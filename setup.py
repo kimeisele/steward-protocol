@@ -16,6 +16,11 @@ setup(
     extras_require={
         "dev": ["pytest", "black", "flake8"],
     },
+    entry_points={
+        "console_scripts": [
+            "steward=steward.cli:main",
+        ],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
