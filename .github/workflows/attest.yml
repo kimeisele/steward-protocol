@@ -38,17 +38,17 @@ jobs:
           # Fallback: Ensure steward CLI is available via direct module invocation
           python -m steward.cli --version || echo "steward" > /tmp/steward_installed
 
-      - name: Verify Organization Identity
+      - name: Verify Organization Identity (Strict)
         run: |
-          echo "🏛️ Verifying Organization Identity..."
-          python -m steward.cli verify STEWARD.md
-          echo "✅ Organization verified"
+          echo "🏛️ Verifying Organization Identity with Cryptographic Signature..."
+          python -m steward.cli verify STEWARD.md --strict
+          echo "✅ Organization identity verified and cryptographically signed"
 
-      - name: Verify All Resident Agents
+      - name: Verify All Resident Agents (Strict)
         run: |
-          echo "🤖 Verifying Resident Agents..."
-          python -m steward.cli verify . --all
-          echo "✅ All agents verified"
+          echo "🤖 Verifying Resident Agents with Cryptographic Signatures..."
+          python -m steward.cli verify . --all --strict
+          echo "✅ All agents verified and cryptographically signed"
 
       - name: Generate Attestation Report
         if: success()

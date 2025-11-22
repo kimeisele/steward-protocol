@@ -16,6 +16,7 @@
 **`[STANDARD]` Additional fields:**
 - **Trust Score:** `0.95 ⭐⭐⭐⭐⭐ (Highly Trusted)`
 - **Protocol Compliance:** `Level 2 (Standard)`
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEMEzGFh4hOWijYMgtcBXcX7zJePUxpG3YhykMbXWCYBYt0cIkFN53hErIcij81RtbtPyPXPho0sJccJo/MTONhg==`
 
 ---
 
@@ -184,3 +185,4 @@ steward inspect agent.vibe.herald
 **Protocol Version:** STEWARD v1.0.0
 **Last Updated:** 2025-11-22
 
+<!-- STEWARD_SIGNATURE: rw0s//LVNcfH1TjJ18yfn/QUKiwUR575WCmDLpWtMNlRmyg1FbsfL66PKNoa+a1UvJO1mtts7h3W+TjFSmS/wQ== -->
