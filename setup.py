@@ -12,6 +12,8 @@ setup(
         "openai>=1.0.0",
         "pydantic>=2.0.0",
         "pyyaml>=6.0",
+        "ecdsa>=0.18.0",
+        "rich>=13.0.0",
     ],
     extras_require={
         "dev": ["pytest", "black", "flake8"],
