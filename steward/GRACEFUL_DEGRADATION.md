@@ -588,5 +588,308 @@ See `docs/protocols/steward/examples/` for:
 
 ---
 
+---
+
+## 🛡️ FAILURE MODES & RECOVERY (v0.1.0+ with Cryptography)
+
+**Philosophy:** The STEWARD Protocol is built for **Hostile Environments**. If security layers fail, the system MUST NOT crash—it MUST degrade gracefully while logging loudly.
+
+### Scenario A: Identity File Not Found (`STEWARD.md`)
+
+**Trigger:** Agent starts, but `steward/keys/identity.md` doesn't exist
+
+**Code Behavior:**
+```python
+# From steward/client.py
+if not self.identity_path.exists():
+    print(f"⚠️ Identity not found. Running in anonymous mode.")
+    self.authenticated = False
+    return
+```
+
+**Impact:**
+- ✅ Agent starts normally
+- ✅ Agent executes tasks
+- ❌ Outputs are flagged as `UNSIGNED_ANONYMOUS_ARTIFACT`
+- ❌ CI/CD pipelines will **REJECT** unsigned artifacts
+
+**Recovery:**
+```bash
+steward keygen              # Generate new identity + keys
+steward verify              # Confirm keys are valid
+git add steward/keys        # Commit public key (safe to commit)
+# NEVER commit steward/keys/steward_private_key (blocked by hook)
+```
+
+**Vibe Agency Impact:** "Graceful mode" — availability preserved, trust degraded. The OS sees the artifact but marks it untrusted.
+
+---
+
+### Scenario B: Corrupted or Missing Private Key
+
+**Trigger:** `steward/keys/steward_private_key` exists but is corrupted or unreadable
+
+**Code Behavior:**
+```python
+# From steward/client.py - signing operation
+try:
+    signature = private_key.sign(artifact_bytes, ec.ECDSA(hashes.SHA256()))
+except Exception as e:
+    print(f"⚠️ Signing failed: {e}")
+    return "SIGNING_ERROR_KEY_CORRUPTED"  # Explicit error flag
+```
+
+**Impact:**
+- ✅ Agent keeps running (no crash)
+- ✅ Task completes
+- ❌ Artifact is saved with signature `SIGNING_ERROR_KEY_CORRUPTED`
+- ❌ Downstream CI/CD rejects it (safety barrier)
+
+**Recovery:**
+```bash
+# Option 1: Restore from backup
+cp steward/keys/steward_private_key.backup steward/keys/steward_private_key
+
+# Option 2: Regenerate (old signatures become invalid)
+steward keygen --force
+steward re-sign previous_artifacts/  # Optional: re-sign old work
+```
+
+**Vibe Agency Impact:** "Degradation with visibility" — the error is explicit in the artifact metadata. The OS can log this and alert the operator.
+
+---
+
+### Scenario C: Invalid Signature (Tampering Detected)
+
+**Trigger:** An artifact is modified after signing, or verification fails
+
+**Code Behavior:**
+```python
+# From steward/verify.py
+try:
+    public_key.verify(signature, artifact_bytes, ec.ECDSA(hashes.SHA256()))
+    return True  # ✅ Valid
+except InvalidSignature:
+    print("❌ TAMPERING DETECTED: Signature is invalid!")
+    return False  # ❌ Rejected
+```
+
+**Impact:**
+- **Local Context:** Warning displayed to the developer
+- **CI/CD Context:** Pipeline exits with code 1 (merge blocked)
+- **Runtime Context:** Receiving agent logs warning but keeps connection open (doesn't crash)
+
+**Recovery:**
+```bash
+# Check what changed
+steward verify --verbose artifact.sig
+
+# If you made a mistake, re-sign
+steward sign artifact
+
+# If tampering is real, investigate
+git log -p artifact  # See who changed it when
+```
+
+**Vibe Agency Impact:** "Security barrier activated" — tampered artifacts are rejected before they propagate. The ecosystem is protected.
+
+---
+
+### Scenario D: Missing Verification Hook (Pre-commit)
+
+**Trigger:** Developer commits private key accidentally (hook disabled or missing)
+
+**Code Behavior:**
+```bash
+# From setup_safety.sh - pre-commit hook
+if grep -q "BEGIN EC PRIVATE KEY" "$file"; then
+    echo "❌ REJECTED: Private key detected in $file"
+    exit 1  # Commit aborted
+fi
+```
+
+**Impact:**
+- ✅ Commit is **BLOCKED** at terminal level
+- ✅ Private key never reaches git history
+- ✅ Developer is forced to run `steward keygen` and restart
+
+**Recovery:**
+```bash
+# Run safety setup again
+bash setup_safety.sh
+
+# Or manually install hook
+cp steward/hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**Vibe Agency Impact:** "First line of defense" — prevents the root cause of key leakage before it happens.
+
+---
+
+### Scenario E: Key Rotation During Active Signing
+
+**Trigger:** Old key is being used while new key is being installed
+
+**Code Behavior:**
+```python
+# The protocol supports key versioning
+artifact = {
+    "data": "...",
+    "signature": "...",
+    "key_version": 2,  # Which key was used?
+    "signed_at": "2025-11-22T10:30:00Z"
+}
+
+# Verification checks key_version
+if artifact["key_version"] != current_key_version:
+    # Trusted if signature still validates with old key
+    if verify_with_historical_key(signature, data, artifact["key_version"]):
+        return True  # ✅ Trusted (old but valid)
+    else:
+        return False  # ❌ Rejected
+```
+
+**Impact:**
+- ✅ Old signatures remain valid (backward compatible)
+- ✅ New signatures use new key immediately
+- ✅ Grace period: old keys can be retained for 30 days (configurable)
+
+**Recovery:**
+```bash
+# Rotate key (grace period: 30 days)
+steward rotate-key --grace-period 30d
+
+# After grace period, old key can be archived
+steward archive-key --key-version 1
+```
+
+**Vibe Agency Impact:** "Zero-downtime rotation" — key rotation happens without breaking existing validations.
+
+---
+
+### Scenario F: Vibe Agency Missing STEWARD Library
+
+**Trigger:** `from steward import StewardClient` fails (library not installed)
+
+**Code Behavior (Vibe OS):**
+```python
+# From vibe-agency startup
+try:
+    from steward import StewardClient
+    crypto_available = True
+except ImportError:
+    print("⚠️ WARNING: STEWARD Library not found. Running in LAWLESS mode (Zero Trust)")
+    crypto_available = False
+    # Continue anyway
+```
+
+**Impact:**
+- ✅ Vibe OS boots normally
+- ✅ Agents run without cryptographic identity (anonymous)
+- ❌ All artifacts are unsigned
+- ❌ CI/CD will reject them (safety barrier)
+
+**Recovery:**
+```bash
+# Install from PyPI (or local)
+pip install steward-protocol
+
+# Or locally
+cd /path/to/steward-protocol
+pip install -e .
+
+# Verify
+python -c "from steward import StewardClient; print('✅ STEWARD available')"
+```
+
+**Vibe Agency Impact:** "Graceful degradation with alerting" — the OS detects the issue and logs it. It doesn't crash. Agents can still run (but untrusted).
+
+---
+
+## 📊 Failure Mode Matrix
+
+| Scenario | Crash? | Availability | Trust Level | Recovery Time |
+|----------|--------|--------------|-------------|----------------|
+| A. No Identity | ❌ No | ✅ 100% | 🔴 Anonymous | ~1 min |
+| B. Corrupted Key | ❌ No | ✅ 100% | 🟡 Unsigned | ~5 min |
+| C. Tampering Detected | ❌ No | ✅ 100% | 🔴 Rejected | ~10 min (investigate) |
+| D. Key in Commit | ❌ No (blocked) | ✅ 100% | ✅ Prevented | ~2 min |
+| E. Key Rotation | ❌ No | ✅ 100% | 🟡 Mixed (grace period) | ~30 days |
+| F. STEWARD Missing | ❌ No | ✅ 100% | 🔴 Anonymous | ~5 min (install) |
+
+**Verdict:** ✅ **Zero crashes.** The system is "Fail-Safe" (degrades, doesn't explode).
+
+---
+
+## 🔗 Vibe Agency Integration (Phoenix Pattern)
+
+### Architecture: "Steward is Law, Vibe is State"
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ VIBE AGENCY (OS Layer)                                      │
+│  - Key Management (where are private keys stored?)          │
+│  - Policy Enforcement (what can agents do?)                 │
+│  - Audit Logging (who did what?)                            │
+└─────────────────────────────────────────────────────────────┘
+                        ↓ uses
+┌─────────────────────────────────────────────────────────────┐
+│ STEWARD PROTOCOL (Cryptography Library)                     │
+│  - Key Generation (keygen)                                  │
+│  - Signing (sign)                                           │
+│  - Verification (verify)                                    │
+│  - Graceful Degradation (what if key is missing?)           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Separation of Concerns
+
+| Component | Responsibility | Location |
+|-----------|-----------------|----------|
+| **STEWARD** | *What* is cryptographically true | `steward/crypto.py` |
+| **Vibe OS** | *Where* keys are stored, *Who* can use them | `vibe-agency/config.yml` |
+| **CI/CD** | *When* to accept/reject artifacts | `.github/workflows/` |
+
+### How Integration Works
+
+```python
+# 1. Vibe OS boots and loads STEWARD
+from steward import StewardClient
+
+client = StewardClient(
+    identity_path="steward/keys/identity.md",
+    private_key_path="$VIBE_SECRETS/steward_private_key"  # Configured by OS
+)
+
+# 2. Agent asks to sign an artifact
+artifact = {"data": "important work"}
+signature = client.sign(artifact)
+
+# 3. Vibe OS delivers the artifact downstream
+# 4. CI/CD verifies using steward.verify()
+# 5. Trust decision is made (accept/reject)
+
+# If client is missing (ImportError):
+# Vibe OS gracefully degrades: "Anonymous mode"
+# Artifacts are unsigned (CI/CD rejects them—safety barrier)
+```
+
+### Key Management Policy
+
+**Vibe OS is responsible for:**
+- Storing private keys in `$VIBE_SECRETS` (not git)
+- Setting permissions: `chmod 600 steward_private_key`
+- Rotating keys on schedule (steward supports this)
+- Backing up keys (and testing recovery)
+
+**Steward Protocol guarantees:**
+- Will never write the private key to logs
+- Will never commit private key to git (blocked by hook)
+- Will use industry-standard NIST P-256 (SECP256R1)
+- Will fail gracefully if key is missing
+
+---
+
 **Status:** ✅ STABLE - Graceful degradation model complete
 **Next:** Create templates for each level + vibe-agency reference implementation
