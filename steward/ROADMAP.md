@@ -18,6 +18,50 @@
 
 ---
 
+## 🛡️ SAFETY INFRASTRUCTURE (Continuous)
+
+**Status:** ✅ INSTALLED (2025-11-22)
+
+### Purpose
+
+Prevent accidental security breaches during development. Uses git pre-commit hooks to protect against:
+- Private key leaks (detects PEM private key headers)
+- Unsafe commits of `.steward/keys/` directory
+- Unsigned STEWARD.md manifest changes
+
+### Installation
+
+```bash
+bash setup_safety.sh
+```
+
+This installs a pre-commit hook that runs before every `git commit`. The hook acts as an **automatic bodyguard**:
+
+**Scenario 1: Accidental Private Key Commit**
+```bash
+$ git add .steward/keys/private.pem
+$ git commit -m "oops"
+❌ CRITICAL SECURITY ALERT: You are attempting to commit a Private Key!
+   Action BLOCKED. Remove the key from git add immediately.
+```
+
+**Scenario 2: Unsigned STEWARD.md**
+```bash
+$ git add STEWARD.md  # (modified but not signed)
+$ git commit -m "Update manifest"
+🔎 Verifying STEWARD.md identity signature...
+❌ SIGNATURE VERIFICATION FAILED
+   Run 'steward sign STEWARD.md --append' before committing.
+```
+
+### Why This Matters
+
+> *"Make the system so secure that it even protects you from yourself."*
+
+This is **defensive security**: the system doesn't trust the user to remember security protocols—it enforces them automatically.
+
+---
+
 ## 📅 PHASE 1: MVP (Weeks 1-4)
 
 ### Week 1: Specification & Design
