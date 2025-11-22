@@ -1,85 +1,149 @@
+"""
+STEWARD Protocol Cryptographic Functions
+Real ECDSA (Elliptic Curve Digital Signature Algorithm) implementation for identity verification
+Using pure Python ECDSA library for maximum compatibility
+"""
+
 import os
 import base64
+import hashlib
 from pathlib import Path
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import serialization
-from cryptography.exceptions import InvalidSignature
+from ecdsa import SigningKey, VerifyingKey, NIST256p
+from ecdsa.util import sigencode_string, sigdecode_string
 
-KEY_DIR = Path(".steward/keys")
-PRIVATE_KEY_FILE = KEY_DIR / "private.pem"
-PUBLIC_KEY_FILE = KEY_DIR / "public.pem"
+# Key storage location
+KEYS_DIR = Path(".steward/keys")
+PRIVATE_KEY_PATH = KEYS_DIR / "private.pem"
+PUBLIC_KEY_PATH = KEYS_DIR / "public.pem"
+
 
 def ensure_keys_exist():
-    """Generates a new ECC keypair if none exists."""
-    if PRIVATE_KEY_FILE.exists():
+    """
+    Ensures that key pair exists. Creates one if it doesn't.
+
+    Returns:
+        bool: True if new keys were created, False if they already existed
+    """
+    if PRIVATE_KEY_PATH.exists() and PUBLIC_KEY_PATH.exists():
         return False
 
-    KEY_DIR.mkdir(parents=True, exist_ok=True)
+    # Create directory
+    KEYS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Generate Private Key (SECP256R1)
-    private_key = ec.generate_private_key(ec.SECP256R1())
+    # Generate new keypair using NIST P-256 curve
+    private_key = SigningKey.generate(curve=NIST256p, hashfunc=hashlib.sha256)
+    public_key = private_key.get_verifying_key()
 
-    # Save Private Key
-    with open(PRIVATE_KEY_FILE, "wb") as f:
-        f.write(private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        ))
+    # Save private key (PEM format)
+    private_pem = private_key.to_pem().decode("utf-8")
+    PRIVATE_KEY_PATH.write_text(private_pem)
+    PRIVATE_KEY_PATH.chmod(0o600)  # Restrict to owner only
 
-    # Save Public Key
-    public_key = private_key.public_key()
-    with open(PUBLIC_KEY_FILE, "wb") as f:
-        f.write(public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ))
+    # Save public key (PEM format)
+    public_pem = public_key.to_pem().decode("utf-8")
+    PUBLIC_KEY_PATH.write_text(public_pem)
 
-    # Update .gitignore to secure private key
+    # Add private.pem to .gitignore
     gitignore_path = Path(".gitignore")
-    if gitignore_path.exists():
-        content = gitignore_path.read_text()
-        if ".steward/keys/private.pem" not in content:
-            with open(gitignore_path, "a") as f:
-                f.write("\n# Steward Keys\n.steward/keys/private.pem\n")
+    gitignore_content = gitignore_path.read_text() if gitignore_path.exists() else ""
+    if ".steward/keys/private.pem" not in gitignore_content:
+        with open(gitignore_path, "a") as f:
+            if gitignore_content and not gitignore_content.endswith("\n"):
+                f.write("\n")
+            f.write(".steward/keys/private.pem\n")
 
     return True
 
-def get_public_key_string():
-    """Returns the public key as a clean base64 string for the STEWARD.md."""
-    if not PUBLIC_KEY_FILE.exists():
-        raise FileNotFoundError("No keys found. Run 'steward keygen' first.")
 
-    with open(PUBLIC_KEY_FILE, "rb") as f:
-        pem_data = f.read()
-        # Strip PEM headers to keep markdown clean
-        lines = pem_data.decode().splitlines()
-        return "".join(lines[1:-1])
+def get_public_key_string():
+    """
+    Returns the public key as a base64 string (without PEM markers).
+    Suitable for embedding in STEWARD.md files.
+
+    Returns:
+        str: Public key in base64 format (without BEGIN/END markers)
+    """
+    ensure_keys_exist()
+    public_pem = PUBLIC_KEY_PATH.read_text()
+    # Extract just the base64 content (without BEGIN/END lines)
+    lines = public_pem.split("\n")
+    content = "".join([line for line in lines if line and not line.startswith("-----")])
+    return content
+
+
+def _load_private_key():
+    """Load private key from file."""
+    if not PRIVATE_KEY_PATH.exists():
+        raise FileNotFoundError(f"Private key not found at {PRIVATE_KEY_PATH}")
+
+    private_pem = PRIVATE_KEY_PATH.read_text()
+    private_key = SigningKey.from_pem(private_pem)
+    return private_key
+
+
+def _load_public_key(public_key_b64_str):
+    """Load public key from base64 string (without PEM markers)."""
+    # Reconstruct PEM format with BEGIN/END markers
+    pem_str = f"""-----BEGIN PUBLIC KEY-----
+{public_key_b64_str}
+-----END PUBLIC KEY-----"""
+
+    public_key = VerifyingKey.from_pem(pem_str)
+    return public_key
+
 
 def sign_content(content: str) -> str:
-    """Signs the content string with the private key."""
-    if not PRIVATE_KEY_FILE.exists():
-        raise FileNotFoundError("No private key found.")
+    """
+    Sign the given content with the private key.
 
-    with open(PRIVATE_KEY_FILE, "rb") as f:
-        private_key = serialization.load_pem_private_key(f.read(), password=None)
+    Args:
+        content (str): The content to sign
 
-    signature = private_key.sign(
-        content.encode('utf-8'),
-        ec.ECDSA(hashes.SHA256())
+    Returns:
+        str: The signature in base64 format
+    """
+    private_key = _load_private_key()
+
+    # Sign the content using SHA256 hash
+    content_bytes = content.encode("utf-8")
+    signature_bytes = private_key.sign(
+        content_bytes,
+        hashfunc=hashlib.sha256,
+        sigencode=sigencode_string
     )
-    return base64.b64encode(signature).decode('utf-8')
 
-def verify_signature(content: str, signature_b64: str, public_key_pem_str: str) -> bool:
-    """Verifies a signature against content and a public key."""
+    # Encode as base64
+    signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")
+    return signature_b64
+
+
+def verify_signature(content: str, signature_b64: str, public_key_b64: str) -> bool:
+    """
+    Verify a signature against content using the public key.
+
+    Args:
+        content (str): The original content that was signed
+        signature_b64 (str): The signature in base64 format
+        public_key_b64 (str): The public key (base64 content without BEGIN/END markers)
+
+    Returns:
+        bool: True if signature is valid, False otherwise
+    """
     try:
-        # Reconstruct PEM format
-        pem = f"-----BEGIN PUBLIC KEY-----\n{public_key_pem_str}\n-----END PUBLIC KEY-----"
-        public_key = serialization.load_pem_public_key(pem.encode())
+        public_key = _load_public_key(public_key_b64)
 
-        signature = base64.b64decode(signature_b64)
-        public_key.verify(signature, content.encode('utf-8'), ec.ECDSA(hashes.SHA256()))
+        # Decode signature from base64
+        signature_bytes = base64.b64decode(signature_b64)
+
+        # Verify the signature
+        content_bytes = content.encode("utf-8")
+        public_key.verify(
+            signature_bytes,
+            content_bytes,
+            hashfunc=hashlib.sha256,
+            sigdecode=sigdecode_string
+        )
         return True
-    except (InvalidSignature, Exception):
+    except Exception:
+        # Any exception means verification failed
         return False

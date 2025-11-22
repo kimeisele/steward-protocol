@@ -34,20 +34,23 @@ jobs:
       - name: 🔎 Verify Organization Identity (Strict)
         # Enforce cryptographic signature on the Root Identity
         run: |
-          steward verify STEWARD.md --strict
+          echo "🏛️ Verifying Organization Identity with Cryptographic Signature..."
+          python -m steward.cli verify STEWARD.md --strict
+          echo "✅ Organization identity verified and cryptographically signed"
 
-      - name: 🔎 Verify Resident Agents
-        # Verify all agents found in examples/
+      - name: 🔎 Verify All Resident Agents (Strict)
+        # Verify all agents found in examples/ and subdirectories
         run: |
-          echo "Searching for STEWARD.md files in examples..."
+          echo "🤖 Verifying Resident Agents with Cryptographic Signatures..."
           if find examples -name "STEWARD.md" -type f 2>/dev/null | grep -q .; then
             find examples -name "STEWARD.md" -type f | while read file; do
               echo ""
               echo "Verifying $file..."
-              steward verify "$file" --strict
+              python -m steward.cli verify "$file" --strict
             done
+            echo "✅ All agents verified and cryptographically signed"
           else
-            echo "No STEWARD.md files found in examples/ (optional)"
+            echo "⚠️  No STEWARD.md files found in examples/ (optional)"
           fi
 
       - name: ✅ Attestation Complete
