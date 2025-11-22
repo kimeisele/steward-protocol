@@ -515,6 +515,125 @@ User context is intentionally NOT in `steward.json` because:
 
 ---
 
+## 🧠 LAYER 1.6: COGNITIVE POLICY (New in v1.1.0)
+
+### Purpose: User Sovereignty over AI Cognition
+
+**Problem:** Users want to control *how* an agent thinks (which model) and *how much* it spends, without rewriting the agent's code.
+
+**Solution:** A declarative policy layer in the manifest that allows users to:
+1. Specify preferred models for different cognitive tasks (reasoning, efficiency, creative)
+2. Set economic constraints (budget limits, provider preferences)
+3. Control resource consumption without modifying agent implementation
+
+### Structure
+
+```json
+{
+  "cognitive_policy": {
+    "model_preferences": {
+      "reasoning": "google/gemini-1.5-pro-latest",
+      "efficiency": "google/gemini-1.5-flash",
+      "creative": "anthropic/claude-3-opus",
+      "fallback": "openai/gpt-3.5-turbo"
+    },
+    "economic_constraints": {
+      "max_cost_per_run": 0.50,
+      "max_daily_budget": 5.00,
+      "provider_priority": ["OpenRouter", "Anthropic", "Google"]
+    }
+  }
+}
+```
+
+### Model Preferences
+
+Agents can optimize cognition by selecting appropriate models for different tasks:
+
+- **reasoning**: Deep analysis, complex problem-solving (high capability, higher cost)
+- **efficiency**: Fast operations, simple tasks (lower cost, good performance)
+- **creative**: Content generation, creative work (specialized for quality output)
+- **fallback**: Backup model when preferred options unavailable
+
+### Economic Constraints
+
+Hard limits on resource consumption:
+
+- **max_cost_per_run**: USD limit per single delegation (prevents runaway costs)
+- **max_daily_budget**: USD limit per 24-hour period (prevents budget overruns)
+- **provider_priority**: Ordered list of allowed providers (e.g., prefer OpenRouter for cost, fallback to Anthropic for reliability)
+
+### Implementation Requirement
+
+**Runtime clients (like `steward/client.py`) MUST:**
+
+1. Read `cognitive_policy` during boot/initialization
+2. Configure underlying LLM clients accordingly
+3. Enforce economic constraints BEFORE making LLM calls
+4. Respect model preferences while maintaining agent functionality
+5. Fail gracefully when constraints cannot be met
+
+### Example Use Cases
+
+#### Use Case 1: Cost-Conscious Operation
+```json
+{
+  "cognitive_policy": {
+    "model_preferences": {
+      "reasoning": "mistralai/mistral-medium",
+      "efficiency": "mistralai/mistral-small"
+    },
+    "economic_constraints": {
+      "max_cost_per_run": 0.10,
+      "max_daily_budget": 1.00
+    }
+  }
+}
+```
+
+#### Use Case 2: Quality-First
+```json
+{
+  "cognitive_policy": {
+    "model_preferences": {
+      "reasoning": "anthropic/claude-3-opus",
+      "creative": "openai/gpt-4-turbo",
+      "efficiency": "google/gemini-1.5-flash"
+    },
+    "economic_constraints": {
+      "max_cost_per_run": 5.00,
+      "max_daily_budget": 100.00
+    }
+  }
+}
+```
+
+#### Use Case 3: Provider Lock-In Prevention
+```json
+{
+  "cognitive_policy": {
+    "economic_constraints": {
+      "provider_priority": ["OpenRouter", "Anthropic", "Google", "OpenAI"],
+      "max_cost_per_run": 1.00
+    }
+  }
+}
+```
+
+### Relationship to Other Layers
+
+- **Layer 1 (Agent Manifest)**: Cognitive policy extends agent identity with operational preferences
+- **Layer 1.5 (User Context)**: Cognitive policy is user/team-specific, complements user preferences
+- **Runtime**: Clients use cognitive policy to configure LLM routing and cost management
+
+### Backwards Compatibility
+
+- **Optional Field**: Agents without `cognitive_policy` work normally (use agent defaults)
+- **Graceful Degradation**: Missing model preferences fall back to agent's default models
+- **No Breaking Changes**: Existing v1.0.0 manifests remain valid
+
+---
+
 ## 🔍 LAYER 2: STEWARD REGISTRY
 
 ### Like: Docker Hub, npm registry, PyPI
