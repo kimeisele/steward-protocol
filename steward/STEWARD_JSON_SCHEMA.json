@@ -1,0 +1,292 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://steward-protocol.org/schemas/v1.0.0/steward.json",
+  "title": "STEWARD Agent Manifest",
+  "description": "Universal AI Agent Identity Standard - Machine-readable agent manifest",
+  "type": "object",
+  "required": ["steward_version", "agent", "credentials", "capabilities"],
+  "properties": {
+    "steward_version": {
+      "type": "string",
+      "description": "STEWARD protocol version (semver)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    },
+
+    "agent": {
+      "type": "object",
+      "required": ["id", "name", "version", "class", "specialization", "status"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique agent identifier (kebab-case)",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "examples": ["vibe-agency-orchestrator"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable agent name",
+          "examples": ["STEWARD"]
+        },
+        "version": {
+          "type": "string",
+          "description": "Agent version (semver)",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "examples": ["4.0.0"]
+        },
+        "class": {
+          "type": "string",
+          "description": "Agent classification",
+          "enum": [
+            "orchestration_operator",
+            "task_executor",
+            "knowledge_agent",
+            "research_agent",
+            "code_generator",
+            "quality_validator",
+            "deployment_agent",
+            "monitoring_agent"
+          ]
+        },
+        "specialization": {
+          "type": "string",
+          "description": "Domain of expertise",
+          "examples": ["sdlc_management", "healthcare_compliance", "financial_analysis"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "development", "maintenance", "deprecated"],
+          "description": "Current operational status"
+        },
+        "fingerprint": {
+          "type": "string",
+          "description": "Cryptographic fingerprint (sha256 hex)",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "examples": ["sha256:abc123def456..."]
+        },
+        "issued_by": {
+          "type": "string",
+          "description": "Issuing organization/project",
+          "examples": ["vibe-agency"]
+        },
+        "issued_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of issuance"
+        }
+      }
+    },
+
+    "credentials": {
+      "type": "object",
+      "required": ["mandate", "constraints", "prime_directive"],
+      "properties": {
+        "mandate": {
+          "type": "array",
+          "description": "Authorized operations",
+          "items": {
+            "type": "object",
+            "required": ["capability", "scope"],
+            "properties": {
+              "capability": {
+                "type": "string",
+                "description": "Capability identifier",
+                "examples": ["orchestrate_sdlc", "generate_code"]
+              },
+              "scope": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Scope of capability",
+                "examples": [["planning", "coding", "testing"]]
+              },
+              "attestation": {
+                "type": "string",
+                "description": "Cryptographic attestation hash",
+                "pattern": "^sha256:[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "description": "Forbidden operations",
+          "items": {
+            "type": "object",
+            "required": ["forbidden", "reason"],
+            "properties": {
+              "forbidden": {
+                "type": "string",
+                "examples": ["bypass_tests", "access_production"]
+              },
+              "reason": {
+                "type": "string",
+                "examples": ["Test-first discipline mandatory"]
+              }
+            }
+          }
+        },
+        "prime_directive": {
+          "type": "string",
+          "description": "Core principle governing all operations",
+          "examples": ["Trust tests over claims, verify over assume"]
+        }
+      }
+    },
+
+    "capabilities": {
+      "type": "object",
+      "required": ["interfaces", "operations"],
+      "properties": {
+        "interfaces": {
+          "type": "array",
+          "description": "Communication interfaces",
+          "items": {
+            "type": "object",
+            "required": ["type", "protocol", "endpoint"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["cli", "api", "websocket", "grpc"],
+                "description": "Interface type"
+              },
+              "protocol": {
+                "type": "string",
+                "examples": ["bash", "http", "ws", "grpc"]
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Connection endpoint",
+                "examples": ["./bin/vibe --json", "http://localhost:8080/api/v1"]
+              },
+              "health_check": {
+                "type": "string",
+                "description": "Health check endpoint",
+                "examples": ["./bin/vibe status --json"]
+              }
+            }
+          }
+        },
+
+        "operations": {
+          "type": "array",
+          "description": "Supported operations",
+          "items": {
+            "type": "object",
+            "required": ["name", "input_schema", "output_schema"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Operation identifier",
+                "examples": ["orchestrate_sdlc", "generate_code"]
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable description"
+              },
+              "input_schema": {
+                "type": "object",
+                "description": "JSON Schema for input"
+              },
+              "output_schema": {
+                "type": "object",
+                "description": "JSON Schema for output"
+              },
+              "latency_ms": {
+                "type": "integer",
+                "description": "Expected latency in milliseconds",
+                "minimum": 0
+              },
+              "idempotent": {
+                "type": "boolean",
+                "description": "Whether operation is idempotent"
+              },
+              "versioned": {
+                "type": "boolean",
+                "description": "Whether operation supports versioning"
+              }
+            }
+          }
+        },
+
+        "quality_metrics": {
+          "type": "object",
+          "description": "Quality guarantees",
+          "properties": {
+            "accuracy": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Accuracy rate (0.0 to 1.0)"
+            },
+            "test_coverage": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Test coverage (0.0 to 1.0)"
+            },
+            "uptime": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "Uptime guarantee (0.0 to 1.0)"
+            },
+            "latency_p99_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "99th percentile latency in ms"
+            }
+          }
+        }
+      }
+    },
+
+    "runtime": {
+      "type": "object",
+      "description": "Runtime introspection endpoints",
+      "properties": {
+        "introspection_endpoint": {
+          "type": "string",
+          "description": "Endpoint for runtime state query",
+          "examples": ["./bin/vibe introspect --json"]
+        },
+        "state_query": {
+          "type": "string",
+          "description": "Endpoint for state history query",
+          "examples": ["./bin/vibe ledger-query --json"]
+        },
+        "logs": {
+          "type": "string",
+          "description": "Log file location",
+          "examples": ["./logs/steward.log"]
+        }
+      }
+    },
+
+    "governance": {
+      "type": "object",
+      "required": ["principal", "transparency"],
+      "properties": {
+        "principal": {
+          "type": "string",
+          "description": "Controlling entity",
+          "examples": ["vibe-agency-core-team"]
+        },
+        "contact": {
+          "type": "string",
+          "description": "Contact information (URL, email)",
+          "examples": ["https://github.com/kimeisele/vibe-agency"]
+        },
+        "audit_trail": {
+          "type": "string",
+          "description": "Audit log location",
+          "examples": ["vibe_core/ledger.db"]
+        },
+        "transparency": {
+          "type": "string",
+          "enum": ["public", "private", "confidential"],
+          "description": "Transparency level"
+        }
+      }
+    }
+  }
+}
