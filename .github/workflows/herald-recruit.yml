@@ -1,0 +1,73 @@
+name: HERALD Recruitment Campaign
+
+on:
+  schedule:
+    # Run every morning at 08:00 UTC
+    # This is when HERALD wakes up to generate marketing content
+    - cron: '0 8 * * *'
+
+  # Also allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  create-content:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # CRITICAL: Allows writing back to the repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Get the full history so we can commit properly
+          fetch-depth: 0
+
+      - name: Set up Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Run HERALD Campaign Generator
+        env:
+          # In production, add OPENROUTER_API_KEY here if doing LLM-based content
+          # For now, campaign.py has built-in topic rotation
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || '' }}
+        run: |
+          # Make campaign.py executable and run it
+          chmod +x examples/herald/campaign.py
+          python examples/herald/campaign.py
+
+      - name: Configure Git for Commits
+        run: |
+          git config --global user.name "HERALD Agent"
+          git config --global user.email "herald@steward.local"
+
+      - name: Commit & Push Generated Content
+        run: |
+          # Check if there are new files in content/posts/
+          if [ -d "content/posts" ] && [ -n "$(git status --short content/posts/)" ]; then
+            git add content/posts/
+
+            # Get today's date for the commit message
+            TODAY=$(date +"%Y-%m-%d")
+
+            # Commit with an emoji and clear message
+            git commit -m "🤖 HERALD: Generated recruitment post for $TODAY"
+
+            # Push back to the current branch
+            git push
+
+            echo "✅ Content pushed successfully"
+          else
+            echo "ℹ️  No new content to commit (already generated today)"
+          fi
+
+      - name: Report Status
+        if: always()
+        run: |
+          echo "📊 HERALD Campaign Workflow Complete"
+          echo "Time: $(date -u)"
+          if [ -d "content/posts" ]; then
+            echo "📁 Generated posts:"
+            ls -lh content/posts/ 2>/dev/null || echo "   (directory exists but empty)"
+          fi
