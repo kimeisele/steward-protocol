@@ -17,7 +17,7 @@
 - **Fingerprint:** `sha256:[to-be-generated]` (run `steward keygen` to generate)
 - **Trust Score:** `0.75 ⭐⭐⭐ (Verified)`
 - **Protocol Compliance:** `Level 2 (Standard)`
-- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE5qVtgMApzUpWjn+7UJv7Y1h7KP5vagl1q0lVPaAG7T+Du+xJrUslUUWsE42h+1p0iFItdjcyH9N+T6fekGGEWg==`
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEV5W70DZQKd4OAlKF84bVH9cRkJlL24WV9djJKsFveeYJzbPB36UK2ql8z1DgTF9vYQsNc+EbdJ/wpuPj/bIoQg==`
 
 **Hosted In:**
 - **Parent Organization:** `org.vibe.steward` (Steward Protocol Organization)
@@ -330,4 +330,4 @@ To bring HERALD into full operational status:
    - [ ] Federation registry publication
    - [ ] SLA commitment definitions
 
-<!-- STEWARD_SIGNATURE: iwnMD7kLa9EG6AtHs1rycBZEhBrXhBV9DU7IaghxoqB8s09CFuBJ0Hqgcg2gs5ijMGglRLiM5ACyBMG2C5tu/w== -->
+<!-- STEWARD_SIGNATURE: Z7eHaZrtd60XIBafnlMRjz3fb3Q85mWAIr3QkQPZTRoqwcPBfoJ9McgoGL0lRCjIHQqTs3u6orZgGyLpJLpeYw== -->
