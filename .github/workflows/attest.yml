@@ -1,26 +1,22 @@
 name: Protocol Attestation
 
 on:
-  # 1. Automatisch alle 6 Stunden
   schedule:
     - cron: '0 */6 * * *'
-  # 2. Bei jedem Push auf main/Entwicklungsbranches
   push:
     branches: [ main, 'claude/**' ]
     paths:
-      - 'STEWARD.md'
-      - 'examples/**/STEWARD.md'
-      - 'setup.py'
+      - '**STEWARD.md'
       - 'steward/**'
-  # 3. Manuell triggerbar
+      - 'setup.py'
   workflow_dispatch:
 
 jobs:
   verify-agents:
+    name: 🛡️ Verify Agent Identities
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
 
     steps:
       - name: Checkout Repository
@@ -31,56 +27,32 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Steward Protocol CLI
+      - name: Install Steward Protocol
         run: |
-          echo "📦 Installing STEWARD CLI from local code..."
-          pip install --quiet -e . 2>&1 | grep -v "AttributeError" || true
-          # Fallback: Ensure steward CLI is available via direct module invocation
-          python -m steward.cli --version || echo "steward" > /tmp/steward_installed
+          pip install -e .
 
-      - name: Verify Organization Identity (Strict)
+      - name: 🔎 Verify Organization Identity (Strict)
+        # Enforce cryptographic signature on the Root Identity
         run: |
           echo "🏛️ Verifying Organization Identity with Cryptographic Signature..."
           python -m steward.cli verify STEWARD.md --strict
           echo "✅ Organization identity verified and cryptographically signed"
 
-      - name: Verify All Resident Agents (Strict)
+      - name: 🔎 Verify All Resident Agents (Strict)
+        # Verify all agents found in examples/ and subdirectories
         run: |
           echo "🤖 Verifying Resident Agents with Cryptographic Signatures..."
-          python -m steward.cli verify . --all --strict
-          echo "✅ All agents verified and cryptographically signed"
+          if find examples -name "STEWARD.md" -type f 2>/dev/null | grep -q .; then
+            find examples -name "STEWARD.md" -type f | while read file; do
+              echo ""
+              echo "Verifying $file..."
+              python -m steward.cli verify "$file" --strict
+            done
+            echo "✅ All agents verified and cryptographically signed"
+          else
+            echo "⚠️  No STEWARD.md files found in examples/ (optional)"
+          fi
 
-      - name: Generate Attestation Report
+      - name: ✅ Attestation Complete
         if: success()
-        run: |
-          echo "✅ ALL SYSTEMS COMPLIANT" > attestation_report.txt
-          echo "Attestation Timestamp: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> attestation_report.txt
-          echo "" >> attestation_report.txt
-          echo "Protocol Status:" >> attestation_report.txt
-          echo "- Organization: ✅ VERIFIED" >> attestation_report.txt
-          echo "- Resident Agents: ✅ VERIFIED" >> attestation_report.txt
-          echo "- Compliance Level: 2 (Standard)" >> attestation_report.txt
-          cat attestation_report.txt
-
-      - name: Upload Attestation Report
-        if: success()
-        uses: actions/upload-artifact@v3
-        with:
-          name: attestation-report-${{ github.run_number }}
-          path: attestation_report.txt
-          retention-days: 90
-
-      - name: Attestation Status
-        if: success()
-        run: |
-          echo "🎉 Attestation Successful"
-          echo "✅ STEWARD Protocol compliance verified"
-          echo "📅 Next attestation scheduled in 6 hours"
-          echo "🔗 Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-      - name: Attestation Failed
-        if: failure()
-        run: |
-          echo "❌ Attestation Failed"
-          echo "Please review STEWARD.md files for compliance issues"
-          exit 1
+        run: echo "✅ All Agents compliant and cryptographically verified."
