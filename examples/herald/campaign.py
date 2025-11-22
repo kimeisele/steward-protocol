@@ -17,6 +17,7 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime
+from examples.herald.publisher import LinkedInPublisher
 
 # --- CONFIG: OPENROUTER BRIDGE ---
 if os.getenv("OPENROUTER_API_KEY"):
@@ -271,11 +272,21 @@ def main():
     print("\n📤 Saving to repository...")
     filename = save_recruitment_post(post_content, signature)
 
-    # Step 6: Summary
+    # Step 6: PUBLISH TO NETWORK (Phase 2: The Publisher)
+    print("\n🚀 Publishing to network...")
+    publisher = LinkedInPublisher()
+    publish_success = publisher.publish(post_content)
+
+    # Step 7: Summary
     print("\n" + "=" * 60)
     print("✅ CAMPAIGN GENERATION COMPLETE")
     print("=" * 60)
-    print(f"\nNext step: Commit and push {filename} to your branch")
+    print(f"\n📁 Content saved: {filename}")
+    if publish_success:
+        print("🌐 Published to: LinkedIn")
+    else:
+        print("💾 Status: Saved locally (LinkedIn token not configured)")
+    print("\nNext step: Commit and push {filename} to your branch")
     print("Or schedule this to run automatically via GitHub Actions!\n")
 
 
