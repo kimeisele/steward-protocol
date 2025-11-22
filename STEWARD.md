@@ -1,6 +1,6 @@
 # STEWARD Protocol Organization
 
-> **STEWARD Protocol v1.0.0 | Organization Identity**
+> **STEWARD Protocol v1.1.0 | Organization Identity**
 > *The open standard for sovereign agent collaboration*
 
 ---
@@ -10,7 +10,7 @@
 - **ID:** `org.vibe.steward`
 - **Name:** `Steward Protocol Organization`
 - **Class:** `organization`
-- **Version:** `1.0.0`
+- **Version:** `1.1.0`
 - **Status:** `ACTIVE`
 
 **`[STANDARD]` Additional fields:**
@@ -137,7 +137,7 @@ steward inspect agent.vibe.herald
 
 **Protocol Compliance:**
 - **Compliance Level:** Level 2 (Standard)
-- **Protocol Version:** STEWARD v1.0.0
+- **Protocol Version:** STEWARD v1.1.0
 - **Full Specification:** [steward/SPECIFICATION.md](./steward/SPECIFICATION.md)
 - **Graceful Degradation Model:** [steward/GRACEFUL_DEGRADATION.md](./steward/GRACEFUL_DEGRADATION.md)
 
@@ -181,8 +181,8 @@ steward inspect agent.vibe.herald
 
 ---
 
-**Organization Version:** 1.0.0
-**Protocol Version:** STEWARD v1.0.0
+**Organization Version:** 1.1.0
+**Protocol Version:** STEWARD v1.1.0
 **Last Updated:** 2025-11-22
 
 <!-- STEWARD_SIGNATURE: rw0s//LVNcfH1TjJ18yfn/QUKiwUR575WCmDLpWtMNlRmyg1FbsfL66PKNoa+a1UvJO1mtts7h3W+TjFSmS/wQ== -->
