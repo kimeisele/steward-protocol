@@ -1,3 +1,7 @@
+⚠️ DISCLAIMER: This protocol is currently in v1.1.0 (Active Development). While it uses industry-standard cryptography (NIST P-256), use it at your own risk. Always audit code before deploying autonomous agents with financial budgets.
+
+---
+
 # steward-protocol
 
 > **STEWARD = Standard Trust Endorsement Warranty Architecture Reserve Distribution**
