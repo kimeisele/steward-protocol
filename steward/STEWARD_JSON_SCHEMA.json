@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://steward-protocol.org/schemas/v1.0.0/steward.json",
+  "$id": "https://steward-protocol.org/schemas/v1.1.0/steward.json",
   "title": "STEWARD Agent Manifest",
   "description": "Universal AI Agent Identity Standard - Machine-readable agent manifest",
   "type": "object",
@@ -285,6 +285,68 @@
           "type": "string",
           "enum": ["public", "private", "confidential"],
           "description": "Transparency level"
+        }
+      }
+    },
+
+    "cognitive_policy": {
+      "type": "object",
+      "description": "User-defined constraints on agent cognition and economics (New in v1.1.0)",
+      "properties": {
+        "model_preferences": {
+          "type": "object",
+          "description": "Preferred models for specific cognitive tasks",
+          "properties": {
+            "reasoning": {
+              "type": "string",
+              "description": "Model for deep reasoning and complex analysis",
+              "examples": ["google/gemini-1.5-pro-latest", "anthropic/claude-3-opus"]
+            },
+            "efficiency": {
+              "type": "string",
+              "description": "Model for fast, cost-effective operations",
+              "examples": ["google/gemini-1.5-flash", "mistralai/mistral-small"]
+            },
+            "creative": {
+              "type": "string",
+              "description": "Model for creative and content generation tasks",
+              "examples": ["anthropic/claude-3-opus", "openai/gpt-4-turbo"]
+            },
+            "fallback": {
+              "type": "string",
+              "description": "Fallback model when preferred models are unavailable",
+              "examples": ["openai/gpt-3.5-turbo", "mistralai/mistral-medium"]
+            }
+          }
+        },
+        "economic_constraints": {
+          "type": "object",
+          "description": "Hard limits on resource consumption and spending",
+          "properties": {
+            "max_cost_per_run": {
+              "type": "number",
+              "description": "Maximum USD cost allowed per single delegation/run",
+              "minimum": 0,
+              "examples": [0.50, 1.00, 5.00]
+            },
+            "max_daily_budget": {
+              "type": "number",
+              "description": "Maximum USD cost allowed per 24-hour period",
+              "minimum": 0,
+              "examples": [5.00, 10.00, 50.00]
+            },
+            "provider_priority": {
+              "type": "array",
+              "description": "Ordered list of allowed LLM providers (highest priority first)",
+              "items": {
+                "type": "string"
+              },
+              "examples": [
+                ["OpenRouter", "Anthropic", "Google"],
+                ["Google", "OpenAI", "Anthropic"]
+              ]
+            }
+          }
         }
       }
     }
