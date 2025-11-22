@@ -33,6 +33,17 @@ FLEXIBLE_SECTIONS = {
     "Verification": ["Verification", "🔐 Verification"],
 }
 
+# Signature block pattern: captures signature block at end of file
+SIG_BLOCK_PATTERN = re.compile(
+    r'\n*<!-- STEWARD_SIGNATURE\s+(.*?)\s+-->\s*$',
+    re.DOTALL
+)
+
+# Extract signature and key from the block content
+SIG_LINE_PATTERN = re.compile(r'signature:\s*([A-Za-z0-9+/=]+)')
+KEY_LINE_PATTERN = re.compile(r'key:\s*([A-Za-z0-9+/=\n]+)')
+
+
 
 def is_markdown_section(line, section_name):
     """Check if a line contains a markdown section header for the given section name."""
@@ -88,8 +99,15 @@ def cmd_keygen(args):
     else:
         console.print("[yellow]ℹ️  Keys already exist. Skipping generation.[/yellow]")
 
-    pub_key = crypto.get_public_key_string()
-    console.print(Panel(f"[bold]Add this to your STEWARD.md:[/bold]\n\nkey: {pub_key[:20]}...{pub_key[-20:]}", title="Public Key"))
+    try:
+        pub_key = crypto.get_public_key_string()
+        console.print(Panel(
+            f"[bold]Add this key block to your STEWARD.md:[/bold]\n\n```\nkey: {pub_key}\n```",
+            title="Identity Public Key"
+        ))
+    except Exception as e:
+        console.print(f"[red]❌ Error reading keys: {e}[/red]")
+        sys.exit(1)
 
 
 def cmd_sign(args):
@@ -99,45 +117,102 @@ def cmd_sign(args):
         console.print(f"[red]❌ File not found: {path}[/red]")
         sys.exit(1)
 
-    content = path.read_text()
-    # Simple logic: We sign the content assuming the last line isn't the signature yet
-    # In a real impl, we would parse the markdown strictly.
-    # For now, we hash the whole file content (excluding any existing sig block).
+    try:
+        full_content = path.read_text()
 
-    signature = crypto.sign_content(content)
+        # Remove existing signature block if present (re-sign clean content)
+        clean_content = SIG_BLOCK_PATTERN.sub('', full_content).rstrip()
 
-    console.print(f"[bold green]✅ Signed {path.name}[/bold green]")
-    console.print(f"\n[dim]Signature:[/dim] {signature}")
+        # Get public key and sign
+        pub_key = crypto.get_public_key_string()
+        signature = crypto.sign_content(clean_content)
 
-    # Option to append
-    if args.append:
-        with open(path, "a") as f:
-            f.write(f"\n\n")
-        console.print("[blue]🖊️  Appended signature to file.[/blue]")
+        console.print(f"[bold green]✅ Generated Signature for {path.name}[/bold green]")
+
+        if args.append:
+            # Create signature block in HTML comment format
+            sig_block = f"\n\n<!-- STEWARD_SIGNATURE\nsignature: {signature}\nkey: {pub_key}\n-->"
+
+            # Write back with signature
+            with open(path, "w") as f:
+                f.write(clean_content + sig_block)
+
+            console.print("[blue]🖊️  Appended signature to file.[/blue]")
+            console.print(f"[dim]File updated: {path}[/dim]")
+        else:
+            # Just display the signature
+            console.print(f"\n[bold]Signature:[/bold]\n{signature}")
+            console.print(f"\n[bold]Public Key:[/bold]\n{pub_key}")
+            console.print(f"\n[dim]Use --append to write signature to file[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]❌ Signing failed: {e}[/red]")
+        sys.exit(1)
 
 
 def cmd_verify(args):
-    """Verifies structure and optional signature."""
+    """Verifies structure and cryptographic signature."""
     path = Path(args.file)
     console.print(f"[bold]🔍 Verifying {path}...[/bold]")
 
-    # 1. Structure Check (Legacy)
-    content = path.read_text()
-    required = ["Agent Identity", "ID:", "Name:"]
-    missing = [r for r in required if r not in content]
-
-    if missing:
-        console.print(f"[red]❌ Missing sections: {', '.join(missing)}[/red]")
+    if not path.exists():
+        console.print(f"[red]❌ File not found: {path}[/red]")
         sys.exit(1)
 
-    console.print("[green]✅ Structure: OK[/green]")
+    try:
+        full_content = path.read_text()
 
-    # 2. Crypto Check (if signature present)
-    if "STEWARD_SIGNATURE" in content:
-        console.print("[cyan]🔒 Cryptographic Signature detected. Verifying...[/cyan]")
-        # (Verification implementation would go here - extracting sig and verifying)
-        # For this Golden Shot, we just indicate readiness.
-        console.print("[dim](Signature verification logic ready)[/dim]")
+        # 1. Structure Check
+        required = ["Agent Identity", "ID:", "Name:"]
+        missing = [r for r in required if r not in full_content]
+
+        if missing:
+            console.print(f"[red]❌ Structure Invalid. Missing: {', '.join(missing)}[/red]")
+            if args.strict:
+                sys.exit(1)
+            return
+        else:
+            console.print("[green]✅ Structure: OK[/green]")
+
+        # 2. Cryptographic Verification
+        sig_match = SIG_BLOCK_PATTERN.search(full_content)
+
+        if sig_match:
+            sig_block_content = sig_match.group(1)
+
+            # Extract signature and key from block
+            sig_match_line = SIG_LINE_PATTERN.search(sig_block_content)
+            key_match_line = KEY_LINE_PATTERN.search(sig_block_content)
+
+            if not sig_match_line or not key_match_line:
+                console.print("[yellow]⚠️  Signature block found but incomplete.[/yellow]")
+                if args.strict:
+                    sys.exit(1)
+                return
+
+            signature = sig_match_line.group(1).strip()
+            public_key_str = key_match_line.group(1).replace("\n", "").replace(" ", "")
+
+            # Get content that was signed (everything except signature block)
+            clean_content = SIG_BLOCK_PATTERN.sub('', full_content).rstrip()
+
+            console.print("[cyan]🔒 Verifying Cryptographic Signature...[/cyan]")
+            valid = crypto.verify_signature(clean_content, signature, public_key_str)
+
+            if valid:
+                console.print("[bold green]✅ INTEGRITY CONFIRMED: Signature is valid.[/bold green]")
+            else:
+                console.print("[bold red]❌ SECURITY ALERT: Signature is INVALID! File may be tampered.[/bold red]")
+                sys.exit(1)
+        else:
+            console.print("[yellow]⚠️  No digital signature found (Unsecured).[/yellow]")
+            if args.strict:
+                console.print("[red]❌ Strict mode enabled: Signature required.[/red]")
+                sys.exit(1)
+
+    except Exception as e:
+        console.print(f"[red]❌ Verification error: {e}[/red]")
+        sys.exit(1)
 
 
 def verify_command(args):
@@ -209,6 +284,8 @@ Examples:
     )
     verify_parser.add_argument(
         "file",
+        default="STEWARD.md",
+        nargs="?",
         help="Path to STEWARD.md file or directory (when using --all)"
     )
     verify_parser.add_argument(
@@ -216,7 +293,20 @@ Examples:
         action="store_true",
         help="Verify all STEWARD.md files in directory tree"
     )
-    verify_parser.set_defaults(func=verify_command)
+    verify_parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail if file is unsigned or signature is invalid"
+    )
+
+    # Set default function to cmd_verify if not using --all
+    def verify_wrapper(args):
+        if args.all:
+            return verify_command(args)
+        else:
+            return cmd_verify(args)
+
+    verify_parser.set_defaults(func=verify_wrapper)
 
     # Keygen subcommand
     keygen_parser = subparsers.add_parser(
