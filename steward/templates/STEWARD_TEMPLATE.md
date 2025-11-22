@@ -187,6 +187,69 @@ steward delegate [your-agent-id] \
 
 ---
 
+## 🧠 Cognitive Policy `[STANDARD]` *(Optional, New in v1.1.0)*
+
+> Define how your agent thinks and spends money
+
+**Purpose:** Declare model preferences and economic constraints to give users control over agent cognition without modifying code.
+
+### Model Preferences
+
+Specify preferred models for different cognitive tasks:
+
+- **Reasoning:** `[provider/model-name]` (e.g., `google/gemini-1.5-pro-latest`)
+  - *Use for: Deep analysis, complex problem-solving*
+- **Efficiency:** `[provider/model-name]` (e.g., `google/gemini-1.5-flash`)
+  - *Use for: Fast operations, simple tasks*
+- **Creative:** `[provider/model-name]` (e.g., `anthropic/claude-3-opus`)
+  - *Use for: Content generation, creative work*
+- **Fallback:** `[provider/model-name]` (e.g., `openai/gpt-3.5-turbo`)
+  - *Use for: When preferred models unavailable*
+
+### Economic Constraints
+
+Set hard limits on resource consumption:
+
+- **Max Cost Per Run:** `$[0.XX]` (e.g., `$0.50`)
+  - *Prevents runaway costs on single delegations*
+- **Max Daily Budget:** `$[X.XX]` (e.g., `$5.00`)
+  - *Prevents budget overruns per 24-hour period*
+- **Provider Priority:** `[Provider1, Provider2, ...]` (e.g., `OpenRouter, Anthropic, Google`)
+  - *Ordered list of allowed LLM providers (highest priority first)*
+
+### Example: Cost-Conscious Configuration
+
+```yaml
+cognitive_policy:
+  model_preferences:
+    reasoning: "google/gemini-1.5-pro-latest"
+    efficiency: "mistralai/mistral-small"
+    fallback: "openai/gpt-3.5-turbo"
+  economic_constraints:
+    max_cost_per_run: 0.20
+    max_daily_budget: 2.00
+    provider_priority: ["OpenRouter", "Google"]
+```
+
+### Example: Quality-First Configuration
+
+```yaml
+cognitive_policy:
+  model_preferences:
+    reasoning: "anthropic/claude-3-opus"
+    creative: "openai/gpt-4-turbo"
+    efficiency: "google/gemini-1.5-flash"
+  economic_constraints:
+    max_cost_per_run: 5.00
+    max_daily_budget: 100.00
+```
+
+**Implementation Note:** Runtime clients MUST read this section during boot and enforce constraints before making LLM calls.
+
+**See full specification:** [SPECIFICATION.md Layer 1.6](../SPECIFICATION.md#-layer-16-cognitive-policy-new-in-v110)
+
+---
+
 ## 📋 SLA Commitments `[ADVANCED]` *(Optional)*
 
 > Declare service level agreements (Level 3+)

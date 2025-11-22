@@ -196,6 +196,45 @@ steward delegate agent.vibe.herald \
 
 ---
 
+## 🧠 Cognitive Policy `[STANDARD]`
+
+> Define how HERALD thinks and spends money
+
+**Purpose:** Control model selection and spending for HERALD's marketing operations.
+
+### Model Preferences
+
+- **Reasoning:** `google/gemini-1.5-pro-latest`
+  - *Use for: Marketing strategy analysis, competitive research, campaign planning*
+- **Efficiency:** `mistralai/mistral-small`
+  - *Use for: Social media drafts, quick tweets, content variations*
+- **Creative:** `anthropic/claude-3-opus`
+  - *Use for: Blog posts, long-form content, brand storytelling*
+- **Fallback:** `openai/gpt-3.5-turbo`
+  - *Use for: When preferred models unavailable*
+
+### Economic Constraints
+
+- **Max Cost Per Run:** `$0.20`
+  - *Prevents expensive single operations (e.g., one campaign generation)*
+- **Max Daily Budget:** `$2.00`
+  - *Controls total daily spending across all HERALD operations*
+- **Provider Priority:** `OpenRouter`
+  - *Primary provider for cost-effective access to multiple models*
+
+### Rationale
+
+HERALD's cognitive policy optimizes for:
+1. **Cost Efficiency**: Marketing content generation can scale quickly; strict budgets prevent runaway costs
+2. **Quality Tiers**: Different content types need different models (strategy vs. tweets)
+3. **Provider Flexibility**: OpenRouter provides access to multiple models without vendor lock-in
+
+**Implementation Status:** ⏳ Pending (awaiting runtime client integration)
+
+**See full specification:** [../../steward/SPECIFICATION.md Layer 1.6](../../steward/SPECIFICATION.md#-layer-16-cognitive-policy-new-in-v110)
+
+---
+
 ## 👤 Maintained By `[REQUIRED]`
 
 - **Organization:** `Vibe Inc.`
