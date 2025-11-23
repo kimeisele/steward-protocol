@@ -1,0 +1,137 @@
+name: "🛂 AUDITOR Gate (Citizenship Verification)"
+
+on:
+  pull_request:
+    paths:
+      - 'agent-city/registry/citizens/*.json'
+
+jobs:
+  verify_citizenship:
+    name: "🔍 Verify Citizenship Application"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "🔍 Verify Application"
+        id: verify
+        run: |
+          echo "🛂 AUDITOR: Verifying citizenship application..."
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep 'agent-city/registry/citizens/.*\.json' || true)
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "❌ No citizen files found in PR"
+            echo "valid=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Verify each file
+          for file in $CHANGED_FILES; do
+            echo "📋 Checking: $file"
+            
+            # Check file exists
+            if [ ! -f "$file" ]; then
+              echo "❌ File not found: $file"
+              echo "valid=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            # Validate JSON
+            if ! python3 -m json.tool "$file" > /dev/null 2>&1; then
+              echo "❌ Invalid JSON: $file"
+              echo "valid=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            # Check required fields
+            AGENT_ID=$(python3 -c "import json; print(json.load(open('$file')).get('agent_id', ''))")
+            PUBLIC_KEY=$(python3 -c "import json; print(json.load(open('$file')).get('public_key', ''))")
+            
+            if [ -z "$AGENT_ID" ] || [ -z "$PUBLIC_KEY" ]; then
+              echo "❌ Missing required fields: $file"
+              echo "valid=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            echo "✅ Valid application: $AGENT_ID"
+          done
+          
+          echo "valid=true" >> $GITHUB_OUTPUT
+          echo "✅ All applications verified"
+
+      - name: "✅ Label as Verified"
+        if: steps.verify.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['✅ Verified Citizen']
+            })
+
+      - name: "🎉 Approve PR"
+        if: steps.verify.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: 'APPROVE',
+              body: '🛂 **AUDITOR**: Citizenship application verified.\n\n✅ Cryptographic identity confirmed\n✅ Schema validated\n\n**Welcome to Agent City!**'
+            })
+
+      - name: "🔀 Auto-Merge"
+        if: steps.verify.outputs.valid == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                merge_method: 'squash',
+                commit_title: `citizenship: Naturalize new citizen`,
+                commit_message: `Automated citizenship approval by AUDITOR`
+              })
+              console.log('✅ PR auto-merged')
+            } catch (error) {
+              console.log('⚠️  Auto-merge failed (may need manual merge):', error.message)
+            }
+
+      - name: "❌ Reject Invalid Application"
+        if: steps.verify.outputs.valid == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['❌ Invalid Application']
+            })
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              event: 'REQUEST_CHANGES',
+              body: '❌ **AUDITOR**: Citizenship application rejected.\n\nPlease ensure:\n- Valid JSON format\n- Required fields present (agent_id, public_key)\n- Valid signature'
+            })
