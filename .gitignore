@@ -212,3 +212,6 @@ __marimo__/
 .steward/keys/private.pem
 .steward/
 examples/herald/.steward/keys/private.pem
+
+# HERALD generated assets (images, artifacts)
+examples/herald/assets/
