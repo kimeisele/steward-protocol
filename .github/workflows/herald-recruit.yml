@@ -32,7 +32,9 @@ jobs:
           # In production, add OPENROUTER_API_KEY here if doing LLM-based content
           # For now, campaign.py has built-in topic rotation
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || '' }}
-          # Phase 2: LinkedIn Publishing - optional but recommended
+          # Phase 2: Multi-Channel Publishing
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY || '' }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET || '' }}
           LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN || '' }}
         run: |
           # Make campaign.py executable and run it
@@ -74,13 +76,18 @@ jobs:
             ls -lh content/posts/ 2>/dev/null || echo "   (directory exists but empty)"
           fi
           echo ""
-          echo "💡 Phase 2 Hint:"
-          if [ -z "${{ secrets.LINKEDIN_ACCESS_TOKEN }}" ]; then
-            echo "   📝 To enable LinkedIn publishing:"
-            echo "   1. Go to Settings → Secrets and variables → Actions"
-            echo "   2. Create secret: LINKEDIN_ACCESS_TOKEN"
-            echo "   3. Add your LinkedIn OAuth token"
-            echo "   4. Re-run this workflow to start publishing!"
+          echo "💡 Multi-Channel Publishing Status:"
+          echo ""
+          if [ -z "${{ secrets.TWITTER_API_KEY }}" ]; then
+            echo "   📢 Twitter: NOT CONFIGURED (daily posts disabled)"
+            echo "      To enable: Set TWITTER_API_KEY in GitHub Secrets"
           else
-            echo "   ✅ LinkedIn token is configured (HERALD can publish)"
+            echo "   ✅ Twitter: READY (HERALD posts daily)"
+          fi
+          echo ""
+          if [ -z "${{ secrets.LINKEDIN_ACCESS_TOKEN }}" ]; then
+            echo "   📋 LinkedIn: NOT CONFIGURED (weekly posts disabled)"
+            echo "      To enable: Set LINKEDIN_ACCESS_TOKEN in GitHub Secrets"
+          else
+            echo "   ✅ LinkedIn: READY (HERALD posts on Fridays)"
           fi

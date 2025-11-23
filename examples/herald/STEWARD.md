@@ -222,14 +222,44 @@ steward delegate agent.vibe.herald \
 - **Provider Priority:** `OpenRouter`
   - *Primary provider for cost-effective access to multiple models*
 
+### Publishing Channels (Phase 2+)
+
+HERALD's multi-platform strategy for maximum reach and impact:
+
+- **Twitter (Daily Pulse)** 📢
+  - **Frequency:** Daily (automatic via GitHub Actions)
+  - **Content:** Hot takes, quick thoughts, trend reactions, community engagement
+  - **Audience:** AI/Crypto developers, tech community, thought leaders
+  - **Strategy:** Speed & virality over polish (Twitter rewards frequency)
+  - **Status:** ⏳ ENABLED (when `TWITTER_API_KEY` + `TWITTER_API_SECRET` are configured)
+
+- **LinkedIn (Weekly Authority)** 📋
+  - **Frequency:** Weekly (selected posts only)
+  - **Content:** "Big wins", protocol updates, business insights, long-form thoughts
+  - **Audience:** CTOs, enterprise decision-makers, protocol adopters
+  - **Strategy:** Trust & credibility over frequency (LinkedIn rewards substance)
+  - **Status:** ✅ ENABLED (when `LINKEDIN_ACCESS_TOKEN` is configured)
+
+**Channel Selection Logic:**
+```python
+if twitter_token_configured:
+    publisher.post_to_twitter(content, tags=["#StewardProtocol", "#AI"])
+
+if linkedin_token_configured:
+    # Post to LinkedIn only on Fridays for "Weekly Insights"
+    if datetime.now().weekday() == 4:  # Friday
+        publisher.post_to_linkedin(content)
+```
+
 ### Rationale
 
 HERALD's cognitive policy optimizes for:
 1. **Cost Efficiency**: Marketing content generation can scale quickly; strict budgets prevent runaway costs
 2. **Quality Tiers**: Different content types need different models (strategy vs. tweets)
 3. **Provider Flexibility**: OpenRouter provides access to multiple models without vendor lock-in
+4. **Multi-Channel Strategy**: Different platforms reward different behaviors—Twitter for speed, LinkedIn for trust
 
-**Implementation Status:** ⏳ Pending (awaiting runtime client integration)
+**Implementation Status:** ⏳ Phase 2 (Twitter Publisher + LinkedIn Publisher)
 
 **See full specification:** [../../steward/SPECIFICATION.md Layer 1.6](../../steward/SPECIFICATION.md#-layer-16-cognitive-policy-new-in-v110)
 
