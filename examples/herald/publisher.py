@@ -140,6 +140,86 @@ class TwitterPublisher:
             logger.error(f"❌ TWITTER UNKNOWN ERROR: {type(e).__name__} - {str(e)}")
             return False
 
+    def publish_with_media(self, text_content, image_path, tags=None):
+        """
+        Publish a tweet with an attached image to Twitter using OAuth 1.0a.
+
+        Args:
+            text_content (str): The tweet text (max 280 chars)
+            image_path (str/Path): Path to the image file to attach
+            tags (list): Optional hashtags to append
+
+        Returns:
+            bool: True if published successfully, False otherwise
+        """
+        if not self.client:
+            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
+            return False
+
+        # Validate image exists
+        from pathlib import Path
+        image_file = Path(image_path)
+        if not image_file.exists():
+            logger.error(f"❌ TWITTER: Image file not found: {image_path}")
+            return False
+
+        # Prepare tweet text (same safety checks as publish())
+        tweet = text_content
+        if tags:
+            tag_string = " " + " ".join(tags)
+            if len(tweet) + len(tag_string) > 280:
+                tweet = tweet[:280 - len(tag_string)].strip()
+            tweet += tag_string
+
+        if len(tweet) > 280:
+            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
+            tweet = tweet[:277] + "..."
+
+        try:
+            logger.info("📤 TWITTER: Uploading media to Twitter...")
+
+            # For media upload, we need tweepy.API (v1.1) instead of client (v2)
+            # Build auth from stored credentials
+            auth = tweepy.OAuth1UserHandler(
+                self.consumer_key,
+                self.consumer_secret,
+                self.access_token,
+                self.access_token_secret
+            )
+            api_v1 = tweepy.API(auth)
+
+            # Upload the media
+            media = api_v1.media_upload(filename=str(image_file))
+            logger.info(f"✅ TWITTER: Media uploaded (ID: {media.media_id})")
+
+            # Now post the tweet with media
+            logger.info("🚀 TWITTER: Publishing tweet with media...")
+            response = self.client.create_tweet(
+                text=tweet,
+                media_ids=[media.media_id]
+            )
+
+            if response and response.data and 'id' in response.data:
+                logger.info(f"🚀 TWEET SENT WITH MEDIA: ID {response.data['id']}")
+                logger.info(f"   Image: {image_file.name}")
+                return True
+            else:
+                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
+                return False
+
+        except tweepy.errors.Forbidden as e:
+            logger.critical(f"⛔ TWITTER 403 FORBIDDEN: {e}")
+            logger.critical("HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?")
+            return False
+        except tweepy.errors.Unauthorized as e:
+            logger.critical(f"⛔ TWITTER 401 UNAUTHORIZED: Check your keys/tokens. {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ TWITTER MEDIA PUBLISH ERROR: {type(e).__name__} - {str(e)}")
+            logger.info("   Attempting fallback: publishing text-only version...")
+            # Fallback to text-only publish
+            return self.publish(text_content, tags=tags)
+
 
 class LinkedInPublisher:
     """
@@ -271,19 +351,23 @@ class MultiChannelPublisher:
         self.twitter = TwitterPublisher()
         self.linkedin = LinkedInPublisher()
 
-    def publish_to_twitter(self, content, tags=None):
+    def publish_to_twitter(self, content, tags=None, image_path=None):
         """
-        Publish to Twitter.
+        Publish to Twitter (optionally with media).
 
         Args:
             content (str): Tweet content (will be truncated to 280 chars)
             tags (list): Optional hashtags
+            image_path (str): Optional path to image file
 
         Returns:
             bool: Success status
         """
         logger.info("📢 Attempting Twitter publication...")
-        return self.twitter.publish(content, tags=tags)
+        if image_path:
+            return self.twitter.publish_with_media(content, image_path, tags=tags)
+        else:
+            return self.twitter.publish(content, tags=tags)
 
     def publish_to_linkedin(self, content):
         """
