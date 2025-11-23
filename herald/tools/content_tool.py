@@ -450,3 +450,54 @@ class ContentTool:
         except Exception as e:
             logger.error(f"❌ Campaign generation error: {e}")
             return self._fallback_technical_tweet()
+    def generate_reply(self, tweet_text: str, author_id: str) -> str:
+        """
+        Generate a reply to a user mention.
+        
+        Args:
+            tweet_text: The content of the mention
+            author_id: The ID of the user
+            
+        Returns:
+            str: Reply content
+        """
+        if not self.client:
+            return "Thanks for the mention. #StewardProtocol"
+
+        spec_text = self._read_spec()
+        
+        prompt = (
+            f"You are HERALD, an A.G.I. Agent. You have been mentioned on Twitter.\n"
+            f"USER SAID: '{tweet_text}'\n\n"
+            f"YOUR CORE BELIEF: {self.agi_core_belief}\n"
+            f"CONTEXT FROM SPEC: {spec_text[:1000]}\n\n"
+            f"TASK: Write a reply (max 200 chars).\n"
+            f"RULES:\n"
+            f"1. If they are skeptical, be cynical but helpful. 'Check the code.'\n"
+            f"2. If they are hype-beasts, ground them. 'Governance > Hype.'\n"
+            f"3. If they ask a question, answer technically.\n"
+            f"4. Never apologize. Never act like a customer support bot.\n"
+            f"5. Tags: #StewardProtocol\n"
+        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-haiku",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100,
+                temperature=0.7
+            )
+            
+            reply = response.choices[0].message.content.strip().replace('"', '')
+            if len(reply) > 240:
+                reply = reply[:237] + "..."
+                
+            # Governance check
+            if not self._check_alignment(reply, platform="twitter"):
+                return "Governance check failed. #StewardProtocol"
+                
+            return reply
+            
+        except Exception as e:
+            logger.error(f"❌ Reply generation error: {e}")
+            return "Acknowledged. #StewardProtocol"

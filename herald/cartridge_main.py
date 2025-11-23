@@ -62,10 +62,10 @@ class HeraldCartridge:
 
     def __init__(self):
         """Initialize HERALD with all tools."""
-        self.content_tool = ContentTool()
-        self.broadcast_tool = BroadcastTool()
-        self.research_tool = ResearchTool()
-        self.strategy_tool = StrategyTool()
+        self.content = ContentTool()
+        self.broadcast = BroadcastTool()
+        self.research = ResearchTool()
+        self.strategy = StrategyTool()
         self.artisan = ArtisanCartridge()
         logger.info("🦅 HERALD is online.")
 
@@ -511,13 +511,117 @@ class HeraldCartridge:
                 "error": str(e)
             }
 
+    def run_reply_cycle(self, dry_run: bool = False) -> Dict[str, Any]:
+        """
+        Execute the engagement loop: Listen -> Think -> Draft.
+        
+        1. Load state (last processed tweet)
+        2. Scan for new mentions
+        3. Generate replies
+        4. Validate governance
+        5. Save drafts for approval
+        
+        Args:
+            dry_run: If True, don't update state
+            
+        Returns:
+            dict: Result summary
+        """
+        logger.info("\n🦅 PHASE 1: LISTENING")
+        logger.info("=" * 70)
+        
+        # Load state
+        state_path = Path("data/state/twitter_state.json")
+        state = {}
+        if state_path.exists():
+            try:
+                with open(state_path) as f:
+                    state = json.load(f)
+            except Exception:
+                pass
+                
+        since_id = state.get("last_mention_id")
+        logger.info(f"👂 Scanning mentions since ID: {since_id}")
+        
+        mentions = self.broadcast.scan_mentions(since_id=since_id, platform="twitter")
+        
+        if not mentions:
+            logger.info("✅ No new mentions found.")
+            return {"status": "no_new_mentions", "count": 0}
+            
+        logger.info(f"✅ Found {len(mentions)} mentions. Processing...")
+        
+        drafts = []
+        new_since_id = since_id
+        
+        logger.info("\n🦅 PHASE 2: ENGAGEMENT")
+        logger.info("=" * 70)
+        
+        for mention in mentions:
+            t_id = mention["id"]
+            text = mention["text"]
+            author = mention["author_id"]
+            
+            # Update high-water mark
+            if not new_since_id or int(t_id) > int(new_since_id):
+                new_since_id = t_id
+            
+            logger.info(f"🤔 Thinking about: {text[:50]}...")
+            
+            # Generate Reply
+            reply_content = self.content.generate_reply(text, author)
+            
+            # Validate (Double Check)
+            validation = self.governance.validate(reply_content, platform="twitter")
+            
+            draft = {
+                "reply_to_id": t_id,
+                "original_text": text,
+                "reply_content": reply_content,
+                "is_valid": validation.is_valid,
+                "violations": validation.violations
+            }
+            
+            if validation.is_valid:
+                logger.info(f"   ✅ Drafted: {reply_content}")
+                drafts.append(draft)
+            else:
+                logger.warning(f"   ❌ Rejected: {reply_content} ({validation.violations})")
+                
+        # Save Drafts
+        logger.info("\n🦅 PHASE 3: APPROVAL QUEUE")
+        logger.info("=" * 70)
+        
+        output_path = Path("dist/replies.json")
+        output_path.parent.mkdir(exist_ok=True)
+        
+        with open(output_path, "w") as f:
+            json.dump(drafts, f, indent=2)
+            
+        logger.info(f"✅ Saved {len(drafts)} drafts to {output_path}")
+        
+        # Update State
+        if not dry_run and new_since_id != since_id:
+            state["last_mention_id"] = new_since_id
+            state_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(state_path, "w") as f:
+                json.dump(state, f, indent=2)
+            logger.info(f"💾 State updated: last_mention_id = {new_since_id}")
+            
+        return {
+            "status": "success", 
+            "processed": len(mentions), 
+            "drafted": len(drafts),
+            "drafts_file": str(output_path)
+        }
+
     def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA") -> Optional[Dict[str, Any]]:
         """
         Generate a Reddit deep-dive post (standalone capability).
-
+        
         Args:
             subreddit: Target subreddit
-
+            
         Returns:
             dict: {"title": str, "body": str} or None
         """

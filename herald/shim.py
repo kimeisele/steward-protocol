@@ -10,9 +10,10 @@ The shim adapts the cartridge to work without a full Vibe-OS environment,
 making it portable and testable.
 
 Usage:
-    python herald/shim.py --action run           # Generate content
-    python herald/shim.py --action publish       # Publish prepared content
-    python herald/shim.py --action plan_campaign # Plan campaign strategy
+    python herald/shim.py --action run            # Generate content
+    python herald/shim.py --action publish        # Publish prepared content
+    python herald/shim.py --action plan_campaign  # Plan campaign strategy
+    python herald/shim.py --action reply_cycle    # Run engagement loop
 """
 
 import sys
@@ -45,11 +46,12 @@ Examples:
   python herald/shim.py --action run            Generate content draft
   python herald/shim.py --action publish        Publish prepared content
   python herald/shim.py --action run --dry-run  Test without publishing
+  python herald/shim.py --action reply_cycle    Run engagement loop
         """
     )
     parser.add_argument(
         "--action",
-        choices=["run", "publish", "plan_campaign"],
+        choices=["run", "publish", "plan_campaign", "reply_cycle"],
         required=True,
         help="Action to execute"
     )
@@ -91,6 +93,8 @@ Examples:
         _execute_publish(cartridge, dist_dir, args.content)
     elif args.action == "plan_campaign":
         _execute_plan_campaign(cartridge, dist_dir, args.weeks, args.dry_run)
+    elif args.action == "reply_cycle":
+        _execute_reply_cycle(cartridge, dist_dir, args.dry_run)
 
 
 def _execute_run(cartridge: HeraldCartridge, dist_dir: Path, dry_run: bool = False):
@@ -256,6 +260,31 @@ def _execute_plan_campaign(cartridge: HeraldCartridge, dist_dir: Path, weeks: in
 
     except Exception as e:
         logger.error(f"❌ Planning action failed: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+
+def _execute_reply_cycle(cartridge: HeraldCartridge, dist_dir: Path, dry_run: bool = False):
+    """Execute the reply cycle (engagement loop)."""
+    logger.info("=" * 70)
+    logger.info("EXECUTING: REPLY CYCLE")
+    logger.info("=" * 70)
+
+    try:
+        result = cartridge.run_reply_cycle(dry_run=dry_run)
+        
+        logger.info("\n📊 Cycle Results:")
+        logger.info(f"   Processed: {result.get('processed')}")
+        logger.info(f"   Drafted: {result.get('drafted')}")
+        logger.info(f"   Drafts File: {result.get('drafts_file')}")
+        
+        logger.info("\n" + "=" * 70)
+        logger.info("✅ REPLY CYCLE COMPLETE")
+        logger.info("=" * 70)
+
+    except Exception as e:
+        logger.error(f"❌ Reply cycle failed: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)
