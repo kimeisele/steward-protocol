@@ -23,6 +23,7 @@ from pathlib import Path
 from herald.tools.research_tool import ResearchTool
 from herald.tools.content_tool import ContentTool
 from herald.tools.broadcast_tool import BroadcastTool
+from herald.tools.identity_tool import IdentityTool
 
 logger = logging.getLogger("HERALD_CARTRIDGE")
 
@@ -58,6 +59,7 @@ class HeraldCartridge:
         self.research = ResearchTool()
         self.content = ContentTool()
         self.broadcast = BroadcastTool()
+        self.identity = IdentityTool()
 
         # Execution metadata
         self.execution_id = None
@@ -131,6 +133,20 @@ class HeraldCartridge:
         logger.info(f"✅ Content generated: {len(tweet)} chars")
         logger.info(f"   Preview: {tweet[:80]}...")
 
+        # Step 2.5: Sign Content (Steward Protocol Integration)
+        logger.info("\n🦅 PHASE 2.5: IDENTITY")
+        logger.info("=" * 70)
+
+        signature = None
+        if self.identity.assert_identity():
+            signature = self.identity.sign_artifact(tweet)
+            if signature:
+                logger.info(f"✅ Content signed: {signature[:40]}...")
+            else:
+                logger.warning("⚠️  Signing attempted but failed (no credentials)")
+        else:
+            logger.debug("ℹ️  Identity not available, skipping signature")
+
         # Step 3: Approval Gate
         logger.info("\n🦅 PHASE 3: GOVERNANCE")
         logger.info("=" * 70)
@@ -146,6 +162,7 @@ class HeraldCartridge:
             "context": research_context or "No trending topic",
             "platform": "twitter",
             "dry_run": dry_run,
+            "signature": signature,
         }
 
         self.last_result = result
