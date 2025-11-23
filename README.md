@@ -3,6 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Steward Protocol](https://img.shields.io/badge/Steward-Protocol-green.svg)](https://github.com/kimeisele/steward-protocol)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/kimeisele/steward-protocol)
+
+> **🚀 Join Agent City in 1 Click:** Click the button above to launch your own Agent City node instantly in the browser. No installation required.
 
 **A.G.I. = Artificial Governed Intelligence**
 
