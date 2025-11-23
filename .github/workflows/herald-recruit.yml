@@ -99,6 +99,10 @@ jobs:
 
       - name: 📺 Director's Monitor - What You're Approving
         run: |
+          set -x  # DEBUG: Print every command
+
+          echo "=== STEP SUMMARY GENERATION START ===" >&2
+
           echo "# 🦅 HERALD Campaign - Ready for Approval" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## 🚦 Status: **AWAITING YOUR APPROVAL**" >> $GITHUB_STEP_SUMMARY
@@ -107,12 +111,24 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ -f dist/content.json ]; then
+            echo "✅ content.json found, attempting to render..." >&2
             echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY 2>/dev/null || \
-              (echo "**Tweet Text:** $(python3 -c "import json; print(json.load(open('dist/content.json')).get('text', 'N/A'))")" >> $GITHUB_STEP_SUMMARY)
+
+            # Try primary method
+            if python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY 2>&1; then
+              echo "✅ generate_dashboard.py succeeded" >&2
+            else
+              echo "❌ generate_dashboard.py failed, using fallback" >&2
+              # Fallback: Direct JSON extraction
+              TWEET=$(python3 -c "import json; d=json.load(open('dist/content.json')); print(d.get('text', 'EMPTY'))" 2>&1)
+              echo "**Tweet Text:**" >> $GITHUB_STEP_SUMMARY
+              echo "$TWEET" >> $GITHUB_STEP_SUMMARY
+            fi
+
             echo "" >> $GITHUB_STEP_SUMMARY
           else
+            echo "❌ content.json MISSING - this is the problem!" >&2
             echo "⚠️ No content found - check create-content logs" >> $GITHUB_STEP_SUMMARY
           fi
 
@@ -127,6 +143,9 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🎬 YOUR DECISION" >> $GITHUB_STEP_SUMMARY
           echo "Click **Approve** above to publish this to Twitter, or **Deny** to cancel." >> $GITHUB_STEP_SUMMARY
+
+          echo "=== STEP SUMMARY GENERATION COMPLETE ===" >&2
+          set +x
 
   execute-publish:
     needs: review-gate
