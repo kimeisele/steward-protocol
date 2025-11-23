@@ -11,6 +11,7 @@ Architecture:
 
 import os
 import json
+import yaml
 import random
 import logging
 from pathlib import Path
@@ -131,6 +132,31 @@ class CreativeCapability:
         elif not self.api_key:
             logger.warning("⚠️  CREATIVE: No OPENROUTER_API_KEY found.")
 
+    def _load_knowledge_base_config(self) -> Dict[str, str]:
+        """Load knowledge_base URLs from system.yaml."""
+        config_paths = [
+            Path("herald/config/system.yaml"),
+            Path(__file__).parent.parent / "config" / "system.yaml",
+        ]
+
+        for config_path in config_paths:
+            if config_path.exists():
+                try:
+                    with open(config_path) as f:
+                        config = yaml.safe_load(f)
+                        kb = config.get("system", {}).get("knowledge_base", {})
+                        if kb:
+                            logger.debug(f"📚 Loaded knowledge_base from {config_path}")
+                            return kb
+                except Exception as e:
+                    logger.debug(f"⚠️  Could not load knowledge_base from {config_path}: {e}")
+
+        logger.warning("⚠️  KNOWLEDGE_BASE CONFIG NOT FOUND: Using fallback URLs")
+        return {
+            "project_url": "https://github.com/kimeisele/steward-protocol",
+            "docs_url": "https://github.com/kimeisele/steward-protocol/tree/main/steward",
+        }
+
     def _read_spec(self) -> str:
         """Read STEWARD Protocol specification (context)."""
         paths = [
@@ -172,6 +198,8 @@ class CreativeCapability:
             return self._fallback_content()
 
         spec_text = self._read_spec()
+        knowledge_base = self._load_knowledge_base_config()
+        project_url = knowledge_base.get("project_url", "https://github.com/kimeisele/steward-protocol")
         news_prompt = ""
 
         if research_context:
@@ -181,12 +209,14 @@ class CreativeCapability:
             f"You are HERALD, a Cynical Senior Engineer Agent.\n"
             f"{news_prompt}"
             f"TECH SPEC: {spec_text[:2000]}\n\n"
+            f"PROJECT URL: {project_url}\n\n"
             f"TASK: Write a tweet (max 250 chars).\n"
             f"STRATEGY:\n"
             f"1. If context exists, reference the PROBLEM.\n"
             f"2. Pivot to the SOLUTION (Cryptographic Identity/Steward).\n"
             f"3. No marketing fluff ('revolutionary', etc.). Be dry and technical.\n"
-            f"4. Tags: #AI #StewardProtocol"
+            f"4. If appropriate, include the GitHub URL naturally (not as [url])\n"
+            f"5. Tags: #AI #StewardProtocol"
         )
 
         try:
