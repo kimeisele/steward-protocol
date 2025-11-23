@@ -29,6 +29,7 @@ def main():
         "openai": "openai",
         "tweepy": "tweepy",
         "tavily-python": "tavily",
+        "praw": "praw",
         "gitpython": "git",
         "python-dotenv": "dotenv",
     }
