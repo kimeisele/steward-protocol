@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Integration Tests for HERALD Multi-Channel Publisher
+HERALD OAuth 1.0a Authentication Tests
 
 Uses pytest monkeypatch fixture for robust environment variable injection.
 This ensures env vars are set BEFORE TwitterPublisher.__init__() is called.
+
+This file replaces test_herald_publisher.py to force CI to pick up new code.
 """
 
 import os
@@ -21,6 +23,7 @@ class TestTwitterPublisher:
         """
         Fixture that runs before each test in this class.
         Uses pytest's monkeypatch - the robust way to set env vars.
+        Guarantees env vars exist BEFORE TwitterPublisher() is instantiated.
         """
         monkeypatch.setenv("TWITTER_API_KEY", "fake_consumer_key")
         monkeypatch.setenv("TWITTER_API_SECRET", "fake_consumer_secret")
@@ -80,7 +83,7 @@ class TestTwitterPublisher:
             assert len(actual_text) <= 280
             assert actual_text == expected_text
 
-    def test_403_forbidden_error_handling(self):
+    def test_error_handling_403_forbidden(self):
         """403 Forbidden (permission error) returns False."""
         import tweepy
 
@@ -95,7 +98,7 @@ class TestTwitterPublisher:
 
             assert result is False
 
-    def test_401_unauthorized_error_handling(self):
+    def test_error_handling_401_unauthorized(self):
         """401 Unauthorized (bad credentials) returns False."""
         import tweepy
 
