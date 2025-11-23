@@ -5,6 +5,7 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
+  "onCreateCommand": "apt-get update && apt-get install -y openssl",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -23,14 +24,10 @@
       }
     }
   },
-  "postCreateCommand": "pip install -e . && pip install -r herald/requirements.txt",
-  "postAttachCommand": "python scripts/join_city.py",
+  "postCreateCommand": "pip install pyyaml && pip install -e . && pip install -r herald/requirements.txt",
   "remoteUser": "vscode",
   "forwardPorts": [],
   "portsAttributes": {},
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
-  ],
   "containerEnv": {
     "PYTHONUNBUFFERED": "1"
   }

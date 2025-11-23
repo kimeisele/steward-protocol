@@ -163,29 +163,30 @@ def get_agent_name():
         print("❌ Name must be at least 3 characters.")
 
 def copy_starter_pack(choice: str, agent_name: str) -> Path:
-    """Copy chosen starter pack to my_agent/."""
+    """Copy chosen starter pack to agents/{agent_name}/."""
     pack_map = {
         "1": "spark",
         "2": "shield",
         "3": "scope",
         "4": "nexus"
     }
-    
+
     pack_name = pack_map[choice]
     source = Path(f"starter-packs/{pack_name}")
-    dest = Path("my_agent")
-    
+    dest = Path(f"agents/{agent_name}")
+
     if dest.exists():
-        print(f"\n⚠️  Directory 'my_agent' already exists!")
+        print(f"\n⚠️  Agent '{agent_name}' already exists!")
         overwrite = input("   Overwrite? (y/n): ").strip().lower()
         if overwrite != "y":
             print("❌ Aborted.")
             sys.exit(0)
         shutil.rmtree(dest)
-    
+
+    dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source, dest)
-    print(f"\n✅ Copied {pack_name.upper()} template to my_agent/")
-    
+    print(f"\n✅ Copied {pack_name.upper()} template to agents/{agent_name}/")
+
     return dest
 
 def generate_keys(agent_dir: Path):
@@ -294,25 +295,25 @@ def print_next_steps(agent_name: str, pack_choice: str):
     ╚══════════════════════════════════════════════════════════════╝
 
     🛑 THE SHADY AGENT ERA IS OFFICIALLY OVER.
-    
+
     Your agent is cryptographically verified and governed.
     Welcome to the new paradigm.
 
     ───────────────────────────────────────────────────────────────
 
-    📂 Your Agent Directory: my_agent/
+    📂 Your Agent Directory: agents/{agent_name}/
 
     🔐 Security:
-       - Private key: my_agent/private_key.pem (🔒 KEEP SECRET!)
-       - Public key: my_agent/public_key.pem (✅ Share this)
+       - Private key: agents/{agent_name}/private_key.pem (🔒 KEEP SECRET!)
+       - Public key: agents/{agent_name}/public_key.pem (✅ Share this)
 
     🚀 Quick Start:
 
        1. Test connectivity:
-          cd my_agent && python tools/ping_tool.py
+          cd agents/{agent_name} && python tools/ping_tool.py
 
        2. Read your agent's manual:
-          cat my_agent/README.md
+          cat agents/{agent_name}/README.md
 
        3. Start earning XP in Agent City!
 
