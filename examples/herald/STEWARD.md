@@ -251,6 +251,38 @@ if linkedin_token_configured:
         publisher.post_to_linkedin(content)
 ```
 
+### Research Policy (Phase 3)
+
+HERALD's "research mode" enables intelligent, trend-aware content generation.
+
+**Capabilities:**
+- **Web Search**: Tavily API searches for AI/Agent/Protocol trends
+- **Relevance Scoring**: Filters for STEWARD-relevant topics (0.0-1.0 score)
+- **Intelligent Reactions**: LLM-powered hot takes on discovered articles
+- **Source Attribution**: All posts include links + citations
+- **Graceful Degradation**: Falls back to rotation mode if API unavailable
+
+**Search Strategy:**
+- Primary Keywords: `["AI agents autonomous", "agent protocols standards", "cryptographic verification agents", "agent budget governance", "sovereign AI", "verifiable AI"]`
+- Trusted Sources: GitHub, ArXiv, Dev.to, Medium, HuggingFace, OpenAI, Anthropic, Hacker News
+- Minimum Relevance: `0.5` (50% match to STEWARD themes)
+- Max Searches per Run: 6 (covers all keywords)
+
+**Content Generation:**
+- **Twitter Mode**: 280-character hot take + source link
+- **LinkedIn Mode**: Long-form analysis with actionable insights
+- **Fallback**: If research API fails, use pre-written rotation topics
+
+**API Cost Budget (Cognitive Policy Compliance):**
+- Tavily Search: ~$0.01 per search (6 searches/day = $0.06)
+- OpenRouter LLM: $0.02-0.10 per content generation
+- **Total Daily Research Cost**: ~$0.12-0.20 (within $2.00 daily budget)
+
+**Activation:**
+- Requires: `TAVILY_API_KEY` in environment
+- Optional: `OPENROUTER_API_KEY` for LLM-powered generation
+- Default: Rotation mode (if keys unavailable)
+
 ### Rationale
 
 HERALD's cognitive policy optimizes for:
