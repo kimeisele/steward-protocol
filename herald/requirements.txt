@@ -17,3 +17,6 @@ praw>=7.7.0
 
 # Utilities
 gitpython>=3.1.0
+
+# Media Processing
+Pillow>=10.0.0
