@@ -1,0 +1,203 @@
+name: "🦅 HERALD Staged Campaign (HITL)"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  # ========== JOB 1: PRE-FLIGHT CHECK ==========
+  health-check:
+    runs-on: ubuntu-latest
+    name: "🏥 System Diagnosis"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install & Verify
+        run: |
+          pip install --upgrade pip
+          pip install -r examples/herald/requirements.txt
+          python3 examples/herald/health_check.py
+
+  # ========== JOB 2: GENERATION (WITH ASSERTIONS) ==========
+  proposal:
+    needs: health-check
+    runs-on: ubuntu-latest
+    name: "🧠 Generate Proposal"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r examples/herald/requirements.txt
+
+      - name: 🧠 Generate Content
+        id: generate
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          python3 examples/herald/generate_only.py
+
+          # ASSERTION: File must exist
+          if [ ! -f dist/content.json ]; then
+            echo "❌ CRITICAL: Brain failed - no output file created"
+            exit 1
+          fi
+
+          # ASSERTION: File must not be empty
+          if [ ! -s dist/content.json ]; then
+            echo "❌ CRITICAL: Brain produced empty file"
+            exit 1
+          fi
+
+          # ASSERTION: File must be valid JSON
+          if ! python3 -m json.tool dist/content.json > /dev/null 2>&1; then
+            echo "❌ CRITICAL: Invalid JSON in content.json"
+            exit 1
+          fi
+
+          # ASSERTION: Must have 'text' field
+          if ! python3 -c "import json; d=json.load(open('dist/content.json')); assert d.get('text'), 'Missing text field'" 2>/dev/null; then
+            echo "❌ CRITICAL: content.json missing required 'text' field"
+            exit 1
+          fi
+
+          echo "✅ Content validation PASSED"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-bundle
+          path: dist/
+          retention-days: 1
+
+  # ========== JOB 3: REVIEW GATE (WITH ENVIRONMENT LOCK) ==========
+  review-gate:
+    needs: proposal
+    runs-on: ubuntu-latest
+    name: "🛑 Operator Review Gate"
+    environment:
+      name: production-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: campaign-bundle
+          path: dist/
+
+      - name: Validate Artifacts
+        run: |
+          # ASSERTION: Artifact must arrive intact
+          if [ ! -f dist/content.json ]; then
+            echo "❌ ERROR: Artifact lost during transfer"
+            exit 1
+          fi
+
+          if [ ! -s dist/content.json ]; then
+            echo "❌ ERROR: Artifact is empty"
+            exit 1
+          fi
+
+          echo "✅ Artifact validation PASSED"
+
+      - name: 📺 Director's Monitor Dashboard
+        run: |
+          echo "# 🦅 HERALD Campaign Proposal - Director's Monitor" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚦 Status: **AWAITING YOUR APPROVAL**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f dist/content.json ]; then
+            echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No content found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚖️ Governance" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Health Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Content Validated" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏳ Waiting for YOUR decision" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎬 Action Required" >> $GITHUB_STEP_SUMMARY
+          echo "Click **Approve** below to publish, or **Deny** to cancel." >> $GITHUB_STEP_SUMMARY
+          echo "This is your final checkpoint." >> $GITHUB_STEP_SUMMARY
+
+      - name: ✅ Approval Granted
+        run: |
+          echo "🎯 Operator approved. Proceeding to publication."
+
+  # ========== JOB 4: PUBLISH (ONLY AFTER APPROVAL) ==========
+  execute-publish:
+    needs: review-gate
+    runs-on: ubuntu-latest
+    name: "🚀 Execute Publication"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r examples/herald/requirements.txt
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: campaign-bundle
+          path: dist/
+
+      - name: Final Validation Before Publish
+        run: |
+          if [ ! -f dist/content.json ] || [ ! -s dist/content.json ]; then
+            echo "❌ ABORT: Content missing or empty"
+            exit 1
+          fi
+          echo "✅ Final check PASSED - safe to publish"
+
+      - name: 🐦 Publish to Twitter
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+        run: |
+          python3 examples/herald/publish_only.py
+
+      - name: 📊 Publication Summary
+        if: success()
+        run: |
+          echo "### 🎉 Publication Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Content published to Twitter" >> $GITHUB_STEP_SUMMARY
