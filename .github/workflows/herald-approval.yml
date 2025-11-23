@@ -37,6 +37,10 @@ jobs:
         run: |
           python3 examples/herald/health_check.py
 
+      - name: "🧪 E2E Test Suite (Early Failure Detection)"
+        run: |
+          python3 tests/test_herald_e2e.py
+
       # Generate Content
       - name: "🧠 Generate Content (Brain + Artist)"
         id: generate
