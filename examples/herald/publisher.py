@@ -16,34 +16,38 @@ This module handles:
 
 import os
 import requests
+from requests_oauthlib import OAuth1
 from pathlib import Path
 from datetime import datetime
 
 
 class TwitterPublisher:
     """
-    HERALD's Twitter Publisher
+    HERALD's Twitter Publisher (OAuth 1.0a User Context)
     Posts daily hot takes and community engagement to AI/Crypto Twitter.
 
-    Requires:
-    - TWITTER_API_KEY (Bearer Token for Twitter API v2)
-    - TWITTER_API_SECRET (optional, for advanced auth)
+    Requires OAuth 1.0a credentials (4 keys) for write access:
+    - TWITTER_API_KEY (Consumer Key)
+    - TWITTER_API_SECRET (Consumer Secret)
+    - TWITTER_ACCESS_TOKEN (Access Token)
+    - TWITTER_ACCESS_SECRET (Access Token Secret)
 
-    Note: Twitter API v2 requires elevated access for bot posting.
-    For development, ensure your app is in Project Elevated tier.
+    Note: App-Only Bearer Tokens do NOT support write operations.
+    Use OAuth 1.0a User Context for bot posting.
     """
 
     def __init__(self):
-        """Initialize with Twitter API credentials."""
+        """Initialize with OAuth 1.0a credentials."""
         self.api_key = os.getenv("TWITTER_API_KEY")
         self.api_secret = os.getenv("TWITTER_API_SECRET")
+        self.access_token = os.getenv("TWITTER_ACCESS_TOKEN")
+        self.access_secret = os.getenv("TWITTER_ACCESS_SECRET")
         # Twitter API v2 endpoint for posting tweets
         self.api_url = "https://api.twitter.com/2/tweets"
-        self.bearer_token = self.api_key
 
     def publish(self, text_content, tags=None):
         """
-        Publish a tweet to Twitter.
+        Publish a tweet to Twitter using OAuth 1.0a User Context.
 
         Args:
             text_content (str): The tweet text (max 280 chars)
@@ -52,8 +56,10 @@ class TwitterPublisher:
         Returns:
             bool: True if published successfully, False otherwise
         """
-        if not self.api_key:
-            print("⚠️  No TWITTER_API_KEY found. Skipping Twitter publication.")
+        # Fail fast: Check if all 4 OAuth 1.0a keys are present
+        if not all([self.api_key, self.api_secret, self.access_token, self.access_secret]):
+            print("⚠️  TWITTER: Missing OAuth 1.0a credentials.")
+            print("   Required: TWITTER_API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET")
             return False
 
         # Truncate to Twitter limits (280 chars)
@@ -67,11 +73,13 @@ class TwitterPublisher:
         if tags:
             tweet += " " + " ".join(tags)
 
-        # Prepare headers
-        headers = {
-            "Authorization": f"Bearer {self.bearer_token}",
-            "Content-Type": "application/json",
-        }
+        # Setup OAuth 1.0a authentication (Range Rover Motor)
+        auth = OAuth1(
+            self.api_key,
+            self.api_secret,
+            self.access_token,
+            self.access_secret
+        )
 
         # Prepare payload
         payload = {"text": tweet}
@@ -79,7 +87,7 @@ class TwitterPublisher:
         try:
             response = requests.post(
                 self.api_url,
-                headers=headers,
+                auth=auth,
                 json=payload,
                 timeout=10
             )

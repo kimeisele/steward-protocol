@@ -209,14 +209,19 @@ class TestPublisherIntegration:
 
             with patch.object(publisher.twitter, "publish", return_value=True):
                 with patch.object(publisher.linkedin, "publish", return_value=True):
-                    result = publisher.publish_to_all_available(
-                        "Test content",
-                        twitter_tags=["#test"]
-                    )
+                    # Mock datetime to return Friday (weekday() == 4)
+                    # This allows LinkedIn to publish per the Cognitive Policy
+                    with patch("examples.herald.publisher.datetime") as mock_datetime:
+                        mock_datetime.now.return_value.weekday.return_value = 4
 
-                    assert result["twitter"] is True
-                    assert result["linkedin"] is True
-                    assert len(result["summary"]) >= 2
+                        result = publisher.publish_to_all_available(
+                            "Test content",
+                            twitter_tags=["#test"]
+                        )
+
+                        assert result["twitter"] is True
+                        assert result["linkedin"] is True
+                        assert len(result["summary"]) >= 2
 
 
 if __name__ == "__main__":
