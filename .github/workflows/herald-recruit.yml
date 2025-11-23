@@ -54,7 +54,40 @@ jobs:
           echo "🧪 Running integration tests..."
           pytest tests/test_herald_publisher.py -v
 
-      - name: Ignite HERALD (via Vibe OS)
+  review-gate:
+    needs: create-content
+    runs-on: ubuntu-latest
+    name: "🛑 Operator Approval Gate"
+    environment:
+      name: production-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Awaiting Operator Decision
+        run: |
+          echo "⏳ Waiting for operator approval..."
+          echo "This job is blocked until you click 'Approve' above"
+
+  execute-publish:
+    needs: review-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          if [ -f examples/herald/requirements.txt ]; then pip install -r examples/herald/requirements.txt; fi
+
+      - name: 🚀 Ignite HERALD (via Vibe OS)
         env:
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
