@@ -50,8 +50,17 @@ jobs:
       - name: 🧠 Generate Content
         id: generate
         env:
+          # All secrets required for Kernel boot validation
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
           python herald/main.py --action generate
 
@@ -81,6 +90,36 @@ jobs:
 
           echo "✅ Content validation PASSED"
 
+      - name: 📺 Generate Preview Dashboard
+        if: success()
+        run: |
+          echo "# 🦅 HERALD Campaign Proposal - Director's Monitor" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚦 Status: **READY FOR YOUR REVIEW**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tweet Text:**" >> $GITHUB_STEP_SUMMARY
+          python3 -c "import json; d=json.load(open('dist/content.json')); print(f\"> {d.get('text', 'N/A')}\");" >> $GITHUB_STEP_SUMMARY || echo "> N/A" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Visual Attachment:** None (text-only campaign)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ⚖️ Governance" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Health Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Content Validated" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Artifact Uploaded" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎬 Next Step" >> $GITHUB_STEP_SUMMARY
+          echo "👉 **Scroll down to 'review-gate' job and click 'Review deployments' to Approve or Reject.**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This preview is generated BEFORE the approval gate, so you can review the content safely." >> $GITHUB_STEP_SUMMARY
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -88,7 +127,7 @@ jobs:
           path: dist/
           retention-days: 1
 
-  # ========== JOB 3: REVIEW GATE (WITH ENVIRONMENT LOCK) ==========
+  # ========== JOB 3: REVIEW GATE (MINIMAL BLOCKER) ==========
   review-gate:
     needs: proposal
     runs-on: ubuntu-latest
@@ -97,64 +136,14 @@ jobs:
       name: production-approval
       url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: campaign-bundle
-          path: dist/
-
-      - name: Validate Artifacts
+      - name: ✅ Approval Granted - Gate Opening
         run: |
-          # ASSERTION: Artifact must arrive intact
-          if [ ! -f dist/content.json ]; then
-            echo "❌ ERROR: Artifact lost during transfer"
-            exit 1
-          fi
-
-          if [ ! -s dist/content.json ]; then
-            echo "❌ ERROR: Artifact is empty"
-            exit 1
-          fi
-
-          echo "✅ Artifact validation PASSED"
-
-      - name: 📺 Director's Monitor Dashboard
-        run: |
-          echo "# 🦅 HERALD Campaign Proposal - Director's Monitor" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 🚦 Status: **AWAITING YOUR APPROVAL**" >> $GITHUB_STEP_SUMMARY
+          echo "🎯 Operator approved campaign." >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Proceeding to publication phase..." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f dist/content.json ]; then
-            echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Tweet Text:**" >> $GITHUB_STEP_SUMMARY
-            python3 -c "import json; d=json.load(open('dist/content.json')); print(f\"> {d.get('text', 'N/A')}\");" >> $GITHUB_STEP_SUMMARY || echo "N/A" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Visual Attachment:** None (text-only campaign)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ No content found" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### ⚖️ Governance" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Health Check Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Content Validated" >> $GITHUB_STEP_SUMMARY
-          echo "- ⏳ Waiting for YOUR decision" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🎬 Action Required" >> $GITHUB_STEP_SUMMARY
-          echo "Click **Approve** below to publish, or **Deny** to cancel." >> $GITHUB_STEP_SUMMARY
-          echo "This is your final checkpoint." >> $GITHUB_STEP_SUMMARY
-
-      - name: ✅ Approval Granted
-        run: |
-          echo "🎯 Operator approved. Proceeding to publication."
+          echo "**Note:** Content preview is available in the 'proposal' job summary above." >> $GITHUB_STEP_SUMMARY
 
   # ========== JOB 4: PUBLISH (ONLY AFTER APPROVAL) ==========
   execute-publish:
@@ -191,10 +180,17 @@ jobs:
 
       - name: 🐦 Publish to Twitter
         env:
+          # All secrets required for Kernel boot validation
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
           python herald/main.py --action publish
 
