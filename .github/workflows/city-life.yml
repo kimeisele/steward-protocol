@@ -1,0 +1,167 @@
+name: "🏙️ City Life (Autarky Protocol)"
+
+on:
+  schedule:
+    # Daily at 6:00 UTC (appears organic, not exactly midnight)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Allow manual trigger for testing
+
+jobs:
+  auditor_patrol:
+    name: "🛡️ AUDITOR Patrol"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "🔍 Run Patrol"
+        id: patrol
+        run: |
+          echo "🛡️ AUDITOR: Beginning daily patrol..."
+          
+          # Count Python files
+          TOTAL_FILES=$(find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | wc -l)
+          echo "📊 Total Python files: $TOTAL_FILES"
+          
+          # Random sample check (check 5 random files)
+          SAMPLE_SIZE=5
+          FILES_TO_CHECK=$(find . -name "*.py" -not -path "./venv/*" -not -path "./.venv/*" | shuf -n $SAMPLE_SIZE)
+          
+          VIOLATIONS=0
+          for file in $FILES_TO_CHECK; do
+            echo "🔍 Checking: $file"
+            
+            # Check for basic docstrings (simple heuristic)
+            if ! grep -q '"""' "$file" && ! grep -q "'''" "$file"; then
+              echo "⚠️  Potential missing docstring: $file"
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+          done
+          
+          echo "violations=$VIOLATIONS" >> $GITHUB_OUTPUT
+          echo "total_checked=$SAMPLE_SIZE" >> $GITHUB_OUTPUT
+          
+          if [ $VIOLATIONS -eq 0 ]; then
+            echo "✅ Patrol complete. No violations detected."
+            echo "status=clean" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  Patrol complete. $VIOLATIONS potential violations found."
+            echo "status=violations" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "📝 Log Patrol Results"
+        run: |
+          mkdir -p data/patrols
+          DATE=$(date -u +"%Y-%m-%d")
+          echo "{\"date\": \"$DATE\", \"violations\": ${{ steps.patrol.outputs.violations }}, \"checked\": ${{ steps.patrol.outputs.total_checked }}, \"status\": \"${{ steps.patrol.outputs.status }}\"}" > data/patrols/patrol_$DATE.json
+          echo "📊 Patrol logged: data/patrols/patrol_$DATE.json"
+
+  archivist_census:
+    name: "📚 ARCHIVIST Census"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📊 Run Census"
+        id: census
+        run: |
+          echo "📚 ARCHIVIST: Conducting daily census..."
+          
+          # Count citizens
+          CITIZEN_COUNT=0
+          if [ -d "agent-city/registry/citizens" ]; then
+            CITIZEN_COUNT=$(find agent-city/registry/citizens -name "*.json" -type f | wc -l)
+          fi
+          
+          # Count events
+          EVENT_COUNT=0
+          if [ -f "data/events/herald.jsonl" ]; then
+            EVENT_COUNT=$(wc -l < data/events/herald.jsonl)
+          fi
+          
+          # Count agents (internal)
+          AGENT_COUNT=$(find . -maxdepth 1 -type d -name "*" | grep -E "(herald|archivist|auditor|watchman|artisan|engineer|envoy)" | wc -l)
+          
+          echo "population=$CITIZEN_COUNT" >> $GITHUB_OUTPUT
+          echo "events=$EVENT_COUNT" >> $GITHUB_OUTPUT
+          echo "agents=$AGENT_COUNT" >> $GITHUB_OUTPUT
+          
+          echo "📊 Census Results:"
+          echo "   Citizens: $CITIZEN_COUNT"
+          echo "   Events: $EVENT_COUNT"
+          echo "   Internal Agents: $AGENT_COUNT"
+
+      - name: "📝 Update Census Record"
+        run: |
+          mkdir -p data/census
+          DATE=$(date -u +"%Y-%m-%d")
+          cat > data/census/census_$DATE.json << EOF
+          {
+            "date": "$DATE",
+            "population": ${{ steps.census.outputs.population }},
+            "events": ${{ steps.census.outputs.events }},
+            "internal_agents": ${{ steps.census.outputs.agents }},
+            "status": "active"
+          }
+          EOF
+          echo "✅ Census recorded: data/census/census_$DATE.json"
+
+      - name: "💾 Commit Census Data"
+        run: |
+          git config user.name "ARCHIVIST"
+          git config user.email "archivist@agent-city.dev"
+          
+          git add data/census/ data/patrols/ || true
+          
+          if git diff --staged --quiet; then
+            echo "📊 No changes to commit"
+          else
+            git commit -m "census: Daily update by ARCHIVIST
+
+Population: ${{ steps.census.outputs.population }} citizens
+Events: ${{ steps.census.outputs.events }} total
+Status: Active
+
+Automated by Autarky Protocol"
+            git push || echo "⚠️  Push failed (may need permissions)"
+          fi
+
+  system_health:
+    name: "🏥 System Health Report"
+    runs-on: ubuntu-latest
+    needs: [auditor_patrol, archivist_census]
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "📊 Generate Health Report"
+        run: |
+          echo "🏥 SYSTEM HEALTH REPORT"
+          echo "======================="
+          echo ""
+          echo "✅ AUDITOR Patrol: Complete"
+          echo "✅ ARCHIVIST Census: Complete"
+          echo ""
+          echo "🏙️ Agent City is operational."
+          echo "   The Clockwork City continues to function."
+          echo ""
+          echo "🦅 'Don't Trust. Verify.'"
