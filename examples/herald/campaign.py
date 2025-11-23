@@ -18,6 +18,8 @@ import hashlib
 from pathlib import Path
 from datetime import datetime
 from examples.herald.publisher import MultiChannelPublisher
+from examples.herald.researcher import TavilyResearcher, ResearchReport
+from examples.herald.content_generator import ContentGenerator
 
 # --- CONFIG: OPENROUTER BRIDGE ---
 if os.getenv("OPENROUTER_API_KEY"):
@@ -71,6 +73,38 @@ def check_cognitive_policy():
     print(f"   ✅ Within budget")
 
     return True
+
+
+def generate_research_content(identity_content):
+    """
+    Generate content from web research (Phase 3 mode).
+
+    Returns content from trending topics about AI agents, protocols, etc.
+    Falls back to rotation if research unavailable.
+    """
+    print("🔍 PHASE 3: RESEARCH MODE ACTIVATED")
+    print("=" * 60)
+
+    # Attempt to find trending topic
+    researcher = TavilyResearcher()
+    topic = researcher.find_trending_topic(min_relevance=0.5)
+
+    if topic:
+        # Found research! Create report
+        print(f"\n✅ Found trending topic: {topic['article']['title']}")
+        report = ResearchReport(topic)
+
+        # Generate content
+        gen = ContentGenerator()
+        content = gen.generate(report)
+
+        print(f"📝 Generated research-driven content")
+        print(f"   Source: {content['source']}")
+        return content
+    else:
+        # No research found, fall back to rotation
+        print("⚠️  No relevant research found. Falling back to rotation...")
+        return None
 
 
 def generate_recruitment_post(identity_content):
@@ -260,8 +294,25 @@ def main():
         sys.exit(1)
 
     # Step 3: Generate content
-    print("\n🧠 Generating recruitment post...")
-    post_content = generate_recruitment_post(identity)
+    print("\n🧠 Generating content...")
+
+    # Try research mode first (Phase 3), fallback to rotation
+    research_content = generate_research_content(identity)
+
+    if research_content:
+        # Use research-driven content
+        post_twitter = research_content.get("twitter", "")
+        post_linkedin = research_content.get("linkedin", "")
+        post_content = f"{post_twitter}\n\n---\n\n{post_linkedin}"
+        content_source = research_content.get("source", "Research")
+        is_research = True
+    else:
+        # Fall back to rotation mode
+        print("\n📋 FALLBACK: ROTATION MODE")
+        print("=" * 60)
+        post_content = generate_recruitment_post(identity)
+        content_source = "Rotation"
+        is_research = False
 
     # Step 4: Sign content
     print("✍️  Signing content...")
@@ -289,6 +340,8 @@ def main():
     print("✅ CAMPAIGN GENERATION COMPLETE")
     print("=" * 60)
     print(f"\n📁 Content saved: {filename}")
+    print(f"🧠 Content mode: {'🔍 Research' if is_research else '📋 Rotation'}")
+    print(f"📝 Source: {content_source}")
     print(f"📡 Publishing status: {' | '.join(publish_results['summary'])}")
     print("\nNext step: Commit and push {filename} to your branch")
     print("Or schedule this to run automatically via GitHub Actions!\n")
