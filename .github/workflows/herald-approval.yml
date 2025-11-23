@@ -1,0 +1,182 @@
+name: "🦅 HERALD Staged Campaign (Human-in-the-Loop)"
+
+on:
+  # Manually trigger via GitHub UI (Workflow Dispatch)
+  workflow_dispatch:
+
+  # OR schedule daily at 09:00 UTC
+  schedule:
+    - cron: '0 9 * * *'
+
+jobs:
+  # ========== JOB 1: GENERATION (Brain + Artist) ==========
+  draft-content:
+    name: "📝 Draft Content (Brain + Artist)"
+    runs-on: ubuntu-latest
+
+    outputs:
+      preview_text: ${{ steps.generate.outputs.preview_text }}
+      has_image: ${{ steps.generate.outputs.has_image }}
+
+    steps:
+      # Setup
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install -r examples/herald/requirements.txt
+
+      # Generate Content
+      - name: "🧠 Generate Content (Brain + Artist)"
+        id: generate
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          # Artist typically needs no special keys (uses Pollinations free tier)
+        run: |
+          python examples/herald/generate_only.py
+
+      # Upload Artifacts (dist/ directory)
+      - name: "📦 Upload Artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: campaign-assets
+          path: dist/
+          retention-days: 7
+
+      # Summary
+      - name: "📋 Summary"
+        run: |
+          echo "### ✅ Generation Phase Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Preview:** ${{ steps.generate.outputs.preview_text }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ steps.generate.outputs.has_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⏳ Waiting for Operator Approval..." >> $GITHUB_STEP_SUMMARY
+
+  # ========== JOB 2: HUMAN APPROVAL GATE ==========
+  review-gate:
+    name: "🛑 Operator Review Gate"
+    needs: draft-content
+    runs-on: ubuntu-latest
+
+    # THIS IS THE MAGIC: This environment enforces Required Reviewers
+    # You must have created this in GitHub UI: Settings -> Environments -> production-approval
+    # With "Required reviewers" set to your username
+    environment:
+      name: production-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    steps:
+      - name: "✅ Operator Approved"
+        run: |
+          echo "🎯 Approval granted. Proceeding to publication."
+
+      - name: "📢 Approval Announcement"
+        run: |
+          echo "### ✅ Operator Approved Publication" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Content:" >> $GITHUB_STEP_SUMMARY
+          echo "- Text: ${{ needs.draft-content.outputs.preview_text }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Media: ${{ needs.draft-content.outputs.has_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Publishing in next phase..." >> $GITHUB_STEP_SUMMARY
+
+  # ========== JOB 3: EXECUTION (Publisher) ==========
+  execute-publish:
+    name: "🚀 Execute Publication"
+    needs: [draft-content, review-gate]
+    runs-on: ubuntu-latest
+
+    steps:
+      # Setup
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install -r examples/herald/requirements.txt
+
+      # Download Artifacts
+      - name: "📥 Download Content Bundle"
+        uses: actions/download-artifact@v4
+        with:
+          name: campaign-assets
+          path: dist/
+
+      # Publish
+      - name: "🐦 Publish to Twitter"
+        id: publish
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+        run: |
+          python examples/herald/publish_only.py
+
+      # Summary
+      - name: "📊 Publication Summary"
+        if: success()
+        run: |
+          echo "### 🎉 Publication Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Content published to Twitter" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Content Preview:**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.draft-content.outputs.preview_text }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: "❌ Publication Failed"
+        if: failure()
+        run: |
+          echo "### ❌ Publication Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check logs above for details." >> $GITHUB_STEP_SUMMARY
+          exit 1
+
+  # ========== JOB 4: RESILIENCE TESTING (Optional) ==========
+  chaos-tests:
+    name: "🧪 Chaos Testing Suite"
+    runs-on: ubuntu-latest
+
+    # These run in parallel with draft-content, don't block publication
+    # This gives you early warning if something is broken
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install pytest pytest-cov
+          pip install -r examples/herald/requirements.txt
+
+      - name: "🧪 Run Resilience Tests"
+        run: |
+          pytest tests/test_resilience.py -v --tb=short
+
+      - name: "📈 Test Summary"
+        if: always()
+        run: |
+          echo "### 🧪 Chaos Testing Results" >> $GITHUB_STEP_SUMMARY
+          echo "All system degradation scenarios tested." >> $GITHUB_STEP_SUMMARY
+          echo "Check logs for details." >> $GITHUB_STEP_SUMMARY
