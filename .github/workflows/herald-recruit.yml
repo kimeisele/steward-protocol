@@ -49,6 +49,40 @@ jobs:
             exit 1
           fi
 
+      # Install test dependencies
+      - name: Install Test Dependencies
+        run: |
+          pip install pytest pytest-cov
+          echo "✅ Test tools installed"
+
+      # Run integration tests BEFORE campaign
+      - name: 🧪 Run Integration Tests
+        run: |
+          echo "🧪 Running integration tests..."
+          pytest tests/test_herald_publisher.py -v --tb=short
+          if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ Tests failed. Aborting campaign."
+            exit 1
+          fi
+          echo "✅ All tests passed"
+
+      # 🕵️ FAIL FAST: Validate Twitter connection BEFORE running campaign
+      - name: 🕵️ Diagnostic Check (Twitter Configuration)
+        if: always()
+        env:
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+        run: |
+          echo "🕵️  Running pre-flight diagnostic checks..."
+          chmod +x examples/herald/debug_twitter.py
+          python examples/herald/debug_twitter.py
+          if [ $? -ne 0 ]; then
+            echo ""
+            echo "❌ ABORT: Twitter configuration is invalid"
+            echo "   Fix the issues above before the campaign can proceed"
+            exit 1
+          fi
+
       # 🚀 Launch HERALD on the Vibe OS runtime
       - name: Ignite HERALD (via Vibe OS)
         env:
