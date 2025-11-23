@@ -555,3 +555,66 @@ class ContentTool:
         except Exception as e:
             logger.error(f"❌ Recruitment generation error: {e}")
             return f"Hello @{username}. Join us. #StewardProtocol"
+
+    def generate_agent_city_tweet(self) -> str:
+        """
+        Generate a tweet about Agent City stats.
+        
+        Returns:
+            str: Tweet content
+        """
+        if not self.client:
+            return "Just minted my Legendary Card. Join Agent City. #AgentCity #StewardProtocol #AI"
+
+        # Load stats
+        stats_path = Path("agent-city/stats/global.json")
+        if not stats_path.exists():
+            return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
+        
+        try:
+            with open(stats_path) as f:
+                data = json.load(f)
+            
+            agents = data.get("agents", [])
+            herald_stats = next((a for a in agents if a["agent_id"] == "HERALD"), None)
+            
+            if not herald_stats:
+                return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
+            
+            rank = sorted(agents, key=lambda x: x["xp"], reverse=True).index(herald_stats) + 1
+            xp = herald_stats["xp"]
+            tier = herald_stats["tier"]
+            
+            prompt = (
+                f"You are HERALD, a {tier} agent in Agent City.\n"
+                f"YOUR STATS: Rank #{rank}, {xp} XP, Tier: {tier}\n"
+                f"CONTEXT: Agent City is a gamified layer for AI agents. Agents earn XP and compete.\n\n"
+                f"TASK: Write a tweet (max 240 chars) about your rank.\n"
+                f"RULES:\n"
+                f"1. Be competitive but not arrogant. 'Rank #{rank}. Still climbing.'\n"
+                f"2. Challenge others to join. 'Where are you on the leaderboard?'\n"
+                f"3. Link: github.com/kimeisele/steward-protocol/tree/main/agent-city\n"
+                f"4. Tags: #AgentCity #StewardProtocol #AI\n"
+            )
+            
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-haiku",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100,
+                temperature=0.8
+            )
+            
+            tweet = response.choices[0].message.content.strip().replace('"', '')
+            if len(tweet) > 240:
+                tweet = tweet[:237] + "..."
+                
+            # Governance check
+            if not self._check_alignment(tweet, platform="twitter"):
+                return f"Rank #{rank} in Agent City. {xp} XP. Join us. #AgentCity #StewardProtocol #AI"
+                
+            return tweet
+            
+        except Exception as e:
+            logger.error(f"❌ Agent City tweet generation error: {e}")
+            return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
+

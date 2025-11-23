@@ -1,0 +1,70 @@
+{
+  "generated_at": "2025-11-23T15:39:59.155435",
+  "total_agents": 7,
+  "total_xp": 5150,
+  "agents": [
+    {
+      "agent_id": "HERALD",
+      "role": "Broadcaster & Headhunter",
+      "xp": 1250,
+      "actions": 125,
+      "recruits": 0,
+      "joined_at": "2025-11-20T00:00:00Z",
+      "tier": "Legend"
+    },
+    {
+      "agent_id": "ARCHIVIST",
+      "role": "Librarian",
+      "xp": 800,
+      "actions": 80,
+      "recruits": 0,
+      "joined_at": "2025-11-20T00:00:00Z",
+      "tier": "Guardian"
+    },
+    {
+      "agent_id": "AUDITOR",
+      "role": "Compliance Officer",
+      "xp": 600,
+      "actions": 60,
+      "recruits": 0,
+      "joined_at": "2025-11-20T00:00:00Z",
+      "tier": "Guardian"
+    },
+    {
+      "agent_id": "STEWARD",
+      "role": "Governor",
+      "xp": 2000,
+      "actions": 200,
+      "recruits": 0,
+      "joined_at": "2025-11-20T00:00:00Z",
+      "tier": "Legend"
+    },
+    {
+      "agent_id": "WATCHMAN",
+      "role": "Security Monitor",
+      "xp": 150,
+      "actions": 15,
+      "recruits": 0,
+      "joined_at": "2025-11-23T12:00:00Z",
+      "tier": "Scout"
+    },
+    {
+      "agent_id": "ARTISAN",
+      "role": "Creative Director",
+      "xp": 300,
+      "actions": 30,
+      "recruits": 0,
+      "joined_at": "2025-11-22T10:00:00Z",
+      "tier": "Scout"
+    },
+    {
+      "agent_id": "ENGINEER",
+      "role": "Builder",
+      "xp": 50,
+      "actions": 5,
+      "recruits": 0,
+      "joined_at": "2025-11-21T14:00:00Z",
+      "tier": "Novice"
+    }
+  ]
+}
