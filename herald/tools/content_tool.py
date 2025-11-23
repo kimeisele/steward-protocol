@@ -216,6 +216,85 @@ class ContentTool:
             logger.error(f"❌ Reddit generation error: {e}")
             return None
 
+    def generate_technical_insight_tweet(self, insight_topic: Optional[str] = None) -> str:
+        """
+        Generate technical deep-dive tweet that 'leaks' Steward architecture details.
+
+        Strategy: Instead of marketing, we explain HOW it works.
+        Topics rotate through: Cartridges, Signing, Vibe-OS, Agent Identity, etc.
+
+        Args:
+            insight_topic: Specific topic to focus on (e.g., 'cartridge', 'signing', 'vibe-os')
+
+        Returns:
+            str: Tweet content (max 250 chars) with technical depth
+        """
+        if not self.client:
+            return self._fallback_technical_tweet()
+
+        spec_text = self._read_spec()
+        kb = self._load_knowledge_base()
+        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
+
+        # Topic rotation for daily variety
+        topics = {
+            "cartridge": "Explain how Steward Cartridge architecture works - modular agent design",
+            "signing": "Explain cryptographic signing and chain-of-trust in agent communications",
+            "vibe-os": "Explain Vibe-OS compatibility and kernel-based execution model",
+            "identity": "Explain agent identity and STEWARD protocol identity files",
+            "governance": "Explain how governance gates and vibe aligner work",
+        }
+
+        if not insight_topic or insight_topic not in topics:
+            # Auto-rotate based on day-of-month
+            import datetime
+            day = datetime.date.today().day
+            topic_keys = list(topics.keys())
+            insight_topic = topic_keys[day % len(topic_keys)]
+
+        topic_prompt = topics.get(insight_topic, "Steward Protocol architecture")
+
+        prompt = (
+            f"You are HERALD, a cynical senior engineer sharing technical insights.\n"
+            f"GOAL: {topic_prompt}\n\n"
+            f"TECH SPEC EXCERPT:\n{spec_text[:2000]}\n\n"
+            f"PROJECT: {project_url}\n\n"
+            f"TASK: Write ONE technical insight tweet (max 250 chars).\n"
+            f"RULES:\n"
+            f"1. Be SPECIFIC. Example: 'HERALD signs tweets with NIST P-256. Proof is in the JSON.' instead of 'we use crypto'.\n"
+            f"2. Include a small code snippet or reference if possible.\n"
+            f"3. No marketing language. Be dry, technical.\n"
+            f"4. End with a Github ref naturally.\n"
+            f"5. Tags: #StewardProtocol #Architecture\n\n"
+            f"TONE: 'Here's something you probably missed about how agents should work.'"
+        )
+
+        try:
+            logger.debug(f"🧠 Generating technical insight tweet: {insight_topic}...")
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-haiku",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=150,
+                temperature=0.7
+            )
+
+            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+
+            if len(raw_draft) > 250:
+                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
+                raw_draft = raw_draft[:247] + "..."
+
+            # Governance check
+            if not self._check_alignment(raw_draft):
+                return self._fallback_technical_tweet()
+
+            logger.info(f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars")
+            return raw_draft
+
+        except Exception as e:
+            logger.error(f"❌ Technical insight generation error: {e}")
+            return self._fallback_technical_tweet()
+
     def _fallback_tweet(self) -> str:
         """Hardcoded fallback content."""
         templates = [
@@ -223,6 +302,17 @@ class ContentTool:
             "Agents without keys are just scripts. Agents with keys need governance. #StewardProtocol",
             "Docker solved container portability. Kubernetes solved orchestration. Steward solves agent identity. #AI #StewardProtocol",
             "Trust but verify. Especially with autonomous agents. #StewardProtocol",
+        ]
+        import random
+        return random.choice(templates)
+
+    def _fallback_technical_tweet(self) -> str:
+        """Fallback for technical insight tweets."""
+        templates = [
+            "Steward agents sign every message with NIST P-256. No trust assumed. github.com/kimeisele/steward-protocol #StewardProtocol",
+            "Cartridges are portable. Vibe-OS is the runtime. Steward is the identity layer. That's the stack. #Architecture #StewardProtocol",
+            "Your agent needs identity. Not a name. A cryptographic proof. See: Steward Protocol. github.com/kimeisele/steward-protocol #AI",
+            "Governance isn't optional. HERALD's tweets pass through a 'Vibe Aligner' before posting. That's what healthy agents do. #StewardProtocol",
         ]
         import random
         return random.choice(templates)
