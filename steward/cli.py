@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-STEWARD Protocol CLI - Automated Protocol Attestation & Agent Identity Verification
+STEWARD Protocol CLI - Agent Operating System Interface
+
+The interface to the Agent Operating System (A.O.S.) - where the OS itself is an Agent.
 
 Real cryptographic identity verification with ECDSA signatures.
 
 Usage:
+  steward whoami                  - Identify STEWARD as an Agent
+  steward status --federation     - Show federation agent health status
   steward verify <file>           - Verify STEWARD.md structure and cryptographic signature
   steward verify --all <dir>      - Verify all STEWARD.md files in directory tree
   steward keygen                  - Generate cryptographic identity keypair
@@ -224,6 +228,89 @@ def verify_command(args):
         return True
 
 
+def cmd_whoami(args):
+    """Identify STEWARD as an Agent in the A.O.S. Federation."""
+    agent_id = "agent.steward.core"
+
+    identity_panel = Panel(
+        f"[bold cyan]I am {agent_id}[/bold cyan]\n"
+        f"[dim]I am the Interface to the Agent Operating System (A.O.S.)[/dim]\n\n"
+        f"[yellow]Role:[/yellow] The Omniscient Information Provider\n"
+        f"[yellow]Function:[/yellow] Universal Protocol Interface & Federation Coordinator\n"
+        f"[yellow]Status:[/yellow] [green]ACTIVE[/green]\n\n"
+        f"[dim]I am the fourth member of the Quadrinity Federation.[/dim]",
+        title="[bold magenta]⭐ STEWARD AGENT IDENTITY[/bold magenta]",
+        expand=False
+    )
+    console.print(identity_panel)
+
+
+def cmd_status(args):
+    """Display federation agent health and status."""
+    if not args.federation:
+        console.print("[yellow]Use --federation flag to show federation status[/yellow]")
+        return
+
+    # Define federation agents
+    agents = [
+        {
+            "name": "agent.steward.herald",
+            "role": "Creator",
+            "function": "Content Generation & Publication",
+            "status": "ACTIVE"
+        },
+        {
+            "name": "agent.vibe.archivist",
+            "role": "Verifier",
+            "function": "Event Verification & Audit Trail",
+            "status": "ACTIVE"
+        },
+        {
+            "name": "agent.steward.auditor",
+            "role": "Enforcer",
+            "function": "Governance As Design (GAD-000) Compliance",
+            "status": "ACTIVE"
+        },
+        {
+            "name": "agent.steward.core",
+            "role": "Provider",
+            "function": "Omniscient Interface & A.O.S. Coordinator",
+            "status": "ACTIVE"
+        }
+    ]
+
+    # Create federation status table
+    if Table is not None:
+        table = Table(title="[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]")
+        table.add_column("Agent ID", style="cyan")
+        table.add_column("Role", style="magenta")
+        table.add_column("Function", style="green")
+        table.add_column("Status", style="yellow")
+
+        for agent in agents:
+            status_style = "green" if agent["status"] == "ACTIVE" else "red"
+            status_icon = "✅" if agent["status"] == "ACTIVE" else "❌"
+            table.add_row(
+                agent["name"],
+                agent["role"],
+                agent["function"],
+                f"[{status_style}]{status_icon} {agent['status']}[/{status_style}]"
+            )
+
+        console.print(table)
+    else:
+        # Fallback: simple text display
+        console.print("\n[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]\n")
+        console.print(f"{'Agent ID':<25} {'Role':<12} {'Function':<35} {'Status':<8}")
+        console.print("-" * 80)
+
+        for agent in agents:
+            status_icon = "✅" if agent["status"] == "ACTIVE" else "❌"
+            console.print(f"{agent['name']:<25} {agent['role']:<12} {agent['function']:<35} {status_icon} {agent['status']:<6}")
+
+    console.print("\n[dim]The Agent Operating System (A.O.S.) is a self-referential meta-system where the OS itself is an Agent.[/dim]")
+
+
 def cmd_inspect(args):
     """Inspect agent event log and display recent events in a heartbeat view."""
     agent_name = args.agent
@@ -392,6 +479,25 @@ Examples:
 
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
+    # Whoami subcommand
+    whoami_parser = subparsers.add_parser(
+        "whoami",
+        help="Identify STEWARD as an Agent in the A.O.S. Federation"
+    )
+    whoami_parser.set_defaults(func=cmd_whoami)
+
+    # Status subcommand
+    status_parser = subparsers.add_parser(
+        "status",
+        help="Display federation agent health and status"
+    )
+    status_parser.add_argument(
+        "--federation",
+        action="store_true",
+        help="Show federation agent status"
+    )
+    status_parser.set_defaults(func=cmd_status)
+
     # Keygen subcommand
     keygen_parser = subparsers.add_parser(
         "keygen",
@@ -456,7 +562,13 @@ Examples:
         return 0
 
     try:
-        if args.command == "keygen":
+        if args.command == "whoami":
+            args.func(args)
+            return 0
+        elif args.command == "status":
+            args.func(args)
+            return 0
+        elif args.command == "keygen":
             args.func(args)
             return 0
         elif args.command == "sign":
