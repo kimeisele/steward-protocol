@@ -17,6 +17,12 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime
+
+# Add project root to Python path so imports work from any working directory
+project_root = Path(__file__).parent.parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from examples.herald.publisher import MultiChannelPublisher
 from examples.herald.researcher import TavilyResearcher, ResearchReport
 from examples.herald.content_generator import ContentGenerator
