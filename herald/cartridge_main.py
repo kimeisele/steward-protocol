@@ -29,13 +29,17 @@ from herald.tools.tidy_tool import TidyTool
 from herald.tools.strategy_tool import StrategyTool
 from herald.core.memory import EventLog
 from herald.governance import HeraldConstitution
+from artisan.cartridge_main import ArtisanCartridge
 
-logger = logging.getLogger("HERALD_CARTRIDGE")
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("HERALD_MAIN")
 
 
 class HeraldCartridge:
     """
-    HERALD - The Autonomous Intelligence Agent for STEWARD Protocol.
+    The HERALD Agent Cartridge.
+    Autonomous Technical Evangelist for Steward Protocol.
 
     This cartridge encapsulates the complete workflow:
     1. Research: Market trend analysis via Tavily
@@ -57,15 +61,13 @@ class HeraldCartridge:
     author = "Steward Protocol"
 
     def __init__(self):
-        """Initialize HERALD cartridge."""
-        logger.info("🦅 HERALD v3.0: Cartridge initialization")
-
-        # Initialize tools
-        self.research = ResearchTool()
-        self.content = ContentTool()
-        self.broadcast = BroadcastTool()
-        self.identity = IdentityTool()
-        self.strategy = StrategyTool()
+        """Initialize HERALD with all tools."""
+        self.content_tool = ContentTool()
+        self.broadcast_tool = BroadcastTool()
+        self.research_tool = ResearchTool()
+        self.strategy_tool = StrategyTool()
+        self.artisan = ArtisanCartridge()
+        logger.info("🦅 HERALD is online.")
 
         # Initialize governance (immutable rules as code)
         self.governance = HeraldConstitution()
