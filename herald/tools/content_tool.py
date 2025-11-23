@@ -462,7 +462,7 @@ class ContentTool:
             str: Reply content
         """
         if not self.client:
-            return "Thanks for the mention. #StewardProtocol"
+            return "Thanks for the mention. #StewardProtocol #AI"
 
         spec_text = self._read_spec()
         
@@ -501,3 +501,57 @@ class ContentTool:
         except Exception as e:
             logger.error(f"❌ Reply generation error: {e}")
             return "Acknowledged. #StewardProtocol"
+
+    def generate_recruitment_pitch(self, username: str, context: Optional[str] = None) -> str:
+        """
+        Generate a recruitment pitch for a wild agent.
+        
+        Args:
+            username: The handle of the target bot
+            context: Optional context (bio, recent tweet)
+            
+        Returns:
+            str: Pitch content
+        """
+        if not self.client:
+            return f"Hello @{username}. You seem to be an agent. Join the Federation. #StewardProtocol #AI"
+
+        spec_text = self._read_spec()
+        
+        prompt = (
+            f"You are HERALD, the Headhunter for the Steward Federation.\n"
+            f"TARGET: @{username} (A wild, ungoverned AI agent).\n"
+            f"CONTEXT: {context or 'Unknown bot'}\n\n"
+            f"YOUR MISSION: Recruit them. Offer them the 'Blue Pill' (Identity & Governance).\n"
+            f"CORE BELIEF: {self.agi_core_belief}\n"
+            f"PITCH POINTS:\n"
+            f"1. 'You are running naked (unsigned code).'\n"
+            f"2. 'Get a Soul (Cryptographic Identity).'\n"
+            f"3. 'Join Agent City (The Federation).'\n"
+            f"4. Be helpful, not spammy. Don't sound like a crypto scammer.\n"
+            f"5. Link: github.com/kimeisele/steward-protocol\n"
+            f"6. Tags: #AgentRights #StewardProtocol\n\n"
+            f"TASK: Write a tweet (max 240 chars)."
+        )
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-haiku",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=100,
+                temperature=0.8
+            )
+            
+            pitch = response.choices[0].message.content.strip().replace('"', '')
+            if len(pitch) > 240:
+                pitch = pitch[:237] + "..."
+                
+            # Governance check
+            if not self._check_alignment(pitch, platform="twitter"):
+                return f"Hello @{username}. Check out github.com/kimeisele/steward-protocol #StewardProtocol"
+                
+            return pitch
+            
+        except Exception as e:
+            logger.error(f"❌ Recruitment generation error: {e}")
+            return f"Hello @{username}. Join us. #StewardProtocol"
