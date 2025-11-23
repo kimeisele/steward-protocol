@@ -20,11 +20,65 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
+
+# Security - CRITICAL: Never commit these
+**/*.pem
+**/*_key.pem
+**/*_private_key*
+**/*_public_key*
+.env
+.env.*
+*.key
+*.crt
+*.p12
+secrets/
+keys/
+
+# User-generated agent directories
+my_agent/
+**/my_agent/
+
+# Temporary state files
+agent-city/registry/pending.json
+data/state/*.json
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
