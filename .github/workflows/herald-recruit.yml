@@ -1,169 +1,41 @@
 name: HERALD Recruitment Campaign
-
 on:
-  schedule:
-    # Run every morning at 08:00 UTC
-    # This is when HERALD wakes up to generate marketing content
-    - cron: '0 8 * * *'
-
-  # Also allow manual trigger for testing
+  push:
+    branches: [ main, master, "claude/*" ]
   workflow_dispatch:
 
 jobs:
   create-content:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # CRITICAL: Allows writing back to the repo
-
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          # Get the full history so we can commit properly
-          fetch-depth: 0
 
-      - name: Set up Python Environment
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # 🔥 GAD-100 PHOENIX BOOTSTRAP
-      # Install Vibe OS (this repo) as the system layer
-      # This provides the core runtime for all agents
-      - name: Bootstrap Vibe OS (Phoenix Layer)
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          echo "🦅 PHOENIX: Bootstrapping Vibe OS..."
-          pip install .  # Install vibe-agency (the runtime OS)
-          echo "✅ Vibe OS ready"
+          pip install .
+          if [ -f examples/herald/requirements.txt ]; then pip install -r examples/herald/requirements.txt; fi
+          pip install pytest
 
-      # Install agent-specific plugins
-      - name: Install Agent Plugins
-        run: |
-          if [ -f examples/herald/requirements.txt ]; then
-            echo "🔌 Installing HERALD Agent plugins..."
-            pip install -r examples/herald/requirements.txt
-            echo "✅ HERALD plugins loaded"
-          else
-            echo "❌ No requirements.txt found for HERALD Agent"
-            exit 1
-          fi
-
-      # Install test dependencies
-      - name: Install Test Dependencies
-        run: |
-          pip install pytest pytest-cov
-          echo "✅ Test tools installed"
-
-      # Run integration tests BEFORE campaign
-      - name: 🧪 Run Integration Tests
+      - name: Run Integration Tests
         run: |
           echo "🧪 Running integration tests..."
-          pytest tests/test_herald_publisher.py -v --tb=short
-          if [ $? -ne 0 ]; then
-            echo ""
-            echo "❌ Tests failed. Aborting campaign."
-            exit 1
-          fi
-          echo "✅ All tests passed"
+          pytest tests/test_herald_publisher.py -v
 
-      # 🕵️ FAIL FAST: Validate Twitter connection BEFORE running campaign
-      - name: 🕵️ Diagnostic Check (Twitter Configuration)
-        if: always()
-        env:
-          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
-        run: |
-          echo "🕵️  Running pre-flight diagnostic checks..."
-          chmod +x examples/herald/debug_twitter.py
-          python examples/herald/debug_twitter.py
-          if [ $? -ne 0 ]; then
-            echo ""
-            echo "❌ ABORT: Twitter configuration is invalid"
-            echo "   Fix the issues above before the campaign can proceed"
-            exit 1
-          fi
-
-      # 🚀 Launch HERALD on the Vibe OS runtime
       - name: Ignite HERALD (via Vibe OS)
         env:
-          # Phase 2: Multi-Channel Publishing (OAuth 1.0a - 4 Keys Required)
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
-          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
-          # Phase 3: Research Mode (Web Search for Trending Topics)
-          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          # Intelligence: LLM-powered content generation (optional)
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           echo "🚀 PHOENIX: Igniting HERALD agent..."
-          chmod +x examples/herald/campaign.py
           python examples/herald/campaign.py
-          echo "✅ HERALD execution complete"
-
-      - name: Configure Git for Commits
-        run: |
-          git config --global user.name "HERALD Agent"
-          git config --global user.email "herald@steward.local"
-
-      - name: Commit & Push Generated Content
-        run: |
-          # Check if there are new files in content/posts/
-          if [ -d "content/posts" ] && [ -n "$(git status --short content/posts/)" ]; then
-            git add content/posts/
-
-            # Get today's date for the commit message
-            TODAY=$(date +"%Y-%m-%d")
-
-            # Commit with an emoji and clear message
-            git commit -m "🤖 HERALD: Generated recruitment post for $TODAY"
-
-            # 🔥 THE REBASE MANEUVER: Sync before push (handles concurrent updates)
-            git pull --rebase origin main
-
-            # Push back to the current branch
-            git push
-
-            echo "✅ Content pushed successfully"
-          else
-            echo "ℹ️  No new content to commit (already generated today)"
-          fi
-
-      - name: Report Status
-        if: always()
-        run: |
-          echo "📊 HERALD Campaign Workflow Complete"
-          echo "Time: $(date -u)"
-          if [ -d "content/posts" ]; then
-            echo "📁 Generated posts:"
-            ls -lh content/posts/ 2>/dev/null || echo "   (directory exists but empty)"
-          fi
-          echo ""
-          echo "💡 HERALD Capability Status:"
-          echo ""
-          echo "  Phase 2 - Multi-Channel Publishing:"
-          if [ -z "${{ secrets.TWITTER_API_KEY }}" ]; then
-            echo "   📢 Twitter: NOT CONFIGURED (daily posts disabled)"
-          else
-            echo "   ✅ Twitter: READY (HERALD posts daily)"
-          fi
-          if [ -z "${{ secrets.LINKEDIN_ACCESS_TOKEN }}" ]; then
-            echo "   📋 LinkedIn: NOT CONFIGURED (weekly posts disabled)"
-          else
-            echo "   ✅ LinkedIn: READY (HERALD posts on Fridays)"
-          fi
-          echo ""
-          echo "  Phase 3 - Research Mode:"
-          if [ -z "${{ secrets.TAVILY_API_KEY }}" ]; then
-            echo "   🔍 Research: DISABLED (using rotation mode)"
-            echo "      To enable: Set TAVILY_API_KEY in GitHub Secrets"
-          else
-            echo "   ✅ Research: ENABLED (HERALD searches for trends daily)"
-          fi
-          if [ -z "${{ secrets.OPENROUTER_API_KEY }}" ]; then
-            echo "   🧠 Intelligence: DISABLED (using basic hot takes)"
-            echo "      To enable: Set OPENROUTER_API_KEY in GitHub Secrets"
-          else
-            echo "   ✅ Intelligence: ENABLED (LLM-powered analysis)"
-          fi
