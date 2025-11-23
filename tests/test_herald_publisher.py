@@ -25,38 +25,19 @@ if str(project_root) not in sys.path:
 from examples.herald.publisher import TwitterPublisher, LinkedInPublisher, MultiChannelPublisher
 
 
-# Shared Fixture für eine "perfekte" Umgebung
-@pytest.fixture
-def mock_env():
-    """Fixture that provides all required OAuth 1.0a credentials"""
-    return {
-        "TWITTER_API_KEY": "fake_consumer_key",
-        "TWITTER_API_SECRET": "fake_consumer_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_access_token",
-        "TWITTER_ACCESS_SECRET": "fake_access_token_secret"
-    }
-
-
+# Apply environment patch to entire test class
+@patch.dict(os.environ, {
+    "TWITTER_API_KEY": "mock_consumer_key",
+    "TWITTER_API_SECRET": "mock_consumer_secret",
+    "TWITTER_ACCESS_TOKEN": "mock_access_token",
+    "TWITTER_ACCESS_SECRET": "mock_access_token_secret"
+})
 class TestTwitterPublisher:
-    """Test Twitter publishing functionality (OAuth 1.0a)."""
+    """All tests in this class have mocked OAuth 1.0a credentials."""
 
-    @patch.dict(os.environ, {}, clear=True)
-    def test_no_api_key_returns_false(self):
-        """Publishing without OAuth 1.0a credentials should return False gracefully."""
-        publisher = TwitterPublisher()
-        assert publisher.client is None
-        assert publisher.publish("Test tweet") is False
-
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
     @patch("examples.herald.publisher.tweepy.Client")
     def test_successful_tweet(self, MockClient):
-        """Successful tweet should return True (OAuth 1.0a path)."""
-        # Setup des Mocks: create_tweet muss ein Objekt mit .data['id'] zurückgeben
+        """Core test: Can publish with mocked client."""
         mock_instance = MockClient.return_value
         mock_instance.create_tweet.return_value = MagicMock(data={"id": "12345"})
 
@@ -66,12 +47,27 @@ class TestTwitterPublisher:
         assert result is True
         mock_instance.create_tweet.assert_called_once()
 
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
+    @patch("examples.herald.publisher.tweepy.Client")
+    def test_verify_credentials_success(self, MockClient):
+        """Test the new diagnostic method."""
+        mock_instance = MockClient.return_value
+        mock_instance.get_me.return_value = MagicMock(
+            data=MagicMock(username="test_user")
+        )
+
+        publisher = TwitterPublisher()
+        assert publisher.verify_credentials() is True
+        mock_instance.get_me.assert_called_once()
+
+    @patch("examples.herald.publisher.tweepy.Client")
+    def test_verify_credentials_fail(self, MockClient):
+        """Test diagnostic when auth fails."""
+        mock_instance = MockClient.return_value
+        mock_instance.get_me.side_effect = Exception("Auth failed")
+
+        publisher = TwitterPublisher()
+        assert publisher.verify_credentials() is False
+
     @patch("examples.herald.publisher.tweepy.Client")
     def test_tweet_with_hashtags(self, MockClient):
         """Tweet with hashtags should be processed correctly."""
@@ -88,12 +84,6 @@ class TestTwitterPublisher:
         assert "#test" in text
         assert "#herald" in text
 
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
     @patch("examples.herald.publisher.tweepy.Client")
     def test_tweet_truncation(self, MockClient):
         """Tweets longer than 280 chars should be truncated."""
@@ -111,12 +101,6 @@ class TestTwitterPublisher:
         text = call_args.kwargs["text"]
         assert len(text) <= 280
 
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
     @patch("examples.herald.publisher.tweepy.Client")
     def test_twitter_403_handling(self, MockClient):
         """403 Forbidden should return False (permission issue)."""
@@ -132,12 +116,6 @@ class TestTwitterPublisher:
 
         assert result is False
 
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
     @patch("examples.herald.publisher.tweepy.Client")
     def test_twitter_401_handling(self, MockClient):
         """401 Unauthorized should return False (invalid credentials)."""
@@ -153,12 +131,6 @@ class TestTwitterPublisher:
 
         assert result is False
 
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "fake_key",
-        "TWITTER_API_SECRET": "fake_secret",
-        "TWITTER_ACCESS_TOKEN": "fake_token",
-        "TWITTER_ACCESS_SECRET": "fake_token_secret"
-    })
     @patch("examples.herald.publisher.tweepy.Client")
     def test_twitter_unexpected_error_handling(self, MockClient):
         """Unexpected errors should be caught and return False."""
@@ -170,6 +142,15 @@ class TestTwitterPublisher:
         result = publisher.publish("Error Tweet")
 
         assert result is False
+
+
+# Separate test for NO credentials (fail-fast)
+def test_no_credentials_fails_safely():
+    """Test without any env vars - should fail gracefully."""
+    with patch.dict(os.environ, {}, clear=True):
+        publisher = TwitterPublisher()
+        assert publisher.client is None
+        assert publisher.verify_credentials() is False
 
 
 class TestLinkedInPublisher:

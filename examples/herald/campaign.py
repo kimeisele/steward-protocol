@@ -285,9 +285,24 @@ Ready to publish to Twitter, LinkedIn, or your blog.
 
 
 def main():
-    print("🚀 HERALD CAMPAIGN MODE ACTIVATED...")
+    print("🦅 HERALD Campaign Starting...")
     print("=" * 60)
 
+    # PHASE 1: PRE-FLIGHT DIAGNOSTIC
+    print("🕵️ Running OAuth 1.0a Diagnostic Check...")
+    from examples.herald.publisher import TwitterPublisher
+    twitter = TwitterPublisher()
+
+    if not twitter.verify_credentials():
+        print("❌ ABORT: Twitter OAuth 1.0a authentication failed")
+        print("   Check: TWITTER_API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET")
+        print("   Check: Dev Portal has OAuth 1.0a enabled and Read/Write permissions")
+        sys.exit(1)
+
+    print("✅ DIAGNOSTIC PASSED: Twitter auth working")
+    print("=" * 60)
+
+    # PHASE 2: CAMPAIGN LOGIC
     # Step 1: Load identity
     identity = load_identity()
     if not identity:

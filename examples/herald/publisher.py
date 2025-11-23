@@ -68,6 +68,28 @@ class TwitterPublisher:
             except Exception as e:
                 logger.error(f"❌ TWITTER: Client initialization crashed: {e}")
 
+    def verify_credentials(self) -> bool:
+        """
+        Diagnostic Method: Checks if we can talk to Twitter using OAuth 1.0a User Context.
+        Uses client.get_me() - a simple read call that proves auth works.
+        Returns: True if connected, False otherwise
+        """
+        if not self.client:
+            logger.error("❌ TWITTER: No client initialized (Missing Credentials)")
+            return False
+        try:
+            # get_me() proves we have valid OAuth 1.0a User Context
+            me = self.client.get_me()
+            if me and me.data:
+                logger.info(f"✅ TWITTER AUTH VERIFIED: Connected as @{me.data.username}")
+                return True
+            else:
+                logger.error("❌ TWITTER: get_me() returned no data")
+                return False
+        except Exception as e:
+            logger.error(f"❌ TWITTER AUTH CHECK FAILED: {type(e).__name__}: {e}")
+            return False
+
     def publish(self, text_content, tags=None):
         """
         Publish a tweet to Twitter using OAuth 1.0a User Context.
