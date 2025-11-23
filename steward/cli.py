@@ -10,24 +10,29 @@ Usage:
   steward keygen                  - Generate cryptographic identity keypair
   steward sign <file>             - Cryptographically sign a file
   steward sign <file> --append    - Sign file and append signature to it
+  steward inspect <agent>         - Inspect agent event log (heartbeat view)
   steward --version               - Show version
   steward --help                  - Show this help
 """
 
 import sys
 import re
+import json
 import argparse
 from pathlib import Path
+from datetime import datetime
 
 try:
     from rich.console import Console
     from rich.panel import Panel
+    from rich.table import Table
 except ImportError:
     # Fallback if rich is not installed
     class Console:
         def print(self, msg):
             print(msg)
     Panel = None
+    Table = None
 
 from steward import crypto
 
@@ -219,6 +224,148 @@ def verify_command(args):
         return True
 
 
+def cmd_inspect(args):
+    """Inspect agent event log and display recent events in a heartbeat view."""
+    agent_name = args.agent
+
+    # Map agent names to event log paths
+    agent_paths = {
+        "agent.steward.herald": Path("data/events/herald.jsonl"),
+        "herald": Path("data/events/herald.jsonl"),
+    }
+
+    event_log_path = agent_paths.get(agent_name)
+
+    if event_log_path is None:
+        console.print(f"[red]❌ Unknown agent: {agent_name}[/red]")
+        console.print(f"[yellow]Available agents: {', '.join(agent_paths.keys())}[/yellow]")
+        sys.exit(1)
+
+    if not event_log_path.exists():
+        console.print(f"[yellow]⚠️  No event log found at {event_log_path}[/yellow]")
+        console.print(f"[dim]Agent has not recorded any events yet.[/dim]")
+        return
+
+    # Read and parse events
+    try:
+        events = []
+        with open(event_log_path, "r") as f:
+            for line in f:
+                if line.strip():
+                    try:
+                        event = json.loads(line.strip())
+                        events.append(event)
+                    except json.JSONDecodeError as e:
+                        console.print(f"[yellow]⚠️  Skipped malformed event: {e}[/yellow]")
+
+        if not events:
+            console.print(f"[yellow]⚠️  Event log is empty[/yellow]")
+            return
+
+        # Display agent status panel
+        last_event = events[-1]
+        last_timestamp = last_event.get("timestamp", "unknown")
+        last_type = last_event.get("event_type", "unknown")
+
+        try:
+            dt = datetime.fromisoformat(last_timestamp.replace("Z", "+00:00"))
+            time_str = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
+        except:
+            time_str = last_timestamp
+
+        status_panel = Panel(
+            f"[bold cyan]📖 {agent_name}[/bold cyan]\n"
+            f"[dim]Total Events: {len(events)}[/dim]\n"
+            f"[dim]Last Activity: {time_str}[/dim]\n"
+            f"[dim]Last Type: {last_type}[/dim]",
+            title="[bold]Agent Heartbeat[/bold]"
+        )
+        console.print(status_panel)
+
+        # Create events table
+        if Table is not None:
+            table = Table(title="Recent Events (last 15)")
+            table.add_column("Seq", style="cyan")
+            table.add_column("Timestamp", style="green")
+            table.add_column("Type", style="magenta")
+            table.add_column("Signature", style="yellow")
+            table.add_column("Payload Preview", style="white")
+
+            # Show last 15 events
+            for event in events[-15:]:
+                seq = str(event.get("sequence_number", "?"))
+                timestamp = event.get("timestamp", "unknown")
+
+                # Format timestamp
+                try:
+                    dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    timestamp = dt.strftime("%H:%M:%S")
+                except:
+                    timestamp = timestamp[:8] if len(timestamp) > 8 else timestamp
+
+                event_type = event.get("event_type", "unknown")
+                signature = event.get("signature")
+                sig_status = "✅" if signature else "❌"
+
+                # Create payload preview
+                payload = event.get("payload", {})
+                if isinstance(payload, dict):
+                    if "content" in payload:
+                        preview = payload["content"][:40] + "..." if len(str(payload.get("content", ""))) > 40 else payload["content"]
+                    elif "error_message" in payload:
+                        preview = payload["error_message"][:40]
+                    elif "platform" in payload:
+                        preview = f"[{payload['platform']}]"
+                    else:
+                        preview = str(list(payload.keys())[:2])
+                else:
+                    preview = str(payload)[:40]
+
+                table.add_row(seq, timestamp, event_type, sig_status, preview)
+
+            console.print(table)
+        else:
+            # Fallback: simple text table if rich Table not available
+            console.print("\n[bold]Recent Events (last 15):[/bold]\n")
+            console.print(f"{'Seq':<4} {'Timestamp':<10} {'Type':<18} {'Sig':<4} {'Preview':<40}")
+            console.print("-" * 76)
+
+            for event in events[-15:]:
+                seq = str(event.get("sequence_number", "?"))
+                timestamp = event.get("timestamp", "unknown")
+
+                try:
+                    dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                    timestamp = dt.strftime("%H:%M:%S")
+                except:
+                    timestamp = timestamp[:8] if len(timestamp) > 8 else timestamp
+
+                event_type = event.get("event_type", "unknown")
+                signature = event.get("signature")
+                sig_status = "✅" if signature else "❌"
+
+                payload = event.get("payload", {})
+                if isinstance(payload, dict) and "content" in payload:
+                    preview = payload["content"][:40]
+                else:
+                    preview = str(payload)[:40]
+
+                console.print(f"{seq:<4} {timestamp:<10} {event_type:<18} {sig_status:<4} {preview:<40}")
+
+        # Event type summary
+        event_types = {}
+        for event in events:
+            etype = event.get("event_type", "unknown")
+            event_types[etype] = event_types.get(etype, 0) + 1
+
+        summary = ", ".join([f"{count} {etype}" for etype, count in sorted(event_types.items())])
+        console.print(f"\n[dim]Event Summary: {summary}[/dim]")
+
+    except Exception as e:
+        console.print(f"[red]❌ Error reading event log: {e}[/red]")
+        sys.exit(1)
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -232,6 +379,8 @@ Examples:
   steward verify STEWARD.md --strict      # Verify and require signature
   steward verify . --all                  # Verify all STEWARD.md files
   steward verify . --all --strict         # Strict verification of all files
+  steward inspect herald                  # View agent heartbeat (recent events)
+  steward inspect agent.steward.herald    # View agent heartbeat by full name
 """
     )
 
@@ -289,6 +438,17 @@ Examples:
     )
     verify_parser.set_defaults(func=verify_command)
 
+    # Inspect subcommand
+    inspect_parser = subparsers.add_parser(
+        "inspect",
+        help="Inspect agent event log and display heartbeat"
+    )
+    inspect_parser.add_argument(
+        "agent",
+        help="Agent name to inspect (e.g., 'herald' or 'agent.steward.herald')"
+    )
+    inspect_parser.set_defaults(func=cmd_inspect)
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -305,6 +465,9 @@ Examples:
         elif args.command == "verify":
             success = args.func(args)
             return 0 if success else 1
+        elif args.command == "inspect":
+            args.func(args)
+            return 0
         else:
             parser.print_help()
             return 1
