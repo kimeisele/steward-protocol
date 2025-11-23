@@ -19,4 +19,8 @@ praw>=7.7.0
 gitpython>=3.1.0
 
 # Media Processing
+# Media Processing
 Pillow>=10.0.0
+
+# GitHub Integration
+PyGithub>=2.1.1

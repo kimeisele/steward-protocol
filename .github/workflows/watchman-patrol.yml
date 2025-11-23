@@ -1,0 +1,34 @@
+name: "👀 Watchman Patrol"
+
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  triage:
+    name: "🛡️ Triage Issue"
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install -r herald/requirements.txt
+
+      - name: "👀 Watchman Triage"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          python watchman/shim.py --action triage --issue_id ${{ github.event.issue.number }}
