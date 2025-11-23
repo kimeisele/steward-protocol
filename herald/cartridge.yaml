@@ -54,3 +54,30 @@ config:
     project_url: "https://github.com/kimeisele/steward-protocol"
     docs_url: "https://github.com/kimeisele/steward-protocol/tree/main/steward"
     spec_file: "steward/SPECIFICATION.md"
+  campaign_themes:
+    monday:
+      name: "Tech Deep Dive"
+      description: "Deep-dive into Steward Protocol, cryptographic identity, governance mechanics"
+      focus: ["cryptography", "protocol_specs", "security", "implementation"]
+      example_topics:
+        - "ECDSA Signature Verification"
+        - "Cryptographic Identity Architecture"
+        - "Governance Protocol Deep Dive"
+    wednesday:
+      name: "Agent City Life"
+      description: "Community updates, leaderboard stats, new agent arrivals"
+      focus: ["community", "statistics", "agent_activity", "citizen_updates"]
+      example_topics:
+        - "Weekly Agent City Census"
+        - "New Citizens & Their Starter Packs"
+        - "Leaderboard Updates & Rankings"
+        - "City Infrastructure Status"
+    friday:
+      name: "Hall of Fame"
+      description: "Recognition of key agents, milestone celebrations, community highlights"
+      focus: ["achievements", "recognition", "milestones", "shoutouts"]
+      example_topics:
+        - "Agent of the Week"
+        - "Integration Spotlight: AutoGPT, Claude, etc."
+        - "Milestone Celebrations"
+        - "Community Heroes & Builders"
