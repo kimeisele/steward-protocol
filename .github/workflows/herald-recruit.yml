@@ -86,14 +86,16 @@ jobs:
       # 🚀 Launch HERALD on the Vibe OS runtime
       - name: Ignite HERALD (via Vibe OS)
         env:
-          # Phase 2: Multi-Channel Publishing
-          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY || '' }}
-          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET || '' }}
-          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN || '' }}
+          # Phase 2: Multi-Channel Publishing (OAuth 1.0a - 4 Keys Required)
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           # Phase 3: Research Mode (Web Search for Trending Topics)
-          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY || '' }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           # Intelligence: LLM-powered content generation (optional)
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || '' }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           echo "🚀 PHOENIX: Igniting HERALD agent..."
           chmod +x examples/herald/campaign.py
