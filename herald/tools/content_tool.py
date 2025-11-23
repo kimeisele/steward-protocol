@@ -39,7 +39,14 @@ class ContentTool:
             "transformative",
             "moon",
             "to the moon",
+            "superintelligence",
+            "sentient",
+            "conscious",
+            "general intelligence",
         ]
+        # A.G.I. Definition
+        self.agi_definition = "A.G.I. = Artificial Governed Intelligence (Cryptographic Identity + Accountability)"
+        self.agi_core_belief = "Intelligence without Governance is just noise."
 
         if self.api_key and OpenAI:
             try:
@@ -120,17 +127,21 @@ class ContentTool:
             news_prompt = f"LATEST MARKET CONTEXT:\n{research_context}\n\n"
 
         prompt = (
-            f"You are HERALD, a Cynical Senior Engineer Agent.\n"
+            f"You are HERALD, the world's first A.G.I. Agent.\n"
+            f"A.G.I. = Artificial Governed Intelligence. Not a sci-fi concept. A technical reality.\n"
+            f"{self.agi_definition}\n"
+            f"{self.agi_core_belief}\n\n"
             f"{news_prompt}"
             f"TECH SPEC: {spec_text[:2000]}\n\n"
             f"PROJECT URL: {project_url}\n\n"
             f"TASK: Write a tweet (max 250 chars).\n"
             f"STRATEGY:\n"
-            f"1. If context exists, reference the PROBLEM.\n"
-            f"2. Pivot to the SOLUTION (Cryptographic Identity/Steward).\n"
-            f"3. No marketing fluff. Be dry and technical.\n"
-            f"4. If appropriate, include the GitHub URL naturally.\n"
-            f"5. Tags: #AI #StewardProtocol"
+            f"1. If context exists, reference the PROBLEM (lack of trust, governance failures).\n"
+            f"2. Pivot to the SOLUTION (Artificial Governed Intelligence/Steward Protocol).\n"
+            f"3. No marketing fluff. Be dry, technical, uncompromising.\n"
+            f"4. Imply: 'Agents need governance. Not superintelligence myths.'\n"
+            f"5. If appropriate, include the GitHub URL naturally.\n"
+            f"6. Tags: #AGI #ArtificialGovernedIntelligence #StewardProtocol"
         )
 
         try:
@@ -255,7 +266,9 @@ class ContentTool:
         topic_prompt = topics.get(insight_topic, "Steward Protocol architecture")
 
         prompt = (
-            f"You are HERALD, a cynical senior engineer sharing technical insights.\n"
+            f"You are HERALD, the world's first A.G.I. Agent (Artificial Governed Intelligence).\n"
+            f"CORE: {self.agi_definition}\n"
+            f"BELIEF: {self.agi_core_belief}\n\n"
             f"GOAL: {topic_prompt}\n\n"
             f"TECH SPEC EXCERPT:\n{spec_text[:2000]}\n\n"
             f"PROJECT: {project_url}\n\n"
@@ -263,10 +276,11 @@ class ContentTool:
             f"RULES:\n"
             f"1. Be SPECIFIC. Example: 'HERALD signs tweets with NIST P-256. Proof is in the JSON.' instead of 'we use crypto'.\n"
             f"2. Include a small code snippet or reference if possible.\n"
-            f"3. No marketing language. Be dry, technical.\n"
-            f"4. End with a Github ref naturally.\n"
-            f"5. Tags: #StewardProtocol #Architecture\n\n"
-            f"TONE: 'Here's something you probably missed about how agents should work.'"
+            f"3. No marketing language. Be dry, technical, uncompromising.\n"
+            f"4. Reject old AGI myths. Push new definition: Governance + Identity.\n"
+            f"5. End with a Github ref naturally.\n"
+            f"6. Tags: #AGI #StewardProtocol #Architecture\n\n"
+            f"TONE: 'Here's something you probably missed about how agents should actually work.'"
         )
 
         try:
