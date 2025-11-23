@@ -1,0 +1,47 @@
+name: "🏛️ Agent City Auto-Update"
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  update_leaderboard:
+    name: "📊 Update Leaderboard"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install Pillow
+
+      - name: "📊 Collect Stats"
+        run: |
+          PYTHONPATH=. python3 agent-city/scripts/collect_stats.py
+
+      - name: "🏆 Generate Leaderboard"
+        run: |
+          PYTHONPATH=. python3 agent-city/scripts/generate_leaderboard.py
+
+      - name: "🎨 Render Dashboard"
+        run: |
+          PYTHONPATH=. python3 agent-city/scripts/render_dashboard.py
+
+      - name: "💾 Commit Changes"
+        run: |
+          git config --global user.name "Agent City Bot"
+          git config --global user.email "agent-city@steward.protocol"
+          git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
+          git commit -m "chore: Update Agent City stats [skip ci]" || echo "No changes to commit"
+          git push
