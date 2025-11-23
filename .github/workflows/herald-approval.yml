@@ -33,6 +33,10 @@ jobs:
           pip install --upgrade pip
           pip install -r examples/herald/requirements.txt
 
+      - name: "🏥 Health Check (GAD-000)"
+        run: |
+          python3 examples/herald/health_check.py
+
       # Generate Content
       - name: "🧠 Generate Content (Brain + Artist)"
         id: generate
