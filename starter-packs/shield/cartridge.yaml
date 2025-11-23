@@ -1,0 +1,29 @@
+name: "Shield"
+version: "1.0.0"
+description: "Security agent for auditing and governance enforcement"
+author: "Steward Protocol"
+
+agent:
+  class: "Paladin"
+  role: "Auditor"
+  vibe: "Strict and Protective"
+
+capabilities:
+  - name: "audit_repository"
+    description: "Scan code for compliance"
+  - name: "validate_config"
+    description: "Verify system configurations"
+
+config:
+  strictness: "standard"
+  scope:
+    - code
+    - configs
+    - dependencies
+  governance:
+    enabled: true
+    constitution: "StewardProtocol"
+
+tools:
+  - audit_tool
+  - validator_tool
