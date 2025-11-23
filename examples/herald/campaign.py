@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-HERALD Campaign Launcher (Simplified OAuth 1.0a Edition)
+HERALD Campaign Launcher (LLM-Powered Insight Agent)
 
 This script:
 1. Initializes TwitterPublisher with OAuth 1.0a credentials
 2. Verifies Twitter connection using verify_credentials()
-3. Publishes test content
-4. Reports results
+3. Generates intelligent content via HERALD Brain (LLM-based)
+4. Publishes content with graceful fallback
+5. Reports results
 """
 
 import os
@@ -26,70 +27,69 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from examples.herald.publisher import TwitterPublisher, MultiChannelPublisher
+from examples.herald.publisher import TwitterPublisher
+from examples.herald.brain import HeraldBrain
 
 
 def run_campaign():
-    """Main campaign execution."""
-    logger.info("🦅 HERALD Campaign Starting...")
+    """Main campaign execution with HERALD Brain."""
+    logger.info("🦅 PHOENIX: Igniting HERALD Brain...")
     logger.info("=" * 70)
 
-    # PHASE 1: INITIALIZE PUBLISHER
-    logger.info("PHASE 1: Initializing Twitter Publisher...")
+    # PHASE 1: INITIALIZE INFRASTRUCTURE
+    logger.info("PHASE 1: Initializing Publisher & Brain...")
     try:
-        twitter = TwitterPublisher()
-        logger.info("✅ Publisher initialized")
+        publisher = TwitterPublisher()
+        brain = HeraldBrain()
+        logger.info("✅ Infrastructure initialized")
     except Exception as e:
-        logger.error(f"❌ CRITICAL: Publisher failed to initialize: {e}")
+        logger.error(f"❌ CRITICAL: {e}")
         sys.exit(1)
 
-    # PHASE 2: DIAGNOSTIC CHECK (OAuth 1.0a)
-    logger.info("\nPHASE 2: Running OAuth 1.0a Diagnostic...")
+    # PHASE 2: VERIFY PUBLISHER
+    logger.info("\nPHASE 2: OAuth 1.0a Diagnostic...")
 
-    if twitter.client is None:
-        logger.error("❌ DIAGNOSTIC FAIL: Client is None - Missing OAuth 1.0a credentials")
-        logger.error("   Required environment variables:")
-        logger.error("   - TWITTER_API_KEY (Consumer Key)")
-        logger.error("   - TWITTER_API_SECRET (Consumer Secret)")
-        logger.error("   - TWITTER_ACCESS_TOKEN (Access Token)")
-        logger.error("   - TWITTER_ACCESS_SECRET (Access Token Secret)")
-        logger.error("")
-        logger.error("   Fix in GitHub Secrets or .env file and retry.")
+    if publisher.client is None:
+        logger.error("❌ DIAGNOSTIC FAIL: Missing Twitter OAuth credentials")
+        logger.error("   Required: TWITTER_API_KEY, TWITTER_API_SECRET,")
+        logger.error("             TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET")
         sys.exit(1)
 
-    # Use the verify_credentials() method
-    if twitter.verify_credentials():
-        logger.info("✅ DIAGNOSTIC PASS: OAuth 1.0a authentication verified")
+    if publisher.verify_credentials():
+        logger.info("✅ DIAGNOSTIC PASS: OAuth 1.0a verified")
     else:
-        logger.error("❌ DIAGNOSTIC FAIL: OAuth 1.0a authentication failed")
-        logger.error("   Check: Are app permissions set to 'Read AND Write' in Dev Portal?")
-        logger.error("   Check: Is OAuth 1.0a User Context enabled?")
+        logger.error("❌ DIAGNOSTIC FAIL: OAuth 1.0a failed")
+        logger.error("   Check permissions & User Context in Dev Portal")
         sys.exit(1)
 
-    # PHASE 3: CAMPAIGN EXECUTION
-    logger.info("\nPHASE 3: Generating and Publishing Content...")
+    # PHASE 3: GENERATE INTELLIGENT CONTENT
+    logger.info("\nPHASE 3: Brain Generating Insight...")
 
-    content = "🦅 HERALD Agent running via GitHub Actions & Steward Protocol. #BuildInPublic #AI"
-    tags = ["#StewardProtocol", "#HERALD"]
+    content = brain.generate_insight()
 
-    logger.info(f"📝 Content: {content}")
-    logger.info(f"🏷️  Tags: {' '.join(tags)}")
+    # Validate content
+    if not content or len(content) < 10:
+        logger.error("❌ BRAIN FART: Generated content too short or empty")
+        sys.exit(1)
 
-    # Try to publish
-    success = twitter.publish(content, tags=tags)
+    logger.info(f"📝 Generated Insight:\n{content}")
+
+    # PHASE 4: PUBLISH
+    logger.info("\nPHASE 4: Publishing to Twitter...")
+
+    success = publisher.publish(content)
 
     if success:
-        logger.info("✅ PHASE 3 COMPLETE: Content published successfully")
+        logger.info("✅ PHASE 4 COMPLETE: Published successfully")
     else:
-        logger.warning("⚠️  PHASE 3 PARTIAL: Publisher returned False")
-        logger.warning("   (This may happen if credentials are missing or invalid)")
+        logger.warning("⚠️  PHASE 4 PARTIAL: Publisher returned False")
+        logger.warning("   (May happen if credentials invalid)")
 
     # SUMMARY
     logger.info("\n" + "=" * 70)
-    logger.info("🎯 HERALD Campaign Execution Complete")
+    logger.info("🎯 HERALD Campaign Complete")
     logger.info("=" * 70)
 
-    # Exit code 0 to not break the workflow (logging is the diagnostics)
     sys.exit(0)
 
 
