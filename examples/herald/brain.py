@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """
-HERALD Brain: Modular LLM-Powered Content Engine
+HERALD Brain: The Agency Model (v1.2)
 
-Enterprise-Grade Architecture:
+Enterprise-Grade Multi-Agent Architecture:
 - ResearchEngine: Market intelligence via Tavily (The Eyes)
-- HeraldBrain: Content orchestrator with dual-mode generation
+- SeniorEditor: Quality assurance via Reflexion Pattern (The Quality Gate)
+- HeraldBrain: Content orchestrator with dual-mode generation (The Core)
   - Twitter Mode: Real-time, snappy insights (150-250 chars)
   - Reddit Mode: Deep technical analysis (800-2000 chars)
+
+The Agency Model:
+1. Research: Scan market for problems (Tavily API)
+2. Draft: Generate content (Haiku for Twitter, Sonnet for Reddit)
+3. Critique: Editor reviews draft against quality criteria
+4. Refine: Editor rewrites if needed (Reflexion Pattern)
+5. Publish: Only approved content goes out
 
 Anti-Slop Philosophy: Every output must provide genuine technical value.
 No marketing fluff. No buzzwords. Pure engineering truth.
@@ -63,7 +71,93 @@ class ResearchEngine:
             return None
 
 
-# --- MODULE 2: THE CORE (Processing) ---
+# --- MODULE 2: THE QUALITY GATE (Editorial) ---
+class SeniorEditor:
+    """
+    The Ruthless Quality Assurance Layer.
+    Critiques content drafts and rewrites them if they fail standards.
+
+    This is the 'Reflexion Pattern' - the agent critiques its own work.
+    No slop gets through. No marketing fluff. Pure technical value.
+    """
+
+    def __init__(self, client):
+        self.client = client
+
+    def critique_and_refine(self, draft, platform="twitter", max_retries=1):
+        """
+        Reviews a content draft and improves it if necessary.
+
+        Args:
+            draft: The initial content to review
+            platform: "twitter" or "reddit" (affects scoring criteria)
+            max_retries: How many rewrite attempts (default 1 to avoid infinite loops)
+
+        Returns:
+            str: Either the original draft (if good) or a refined version
+        """
+        if not self.client:
+            logger.debug("🎨 EDITOR: No LLM available, passing draft as-is")
+            return draft
+
+        # Platform-specific quality criteria
+        criteria = {
+            "twitter": [
+                "Is it generic AI slop? (ChatGPT-sounding clichés)",
+                "Is it overly promotional? (Selling instead of teaching)",
+                "Is it boring or obvious?",
+                "Does it lack technical substance?"
+            ],
+            "reddit": [
+                "Does it read like a sales pitch?",
+                "Is it missing code examples or technical depth?",
+                "Does it use buzzwords without explanations?",
+                "Is the tone inappropriate for the subreddit culture?"
+            ]
+        }
+
+        rules = criteria.get(platform, criteria["twitter"])
+        rules_text = "\n".join(f"{i+1}. {r}" for i, r in enumerate(rules))
+
+        prompt = (
+            f"You are a Ruthless Senior Editor at a top-tier tech publication.\n"
+            f"Review this {platform.upper()} draft:\n\n"
+            f"'{draft}'\n\n"
+            f"QUALITY CRITERIA (fail if ANY apply):\n{rules_text}\n\n"
+            f"TASK:\n"
+            f"- If draft is GOOD (passes all criteria), reply ONLY: PASS\n"
+            f"- If draft is BAD, rewrite it to be:\n"
+            f"  * More technically specific (use concrete examples)\n"
+            f"  * More cynical/honest (no hype)\n"
+            f"  * More actionable (what can the reader DO with this?)\n\n"
+            f"Return ONLY 'PASS' or the rewritten content. No explanations."
+        )
+
+        try:
+            logger.debug("🎨 EDITOR: Reviewing draft...")
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-5-sonnet",  # Editor needs high IQ
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=300
+            )
+            verdict = response.choices[0].message.content.strip()
+
+            if verdict == "PASS" or verdict.startswith("PASS"):
+                logger.info("✅ EDITOR: Draft approved (no changes needed)")
+                return draft
+            else:
+                # Clean the rewrite
+                refined = verdict.replace('"', '').replace("'", "'")
+                logger.info(f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}...")
+                return refined
+
+        except Exception as e:
+            logger.error(f"❌ EDITOR ERROR: {e}")
+            logger.info("🎨 EDITOR: Falling back to original draft")
+            return draft
+
+
+# --- MODULE 3: THE CORE (Processing) ---
 class HeraldBrain:
     """
     The thinking engine for HERALD.
@@ -73,17 +167,20 @@ class HeraldBrain:
     """
 
     def __init__(self):
-        """Initialize the Brain with OpenRouter API and Research Engine."""
+        """Initialize the Brain with OpenRouter API, Research Engine, and Senior Editor."""
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.researcher = ResearchEngine()
         self.client = None
+        self.editor = None
 
         if self.api_key:
             self.client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=self.api_key,
             )
+            self.editor = SeniorEditor(self.client)  # The Quality Gate
             logger.info("✅ BRAIN ONLINE: LLM client initialized (OpenRouter)")
+            logger.info("✅ EDITOR ONLINE: Quality gate active")
         else:
             logger.warning("⚠️ BRAIN: No OPENROUTER_API_KEY. Brain damage.")
 
@@ -166,15 +263,24 @@ class HeraldBrain:
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=150
             )
-            content = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', '')
 
             # Validate length
-            if len(content) > 250:
-                logger.warning(f"⚠️ Content too long ({len(content)} chars), truncating")
-                content = content[:247] + "..."
+            if len(raw_draft) > 250:
+                logger.warning(f"⚠️ Content too long ({len(raw_draft)} chars), truncating")
+                raw_draft = raw_draft[:247] + "..."
 
-            logger.info(f"✅ TWITTER INSIGHT GENERATED: {len(content)} chars")
-            return content
+            logger.info(f"✅ TWITTER DRAFT GENERATED: {len(raw_draft)} chars")
+
+            # QUALITY GATE: Editor reviews and refines the draft
+            if self.editor:
+                final_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
+            else:
+                logger.debug("⚠️ EDITOR: Not available, using raw draft")
+                final_content = raw_draft
+
+            logger.info(f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars")
+            return final_content
 
         except Exception as e:
             logger.error(f"❌ BRAIN TWITTER ERROR: {e}")
@@ -236,10 +342,20 @@ class HeraldBrain:
                 response_format={"type": "json_object"}
             )
             content = response.choices[0].message.content
-            result = json.loads(content)
+            draft_result = json.loads(content)
 
-            logger.info(f"✅ REDDIT DEEPDIVE GENERATED: {len(result.get('body', ''))} chars")
-            return result
+            logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
+
+            # QUALITY GATE: Editor reviews the body (title is usually fine)
+            if self.editor and draft_result.get('body'):
+                refined_body = self.editor.critique_and_refine(
+                    draft_result['body'],
+                    platform="reddit"
+                )
+                draft_result['body'] = refined_body
+                logger.info(f"✅ EDITOR REFINED REDDIT POST: {len(refined_body)} chars")
+
+            return draft_result
 
         except Exception as e:
             logger.error(f"❌ BRAIN REDDIT ERROR: {e}")
