@@ -14,6 +14,9 @@ jobs:
     name: "🤫 Generate & Publish Technical Insight"
     runs-on: ubuntu-latest
 
+    outputs:
+      tweet_generated: ${{ steps.generate.outputs.preview_text != '' }}
+
     steps:
       - name: "📥 Checkout Repository"
         uses: actions/checkout@v4
@@ -33,6 +36,7 @@ jobs:
           python examples/herald/health_check.py
 
       - name: "🧠 Generate Technical Insight Tweet"
+        id: generate
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
@@ -162,3 +166,41 @@ jobs:
           echo "### ❌ Stealth Campaign Failed" >> $GITHUB_STEP_SUMMARY
           echo "Check logs for details" >> $GITHUB_STEP_SUMMARY
           exit 1
+
+  archive:
+    name: "🗃️  Archive to Chain of Trust Ledger"
+    runs-on: ubuntu-latest
+    needs: stealth-campaign
+    if: success()
+
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📚 Archive HERALD Broadcast to Ledger"
+        run: |
+          python archivist/archivist_shim.py --action archive
+
+      - name: "📝 Commit Ledger Updates"
+        run: |
+          git config user.name "ARCHIVIST"
+          git config user.email "archivist@steward-protocol.local"
+          git add archive/ledger.json
+          if git diff --cached --quiet; then
+            echo "ℹ️  No changes to ledger"
+          else
+            git commit -m "chore: ARCHIVIST - Chain of Trust Ledger Updated"
+            git push origin main
+          fi
+
+      - name: "✅ Archive Complete"
+        if: success()
+        run: |
+          echo "### 🗃️  Chain of Trust Archived" >> $GITHUB_STEP_SUMMARY
+          echo "**Ledger updated and committed to main branch**" >> $GITHUB_STEP_SUMMARY
+          python archivist/archivist_shim.py --action ledger >> $GITHUB_STEP_SUMMARY || true
