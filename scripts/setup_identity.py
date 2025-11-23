@@ -18,10 +18,16 @@ import sys
 import os
 from pathlib import Path
 
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 try:
-    from steward import crypto
-except ImportError:
-    print("❌ ERROR: 'steward' module not found")
+    import steward.crypto as crypto
+except ImportError as e:
+    print(f"❌ ERROR: 'steward' module not found: {e}")
+    print(f"   sys.path: {sys.path}")
     print("   Please ensure you're running this from the project root")
     print("   and that the steward package is installed.")
     sys.exit(1)
