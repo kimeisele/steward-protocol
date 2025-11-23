@@ -1,8 +1,13 @@
 name: HERALD Recruitment Campaign
 on:
+  # Manual trigger for testing
+  workflow_dispatch:
+  # Daily heartbeat at 09:00 UTC
+  schedule:
+    - cron: '0 9 * * *'
+  # On push to branch (CI feedback)
   push:
     branches: [ main, master, "claude/*" ]
-  workflow_dispatch:
 
 jobs:
   create-content:

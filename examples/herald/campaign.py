@@ -5,13 +5,16 @@ HERALD Campaign Launcher (Simplified OAuth 1.0a Edition)
 This script:
 1. Initializes TwitterPublisher with OAuth 1.0a credentials
 2. Verifies Twitter connection using verify_credentials()
-3. Publishes test content
-4. Reports results
+3. Generates dynamic content based on git state
+4. Publishes content
+5. Reports results
 """
 
 import os
 import sys
 import logging
+import datetime
+import subprocess
 from pathlib import Path
 
 # Setup Logging
@@ -27,6 +30,26 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from examples.herald.publisher import TwitterPublisher, MultiChannelPublisher
+
+
+def get_git_info():
+    """
+    Fetches the latest commit hash and message for transparency.
+    Returns (commit_hash, commit_message) or ("Unknown", "Manual Run") on error.
+    """
+    try:
+        commit = subprocess.check_output(
+            ['git', 'rev-parse', '--short', 'HEAD'],
+            stderr=subprocess.DEVNULL
+        ).decode('ascii').strip()
+        msg = subprocess.check_output(
+            ['git', 'log', '-1', '--pretty=%B'],
+            stderr=subprocess.DEVNULL
+        ).decode('ascii').strip()
+        return commit, msg
+    except Exception as e:
+        logger.debug(f"Could not fetch git info: {e}")
+        return "Unknown", "Manual Run"
 
 
 def run_campaign():
@@ -69,10 +92,26 @@ def run_campaign():
     # PHASE 3: CAMPAIGN EXECUTION
     logger.info("\nPHASE 3: Generating and Publishing Content...")
 
-    content = "🦅 HERALD Agent running via GitHub Actions & Steward Protocol. #BuildInPublic #AI"
-    tags = ["#StewardProtocol", "#HERALD"]
+    # Generate dynamic content based on git state and timestamp
+    now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    commit_hash, commit_msg = get_git_info()
 
-    logger.info(f"📝 Content: {content}")
+    # Truncate commit message to first 50 chars for tweet length
+    commit_msg_short = commit_msg[:50].split('\n')[0]  # Take only first line
+    if len(commit_msg_short) > 47:
+        commit_msg_short = commit_msg_short[:47] + "..."
+
+    # Construct dynamic content with agent identity
+    content = (
+        f"🦅 HERALD AGENT LOG [{now}]\n"
+        f"Status: OPERATIONAL 🟢\n"
+        f"Deploy: {commit_hash}\n"
+        f"Update: {commit_msg_short}\n\n"
+        f"#StewardProtocol #AI #BuildInPublic"
+    )
+    tags = ["#StewardProtocol", "#HERALD", "#AI"]
+
+    logger.info(f"📝 Generated Content:\n{content}")
     logger.info(f"🏷️  Tags: {' '.join(tags)}")
 
     # Try to publish
