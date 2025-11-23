@@ -1,0 +1,22 @@
+# STEWARD PROTOCOL GOVERNANCE - PHASE 1
+# Philosophy: Benevolent Dictatorship (Bootstrapping Phase)
+
+constitution_authority:
+  - "Kim Eisele <owner>"
+  - "agent.steward.herald <guardian>"
+
+merge_authority:
+  - "Kim Eisele"
+  # HERALD reviews all PRs automatically via CI
+
+code_review_policy:
+  required_approvals: 1
+  automated_checks:
+    - "HeraldConstitution.validate()"
+    - "pytest"
+    - "docs_verification"
+
+roles:
+  dictator: "Kim Eisele"
+  guardian: "HERALD"
+  contributors: []
