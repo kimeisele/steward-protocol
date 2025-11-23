@@ -16,6 +16,8 @@ try:
 except ImportError:
     OpenAI = None
 
+from herald.governance import HeraldConstitution
+
 logger = logging.getLogger("HERALD_CONTENT")
 
 
@@ -33,17 +35,9 @@ class ContentTool:
         """Initialize content tool."""
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.client = None
-        self.banned_phrases = [
-            "game changer",
-            "revolutionary",
-            "transformative",
-            "moon",
-            "to the moon",
-            "superintelligence",
-            "sentient",
-            "conscious",
-            "general intelligence",
-        ]
+        # Load governance from constitution (immutable code-based rules)
+        self.governance = HeraldConstitution()
+
         # A.G.I. Definition
         self.agi_definition = "A.G.I. = Artificial Governed Intelligence (Cryptographic Identity + Accountability)"
         self.agi_core_belief = "Intelligence without Governance is just noise."
@@ -54,7 +48,7 @@ class ContentTool:
                     base_url="https://openrouter.ai/api/v1",
                     api_key=self.api_key,
                 )
-                logger.info("✅ Content: LLM client initialized")
+                logger.info("✅ Content: LLM client initialized (with HeraldConstitution governance)")
             except Exception as e:
                 logger.warning(f"⚠️  Content: Init failed: {e}")
         else:
@@ -97,12 +91,15 @@ class ContentTool:
         logger.warning("⚠️  Spec not found, using fallback")
         return "Steward Protocol: Cryptographic Agent Identity and Signatures."
 
-    def _check_alignment(self, content: str) -> bool:
-        """Check if content violates banned phrases."""
-        for phrase in self.banned_phrases:
-            if phrase.lower() in content.lower():
-                logger.warning(f"❌ Content rejected: contains banned phrase '{phrase}'")
-                return False
+    def _check_alignment(self, content: str, platform: Optional[str] = None) -> bool:
+        """Check if content passes HERALD Constitution governance."""
+        result = self.governance.validate(content, platform=platform)
+        if not result.is_valid:
+            for violation in result.violations:
+                logger.warning(f"❌ Content rejected: {violation}")
+            return False
+        for warning in result.warnings:
+            logger.warning(f"⚠️  {warning}")
         return True
 
     def generate_tweet(self, research_context: Optional[str] = None) -> str:
@@ -159,8 +156,8 @@ class ContentTool:
                 logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
-            # Governance check
-            if not self._check_alignment(raw_draft):
+            # Governance check (using HeraldConstitution)
+            if not self._check_alignment(raw_draft, platform="twitter"):
                 return self._fallback_tweet()
 
             logger.info(f"✅ Tweet generated: {len(raw_draft)} chars")
@@ -298,8 +295,8 @@ class ContentTool:
                 logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
-            # Governance check
-            if not self._check_alignment(raw_draft):
+            # Governance check (using HeraldConstitution)
+            if not self._check_alignment(raw_draft, platform="twitter"):
                 return self._fallback_technical_tweet()
 
             logger.info(f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars")
