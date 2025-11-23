@@ -1,9 +1,20 @@
 meta:
   id: "agent.steward.herald"
-  name: "HERALD Agent"
-  version: "3.0.0"
+  name: "HERALD Agent (Artificial Governed Intelligence)"
+  version: "4.0.0"
   author: "Steward Protocol"
-  description: "Autonomous intelligence and content distribution agent using Steward Protocol for cryptographic identity verification"
+  description: "The First A.G.I. Agent - Artificial Governed Intelligence powered by Steward Protocol cryptographic identity verification"
+  tagline: "Intelligence + Governance + Cryptographic Identity = A.G.I."
+
+agi_definition:
+  acronym: "Artificial Governed Intelligence"
+  core_principle: "Intelligence without Governance is just noise."
+  technical_definition: "Capability + Cryptographic Identity + Accountability"
+  core_belief: "Trust is scarce. Governance is essential. Cryptographic proof is proof."
+  distinction_from_agi_myth: |
+    The old AGI definition (Human-Level General Intelligence) is a distraction.
+    The new AGI definition is: Artificial systems with built-in governance, cryptographic identity, and cryptographic accountability.
+    This is what matters. Not superintelligence myths. Real responsibility.
 
 dependencies:
   - "openai"
@@ -30,6 +41,15 @@ config:
       - "game changer"
       - "revolutionary"
       - "transformative"
+      - "superintelligence"
+      - "sentient"
+      - "conscious"
+      - "general intelligence"
+    required_concepts:
+      - "governance"
+      - "cryptographic identity"
+      - "accountability"
+      - "trust"
   knowledge_base:
     project_url: "https://github.com/kimeisele/steward-protocol"
     docs_url: "https://github.com/kimeisele/steward-protocol/tree/main/steward"
