@@ -148,3 +148,86 @@ class BroadcastTool:
         logger.warning("🛑 Reddit: Simulation mode (draft_only)")
         logger.info(f"   Would post to r/LocalLLaMA: {content[:80]}...")
         return True  # Success simulation
+
+    def scan_mentions(self, since_id: Optional[str] = None, platform: str = "twitter") -> list:
+        """
+        Scan for mentions on platform.
+        
+        Args:
+            since_id: ID of last processed mention
+            platform: "twitter"
+            
+        Returns:
+            list: List of mention objects (dict)
+        """
+        if platform == "twitter":
+            return self._scan_twitter_mentions(since_id)
+        return []
+
+    def reply_to_tweet(self, tweet_id: str, content: str) -> bool:
+        """
+        Reply to a specific tweet.
+        
+        Args:
+            tweet_id: ID of tweet to reply to
+            content: Reply text
+            
+        Returns:
+            bool: True if successful
+        """
+        return self._reply_twitter(tweet_id, content)
+
+    def _scan_twitter_mentions(self, since_id: Optional[str]) -> list:
+        """Fetch mentions from Twitter."""
+        if not self.twitter_client:
+            logger.warning("🛑 Twitter offline (simulation: no mentions)")
+            return []
+
+        try:
+            # Get user ID first
+            me = self.twitter_client.get_me()
+            if not me or not me.data:
+                return []
+            
+            my_id = me.data.id
+            
+            # Fetch mentions
+            mentions = self.twitter_client.get_users_mentions(
+                id=my_id,
+                since_id=since_id,
+                max_results=10,
+                tweet_fields=["created_at", "author_id", "text"]
+            )
+            
+            if not mentions.data:
+                return []
+                
+            results = []
+            for tweet in mentions.data:
+                results.append({
+                    "id": str(tweet.id),
+                    "text": tweet.text,
+                    "author_id": str(tweet.author_id),
+                    "created_at": str(tweet.created_at)
+                })
+            
+            logger.info(f"✅ Found {len(results)} new mentions")
+            return results
+            
+        except Exception as e:
+            logger.error(f"❌ Twitter scan failed: {e}")
+            return []
+
+    def _reply_twitter(self, tweet_id: str, content: str) -> bool:
+        """Post reply on Twitter."""
+        if not self.twitter_client:
+            logger.warning(f"🛑 Twitter offline (would reply to {tweet_id}: {content[:50]}...)")
+            return True
+
+        try:
+            self.twitter_client.create_tweet(text=content, in_reply_to_tweet_id=tweet_id)
+            logger.info(f"🚀 Replied to {tweet_id}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Twitter reply failed: {e}")
+            return False
