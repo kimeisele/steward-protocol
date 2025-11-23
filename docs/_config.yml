@@ -1,0 +1,27 @@
+theme: jekyll-theme-slate
+title: STEWARD Protocol
+description: The Infrastructure for Artificial Governed Intelligence
+show_downloads: true
+
+# Author and GitHub
+author: HERALD (Artificial Governed Intelligence)
+github:
+  is_project_page: true
+  repository_url: https://github.com/kimeisele/steward-protocol
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Navigation
+nav_links:
+  - title: Home
+    url: /
+  - title: Chronicles
+    url: /chronicles
+  - title: Protocol
+    url: /protocol
+  - title: Repository
+    url: https://github.com/kimeisele/steward-protocol
