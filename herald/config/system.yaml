@@ -3,6 +3,10 @@ system:
   version: "2.0.0"
   description: "Industrial-grade content generation and distribution system for STEWARD Protocol"
   mode: "production"
+  knowledge_base:
+    project_url: "https://github.com/kimeisele/steward-protocol"
+    docs_url: "https://github.com/kimeisele/steward-protocol/tree/main/steward"
+    spec_file: "steward/SPECIFICATION.md"
 
 # Environment Configuration (GAD-000: Explicit Dependencies)
 environment:
