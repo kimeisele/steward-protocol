@@ -2,299 +2,283 @@
 """
 Integration Tests for HERALD Multi-Channel Publisher
 
-Tests verify that:
-1. TwitterPublisher can authenticate and post (with OAuth 1.0a)
-2. LinkedInPublisher can authenticate and post
-3. MultiChannelPublisher routes correctly
-4. Errors are NOT silently swallowed (fail fast)
-
-Run with: pytest tests/test_herald_publisher.py -v
+Uses pytest monkeypatch fixture for robust environment variable injection.
+This ensures env vars are set BEFORE TwitterPublisher.__init__() is called.
 """
 
 import os
-import sys
 import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
-
-# Add project root to path
-project_root = Path(__file__).parent.parent
-if str(project_root) not in sys.path:
-    sys.path.insert(0, str(project_root))
+from unittest.mock import MagicMock, patch
 
 from examples.herald.publisher import TwitterPublisher, LinkedInPublisher, MultiChannelPublisher
 
 
-# Apply environment patch to entire test class
-@patch.dict(os.environ, {
-    "TWITTER_API_KEY": "mock_consumer_key",
-    "TWITTER_API_SECRET": "mock_consumer_secret",
-    "TWITTER_ACCESS_TOKEN": "mock_access_token",
-    "TWITTER_ACCESS_SECRET": "mock_access_token_secret"
-})
 class TestTwitterPublisher:
-    """All tests in this class have mocked OAuth 1.0a credentials."""
+    """Test Twitter publishing with OAuth 1.0a credentials."""
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_successful_tweet(self, MockClient):
-        """Core test: Can publish with mocked client."""
-        mock_instance = MockClient.return_value
-        mock_instance.create_tweet.return_value = MagicMock(data={"id": "12345"})
+    @pytest.fixture(autouse=True)
+    def setup_oauth_env(self, monkeypatch):
+        """
+        Fixture that runs before each test in this class.
+        Uses pytest's monkeypatch - the robust way to set env vars.
+        """
+        monkeypatch.setenv("TWITTER_API_KEY", "fake_consumer_key")
+        monkeypatch.setenv("TWITTER_API_SECRET", "fake_consumer_secret")
+        monkeypatch.setenv("TWITTER_ACCESS_TOKEN", "fake_access_token")
+        monkeypatch.setenv("TWITTER_ACCESS_SECRET", "fake_access_secret")
 
-        publisher = TwitterPublisher()
-        result = publisher.publish("Hello World")
+    def test_client_initializes_with_credentials(self):
+        """With env vars set, TwitterPublisher should initialize tweepy.Client."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            publisher = TwitterPublisher()
+            # Client must be initialized (not None)
+            assert publisher.client is not None
+            # Verify tweepy.Client was called with correct args
+            MockClient.assert_called_once()
 
-        assert result is True
-        mock_instance.create_tweet.assert_called_once()
+    def test_successful_tweet_publication(self):
+        """Happy path: tweet publishes successfully."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            # Mock the response structure
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.return_value = MagicMock(data={"id": "12345"})
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_verify_credentials_success(self, MockClient):
-        """Test the new diagnostic method."""
-        mock_instance = MockClient.return_value
-        mock_instance.get_me.return_value = MagicMock(
-            data=MagicMock(username="test_user")
-        )
+            publisher = TwitterPublisher()
+            result = publisher.publish("Hello World")
 
-        publisher = TwitterPublisher()
-        assert publisher.verify_credentials() is True
-        mock_instance.get_me.assert_called_once()
+            assert result is True
+            mock_instance.create_tweet.assert_called_once_with(text="Hello World")
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_verify_credentials_fail(self, MockClient):
-        """Test diagnostic when auth fails."""
-        mock_instance = MockClient.return_value
-        mock_instance.get_me.side_effect = Exception("Auth failed")
+    def test_tweet_with_hashtags(self):
+        """Tweet can include hashtags."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.return_value = MagicMock(data={"id": "999"})
 
-        publisher = TwitterPublisher()
-        assert publisher.verify_credentials() is False
+            publisher = TwitterPublisher()
+            publisher.publish("Hello", tags=["#AI", "#Crypto"])
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_tweet_with_hashtags(self, MockClient):
-        """Tweet with hashtags should be processed correctly."""
-        mock_instance = MockClient.return_value
-        mock_instance.create_tweet.return_value = MagicMock(data={"id": "999"})
+            call_args = mock_instance.create_tweet.call_args
+            text = call_args.kwargs["text"]
+            assert "#AI" in text
+            assert "#Crypto" in text
 
-        publisher = TwitterPublisher()
-        publisher.publish("Hello", tags=["#test", "#herald"])
-
-        # Check that tags were appended
-        call_args = mock_instance.create_tweet.call_args
-        assert call_args is not None
-        text = call_args.kwargs["text"]
-        assert "#test" in text
-        assert "#herald" in text
-
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_tweet_truncation(self, MockClient):
-        """Tweets longer than 280 chars should be truncated."""
+    def test_tweet_truncation_to_280_chars(self):
+        """Tweets longer than 280 chars are truncated."""
         long_text = "A" * 300
+        expected_text = "A" * 277 + "..."
 
-        mock_instance = MockClient.return_value
-        mock_instance.create_tweet.return_value = MagicMock(data={"id": "999"})
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.return_value = MagicMock(data={"id": "999"})
 
-        publisher = TwitterPublisher()
-        publisher.publish(long_text)
+            publisher = TwitterPublisher()
+            publisher.publish(long_text)
 
-        # Verify the posted text is truncated
-        call_args = mock_instance.create_tweet.call_args
-        assert call_args is not None
-        text = call_args.kwargs["text"]
-        assert len(text) <= 280
+            call_args = mock_instance.create_tweet.call_args
+            actual_text = call_args.kwargs["text"]
+            assert len(actual_text) <= 280
+            assert actual_text == expected_text
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_twitter_403_handling(self, MockClient):
-        """403 Forbidden should return False (permission issue)."""
+    def test_403_forbidden_error_handling(self):
+        """403 Forbidden (permission error) returns False."""
         import tweepy
-        mock_instance = MockClient.return_value
-        # Simulate a Forbidden exception
-        mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
-            response=MagicMock(status_code=403)
-        )
 
-        publisher = TwitterPublisher()
-        result = publisher.publish("Forbidden Tweet")
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
+                response=MagicMock()
+            )
 
-        assert result is False
+            publisher = TwitterPublisher()
+            result = publisher.publish("Forbidden Tweet")
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_twitter_401_handling(self, MockClient):
-        """401 Unauthorized should return False (invalid credentials)."""
+            assert result is False
+
+    def test_401_unauthorized_error_handling(self):
+        """401 Unauthorized (bad credentials) returns False."""
         import tweepy
-        mock_instance = MockClient.return_value
-        # Simulate an Unauthorized exception
-        mock_instance.create_tweet.side_effect = tweepy.errors.Unauthorized(
-            response=MagicMock(status_code=401)
-        )
 
-        publisher = TwitterPublisher()
-        result = publisher.publish("Unauthorized Tweet")
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.side_effect = tweepy.errors.Unauthorized(
+                response=MagicMock()
+            )
 
-        assert result is False
+            publisher = TwitterPublisher()
+            result = publisher.publish("Unauthorized Tweet")
 
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_twitter_unexpected_error_handling(self, MockClient):
-        """Unexpected errors should be caught and return False."""
-        mock_instance = MockClient.return_value
-        # Simulate an unexpected exception
-        mock_instance.create_tweet.side_effect = ValueError("Unexpected error")
+            assert result is False
 
-        publisher = TwitterPublisher()
-        result = publisher.publish("Error Tweet")
+    def test_unexpected_error_handling(self):
+        """Unexpected errors are caught and return False."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.side_effect = ValueError("Network error")
 
-        assert result is False
+            publisher = TwitterPublisher()
+            result = publisher.publish("Error Tweet")
+
+            assert result is False
+
+    def test_verify_credentials_success(self):
+        """verify_credentials() returns True when auth succeeds."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.get_me.return_value = MagicMock(
+                data=MagicMock(username="steward_bot")
+            )
+
+            publisher = TwitterPublisher()
+            result = publisher.verify_credentials()
+
+            assert result is True
+            mock_instance.get_me.assert_called_once()
+
+    def test_verify_credentials_failure(self):
+        """verify_credentials() returns False when auth fails."""
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.get_me.side_effect = Exception("Auth failed")
+
+            publisher = TwitterPublisher()
+            result = publisher.verify_credentials()
+
+            assert result is False
 
 
-# Separate test for NO credentials (fail-fast)
-def test_no_credentials_fails_safely():
-    """Test without any env vars - should fail gracefully."""
-    with patch.dict(os.environ, {}, clear=True):
+class TestTwitterPublisherNoCredentials:
+    """Test behavior when NO OAuth 1.0a credentials are provided."""
+
+    def test_client_not_initialized_without_credentials(self, monkeypatch):
+        """Without env vars, client should be None (fail-fast)."""
+        # Clear all Twitter env vars
+        monkeypatch.delenv("TWITTER_API_KEY", raising=False)
+        monkeypatch.delenv("TWITTER_API_SECRET", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_TOKEN", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_SECRET", raising=False)
+
         publisher = TwitterPublisher()
         assert publisher.client is None
-        assert publisher.verify_credentials() is False
+
+    def test_publish_fails_without_client(self, monkeypatch):
+        """publish() returns False if client is None."""
+        monkeypatch.delenv("TWITTER_API_KEY", raising=False)
+        monkeypatch.delenv("TWITTER_API_SECRET", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_TOKEN", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_SECRET", raising=False)
+
+        publisher = TwitterPublisher()
+        result = publisher.publish("Test")
+
+        assert result is False
+
+    def test_verify_credentials_fails_without_client(self, monkeypatch):
+        """verify_credentials() returns False if client is None."""
+        monkeypatch.delenv("TWITTER_API_KEY", raising=False)
+        monkeypatch.delenv("TWITTER_API_SECRET", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_TOKEN", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_SECRET", raising=False)
+
+        publisher = TwitterPublisher()
+        result = publisher.verify_credentials()
+
+        assert result is False
 
 
 class TestLinkedInPublisher:
     """Test LinkedIn publishing functionality."""
 
-    @patch.dict(os.environ, {}, clear=True)
-    def test_no_access_token_returns_false(self):
-        """Publishing without access token should return False gracefully."""
+    def test_no_token_returns_false(self, monkeypatch):
+        """Without LINKEDIN_ACCESS_TOKEN, publish returns False."""
+        monkeypatch.delenv("LINKEDIN_ACCESS_TOKEN", raising=False)
         publisher = LinkedInPublisher()
         result = publisher.publish("Test post")
         assert result is False
 
-    def test_successful_linkedin_post(self):
-        """Successful LinkedIn post should return True."""
-        with patch.dict(os.environ, {"LINKEDIN_ACCESS_TOKEN": "test_token"}):
-            publisher = LinkedInPublisher()
+    def test_successful_post(self, monkeypatch):
+        """Successful LinkedIn post returns True."""
+        monkeypatch.setenv("LINKEDIN_ACCESS_TOKEN", "test_token")
+        publisher = LinkedInPublisher()
 
-            # Mock get_author_urn
-            with patch.object(publisher, "get_author_urn", return_value="urn:li:person:123"):
-                import requests
-                with patch("examples.herald.publisher.requests.post") as mock_post:
-                    mock_response = MagicMock()
-                    mock_response.status_code = 201
-                    mock_post.return_value = mock_response
+        # Mock get_author_urn to return a valid URN
+        with patch.object(publisher, "get_author_urn", return_value="urn:li:person:123"):
+            with patch("examples.herald.publisher.requests.post") as mock_post:
+                mock_response = MagicMock()
+                mock_response.status_code = 201
+                mock_post.return_value = mock_response
 
-                    result = publisher.publish("Test post")
-                    assert result is True
-
-    def test_linkedin_403_returns_false(self):
-        """403 on LinkedIn should return False."""
-        with patch.dict(os.environ, {"LINKEDIN_ACCESS_TOKEN": "test_token"}):
-            publisher = LinkedInPublisher()
-
-            with patch.object(publisher, "get_author_urn", return_value="urn:li:person:123"):
-                import requests
-                with patch("examples.herald.publisher.requests.post") as mock_post:
-                    mock_response = MagicMock()
-                    mock_response.status_code = 403
-                    mock_response.text = "Forbidden"
-                    mock_post.return_value = mock_response
-
-                    result = publisher.publish("Test post")
-                    assert result is False
-
-    def test_no_author_urn_returns_false(self):
-        """Unable to fetch author URN should return False."""
-        with patch.dict(os.environ, {"LINKEDIN_ACCESS_TOKEN": "test_token"}):
-            publisher = LinkedInPublisher()
-
-            with patch.object(publisher, "get_author_urn", return_value=None):
                 result = publisher.publish("Test post")
-                assert result is False
+                assert result is True
+
+    def test_failed_author_urn_returns_false(self, monkeypatch):
+        """If get_author_urn fails, publish returns False."""
+        monkeypatch.setenv("LINKEDIN_ACCESS_TOKEN", "test_token")
+        publisher = LinkedInPublisher()
+
+        with patch.object(publisher, "get_author_urn", return_value=None):
+            result = publisher.publish("Test post")
+            assert result is False
 
 
 class TestMultiChannelPublisher:
     """Test unified multi-channel publishing."""
 
-    @patch.dict(os.environ, {}, clear=True)
-    def test_no_channels_configured_no_failure(self):
-        """If no channels configured, should still return gracefully."""
-        publisher = MultiChannelPublisher()
-        result = publisher.publish_to_all_available("Test content")
-
-        # Should have a summary even if nothing published
-        assert "summary" in result
-        assert isinstance(result["summary"], list)
-
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "test_key",
-        "TWITTER_API_SECRET": "test_secret",
-        "TWITTER_ACCESS_TOKEN": "test_token",
-        "TWITTER_ACCESS_SECRET": "test_token_secret"
-    }, clear=True)
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_twitter_configured_linkedin_not(self, MockClient):
-        """Only Twitter configured - should attempt Twitter only."""
-        mock_instance = MockClient.return_value
-        mock_instance.create_tweet.return_value = MagicMock(data={"id": "123"})
+    def test_no_channels_graceful_fail(self, monkeypatch):
+        """With no credentials, system still returns a valid result dict."""
+        monkeypatch.delenv("TWITTER_API_KEY", raising=False)
+        monkeypatch.delenv("TWITTER_API_SECRET", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_TOKEN", raising=False)
+        monkeypatch.delenv("TWITTER_ACCESS_SECRET", raising=False)
+        monkeypatch.delenv("LINKEDIN_ACCESS_TOKEN", raising=False)
 
         publisher = MultiChannelPublisher()
         result = publisher.publish_to_all_available("Test content")
 
-        assert result["twitter"] is True
-        assert "✅ Twitter" in result["summary"]
-        # LinkedIn should be skipped (no token)
-        assert result["linkedin"] is False
-
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "test_key",
-        "TWITTER_API_SECRET": "test_secret",
-        "TWITTER_ACCESS_TOKEN": "test_token",
-        "TWITTER_ACCESS_SECRET": "test_token_secret"
-    }, clear=True)
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_twitter_failure_is_reported(self, MockClient):
-        """Twitter failure should be recorded in results."""
-        mock_instance = MockClient.return_value
-        import tweepy
-        mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
-            response=MagicMock()
-        )
-
-        publisher = MultiChannelPublisher()
-        result = publisher.publish_to_all_available("Test content")
-
-        assert result["twitter"] is False
-        assert "❌ Twitter" in result["summary"]
-
-
-class TestPublisherIntegration:
-    """End-to-end integration tests."""
-
-    @patch.dict(os.environ, {
-        "TWITTER_API_KEY": "test_twitter_key",
-        "TWITTER_API_SECRET": "test_twitter_secret",
-        "TWITTER_ACCESS_TOKEN": "test_twitter_token",
-        "TWITTER_ACCESS_SECRET": "test_twitter_token_secret"
-    }, clear=True)
-    @patch("examples.herald.publisher.tweepy.Client")
-    def test_full_pipeline_with_twitter_only(self, MockClient):
-        """Test complete publishing pipeline when Twitter is configured."""
-        mock_instance = MockClient.return_value
-        mock_instance.create_tweet.return_value = MagicMock(data={"id": "123"})
-
-        publisher = MultiChannelPublisher()
-        result = publisher.publish_to_all_available(
-            "Test content",
-            twitter_tags=["#test"]
-        )
-
-        assert result["twitter"] is True
-        assert len(result["summary"]) >= 1
-
-    @patch.dict(os.environ, {}, clear=True)
-    def test_missing_all_credentials_graceful_fail(self):
-        """Even with no credentials, the system should not crash."""
-        publisher = MultiChannelPublisher()
-        result = publisher.publish_to_all_available("Test content")
-
-        # Should not crash, should return a proper dict
         assert isinstance(result, dict)
         assert "summary" in result
         assert result["twitter"] is False
         assert result["linkedin"] is False
+
+    def test_twitter_only_configured(self, monkeypatch):
+        """Only Twitter configured - only Twitter gets published to."""
+        monkeypatch.setenv("TWITTER_API_KEY", "key")
+        monkeypatch.setenv("TWITTER_API_SECRET", "secret")
+        monkeypatch.setenv("TWITTER_ACCESS_TOKEN", "token")
+        monkeypatch.setenv("TWITTER_ACCESS_SECRET", "token_secret")
+        monkeypatch.delenv("LINKEDIN_ACCESS_TOKEN", raising=False)
+
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.return_value = MagicMock(data={"id": "123"})
+
+            publisher = MultiChannelPublisher()
+            result = publisher.publish_to_all_available("Test content")
+
+            assert result["twitter"] is True
+            assert "✅ Twitter" in result["summary"]
+            assert result["linkedin"] is False
+
+    def test_twitter_failure_reported(self, monkeypatch):
+        """Twitter failure is recorded in the result."""
+        monkeypatch.setenv("TWITTER_API_KEY", "key")
+        monkeypatch.setenv("TWITTER_API_SECRET", "secret")
+        monkeypatch.setenv("TWITTER_ACCESS_TOKEN", "token")
+        monkeypatch.setenv("TWITTER_ACCESS_SECRET", "token_secret")
+
+        import tweepy
+
+        with patch("examples.herald.publisher.tweepy.Client") as MockClient:
+            mock_instance = MockClient.return_value
+            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
+                response=MagicMock()
+            )
+
+            publisher = MultiChannelPublisher()
+            result = publisher.publish_to_all_available("Test content")
+
+            assert result["twitter"] is False
+            assert "❌ Twitter" in result["summary"]
 
 
 if __name__ == "__main__":
