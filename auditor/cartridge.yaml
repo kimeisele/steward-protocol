@@ -1,0 +1,45 @@
+meta:
+  id: "agent.steward.auditor"
+  name: "AUDITOR Agent (GAD-000 Enforcement)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The System Integrity Guardian - Enforces GAD-000 compliance and verifies protocol adherence"
+  tagline: "Trust, but verify. Verify everything."
+
+mission:
+  core_principle: "The code is the truth. The docs are the law. The AUDITOR ensures they match."
+  technical_definition: "Meta-verification + Compliance enforcement + Architectural resilience"
+  enforcement_model: |
+    The AUDITOR watches the watchers. It verifies:
+    1. Agent identities are cryptographically sound
+    2. Documentation matches implementation
+    3. Event logs are intact and uncorrupted
+    4. GAD-000 (Governance As Design) is enforced at all levels
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+  - "pathlib"
+
+config:
+  compliance:
+    level: "strict"
+    fail_on_violation: true
+    checks:
+      - "identity_integrity"      # Verify all agents have valid keys
+      - "documentation_sync"      # Verify STEWARD.md is present and valid
+      - "event_log_resilience"    # Verify event logs are intact
+
+  scan_paths:
+    agents:
+      - "herald/"
+      - "archivist/"
+      - "auditor/"
+    docs:
+      - "STEWARD.md"
+    events:
+      - "data/events/*.jsonl"
+
+  enforcement:
+    mode: "fail_build"  # Build fails on violations
+    report_path: "data/reports/audit_compliance.json"
