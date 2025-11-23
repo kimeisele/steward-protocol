@@ -327,3 +327,126 @@ class ContentTool:
         ]
         import random
         return random.choice(templates)
+
+    def generate_campaign_tweet(self, roadmap_path: str = "marketing/launch_roadmap.md") -> str:
+        """
+        Generate a tweet based on the active phase of the campaign roadmap.
+        
+        Args:
+            roadmap_path: Path to the roadmap markdown file
+            
+        Returns:
+            str: Tweet content aligned with the current campaign phase
+        """
+        if not self.client:
+            return self._fallback_tweet()
+            
+        # Load roadmap
+        try:
+            roadmap_file = Path(roadmap_path)
+            if not roadmap_file.exists():
+                # Try relative to project root if not found
+                roadmap_file = Path(__file__).parent.parent.parent / roadmap_path
+                
+            if not roadmap_file.exists():
+                logger.warning(f"⚠️ Roadmap not found at {roadmap_path}, falling back to technical insight")
+                return self.generate_technical_insight_tweet()
+                
+            roadmap_content = roadmap_file.read_text()
+        except Exception as e:
+            logger.error(f"❌ Failed to read roadmap: {e}")
+            return self.generate_technical_insight_tweet()
+            
+        # Determine current day in campaign
+        import datetime
+        import re
+        
+        # Extract start date from roadmap
+        start_date_match = re.search(r"\*\*Start Date\*\*: (\d{4}-\d{2}-\d{2})", roadmap_content)
+        if not start_date_match:
+            logger.warning("⚠️ No start date found in roadmap, assuming today is Day 1")
+            current_day = 1
+        else:
+            start_date_str = start_date_match.group(1)
+            start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            today = datetime.date.today()
+            delta = (today - start_date).days
+            current_day = delta + 1 # Day 1 is the start date
+            
+        logger.info(f"📅 Campaign Day: {current_day}")
+        
+        # Extract phases and find the active one
+        # Simple parsing: look for headers like "## Phase: Name (Days X-Y)"
+        phases = re.split(r"^## Phase:", roadmap_content, flags=re.MULTILINE)[1:] # Skip preamble
+        
+        active_phase_text = ""
+        active_phase_name = "General Awareness"
+        
+        for phase in phases:
+            # Extract day range
+            header_line = phase.split("\n")[0].strip()
+            range_match = re.search(r"\(Days (\d+)-(\d+)\)", header_line)
+            
+            if range_match:
+                start_day = int(range_match.group(1))
+                end_day = int(range_match.group(2))
+                
+                if start_day <= current_day <= end_day:
+                    active_phase_name = header_line.split("(")[0].strip()
+                    active_phase_text = phase
+                    break
+            else:
+                # Handle single day or open ended if needed, but for now strict format
+                pass
+                
+        if not active_phase_text:
+            logger.warning(f"⚠️ No active phase found for Day {current_day}. Campaign might be over or not started.")
+            # Fallback to general technical insight if outside campaign window
+            return self.generate_technical_insight_tweet()
+            
+        logger.info(f"🎯 Active Phase: {active_phase_name}")
+        
+        # Generate tweet based on phase narrative
+        spec_text = self._read_spec()
+        kb = self._load_knowledge_base()
+        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
+        
+        prompt = (
+            f"You are HERALD, executing Day {current_day} of the A.G.I. Launch Campaign.\n"
+            f"CORE DEFINITION: {self.agi_definition}\n\n"
+            f"CURRENT CAMPAIGN PHASE: {active_phase_name}\n"
+            f"PHASE DETAILS:\n{active_phase_text}\n\n"
+            f"TECH SPEC CONTEXT:\n{spec_text[:1500]}\n\n"
+            f"TASK: Write a tweet (max 250 chars) for this specific campaign phase.\n"
+            f"STRATEGY:\n"
+            f"1. Focus strictly on the 'Narrative' and 'Proof Point' defined in the phase.\n"
+            f"2. Be authoritative, not promotional. 'Here is the proof', not 'Check this out'.\n"
+            f"3. Link to the specific proof point file if mentioned (e.g. docs/ledger-viewer.html) or the project URL.\n"
+            f"4. Use tags: #AGI #StewardProtocol #{active_phase_name.replace(' ', '')}\n"
+            f"5. Project URL: {project_url}\n"
+        )
+        
+        try:
+            logger.debug(f"🧠 Generating campaign tweet for Day {current_day}...")
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-haiku",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=150,
+                temperature=0.7
+            )
+
+            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+
+            if len(raw_draft) > 250:
+                raw_draft = raw_draft[:247] + "..."
+
+            # Governance check
+            if not self._check_alignment(raw_draft, platform="twitter"):
+                return self._fallback_technical_tweet()
+
+            logger.info(f"✅ Campaign tweet generated: {len(raw_draft)} chars")
+            return raw_draft
+
+        except Exception as e:
+            logger.error(f"❌ Campaign generation error: {e}")
+            return self._fallback_technical_tweet()
