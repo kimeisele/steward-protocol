@@ -1,0 +1,70 @@
+{
+  "agent": {
+    "id": "agent.vibe.herald",
+    "name": "HERALD",
+    "version": "1.0.0",
+    "description": "Agent recruitment and market intelligence bot"
+  },
+  
+  "steward": {
+    "identity_path": "steward/keys/herald_identity.md",
+    "private_key_path": "steward/keys/herald_private_key",
+    "organization": "org.vibe.steward"
+  },
+  
+  "twitter": {
+    "enabled": true,
+    "rate_limits": {
+      "posts_per_day": 10,
+      "steward_mentions_per_week": 3
+    }
+  },
+  
+  "reddit": {
+    "enabled": true,
+    "user_agent": "HERALD:v1.0.0 (by /u/YourUsername)",
+    "rate_limits": {
+      "posts_per_day_per_subreddit": 1,
+      "steward_mentions_per_week": 3
+    },
+    "target_subreddits": [
+      "r/LocalLLaMA",
+      "r/MachineLearning",
+      "r/programming",
+      "r/singularity",
+      "r/opensource"
+    ]
+  },
+  
+  "content_strategy": {
+    "mix": {
+      "educational": 0.80,
+      "engagement": 0.15,
+      "promotional": 0.05
+    },
+    "quality_threshold": 0.75,
+    "topics": [
+      "agent identity and verification",
+      "multi-agent system trust",
+      "cryptographic signatures for AI",
+      "agent collaboration patterns",
+      "graceful degradation in distributed systems",
+      "federated agent discovery",
+      "agent capability attestation"
+    ]
+  },
+  
+  "quality_gates": {
+    "min_genuine_value": 7,
+    "min_not_promotional": 8,
+    "min_appropriate_tone": 7,
+    "min_has_proof": 6,
+    "min_discussion_potential": 6
+  },
+  
+  "emergency_protocols": {
+    "auto_delete_if_downvoted_below": -5,
+    "pause_posting_if_flagged": true,
+    "cooldown_period_days": 7
+  }
+}
