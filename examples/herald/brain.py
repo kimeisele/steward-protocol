@@ -27,6 +27,7 @@ import logging
 from pathlib import Path
 from openai import OpenAI
 from tavily import TavilyClient
+from examples.herald.aligner import VibeAligner
 
 logger = logging.getLogger("HERALD_BRAIN")
 
@@ -167,11 +168,12 @@ class HeraldBrain:
     """
 
     def __init__(self):
-        """Initialize the Brain with OpenRouter API, Research Engine, and Senior Editor."""
+        """Initialize the Brain with OpenRouter API, Research Engine, Senior Editor, and Governance."""
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.researcher = ResearchEngine()
         self.client = None
         self.editor = None
+        self.aligner = VibeAligner()  # The Governance Module (The Conscience)
 
         if self.api_key:
             self.client = OpenAI(
@@ -181,6 +183,7 @@ class HeraldBrain:
             self.editor = SeniorEditor(self.client)  # The Quality Gate
             logger.info("✅ BRAIN ONLINE: LLM client initialized (OpenRouter)")
             logger.info("✅ EDITOR ONLINE: Quality gate active")
+            logger.info("🛡️ ALIGNER ONLINE: Governance enforcement active")
         else:
             logger.warning("⚠️ BRAIN: No OPENROUTER_API_KEY. Brain damage.")
 
@@ -272,14 +275,22 @@ class HeraldBrain:
 
             logger.info(f"✅ TWITTER DRAFT GENERATED: {len(raw_draft)} chars")
 
-            # QUALITY GATE: Editor reviews and refines the draft
+            # QUALITY GATE 1: Editor reviews and refines the draft
             if self.editor:
-                final_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
+                edited_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
             else:
                 logger.debug("⚠️ EDITOR: Not available, using raw draft")
-                final_content = raw_draft
+                edited_content = raw_draft
 
-            logger.info(f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars")
+            # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
+            final_content = self.aligner.align(edited_content, platform="twitter", client=self.client)
+
+            if not final_content:
+                # Governance rejected the content. Fallback to safe spec reading.
+                logger.warning("⚠️ ALIGNER REJECTED: Content violates governance. Switching to fallback.")
+                return self._fallback_content()
+
+            logger.info(f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars (passed editor + aligner)")
             return final_content
 
         except Exception as e:
@@ -346,15 +357,26 @@ class HeraldBrain:
 
             logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
 
-            # QUALITY GATE: Editor reviews the body (title is usually fine)
-            if self.editor and draft_result.get('body'):
+            # QUALITY GATE 1: Editor reviews the body (title is usually fine)
+            edited_body = draft_result.get('body', '')
+            if self.editor and edited_body:
                 refined_body = self.editor.critique_and_refine(
-                    draft_result['body'],
+                    edited_body,
                     platform="reddit"
                 )
                 draft_result['body'] = refined_body
                 logger.info(f"✅ EDITOR REFINED REDDIT POST: {len(refined_body)} chars")
 
+            # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
+            aligned_body = self.aligner.align(draft_result['body'], platform="reddit", client=self.client)
+
+            if not aligned_body:
+                # Governance rejected the content. Return None to indicate failure.
+                logger.warning("⚠️ ALIGNER REJECTED: Reddit post violates governance.")
+                return None
+
+            draft_result['body'] = aligned_body
+            logger.info(f"✅ FINAL REDDIT POST: {len(aligned_body)} chars (passed editor + aligner)")
             return draft_result
 
         except Exception as e:
