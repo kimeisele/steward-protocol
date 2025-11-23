@@ -324,7 +324,7 @@ class EventLog:
         content: str,
         platform: str,
         context: Optional[Dict[str, Any]] = None,
-    ) -> bool:
+    ) -> Optional[Event]:
         """
         Record that HERALD generated content.
 
@@ -334,7 +334,7 @@ class EventLog:
             context: Optional metadata
 
         Returns:
-            True if successfully recorded
+            Event object if successfully recorded, None otherwise
         """
         event = self.create_event(
             event_type="content_generated",
@@ -345,7 +345,9 @@ class EventLog:
                 "context": context or {},
             },
         )
-        return self.commit(event)
+        if self.commit(event):
+            return event
+        return None
 
     def record_content_published(
         self,
@@ -353,7 +355,7 @@ class EventLog:
         platform: str,
         post_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-    ) -> bool:
+    ) -> Optional[Event]:
         """
         Record that HERALD published content.
 
@@ -364,7 +366,7 @@ class EventLog:
             metadata: Optional metadata
 
         Returns:
-            True if successfully recorded
+            Event object if successfully recorded, None otherwise
         """
         event = self.create_event(
             event_type="content_published",
@@ -375,14 +377,16 @@ class EventLog:
                 "metadata": metadata or {},
             },
         )
-        return self.commit(event)
+        if self.commit(event):
+            return event
+        return None
 
     def record_content_rejected(
         self,
         content: str,
         reason: str,
         violations: Optional[List[str]] = None,
-    ) -> bool:
+    ) -> Optional[Event]:
         """
         Record that HERALD rejected content due to governance violations.
 
@@ -392,7 +396,7 @@ class EventLog:
             violations: List of specific governance violations
 
         Returns:
-            True if successfully recorded
+            Event object if successfully recorded, None otherwise
         """
         event = self.create_event(
             event_type="content_rejected",
@@ -402,14 +406,16 @@ class EventLog:
                 "violations": violations or [],
             },
         )
-        return self.commit(event)
+        if self.commit(event):
+            return event
+        return None
 
     def record_system_error(
         self,
         error_type: str,
         error_message: str,
         traceback: Optional[str] = None,
-    ) -> bool:
+    ) -> Optional[Event]:
         """
         Record a system error.
 
@@ -419,7 +425,7 @@ class EventLog:
             traceback: Optional traceback information
 
         Returns:
-            True if successfully recorded
+            Event object if successfully recorded, None otherwise
         """
         event = self.create_event(
             event_type="system_error",
@@ -429,7 +435,9 @@ class EventLog:
                 "traceback": traceback,
             },
         )
-        return self.commit(event)
+        if self.commit(event):
+            return event
+        return None
 
 
 def get_event_log(ledger_path: Optional[Path] = None) -> EventLog:

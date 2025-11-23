@@ -16,7 +16,7 @@
 **`[STANDARD]` Additional fields:**
 - **Trust Score:** `0.95 ⭐⭐⭐⭐⭐ (Highly Trusted)`
 - **Protocol Compliance:** `Level 2 (Standard)`
-- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEV5W70DZQKd4OAlKF84bVH9cRkJlL24WV9djJKsFveeYJzbPB36UK2ql8z1DgTF9vYQsNc+EbdJ/wpuPj/bIoQg==`
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIeUOX7xPIX/tSOUpqQTjLjVx4A+Vsh8kNF0ID5yxMlBov08b4cBOX7pd1/b0dnHDxXj1qRftwWVPFjKdHF+Yvw==`
 
 ---
 
@@ -155,12 +155,54 @@ steward inspect agent.vibe.herald
 
 ---
 
+## 🧹 Tidy Protocols (Repository Maintenance)
+
+**Purpose:** HERALD maintains repository hygiene through autonomous organization. Tidy Protocols define how files are organized and which paths are protected from modification.
+
+### Organization Rules
+
+Files matching these patterns are automatically organized by HERALD's Tidy capability:
+
+```
+* .log files       -> data/logs/
+* .jsonl files     -> data/history/
+* .csv files       -> data/analysis/
+* *.png, *.jpg     -> assets/media/
+* temp_*, debug_*  -> _archive/quarantine/
+```
+
+### Protected Paths (IMMUTABLE)
+
+These paths are **NEVER** modified by Tidy:
+
+```
+herald/                 (HERALD's core logic)
+.github/                (GitHub workflows & config)
+STEWARD.md              (This protocol document)
+STEWARD_SIGNATURE       (Protocol verification)
+requirements.txt        (Dependencies)
+.gitignore              (Version control rules)
+*.md (documentation)    (Human-written guides)
+*.py (in root)          (Script layer)
+```
+
+**Consequence:** If a file matches a protected pattern, it is left untouched. Tidy silently skips it.
+
+### Logging
+
+Every Tidy action is reported via the Scribe:
+- *"🧹 TIDY: Organized X files into Y directories"*
+- *"⚠️  TIDY: 3 files match protected patterns (skipped)"*
+
+---
+
 ## 🔄 Status & Updates `[STANDARD]`
 
 **Current Status:**
 - ✅ Operational (specification stable, agent implementations ongoing)
 
 **Recent Updates:**
+- **2025-11-23:** Tidy Protocols (Repository Maintenance) added - HERALD now autonomously organizes files
 - **2025-11-22:** Agent Identity Protocol (Level 2 standard) finalized
 - **2025-11-21:** Federation model specification released
 - **2025-11-20:** Trust model and SLA framework defined
@@ -183,6 +225,6 @@ steward inspect agent.vibe.herald
 
 **Organization Version:** 1.1.0
 **Protocol Version:** STEWARD v1.1.0
-**Last Updated:** 2025-11-22
+**Last Updated:** 2025-11-23
 
-<!-- STEWARD_SIGNATURE: jlBD0p89XWRaQKVJXJfwKe3xWBIIGoPl6HtYsN5kpo6UkdAYY4NY4PaeLWvBOw0XDRdl+sRbM3X3HkQjAmGmpA== -->
+<!-- STEWARD_SIGNATURE: KESGqjNOL6L+sSDx7zJEaz35aDdRqK0FqZw2qF421Enb1j6eXs/6qkqNTz5D7kVWahwU8sziyuuEy6Fb/9nJlA== -->
