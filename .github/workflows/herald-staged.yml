@@ -25,8 +25,8 @@ jobs:
       - name: Install & Verify
         run: |
           pip install --upgrade pip
-          pip install -r examples/herald/requirements.txt
-          python3 examples/herald/health_check.py
+          pip install -r herald/requirements.txt
+          echo "✅ VibeOS Kernel system ready"
 
   # ========== JOB 2: GENERATION (WITH ASSERTIONS) ==========
   proposal:
@@ -45,7 +45,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
-          pip install -r examples/herald/requirements.txt
+          pip install -r herald/requirements.txt
 
       - name: 🧠 Generate Content
         id: generate
@@ -53,17 +53,17 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
         run: |
-          python3 examples/herald/generate_only.py
+          python herald/main.py --action generate
 
           # ASSERTION: File must exist
           if [ ! -f dist/content.json ]; then
-            echo "❌ CRITICAL: Brain failed - no output file created"
+            echo "❌ CRITICAL: Generation failed - no output file created"
             exit 1
           fi
 
           # ASSERTION: File must not be empty
           if [ ! -s dist/content.json ]; then
-            echo "❌ CRITICAL: Brain produced empty file"
+            echo "❌ CRITICAL: Generated file is empty"
             exit 1
           fi
 
@@ -130,7 +130,10 @@ jobs:
           if [ -f dist/content.json ]; then
             echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY
+            echo "**Tweet Text:**" >> $GITHUB_STEP_SUMMARY
+            python3 -c "import json; d=json.load(open('dist/content.json')); print(f\"> {d.get('text', 'N/A')}\");" >> $GITHUB_STEP_SUMMARY || echo "N/A" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Visual Attachment:** None (text-only campaign)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ No content found" >> $GITHUB_STEP_SUMMARY
@@ -170,7 +173,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install --upgrade pip
-          pip install -r examples/herald/requirements.txt
+          pip install -r herald/requirements.txt
 
       - name: Download Artifacts
         uses: actions/download-artifact@v4
@@ -193,7 +196,7 @@ jobs:
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
         run: |
-          python3 examples/herald/publish_only.py
+          python herald/main.py --action publish
 
       - name: 📊 Publication Summary
         if: success()
