@@ -391,3 +391,7 @@ To bring HERALD into full operational status:
    - [ ] Multi-sig capability setup
    - [ ] Federation registry publication
    - [ ] SLA commitment definitions
+
+---
+
+<!-- STEWARD_SIGNATURE: PENDING_AGENT_SIGNATURE -->
