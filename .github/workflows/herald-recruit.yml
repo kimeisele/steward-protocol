@@ -54,6 +54,13 @@ jobs:
           echo "🧪 Running integration tests..."
           pytest tests/test_herald_publisher.py -v
 
+      - name: Upload Generated Content
+        uses: actions/upload-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
+          retention-days: 1
+
   review-gate:
     needs: create-content
     runs-on: ubuntu-latest
@@ -62,10 +69,42 @@ jobs:
       name: production-approval
       url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
-      - name: Awaiting Operator Decision
+      - name: Download Content
+        uses: actions/download-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
+
+      - name: 📺 Director's Monitor - What You're Approving
         run: |
-          echo "⏳ Waiting for operator approval..."
-          echo "This job is blocked until you click 'Approve' above"
+          echo "# 🦅 HERALD Campaign - Ready for Approval" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚦 Status: **AWAITING YOUR APPROVAL**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f dist/content.json ]; then
+            echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY 2>/dev/null || \
+              (echo "**Tweet Text:** $(python3 -c "import json; print(json.load(open('dist/content.json')).get('text', 'N/A'))")" >> $GITHUB_STEP_SUMMARY)
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No content found - check create-content logs" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Approval Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- Health check: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Content generated: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎬 YOUR DECISION" >> $GITHUB_STEP_SUMMARY
+          echo "Click **Approve** above to publish this to Twitter, or **Deny** to cancel." >> $GITHUB_STEP_SUMMARY
 
   execute-publish:
     needs: review-gate
@@ -75,6 +114,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Download Approved Content
+        uses: actions/download-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
 
       - name: Set up Python
         uses: actions/setup-python@v4
