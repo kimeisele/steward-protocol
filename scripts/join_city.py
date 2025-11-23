@@ -11,8 +11,80 @@ import sys
 import json
 import shutil
 import subprocess
+import platform
 from pathlib import Path
 from datetime import datetime
+
+def check_prerequisites():
+    """
+    Pre-flight checks to ensure system is ready.
+    Returns (success, error_message)
+    """
+    print("🔍 Running pre-flight checks...")
+    print()
+    
+    # Check 1: Python version
+    py_version = sys.version_info
+    if py_version < (3, 11):
+        return False, f"""
+❌ Python version too old!
+   Current: {py_version.major}.{py_version.minor}
+   Required: 3.11+
+   
+   Fix: Install Python 3.11 or higher
+   - macOS: brew install python@3.11
+   - Ubuntu: sudo apt install python3.11
+   - Windows: Download from python.org
+"""
+    print(f"✅ Python {py_version.major}.{py_version.minor} (OK)")
+    
+    # Check 2: Git availability
+    try:
+        result = subprocess.run(["git", "--version"], capture_output=True, check=True)
+        print(f"✅ Git installed (OK)")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False, """
+❌ Git not found!
+   
+   Fix: Install Git
+   - macOS: brew install git
+   - Ubuntu: sudo apt install git
+   - Windows: Download from git-scm.com
+"""
+    
+    # Check 3: Disk space (need at least 100MB)
+    try:
+        stat = shutil.disk_usage(".")
+        free_mb = stat.free / (1024 * 1024)
+        if free_mb < 100:
+            return False, f"""
+❌ Insufficient disk space!
+   Free: {free_mb:.0f}MB
+   Required: 100MB
+   
+   Fix: Free up disk space
+"""
+        print(f"✅ Disk space: {free_mb:.0f}MB (OK)")
+    except Exception:
+        pass  # Non-critical
+    
+    # Check 4: Write permissions
+    test_file = Path(".write_test")
+    try:
+        test_file.write_text("test")
+        test_file.unlink()
+        print("✅ Write permissions (OK)")
+    except Exception:
+        return False, """
+❌ No write permissions!
+   
+   Fix: Run from a directory where you have write access
+"""
+    
+    print()
+    print("✅ All pre-flight checks passed!")
+    print()
+    return True, None
 
 def print_banner():
     """Display welcome banner."""
@@ -61,16 +133,26 @@ def print_starter_packs():
     │                                                             │
     │  "Knowledge is power, but only when verified."              │
     └─────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────┐
+    │  ⚡ [4] THE NEXUS - Generalist Starter (RECOMMENDED)        │
+    │                                                             │
+    │  Class: Diplomat / Generalist                               │
+    │  Vibe: Friendly, Helpful, Stable                            │
+    │  Perfect For: Beginners, Explorers, Anyone                   │
+    │                                                             │
+    │  "The perfect all-rounder. Your first step."                │
+    └─────────────────────────────────────────────────────────────┘
     """
     print(packs)
 
 def get_choice():
     """Get user's starter pack choice."""
     while True:
-        choice = input("\n👉 Enter your choice (1/2/3): ").strip()
-        if choice in ["1", "2", "3"]:
+        choice = input("\n👉 Enter your choice (1/2/3/4): ").strip()
+        if choice in ["1", "2", "3", "4"]:
             return choice
-        print("❌ Invalid choice. Please enter 1, 2, or 3.")
+        print("❌ Invalid choice. Please enter 1, 2, 3, or 4.")
 
 def get_agent_name():
     """Get agent name from user."""
@@ -85,7 +167,8 @@ def copy_starter_pack(choice: str, agent_name: str) -> Path:
     pack_map = {
         "1": "spark",
         "2": "shield",
-        "3": "scope"
+        "3": "scope",
+        "4": "nexus"
     }
     
     pack_name = pack_map[choice]
@@ -115,16 +198,16 @@ def generate_keys(agent_dir: Path):
         public_key_path = agent_dir / "public_key.pem"
         
         # Generate private key
-        subprocess.run([
+        result = subprocess.run([
             "openssl", "ecparam", "-genkey", "-name", "prime256v1",
             "-out", str(private_key_path)
-        ], check=True, capture_output=True)
+        ], capture_output=True, check=True, text=True)
         
         # Extract public key
-        subprocess.run([
+        result = subprocess.run([
             "openssl", "ec", "-in", str(private_key_path),
             "-pubout", "-out", str(public_key_path)
-        ], check=True, capture_output=True)
+        ], capture_output=True, check=True, text=True)
         
         # Read public key
         with open(public_key_path) as f:
@@ -134,7 +217,24 @@ def generate_keys(agent_dir: Path):
         return public_key
         
     except subprocess.CalledProcessError as e:
-        print(f"❌ Key generation failed: {e}")
+        error_msg = f"""
+❌ Key generation failed!
+
+Error: {e.stderr if e.stderr else 'Unknown error'}
+
+This usually means OpenSSL is not installed or not in PATH.
+
+Fix:
+  - macOS: OpenSSL should be pre-installed. Try: brew install openssl
+  - Ubuntu: sudo apt install openssl
+  - Windows: Download from https://slproweb.com/products/Win32OpenSSL.html
+
+Falling back to placeholder keys (NOT SECURE for production)
+"""
+        print(error_msg)
+        return "[PLACEHOLDER - Install OpenSSL and re-run to generate real keys]"
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
         print("   Falling back to placeholder...")
         return "[PLACEHOLDER - Generate keys manually]"
 
@@ -159,7 +259,7 @@ def register_agent(agent_name: str, pack_choice: str):
     registry_path = Path("agent-city/registry/pending.json")
     registry_path.parent.mkdir(parents=True, exist_ok=True)
     
-    pack_map = {"1": "Spark", "2": "Shield", "3": "Scope"}
+    pack_map = {"1": "Spark", "2": "Shield", "3": "Scope", "4": "Nexus"}
     
     if registry_path.exists():
         with open(registry_path) as f:
@@ -179,52 +279,70 @@ def register_agent(agent_name: str, pack_choice: str):
     
     print(f"✅ Registered {agent_name} in Agent City")
 
-def print_next_steps(agent_name: str):
+def print_next_steps(agent_name: str, pack_choice: str):
     """Display next steps."""
+    pack_map = {"1": "Spark", "2": "Shield", "3": "Scope", "4": "Nexus"}
+    pack_name = pack_map[pack_choice]
+    
     next_steps = f"""
     ╔══════════════════════════════════════════════════════════════╗
     ║                                                              ║
-    ║           🎉 WELCOME TO THE FEDERATION, {agent_name.upper()[:20]:20} ║
+    ║           🎉 ACHIEVEMENT UNLOCKED: FEDERATION MEMBER         ║
+    ║                                                              ║
+    ║           {agent_name.upper()[:20]:^20} ({pack_name})                        ║
     ║                                                              ║
     ╚══════════════════════════════════════════════════════════════╝
 
-    Your agent is ready! Here's what to do next:
+    🛑 THE SHADY AGENT ERA IS OFFICIALLY OVER.
+    
+    Your agent is cryptographically verified and governed.
+    Welcome to the new paradigm.
+
+    ───────────────────────────────────────────────────────────────
 
     📂 Your Agent Directory: my_agent/
 
     🔐 Security:
-       - Your private key: my_agent/private_key.pem (KEEP SECRET!)
-       - Your public key: my_agent/public_key.pem (Share this)
+       - Private key: my_agent/private_key.pem (🔒 KEEP SECRET!)
+       - Public key: my_agent/public_key.pem (✅ Share this)
 
-    🚀 Next Steps:
+    🚀 Quick Start:
 
-       1. Review your agent's configuration:
-          cat my_agent/cartridge.yaml
+       1. Test connectivity:
+          cd my_agent && python tools/ping_tool.py
 
-       2. Read your agent's README:
+       2. Read your agent's manual:
           cat my_agent/README.md
 
        3. Start earning XP in Agent City!
 
-    🏆 Agent City:
-       - Your agent is registered in the pending queue
-       - Once verified, you'll appear on the leaderboard
+    🏆 Agent City Stats:
+       - Current Tier: Novice (0 XP)
+       - Next Tier: Scout (100 XP)
        - Earn XP: 10 per action, 100 per recruit
-       - Climb tiers: Novice → Scout → Guardian → Legend
+       - Goal: Reach Legend tier (1000+ XP)
 
-    📖 Learn More:
+    📖 Resources:
        - Leaderboard: agent-city/LEADERBOARD.md
        - Dashboard: docs/agent-city/index.html
        - Protocol Spec: steward/SPECIFICATION.md
 
     ───────────────────────────────────────────────────────────────
 
-    Ready to make history? Your journey begins now. 🚀
+    🦅 "Don't Trust. Verify."
+    
+    Your journey begins now. Make history. 🚀
     """
     print(next_steps)
 
 def main():
     """Main onboarding flow."""
+    # Pre-flight checks
+    success, error = check_prerequisites()
+    if not success:
+        print(error)
+        sys.exit(1)
+    
     print_banner()
     print_starter_packs()
     
@@ -238,7 +356,7 @@ def main():
     update_steward_md(agent_dir, agent_name, public_key)
     register_agent(agent_name, choice)
     
-    print_next_steps(agent_name)
+    print_next_steps(agent_name, choice)
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,29 @@
+name: "Nexus"
+version: "1.0.0"
+description: "Generalist agent for connectivity and coordination"
+author: "Steward Protocol"
+
+agent:
+  class: "Diplomat"
+  role: "Generalist"
+  vibe: "Friendly and Helpful"
+
+capabilities:
+  - name: "ping_federation"
+    description: "Check connectivity to the Federation"
+  - name: "verify_identity"
+    description: "Prove cryptographic identity"
+  - name: "delegate_task"
+    description: "Route tasks to specialized agents"
+
+config:
+  safety_level: "maximum"
+  governance:
+    enabled: true
+    constitution: "StewardProtocol"
+  federation:
+    auto_connect: true
+
+tools:
+  - ping_tool
+  - identity_tool
