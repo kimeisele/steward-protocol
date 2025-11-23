@@ -27,9 +27,6 @@
   "remoteUser": "vscode",
   "forwardPorts": [],
   "portsAttributes": {},
-  "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,readonly"
-  ],
   "containerEnv": {
     "PYTHONUNBUFFERED": "1"
   }
