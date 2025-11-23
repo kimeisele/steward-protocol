@@ -21,6 +21,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install .
           if [ -f examples/herald/requirements.txt ]; then pip install -r examples/herald/requirements.txt; fi
           pip install pytest
 
