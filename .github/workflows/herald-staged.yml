@@ -62,7 +62,7 @@ jobs:
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
-          python herald/main.py --action generate
+          python herald/shim.py --action run
 
           # ASSERTION: File must exist
           if [ ! -f dist/content.json ]; then
@@ -192,7 +192,7 @@ jobs:
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
         run: |
-          python herald/main.py --action publish
+          python herald/shim.py --action publish
 
       - name: 📊 Publication Summary
         if: success()
