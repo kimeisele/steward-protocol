@@ -16,7 +16,7 @@
 **`[STANDARD]` Additional fields:**
 - **Trust Score:** `0.95 ⭐⭐⭐⭐⭐ (Highly Trusted)`
 - **Protocol Compliance:** `Level 2 (Standard)`
-- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEV5W70DZQKd4OAlKF84bVH9cRkJlL24WV9djJKsFveeYJzbPB36UK2ql8z1DgTF9vYQsNc+EbdJ/wpuPj/bIoQg==`
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEIeUOX7xPIX/tSOUpqQTjLjVx4A+Vsh8kNF0ID5yxMlBov08b4cBOX7pd1/b0dnHDxXj1qRftwWVPFjKdHF+Yvw==`
 
 ---
 
@@ -227,4 +227,4 @@ Every Tidy action is reported via the Scribe:
 **Protocol Version:** STEWARD v1.1.0
 **Last Updated:** 2025-11-23
 
-<!-- STEWARD_SIGNATURE: xKJKSTxPJsUlWQUGVjIIJhLcaXez/+uV9WVuNaCy9Lxv3C1gZI7TeaPa2/LfgwoG7zs408k3rLjQvPHay3I3GQ== -->
+<!-- STEWARD_SIGNATURE: KESGqjNOL6L+sSDx7zJEaz35aDdRqK0FqZw2qF421Enb1j6eXs/6qkqNTz5D7kVWahwU8sziyuuEy6Fb/9nJlA== -->
