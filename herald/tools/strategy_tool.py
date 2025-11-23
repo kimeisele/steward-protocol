@@ -16,6 +16,7 @@ import logging
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
+import yaml
 
 try:
     from openai import OpenAI
@@ -63,6 +64,97 @@ class StrategyTool:
                 logger.warning(f"⚠️  Strategy Tool: LLM init failed: {e}")
         else:
             logger.warning("⚠️  Strategy Tool: LLM unavailable (planning in offline mode)")
+
+        # Load campaign themes for content rotation
+        self.campaign_themes = self._load_campaign_themes()
+
+    def _load_campaign_themes(self) -> Optional[Dict[str, Any]]:
+        """
+        Load campaign themes from cartridge.yaml.
+
+        Returns:
+            Dict with campaign themes keyed by day (monday, wednesday, friday)
+            or None if unable to load.
+        """
+        try:
+            cartridge_path = Path(__file__).parent.parent / "cartridge.yaml"
+
+            if not cartridge_path.exists():
+                logger.warning("⚠️  Campaign themes not found (cartridge.yaml missing)")
+                return None
+
+            with open(cartridge_path, 'r', encoding='utf-8') as f:
+                cartridge = yaml.safe_load(f)
+
+            campaign_themes = cartridge.get("config", {}).get("campaign_themes", {})
+
+            if campaign_themes:
+                logger.info("✅ Campaign themes loaded for content rotation")
+            else:
+                logger.warning("⚠️  No campaign themes found in cartridge.yaml")
+
+            return campaign_themes
+
+        except Exception as e:
+            logger.error(f"❌ Failed to load campaign themes: {e}")
+            return None
+
+    def get_todays_campaign_theme(self) -> Optional[Dict[str, Any]]:
+        """
+        Get the campaign theme for today based on day of week.
+
+        Returns:
+            Dict with theme info (name, description, focus, example_topics)
+            Maps: Monday -> Tech Deep Dive, Wednesday -> Agent City Life, Friday -> Hall of Fame
+        """
+        if not self.campaign_themes:
+            return None
+
+        # Get current day of week (0=Monday, 6=Sunday)
+        today = datetime.now()
+        day_name = today.strftime("%A").lower()
+
+        # Map day names to theme keys
+        day_to_theme = {
+            "monday": "monday",
+            "wednesday": "wednesday",
+            "friday": "friday"
+        }
+
+        theme_key = day_to_theme.get(day_name)
+
+        if theme_key and theme_key in self.campaign_themes:
+            theme = self.campaign_themes[theme_key]
+            logger.info(f"📅 Today's campaign theme ({day_name}): {theme.get('name', 'Unknown')}")
+            return theme
+        else:
+            # Off-days: fall back to the nearest upcoming theme
+            logger.debug(f"📅 Today ({day_name}) is not a campaign day. Using default theme.")
+            return None
+
+    def get_content_focus_areas(self) -> List[str]:
+        """
+        Get the content focus areas for today's campaign.
+
+        Returns:
+            List of focus areas (e.g., ["cryptography", "protocol_specs"])
+        """
+        theme = self.get_todays_campaign_theme()
+        if theme:
+            return theme.get("focus", [])
+        return []
+
+    def get_todays_example_topics(self) -> List[str]:
+        """
+        Get example topics for today's campaign.
+
+        Returns:
+            List of suggested topics for content generation
+        """
+        theme = self.get_todays_campaign_theme()
+        if theme:
+            return theme.get("example_topics", [])
+        return []
 
     def plan_launch_campaign(self,
                             manifesto_path: Optional[Path] = None,
