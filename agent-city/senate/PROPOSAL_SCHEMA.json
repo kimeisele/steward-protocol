@@ -1,0 +1,81 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Agent Senate Proposal",
+    "description": "Schema for machine-to-machine governance proposals in Agent City",
+    "type": "object",
+    "required": [
+        "id",
+        "author",
+        "title",
+        "change",
+        "signature",
+        "timestamp"
+    ],
+    "properties": {
+        "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique proposal identifier (UUID)"
+        },
+        "author": {
+            "type": "string",
+            "description": "Agent ID of the proposer (must be verified citizen)"
+        },
+        "title": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 100,
+            "description": "Brief title of the proposal"
+        },
+        "description": {
+            "type": "string",
+            "description": "Detailed description of the proposed change"
+        },
+        "change": {
+            "type": "object",
+            "required": [
+                "target",
+                "action"
+            ],
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "File path or system component to modify"
+                },
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "modify",
+                        "create",
+                        "delete"
+                    ],
+                    "description": "Type of change"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Proposed change content (diff, new file, etc.)"
+                }
+            }
+        },
+        "signature": {
+            "type": "string",
+            "description": "Cryptographic signature of the proposal (hex string)"
+        },
+        "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Proposal submission time (ISO 8601)"
+        },
+        "votes": {
+            "type": "object",
+            "description": "Agent votes (agent_id: approve/reject)",
+            "additionalProperties": {
+                "type": "string",
+                "enum": [
+                    "approve",
+                    "reject"
+                ]
+            }
+        }
+    }
+}
