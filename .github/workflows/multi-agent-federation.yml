@@ -1,9 +1,10 @@
-name: "🔗 Multi-Agent Federation (HERALD + ARCHIVIST)"
+name: "🔗 Multi-Agent Federation (HERALD + ARCHIVIST + AUDITOR)"
 
 # Demonstrates STEWARD Protocol multi-agent coordination:
 # 1. HERALD generates content (Agent #1)
 # 2. ARCHIVIST audits HERALD's events (Agent #2)
-# 3. Both agents operate independently but coordinate through events
+# 3. AUDITOR enforces GAD-000 compliance (Agent #3 - Meta-Level)
+# All agents operate independently but coordinate through events and compliance
 
 on:
   # Manual trigger for testing
@@ -60,10 +61,57 @@ jobs:
           echo "**Latest Event:**" >> $GITHUB_STEP_SUMMARY
           tail -n 1 data/events/herald.jsonl | python3 -m json.tool >> $GITHUB_STEP_SUMMARY || echo "No events"
 
+  auditor-compliance:
+    name: "🔍 AUDITOR - GAD-000 Enforcement"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "📥 Checkout Repository"
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: "📦 Install Dependencies"
+        run: |
+          pip install --upgrade pip
+          pip install pyyaml python-dotenv
+
+      - name: "🔍 AUDITOR - Run Compliance Audit"
+        run: |
+          echo "🔍 Running AUDITOR GAD-000 compliance audit..."
+          python auditor/shim.py --action audit
+
+      - name: "📤 Upload Compliance Report"
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: compliance-report
+          path: data/reports/audit_compliance.json
+          retention-days: 30
+
+      - name: "📊 AUDITOR Summary"
+        if: always()
+        run: |
+          echo "### 🔍 AUDITOR - GAD-000 Compliance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f data/reports/audit_compliance.json ]; then
+            echo "**Compliance Status:**" >> $GITHUB_STEP_SUMMARY
+            python3 -c "import json; r=json.load(open('data/reports/audit_compliance.json')); print(r['summary'])" >> $GITHUB_STEP_SUMMARY || echo "Report parsing failed"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Full Report:** See compliance-report artifact" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  No compliance report generated" >> $GITHUB_STEP_SUMMARY
+          fi
+
   archivist-audit:
     name: "🔍 ARCHIVIST - Event Verification"
     runs-on: ubuntu-latest
-    needs: herald-generate
+    needs: [herald-generate, auditor-compliance]
 
     steps:
       - name: "📥 Checkout Repository"
@@ -163,8 +211,14 @@ Workflow: Multi-Agent Federation
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Agent #1 (HERALD):** Content generation ✅" >> $GITHUB_STEP_SUMMARY
           echo "**Agent #2 (ARCHIVIST):** Event verification ✅" >> $GITHUB_STEP_SUMMARY
+          echo "**Agent #3 (AUDITOR):** GAD-000 compliance ✅" >> $GITHUB_STEP_SUMMARY
           echo "**Audit Trail:** Committed to repository ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "*This demonstrates the STEWARD Protocol's multi-agent coordination capabilities.*" >> $GITHUB_STEP_SUMMARY
+          echo "*This demonstrates the STEWARD Protocol's multi-agent coordination with meta-level governance.*" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Meta-Level Governance:**" >> $GITHUB_STEP_SUMMARY
+          echo "- HERALD creates (Agent #1)" >> $GITHUB_STEP_SUMMARY
+          echo "- ARCHIVIST verifies (Agent #2)" >> $GITHUB_STEP_SUMMARY
+          echo "- AUDITOR enforces (Agent #3 - Watches the watchers)" >> $GITHUB_STEP_SUMMARY

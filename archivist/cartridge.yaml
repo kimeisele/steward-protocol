@@ -1,0 +1,36 @@
+meta:
+  id: "agent.vibe.archivist"
+  name: "ARCHIVIST Agent (Audit & Verification)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Audit & Verification Agent - Monitors and verifies events from other agents"
+  tagline: "Trust, but verify."
+
+mission:
+  core_principle: "Verification is the foundation of trust."
+  technical_definition: "Event monitoring + Cryptographic verification + Immutable audit trail"
+  verification_model: |
+    The ARCHIVIST observes all agent actions and creates cryptographic attestations.
+    Every event is verified. Every verification is recorded. Every record is immutable.
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+  - "pathlib"
+
+config:
+  verification:
+    level: "strict"
+    verify_signatures: true
+    create_attestations: true
+
+  monitoring:
+    agents:
+      - "herald"
+      - "auditor"
+    event_paths:
+      - "data/events/*.jsonl"
+
+  ledger:
+    path: "data/ledger/audit_trail.jsonl"
+    retention: "permanent"
