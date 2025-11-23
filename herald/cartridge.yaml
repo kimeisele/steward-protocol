@@ -1,0 +1,36 @@
+meta:
+  id: "agent.steward.herald"
+  name: "HERALD Agent"
+  version: "3.0.0"
+  author: "Steward Protocol"
+  description: "Autonomous intelligence and content distribution agent using Steward Protocol for cryptographic identity verification"
+
+dependencies:
+  - "openai"
+  - "tavily-python"
+  - "tweepy"
+  - "praw"
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  twitter:
+    enabled: true
+    retry_limit: 3
+  reddit:
+    enabled: true
+    mode: "draft_only"
+    subreddits:
+      - "r/LocalLLaMA"
+      - "r/singularity"
+      - "r/test"
+  governance:
+    level: "strict"
+    banned_phrases:
+      - "game changer"
+      - "revolutionary"
+      - "transformative"
+  knowledge_base:
+    project_url: "https://github.com/kimeisele/steward-protocol"
+    docs_url: "https://github.com/kimeisele/steward-protocol/tree/main/steward"
+    spec_file: "steward/SPECIFICATION.md"
