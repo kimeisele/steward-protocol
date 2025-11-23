@@ -29,6 +29,7 @@ if str(project_root) not in sys.path:
 
 from examples.herald.publisher import TwitterPublisher
 from examples.herald.brain import HeraldBrain
+from examples.herald.artist import HeraldArtist
 
 
 def run_campaign():
@@ -37,11 +38,12 @@ def run_campaign():
     logger.info("=" * 70)
 
     # PHASE 1: INITIALIZE INFRASTRUCTURE
-    logger.info("PHASE 1: Initializing Publisher & Brain...")
+    logger.info("PHASE 1: Initializing Publisher, Brain & Artist...")
     try:
         publisher = TwitterPublisher()
         brain = HeraldBrain()
-        logger.info("✅ Infrastructure initialized")
+        artist = HeraldArtist()
+        logger.info("✅ Infrastructure initialized (Publisher + Brain + Artist)")
     except Exception as e:
         logger.error(f"❌ CRITICAL: {e}")
         sys.exit(1)
@@ -74,13 +76,31 @@ def run_campaign():
 
     logger.info(f"📝 Generated Insight:\n{content}")
 
-    # PHASE 4: PUBLISH
+    # PHASE 3B: GENERATE VISUAL CONTENT
+    logger.info("\nPHASE 3B: Artist Generating Visual...")
+
+    image_path = artist.generate_visual(content, style="cyberpunk")
+
+    if image_path:
+        logger.info(f"🎨 Visual generated successfully")
+    else:
+        logger.warning("⚠️  PHASE 3B: Artist failed (will fall back to text-only)")
+        image_path = None
+
+    # PHASE 4: PUBLISH (WITH MEDIA IF AVAILABLE)
     logger.info("\nPHASE 4: Publishing to Twitter...")
 
-    success = publisher.publish(content)
+    if image_path:
+        logger.info("📸 Publishing with media...")
+        success = publisher.publish_with_media(content, image_path)
+    else:
+        logger.info("📝 Publishing text-only...")
+        success = publisher.publish(content)
 
     if success:
         logger.info("✅ PHASE 4 COMPLETE: Published successfully")
+        if image_path:
+            logger.info("   ✅ With visual media attached")
     else:
         logger.warning("⚠️  PHASE 4 PARTIAL: Publisher returned False")
         logger.warning("   (May happen if credentials invalid)")
