@@ -27,21 +27,30 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Environment & Dependencies
+      # 🔥 GAD-100 PHOENIX BOOTSTRAP
+      # Install Vibe OS (this repo) as the system layer
+      # This provides the core runtime for all agents
+      - name: Bootstrap Vibe OS (Phoenix Layer)
         run: |
           python -m pip install --upgrade pip
-          # 1. Install the STEWARD Protocol
-          pip install .
-          # 2. Install HERALD Agent dependencies
+          echo "🦅 PHOENIX: Bootstrapping Vibe OS..."
+          pip install .  # Install vibe-agency (the runtime OS)
+          echo "✅ Vibe OS ready"
+
+      # Install agent-specific plugins
+      - name: Install Agent Plugins
+        run: |
           if [ -f examples/herald/requirements.txt ]; then
-            echo "📦 Installing HERALD Agent dependencies..."
+            echo "🔌 Installing HERALD Agent plugins..."
             pip install -r examples/herald/requirements.txt
+            echo "✅ HERALD plugins loaded"
           else
             echo "❌ No requirements.txt found for HERALD Agent"
             exit 1
           fi
 
-      - name: Run HERALD Campaign Generator
+      # 🚀 Launch HERALD on the Vibe OS runtime
+      - name: Ignite HERALD (via Vibe OS)
         env:
           # Phase 2: Multi-Channel Publishing
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY || '' }}
@@ -52,8 +61,10 @@ jobs:
           # Intelligence: LLM-powered content generation (optional)
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || '' }}
         run: |
+          echo "🚀 PHOENIX: Igniting HERALD agent..."
           chmod +x examples/herald/campaign.py
           python examples/herald/campaign.py
+          echo "✅ HERALD execution complete"
 
       - name: Configure Git for Commits
         run: |
