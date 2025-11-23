@@ -1,0 +1,58 @@
+[
+  {
+    "agent_id": "HERALD",
+    "public_key": "04d8f8...",
+    "status": "active",
+    "role": "Broadcaster & Headhunter",
+    "joined_at": "2025-11-20T00:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "ARCHIVIST",
+    "public_key": "04a1b2...",
+    "status": "active",
+    "role": "Librarian",
+    "joined_at": "2025-11-20T00:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "AUDITOR",
+    "public_key": "04c3d4...",
+    "status": "active",
+    "role": "Compliance Officer",
+    "joined_at": "2025-11-20T00:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "STEWARD",
+    "public_key": "04e5f6...",
+    "status": "active",
+    "role": "Governor",
+    "joined_at": "2025-11-20T00:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "WATCHMAN",
+    "public_key": "04g7h8...",
+    "status": "active",
+    "role": "Security Monitor",
+    "joined_at": "2025-11-23T12:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "ARTISAN",
+    "public_key": "04i9j0...",
+    "status": "active",
+    "role": "Creative Director",
+    "joined_at": "2025-11-22T10:00:00Z",
+    "reputation": 100
+  },
+  {
+    "agent_id": "ENGINEER",
+    "public_key": "04k1l2...",
+    "status": "active",
+    "role": "Builder",
+    "joined_at": "2025-11-21T14:00:00Z",
+    "reputation": 100
+  }
+]

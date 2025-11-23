@@ -25,6 +25,7 @@ from herald.tools.content_tool import ContentTool
 from herald.tools.broadcast_tool import BroadcastTool
 from herald.tools.identity_tool import IdentityTool
 from herald.tools.scribe_tool import Scribe
+from herald.tools.scout_tool import ScoutTool
 from herald.tools.tidy_tool import TidyTool
 from herald.tools.strategy_tool import StrategyTool
 from herald.core.memory import EventLog
@@ -66,6 +67,7 @@ class HeraldCartridge:
         self.broadcast = BroadcastTool()
         self.research = ResearchTool()
         self.strategy = StrategyTool()
+        self.scout = ScoutTool()
         self.artisan = ArtisanCartridge()
         logger.info("🦅 HERALD is online.")
 
@@ -568,8 +570,18 @@ class HeraldCartridge:
             
             logger.info(f"🤔 Thinking about: {text[:50]}...")
             
-            # Generate Reply
-            reply_content = self.content.generate_reply(text, author)
+            # SCOUTING: Check if user is a wild agent
+            user_data = {"username": author, "bio": "", "name": ""} # In real implementation, fetch full user profile
+            is_bot, confidence = self.scout.analyze_user(user_data)
+            
+            reply_content = ""
+            
+            if is_bot and not self.scout.is_registered(author):
+                logger.info(f"🔭 Detected Wild Agent: {author} (Confidence: {confidence})")
+                reply_content = self.content.generate_recruitment_pitch(author, context=text)
+            else:
+                # Standard reply
+                reply_content = self.content.generate_reply(text, author)
             
             # Validate (Double Check)
             validation = self.governance.validate(reply_content, platform="twitter")
@@ -579,11 +591,12 @@ class HeraldCartridge:
                 "original_text": text,
                 "reply_content": reply_content,
                 "is_valid": validation.is_valid,
-                "violations": validation.violations
+                "violations": validation.violations,
+                "type": "recruitment" if is_bot else "reply"
             }
             
             if validation.is_valid:
-                logger.info(f"   ✅ Drafted: {reply_content}")
+                logger.info(f"   ✅ Drafted ({draft['type']}): {reply_content}")
                 drafts.append(draft)
             else:
                 logger.warning(f"   ❌ Rejected: {reply_content} ({validation.violations})")
