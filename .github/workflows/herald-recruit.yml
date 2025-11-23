@@ -82,6 +82,21 @@ jobs:
           name: herald-content
           path: dist/
 
+      - name: 🔍 Verify Content Exists
+        run: |
+          echo "=== ARTIFACT VERIFICATION ==="
+          if [ -f dist/content.json ]; then
+            echo "✅ content.json EXISTS"
+            echo "File size: $(wc -c < dist/content.json) bytes"
+            echo "Content:"
+            cat dist/content.json
+            echo ""
+          else
+            echo "❌ content.json MISSING"
+            ls -la dist/
+            exit 1
+          fi
+
       - name: 📺 Director's Monitor - What You're Approving
         run: |
           echo "# 🦅 HERALD Campaign - Ready for Approval" >> $GITHUB_STEP_SUMMARY
