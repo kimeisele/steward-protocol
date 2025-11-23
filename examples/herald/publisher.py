@@ -8,17 +8,22 @@ Supported Platforms:
 - LinkedIn (Weekly authority, business insights, announcements)
 
 This module handles:
-- Multi-platform API authentication
+- Multi-platform API authentication (OAuth 1.0a for Twitter)
 - Unified publishing interface
 - Error handling and graceful degradation
 - Per-platform strategy optimization
+- Structured logging for GAD-000 compliance
 """
 
 import os
-import requests
-from requests_oauthlib import OAuth1
+import logging
+import tweepy
 from pathlib import Path
 from datetime import datetime
+
+# GAD-000: Structured Logging for traceability
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("HERALD_PUBLISHER")
 
 
 class TwitterPublisher:
@@ -38,12 +43,30 @@ class TwitterPublisher:
 
     def __init__(self):
         """Initialize with OAuth 1.0a credentials."""
-        self.api_key = os.getenv("TWITTER_API_KEY")
-        self.api_secret = os.getenv("TWITTER_API_SECRET")
+        self.client = None
+
+        # 1. Credentials laden (Fail Fast Check)
+        # Für WRITE Access (Tweets senden) brauchen wir zwingend OAuth 1.0a (alle 4 Keys)
+        self.consumer_key = os.getenv("TWITTER_API_KEY")
+        self.consumer_secret = os.getenv("TWITTER_API_SECRET")
         self.access_token = os.getenv("TWITTER_ACCESS_TOKEN")
-        self.access_secret = os.getenv("TWITTER_ACCESS_SECRET")
-        # Twitter API v2 endpoint for posting tweets
-        self.api_url = "https://api.twitter.com/2/tweets"
+        self.access_token_secret = os.getenv("TWITTER_ACCESS_SECRET")
+
+        # 2. Initialisierung versuchen
+        if not all([self.consumer_key, self.consumer_secret, self.access_token, self.access_token_secret]):
+            logger.warning("⚠️  TWITTER: Missing OAuth 1.0a credentials. Write access will fail.")
+            # Wir lassen self.client auf None, damit publish() sofort abbricht
+        else:
+            try:
+                self.client = tweepy.Client(
+                    consumer_key=self.consumer_key,
+                    consumer_secret=self.consumer_secret,
+                    access_token=self.access_token,
+                    access_token_secret=self.access_token_secret
+                )
+                logger.info("✅ TWITTER: Client initialized with OAuth 1.0a context.")
+            except Exception as e:
+                logger.error(f"❌ TWITTER: Client initialization crashed: {e}")
 
     def publish(self, text_content, tags=None):
         """
@@ -56,55 +79,43 @@ class TwitterPublisher:
         Returns:
             bool: True if published successfully, False otherwise
         """
-        # Fail fast: Check if all 4 OAuth 1.0a keys are present
-        if not all([self.api_key, self.api_secret, self.access_token, self.access_secret]):
-            print("⚠️  TWITTER: Missing OAuth 1.0a credentials.")
-            print("   Required: TWITTER_API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET")
+        if not self.client:
+            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
             return False
 
-        # Truncate to Twitter limits (280 chars)
-        # If tags provided, reserve space for them
-        max_length = 280
+        # Safety Check: Twitter Limit ist 280 Zeichen
+        tweet = text_content
         if tags:
             tag_string = " " + " ".join(tags)
-            max_length -= len(tag_string)
+            if len(tweet) + len(tag_string) > 280:
+                tweet = tweet[:280 - len(tag_string)].strip()
+            tweet += tag_string
 
-        tweet = text_content[:max_length].strip()
-        if tags:
-            tweet += " " + " ".join(tags)
-
-        # Setup OAuth 1.0a authentication (Range Rover Motor)
-        auth = OAuth1(
-            self.api_key,
-            self.api_secret,
-            self.access_token,
-            self.access_secret
-        )
-
-        # Prepare payload
-        payload = {"text": tweet}
+        if len(tweet) > 280:
+            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
+            tweet = tweet[:277] + "..."
 
         try:
-            response = requests.post(
-                self.api_url,
-                auth=auth,
-                json=payload,
-                timeout=10
-            )
+            # Der eigentliche Call
+            response = self.client.create_tweet(text=tweet)
 
-            if response.status_code == 201:
-                tweet_data = response.json()
-                tweet_id = tweet_data.get("data", {}).get("id")
-                print(f"✅ SUCCESS: Tweet posted to Twitter!")
-                print(f"   Tweet ID: {tweet_id}")
+            # Prüfung der Response
+            if response and response.data and 'id' in response.data:
+                logger.info(f"🚀 TWEET SENT: ID {response.data['id']}")
                 return True
             else:
-                print(f"❌ Twitter API Error: {response.status_code}")
-                print(f"   Details: {response.text[:200]}")
+                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
                 return False
 
-        except requests.RequestException as e:
-            print(f"❌ Network error publishing to Twitter: {e}")
+        except tweepy.errors.Forbidden as e:
+            logger.critical(f"⛔ TWITTER 403 FORBIDDEN: {e}")
+            logger.critical("HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?")
+            return False
+        except tweepy.errors.Unauthorized as e:
+            logger.critical(f"⛔ TWITTER 401 UNAUTHORIZED: Check your keys/tokens. {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ TWITTER UNKNOWN ERROR: {type(e).__name__} - {str(e)}")
             return False
 
 
@@ -140,6 +151,7 @@ class LinkedInPublisher:
         }
 
         try:
+            import requests
             response = requests.get(
                 self.userinfo_url,
                 headers=headers,
@@ -151,8 +163,8 @@ class LinkedInPublisher:
                 if user_id:
                     return f"urn:li:person:{user_id}"
             return None
-        except requests.RequestException as e:
-            print(f"⚠️  Failed to fetch LinkedIn user ID: {e}")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to fetch LinkedIn user ID: {e}")
             return None
 
     def publish(self, text_content):
@@ -166,13 +178,13 @@ class LinkedInPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.access_token:
-            print("⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication.")
+            logger.warning("⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication.")
             return False
 
         # Fetch author URN
         author_urn = self.get_author_urn()
         if not author_urn:
-            print("❌ Failed to determine LinkedIn User ID. Check your access token.")
+            logger.error("❌ Failed to determine LinkedIn User ID. Check your access token.")
             return False
 
         # Prepare post data (LinkedIn UGC Post format)
@@ -201,6 +213,7 @@ class LinkedInPublisher:
 
         # Send POST request
         try:
+            import requests
             response = requests.post(
                 self.api_url,
                 headers=headers,
@@ -209,16 +222,15 @@ class LinkedInPublisher:
             )
 
             if response.status_code == 201:
-                print("✅ SUCCESS: Post published to LinkedIn!")
-                print(f"   Response: {response.status_code}")
+                logger.info("✅ SUCCESS: Post published to LinkedIn!")
                 return True
             else:
-                print(f"❌ LinkedIn API Error: {response.status_code}")
-                print(f"   Details: {response.text[:200]}")
+                logger.error(f"❌ LinkedIn API Error: {response.status_code}")
+                logger.error(f"   Details: {response.text[:200]}")
                 return False
 
-        except requests.RequestException as e:
-            print(f"❌ Network error publishing to LinkedIn: {e}")
+        except Exception as e:
+            logger.error(f"❌ Network error publishing to LinkedIn: {e}")
             return False
 
 
@@ -248,7 +260,7 @@ class MultiChannelPublisher:
         Returns:
             bool: Success status
         """
-        print("📢 Attempting Twitter publication...")
+        logger.info("📢 Attempting Twitter publication...")
         return self.twitter.publish(content, tags=tags)
 
     def publish_to_linkedin(self, content):
@@ -261,7 +273,7 @@ class MultiChannelPublisher:
         Returns:
             bool: Success status
         """
-        print("📋 Attempting LinkedIn publication...")
+        logger.info("📋 Attempting LinkedIn publication...")
         return self.linkedin.publish(content)
 
     def publish_to_all_available(self, content, twitter_tags=None):
@@ -285,21 +297,21 @@ class MultiChannelPublisher:
         }
 
         # Twitter: Always publish (if token configured)
-        if self.twitter.api_key:
-            print("\n🐦 [TWITTER]")
+        if self.twitter.consumer_key:
+            logger.info("\n🐦 [TWITTER]")
             if self.publish_to_twitter(content, tags=twitter_tags):
                 results["twitter"] = True
                 results["summary"].append("✅ Twitter")
             else:
                 results["summary"].append("❌ Twitter")
         else:
-            print("⚠️  Twitter: Token not configured")
+            logger.info("⚠️  Twitter: Token not configured")
             results["summary"].append("⊘ Twitter (no token)")
 
         # LinkedIn: Only on Fridays (weekly strategy)
         is_friday = datetime.now().weekday() == 4
         if self.linkedin.access_token:
-            print("\n🔗 [LINKEDIN]")
+            logger.info("\n🔗 [LINKEDIN]")
             if is_friday:
                 if self.publish_to_linkedin(content):
                     results["linkedin"] = True
@@ -307,10 +319,10 @@ class MultiChannelPublisher:
                 else:
                     results["summary"].append("❌ LinkedIn")
             else:
-                print("⏸️  LinkedIn: Saved for Friday publication (weekly strategy)")
+                logger.info("⏸️  LinkedIn: Saved for Friday publication (weekly strategy)")
                 results["summary"].append("⏸️  LinkedIn (weekly)")
         else:
-            print("⚠️  LinkedIn: Token not configured")
+            logger.info("⚠️  LinkedIn: Token not configured")
             results["summary"].append("⊘ LinkedIn (no token)")
 
         return results
@@ -328,7 +340,7 @@ class MultiChannelPublisher:
         """
         path = Path(filepath)
         if not path.exists():
-            print(f"❌ File not found: {filepath}")
+            logger.error(f"❌ File not found: {filepath}")
             return {"error": "File not found"}
 
         # Read the file and extract just the content (before the "---" metadata)
@@ -338,36 +350,39 @@ class MultiChannelPublisher:
         else:
             content = full_text.strip()
 
-        print(f"📄 Publishing from {path.name}...")
+        logger.info(f"📄 Publishing from {path.name}...")
         return self.publish_to_all_available(content, twitter_tags=twitter_tags)
 
 
 # Demo/Test Mode
 if __name__ == "__main__":
-    print("🧪 HERALD MULTI-CHANNEL PUBLISHER - Test Mode")
-    print("=" * 60)
+    logger.info("🧪 HERALD MULTI-CHANNEL PUBLISHER - Test Mode")
+    logger.info("=" * 60)
 
     publisher = MultiChannelPublisher()
 
-    twitter_ready = publisher.twitter.api_key is not None
+    twitter_ready = publisher.twitter.consumer_key is not None
     linkedin_ready = publisher.linkedin.access_token is not None
 
-    print(f"✅ Twitter: {'READY' if twitter_ready else 'NOT CONFIGURED'}")
-    print(f"✅ LinkedIn: {'READY' if linkedin_ready else 'NOT CONFIGURED'}")
-    print("=" * 60)
+    logger.info(f"✅ Twitter: {'READY' if twitter_ready else 'NOT CONFIGURED'}")
+    logger.info(f"✅ LinkedIn: {'READY' if linkedin_ready else 'NOT CONFIGURED'}")
+    logger.info("=" * 60)
 
     if twitter_ready or linkedin_ready:
-        print("\n🚀 Multi-Channel Publisher is ready to rock!")
+        logger.info("\n🚀 Multi-Channel Publisher is ready to rock!")
         # In production, uncomment to test:
         # test_content = "Testing HERALD multi-channel publisher! #StewardProtocol #AI"
         # publisher.publish_to_all_available(test_content, twitter_tags=["#StewardProtocol", "#AI"])
     else:
-        print("\n⚠️  No publishing tokens configured")
-        print("To enable multi-channel publishing:")
-        print("  1. TWITTER_API_KEY - Set for Twitter publishing")
-        print("  2. LINKEDIN_ACCESS_TOKEN - Set for LinkedIn publishing")
-        print("\nConfigure in:")
-        print("  - GitHub Secrets (for GitHub Actions)")
-        print("  - .env file (for local testing)")
+        logger.warning("\n⚠️  No publishing tokens configured")
+        logger.warning("To enable multi-channel publishing:")
+        logger.warning("  1. TWITTER_API_KEY - Set for Twitter publishing")
+        logger.warning("  2. TWITTER_API_SECRET - Set for Twitter publishing")
+        logger.warning("  3. TWITTER_ACCESS_TOKEN - Set for Twitter publishing")
+        logger.warning("  4. TWITTER_ACCESS_SECRET - Set for Twitter publishing")
+        logger.warning("  5. LINKEDIN_ACCESS_TOKEN - Set for LinkedIn publishing")
+        logger.warning("\nConfigure in:")
+        logger.warning("  - GitHub Secrets (for GitHub Actions)")
+        logger.warning("  - .env file (for local testing)")
 
-    print("=" * 60)
+    logger.info("=" * 60)
