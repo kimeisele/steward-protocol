@@ -83,6 +83,9 @@ jobs:
             # Commit with an emoji and clear message
             git commit -m "🤖 HERALD: Generated recruitment post for $TODAY"
 
+            # 🔥 THE REBASE MANEUVER: Sync before push (handles concurrent updates)
+            git pull --rebase origin main
+
             # Push back to the current branch
             git push
 
