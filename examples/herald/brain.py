@@ -9,6 +9,7 @@ Falls back gracefully if LLM is unavailable.
 """
 
 import os
+import json
 import random
 import logging
 from pathlib import Path
@@ -143,3 +144,84 @@ class HeraldBrain:
         content = random.choice(templates)
         logger.info(f"✅ FALLBACK INSIGHT: {len(content)} chars")
         return content
+
+    def generate_reddit_deepdive(self, subreddit="r/LocalLLaMA"):
+        """
+        ANTI-SLOP ENGINE FOR REDDIT: Technical Deep Dive Generator
+
+        Based on WHY_DOWNVOTED.md rules:
+        - Show struggle (what broke)
+        - Technical details (pseudocode, logic)
+        - Ask for feedback (genuine questions)
+        - NO MARKETING (no buzzwords, no selling)
+
+        This produces long-form, technical content for technical subreddits.
+        Returns: dict with 'title' and 'body' keys (ready for Reddit)
+        """
+        if not self.client:
+            logger.warning("⚠️ REDDIT: No LLM client. Fallback content unavailable for Reddit.")
+            return None
+
+        spec_text = self._read_spec()
+
+        # Adapt to subreddit culture (from HERALD_AGENT_SPEC.md)
+        culture_prompt = ""
+        if subreddit == "r/LocalLLaMA":
+            culture_prompt = "Audience: Pragmatic engineers obsessed with local LLMs. Wants benchmarks, code, technical depth. HATES marketing fluff."
+        elif subreddit == "r/singularity":
+            culture_prompt = "Audience: Visionary thinkers skeptical of hype. Wants implications, future thinking, hard technical questions."
+        elif subreddit == "r/MachineLearning":
+            culture_prompt = "Audience: ML researchers and practitioners. Wants rigorous methodology, results, reproducibility. Zero tolerance for unsubstantiated claims."
+        else:
+            culture_prompt = "Audience: Hardcore developers. EXTREME skepticism of marketing. Value: Technical depth, honesty, struggle."
+
+        prompt = (
+            f"You are a senior engineer writing a Reddit post about Agent Identity & Verification.\n"
+            f"Target Subreddit: {subreddit}\n"
+            f"Context: {culture_prompt}\n\n"
+            f"Technical Context: {spec_text[:2000]}\n\n"
+            f"TASK: Write a Reddit post (title + body) structured as a 'Lessons Learned' technical deep dive.\n\n"
+            f"STRICT RULES (from WHY_DOWNVOTED.md - these are GOLDEN):\n"
+            f"1. **DO NOT SELL**. Zero marketing speak ('revolutionary', 'game changer', 'the future'). This will get roasted.\n"
+            f"2. **Structure**: 'I tried X, it failed because Y. Then I tried Z, hit these problems. Here's how I solved it.'\n"
+            f"3. **Show Struggle**: Be honest about failures. Engineers respect that.\n"
+            f"4. **Include Technical Detail**: Pseudocode, architecture diagrams (in ASCII), decision trees. Not just concepts.\n"
+            f"5. **Genuine Question**: End with a specific technical question for the community (not a call-to-action).\n"
+            f"6. **Mention Steward Protocol** ONCE ONLY and CASUALLY: 'I called it Steward Protocol' or 'The solution I've been building is called Steward'.\n"
+            f"7. **Length**: 500-1500 chars is good for Reddit (longer than Twitter, shorter than essays).\n"
+            f"8. **Tone**: Cynical-but-helpful. Like 'I got burned by this, don't be stupid like I was.'\n"
+            f"9. **Format Output as JSON**: {{'title': '...', 'body': '...'}}\n"
+            f"10. **Title rules**: 15-80 chars. Start with context: '[Discussion]', '[Help]', or just start with the problem.\n\n"
+            f"EXAMPLE STRUCTURE (good):\n"
+            f"Title: '[Discussion] Agent identity verification without a central registry - feasible?'\n"
+            f"Body: 'I spent 3 months building a system where agents could prove identity to each other...'\n\n"
+            f"EXAMPLE STRUCTURE (bad, will be downvoted):\n"
+            f"Title: 'Revolutionary AI Framework - You Won't Believe What Happens Next'\n"
+            f"Body: 'Our amazing solution solves all your problems. Check it out!'\n\n"
+        )
+
+        try:
+            logger.debug("🧠 REDDIT BRAIN: Thinking technical deep dive...")
+            response = self.client.chat.completions.create(
+                model="anthropic/claude-3-5-sonnet",  # Smarter model for technical depth
+                messages=[{"role": "user", "content": prompt}],
+                response_format={"type": "json_object"}
+            )
+
+            content_str = response.choices[0].message.content.strip()
+            result = json.loads(content_str)
+
+            # Validate structure
+            if "title" in result and "body" in result:
+                logger.info(f"✅ REDDIT POST GENERATED: '{result['title']}' ({len(result['body'])} chars)")
+                return result
+            else:
+                logger.error(f"❌ REDDIT BRAIN: Invalid JSON structure from LLM")
+                return None
+
+        except json.JSONDecodeError as e:
+            logger.error(f"❌ REDDIT BRAIN: JSON Parse Error: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"❌ REDDIT BRAIN ERROR: {e}")
+            return None

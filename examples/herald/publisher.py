@@ -18,6 +18,7 @@ This module handles:
 import os
 import logging
 import tweepy
+import praw
 from pathlib import Path
 from datetime import datetime
 
@@ -256,6 +257,118 @@ class LinkedInPublisher:
             return False
 
 
+class RedditPublisher:
+    """
+    HERALD's Reddit Publisher (Anti-Slop Edition)
+    Posts technical deep dives and authentic contributor insights.
+
+    Strategy: Post rarely but with MAXIMUM value.
+    Avoids: Marketing fluff, promotional links, engagement bait.
+    Embraces: Technical depth, struggle stories, genuine questions.
+
+    Requires OAuth2 Reddit credentials:
+    - REDDIT_CLIENT_ID
+    - REDDIT_CLIENT_SECRET
+    - REDDIT_USERNAME
+    - REDDIT_PASSWORD
+    """
+
+    def __init__(self):
+        """Initialize Reddit API client with OAuth2 credentials."""
+        self.client_id = os.getenv("REDDIT_CLIENT_ID")
+        self.client_secret = os.getenv("REDDIT_CLIENT_SECRET")
+        self.username = os.getenv("REDDIT_USERNAME")
+        self.password = os.getenv("REDDIT_PASSWORD")
+        self.user_agent = "HERALD:v1.0.0 (by /u/Vibe_Steward)"
+
+        self.reddit = None
+
+        if not all([self.client_id, self.client_secret, self.username, self.password]):
+            logger.warning("⚠️  REDDIT: Missing OAuth2 credentials.")
+            logger.warning("   Required: REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD")
+            return
+
+        try:
+            self.reddit = praw.Reddit(
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+                password=self.password,
+                user_agent=self.user_agent,
+                username=self.username
+            )
+            # Test authentication
+            authenticated_user = self.reddit.user.me()
+            logger.info(f"✅ REDDIT: Authenticated as u/{authenticated_user.name}")
+        except Exception as e:
+            logger.error(f"❌ REDDIT INIT FAILED: {e}")
+            self.reddit = None
+
+    def publish(self, title, body, subreddit_name="test"):
+        """
+        Publish a technical deep dive post to Reddit.
+
+        Args:
+            title (str): Post title (15-80 chars, Reddit specific formatting)
+            body (str): Post body (selftext format, supports Markdown)
+            subreddit_name (str): Target subreddit (default: test)
+
+        Returns:
+            bool: True if published successfully, False otherwise
+        """
+        if not self.reddit:
+            logger.error("❌ REDDIT: No authenticated client. Check credentials.")
+            return False
+
+        try:
+            logger.info(f"🌊 REDDIT: Publishing to r/{subreddit_name}...")
+            logger.debug(f"   Title: {title}")
+            logger.debug(f"   Body length: {len(body)} chars")
+
+            subreddit = self.reddit.subreddit(subreddit_name)
+
+            # ANTI-SLOP GUARDRAIL: Validate we're not spamming
+            # (In production, check rate limits, duplicate content, etc.)
+            logger.debug(f"   Subreddit: {subreddit.display_name}")
+
+            # Submit the post
+            submission = subreddit.submit(title=title, selftext=body)
+
+            logger.info(f"🚀 REDDIT POST PUBLISHED!")
+            logger.info(f"   URL: https://reddit.com{submission.permalink}")
+            logger.info(f"   ID: {submission.id}")
+
+            return True
+
+        except praw.exceptions.InvalidSubreddit as e:
+            logger.error(f"❌ REDDIT: Invalid subreddit 'r/{subreddit_name}': {e}")
+            return False
+        except praw.exceptions.ResponseException as e:
+            logger.error(f"❌ REDDIT API ERROR: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ REDDIT UNKNOWN ERROR: {type(e).__name__} - {str(e)}")
+            return False
+
+    def verify_credentials(self) -> bool:
+        """
+        Diagnostic: Test if Reddit credentials work.
+
+        Returns:
+            bool: True if authenticated, False otherwise
+        """
+        if not self.reddit:
+            logger.error("❌ REDDIT: No client initialized (Missing Credentials)")
+            return False
+
+        try:
+            user = self.reddit.user.me()
+            logger.info(f"✅ REDDIT AUTH VERIFIED: u/{user.name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ REDDIT AUTH FAILED: {type(e).__name__}: {e}")
+            return False
+
+
 class MultiChannelPublisher:
     """
     HERALD's unified publishing interface.
@@ -270,6 +383,7 @@ class MultiChannelPublisher:
         """Initialize all publishers."""
         self.twitter = TwitterPublisher()
         self.linkedin = LinkedInPublisher()
+        self.reddit = RedditPublisher()
 
     def publish_to_twitter(self, content, tags=None):
         """
@@ -297,6 +411,21 @@ class MultiChannelPublisher:
         """
         logger.info("📋 Attempting LinkedIn publication...")
         return self.linkedin.publish(content)
+
+    def publish_to_reddit(self, title, body, subreddit="test"):
+        """
+        Publish to Reddit.
+
+        Args:
+            title (str): Post title
+            body (str): Post body (supports Markdown)
+            subreddit (str): Target subreddit (default: test)
+
+        Returns:
+            bool: Success status
+        """
+        logger.info(f"🌊 Attempting Reddit publication to r/{subreddit}...")
+        return self.reddit.publish(title, body, subreddit_name=subreddit)
 
     def publish_to_all_available(self, content, twitter_tags=None):
         """
