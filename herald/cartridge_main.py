@@ -25,6 +25,7 @@ from herald.tools.content_tool import ContentTool
 from herald.tools.broadcast_tool import BroadcastTool
 from herald.tools.identity_tool import IdentityTool
 from herald.tools.scribe_tool import Scribe
+from herald.tools.tidy_tool import TidyTool
 from herald.core.memory import EventLog
 from herald.governance import HeraldConstitution
 
@@ -76,6 +77,10 @@ class HeraldCartridge:
         self.scribe = Scribe(chronicle_path=Path("docs/chronicles.md"))
         self.scribe.initialize_logbook_section()
         logger.info("✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md")
+
+        # Initialize repository maintenance (Tidy)
+        self.tidy = TidyTool(root_path=Path("."), steward_path=Path("STEWARD.md"))
+        logger.info("🧹 Tidy Tool initialized: Repository hygiene enabled")
 
         # Rebuild state from event ledger (self-correction on startup)
         self.agent_state = self.event_log.rebuild_state()
@@ -210,6 +215,13 @@ class HeraldCartridge:
                 )
                 if event:
                     self.scribe.log_action(event)
+
+                # Still perform housekeeping even on failure
+                logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
+                logger.info("=" * 70)
+                moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
+                logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+
                 return {
                     "status": "rejected",
                     "reason": "governance_violations",
@@ -247,6 +259,12 @@ class HeraldCartridge:
             logger.info(f"   Content: {len(tweet)} chars")
             logger.info(f"   Status: {'DRY RUN' if dry_run else 'READY FOR PUBLISH'}")
             logger.info("=" * 70)
+
+            # Phase 5: Housekeeping (Repository Maintenance)
+            logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
+            logger.info("=" * 70)
+            moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
+            logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
 
             return result
 

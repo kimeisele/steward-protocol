@@ -155,6 +155,47 @@ steward inspect agent.vibe.herald
 
 ---
 
+## 🧹 Tidy Protocols (Repository Maintenance)
+
+**Purpose:** HERALD maintains repository hygiene through autonomous organization. Tidy Protocols define how files are organized and which paths are protected from modification.
+
+### Organization Rules
+
+Files matching these patterns are automatically organized by HERALD's Tidy capability:
+
+```
+* .log files       -> data/logs/
+* .jsonl files     -> data/history/
+* .csv files       -> data/analysis/
+* *.png, *.jpg     -> assets/media/
+* temp_*, debug_*  -> _archive/quarantine/
+```
+
+### Protected Paths (IMMUTABLE)
+
+These paths are **NEVER** modified by Tidy:
+
+```
+herald/                 (HERALD's core logic)
+.github/                (GitHub workflows & config)
+STEWARD.md              (This protocol document)
+STEWARD_SIGNATURE       (Protocol verification)
+requirements.txt        (Dependencies)
+.gitignore              (Version control rules)
+*.md (documentation)    (Human-written guides)
+*.py (in root)          (Script layer)
+```
+
+**Consequence:** If a file matches a protected pattern, it is left untouched. Tidy silently skips it.
+
+### Logging
+
+Every Tidy action is reported via the Scribe:
+- *"🧹 TIDY: Organized X files into Y directories"*
+- *"⚠️  TIDY: 3 files match protected patterns (skipped)"*
+
+---
+
 ## 🔄 Status & Updates `[STANDARD]`
 
 **Current Status:**
