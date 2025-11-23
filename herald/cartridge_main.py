@@ -69,6 +69,7 @@ class HeraldCartridge:
         self.strategy = StrategyTool()
         self.scout = ScoutTool()
         self.artisan = ArtisanCartridge()
+        self.identity = IdentityTool()
         logger.info("🦅 HERALD is online.")
 
         # Initialize governance (immutable rules as code)
