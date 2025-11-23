@@ -66,8 +66,9 @@ jobs:
           content_tool = ContentTool()
           logger.info("🧠 STEALTH CAMPAIGN: Generating technical insight tweet...")
 
-          # Generate using technical insight mode
-          tweet = content_tool.generate_technical_insight_tweet()
+          # Generate using campaign roadmap mode
+          logger.info("🗺️ Executing Campaign Roadmap Strategy...")
+          tweet = content_tool.generate_campaign_tweet(roadmap_path="marketing/launch_roadmap.md")
 
           if not tweet or len(tweet) < 10:
               logger.error("❌ Failed to generate tweet")
@@ -79,7 +80,7 @@ jobs:
 
           payload = {
               "text": tweet,
-              "mode": "technical_insight",
+              "mode": "campaign_execution",
               "timestamp": str(Path(__file__))
           }
 
