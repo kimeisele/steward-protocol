@@ -24,7 +24,6 @@
     }
   },
   "postCreateCommand": "pip install -e . && pip install -r herald/requirements.txt",
-  "postAttachCommand": "python scripts/join_city.py",
   "remoteUser": "vscode",
   "forwardPorts": [],
   "portsAttributes": {},
