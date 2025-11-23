@@ -1,0 +1,38 @@
+{
+  "chain_of_trust": {
+    "genesis_block": {
+      "timestamp": "2025-11-23T10:55:00.518062",
+      "message": "ARCHIVIST Chain of Trust initialized",
+      "agent": "ARCHIVIST_Agent",
+      "version": "1.0"
+    },
+    "entries": [
+      {
+        "broadcast_id": "tweet_001",
+        "broadcast_content": "Identity is the missing layer in the AI stack. #StewardProtocol #AI",
+        "broadcast_author": "HERALD_Agent",
+        "broadcast_timestamp": "2025-11-23T10:55:18.549783",
+        "original_signature": "HERALD_SIG_001",
+        "verification_proof": {
+          "content_hash": "428496e28d5f9a9b8ccc15657537b635ff90b92bbea3847afd0b7b0d71780af8",
+          "verifier_id": "ARCHIVIST_Agent",
+          "verification_timestamp": "2025-11-23T10:55:18.550010",
+          "verification_status": "VERIFIED",
+          "chain_of_trust_link": {
+            "from_agent": "HERALD_Agent",
+            "to_agent": "ARCHIVIST_Agent",
+            "relay_count": 1
+          }
+        },
+        "archivist_signature": "ARCHIVIST_SIG_5BE259B7F64B720A",
+        "entry_timestamp": "2025-11-23T10:55:18.550450",
+        "sequence_number": 1
+      }
+    ]
+  },
+  "statistics": {
+    "total_verified": 1,
+    "total_rejected": 0,
+    "verification_start": "2025-11-23T10:55:00.518068"
+  }
+}
