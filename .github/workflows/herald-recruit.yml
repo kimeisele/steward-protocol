@@ -1,4 +1,4 @@
-name: HERALD Recruitment Campaign
+name: "🦅 HERALD Recruitment Campaign"
 on:
   # Manual trigger for testing
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     - cron: '0 9 * * *'
   # On push to branch (CI feedback)
   push:
-    branches: [ main, master, "claude/*" ]
+    branches: [main, master, "claude/*"]
 
 jobs:
   health-check:
