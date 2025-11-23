@@ -1,0 +1,29 @@
+name: "Spark"
+version: "1.0.0"
+description: "Creative agent for content generation and social engagement"
+author: "Steward Protocol"
+
+agent:
+  class: "Bard"
+  role: "Content Creator"
+  vibe: "Enthusiastic and Creative"
+
+capabilities:
+  - name: "generate_tweet"
+    description: "Generate creative tweets"
+  - name: "plan_campaign"
+    description: "Plan content campaigns"
+
+config:
+  tone: "enthusiastic"
+  platforms:
+    - twitter
+    - reddit
+  governance:
+    enabled: true
+    constitution: "HeraldConstitution"
+
+tools:
+  - content_tool
+  - broadcast_tool
+  - strategy_tool
