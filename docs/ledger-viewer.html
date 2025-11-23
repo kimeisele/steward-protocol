@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steward Protocol - Live Ledger Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #e0e6ed;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #2a2f47;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #64ffda;
+        }
+
+        .subtitle {
+            color: #a0afc0;
+            font-size: 0.95em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #1a1f3a;
+            border: 1px solid #2a3f5f;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: #64ffda;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #64ffda;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #a0afc0;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .ledger-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #64ffda;
+            margin-bottom: 15px;
+            border-left: 3px solid #64ffda;
+            padding-left: 10px;
+        }
+
+        .event-list {
+            background: #1a1f3a;
+            border: 1px solid #2a3f5f;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .event-item {
+            padding: 15px;
+            border-bottom: 1px solid #2a3f5f;
+            display: grid;
+            grid-template-columns: 150px 1fr 120px 100px;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-type {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 1px;
+        }
+
+        .event-type.generated {
+            color: #64ffda;
+        }
+
+        .event-type.published {
+            color: #ffd700;
+        }
+
+        .event-type.rejected {
+            color: #ff6b6b;
+        }
+
+        .event-type.verified {
+            color: #51cf66;
+        }
+
+        .event-type.error {
+            color: #ff6b6b;
+        }
+
+        .event-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .event-timestamp {
+            color: #a0afc0;
+            font-size: 0.85em;
+        }
+
+        .event-agent {
+            color: #64ffda;
+            font-size: 0.9em;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .status-verified {
+            background: #1a4d2e;
+            color: #51cf66;
+        }
+
+        .status-failed {
+            background: #4d1a1a;
+            color: #ff6b6b;
+        }
+
+        .status-pending {
+            background: #4d3a1a;
+            color: #ffd700;
+        }
+
+        .seq-number {
+            color: #a0afc0;
+            font-size: 0.9em;
+            text-align: right;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a0afc0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #2a2f47;
+            color: #a0afc0;
+            font-size: 0.9em;
+        }
+
+        .verification-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .verification-summary-card {
+            background: #1a1f3a;
+            border: 1px solid #2a3f5f;
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+        }
+
+        .verification-summary-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #64ffda;
+        }
+
+        .verification-summary-label {
+            color: #a0afc0;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64ffda;
+        }
+
+        .error {
+            background: #4d1a1a;
+            border: 1px solid #8b3a3a;
+            color: #ff6b6b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚖️ Steward Protocol Ledger</h1>
+            <p class="subtitle">Live Verification & Audit Trail</p>
+        </header>
+
+        <div id="error-container"></div>
+
+        <div id="loading" class="loading">
+            Loading ledger data...
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-events">0</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="verified-count">0</div>
+                    <div class="stat-label">Verified</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="failed-count">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="verification-rate">0%</div>
+                    <div class="stat-label">Verification Rate</div>
+                </div>
+            </div>
+
+            <div class="ledger-section">
+                <div class="section-title">Verification Summary</div>
+                <div class="verification-summary" id="verification-summary">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="ledger-section">
+                <div class="section-title">Recent Verifications</div>
+                <div class="event-list" id="event-list">
+                    <!-- Generated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>Last updated: <span id="last-updated">--</span></p>
+                <p>Steward Protocol - Artificial Governed Intelligence</p>
+                <p><a href="https://github.com/kimeisele/steward-protocol" style="color: #64ffda; text-decoration: none;">View on GitHub</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and parse the ledger file
+        async function loadLedger() {
+            try {
+                const response = await fetch('../data/ledger/audit_trail.jsonl');
+                if (!response.ok) {
+                    throw new Error(`Failed to load ledger: ${response.status}`);
+                }
+
+                const text = await response.text();
+                const lines = text.trim().split('\n').filter(line => line.trim());
+                const attestations = lines.map(line => {
+                    try {
+                        return JSON.parse(line);
+                    } catch (e) {
+                        console.warn('Failed to parse line:', line);
+                        return null;
+                    }
+                }).filter(Boolean);
+
+                displayLedger(attestations);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading ledger:', error);
+                const errorContainer = document.getElementById('error-container');
+                errorContainer.innerHTML = `<div class="error">Error loading ledger: ${error.message}</div>`;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+            }
+        }
+
+        function displayLedger(attestations) {
+            // Calculate statistics
+            const totalEvents = attestations.length;
+            const verifiedCount = attestations.filter(a => a.status === 'VERIFIED').length;
+            const failedCount = attestations.filter(a => a.status === 'FAILED').length;
+            const verificationRate = totalEvents > 0 ? Math.round((verifiedCount / totalEvents) * 100) : 0;
+
+            // Update stat cards
+            document.getElementById('total-events').textContent = totalEvents;
+            document.getElementById('verified-count').textContent = verifiedCount;
+            document.getElementById('failed-count').textContent = failedCount;
+            document.getElementById('verification-rate').textContent = `${verificationRate}%`;
+
+            // Build event type summary
+            const eventTypeCounts = {};
+            attestations.forEach(a => {
+                const eventType = a.target_event?.event_type || 'unknown';
+                eventTypeCounts[eventType] = (eventTypeCounts[eventType] || 0) + 1;
+            });
+
+            const summaryHtml = Object.entries(eventTypeCounts)
+                .map(([type, count]) => `
+                    <div class="verification-summary-card">
+                        <div class="verification-summary-value">${count}</div>
+                        <div class="verification-summary-label">${type}</div>
+                    </div>
+                `)
+                .join('');
+            document.getElementById('verification-summary').innerHTML = summaryHtml;
+
+            // Build event list (reverse chronological)
+            const eventHtml = attestations
+                .reverse()
+                .map((attestation, index) => {
+                    const event = attestation.target_event;
+                    const eventType = event?.event_type || 'unknown';
+                    const timestamp = new Date(attestation.timestamp).toLocaleString();
+                    const seqNum = event?.sequence_number || 'N/A';
+                    const status = attestation.status || 'UNKNOWN';
+                    const statusClass = status === 'VERIFIED' ? 'status-verified' :
+                                       status === 'FAILED' ? 'status-failed' :
+                                       'status-pending';
+
+                    return `
+                        <div class="event-item">
+                            <div class="event-type ${eventType}">${eventType}</div>
+                            <div class="event-info">
+                                <div class="event-agent">${event?.agent_id || 'unknown'}</div>
+                                <div class="event-timestamp">${timestamp}</div>
+                            </div>
+                            <div class="status-badge ${statusClass}">${status}</div>
+                            <div class="seq-number">#${seqNum}</div>
+                        </div>
+                    `;
+                })
+                .join('');
+
+            document.getElementById('event-list').innerHTML = eventHtml || '<div class="empty-state">No events in ledger</div>';
+
+            // Update last updated time
+            document.getElementById('last-updated').textContent = new Date().toLocaleString();
+        }
+
+        // Load ledger on page load
+        document.addEventListener('DOMContentLoaded', loadLedger);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadLedger, 30000);
+    </script>
+</body>
+</html>
