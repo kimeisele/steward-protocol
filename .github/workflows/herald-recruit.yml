@@ -1,4 +1,4 @@
-name: HERALD Recruitment Campaign
+name: "🦅 HERALD Recruitment Campaign"
 on:
   # Manual trigger for testing
   workflow_dispatch:
@@ -7,10 +7,29 @@ on:
     - cron: '0 9 * * *'
   # On push to branch (CI feedback)
   push:
-    branches: [ main, master, "claude/*" ]
+    branches: [main, master, "claude/*"]
 
 jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    name: GAD-000 Pre-flight Validation
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install & Verify Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f examples/herald/requirements.txt ]; then pip install -r examples/herald/requirements.txt; fi
+          python examples/herald/health_check.py
+
   create-content:
+    needs: health-check
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -35,7 +54,126 @@ jobs:
           echo "🧪 Running integration tests..."
           pytest tests/test_herald_publisher.py -v
 
-      - name: Ignite HERALD (via Vibe OS)
+      - name: 🧠 Generate Content (Brain + Artist)
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+        run: |
+          python3 examples/herald/generate_only.py
+
+      - name: Upload Generated Content
+        uses: actions/upload-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
+          retention-days: 1
+
+  review-gate:
+    needs: create-content
+    runs-on: ubuntu-latest
+    name: "🛑 Operator Approval Gate"
+    environment:
+      name: production-approval
+      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Download Content
+        uses: actions/download-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
+
+      - name: 🔍 Verify Content Exists
+        run: |
+          echo "=== ARTIFACT VERIFICATION ==="
+          if [ -f dist/content.json ]; then
+            echo "✅ content.json EXISTS"
+            echo "File size: $(wc -c < dist/content.json) bytes"
+            echo "Content:"
+            cat dist/content.json
+            echo ""
+          else
+            echo "❌ content.json MISSING"
+            ls -la dist/
+            exit 1
+          fi
+
+      - name: 📺 Director's Monitor - What You're Approving
+        run: |
+          set -x  # DEBUG: Print every command
+
+          echo "=== STEP SUMMARY GENERATION START ===" >&2
+
+          echo "# 🦅 HERALD Campaign - Ready for Approval" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚦 Status: **AWAITING YOUR APPROVAL**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f dist/content.json ]; then
+            echo "✅ content.json found, attempting to render..." >&2
+            echo "### 📝 Draft Content" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # Try primary method
+            if python3 examples/herald/generate_dashboard.py >> $GITHUB_STEP_SUMMARY 2>&1; then
+              echo "✅ generate_dashboard.py succeeded" >&2
+            else
+              echo "❌ generate_dashboard.py failed, using fallback" >&2
+              # Fallback: Direct JSON extraction
+              TWEET=$(python3 -c "import json; d=json.load(open('dist/content.json')); print(d.get('text', 'EMPTY'))" 2>&1)
+              echo "**Tweet Text:**" >> $GITHUB_STEP_SUMMARY
+              echo "$TWEET" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ content.json MISSING - this is the problem!" >&2
+            echo "⚠️ No content found - check create-content logs" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Approval Checklist" >> $GITHUB_STEP_SUMMARY
+          echo "- Health check: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Content generated: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration tests: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎬 YOUR DECISION" >> $GITHUB_STEP_SUMMARY
+          echo "Click **Approve** above to publish this to Twitter, or **Deny** to cancel." >> $GITHUB_STEP_SUMMARY
+
+          echo "=== STEP SUMMARY GENERATION COMPLETE ===" >&2
+          set +x
+
+  execute-publish:
+    needs: review-gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Approved Content
+        uses: actions/download-artifact@v4
+        with:
+          name: herald-content
+          path: dist/
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          if [ -f examples/herald/requirements.txt ]; then pip install -r examples/herald/requirements.txt; fi
+
+      - name: 🚀 Ignite HERALD (via Vibe OS)
         env:
           TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
