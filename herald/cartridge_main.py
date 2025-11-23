@@ -24,6 +24,8 @@ from herald.tools.research_tool import ResearchTool
 from herald.tools.content_tool import ContentTool
 from herald.tools.broadcast_tool import BroadcastTool
 from herald.tools.identity_tool import IdentityTool
+from herald.tools.scribe_tool import Scribe
+from herald.tools.tidy_tool import TidyTool
 from herald.core.memory import EventLog
 from herald.governance import HeraldConstitution
 
@@ -70,6 +72,15 @@ class HeraldCartridge:
         # Initialize event sourcing (state as event ledger)
         self.event_log = EventLog(ledger_path=Path("data/events/herald.jsonl"))
         logger.info("📖 EventLog initialized: All actions will be recorded and signed")
+
+        # Initialize living documentation (Auto-Scribe)
+        self.scribe = Scribe(chronicle_path=Path("docs/chronicles.md"))
+        self.scribe.initialize_logbook_section()
+        logger.info("✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md")
+
+        # Initialize repository maintenance (Tidy)
+        self.tidy = TidyTool(root_path=Path("."), steward_path=Path("STEWARD.md"))
+        logger.info("🧹 Tidy Tool initialized: Repository hygiene enabled")
 
         # Rebuild state from event ledger (self-correction on startup)
         self.agent_state = self.event_log.rebuild_state()
@@ -148,10 +159,12 @@ class HeraldCartridge:
             tweet = self.content.generate_tweet(research_context=research_context)
             if not tweet:
                 logger.error("❌ Content generation failed")
-                self.event_log.record_system_error(
+                event = self.event_log.record_system_error(
                     error_type="content_generation_error",
                     error_message="LLM returned empty content"
                 )
+                if event:
+                    self.scribe.log_action(event)
                 return {
                     "status": "failed",
                     "reason": "content_generation_failed",
@@ -161,12 +174,14 @@ class HeraldCartridge:
             logger.info(f"✅ Content generated: {len(tweet)} chars")
             logger.info(f"   Preview: {tweet[:80]}...")
 
-            # Record generation event
-            self.event_log.record_content_generated(
+            # Record generation event and log to chronicle
+            event = self.event_log.record_content_generated(
                 content=tweet,
                 platform="twitter",
                 context={"research_query": research_context[:100] if research_context else None}
             )
+            if event:
+                self.scribe.log_action(event)
 
             # Step 2.5: Sign Content (Steward Protocol Integration)
             logger.info("\n🦅 PHASE 2.5: IDENTITY")
@@ -192,12 +207,21 @@ class HeraldCartridge:
                 for violation in validation_result.violations:
                     logger.error(f"   ❌ {violation}")
 
-                # Record rejection with governance violations
-                self.event_log.record_content_rejected(
+                # Record rejection with governance violations and log to chronicle
+                event = self.event_log.record_content_rejected(
                     content=tweet,
                     reason="governance_violation",
                     violations=validation_result.violations
                 )
+                if event:
+                    self.scribe.log_action(event)
+
+                # Still perform housekeeping even on failure
+                logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
+                logger.info("=" * 70)
+                moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
+                logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+
                 return {
                     "status": "rejected",
                     "reason": "governance_violations",
@@ -236,6 +260,12 @@ class HeraldCartridge:
             logger.info(f"   Status: {'DRY RUN' if dry_run else 'READY FOR PUBLISH'}")
             logger.info("=" * 70)
 
+            # Phase 5: Housekeeping (Repository Maintenance)
+            logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
+            logger.info("=" * 70)
+            moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
+            logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+
             return result
 
         except Exception as e:
@@ -244,12 +274,14 @@ class HeraldCartridge:
             tb = traceback.format_exc()
             logger.error(f"   Traceback: {tb}")
 
-            # Record system error to event ledger
-            self.event_log.record_system_error(
+            # Record system error to event ledger and log to chronicle
+            event = self.event_log.record_system_error(
                 error_type="campaign_error",
                 error_message=str(e),
                 traceback=tb
             )
+            if event:
+                self.scribe.log_action(event)
 
             return {
                 "status": "error",
@@ -278,11 +310,13 @@ class HeraldCartridge:
             # Verify content
             if not content or len(content) < 10:
                 logger.error("❌ Invalid content")
-                self.event_log.record_content_rejected(
+                event = self.event_log.record_content_rejected(
                     content=content,
                     reason="invalid_content",
                     violations=["Content too short or empty"]
                 )
+                if event:
+                    self.scribe.log_action(event)
                 return {"status": "failed", "reason": "invalid_content"}
 
             # Publish to Twitter
@@ -295,20 +329,24 @@ class HeraldCartridge:
                 success = self.broadcast.publish(content, platform="twitter")
                 if not success:
                     logger.error("❌ Twitter publish failed")
-                    self.event_log.record_system_error(
+                    event = self.event_log.record_system_error(
                         error_type="publish_error",
                         error_message="Twitter publish failed"
                     )
+                    if event:
+                        self.scribe.log_action(event)
                     return {"status": "failed", "platform": "twitter"}
 
-                # Record successful publication
+                # Record successful publication and log to chronicle
                 from datetime import datetime, timezone
-                self.event_log.record_content_published(
+                event = self.event_log.record_content_published(
                     content=content,
                     platform="twitter",
                     post_id=None,  # Would be populated from API response in production
                     metadata={"published_at": datetime.now(timezone.utc).isoformat()}
                 )
+                if event:
+                    self.scribe.log_action(event)
 
                 logger.info("✅ Published to Twitter")
 
@@ -321,11 +359,13 @@ class HeraldCartridge:
         except Exception as e:
             import traceback
             logger.error(f"❌ Publication error: {e}")
-            self.event_log.record_system_error(
+            event = self.event_log.record_system_error(
                 error_type="publish_error",
                 error_message=str(e),
                 traceback=traceback.format_exc()
             )
+            if event:
+                self.scribe.log_action(event)
             return {"status": "error", "reason": "publication_error", "error": str(e)}
 
     def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA") -> Optional[Dict[str, Any]]:
