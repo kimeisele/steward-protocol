@@ -210,7 +210,7 @@ class HeraldBrain:
         """Hardcoded anti-slop insights for when LLM is unavailable."""
         templates = [
             "Identity is the missing layer in the AI stack. #StewardProtocol #AI",
-            "Agents without keys are just scripts. Agents with keys need governance. #Web3",
+            "Agents without keys are just scripts. Agents with keys need governance. #StewardProtocol",
             "Trust but verify. Especially with autonomous agents. #StewardProtocol",
             "Agent A calls Agent B. B says 'prove you're real.' A has: a string in an env var. Terrible. Steward: cryptographic identity + registry. #StewardProtocol #AI",
             "Docker solved container portability. Kubernetes solved orchestration. What solves agent interop + identity? Steward Protocol. #AI #StewardProtocol",
