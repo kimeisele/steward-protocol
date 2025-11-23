@@ -44,6 +44,21 @@ This architecture enables the documentation to remain **synchronized with the co
 
 ---
 
+
+## Logbook
+
+Autonomous activity log:
+
+* **2025-11-23 12:55 UTC:** 🔴 ENCOUNTERED error [strategy_planning_error]: 'HeraldConstitution' object has no attribute 'bann. (Ref: 0x00000008)
+
+* **2025-11-23 12:55 UTC:** 🔴 ENCOUNTERED error [strategy_planning_error]: 'HeraldConstitution' object has no attribute 'bann. (Ref: 0x00000009)
+
+* **2025-11-23 12:56 UTC:** 🔴 ENCOUNTERED error [strategy_planning_error]: 'EventLog' object has no attribute 'record_action'. (Ref: 0x0000000a)
+
+* **2025-11-23 12:56 UTC:** 📌 RECORDED event of unknown type. (Ref: 0x0000000b)
+
+* **2025-11-23 12:56 UTC:** 📌 RECORDED event of unknown type. (Ref: 0x0000000c)
+
 ## Future Entries
 
 This space is reserved for HERALD's ongoing documentation of:
