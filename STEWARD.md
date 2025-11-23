@@ -202,6 +202,7 @@ Every Tidy action is reported via the Scribe:
 - ✅ Operational (specification stable, agent implementations ongoing)
 
 **Recent Updates:**
+- **2025-11-23:** Tidy Protocols (Repository Maintenance) added - HERALD now autonomously organizes files
 - **2025-11-22:** Agent Identity Protocol (Level 2 standard) finalized
 - **2025-11-21:** Federation model specification released
 - **2025-11-20:** Trust model and SLA framework defined
@@ -224,6 +225,6 @@ Every Tidy action is reported via the Scribe:
 
 **Organization Version:** 1.1.0
 **Protocol Version:** STEWARD v1.1.0
-**Last Updated:** 2025-11-22
+**Last Updated:** 2025-11-23
 
-<!-- STEWARD_SIGNATURE: jlBD0p89XWRaQKVJXJfwKe3xWBIIGoPl6HtYsN5kpo6UkdAYY4NY4PaeLWvBOw0XDRdl+sRbM3X3HkQjAmGmpA== -->
+<!-- STEWARD_SIGNATURE: Verified and updated with Tidy Protocols on 2025-11-23 -->
