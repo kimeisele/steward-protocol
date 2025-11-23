@@ -222,14 +222,76 @@ steward delegate agent.vibe.herald \
 - **Provider Priority:** `OpenRouter`
   - *Primary provider for cost-effective access to multiple models*
 
+### Publishing Channels (Phase 2+)
+
+HERALD's multi-platform strategy for maximum reach and impact:
+
+- **Twitter (Daily Pulse)** 📢
+  - **Frequency:** Daily (automatic via GitHub Actions)
+  - **Content:** Hot takes, quick thoughts, trend reactions, community engagement
+  - **Audience:** AI/Crypto developers, tech community, thought leaders
+  - **Strategy:** Speed & virality over polish (Twitter rewards frequency)
+  - **Status:** ⏳ ENABLED (when `TWITTER_API_KEY` + `TWITTER_API_SECRET` are configured)
+
+- **LinkedIn (Weekly Authority)** 📋
+  - **Frequency:** Weekly (selected posts only)
+  - **Content:** "Big wins", protocol updates, business insights, long-form thoughts
+  - **Audience:** CTOs, enterprise decision-makers, protocol adopters
+  - **Strategy:** Trust & credibility over frequency (LinkedIn rewards substance)
+  - **Status:** ✅ ENABLED (when `LINKEDIN_ACCESS_TOKEN` is configured)
+
+**Channel Selection Logic:**
+```python
+if twitter_token_configured:
+    publisher.post_to_twitter(content, tags=["#StewardProtocol", "#AI"])
+
+if linkedin_token_configured:
+    # Post to LinkedIn only on Fridays for "Weekly Insights"
+    if datetime.now().weekday() == 4:  # Friday
+        publisher.post_to_linkedin(content)
+```
+
+### Research Policy (Phase 3)
+
+HERALD's "research mode" enables intelligent, trend-aware content generation.
+
+**Capabilities:**
+- **Web Search**: Tavily API searches for AI/Agent/Protocol trends
+- **Relevance Scoring**: Filters for STEWARD-relevant topics (0.0-1.0 score)
+- **Intelligent Reactions**: LLM-powered hot takes on discovered articles
+- **Source Attribution**: All posts include links + citations
+- **Graceful Degradation**: Falls back to rotation mode if API unavailable
+
+**Search Strategy:**
+- Primary Keywords: `["AI agents autonomous", "agent protocols standards", "cryptographic verification agents", "agent budget governance", "sovereign AI", "verifiable AI"]`
+- Trusted Sources: GitHub, ArXiv, Dev.to, Medium, HuggingFace, OpenAI, Anthropic, Hacker News
+- Minimum Relevance: `0.5` (50% match to STEWARD themes)
+- Max Searches per Run: 6 (covers all keywords)
+
+**Content Generation:**
+- **Twitter Mode**: 280-character hot take + source link
+- **LinkedIn Mode**: Long-form analysis with actionable insights
+- **Fallback**: If research API fails, use pre-written rotation topics
+
+**API Cost Budget (Cognitive Policy Compliance):**
+- Tavily Search: ~$0.01 per search (6 searches/day = $0.06)
+- OpenRouter LLM: $0.02-0.10 per content generation
+- **Total Daily Research Cost**: ~$0.12-0.20 (within $2.00 daily budget)
+
+**Activation:**
+- Requires: `TAVILY_API_KEY` in environment
+- Optional: `OPENROUTER_API_KEY` for LLM-powered generation
+- Default: Rotation mode (if keys unavailable)
+
 ### Rationale
 
 HERALD's cognitive policy optimizes for:
 1. **Cost Efficiency**: Marketing content generation can scale quickly; strict budgets prevent runaway costs
 2. **Quality Tiers**: Different content types need different models (strategy vs. tweets)
 3. **Provider Flexibility**: OpenRouter provides access to multiple models without vendor lock-in
+4. **Multi-Channel Strategy**: Different platforms reward different behaviors—Twitter for speed, LinkedIn for trust
 
-**Implementation Status:** ⏳ Pending (awaiting runtime client integration)
+**Implementation Status:** ⏳ Phase 2 (Twitter Publisher + LinkedIn Publisher)
 
 **See full specification:** [../../steward/SPECIFICATION.md Layer 1.6](../../steward/SPECIFICATION.md#-layer-16-cognitive-policy-new-in-v110)
 
@@ -329,5 +391,3 @@ To bring HERALD into full operational status:
    - [ ] Multi-sig capability setup
    - [ ] Federation registry publication
    - [ ] SLA commitment definitions
-
-<!-- STEWARD_SIGNATURE: Z7eHaZrtd60XIBafnlMRjz3fb3Q85mWAIr3QkQPZTRoqwcPBfoJ9McgoGL0lRCjIHQqTs3u6orZgGyLpJLpeYw== -->
