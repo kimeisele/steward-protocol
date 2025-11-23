@@ -1,0 +1,13 @@
+meta:
+  client_name: "Tesla Inc."
+  campaign_id: "cyber_001"
+
+content:
+  product: "Tesla Cybertruck"
+  audience: "Tech Enthusiasts & Skeptics"
+  goal: "Prove durability and utility"
+
+constraints:
+  channel: "twitter"
+  tone: "edgy"
+  forbidden_words: ["sustainablity", "green", "save the planet"]

@@ -1,0 +1,49 @@
+apiVersion: vibe/v1
+kind: Cartridge
+metadata:
+  name: agency-strategist
+  version: 1.0.0
+  description: "Analyzes briefings and creates content skeletons."
+
+identity:
+  org: org.vibe.steward
+  role: architect
+  compliance: level_2
+
+# JNANA (Input Wissen)
+input_schema:
+  required:
+    - content.product
+    - content.audience
+    - content.goal
+    - constraints.channel
+
+# VIJNANA (Prozess Wissen)
+process:
+  logic_flow: "determinstic_aida"
+  steps:
+    - step: analyze_intent
+      action: "extract_keywords"
+      from: content.product
+
+    - step: select_framework
+      decision_tree:
+        - if: constraints.channel == "twitter"
+          then: "thread_structure"
+        - if: constraints.channel == "linkedin"
+          then: "thought_leadership_structure"
+        - default: "standard_post"
+
+    - step: build_skeleton
+      instruction: |
+        Create a JSON structure based on AIDA model:
+        1. Attention (Hook based on Audience)
+        2. Interest (Fact based on Product)
+        3. Desire (Benefit based on Goal)
+        4. Action (Call to Action)
+        DO NOT WRITE THE COPY. Only the direction.
+
+# PRAJNANA (Output Wissen)
+output_schema:
+  format: json
+  target_path: "agency/temp/{campaign_id}/strategy.json"

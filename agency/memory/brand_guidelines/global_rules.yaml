@@ -1,0 +1,7 @@
+rules:
+  - id: "no_hallucination"
+    check: "All claims must be verifiable."
+  - id: "no_hype"
+    check: "Avoid words: revolutionary, game-changing, cutting-edge."
+  - id: "identity_lock"
+    check: "Maintain the persona defined in the cartridge."

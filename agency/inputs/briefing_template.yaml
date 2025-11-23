@@ -1,0 +1,16 @@
+# VIBE AGENCY | BRIEFING TEMPLATE v1
+# Fülle dies aus, um die Maschine zu starten.
+
+meta:
+  client_name: "Name des Kunden"
+  campaign_id: "eindeutige_id_001"
+
+content:
+  product: "Was verkaufen wir?"
+  audience: "Wen sprechen wir an?"
+  goal: "Was ist das Ziel? (Awareness, Conversion, Trust)"
+
+constraints:
+  channel: "twitter | linkedin | blog"
+  tone: "professional | casual | edgy"
+  forbidden_words: ["AI", "ChatGPT", "Revolutionary"]
