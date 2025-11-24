@@ -427,6 +427,20 @@ class CivicCartridge(VibeAgent):
 
         logger.info(f"   Credits: {current_credits} → {new_credits}")
 
+        # CRITICAL: Record in kernel ledger
+        if hasattr(self, 'kernel') and self.kernel:
+            self.kernel.ledger.record_event(
+                event_type="credit_deducted",
+                agent_id=self.agent_id,
+                details={
+                    "agent": agent_name,
+                    "amount": amount,
+                    "reason": reason,
+                    "previous_balance": current_credits,
+                    "new_balance": new_credits,
+                }
+            )
+
         # Revoke license if credits depleted
         if new_credits == 0:
             agent["broadcast_license"] = False

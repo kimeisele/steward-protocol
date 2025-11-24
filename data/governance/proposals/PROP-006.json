@@ -1,0 +1,24 @@
+{
+  "id": "PROP-006",
+  "title": "Test Proposal",
+  "description": "Test with vote",
+  "proposer": "herald",
+  "proposed_at": "2025-11-24T15:07:59.845944+00:00",
+  "status": "OPEN",
+  "action": {
+    "type": "credit_transfer",
+    "params": {
+      "to": "civic",
+      "amount": 10
+    }
+  },
+  "voting": {
+    "threshold": 0.5,
+    "quorum": 0.5,
+    "votes_yes": 1,
+    "votes_no": 0,
+    "votes_abstain": 0
+  },
+  "executed": false,
+  "executed_at": null
+}

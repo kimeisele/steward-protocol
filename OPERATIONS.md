@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-24T14:53:19.632585
+**Last Updated:** 2025-11-24T15:09:03.380290
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 5
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 0
+- Total Events: 1
 
 ## 🤖 Agent Status
 
@@ -36,7 +36,7 @@
 - status: RUNNING
 - domain: GOVERNANCE
 - capabilities: ['governance', 'voting', 'proposal_management']
-- governance_metrics: {'total_proposals': 1, 'open_proposals': 0, 'approved_proposals': 1, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 1, 'next_proposal_id': 2, 'proposals_path': 'data/governance/proposals', 'votes_ledger_path': 'data/governance/votes/votes.jsonl', 'executed_archive_path': 'data/governance/executed'}
+- governance_metrics: {'total_proposals': 7, 'open_proposals': 6, 'approved_proposals': 1, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 2, 'next_proposal_id': 8, 'proposals_path': 'data/governance/proposals', 'votes_ledger_path': 'data/governance/votes/votes.jsonl', 'executed_archive_path': 'data/governance/executed'}
 
 ### science
 - agent_id: science
