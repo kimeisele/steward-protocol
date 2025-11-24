@@ -86,6 +86,32 @@ This pack includes seven specialized cartridges for Agent City:
 
 ---
 
+## 🧹 Always See the Real State: Clean Boot Protocol
+
+**IMPORTANT:** To see the authoritative system state, always use the official launcher with clean boot:
+
+```bash
+# Clean boot: removes old test artifacts, guarantees production state
+./bin/agent-city --clean --status
+
+# View live snapshot (auto-generated after boot)
+cat vibe_snapshot.json
+```
+
+**Why?** During development, tests create temporary agents. The `--clean` flag ensures they're purged and you see **only** the 5 production agents (Herald, Civic, Forum, Science, Envoy).
+
+**The Snapshot is the Truth:** After any `./bin/agent-city` run, `vibe_snapshot.json` shows the authoritative state: kernel status, all agent states, ledger stats. No guessing. No confusion.
+
+```bash
+# Quick reference
+./bin/agent-city --clean --status    # ✅ Best way to verify system
+./bin/agent-city                     # Start interactive mode
+./bin/agent-city --clean --snapshot  # Generate fresh snapshot
+./bin/agent-city --kernel-status     # Debug kernel internals
+```
+
+---
+
 ## 💾 Persistence: The Ledger Never Forgets
 
 Every action in Agent City is **permanently recorded** in an immutable ledger.
