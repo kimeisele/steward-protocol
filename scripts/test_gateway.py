@@ -16,6 +16,12 @@ if str(project_root) not in sys.path:
 
 # Mock dependencies if not installed
 try:
+    # Set ENV vars for testing BEFORE importing app
+    import os
+    os.environ["GOVERNANCE_MODE"] = "SERVERLESS_BYPASS"
+    os.environ["ENV"] = "development"
+    os.environ["API_KEY"] = "steward-secret-key"
+    
     from fastapi.testclient import TestClient
     from gateway.api import app
 except ImportError:

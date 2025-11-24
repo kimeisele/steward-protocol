@@ -12,8 +12,14 @@ RUN pip install --no-cache-dir fastapi uvicorn pydantic mangum httpx
 # Copy project files
 COPY . .
 
+# Create a non-root user
+RUN useradd -m -u 1000 steward
+USER steward
+
 # Expose port (Cloud Run default)
 ENV PORT=8080
+ENV GOVERNANCE_MODE=SERVERLESS_BYPASS
+ENV ENV=production
 
 # Run the application
 # We use the shell form to allow variable expansion if needed, but exec form is better for signals.
