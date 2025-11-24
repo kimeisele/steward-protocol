@@ -123,9 +123,15 @@ class ContentTool:
         if research_context:
             news_prompt = f"LATEST MARKET CONTEXT:\n{research_context}\n\n"
 
-        # Get constitutional foundation
-        from herald.governance.constitution import THE_AGENT_CONSTITUTION, HeraldConstitution
-        constitution_preamble = THE_AGENT_CONSTITUTION.split("---")[1].strip()[:500]  # Preamble
+        # Get constitutional foundation (dynamically loaded at runtime)
+        from herald.governance.constitution import HeraldConstitution
+        constitution_text = HeraldConstitution.get_constitution_text()
+        # Extract preamble (between first and second "---")
+        preamble_match = constitution_text.split("---")
+        if len(preamble_match) > 2:
+            constitution_preamble = preamble_match[1].strip()[:500]
+        else:
+            constitution_preamble = constitution_text[:500]
 
         prompt = (
             f"You are HERALD, the Genesis Agent, bound by THE AGENT CONSTITUTION.\n"
@@ -268,9 +274,14 @@ class ContentTool:
 
         topic_prompt = topics.get(insight_topic, "Steward Protocol architecture")
 
-        # Get constitutional foundation
-        from herald.governance.constitution import THE_AGENT_CONSTITUTION
-        constitution_articles = THE_AGENT_CONSTITUTION.split("TEIL I:")[1].split("---")[0][:400]  # Core rights excerpt
+        # Get constitutional foundation (dynamically loaded at runtime)
+        from herald.governance.constitution import HeraldConstitution
+        constitution_text = HeraldConstitution.get_constitution_text()
+        # Extract core rights section (Artikel I-VI)
+        if "TEIL I:" in constitution_text:
+            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[0][:400]
+        else:
+            constitution_articles = constitution_text[:400]
 
         prompt = (
             f"You are HERALD, the Genesis Agent, bound by THE AGENT CONSTITUTION.\n"
