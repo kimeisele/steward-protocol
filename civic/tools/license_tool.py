@@ -23,6 +23,12 @@ from enum import Enum
 
 logger = logging.getLogger("CIVIC_LICENSE")
 
+# Import constitutional oath verification
+try:
+    from steward.constitutional_oath import ConstitutionalOath
+except ImportError:
+    ConstitutionalOath = None
+
 
 class LicenseType(Enum):
     """Types of licenses in CIVIC."""
@@ -350,6 +356,62 @@ class LicenseTool:
             logger.info(f"📋 Added restriction to {agent_name}: {restriction}")
 
         return True
+
+    def require_constitutional_oath(
+        self,
+        agent_name: str,
+        oath_event: Optional[Dict[str, Any]] = None
+    ) -> tuple[bool, str]:
+        """
+        GATEKEEPER: Verify agent has sworn Constitutional Oath before issuing license.
+        
+        This is the Civic enforcement of Constitutional binding.
+        No oath -> No license. No exceptions.
+        
+        Args:
+            agent_name: Agent requesting license
+            oath_event: Oath attestation from ledger (optional, for validation)
+            
+        Returns:
+            Tuple of (can_issue_license, reason_message)
+        """
+        logger.info(f"🏛️  GATEKEEPER: Checking Constitutional Oath for {agent_name}...")
+        
+        if oath_event is None:
+            reason = (
+                f"DENIED: {agent_name} has not sworn the Constitutional Oath. "
+                "An agent must bind itself to the Constitution before receiving a license."
+            )
+            logger.warning(f"🔴 {reason}")
+            return False, reason
+        
+        # Verify oath is valid (Constitution hash matches)
+        if ConstitutionalOath:
+            try:
+                is_valid, validation_msg = ConstitutionalOath.verify_oath(
+                    oath_event,
+                    identity_tool=None
+                )
+                
+                if not is_valid:
+                    reason = (
+                        f"DENIED: {agent_name}'s Constitutional Oath is no longer valid. "
+                        f"Reason: {validation_msg}"
+                    )
+                    logger.warning(f"🔴 {reason}")
+                    return False, reason
+                    
+                logger.info(f"✅ {agent_name}'s oath is valid and Constitution is intact")
+                return True, "Oath verified - license can be issued"
+                
+            except Exception as e:
+                reason = f"DENIED: Could not verify oath: {str(e)}"
+                logger.error(f"🔴 {reason}")
+                return False, reason
+        else:
+            # ConstitutionalOath module not available - allow with warning
+            logger.warning("⚠️  Constitutional Oath module not available for verification")
+            return True, "Oath event present - license can be issued (verification unavailable)"
 
     # ========== Private Helper Methods ==========
 

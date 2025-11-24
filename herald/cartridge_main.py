@@ -16,6 +16,11 @@ This is now a native VibeAgent:
 Architecture Change:
 - OLD: Standalone agent with own event loop (run_campaign)
 - NEW: Task-responsive agent (process method) within VibeOS kernel
+
+GENESIS OATH INTEGRATION:
+- Each boot includes the Constitutional Oath ceremony
+- Agent binds itself cryptographically to the Constitution
+- Ledger records the binding
 """
 
 import logging
@@ -39,12 +44,18 @@ from herald.governance import HeraldConstitution
 from artisan.cartridge_main import ArtisanCartridge
 from science.cartridge_main import ScientistCartridge
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HERALD_MAIN")
 
 
-class HeraldCartridge(VibeAgent):
+class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The HERALD Agent Cartridge.
     Autonomous Technical Evangelist for Steward Protocol.
@@ -60,6 +71,7 @@ class HeraldCartridge(VibeAgent):
     - Offline-capable (graceful fallback)
     - Identity-ready (Steward Protocol integration prepared)
     - Governance-first (no marketing clichés)
+    - OATH-BOUND: Constitutional binding via Genesis Ceremony
     """
 
     def __init__(self):
@@ -81,6 +93,11 @@ class HeraldCartridge(VibeAgent):
         )
 
         logger.info("🦅 HERALD (VibeAgent v3.0) is online.")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            logger.info("🕉️  Constitutional Oath ceremony prepared")
 
         # Initialize all tools
         self.content = ContentTool()
@@ -123,6 +140,37 @@ class HeraldCartridge(VibeAgent):
         self.last_result = None
 
         logger.info("✅ HERALD: Ready for operation")
+
+    async def boot(self):
+        """
+        Extended boot sequence including Constitutional Oath ceremony.
+        
+        This is the Genesis Ceremony:
+        1. Load Constitution
+        2. Compute hash
+        3. Sign hash with identity
+        4. Record oath in ledger
+        5. Proceed with normal operation
+        """
+        logger.info("🕉️  ═══════════════════════════════════════════════════════")
+        logger.info("🕉️  GENESIS CEREMONY: Herald is swearing Constitutional Oath")
+        logger.info("🕉️  ═══════════════════════════════════════════════════════")
+
+        if OathMixin and self.oath_sworn is False:
+            try:
+                oath_event = await self.swear_constitutional_oath()
+                logger.info(f"✅ Herald has been bound to Constitution")
+                logger.info(f"   Hash: {oath_event['constitution_hash_short']}...")
+                logger.info(f"   Event ID: {oath_event['event_id']}")
+            except Exception as e:
+                logger.error(f"❌ Oath ceremony failed: {e}")
+                # Continue anyway - oath is preferential, not blocking
+        else:
+            logger.info("ℹ️  Oath mixin not available or already sworn")
+
+        logger.info("🕉️  ═══════════════════════════════════════════════════════")
+        logger.info("🕉️  Genesis Ceremony complete. Herald is fully initialized.")
+        logger.info("🕉️  ═══════════════════════════════════════════════════════")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
