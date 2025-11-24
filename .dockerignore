@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.git
+.gitignore
+.DS_Store
+data/logs/
+data/vibe_ledger.db
+data/vibe_ledger.db.bak
+tests/
+scripts/
+docs/

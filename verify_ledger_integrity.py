@@ -48,6 +48,13 @@ def verify_ledger_integrity():
         ]
 
         for agent_id, agent_instance in agents_to_register:
+            # SIMULATION: Swear the oath to pass Governance Gate
+            # In production, this happens via 'steward swear' CLI
+            if hasattr(agent_instance, "oath_sworn"):
+                agent_instance.oath_sworn = True
+                # We leave oath_event as None to skip cryptographic check in this test
+                # (We are testing Ledger Integrity here, not Oath Cryptography)
+            
             kernel.register_agent(agent_instance)
 
         kernel.boot()
