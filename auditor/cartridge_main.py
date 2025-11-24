@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 """
-AUDITOR Cartridge - The GAD-000 Enforcement Agent
+AUDITOR Cartridge - The GAD-000 Enforcement Agent & Semantic Verifier
 
-This cartridge demonstrates meta-level verification in the Steward Protocol:
-1. Verifies agent identity integrity (all agents have valid cartridge.yaml)
-2. Verifies documentation sync (STEWARD.md exists and is valid)
-3. Verifies event log resilience (event logs are intact)
-4. Enforces GAD-000 compliance at the system level
+This cartridge encompasses THREE layers of verification:
+
+LAYER 1: GAD-000 Compliance (Static Analysis)
+- Verifies agent identity integrity (all agents have valid cartridge.yaml)
+- Verifies documentation sync (STEWARD.md exists and is valid)
+- Verifies event log resilience (event logs are intact)
+
+LAYER 2: Semantic Verification (The JUDGE)
+- Runs invariant rules against the event ledger
+- Detects logical violations (not just syntax errors)
+- Example: "BROADCAST without LICENSE_VALID" = violation
+
+LAYER 3: Runtime Monitoring (The WATCHDOG)
+- Continuous daemon that monitors ledger stream
+- Records VIOLATION events when invariants break
+- Can halt system on CRITICAL violations
 
 This is Agent #3 in the STEWARD Protocol ecosystem - The Watcher of Watchers.
 
@@ -19,38 +30,45 @@ Usage:
 
 import logging
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pathlib import Path
 
 from auditor.tools.compliance_tool import ComplianceTool
+from auditor.tools.invariant_tool import get_judge
+from auditor.tools.watchdog_tool import Watchdog, WatchdogConfig, WatchdogIntegration
 
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
 class AuditorCartridge:
     """
-    AUDITOR - The GAD-000 Enforcement Agent for STEWARD Protocol.
+    AUDITOR - The GAD-000 Enforcement & Semantic Verification Agent for STEWARD Protocol.
 
-    This cartridge encapsulates the system integrity workflow:
-    1. Identity Check: Verify all agents have valid identities
-    2. Documentation Check: Verify STEWARD.md is synchronized
-    3. Resilience Check: Verify event logs are intact
-    4. Report: Generate compliance report and FAIL BUILD if violations found
-
-    Architecture:
-    - Vibe-OS compatible (ARCH-050 CartridgeBase)
-    - Meta-verification (verifies the system, not just agents)
-    - Enforcement-first (fails builds on violations)
-    - Zero-tolerance (GAD-000 compliance is non-negotiable)
+    This cartridge encapsulates THREE verification layers:
+    
+    LAYER 1: Static Compliance (ComplianceTool)
+    - Identity Check: Verify all agents have valid identities
+    - Documentation Check: Verify STEWARD.md is synchronized
+    - Resilience Check: Verify event logs are intact
+    
+    LAYER 2: Semantic Verification (The JUDGE)
+    - Runs invariant checks on the ledger
+    - Detects logical violations in event sequences
+    - Example: "BROADCAST without LICENSE_VALID" = CRITICAL violation
+    
+    LAYER 3: Runtime Monitoring (The WATCHDOG)
+    - Continuous monitoring daemon
+    - Records VIOLATION events
+    - Can halt system on CRITICAL violations
 
     Unlike HERALD (creator) and ARCHIVIST (verifier), AUDITOR verifies
-    the SYSTEM ITSELF. It is the meta-level guardian.
+    the SYSTEM ITSELF at multiple levels. It is the meta-level guardian.
     """
 
     # Cartridge Metadata (ARCH-050 required fields)
     name = "auditor"
-    version = "1.0.0"
-    description = "System integrity and GAD-000 compliance enforcement agent"
+    version = "2.0.0"  # Now includes semantic verification
+    description = "System integrity, GAD-000 compliance, and semantic verification enforcement agent"
     author = "Steward Protocol"
 
     def __init__(self, root_path: Path = Path(".")):
@@ -60,13 +78,19 @@ class AuditorCartridge:
         Args:
             root_path: Root path of the repository
         """
-        logger.info("🔍 AUDITOR v1.0: Cartridge initialization")
+        logger.info("🔍 AUDITOR v2.0: Cartridge initialization")
 
-        # Initialize compliance tool
+        # LAYER 1: Static compliance tool
         self.compliance = ComplianceTool(root_path=root_path)
         self.root_path = root_path
+        
+        # LAYER 2: The JUDGE (semantic verification)
+        self.judge = get_judge()
+        
+        # LAYER 3: The WATCHDOG (runtime monitoring)
+        self.watchdog_integration = WatchdogIntegration()
 
-        logger.info("✅ AUDITOR: Ready for compliance enforcement")
+        logger.info("✅ AUDITOR v2.0: Ready for multi-layer verification")
 
     def get_config(self) -> Dict[str, Any]:
         """Get cartridge configuration (ARCH-050 interface)."""
@@ -90,19 +114,28 @@ class AuditorCartridge:
         except:
             compliance_stats["reports_generated"] = 0
 
+        # Get watchdog status
+        watchdog_status = self.watchdog_integration.get_status()
+
         return {
             "agent_id": "auditor",
             "name": self.name,
             "version": self.version,
             "status": "RUNNING",
             "domain": "SECURITY",
-            "enforcement_mode": "fail_build",
+            "enforcement_mode": "fail_build_and_halt_on_critical",
             "compliance_metrics": {
                 "root_path": str(self.root_path),
                 "reports_generated": compliance_stats.get("reports_generated", 0),
                 "reports_dir": compliance_stats.get("reports_dir", str(self.root_path / "data" / "reports")),
                 "enforcement_enabled": True,
-            }
+            },
+            "verification_layers": {
+                "layer_1_static_compliance": "enabled",
+                "layer_2_semantic_judge": "enabled",
+                "layer_3_watchdog_monitoring": "enabled"
+            },
+            "watchdog": watchdog_status
         }
 
     def run_compliance_audit(
@@ -238,6 +271,143 @@ class AuditorCartridge:
             "status": "passed",
             "path": str(cartridge_path),
         }
+
+    # ========== LAYER 2: SEMANTIC VERIFICATION (THE JUDGE) ==========
+
+    def run_semantic_verification(self) -> Dict[str, Any]:
+        """
+        Run semantic verification on the kernel ledger.
+        
+        This checks for LOGICAL violations, not just syntax errors.
+        For example: "Is BROADCAST preceded by LICENSE_VALID?"
+        
+        Returns:
+            dict: Semantic verification report
+        """
+        try:
+            logger.info("⚖️  JUDGE: Running semantic verification")
+            logger.info("=" * 70)
+            
+            # Read kernel ledger
+            ledger_path = self.root_path / "data" / "ledger" / "kernel.jsonl"
+            events = []
+            
+            if ledger_path.exists():
+                import json
+                with open(ledger_path, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                events.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                pass
+            
+            logger.info(f"⚖️  Loaded {len(events)} events from ledger")
+            
+            # Run the Judge
+            report = self.judge.verify_ledger(events)
+            
+            # Save report
+            report_path = self.root_path / "data" / "reports" / "semantic_verification.json"
+            report_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            import json
+            with open(report_path, "w") as f:
+                json.dump(report.to_dict(), f, indent=2)
+            
+            logger.info(f"✅ Semantic verification report saved: {report_path}")
+            
+            return {
+                "status": "completed",
+                "passed": report.passed,
+                "violations": len(report.violations),
+                "events_checked": report.checked_events,
+                "report": report.to_dict()
+            }
+        
+        except Exception as e:
+            logger.error(f"⚖️  Semantic verification error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    # ========== LAYER 3: RUNTIME MONITORING (THE WATCHDOG) ==========
+
+    def start_watchdog(self) -> Dict[str, Any]:
+        """
+        Start the Watchdog runtime verification daemon.
+        
+        This should be called early in kernel initialization.
+        The watchdog then monitors the ledger continuously.
+        
+        Returns:
+            dict: Watchdog initialization status
+        """
+        try:
+            logger.info("👁️  WATCHDOG: Starting runtime verification daemon")
+            
+            # Configure watchdog for this system
+            config = WatchdogConfig(
+                ledger_path=self.root_path / "data" / "ledger" / "kernel.jsonl",
+                violations_path=self.root_path / "data" / "ledger" / "violations.jsonl",
+                halt_on_critical=True,
+                notify_envoy=True
+            )
+            
+            self.watchdog_integration.watchdog = Watchdog(config)
+            
+            logger.info("✅ WATCHDOG: Daemon started and ready for kernel attachment")
+            
+            return {
+                "status": "started",
+                "config": {
+                    "check_interval": config.check_interval,
+                    "halt_on_critical": config.halt_on_critical,
+                    "notify_envoy": config.notify_envoy
+                }
+            }
+        
+        except Exception as e:
+            logger.error(f"👁️  WATCHDOG startup error: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def run_watchdog_check(self) -> Dict[str, Any]:
+        """
+        Run a single watchdog check cycle (for testing or manual invocation).
+        
+        Normally this would be called by the kernel on each tick.
+        
+        Returns:
+            dict: Check results including any violations found
+        """
+        try:
+            logger.info("👁️  WATCHDOG: Running verification check")
+            result = self.watchdog_integration.watchdog.run_once()
+            
+            if result.get("status") == "error":
+                logger.error(f"👁️  Check failed: {result.get('error')}")
+            else:
+                logger.info(f"👁️  Check complete: {len(result.get('violations', []))} violations")
+            
+            return result
+        
+        except Exception as e:
+            logger.error(f"👁️  Watchdog check error: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def get_watchdog_status(self) -> Dict[str, Any]:
+        """Get current watchdog status"""
+        return self.watchdog_integration.get_status()
 
 
 # Export for VibeOS cartridge loading
