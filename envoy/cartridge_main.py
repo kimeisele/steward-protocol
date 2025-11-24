@@ -28,6 +28,7 @@ from vibe_core import VibeAgent, Task
 from envoy.tools.city_control_tool import CityControlTool
 from envoy.tools.diplomacy_tool import DiplomacyTool
 from envoy.tools.curator_tool import CuratorTool
+from envoy.tools.run_campaign_tool import RunCampaignTool
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -75,6 +76,7 @@ class EnvoyCartridge(VibeAgent):
         self.city_control = None  # Will be initialized after kernel injection
         self.diplomacy = DiplomacyTool()
         self.curator = CuratorTool()
+        self.campaign_tool = RunCampaignTool()  # Initialize campaign orchestration
 
         # Operation logs (state)
         self.operation_log = []
@@ -96,6 +98,10 @@ class EnvoyCartridge(VibeAgent):
         # This is the critical connection: the Envoy now has direct access to the kernel
         self.city_control = CityControlTool(kernel=kernel)
         logger.info("🧠❤️ ENVOY brain wired to kernel heart via CityControlTool")
+
+        # Inject kernel into campaign tool
+        self.campaign_tool.set_kernel(kernel)
+        logger.info("🎯 RunCampaignTool connected to kernel")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
@@ -164,6 +170,7 @@ class EnvoyCartridge(VibeAgent):
         - trigger: Trigger agent action
         - credits: Check agent credits
         - refill: Refill agent credits
+        - campaign: Run multi-agent marketing campaign
         """
         logger.info(f"🔄 ENVOY routing command: {command} with args: {args}")
 
@@ -216,6 +223,16 @@ class EnvoyCartridge(VibeAgent):
                 if not agent_name:
                     return {"status": "error", "error": "agent_name required"}
                 return self.city_control.refill_credits(agent_name, amount)
+
+            elif command == "campaign":
+                goal = args.get("goal")
+                campaign_type = args.get("campaign_type", "recruitment")
+                if not goal:
+                    return {"status": "error", "error": "goal required for campaign"}
+                # Extract additional parameters
+                campaign_params = {k: v for k, v in args.items()
+                                  if k not in ["goal", "campaign_type"]}
+                return self.campaign_tool.run_campaign(goal, campaign_type, **campaign_params)
 
             else:
                 return {
