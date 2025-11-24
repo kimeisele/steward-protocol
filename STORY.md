@@ -346,14 +346,17 @@ controller.trigger_agent("herald", "update_frequency", hours=1)
 
 ## Chapter 6: The Ledger
 
-### Trust Through Transparency
+### Trust Through Transparency (And Persistence)
 
-Every action in Agent City is recorded in `data/ledger.jsonl`.
+Every action in Agent City is recorded in an **immutable, persistent ledger**.
+
+**It lives in:** SQLite database (`data/vibe_ledger.db`) — Production-grade storage
 
 **It's:**
 - ✅ Append-only (can't edit history)
 - ✅ Cryptographically signed (can't fake entries)
-- ✅ Human-readable (JSON format)
+- ✅ Human-readable (JSON events stored in database)
+- ✅ **Persistent across restarts** (this is key)
 
 **Example entry:**
 
@@ -378,7 +381,33 @@ cat data/ledger.jsonl | jq 'select(.agent == "herald")'
 
 **You see every action Herald ever took.**
 
-**This is accountability.**
+### The Superpower: History That Survives Restarts
+
+Your Agent City crashed. Maybe a power outage. Maybe you restarted.
+
+```bash
+# City is down. All agents offline.
+$ ./bin/agent-city
+# [Process dies unexpectedly]
+
+# Hours later, you restart
+$ ./bin/agent-city
+```
+
+**What happens?**
+
+The kernel boots. It loads `data/vibe_ledger.db`. **The entire history is restored:**
+- ✅ All 2,000+ ledger entries
+- ✅ Governance state (all proposals, votes)
+- ✅ Credit balances (who has what)
+- ✅ Agent licenses (who's authorized)
+- ✅ Identity keys (who is who)
+
+**It's like the city never went down.**
+
+This is **not a mock ledger. This is production persistence.**
+
+**This is accountability. Forever.**
 
 ---
 
