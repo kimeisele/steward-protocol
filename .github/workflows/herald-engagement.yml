@@ -1,5 +1,10 @@
 name: "🦅 Herald Engagement"
 
+# SHADOW MODE CONFIG:
+# Set GitHub Actions variable HERALD_SHADOW_MODE=false to enable live publishing
+# Default (true) = Shadow Mode: Dry-run only, no tweets published
+# Requires Constitution.md to be present and valid
+
 on:
   schedule:
     - cron: "0 */2 * * *"  # Every 2 hours
@@ -33,8 +38,15 @@ jobs:
           TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
+          HERALD_SHADOW_MODE: ${{ vars.HERALD_SHADOW_MODE || 'true' }}
         run: |
-          python herald/shim.py --action reply_cycle
+          if [ "$HERALD_SHADOW_MODE" = "true" ]; then
+            echo "🌙 SHADOW MODE ACTIVATED - Dry run only"
+            python herald/shim.py --action reply_cycle --dry-run
+          else
+            echo "🚀 LIVE MODE - Publishing tweets"
+            python herald/shim.py --action reply_cycle
+          fi
 
       - name: "📤 Upload Drafts"
         uses: actions/upload-artifact@v4
