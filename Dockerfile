@@ -18,11 +18,14 @@ RUN pip install --no-cache-dir \
     python-dotenv \
     cryptography
 
-# Copy project files
+# Copy project files FIRST (as root)
 COPY . .
 
-# Create a non-root user
-RUN useradd -m -u 1000 steward
+# Create a non-root user and give ownership of /app
+RUN useradd -m -u 1000 steward && \
+    chown -R steward:steward /app
+
+# Switch to non-root user
 USER steward
 
 # Expose port (Cloud Run default)
@@ -31,6 +34,4 @@ ENV GOVERNANCE_MODE=SERVERLESS_BYPASS
 ENV ENV=production
 
 # Run the application
-# We use the shell form to allow variable expansion if needed, but exec form is better for signals.
-# Host 0.0.0.0 is crucial for containers.
 CMD ["uvicorn", "gateway.api:app", "--host", "0.0.0.0", "--port", "8080"]
