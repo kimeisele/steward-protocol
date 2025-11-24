@@ -5,9 +5,18 @@ WORKDIR /app
 # Install system dependencies (SQLite)
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements (if we had a requirements.txt, otherwise install manually for PoC)
-# For this PoC, we install directly as per guide
-RUN pip install --no-cache-dir fastapi uvicorn pydantic mangum httpx
+# Install Python dependencies
+# Core API dependencies
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    pydantic \
+    mangum \
+    httpx \
+    pyyaml \
+    requests \
+    python-dotenv \
+    cryptography
 
 # Copy project files
 COPY . .
