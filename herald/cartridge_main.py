@@ -573,7 +573,7 @@ class HeraldCartridge:
             
             # SCOUTING: Check if user is a wild agent
             user_data = {"username": author, "bio": "", "name": ""} # In real implementation, fetch full user profile
-            is_bot, confidence = self.scout.analyze_user(user_data)
+            is_bot, confidence = self.scout.analyze_user(user_data, text=text)
             
             reply_content = ""
             
