@@ -356,11 +356,18 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                 for violation in validation_result.violations:
                     logger.error(f"   ❌ {violation}")
 
+                # PHASE II: Cite governance constraint
+                constraint_citation = self._cite_governance_constraint(
+                    "governance_violation",
+                    details="Content violates " + "; ".join(validation_result.violations[:2])
+                )
+                logger.error(constraint_citation)
+
                 # Record rejection with governance violations and log to chronicle
                 event = self.event_log.record_content_rejected(
                     content=tweet,
                     reason="governance_violation",
-                    violations=validation_result.violations
+                    violations=[constraint_citation] + validation_result.violations
                 )
                 if event:
                     self.scribe.log_action(event)
@@ -376,6 +383,7 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                     "reason": "governance_violations",
                     "content": tweet,
                     "violations": validation_result.violations,
+                    "constraint_citation": constraint_citation
                 }
 
             # Warnings (don't reject, but log)
@@ -439,6 +447,35 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "content": None,
             }
 
+    def _cite_governance_constraint(self, constraint_type: str, details: str = "") -> str:
+        """
+        Generate explicit citation of governance constraint being violated.
+
+        Phase II Enhancement: Force transparency about why actions are blocked.
+        When Herald fails, it must quote the specific governance rule.
+
+        Args:
+            constraint_type: Type of constraint ("license_revoked", "connectivity_disabled", "governance_violation", etc)
+            details: Additional detail about the constraint
+
+        Returns:
+            Formatted constraint citation string
+        """
+        citations = {
+            "license_revoked": f"❌ Failure. Action was blocked because **broadcast license is revoked**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "license_inactive": f"❌ Failure. Action was blocked because **broadcast license is inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "connectivity_disabled": f"❌ Failure. Action was blocked because **connectivity is unauthorized/inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "insufficient_credits": f"❌ Failure. Action was blocked because **insufficient credits remain**. Budget allocation requires **FORUM proposal approval** per Article V (Economic Governance).",
+            "governance_violation": f"❌ Failure. Action was blocked by governance validation. The content violates one or more rules in the **HeraldConstitution** governance framework.",
+        }
+
+        citation = citations.get(constraint_type, f"❌ Failure. Action blocked by constraint: {constraint_type}")
+
+        if details:
+            citation += f"\n   Details: {details}"
+
+        return citation
+
     def execute_publish(self, content: str, civic_cartridge=None, forum_cartridge=None) -> Dict[str, Any]:
         """
         Execute publication action with event recording.
@@ -448,6 +485,8 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
 
         NEW: Checks broadcast license and credits via CIVIC before publishing.
         If out of credits, creates a proposal automatically.
+
+        PHASE II: Explicitly cites governance constraints when blocking actions.
 
         Args:
             content: Text to publish
@@ -478,18 +517,24 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                 logger.info("[STEP 1] Checking broadcast license with CIVIC...")
                 license_check = civic_cartridge.check_broadcast_license("herald")
                 if not license_check["licensed"]:
-                    logger.error(f"❌ Broadcast license check failed: {license_check.get('reason')}")
+                    # PHASE II: Explicitly cite the governance constraint
+                    constraint_citation = self._cite_governance_constraint(
+                        "license_revoked" if license_check.get('reason') == 'revoked' else "license_inactive",
+                        details=f"License status: {license_check.get('reason')}"
+                    )
+                    logger.error(constraint_citation)
+
                     event = self.event_log.record_content_rejected(
                         content=content,
                         reason="no_broadcast_license",
-                        violations=[f"License status: {license_check.get('reason')}"]
+                        violations=[constraint_citation]
                     )
                     if event:
                         self.scribe.log_action(event)
                     return {
                         "status": "rejected",
                         "reason": "no_broadcast_license",
-                        "message": f"Cannot broadcast: {license_check.get('reason')}"
+                        "message": constraint_citation
                     }
                 logger.info(f"   ✅ License valid (credits: {license_check.get('credits', 'N/A')})")
 
@@ -499,6 +544,13 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
 
                 if balance == 0:
                     logger.warning("⚠️  Out of credits! Creating proposal for budget request...")
+
+                    # PHASE II: Cite governance constraint
+                    constraint_citation = self._cite_governance_constraint(
+                        "insufficient_credits",
+                        details="Zero balance. Broadcasting requires credits per economic governance."
+                    )
+                    logger.error(constraint_citation)
 
                     if forum_cartridge:
                         proposal = forum_cartridge.create_proposal(
@@ -518,39 +570,66 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                         event = self.event_log.record_content_rejected(
                             content=content,
                             reason="insufficient_credits",
-                            violations=[f"Created proposal {proposal['id']} requesting budget"]
+                            violations=[constraint_citation, f"Created proposal {proposal['id']} requesting budget"]
                         )
                         if event:
                             self.scribe.log_action(event)
 
                         return {
                             "status": "insufficient_credits",
-                            "message": f"Out of credits. Created proposal {proposal['id']} requesting 50 credits.",
-                            "proposal_id": proposal["id"]
+                            "message": constraint_citation,
+                            "proposal_id": proposal["id"],
+                            "proposal_message": f"Created proposal {proposal['id']} requesting 50 credits."
                         }
                     else:
                         return {
                             "status": "insufficient_credits",
-                            "message": "Out of credits. Please request budget from FORUM."
+                            "message": constraint_citation
                         }
 
             # Publish to Twitter
             logger.info("[STEP 2] Verifying Twitter credentials...")
             if not self.broadcast.verify_credentials("twitter"):
-                logger.warning("⚠️  Twitter offline, skipping")
-                return {"status": "skipped", "reason": "twitter_offline"}
+                # PHASE II: Cite governance constraint
+                constraint_citation = self._cite_governance_constraint(
+                    "connectivity_disabled",
+                    details="Twitter connection is unavailable or unauthorized."
+                )
+                logger.warning(constraint_citation)
+                event = self.event_log.record_content_rejected(
+                    content=content,
+                    reason="connectivity_unavailable",
+                    violations=[constraint_citation]
+                )
+                if event:
+                    self.scribe.log_action(event)
+                return {
+                    "status": "rejected",
+                    "reason": "twitter_offline",
+                    "message": constraint_citation
+                }
             else:
                 logger.info("[STEP 3] Publishing to Twitter...")
                 success = self.broadcast.publish(content, platform="twitter")
                 if not success:
                     logger.error("❌ Twitter publish failed")
+                    # PHASE II: Cite governance constraint
+                    constraint_citation = self._cite_governance_constraint(
+                        "connectivity_disabled",
+                        details="Twitter API returned an error during publication."
+                    )
                     event = self.event_log.record_system_error(
                         error_type="publish_error",
-                        error_message="Twitter publish failed"
+                        error_message=constraint_citation
                     )
                     if event:
                         self.scribe.log_action(event)
-                    return {"status": "failed", "platform": "twitter"}
+                    return {
+                        "status": "failed",
+                        "reason": "publish_error",
+                        "message": constraint_citation,
+                        "platform": "twitter"
+                    }
 
                 # NEW: Deduct credits from CIVIC
                 if civic_cartridge:
