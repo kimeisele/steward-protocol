@@ -125,16 +125,24 @@ class ScientistCartridge(VibeAgent):
             }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report SCIENCE status (VibeAgent interface)."""
+        """Report SCIENCE status (VibeAgent interface) - Deep Introspection."""
+        # Count cached results
+        cache_files = list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
+        results_files = list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
+
         return {
             "agent_id": "science",
             "name": "SCIENCE",
             "status": "RUNNING",
             "domain": "SCIENCE",
             "capabilities": self.capabilities,
-            "search_mode": self.search.mode,
-            "cache_dir": str(self.cache_dir),
-            "results_dir": str(self.results_dir),
+            "research_metrics": {
+                "search_mode": self.search.mode,
+                "cache_entries": len(cache_files),
+                "results_generated": len(results_files),
+                "cache_dir": str(self.cache_dir),
+                "results_dir": str(self.results_dir),
+            }
         }
 
     def research(

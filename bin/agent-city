@@ -138,6 +138,90 @@ def boot_kernel() -> RealVibeKernel:
     return kernel
 
 
+def generate_snapshot(kernel: RealVibeKernel = None):
+    """
+    Generate a comprehensive system snapshot (the USB stick of truth).
+
+    Collects status from all agents and kernel, writes to vibe_snapshot.json.
+
+    Args:
+        kernel: Optional kernel instance. If not provided, will boot a new one.
+    """
+    print_banner()
+    print(f"\n{Colors.BOLD}📸 GENERATING SYSTEM SNAPSHOT...{Colors.END}\n")
+
+    # Boot if needed
+    if not kernel:
+        try:
+            print(f"{Colors.CYAN}Booting kernel...{Colors.END}")
+            kernel = boot_kernel()
+        except Exception as e:
+            print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
+            return
+
+    from datetime import datetime, timezone
+
+    # Get kernel status
+    kernel_status = kernel.get_status()
+
+    # Collect agent statuses
+    agents_status = {}
+    for agent_id, agent in kernel.agent_registry.items():
+        try:
+            status = agent.report_status()
+            agents_status[agent_id] = status
+            print(f"{Colors.GREEN}✅{Colors.END} {agent_id.upper()}: {status.get('status', 'Unknown')}")
+        except Exception as e:
+            print(f"{Colors.RED}❌{Colors.END} {agent_id.upper()}: {str(e)}")
+            agents_status[agent_id] = {
+                "status": "ERROR",
+                "error": str(e)
+            }
+
+    # Build snapshot
+    snapshot = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "git_commit": _get_git_commit(),
+        "kernel": {
+            "status": kernel_status.get("status", "UNKNOWN"),
+            "agents_registered": kernel_status.get("agents_registered", 0),
+            "manifests": kernel_status.get("manifests", 0),
+            "ledger_events": kernel_status.get("ledger_events", 0),
+            "scheduler": kernel_status.get("scheduler", {}),
+        },
+        "agents": agents_status,
+    }
+
+    # Write snapshot
+    snapshot_path = project_root / ".steward" / "vibe_snapshot.json"
+    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        snapshot_path.write_text(json.dumps(snapshot, indent=2))
+        print(f"\n{Colors.GREEN}✅ SNAPSHOT GENERATED{Colors.END}")
+        print(f"{Colors.CYAN}📁 Location: {snapshot_path}{Colors.END}")
+        print(f"{Colors.CYAN}📊 Agents captured: {len(agents_status)}{Colors.END}")
+        print(f"{Colors.CYAN}🧬 Timestamp: {snapshot['timestamp']}{Colors.END}\n")
+    except Exception as e:
+        print(f"{Colors.RED}❌ Failed to write snapshot: {e}{Colors.END}")
+
+
+def _get_git_commit() -> str:
+    """Get current git commit hash."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        return result.stdout.strip() if result.returncode == 0 else "unknown"
+    except:
+        return "unknown"
+
+
 def quick_status(kernel: RealVibeKernel = None):
     """
     Run a quick status check and exit.
@@ -404,6 +488,12 @@ The Envoy's brain is now wired to the Kernel's heart.
     )
 
     parser.add_argument(
+        '--snapshot',
+        action='store_true',
+        help='Generate system snapshot (vibe_snapshot.json) and exit'
+    )
+
+    parser.add_argument(
         '--version',
         action='version',
         version='Agent City Launcher v2.0.0 (Kernel-Integrated)'
@@ -416,7 +506,9 @@ The Envoy's brain is now wired to the Kernel's heart.
     os.environ['AGENT_CITY_ROOT'] = str(project_root)
 
     # Route to appropriate mode
-    if args.status:
+    if args.snapshot:
+        generate_snapshot()
+    elif args.status:
         quick_status()
     elif args.kernel_status:
         kernel = boot_kernel()

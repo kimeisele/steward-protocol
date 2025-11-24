@@ -148,9 +148,20 @@ class ForumCartridge(VibeAgent):
             }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report FORUM status (VibeAgent interface)."""
+        """Report FORUM status (VibeAgent interface) - Deep Introspection."""
         open_proposals = [p for p in self.proposals.values() if p.get("status") == "OPEN"]
         approved_proposals = [p for p in self.proposals.values() if p.get("status") == "APPROVED"]
+        executed_proposals = [p for p in self.proposals.values() if p.get("status") == "EXECUTED"]
+        rejected_proposals = [p for p in self.proposals.values() if p.get("status") == "REJECTED"]
+
+        # Load and count votes from ledger
+        votes_count = 0
+        if self.votes_ledger_path.exists():
+            try:
+                with open(self.votes_ledger_path, "r") as f:
+                    votes_count = len(f.readlines())
+            except:
+                votes_count = 0
 
         return {
             "agent_id": "forum",
@@ -158,9 +169,18 @@ class ForumCartridge(VibeAgent):
             "status": "RUNNING",
             "domain": "GOVERNANCE",
             "capabilities": self.capabilities,
-            "total_proposals": len(self.proposals),
-            "open_proposals": len(open_proposals),
-            "approved_proposals": len(approved_proposals),
+            "governance_metrics": {
+                "total_proposals": len(self.proposals),
+                "open_proposals": len(open_proposals),
+                "approved_proposals": len(approved_proposals),
+                "executed_proposals": len(executed_proposals),
+                "rejected_proposals": len(rejected_proposals),
+                "total_votes_recorded": votes_count,
+                "next_proposal_id": self.next_proposal_id,
+                "proposals_path": str(self.proposals_path),
+                "votes_ledger_path": str(self.votes_ledger_path),
+                "executed_archive_path": str(self.executed_path),
+            }
         }
 
     def create_proposal(

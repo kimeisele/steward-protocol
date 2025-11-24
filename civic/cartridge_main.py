@@ -161,7 +161,7 @@ class CivicCartridge(VibeAgent):
             }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report CIVIC status (VibeAgent interface)."""
+        """Report CIVIC status (VibeAgent interface) - Deep Introspection."""
         # If kernel is available, use real data
         if self.kernel:
             agents = self.kernel.agent_registry.values()
@@ -171,13 +171,33 @@ class CivicCartridge(VibeAgent):
             agents = self.registry.get("agents", {})
             agent_count = len(agents)
 
+        # Extract ledger statistics
+        ledger_entries = len(self.ledger.entries) if self.ledger.entries else 0
+        total_credits = sum(
+            entry.get("balance_after", 0)
+            for entry in (self.ledger.entries or [])
+        )
+
+        # Extract license statistics
+        active_licenses = len([
+            lic for lic in self.license_tool.licenses.values()
+            if lic.get("status") == "ACTIVE"
+        ])
+
         return {
             "agent_id": "civic",
             "name": "CIVIC",
             "status": "RUNNING",
-            "total_agents": agent_count,
             "domain": "GOVERNANCE",
             "capabilities": self.capabilities,
+            "authority_metrics": {
+                "total_agents_registered": agent_count,
+                "active_broadcast_licenses": active_licenses,
+                "ledger_entries": ledger_entries,
+                "total_credits_in_system": total_credits,
+                "ledger_path": "data/registry/ledger.jsonl",
+                "licenses_path": "data/registry/licenses.json",
+            }
         }
 
     def scan_and_register_agents(self, dry_run: bool = False) -> Dict[str, Any]:
