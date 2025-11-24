@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""
+AGENT CITY LAUNCHER - The Envoy Interface
+
+This script launches the Universal Operator interface for Agent City.
+It loads the Envoy system prompt and injects the City Control Tool.
+
+Usage:
+  ./bin/agent-city                    # Start interactive session
+  ./bin/agent-city --status           # Quick status check
+  ./bin/agent-city --help             # Show help
+
+The Envoy is now awake.
+"""
+
+import sys
+import os
+from pathlib import Path
+import argparse
+import json
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+# Import City Control Tool
+from envoy.tools.city_control_tool import CityControlTool
+
+# ANSI colors for terminal output
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    END = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def print_banner():
+    """Print the Agent City banner."""
+    banner = f"""
+{Colors.CYAN}╔════════════════════════════════════════════════════════════════════╗
+║                                                                    ║
+║                   👁️  THE ENVOY - Agent City Interface            ║
+║                                                                    ║
+║        "The bridge between Human Intent and Agent Execution"      ║
+║                                                                    ║
+╚════════════════════════════════════════════════════════════════════╝{Colors.END}
+"""
+    print(banner)
+
+
+def load_system_prompt() -> str:
+    """Load the Envoy system prompt."""
+    prompt_path = project_root / "prompts" / "envoy.md"
+
+    if not prompt_path.exists():
+        print(f"{Colors.RED}⚠️  WARNING: Envoy system prompt not found at {prompt_path}{Colors.END}")
+        return ""
+
+    return prompt_path.read_text()
+
+
+def load_policies() -> str:
+    """Load POLICIES.md for context."""
+    policies_path = project_root / "POLICIES.md"
+
+    if not policies_path.exists():
+        print(f"{Colors.YELLOW}⚠️  WARNING: POLICIES.md not found{Colors.END}")
+        return ""
+
+    return policies_path.read_text()
+
+
+def quick_status():
+    """Run a quick status check and exit."""
+    print_banner()
+    print(f"\n{Colors.BOLD}📊 CITY STATUS{Colors.END}\n")
+
+    controller = CityControlTool()
+    status = controller.get_city_status()
+
+    # Pretty print status
+    print(f"{Colors.CYAN}🏙️  City:{Colors.END} {status.get('city_name', 'Unknown')}")
+    print(f"{Colors.CYAN}⏰ Time:{Colors.END} {status.get('timestamp', 'Unknown')}")
+    print(f"{Colors.CYAN}🤖 Agents:{Colors.END} {status.get('agents', {}).get('total', 0)} registered")
+
+    agents = status.get('agents', {}).get('registry', [])
+    if agents:
+        print(f"{Colors.CYAN}   └─{Colors.END} {', '.join(agents)}")
+
+    economy = status.get('economy', {})
+    print(f"{Colors.CYAN}💰 Economy:{Colors.END}")
+    print(f"{Colors.CYAN}   ├─{Colors.END} Credits Allocated: {economy.get('total_credits_allocated', 0)}")
+    print(f"{Colors.CYAN}   └─{Colors.END} Total Transactions: {economy.get('total_transactions', 0)}")
+
+    governance = status.get('governance', {})
+    print(f"{Colors.CYAN}🗳️  Governance:{Colors.END}")
+    print(f"{Colors.CYAN}   └─{Colors.END} Open Proposals: {governance.get('open_proposals', 0)}")
+
+    if governance.get('proposals'):
+        print(f"\n{Colors.BOLD}📋 OPEN PROPOSALS:{Colors.END}")
+        for prop in governance.get('proposals', []):
+            print(f"   • {prop.get('id')}: {prop.get('title')} (by {prop.get('proposer')})")
+
+    health = status.get('health', '❓ UNKNOWN')
+    print(f"\n{Colors.BOLD}{health}{Colors.END}\n")
+
+
+def interactive_mode():
+    """Start interactive REPL session with the Envoy."""
+    print_banner()
+
+    # Load context
+    system_prompt = load_system_prompt()
+    policies = load_policies()
+
+    # Initialize controller
+    controller = CityControlTool()
+
+    # Startup sequence
+    print(f"{Colors.GREEN}✅ THE ENVOY - Connected{Colors.END}")
+    print(f"{Colors.CYAN}📜 System Prompt Loaded: prompts/envoy.md{Colors.END}")
+    print(f"{Colors.CYAN}📋 Policies Loaded: POLICIES.md{Colors.END}")
+    print(f"{Colors.CYAN}🏙️  City Control Tool: Initialized (Mode: {controller.mode}){Colors.END}\n")
+
+    # Get initial status
+    print(f"{Colors.BOLD}📊 Initial City Status:{Colors.END}")
+    status = controller.get_city_status()
+    agents_count = status.get('agents', {}).get('total', 0)
+    open_proposals = status.get('governance', {}).get('open_proposals', 0)
+    health = status.get('health', 'UNKNOWN')
+
+    print(f"   Agents: {agents_count} | Proposals: {open_proposals} | Status: {health}\n")
+
+    # Show available commands
+    print(f"{Colors.BOLD}Available Commands:{Colors.END}")
+    print(f"   {Colors.CYAN}status{Colors.END}        - Get city status")
+    print(f"   {Colors.CYAN}proposals{Colors.END}     - List governance proposals")
+    print(f"   {Colors.CYAN}credits <agent>{Colors.END} - Check agent credits")
+    print(f"   {Colors.CYAN}vote <id> <choice>{Colors.END} - Vote on proposal (YES/NO/ABSTAIN)")
+    print(f"   {Colors.CYAN}execute <id>{Colors.END} - Execute approved proposal")
+    print(f"   {Colors.CYAN}trigger <agent> <action>{Colors.END} - Trigger agent action")
+    print(f"   {Colors.CYAN}help{Colors.END}          - Show this help")
+    print(f"   {Colors.CYAN}exit{Colors.END}          - Exit\n")
+
+    print(f"{Colors.BOLD}How can I help?{Colors.END}\n")
+
+    # REPL loop
+    while True:
+        try:
+            user_input = input(f"{Colors.GREEN}>{Colors.END} ").strip()
+
+            if not user_input:
+                continue
+
+            # Parse command
+            parts = user_input.split()
+            command = parts[0].lower()
+            args = parts[1:]
+
+            # Handle commands
+            if command in ['exit', 'quit', 'q']:
+                print(f"\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
+                break
+
+            elif command == 'status':
+                status = controller.get_city_status()
+                print(json.dumps(status, indent=2))
+
+            elif command == 'proposals':
+                proposals = controller.list_proposals(status="OPEN")
+                if proposals:
+                    for prop in proposals:
+                        print(f"  • {prop.get('id')}: {prop.get('title')} (by {prop.get('proposer')})")
+                else:
+                    print("  No open proposals")
+
+            elif command == 'credits':
+                if not args:
+                    print(f"{Colors.RED}Usage: credits <agent_name>{Colors.END}")
+                    continue
+                agent_name = args[0]
+                credits = controller.check_credits(agent_name)
+                print(json.dumps(credits, indent=2))
+
+            elif command == 'vote':
+                if len(args) < 2:
+                    print(f"{Colors.RED}Usage: vote <proposal_id> <YES|NO|ABSTAIN>{Colors.END}")
+                    continue
+                proposal_id = args[0]
+                choice = args[1].upper()
+                result = controller.vote_proposal(proposal_id, choice, voter="operator")
+                print(json.dumps(result, indent=2))
+
+            elif command == 'execute':
+                if not args:
+                    print(f"{Colors.RED}Usage: execute <proposal_id>{Colors.END}")
+                    continue
+                proposal_id = args[0]
+                result = controller.execute_proposal(proposal_id)
+                print(json.dumps(result, indent=2))
+
+            elif command == 'trigger':
+                if len(args) < 2:
+                    print(f"{Colors.RED}Usage: trigger <agent_name> <action>{Colors.END}")
+                    continue
+                agent_name = args[0]
+                action = args[1]
+                result = controller.trigger_agent(agent_name, action)
+                print(json.dumps(result, indent=2))
+
+            elif command == 'help':
+                print(f"\n{Colors.BOLD}Available Commands:{Colors.END}")
+                print(f"   status        - Get city status")
+                print(f"   proposals     - List governance proposals")
+                print(f"   credits <agent> - Check agent credits")
+                print(f"   vote <id> <choice> - Vote on proposal")
+                print(f"   execute <id> - Execute approved proposal")
+                print(f"   trigger <agent> <action> - Trigger agent action")
+                print(f"   help          - Show this help")
+                print(f"   exit          - Exit\n")
+
+            else:
+                print(f"{Colors.YELLOW}Unknown command: {command}{Colors.END}")
+                print(f"Type 'help' for available commands")
+
+            print()  # Empty line for readability
+
+        except KeyboardInterrupt:
+            print(f"\n\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
+            break
+        except Exception as e:
+            print(f"{Colors.RED}❌ Error: {e}{Colors.END}")
+
+
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Agent City Universal Operator Interface",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  ./bin/agent-city                 # Start interactive session
+  ./bin/agent-city --status        # Quick status check
+
+The Envoy awaits your command.
+        """
+    )
+
+    parser.add_argument(
+        '--status',
+        action='store_true',
+        help='Show quick status and exit'
+    )
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='Agent City Launcher v1.0.0'
+    )
+
+    args = parser.parse_args()
+
+    # Set environment variables for VibeOS integration
+    os.environ['VIBE_SYSTEM_PROMPT'] = str(project_root / "prompts" / "envoy.md")
+    os.environ['AGENT_CITY_ROOT'] = str(project_root)
+
+    # Route to appropriate mode
+    if args.status:
+        quick_status()
+    else:
+        interactive_mode()
+
+
+if __name__ == "__main__":
+    main()
