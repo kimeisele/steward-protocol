@@ -1,0 +1,25 @@
+{
+  "id": "PROP-009",
+  "title": "Reinstate HERALD Broadcast License",
+  "description": "Reinstate the broadcast license for HERALD agent. Previous revocation was for manual admin intervention verification. Reason has been addressed through governance protocol.",
+  "proposer": "envoy",
+  "proposed_at": "2025-11-24T20:57:00.000000+00:00",
+  "status": "APPROVED",
+  "action": {
+    "type": "civic.license.reinstate",
+    "params": {
+      "agent_name": "herald",
+      "license_type": "broadcast",
+      "source_authority": "PROP-009"
+    }
+  },
+  "voting": {
+    "threshold": 0.5,
+    "quorum": 0.5,
+    "votes_yes": 1,
+    "votes_no": 0,
+    "votes_abstain": 0
+  },
+  "executed": false,
+  "executed_at": null
+}
