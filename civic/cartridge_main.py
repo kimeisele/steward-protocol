@@ -117,6 +117,7 @@ class CivicCartridge(VibeAgent):
         - "check_license": Verify broadcast permission
         - "deduct_credits": Charge agent for action
         - "refill_credits": Admin credit refill
+        - "revoke_license": Revoke an agent's license (manual admin intervention)
         - "get_registry": Return current registry snapshot
         - "generate_citymap": Create markdown map of agents
         """
@@ -138,6 +139,12 @@ class CivicCartridge(VibeAgent):
                 agent_id = task.payload.get("agent_id")
                 amount = task.payload.get("amount")
                 return self.refill_credits(agent_id, amount)
+
+            elif action == "revoke_license":
+                agent_id = task.payload.get("agent_id")
+                reason = task.payload.get("reason", "violation")
+                source_authority = task.payload.get("source_authority")
+                return self.revoke_license(agent_id, reason, source_authority)
 
             elif action == "get_registry":
                 return self._get_registry_from_kernel()
@@ -509,6 +516,59 @@ class CivicCartridge(VibeAgent):
             "status": "success",
             "agent": agent_name,
             "credits": agent.get("credits", 0)
+        }
+
+    def revoke_license(self, agent_name: str, reason: str = "violation", source_authority: str = None) -> Dict[str, Any]:
+        """
+        Revoke an agent's broadcast license (manual admin intervention).
+
+        This is a governance action that prevents an agent from publishing.
+        Used for violations, governance failures, or manual intervention.
+
+        Args:
+            agent_name: Agent whose license is being revoked
+            reason: Reason for revocation (e.g., "Violation: Manual Admin Intervention Required")
+            source_authority: Source of authority for this revocation (e.g., ENVOY, CIVIC_ADMIN)
+
+        Returns:
+            dict: Revocation result
+        """
+        logger.info(f"🔴 Revoking broadcast license for {agent_name}")
+        logger.info(f"   Reason: {reason}")
+        if source_authority:
+            logger.info(f"   Authority: {source_authority}")
+
+        # Call license tool to revoke the license
+        success = self.license_tool.revoke_license(
+            agent_name,
+            license_type=LicenseType.BROADCAST,
+            reason=reason,
+            source_authority=source_authority
+        )
+
+        if not success:
+            logger.warning(f"⚠️  License revocation failed: {agent_name} has no active broadcast license")
+            return {
+                "status": "error",
+                "reason": "license_not_found",
+                "agent": agent_name,
+                "message": f"No broadcast license found for {agent_name}"
+            }
+
+        # Update local registry as well
+        agents = self.registry.get("agents", {})
+        agent = agents.get(agent_name)
+        if agent:
+            agent["broadcast_license"] = False
+            self._save_registry()
+            logger.info(f"   ✅ Local registry updated")
+
+        return {
+            "status": "success",
+            "agent": agent_name,
+            "reason": reason,
+            "source_authority": source_authority,
+            "message": f"Broadcast license revoked for {agent_name}"
         }
 
     # ========== KERNEL INTEGRATION METHODS ==========
