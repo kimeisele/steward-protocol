@@ -100,9 +100,39 @@ def load_policies() -> str:
     return policies_path.read_text()
 
 
-def boot_kernel() -> RealVibeKernel:
+def clean_old_artifacts(clean: bool = False):
+    """
+    Remove old snapshot and ledger artifacts for a fresh start.
+    
+    Args:
+        clean: If True, remove artifacts. If False, skip.
+    """
+    if not clean:
+        return
+    
+    logger.info("🧹 Cleaning old artifacts for fresh boot...")
+    
+    # Remove old snapshot
+    snapshot_path = project_root / ".steward" / "vibe_snapshot.json"
+    if snapshot_path.exists():
+        snapshot_path.unlink()
+        logger.info(f"   ✅ Removed: {snapshot_path}")
+    
+    # Remove old ledger if in-file
+    ledger_path = project_root / ".steward" / "ledger.json"
+    if ledger_path.exists():
+        ledger_path.unlink()
+        logger.info(f"   ✅ Removed: {ledger_path}")
+    
+    logger.info("🧹 Fresh boot environment ready")
+
+
+def boot_kernel(clean: bool = False) -> RealVibeKernel:
     """
     Boot the real VibeOS kernel and register all agents.
+
+    Args:
+        clean: If True, remove old artifacts first for a fresh start.
 
     Returns:
         RealVibeKernel: The booted kernel with all agents registered
@@ -110,6 +140,9 @@ def boot_kernel() -> RealVibeKernel:
     logger.info("=" * 70)
     logger.info("⚙️  KERNEL BOOT SEQUENCE INITIATED")
     logger.info("=" * 70)
+
+    # Clean artifacts if requested
+    clean_old_artifacts(clean)
 
     # Create kernel
     kernel = RealVibeKernel()
@@ -134,11 +167,15 @@ def boot_kernel() -> RealVibeKernel:
 
     # Boot kernel (register manifests and start)
     kernel.boot()
+    
+    # Trigger initial pulse to capture production state
+    logger.info("📸 Writing initial pulse...")
+    kernel._pulse()
 
     return kernel
 
 
-def generate_snapshot(kernel: RealVibeKernel = None):
+def generate_snapshot(kernel: RealVibeKernel = None, clean: bool = False):
     """
     Generate a comprehensive system snapshot (the USB stick of truth).
 
@@ -146,6 +183,7 @@ def generate_snapshot(kernel: RealVibeKernel = None):
 
     Args:
         kernel: Optional kernel instance. If not provided, will boot a new one.
+        clean: If True, clean old artifacts before booting.
     """
     print_banner()
     print(f"\n{Colors.BOLD}📸 GENERATING SYSTEM SNAPSHOT...{Colors.END}\n")
@@ -154,7 +192,7 @@ def generate_snapshot(kernel: RealVibeKernel = None):
     if not kernel:
         try:
             print(f"{Colors.CYAN}Booting kernel...{Colors.END}")
-            kernel = boot_kernel()
+            kernel = boot_kernel(clean=clean)
         except Exception as e:
             print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
             return
@@ -222,12 +260,13 @@ def _get_git_commit() -> str:
         return "unknown"
 
 
-def quick_status(kernel: RealVibeKernel = None):
+def quick_status(kernel: RealVibeKernel = None, clean: bool = False):
     """
     Run a quick status check and exit.
 
     Args:
         kernel: Optional kernel instance. If not provided, will boot a new one.
+        clean: If True, clean old artifacts before booting.
     """
     print_banner()
     print(f"\n{Colors.BOLD}📊 KERNEL STATUS{Colors.END}\n")
@@ -235,7 +274,7 @@ def quick_status(kernel: RealVibeKernel = None):
     # Boot if needed
     if not kernel:
         try:
-            kernel = boot_kernel()
+            kernel = boot_kernel(clean=clean)
         except Exception as e:
             print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
             return
@@ -265,7 +304,7 @@ def quick_status(kernel: RealVibeKernel = None):
     print(f"\n{Colors.GREEN}✅ KERNEL OPERATIONAL{Colors.END}\n")
 
 
-def interactive_mode():
+def interactive_mode(clean: bool = False):
     """
     Start interactive REPL session with the Envoy.
 
@@ -283,7 +322,7 @@ def interactive_mode():
     # Boot the kernel
     print(f"\n{Colors.BOLD}🚀 Starting kernel boot...{Colors.END}\n")
     try:
-        kernel = boot_kernel()
+        kernel = boot_kernel(clean=clean)
     except Exception as e:
         print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
         import traceback
@@ -488,6 +527,12 @@ The Envoy's brain is now wired to the Kernel's heart.
     )
 
     parser.add_argument(
+        '--clean',
+        action='store_true',
+        help='Clean old artifacts (snapshot, ledger) for fresh boot'
+    )
+
+    parser.add_argument(
         '--snapshot',
         action='store_true',
         help='Generate system snapshot (vibe_snapshot.json) and exit'
@@ -507,11 +552,11 @@ The Envoy's brain is now wired to the Kernel's heart.
 
     # Route to appropriate mode
     if args.snapshot:
-        generate_snapshot()
+        generate_snapshot(clean=args.clean)
     elif args.status:
-        quick_status()
+        quick_status(clean=args.clean)
     elif args.kernel_status:
-        kernel = boot_kernel()
+        kernel = boot_kernel(clean=args.clean)
         status = kernel.get_status()
         print("\n" + "=" * 70)
         print("KERNEL INTERNAL STATE")
@@ -521,7 +566,7 @@ The Envoy's brain is now wired to the Kernel's heart.
         ledger = kernel.dump_ledger()
         print(json.dumps(ledger, indent=2))
     else:
-        interactive_mode()
+        interactive_mode(clean=args.clean)
 
 
 if __name__ == "__main__":

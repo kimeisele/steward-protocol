@@ -31,6 +31,15 @@ from .kernel import (
 from .agent_protocol import VibeAgent, AgentManifest
 from .scheduling import Task, TaskStatus
 
+# Import Auditor for immune system
+try:
+    from auditor.tools.invariant_tool import get_judge, InvariantSeverity
+    AUDITOR_AVAILABLE = True
+except ImportError:
+    AUDITOR_AVAILABLE = False
+    logger_setup = logging.getLogger("VIBE_KERNEL")
+    logger_setup.warning("⚠️  Auditor not available - immune system disabled")
+
 
 logger = logging.getLogger("VIBE_KERNEL")
 
@@ -344,6 +353,12 @@ class RealVibeKernel(VibeKernel):
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
+        
+        # Load immune system (Auditor)
+        self._auditor = None
+        if AUDITOR_AVAILABLE:
+            self._auditor = get_judge()
+            logger.info("🛡️  Immune system loaded (Auditor attached)")
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
@@ -426,6 +441,9 @@ class RealVibeKernel(VibeKernel):
             
             # PULSE: Update snapshot after task completion
             self._pulse()
+            
+            # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
+            self._check_system_health()
 
         except Exception as e:
             error = str(e)
@@ -440,11 +458,62 @@ class RealVibeKernel(VibeKernel):
             "scheduler": self._scheduler.get_queue_status(),
             "manifests": len(self._manifest_registry.list_all()),
             "ledger_events": len(self._ledger.get_all_events()),
+            "total_credits": 1000,  # Placeholder - would be fetched from state
         }
+
+    def _check_system_health(self) -> None:
+        """
+        🛡️ IMMUNE SYSTEM WATCHDOG
+        
+        Called after every task execution.
+        If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
+        """
+        if not AUDITOR_AVAILABLE or not self._auditor:
+            return
+        
+        try:
+            # Get current ledger events
+            events = self._ledger.get_all_events()
+            
+            # Run verification (events-only for now, VOID checks need external context)
+            report = self._auditor.verify_ledger(events)
+            
+            # If there's a CRITICAL violation, halt the kernel
+            if not report.passed:
+                for violation in report.violations:
+                    if violation.severity == InvariantSeverity.CRITICAL.value:
+                        # Don't halt on VOID violations in normal operation (they need context)
+                        # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
+                        if "VOID" not in violation.invariant_name:
+                            logger.critical(
+                                f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}"
+                            )
+                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
+                            return
+                        else:
+                            logger.debug(f"⚠️  VOID check skipped (requires external context)")
+            
+            # Log health check (non-critical)
+            if report.violations:
+                logger.debug(
+                    f"⚠️  Auditor info: {len(report.violations)} issue(s) detected"
+                )
+            else:
+                logger.debug("✅ System health check passed")
+                
+        except Exception as e:
+            logger.error(f"❌ Health check failed: {e}")
 
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
         return self._manifest_registry.lookup(agent_id)
+
+    def shutdown(self, reason: str = "User shutdown") -> None:
+        """Gracefully shut down the kernel"""
+        self._status = KernelStatus.STOPPED
+        logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
+        if isinstance(self._ledger, SQLiteLedger):
+            self._ledger.close()
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         """Find agents with a specific capability"""

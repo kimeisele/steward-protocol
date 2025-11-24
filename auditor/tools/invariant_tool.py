@@ -314,6 +314,61 @@ class InvariantEngine:
             check_function=check_proposal_workflow
         ))
 
+        # INVARIANT 7: No Critical Voids (Null/Empty Detection)
+        def check_no_critical_voids(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+            """
+            RULE: Critical system state fields must never be null/empty.
+            Detects "silent failures" where operations complete but state is corrupted.
+            
+            Checks:
+            - total_credits must not be None/0 (after first action)
+            - agents_registered must not be 0 (after boot)
+            - ledger_events must not be 0 (after first action)
+            - All agents must have valid name and domain (NOT test/dummy agents)
+            """
+            # Extract system state from context
+            total_credits = ctx.get("total_credits")
+            agents_registered = ctx.get("agents_registered")
+            ledger_events = ctx.get("ledger_events", len(events))
+            agents = ctx.get("agents", [])
+            
+            # Check agent integrity
+            for agent in agents:
+                agent_id = agent.get("agent_id", "")
+                name = agent.get("name", "")
+                domain = agent.get("domain", "")
+                
+                # Reject dummy/test agents in production
+                if agent_id.startswith("dummy-") or name.startswith("Dummy"):
+                    return (False, f"VOID: Dummy/test agent found in production: {agent_id}")
+                
+                # All agents must have name and domain
+                if not name or not domain:
+                    return (False, f"VOID: Agent {agent_id} missing name or domain")
+            
+            # After boot (events exist), these must have values
+            if len(events) > 0:
+                # Check total_credits
+                if total_credits is None or total_credits == 0:
+                    return (False, "VOID: total_credits is None or 0 after system action")
+                
+                # Check agents_registered
+                if agents_registered is not None and agents_registered == 0:
+                    return (False, "VOID: agents_registered is 0 (system appears offline)")
+                
+                # Ledger events should match event count
+                if ledger_events == 0 and len(events) > 0:
+                    return (False, "VOID: ledger_events is 0 but events exist (state mismatch)")
+            
+            return (True, None)
+        
+        self.register_rule(InvariantRule(
+            name="NO_CRITICAL_VOIDS",
+            description="Critical system fields (credits, agents, ledger) must never be null/empty",
+            severity=InvariantSeverity.CRITICAL,
+            check_function=check_no_critical_voids
+        ))
+
         logger.info(f"⚖️  JUDGE: {len(self.rules)} core invariant rules registered")
 
     def register_rule(self, rule: InvariantRule):
