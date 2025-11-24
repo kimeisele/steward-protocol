@@ -31,6 +31,7 @@ from herald.tools.strategy_tool import StrategyTool
 from herald.core.memory import EventLog
 from herald.governance import HeraldConstitution
 from artisan.cartridge_main import ArtisanCartridge
+from science.cartridge_main import ScientistCartridge
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +71,7 @@ class HeraldCartridge:
         self.strategy = StrategyTool()
         self.scout = ScoutTool()
         self.artisan = ArtisanCartridge()
+        self.scientist = ScientistCartridge()  # NEW: External intelligence from SCIENTIST
         self.identity = IdentityTool()
         logger.info("🦅 HERALD is online.")
 
@@ -148,17 +150,30 @@ class HeraldCartridge:
             dict: Campaign result with status and generated content
         """
         try:
-            logger.info("🦅 PHASE 1: RESEARCH")
+            logger.info("🦅 PHASE 1: RESEARCH (with SCIENTIST)")
             logger.info("=" * 70)
 
-            # Step 1: Research
-            trending = self.research.find_trending_topic()
+            # Step 1: Research via SCIENTIST (external intelligence)
+            logger.info("[SCIENTIST] Researching current trends...")
+            briefing = self.scientist.research(
+                query="AI agents autonomous governance 2025",
+                max_results=5
+            )
+
             research_context = None
-            if trending:
-                research_context = trending.get("article", {}).get("content")
-                logger.info(f"✅ Trending topic found: {trending.get('search_query')}")
+            if briefing and briefing.get("summary"):
+                research_context = briefing.get("summary")
+                logger.info(f"✅ SCIENTIST briefing ready: {len(research_context)} chars")
+                logger.info(f"   Sources analyzed: {briefing.get('source_count', 0)}")
+                logger.info(f"   Key insights: {len(briefing.get('key_insights', []))}")
             else:
-                logger.warning("⚠️  No trending topic, using generic context")
+                logger.warning("⚠️  SCIENTIST research failed, using fallback...")
+                trending = self.research.find_trending_topic()
+                if trending:
+                    research_context = trending.get("article", {}).get("content")
+                    logger.info(f"✅ Fallback trending topic: {trending.get('search_query')}")
+                else:
+                    logger.warning("⚠️  No trending topic, using generic context")
 
             # Step 2: Generate Content
             logger.info("\n🦅 PHASE 2: CREATION")
