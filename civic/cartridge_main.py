@@ -3,21 +3,21 @@
 CIVIC Cartridge - The Bureaucrat (Administrative Agent)
 
 CIVIC is the "City Hall" of Agent City. It manages:
-1. Agent Registration & Identity Management (Citizens Registry)
-2. Broadcast Licenses (Permission to publish)
-3. Credit System (Economic constraints on autonomous action)
-4. Registry Updates (AGENTS.md and citizens.json)
+1. Governance Rules & Enforcement (Licenses, Credits)
+2. Registry Authority (validates agent claims against VibeOS kernel)
+3. Broadcast Licensing (permission to publish)
+4. Credit System (economic constraints on autonomous action)
 
-This cartridge is "on-demand" - runs when:
-- A new agent deploys (registration)
-- CI/CD pipeline triggers (registry sync)
-- Admin explicitly calls it (manual governance)
+This is a VibeAgent that:
+- Inherits from vibe_core.VibeAgent (VibeOS compatible)
+- Receives tasks from the kernel scheduler
+- Enforces governance rules in real-time
+- Queries kernel for agent registry (source of truth)
 
-Architecture:
-- ARCH-050 compatible (CartridgeBase interface)
-- Event-sourced (all decisions recorded)
-- Immutable rules (bureaucratic authority is coded)
-- No "God Mode" - even HERALD must register with CIVIC
+Key Insight (ARCH REALIGNMENT):
+- OLD: CIVIC scanned filesystem. Built local registry.
+- NEW: CIVIC queries kernel.agent_registry. Enforces rules.
+The kernel is the source of truth. CIVIC is the bureaucracy layer.
 """
 
 import logging
@@ -26,6 +26,9 @@ import yaml
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
+
+# VibeOS Integration
+from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 
 # Import tools
 from civic.tools.ledger_tool import LedgerTool, AgentBank
@@ -37,7 +40,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CIVIC_MAIN")
 
 
-class CivicCartridge:
+class CivicCartridge(VibeAgent):
     """
     The CIVIC Agent Cartridge (The Bureaucrat).
 
@@ -54,15 +57,25 @@ class CivicCartridge:
     You want credits? Prove you're not spam. Break the rules? License revoked."
     """
 
-    # Cartridge Metadata (ARCH-050 required fields)
-    name = "civic"
-    version = "1.0.0"
-    description = "Administrative oversight and agent registry management"
-    author = "Steward Protocol"
-
     def __init__(self):
-        """Initialize CIVIC (The Bureaucrat)."""
-        logger.info("🏛️  CIVIC Cartridge initializing...")
+        """Initialize CIVIC (The Bureaucrat) as a VibeAgent."""
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="civic",
+            name="CIVIC",
+            version="2.0.0",
+            author="Steward Protocol",
+            description="Governance agent: enforces rules, manages licenses, audits credits",
+            domain="GOVERNANCE",
+            capabilities=[
+                "registry",
+                "licensing",
+                "ledger",
+                "governance"
+            ]
+        )
+
+        logger.info("🏛️  CIVIC Cartridge initializing (VibeAgent v2.0)...")
 
         # Load THE MATRIX (configuration)
         self.matrix = self._load_matrix()
@@ -73,7 +86,7 @@ class CivicCartridge:
             logger.warning("⚠️  THE MATRIX not found, using defaults")
             self.matrix = self._default_matrix()
 
-        # Registry paths
+        # Persistence paths (local fallback)
         self.registry_path = Path("data/registry/citizens.json")
         self.agents_md_path = Path("AGENTS.md")
         self.state_path = Path("data/state/civic_state.json")
@@ -87,36 +100,84 @@ class CivicCartridge:
         self.license_tool = LicenseTool("data/registry/licenses.json")
         self.registry_tool = RegistryTool(".")
 
-        # Load or initialize registry
+        # Load local registry (fallback, not authoritative)
         self.registry = self._load_registry()
-
-        # Load state (last sync time, etc)
         self.state = self._load_state()
 
-        logger.info(f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents")
+        logger.info(f"📋 Local registry cache: {len(self.registry.get('agents', {}))} agents (fallback only)")
         logger.info(f"💰 Ledger initialized: {len(self.ledger.entries)} transactions")
         logger.info(f"🎫 License database initialized: {len(self.license_tool.licenses)} licenses")
-        logger.info(f"🏛️  CIVIC: Ready for operation")
+        logger.info(f"🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
 
-    def get_config(self) -> Dict[str, Any]:
-        """Get cartridge configuration (ARCH-050 interface)."""
-        return {
-            "name": self.name,
-            "version": self.version,
-            "description": self.description,
-            "author": self.author,
-        }
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        CIVIC responds to governance-related tasks:
+        - "check_license": Verify broadcast permission
+        - "deduct_credits": Charge agent for action
+        - "refill_credits": Admin credit refill
+        - "get_registry": Return current registry snapshot
+        - "generate_citymap": Create markdown map of agents
+        """
+        try:
+            action = task.payload.get("action")
+            logger.info(f"🏛️  CIVIC processing task: {action}")
+
+            if action == "check_license":
+                agent_id = task.payload.get("agent_id")
+                return self.check_broadcast_license(agent_id)
+
+            elif action == "deduct_credits":
+                agent_id = task.payload.get("agent_id")
+                amount = task.payload.get("amount", 1)
+                reason = task.payload.get("reason", "action")
+                return self.deduct_credits(agent_id, amount, reason)
+
+            elif action == "refill_credits":
+                agent_id = task.payload.get("agent_id")
+                amount = task.payload.get("amount")
+                return self.refill_credits(agent_id, amount)
+
+            elif action == "get_registry":
+                return self._get_registry_from_kernel()
+
+            elif action == "generate_citymap":
+                return self._generate_citymap_from_kernel()
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+
+        except Exception as e:
+            logger.error(f"❌ CIVIC processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
-        agents = self.registry.get("agents", {})
+        """Report CIVIC status (VibeAgent interface)."""
+        # If kernel is available, use real data
+        if self.kernel:
+            agents = self.kernel.agent_registry.values()
+            agent_count = len(agents)
+        else:
+            # Fallback to local cache
+            agents = self.registry.get("agents", {})
+            agent_count = len(agents)
+
         return {
-            "name": self.name,
-            "version": self.version,
-            "total_agents": len(agents),
-            "licensed_agents": len([a for a in agents.values() if a.get("broadcast_license", False)]),
-            "total_credits_distributed": sum(a.get("credits", 0) for a in agents.values()),
-            "last_registry_update": self.state.get("last_registry_update"),
+            "agent_id": "civic",
+            "name": "CIVIC",
+            "status": "RUNNING",
+            "total_agents": agent_count,
+            "domain": "GOVERNANCE",
+            "capabilities": self.capabilities,
         }
 
     def scan_and_register_agents(self, dry_run: bool = False) -> Dict[str, Any]:
@@ -411,13 +472,156 @@ class CivicCartridge:
             "credits": agent.get("credits", 0)
         }
 
-    # ========== Private Helper Methods ==========
+    # ========== KERNEL INTEGRATION METHODS ==========
 
-    def _find_agent_cartridges(self) -> List[Path]:
-        """Find all agent cartridge_main.py files."""
-        repo_root = Path("/home/user/steward-protocol")
-        cartridges = list(repo_root.glob("*/cartridge_main.py"))
-        return cartridges
+    def _get_registry_from_kernel(self) -> Dict[str, Any]:
+        """
+        Query the kernel for the authoritative agent registry.
+
+        This is the NEW ARCH approach: Ask the OS, don't scan files.
+        """
+        if not self.kernel:
+            logger.warning("⚠️  Kernel not available, using local cache")
+            return {
+                "status": "fallback",
+                "agents": self.registry.get("agents", {}),
+                "note": "Using local cache (kernel not injected)"
+            }
+
+        try:
+            manifests = self.kernel.manifest_registry.list_all()
+            agents_dict = {}
+
+            for manifest in manifests:
+                agents_dict[manifest.agent_id] = {
+                    "agent_id": manifest.agent_id,
+                    "name": manifest.name,
+                    "version": manifest.version,
+                    "domain": manifest.domain,
+                    "capabilities": manifest.capabilities,
+                    "status": "REGISTERED"
+                }
+
+            return {
+                "status": "success",
+                "agent_count": len(agents_dict),
+                "agents": agents_dict,
+                "source": "kernel"
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Failed to query kernel registry: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def _generate_citymap_from_kernel(self) -> Dict[str, Any]:
+        """
+        Generate CityMap from kernel's agent registry.
+
+        OLD ARCH: Scan filesystem for cartridge_main.py files
+        NEW ARCH: Query kernel for actual running agents
+        """
+        if not self.kernel:
+            logger.warning("⚠️  Kernel not available, generating from local cache")
+            return self._generate_citymap_from_cache()
+
+        try:
+            manifests = self.kernel.manifest_registry.list_all()
+            status = self.kernel.get_status()
+
+            markdown_lines = [
+                "# 🏙️ AGENT CITY MAP",
+                "",
+                "**Generated by CIVIC from VibeOS Kernel**",
+                f"Generated: {datetime.now(timezone.utc).isoformat()}",
+                f"Kernel Status: {status.get('kernel_status', 'UNKNOWN')}",
+                f"Total Agents: {len(manifests)}",
+                "",
+                "---",
+                "",
+            ]
+
+            # Group agents by domain
+            domains = {}
+            for manifest in manifests:
+                domain = manifest.domain or "UNKNOWN"
+                if domain not in domains:
+                    domains[domain] = []
+                domains[domain].append(manifest)
+
+            # Render by domain
+            for domain in sorted(domains.keys()):
+                markdown_lines.extend([
+                    f"## {domain}",
+                    "",
+                ])
+
+                for manifest in domains[domain]:
+                    markdown_lines.extend([
+                        f"### {manifest.name} (`{manifest.agent_id}`)",
+                        f"- **Version**: {manifest.version}",
+                        f"- **Author**: {manifest.author}",
+                        f"- **Capabilities**: {', '.join(manifest.capabilities)}",
+                        f"- **Status**: 🟢 RUNNING",
+                        "",
+                    ])
+
+            markdown_lines.extend([
+                "---",
+                "",
+                "**CityMap Authority**: CIVIC (The Bureaucrat)",
+                "**Source of Truth**: VibeOS Kernel (vibe_core.manifest_registry)",
+                "Real-time map. Always accurate. 🏛️",
+            ])
+
+            return {
+                "status": "success",
+                "markdown": "\n".join(markdown_lines),
+                "agent_count": len(manifests),
+                "domains": len(domains)
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Failed to generate citymap from kernel: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def _generate_citymap_from_cache(self) -> Dict[str, Any]:
+        """Fallback: Generate citymap from local cache."""
+        agents = self.registry.get("agents", {})
+        markdown_lines = [
+            "# 🏙️ AGENT CITY MAP (LOCAL CACHE)",
+            "",
+            "⚠️  **Generated from local cache (kernel not available)**",
+            f"Generated: {datetime.now(timezone.utc).isoformat()}",
+            "",
+            "---",
+            "",
+        ]
+
+        for agent_name in sorted(agents.keys()):
+            agent = agents[agent_name]
+            status = "🟢 LICENSED" if agent.get("broadcast_license") else "🔴 REVOKED"
+            markdown_lines.extend([
+                f"### {agent_name.upper()}",
+                f"- **Status**: {status}",
+                f"- **Credits**: {agent.get('credits', 0)} 💰",
+                f"- **Registered**: {agent.get('registered_at', 'N/A')}",
+                "",
+            ])
+
+        return {
+            "status": "fallback",
+            "markdown": "\n".join(markdown_lines),
+            "agent_count": len(agents),
+            "note": "Using local cache"
+        }
+
+    # ========== Private Helper Methods ==========
 
     def _validate_agent_config(self, cartridge_path: Path) -> Optional[Dict[str, Any]]:
         """
