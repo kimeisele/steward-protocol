@@ -238,18 +238,24 @@ class ForumCartridge(VibeAgent):
 
         self.proposals[proposal_id] = proposal
 
-        # CRITICAL: Record in kernel ledger (source of truth)
-        if hasattr(self, 'kernel') and self.kernel:
-            self.kernel.ledger.record_event(
-                event_type="proposal_created",
-                agent_id=self.agent_id,
-                details={
-                    "proposal_id": proposal_id,
-                    "title": title,
-                    "proposer": proposer,
-                    "action_type": action.get("type"),
-                }
+        # MANDATORY: Record in kernel ledger (source of truth)
+        # If kernel not set, this MUST fail - agents cannot work offline
+        if not hasattr(self, 'kernel') or not self.kernel:
+            raise RuntimeError(
+                f"FATAL: {self.agent_id} cannot create proposal - not connected to kernel. "
+                "All agent actions MUST be recorded in kernel ledger (no offline mode)."
             )
+        
+        self.kernel.ledger.record_event(
+            event_type="proposal_created",
+            agent_id=self.agent_id,
+            details={
+                "proposal_id": proposal_id,
+                "title": title,
+                "proposer": proposer,
+                "action_type": action.get("type"),
+            }
+        )
 
         logger.info(f"✅ Proposal created: {proposal_id}")
         return proposal
@@ -319,19 +325,24 @@ class ForumCartridge(VibeAgent):
         proposal_file = self.proposals_path / f"{proposal_id}.json"
         proposal_file.write_text(json.dumps(proposal, indent=2))
 
-        # CRITICAL: Record in kernel ledger (source of truth)
-        if hasattr(self, 'kernel') and self.kernel:
-            self.kernel.ledger.record_event(
-                event_type="vote_cast",
-                agent_id=self.agent_id,
-                details={
-                    "proposal_id": proposal_id,
-                    "voter": voter,
-                    "vote": vote,
-                    "votes_yes": proposal["voting"]["votes_yes"],
-                    "votes_no": proposal["voting"]["votes_no"],
-                }
+        # MANDATORY: Record in kernel ledger (source of truth)
+        if not hasattr(self, 'kernel') or not self.kernel:
+            raise RuntimeError(
+                f"FATAL: {self.agent_id} cannot cast vote - not connected to kernel. "
+                "All agent actions MUST be recorded in kernel ledger (no offline mode)."
             )
+        
+        self.kernel.ledger.record_event(
+            event_type="vote_cast",
+            agent_id=self.agent_id,
+            details={
+                "proposal_id": proposal_id,
+                "voter": voter,
+                "vote": vote,
+                "votes_yes": proposal["voting"]["votes_yes"],
+                "votes_no": proposal["voting"]["votes_no"],
+            }
+        )
 
         logger.info(f"   Updated: YES={proposal['voting']['votes_yes']}, NO={proposal['voting']['votes_no']}")
 
