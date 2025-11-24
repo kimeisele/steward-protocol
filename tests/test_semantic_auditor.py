@@ -363,5 +363,132 @@ class TestRealWorldScenarios:
         assert len(violations) == 0
 
 
+class TestSemanticCompliance:
+    """Test the Curator Invariant (Rule 8: Semantic Compliance)"""
+
+    def test_semantic_compliance_without_config(self):
+        """Test that semantic compliance check passes when config doesn't exist"""
+        judge = InvariantEngine()
+
+        # The check should gracefully pass if config is missing
+        events = [
+            {"event_type": "POLICY_UPDATED", "task_id": "t1", "agent_id": "governance", "timestamp": "2025-11-24T15:00:00Z"}
+        ]
+
+        report = judge.verify_ledger(events)
+        # Should not fail (config doesn't exist, check is skipped)
+        violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
+        assert len(violations) == 0
+
+    def test_semantic_compliance_rule_registered(self):
+        """Test that Semantic Compliance Rule is registered"""
+        judge = get_judge()
+        assert "SEMANTIC_COMPLIANCE_REQUIREMENT" in judge.rules
+
+        rule = judge.rules["SEMANTIC_COMPLIANCE_REQUIREMENT"]
+        assert rule.severity == InvariantSeverity.HIGH
+        assert "semantic" in rule.description.lower()
+
+    def test_semantic_compliance_detects_hype_words(self, tmp_path):
+        """Test that Curator detects red-flag hype words in documents"""
+        # Create a temporary test setup
+        from pathlib import Path
+        import yaml
+
+        # Create temp directories
+        config_dir = tmp_path / "config"
+        docs_dir = tmp_path / "docs"
+        config_dir.mkdir()
+        docs_dir.mkdir()
+
+        # Create semantic compliance config with red flags
+        config_data = {
+            "RED_FLAGS": {
+                "HYPE": ["revolutionary", "game-changer", "breakthrough"]
+            },
+            "SCOPE": {
+                "CRITICAL_DOCUMENTS": ["docs/*.md"]
+            }
+        }
+        config_file = config_dir / "semantic_compliance.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        # Create a document with red flags
+        bad_doc = docs_dir / "bad_policy.md"
+        bad_doc.write_text("# Revolutionary Policy\nThis is a game-changer initiative.")
+
+        # Change to temp directory and run check
+        import os
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+
+            judge = InvariantEngine()
+            events = [{"event_type": "TEST", "task_id": "t1", "agent_id": "test", "timestamp": "2025-11-24T15:00:00Z"}]
+            report = judge.verify_ledger(events)
+
+            violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
+            # Should detect red-flag words
+            assert len(violations) > 0
+            assert any("revolutionary" in v.message.lower() or "game-changer" in v.message.lower() for v in violations)
+        finally:
+            os.chdir(old_cwd)
+
+    def test_semantic_compliance_allows_green_flags(self, tmp_path):
+        """Test that Curator allows green-flag approved words"""
+        import yaml
+        import os
+
+        # Create temp setup
+        config_dir = tmp_path / "config"
+        docs_dir = tmp_path / "docs"
+        config_dir.mkdir()
+        docs_dir.mkdir()
+
+        # Config with red and green flags
+        config_data = {
+            "RED_FLAGS": {
+                "HYPE": ["revolutionary"]
+            },
+            "GREEN_FLAGS": {
+                "VERIFIABLE": ["auditable", "provable"]
+            },
+            "SCOPE": {
+                "CRITICAL_DOCUMENTS": ["docs/*.md"]
+            }
+        }
+        config_file = config_dir / "semantic_compliance.yaml"
+        with open(config_file, "w") as f:
+            yaml.dump(config_data, f)
+
+        # Create document with only green flags (no red flags)
+        good_doc = docs_dir / "good_policy.md"
+        good_doc.write_text("# Auditable Governance\nThis policy is provable and verifiable.")
+
+        old_cwd = os.getcwd()
+        try:
+            os.chdir(tmp_path)
+
+            judge = InvariantEngine()
+            events = [{"event_type": "TEST", "task_id": "t1", "agent_id": "test", "timestamp": "2025-11-24T15:00:00Z"}]
+            report = judge.verify_ledger(events)
+
+            violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
+            # Should have NO violations when only green flags are present
+            assert len(violations) == 0
+        finally:
+            os.chdir(old_cwd)
+
+    def test_semantic_compliance_severity_is_high(self):
+        """Test that semantic compliance violations are HIGH severity (non-halting)"""
+        judge = get_judge()
+        rule = judge.rules["SEMANTIC_COMPLIANCE_REQUIREMENT"]
+
+        assert rule.severity == InvariantSeverity.HIGH
+        # HIGH severity means violations are reported but don't halt the system
+        # (unlike CRITICAL which would halt)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
