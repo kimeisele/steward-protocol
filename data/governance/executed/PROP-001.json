@@ -1,0 +1,25 @@
+{
+  "id": "PROP-001",
+  "title": "Budget Request: Herald Marketing Campaign Q4 2025",
+  "description": "Herald has exhausted its credit allocation and requests budget increase for Q4 marketing initiatives.",
+  "proposer": "herald",
+  "proposed_at": "2025-11-24T10:20:38.818418+00:00",
+  "status": "APPROVED",
+  "action": {
+    "type": "civic.ledger.transfer",
+    "params": {
+      "to": "herald",
+      "amount": 50,
+      "reason": "proposal_approved"
+    }
+  },
+  "voting": {
+    "threshold": 0.5,
+    "quorum": 0.5,
+    "votes_yes": 1,
+    "votes_no": 0,
+    "votes_abstain": 0
+  },
+  "executed": false,
+  "executed_at": null
+}
