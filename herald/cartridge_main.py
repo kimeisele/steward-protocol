@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
 """
-HERALD Cartridge - ARCH-050 Vibe-OS Compatible Reference Agent
+HERALD Cartridge - VibeAgent-Native Intelligence & Content Agent
 
 This cartridge demonstrates the Steward Protocol in action:
 1. Autonomous content generation for marketing
 2. Multi-platform distribution (Twitter, Reddit)
-3. Cryptographic identity via Steward Protocol (prepared)
+3. Cryptographic identity via Steward Protocol
 4. Governance-first architecture (no marketing slop)
 
-Can be run standalone (via shim.py) OR as a native Vibe-OS cartridge.
+This is now a native VibeAgent:
+- Inherits from vibe_core.VibeAgent
+- Receives tasks from kernel scheduler
+- Can run standalone (legacy mode) or in VibeOS (native mode)
 
-Usage:
-    Standalone: python herald/shim.py --action run
-    VibeOS:     kernel.load_cartridge("herald").run_campaign()
+Architecture Change:
+- OLD: Standalone agent with own event loop (run_campaign)
+- NEW: Task-responsive agent (process method) within VibeOS kernel
 """
 
 import logging
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
+
+# VibeOS Integration
+from vibe_core import VibeAgent, Task
 
 from herald.tools.research_tool import ResearchTool
 from herald.tools.content_tool import ContentTool
@@ -38,7 +44,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HERALD_MAIN")
 
 
-class HeraldCartridge:
+class HeraldCartridge(VibeAgent):
     """
     The HERALD Agent Cartridge.
     Autonomous Technical Evangelist for Steward Protocol.
@@ -56,24 +62,35 @@ class HeraldCartridge:
     - Governance-first (no marketing clichés)
     """
 
-    # Cartridge Metadata (ARCH-050 required fields)
-    name = "herald"
-    version = "3.0.0"
-    description = "Autonomous intelligence and content distribution agent"
-    author = "Steward Protocol"
-    domain = "MEDIA"  # NEW: Categorized for CITYMAP
-
     def __init__(self):
-        """Initialize HERALD with all tools."""
+        """Initialize HERALD as a VibeAgent."""
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="herald",
+            name="HERALD",
+            version="3.0.0",
+            author="Steward Protocol",
+            description="Autonomous intelligence and content distribution agent",
+            domain="MEDIA",
+            capabilities=[
+                "content_generation",
+                "broadcasting",
+                "research",
+                "strategy"
+            ]
+        )
+
+        logger.info("🦅 HERALD (VibeAgent v3.0) is online.")
+
+        # Initialize all tools
         self.content = ContentTool()
         self.broadcast = BroadcastTool()
         self.research = ResearchTool()
         self.strategy = StrategyTool()
         self.scout = ScoutTool()
         self.artisan = ArtisanCartridge()
-        self.scientist = ScientistCartridge()  # NEW: External intelligence from SCIENTIST
+        self.scientist = ScientistCartridge()
         self.identity = IdentityTool()
-        logger.info("🦅 HERALD is online.")
 
         # Initialize governance (immutable rules as code)
         self.governance = HeraldConstitution()
@@ -107,22 +124,67 @@ class HeraldCartridge:
 
         logger.info("✅ HERALD: Ready for operation")
 
-    def get_config(self) -> Dict[str, Any]:
-        """Get cartridge configuration (ARCH-050 interface)."""
-        return {
-            "name": self.name,
-            "version": self.version,
-            "description": self.description,
-            "author": self.author,
-        }
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        HERALD responds to content generation and broadcasting tasks:
+        - "run_campaign": Execute full research → create → validate → publish workflow
+        - "publish": Publish prepared content
+        - "check_license": Verify broadcast license with CIVIC
+        """
+        try:
+            action = task.payload.get("action")
+            logger.info(f"🦅 HERALD processing task: {action}")
+
+            if action == "run_campaign":
+                dry_run = task.payload.get("dry_run", False)
+                return self.run_campaign(dry_run=dry_run)
+
+            elif action == "publish":
+                content = task.payload.get("content")
+                platform = task.payload.get("platform", "twitter")
+                return self.broadcast.publish(content, platform=platform)
+
+            elif action == "check_license":
+                if self.kernel:
+                    # Ask CIVIC for broadcast license
+                    civic = self.kernel.agent_registry.get("civic")
+                    if civic:
+                        license_task = Task(
+                            agent_id="civic",
+                            payload={
+                                "action": "check_license",
+                                "agent_id": "herald"
+                            }
+                        )
+                        return civic.process(license_task)
+                return {"status": "error", "reason": "civic_not_available"}
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+
+        except Exception as e:
+            logger.error(f"❌ HERALD processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
+        """Report HERALD status (VibeAgent interface)."""
         return {
-            "name": self.name,
-            "version": self.version,
+            "agent_id": "herald",
+            "name": "HERALD",
+            "status": "RUNNING",
+            "domain": "MEDIA",
+            "capabilities": self.capabilities,
             "last_execution": self.execution_id,
-            "last_result": self.last_result,
             "connectivity": {
                 "twitter": self.broadcast.verify_credentials("twitter"),
                 "reddit": self.broadcast.verify_credentials("reddit"),

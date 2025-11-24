@@ -8,14 +8,17 @@ FORUM is the democratic institution of Agent City. It:
 3. Executes approved actions via CIVIC
 4. Maintains immutable record of all decisions
 
+This is now a native VibeAgent:
+- Inherits from vibe_core.VibeAgent
+- Receives governance tasks from kernel scheduler
+- Integrates with CIVIC for action execution
+
 Design Principles:
 - Genesis Phase: Admin-voting (Steward decides)
 - Licensed Agents: Can submit proposals
 - Quorum: 50% + 1 (simple majority)
 - Actions: Credit transfers only (initially)
 - Transparency: All votes recorded and signed
-
-This is the birthplace of Agent City's democracy.
 """
 
 import logging
@@ -23,6 +26,9 @@ import json
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
+
+# VibeOS Integration
+from vibe_core import VibeAgent, Task
 
 # Import tools (to be created)
 # from forum.tools.proposal_tool import ProposalTool
@@ -34,7 +40,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FORUM_MAIN")
 
 
-class ForumCartridge:
+class ForumCartridge(VibeAgent):
     """
     The FORUM Agent Cartridge (The Town Hall).
 
@@ -51,16 +57,24 @@ class ForumCartridge:
     votes are cast, and the majority rules. Welcome to democracy, agents."
     """
 
-    # Cartridge Metadata (ARCH-050 required fields)
-    name = "forum"
-    version = "1.0.0"
-    description = "Democratic decision-making and proposal voting system"
-    author = "Steward Protocol"
-    domain = "GOVERNANCE"
-
     def __init__(self):
-        """Initialize FORUM (The Town Hall)."""
-        logger.info("🗳️  FORUM Cartridge initializing...")
+        """Initialize FORUM as a VibeAgent (The Town Hall)."""
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="forum",
+            name="FORUM",
+            version="1.0.0",
+            author="Steward Protocol",
+            description="Democratic decision-making and proposal voting system",
+            domain="GOVERNANCE",
+            capabilities=[
+                "governance",
+                "voting",
+                "proposal_management"
+            ]
+        )
+
+        logger.info("🗳️  FORUM (VibeAgent) initializing...")
 
         # Governance paths
         self.proposals_path = Path("data/governance/proposals")
@@ -80,24 +94,70 @@ class ForumCartridge:
         logger.info(f"📋 Proposals loaded: {len(self.proposals)} total")
         logger.info(f"🗳️  FORUM: Ready for operation")
 
-    def get_config(self) -> Dict[str, Any]:
-        """Get cartridge configuration (ARCH-050 interface)."""
-        return {
-            "name": self.name,
-            "version": self.version,
-            "description": self.description,
-            "author": self.author,
-            "domain": self.domain,
-        }
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        FORUM responds to governance tasks:
+        - "create_proposal": Create a new proposal
+        - "vote": Vote on a proposal
+        - "execute": Execute an approved proposal
+        - "get_proposals": List all proposals
+        """
+        try:
+            action = task.payload.get("action")
+            logger.info(f"🗳️  FORUM processing task: {action}")
+
+            if action == "create_proposal":
+                title = task.payload.get("title")
+                description = task.payload.get("description")
+                proposer = task.payload.get("proposer")
+                action_spec = task.payload.get("action")
+                return self.create_proposal(title, description, proposer, action_spec)
+
+            elif action == "vote":
+                proposal_id = task.payload.get("proposal_id")
+                voter = task.payload.get("voter")
+                vote = task.payload.get("vote")  # "yes" or "no"
+                return self.vote_on_proposal(proposal_id, voter, vote)
+
+            elif action == "execute":
+                proposal_id = task.payload.get("proposal_id")
+                return self.execute_proposal(proposal_id)
+
+            elif action == "get_proposals":
+                return {
+                    "status": "success",
+                    "proposals": self.proposals,
+                    "total": len(self.proposals)
+                }
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+
+        except Exception as e:
+            logger.error(f"❌ FORUM processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
+        """Report FORUM status (VibeAgent interface)."""
         open_proposals = [p for p in self.proposals.values() if p.get("status") == "OPEN"]
         approved_proposals = [p for p in self.proposals.values() if p.get("status") == "APPROVED"]
 
         return {
-            "name": self.name,
-            "version": self.version,
+            "agent_id": "forum",
+            "name": "FORUM",
+            "status": "RUNNING",
+            "domain": "GOVERNANCE",
+            "capabilities": self.capabilities,
             "total_proposals": len(self.proposals),
             "open_proposals": len(open_proposals),
             "approved_proposals": len(approved_proposals),

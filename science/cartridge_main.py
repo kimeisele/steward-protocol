@@ -7,6 +7,11 @@ DISTRICT 4: SCIENCE - The Truth Seeker
 This cartridge provides ground truth to other agents through web research.
 Instead of hallucinating, HERALD can now ask SCIENCE for facts.
 
+This is now a native VibeAgent:
+- Inherits from vibe_core.VibeAgent
+- Receives research tasks from kernel scheduler
+- Supplies intelligence to other agents
+
 Core Philosophy:
 "An agent that researches is powerful. An agent that halluccinates is worthless.
 We choose power."
@@ -16,20 +21,15 @@ Architecture:
 - Web search capability (Tavily API + mock fallback)
 - Fact synthesis into structured briefings
 - Integration with HERALD's content generation pipeline
-
-Usage:
-    scientist = ScientistCartridge()
-    briefing = scientist.research("AI Governance Trends 2025")
-    # HERALD then uses briefing.summary for more factual content
-
-VibeOS:
-    kernel.load_cartridge("science").research(topic)
 """
 
 import logging
 import json
 from typing import Dict, Any, Optional
 from pathlib import Path
+
+# VibeOS Integration
+from vibe_core import VibeAgent, Task
 
 from science.tools.web_search_tool import WebSearchTool, SearchResult
 
@@ -38,7 +38,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCIENTIST_MAIN")
 
 
-class ScientistCartridge:
+class ScientistCartridge(VibeAgent):
     """
     THE SCIENTIST Agent - External Intelligence Module.
 
@@ -60,16 +60,24 @@ class ScientistCartridge:
     HERALD with SCIENTIST = Denkfabrik (think tank)
     """
 
-    # Cartridge Metadata (ARCH-050 required fields)
-    name = "science"
-    version = "1.0.0"
-    description = "External intelligence and fact research agent"
-    author = "Steward Protocol"
-    domain = "SCIENCE"  # NEW: Categorized for CITYMAP
-
     def __init__(self):
-        """Initialize THE SCIENTIST with web search capability."""
-        logger.info("🔬 SCIENTIST Cartridge initializing...")
+        """Initialize THE SCIENTIST as a VibeAgent."""
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="science",
+            name="SCIENCE",
+            version="1.0.0",
+            author="Steward Protocol",
+            description="External intelligence and fact research agent",
+            domain="SCIENCE",
+            capabilities=[
+                "research",
+                "web_search",
+                "fact_synthesis"
+            ]
+        )
+
+        logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
         # Initialize search tool
         self.search = WebSearchTool()
@@ -83,25 +91,50 @@ class ScientistCartridge:
 
         logger.info("✅ SCIENTIST: Ready for operation")
 
-    def get_config(self) -> Dict[str, Any]:
-        """Get cartridge configuration (ARCH-050 interface)."""
-        return {
-            "name": self.name,
-            "version": self.version,
-            "description": self.description,
-            "author": self.author,
-            "domain": self.domain,
-        }
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        SCIENCE responds to research tasks:
+        - "research": Conduct web research on a topic
+        - "query": Alias for research
+        """
+        try:
+            action = task.payload.get("action")
+            logger.info(f"🔬 SCIENCE processing task: {action}")
+
+            if action in ("research", "query"):
+                query = task.payload.get("query")
+                max_results = task.payload.get("max_results", 5)
+                use_cache = task.payload.get("use_cache", True)
+                return self.research(query, max_results, use_cache)
+
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+
+        except Exception as e:
+            logger.error(f"❌ SCIENCE processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
+        """Report SCIENCE status (VibeAgent interface)."""
         return {
-            "name": self.name,
-            "version": self.version,
+            "agent_id": "science",
+            "name": "SCIENCE",
+            "status": "RUNNING",
+            "domain": "SCIENCE",
+            "capabilities": self.capabilities,
             "search_mode": self.search.mode,
             "cache_dir": str(self.cache_dir),
             "results_dir": str(self.results_dir),
-            "ready": True,
         }
 
     def research(
