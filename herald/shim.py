@@ -180,20 +180,28 @@ def _execute_publish(cartridge: HeraldCartridge, dist_dir: Path, content: str = 
             logger.info(f"✅ Loaded content from artifact: {len(content)} chars")
 
         # Verify content
-        logger.info("\n[STEP 1] Verifying content...")
+        logger.info("\n[STEP 1] Verifying content structure...")
         if not content or len(content) < 10:
-            logger.error("❌ Invalid content")
+            logger.error("❌ Invalid content: too short or empty")
             sys.exit(1)
 
-        logger.info(f"✅ Content verified: {len(content)} chars")
+        logger.info(f"✅ Content structure verified: {len(content)} chars")
         logger.info(f"   Preview: {content[:80]}...")
 
-        # Publish
-        logger.info("\n[STEP 2] Publishing...")
+        # Publish (cartridge.execute_publish will validate governance)
+        logger.info("\n[STEP 2] Publishing with full validation...")
         result = cartridge.execute_publish(content)
 
         if result.get("status") == "failed":
             logger.error(f"❌ Publish failed: {result.get('reason')}")
+            sys.exit(1)
+
+        if result.get("status") == "rejected":
+            logger.error(f"❌ Content rejected: {result.get('reason')}")
+            if result.get("violations"):
+                logger.error("   Violations:")
+                for v in result.get("violations", []):
+                    logger.error(f"   - {v}")
             sys.exit(1)
 
         logger.info(f"✅ Published: {result.get('platform')}")

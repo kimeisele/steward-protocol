@@ -66,6 +66,7 @@ jobs:
   auditor-compliance:
     name: "🔍 AUDITOR - GAD-000 Enforcement"
     runs-on: ubuntu-latest
+    needs: [herald-generate]
 
     steps:
       - name: "📥 Checkout Repository"

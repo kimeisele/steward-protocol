@@ -326,13 +326,42 @@ class HeraldCartridge:
                     self.scribe.log_action(event)
                 return {"status": "failed", "reason": "invalid_content"}
 
+            # Defense-in-depth: Re-validate against HeraldConstitution
+            # (Content should have been validated in run_campaign, but we verify again)
+            logger.info("[STEP 1] Governance validation (defense-in-depth)...")
+            validation_result = self.governance.validate(content, platform="twitter")
+            if not validation_result.is_valid:
+                logger.error("❌ Content failed governance validation")
+                for violation in validation_result.violations:
+                    logger.error(f"   ❌ {violation}")
+
+                event = self.event_log.record_content_rejected(
+                    content=content,
+                    reason="governance_violation",
+                    violations=validation_result.violations
+                )
+                if event:
+                    self.scribe.log_action(event)
+
+                return {
+                    "status": "rejected",
+                    "reason": "governance_violations",
+                    "violations": validation_result.violations
+                }
+
+            # Log any warnings but don't reject
+            if validation_result.warnings:
+                logger.warning("⚠️  Governance warnings:")
+                for warning in validation_result.warnings:
+                    logger.warning(f"   {warning}")
+
             # Publish to Twitter
-            logger.info("[STEP 1] Verifying Twitter credentials...")
+            logger.info("[STEP 2] Verifying Twitter credentials...")
             if not self.broadcast.verify_credentials("twitter"):
                 logger.warning("⚠️  Twitter offline, skipping")
                 return {"status": "skipped", "reason": "twitter_offline"}
             else:
-                logger.info("[STEP 2] Publishing to Twitter...")
+                logger.info("[STEP 3] Publishing to Twitter...")
                 success = self.broadcast.publish(content, platform="twitter")
                 if not success:
                     logger.error("❌ Twitter publish failed")
