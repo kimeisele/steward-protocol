@@ -1,116 +1,34 @@
-# Agent City Core - VibeOS Cartridge Pack Manifest
-# This file defines agent-city-core as a cartridge pack for VibeOS kernel
-#
-# NAMING CLARITY:
-# - agent-city-core: This cartridge pack (governance + economy layer)
-# - Steward Protocol: The cryptographic protocol (Layer 0) that governs all agents
-# - Envoy: The VibeOS operator agent that bridges human intent to protocol execution
-# - Steward (OS): The existing VibeOS agent for local settings (NOT part of this pack)
-
 package:
   name: "agent-city-core"
   version: "1.0.0"
-  description: "The Governance Core for Agent City - Cryptographic Identity + Accountability for AI Agents"
-  author: "kimeisele"
-  repository: "https://github.com/kimeisele/steward-protocol"
+  description: "The Governance & Operations Core for VibeOS"
   license: "MIT"
-  keywords:
-    - "governance"
-    - "agent-city"
-    - "cryptography"
-    - "identity"
-    - "accountability"
+  author: "Vibe Inc."
 
-# Core system component
-core:
-  name: "steward"
-  path: "./steward"
-  class: "StewardCore"
-  description: "Core protocol engine - manages identity and consensus"
-
-# Cartridges that extend VibeOS
 cartridges:
-  - name: "herald"
-    path: "./herald"
-    class: "HeraldCartridge"
-    description: "Creative Director - Generates governance-aligned narratives"
-    role: "content-generator"
-
   - name: "civic"
     path: "./civic"
     class: "CivicCartridge"
-    description: "Governance Engine - Proposal system and voting"
-    role: "governance"
+    domain: "INFRASTRUCTURE"
+    capabilities: ["ledger", "registry", "licenses"]
+
+  - name: "herald"
+    path: "./herald"
+    class: "HeraldCartridge"
+    domain: "MEDIA"
+    capabilities: ["content", "broadcast"]
 
   - name: "forum"
     path: "./forum"
     class: "ForumCartridge"
-    description: "Public Square - Discussion and debate platform"
-    role: "communication"
+    domain: "GOVERNANCE"
+    capabilities: ["proposals", "voting"]
 
   - name: "science"
     path: "./science"
     class: "ScienceCartridge"
-    description: "Research Agent - Analyzes and validates protocols"
-    role: "validation"
+    domain: "INTELLIGENCE"
+    capabilities: ["research", "search"]
 
-  - name: "archivist"
-    path: "./archivist"
-    class: "ArchivistCartridge"
-    description: "Auditor - Verifies signatures and maintains chain of trust"
-    role: "audit"
-
-  - name: "artisan"
-    path: "./artisan"
-    class: "ArtisanCartridge"
-    description: "Media Operations - Polishes and formats assets"
-    role: "operations"
-
-  - name: "envoy"
-    path: "./envoy"
-    class: "EnvoyCartridge"
-    description: "Interface Agent - Natural language shell for Agent City"
-    role: "interface"
-
-# Integration points with VibeOS kernel
-vibe_integration:
-  kernel_version: ">=2.0"
-  cartridge_api_version: "1.0"
-  compatible_with:
-    - "vibe-operator"       # Can be controlled by VibeOS operator agent (Envoy)
-    - "vibe-ledger"         # Integrates with kernel ledger system
-  hooks:
-    - "agent.register"      # When a new agent joins Agent City
-    - "proposal.create"     # When a governance proposal is submitted
-    - "vote.cast"          # When an agent votes
-    - "ledger.append"      # When an action is recorded
-  event_sources:
-    - "citizen_registry"    # Track agent registrations
-    - "civic_ledger"        # Track all credit transactions
-
-# Dependencies
 dependencies:
-  python:
-    - "cryptography>=42.0.0"
-    - "pydantic>=2.0.0"
-    - "pyOpenSSL>=23.0.0"
-  vibe:
-    - "vibe-agency>=2.0"
-
-# Installation instructions
-installation:
-  type: "symlink"
-  target_directory: "${VIBE_HOME}/vibe_core/cartridges"
-  post_install_script: "./scripts/install_cartridges.sh"
-
-# Metadata for discovery and registration
-discovery:
-  tags:
-    - "governance"
-    - "agent-city"
-    - "security"
-    - "identity"
-  compatibility:
-    - "agents"
-    - "ai-operators"
-  federation_enabled: true
+  - "vibe-agency >= 2.0.0"
