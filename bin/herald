@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""
+HERALD Agent - Entry Point Script
+
+Usage:
+  herald status              - Show current agency state
+  herald run --theme auto    - Execute one cycle
+  herald loop --interval 60  - Run continuous cycles
+  herald simulate --cycles 5 - Test without real posts
+"""
+
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from herald.cli import main
+
+if __name__ == "__main__":
+    main()
