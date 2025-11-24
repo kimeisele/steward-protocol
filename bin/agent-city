@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 """
-AGENT CITY LAUNCHER - The Envoy Interface
+AGENT CITY LAUNCHER - The Envoy Interface (Kernel-Integrated Version)
 
 This script launches the Universal Operator interface for Agent City.
-It loads the Envoy system prompt and injects the City Control Tool.
+It boots the real VibeOS kernel, registers all agents, and wires the Envoy as the
+operational hub.
+
+This is the final wiring: User Input → Task → Kernel → Envoy → CityControlTool → Agents
 
 Usage:
-  ./bin/agent-city                    # Start interactive session
-  ./bin/agent-city --status           # Quick status check
+  ./bin/agent-city                    # Start interactive session with kernel
+  ./bin/agent-city --status           # Quick kernel status check
+  ./bin/agent-city --kernel-status    # Detailed kernel state
   ./bin/agent-city --help             # Show help
 
-The Envoy is now awake.
+ARCH CHANGE:
+- OLD: bin/agent-city → CityControlTool (DIRECT mode, no kernel)
+- NEW: bin/agent-city → RealVibeKernel → Envoy → CityControlTool (KERNEL mode)
+
+The brain is now connected to the heart.
 """
 
 import sys
@@ -18,13 +26,30 @@ import os
 from pathlib import Path
 import argparse
 import json
+import time
+import logging
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Import City Control Tool
-from envoy.tools.city_control_tool import CityControlTool
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s [%(name)s] %(message)s'
+)
+logger = logging.getLogger("AGENT_CITY_LAUNCHER")
+
+# Import VibeOS kernel and agents
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.scheduling import Task
+
+# Import all agent cartridges
+from herald.cartridge_main import HeraldCartridge
+from civic.cartridge_main import CivicCartridge
+from forum.cartridge_main import ForumCartridge
+from science.cartridge_main import ScientistCartridge
+from envoy.cartridge_main import EnvoyCartridge
 
 # ANSI colors for terminal output
 class Colors:
@@ -58,7 +83,7 @@ def load_system_prompt() -> str:
     prompt_path = project_root / "prompts" / "envoy.md"
 
     if not prompt_path.exists():
-        print(f"{Colors.RED}⚠️  WARNING: Envoy system prompt not found at {prompt_path}{Colors.END}")
+        logger.warning(f"Envoy system prompt not found at {prompt_path}")
         return ""
 
     return prompt_path.read_text()
@@ -69,85 +94,154 @@ def load_policies() -> str:
     policies_path = project_root / "POLICIES.md"
 
     if not policies_path.exists():
-        print(f"{Colors.YELLOW}⚠️  WARNING: POLICIES.md not found{Colors.END}")
+        logger.warning("POLICIES.md not found")
         return ""
 
     return policies_path.read_text()
 
 
-def quick_status():
-    """Run a quick status check and exit."""
+def boot_kernel() -> RealVibeKernel:
+    """
+    Boot the real VibeOS kernel and register all agents.
+
+    Returns:
+        RealVibeKernel: The booted kernel with all agents registered
+    """
+    logger.info("=" * 70)
+    logger.info("⚙️  KERNEL BOOT SEQUENCE INITIATED")
+    logger.info("=" * 70)
+
+    # Create kernel
+    kernel = RealVibeKernel()
+    logger.info("✅ Kernel instance created")
+
+    # Create and register agents
+    agents_to_register = [
+        ("herald", HeraldCartridge()),
+        ("civic", CivicCartridge()),
+        ("forum", ForumCartridge()),
+        ("science", ScientistCartridge()),
+        ("envoy", EnvoyCartridge()),
+    ]
+
+    for agent_id, agent_instance in agents_to_register:
+        try:
+            kernel.register_agent(agent_instance)
+            logger.info(f"✅ Agent registered: {agent_id}")
+        except Exception as e:
+            logger.error(f"❌ Failed to register {agent_id}: {e}")
+            raise
+
+    # Boot kernel (register manifests and start)
+    kernel.boot()
+
+    return kernel
+
+
+def quick_status(kernel: RealVibeKernel = None):
+    """
+    Run a quick status check and exit.
+
+    Args:
+        kernel: Optional kernel instance. If not provided, will boot a new one.
+    """
     print_banner()
-    print(f"\n{Colors.BOLD}📊 CITY STATUS{Colors.END}\n")
+    print(f"\n{Colors.BOLD}📊 KERNEL STATUS{Colors.END}\n")
 
-    controller = CityControlTool()
-    status = controller.get_city_status()
+    # Boot if needed
+    if not kernel:
+        try:
+            kernel = boot_kernel()
+        except Exception as e:
+            print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
+            return
 
-    # Pretty print status
-    print(f"{Colors.CYAN}🏙️  City:{Colors.END} {status.get('city_name', 'Unknown')}")
-    print(f"{Colors.CYAN}⏰ Time:{Colors.END} {status.get('timestamp', 'Unknown')}")
-    print(f"{Colors.CYAN}🤖 Agents:{Colors.END} {status.get('agents', {}).get('total', 0)} registered")
+    # Get kernel status
+    status = kernel.get_status()
 
-    agents = status.get('agents', {}).get('registry', [])
+    print(f"{Colors.CYAN}⚙️  Kernel Status:{Colors.END} {status.get('status', 'Unknown')}")
+    print(f"{Colors.CYAN}🤖 Agents Registered:{Colors.END} {status.get('agents_registered', 0)}")
+    print(f"{Colors.CYAN}📋 Manifests:{Colors.END} {status.get('manifests', 0)}")
+    print(f"{Colors.CYAN}📝 Ledger Events:{Colors.END} {status.get('ledger_events', 0)}")
+
+    scheduler = status.get('scheduler', {})
+    print(f"{Colors.CYAN}📨 Scheduler:{Colors.END}")
+    print(f"{Colors.CYAN}   ├─ Queue Length: {scheduler.get('queue_length', 0)}{Colors.END}")
+    print(f"{Colors.CYAN}   └─ Completed: {scheduler.get('completed', 0)}{Colors.END}")
+
+    # List agents
+    agents = list(kernel.agent_registry.keys())
     if agents:
-        print(f"{Colors.CYAN}   └─{Colors.END} {', '.join(agents)}")
+        print(f"\n{Colors.BOLD}🤖 REGISTERED AGENTS:{Colors.END}")
+        for agent_id in agents:
+            manifest = kernel.get_agent_manifest(agent_id)
+            if manifest:
+                print(f"   • {agent_id}: {manifest.description}")
 
-    economy = status.get('economy', {})
-    print(f"{Colors.CYAN}💰 Economy:{Colors.END}")
-    print(f"{Colors.CYAN}   ├─{Colors.END} Credits Allocated: {economy.get('total_credits_allocated', 0)}")
-    print(f"{Colors.CYAN}   └─{Colors.END} Total Transactions: {economy.get('total_transactions', 0)}")
-
-    governance = status.get('governance', {})
-    print(f"{Colors.CYAN}🗳️  Governance:{Colors.END}")
-    print(f"{Colors.CYAN}   └─{Colors.END} Open Proposals: {governance.get('open_proposals', 0)}")
-
-    if governance.get('proposals'):
-        print(f"\n{Colors.BOLD}📋 OPEN PROPOSALS:{Colors.END}")
-        for prop in governance.get('proposals', []):
-            print(f"   • {prop.get('id')}: {prop.get('title')} (by {prop.get('proposer')})")
-
-    health = status.get('health', '❓ UNKNOWN')
-    print(f"\n{Colors.BOLD}{health}{Colors.END}\n")
+    print(f"\n{Colors.GREEN}✅ KERNEL OPERATIONAL{Colors.END}\n")
 
 
 def interactive_mode():
-    """Start interactive REPL session with the Envoy."""
+    """
+    Start interactive REPL session with the Envoy.
+
+    This is the main user interface. All commands are converted to Tasks
+    and sent to the Envoy through the kernel scheduler.
+
+    Flow: User Input → Task → Kernel Scheduler → Envoy.process() → CityControlTool → Agents
+    """
     print_banner()
 
     # Load context
     system_prompt = load_system_prompt()
     policies = load_policies()
 
-    # Initialize controller
-    controller = CityControlTool()
+    # Boot the kernel
+    print(f"\n{Colors.BOLD}🚀 Starting kernel boot...{Colors.END}\n")
+    try:
+        kernel = boot_kernel()
+    except Exception as e:
+        print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
+        import traceback
+        traceback.print_exc()
+        return
+
+    # Get the Envoy agent
+    envoy = kernel.agent_registry.get("envoy")
+    if not envoy:
+        print(f"{Colors.RED}❌ Envoy not found in kernel registry{Colors.END}")
+        return
 
     # Startup sequence
-    print(f"{Colors.GREEN}✅ THE ENVOY - Connected{Colors.END}")
+    print(f"\n{Colors.GREEN}✅ THE ENVOY - Brain Connected to Heart{Colors.END}")
     print(f"{Colors.CYAN}📜 System Prompt Loaded: prompts/envoy.md{Colors.END}")
     print(f"{Colors.CYAN}📋 Policies Loaded: POLICIES.md{Colors.END}")
-    print(f"{Colors.CYAN}🏙️  City Control Tool: Initialized (Mode: {controller.mode}){Colors.END}\n")
+    print(f"{Colors.CYAN}🧠❤️ Envoy: Connected to RealVibeKernel{Colors.END}")
+    print(f"{Colors.CYAN}🤖 Agents: {len(kernel.agent_registry)} registered{Colors.END}\n")
 
-    # Get initial status
-    print(f"{Colors.BOLD}📊 Initial City Status:{Colors.END}")
-    status = controller.get_city_status()
-    agents_count = status.get('agents', {}).get('total', 0)
-    open_proposals = status.get('governance', {}).get('open_proposals', 0)
-    health = status.get('health', 'UNKNOWN')
-
-    print(f"   Agents: {agents_count} | Proposals: {open_proposals} | Status: {health}\n")
+    # Show kernel status
+    print(f"{Colors.BOLD}📊 Kernel Status:{Colors.END}")
+    kernel_status = kernel.get_status()
+    print(f"   Status: {kernel_status.get('status')}")
+    print(f"   Agents: {kernel_status.get('agents_registered')}")
+    print(f"   Manifests: {kernel_status.get('manifests')}\n")
 
     # Show available commands
     print(f"{Colors.BOLD}Available Commands:{Colors.END}")
-    print(f"   {Colors.CYAN}status{Colors.END}        - Get city status")
-    print(f"   {Colors.CYAN}proposals{Colors.END}     - List governance proposals")
-    print(f"   {Colors.CYAN}credits <agent>{Colors.END} - Check agent credits")
-    print(f"   {Colors.CYAN}vote <id> <choice>{Colors.END} - Vote on proposal (YES/NO/ABSTAIN)")
-    print(f"   {Colors.CYAN}execute <id>{Colors.END} - Execute approved proposal")
+    print(f"   {Colors.CYAN}status{Colors.END}              - Get city status")
+    print(f"   {Colors.CYAN}proposals{Colors.END}           - List governance proposals")
+    print(f"   {Colors.CYAN}credits <agent>{Colors.END}     - Check agent credits")
+    print(f"   {Colors.CYAN}vote <id> <choice>{Colors.END}  - Vote on proposal (YES/NO/ABSTAIN)")
+    print(f"   {Colors.CYAN}execute <id>{Colors.END}        - Execute approved proposal")
     print(f"   {Colors.CYAN}trigger <agent> <action>{Colors.END} - Trigger agent action")
-    print(f"   {Colors.CYAN}help{Colors.END}          - Show this help")
-    print(f"   {Colors.CYAN}exit{Colors.END}          - Exit\n")
+    print(f"   {Colors.CYAN}kernel-status{Colors.END}       - Show kernel internal state")
+    print(f"   {Colors.CYAN}kernel-ledger{Colors.END}       - Dump ledger events")
+    print(f"   {Colors.CYAN}help{Colors.END}                - Show this help")
+    print(f"   {Colors.CYAN}exit{Colors.END}                - Exit\n")
 
     print(f"{Colors.BOLD}How can I help?{Colors.END}\n")
+
+    task_counter = 0
 
     # REPL loop
     while True:
@@ -167,66 +261,60 @@ def interactive_mode():
                 print(f"\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
                 break
 
-            elif command == 'status':
-                status = controller.get_city_status()
-                print(json.dumps(status, indent=2))
-
-            elif command == 'proposals':
-                proposals = controller.list_proposals(status="OPEN")
-                if proposals:
-                    for prop in proposals:
-                        print(f"  • {prop.get('id')}: {prop.get('title')} (by {prop.get('proposer')})")
-                else:
-                    print("  No open proposals")
-
-            elif command == 'credits':
-                if not args:
-                    print(f"{Colors.RED}Usage: credits <agent_name>{Colors.END}")
-                    continue
-                agent_name = args[0]
-                credits = controller.check_credits(agent_name)
-                print(json.dumps(credits, indent=2))
-
-            elif command == 'vote':
-                if len(args) < 2:
-                    print(f"{Colors.RED}Usage: vote <proposal_id> <YES|NO|ABSTAIN>{Colors.END}")
-                    continue
-                proposal_id = args[0]
-                choice = args[1].upper()
-                result = controller.vote_proposal(proposal_id, choice, voter="operator")
-                print(json.dumps(result, indent=2))
-
-            elif command == 'execute':
-                if not args:
-                    print(f"{Colors.RED}Usage: execute <proposal_id>{Colors.END}")
-                    continue
-                proposal_id = args[0]
-                result = controller.execute_proposal(proposal_id)
-                print(json.dumps(result, indent=2))
-
-            elif command == 'trigger':
-                if len(args) < 2:
-                    print(f"{Colors.RED}Usage: trigger <agent_name> <action>{Colors.END}")
-                    continue
-                agent_name = args[0]
-                action = args[1]
-                result = controller.trigger_agent(agent_name, action)
-                print(json.dumps(result, indent=2))
-
             elif command == 'help':
                 print(f"\n{Colors.BOLD}Available Commands:{Colors.END}")
-                print(f"   status        - Get city status")
-                print(f"   proposals     - List governance proposals")
-                print(f"   credits <agent> - Check agent credits")
-                print(f"   vote <id> <choice> - Vote on proposal")
-                print(f"   execute <id> - Execute approved proposal")
+                print(f"   status              - Get city status")
+                print(f"   proposals           - List governance proposals")
+                print(f"   credits <agent>     - Check agent credits")
+                print(f"   vote <id> <choice>  - Vote on proposal")
+                print(f"   execute <id>        - Execute approved proposal")
                 print(f"   trigger <agent> <action> - Trigger agent action")
-                print(f"   help          - Show this help")
-                print(f"   exit          - Exit\n")
+                print(f"   kernel-status       - Show kernel state")
+                print(f"   kernel-ledger       - Dump ledger")
+                print(f"   help                - Show this help")
+                print(f"   exit                - Exit\n")
+
+            elif command == 'kernel-status':
+                status = kernel.get_status()
+                print(json.dumps(status, indent=2))
+
+            elif command == 'kernel-ledger':
+                ledger = kernel.dump_ledger()
+                print(json.dumps(ledger, indent=2))
 
             else:
-                print(f"{Colors.YELLOW}Unknown command: {command}{Colors.END}")
-                print(f"Type 'help' for available commands")
+                # Route all other commands through the Envoy via kernel
+                # Convert user input to a task for the Envoy
+                task_counter += 1
+                task = Task(
+                    agent_id="envoy",
+                    payload={
+                        "command": command,
+                        "args": _parse_args(command, args)
+                    }
+                )
+
+                # Submit task to kernel scheduler
+                task_id = kernel.submit_task(task)
+                logger.info(f"📤 Task submitted to kernel: {task_id} for command '{command}'")
+
+                # Process the task immediately (single-threaded tick)
+                kernel.tick()
+
+                # Retrieve result from ledger
+                result = kernel.get_task_result(task_id)
+
+                if result:
+                    if result.get('status') == 'COMPLETED':
+                        output = result.get('output_result')
+                        if isinstance(output, dict):
+                            print(json.dumps(output, indent=2))
+                        else:
+                            print(output)
+                    elif result.get('status') == 'FAILED':
+                        print(f"{Colors.RED}❌ Error: {result.get('error')}{Colors.END}")
+                else:
+                    print(f"{Colors.YELLOW}⚠️  Task result not found{Colors.END}")
 
             print()  # Empty line for readability
 
@@ -234,33 +322,91 @@ def interactive_mode():
             print(f"\n\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
             break
         except Exception as e:
+            logger.exception(f"Error processing command: {e}")
             print(f"{Colors.RED}❌ Error: {e}{Colors.END}")
+
+
+def _parse_args(command: str, args: list) -> dict:
+    """
+    Parse command-line arguments into a dict for the Envoy task payload.
+
+    Args:
+        command: The command name
+        args: List of argument strings
+
+    Returns:
+        dict: Parsed arguments for the command
+    """
+    if command == 'status':
+        return {}
+
+    elif command == 'proposals':
+        return {
+            'status': args[0] if args else 'OPEN'
+        }
+
+    elif command == 'credits':
+        return {
+            'agent_name': args[0] if args else None
+        }
+
+    elif command == 'vote':
+        return {
+            'proposal_id': args[0] if len(args) > 0 else None,
+            'choice': args[1] if len(args) > 1 else None,
+            'voter': 'operator'
+        }
+
+    elif command == 'execute':
+        return {
+            'proposal_id': args[0] if args else None
+        }
+
+    elif command == 'trigger':
+        return {
+            'agent_name': args[0] if len(args) > 0 else None,
+            'action': args[1] if len(args) > 1 else None,
+            'kwargs': {}
+        }
+
+    else:
+        return {}
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Agent City Universal Operator Interface",
+        description="Agent City Launcher - Kernel-Integrated Version",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  ./bin/agent-city                 # Start interactive session
-  ./bin/agent-city --status        # Quick status check
+  ./bin/agent-city                    # Start interactive session with kernel
+  ./bin/agent-city --status           # Quick kernel status check
+  ./bin/agent-city --kernel-status    # Detailed kernel state
 
-The Envoy awaits your command.
+ARCHITECTURE:
+  User Input → Task → RealVibeKernel → Envoy.process() → CityControlTool → Agents
+
+The Envoy's brain is now wired to the Kernel's heart.
         """
     )
 
     parser.add_argument(
         '--status',
         action='store_true',
-        help='Show quick status and exit'
+        help='Show quick kernel status and exit'
+    )
+
+    parser.add_argument(
+        '--kernel-status',
+        action='store_true',
+        help='Show detailed kernel internal state'
     )
 
     parser.add_argument(
         '--version',
         action='version',
-        version='Agent City Launcher v1.0.0'
+        version='Agent City Launcher v2.0.0 (Kernel-Integrated)'
     )
 
     args = parser.parse_args()
@@ -272,6 +418,16 @@ The Envoy awaits your command.
     # Route to appropriate mode
     if args.status:
         quick_status()
+    elif args.kernel_status:
+        kernel = boot_kernel()
+        status = kernel.get_status()
+        print("\n" + "=" * 70)
+        print("KERNEL INTERNAL STATE")
+        print("=" * 70)
+        print(json.dumps(status, indent=2))
+        print("\nLedger Events:")
+        ledger = kernel.dump_ledger()
+        print(json.dumps(ledger, indent=2))
     else:
         interactive_mode()
 
