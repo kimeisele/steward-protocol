@@ -615,12 +615,14 @@ class HeraldCartridge:
         logger.info(f"✅ Saved {len(drafts)} drafts to {output_path}")
         
         # Update State
-        if not dry_run and new_since_id != since_id:
-            state["last_mention_id"] = new_since_id
+        if not dry_run:
+            if new_since_id != since_id:
+                state["last_mention_id"] = new_since_id
+                logger.info(f"💾 State updated: last_mention_id = {new_since_id}")
+
             state_path.parent.mkdir(parents=True, exist_ok=True)
             with open(state_path, "w") as f:
                 json.dump(state, f, indent=2)
-            logger.info(f"💾 State updated: last_mention_id = {new_since_id}")
             
         return {
             "status": "success", 
