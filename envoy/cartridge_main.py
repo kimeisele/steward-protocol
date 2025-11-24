@@ -256,13 +256,27 @@ class EnvoyCartridge(VibeAgent):
             logger.warning(f"Failed to log operation: {e}")
 
     def report_status(self) -> Dict[str, Any]:
-        """Report Envoy status"""
+        """Report Envoy status - Deep Introspection"""
+        # Count operations from log file
+        operations_count = 0
+        if self.log_path.exists():
+            try:
+                with open(self.log_path, "r") as f:
+                    operations_count = len(f.readlines())
+            except:
+                operations_count = 0
+
         return {
             "agent_id": self.agent_id,
             "name": self.name,
             "status": "RUNNING",
+            "domain": "ORCHESTRATION",
             "capabilities": self.capabilities,
-            "city_control_initialized": self.city_control is not None,
-            "operations_logged": len(self.operation_log),
-            "kernel_injected": self.kernel is not None
+            "orchestration_metrics": {
+                "city_control_initialized": self.city_control is not None,
+                "operations_logged_in_memory": len(self.operation_log),
+                "operations_logged_persistent": operations_count,
+                "kernel_injected": self.kernel is not None,
+                "log_path": str(self.log_path),
+            }
         }

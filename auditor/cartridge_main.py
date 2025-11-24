@@ -78,12 +78,31 @@ class AuditorCartridge:
         }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
+        """Report cartridge status (ARCH-050 interface) - Deep Introspection."""
+        # Try to get compliance statistics
+        compliance_stats = {}
+        try:
+            # Count report files if they exist
+            reports_dir = self.root_path / "data" / "reports"
+            reports_count = len(list(reports_dir.glob("*.json"))) if reports_dir.exists() else 0
+            compliance_stats["reports_generated"] = reports_count
+            compliance_stats["reports_dir"] = str(reports_dir)
+        except:
+            compliance_stats["reports_generated"] = 0
+
         return {
+            "agent_id": "auditor",
             "name": self.name,
             "version": self.version,
+            "status": "RUNNING",
+            "domain": "SECURITY",
             "enforcement_mode": "fail_build",
-            "root_path": str(self.root_path),
+            "compliance_metrics": {
+                "root_path": str(self.root_path),
+                "reports_generated": compliance_stats.get("reports_generated", 0),
+                "reports_dir": compliance_stats.get("reports_dir", str(self.root_path / "data" / "reports")),
+                "enforcement_enabled": True,
+            }
         }
 
     def run_compliance_audit(

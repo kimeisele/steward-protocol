@@ -69,15 +69,31 @@ class ArchivistCartridge:
         }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface)."""
-        audit_stats = self.audit.get_statistics()
-        ledger_stats = self.ledger.get_statistics()
+        """Report cartridge status (ARCH-050 interface) - Deep Introspection."""
+        try:
+            audit_stats = self.audit.get_statistics()
+        except:
+            audit_stats = {"verified": 0, "failed": 0, "success_rate": 0}
+
+        try:
+            ledger_stats = self.ledger.get_statistics()
+        except:
+            ledger_stats = {"entries": 0, "ledger_path": str(self.ledger.ledger_path)}
 
         return {
+            "agent_id": "archivist",
             "name": self.name,
             "version": self.version,
+            "status": "RUNNING",
+            "domain": "AUDIT",
             "audit_statistics": audit_stats,
             "ledger_statistics": ledger_stats,
+            "audit_metrics": {
+                "ledger_path": str(self.ledger.ledger_path) if hasattr(self.ledger, 'ledger_path') else "unknown",
+                "verified_events": audit_stats.get("verified", 0),
+                "failed_verifications": audit_stats.get("failed", 0),
+                "verification_success_rate": audit_stats.get("success_rate", 0),
+            }
         }
 
     def read_agent_events(
