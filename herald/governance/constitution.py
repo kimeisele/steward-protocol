@@ -16,6 +16,7 @@ The agent is DEPENDENT on the constitutional file, not the other way around.
 """
 
 import re
+import os
 import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
@@ -201,10 +202,16 @@ class HeraldConstitution(GovernanceContract):
     @staticmethod
     def _load_constitution_file() -> str:
         """
-        Load THE AGENT CONSTITUTION from CONSTITUTION.md at project root.
+        Load THE AGENT CONSTITUTION from CONSTITUTION.md.
 
         This is NOT a fallback. If the file is missing, the system FAILS.
         Artikel III: Code is Law. The Law must be present and readable.
+
+        RUNTIME AGNOSTIC: Supports multiple loading strategies:
+        1. ENV VAR: HERALD_CONSTITUTION_PATH (explicit override - Docker, K8s, etc.)
+        2. Relative paths from code location (local development)
+        3. CWD-based paths (different execution contexts)
+        4. Standard system paths (/etc/herald/)
 
         Returns:
             str: The constitutional text
@@ -213,14 +220,37 @@ class HeraldConstitution(GovernanceContract):
             FileNotFoundError: If CONSTITUTION.md cannot be found
             IOError: If the file cannot be read
         """
-        # Try multiple possible paths
+        # Priority 1: Environment Variable Override (maximum flexibility for Cloud/Docker)
+        env_path = os.environ.get("HERALD_CONSTITUTION_PATH")
+        if env_path:
+            path = Path(env_path)
+            if path.exists():
+                try:
+                    constitution_text = path.read_text(encoding="utf-8")
+                    HeraldConstitution._CONSTITUTION_TEXT = constitution_text
+                    HeraldConstitution._CONSTITUTION_PATH = path
+                    logger.info(f"✅ CONSTITUTION.md loaded from ENV VAR: {path}")
+                    return constitution_text
+                except IOError as e:
+                    logger.error(f"❌ Could not read CONSTITUTION.md at ENV path {path}: {e}")
+                    raise FileNotFoundError(f"Failed to read CONSTITUTION.md from HERALD_CONSTITUTION_PATH: {env_path}") from e
+            else:
+                raise FileNotFoundError(f"HERALD_CONSTITUTION_PATH points to non-existent file: {env_path}")
+
+        # Priority 2-4: Fallback paths (for local dev and standard deployments)
         possible_paths = [
-            # From herald/governance/ (relative path)
+            # From herald/governance/ (relative path for local dev)
             Path(__file__).parent.parent.parent / "CONSTITUTION.md",
             # From project root (if running from different location)
             Path.cwd() / "CONSTITUTION.md",
-            # Absolute fallback
-            Path("/home/user/steward-protocol/CONSTITUTION.md"),
+            # One level up (if running from subdirectory)
+            Path.cwd().parent / "CONSTITUTION.md",
+            # Standard Linux/Unix system path
+            Path("/etc/herald/CONSTITUTION.md"),
+            # Docker standard
+            Path("/app/config/CONSTITUTION.md"),
+            # Kubernetes ConfigMap mount
+            Path("/etc/config/constitution/CONSTITUTION.md"),
         ]
 
         constitution_text = None
@@ -240,7 +270,10 @@ class HeraldConstitution(GovernanceContract):
         if constitution_text is None:
             error_msg = (
                 "❌ CRITICAL: CONSTITUTION.md not found!\n"
-                f"Searched paths: {[str(p) for p in possible_paths]}\n"
+                f"Searched paths:\n"
+                + "\n".join([f"  - {p}" for p in possible_paths]) + "\n"
+                "\nSet HERALD_CONSTITUTION_PATH environment variable to override.\n"
+                "Example: export HERALD_CONSTITUTION_PATH=/path/to/CONSTITUTION.md\n"
                 "The system cannot initialize without its constitutional foundation.\n"
                 "Artikel III violation: Code is Law, and the Law must be readable."
             )
