@@ -1,0 +1,24 @@
+{
+  "registry_version": "2.0",
+  "registry_authority": "CIVIC",
+  "description": "The Citizen Registry - All registered agents in Agent City",
+  "created_at": "2025-11-24T00:00:00Z",
+  "last_updated": "2025-11-24T00:00:00Z",
+  "agents": {
+    "herald": {
+      "name": "herald",
+      "registered_at": "2025-11-24T00:00:00Z",
+      "last_scanned": "2025-11-24T00:00:00Z",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/herald/cartridge_main.py",
+        "validated_at": "2025-11-24T00:00:00Z",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 150,
+      "total_broadcasts": 0,
+      "violations": []
+    }
+  },
+  "notes": "This is the authoritative citizen registry maintained by CIVIC. All agents must be registered here to operate. Unregistered = illegal."
+}

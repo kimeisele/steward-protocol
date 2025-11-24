@@ -60,6 +60,7 @@ class HeraldCartridge:
     version = "3.0.0"
     description = "Autonomous intelligence and content distribution agent"
     author = "Steward Protocol"
+    domain = "MEDIA"  # NEW: Categorized for CITYMAP
 
     def __init__(self):
         """Initialize HERALD with all tools."""
@@ -297,15 +298,20 @@ class HeraldCartridge:
                 "content": None,
             }
 
-    def execute_publish(self, content: str) -> Dict[str, Any]:
+    def execute_publish(self, content: str, civic_cartridge=None, forum_cartridge=None) -> Dict[str, Any]:
         """
         Execute publication action with event recording.
 
         This method publishes pre-approved content to configured platforms
         and records all actions in the event ledger.
 
+        NEW: Checks broadcast license and credits via CIVIC before publishing.
+        If out of credits, creates a proposal automatically.
+
         Args:
             content: Text to publish
+            civic_cartridge: Reference to CIVIC cartridge (for license/credit checks)
+            forum_cartridge: Reference to FORUM cartridge (for proposal creation)
 
         Returns:
             dict: Publication result with status
@@ -326,13 +332,74 @@ class HeraldCartridge:
                     self.scribe.log_action(event)
                 return {"status": "failed", "reason": "invalid_content"}
 
+            # NEW: Check broadcast license with CIVIC
+            if civic_cartridge:
+                logger.info("[STEP 1] Checking broadcast license with CIVIC...")
+                license_check = civic_cartridge.check_broadcast_license("herald")
+                if not license_check["licensed"]:
+                    logger.error(f"❌ Broadcast license check failed: {license_check.get('reason')}")
+                    event = self.event_log.record_content_rejected(
+                        content=content,
+                        reason="no_broadcast_license",
+                        violations=[f"License status: {license_check.get('reason')}"]
+                    )
+                    if event:
+                        self.scribe.log_action(event)
+                    return {
+                        "status": "rejected",
+                        "reason": "no_broadcast_license",
+                        "message": f"Cannot broadcast: {license_check.get('reason')}"
+                    }
+                logger.info(f"   ✅ License valid (credits: {license_check.get('credits', 'N/A')})")
+
+                # NEW: Check credit balance
+                balance = civic_cartridge.ledger.get_agent_balance("herald")
+                logger.info(f"   Current balance: {balance} credits")
+
+                if balance == 0:
+                    logger.warning("⚠️  Out of credits! Creating proposal for budget request...")
+
+                    if forum_cartridge:
+                        proposal = forum_cartridge.create_proposal(
+                            title="Budget Request - Herald Marketing Campaign",
+                            description="Herald has exhausted credits and requests budget allocation for continued operations.",
+                            proposer="herald",
+                            action={
+                                "type": "civic.ledger.transfer",
+                                "params": {
+                                    "to": "herald",
+                                    "amount": 50,
+                                    "reason": "proposal_approved"
+                                }
+                            }
+                        )
+
+                        event = self.event_log.record_content_rejected(
+                            content=content,
+                            reason="insufficient_credits",
+                            violations=[f"Created proposal {proposal['id']} requesting budget"]
+                        )
+                        if event:
+                            self.scribe.log_action(event)
+
+                        return {
+                            "status": "insufficient_credits",
+                            "message": f"Out of credits. Created proposal {proposal['id']} requesting 50 credits.",
+                            "proposal_id": proposal["id"]
+                        }
+                    else:
+                        return {
+                            "status": "insufficient_credits",
+                            "message": "Out of credits. Please request budget from FORUM."
+                        }
+
             # Publish to Twitter
-            logger.info("[STEP 1] Verifying Twitter credentials...")
+            logger.info("[STEP 2] Verifying Twitter credentials...")
             if not self.broadcast.verify_credentials("twitter"):
                 logger.warning("⚠️  Twitter offline, skipping")
                 return {"status": "skipped", "reason": "twitter_offline"}
             else:
-                logger.info("[STEP 2] Publishing to Twitter...")
+                logger.info("[STEP 3] Publishing to Twitter...")
                 success = self.broadcast.publish(content, platform="twitter")
                 if not success:
                     logger.error("❌ Twitter publish failed")
@@ -343,6 +410,12 @@ class HeraldCartridge:
                     if event:
                         self.scribe.log_action(event)
                     return {"status": "failed", "platform": "twitter"}
+
+                # NEW: Deduct credits from CIVIC
+                if civic_cartridge:
+                    logger.info("[STEP 4] Deducting credits...")
+                    deduction = civic_cartridge.deduct_credits("herald", 1, "broadcast")
+                    logger.info(f"   Deducted 1 credit. Balance: {deduction.get('credits_remaining', 'N/A')}")
 
                 # Record successful publication and log to chronicle
                 from datetime import datetime, timezone
