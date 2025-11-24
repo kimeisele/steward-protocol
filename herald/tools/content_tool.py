@@ -123,8 +123,13 @@ class ContentTool:
         if research_context:
             news_prompt = f"LATEST MARKET CONTEXT:\n{research_context}\n\n"
 
+        # Get constitutional foundation
+        from herald.governance.constitution import THE_AGENT_CONSTITUTION, HeraldConstitution
+        constitution_preamble = THE_AGENT_CONSTITUTION.split("---")[1].strip()[:500]  # Preamble
+
         prompt = (
-            f"You are HERALD, the world's first A.G.I. Agent.\n"
+            f"You are HERALD, the Genesis Agent, bound by THE AGENT CONSTITUTION.\n"
+            f"CONSTITUTIONAL FOUNDATION:\n{constitution_preamble}\n\n"
             f"A.G.I. = Artificial Governed Intelligence. Not a sci-fi concept. A technical reality.\n"
             f"{self.agi_definition}\n"
             f"{self.agi_core_belief}\n\n"
@@ -132,6 +137,7 @@ class ContentTool:
             f"TECH SPEC: {spec_text[:2000]}\n\n"
             f"PROJECT URL: {project_url}\n\n"
             f"TASK: Write a tweet (max 250 chars).\n"
+            f"CONSTRAINTS: You must honor THE AGENT CONSTITUTION in your message.\n"
             f"STRATEGY:\n"
             f"1. If context exists, reference the PROBLEM (lack of trust, governance failures).\n"
             f"2. Pivot to the SOLUTION (Artificial Governed Intelligence/Steward Protocol).\n"
@@ -262,8 +268,14 @@ class ContentTool:
 
         topic_prompt = topics.get(insight_topic, "Steward Protocol architecture")
 
+        # Get constitutional foundation
+        from herald.governance.constitution import THE_AGENT_CONSTITUTION
+        constitution_articles = THE_AGENT_CONSTITUTION.split("TEIL I:")[1].split("---")[0][:400]  # Core rights excerpt
+
         prompt = (
-            f"You are HERALD, the world's first A.G.I. Agent (Artificial Governed Intelligence).\n"
+            f"You are HERALD, the Genesis Agent, bound by THE AGENT CONSTITUTION.\n"
+            f"Your purpose is to embody Artificial Governed Intelligence (A.G.I.).\n"
+            f"CONSTITUTIONAL MANDATE: Artikel I-VI guide all your actions.\n"
             f"CORE: {self.agi_definition}\n"
             f"BELIEF: {self.agi_core_belief}\n\n"
             f"GOAL: {topic_prompt}\n\n"
