@@ -1,8 +1,14 @@
-# Steward Protocol - VibeOS Cartridge Pack Manifest
-# This file defines the steward-protocol as a cartridge pack for VibeOS kernel
+# Agent City Core - VibeOS Cartridge Pack Manifest
+# This file defines agent-city-core as a cartridge pack for VibeOS kernel
+#
+# NAMING CLARITY:
+# - agent-city-core: This cartridge pack (governance + economy layer)
+# - Steward Protocol: The cryptographic protocol (Layer 0) that governs all agents
+# - Envoy: The VibeOS operator agent that bridges human intent to protocol execution
+# - Steward (OS): The existing VibeOS agent for local settings (NOT part of this pack)
 
 package:
-  name: "steward-protocol"
+  name: "agent-city-core"
   version: "1.0.0"
   description: "The Governance Core for Agent City - Cryptographic Identity + Accountability for AI Agents"
   author: "kimeisele"
@@ -66,15 +72,21 @@ cartridges:
     description: "Interface Agent - Natural language shell for Agent City"
     role: "interface"
 
-# Integration points
+# Integration points with VibeOS kernel
 vibe_integration:
   kernel_version: ">=2.0"
   cartridge_api_version: "1.0"
+  compatible_with:
+    - "vibe-operator"       # Can be controlled by VibeOS operator agent (Envoy)
+    - "vibe-ledger"         # Integrates with kernel ledger system
   hooks:
     - "agent.register"      # When a new agent joins Agent City
     - "proposal.create"     # When a governance proposal is submitted
     - "vote.cast"          # When an agent votes
     - "ledger.append"      # When an action is recorded
+  event_sources:
+    - "citizen_registry"    # Track agent registrations
+    - "civic_ledger"        # Track all credit transactions
 
 # Dependencies
 dependencies:

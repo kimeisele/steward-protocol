@@ -1,6 +1,10 @@
 #!/bin/bash
-# Steward Protocol - VibeOS Cartridge Installation Script
-# This script installs the steward-protocol cartridge pack into a VibeOS installation.
+# Agent City Core - VibeOS Cartridge Installation Script
+# This script installs the agent-city-core cartridge pack into a VibeOS installation.
+#
+# The steward-protocol repository contains the Agent City Core package,
+# which provides: Civic (governance), Herald (content), Forum (democracy),
+# Science (research), Archivist (audit), Artisan (media), Envoy (interface)
 #
 # Usage: ./install_to_vibe.sh /path/to/vibe-agency
 #
@@ -203,7 +207,10 @@ main() {
   # Summary
   print_summary
 
-  echo -e "${GREEN}✨ Agent City successfully annexed to VibeOS.${NC}"
+  echo -e "${GREEN}✨ Agent City Core successfully installed to VibeOS.${NC}"
+  echo ""
+  echo "Package: agent-city-core"
+  echo "Repository: steward-protocol (github.com/kimeisele/steward-protocol)"
   echo ""
 }
 
