@@ -30,6 +30,7 @@ from envoy.tools.diplomacy_tool import DiplomacyTool
 from envoy.tools.curator_tool import CuratorTool
 from envoy.tools.run_campaign_tool import RunCampaignTool
 from envoy.tools.gap_report_tool import GAPReportTool
+from envoy.tools.hil_assistant_tool import HILAssistantTool
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +80,7 @@ class EnvoyCartridge(VibeAgent):
         self.curator = CuratorTool()
         self.campaign_tool = RunCampaignTool()  # Initialize campaign orchestration
         self.gap_report = GAPReportTool()  # Initialize governance audit proof reporting
+        self.hil_assistant = HILAssistantTool()  # Initialize HIL Assistant (VAD Layer)
 
         # Operation logs (state)
         self.operation_log = []
@@ -174,6 +176,7 @@ class EnvoyCartridge(VibeAgent):
         - refill: Refill agent credits
         - campaign: Run multi-agent marketing campaign
         - report: Generate G.A.P. (Governability Audit Proof) report
+        - next_action: Get strategic advice from HIL Assistant
         """
         logger.info(f"🔄 ENVOY routing command: {command} with args: {args}")
 
@@ -259,6 +262,33 @@ class EnvoyCartridge(VibeAgent):
                 else:
                     return {"status": "error", "error": f"Unknown report type: {report_type}"}
 
+            elif command == "next_action":
+                # HIL Assistant: Get Next Best Action
+                # 1. Try to get the latest report content if available
+                report_content = args.get("report_content", "")
+                
+                # If no content provided, try to find the latest G.A.P. report
+                if not report_content:
+                    try:
+                        import glob
+                        import os
+                        list_of_files = glob.glob('data/reports/GAP_Report_*.markdown')
+                        if list_of_files:
+                            latest_file = max(list_of_files, key=os.path.getctime)
+                            with open(latest_file, 'r') as f:
+                                report_content = f.read()
+                    except Exception as e:
+                        logger.warning(f"Could not auto-load latest report: {e}")
+                        report_content = "No report available."
+
+                summary = self.hil_assistant.get_next_action_summary(report_content)
+                
+                return {
+                    "status": "success",
+                    "action": "strategic_briefing",
+                    "summary": summary
+                }
+
             else:
                 return {
                     "status": "error",
@@ -320,5 +350,6 @@ class EnvoyCartridge(VibeAgent):
                 "operations_logged_persistent": operations_count,
                 "kernel_injected": self.kernel is not None,
                 "log_path": str(self.log_path),
+                "hil_assistant_active": True
             }
         }
