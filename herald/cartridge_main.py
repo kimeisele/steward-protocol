@@ -177,18 +177,34 @@ class HeraldCartridge(VibeAgent):
             }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report HERALD status (VibeAgent interface)."""
+        """Report HERALD status (VibeAgent interface) - Deep Introspection."""
+        # Get event log statistics
+        events = self.event_log.entries if hasattr(self.event_log, 'entries') else []
+        published_events = [e for e in events if e.get("event_type") == "content_published"]
+
         return {
             "agent_id": "herald",
             "name": "HERALD",
             "status": "RUNNING",
             "domain": "MEDIA",
             "capabilities": self.capabilities,
-            "last_execution": self.execution_id,
+            "broadcast_metrics": {
+                "last_execution_id": self.execution_id,
+                "total_events_recorded": len(events),
+                "content_published_count": len(published_events),
+                "content_generated_count": len([e for e in events if e.get("event_type") == "content_generated"]),
+                "content_rejected_count": len([e for e in events if e.get("event_type") == "content_rejected"]),
+                "event_log_path": "data/events/herald.jsonl",
+                "last_result_status": self.last_result.get("status") if self.last_result else None,
+            },
             "connectivity": {
                 "twitter": self.broadcast.verify_credentials("twitter"),
                 "reddit": self.broadcast.verify_credentials("reddit"),
             },
+            "governance": {
+                "safe_mode": self.safe_mode,
+                "last_failure": self.agent_state.get("last_failure") if self.safe_mode else None,
+            }
         }
 
     def run_campaign(self, dry_run: bool = False) -> Dict[str, Any]:
