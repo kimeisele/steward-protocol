@@ -49,6 +49,10 @@ data/state/*.json
 data/events/*.jsonl
 data/reports/agency_state.json
 
+# SCIENCE generated runtime files (cache, results)
+data/science/cache/
+data/science/results/
+
 # Logs
 *.log
 logs/
