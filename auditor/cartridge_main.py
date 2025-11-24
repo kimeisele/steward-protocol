@@ -19,6 +19,7 @@ Usage:
 
 import logging
 import sys
+import re
 from typing import Dict, Any
 from pathlib import Path
 
@@ -120,10 +121,34 @@ class AuditorCartridge:
                 logger.info("=" * 70)
 
                 report_path = self.root_path / "data" / "reports" / "audit_compliance.json"
-                if self.compliance.save_report(report, report_path):
-                    logger.info(f"✅ Compliance report saved: {report_path}")
+
+                # Ensure report directory exists
+                try:
+                    report_path.parent.mkdir(parents=True, exist_ok=True)
+                    logger.debug(f"✅ Report directory ensured: {report_path.parent}")
+                except OSError as e:
+                    logger.error(f"❌ Failed to create report directory: {e}")
+                    if fail_on_violation:
+                        logger.error("❌ BUILD FAILED: Cannot create report directory")
+                        sys.exit(1)
+
+                # Save report with validation
+                if not self.compliance.save_report(report, report_path):
+                    logger.error("❌ CRITICAL: Failed to save compliance report")
+                    logger.error(f"   Path: {report_path}")
+                    logger.error(f"   This prevents audit trail persistence")
+                    if fail_on_violation:
+                        logger.error("❌ BUILD FAILED: Audit report could not be saved")
+                        sys.exit(1)
                 else:
-                    logger.warning("⚠️  Failed to save compliance report")
+                    # Validate report was written correctly
+                    if not report_path.exists():
+                        logger.error(f"❌ Report file not found after save: {report_path}")
+                        if fail_on_violation:
+                            logger.error("❌ BUILD FAILED: Report file not created")
+                            sys.exit(1)
+                    else:
+                        logger.info(f"✅ Compliance report saved and verified: {report_path}")
 
             # Build result
             result = {
@@ -203,9 +228,44 @@ class AuditorCartridge:
         """
         logger.info(f"🔍 Verifying agent: {agent_name}")
 
+        # Validate agent_name is safe (alphanumeric + underscore + hyphen)
+        if not re.match(r'^[a-zA-Z0-9_-]+$', agent_name):
+            logger.error(f"❌ Invalid agent name: {agent_name}")
+            logger.error("   Agent name must contain only alphanumeric characters, hyphens, and underscores")
+            return {
+                "agent": agent_name,
+                "status": "failed",
+                "reason": "invalid_agent_name",
+                "details": "Agent name must contain only alphanumeric characters, hyphens, and underscores"
+            }
+
         cartridge_path = self.root_path / agent_name / "cartridge.yaml"
 
+        # Ensure resolved path is still within root_path (prevent directory traversal)
+        try:
+            resolved_path = cartridge_path.resolve()
+            resolved_root = self.root_path.resolve()
+            if not str(resolved_path).startswith(str(resolved_root)):
+                logger.error(f"❌ Path traversal attempt detected: {agent_name}")
+                logger.error(f"   Attempted path: {resolved_path}")
+                logger.error(f"   Root path: {resolved_root}")
+                return {
+                    "agent": agent_name,
+                    "status": "failed",
+                    "reason": "path_traversal_detected",
+                    "path": str(cartridge_path),
+                }
+        except Exception as e:
+            logger.error(f"❌ Path resolution failed: {e}")
+            return {
+                "agent": agent_name,
+                "status": "failed",
+                "reason": "path_resolution_error",
+                "error": str(e)
+            }
+
         if not cartridge_path.exists():
+            logger.warning(f"⚠️  Cartridge not found: {cartridge_path}")
             return {
                 "agent": agent_name,
                 "status": "failed",

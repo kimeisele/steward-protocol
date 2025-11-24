@@ -329,11 +329,18 @@ class HeraldCartridge:
             # Defense-in-depth: Re-validate against HeraldConstitution
             # (Content should have been validated in run_campaign, but we verify again)
             logger.info("[STEP 1] Governance validation (defense-in-depth)...")
+            logger.debug(f"   Validating {len(content)} chars of content")
+            logger.debug(f"   Platform: twitter")
+
             validation_result = self.governance.validate(content, platform="twitter")
             if not validation_result.is_valid:
-                logger.error("❌ Content failed governance validation")
-                for violation in validation_result.violations:
-                    logger.error(f"   ❌ {violation}")
+                from datetime import datetime, timezone
+                logger.error("❌ Content failed governance validation (defense-in-depth)")
+                logger.error(f"   Validation timestamp: {datetime.now(timezone.utc).isoformat()}")
+                logger.error(f"   Total violations: {len(validation_result.violations)}")
+                for idx, violation in enumerate(validation_result.violations, 1):
+                    logger.error(f"   [{idx}] {violation}")
+                logger.error(f"   Content preview: {content[:100]}...")
 
                 event = self.event_log.record_content_rejected(
                     content=content,
@@ -649,9 +656,35 @@ class HeraldCartridge:
                 state["last_mention_id"] = new_since_id
                 logger.info(f"💾 State updated: last_mention_id = {new_since_id}")
 
-            state_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(state_path, "w") as f:
-                json.dump(state, f, indent=2)
+                # Only write to file if state actually changed
+                try:
+                    state_path.parent.mkdir(parents=True, exist_ok=True)
+                    logger.debug(f"✅ State directory ensured: {state_path.parent}")
+                except OSError as e:
+                    logger.error(f"❌ Failed to create state directory: {state_path.parent}")
+                    logger.error(f"   Error: {e}")
+                    return {
+                        "status": "partial_success",
+                        "processed": len(mentions),
+                        "drafted": len(drafts),
+                        "warning": "state_directory_creation_failed"
+                    }
+
+                try:
+                    with open(state_path, "w") as f:
+                        json.dump(state, f, indent=2)
+                    logger.info(f"✅ State persisted to {state_path}")
+                except IOError as e:
+                    logger.error(f"❌ Failed to write state file: {state_path}")
+                    logger.error(f"   Error: {e}")
+                    return {
+                        "status": "partial_success",
+                        "processed": len(mentions),
+                        "drafted": len(drafts),
+                        "warning": "state_write_failed"
+                    }
+            else:
+                logger.debug("ℹ️  No state changes detected, skipping state write")
             
         return {
             "status": "success", 

@@ -103,18 +103,49 @@ class ArchivistCartridge:
             return []
 
         events = []
+        failed_lines = []
         try:
             with open(event_file, "r") as f:
-                for line in f:
+                for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if line:
-                        events.append(json.loads(line))
+                        try:
+                            event = json.loads(line)
+                            events.append(event)
+                        except json.JSONDecodeError as e:
+                            failed_lines.append({
+                                "line_number": line_num,
+                                "error": str(e),
+                                "content": line[:100] + "..." if len(line) > 100 else line
+                            })
+                            logger.warning(f"⚠️  Failed to parse event at line {line_num}: {e}")
 
-            logger.info(f"📖 Read {len(events)} events from {agent_name}")
+            if failed_lines:
+                logger.error(f"❌ Failed to parse {len(failed_lines)} events from {agent_name}")
+                for fail in failed_lines[:5]:  # Show first 5 failures
+                    logger.error(f"   Line {fail['line_number']}: {fail['error']}")
+                    logger.debug(f"      Content: {fail['content']}")
+                if len(failed_lines) > 5:
+                    logger.error(f"   ... and {len(failed_lines) - 5} more parse errors")
+
+            logger.info(f"📖 Successfully read {len(events)} valid events from {agent_name}")
+            if failed_lines:
+                logger.warning(f"   {len(failed_lines)} events had parse errors and were skipped")
             return events
 
+        except FileNotFoundError:
+            logger.warning(f"⚠️  No event log found for {agent_name}: {event_file}")
+            return []
+        except PermissionError as e:
+            logger.error(f"❌ Permission denied reading event log: {event_file}")
+            logger.error(f"   Error: {e}")
+            return []
         except Exception as e:
-            logger.error(f"❌ Failed to read events from {agent_name}: {e}")
+            logger.error(f"❌ Failed to read events from {agent_name}: {event_file}")
+            logger.error(f"   Error type: {type(e).__name__}")
+            logger.error(f"   Error: {e}")
+            if events:
+                logger.warning(f"   Partial read: {len(events)} events loaded before error")
             return []
 
     def audit_agent(

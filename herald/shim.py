@@ -169,12 +169,24 @@ def _execute_publish(cartridge: HeraldCartridge, dist_dir: Path, content: str = 
                 logger.error(f"❌ No content file found: {content_file}")
                 sys.exit(1)
 
-            with open(content_file) as f:
-                data = json.load(f)
-                content = data.get("text")
+            try:
+                with open(content_file) as f:
+                    data = json.load(f)
+            except json.JSONDecodeError as e:
+                logger.error(f"❌ Invalid JSON in content file: {content_file}")
+                logger.error(f"   Error at line {e.lineno}, column {e.colno}: {e.msg}")
+                logger.error(f"   Content preview: {e.doc[:100] if e.doc else 'N/A'}")
+                sys.exit(1)
+            except Exception as e:
+                logger.error(f"❌ Failed to load content file: {content_file}")
+                logger.error(f"   Error type: {type(e).__name__}")
+                logger.error(f"   Error: {e}")
+                sys.exit(1)
 
+            content = data.get("text")
             if not content:
                 logger.error("❌ Content file missing 'text' field")
+                logger.error(f"   Available fields: {list(data.keys())}")
                 sys.exit(1)
 
             logger.info(f"✅ Loaded content from artifact: {len(content)} chars")
