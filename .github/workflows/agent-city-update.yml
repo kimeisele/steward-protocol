@@ -42,6 +42,12 @@ jobs:
         run: |
           git config --global user.name "Agent City Bot"
           git config --global user.email "agent-city@steward.protocol"
-          git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
-          git commit -m "chore: Update Agent City stats [skip ci]" || echo "No changes to commit"
-          git push
+
+          if git diff --quiet agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/ 2>/dev/null; then
+            echo "ℹ️  No changes to Agent City stats"
+          else
+            git add agent-city/stats/ agent-city/LEADERBOARD.md docs/agent-city/
+            git commit -m "chore: Update Agent City stats [skip ci]"
+            git push || { echo "❌ CRITICAL: Failed to push Agent City stats!"; exit 1; }
+            echo "✅ Agent City stats committed and pushed"
+          fi

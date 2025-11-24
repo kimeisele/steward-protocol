@@ -171,6 +171,22 @@ jobs:
           name: campaign-assets
           path: dist/
 
+      # Verify artifact exists
+      - name: "🔍 Verify Content Artifact"
+        run: |
+          if [ -f dist/content.json ]; then
+            echo "✅ content.json found"
+            echo "File size: $(wc -c < dist/content.json) bytes"
+            echo "Content preview:"
+            head -c 200 dist/content.json
+            echo ""
+          else
+            echo "❌ CRITICAL: content.json not found!"
+            echo "Available files:"
+            ls -la dist/ || echo "dist/ directory missing"
+            exit 1
+          fi
+
       # Publish
       - name: "🐦 Publish to Twitter"
         id: publish

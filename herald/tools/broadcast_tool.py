@@ -3,11 +3,15 @@ HERALD Broadcast Tool - Social media publishing (Twitter, Reddit).
 
 Handles publishing to multiple platforms with graceful fallback.
 Offline-capable with dry-run modes for safety.
+
+SECURITY: This tool should be used within governance-validated pipelines.
+Content MUST be validated against HeraldConstitution before publishing.
+Direct calls to publish() bypass governance - use execute_publish() instead.
 """
 
 import os
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 try:
     import tweepy
@@ -31,12 +35,24 @@ class BroadcastTool:
     - Reddit: Long-form technical discussions (draft_only mode by default)
 
     Graceful fallback when API keys unavailable.
+
+    SECURITY WARNING:
+    This tool does NOT enforce governance validation.
+    Callers MUST validate content against HeraldConstitution before publishing.
+    Use HeraldCartridge.execute_publish() for governance-safe publication.
     """
 
-    def __init__(self):
-        """Initialize broadcast tool."""
+    def __init__(self, governance_validator: Optional[Any] = None):
+        """
+        Initialize broadcast tool.
+
+        Args:
+            governance_validator: Optional governance validator for defense-in-depth.
+                                 If provided, content will be validated before publishing.
+        """
         self.twitter_client = None
         self.reddit_client = None
+        self.governance_validator = governance_validator
         self._init_twitter()
         self._init_reddit()
 
@@ -116,6 +132,9 @@ class BroadcastTool:
         """
         Publish content to platform.
 
+        SECURITY: Content SHOULD be validated before calling this method.
+        For governance-enforced publication, use HeraldCartridge.execute_publish().
+
         Args:
             content: Text to publish
             platform: "twitter" or "reddit"
@@ -123,6 +142,22 @@ class BroadcastTool:
         Returns:
             bool: True if successful, False otherwise
         """
+        # Governance defense-in-depth: Log warning if validator not provided
+        if not self.governance_validator:
+            logger.warning("⚠️  SECURITY: BroadcastTool.publish() called without governance validator")
+            logger.warning("   Content should have been validated via HeraldConstitution")
+        else:
+            # If validator provided, use it (optional defense-in-depth)
+            try:
+                validation = self.governance_validator.validate(content, platform=platform)
+                if not validation.is_valid:
+                    logger.error(f"❌ Governance validation failed in BroadcastTool:")
+                    for violation in validation.violations:
+                        logger.error(f"   - {violation}")
+                    return False
+            except Exception as e:
+                logger.error(f"⚠️  Governance validation error (bypassing): {e}")
+
         if platform == "twitter":
             return self._publish_twitter(content)
         elif platform == "reddit":

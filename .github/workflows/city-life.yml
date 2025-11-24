@@ -141,7 +141,8 @@ Events: ${{ steps.census.outputs.events }} total
 Status: Active
 
 Automated by Autarky Protocol"
-            git push || echo "⚠️  Push failed (may need permissions)"
+            git push || { echo "❌ CRITICAL: Failed to push census data!"; exit 1; }
+            echo "✅ Census data committed and pushed"
           fi
 
   system_health:

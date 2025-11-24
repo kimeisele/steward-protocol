@@ -162,6 +162,17 @@ jobs:
           name: herald-content
           path: dist/
 
+      - name: "🔍 Verify Artifact Before Publishing"
+        run: |
+          if [ -f dist/content.json ]; then
+            echo "✅ content.json exists"
+            echo "File size: $(wc -c < dist/content.json) bytes"
+          else
+            echo "❌ CRITICAL: content.json missing after download!"
+            ls -la dist/
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:

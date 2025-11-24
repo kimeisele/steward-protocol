@@ -47,6 +47,17 @@ jobs:
         run: |
           git config --global user.name "Herald Agent"
           git config --global user.email "herald@steward.protocol"
-          git add data/state/twitter_state.json
-          git commit -m "chore: Update Twitter state [skip ci]" || echo "No changes to commit"
-          git push
+
+          if [ -f data/state/twitter_state.json ]; then
+            git add data/state/twitter_state.json
+
+            if git diff --cached --quiet; then
+              echo "ℹ️  No state changes to commit"
+            else
+              git commit -m "chore: Update Twitter state [skip ci]"
+              git push || { echo "❌ CRITICAL: Git push failed - state not persisted!"; exit 1; }
+              echo "✅ State committed and pushed"
+            fi
+          else
+            echo "⚠️  State file not created (no new mentions processed)"
+          fi
