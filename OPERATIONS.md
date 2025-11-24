@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-24T22:04:17.910175
+**Last Updated:** 2025-11-24T22:11:31.455853
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 3
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 14
+- Total Events: 18
 
 ## 🤖 Agent Status
 
@@ -18,7 +18,7 @@
 - status: RUNNING
 - domain: ORCHESTRATION
 - capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
-- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 2, 'operations_logged_persistent': 13, 'kernel_injected': True, 'log_path': 'data/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
+- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 2, 'operations_logged_persistent': 15, 'kernel_injected': True, 'log_path': 'data/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
 
 ### civic
 ❌ Error: 'License' object has no attribute 'get'

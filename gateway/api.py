@@ -39,14 +39,18 @@ from herald.cartridge_main import HeraldCartridge
 # In the serverless gateway, we trust the environment and the agents we instantiate.
 # We bypass the strict cryptographic oath verification to avoid complex key management
 # in the ephemeral runtime.
-try:
-    from steward.constitutional_oath import ConstitutionalOath
-    def mock_verify_oath(event, identity_tool):
-        return True, "Serverless Gateway Trust"
-    ConstitutionalOath.verify_oath = staticmethod(mock_verify_oath)
-    logging.info("🛡️  Constitutional Oath verification patched for Serverless Gateway")
-except ImportError:
-    pass
+# SECURITY CRITICAL: Only enable this in controlled serverless environments.
+if os.getenv("GOVERNANCE_MODE") == "SERVERLESS_BYPASS":
+    try:
+        from steward.constitutional_oath import ConstitutionalOath
+        def mock_verify_oath(event, identity_tool):
+            return True, "Serverless Gateway Trust (Bypass Enabled)"
+        ConstitutionalOath.verify_oath = staticmethod(mock_verify_oath)
+        logging.warning("🛡️  SECURITY WARNING: Constitutional Oath verification BYPASSED via GOVERNANCE_MODE")
+    except ImportError:
+        pass
+else:
+    logging.info("🛡️  Constitutional Oath verification ACTIVE (Strict Mode)")
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
@@ -87,6 +91,7 @@ def get_kernel():
         
         # --- GAD-000: GENESIS CEREMONY (Serverless Cold Start) ---
         # Agents must swear the oath to enter the kernel.
+        # In SERVERLESS_BYPASS mode, this signature is mocked.
         timestamp = datetime.utcnow().isoformat()
         for agent in [envoy, civic, herald]:
             agent.oath_sworn = True
@@ -126,8 +131,17 @@ class ChatResponse(BaseModel):
 
 async def verify_auth(x_api_key: str = Header(...)):
     """Simple API Key Check"""
-    expected_key = os.getenv("API_KEY", "steward-secret-key")
-    if x_api_key != expected_key:
+    env_key = os.getenv("API_KEY")
+    if not env_key:
+        # Fallback for local dev ONLY if explicitly allowed, otherwise error
+        if os.getenv("ENV") == "development":
+            env_key = "steward-secret-key"
+            logger.warning("⚠️  Using default development API Key. DO NOT USE IN PRODUCTION.")
+        else:
+            logger.error("❌ API_KEY environment variable not set!")
+            raise HTTPException(status_code=500, detail="Server Configuration Error")
+            
+    if x_api_key != env_key:
         raise HTTPException(status_code=401, detail="Invalid API Key")
     return x_api_key
 
@@ -136,6 +150,10 @@ def check_ledger_access(user_id: str):
     GAD-900 Check: Is this user an authorized HIL?
     Uses CIVIC agent to verify.
     """
+    if len(user_id) > 64 or not user_id.replace("_", "").isalnum():
+         logger.warning(f"⛔ Invalid User ID format: {user_id}")
+         raise HTTPException(status_code=400, detail="Invalid User ID format")
+
     get_kernel() # Ensure kernel is loaded
     
     # In a real implementation, CIVIC would check a license/identity registry.
