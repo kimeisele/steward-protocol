@@ -71,6 +71,22 @@ class InMemoryLedger(VibeLedger):
 
     def __init__(self):
         self.events: List[Dict[str, Any]] = []
+        self._event_counter = 0
+
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+        """Record a generic event (governance action)"""
+        self._event_counter += 1
+        event_id = f"EVT-{self._event_counter:06d}"
+        event = {
+            "event_id": event_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": event_type,
+            "agent_id": agent_id,
+            "details": details,
+        }
+        self.events.append(event)
+        logger.debug(f"📝 Ledger: Event recorded {event_id} ({event_type})")
+        return event_id
 
     def record_start(self, task: Task) -> None:
         """Record task start"""
@@ -146,18 +162,42 @@ class SQLiteLedger(VibeLedger):
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ledger_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT,
                 timestamp TEXT NOT NULL,
                 event_type TEXT NOT NULL,
-                task_id TEXT NOT NULL,
+                task_id TEXT,
                 agent_id TEXT NOT NULL,
                 payload TEXT,
                 result TEXT,
                 error TEXT,
+                details TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
         self.connection.commit()
         logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
+
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+        """Record a generic event (governance action)"""
+        cursor = self.connection.cursor()
+        row = cursor.execute("SELECT MAX(id) FROM ledger_events").fetchone()
+        next_id = (row[0] or 0) + 1
+        event_id = f"EVT-{next_id:06d}"
+        
+        cursor.execute("""
+            INSERT INTO ledger_events 
+            (event_id, timestamp, event_type, agent_id, details)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            event_id,
+            datetime.utcnow().isoformat(),
+            event_type,
+            agent_id,
+            json.dumps(details) if details else None
+        ))
+        self.connection.commit()
+        logger.debug(f"📝 Ledger: Event recorded {event_id} ({event_type})")
+        return event_id
 
     def record_start(self, task: Task) -> None:
         """Record task start"""

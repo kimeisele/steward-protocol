@@ -1,0 +1,24 @@
+{
+  "id": "PROP-003",
+  "title": "Test Ledger Integrity",
+  "description": "This proposal should record in kernel ledger",
+  "proposer": "herald",
+  "proposed_at": "2025-11-24T14:58:10.565729+00:00",
+  "status": "OPEN",
+  "action": {
+    "type": "credit_transfer",
+    "params": {
+      "to": "civic",
+      "amount": 10
+    }
+  },
+  "voting": {
+    "threshold": 0.5,
+    "quorum": 0.5,
+    "votes_yes": 0,
+    "votes_no": 0,
+    "votes_abstain": 0
+  },
+  "executed": false,
+  "executed_at": null
+}

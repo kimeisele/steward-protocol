@@ -232,11 +232,24 @@ class ForumCartridge(VibeAgent):
             "executed_at": None,
         }
 
-        # Save proposal
+        # Save proposal to local file
         proposal_file = self.proposals_path / f"{proposal_id}.json"
         proposal_file.write_text(json.dumps(proposal, indent=2))
 
         self.proposals[proposal_id] = proposal
+
+        # CRITICAL: Record in kernel ledger (source of truth)
+        if hasattr(self, 'kernel') and self.kernel:
+            self.kernel.ledger.record_event(
+                event_type="proposal_created",
+                agent_id=self.agent_id,
+                details={
+                    "proposal_id": proposal_id,
+                    "title": title,
+                    "proposer": proposer,
+                    "action_type": action.get("type"),
+                }
+            )
 
         logger.info(f"✅ Proposal created: {proposal_id}")
         return proposal
@@ -281,7 +294,7 @@ class ForumCartridge(VibeAgent):
             logger.error(f"❌ Invalid vote: {vote}")
             return {"status": "error", "reason": "invalid_vote"}
 
-        # Record vote
+        # Record vote locally
         vote_entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "proposal_id": proposal_id,
@@ -290,7 +303,7 @@ class ForumCartridge(VibeAgent):
             "signature": signature or "unsigned",
         }
 
-        # Append to ledger
+        # Append to local vote ledger
         with open(self.votes_ledger_path, "a") as f:
             f.write(json.dumps(vote_entry) + "\n")
 
@@ -305,6 +318,20 @@ class ForumCartridge(VibeAgent):
         # Save updated proposal
         proposal_file = self.proposals_path / f"{proposal_id}.json"
         proposal_file.write_text(json.dumps(proposal, indent=2))
+
+        # CRITICAL: Record in kernel ledger (source of truth)
+        if hasattr(self, 'kernel') and self.kernel:
+            self.kernel.ledger.record_event(
+                event_type="vote_cast",
+                agent_id=self.agent_id,
+                details={
+                    "proposal_id": proposal_id,
+                    "voter": voter,
+                    "vote": vote,
+                    "votes_yes": proposal["voting"]["votes_yes"],
+                    "votes_no": proposal["voting"]["votes_no"],
+                }
+            )
 
         logger.info(f"   Updated: YES={proposal['voting']['votes_yes']}, NO={proposal['voting']['votes_no']}")
 
