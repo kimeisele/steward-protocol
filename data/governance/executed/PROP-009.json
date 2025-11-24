@@ -4,7 +4,7 @@
   "description": "Reinstate the broadcast license for HERALD agent. Previous revocation was for manual admin intervention verification. Reason has been addressed through governance protocol.",
   "proposer": "envoy",
   "proposed_at": "2025-11-24T20:57:00.000000+00:00",
-  "status": "APPROVED",
+  "status": "EXECUTED",
   "action": {
     "type": "civic.license.reinstate",
     "params": {
@@ -20,6 +20,6 @@
     "votes_no": 0,
     "votes_abstain": 0
   },
-  "executed": false,
-  "executed_at": null
+  "executed": true,
+  "executed_at": "2025-11-24T21:09:29.818550+00:00"
 }
