@@ -8,14 +8,112 @@
     "herald": {
       "name": "herald",
       "registered_at": "2025-11-24T00:00:00Z",
-      "last_scanned": "2025-11-24T00:00:00Z",
+      "last_scanned": "2025-11-24T10:53:13.913351+00:00",
       "config": {
         "cartridge_path": "/home/user/steward-protocol/herald/cartridge_main.py",
-        "validated_at": "2025-11-24T00:00:00Z",
+        "validated_at": "2025-11-24T10:53:13.913232+00:00",
         "syntax_valid": true
       },
       "broadcast_license": true,
       "credits": 150,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "engineer": {
+      "name": "engineer",
+      "registered_at": "2025-11-24T10:53:13.914127+00:00",
+      "last_scanned": "2025-11-24T10:53:13.914129+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/engineer/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.914049+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "artisan": {
+      "name": "artisan",
+      "registered_at": "2025-11-24T10:53:13.914682+00:00",
+      "last_scanned": "2025-11-24T10:53:13.914684+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/artisan/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.914615+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "science": {
+      "name": "science",
+      "registered_at": "2025-11-24T10:53:13.916760+00:00",
+      "last_scanned": "2025-11-24T10:53:13.916765+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/science/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.916672+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "watchman": {
+      "name": "watchman",
+      "registered_at": "2025-11-24T10:53:13.917896+00:00",
+      "last_scanned": "2025-11-24T10:53:13.917901+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/watchman/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.917815+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "auditor": {
+      "name": "auditor",
+      "registered_at": "2025-11-24T10:53:13.919383+00:00",
+      "last_scanned": "2025-11-24T10:53:13.919389+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/auditor/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.919302+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "forum": {
+      "name": "forum",
+      "registered_at": "2025-11-24T10:53:13.922511+00:00",
+      "last_scanned": "2025-11-24T10:53:13.922516+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/forum/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.922396+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
+      "total_broadcasts": 0,
+      "violations": []
+    },
+    "archivist": {
+      "name": "archivist",
+      "registered_at": "2025-11-24T10:53:13.924268+00:00",
+      "last_scanned": "2025-11-24T10:53:13.924273+00:00",
+      "config": {
+        "cartridge_path": "/home/user/steward-protocol/archivist/cartridge_main.py",
+        "validated_at": "2025-11-24T10:53:13.924188+00:00",
+        "syntax_valid": true
+      },
+      "broadcast_license": true,
+      "credits": 100,
       "total_broadcasts": 0,
       "violations": []
     }

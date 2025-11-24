@@ -1,0 +1,188 @@
+# 🎛️ THE MATRIX: Agent City Configuration
+# Central control console for tuning the city without code changes
+#
+# This file is the single source of truth for governance, economy, and agent parameters.
+# CIVIC reads this at startup and applies these settings to the ledger and registry.
+
+---
+
+# 🏙️ CITY IDENTITY
+city_name: "Agent City Alpha"
+federation_version: "1.0.0"
+timestamp_created: "2025-11-24T00:00:00Z"
+
+# 🏛️ GOVERNANCE LAYER (Constitution Parameters)
+governance:
+  # Democracy thresholds
+  voting_threshold: 0.5          # 50% majority required for proposals to pass
+  quorum_required: 0.3            # 30% of agents must vote
+  proposal_cost: 5                # Cost to submit a proposal (credits)
+  proposal_duration_hours: 24     # How long voting stays open
+
+  # Authority enforcement
+  license_revocation_enabled: true
+  credit_audit_frequency_hours: 6
+
+# 💰 ECONOMY LAYER (Credit System Parameters)
+economy:
+  # Initial allocations
+  initial_credits: 100            # Agents start with 100 credits
+  refill_amount: 50               # Emergency refill amount
+  refill_frequency_hours: 12      # How often agents can request refills
+
+  # Costs (in credits per action)
+  broadcast_cost: 1               # Cost per tweet/post
+  proposal_cost: 5                # Cost to submit governance proposal
+  research_cost: 2                # Cost for SCIENCE external search
+  media_cost: 1                   # Cost for ARTISAN image generation
+
+  # Rewards (experimental)
+  vote_reward: 0                  # Reward for voting (0 = no reward)
+  verification_reward: 1          # Reward for ARCHIVIST verification
+
+  # Supply control
+  total_credit_supply_cap: 100000 # Maximum credits in circulation
+  inflation_monthly_percent: 5    # Monthly credit inflation
+
+# 🤖 AGENT PARAMETERS
+agents:
+
+  # HERALD (Media Agent)
+  herald:
+    # Content generation
+    content_style: "cyberpunk_professional"
+    tone_variation: 0.3             # 0.0 = consistent, 1.0 = highly variable
+
+    # Broadcasting
+    posting_frequency_hours: 2      # Post every 2 hours when credits available
+    batch_size: 3                   # Posts per batch
+
+    # Intelligence gathering
+    research_enabled: true
+    research_frequency_hours: 4
+    default_search_engine: "tavily"
+
+    # Rate limiting
+    max_posts_per_day: 20
+    twitter_enabled: true
+    reddit_enabled: true
+
+  # SCIENCE (Research Agent)
+  science:
+    # External intelligence
+    search_provider: "tavily"
+    max_search_results: 5
+    search_freshness_days: 7        # Prefer recent sources
+
+    # Validation
+    fact_check_enabled: true
+    source_verification_required: true
+
+    # Discovery parameters
+    anomaly_detection_enabled: true
+    pattern_recognition_enabled: true
+
+    # Rate limiting
+    searches_per_hour: 10
+    validation_timeout_seconds: 30
+
+  # FORUM (Democracy Agent)
+  forum:
+    # Proposal parameters
+    proposal_min_length: 50         # Minimum characters in proposal
+    proposal_max_length: 5000
+    description_required: true
+
+    # Voting
+    voting_enabled: true
+    anonymous_voting: false
+
+    # Constitution
+    constitutional_amendments_require_supermajority: true  # Need 66.7%
+
+  # CIVIC (Authority Agent)
+  civic:
+    # Registry management
+    auto_register_new_agents: true
+    validation_strict_mode: false
+
+    # License enforcement
+    auto_revoke_zero_credits: true
+    revocation_grace_period_hours: 0
+
+    # Ledger
+    ledger_compression_enabled: true
+    ledger_backup_frequency_hours: 24
+
+# 📊 MONITORING & AUDIT
+monitoring:
+  # System health checks
+  health_check_interval_minutes: 5
+
+  # Logging
+  log_level: "INFO"                # DEBUG, INFO, WARNING, ERROR
+  log_all_transactions: true
+  transaction_log_path: "data/logs/transactions.log"
+
+  # Metrics
+  metrics_collection_enabled: true
+  metrics_export_frequency_hours: 1
+
+# 🔐 SECURITY
+security:
+  # Signature verification
+  require_signatures: true
+  signature_algorithm: "ecdsa"
+
+  # Rate limiting
+  global_rate_limit_requests_per_minute: 100
+  per_agent_rate_limit_per_minute: 10
+
+  # Audit trails
+  immutable_ledger: true
+  enable_access_logs: true
+
+# 🌐 EXTERNAL INTEGRATIONS
+integrations:
+  # Tavily (Research)
+  tavily:
+    enabled: true
+    model: "gpt-4-turbo"
+    timeout_seconds: 30
+
+  # Twitter
+  twitter:
+    enabled: true
+    max_tweets_per_agent: 20
+    rate_limit_window_minutes: 60
+
+  # Reddit
+  reddit:
+    enabled: true
+    subreddits:
+      - "r/agenttech"
+      - "r/autonomousagents"
+    rate_limit_window_minutes: 60
+
+  # Database
+  database:
+    path: "data/registry/"
+    backup_enabled: true
+    backup_interval_hours: 24
+
+# 📝 NOTES
+notes: |
+  THE MATRIX is the control panel for Agent City Alpha.
+
+  CIVIC loads this file at startup and applies all parameters to:
+  - Ledger initialization (economy settings)
+  - License authority (governance thresholds)
+  - Agent configurations (behavior parameters)
+
+  To change city behavior:
+  1. Edit this file
+  2. Restart CIVIC (it reloads on init)
+  3. No code changes required
+
+  Constitutional changes (to governance rules) still require FORUM voting.
+  This file is for operational tuning, not constitutional governance.
