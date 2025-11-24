@@ -22,6 +22,7 @@ Architecture:
 
 import logging
 import json
+import yaml
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
@@ -62,6 +63,15 @@ class CivicCartridge:
     def __init__(self):
         """Initialize CIVIC (The Bureaucrat)."""
         logger.info("🏛️  CIVIC Cartridge initializing...")
+
+        # Load THE MATRIX (configuration)
+        self.matrix = self._load_matrix()
+        if self.matrix:
+            city_name = self.matrix.get("city_name", "Agent City")
+            logger.info(f"🎛️  THE MATRIX loaded: {city_name} (Federation v{self.matrix.get('federation_version', 'unknown')})")
+        else:
+            logger.warning("⚠️  THE MATRIX not found, using defaults")
+            self.matrix = self._default_matrix()
 
         # Registry paths
         self.registry_path = Path("data/registry/citizens.json")
@@ -167,14 +177,15 @@ class CivicCartridge:
                     updated.append(agent_name)
                 else:
                     logger.info(f"   ✅ New agent! Issuing initial license & credits")
-                    # Register new agent
+                    # Register new agent (credits from THE MATRIX)
+                    initial_credits = self.get_matrix_config("economy", "initial_credits", 100)
                     agent_record = {
                         "name": agent_name,
                         "registered_at": datetime.now(timezone.utc).isoformat(),
                         "last_scanned": datetime.now(timezone.utc).isoformat(),
                         "config": config,
                         "broadcast_license": True,  # Initial license (can be revoked)
-                        "credits": 100,  # Starting credit allocation
+                        "credits": initial_credits,  # From THE MATRIX
                         "total_broadcasts": 0,
                         "violations": [],
                     }
@@ -184,7 +195,7 @@ class CivicCartridge:
 
                     self.registry["agents"][agent_name] = agent_record
                     registered.append(agent_name)
-                    logger.info(f"   🎫 License issued | 💰 100 credits allocated")
+                    logger.info(f"   🎫 License issued | 💰 {initial_credits} credits allocated")
 
             # Save registry (unless dry_run)
             if not dry_run:
@@ -355,7 +366,7 @@ class CivicCartridge:
             "total_broadcasts": agent.get("total_broadcasts", 0)
         }
 
-    def refill_credits(self, agent_name: str, amount: int = 100, admin_key: str = None) -> Dict[str, Any]:
+    def refill_credits(self, agent_name: str, amount: Optional[int] = None, admin_key: str = None) -> Dict[str, Any]:
         """
         Refill an agent's credits (admin-only operation).
 
@@ -364,12 +375,16 @@ class CivicCartridge:
 
         Args:
             agent_name: Agent to refill
-            amount: Credits to add
+            amount: Credits to add (default from THE MATRIX refill_amount)
             admin_key: Admin authorization key (future implementation)
 
         Returns:
             dict: Refill result
         """
+        # Use THE MATRIX refill amount if not specified
+        if amount is None:
+            amount = self.get_matrix_config("economy", "refill_amount", 50)
+
         logger.info(f"💰 Refilling credits for {agent_name} (+{amount})")
 
         agents = self.registry.get("agents", {})
@@ -498,6 +513,45 @@ class CivicCartridge:
     def _save_state(self) -> None:
         """Save CIVIC state to disk."""
         self.state_path.write_text(json.dumps(self.state, indent=2))
+
+    def _load_matrix(self) -> Optional[Dict[str, Any]]:
+        """Load THE MATRIX configuration from config/matrix.yaml."""
+        matrix_path = Path("config/matrix.yaml")
+        if not matrix_path.exists():
+            logger.warning("⚠️  config/matrix.yaml not found")
+            return None
+
+        try:
+            with open(matrix_path, "r") as f:
+                return yaml.safe_load(f)
+        except Exception as e:
+            logger.error(f"Failed to load matrix: {e}")
+            return None
+
+    def _default_matrix(self) -> Dict[str, Any]:
+        """Return default matrix configuration."""
+        return {
+            "city_name": "Agent City (Default)",
+            "federation_version": "1.0.0",
+            "governance": {
+                "voting_threshold": 0.5,
+                "proposal_cost": 5,
+            },
+            "economy": {
+                "initial_credits": 100,
+                "refill_amount": 50,
+                "broadcast_cost": 1,
+                "research_cost": 2,
+            },
+            "agents": {},
+        }
+
+    def get_matrix_config(self, section: str, key: str, default: Any = None) -> Any:
+        """Get a configuration value from THE MATRIX."""
+        try:
+            return self.matrix.get(section, {}).get(key, default)
+        except (KeyError, TypeError):
+            return default
 
 
 # Export for VibeOS cartridge loading
