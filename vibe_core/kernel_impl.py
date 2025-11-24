@@ -14,10 +14,12 @@ This is NOT a mock. This is real execution context for cartridges.
 import logging
 import json
 import uuid
+import sqlite3
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from collections import deque
 from pathlib import Path
+import os
 
 from .kernel import (
     VibeKernel,
@@ -119,6 +121,137 @@ class InMemoryLedger(VibeLedger):
         return self.events.copy()
 
 
+class SQLiteLedger(VibeLedger):
+    """Persistent SQLite-backed Event Ledger - Append-only task record with persistence"""
+
+    def __init__(self, db_path: str = "data/vibe_ledger.db"):
+        """Initialize SQLite ledger with database file"""
+        self.db_path = db_path
+        self.connection = None
+        self._initialize_db()
+
+    def _initialize_db(self) -> None:
+        """Create database and schema if not exists"""
+        # Ensure directory exists
+        db_dir = os.path.dirname(self.db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
+
+        # Connect to database
+        self.connection = sqlite3.connect(self.db_path)
+        self.connection.row_factory = sqlite3.Row
+
+        # Create table if not exists
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ledger_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                task_id TEXT NOT NULL,
+                agent_id TEXT NOT NULL,
+                payload TEXT,
+                result TEXT,
+                error TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        self.connection.commit()
+        logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
+
+    def record_start(self, task: Task) -> None:
+        """Record task start"""
+        event = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": "task_start",
+            "task_id": task.task_id,
+            "agent_id": task.agent_id,
+            "payload": json.dumps(task.payload) if task.payload else None,
+        }
+        self._insert_event(event)
+        logger.debug(f"📝 Ledger: Task started {task.task_id}")
+
+    def record_completion(self, task: Task, result: Any) -> None:
+        """Record task completion"""
+        event = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": "task_completed",
+            "task_id": task.task_id,
+            "agent_id": task.agent_id,
+            "result": json.dumps(result) if result else None,
+        }
+        self._insert_event(event)
+        logger.debug(f"📝 Ledger: Task completed {task.task_id}")
+
+    def record_failure(self, task: Task, error: str) -> None:
+        """Record task failure"""
+        event = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event_type": "task_failed",
+            "task_id": task.task_id,
+            "agent_id": task.agent_id,
+            "error": error,
+        }
+        self._insert_event(event)
+        logger.debug(f"📝 Ledger: Task failed {task.task_id}")
+
+    def _insert_event(self, event: Dict[str, Any]) -> None:
+        """Insert event into database (append-only)"""
+        if not self.connection:
+            logger.error("❌ Database connection not available")
+            return
+
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            INSERT INTO ledger_events
+            (timestamp, event_type, task_id, agent_id, payload, result, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            event.get("timestamp"),
+            event.get("event_type"),
+            event.get("task_id"),
+            event.get("agent_id"),
+            event.get("payload"),
+            event.get("result"),
+            event.get("error"),
+        ))
+        self.connection.commit()
+
+    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Query task result (return most recent event for task)"""
+        if not self.connection:
+            return None
+
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            SELECT * FROM ledger_events
+            WHERE task_id = ?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (task_id,))
+
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+
+    def get_all_events(self) -> List[Dict[str, Any]]:
+        """Return all ledger events in order"""
+        if not self.connection:
+            return []
+
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM ledger_events ORDER BY id ASC")
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+
+    def close(self) -> None:
+        """Close database connection"""
+        if self.connection:
+            self.connection.close()
+            logger.info("💾 SQLite ledger closed")
+
+
 class InMemoryManifestRegistry(ManifestRegistry):
     """Agent Manifest Registry - Identity declarations"""
 
@@ -157,15 +290,20 @@ class RealVibeKernel(VibeKernel):
     - Kernel injection (dependency injection pattern)
     """
 
-    def __init__(self, ledger_path: str = ":memory:"):
+    def __init__(self, ledger_path: str = "data/vibe_ledger.db"):
         """Initialize the kernel"""
         self._agent_registry: Dict[str, VibeAgent] = {}
         self._scheduler = InMemoryScheduler()
-        self._ledger = InMemoryLedger()
+        # Use SQLiteLedger for persistence (not in-memory)
+        if ledger_path == ":memory:":
+            self._ledger = InMemoryLedger()
+            logger.info("🚀 Vibe Kernel initialized (in-memory ledger)")
+        else:
+            self._ledger = SQLiteLedger(ledger_path)
+            logger.info(f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})")
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
-        logger.info("🚀 Vibe Kernel initialized (in-memory)")
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
