@@ -26,10 +26,10 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
 
-# Import tools (to be created)
-# from civic.tools.registry_tool import RegistryTool
-# from civic.tools.ledger_tool import LedgerTool
-# from civic.tools.license_tool import LicenseTool
+# Import tools
+from civic.tools.ledger_tool import LedgerTool, AgentBank
+from civic.tools.license_tool import LicenseTool, LicenseAuthority, LicenseType
+from civic.tools.registry_tool import RegistryTool
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -72,6 +72,11 @@ class CivicCartridge:
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
 
+        # Initialize tools
+        self.ledger = LedgerTool("data/registry/ledger.jsonl")
+        self.license_tool = LicenseTool("data/registry/licenses.json")
+        self.registry_tool = RegistryTool(".")
+
         # Load or initialize registry
         self.registry = self._load_registry()
 
@@ -79,6 +84,8 @@ class CivicCartridge:
         self.state = self._load_state()
 
         logger.info(f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents")
+        logger.info(f"💰 Ledger initialized: {len(self.ledger.entries)} transactions")
+        logger.info(f"🎫 License database initialized: {len(self.license_tool.licenses)} licenses")
         logger.info(f"🏛️  CIVIC: Ready for operation")
 
     def get_config(self) -> Dict[str, Any]:
