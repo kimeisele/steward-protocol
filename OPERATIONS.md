@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-24T15:09:03.380290
+**Last Updated:** 2025-11-24T15:09:36.753578
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 5
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 1
+- Total Events: 0
 
 ## 🤖 Agent Status
 
@@ -44,7 +44,7 @@
 - status: RUNNING
 - domain: SCIENCE
 - capabilities: ['research', 'web_search', 'fact_synthesis']
-- research_metrics: {'search_mode': 'offline', 'cache_entries': 1, 'results_generated': 0, 'cache_dir': 'data/science/cache', 'results_dir': 'data/science/results'}
+- research_metrics: {'search_mode': 'offline', 'cache_entries': 2, 'results_generated': 0, 'cache_dir': 'data/science/cache', 'results_dir': 'data/science/results'}
 
 ### envoy
 - agent_id: envoy

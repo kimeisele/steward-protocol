@@ -1,0 +1,21 @@
+{
+  "id": "PROP-008",
+  "title": "Test: Ledger Recording",
+  "description": "Verify this is recorded in kernel ledger",
+  "proposer": "herald",
+  "proposed_at": "2025-11-24T15:09:36.759608+00:00",
+  "status": "OPEN",
+  "action": {
+    "type": "test",
+    "params": {}
+  },
+  "voting": {
+    "threshold": 0.5,
+    "quorum": 0.5,
+    "votes_yes": 1,
+    "votes_no": 0,
+    "votes_abstain": 0
+  },
+  "executed": false,
+  "executed_at": null
+}
