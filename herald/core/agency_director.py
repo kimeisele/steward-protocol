@@ -355,15 +355,57 @@ class AgencyDirector:
                     )
                 logger.info("✅ Media validation passed")
 
-            # Step 3: Cryptographic signing (if identity tool available)
+            # Step 3: Cryptographic signing (Article I Compliance - REQUIRED)
+            # CONSTITUTIONAL REQUIREMENT: Artikel I mandates cryptographic signing
             signature = None
             if self.identity and self.identity.client:
                 try:
                     signature = self.identity.sign_artifact(draft)
                     logger.info(f"✅ Content signed: {signature[:16]}...")
+                    logger.info("✅ Artikel I (Cryptographic Identity) - COMPLIANT")
                 except Exception as e:
-                    logger.warning(f"⚠️  Could not sign content: {e}")
-                    # Continue without signature (not fatal)
+                    logger.error(f"❌ Signing failed (Article I violation): {e}")
+                    # Fail validation if signing fails (Article I requirement)
+                    self._update_state_dashboard(
+                        "VALIDATE",
+                        "FAILED",
+                        cycle_id,
+                        {"reason": "article_i_violation_signature_failed", "error": str(e)},
+                    )
+                    self.event_log.record_content_rejected(
+                        content=draft,
+                        reason="article_i_violation_no_signature",
+                        violations=[f"Content must be cryptographically signed (Article I): {e}"],
+                    )
+                    return CycleResult(
+                        status="VALIDATION_FAILED",
+                        phase="VALIDATE",
+                        cycle_id=cycle_id,
+                        draft=draft,
+                        media=media_data,
+                        violations=[f"Article I violation: Cryptographic signing required - {e}"],
+                    )
+            else:
+                logger.error("❌ Identity tool unavailable (Article I violation)")
+                self._update_state_dashboard(
+                    "VALIDATE",
+                    "FAILED",
+                    cycle_id,
+                    {"reason": "article_i_violation_no_identity_tool"},
+                )
+                self.event_log.record_content_rejected(
+                    content=draft,
+                    reason="article_i_violation_no_identity",
+                    violations=["Content cannot be signed without identity tool (Article I)"],
+                )
+                return CycleResult(
+                    status="VALIDATION_FAILED",
+                    phase="VALIDATE",
+                    cycle_id=cycle_id,
+                    draft=draft,
+                    media=media_data,
+                    violations=["Article I violation: Identity tool required for cryptographic signing"],
+                )
 
             # Step 3: Audit verification (if auditor available)
             audit_result = None

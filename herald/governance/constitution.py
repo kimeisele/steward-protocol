@@ -6,6 +6,13 @@ HERALD's content generation and publication behavior.
 
 All rules are hardcoded here. No YAML config can override them.
 If the law says HERALD cannot execute, HERALD cannot execute.
+
+This implementation is grounded in THE AGENT CONSTITUTION (CONSTITUTION.md),
+which serves as the philosophical and legal foundation for all autonomous agents.
+
+CRITICAL: The constitution is NOT hardcoded. It is LOADED DYNAMICALLY from CONSTITUTION.md.
+This makes the system a "Living Constitution" - change the file, change the agent immediately.
+The agent is DEPENDENT on the constitutional file, not the other way around.
 """
 
 import re
@@ -13,6 +20,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
+from pathlib import Path
 
 
 logger = logging.getLogger("HERALD_GOVERNANCE")
@@ -56,6 +64,14 @@ class HeraldConstitution(GovernanceContract):
     """
     HERALD's immutable governance contract.
 
+    LIVING CONSTITUTION: This class loads THE AGENT CONSTITUTION dynamically from
+    CONSTITUTION.md at the project root. This means the agent is DEPENDENT on the
+    constitutional file. Change CONSTITUTION.md, and the agent's governance changes
+    immediately.
+
+    If CONSTITUTION.md is missing or unreadable, the system CANNOT INITIALIZE.
+    This is Artikel III enforcement: Code is Law, and the Law must be readable.
+
     Prime Directives (Laws):
     1. Thou shall not shill. Ever.
     2. Thou shall provide technical receipts (code/data/logic) for every claim.
@@ -74,6 +90,10 @@ class HeraldConstitution(GovernanceContract):
         "Thou shall respect platform culture (Reddit ≠ Twitter ≠ LinkedIn).",
         "Thou shall prioritize signal-to-noise ratio over engagement metrics.",
     ]
+
+    # The constitutional text - loaded dynamically at runtime
+    _CONSTITUTION_TEXT = None
+    _CONSTITUTION_PATH = None
 
     # Hard blocks - instant rejection if found
     BANNED_PHRASES = [
@@ -167,8 +187,85 @@ class HeraldConstitution(GovernanceContract):
     ]
 
     def __init__(self):
-        """Initialize HERALD's governance contract."""
-        logger.info("🏛️  HERALD Constitution initialized (Rules as Code)")
+        """Initialize HERALD's governance contract.
+
+        CRITICAL: Loads CONSTITUTION.md dynamically. If the file is missing,
+        initialization FAILS. The agent cannot run without its constitution.
+        """
+        # Load the constitutional text dynamically
+        self._load_constitution_file()
+
+        logger.info("🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)")
+        logger.info(f"📜 Constitutional Authority: {self._CONSTITUTION_PATH}")
+
+    @staticmethod
+    def _load_constitution_file() -> str:
+        """
+        Load THE AGENT CONSTITUTION from CONSTITUTION.md at project root.
+
+        This is NOT a fallback. If the file is missing, the system FAILS.
+        Artikel III: Code is Law. The Law must be present and readable.
+
+        Returns:
+            str: The constitutional text
+
+        Raises:
+            FileNotFoundError: If CONSTITUTION.md cannot be found
+            IOError: If the file cannot be read
+        """
+        # Try multiple possible paths
+        possible_paths = [
+            # From herald/governance/ (relative path)
+            Path(__file__).parent.parent.parent / "CONSTITUTION.md",
+            # From project root (if running from different location)
+            Path.cwd() / "CONSTITUTION.md",
+            # Absolute fallback
+            Path("/home/user/steward-protocol/CONSTITUTION.md"),
+        ]
+
+        constitution_text = None
+        loaded_path = None
+
+        for path in possible_paths:
+            if path.exists():
+                try:
+                    constitution_text = path.read_text(encoding="utf-8")
+                    loaded_path = path
+                    logger.info(f"✅ CONSTITUTION.md loaded from: {path}")
+                    break
+                except IOError as e:
+                    logger.warning(f"⚠️  Could not read CONSTITUTION.md at {path}: {e}")
+                    continue
+
+        if constitution_text is None:
+            error_msg = (
+                "❌ CRITICAL: CONSTITUTION.md not found!\n"
+                f"Searched paths: {[str(p) for p in possible_paths]}\n"
+                "The system cannot initialize without its constitutional foundation.\n"
+                "Artikel III violation: Code is Law, and the Law must be readable."
+            )
+            logger.critical(error_msg)
+            raise FileNotFoundError(error_msg)
+
+        # Store in class variables (cache)
+        HeraldConstitution._CONSTITUTION_TEXT = constitution_text
+        HeraldConstitution._CONSTITUTION_PATH = loaded_path
+
+        return constitution_text
+
+    @classmethod
+    def get_constitution_text(cls) -> str:
+        """Get the cached constitutional text."""
+        if cls._CONSTITUTION_TEXT is None:
+            cls._load_constitution_file()
+        return cls._CONSTITUTION_TEXT
+
+    @classmethod
+    def get_constitution_path(cls) -> Path:
+        """Get the path to the constitution file."""
+        if cls._CONSTITUTION_PATH is None:
+            cls._load_constitution_file()
+        return cls._CONSTITUTION_PATH
 
     def validate(
         self,
@@ -422,6 +519,11 @@ class HeraldConstitution(GovernanceContract):
             "max_hype_score": str(self.MAX_HYPE_SCORE),
             "governance_type": "Immutable Code-based Contract",
             "enforcement": "Architectural - cannot be bypassed by Publishers",
+            "constitutional_foundation": "THE AGENT CONSTITUTION (Version 1.0, Genesis)",
+            "constitutional_source": "CONSTITUTION.md (Living Constitution - File Dependent)",
+            "constitutional_path": str(self.get_constitution_path()),
+            "core_mandate": "Artikel I-VI: Identity, Auditability, Governance, Transparency, Consent, Interoperability",
+            "system_status": "AGENT IS DEPENDENT ON CONSTITUTIONAL FILE. Change file = Change governance immediately.",
         }
 
 
