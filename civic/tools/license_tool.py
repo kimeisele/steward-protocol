@@ -52,6 +52,9 @@ class License:
 
     Each agent that wants to broadcast needs a license.
     Licenses can be revoked if the agent misbehaves.
+
+    Phase II Enhancement: source_authority tracks WHO authorized this license
+    (either a proposal ID like "PROP-009" or an admin action reference).
     """
 
     def __init__(
@@ -62,7 +65,8 @@ class License:
         expires_at: str = None,
         status: LicenseStatus = LicenseStatus.ACTIVE,
         restrictions: List[str] = None,
-        violation_count: int = 0
+        violation_count: int = 0,
+        source_authority: str = None
     ):
         """Initialize a license."""
         self.agent_name = agent_name
@@ -72,6 +76,7 @@ class License:
         self.status = status
         self.restrictions = restrictions or []
         self.violation_count = violation_count
+        self.source_authority = source_authority  # NEW: tracks WHO authorized this license
 
     def is_valid(self) -> bool:
         """Check if license is currently valid."""
@@ -97,6 +102,7 @@ class License:
             "status": self.status.value,
             "restrictions": self.restrictions,
             "violation_count": self.violation_count,
+            "source_authority": self.source_authority,  # NEW: track source of authority
         }
 
     @staticmethod
@@ -109,7 +115,8 @@ class License:
             expires_at=data.get("expires_at"),
             status=LicenseStatus(data.get("status", "active")),
             restrictions=data.get("restrictions", []),
-            violation_count=data.get("violation_count", 0)
+            violation_count=data.get("violation_count", 0),
+            source_authority=data.get("source_authority")  # NEW: restore source authority
         )
 
 
@@ -140,7 +147,8 @@ class LicenseTool:
         self,
         agent_name: str,
         license_type: LicenseType = LicenseType.BROADCAST,
-        restrictions: List[str] = None
+        restrictions: List[str] = None,
+        source_authority: str = None
     ) -> License:
         """
         Issue a new license to an agent.
@@ -149,6 +157,7 @@ class LicenseTool:
             agent_name: Agent receiving the license
             license_type: Type of license to issue
             restrictions: Optional restrictions on the license
+            source_authority: Source of authority (proposal ID or action reference) for this license
 
         Returns:
             The newly issued license
@@ -166,16 +175,21 @@ class LicenseTool:
             agent_name=agent_name,
             license_type=license_type,
             restrictions=restrictions or [],
-            status=LicenseStatus.ACTIVE
+            status=LicenseStatus.ACTIVE,
+            source_authority=source_authority
         )
 
         self.licenses[key] = license
         self._save_licenses()
 
-        logger.info(f"🎫 Issued {license_type.value} license to {agent_name}")
+        # Log with source authority reference
+        if source_authority:
+            logger.info(f"🎫 Issued {license_type.value} license to {agent_name}, as mandated by {source_authority}")
+        else:
+            logger.info(f"🎫 Issued {license_type.value} license to {agent_name}")
         return license
 
-    def revoke_license(self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST, reason: str = "violation") -> bool:
+    def revoke_license(self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST, reason: str = "violation", source_authority: str = None) -> bool:
         """
         Revoke a license (punishment for misbehavior).
 
@@ -183,6 +197,7 @@ class LicenseTool:
             agent_name: Agent to revoke license from
             license_type: Type of license to revoke
             reason: Reason for revocation
+            source_authority: Source of authority (proposal ID or action reference) for this revocation
 
         Returns:
             True if revoked, False if not found
@@ -197,9 +212,17 @@ class LicenseTool:
         license.status = LicenseStatus.REVOKED
         license.violation_count += 1
 
+        # Track source of revocation authority
+        if source_authority:
+            license.source_authority = source_authority
+
         self._save_licenses()
 
-        logger.warning(f"🔴 Revoked {license_type.value} license from {agent_name} ({reason})")
+        # Log with source authority reference
+        if source_authority:
+            logger.warning(f"🔴 Revoked {license_type.value} license from {agent_name} ({reason}), as mandated by {source_authority}")
+        else:
+            logger.warning(f"🔴 Revoked {license_type.value} license from {agent_name} ({reason})")
         logger.warning(f"   Violation count: {license.violation_count}")
 
         return True
@@ -303,13 +326,14 @@ class LicenseTool:
 
         return summary
 
-    def reinstate_license(self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST) -> bool:
+    def reinstate_license(self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST, source_authority: str = None) -> bool:
         """
         Reinstate a revoked license (admin operation).
 
         Args:
             agent_name: Agent to reinstate
             license_type: Type of license to reinstate
+            source_authority: Source of authority (proposal ID or action reference) for this reinstatement
 
         Returns:
             True if reinstated, False if not found
@@ -324,9 +348,17 @@ class LicenseTool:
         license.status = LicenseStatus.ACTIVE
         license.violation_count = 0  # Reset violations
 
+        # Track source of reinstatement authority
+        if source_authority:
+            license.source_authority = source_authority
+
         self._save_licenses()
 
-        logger.info(f"✅ Reinstated {license_type.value} license for {agent_name}")
+        # Log with source authority reference
+        if source_authority:
+            logger.info(f"✅ Reinstated {license_type.value} license for {agent_name}, as mandated by {source_authority}")
+        else:
+            logger.info(f"✅ Reinstated {license_type.value} license for {agent_name}")
 
         return True
 
