@@ -81,6 +81,9 @@ class EventLog:
         self.agent_id = "agent.steward.herald"
         self.sequence_counter = 0
 
+        # Validation feedback for retry loops (in-memory, consumed on retrieval)
+        self.pending_validation_feedback: Optional[Dict[str, Any]] = None
+
         # Create ledger directory if it doesn't exist
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -438,6 +441,43 @@ class EventLog:
         if self.commit(event):
             return event
         return None
+
+    def store_validation_feedback(self, violations: List[str], draft: Optional[str] = None) -> None:
+        """
+        Store validation feedback from a failed governance check.
+
+        This feedback will be retrieved by the next PROCESS cycle to generate better content.
+        Feedback is consumed (cleared) when retrieved, preventing stale feedback.
+
+        Args:
+            violations: List of governance violations from HeraldConstitution.validate()
+            draft: Optional draft content that failed validation
+        """
+        self.pending_validation_feedback = {
+            "violations": violations,
+            "draft": draft,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        logger.info(f"📋 Validation feedback stored: {len(violations)} violations to fix in next cycle")
+
+    def get_last_validation_feedback(self) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve and consume the last validation feedback.
+
+        This is called by the PROCESS phase to understand what went wrong in the previous
+        failed validation. After retrieval, the feedback is cleared to prevent reusing stale data.
+
+        Returns:
+            Dict with "violations" and "draft" if feedback exists, None otherwise
+        """
+        if self.pending_validation_feedback is None:
+            return None
+
+        feedback = self.pending_validation_feedback
+        self.pending_validation_feedback = None  # Consume the feedback
+
+        logger.info(f"⚠️  Retrieved validation feedback: {len(feedback['violations'])} violations to address")
+        return feedback
 
 
 def get_event_log(ledger_path: Optional[Path] = None) -> EventLog:

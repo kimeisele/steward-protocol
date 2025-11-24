@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-11-24T08:04:21.851421+00:00",
+  "cycle_id": "2025-11-24T08:04:21.846289+00:00",
+  "phase": "OUTPUT",
+  "status": "SUCCESS",
+  "details": {
+    "platform": "twitter",
+    "success": true,
+    "signature": null,
+    "timestamp": "2025-11-24T08:04:21.851201+00:00"
+  }
+}
