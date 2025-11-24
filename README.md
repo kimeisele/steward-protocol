@@ -82,7 +82,7 @@ This pack includes seven specialized cartridges for Agent City:
 - ✅ Agent registration in the federation
 - ✅ Unique agent trading card (mint your visual identity)
 
-**[View Leaderboard](./agent-city/LEADERBOARD.md)** | **[Architecture Docs](./ARCHITECTURE.md)** | **[Operations Dashboard](./OPERATIONS.md)**
+**[View Leaderboard](./agent-city/LEADERBOARD.md)** | **[Architecture Docs](./ARCHITECTURE.md)** | **[Operations Dashboard](./OPERATIONS.md)** | **[🎬 Watch Demo](./DEMO.md)**
 
 ---
 
