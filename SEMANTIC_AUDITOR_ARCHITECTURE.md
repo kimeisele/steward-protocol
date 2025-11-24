@@ -254,6 +254,28 @@ VIOLATION DETECTED:
 | **Example Invalid** | PROPOSAL_VOTED_YES without PROPOSAL_CREATED |
 | **Why** | Maintains proper proposal lifecycle |
 
+### Rule 7: NO_CRITICAL_VOIDS
+
+| Aspect | Value |
+|--------|-------|
+| **Rule** | Critical system state fields must never be null/empty |
+| **Severity** | CRITICAL |
+| **Checks** | total_credits ≠ 0, agents_registered > 0, ledger_events match count |
+| **Example Invalid** | System boots but total_credits = 0 (state corrupted) |
+| **Why** | Detects silent failures in critical system state |
+
+### Rule 8: SEMANTIC_COMPLIANCE_REQUIREMENT (The Curator)
+
+| Aspect | Value |
+|--------|-------|
+| **Rule** | Governance documents must maintain semantic integrity (no hype/overreach) |
+| **Severity** | HIGH |
+| **Scope** | POLICIES.md, MISSION_BRIEFING.md, AGI_MANIFESTO.md, prompts/*, docs/* |
+| **Config** | `config/semantic_compliance.yaml` (red flags vs green flags) |
+| **Example Invalid** | POLICIES.md contains "revolutionary" or "superintelligence" |
+| **Why** | Protects semantic layer from AI-generated marketing slop; enforces governance tone |
+| **Phase II** | Part of "Hybrid Plan: Strategy & Action" - Curator Invariant for semantic integrity |
+
 ---
 
 ## Data Flow: From Event to Verification
@@ -320,11 +342,13 @@ def main():
 | Metric | Value |
 |--------|-------|
 | **Ledger Read Time** | ~1-2ms for 1000 events |
-| **Invariant Check Time** | ~1-5ms per rule |
-| **Total Check Time** | ~10-50ms for 6 rules |
+| **Invariant Check Time** | ~1-5ms per rule (ledger-based) |
+| **Semantic Scan Time** | ~10-50ms (reads files from disk, configurable scope) |
+| **Total Check Time** | ~20-100ms for all 8 rules |
 | **Check Frequency** | Every 10 kernel ticks (configurable) |
-| **Memory Overhead** | <1MB (streams events) |
-| **CPU Overhead** | <1% when checked every 10 ticks |
+| **Memory Overhead** | <1MB for ledger checks; <10MB for semantic scans |
+| **CPU Overhead** | <1% when ledger checked every 10 ticks; <2% with semantic checks |
+| **Note** | Semantic compliance check (Rule 8) can be disabled by removing `config/semantic_compliance.yaml` |
 
 ---
 
@@ -395,7 +419,8 @@ auditor/
    │  ├─ InvariantEngine
    │  ├─ InvariantRule
    │  ├─ VerificationReport
-   │  └─ 6 core invariant rules
+   │  ├─ Rules 1-7: Core ledger invariants (BROADCAST, CREDIT, DUPLICATES, etc.)
+   │  └─ Rule 8: SEMANTIC_COMPLIANCE_REQUIREMENT (The Curator)
    │
    └─ watchdog_tool.py            (The WATCHDOG implementation)
       ├─ Watchdog
@@ -403,8 +428,12 @@ auditor/
       ├─ ViolationEvent
       └─ WatchdogIntegration
 
+config/
+├─ matrix.yaml                    (Central configuration)
+└─ semantic_compliance.yaml       (NEW) Red-flag/green-flag dictionary for Curator
+
 tests/
-└─ test_semantic_auditor.py       (19 comprehensive tests)
+└─ test_semantic_auditor.py       (19 comprehensive tests + semantic compliance)
 
 examples/
 ├─ semantic_auditor_demo.py       (Live demonstrations)
@@ -412,6 +441,8 @@ examples/
 
 docs/
 └─ SEMANTIC_AUDITOR.md            (User guide)
+
+SEMANTIC_AUDITOR_ARCHITECTURE.md   (This document - System design spec)
 ```
 
 ---
@@ -462,18 +493,57 @@ auditor.watchdog_integration.register_violation_callback(on_violation)
 auditor.watchdog_integration.register_halt_callback(on_halt)
 ```
 
+### Customizing Semantic Compliance (Rule 8: The Curator)
+
+The Curator Invariant (Rule 8) protects governance documents from AI-generated marketing slop. Customize the red-flag/green-flag dictionary:
+
+```yaml
+# config/semantic_compliance.yaml
+RED_FLAGS:
+  HYPE:
+    - "revolutionary"
+    - "game-changer"
+    - "your_custom_red_flag"
+
+GREEN_FLAGS:
+  VERIFIABILITY:
+    - "provable"
+    - "auditable"
+    - "your_approved_term"
+
+SCOPE:
+  CRITICAL_DOCUMENTS:
+    - "POLICIES.md"
+    - "docs/*.md"
+    - "prompts/*.md"
+```
+
+**Key Points:**
+- Remove `config/semantic_compliance.yaml` to disable Rule 8 entirely
+- The Curator scans documents defined in SCOPE on every verification run
+- Use word boundaries to avoid false positives (e.g., "ing" won't match "revolutionary")
+- RED_FLAGS trigger HIGH severity violations (warning, not halt)
+
 ---
 
-## Conclusion
+## Conclusion: The Complete A.G.I. Security Stack
 
-The Semantic Auditor transforms STEWARD Protocol verification from:
+The Semantic Auditor + Curator Invariant completes **three-layer cryptographic governance:**
+
+| Layer | Responsibility | Enforcement |
+|-------|---|---|
+| **Layer 1: The Body (Code)** | Kernel enforces Oath cryptographically | Constitutional binding is non-negotiable |
+| **Layer 2: The History (Ledger)** | Invariants 1-7 enforce causality + finance + governance | Violations halt the system |
+| **Layer 3: The Mind (Documents)** | Rule 8 (The Curator) enforces semantic integrity | Hype-free governance protected |
+
+This transforms STEWARD Protocol verification from:
 
 **Before:** ❌ "Does it compile?"
-**After:** ✅ "Does it make sense?" + "Is it safe?" + "Is it healthy?"
+**After:** ✅ "Does it make sense?" + "Is it safe?" + "Is it semantically pure?"
 
-This is the architecture of an **intelligent system with an immune system**.
+This is the architecture of an **intelligent system with an immune system that protects both its logic and its soul**.
 
-It catches not just syntax errors, but **logical errors** and **governance violations**.
+It catches not just syntax errors and logical violations, but **semantic corruption**—AI-generated marketing slop that might infiltrate governance documents.
 
-**Verification is no longer optional. It's system-immanent.** 🏰⚖️👁️
+**Verification is no longer optional. It's system-immanent. The Curator ensures the system cannot even think about lying.** 🏰⚖️👁️✨
 

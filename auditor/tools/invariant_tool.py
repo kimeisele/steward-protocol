@@ -18,10 +18,12 @@ Example Invariants:
 
 import logging
 import json
+import re
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 
 logger = logging.getLogger("JUDGE_INVARIANT")
 
@@ -369,7 +371,102 @@ class InvariantEngine:
             check_function=check_no_critical_voids
         ))
 
-        logger.info(f"⚖️  JUDGE: {len(self.rules)} core invariant rules registered")
+        # INVARIANT 8: Semantic Compliance Requirement (The Curator)
+        def check_semantic_compliance(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+            """
+            RULE: Policy and governance documents must maintain semantic integrity.
+            No marketing hype, existential overreach, or AI slop allowed.
+
+            Phase II Enhancement: Protects the semantic layer from hype and overreach.
+            Scans governance documents for red-flag vocabulary.
+
+            Checks:
+            - POLICIES.md, MISSION_BRIEFING.md, AGI_MANIFESTO.md
+            - All prompts/*.md system prompts
+            - Documentation files in docs/
+
+            Severity: HIGH (Warning/HIL Review, non-halting)
+            """
+            # Load semantic compliance config
+            config_path = Path("config/semantic_compliance.yaml")
+            if not config_path.exists():
+                # Config not present, skip check
+                return (True, None)
+
+            try:
+                import yaml
+                with open(config_path) as f:
+                    config = yaml.safe_load(f)
+            except Exception as e:
+                logger.warning(f"⚠️  Could not load semantic compliance config: {e}")
+                return (True, None)
+
+            red_flags = []
+            if config and "RED_FLAGS" in config:
+                # Flatten all red flags from all categories
+                for category, words in config["RED_FLAGS"].items():
+                    if isinstance(words, list):
+                        red_flags.extend(words)
+
+            if not red_flags:
+                return (True, None)
+
+            # Get scope from config
+            scope = config.get("SCOPE", {}).get("CRITICAL_DOCUMENTS", [])
+            if not scope:
+                scope = ["POLICIES.md", "MISSION_BRIEFING.md", "AGI_MANIFESTO.md", "prompts/*.md"]
+
+            # Scan documents
+            violations = []
+            for pattern in scope:
+                files_to_check = list(Path(".").glob(pattern))
+
+                for file_path in files_to_check:
+                    if not file_path.is_file():
+                        continue
+
+                    try:
+                        content = file_path.read_text(encoding="utf-8")
+
+                        # Check for red flags (case-insensitive word boundaries)
+                        for red_flag in red_flags:
+                            # Use word boundaries to avoid false positives
+                            pattern_re = rf"\b{re.escape(red_flag)}\b"
+                            matches = re.finditer(pattern_re, content, re.IGNORECASE)
+
+                            for match in matches:
+                                # Find line number for context
+                                line_num = content[:match.start()].count("\n") + 1
+                                violations.append({
+                                    "file": str(file_path),
+                                    "line": line_num,
+                                    "word": red_flag,
+                                    "context": content[max(0, match.start()-30):min(len(content), match.end()+30)]
+                                })
+                    except Exception as e:
+                        logger.debug(f"Could not scan {file_path}: {e}")
+                        continue
+
+            # Report violations
+            if violations:
+                summary = f"Found {len(violations)} red-flag words in governance documents: "
+                words_found = ", ".join(sorted(set(v["word"] for v in violations)))
+                examples = "; ".join([f"{v['file']}:{v['line']}" for v in violations[:3]])
+                detail_msg = f"{summary}{words_found}. Examples: {examples}"
+
+                return (False, detail_msg)
+
+            return (True, None)
+
+        # Register the semantic compliance rule (optional, loads if config exists)
+        self.register_rule(InvariantRule(
+            name="SEMANTIC_COMPLIANCE_REQUIREMENT",
+            description="Governance documents must maintain semantic integrity (no hype, no overreach)",
+            severity=InvariantSeverity.HIGH,
+            check_function=check_semantic_compliance
+        ))
+
+        logger.info(f"⚖️  JUDGE: {len(self.rules)} core invariant rules registered (including Curator)")
 
     def register_rule(self, rule: InvariantRule):
         """Register a new invariant rule"""
