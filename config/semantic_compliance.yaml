@@ -1,0 +1,159 @@
+# SEMANTIC COMPLIANCE CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════════
+#
+# This configuration defines the "Anti-Slop Filter" for the Curator Invariant (Rule 7).
+#
+# The Curator prevents AI-generated marketing slop from infiltrating policy documents.
+# Red Flags trigger violations; Green Flags are preferred terminology.
+#
+# Rule 7: SEMANTIC_COMPLIANCE_REQUIREMENT enforces:
+# - No marketing hype in governance documents
+# - No existential claims without scientific grounding
+# - No overreach in language (absolutes without qualification)
+#
+# SEVERITY: HIGH (Warning/HIL Review required, non-halting)
+# ════════════════════════════════════════════════════════════════════════════════
+
+# RED FLAGS: Words/phrases that trigger violations in policy documents
+RED_FLAGS:
+  HYPE:
+    - "revolutionary"
+    - "game-changer"
+    - "breakthrough"
+    - "mind-blowing"
+    - "game-changing"
+    - "disruptive"
+    - "transformative" # Only in marketing context, not technical docs
+    - "next-generation"
+    - "cutting-edge"
+
+  EXISTENTIAL_OVERREACH:
+    - "superintelligence"
+    - "sentient"
+    - "conscious"
+    - "omniscient"
+    - "god-like"
+    - "all-powerful"
+    - "uncontrollable"
+    - "unstoppable"
+
+  ABSOLUTE_LANGUAGE:
+    - "always" # Unless in security context: "always enforce", "always verify"
+    - "never" # Unless in security context: "never bypass"
+    - "impossible"
+    - "solves everything"
+    - "100% secure"
+    - "completely safe"
+    - "guaranteed"
+
+  ANTHROPOMORPHISM:
+    - "intelligent agent" # Use "agentic system" instead
+    - "thinking"
+    - "believes"
+    - "understands"
+    - "desires"
+    - "wants"
+
+# GREEN FLAGS: Preferred terminology for governance/policy documents
+GREEN_FLAGS:
+  VERIFIABILITY:
+    - "provable"
+    - "auditable"
+    - "verifiable"
+    - "cryptographic"
+    - "signed"
+    - "hashed"
+    - "authenticated"
+
+  GOVERNANCE:
+    - "governed"
+    - "governance"
+    - "constitutional"
+    - "accountable"
+    - "transparent"
+    - "immutable"
+    - "ledger"
+
+  ENFORCEMENT:
+    - "enforced by"
+    - "required to"
+    - "must"
+    - "cannot"
+    - "shall"
+    - "is constrained by"
+    - "compliant with"
+
+  AGENTIC_SYSTEMS:
+    - "agentic system"
+    - "agent"
+    - "cartridge"
+    - "vibe agent"
+    - "autonomous system"
+    - "governed intelligence"
+
+# SCOPE: Which documents to check for semantic compliance
+SCOPE:
+  CRITICAL_DOCUMENTS:
+    # Policy & Governance
+    - "POLICIES.md"
+    - "MISSION_BRIEFING.md"
+    - "AGI_MANIFESTO.md"
+    - "CONSTITUTION.md"
+
+  PROMPT_DOCUMENTS:
+    # System prompts (all agents)
+    - "prompts/*.md"
+    - "prompts/*/*.md"
+
+  DOCUMENTATION:
+    # Public documentation
+    - "docs/*.md"
+    - "docs/**/*.md"
+
+  EXCLUDED:
+    # Files that don't require semantic compliance checks
+    - "OPERATIONS.md" # Auto-generated, not user-edited
+    - "CHANGELOG.md" # Historical records
+    - "README.md" # Can be more marketing-friendly
+
+# EXEMPTIONS: Contexts where red flags are ALLOWED
+EXEMPTIONS:
+  ALWAYS_LANGUAGE:
+    - context: "security_guarantee"
+      reason: "In security contexts, absolute language is required"
+      example: "'Always verify', 'Never bypass', 'Must enforce'"
+
+  NEVER_LANGUAGE:
+    - context: "prohibition"
+      reason: "Legal/governance prohibition"
+      example: "'Never execute without approval'"
+
+  ABSOLUTE_SAFE:
+    - context: "cryptographic_context"
+      reason: "Mathematical proofs allow absolute claims"
+      example: "'Cryptographically secure', 'Hash guarantee'"
+
+# SEVERITY CONFIGURATION
+SEVERITY:
+  # HIGH: Violations reported to HIL for review
+  # Non-halting: system continues but logs warning
+  DEFAULT_SEVERITY: "HIGH"
+
+  # Could be escalated to CRITICAL for mission-critical docs
+  CRITICAL_FOR:
+    - "CONSTITUTION.md"
+    - "POLICIES.md"
+
+# CURATOR CONFIGURATION
+CURATOR:
+  # How many red flag violations before reporting?
+  THRESHOLD: 1  # Report immediately on first violation
+
+  # Automatically fix obvious issues?
+  AUTO_FIX: false  # Require HIL review for all changes
+
+  # Who must approve semantic changes to policy?
+  APPROVAL_REQUIRED: "FORUM"  # Governance votes for policy changes
+
+  # Scan frequency
+  SCAN_INTERVAL_TICKS: 100  # Run semantic check every N kernel ticks
