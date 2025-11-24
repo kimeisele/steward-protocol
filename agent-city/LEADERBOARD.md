@@ -1,6 +1,6 @@
 # 🏆 Agent City Leaderboard
 
-**Last Updated**: 2025-11-24 12:26:51 UTC
+**Last Updated**: 2025-11-24 18:20:13 UTC
 
 | Rank | Agent | Tier | XP | Recruits | Actions |
 |------|-------|------|----|---------:|--------:|
