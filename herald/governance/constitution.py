@@ -362,6 +362,57 @@ class HeraldConstitution(GovernanceContract):
 
         return violations
 
+    def validate_media(self, media: Dict) -> ValidationResult:
+        """
+        Validate media assets (visual components) against governance rules.
+
+        Args:
+            media: Media asset dict with keys: asset_type, content, alt_text, keywords
+
+        Returns:
+            ValidationResult with validation status
+        """
+        violations = []
+        warnings = []
+
+        # Check if media dict is present
+        if not media:
+            warnings.append("No media asset provided (optional)")
+            return ValidationResult(is_valid=True, violations=violations, warnings=warnings)
+
+        # 1. Check alt_text for banned phrases (accessibility + compliance)
+        if "alt_text" in media:
+            alt_text = media["alt_text"]
+            phrase_violations = self._check_banned_phrases(alt_text)
+            if phrase_violations:
+                violations.extend([f"alt_text: {v}" for v in phrase_violations])
+
+        # 2. Check asset type is valid
+        valid_types = ["ascii", "svg", "placeholder", "image"]
+        if "asset_type" in media:
+            asset_type = media["asset_type"]
+            if asset_type not in valid_types:
+                violations.append(
+                    f"Invalid asset_type: {asset_type} (must be one of {valid_types})"
+                )
+
+        # 3. Check keywords don't include banned terms
+        if "keywords" in media:
+            keywords = media["keywords"]
+            for keyword in keywords:
+                for banned in self.BANNED_PHRASES:
+                    if banned.lower() in keyword.lower():
+                        violations.append(
+                            f"Media keyword contains banned phrase: '{keyword}' (contains '{banned}')"
+                        )
+
+        is_valid = len(violations) == 0
+        return ValidationResult(
+            is_valid=is_valid,
+            violations=violations,
+            warnings=warnings,
+        )
+
     def get_rules_summary(self) -> Dict[str, str]:
         """Get a summary of all governance rules."""
         return {

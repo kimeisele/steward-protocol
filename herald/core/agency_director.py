@@ -21,6 +21,7 @@ from herald.tools.research_tool import ResearchTool
 # PROCESS Tools
 from herald.tools.content_tool import ContentTool
 from herald.tools.strategy_tool import StrategyTool
+from herald.tools.visual_tool import VisualTool
 
 # VALIDATE Tools
 from herald.governance.constitution import HeraldConstitution
@@ -48,6 +49,7 @@ class CycleResult:
     phase: str  # INPUT, PROCESS, VALIDATE, OUTPUT
     cycle_id: str
     draft: Optional[str] = None
+    media: Optional[Dict[str, Any]] = None  # Visual asset from VisualTool
     violations: Optional[List[str]] = None
     error: Optional[str] = None
     broadcast_result: Optional[Dict[str, Any]] = None
@@ -79,7 +81,8 @@ class AgencyDirector:
         # PROCESS Tools
         self.content = ContentTool()
         self.strategy = StrategyTool()
-        logger.info("✅ PROCESS: Content and Strategy tools loaded")
+        self.visual = VisualTool()
+        logger.info("✅ PROCESS: Content, Strategy, and Visual tools loaded")
 
         # VALIDATE Tools
         self.constitution = HeraldConstitution()
@@ -154,6 +157,7 @@ class AgencyDirector:
         """
         cycle_id = datetime.now(timezone.utc).isoformat()
         context = {}
+        media_data = None  # Will be populated in PROCESS phase
 
         # ========== PHASE 1: INPUT ==========
         try:
@@ -231,13 +235,37 @@ class AgencyDirector:
             if not draft:
                 raise ValueError("ContentTool returned empty draft")
 
+            # Generate visual asset to accompany text
+            visual_asset = self.visual.generate(
+                text_draft=draft,
+                style_preset="agent_city",
+                format_type="ascii"
+            )
+
+            media_data = {
+                "asset_type": visual_asset.asset_type,
+                "content": visual_asset.content,
+                "alt_text": visual_asset.alt_text,
+                "keywords": visual_asset.keywords,
+            }
+
             self.event_log.record_content_generated(
                 content=draft,
                 platform="internal",
+                context={"has_media": True, "media_type": visual_asset.asset_type},
             )
 
-            self._update_state_dashboard("PROCESS", "SUCCESS", cycle_id, {"draft_length": len(draft)})
-            logger.info(f"✅ PROCESS Phase Complete: Draft generated ({len(draft)} chars)")
+            self._update_state_dashboard(
+                "PROCESS",
+                "SUCCESS",
+                cycle_id,
+                {
+                    "draft_length": len(draft),
+                    "media_generated": True,
+                    "media_type": visual_asset.asset_type
+                }
+            )
+            logger.info(f"✅ PROCESS Phase Complete: Draft ({len(draft)} chars) + {visual_asset.asset_type} visual")
 
         except Exception as e:
             logger.error(f"❌ PROCESS Phase Failed: {e}")
@@ -291,12 +319,43 @@ class AgencyDirector:
                     phase="VALIDATE",
                     cycle_id=cycle_id,
                     draft=draft,
+                    media=media_data,
                     violations=validation_result.violations,
                 )
 
-            logger.info("✅ Governance validation passed")
+            logger.info("✅ Governance validation passed (text)")
 
-            # Step 2: Cryptographic signing (if identity tool available)
+            # Step 2: Validate media asset (if present)
+            if media_data:
+                media_validation = self.constitution.validate_media(media_data)
+                if not media_validation.is_valid:
+                    logger.warning(f"⚠️  Media validation failed: {media_validation.violations}")
+                    self.event_log.store_validation_feedback(
+                        violations=media_validation.violations,
+                        draft=draft,
+                    )
+                    self.event_log.record_content_rejected(
+                        content=draft,
+                        reason="media_validation_failure",
+                        violations=media_validation.violations,
+                    )
+                    self._update_state_dashboard(
+                        "VALIDATE",
+                        "FAILED",
+                        cycle_id,
+                        {"violations": len(media_validation.violations), "reason": "media"},
+                    )
+                    return CycleResult(
+                        status="VALIDATION_FAILED",
+                        phase="VALIDATE",
+                        cycle_id=cycle_id,
+                        draft=draft,
+                        media=media_data,
+                        violations=media_validation.violations,
+                    )
+                logger.info("✅ Media validation passed")
+
+            # Step 3: Cryptographic signing (if identity tool available)
             signature = None
             if self.identity and self.identity.client:
                 try:
@@ -358,6 +417,7 @@ class AgencyDirector:
                 "platform": "twitter",
                 "success": publish_success,
                 "signature": signature,
+                "media": media_data,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
@@ -371,16 +431,20 @@ class AgencyDirector:
                 "OUTPUT",
                 "SUCCESS" if publish_success else "SUCCESS_SIMULATION",
                 cycle_id,
-                broadcast_result,
+                {
+                    **broadcast_result,
+                    "media": {"type": media_data["asset_type"], "keywords": media_data["keywords"]}
+                },
             )
 
-            logger.info("✅ OUTPUT Phase Complete: Content published and logged")
+            logger.info("✅ OUTPUT Phase Complete: Multimodal content published and logged")
 
             return CycleResult(
                 status="SUCCESS",
                 phase="OUTPUT",
                 cycle_id=cycle_id,
                 draft=draft,
+                media=media_data,
                 broadcast_result=broadcast_result,
             )
 
