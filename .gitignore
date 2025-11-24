@@ -45,6 +45,9 @@ my_agent/
 agent-city/registry/pending.json
 data/state/*.json
 
+# Runtime snapshot (auto-generated, changes every tick)
+vibe_snapshot.json
+
 # HERALD generated runtime files (event logs, state)
 data/events/*.jsonl
 data/reports/agency_state.json
