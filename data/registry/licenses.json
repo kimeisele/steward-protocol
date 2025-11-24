@@ -1,0 +1,16 @@
+{
+  "herald": {
+    "broadcast": {
+      "agent_name": "herald",
+      "license_type": "broadcast",
+      "issued_at": "2025-11-24T21:09:29.817120+00:00",
+      "expires_at": "2026-11-24T21:09:29.817136+00:00",
+      "status": "active",
+      "restrictions": [
+        "governance_compliant"
+      ],
+      "violation_count": 0,
+      "source_authority": "PROP-009"
+    }
+  }
+}

@@ -30,6 +30,9 @@ from datetime import datetime, timezone
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
+# Civic imports for license operations
+from civic.tools.license_tool import LicenseType
+
 # Import tools (to be created)
 # from forum.tools.proposal_tool import ProposalTool
 # from forum.tools.voting_tool import VotingTool
@@ -502,6 +505,53 @@ class ForumCartridge(VibeAgent):
                         "status": "error",
                         "reason": "execution_failed",
                         "error": result,
+                    }
+
+            elif action_type == "civic.license.reinstate":
+                agent_name = action_params.get("agent_name")
+                license_type = action_params.get("license_type", "broadcast")
+                source_authority = action_params.get("source_authority")
+
+                logger.info(f"   Executing: Reinstate {license_type} license for {agent_name}")
+
+                # Call CIVIC license tool
+                result = civic_cartridge.license_tool.reinstate_license(
+                    agent_name=agent_name,
+                    license_type=LicenseType[license_type.upper()],
+                    source_authority=source_authority
+                )
+
+                if result:
+                    logger.info(f"   ✅ License reinstatement successful")
+
+                    # Mark as executed
+                    proposal["executed"] = True
+                    proposal["executed_at"] = datetime.now(timezone.utc).isoformat()
+                    proposal["status"] = "EXECUTED"
+
+                    # Move to executed archive
+                    proposal_file = self.proposals_path / f"{proposal_id}.json"
+                    executed_file = self.executed_path / f"{proposal_id}.json"
+                    proposal_file.rename(executed_file)
+
+                    self.proposals[proposal_id] = proposal
+
+                    return {
+                        "status": "executed",
+                        "proposal_id": proposal_id,
+                        "action": action,
+                        "result": {
+                            "status": "success",
+                            "agent": agent_name,
+                            "license_reinstated": True
+                        },
+                    }
+                else:
+                    logger.error(f"   ❌ License reinstatement failed")
+                    return {
+                        "status": "error",
+                        "reason": "execution_failed",
+                        "error": f"Failed to reinstate license for {agent_name}",
                     }
 
             else:
