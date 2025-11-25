@@ -209,17 +209,22 @@ def get_kernel():
             logger.warning("⚠️ No agents available! Kernel will run with empty agent list.")
 
         # --- GAD-000: GENESIS CEREMONY (Serverless Cold Start) ---
+        # Import ConstitutionalOath for proper oath structure
+        from steward.constitutional_oath import ConstitutionalOath
+        
         timestamp = datetime.utcnow().isoformat()
         for agent in agents:
             try:
+                # Use proper oath event structure (GAD-1100 fix)
+                constitution_hash = ConstitutionalOath.compute_constitution_hash()
+                signature = f"sig_{agent.agent_id}_genesis"
+                
+                agent.oath_event = ConstitutionalOath.create_oath_event(
+                    agent_id=agent.agent_id,
+                    constitution_hash=constitution_hash,
+                    signature=signature
+                )
                 agent.oath_sworn = True
-                agent.oath_event = {
-                    "event_type": "constitutional_oath",
-                    "agent_id": agent.agent_id,
-                    "timestamp": timestamp,
-                    "signature": f"sig_{agent.agent_id}_genesis",
-                    "oath_hash": "genesis_hash"
-                }
             except Exception as e:
                 logger.warning(f"⚠️ Failed to set oath for {agent}: {e}")
 

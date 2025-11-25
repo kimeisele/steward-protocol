@@ -1,0 +1,61 @@
+# AGENT CITY DECLARATION (GAD-1100)
+# This file defines the topology of the runtime environment.
+
+city_name: "Genesis Plaza"
+version: "1.0.0"
+governance: "Steward Protocol v1"
+
+residents:
+  - agent_id: "envoy"
+    role: "Diplomat"
+    capabilities: ["governance", "coordination", "hil_assistant"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "herald"
+    role: "Broadcaster"
+    capabilities: ["content_generation", "publishing", "broadcasting"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "watchman"
+    role: "Observer"
+    capabilities: ["monitoring", "auditing", "health_checks"]
+    oath_status: "OPTIONAL" # Internal System Daemon
+
+  - agent_id: "civic"
+    role: "Governor"
+    capabilities: ["licensing", "registry", "governance"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "forum"
+    role: "Legislator"
+    capabilities: ["voting", "proposals", "democracy"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "science"
+    role: "Researcher"
+    capabilities: ["research", "fact_checking", "external_intelligence"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "engineer"
+    role: "Builder"
+    capabilities: ["meta_building", "scaffolding", "agent_creation"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "oracle"
+    role: "Sage"
+    capabilities: ["system_introspection", "explanation", "self_awareness"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "artisan"
+    role: "Craftsman"
+    capabilities: ["media_operations", "branding", "technical_operations"]
+    oath_status: "REQUIRED"
+
+infrastructure:
+  ledger: "sqlite://data/vibe_ledger.db"
+  provider: "UniversalProvider"
+  gateway_port: 8000
+
+access_control:
+  default_policy: "DENY"
+  operator_override: true
