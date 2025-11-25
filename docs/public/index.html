@@ -1,453 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic World | Public Access</title>
+    <title>VibeChat // GAD-3000 // AJNA</title>
     <style>
-        :root {
-            --bg-color: #0a0a0a;
-            --text-color: #e0e0e0;
-            --accent-color: #00ff9d;
-            --secondary-color: #333;
-            --font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-family);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 800px;
-            height: 90vh;
-            display: flex;
-            flex-direction: column;
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        header {
-            padding: 20px;
-            border-bottom: 1px solid #222;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .status {
-            font-size: 0.8rem;
-            color: var(--accent-color);
-        }
-
-        #chat-window {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .user-msg {
-            align-self: flex-end;
-            background: #222;
-            color: #fff;
-            border-bottom-right-radius: 2px;
-        }
-
-        .agent-msg {
-            align-self: flex-start;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #ccc;
-            border-bottom-left-radius: 2px;
-        }
-
-        .agent-msg strong {
-            color: var(--accent-color);
-        }
-
-        #input-area {
-            padding: 20px;
-            border-top: 1px solid #222;
-            display: flex;
-            gap: 10px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            background: #000;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: inherit;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        button {
-            background: var(--accent-color);
-            color: #000;
-            border: none;
-            padding: 0 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-
-        button:hover {
-            opacity: 0.9;
-        }
-
-        #config-panel {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #111;
-            padding: 15px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            display: none;
-            /* Hidden by default */
-            z-index: 100;
-        }
-
-        .config-toggle {
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        footer {
-            padding: 10px 20px;
-            border-top: 1px solid #222;
-            font-size: 0.7rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .version {
-            color: #444;
-        }
-
-        .backend-status {
-            color: #666;
-            font-size: 0.7rem;
-        }
-
-        .backend-status.connected {
-            color: var(--accent-color);
-        }
-
-        .backend-status.error {
-            color: #ff4444;
-        }
+        body { background: #0a0a0a; color: #00ff41; font-family: monospace; padding: 2rem; max-width: 800px; margin: 0 auto; }
+        h1 { border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
+        #log { background: #111; border: 1px solid #333; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; white-space: pre-wrap; }
+        #input-area { display: flex; gap: 10px; }
+        input { flex-grow: 1; background: #000; border: 1px solid #00ff41; color: #fff; padding: 10px; font-family: monospace; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #fff; }
+        .system { color: #888; }
+        .user { color: #0ff; font-weight: bold; }
+        .agent { color: #f0f; }
     </style>
 </head>
-
 <body>
-
-    <div class="container">
-        <header>
-            <div>
-                <h1>Agentic World</h1>
-                <span class="status" id="system-status">● Initializing...</span>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <div class="config-toggle" onclick="toggleHelp()" title="Help">❓</div>
-                <div class="config-toggle" onclick="toggleConfig()" title="Settings">⚙️</div>
-            </div>
-        </header>
-
-        <div id="config-panel">
-            <h3>Configuration</h3>
-            <input type="text" id="api-url" placeholder="API URL (e.g. https://...)"
-                style="margin-bottom: 10px; width: 200px;">
-            <input type="password" id="api-key" placeholder="API Key" style="width: 200px;">
-            <button onclick="saveConfig()" style="margin-top: 10px; width: 100%;">Save</button>
-        </div>
-
-        <div id="help-panel"
-            style="position: absolute; top: 20px; right: 20px; background: #111; padding: 15px; border: 1px solid #333; border-radius: 8px; display: none; z-index: 100; max-width: 300px;">
-            <h3>Available Commands</h3>
-            <ul style="list-style: none; padding: 0; margin: 10px 0;">
-                <li style="margin-bottom: 10px;">
-                    <strong>briefing</strong><br>
-                    <small>Get a strategic briefing from the HIL Assistant</small>
-                </li>
-                <li style="margin-bottom: 10px;">
-                    <strong>status</strong><br>
-                    <small>Get system status</small>
-                </li>
-                <li style="margin-bottom: 10px;">
-                    <strong>Start a campaign for [topic]</strong><br>
-                    <small>Launch a marketing campaign</small>
-                </li>
-            </ul>
-        </div>
-
-        <div id="chat-window">
-            <div class="message agent-msg">
-                <strong>SYSTEM:</strong> Welcome to the Public Access Layer.<br>
-                I am the Soft Interface to the Hard Kernel.<br>
-                <em id="initial-message">Checking configuration...</em>
-            </div>
-        </div>
-
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your command..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-
-        ```
-        <footer>
-            <span class="version">Frontend v1.0.1</span>
-            <span class="backend-status" id="backend-status">Backend: Unknown</span>
-        </footer>
+    <h1>👁️ VIBE_CHAT // IDENTITY FUSION</h1>
+    <div id="status">INITIALIZING OPTICAL NERVE...</div>
+    <div id="log"></div>
+    <div id="input-area">
+        <input type="text" id="cmd" placeholder="Enter command (e.g., 'status', 'briefing')..." autofocus>
+        <button onclick="sendCommand()">TRANSMIT</button>
     </div>
 
     <script src="identity_wallet.js"></script>
     <script>
-        // Load config (auto-detect origin)
-        let apiUrl = localStorage.getItem('steward_api_url') || window.location.origin;
-        // If running from file://, default to localhost
-        if (window.location.protocol === 'file:') {
-            apiUrl = 'http://127.0.0.1:8000';
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        const input = document.getElementById('cmd');
+
+        function appendLog(text, type='system') {
+            log.innerHTML += `<div class="${type}">[${new Date().toLocaleTimeString()}] ${text}</div>`;
+            log.scrollTop = log.scrollHeight;
         }
 
-        let apiKey = localStorage.getItem('steward_api_key') || 'steward-secret-key';
-
-        if (apiUrl) document.getElementById('api-url').value = apiUrl;
-        if (apiKey) document.getElementById('api-key').value = apiKey;
-
-        // Auto-check configuration on load
-        window.addEventListener('load', async () => {
-            await checkSystemStatus();
-            await initializeIdentity();
-        });
-
-        const wallet = new IdentityWallet();
-        let identityRegistered = false;
-
-        async function initializeIdentity() {
-            if (!apiUrl) return;
-
+        // 1. BOOT IDENTITY
+        window.onload = async () => {
             try {
-                const hasIdentity = await wallet.hasIdentity();
-                if (!hasIdentity) {
-                    addMessage("agent", "🔐 Generating secure identity...");
-                    await wallet.registerWithCity(apiUrl);
-                    identityRegistered = true;
-                    addMessage("agent", "✅ Identity created - You are now Agent HIL");
-                } else {
-                    identityRegistered = true;
-                    // addMessage("agent", "🔐 Identity loaded.");
-                }
+                const pubKey = await window.wallet.init();
+                status.innerText = `✅ IDENTITY FUSED: ${pubKey.substring(0,24)}...`;
+                appendLog(`Identity Wallet Active.\nPublic Key: ${pubKey}`, 'system');
             } catch (e) {
-                console.error("Identity error:", e);
-                addMessage("agent", `⚠️ Identity Error: ${e.message}`);
+                status.innerText = "❌ BLIND: Wallet Init Failed";
+                status.style.color = "red";
+                console.error(e);
             }
-        }
+        };
 
-        async function checkSystemStatus() {
-            const statusEl = document.getElementById('system-status');
-            const backendEl = document.getElementById('backend-status');
-            const initialMsg = document.getElementById('initial-message');
+        // 2. TRANSMIT (SIGN & SEND)
+        async function sendCommand() {
+            const txt = input.value;
+            if (!txt) return;
 
-            if (!apiUrl || !apiKey) {
-                statusEl.textContent = '⚠️ Not Configured';
-                statusEl.style.color = '#ff9d00';
-                backendEl.textContent = 'Backend: Not configured';
-                backendEl.className = 'backend-status error';
-                initialMsg.innerHTML = '⚠️ <strong>Please configure the API URL in settings (⚙️) to begin.</strong>';
-                return;
-            }
-
-            // Try to ping the backend
-            statusEl.textContent = '🔄 Connecting...';
-            statusEl.style.color = '#00ff9d';
+            appendLog(`> ${txt}`, 'user');
+            input.value = "";
 
             try {
-                const response = await fetch(`${apiUrl}/health`, {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(5000)
-                });
+                // A. SIGN
+                appendLog("🔒 Signing payload...", 'system');
+                const signedPayload = await window.wallet.signPayload(txt);
 
-                if (response.ok) {
-                    const data = await response.json();
-                    statusEl.textContent = '● System Online';
-                    statusEl.style.color = '#00ff9d';
-                    backendEl.textContent = `Backend: ${data.kernel || 'ready'}`;
-                    backendEl.className = 'backend-status connected';
-                    initialMsg.innerHTML = '✅ <strong>System ready!</strong> Type a command below (try "briefing").';
-                } else {
-                    throw new Error('Backend returned error');
-                }
-            } catch (error) {
-                statusEl.textContent = '⚠️ Backend Offline';
-                statusEl.style.color = '#ff4444';
-                backendEl.textContent = 'Backend: Unreachable';
-                backendEl.className = 'backend-status error';
-                initialMsg.innerHTML = `⚠️ <strong>Cannot reach backend.</strong><br>
-                    Check if <code>${apiUrl}</code> is correct.<br>
-                    The backend might be sleeping (first request takes 30s).`;
-            }
-        }
-
-        function toggleConfig() {
-            const panel = document.getElementById('config-panel');
-            const helpPanel = document.getElementById('help-panel');
-            helpPanel.style.display = 'none'; // Close help if open
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function toggleHelp() {
-            const panel = document.getElementById('help-panel');
-            const configPanel = document.getElementById('config-panel');
-            configPanel.style.display = 'none'; // Close config if open
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function saveConfig() {
-            const urlInput = document.getElementById('api-url').value.trim();
-            const keyInput = document.getElementById('api-key').value.trim();
-
-            if (!urlInput || !keyInput) {
-                addMessage("agent", "⚠️ Error: Both API URL and Key are required!");
-                return;
-            }
-
-            apiUrl = urlInput;
-            apiKey = keyInput;
-            localStorage.setItem('steward_api_url', apiUrl);
-            localStorage.setItem('steward_api_key', apiKey);
-            toggleConfig();
-            addMessage("agent", `✅ Configuration saved!\n📡 API: ${apiUrl}\n🔑 Key: ${apiKey.substring(0, 4)}****`);
-
-            // Re-check system status
-            checkSystemStatus();
-        }
-
-        function addMessage(sender, text) {
-            const chat = document.getElementById('chat-window');
-            const div = document.createElement('div');
-            div.className = `message ${sender}-msg`;
-            div.innerHTML = sender === 'agent' ? text.replace(/\n/g, '<br>') : text;
-            chat.appendChild(div);
-            chat.scrollTop = chat.scrollHeight;
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') sendMessage();
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            if (!apiUrl || !apiKey) {
-                addMessage("agent", "⚠️ Error: Please configure API URL and Key first.");
-                return;
-            }
-
-            addMessage("user", text);
-            input.value = '';
-
-            // Show loading state
-            const loadingId = 'loading-' + Date.now();
-            const chat = document.getElementById('chat-window');
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message agent-msg';
-            loadingDiv.id = loadingId;
-            loadingDiv.innerHTML = "<em>Processing...</em>";
-            chat.appendChild(loadingDiv);
-
-            try {
-                // Sign the message
-                let payload = {
-                    agent_id: "HIL", // Enforce HIL identity
-                    message: text
-                };
-
-                if (identityRegistered) {
-                    try {
-                        const signed = await wallet.signMessage(text);
-                        payload = {
-                            ...payload,
-                            ...signed
-                        };
-                    } catch (e) {
-                        console.error("Signing failed:", e);
-                        addMessage("agent", "⚠️ Signing failed, sending unsigned...");
-                    }
-                }
-
-                const response = await fetch(`${apiUrl}/v1/chat`, {
+                // B. SEND
+                const response = await fetch('/v1/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': apiKey
-                    },
-                    body: JSON.stringify(payload)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(signedPayload)
                 });
 
                 const data = await response.json();
 
-                // Remove loading
-                document.getElementById(loadingId).remove();
-
-                if (response.ok) {
-                    // Format markdown-like summary
-                    let formatted = data.summary
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-                        .replace(/`(.*?)`/g, '<code>$1</code>'); // Code
-
-                    addMessage("agent", formatted);
+                // C. DISPLAY
+                if (data.status === "success" || data.status === "SUBMITTED") {
+                    appendLog(`👁️ AGENT RESPONSE:\n${JSON.stringify(data.summary || data, null, 2)}`, 'agent');
                 } else {
-                    addMessage("agent", `⚠️ Error: ${data.detail || response.statusText}`);
+                    appendLog(`❌ ERROR: ${JSON.stringify(data)}`, 'system');
                 }
 
-            } catch (error) {
-                document.getElementById(loadingId).remove();
-                addMessage("agent", `❌ Connection Error: ${error.message}`);
+            } catch (e) {
+                appendLog(`❌ TRANSMISSION FAILURE: ${e.message}`, 'system');
             }
         }
+
+        input.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendCommand();
+        });
     </script>
 </body>
-
 </html>
