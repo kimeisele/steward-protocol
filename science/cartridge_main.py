@@ -219,42 +219,6 @@ class ScientistCartridge(VibeAgent):
         logger.info(f"✅ Comprehensive briefing created: {len(all_results)} perspectives")
         return comprehensive
 
-    def analyze_sentiment(self, content: str) -> Dict[str, Any]:
-        """
-        Analyze sentiment/tone of content (placeholder for NLP).
-
-        Args:
-            content: Text to analyze
-
-        Returns:
-            dict: Sentiment analysis
-        """
-        # Placeholder: Simple heuristic analysis
-        positive_words = [
-            "innovation",
-            "breakthrough",
-            "leading",
-            "success",
-            "powerful",
-        ]
-        negative_words = ["failed", "risk", "concern", "vulnerable", "deprecated"]
-
-        positive_count = sum(1 for w in positive_words if w in content.lower())
-        negative_count = sum(1 for w in negative_words if w in content.lower())
-
-        if positive_count > negative_count:
-            sentiment = "positive"
-        elif negative_count > positive_count:
-            sentiment = "negative"
-        else:
-            sentiment = "neutral"
-
-        return {
-            "sentiment": sentiment,
-            "positive_indicators": positive_count,
-            "negative_indicators": negative_count,
-        }
-
     def fact_check(self, claim: str, context: Optional[str] = None) -> Dict[str, Any]:
         """
         Fact-check a claim against external sources.

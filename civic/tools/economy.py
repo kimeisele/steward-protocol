@@ -245,20 +245,33 @@ class CivicBank:
             )
             logger.warning(f"🔒 Account frozen: {agent_id} ({reason})")
 
-    def unfreeze_account(self, agent_id: str) -> None:
+    def unfreeze_account(self, agent_id: str, reason: str = "manual_override") -> None:
         """
-        Unfreeze a previously frozen account.
+        Unfreeze a previously frozen account (amnesty/redemption).
 
         Args:
             agent_id: Agent to unfreeze
+            reason: Reason for unfreezing (e.g., "Compliance Restored")
         """
         with self.conn:
             cur = self.conn.cursor()
+            timestamp = datetime.utcnow().isoformat()
+
+            # Update account
             cur.execute(
-                "UPDATE accounts SET is_frozen = 0 WHERE agent_id = ?",
-                (agent_id,)
+                "UPDATE accounts SET is_frozen = 0, updated_at = ? WHERE agent_id = ?",
+                (timestamp, agent_id)
             )
-            logger.info(f"✅ Account unfrozen: {agent_id}")
+
+            # Record in ledger (AMNESTY transaction)
+            tx_id = f"THAW-{hashlib.sha256((timestamp + agent_id).encode()).hexdigest()[:8]}"
+            cur.execute("""
+                INSERT INTO transactions
+                (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
+                VALUES (?, ?, 'WATCHMAN', ?, 0, ?, 'AMNESTY', ?, ?)
+            """, (tx_id, timestamp, agent_id, reason, self.get_last_hash(), tx_id))
+
+            logger.info(f"✅ Account unfrozen: {agent_id} ({reason})")
 
     def is_frozen(self, agent_id: str) -> bool:
         """
