@@ -2,292 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VibeChat // GAD-3000 // MONOLITH</title>
+    <title>VibeChat // GAD-3000</title>
     <style>
-        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 2rem; max-width: 900px; margin: 0 auto; line-height: 1.4; }
-        h1 { border-bottom: 2px solid #00ff41; padding-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; }
-
-        /* THE LOG CONSOLE */
-        #log {
-            background: #000;
-            border: 1px solid #333;
-            height: 400px;
-            overflow-y: scroll;
-            padding: 15px;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-            font-size: 0.9rem;
-            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
-        }
-
-        /* INPUT AREA */
-        #input-area { display: flex; gap: 0; border: 1px solid #00ff41; }
-        input {
-            flex-grow: 1;
-            background: #000;
-            border: none;
-            color: #fff;
-            padding: 15px;
-            font-family: inherit;
-            font-size: 1rem;
-            outline: none;
-        }
-        button {
-            background: #00ff41;
-            color: #000;
-            border: none;
-            padding: 0 30px;
-            cursor: pointer;
-            font-weight: 900;
-            font-size: 1rem;
-            transition: all 0.2s;
-        }
-        button:hover { background: #fff; }
-
-        /* LOG STYLES */
-        .system { color: #666; font-style: italic; }
-        .user { color: #0ff; font-weight: bold; margin-top: 10px; display: block; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 2rem; max-width: 900px; margin: 0 auto; }
+        #log { background: #000; border: 1px solid #333; height: 400px; overflow-y: scroll; padding: 15px; margin-bottom: 20px; white-space: pre-wrap; }
+        #input-area { display: flex; border: 1px solid #00ff41; }
+        input { flex-grow: 1; background: #000; border: none; color: #fff; padding: 15px; outline: none; }
+        button { background: #00ff41; color: #000; border: none; padding: 0 30px; cursor: pointer; font-weight: bold; }
+        .user { color: #0ff; margin-top: 10px; display: block; }
         .agent { color: #f0f; margin-bottom: 10px; display: block; border-left: 2px solid #f0f; padding-left: 10px; }
-        .error { color: #ff3333; font-weight: bold; background: rgba(255, 0, 0, 0.1); padding: 2px; }
-        .success { color: #00ff41; font-weight: bold; }
-
-        #status { font-size: 0.8rem; color: #444; margin-bottom: 5px; text-align: right; }
+        .error { color: red; }
     </style>
 </head>
 <body>
-    <h1>👁️ VIBE_CHAT // IDENTITY FUSION // GAD-3000</h1>
-    <div id="status">SYSTEM OFFLINE</div>
+    <h1>👁️ VIBE_CHAT // FINAL // GAD-3000</h1>
+    <div id="status">OFFLINE</div>
     <div id="log"></div>
     <div id="input-area">
-        <input type="text" id="cmd" placeholder="Initializing encryption layer..." disabled>
+        <input type="text" id="cmd" placeholder="Loading..." disabled>
         <button id="btn" onclick="sendCommand()" disabled>LOCKED</button>
     </div>
 
     <script>
-        /**
-         * 🕉️ SANKHYA-YOGA FUSION (GAD-3000 FINAL)
-         * Now with Environment Sanctity Check (Secure Context Validation)
-         */
-
-        // --- 0. ENVIRONMENT SANCTITY CHECK ---
-        function checkSecureContext() {
-            const isSecure = window.isSecureContext;
-            const hasCrypto = window.crypto && window.crypto.subtle;
-
-            if (!isSecure || !hasCrypto) {
-                const msg = `⛔ SECURITY VIOLATION: UNSAFE ORIGIN DETECTED.\n` +
-                            `The WebCrypto API requires a Secure Context (HTTPS or localhost).\n` +
-                            `Current Origin: ${window.location.origin}\n\n` +
-                            `👉 SOLUTION: Open 'http://localhost:8000' instead of IP/0.0.0.0`;
-
-                document.getElementById('status').innerText = "SECURITY BLOCK";
-                document.getElementById('status').style.color = "red";
-
-                const log = document.getElementById('log');
-                log.innerHTML += `<div class="error" style="padding:20px; border:1px solid red;">${msg.replace(/\n/g, '<br>')}</div>`;
-                throw new Error("Insecure Context - Crypto Disabled");
-            }
-        }
-
-        // --- 1. THE IDENTITY WALLET CORE (Embedded) ---
+        // --- WALLET CORE ---
         const DB_NAME = "VibeChat_Identity_v1";
-        const STORE_NAME = "keypair";
-
         class IdentityWallet {
-            constructor() {
-                this.keyPair = null;
-                this.publicKeyHex = null;
-                this.agentId = "HIL_OPERATOR";
-                this.db = null;
-            }
-
+            constructor() { this.keyPair = null; this.db = null; }
             async init() {
-                // Pre-flight check
-                if (!window.crypto || !window.crypto.subtle) {
-                    throw new Error("Crypto API missing. Are you on http://localhost:8000 ?");
-                }
-
-                try {
-                    await this._openDB();
-                    const existing = await this._getKey();
-
-                    if (existing) {
-                        this.keyPair = existing;
-                        console.log("[WALLET] Identity loaded from persistence.");
-                    } else {
-                        console.log("[WALLET] Generating Genesis Identity...");
-                        this.keyPair = await this._generateKeys();
-                        await this._saveKey(this.keyPair);
-                    }
-
-                    this.publicKeyHex = await this._exportKey(this.keyPair.publicKey);
-                    return this.publicKeyHex;
-                } catch (e) {
-                    console.error("[WALLET] Critical Failure:", e);
-                    throw e;
-                }
+                if (!window.crypto.subtle) throw new Error("Insecure Context (Use localhost!)");
+                await this._openDB();
+                const existing = await this._getKey();
+                if (existing) this.keyPair = existing;
+                else { this.keyPair = await this._genKeys(); await this._saveKey(this.keyPair); }
+                return await this._expKey(this.keyPair.publicKey);
             }
-
-            async signPayload(message) {
-                if (!this.keyPair) throw new Error("Wallet keys not loaded.");
-                const encoder = new TextEncoder();
-                const data = encoder.encode(message);
-                const signature = await window.crypto.subtle.sign(
-                    { name: "ECDSA", hash: { name: "SHA-256" } },
-                    this.keyPair.privateKey,
-                    data
-                );
+            async sign(msg) {
+                const enc = new TextEncoder().encode(msg);
+                const sig = await window.crypto.subtle.sign({name:"ECDSA", hash:"SHA-256"}, this.keyPair.privateKey, enc);
                 return {
-                    message: message,
-                    signature: this._buf2hex(signature),
-                    public_key: this.publicKeyHex,
-                    agent_id: this.agentId,
-                    timestamp: Date.now()
+                    message: msg, signature: this._hex(sig),
+                    public_key: await this._expKey(this.keyPair.publicKey),
+                    agent_id: "HIL_OPERATOR", timestamp: Date.now()
                 };
             }
-
-            // Crypto Primitives
-            async _generateKeys() {
-                return window.crypto.subtle.generateKey(
-                    { name: "ECDSA", namedCurve: "P-256" },
-                    false, ["sign", "verify"]
-                );
-            }
-            async _exportKey(key) {
-                const exported = await window.crypto.subtle.exportKey("spki", key);
-                return this._buf2hex(exported);
-            }
-            _buf2hex(buffer) {
-                return [...new Uint8Array(buffer)].map(x => x.toString(16).padStart(2, '0')).join('');
-            }
-
-            // IndexedDB Logic
-            _openDB() {
-                return new Promise((resolve, reject) => {
-                    const req = indexedDB.open(DB_NAME, 1);
-                    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
-                    req.onsuccess = () => { this.db = req.result; resolve(); };
-                    req.onerror = e => reject(e);
-                });
-            }
-            _getKey() {
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(STORE_NAME, "readonly");
-                    const req = tx.objectStore(STORE_NAME).get("hil_key");
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => reject("Read Error");
-                });
-            }
-            _saveKey(keys) {
-                return new Promise((resolve, reject) => {
-                    const tx = this.db.transaction(STORE_NAME, "readwrite");
-                    tx.objectStore(STORE_NAME).put(keys, "hil_key");
-                    tx.oncomplete = resolve;
-                });
-            }
+            async _genKeys() { return window.crypto.subtle.generateKey({name:"ECDSA", namedCurve:"P-256"}, false, ["sign","verify"]); }
+            async _expKey(k) { return this._hex(await window.crypto.subtle.exportKey("spki", k)); }
+            _hex(buf) { return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+            _openDB() { return new Promise((r,j)=>{ const q=indexedDB.open(DB_NAME,1); q.onupgradeneeded=e=>e.target.result.createObjectStore("keys"); q.onsuccess=e=>{this.db=q.result;r()}; q.onerror=j; }); }
+            _getKey() { return new Promise(r=>{ const t=this.db.transaction("keys","readonly").objectStore("keys").get("hil"); t.onsuccess=()=>r(t.result); }); }
+            _saveKey(k) { return new Promise(r=>{ const t=this.db.transaction("keys","readwrite").objectStore("keys").put(k,"hil"); t.oncomplete=r; }); }
         }
 
-        // --- 2. THE UI LOGIC (View Layer) ---
+        // --- APP LOGIC ---
         const log = document.getElementById('log');
-        const status = document.getElementById('status');
         const input = document.getElementById('cmd');
         const btn = document.getElementById('btn');
         let wallet = null;
 
-        function appendLog(text, type='system') {
-            const time = new Date().toLocaleTimeString('de-DE', {hour12: false});
-            log.innerHTML += `<div class="${type}">[${time}] ${text}</div>`;
+        function append(txt, type) {
+            const t = new Date().toLocaleTimeString();
+            log.innerHTML += `<div class="${type}">[${t}] ${txt}</div>`;
             log.scrollTop = log.scrollHeight;
         }
 
-        // --- 3. THE BOOTLOADER (Genesis) ---
-        // Das hier läuft SOFORT. Keine Wartezeit.
-        (async function boot() {
-            appendLog("SYSTEM INIT: Checking Environment Sanctity...", "system");
-
+        (async () => {
             try {
-                // STEP 0: Check Context
-                checkSecureContext();
-
-                appendLog("SYSTEM INIT: Loading Cryptographic Core...", "system");
                 wallet = new IdentityWallet();
-                const pubKey = await wallet.init();
-
-                // UNLOCK UI
-                input.disabled = false;
-                btn.disabled = false;
-                input.placeholder = "Enter command (e.g. 'status', 'briefing')...";
-                btn.innerText = "TRANSMIT";
-                input.focus();
-
-                status.innerHTML = `ONLINE | <span class="success">SECURE</span>`;
-                appendLog(`✅ IDENTITY FUSED.`, "success");
-                appendLog(`🔑 Public Key: ${pubKey.substring(0, 32)}...`, "system");
-
-            } catch (e) {
-                // Error is handled in checkSecureContext or appended here
-                if (status.innerText !== "SECURITY BLOCK") {
-                     status.innerText = "CRITICAL FAILURE";
-                     status.style.color = "red";
-                     appendLog(`❌ BOOT FAILED: ${e.message}`, "error");
-                }
-            }
+                const pk = await wallet.init();
+                input.disabled = false; btn.disabled = false; input.placeholder = "Enter command..."; btn.innerText = "SEND";
+                document.getElementById('status').innerText = "ONLINE | SECURE";
+                document.getElementById('status').style.color = "#00ff41";
+                append(`IDENTITY FUSED.\nPK: ${pk.substring(0,16)}...`, "system");
+            } catch(e) { append(`BOOT ERROR: ${e.message}`, "error"); }
         })();
 
-        // --- 4. THE TRANSMITTER (Action) ---
         async function sendCommand() {
             const txt = input.value.trim();
-            if (!txt) return;
-
-            appendLog(`> ${txt}`, 'user');
+            if(!txt) return;
+            append(`> ${txt}`, "user");
             input.value = "";
-
             try {
-                // SANKHYA (Analysis/Signing)
-                appendLog("🔒 Signing Vector...", "system");
-                const signedPayload = await wallet.signPayload(txt);
+                const payload = await wallet.sign(txt);
 
-                // 🔥 HARDCODED TARGET: Forces conversation to local kernel
-                const TARGET_URL = "http://localhost:8000/v1/chat";
-
-                // KARMA (Action/Sending)
-                const response = await fetch(TARGET_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': 'steward-secret-key'
-                    },
-                    body: JSON.stringify(signedPayload)
+                // FORCE URL TO LOCALHOST
+                const res = await fetch("http://localhost:8000/v1/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "x-api-key": "steward-secret-key" },
+                    body: JSON.stringify(payload)
                 });
 
-                // Error Handling für "Unexpected token <" (HTML statt JSON)
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    throw new Error(`Server returned non-JSON response (HTTP ${response.status}): ${text.substring(0, 100)}...`);
-                }
-
-                const data = await response.json();
-
-                if (data.status === "success" || data.status === "SUBMITTED") {
-                    const output = data.summary || JSON.stringify(data, null, 2);
-                    appendLog(`${output}`, 'agent');
-                } else {
-                    appendLog(`❌ REJECTED: ${JSON.stringify(data)}`, 'error');
-                }
-
-            } catch (e) {
-                appendLog(`❌ TRANSMISSION ERROR: ${e.message}`, 'error');
-                if (e.message.includes("Failed to fetch")) {
-                    appendLog("💡 HINT: Is the backend running? Open http://localhost:8000", "system");
-                }
-            }
+                if(!res.ok) throw new Error(`Server Error: ${res.status}`);
+                const data = await res.json();
+                append(data.summary || JSON.stringify(data), "agent");
+            } catch(e) { append(`ERROR: ${e.message}`, "error"); }
         }
-
-        input.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendCommand();
-        });
-
+        input.addEventListener("keypress", e=>{if(e.key==="Enter") sendCommand()});
     </script>
 </body>
 </html>
