@@ -64,6 +64,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add CORS middleware to allow frontend access
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://kimeisele.github.io",  # GitHub Pages
+        "http://localhost:*",  # Local development
+        "file://*",  # Local file testing
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # --- Global Kernel State (Lazy Initialization) ---
 kernel = None
 envoy = None
