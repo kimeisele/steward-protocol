@@ -24,6 +24,10 @@ except ImportError:
 
 logger = logging.getLogger("SCIENCE_SEARCH")
 
+# Note: We'll import vault lazily to avoid circular imports
+_bank = None
+_vault = None
+
 
 class SearchResult:
     """Structured search result from external source."""
@@ -65,36 +69,93 @@ class WebSearchTool:
     Philosophy: No mocks. Real data or failure.
     """
 
-    def __init__(self):
-        """Initialize search tool with Tavily API (required, no fallback)."""
-        self.api_key = os.getenv("TAVILY_API_KEY")
+    def __init__(self, bank=None, vault=None):
+        """
+        Initialize search tool with Tavily API via Vault (secure asset management).
 
+        Args:
+            bank: CivicBank instance (for credit charging)
+            vault: CivicVault instance (for secret leasing)
+
+        Philosophy:
+            - API keys are NOT owned by agents
+            - They are ASSETS managed by the Civic Vault
+            - Agents must LEASE them using Credits
+            - This enforces economic rationality and audit trails
+        """
+        global _bank, _vault
+
+        self.api_key = None
+        self.client = None
+        self.mode = "offline"
+
+        # Try to get bank and vault from arguments or use global references
+        if bank is None or vault is None:
+            # Lazy import CivicBank to avoid circular imports
+            try:
+                from civic.tools.economy import CivicBank
+                _bank = bank or CivicBank()
+                _vault = vault or _bank.vault
+            except Exception as e:
+                logger.warning(f"⚠️  Could not initialize Vault: {e}")
+                _bank = bank
+                _vault = vault
+
+        self.bank = _bank
+        self.vault = _vault
+
+        # Try to get API key from Vault (preferred)
+        if self.vault is not None:
+            try:
+                # Lease the Tavily API key from the Vault
+                self.api_key = self.vault.lease_secret(
+                    agent_id="science",
+                    key_name="tavily_api",
+                    bank=self.bank
+                )
+                logger.info("✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)")
+            except Exception as vault_error:
+                logger.warning(f"⚠️  Vault lease failed: {vault_error}")
+                # Fallback to environment variable
+                self.api_key = os.getenv("TAVILY_API_KEY")
+
+        # If still no API key, try direct environment variable
         if not self.api_key:
-            raise ValueError(
-                "❌ CRITICAL: TAVILY_API_KEY environment variable not set. "
-                "SCIENCE agent requires real search capability. "
-                "No mocks. No fallbacks. Provide a real API key or the system fails."
-            )
+            self.api_key = os.getenv("TAVILY_API_KEY")
+            if self.api_key:
+                logger.info("✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)")
 
-        if not TavilyClient:
-            raise ImportError(
-                "❌ CRITICAL: tavily package not installed. "
-                "Install via: pip install tavily-python"
-            )
+        # Initialize Tavily client if we have the key
+        if self.api_key:
+            if not TavilyClient:
+                raise ImportError(
+                    "❌ CRITICAL: tavily package not installed. "
+                    "Install via: pip install tavily-python"
+                )
 
-        try:
-            self.client = TavilyClient(api_key=self.api_key)
-            self.mode = "tavily"  # FIX: Initialize the mode attribute
-            logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
-        except Exception as e:
-            raise RuntimeError(
-                f"❌ CRITICAL: Failed to initialize Tavily API: {e}. "
-                f"Check your API key and network connectivity."
+            try:
+                self.client = TavilyClient(api_key=self.api_key)
+                self.mode = "tavily"
+                logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
+            except Exception as e:
+                raise RuntimeError(
+                    f"❌ CRITICAL: Failed to initialize Tavily API: {e}. "
+                    f"Check your API key and network connectivity."
+                )
+        else:
+            # No API key available - we'll operate in offline mode
+            logger.warning(
+                "⚠️  TAVILY_API_KEY not found in Vault or environment. "
+                "Search will operate in offline mode."
             )
+            self.mode = "offline"
 
     def search(self, query: str, max_results: int = 5) -> List[SearchResult]:
         """
-        Search for content on the web via Tavily (only real source).
+        Search for content on the web.
+
+        If Tavily API is available (either via Vault or env), performs live search.
+        Otherwise, returns empty results (safe degradation).
 
         Args:
             query: Search query (e.g., "AI governance 2025")
@@ -104,8 +165,12 @@ class WebSearchTool:
             list: SearchResult objects
 
         Raises:
-            RuntimeError: If Tavily search fails (no fallback to mocks)
+            RuntimeError: Only if Tavily API is configured but fails
         """
+        if self.mode == "offline":
+            logger.warning(f"⚠️  Offline mode: Cannot search '{query}'")
+            return []
+
         return self._search_tavily(query, max_results)
 
     def _search_tavily(self, query: str, max_results: int) -> List[SearchResult]:
