@@ -250,7 +250,10 @@
                 // KARMA (Action/Sending)
                 const response = await fetch('/v1/chat', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'steward-secret-key'
+                    },
                     body: JSON.stringify(signedPayload)
                 });
 
