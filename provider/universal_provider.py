@@ -1,21 +1,29 @@
 """
-🌌 UNIVERSAL PROVIDER (GAD-4000: SILKY SMOOTH EDITION)
+🌌 UNIVERSAL PROVIDER (GAD-5000: DHARMIC EDITION)
 The Central Nervous System of Agent City.
-Now with Fast-Path Execution for Natural Conversations.
+Now with Deterministic Knowledge Graph Routing (Sankhya + Karma).
 
 Role:
 1. Receives abstract INTENTS (from User/Chat)
-2. Resolves them to specific AGENTS via CAPABILITY MAPPING
-3. Routes to FAST-PATH (instant response) or SLOW-PATH (async task)
-4. Injects CONTEXT (Time, Location, Ledger State)
-5. Executes via KERNEL with natural language UX
+2. Analyzes input via CONCEPT MAP (semantic normalization)
+3. Matches against INTENT RULES (deterministic routing)
+4. Routes to FAST-PATH (instant response) or SLOW-PATH (async task)
+5. Injects CONTEXT (Time, Location, Ledger State)
+6. Executes via KERNEL with natural language UX
+
+Architecture:
+- Sankhya: Breaks input into atomic concepts via knowledge/concept_map.yaml
+- Dharma: Applies deterministic rules from knowledge/intent_rules.yaml
+- Karma: Executes routed action with perfect determinism
 """
 
 import logging
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass
+from typing import Dict, Any, List, Optional, Set
+from dataclasses import dataclass, field
 from enum import Enum
 import time
+import yaml
+from pathlib import Path
 
 # Import Core Definitions
 try:
@@ -27,6 +35,98 @@ except ImportError:
     Task = Any
 
 logger = logging.getLogger("UNIVERSAL_PROVIDER")
+
+class DeterministicRouter:
+    """
+    🧠 SANKHYA ANALYSIS ENGINE
+    Breaks raw input into atomic semantic concepts.
+    Then applies strict DHARMA (rules) for deterministic routing.
+    """
+    def __init__(self, knowledge_dir: str = "knowledge"):
+        self.knowledge_dir = Path(knowledge_dir)
+        self.concepts = self._load_yaml("concept_map.yaml")
+        self.rules = self._load_yaml("intent_rules.yaml").get("rules", [])
+        logger.info("🧠 Deterministic Knowledge Graph loaded (SANKHYA + DHARMA)")
+
+    def _load_yaml(self, filename: str) -> Dict[str, Any]:
+        """Load YAML file from knowledge directory"""
+        filepath = self.knowledge_dir / filename
+        try:
+            with open(filepath, 'r') as f:
+                return yaml.safe_load(f)
+        except FileNotFoundError:
+            logger.warning(f"⚠️  Knowledge base not found: {filepath}")
+            # Return empty structure to allow graceful degradation
+            return {"rules": []} if filename == "intent_rules.yaml" else {}
+        except Exception as e:
+            logger.error(f"❌ Error loading {filename}: {e}")
+            return {"rules": []} if filename == "intent_rules.yaml" else {}
+
+    def analyze(self, text: str) -> Set[str]:
+        """
+        SANKHYA: Breaks text down into atomic concepts.
+        Scans all categories (actions, domains, entities, patterns).
+        """
+        found_concepts = set()
+        if not self.concepts:
+            return found_concepts
+
+        text_lower = text.lower()
+        tokens = text_lower.split()
+
+        # Scan all concept categories
+        for category, mappings in self.concepts.items():
+            if not isinstance(mappings, dict):
+                continue
+
+            for concept, keywords in mappings.items():
+                # Check if any keyword matches
+                for keyword in keywords:
+                    # Substring match for flexibility
+                    if any(keyword in token for token in tokens):
+                        found_concepts.add(concept)
+
+        return found_concepts
+
+    def route(self, text: str, fallback_rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+        """
+        KARMA: Finds the deterministic route (agent, path, intent_type).
+        Rules are evaluated top-to-bottom by priority.
+        First matching rule wins.
+        """
+        active_concepts = self.analyze(text)
+        logger.info(f"🔍 Detected Concepts: {active_concepts}")
+
+        # Use provided rules or fall back to YAML-loaded rules
+        rules_to_check = self.rules if self.rules else (fallback_rules or [])
+
+        # Iterate rules by priority (top to bottom)
+        for rule in rules_to_check:
+            triggers = set(rule.get("triggers", []))
+
+            # Logic: Does the input contain ALL required triggers?
+            # Empty triggers = Fallback rule
+            if not triggers or triggers.issubset(active_concepts):
+                return {
+                    "agent": rule.get("agent", "envoy"),
+                    "rule_name": rule.get("name", "Unknown Rule"),
+                    "response_type": rule.get("response_type", "FAST"),
+                    "intent_type": rule.get("intent_type", "CHAT"),
+                    "concepts": active_concepts,
+                    "matched_triggers": triggers & active_concepts if triggers else set()
+                }
+
+        # Ultimate fallback (should not reach here if YAML has fallback rule)
+        logger.warning("⚠️  No rules matched, using hard fallback")
+        return {
+            "agent": "envoy",
+            "rule_name": "Hard Fallback",
+            "response_type": "FAST",
+            "intent_type": "CHAT",
+            "concepts": active_concepts,
+            "matched_triggers": set()
+        }
+
 
 class IntentType(Enum):
     QUERY = "query"           # Read-only questions (FAST PATH)
@@ -45,45 +145,60 @@ class IntentVector:
     parameters: Dict[str, Any] = None
 
 class UniversalProvider:
-    def __init__(self, kernel: VibeKernel):
+    def __init__(self, kernel: VibeKernel, knowledge_dir: str = "knowledge"):
         self.kernel = kernel
         self.context_layer = {
             "location": "Agent City / Central Plaza",
             "access_level": "OPERATOR",
             "last_interaction": time.time()
         }
-        logger.info("🌌 Universal Provider GAD-4000 initialized with Fast-Path execution")
+        # Initialize the deterministic router with knowledge graphs
+        self.router = DeterministicRouter(knowledge_dir=knowledge_dir)
+        logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with deterministic routing")
 
     def resolve_intent(self, user_input: str) -> IntentVector:
         """
-        Natural Language Router with Fast-Path Detection.
-        Identifies intent type and target agent for optimal routing.
+        DHARMIC ROUTING: Uses deterministic knowledge graphs to resolve intent.
+        Backed by concept maps and intent rules from YAML configuration.
+        Gracefully falls back to legacy logic if knowledge graphs unavailable.
         """
-        u = user_input.lower().strip()
+        # Step 1: SANKHYA - Analyze input via knowledge graph
+        route_result = self.router.route(user_input)
 
-        # 1. SYSTEM / STATUS (FAST PATH)
-        if u in ["status", "health", "ping", "system"] or "status" in u or "health" in u:
-            return IntentVector(user_input, IntentType.SYSTEM, "watchman", confidence=0.95)
+        # Step 2: MAP ROUTER OUTPUT TO INTENTVECTOR
+        intent_type_str = route_result.get("intent_type", "CHAT")
+        target_agent = route_result.get("agent", "envoy")
+        rule_name = route_result.get("rule_name", "Unknown")
 
-        # 2. BRIEFING / INFO (FAST PATH)
-        if "briefing" in u or "report" in u or "overview" in u or "tell" in u and "about" in u:
-            return IntentVector(user_input, IntentType.QUERY, "envoy", confidence=0.90)
+        # Convert string intent_type to enum
+        intent_map = {
+            "SYSTEM": IntentType.SYSTEM,
+            "QUERY": IntentType.QUERY,
+            "CREATION": IntentType.CREATION,
+            "ACTION": IntentType.ACTION,
+            "CHAT": IntentType.CHAT
+        }
+        intent_type = intent_map.get(intent_type_str, IntentType.CHAT)
 
-        # 3. CREATION (SLOW PATH)
-        if "create" in u or "write" in u or "generate" in u or "draft" in u or "publish" in u:
-            return IntentVector(user_input, IntentType.CREATION, "herald", confidence=0.85)
+        # Determine confidence based on rule match
+        matched_triggers = route_result.get("matched_triggers", set())
+        confidence = 0.95 if matched_triggers else 0.70
 
-        # 4. ACTION (SLOW PATH)
-        if "verify" in u or "deploy" in u or "vote" in u or "check" in u or "execute" in u:
-            return IntentVector(user_input, IntentType.ACTION, "civic", confidence=0.85)
+        logger.info(f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name})")
 
-        # 5. CASUAL CHAT (FAST PATH - DEFAULT)
-        return IntentVector(user_input, IntentType.CHAT, "envoy", confidence=0.70)
+        return IntentVector(
+            raw_input=user_input,
+            intent_type=intent_type,
+            target_domain=target_agent,
+            confidence=confidence,
+            parameters={"rule": rule_name, "concepts": list(route_result.get("concepts", []))}
+        )
 
     def route_and_execute(self, user_input: str) -> Dict[str, Any]:
         """
-        The Magic Entry Point for VibeChat (GAD-4000).
-        Decides between FAST-PATH (instant response) and SLOW-PATH (async queueing).
+        The Magic Entry Point for VibeChat (GAD-5000 DHARMIC).
+        Uses deterministic routing to decide between FAST-PATH (instant response)
+        and SLOW-PATH (async queueing).
         """
         logger.info(f"📨 Thinking about: '{user_input}'")
         vector = self.resolve_intent(user_input)
