@@ -21,11 +21,7 @@ from envoy.cartridge_main import EnvoyCartridge
 from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
 from forum.cartridge_main import ForumCartridge
-# Science might be missing a cartridge_main, we'll check or mock it
-try:
-    from science.cartridge_main import ScienceCartridge
-except ImportError:
-    ScienceCartridge = None
+from science.cartridge_main import ScienceCartridge
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
@@ -44,27 +40,6 @@ class MockKernel:
     def get_agent(self, agent_id: str) -> Optional[VibeAgent]:
         return self.agent_registry.get(agent_id)
 
-class MockScienceCartridge(VibeAgent):
-    """Mock Science Agent if real one is missing."""
-    def __init__(self):
-        super().__init__(agent_id="science", name="SCIENCE")
-    
-    def process(self, task: Task) -> Dict[str, Any]:
-        logger.info(f"🧪 SCIENCE processing task: {task.payload.get('action')}")
-        # Simulate successful research
-        return {
-            "status": "success",
-            "data": {
-                "insights": [
-                    "Founder recruitment responds to credibility signals",
-                    "Technical founders value transparency and governance",
-                    "Agent-based systems are emerging opportunity",
-                    "Multi-agent orchestration is compelling narrative"
-                ]
-            },
-            "insights": ["Insight 1", "Insight 2"],
-            "timestamp": "2025-11-24T22:00:00Z"
-        }
 
 def main():
     print("\n" + "="*60)
@@ -79,11 +54,7 @@ def main():
     herald = HeraldCartridge()
     civic = CivicCartridge()
     forum = ForumCartridge()
-    
-    if ScienceCartridge:
-        science = ScienceCartridge()
-    else:
-        science = MockScienceCartridge()
+    science = ScienceCartridge()
 
     # Register Agents
     kernel.register_agent("envoy", envoy)

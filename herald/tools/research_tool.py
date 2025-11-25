@@ -2,7 +2,7 @@
 HERALD Research Tool - Market intelligence via Tavily API.
 
 Provides trend analysis for content generation context.
-Graceful fallback to mock data if API unavailable.
+Requires real Tavily API - no fallback to fake data.
 """
 
 import os
