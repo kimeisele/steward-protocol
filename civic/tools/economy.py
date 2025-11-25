@@ -260,6 +260,21 @@ class CivicBank:
             )
             logger.info(f"✅ Account unfrozen: {agent_id}")
 
+    def is_frozen(self, agent_id: str) -> bool:
+        """
+        Check if an agent's account is frozen.
+
+        Args:
+            agent_id: Agent to check
+
+        Returns:
+            True if frozen, False otherwise
+        """
+        cur = self.conn.cursor()
+        cur.execute("SELECT is_frozen FROM accounts WHERE agent_id = ?", (agent_id,))
+        row = cur.fetchone()
+        return bool(row['is_frozen']) if row else False
+
     def audit_trail(self, limit: int = 10) -> List[Dict]:
         """
         Provide radical transparency: Show all transactions.
