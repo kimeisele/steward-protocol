@@ -35,10 +35,21 @@ class MechanicCartridge:
     # Hard-coded recovery target for oracle issue
     ORACLE_RECOVERY_BRANCH = "claude/envoy-system-shell-0199pvX52DbRTQ323W5YsVTr"
 
-    # Core dependencies required
+    # Mapping from import names to actual package names (knowledge base for Python idioms)
+    PACKAGE_MAPPING = {
+        "yaml": "pyyaml",
+        "PIL": "Pillow",
+        "dotenv": "python-dotenv",
+        "bs4": "beautifulsoup4",
+        "sklearn": "scikit-learn",
+        "tavily": "tavily-python",
+        "github": "PyGithub",
+    }
+
+    # Core dependencies required (using import names)
     CORE_DEPENDENCIES = {
         "pydantic": "pydantic>=2.0.0",
-        "pyyaml": "pyyaml>=6.0",
+        "yaml": "pyyaml>=6.0",  # import yaml, pip install pyyaml
         "ecdsa": "ecdsa>=0.18.0",
         "openai": "openai>=1.0.0",
         "rich": "rich>=13.0.0",
@@ -152,27 +163,31 @@ class MechanicCartridge:
     def _check_dependencies(self) -> bool:
         """Check if required packages are installed.
 
+        Uses CORE_DEPENDENCIES with import names as keys and pip specs as values.
+        PACKAGE_MAPPING provides context for understanding name mismatches
+        (e.g., "yaml" import comes from "pyyaml" package).
+
         Returns:
             bool: True if all core deps installed, False otherwise
         """
         self.logger.info("Checking dependency integrity...")
 
         missing = []
-        for name, spec in self.CORE_DEPENDENCIES.items():
+        for import_name, spec in self.CORE_DEPENDENCIES.items():
             try:
-                importlib.import_module(name)
-                self.logger.debug(f"  ✓ {name}")
+                importlib.import_module(import_name)
+                self.logger.debug(f"  ✓ {import_name}")
             except ImportError:
-                self.logger.warning(f"  ✗ {name} (required)")
+                self.logger.warning(f"  ✗ {import_name} (required)")
                 missing.append(spec)
 
         # Check optional
-        for name, spec in self.OPTIONAL_DEPENDENCIES.items():
+        for import_name, spec in self.OPTIONAL_DEPENDENCIES.items():
             try:
-                importlib.import_module(name)
-                self.logger.debug(f"  ✓ {name}")
+                importlib.import_module(import_name)
+                self.logger.debug(f"  ✓ {import_name}")
             except ImportError:
-                self.logger.info(f"  ~ {name} (optional)")
+                self.logger.info(f"  ~ {import_name} (optional)")
 
         self.diagnostics["missing_deps"] = missing
         return len(missing) == 0
