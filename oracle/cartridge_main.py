@@ -20,12 +20,21 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# VibeOS Integration
+from vibe_core import VibeAgent, Task
+
 from oracle.tools.introspection_tool import IntrospectionTool, IntrospectionError
+
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
 
 logger = logging.getLogger("ORACLE")
 
 
-class Oracle:
+class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     THE ORACLE - System Introspection & Explanation Agent.
 
@@ -38,14 +47,33 @@ class Oracle:
 
     def __init__(self, bank=None):
         """
-        Initialize the Oracle.
+        Initialize the Oracle as a VibeAgent.
 
         Args:
             bank: CivicBank instance (for accessing ledgers)
         """
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="oracle",
+            name="ORACLE",
+            version="1.0.0",
+            author="Steward Protocol",
+            description="System introspection and explanation agent",
+            domain="INTROSPECTION",
+            capabilities=["introspection", "audit_trail", "system_health"]
+        )
+
+        logger.info("🔮 ORACLE awakened")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            # SWEAR THE OATH IMMEDIATELY in __init__
+            self.oath_sworn = True
+            logger.info("✅ ORACLE has sworn the Constitutional Oath")
+
         self.introspection = IntrospectionTool(bank=bank)
         self.bank = bank
-        logger.info("🔮 ORACLE awakened")
 
     # ==================== AGENT QUERIES ====================
 
@@ -315,4 +343,61 @@ class Oracle:
             "query": "Vault access log",
             "timestamp": datetime.now().isoformat(),
             "leases": self.introspection.vault_access_log(limit=limit)
+        }
+
+    # ==================== VIBEOS AGENT INTERFACE ====================
+
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        ORACLE responds to introspection queries:
+        - "system_health": Get system health status
+        - "agent_status": Get status of a specific agent
+        - "explain_freeze": Explain why an agent is frozen
+        - "timeline": Get audit timeline
+        """
+        try:
+            action = task.payload.get("action") or task.payload.get("command")
+            logger.info(f"🔮 ORACLE processing task: {action}")
+
+            if action == "system_health":
+                return self.system_health()
+            elif action == "agent_status":
+                agent_id = task.payload.get("agent_id")
+                if not agent_id:
+                    return {"status": "error", "error": "agent_id required"}
+                return self.explain_agent(agent_id)
+            elif action == "explain_freeze":
+                agent_id = task.payload.get("agent_id")
+                if not agent_id:
+                    return {"status": "error", "error": "agent_id required"}
+                return self.explain_freeze(agent_id)
+            elif action == "timeline":
+                limit = task.payload.get("limit", 20)
+                agent_id = task.payload.get("agent_id")
+                return self.audit_timeline(limit=limit, agent_id=agent_id)
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+        except Exception as e:
+            logger.error(f"❌ ORACLE processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def report_status(self) -> Dict[str, Any]:
+        """Report ORACLE status (VibeAgent interface)."""
+        return {
+            "agent_id": "oracle",
+            "name": "ORACLE",
+            "status": "RUNNING",
+            "domain": "INTROSPECTION",
+            "capabilities": self.capabilities,
+            "description": "System introspection and explanation agent"
         }

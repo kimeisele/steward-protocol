@@ -5,6 +5,9 @@ The Oracle provides read-only introspection of the system state.
 It aggregates data from all ledgers and provides natural language explanations.
 """
 
-from oracle.cartridge_main import Oracle
+from oracle.cartridge_main import OracleCartridge
 
-__all__ = ["Oracle"]
+# Export both names for backwards compatibility
+Oracle = OracleCartridge
+
+__all__ = ["OracleCartridge", "Oracle"]
