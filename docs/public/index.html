@@ -65,10 +65,29 @@
 
     <script>
         /**
-         * 🕉️ SANKHYA-YOGA FUSION
-         * Logic (JS) and Form (HTML) are one.
-         * No race conditions. No loading latency. Pure execution.
+         * 🕉️ SANKHYA-YOGA FUSION (GAD-3000 FINAL)
+         * Now with Environment Sanctity Check (Secure Context Validation)
          */
+
+        // --- 0. ENVIRONMENT SANCTITY CHECK ---
+        function checkSecureContext() {
+            const isSecure = window.isSecureContext;
+            const hasCrypto = window.crypto && window.crypto.subtle;
+
+            if (!isSecure || !hasCrypto) {
+                const msg = `⛔ SECURITY VIOLATION: UNSAFE ORIGIN DETECTED.\n` +
+                            `The WebCrypto API requires a Secure Context (HTTPS or localhost).\n` +
+                            `Current Origin: ${window.location.origin}\n\n` +
+                            `👉 SOLUTION: Open 'http://localhost:8000' instead of IP/0.0.0.0`;
+
+                document.getElementById('status').innerText = "SECURITY BLOCK";
+                document.getElementById('status').style.color = "red";
+
+                const log = document.getElementById('log');
+                log.innerHTML += `<div class="error" style="padding:20px; border:1px solid red;">${msg.replace(/\n/g, '<br>')}</div>`;
+                throw new Error("Insecure Context - Crypto Disabled");
+            }
+        }
 
         // --- 1. THE IDENTITY WALLET CORE (Embedded) ---
         const DB_NAME = "VibeChat_Identity_v1";
@@ -83,6 +102,11 @@
             }
 
             async init() {
+                // Pre-flight check
+                if (!window.crypto || !window.crypto.subtle) {
+                    throw new Error("Crypto API missing. Are you on http://localhost:8000 ?");
+                }
+
                 try {
                     await this._openDB();
                     const existing = await this._getKey();
@@ -179,9 +203,13 @@
         // --- 3. THE BOOTLOADER (Genesis) ---
         // Das hier läuft SOFORT. Keine Wartezeit.
         (async function boot() {
-            appendLog("SYSTEM INIT: Loading Cryptographic Core...", "system");
+            appendLog("SYSTEM INIT: Checking Environment Sanctity...", "system");
 
             try {
+                // STEP 0: Check Context
+                checkSecureContext();
+
+                appendLog("SYSTEM INIT: Loading Cryptographic Core...", "system");
                 wallet = new IdentityWallet();
                 const pubKey = await wallet.init();
 
@@ -197,9 +225,12 @@
                 appendLog(`🔑 Public Key: ${pubKey.substring(0, 32)}...`, "system");
 
             } catch (e) {
-                status.innerText = "CRITICAL FAILURE";
-                status.style.color = "red";
-                appendLog(`❌ BOOT FAILED: ${e.message}`, "error");
+                // Error is handled in checkSecureContext or appended here
+                if (status.innerText !== "SECURITY BLOCK") {
+                     status.innerText = "CRITICAL FAILURE";
+                     status.style.color = "red";
+                     appendLog(`❌ BOOT FAILED: ${e.message}`, "error");
+                }
             }
         })();
 
