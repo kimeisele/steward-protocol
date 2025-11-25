@@ -2,79 +2,221 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VibeChat // GAD-3000 // AJNA</title>
+    <title>VibeChat // GAD-3000 // MONOLITH</title>
     <style>
-        body { background: #0a0a0a; color: #00ff41; font-family: monospace; padding: 2rem; max-width: 800px; margin: 0 auto; }
-        h1 { border-bottom: 2px solid #00ff41; padding-bottom: 10px; }
-        #log { background: #111; border: 1px solid #333; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; white-space: pre-wrap; }
-        #input-area { display: flex; gap: 10px; }
-        input { flex-grow: 1; background: #000; border: 1px solid #00ff41; color: #fff; padding: 10px; font-family: monospace; }
-        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 2rem; max-width: 900px; margin: 0 auto; line-height: 1.4; }
+        h1 { border-bottom: 2px solid #00ff41; padding-bottom: 15px; letter-spacing: 2px; text-transform: uppercase; font-size: 1.5rem; }
+
+        /* THE LOG CONSOLE */
+        #log {
+            background: #000;
+            border: 1px solid #333;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 15px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
+        }
+
+        /* INPUT AREA */
+        #input-area { display: flex; gap: 0; border: 1px solid #00ff41; }
+        input {
+            flex-grow: 1;
+            background: #000;
+            border: none;
+            color: #fff;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+        }
+        button {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 0 30px;
+            cursor: pointer;
+            font-weight: 900;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
         button:hover { background: #fff; }
-        .system { color: #888; }
-        .user { color: #0ff; font-weight: bold; }
-        .agent { color: #f0f; }
-        .error { color: #ff0000; font-weight: bold; }
+
+        /* LOG STYLES */
+        .system { color: #666; font-style: italic; }
+        .user { color: #0ff; font-weight: bold; margin-top: 10px; display: block; }
+        .agent { color: #f0f; margin-bottom: 10px; display: block; border-left: 2px solid #f0f; padding-left: 10px; }
+        .error { color: #ff3333; font-weight: bold; background: rgba(255, 0, 0, 0.1); padding: 2px; }
+        .success { color: #00ff41; font-weight: bold; }
+
+        #status { font-size: 0.8rem; color: #444; margin-bottom: 5px; text-align: right; }
     </style>
 </head>
 <body>
-    <h1>👁️ VIBE_CHAT // IDENTITY FUSION</h1>
-    <div id="status">INITIALIZING OPTICAL NERVE...</div>
+    <h1>👁️ VIBE_CHAT // IDENTITY FUSION // GAD-3000</h1>
+    <div id="status">SYSTEM OFFLINE</div>
     <div id="log"></div>
     <div id="input-area">
-        <input type="text" id="cmd" placeholder="Enter command (e.g., 'status', 'briefing')..." autofocus>
-        <button onclick="sendCommand()">TRANSMIT</button>
+        <input type="text" id="cmd" placeholder="Initializing encryption layer..." disabled>
+        <button id="btn" onclick="sendCommand()" disabled>LOCKED</button>
     </div>
 
-    <!-- CACHE BUSTING: ?v=GAD3000 zwingt den Browser zum Neuladen -->
-    <script src="identity_wallet.js?v=GAD3000"></script>
-
     <script>
+        /**
+         * 🕉️ SANKHYA-YOGA FUSION
+         * Logic (JS) and Form (HTML) are one.
+         * No race conditions. No loading latency. Pure execution.
+         */
+
+        // --- 1. THE IDENTITY WALLET CORE (Embedded) ---
+        const DB_NAME = "VibeChat_Identity_v1";
+        const STORE_NAME = "keypair";
+
+        class IdentityWallet {
+            constructor() {
+                this.keyPair = null;
+                this.publicKeyHex = null;
+                this.agentId = "HIL_OPERATOR";
+                this.db = null;
+            }
+
+            async init() {
+                try {
+                    await this._openDB();
+                    const existing = await this._getKey();
+
+                    if (existing) {
+                        this.keyPair = existing;
+                        console.log("[WALLET] Identity loaded from persistence.");
+                    } else {
+                        console.log("[WALLET] Generating Genesis Identity...");
+                        this.keyPair = await this._generateKeys();
+                        await this._saveKey(this.keyPair);
+                    }
+
+                    this.publicKeyHex = await this._exportKey(this.keyPair.publicKey);
+                    return this.publicKeyHex;
+                } catch (e) {
+                    console.error("[WALLET] Critical Failure:", e);
+                    throw e;
+                }
+            }
+
+            async signPayload(message) {
+                if (!this.keyPair) throw new Error("Wallet keys not loaded.");
+                const encoder = new TextEncoder();
+                const data = encoder.encode(message);
+                const signature = await window.crypto.subtle.sign(
+                    { name: "ECDSA", hash: { name: "SHA-256" } },
+                    this.keyPair.privateKey,
+                    data
+                );
+                return {
+                    message: message,
+                    signature: this._buf2hex(signature),
+                    public_key: this.publicKeyHex,
+                    agent_id: this.agentId,
+                    timestamp: Date.now()
+                };
+            }
+
+            // Crypto Primitives
+            async _generateKeys() {
+                return window.crypto.subtle.generateKey(
+                    { name: "ECDSA", namedCurve: "P-256" },
+                    false, ["sign", "verify"]
+                );
+            }
+            async _exportKey(key) {
+                const exported = await window.crypto.subtle.exportKey("spki", key);
+                return this._buf2hex(exported);
+            }
+            _buf2hex(buffer) {
+                return [...new Uint8Array(buffer)].map(x => x.toString(16).padStart(2, '0')).join('');
+            }
+
+            // IndexedDB Logic
+            _openDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(DB_NAME, 1);
+                    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE_NAME);
+                    req.onsuccess = () => { this.db = req.result; resolve(); };
+                    req.onerror = e => reject(e);
+                });
+            }
+            _getKey() {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, "readonly");
+                    const req = tx.objectStore(STORE_NAME).get("hil_key");
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject("Read Error");
+                });
+            }
+            _saveKey(keys) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction(STORE_NAME, "readwrite");
+                    tx.objectStore(STORE_NAME).put(keys, "hil_key");
+                    tx.oncomplete = resolve;
+                });
+            }
+        }
+
+        // --- 2. THE UI LOGIC (View Layer) ---
         const log = document.getElementById('log');
         const status = document.getElementById('status');
         const input = document.getElementById('cmd');
+        const btn = document.getElementById('btn');
+        let wallet = null;
 
         function appendLog(text, type='system') {
-            log.innerHTML += `<div class="${type}">[${new Date().toLocaleTimeString()}] ${text}</div>`;
+            const time = new Date().toLocaleTimeString('de-DE', {hour12: false});
+            log.innerHTML += `<div class="${type}">[${time}] ${text}</div>`;
             log.scrollTop = log.scrollHeight;
         }
 
-        window.onload = async () => {
-            // ROBUST CHECK
-            if (!window.wallet) {
-                status.innerText = "❌ CRITICAL ERROR: Wallet not loaded";
-                status.style.color = "red";
-                appendLog("FATAL: window.wallet is undefined. Javascript Error in identity_wallet.js?", "error");
-                return;
-            }
+        // --- 3. THE BOOTLOADER (Genesis) ---
+        // Das hier läuft SOFORT. Keine Wartezeit.
+        (async function boot() {
+            appendLog("SYSTEM INIT: Loading Cryptographic Core...", "system");
 
             try {
-                const pubKey = await window.wallet.init();
-                status.innerText = `✅ IDENTITY FUSED: ${pubKey.substring(0,24)}...`;
-                appendLog(`Identity Wallet Active.\nPublic Key: ${pubKey}`, 'system');
-            } catch (e) {
-                status.innerText = "❌ BLIND: Wallet Init Failed";
-                status.style.color = "red";
-                appendLog(`Init Error: ${e.message}`, "error");
-                console.error(e);
-            }
-        };
+                wallet = new IdentityWallet();
+                const pubKey = await wallet.init();
 
+                // UNLOCK UI
+                input.disabled = false;
+                btn.disabled = false;
+                input.placeholder = "Enter command (e.g. 'status', 'briefing')...";
+                btn.innerText = "TRANSMIT";
+                input.focus();
+
+                status.innerHTML = `ONLINE | <span class="success">SECURE</span>`;
+                appendLog(`✅ IDENTITY FUSED.`, "success");
+                appendLog(`🔑 Public Key: ${pubKey.substring(0, 32)}...`, "system");
+
+            } catch (e) {
+                status.innerText = "CRITICAL FAILURE";
+                status.style.color = "red";
+                appendLog(`❌ BOOT FAILED: ${e.message}`, "error");
+            }
+        })();
+
+        // --- 4. THE TRANSMITTER (Action) ---
         async function sendCommand() {
-            const txt = input.value;
+            const txt = input.value.trim();
             if (!txt) return;
 
             appendLog(`> ${txt}`, 'user');
             input.value = "";
 
             try {
-                if (!window.wallet || !window.wallet.keyPair) {
-                     throw new Error("Wallet not ready");
-                }
+                // SANKHYA (Analysis/Signing)
+                appendLog("🔒 Signing Vector...", "system");
+                const signedPayload = await wallet.signPayload(txt);
 
-                appendLog("🔒 Signing payload...", 'system');
-                const signedPayload = await window.wallet.signPayload(txt);
-
+                // KARMA (Action/Sending)
                 const response = await fetch('/v1/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -84,21 +226,21 @@
                 const data = await response.json();
 
                 if (data.status === "success" || data.status === "SUBMITTED") {
-                    // Zeige summary wenn vorhanden, sonst raw dump
-                    const display = data.summary || JSON.stringify(data, null, 2);
-                    appendLog(`👁️ AGENT RESPONSE:\n${display}`, 'agent');
+                    const output = data.summary || JSON.stringify(data, null, 2);
+                    appendLog(`${output}`, 'agent');
                 } else {
-                    appendLog(`❌ ERROR: ${JSON.stringify(data)}`, 'error');
+                    appendLog(`❌ REJECTED: ${JSON.stringify(data)}`, 'error');
                 }
 
             } catch (e) {
-                appendLog(`❌ TRANSMISSION FAILURE: ${e.message}`, 'error');
+                appendLog(`❌ TRANSMISSION ERROR: ${e.message}`, 'error');
             }
         }
 
         input.addEventListener("keypress", (e) => {
             if (e.key === "Enter") sendCommand();
         });
+
     </script>
 </body>
 </html>
