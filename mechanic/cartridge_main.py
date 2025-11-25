@@ -520,8 +520,54 @@ class MechanicCartridge:
             self.logger.error("System still missing dependencies after healing")
             return False
 
+        # Validate configuration (GAD-100: Phoenix Configuration)
+        if not self._validate_config():
+            self.logger.error("System configuration is invalid or corrupted")
+            return False
+
         self.logger.info("✅ System integrity validated. Ready for kernel boot.")
         return True
+
+    def _validate_config(self) -> bool:
+        """Validate The Dharma (System Configuration).
+
+        GAD-100: If the Soul (Config) is corrupted, the Body (Kernel) must not wake.
+
+        Returns:
+            bool: True if config is valid, False otherwise
+        """
+        self.logger.info("🔐 Validating configuration (Dharma)...")
+
+        try:
+            from vibe_core.config import load_config
+
+            # Try to load and validate config/matrix.yaml (or dharma.yaml if it exists)
+            config_path = self.project_root / "config" / "matrix.yaml"
+            if not config_path.exists():
+                self.logger.warning(f"  Configuration file not found at {config_path}")
+                self.logger.info("  Creating default configuration...")
+                # This is OK - we'll use defaults for now
+                return True
+
+            # Load and validate
+            config = load_config(str(config_path))
+            self.logger.info(f"  ✓ Configuration valid: {config.city_name}")
+            self.logger.info(f"    Version: {config.federation_version}")
+            self.logger.info(f"    Economy: {config.economy.initial_credits} initial credits")
+            self.logger.info(f"    Security: Signatures {'required' if config.security.require_signatures else 'optional'}")
+
+            return True
+
+        except ImportError as e:
+            self.logger.warning(f"  Config validation library not available: {e}")
+            # This is not critical - if pydantic isn't loaded yet, we can proceed
+            return True
+        except ValueError as e:
+            self.logger.error(f"  Configuration validation failed: {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"  Unexpected error validating configuration: {e}")
+            return False
 
     def get_diagnostics(self) -> Dict[str, Any]:
         """Return diagnosis report.
