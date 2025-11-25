@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,7 @@
             background: #111;
             border: 1px solid #222;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         header {
@@ -139,17 +140,18 @@
             padding: 15px;
             border: 1px solid #333;
             border-radius: 8px;
-            display: none; /* Hidden by default */
+            display: none;
+            /* Hidden by default */
             z-index: 100;
         }
-        
+
         .config-toggle {
             cursor: pointer;
             font-size: 1.2rem;
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -163,7 +165,8 @@
 
         <div id="config-panel">
             <h3>Configuration</h3>
-            <input type="text" id="api-url" placeholder="API URL (e.g. https://...)" style="margin-bottom: 10px; width: 200px;">
+            <input type="text" id="api-url" placeholder="API URL (e.g. https://...)"
+                style="margin-bottom: 10px; width: 200px;">
             <input type="password" id="api-key" placeholder="API Key" style="width: 200px;">
             <button onclick="saveConfig()" style="margin-top: 10px; width: 100%;">Save</button>
         </div>
@@ -196,12 +199,20 @@
         }
 
         function saveConfig() {
-            apiUrl = document.getElementById('api-url').value;
-            apiKey = document.getElementById('api-key').value;
+            const urlInput = document.getElementById('api-url').value.trim();
+            const keyInput = document.getElementById('api-key').value.trim();
+
+            if (!urlInput || !keyInput) {
+                addMessage("agent", "⚠️ Error: Both API URL and Key are required!");
+                return;
+            }
+
+            apiUrl = urlInput;
+            apiKey = keyInput;
             localStorage.setItem('steward_api_url', apiUrl);
             localStorage.setItem('steward_api_key', apiKey);
             toggleConfig();
-            addMessage("agent", "Configuration saved. Ready to connect.");
+            addMessage("agent", `✅ Configuration saved!\n📡 API: ${apiUrl}\n🔑 Key: ${apiKey.substring(0, 4)}****`);
         }
 
         function addMessage(sender, text) {
@@ -253,7 +264,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 // Remove loading
                 document.getElementById(loadingId).remove();
 
@@ -262,7 +273,7 @@
                     let formatted = data.summary
                         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
                         .replace(/`(.*?)`/g, '<code>$1</code>'); // Code
-                    
+
                     addMessage("agent", formatted);
                 } else {
                     addMessage("agent", `⚠️ Error: ${data.detail || response.statusText}`);
@@ -275,4 +286,5 @@
         }
     </script>
 </body>
+
 </html>
