@@ -31,10 +31,19 @@ from pydantic import BaseModel
 # VibeOS Imports
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling import Task
-from envoy.cartridge_main import EnvoyCartridge
-from civic.cartridge_main import CivicCartridge
+
+# Import all 11 agent cartridges
 from herald.cartridge_main import HeraldCartridge
-# Import other agents as needed
+from civic.cartridge_main import CivicCartridge
+from forum.cartridge_main import ForumCartridge
+from science.cartridge_main import ScientistCartridge
+from envoy.cartridge_main import EnvoyCartridge
+from archivist.cartridge_main import ArchivistCartridge
+from auditor.cartridge_main import AuditorCartridge
+from engineer.cartridge_main import EngineerCartridge
+from oracle.cartridge_main import OracleCartridge
+from watchman.cartridge_main import WatchmanCartridge
+from artisan.cartridge_main import ArtisanCartridge
 
 # --- Governance Verification ---
 # Constitutional Oath verification is ALWAYS active.
@@ -99,14 +108,24 @@ def get_kernel():
         db_path = os.getenv("LEDGER_PATH", "data/vibe_ledger.db")
         kernel = RealVibeKernel(ledger_path=db_path)
         
-        # 2. Init Agents (only the essential ones for now)
-        envoy = EnvoyCartridge()
-        civic = CivicCartridge()
-        herald = HeraldCartridge()
-        
+        # 2. Init All 11 Agents (Complete Agent City)
+        agents = [
+            HeraldCartridge(),
+            CivicCartridge(),
+            ForumCartridge(),
+            ScientistCartridge(),
+            EnvoyCartridge(),
+            ArchivistCartridge(),
+            AuditorCartridge(),
+            EngineerCartridge(),
+            OracleCartridge(),
+            WatchmanCartridge(),
+            ArtisanCartridge(),
+        ]
+
         # --- GAD-000: GENESIS CEREMONY (Serverless Cold Start) ---
         timestamp = datetime.utcnow().isoformat()
-        for agent in [envoy, civic, herald]:
+        for agent in agents:
             agent.oath_sworn = True
             agent.oath_event = {
                 "event_type": "constitutional_oath",
@@ -115,11 +134,10 @@ def get_kernel():
                 "signature": f"sig_{agent.agent_id}_genesis",
                 "oath_hash": "genesis_hash"
             }
-        
-        # 3. Register Agents
-        kernel.register_agent(envoy)
-        kernel.register_agent(civic)
-        kernel.register_agent(herald)
+
+        # 3. Register All Agents
+        for agent in agents:
+            kernel.register_agent(agent)
         
         # 4. Boot Kernel
         kernel.boot()
