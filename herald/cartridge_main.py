@@ -97,7 +97,10 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            logger.info("🕉️  Constitutional Oath ceremony prepared")
+            # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
+            # This ensures Herald has oath_sworn=True before kernel registration
+            self.oath_sworn = True
+            logger.info("✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)")
 
         # Initialize all tools
         self.content = ContentTool()
