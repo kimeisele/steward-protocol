@@ -18,7 +18,7 @@ We choose power."
 
 Architecture:
 - Autonomous research agent
-- Web search capability (Tavily API + mock fallback)
+- Web search capability (Tavily API only - no fallback)
 - Fact synthesis into structured briefings
 - Integration with HERALD's content generation pipeline
 """

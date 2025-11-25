@@ -20,31 +20,11 @@ from envoy.cartridge_main import EnvoyCartridge
 from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
 from forum.cartridge_main import ForumCartridge
-# Mock Science if needed
-try:
-    from science.cartridge_main import ScienceCartridge
-except ImportError:
-    class ScienceCartridge(VibeAgent):
-        def __init__(self): super().__init__(agent_id="science", name="SCIENCE")
-        def process(self, task): 
-            return {
-                "status": "success", 
-                "data": {"insights": ["Cost-efficient routing confirmed", "Targeting founders"]},
-                "insights": ["Insight 1"]
-            }
+from science.cartridge_main import ScienceCartridge
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger("FINAL_LAUNCH")
-
-class MockKernel:
-    """Simulates the VibeOS Kernel."""
-    def __init__(self):
-        self.agent_registry = {}
-    def register_agent(self, agent_id: str, agent: VibeAgent):
-        self.agent_registry[agent_id] = agent
-    def get_agent(self, agent_id: str) -> Optional[VibeAgent]:
-        return self.agent_registry.get(agent_id)
 
 def main():
     print("\n" + "="*70)
@@ -52,24 +32,11 @@ def main():
     print("="*70 + "\n")
 
     # 1. Initialize System
-    kernel = MockKernel()
     envoy = EnvoyCartridge()
     herald = HeraldCartridge()
     civic = CivicCartridge()
     forum = ForumCartridge()
     science = ScienceCartridge()
-
-    kernel.register_agent("envoy", envoy)
-    kernel.register_agent("herald", herald)
-    kernel.register_agent("civic", civic)
-    kernel.register_agent("forum", forum)
-    kernel.register_agent("science", science)
-
-    envoy.set_kernel(kernel)
-    # Inject kernel into others if they support it
-    for agent in [herald, civic, forum, science]:
-        if hasattr(agent, 'set_kernel'):
-            agent.set_kernel(kernel)
 
     print("✅ System Online (GAD-000 Compliant)\n")
 
