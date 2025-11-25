@@ -37,6 +37,15 @@ wheels/
 secrets/
 keys/
 
+# CIVIC VAULT - CRITICAL SECURITY
+# Master encryption key (one copy only, in secure storage)
+data/security/master.key
+data/security/*.key
+# Encrypted vault database (contains sensitive secrets)
+data/economy.db*
+# Never commit vault backups
+data/backups/vault*
+
 # User-generated agent directories
 my_agent/
 **/my_agent/
