@@ -28,7 +28,9 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -336,155 +338,148 @@ async def register_human(request: dict):
 @app.post("/v1/chat")
 async def chat(request: dict, api_key: str = Depends(verify_auth)):
     """
-    Accept signed messages from HIL.
+    GAD-1000: Accept signed messages from HIL.
+    GAD-000: AI operates on behalf of verified human.
     """
-    agent_id = request.get("agent_id", request.get("user_id", "unknown"))
-    message = request.get("message", request.get("command"))
-    signature = request.get("signature")
-    timestamp = request.get("timestamp")
-    context = request.get("context", {})
-    
-    global kernel, envoy
-    
-    # 2. Ledger Check (GAD-900)
-    check_ledger_access(agent_id)
-    
-    # If signature present, verify it
-    if signature and agent_id == "HIL":
-        # Verify signature
-        # We need the public key. 
-        # For this implementation, since we don't have a persistent HIL agent in registry yet,
-        # we might need to fetch it from the registration event in ledger.
-        # Or simpler: The frontend sends the public key? No, that's insecure.
-        # I will assume we can get it.
-        # For the sake of this task, I will implement the verification logic as requested.
+    try:
+        agent_id = request.get("agent_id", request.get("user_id", "unknown"))
+        message = request.get("message", request.get("command"))
+        signature = request.get("signature")
+        timestamp = request.get("timestamp")
+        context = request.get("context", {})
         
-        # To make it work without complex registry lookups in this limited scope:
-        # I'll search the ledger for the last "human_registered" event for "HIL".
+        global kernel, envoy
         
-        get_kernel()
-        all_events = kernel.ledger.get_all_events()
-        events = [e for e in all_events if e.get("event_type") == "human_registered"]
-        public_key = None
-        for e in reversed(events):
-             if e.get("agent_id") == "HIL":
-                 public_key = e.get("details", {}).get("public_key")
-                 break
+        # 2. Ledger Check (GAD-900)
+        check_ledger_access(agent_id)
         
-        if not public_key:
-             # Fallback for testing if not registered yet?
-             # Or return error.
-             # logger.warning("HIL public key not found")
-             pass
-
-        if public_key:
-            # Reconstruct payload
-            # JS: JSON.stringify({ message, timestamp })
-            payload = json.dumps({"message": message, "timestamp": timestamp}, separators=(',', ':'))
+        # GAD-1000: Signature Verification
+        if signature and agent_id == "HIL":
+            get_kernel()
+            all_events = kernel.ledger.get_all_events()
+            events = [e for e in all_events if e.get("event_type") == "human_registered"]
+            public_key = None
+            for e in reversed(events):
+                 if e.get("agent_id") == "HIL":
+                     public_key = e.get("details", {}).get("public_key")
+                     break
             
-            # Convert Hex to Base64 for steward.crypto
-            try:
-                # Public Key: Hex -> Bytes -> Base64
-                # Note: steward.crypto expects Base64 of the key content (SPKI)
-                public_key_bytes = bytes.fromhex(public_key)
-                public_key_b64 = base64.b64encode(public_key_bytes).decode('utf-8')
+            if public_key:
+                # Reconstruct payload
+                payload = json.dumps({"message": message, "timestamp": timestamp}, separators=(',', ':'))
                 
-                # Signature: Hex -> Bytes -> Base64
-                signature_bytes = bytes.fromhex(signature)
-                signature_b64 = base64.b64encode(signature_bytes).decode('utf-8')
+                # Convert Hex to Base64 for steward.crypto
+                try:
+                    public_key_bytes = bytes.fromhex(public_key)
+                    public_key_b64 = base64.b64encode(public_key_bytes).decode('utf-8')
+                    
+                    signature_bytes = bytes.fromhex(signature)
+                    signature_b64 = base64.b64encode(signature_bytes).decode('utf-8')
+                    
+                    # Verify
+                    if not verify_signature(payload, signature_b64, public_key_b64):
+                        return {"error": "Invalid signature", "status": "rejected"}
+                except Exception as e:
+                    logger.error(f"Crypto error: {e}")
+                    return {"error": "Signature verification failed", "status": "rejected"}
                 
-                # Verify
-                if not verify_signature(payload, signature_b64, public_key_b64):
-                    return {"error": "Invalid signature", "status": "rejected"}
-            except Exception as e:
-                logger.error(f"Crypto error: {e}")
-                return {"error": "Signature verification failed", "status": "rejected"}
-            
-            # Check freshness
-            if abs(time.time() * 1000 - timestamp) > 60000:
-                return {"error": "Timestamp too old", "status": "rejected"}
-                
-            logger.info("✅ Verified HIL Signature")
-    
-    logger.info(f"📨 Received command from {agent_id}: {message}")
-    
-    # Parse command with robust intent detection
-    cmd_lower = message.lower().strip()
-    payload = None
-    
-    # 1. Direct command: "briefing"
-    if cmd_lower == "briefing":
-        payload = {
-            "command": "next_action",
-            "args": context
-        }
-    
-    # 2. Pattern 1: "campaign" alone - needs goal in context
-    elif cmd_lower == "campaign":
-        goal = context.get("goal") if context else None
-        if not goal:
-            raise HTTPException(status_code=400, detail="Campaign goal required. Try: 'Start a campaign for [your goal]'")
-        payload = {
-            "command": "launch_campaign",
-            "args": {"goal": goal, **context}
-        }
-    # 3. Pattern 2: "start a campaign for X"
-    elif cmd_lower.startswith("start a campaign for "):
-        goal = message[len("start a campaign for "):].strip()
-        payload = {
-            "command": "launch_campaign",
-            "args": {"goal": goal, **context}
-        }
-    # 4. Pattern 3: "campaign X" - use X as goal
-    elif cmd_lower.startswith("campaign "):
-        goal = message[len("campaign "):].strip()
-        payload = {
-            "command": "launch_campaign",
-            "args": {"goal": goal, **context}
-        }
-    # 5. Unknown command - pass to ENVOY as-is (it might understand)
-    else:
-        payload = {
-            "command": message,
-            "args": context
-        }
+                # Check freshness
+                if abs(time.time() * 1000 - timestamp) > 60000:
+                    return {"error": "Timestamp too old", "status": "rejected"}
+                    
+                logger.info("✅ Verified HIL Signature")
         
-    task = Task(
-        agent_id="envoy",
-        payload=payload
-    )
-    
-    task_id = kernel.submit_task(task)
-    kernel.tick()
-    result_data = kernel.get_task_result(task_id)
-    
-    if not result_data:
-        raise HTTPException(status_code=500, detail="Task execution failed")
+        logger.info(f"📨 Received command from {agent_id}: {message}")
         
-    output = result_data.get("output_result", {})
-    
-    # Handle SQLite JSON serialization
-    if isinstance(output, str):
-        try:
-            output = json.loads(output)
-        except json.JSONDecodeError:
-            output = {"summary": str(output)}
-
-    summary = output.get("summary")
-    if not summary:
-        if output.get("status") == "success" or output.get("status") == "complete":
-            summary = f"✅ **Operation Successful**\nTask `{task_id}` completed.\nResult: {str(output)}"
+        # Parse command with robust intent detection
+        cmd_lower = message.lower().strip()
+        payload = None
+        
+        # 1. Direct command: "briefing"
+        if cmd_lower == "briefing":
+            payload = {
+                "command": "next_action",
+                "args": context
+            }
+        
+        # 2. Pattern 1: "campaign" alone - needs goal in context
+        elif cmd_lower == "campaign":
+            goal = context.get("goal") if context else None
+            if not goal:
+                return {"error": "Campaign goal required", "status": "error"}
+            payload = {
+                "command": "launch_campaign",
+                "args": {"goal": goal, **context}
+            }
+        # 3. Pattern 2: "start a campaign for X"
+        elif cmd_lower.startswith("start a campaign for "):
+            goal = message[len("start a campaign for "):].strip()
+            payload = {
+                "command": "launch_campaign",
+                "args": {"goal": goal, **context}
+            }
+        # 4. Pattern 3: "campaign X" - use X as goal
+        elif cmd_lower.startswith("campaign "):
+            goal = message[len("campaign "):].strip()
+            payload = {
+                "command": "launch_campaign",
+                "args": {"goal": goal, **context}
+            }
+        # 5. Unknown command - pass to ENVOY as-is (it might understand)
         else:
-            summary = f"⚠️ **Operation Failed**\nError: {output.get('error')}"
+            payload = {
+                "command": message,
+                "args": context
+            }
             
-    ledger_hash = kernel.ledger.get_top_hash()
+        task = Task(
+            agent_id="envoy",
+            payload=payload
+        )
+        
+        task_id = kernel.submit_task(task)
+        kernel.tick()
+        result_data = kernel.get_task_result(task_id)
+        
+        if not result_data:
+            return {"error": "Task execution failed", "status": "error"}
+            
+        output = result_data.get("output_result", {})
+        
+        # Handle SQLite JSON serialization
+        if isinstance(output, str):
+            try:
+                output = json.loads(output)
+            except json.JSONDecodeError:
+                output = {"summary": str(output)}
+
+        summary = output.get("summary")
+        if not summary:
+            if output.get("status") == "success" or output.get("status") == "complete":
+                summary = f"✅ **Operation Successful**\\nTask `{task_id}` completed.\\nResult: {str(output)}"
+            else:
+                summary = f"⚠️ **Operation Failed**\\nError: {output.get('error')}"
+                
+        ledger_hash = kernel.ledger.get_top_hash()
+        
+        return {
+            "status": "success",
+            "summary": summary,
+            "ledger_hash": ledger_hash,
+            "task_id": task_id
+        }
     
-    return {
-        "status": "success",
-        "summary": summary,
-        "ledger_hash": ledger_hash,
-        "task_id": task_id
-    }
+    except Exception as e:
+        # CRITICAL: Always return JSON, never HTML
+        logger.error(f"❌ /v1/chat error: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(e),
+                "status": "error",
+                "message": "Internal server error - check logs"
+            }
+        )
 
 @app.get("/health")
 async def health():
