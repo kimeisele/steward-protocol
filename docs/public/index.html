@@ -149,6 +149,33 @@
             cursor: pointer;
             font-size: 1.2rem;
         }
+
+        footer {
+            padding: 10px 20px;
+            border-top: 1px solid #222;
+            font-size: 0.7rem;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .version {
+            color: #444;
+        }
+
+        .backend-status {
+            color: #666;
+            font-size: 0.7rem;
+        }
+
+        .backend-status.connected {
+            color: var(--accent-color);
+        }
+
+        .backend-status.error {
+            color: #ff4444;
+        }
     </style>
 </head>
 
@@ -158,7 +185,7 @@
         <header>
             <div>
                 <h1>Agentic World</h1>
-                <span class="status">● System Online</span>
+                <span class="status" id="system-status">● Initializing...</span>
             </div>
             <div class="config-toggle" onclick="toggleConfig()">⚙️</div>
         </header>
@@ -175,7 +202,7 @@
             <div class="message agent-msg">
                 <strong>SYSTEM:</strong> Welcome to the Public Access Layer.<br>
                 I am the Soft Interface to the Hard Kernel.<br>
-                <em>Please configure the API URL in settings (⚙️) to begin.</em>
+                <em id="initial-message">Checking configuration...</em>
             </div>
         </div>
 
@@ -183,6 +210,11 @@
             <input type="text" id="user-input" placeholder="Type your command..." onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()">Send</button>
         </div>
+
+        <footer>
+            <span class="version">Frontend v1.0.1</span>
+            <span class="backend-status" id="backend-status">Backend: Unknown</span>
+        </footer>
     </div>
 
     <script>
@@ -192,6 +224,54 @@
 
         if (apiUrl) document.getElementById('api-url').value = apiUrl;
         if (apiKey) document.getElementById('api-key').value = apiKey;
+
+        // Auto-check configuration on load
+        window.addEventListener('load', checkSystemStatus);
+
+        async function checkSystemStatus() {
+            const statusEl = document.getElementById('system-status');
+            const backendEl = document.getElementById('backend-status');
+            const initialMsg = document.getElementById('initial-message');
+
+            if (!apiUrl || !apiKey) {
+                statusEl.textContent = '⚠️ Not Configured';
+                statusEl.style.color = '#ff9d00';
+                backendEl.textContent = 'Backend: Not configured';
+                backendEl.className = 'backend-status error';
+                initialMsg.innerHTML = '⚠️ <strong>Please configure the API URL in settings (⚙️) to begin.</strong>';
+                return;
+            }
+
+            // Try to ping the backend
+            statusEl.textContent = '🔄 Connecting...';
+            statusEl.style.color = '#00ff9d';
+
+            try {
+                const response = await fetch(`${apiUrl}/health`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusEl.textContent = '● System Online';
+                    statusEl.style.color = '#00ff9d';
+                    backendEl.textContent = `Backend: ${data.kernel || 'ready'}`;
+                    backendEl.className = 'backend-status connected';
+                    initialMsg.innerHTML = '✅ <strong>System ready!</strong> Type a command below (try "briefing").';
+                } else {
+                    throw new Error('Backend returned error');
+                }
+            } catch (error) {
+                statusEl.textContent = '⚠️ Backend Offline';
+                statusEl.style.color = '#ff4444';
+                backendEl.textContent = 'Backend: Unreachable';
+                backendEl.className = 'backend-status error';
+                initialMsg.innerHTML = `⚠️ <strong>Cannot reach backend.</strong><br>
+                    Check if <code>${apiUrl}</code> is correct.<br>
+                    The backend might be sleeping (first request takes 30s).`;
+            }
+        }
 
         function toggleConfig() {
             const panel = document.getElementById('config-panel');
@@ -213,6 +293,9 @@
             localStorage.setItem('steward_api_key', apiKey);
             toggleConfig();
             addMessage("agent", `✅ Configuration saved!\n📡 API: ${apiUrl}\n🔑 Key: ${apiKey.substring(0, 4)}****`);
+
+            // Re-check system status
+            checkSystemStatus();
         }
 
         function addMessage(sender, text) {
