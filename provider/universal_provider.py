@@ -117,6 +117,7 @@ class UniversalProvider:
 
             return {
                 "status": "SUBMITTED",
+                "path": "slow",
                 "summary": f"🤖 {response_msg}",
                 "details": {
                     "task_id": task_id,
@@ -126,7 +127,11 @@ class UniversalProvider:
             }
         except Exception as e:
             logger.error(f"Task submission failed: {e}")
-            return {"status": "FAILED", "error": str(e)}
+            return {
+                "status": "FAILED",
+                "path": "slow",
+                "error": str(e)
+            }
 
     # --- FAST PATH HANDLERS ---
 
