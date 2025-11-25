@@ -184,7 +184,7 @@ def check_ledger_access(user_id: str):
     
     # In a real implementation, CIVIC would check a license/identity registry.
     # For this PoC, we simulate the check or check a known list.
-    authorized_users = ["hil_operator_01", "admin", "steward_architect"]
+    authorized_users = ["hil_operator_01", "admin", "steward_architect", "public_user"]
     
     if user_id not in authorized_users:
         logger.warning(f"⛔ Unauthorized access attempt by {user_id}")
@@ -294,6 +294,31 @@ async def chat(
 @app.get("/health")
 async def health():
     return {"status": "ok", "kernel": "ready" if kernel else "cold"}
+
+@app.get("/help")
+async def help_endpoint():
+    """Return available commands and usage instructions."""
+    return {
+        "commands": [
+            {
+                "command": "briefing",
+                "description": "Get a strategic briefing from the HIL Assistant",
+                "example": "briefing"
+            },
+            {
+                "command": "campaign",
+                "description": "Launch a marketing campaign",
+                "example": "Start a campaign for product launch"
+            },
+            {
+                "command": "status",
+                "description": "Get system status",
+                "example": "status"
+            }
+        ],
+        "usage": "Send commands via POST /v1/chat with user_id and command in the body",
+        "version": "1.0.0"
+    }
 
 if __name__ == "__main__":
     import uvicorn
