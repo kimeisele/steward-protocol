@@ -22,27 +22,13 @@ from envoy.cartridge_main import EnvoyCartridge
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger("VERIFICATION")
 
-class MockKernel:
-    """Simulates the VibeOS Kernel."""
-    def __init__(self):
-        self.agent_registry = {}
-
-    def register_agent(self, agent_id: str, agent: VibeAgent):
-        self.agent_registry[agent_id] = agent
-
-    def get_agent(self, agent_id: str) -> Optional[VibeAgent]:
-        return self.agent_registry.get(agent_id)
-
 def main():
     print("\n" + "="*60)
     print("🧠 VERIFICATION: HIL Assistant (VAD Layer)")
     print("="*60 + "\n")
 
-    # 1. Initialize Kernel and Envoy
-    kernel = MockKernel()
+    # 1. Initialize Envoy
     envoy = EnvoyCartridge()
-    kernel.register_agent("envoy", envoy)
-    envoy.set_kernel(kernel)
 
     print("✅ System Initialized.\n")
 

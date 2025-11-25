@@ -36,12 +36,23 @@ class CuratorTool:
         """
         Search GitHub for AI agent repositories.
         Returns list of candidate repositories with metadata.
+
+        Raises:
+            ImportError: If PyGithub is not installed
+            RuntimeError: If GitHub search fails
         """
         print(f"\n🔍 CURATOR: Scanning GitHub for '{topic}' projects (min {min_stars}⭐)...")
 
         try:
             from github import Github
+        except ImportError:
+            raise ImportError(
+                "❌ CRITICAL: PyGithub not installed. "
+                "Install with: pip install PyGithub. "
+                "No mocks. Real GitHub search required."
+            )
 
+        try:
             token = os.getenv("GITHUB_TOKEN")
             if token:
                 g = Github(token)
@@ -71,28 +82,11 @@ class CuratorTool:
             print(f"  ✓ Found {len(candidates)} candidates")
             return candidates
 
-        except ImportError:
-            print("  ⚠️  PyGithub not installed. Using mock data.")
-            return self._mock_search()
         except Exception as e:
-            print(f"  ✗ Search failed: {e}")
-            return self._mock_search()
-
-    def _mock_search(self) -> List[Dict]:
-        """Mock search results for testing without GitHub API."""
-        return [
-            {
-                "name": "example/ai-agent-framework",
-                "description": "A framework for building autonomous AI agents",
-                "stars": 250,
-                "forks": 45,
-                "language": "Python",
-                "url": "https://github.com/example/ai-agent-framework",
-                "topics": ["ai-agent", "llm", "autonomous"],
-                "updated_at": "2025-11-20T10:30:00Z",
-                "open_issues": 12,
-            }
-        ]
+            raise RuntimeError(
+                f"❌ CRITICAL: GitHub search failed: {e}. "
+                f"No mocks. Real search required. Check API limits and network."
+            )
 
     def analyze_governance(self, repo_info: Dict) -> Dict:
         """

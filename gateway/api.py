@@ -36,22 +36,11 @@ from civic.cartridge_main import CivicCartridge
 from herald.cartridge_main import HeraldCartridge
 # Import other agents as needed
 
-# --- GAD-000: SERVERLESS OATH BYPASS ---
-# In the serverless gateway, we trust the environment and the agents we instantiate.
-# We bypass the strict cryptographic oath verification to avoid complex key management
-# in the ephemeral runtime.
-# SECURITY CRITICAL: Only enable this in controlled serverless environments.
-if os.getenv("GOVERNANCE_MODE") == "SERVERLESS_BYPASS":
-    try:
-        from steward.constitutional_oath import ConstitutionalOath
-        def mock_verify_oath(event, identity_tool):
-            return True, "Serverless Gateway Trust (Bypass Enabled)"
-        ConstitutionalOath.verify_oath = staticmethod(mock_verify_oath)
-        logging.warning("🛡️  SECURITY WARNING: Constitutional Oath verification BYPASSED via GOVERNANCE_MODE")
-    except ImportError:
-        pass
-else:
-    logging.info("🛡️  Constitutional Oath verification ACTIVE (Strict Mode)")
+# --- Governance Verification ---
+# Constitutional Oath verification is ALWAYS active.
+# For serverless/development environments, use proper authorization mechanisms
+# (API keys, ledger checks) instead of oath bypasses.
+logging.info("🛡️  Constitutional Oath verification ACTIVE")
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
