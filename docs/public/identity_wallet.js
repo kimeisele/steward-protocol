@@ -11,25 +11,32 @@ class IdentityWallet {
         this.keyPair = null;
         this.publicKeyHex = null;
         this.agentId = "HIL_OPERATOR";
+        this.db = null;
+        console.log("🧩 Wallet Class Instantiated");
     }
 
     async init() {
         console.log("👁️ Opening Third Eye (Identity Wallet)...");
-        await this._openDB();
+        try {
+            await this._openDB();
 
-        const existing = await this._getKey();
-        if (existing) {
-            console.log("✅ Identity Loaded from Storage");
-            this.keyPair = existing;
-        } else {
-            console.log("⚡ Generating New Genesis Identity...");
-            this.keyPair = await this._generateKeys();
-            await this._saveKey(this.keyPair);
+            const existing = await this._getKey();
+            if (existing) {
+                console.log("✅ Identity Loaded from Storage");
+                this.keyPair = existing;
+            } else {
+                console.log("⚡ Generating New Genesis Identity...");
+                this.keyPair = await this._generateKeys();
+                await this._saveKey(this.keyPair);
+            }
+
+            this.publicKeyHex = await this._exportKey(this.keyPair.publicKey);
+            console.log("🔑 Public Key Available");
+            return this.publicKeyHex;
+        } catch (e) {
+            console.error("CRITICAL WALLET FAILURE:", e);
+            throw e;
         }
-
-        this.publicKeyHex = await this._exportKey(this.keyPair.publicKey);
-        console.log("🔑 Public Key:", this.publicKeyHex.substring(0, 16) + "...");
-        return this.publicKeyHex;
     }
 
     async signPayload(message) {
@@ -58,7 +65,7 @@ class IdentityWallet {
     async _generateKeys() {
         return window.crypto.subtle.generateKey(
             { name: "ECDSA", namedCurve: "P-256" },
-            false, // Non-extractable private key (Security!)
+            false,
             ["sign", "verify"]
         );
     }
@@ -83,23 +90,31 @@ class IdentityWallet {
                 e.target.result.createObjectStore(STORE_NAME);
             };
             req.onsuccess = () => { this.db = req.result; resolve(); };
-            req.onerror = reject;
+            req.onerror = (e) => reject("DB Open Error: " + e.target.error);
         });
     }
 
     _getKey() {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
+            if (!this.db) return reject("DB not open");
             const tx = this.db.transaction(STORE_NAME, "readonly");
             const req = tx.objectStore(STORE_NAME).get("hil_key");
             req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
         });
     }
 
     _saveKey(keys) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             const tx = this.db.transaction(STORE_NAME, "readwrite");
             tx.objectStore(STORE_NAME).put(keys, "hil_key");
             tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error);
         });
     }
 }
+
+// FORCE GLOBAL ASSIGNMENT
+console.log("⚡ Attaching Wallet to Window...");
+window.wallet = new IdentityWallet();
+console.log("✅ Wallet Attached:", window.wallet);
