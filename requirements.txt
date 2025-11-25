@@ -1,0 +1,40 @@
+# Core Steward Protocol Dependencies
+# Generated from setup.py and all cartridge-specific requirements
+
+# Core Framework
+openai>=1.0.0
+pydantic>=2.0.0
+pyyaml>=6.0
+ecdsa>=0.18.0
+rich>=13.0.0
+
+# API & Web
+fastapi>=0.104.0
+uvicorn>=0.24.0
+requests>=2.31.0
+
+# External APIs
+tavily-python>=0.3.0
+tweepy>=4.14.0
+praw>=7.7.0
+PyGithub>=2.0.0
+
+# Utilities
+gitpython>=3.1.0
+Pillow>=10.0.0
+python-dotenv>=1.0.0
+
+# Database
+# SQLite is built-in to Python, but we may want explicit version management
+# Included implicitly via standard library
+
+# Development (optional)
+# pytest>=7.4.0
+# black>=23.0.0
+# flake8>=6.1.0
+# pytest-cov>=4.1.0
+
+# Note: This file combines:
+# - Core dependencies from setup.py
+# - Herald-specific dependencies from herald/requirements.txt
+# - All other cartridge dependencies
