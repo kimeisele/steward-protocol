@@ -35,12 +35,18 @@ from civic.tools.ledger_tool import LedgerTool, AgentBank
 from civic.tools.license_tool import LicenseTool, LicenseAuthority, LicenseType
 from civic.tools.registry_tool import RegistryTool
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CIVIC_MAIN")
 
 
-class CivicCartridge(VibeAgent):
+class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The CIVIC Agent Cartridge (The Bureaucrat).
 
@@ -76,6 +82,11 @@ class CivicCartridge(VibeAgent):
         )
 
         logger.info("🏛️  CIVIC Cartridge initializing (VibeAgent v2.0)...")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            logger.info("🕉️  Constitutional Oath ceremony prepared")
 
         # Load THE MATRIX (configuration)
         self.matrix = self._load_matrix()

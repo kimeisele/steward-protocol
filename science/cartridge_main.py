@@ -33,12 +33,18 @@ from vibe_core import VibeAgent, Task
 
 from science.tools.web_search_tool import WebSearchTool, SearchResult
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCIENTIST_MAIN")
 
 
-class ScientistCartridge(VibeAgent):
+class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     THE SCIENTIST Agent - External Intelligence Module.
 
@@ -76,6 +82,11 @@ class ScientistCartridge(VibeAgent):
                 "fact_synthesis"
             ]
         )
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            logger.info("🕉️  Constitutional Oath ceremony prepared")
 
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 

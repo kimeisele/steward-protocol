@@ -33,6 +33,12 @@ from vibe_core import VibeAgent, Task
 # Civic imports for license operations
 from civic.tools.license_tool import LicenseType
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Import tools (to be created)
 # from forum.tools.proposal_tool import ProposalTool
 # from forum.tools.voting_tool import VotingTool
@@ -43,7 +49,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FORUM_MAIN")
 
 
-class ForumCartridge(VibeAgent):
+class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The FORUM Agent Cartridge (The Town Hall).
 
@@ -78,6 +84,11 @@ class ForumCartridge(VibeAgent):
         )
 
         logger.info("🗳️  FORUM (VibeAgent) initializing...")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            logger.info("🕉️  Constitutional Oath ceremony prepared")
 
         # Governance paths
         self.proposals_path = Path("data/governance/proposals")

@@ -32,12 +32,18 @@ from envoy.tools.run_campaign_tool import RunCampaignTool
 from envoy.tools.gap_report_tool import GAPReportTool
 from envoy.tools.hil_assistant_tool import HILAssistantTool
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENVOY_CARTRIDGE")
 
 
-class EnvoyCartridge(VibeAgent):
+class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The ENVOY Agent Cartridge - Brain of Agent City
 
@@ -70,6 +76,11 @@ class EnvoyCartridge(VibeAgent):
                 "auditing"
             ]
         )
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            logger.info("🕉️  Constitutional Oath ceremony prepared")
 
         logger.info("👁️  ENVOY (VibeAgent v2.0) is initializing...")
 
