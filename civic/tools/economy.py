@@ -26,6 +26,9 @@ from typing import Optional, Dict, List, Tuple
 
 logger = logging.getLogger("CIVIC_BANK")
 
+# Vault will be imported lazily to avoid circular imports
+vault = None
+
 
 class InsufficientFundsError(Exception):
     """Raised when an agent lacks sufficient credits for a transaction."""
@@ -53,6 +56,15 @@ class CivicBank:
         self.conn = sqlite3.connect(str(self.DB_PATH), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self._init_db()
+
+        # Initialize the Civic Vault (lazy import to avoid circular imports)
+        try:
+            from .vault import CivicVault
+            self.vault = CivicVault(self.conn)
+        except ImportError:
+            logger.warning("⚠️  Vault unavailable (cryptography not installed)")
+            self.vault = None
+
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")
 
     def _init_db(self):
@@ -97,10 +109,19 @@ class CivicBank:
             )
         """)
 
-        # GENESIS: Ensure the MINT exists (infinite money fountain)
-        cur.execute("INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES ('MINT', 1000000000)")
+        # GENESIS: Ensure special accounts exist
+        genesis_accounts = [
+            ('MINT', 1000000000),      # Infinite money fountain
+            ('VAULT', 0),              # Vault asset management (receives lease fees)
+            ('CIVIC', 0),              # Platform operations (receives platform fees)
+        ]
+        for agent_id, initial_balance in genesis_accounts:
+            cur.execute(
+                "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, ?)",
+                (agent_id, initial_balance)
+            )
         self.conn.commit()
-        logger.info("✅ Schema initialized (MINT account ready)")
+        logger.info("✅ Schema initialized (MINT, VAULT, CIVIC accounts ready)")
 
     def get_last_hash(self) -> str:
         """
