@@ -1,0 +1,29 @@
+# CONCEPT MAP (SANKHYA ANALYSIS)
+# Maps raw inputs to atomic semantic elements.
+# This layer performs semantic normalization: Chaos (User Input) -> Order (Concepts)
+
+actions:
+  CMD_CREATE: [create, crate, make, build, draft, write, generate, compose, publish]
+  CMD_STATUS: [status, health, ping, system, check, alive, info, stats]
+  CMD_VERIFY: [verify, audit, check, validate, confirm, validate, inspect, review]
+  CMD_VOTE: [vote, elect, choose, ballot, decide, select]
+  CMD_BRIEFING: [briefing, report, overview, help, who, what, tell, explain, describe]
+  CMD_EXECUTE: [execute, deploy, launch, run, trigger, activate]
+
+domains:
+  DOM_GOVERNANCE: [campaign, election, law, rule, constitution, vote, civic, congress]
+  DOM_CONTENT: [blog, post, tweet, article, text, image, video, media, content]
+  DOM_FINANCE: [money, credit, fund, transfer, pay, budget]
+  DOM_SYSTEM: [kernel, logs, error, boot, shutdown, performance, memory]
+  DOM_AGENT: [agent, actor, cartridge, herald, civic, envoy, watchman, forum, science, engineer, oracle, artisan, auditor]
+
+entities:
+  ENT_ENVOY: [envoy, hi, hello, hey, talk, chat, speak, ask]
+  ENT_HERALD: [herald, publish, broadcast, announce, share]
+  ENT_CIVIC: [civic, governance, voting, rules]
+  ENT_WATCHMAN: [watchman, monitor, watch, guard]
+
+patterns:
+  PAT_CASUAL: [casual, chat, conversation, small talk, chit chat]
+  PAT_URGENT: [urgent, asap, immediately, now, critical, emergency]
+  PAT_DEFERRED: [later, later, when you can, eventually, background]

@@ -1,0 +1,82 @@
+# INTENT RULES (DHARMA)
+# Deterministic mapping of Concept Sets to Agents and Execution Paths.
+# Rules are evaluated top-to-bottom by priority. First match wins.
+
+rules:
+  # --- PRIORITY 1: SYSTEM OPERATIONS (FAST PATH) ---
+  - name: "System Health Check"
+    triggers: [CMD_STATUS]
+    agent: "watchman"
+    response_type: "FAST"
+    intent_type: "SYSTEM"
+    description: "Status queries trigger immediate system check via WATCHMAN"
+
+  # --- PRIORITY 2: CONTENT CREATION (SLOW PATH) ---
+  - name: "Content Generation"
+    triggers: [CMD_CREATE]
+    agent: "herald"
+    response_type: "SLOW"
+    intent_type: "CREATION"
+    description: "Create/publish commands delegated to HERALD for content generation"
+
+  - name: "Specific Content with Governance"
+    triggers: [CMD_CREATE, DOM_GOVERNANCE]
+    agent: "herald"
+    response_type: "SLOW"
+    intent_type: "CREATION"
+    description: "Content creation in governance domain still routes to HERALD"
+
+  # --- PRIORITY 3: GOVERNANCE & ACTIONS (SLOW PATH) ---
+  - name: "Voting & Elections"
+    triggers: [CMD_VOTE, DOM_GOVERNANCE]
+    agent: "civic"
+    response_type: "SLOW"
+    intent_type: "ACTION"
+    description: "Electoral operations delegated to CIVIC"
+
+  - name: "Verification & Audits"
+    triggers: [CMD_VERIFY]
+    agent: "civic"
+    response_type: "SLOW"
+    intent_type: "ACTION"
+    description: "Verification operations go to CIVIC for ledger handling"
+
+  # --- PRIORITY 4: EXECUTION & DEPLOYMENT (SLOW PATH) ---
+  - name: "Deploy & Execute"
+    triggers: [CMD_EXECUTE]
+    agent: "civic"
+    response_type: "SLOW"
+    intent_type: "ACTION"
+    description: "Execution commands go through CIVIC for governance compliance"
+
+  # --- PRIORITY 5: INFORMATION & BRIEFINGS (FAST PATH) ---
+  - name: "Briefing & Reports"
+    triggers: [CMD_BRIEFING]
+    agent: "envoy"
+    response_type: "FAST"
+    intent_type: "QUERY"
+    description: "Informational queries handled by ENVOY (fast response)"
+
+  # --- PRIORITY 6: CASUAL CHAT (FAST PATH) ---
+  - name: "Casual Conversation"
+    triggers: [PAT_CASUAL, ENT_ENVOY]
+    agent: "envoy"
+    response_type: "FAST"
+    intent_type: "CHAT"
+    description: "Casual interactions handled by ENVOY"
+
+  # --- PRIORITY 7: FALLBACK (FAST PATH) ---
+  - name: "Default Chat"
+    triggers: []  # Empty triggers = Fallback rule (matches everything else)
+    agent: "envoy"
+    response_type: "FAST"
+    intent_type: "CHAT"
+    description: "Ultimate fallback: unmatched inputs go to ENVOY"
+
+# ROUTING PRIORITIES (used by router)
+priorities:
+  - SYSTEM        # CMD_STATUS first
+  - CREATION      # Then content creation
+  - ACTION        # Then governance/verification
+  - QUERY         # Then informational
+  - CHAT          # Finally casual chat
