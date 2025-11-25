@@ -68,28 +68,26 @@ class UniversalProvider:
     def route_and_execute(self, user_input: str) -> Dict[str, Any]:
         """
         The Main Entry Point for VibeChat.
+        NOW WITH ABI TRANSLATION (GAD-2100)
         """
         logger.info(f"📨 Processing Input: '{user_input}'")
-        
+
         # 1. Parse Intent
         vector = self.resolve_intent(user_input)
-        
+
         # 2. Select Agent based on Manifest Registry
         target_agent_id = self._find_best_agent(vector)
-        
+
         if not target_agent_id:
             return {
                 "status": "ERROR",
                 "message": f"No agent found for intent: {vector.intent_type.value}"
             }
 
-        # 3. Construct Task
-        task_payload = {
-            "input": user_input,
-            "vector": vector.intent_type.value,
-            "context": self.context_layer
-        }
-        
+        # 3. TRANSLATE PAYLOAD (GAD-2100: ABI Harmonization)
+        # Übersetze den abstrakten Intent in konkrete Agent-Befehle
+        task_payload = self._translate_payload(target_agent_id, vector)
+
         task = Task(
             agent_id=target_agent_id,
             payload=task_payload
@@ -98,14 +96,15 @@ class UniversalProvider:
         # 4. Execute via Kernel
         try:
             task_id = self.kernel.submit_task(task)
-            
-            # Note: This is async in reality, but for chat interaction 
+
+            # Note: This is async in reality, but for chat interaction
             # we might want to poll or return the ID.
             return {
                 "status": "SUBMITTED",
                 "task_id": task_id,
                 "assigned_agent": target_agent_id,
-                "vector": vector.intent_type.value
+                "vector": vector.intent_type.value,
+                "translated_payload": task_payload
             }
         except Exception as e:
             return {"status": "FAILED", "error": str(e)}
@@ -129,3 +128,51 @@ class UniversalProvider:
 
     def _check_agent(self, agent_id: str) -> bool:
         return agent_id in self.kernel.agent_registry
+
+    def _translate_payload(self, agent_id: str, vector: IntentVector) -> Dict[str, Any]:
+        """
+        ABI LAYER (GAD-2100): Translates High-Level Intent to Low-Level Agent Protocol.
+
+        Each agent speaks its own protocol:
+        - Watchman: Expects 'command' field
+        - Herald: Expects 'command' field with content
+        - Envoy: Expects 'instruction' field
+        """
+        agent_id = agent_id.lower()
+
+        # WATCHMAN PROTOCOL (System Monitor)
+        if agent_id in ("watchman", "watchman_01"):
+            logger.info("🔍 Translating to WATCHMAN protocol")
+            return {
+                "command": "status_report",
+                "details": "full",
+                "context": self.context_layer
+            }
+
+        # HERALD PROTOCOL (Publisher/Content Creator)
+        if agent_id in ("herald", "herald_01"):
+            logger.info("📢 Translating to HERALD protocol")
+            return {
+                "command": "publish",
+                "content": vector.raw_input,
+                "channel": "global",
+                "context": self.context_layer
+            }
+
+        # ENVOY PROTOCOL (General Purpose / Governance Handler)
+        if agent_id in ("envoy", "envoy_01"):
+            logger.info("🚀 Translating to ENVOY protocol")
+            return {
+                "instruction": vector.raw_input,
+                "context": self.context_layer,
+                "intent": vector.intent_type.value
+            }
+
+        # Default Fallback (Unknown Agent)
+        logger.warning(f"⚠️ Unknown agent {agent_id}, using generic protocol")
+        return {
+            "instruction": vector.raw_input,
+            "context": self.context_layer,
+            "intent": vector.intent_type.value,
+            "fallback": True
+        }
