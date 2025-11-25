@@ -14,6 +14,7 @@
         .system { color: #888; }
         .user { color: #0ff; font-weight: bold; }
         .agent { color: #f0f; }
+        .error { color: #ff0000; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -25,7 +26,9 @@
         <button onclick="sendCommand()">TRANSMIT</button>
     </div>
 
-    <script src="identity_wallet.js"></script>
+    <!-- CACHE BUSTING: ?v=GAD3000 zwingt den Browser zum Neuladen -->
+    <script src="identity_wallet.js?v=GAD3000"></script>
+
     <script>
         const log = document.getElementById('log');
         const status = document.getElementById('status');
@@ -36,8 +39,15 @@
             log.scrollTop = log.scrollHeight;
         }
 
-        // 1. BOOT IDENTITY
         window.onload = async () => {
+            // ROBUST CHECK
+            if (!window.wallet) {
+                status.innerText = "❌ CRITICAL ERROR: Wallet not loaded";
+                status.style.color = "red";
+                appendLog("FATAL: window.wallet is undefined. Javascript Error in identity_wallet.js?", "error");
+                return;
+            }
+
             try {
                 const pubKey = await window.wallet.init();
                 status.innerText = `✅ IDENTITY FUSED: ${pubKey.substring(0,24)}...`;
@@ -45,11 +55,11 @@
             } catch (e) {
                 status.innerText = "❌ BLIND: Wallet Init Failed";
                 status.style.color = "red";
+                appendLog(`Init Error: ${e.message}`, "error");
                 console.error(e);
             }
         };
 
-        // 2. TRANSMIT (SIGN & SEND)
         async function sendCommand() {
             const txt = input.value;
             if (!txt) return;
@@ -58,11 +68,13 @@
             input.value = "";
 
             try {
-                // A. SIGN
+                if (!window.wallet || !window.wallet.keyPair) {
+                     throw new Error("Wallet not ready");
+                }
+
                 appendLog("🔒 Signing payload...", 'system');
                 const signedPayload = await window.wallet.signPayload(txt);
 
-                // B. SEND
                 const response = await fetch('/v1/chat', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -71,15 +83,16 @@
 
                 const data = await response.json();
 
-                // C. DISPLAY
                 if (data.status === "success" || data.status === "SUBMITTED") {
-                    appendLog(`👁️ AGENT RESPONSE:\n${JSON.stringify(data.summary || data, null, 2)}`, 'agent');
+                    // Zeige summary wenn vorhanden, sonst raw dump
+                    const display = data.summary || JSON.stringify(data, null, 2);
+                    appendLog(`👁️ AGENT RESPONSE:\n${display}`, 'agent');
                 } else {
-                    appendLog(`❌ ERROR: ${JSON.stringify(data)}`, 'system');
+                    appendLog(`❌ ERROR: ${JSON.stringify(data)}`, 'error');
                 }
 
             } catch (e) {
-                appendLog(`❌ TRANSMISSION FAILURE: ${e.message}`, 'system');
+                appendLog(`❌ TRANSMISSION FAILURE: ${e.message}`, 'error');
             }
         }
 
