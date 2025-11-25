@@ -22,6 +22,7 @@ from datetime import datetime
 import time
 import base64
 from steward.crypto import verify_signature
+from provider.universal_provider import UniversalProvider
 
 # Add project root to Python path for imports
 project_root = Path(__file__).parent.parent
@@ -150,6 +151,7 @@ app.add_middleware(
 kernel = None
 envoy = None
 civic = None
+provider = None  # The Brain
 _kernel_lock = threading.Lock()  # Thread safety for concurrent requests
 
 def get_kernel():
@@ -238,6 +240,12 @@ def get_kernel():
         
         # 4. Boot Kernel
         kernel.boot()
+        
+        # 5. THE GREAT REWIRING: Activate Universal Provider (GAD-2000)
+        global provider
+        logger.info("🧠 ACTIVATING UNIVERSAL PROVIDER...")
+        provider = UniversalProvider(kernel)
+        logger.info("✅ Universal Provider wired to kernel")
         
         elapsed = (datetime.utcnow() - start_time).total_seconds()
         logger.info(f"🔥 Kernel Ready (initialized in {elapsed:.2f}s)")
@@ -435,13 +443,17 @@ async def chat(request: dict, api_key: str = Depends(verify_auth)):
                 "command": message,
                 "args": context
             }
-            
-        task = Task(
-            agent_id="envoy",
-            payload=payload
-        )
         
-        task_id = kernel.submit_task(task)
+        # GAD-2000: Route through Universal Provider
+        logger.info(f"📨 ROUTING via UNIVERSAL PROVIDER: {message}")
+        global provider
+        execution_result = provider.route_and_execute(message)
+        
+        if execution_result.get("status") == "FAILED":
+            return {"error": execution_result.get("error"), "status": "error"}
+        
+        # Provider submitted task, get task_id
+        task_id = execution_result.get("task_id")
         kernel.tick()
         result_data = kernel.get_task_result(task_id)
         
