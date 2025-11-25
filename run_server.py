@@ -61,7 +61,7 @@ from envoy.cartridge_main import EnvoyCartridge
 from archivist.cartridge_main import ArchivistCartridge
 from auditor.cartridge_main import AuditorCartridge
 from engineer.cartridge_main import EngineerCartridge
-from oracle.cartridge_main import OracleCartridge
+from oracle.cartridge_main import Oracle as OracleCartridge
 from watchman.cartridge_main import WatchmanCartridge
 from artisan.cartridge_main import ArtisanCartridge
 
