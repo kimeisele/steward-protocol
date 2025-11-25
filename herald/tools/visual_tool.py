@@ -26,7 +26,7 @@ logger = logging.getLogger("HERALD_VISUAL")
 @dataclass
 class VisualAsset:
     """Represents a generated visual asset."""
-    asset_type: str  # "ascii", "svg", "placeholder"
+    asset_type: str  # "ascii" or "svg"
     content: str     # The actual SVG/ASCII content
     alt_text: str    # Accessibility text
     keywords: List[str]  # Metadata: what this asset represents

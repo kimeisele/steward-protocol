@@ -84,6 +84,7 @@ class WebSearchTool:
 
         try:
             self.client = TavilyClient(api_key=self.api_key)
+            self.mode = "tavily"  # FIX: Initialize the mode attribute
             logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
         except Exception as e:
             raise RuntimeError(
@@ -167,7 +168,7 @@ class WebSearchTool:
         fact_sheet = {
             "query": query,
             "timestamp": datetime.now().isoformat(),
-            "mode": self.mode,
+            "mode": self.mode,  # initialized in __init__ - safe access
             "source_count": len(results),
             "sources": [r.to_dict() for r in results],
             "key_insights": self._extract_key_insights(results),
@@ -177,26 +178,26 @@ class WebSearchTool:
         return fact_sheet
 
     def _extract_key_insights(self, results: List[SearchResult]) -> List[str]:
-        """Extract key insights from results (placeholder for NLP)."""
+        """Extract key insights from results by identifying first sentences."""
         insights = []
         for result in results:
-            # Simple heuristic: split by sentences and take first few
+            # Extract first sentences from content
             sentences = result.content.split(".")
             for sentence in sentences[:2]:
-                if sentence.strip():
+                if sentence.strip() and len(sentence.strip()) > 10:
                     insights.append(sentence.strip())
         return insights[:5]  # Top 5 insights
 
     def _generate_summary(self, results: List[SearchResult]) -> str:
-        """Generate summary from results (placeholder for NLP)."""
+        """Generate summary from results by combining leading content."""
         if not results:
             return "No results found."
 
-        # Simple approach: concatenate first sentences
+        # Combine first sentences from top results
         summary_parts = []
         for result in results[:3]:
             first_sentence = result.content.split(".")[0].strip()
-            if first_sentence:
+            if first_sentence and len(first_sentence) > 10:
                 summary_parts.append(first_sentence)
 
         return " ".join(summary_parts)
