@@ -32,20 +32,31 @@ class DiplomacyTool:
     def search_github(self, topic="ai-agent", min_stars=100, max_results=10):
         """
         Search GitHub for high-quality AI agent repositories.
-        
+
         Args:
             topic: GitHub topic to search for
             min_stars: Minimum star count
             max_results: Maximum number of results
-        
+
         Returns:
             List of candidate repositories
+
+        Raises:
+            ImportError: If PyGithub is not installed
+            RuntimeError: If GitHub search fails
         """
         print(f"🔍 Searching GitHub for '{topic}' projects (min {min_stars} stars)...")
-        
+
         try:
             from github import Github
-            
+        except ImportError:
+            raise ImportError(
+                "❌ CRITICAL: PyGithub not installed. "
+                "Install with: pip install PyGithub. "
+                "No mocks. Real GitHub search required."
+            )
+
+        try:
             # Try to get token from environment
             token = os.getenv("GITHUB_TOKEN")
             if not token:
@@ -53,11 +64,11 @@ class DiplomacyTool:
                 g = Github()
             else:
                 g = Github(token)
-            
+
             # Search repositories
             query = f"topic:{topic} stars:>={min_stars}"
             repos = g.search_repositories(query=query, sort="stars", order="desc")
-            
+
             candidates = []
             for repo in repos[:max_results]:
                 candidates.append({
@@ -67,29 +78,15 @@ class DiplomacyTool:
                     "url": repo.html_url,
                     "topics": repo.get_topics()
                 })
-            
+
             print(f"✅ Found {len(candidates)} candidates")
             return candidates
-            
-        except ImportError:
-            print("❌ PyGithub not installed. Install with: pip install PyGithub")
-            return self._mock_search()
+
         except Exception as e:
-            print(f"❌ GitHub search failed: {e}")
-            return self._mock_search()
-    
-    def _mock_search(self):
-        """Mock search results for testing."""
-        print("📋 Using mock search results (for testing)")
-        return [
-            {
-                "name": "example/ai-agent-framework",
-                "description": "A framework for building autonomous AI agents",
-                "stars": 250,
-                "url": "https://github.com/example/ai-agent-framework",
-                "topics": ["ai-agent", "llm", "autonomous"]
-            }
-        ]
+            raise RuntimeError(
+                f"❌ CRITICAL: GitHub search failed: {e}. "
+                f"No mocks. Real search required. Check API limits and network."
+            )
     
     def analyze_project(self, repo_info):
         """
