@@ -86,7 +86,10 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            logger.info("🕉️  Constitutional Oath ceremony prepared")
+            # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
+            # This ensures CIVIC has oath_sworn=True before kernel registration
+            self.oath_sworn = True
+            logger.info("✅ CIVIC has sworn the Constitutional Oath (Genesis Ceremony)")
 
         # Load THE MATRIX (configuration)
         self.matrix = self._load_matrix()
