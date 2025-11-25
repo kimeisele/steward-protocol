@@ -240,9 +240,9 @@
     </div>
 
     <script>
-        // Load config
-        let apiUrl = localStorage.getItem('steward_api_url') || '';
-        let apiKey = localStorage.getItem('steward_api_key') || '';
+        // Load config (with hardcoded defaults for localhost)
+        let apiUrl = localStorage.getItem('steward_api_url') || 'http://127.0.0.1:8000';
+        let apiKey = localStorage.getItem('steward_api_key') || 'steward-secret-key';
 
         if (apiUrl) document.getElementById('api-url').value = apiUrl;
         if (apiKey) document.getElementById('api-key').value = apiKey;
