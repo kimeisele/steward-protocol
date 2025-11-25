@@ -11,7 +11,7 @@ Role:
 
 import logging
 from typing import Dict, Any, List, Optional
-from dataclass import dataclass
+from dataclasses import dataclass
 from enum import Enum
 
 # Import Core Definitions
