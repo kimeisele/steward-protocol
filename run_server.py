@@ -192,6 +192,11 @@ class StewardBootLoader:
 
         for agent_id, agent_instance, purpose in cartridges:
             try:
+                # Check if agent is a VibeAgent (has required interface)
+                if not hasattr(agent_instance, 'get_manifest') or not hasattr(agent_instance, 'process'):
+                    logger.warning(f"   ⏭️  {agent_id.upper():12} | SKIPPED (legacy cartridge, not VibeAgent)")
+                    continue
+
                 self.kernel.register_agent(agent_instance)
                 self.agents.append((agent_id, agent_instance))
                 logger.info(f"   ✅ {agent_id.upper():12} | {purpose}")
