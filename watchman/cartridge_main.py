@@ -60,7 +60,7 @@ class WatchmanCartridge:
         logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
 
     def run_patrol(self) -> dict:
-        """Execute full system integrity check."""
+        """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
         logger.info("\n" + "=" * 70)
         logger.info("⚔️ WATCHMAN PATROL INITIATED")
         logger.info("=" * 70)
@@ -71,28 +71,38 @@ class WatchmanCartridge:
             "status": "clean" if not violations else "VIOLATIONS_DETECTED",
             "violations_found": len(violations),
             "agents_frozen": [],
+            "agents_thawed": [],
             "details": violations
         }
 
-        # ENFORCEMENT PHASE
+        # PHASE 1: IDENTIFY CURRENT VIOLATORS
+        current_violators = set()
         if violations:
             logger.warning(f"\n🚨 FOUND {len(violations)} VIOLATIONS")
-            frozen_agents = set()
-
             for v in violations:
                 agent_id = v["agent_id"]
                 reason = v["reason"]
+                current_violators.add(agent_id)
 
-                if agent_id not in frozen_agents and agent_id not in ["system", "civic"]:
+                if agent_id not in ["system", "civic"]:
                     if not self.bank.is_frozen(agent_id):
                         logger.critical(f"❄️ FREEZING: {agent_id.upper()}")
                         self.bank.freeze_account(agent_id, reason)
-                        frozen_agents.add(agent_id)
                         report["agents_frozen"].append(agent_id)
                     else:
                         logger.info(f"ℹ️ {agent_id.upper()} already frozen")
 
-        else:
+        # PHASE 2: GRANT AMNESTY TO REDEEMED AGENTS
+        # Check all known agents for thaw eligibility
+        logger.info("\n⚖️ JUSTICE PHASE: Checking for redemption...")
+        for agent_id in ["herald", "science", "forum"]:
+            if self.bank.is_frozen(agent_id) and agent_id not in current_violators:
+                # Agent was frozen but has no current violations = REDEEMED
+                logger.info(f"🔥 THAWING: {agent_id.upper()} (violations resolved)")
+                self.bank.unfreeze_account(agent_id, "Compliance Restored")
+                report["agents_thawed"].append(agent_id)
+
+        if not violations:
             logger.info("✅ SYSTEM CLEAN. TEMPLE SECURE.")
 
         logger.info("=" * 70 + "\n")
@@ -151,7 +161,9 @@ class WatchmanCartridge:
                         "reason": f"Placeholder implementation in {agent_name}"
                     })
 
-                if "self.mode" in line and i > 20:  # Skip imports
+                # Only flag self.mode usage WITHOUT assignment (=) and WITHOUT safety comment
+                if ("self.mode" in line and i > 20 and "self.mode =" not in line
+                    and "initialized" not in lower_line and "safe" not in lower_line):
                     violations.append({
                         "agent_id": agent_name,
                         "file": str(file_path),

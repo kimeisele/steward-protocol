@@ -37,6 +37,7 @@ def main():
     print(f"Status: {report['status']}")
     print(f"Violations Found: {report['violations_found']}")
     print(f"Agents Frozen: {len(report['agents_frozen'])}")
+    print(f"Agents Thawed (Redeemed): {len(report['agents_thawed'])}")
 
     if report['violations_found'] > 0:
         print("\n🚨 VIOLATIONS DETAIL:")
@@ -53,6 +54,13 @@ def main():
             print(f"   - {agent.upper()}")
             balance = bank.get_balance(agent)
             print(f"     Balance: {balance} credits (LOCKED)")
+
+    if report['agents_thawed']:
+        print(f"\n🔥 THAWED AGENTS (Redeemed):")
+        for agent in report['agents_thawed']:
+            print(f"   - {agent.upper()}")
+            balance = bank.get_balance(agent)
+            print(f"     Balance: {balance} credits (UNLOCKED)")
 
     # System Status
     print("\n📊 SYSTEM STATUS:")
