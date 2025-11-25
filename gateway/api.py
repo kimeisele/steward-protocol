@@ -52,14 +52,30 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
 
     try:
-        # 2. Execute via Provider
+        # 2. Execute via Provider (GAD-4000: Fast-Path vs Slow-Path)
         result = provider.route_and_execute(request.message)
 
-        return {
-            "status": "success",
-            "summary": f"✅ PROCESSED via {result.get('assigned_agent', 'UNKNOWN')}",
-            "data": result
-        }
+        # Handle both fast-path (instant response) and slow-path (task queued)
+        path = result.get('path', 'slow')
+        summary = result.get('summary', result.get('message', ''))
+
+        if path == 'fast' or path == 'fast_fallback':
+            # Fast-path: Return the natural language response directly
+            return {
+                "status": "success",
+                "path": path,
+                "summary": summary,
+                "data": result
+            }
+        else:
+            # Slow-path: Acknowledge task submission with agent info
+            agent = result.get('details', {}).get('agent', 'UNKNOWN')
+            return {
+                "status": "success",
+                "path": "slow",
+                "summary": summary,
+                "data": result
+            }
     except Exception as e:
         logger.error(f"❌ ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
