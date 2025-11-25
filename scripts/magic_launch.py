@@ -146,8 +146,8 @@ def open_browser():
         logger.error(f"❌ Frontend not found at {html_path}")
         return False
 
-    # Convert to file:// URL
-    file_url = html_path.as_uri()
+    # Open localhost instead of file path
+    file_url = "http://127.0.0.1:8000/"
 
     try:
         webbrowser.open(file_url)

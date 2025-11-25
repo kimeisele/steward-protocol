@@ -233,22 +233,55 @@
             <button onclick="sendMessage()">Send</button>
         </div>
 
+        ```
         <footer>
             <span class="version">Frontend v1.0.1</span>
             <span class="backend-status" id="backend-status">Backend: Unknown</span>
         </footer>
     </div>
 
+    <script src="identity_wallet.js"></script>
     <script>
-        // Load config (with hardcoded defaults for localhost)
-        let apiUrl = localStorage.getItem('steward_api_url') || 'http://127.0.0.1:8000';
+        // Load config (auto-detect origin)
+        let apiUrl = localStorage.getItem('steward_api_url') || window.location.origin;
+        // If running from file://, default to localhost
+        if (window.location.protocol === 'file:') {
+            apiUrl = 'http://127.0.0.1:8000';
+        }
+
         let apiKey = localStorage.getItem('steward_api_key') || 'steward-secret-key';
 
         if (apiUrl) document.getElementById('api-url').value = apiUrl;
         if (apiKey) document.getElementById('api-key').value = apiKey;
 
         // Auto-check configuration on load
-        window.addEventListener('load', checkSystemStatus);
+        window.addEventListener('load', async () => {
+            await checkSystemStatus();
+            await initializeIdentity();
+        });
+
+        const wallet = new IdentityWallet();
+        let identityRegistered = false;
+
+        async function initializeIdentity() {
+            if (!apiUrl) return;
+
+            try {
+                const hasIdentity = await wallet.hasIdentity();
+                if (!hasIdentity) {
+                    addMessage("agent", "🔐 Generating secure identity...");
+                    await wallet.registerWithCity(apiUrl);
+                    identityRegistered = true;
+                    addMessage("agent", "✅ Identity created - You are now Agent HIL");
+                } else {
+                    identityRegistered = true;
+                    // addMessage("agent", "🔐 Identity loaded.");
+                }
+            } catch (e) {
+                console.error("Identity error:", e);
+                addMessage("agent", `⚠️ Identity Error: ${e.message}`);
+            }
+        }
 
         async function checkSystemStatus() {
             const statusEl = document.getElementById('system-status');
@@ -365,16 +398,32 @@
             chat.appendChild(loadingDiv);
 
             try {
+                // Sign the message
+                let payload = {
+                    agent_id: "HIL", // Enforce HIL identity
+                    message: text
+                };
+
+                if (identityRegistered) {
+                    try {
+                        const signed = await wallet.signMessage(text);
+                        payload = {
+                            ...payload,
+                            ...signed
+                        };
+                    } catch (e) {
+                        console.error("Signing failed:", e);
+                        addMessage("agent", "⚠️ Signing failed, sending unsigned...");
+                    }
+                }
+
                 const response = await fetch(`${apiUrl}/v1/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'x-api-key': apiKey
                     },
-                    body: JSON.stringify({
-                        user_id: "public_user",
-                        command: text
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
