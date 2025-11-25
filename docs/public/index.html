@@ -187,7 +187,10 @@
                 <h1>Agentic World</h1>
                 <span class="status" id="system-status">● Initializing...</span>
             </div>
-            <div class="config-toggle" onclick="toggleConfig()">⚙️</div>
+            <div style="display: flex; gap: 15px;">
+                <div class="config-toggle" onclick="toggleHelp()" title="Help">❓</div>
+                <div class="config-toggle" onclick="toggleConfig()" title="Settings">⚙️</div>
+            </div>
         </header>
 
         <div id="config-panel">
@@ -196,6 +199,25 @@
                 style="margin-bottom: 10px; width: 200px;">
             <input type="password" id="api-key" placeholder="API Key" style="width: 200px;">
             <button onclick="saveConfig()" style="margin-top: 10px; width: 100%;">Save</button>
+        </div>
+
+        <div id="help-panel"
+            style="position: absolute; top: 20px; right: 20px; background: #111; padding: 15px; border: 1px solid #333; border-radius: 8px; display: none; z-index: 100; max-width: 300px;">
+            <h3>Available Commands</h3>
+            <ul style="list-style: none; padding: 0; margin: 10px 0;">
+                <li style="margin-bottom: 10px;">
+                    <strong>briefing</strong><br>
+                    <small>Get a strategic briefing from the HIL Assistant</small>
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>status</strong><br>
+                    <small>Get system status</small>
+                </li>
+                <li style="margin-bottom: 10px;">
+                    <strong>Start a campaign for [topic]</strong><br>
+                    <small>Launch a marketing campaign</small>
+                </li>
+            </ul>
         </div>
 
         <div id="chat-window">
@@ -275,6 +297,15 @@
 
         function toggleConfig() {
             const panel = document.getElementById('config-panel');
+            const helpPanel = document.getElementById('help-panel');
+            helpPanel.style.display = 'none'; // Close help if open
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function toggleHelp() {
+            const panel = document.getElementById('help-panel');
+            const configPanel = document.getElementById('config-panel');
+            configPanel.style.display = 'none'; // Close config if open
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
 
