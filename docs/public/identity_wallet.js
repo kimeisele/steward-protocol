@@ -1,166 +1,105 @@
 /**
- * IDENTITY WALLET - Human becomes Agent "HIL"
- * 
- * Critical functions:
- * - generateIdentity() - Creates ECDSA P-256 key pair
- * - signMessage() - Signs every user action
- * - registerWithCity() - Sends public key to Agent City
- * 
- * Security: Keys stored in IndexedDB (XSS resistant per Opus audit)
+ * 👁️ AJNA CHAKRA: VibeChat Identity Wallet
+ * GAD-3000 Standard: ECDSA P-256 Signature Layer
  */
+
+const DB_NAME = "VibeChat_Identity_v1";
+const STORE_NAME = "keypair";
 
 class IdentityWallet {
     constructor() {
-        this.dbName = 'AgentCityWallet';
-        this.storeName = 'keys';
-        this.dbVersion = 1;
-        this.db = null;
+        this.keyPair = null;
+        this.publicKeyHex = null;
+        this.agentId = "HIL_OPERATOR";
     }
 
-    // Initialize DB connection
-    async _initDB() {
-        if (this.db) return this.db;
+    async init() {
+        console.log("👁️ Opening Third Eye (Identity Wallet)...");
+        await this._openDB();
 
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, this.dbVersion);
-
-            request.onerror = (event) => {
-                console.error("IdentityWallet: DB error", event);
-                reject("Failed to open IdentityWallet DB");
-            };
-
-            request.onsuccess = (event) => {
-                this.db = event.target.result;
-                resolve(this.db);
-            };
-
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(this.storeName)) {
-                    db.createObjectStore(this.storeName);
-                }
-            };
-        });
-    }
-
-    // Generate new identity (run once per browser)
-    async generateIdentity() {
-        console.log("IdentityWallet: Generating new ECDSA P-256 identity...");
-        const keyPair = await crypto.subtle.generateKey(
-            { name: "ECDSA", namedCurve: "P-256" },
-            false,  // non-extractable for security (private key stays in browser)
-            ["sign", "verify"]
-        );
-
-        // Export public key for registration
-        const publicKey = await crypto.subtle.exportKey("spki", keyPair.publicKey);
-        const publicKeyHex = this._arrayBufferToHex(publicKey);
-
-        // Store keys in IndexedDB
-        await this._storeKeys(keyPair);
-        console.log("IdentityWallet: Identity generated and stored.");
-
-        return { publicKey: publicKeyHex };
-    }
-
-    // Check if identity exists
-    async hasIdentity() {
-        try {
-            const keys = await this._getKeys();
-            return !!keys;
-        } catch (e) {
-            return false;
+        const existing = await this._getKey();
+        if (existing) {
+            console.log("✅ Identity Loaded from Storage");
+            this.keyPair = existing;
+        } else {
+            console.log("⚡ Generating New Genesis Identity...");
+            this.keyPair = await this._generateKeys();
+            await this._saveKey(this.keyPair);
         }
+
+        this.publicKeyHex = await this._exportKey(this.keyPair.publicKey);
+        console.log("🔑 Public Key:", this.publicKeyHex.substring(0, 16) + "...");
+        return this.publicKeyHex;
     }
 
-    // Sign message with private key
-    async signMessage(message) {
-        const keys = await this._getKeys();
-        if (!keys) throw new Error("No identity found. Generate one first.");
+    async signPayload(message) {
+        if (!this.keyPair) throw new Error("Wallet not initialized");
 
-        const privateKey = keys.privateKey;
-        const timestamp = Date.now();
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
 
-        // Include timestamp in payload to prevent replay attacks
-        const payload = JSON.stringify({ message, timestamp });
-        const signature = await crypto.subtle.sign(
-            { name: "ECDSA", hash: "SHA-256" },
-            privateKey,
-            new TextEncoder().encode(payload)
+        const signature = await window.crypto.subtle.sign(
+            { name: "ECDSA", hash: { name: "SHA-256" } },
+            this.keyPair.privateKey,
+            data
         );
 
         return {
-            message,
-            timestamp,
-            signature: this._arrayBufferToHex(signature)
+            message: message,
+            signature: this._buf2hex(signature),
+            public_key: this.publicKeyHex,
+            agent_id: this.agentId,
+            timestamp: Date.now()
         };
     }
 
-    // Register with Agent City
-    async registerWithCity(apiUrl) {
-        let identity;
-        if (await this.hasIdentity()) {
-            const keys = await this._getKeys();
-            const publicKey = await crypto.subtle.exportKey("spki", keys.publicKey);
-            identity = { publicKey: this._arrayBufferToHex(publicKey) };
-        } else {
-            identity = await this.generateIdentity();
-        }
+    // --- INTERNAL CRYPTO PLUMBING ---
 
-        console.log("IdentityWallet: Registering with City at", apiUrl);
-        const response = await fetch(`${apiUrl}/v1/register_human`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                agent_id: "HIL",
-                public_key: identity.publicKey,
-                timestamp: Date.now()
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error(`Registration failed: ${response.statusText}`);
-        }
-
-        return response.json();
+    async _generateKeys() {
+        return window.crypto.subtle.generateKey(
+            { name: "ECDSA", namedCurve: "P-256" },
+            false, // Non-extractable private key (Security!)
+            ["sign", "verify"]
+        );
     }
 
-    // Helper: ArrayBuffer to hex string
-    _arrayBufferToHex(buffer) {
-        return Array.from(new Uint8Array(buffer))
-            .map(b => b.toString(16).padStart(2, '0'))
+    async _exportKey(key) {
+        const exported = await window.crypto.subtle.exportKey("spki", key);
+        return this._buf2hex(exported);
+    }
+
+    _buf2hex(buffer) {
+        return [...new Uint8Array(buffer)]
+            .map(x => x.toString(16).padStart(2, '0'))
             .join('');
     }
 
-    // Store keys in IndexedDB
-    async _storeKeys(keyPair) {
-        const db = await this._initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.storeName], "readwrite");
-            const store = transaction.objectStore(this.storeName);
-            const request = store.put(keyPair, "identity"); // Store as "identity"
+    // --- INDEXED DB STORAGE ---
 
-            request.onerror = () => reject("Failed to store keys");
-            request.onsuccess = () => resolve();
+    _openDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(DB_NAME, 1);
+            req.onupgradeneeded = e => {
+                e.target.result.createObjectStore(STORE_NAME);
+            };
+            req.onsuccess = () => { this.db = req.result; resolve(); };
+            req.onerror = reject;
         });
     }
 
-    // Retrieve keys from IndexedDB
-    async _getKeys() {
-        const db = await this._initDB();
-        return new Promise((resolve, reject) => {
-            const transaction = db.transaction([this.storeName], "readonly");
-            const store = transaction.objectStore(this.storeName);
-            const request = store.get("identity");
-
-            request.onerror = () => reject("Failed to retrieve keys");
-            request.onsuccess = () => resolve(request.result);
+    _getKey() {
+        return new Promise(resolve => {
+            const tx = this.db.transaction(STORE_NAME, "readonly");
+            const req = tx.objectStore(STORE_NAME).get("hil_key");
+            req.onsuccess = () => resolve(req.result);
         });
     }
 
-    // Retrieve private key (internal use)
-    async _getPrivateKey() {
-        const keys = await this._getKeys();
-        return keys ? keys.privateKey : null;
+    _saveKey(keys) {
+        return new Promise(resolve => {
+            const tx = this.db.transaction(STORE_NAME, "readwrite");
+            tx.objectStore(STORE_NAME).put(keys, "hil_key");
+            tx.oncomplete = resolve;
+        });
     }
 }
