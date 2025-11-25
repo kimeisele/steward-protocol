@@ -1,15 +1,18 @@
-# A.G.I. Infrastructure
+# Steward Protocol: The Kernel for Artificial Governed Intelligence
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Steward Protocol](https://img.shields.io/badge/Steward-Protocol-green.svg)](https://github.com/kimeisele/steward-protocol)
+[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./AUDIT_REPORT_OPUS.md)
+[![Self-Healing: ACTIVE](https://img.shields.io/badge/Self--Healing-ACTIVE-brightgreen.svg)](./mechanic/cartridge_main.py)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/kimeisele/steward-protocol)
 
-> **⚠️ This is a VibeOS Cartridge Pack.** Do not run standalone. Requires VibeOS kernel >=2.0.
+> **A.G.I. = Artificial Governed Intelligence**
+>
+> **Formula:** `Capability + Identity + Accountability = Trustworthy AI`
+>
+> Not sci-fi superintelligence. A technical reality: cryptographic governance for autonomous agents.
 
-**A.G.I. = Artificial Governed Intelligence**
-
-Not sci-fi superintelligence. A technical reality: Cryptographic Identity + Accountability for AI agents.
+✅ **System Status:** Online • Self-Healing Active • Production Ready
 
 ---
 
