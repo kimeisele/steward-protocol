@@ -259,6 +259,17 @@ class ChatRequest(BaseModel):
     command: str
     context: Optional[Dict[str, Any]] = {}
 
+class SignedChatRequest(BaseModel):
+    """
+    Pydantic model for signed chat requests.
+    Matches the cryptographic payload structure from the frontend identity wallet.
+    """
+    message: str
+    agent_id: str
+    signature: str
+    public_key: str
+    timestamp: int
+
 class ChatResponse(BaseModel):
     status: str
     summary: str
@@ -345,17 +356,17 @@ async def register_human(request: dict):
     }
 
 @app.post("/v1/chat")
-async def chat(request: dict, api_key: str = Depends(verify_auth)):
+async def chat(request: SignedChatRequest, api_key: str = Depends(verify_auth)):
     """
     GAD-1000: Accept signed messages from HIL.
     GAD-000: AI operates on behalf of verified human.
     """
     try:
-        agent_id = request.get("agent_id", request.get("user_id", "unknown"))
-        message = request.get("message", request.get("command"))
-        signature = request.get("signature")
-        timestamp = request.get("timestamp")
-        context = request.get("context", {})
+        agent_id = request.agent_id
+        message = request.message
+        signature = request.signature
+        timestamp = request.timestamp
+        context = {}
         
         global kernel, envoy
         
@@ -366,40 +377,34 @@ async def chat(request: dict, api_key: str = Depends(verify_auth)):
         check_ledger_access(agent_id)
         
         # GAD-1000: Signature Verification
-        if signature and agent_id == "HIL":
-            get_kernel()
-            all_events = kernel.ledger.get_all_events()
-            events = [e for e in all_events if e.get("event_type") == "human_registered"]
-            public_key = None
-            for e in reversed(events):
-                 if e.get("agent_id") == "HIL":
-                     public_key = e.get("details", {}).get("public_key")
-                     break
-            
+        if signature and agent_id == "HIL_OPERATOR":
+            public_key = request.public_key
+
             if public_key:
-                # Reconstruct payload
+                # Reconstruct payload for verification
                 payload = json.dumps({"message": message, "timestamp": timestamp}, separators=(',', ':'))
-                
+
                 # Convert Hex to Base64 for steward.crypto
                 try:
                     public_key_bytes = bytes.fromhex(public_key)
                     public_key_b64 = base64.b64encode(public_key_bytes).decode('utf-8')
-                    
+
                     signature_bytes = bytes.fromhex(signature)
                     signature_b64 = base64.b64encode(signature_bytes).decode('utf-8')
-                    
+
                     # Verify
                     if not verify_signature(payload, signature_b64, public_key_b64):
+                        logger.warning(f"⛔ Invalid signature from {agent_id}")
                         return {"error": "Invalid signature", "status": "rejected"}
+
+                    logger.info("✅ Verified HIL Signature")
                 except Exception as e:
-                    logger.error(f"Crypto error: {e}")
+                    logger.error(f"❌ Crypto error: {e}")
                     return {"error": "Signature verification failed", "status": "rejected"}
                 
                 # Check freshness
                 if abs(time.time() * 1000 - timestamp) > 60000:
                     return {"error": "Timestamp too old", "status": "rejected"}
-                    
-                logger.info("✅ Verified HIL Signature")
         
         logger.info(f"📨 Received command from {agent_id}: {message}")
         
