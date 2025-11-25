@@ -15,6 +15,7 @@ import logging
 import os
 import sys
 import json
+import threading
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -63,35 +64,43 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# --- Global Kernel State (Cached for warm starts) ---
+# --- Global Kernel State (Lazy Initialization) ---
 kernel = None
 envoy = None
 civic = None
+_kernel_lock = threading.Lock()  # Thread safety for concurrent requests
 
 def get_kernel():
     """
-    Initialize the VibeOS Kernel.
-    In serverless, this runs once per cold start.
+    Lazy initialization of the VibeOS Kernel.
+    Only boots on first request, not on import.
+    Thread-safe for concurrent requests.
     """
     global kernel, envoy, civic
     
-    if kernel is None:
+    # Fast path: kernel already initialized
+    if kernel is not None:
+        return kernel
+    
+    # Slow path: need to initialize (with lock for thread safety)
+    with _kernel_lock:
+        # Double-check pattern: another thread might have initialized while we waited
+        if kernel is not None:
+            return kernel
+            
         logger.info("❄️ Cold Start: Initializing VibeOS Kernel...")
+        start_time = datetime.utcnow()
         
         # 1. Init Kernel
-        # Use /tmp for serverless writable storage if needed, or in-memory
-        # For this PoC, we use a persistent path if available, else memory
         db_path = os.getenv("LEDGER_PATH", "data/vibe_ledger.db")
         kernel = RealVibeKernel(ledger_path=db_path)
         
-        # 2. Init Agents
+        # 2. Init Agents (only the essential ones for now)
         envoy = EnvoyCartridge()
         civic = CivicCartridge()
         herald = HeraldCartridge()
         
         # --- GAD-000: GENESIS CEREMONY (Serverless Cold Start) ---
-        # Agents must swear the oath to enter the kernel.
-        # In SERVERLESS_BYPASS mode, this signature is mocked.
         timestamp = datetime.utcnow().isoformat()
         for agent in [envoy, civic, herald]:
             agent.oath_sworn = True
@@ -110,7 +119,9 @@ def get_kernel():
         
         # 4. Boot Kernel
         kernel.boot()
-        logger.info("🔥 Kernel Warm & Ready")
+        
+        elapsed = (datetime.utcnow() - start_time).total_seconds()
+        logger.info(f"🔥 Kernel Ready (initialized in {elapsed:.2f}s)")
         
     return kernel
 
