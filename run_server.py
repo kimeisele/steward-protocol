@@ -52,6 +52,9 @@ logger = logging.getLogger("STEWARD_BOOTLOADER")
 # Import VibeOS Kernel
 from vibe_core.kernel_impl import RealVibeKernel
 
+# Import Configuration (GAD-100: Phoenix Configuration)
+from vibe_core.config import ConfigLoader, CityConfig
+
 # Import all 11 agent cartridges
 from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
@@ -71,14 +74,16 @@ class StewardBootLoader:
     The bootloader that brings the Steward Protocol system online.
 
     Responsibilities:
-    1. Initialize the VibeOS Kernel
-    2. Register all 11 CORE CARTRIDGES
-    3. Execute the Constitutional Oath ceremony
-    4. Boot the kernel (register manifests, ledger init, etc)
-    5. Start the FastAPI Gateway
+    1. Load and validate configuration (GAD-100: Phoenix Configuration)
+    2. Initialize the VibeOS Kernel
+    3. Register all 11 CORE CARTRIDGES
+    4. Execute the Constitutional Oath ceremony
+    5. Boot the kernel (register manifests, ledger init, etc)
+    6. Start the FastAPI Gateway
     """
 
-    def __init__(self, ledger_path: str = None, port: int = 8000, host: str = "0.0.0.0"):
+    def __init__(self, ledger_path: str = None, port: int = 8000, host: str = "0.0.0.0",
+                 config_path: str = "config/matrix.yaml"):
         """
         Initialize the bootloader.
 
@@ -86,12 +91,57 @@ class StewardBootLoader:
             ledger_path: Path to SQLite ledger (default: data/vibe_ledger.db)
             port: API Gateway port
             host: API Gateway host
+            config_path: Path to configuration YAML (default: config/matrix.yaml)
         """
         self.ledger_path = ledger_path or "data/vibe_ledger.db"
         self.port = port
         self.host = host
+        self.config_path = config_path
         self.kernel = None
         self.agents = []
+        self.config: CityConfig = None
+
+        # Load configuration (GAD-100)
+        self._load_config()
+
+    def _load_config(self):
+        """Load and validate system configuration.
+
+        This loads THE DHARMA (configuration) which defines the entire city.
+        Configuration is loaded from config/matrix.yaml and validated against
+        the Pydantic CityConfig schema.
+
+        Raises:
+            RuntimeError: If configuration is missing or invalid
+        """
+        logger.info("=" * 80)
+        logger.info("🔐 LOADING CONFIGURATION (GAD-100: Phoenix Configuration)")
+        logger.info("=" * 80)
+
+        try:
+            loader = ConfigLoader(self.config_path)
+            self.config = loader.load()
+
+            logger.info(f"✅ Configuration loaded: {self.config.city_name}")
+            logger.info(f"   Version: {self.config.federation_version}")
+            logger.info(f"   Economy: {self.config.economy.initial_credits} initial credits")
+            logger.info(f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold")
+
+            # Validate configuration
+            validation_report = loader.validate()
+            if not validation_report["valid"]:
+                logger.error("❌ Configuration validation failed")
+                raise RuntimeError("Configuration invalid")
+
+            logger.info("✅ Configuration validated successfully\n")
+
+        except FileNotFoundError as e:
+            logger.error(f"❌ Configuration file not found: {e}")
+            logger.info("💡 Expected configuration at: config/matrix.yaml")
+            raise RuntimeError(f"Configuration missing: {e}")
+        except ValueError as e:
+            logger.error(f"❌ Configuration validation error: {e}")
+            raise RuntimeError(f"Configuration invalid: {e}")
 
     def _print_banner(self):
         """Print the system startup banner."""
