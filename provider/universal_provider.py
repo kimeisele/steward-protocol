@@ -34,6 +34,12 @@ except ImportError:
     VibeKernel = Any
     Task = Any
 
+# Import LLM Engine (GAD-6000)
+try:
+    from services.llm_engine import llm
+except ImportError:
+    llm = None
+
 logger = logging.getLogger("UNIVERSAL_PROVIDER")
 
 class DeterministicRouter:
@@ -283,22 +289,21 @@ class UniversalProvider:
 
     def _fast_path_chat_response(self, vector: IntentVector) -> Dict[str, Any]:
         """
-        Simulates natural conversation with ENVOY.
-        Immediate, friendly response for casual queries.
+        Natural conversation via LLM Engine (GAD-6000).
+        Immediate, dynamic response for casual queries.
+        Routed to ENVOY agent with context.
         """
         user_msg = vector.raw_input
+        agent_name = "ENVOY"
 
-        # Simple pattern recognition for common chat queries
-        if any(word in user_msg.lower() for word in ["hi", "hello", "hey"]):
-            response = (
-                f"**🤖 ENVOY:** Hey there! I'm ENVOY, Agent City's communication hub.\n\n"
-                f"I can help with:\n"
-                f"• **Status checks** (just ask for 'status')\n"
-                f"• **Creating content** (tell me to 'create' something)\n"
-                f"• **Governance** (ask me to 'verify' or 'vote')\n\n"
-                f"What's on your mind?"
-            )
+        # Generate context for LLM
+        context = "Fast-path conversational response to casual user query"
+
+        # Generate dynamic response via LLM Engine
+        if llm:
+            response = llm.speak(agent_name, context, user_msg)
         else:
+            # Fallback to static response if LLM unavailable
             response = (
                 f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
                 f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"
@@ -334,15 +339,30 @@ class UniversalProvider:
 
     def _generate_ack_message(self, vector: IntentVector, agent: str) -> str:
         """
-        Generates natural language acknowledgment for slow-path tasks.
+        Generates dynamic acknowledgment for slow-path tasks via LLM Engine.
+        Contextualizes the task type (creation, action, etc.) for natural language.
         """
         agent_display = agent.upper()
+        user_input = vector.raw_input
 
+        # Build context based on intent type
         if vector.intent_type == IntentType.CREATION:
-            return f"**{agent_display}** is drafting your content now. I'll keep you posted."
-        if vector.intent_type == IntentType.ACTION:
-            return f"**{agent_display}** is executing this governance action on the ledger. Standby."
-        return f"Request forwarded to **{agent_display}**. Processing..."
+            context = f"User initiated CREATION task. {agent_display} agent is handling content generation. Confirm receipt and mention background processing."
+        elif vector.intent_type == IntentType.ACTION:
+            context = f"User initiated ACTION/GOVERNANCE task. {agent_display} agent is handling state-changing operation. Confirm and mention ledger immutability."
+        else:
+            context = f"User initiated task. {agent_display} agent is processing. Confirm receipt."
+
+        # Generate dynamic acknowledgment via LLM Engine
+        if llm:
+            return llm.speak(agent_display, context, user_input)
+        else:
+            # Fallback to static response
+            if vector.intent_type == IntentType.CREATION:
+                return f"**{agent_display}** is drafting your content now. I'll keep you posted."
+            if vector.intent_type == IntentType.ACTION:
+                return f"**{agent_display}** is executing this governance action on the ledger. Standby."
+            return f"Request forwarded to **{agent_display}**. Processing..."
 
     def _find_best_agent(self, vector: IntentVector) -> Optional[str]:
         """
