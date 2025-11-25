@@ -111,6 +111,9 @@ class MechanicCartridge:
         # Check git hooks
         self._check_git_hooks()
 
+        # Check documentation integrity
+        self._check_documentation_integrity()
+
         return issues_found
 
     def _check_imports(self) -> bool:
@@ -262,6 +265,34 @@ class MechanicCartridge:
                 self.diagnostics["git_hooks_status"] = "not_configured"
         except Exception as e:
             self.logger.warning(f"Could not check git hooks: {e}")
+
+    def _check_documentation_integrity(self):
+        """Check if critical documentation files exist.
+
+        The Mechanic cannot write history, but it can flag when it's missing.
+        Only the User (Archivist) can create the canonical audit report.
+        """
+        self.logger.info("Checking documentation integrity...")
+
+        required_docs = {
+            "AUDIT_REPORT_OPUS.md": "System audit report and verification",
+            "README.md": "Project documentation",
+        }
+
+        missing_docs = []
+        for doc_name, description in required_docs.items():
+            doc_path = self.project_root / doc_name
+            if doc_path.exists():
+                self.logger.debug(f"  ✓ {doc_name}")
+            else:
+                self.logger.warning(f"  ⚠️ {doc_name}: {description} (MISSING)")
+                missing_docs.append(doc_name)
+
+        if missing_docs:
+            self.logger.warning(f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}")
+            self.logger.info("  → Only the Archivist (User) can restore history")
+        else:
+            self.logger.debug("  ✓ All documentation present")
 
     # =========================================================================
     # PHASE 2: SELF-HEALING
