@@ -161,7 +161,9 @@ class Scribe:
             entry: The formatted markdown entry to append
         """
         if not self.chronicle_path.exists():
-            raise FileNotFoundError(f"Chronicle file not found: {self.chronicle_path}")
+            # Initialize the file first
+            self.initialize_logbook_section()
+
 
         # Read current content
         content = self.chronicle_path.read_text(encoding="utf-8")
@@ -234,9 +236,25 @@ class Scribe:
         Initialize the logbook section in chronicles.md if it doesn't exist.
 
         Creates a "## Logbook" section where Auto-Scribe entries are appended.
+        If the file doesn't exist, creates it with a basic template.
         """
         if not self.chronicle_path.exists():
-            raise FileNotFoundError(f"Chronicle file not found: {self.chronicle_path}")
+            # Create the file with a basic template
+            self.chronicle_path.parent.mkdir(parents=True, exist_ok=True)
+            template = """# HERALD Chronicles
+
+This is the living documentation of HERALD's autonomous activity.
+
+## Logbook
+
+Autonomous activity log:
+
+---
+
+*The Chronicles are automatically updated by the Auto-Scribe.*
+"""
+            self.chronicle_path.write_text(template, encoding="utf-8")
+            return
 
         content = self.chronicle_path.read_text(encoding="utf-8")
 
