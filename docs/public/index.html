@@ -247,8 +247,11 @@
                 appendLog("🔒 Signing Vector...", "system");
                 const signedPayload = await wallet.signPayload(txt);
 
+                // 🔥 HARDCODED TARGET: Forces conversation to local kernel
+                const TARGET_URL = "http://localhost:8000/v1/chat";
+
                 // KARMA (Action/Sending)
-                const response = await fetch('/v1/chat', {
+                const response = await fetch(TARGET_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -256,6 +259,13 @@
                     },
                     body: JSON.stringify(signedPayload)
                 });
+
+                // Error Handling für "Unexpected token <" (HTML statt JSON)
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON response (HTTP ${response.status}): ${text.substring(0, 100)}...`);
+                }
 
                 const data = await response.json();
 
@@ -268,6 +278,9 @@
 
             } catch (e) {
                 appendLog(`❌ TRANSMISSION ERROR: ${e.message}`, 'error');
+                if (e.message.includes("Failed to fetch")) {
+                    appendLog("💡 HINT: Is the backend running? Open http://localhost:8000", "system");
+                }
             }
         }
 
