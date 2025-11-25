@@ -215,30 +215,69 @@ async def chat(
     
     logger.info(f"📨 Received command from {request.user_id}: {request.command}")
     
-    # 1. Create Task for ENVOY
-    # We route everything to ENVOY. It decides if it's a 'next_action' query or a command.
-    # To support natural language, we might want to wrap the command.
-    # If the command is "status" or "report", Envoy handles it.
-    # If it's natural language, Envoy's LLM (if connected) would parse it.
-    # For this strict GAD implementation, we assume the command maps to Envoy's routing.
+    # Parse command with robust intent detection
+    cmd_lower = request.command.lower().strip()
+    payload = None
     
-    # HACK: If command is not a known structured command, treat as 'next_action' request or 'campaign'
-    # For simplicity in this PoC, we pass it raw.
+    # 1. Direct command: "briefing"
+    if cmd_lower == "briefing":
+        payload = {
+            "command": "next_action",
+            "args": request.context
+        }
     
-    payload = {
-        "command": "next_action" if request.command == "briefing" else request.command,
-        "args": request.context
-    }
+    # 2. Direct command: "status"
+    elif cmd_lower == "status":
+        payload = {
+            "command": "status",
+            "args": request.context
+        }
     
-    # Special handling for natural language "launch" intent mapping (Mocking IntentRouter)
-    cmd_lower = request.command.lower()
-    if ("start" in cmd_lower or "starte" in cmd_lower) and ("campaign" in cmd_lower or "kampagne" in cmd_lower):
+    # 3. Campaign commands (multiple variations)
+    elif (cmd_lower == "campaign" or 
+          "campaign" in cmd_lower or
+          any(marketing_word in cmd_lower for marketing_word in ["marketing", "promote", "advertise", "publicize"])):
+        # Extract goal from the command
+        goal = None
+        
+        # Pattern 1: "campaign" alone - needs goal in context
+        if cmd_lower == "campaign":
+            goal = request.context.get("goal") if request.context else None
+            if not goal:
+                raise HTTPException(status_code=400, detail="Campaign goal required. Try: 'Start a campaign for [your goal]'")
+        
+        # Pattern 2: "Start a campaign for X" or "Create marketing for X"
+        elif any(trigger in cmd_lower for trigger in ["start", "create", "launch", "starte", "make"]):
+            # Extract everything after "for" or "about"
+            for marker in [" for ", " about ", " on ", " regarding "]:
+                if marker in cmd_lower:
+                    goal = request.command.split(marker, 1)[1].strip()
+                    break
+            
+            if not goal:
+                # Fallback: use the whole command as goal
+                goal = request.command
+        
+        # Pattern 3: "campaign X" - use X as goal
+        else:
+            goal = request.command.replace("campaign", "").replace("Campaign", "").strip()
+        
+        if not goal:
+            raise HTTPException(status_code=400, detail="Could not extract campaign goal. Try: 'Start a campaign for [your goal]'")
+        
         payload = {
             "command": "campaign",
             "args": {
-                "goal": request.command,
+                "goal": goal,
                 "campaign_type": "publication"
             }
+        }
+    
+    # 4. Unknown command - pass to ENVOY as-is (it might understand)
+    else:
+        payload = {
+            "command": request.command,
+            "args": request.context
         }
     
     task = Task(
