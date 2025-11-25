@@ -35,10 +35,21 @@ class MechanicCartridge:
     # Hard-coded recovery target for oracle issue
     ORACLE_RECOVERY_BRANCH = "claude/envoy-system-shell-0199pvX52DbRTQ323W5YsVTr"
 
-    # Core dependencies required
+    # Mapping from import names to actual package names (knowledge base for Python idioms)
+    PACKAGE_MAPPING = {
+        "yaml": "pyyaml",
+        "PIL": "Pillow",
+        "dotenv": "python-dotenv",
+        "bs4": "beautifulsoup4",
+        "sklearn": "scikit-learn",
+        "tavily": "tavily-python",
+        "github": "PyGithub",
+    }
+
+    # Core dependencies required (using import names)
     CORE_DEPENDENCIES = {
         "pydantic": "pydantic>=2.0.0",
-        "pyyaml": "pyyaml>=6.0",
+        "yaml": "pyyaml>=6.0",  # import yaml, pip install pyyaml
         "ecdsa": "ecdsa>=0.18.0",
         "openai": "openai>=1.0.0",
         "rich": "rich>=13.0.0",
@@ -100,6 +111,9 @@ class MechanicCartridge:
         # Check git hooks
         self._check_git_hooks()
 
+        # Check documentation integrity
+        self._check_documentation_integrity()
+
         return issues_found
 
     def _check_imports(self) -> bool:
@@ -152,27 +166,31 @@ class MechanicCartridge:
     def _check_dependencies(self) -> bool:
         """Check if required packages are installed.
 
+        Uses CORE_DEPENDENCIES with import names as keys and pip specs as values.
+        PACKAGE_MAPPING provides context for understanding name mismatches
+        (e.g., "yaml" import comes from "pyyaml" package).
+
         Returns:
             bool: True if all core deps installed, False otherwise
         """
         self.logger.info("Checking dependency integrity...")
 
         missing = []
-        for name, spec in self.CORE_DEPENDENCIES.items():
+        for import_name, spec in self.CORE_DEPENDENCIES.items():
             try:
-                importlib.import_module(name)
-                self.logger.debug(f"  ✓ {name}")
+                importlib.import_module(import_name)
+                self.logger.debug(f"  ✓ {import_name}")
             except ImportError:
-                self.logger.warning(f"  ✗ {name} (required)")
+                self.logger.warning(f"  ✗ {import_name} (required)")
                 missing.append(spec)
 
         # Check optional
-        for name, spec in self.OPTIONAL_DEPENDENCIES.items():
+        for import_name, spec in self.OPTIONAL_DEPENDENCIES.items():
             try:
-                importlib.import_module(name)
-                self.logger.debug(f"  ✓ {name}")
+                importlib.import_module(import_name)
+                self.logger.debug(f"  ✓ {import_name}")
             except ImportError:
-                self.logger.info(f"  ~ {name} (optional)")
+                self.logger.info(f"  ~ {import_name} (optional)")
 
         self.diagnostics["missing_deps"] = missing
         return len(missing) == 0
@@ -247,6 +265,34 @@ class MechanicCartridge:
                 self.diagnostics["git_hooks_status"] = "not_configured"
         except Exception as e:
             self.logger.warning(f"Could not check git hooks: {e}")
+
+    def _check_documentation_integrity(self):
+        """Check if critical documentation files exist.
+
+        The Mechanic cannot write history, but it can flag when it's missing.
+        Only the User (Archivist) can create the canonical audit report.
+        """
+        self.logger.info("Checking documentation integrity...")
+
+        required_docs = {
+            "AUDIT_REPORT_OPUS.md": "System audit report and verification",
+            "README.md": "Project documentation",
+        }
+
+        missing_docs = []
+        for doc_name, description in required_docs.items():
+            doc_path = self.project_root / doc_name
+            if doc_path.exists():
+                self.logger.debug(f"  ✓ {doc_name}")
+            else:
+                self.logger.warning(f"  ⚠️ {doc_name}: {description} (MISSING)")
+                missing_docs.append(doc_name)
+
+        if missing_docs:
+            self.logger.warning(f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}")
+            self.logger.info("  → Only the Archivist (User) can restore history")
+        else:
+            self.logger.debug("  ✓ All documentation present")
 
     # =========================================================================
     # PHASE 2: SELF-HEALING
