@@ -12,13 +12,24 @@ the Watchman's sword falls swift and merciless. No exceptions."
 
 import os
 import logging
+import sys
 from pathlib import Path
+
+# VibeOS Integration
+from vibe_core import VibeAgent, Task
+
 from civic.tools.economy import CivicBank
+
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
 
 logger = logging.getLogger("WATCHMAN")
 
 
-class WatchmanCartridge:
+class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     THE WATCHMAN - System Integrity Enforcer.
 
@@ -54,8 +65,27 @@ class WatchmanCartridge:
     }
 
     def __init__(self):
-        """Initialize Watchman with enforcement authority."""
+        """Initialize Watchman as a VibeAgent with enforcement authority."""
+        # Initialize VibeAgent base class
+        super().__init__(
+            agent_id="watchman",
+            name="WATCHMAN",
+            version="1.0.0",
+            author="Steward Protocol",
+            description="System integrity enforcer and governance enforcer",
+            domain="ENFORCEMENT",
+            capabilities=["integrity_scanning", "account_freezing", "violation_detection"]
+        )
+
         logger.info("⚔️ WATCHMAN BOOTING...")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            # SWEAR THE OATH IMMEDIATELY in __init__
+            self.oath_sworn = True
+            logger.info("✅ WATCHMAN has sworn the Constitutional Oath")
+
         self.bank = CivicBank()
         logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
 
@@ -177,3 +207,43 @@ class WatchmanCartridge:
             logger.warning(f"⚠️ Error scanning {file_path}: {e}")
 
         return violations
+
+    # ==================== VIBEOS AGENT INTERFACE ====================
+
+    def process(self, task: Task) -> dict:
+        """
+        Process a task from the VibeKernel scheduler.
+
+        WATCHMAN responds to enforcement tasks:
+        - "patrol": Run full system integrity check
+        """
+        try:
+            action = task.payload.get("action") or task.payload.get("command")
+            logger.info(f"⚔️ WATCHMAN processing task: {action}")
+
+            if action == "patrol":
+                return self.run_patrol()
+            else:
+                return {
+                    "status": "error",
+                    "error": f"Unknown action: {action}"
+                }
+        except Exception as e:
+            logger.error(f"❌ WATCHMAN processing error: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+    def report_status(self) -> dict:
+        """Report WATCHMAN status (VibeAgent interface)."""
+        return {
+            "agent_id": "watchman",
+            "name": "WATCHMAN",
+            "status": "RUNNING",
+            "domain": "ENFORCEMENT",
+            "capabilities": self.capabilities,
+            "description": "System integrity enforcer and governance enforcer"
+        }
