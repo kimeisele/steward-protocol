@@ -32,18 +32,76 @@ from pydantic import BaseModel
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling import Task
 
-# Import all 11 agent cartridges
-from herald.cartridge_main import HeraldCartridge
-from civic.cartridge_main import CivicCartridge
-from forum.cartridge_main import ForumCartridge
-from science.cartridge_main import ScientistCartridge
-from envoy.cartridge_main import EnvoyCartridge
-from archivist.cartridge_main import ArchivistCartridge
-from auditor.cartridge_main import AuditorCartridge
-from engineer.cartridge_main import EngineerCartridge
-from oracle.cartridge_main import OracleCartridge
-from watchman.cartridge_main import WatchmanCartridge
-from artisan.cartridge_main import ArtisanCartridge
+# Import all 11 agent cartridges with graceful fallback
+# If an agent fails to import, log a warning but don't crash the server
+
+available_agents = {}
+
+try:
+    from herald.cartridge_main import HeraldCartridge
+    available_agents['HeraldCartridge'] = HeraldCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: HeraldCartridge import failed: {e}")
+
+try:
+    from civic.cartridge_main import CivicCartridge
+    available_agents['CivicCartridge'] = CivicCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: CivicCartridge import failed: {e}")
+
+try:
+    from forum.cartridge_main import ForumCartridge
+    available_agents['ForumCartridge'] = ForumCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: ForumCartridge import failed: {e}")
+
+try:
+    from science.cartridge_main import ScientistCartridge
+    available_agents['ScientistCartridge'] = ScientistCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: ScientistCartridge import failed: {e}")
+
+try:
+    from envoy.cartridge_main import EnvoyCartridge
+    available_agents['EnvoyCartridge'] = EnvoyCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: EnvoyCartridge import failed: {e}")
+
+try:
+    from archivist.cartridge_main import ArchivistCartridge
+    available_agents['ArchivistCartridge'] = ArchivistCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: ArchivistCartridge import failed: {e}")
+
+try:
+    from auditor.cartridge_main import AuditorCartridge
+    available_agents['AuditorCartridge'] = AuditorCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: AuditorCartridge import failed: {e}")
+
+try:
+    from engineer.cartridge_main import EngineerCartridge
+    available_agents['EngineerCartridge'] = EngineerCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: EngineerCartridge import failed: {e}")
+
+try:
+    from oracle.cartridge_main import OracleCartridge
+    available_agents['OracleCartridge'] = OracleCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: OracleCartridge import failed: {e}")
+
+try:
+    from watchman.cartridge_main import WatchmanCartridge
+    available_agents['WatchmanCartridge'] = WatchmanCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: WatchmanCartridge import failed: {e}")
+
+try:
+    from artisan.cartridge_main import ArtisanCartridge
+    available_agents['ArtisanCartridge'] = ArtisanCartridge
+except ImportError as e:
+    logger.warning(f"⚠️ Gateway warning: ArtisanCartridge import failed: {e}")
 
 # --- Governance Verification ---
 # Constitutional Oath verification is ALWAYS active.
@@ -108,36 +166,59 @@ def get_kernel():
         db_path = os.getenv("LEDGER_PATH", "data/vibe_ledger.db")
         kernel = RealVibeKernel(ledger_path=db_path)
         
-        # 2. Init All 11 Agents (Complete Agent City)
-        agents = [
-            HeraldCartridge(),
-            CivicCartridge(),
-            ForumCartridge(),
-            ScientistCartridge(),
-            EnvoyCartridge(),
-            ArchivistCartridge(),
-            AuditorCartridge(),
-            EngineerCartridge(),
-            OracleCartridge(),
-            WatchmanCartridge(),
-            ArtisanCartridge(),
+        # 2. Init All Available Agents (Complete Agent City)
+        # Only instantiate agents that successfully imported
+        agents = []
+        agent_classes = [
+            ('HeraldCartridge', available_agents.get('HeraldCartridge')),
+            ('CivicCartridge', available_agents.get('CivicCartridge')),
+            ('ForumCartridge', available_agents.get('ForumCartridge')),
+            ('ScientistCartridge', available_agents.get('ScientistCartridge')),
+            ('EnvoyCartridge', available_agents.get('EnvoyCartridge')),
+            ('ArchivistCartridge', available_agents.get('ArchivistCartridge')),
+            ('AuditorCartridge', available_agents.get('AuditorCartridge')),
+            ('EngineerCartridge', available_agents.get('EngineerCartridge')),
+            ('OracleCartridge', available_agents.get('OracleCartridge')),
+            ('WatchmanCartridge', available_agents.get('WatchmanCartridge')),
+            ('ArtisanCartridge', available_agents.get('ArtisanCartridge')),
         ]
+
+        for agent_name, agent_class in agent_classes:
+            if agent_class:
+                try:
+                    agent = agent_class()
+                    agents.append(agent)
+                    logger.info(f"✅ {agent_name} instantiated")
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to instantiate {agent_name}: {e}")
+            else:
+                logger.info(f"⏭️ {agent_name} not available (import failed earlier)")
+
+        if not agents:
+            logger.warning("⚠️ No agents available! Kernel will run with empty agent list.")
 
         # --- GAD-000: GENESIS CEREMONY (Serverless Cold Start) ---
         timestamp = datetime.utcnow().isoformat()
         for agent in agents:
-            agent.oath_sworn = True
-            agent.oath_event = {
-                "event_type": "constitutional_oath",
-                "agent_id": agent.agent_id,
-                "timestamp": timestamp,
-                "signature": f"sig_{agent.agent_id}_genesis",
-                "oath_hash": "genesis_hash"
-            }
+            try:
+                agent.oath_sworn = True
+                agent.oath_event = {
+                    "event_type": "constitutional_oath",
+                    "agent_id": agent.agent_id,
+                    "timestamp": timestamp,
+                    "signature": f"sig_{agent.agent_id}_genesis",
+                    "oath_hash": "genesis_hash"
+                }
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to set oath for {agent}: {e}")
 
-        # 3. Register All Agents
+        # 3. Register All Available Agents
         for agent in agents:
-            kernel.register_agent(agent)
+            try:
+                kernel.register_agent(agent)
+                logger.info(f"✅ Registered {agent.agent_id}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to register {agent}: {e}")
         
         # 4. Boot Kernel
         kernel.boot()
