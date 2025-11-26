@@ -13,7 +13,7 @@ ARCHITECTURE (OS ANALOGY):
 
 THE PROCESS:
 1. Boot VibeOS Kernel
-2. Load all 11 CORE CARTRIDGES (agents)
+2. Load all 12 CORE CARTRIDGES (agents)
 3. Initialize ENVOY as the only user-facing interface
 4. Start FastAPI Gateway for Frontend connection
 5. Accept commands via /v1/chat (HIL-optimized responses)
@@ -55,7 +55,7 @@ from vibe_core.kernel_impl import RealVibeKernel
 # Import Configuration (GAD-100: Phoenix Configuration)
 from vibe_core.config import ConfigLoader, CityConfig
 
-# Import all 11 agent cartridges
+# Import all 12 agent cartridges
 from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
 from forum.cartridge_main import ForumCartridge
@@ -67,6 +67,7 @@ from engineer.cartridge_main import EngineerCartridge
 from oracle.cartridge_main import OracleCartridge
 from watchman.cartridge_main import WatchmanCartridge
 from artisan.cartridge_main import ArtisanCartridge
+from chronicle.cartridge_main import ChronicleCartridge
 
 
 class StewardBootLoader:
@@ -76,7 +77,7 @@ class StewardBootLoader:
     Responsibilities:
     1. Load and validate configuration (GAD-100: Phoenix Configuration)
     2. Initialize the VibeOS Kernel
-    3. Register all 11 CORE CARTRIDGES
+    3. Register all 12 CORE CARTRIDGES
     4. Execute the Constitutional Oath ceremony
     5. Boot the kernel (register manifests, ledger init, etc)
     6. Start the FastAPI Gateway
@@ -173,8 +174,8 @@ class StewardBootLoader:
         logger.info(f"🔧 Creating RealVibeKernel (ledger: {self.ledger_path})")
         self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
 
-        # 2. Create and register all 11 agent cartridges
-        logger.info("🤖 Loading all 11 CORE CARTRIDGES...")
+        # 2. Create and register all 12 agent cartridges
+        logger.info("🤖 Loading all 12 CORE CARTRIDGES...")
 
         cartridges = [
             ("herald", HeraldCartridge(), "Content & Broadcasting"),
@@ -188,6 +189,7 @@ class StewardBootLoader:
             ("oracle", OracleCartridge(), "System Introspection & Self-Awareness"),
             ("watchman", WatchmanCartridge(), "Monitoring & Health Checks"),
             ("artisan", ArtisanCartridge(), "Media Operations & Branding"),
+            ("chronicle", ChronicleCartridge(), "Temporal agent: git operations"),
         ]
 
         for agent_id, agent_instance, purpose in cartridges:
