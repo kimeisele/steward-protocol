@@ -18,10 +18,16 @@ from typing import Dict, Any
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from vibe_core.scheduling.task import Task
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 logger = logging.getLogger("ECHO_CARTRIDGE")
 
 
-class EchoCartridge(VibeAgent):
+class EchoCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The ECHO Agent Cartridge (Test Agent).
 
@@ -40,7 +46,19 @@ class EchoCartridge(VibeAgent):
             domain="TESTING",
             capabilities=["echo_back"]
         )
-        logger.info("🔔 ECHO Cartridge initialized")
+
+        logger.info("🔔 ECHO Cartridge initializing...")
+
+        # Initialize Constitutional Oath mixin (if available)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            try:
+                self.swear_constitutional_oath()
+                logger.info("✅ ECHO has sworn the Constitutional Oath")
+            except Exception as e:
+                logger.warning(f"⚠️  Oath swearing failed: {e}")
+
+        logger.info("🔔 ECHO Cartridge ready")
         self.tasks_processed = 0
         self.tasks_successful = 0
 
