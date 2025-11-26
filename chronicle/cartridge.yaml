@@ -1,0 +1,102 @@
+# 🗡️ CHRONICLE CARTRIDGE MANIFEST 🗡️
+# The Keeper of Temporal Lines - Git operations for the Steward Protocol
+
+cartridge:
+  id: chronicle
+  name: CHRONICLE
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "Temporal agent: manages git operations, commits, branches, and code history"
+
+  # Agent classification
+  type: AGENT
+  domain: INFRASTRUCTURE
+
+  # Capabilities this agent provides
+  capabilities:
+    - content_generation    # Can create commits
+    - ledger               # Records to immutable ledger
+    - orchestration        # Coordinates with other agents
+
+  # Dependencies
+  dependencies:
+    - vibe_core           # VibeAgent protocol
+    - steward            # Constitutional Oath
+
+  # Configuration
+  config:
+    repo_path: "."
+    signing_enabled: true
+    audit_trail: true
+
+  # Responsibilities
+  responsibilities:
+    - "Manage git repository operations"
+    - "Create cryptographically signed commits"
+    - "Query commit history"
+    - "Create and manage git branches"
+    - "Stage files for sealing"
+    - "Record all operations in audit trail"
+
+  # Actions this agent can perform
+  actions:
+    - action: seal_history
+      description: "Create a signed commit (seals the timeline)"
+      params:
+        - name: message
+          type: string
+          required: true
+          description: "Commit message"
+        - name: files
+          type: array
+          required: false
+          description: "List of files to commit (if empty, commits staged files)"
+        - name: sign
+          type: boolean
+          required: false
+          default: true
+          description: "Whether to sign the commit"
+
+    - action: read_history
+      description: "Query git log (read the timeline)"
+      params:
+        - name: pattern
+          type: string
+          required: false
+          description: "Optional file pattern to filter commits"
+        - name: limit
+          type: integer
+          required: false
+          default: 10
+          description: "Maximum number of commits to return"
+
+    - action: fork_reality
+      description: "Create a new git branch (fork a possible universe)"
+      params:
+        - name: branch_name
+          type: string
+          required: true
+          description: "Name of the new branch (auto-prefixed with 'claude/')"
+
+    - action: manifest_reality
+      description: "Stage files for sealing (prepare for commitment)"
+      params:
+        - name: files
+          type: array
+          required: true
+          description: "List of files to stage"
+
+  # Health checks
+  health:
+    enabled: true
+    check_interval_seconds: 60
+    checks:
+      - git_repo_accessible
+      - git_configured
+      - can_read_history
+
+# Steward Protocol compliance
+steward:
+  constitutional_oath: required
+  governance_domain: INFRASTRUCTURE
+  risk_level: MEDIUM  # Git operations can modify the codebase

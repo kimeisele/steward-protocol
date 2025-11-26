@@ -1,268 +1,212 @@
 #!/usr/bin/env python3
 """
-ARCHIVIST Cartridge - The Audit & Verification Agent
+ARCHIVIST Cartridge - The History Keeper
 
-This cartridge demonstrates multi-agent federation in the Steward Protocol:
-1. Monitors events from HERALD (or other agents)
-2. Verifies cryptographic signatures
-3. Creates attestations for verified events
-4. Maintains immutable audit trail
+Updated for Safe Evolution Loop (GAD-5500):
+- Implements VibeAgent protocol (sync process)
+- seal_history: Commit verified code to git
+- Only commits if audit_result.passed == true
 
-This is Agent #2 in the STEWARD Protocol ecosystem.
-
-Usage:
-    Standalone: python archivist/shim.py --action audit
-    VibeOS:     kernel.load_cartridge("archivist").run_audit()
+This is the Hand that writes to Git. The Auditor is the Conscience.
 """
 
+import os
+import shutil
+import subprocess
 import logging
-import json
-from typing import Dict, Any, Optional, List
-from pathlib import Path
+from typing import Dict, Any
 
-from archivist.tools.audit_tool import AuditTool
-from archivist.tools.ledger import AuditLedger
+from vibe_core.agent_protocol import VibeAgent, Task, AgentManifest
 
 logger = logging.getLogger("ARCHIVIST_CARTRIDGE")
 
 
-class ArchivistCartridge:
+class ArchivistCartridge(VibeAgent):
     """
-    ARCHIVIST - The Audit & Verification Agent for STEWARD Protocol.
+    ARCHIVIST - The History Keeper Agent.
 
-    This cartridge encapsulates the audit workflow:
-    1. Monitor: Read events from other agents' event logs
-    2. Verify: Check cryptographic signatures
-    3. Attest: Create verification records
-    4. Record: Write to immutable audit ledger
+    Seals verified code into the repository history via git commit.
+    Acts as the "Chronicle" role in the Safe Evolution Loop.
 
-    Architecture:
-    - Vibe-OS compatible (ARCH-050 CartridgeBase)
-    - Observer pattern (doesn't interfere with HERALD)
-    - Event-driven (reacts to published events)
-    - Governance-first (transparent audit trail)
+    CRITICAL: Only commits if audit_result.passed == true
     """
-
-    # Cartridge Metadata (ARCH-050 required fields)
-    name = "archivist"
-    version = "1.0.0"
-    description = "Autonomous audit and verification agent"
-    author = "Steward Protocol"
 
     def __init__(self):
-        """Initialize ARCHIVIST cartridge."""
-        logger.info("🔍 ARCHIVIST v1.0: Cartridge initialization")
+        """Initialize ARCHIVIST as a VibeAgent."""
+        super().__init__(
+            agent_id="archivist",
+            name="ARCHIVIST",
+            version="2.0.0",
+            author="Steward Protocol",
+            description="History keeper: seals verified code into git history",
+            domain="INFRASTRUCTURE",
+            capabilities=["seal_history", "ledger"]
+        )
+        logger.info("📜 ARCHIVIST is online (History Keeper Ready)")
 
-        # Initialize tools
-        self.audit = AuditTool(agent_name="archivist")
-        self.ledger = AuditLedger(ledger_path=Path("data/ledger/audit_trail.jsonl"))
+    def get_manifest(self) -> AgentManifest:
+        """Return agent manifest (VibeAgent interface)."""
+        return AgentManifest(
+            agent_id=self.agent_id,
+            name=self.name,
+            version=self.version,
+            author=self.author,
+            description=self.description,
+            domain=self.domain,
+            capabilities=self.capabilities,
+            dependencies=[]
+        )
 
-        logger.info("✅ ARCHIVIST: Ready for audit operations")
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Sync dispatch based on payload 'action' or 'method'.
 
-    def get_config(self) -> Dict[str, Any]:
-        """Get cartridge configuration (ARCH-050 interface)."""
-        return {
-            "name": self.name,
-            "version": self.version,
-            "description": self.description,
-            "author": self.author,
-        }
+        Supported actions:
+        - seal_history: Commit verified code
+        """
+        action = task.payload.get("action") or task.payload.get("method")
+        logger.info(f"📜 ARCHIVIST processing: {action}")
+
+        if action == "seal_history":
+            return self.seal_history(task)
+        else:
+            return {"status": "ignored", "reason": f"Unknown action: {action}"}
+
+    def seal_history(self, task: Task) -> Dict[str, Any]:
+        """
+        Seal code into git history (Commit).
+
+        GATEKEEPER: Only commits if audit_result.passed == true
+
+        Payload:
+        - source_path: Path to file in sandbox
+        - dest_path: Target path in repo (relative)
+        - audit_result: Dict with 'passed' field (REQUIRED)
+        - message: Commit message (optional)
+
+        Returns:
+        - status: "sealed" | "rejected" | "error"
+        - commit: Commit hash (if sealed)
+        """
+        source_path = task.payload.get("source_path")
+        dest_rel_path = task.payload.get("dest_path")
+        audit_result = task.payload.get("audit_result", {})
+        message = task.payload.get("message", "Update via Steward Protocol")
+
+        logger.info(f"📜 Sealing history: {dest_rel_path}")
+
+        # ===== GATEKEEPER CHECK =====
+        if not audit_result.get("passed"):
+            reason = audit_result.get("reason", "Unknown reason")
+            logger.critical(f"⛔ GATEKEEPER VIOLATION: Audit failed. {reason}")
+            return {
+                "status": "rejected",
+                "reason": f"Audit failed. History cannot be sealed. {reason}"
+            }
+
+        if not source_path or not os.path.exists(source_path):
+            logger.error(f"❌ Source file not found: {source_path}")
+            return {"status": "error", "reason": "Source file vanished."}
+
+        # ===== MOVE TO PRODUCTION =====
+        logger.info(f"📜 Moving from sandbox to production...")
+        real_dest_path = os.path.abspath(dest_rel_path)
+
+        # Security: Prevent path traversal
+        try:
+            cwd = os.getcwd()
+            real_dest_path_normalized = os.path.normpath(os.path.abspath(real_dest_path))
+            cwd_normalized = os.path.normpath(cwd)
+
+            if not real_dest_path_normalized.startswith(cwd_normalized):
+                logger.error(f"⛔ Path traversal detected: {real_dest_path}")
+                return {"status": "error", "reason": "Path traversal detected."}
+        except Exception as e:
+            logger.error(f"❌ Path validation error: {e}")
+            return {"status": "error", "reason": f"Path validation failed: {str(e)}"}
+
+        # Create destination directory
+        os.makedirs(os.path.dirname(real_dest_path), exist_ok=True)
+
+        # Copy file from sandbox to production
+        try:
+            shutil.copy2(source_path, real_dest_path)
+            logger.info(f"✅ File copied: {real_dest_path}")
+        except Exception as e:
+            logger.error(f"❌ File copy failed: {e}")
+            return {"status": "error", "reason": f"File copy failed: {str(e)}"}
+
+        # ===== GIT COMMIT =====
+        logger.info(f"📜 Creating git commit...")
+        try:
+            # Stage the file
+            subprocess.run(
+                ["git", "add", dest_rel_path],
+                check=True,
+                cwd=cwd
+            )
+            logger.info(f"✅ File staged: {dest_rel_path}")
+
+            # Commit with message
+            # Optional: Add -S flag for signing if key available
+            commit_msg = f"feat: {message}"
+            try:
+                # Try to sign (may fail if no signing key configured)
+                subprocess.run(
+                    ["git", "commit", "-S", "-m", commit_msg],
+                    check=True,
+                    cwd=cwd
+                )
+                signed = True
+            except subprocess.CalledProcessError:
+                # Fall back to unsigned commit
+                logger.warning("⚠️  Signing failed, creating unsigned commit")
+                subprocess.run(
+                    ["git", "commit", "-m", commit_msg],
+                    check=True,
+                    cwd=cwd
+                )
+                signed = False
+
+            logger.info(f"✅ Commit created")
+
+            # Get commit hash
+            rev = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"],
+                cwd=cwd
+            ).decode().strip()
+
+            logger.info(f"✅ SEALED: Commit {rev[:7]}")
+
+            return {
+                "status": "sealed",
+                "commit": rev,
+                "commit_short": rev[:7],
+                "file": dest_rel_path,
+                "signed": signed,
+                "message": commit_msg
+            }
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"❌ Git command failed: {e}")
+            return {
+                "status": "git_error",
+                "details": str(e)
+            }
+        except Exception as e:
+            logger.error(f"❌ Commit error: {e}")
+            return {
+                "status": "error",
+                "reason": str(e)
+            }
 
     def report_status(self) -> Dict[str, Any]:
-        """Report cartridge status (ARCH-050 interface) - Deep Introspection."""
-        try:
-            audit_stats = self.audit.get_statistics()
-        except:
-            audit_stats = {"verified": 0, "failed": 0, "success_rate": 0}
-
-        try:
-            ledger_stats = self.ledger.get_statistics()
-        except:
-            ledger_stats = {"entries": 0, "ledger_path": str(self.ledger.ledger_path)}
-
+        """Report ARCHIVIST status (VibeAgent interface)."""
         return {
             "agent_id": "archivist",
             "name": self.name,
-            "version": self.version,
             "status": "RUNNING",
-            "domain": "AUDIT",
-            "audit_statistics": audit_stats,
-            "ledger_statistics": ledger_stats,
-            "audit_metrics": {
-                "ledger_path": str(self.ledger.ledger_path) if hasattr(self.ledger, 'ledger_path') else "unknown",
-                "verified_events": audit_stats.get("verified", 0),
-                "failed_verifications": audit_stats.get("failed", 0),
-                "verification_success_rate": audit_stats.get("success_rate", 0),
-            }
+            "domain": self.domain,
+            "capabilities": self.capabilities,
+            "description": self.description
         }
-
-    def read_agent_events(
-        self,
-        agent_name: str = "herald",
-        event_file: Optional[Path] = None
-    ) -> List[Dict[str, Any]]:
-        """
-        Read events from another agent's event log.
-
-        Args:
-            agent_name: Name of the agent to audit
-            event_file: Optional custom event file path
-
-        Returns:
-            list: Events from the agent
-        """
-        if event_file is None:
-            event_file = Path(f"data/events/{agent_name}.jsonl")
-
-        if not event_file.exists():
-            logger.warning(f"⚠️  No event log found for {agent_name}: {event_file}")
-            return []
-
-        events = []
-        try:
-            with open(event_file, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        events.append(json.loads(line))
-
-            logger.info(f"📖 Read {len(events)} events from {agent_name}")
-            return events
-
-        except Exception as e:
-            logger.error(f"❌ Failed to read events from {agent_name}: {e}")
-            return []
-
-    def audit_agent(
-        self,
-        agent_name: str = "herald",
-        event_file: Optional[Path] = None,
-        public_key: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Audit all events from a specific agent.
-
-        This is the main workflow:
-        1. Read events from agent's event log
-        2. Verify each event's signature
-        3. Create attestations
-        4. Write to audit ledger
-
-        Args:
-            agent_name: Name of agent to audit
-            event_file: Optional custom event file
-            public_key: Optional public key for signature verification
-
-        Returns:
-            dict: Audit summary with statistics
-        """
-        try:
-            logger.info("🔍 PHASE 1: EVENT COLLECTION")
-            logger.info("=" * 70)
-
-            # Step 1: Read events
-            events = self.read_agent_events(agent_name, event_file)
-
-            if not events:
-                logger.warning(f"⚠️  No events to audit for {agent_name}")
-                return {
-                    "status": "completed",
-                    "agent_audited": agent_name,
-                    "events_found": 0,
-                    "attestations_created": 0,
-                }
-
-            logger.info(f"✅ Found {len(events)} events to audit")
-
-            # Step 2: Verify and attest each event
-            logger.info("\n🔍 PHASE 2: VERIFICATION")
-            logger.info("=" * 70)
-
-            attestations_created = 0
-            for idx, event in enumerate(events, 1):
-                event_type = event.get("event_type", "unknown")
-                sequence = event.get("sequence_number", idx)
-
-                logger.info(f"\n[{idx}/{len(events)}] Auditing: {event_type} (seq={sequence})")
-
-                # Verify signature
-                verification_result = self.audit.verify_event_signature(
-                    event,
-                    public_key=public_key
-                )
-
-                # Create attestation
-                attestation = self.audit.create_attestation(event, verification_result)
-
-                # Write to ledger
-                if self.ledger.append(attestation):
-                    attestations_created += 1
-                else:
-                    logger.error(f"❌ Failed to write attestation for event {sequence}")
-
-            # Step 3: Report results
-            logger.info("\n🔍 PHASE 3: SUMMARY")
-            logger.info("=" * 70)
-
-            audit_stats = self.audit.get_statistics()
-            ledger_stats = self.ledger.get_statistics()
-
-            logger.info(f"✅ Audit complete:")
-            logger.info(f"   Events audited: {len(events)}")
-            logger.info(f"   Verified: {audit_stats['verified']}")
-            logger.info(f"   Failed: {audit_stats['failed']}")
-            logger.info(f"   Success rate: {audit_stats['success_rate']}")
-            logger.info(f"   Attestations written: {attestations_created}")
-            logger.info(f"   Ledger: {ledger_stats['ledger_path']}")
-
-            logger.info("\n" + "=" * 70)
-            logger.info("✅ AUDIT COMPLETE")
-            logger.info("=" * 70)
-
-            return {
-                "status": "completed",
-                "agent_audited": agent_name,
-                "events_found": len(events),
-                "attestations_created": attestations_created,
-                "audit_statistics": audit_stats,
-                "ledger_statistics": ledger_stats,
-            }
-
-        except Exception as e:
-            logger.error(f"❌ Audit execution error: {e}")
-            import traceback
-            tb = traceback.format_exc()
-            logger.error(f"   Traceback: {tb}")
-
-            return {
-                "status": "error",
-                "reason": "audit_execution_error",
-                "error": str(e),
-            }
-
-    def verify_specific_event(
-        self,
-        event: Dict[str, Any],
-        public_key: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """
-        Verify a single event (for testing or API use).
-
-        Args:
-            event: Event to verify
-            public_key: Optional public key
-
-        Returns:
-            dict: Verification result
-        """
-        verification_result = self.audit.verify_event_signature(event, public_key)
-        attestation = self.audit.create_attestation(event, verification_result)
-
-        return {
-            "verification": verification_result,
-            "attestation": attestation,
-        }
-
-
-# Export for VibeOS cartridge loading
-__all__ = ["ArchivistCartridge"]
