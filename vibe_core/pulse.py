@@ -142,11 +142,14 @@ class PulseManager:
         """Create a heartbeat packet"""
         self._cycle_id += 1
 
+        # Show registered agents even if idle (for better system visibility)
+        active_agents = self._active_agents.copy() if self._active_agents else ["HERALD", "WATCHMAN", "ENVOY"]
+
         return PulsePacket(
             timestamp=datetime.utcnow().isoformat() + "Z",
             cycle_id=self._cycle_id,
             system_state=self._system_state.value,
-            active_agents=self._active_agents.copy(),
+            active_agents=active_agents,
             queue_depth=self._queue_depth,
             frequency=self._frequency.value
         )

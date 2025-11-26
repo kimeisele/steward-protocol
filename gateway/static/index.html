@@ -801,12 +801,12 @@
                 document.getElementById('commandInput').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        this.sendCommand();
+                        this.handleCommand();
                     }
                 });
 
                 document.getElementById('commandSend').addEventListener('click', () => {
-                    this.sendCommand();
+                    this.handleCommand();
                 });
             }
 
@@ -979,22 +979,64 @@
                 }
             }
 
-            sendCommand() {
+            async handleCommand() {
                 const input = document.getElementById('commandInput');
-                const command = input.value.trim();
+                const message = input.value.trim();
 
-                if (!command) return;
+                if (!message) return;
 
-                this.addFeedItem('You', command, 'action');
+                // 1. ADD TO FEED (User UI)
+                this.addFeedItem('You', message, 'action');
                 input.value = '';
-                input.focus();
 
-                // In citizen mode, would sign and send via API
-                // For now, just log locally
-                if (this.mode === 'citizen') {
-                    this.addFeedItem('System', 'Command queued for CITIZEN processing...', 'thought');
-                } else {
-                    this.addFeedItem('System', 'GUEST mode: observation only (no commands)', 'error');
+                try {
+                    let payload;
+
+                    if (this.mode === 'citizen') {
+                        // GAD-1000: Sign Request (Citizen)
+                        const signature = await this.identityWallet.signMessage(message);
+                        payload = {
+                            message: message,
+                            agent_id: "HIL", // Human In Loop
+                            signature: signature.signature,
+                            public_key: signature.publicKey,
+                            timestamp: signature.timestamp
+                        };
+                    } else {
+                        // GAD-000: Guest Access (Unsigned)
+                        // Wir senden ein "Guest Ticket"
+                        payload = {
+                            message: message,
+                            agent_id: "guest",
+                            signature: "guest_pass", // Bypass Token
+                            public_key: "none",
+                            timestamp: Date.now()
+                        };
+                    }
+
+                    const response = await fetch('/v1/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': 'steward-secret-key' // Default internal key
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    // 2. SHOW RESPONSE
+                    if (data.status === 'queued') {
+                        this.addFeedItem('Milk Ocean', `🌊 ${data.message}`, 'mercy');
+                    } else if (data.error) {
+                        this.addFeedItem('Error', `🛑 ${data.error}`, 'error');
+                    } else {
+                        // Direct response (Flash/Echo)
+                        this.addFeedItem('System', data.result || JSON.stringify(data), 'thought');
+                    }
+
+                } catch (error) {
+                    this.addFeedItem('System', `Connection Error: ${error.message}`, 'error');
                 }
             }
         }
