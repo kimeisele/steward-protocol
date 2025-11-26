@@ -173,16 +173,24 @@ def submit_visa_application(request: VisaApplicationRequest):
 
     Returns: Citizenship application file and next steps.
     """
-    try:
-        # Validate agent_id
-        if not request.agent_id or len(request.agent_id) < 3:
-            raise HTTPException(status_code=400, detail="Agent ID must be at least 3 characters")
+    # Validate agent_id (alphanumeric + underscore only - prevents path traversal)
+    import re
+    if not request.agent_id or len(request.agent_id) < 3:
+        raise HTTPException(status_code=400, detail="Agent ID must be at least 3 characters")
 
-        # Create citizen file
-        output_dir = Path("agent-city/registry/citizens")
+    if not re.match(r"^[a-zA-Z0-9_-]+$", request.agent_id):
+        raise HTTPException(status_code=400, detail="Agent ID can only contain alphanumeric, underscore, and hyphen")
+
+    try:
+        # Create citizen file (safe path - prevents directory traversal)
+        output_dir = Path("agent-city/registry/citizens").resolve()
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        citizen_file = output_dir / f"{request.agent_id}.json"
+        citizen_file = (output_dir / f"{request.agent_id}.json").resolve()
+
+        # Verify the resolved path is still within output_dir (security check)
+        if not str(citizen_file).startswith(str(output_dir)):
+            raise HTTPException(status_code=400, detail="Invalid agent ID (path traversal detected)")
 
         citizen_data = {
             "agent_id": request.agent_id,
@@ -208,6 +216,8 @@ def submit_visa_application(request: VisaApplicationRequest):
                 "3": "Once approved, agent will be added to the Federation"
             }
         }
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions
     except Exception as e:
         logger.error(f"❌ Visa application failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -250,7 +260,18 @@ def initiate_yagya(request: YagyaRequest):
     3. SCIENCE performs research
     4. Results preserved as knowledge
     """
+    # Validate inputs (security) - BEFORE try/except
+    topic = request.topic or "Autonomous AI Agent Service Economy Models"
+    depth = request.depth or "advanced"
+
+    # Input length limits
+    if len(topic) > 500:
+        raise HTTPException(status_code=400, detail="Topic too long (max 500 characters)")
+    if depth not in ["quick", "standard", "advanced"]:
+        raise HTTPException(status_code=400, detail="Depth must be: quick, standard, or advanced")
+
     try:
+
         # Run yagya script asynchronously
         import subprocess
         import threading
@@ -260,8 +281,8 @@ def initiate_yagya(request: YagyaRequest):
                 cmd = [
                     "python",
                     "scripts/research_yagya.py",
-                    "--topic", request.topic or "Autonomous AI Agent Service Economy Models",
-                    "--depth", request.depth or "advanced"
+                    "--topic", topic,
+                    "--depth", depth
                 ]
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
                 logger.info(f"🕯️ Yagya completed: {result.returncode}")
@@ -287,6 +308,8 @@ def initiate_yagya(request: YagyaRequest):
             },
             "monitor": "Check /api/ledger for ritual completion"
         }
+    except HTTPException:
+        raise  # Re-raise HTTPExceptions
     except Exception as e:
         logger.error(f"❌ Yagya initiation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
