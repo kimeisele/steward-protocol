@@ -3,11 +3,12 @@ import logging
 import os
 import json
 import subprocess
-from fastapi import FastAPI, HTTPException, Header, Query
+import asyncio
+from fastapi import FastAPI, HTTPException, Header, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Set
 from pathlib import Path
 
 # KERNEL IMPORTS
@@ -16,6 +17,10 @@ from provider.universal_provider import UniversalProvider
 
 # MILK OCEAN ROUTER IMPORTS
 from envoy.tools.milk_ocean import MilkOceanRouter
+
+# PULSE SYSTEM IMPORTS
+from vibe_core.pulse import get_pulse_manager, PulseFrequency
+from vibe_core.event_bus import get_event_bus, Event
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
@@ -41,6 +46,51 @@ provider = UniversalProvider(kernel)
 
 logger.info("🌊 INITIALIZING MILK OCEAN ROUTER (Brahma Protocol)...")
 milk_ocean = MilkOceanRouter(kernel=kernel)
+
+logger.info("💓 INITIALIZING PULSE SYSTEM (Spandana)...")
+pulse_manager = get_pulse_manager()
+event_bus = get_event_bus()
+
+# --- WEBSOCKET MANAGEMENT ---
+class WebSocketManager:
+    """Manages WebSocket connections for pulse broadcasting"""
+    def __init__(self):
+        self.active_connections: Set[WebSocket] = set()
+        self.lock = asyncio.Lock()
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        async with self.lock:
+            self.active_connections.add(websocket)
+        logger.info(f"📡 WebSocket connected (total: {len(self.active_connections)})")
+
+    async def disconnect(self, websocket: WebSocket):
+        async with self.lock:
+            self.active_connections.discard(websocket)
+        logger.info(f"📡 WebSocket disconnected (total: {len(self.active_connections)})")
+
+    async def broadcast(self, message: str):
+        """Broadcast message to all connected clients (fault-tolerant)"""
+        disconnected = []
+        async with self.lock:
+            for connection in self.active_connections:
+                try:
+                    await connection.send_text(message)
+                except Exception as e:
+                    logger.warning(f"⚠️  WebSocket broadcast error: {e}")
+                    disconnected.append(connection)
+
+        # Clean up disconnected clients
+        async with self.lock:
+            for conn in disconnected:
+                self.active_connections.discard(conn)
+
+    def get_status(self) -> int:
+        """Get number of active connections"""
+        return len(self.active_connections)
+
+
+ws_manager = WebSocketManager()
 
 # --- DATA MODELS ---
 class SignedChatRequest(BaseModel):
@@ -132,6 +182,129 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     except Exception as e:
         logger.error(f"❌ ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# --- STARTUP/SHUTDOWN EVENTS ---
+@app.on_event("startup")
+async def startup_event():
+    """Start the pulse system on app startup"""
+    logger.info("🚀 Starting pulse system...")
+    await pulse_manager.start()
+
+    # Register pulse broadcaster with event bus
+    async def broadcast_event(event: Event):
+        """Broadcast events to WebSocket clients"""
+        message = json.dumps({
+            "type": "event",
+            "data": {
+                "event_id": event.event_id,
+                "timestamp": event.timestamp,
+                "event_type": event.event_type,
+                "agent_id": event.agent_id,
+                "message": event.message,
+                "color": event.get_color()
+            }
+        })
+        await ws_manager.broadcast(message)
+
+    # Register pulse packet broadcaster
+    async def broadcast_pulse(pulse_packet):
+        """Broadcast pulse packets to WebSocket clients"""
+        message = json.dumps({
+            "type": "pulse",
+            "data": {
+                "timestamp": pulse_packet.timestamp,
+                "cycle_id": pulse_packet.cycle_id,
+                "system_state": pulse_packet.system_state,
+                "active_agents": pulse_packet.active_agents,
+                "queue_depth": pulse_packet.queue_depth,
+                "frequency": pulse_packet.frequency
+            }
+        })
+        await ws_manager.broadcast(message)
+
+    # Subscribe both to their respective sources
+    pulse_manager.subscribe(broadcast_pulse)
+    event_bus.subscribe(broadcast_event)
+    logger.info("✅ Pulse system started and subscribers registered")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the pulse system on app shutdown"""
+    logger.info("🛑 Shutting down pulse system...")
+    await pulse_manager.stop()
+
+
+# --- WEBSOCKET ENDPOINT: /v1/pulse ---
+@app.websocket("/v1/pulse")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    Real-time Telemetry & Event Stream via WebSocket
+
+    This endpoint streams:
+    1. Heartbeat packets (Pulse) at regular intervals
+    2. Agent events (Thoughts, Actions, Errors, etc.)
+    3. System state changes (Health, Degraded, Emergency)
+
+    The endpoint is read-only for security.
+    """
+    await ws_manager.connect(websocket)
+
+    try:
+        # Send initial state to new client
+        status = {
+            "type": "system",
+            "message": "Connected to VibeOS Pulse",
+            "pulse_status": pulse_manager.get_status(),
+            "event_bus_status": event_bus.get_status(),
+            "ws_connections": ws_manager.get_status()
+        }
+        await websocket.send_text(json.dumps(status))
+
+        # Send last pulse packet if available (for quick sync)
+        last_packet = pulse_manager.get_last_packet()
+        if last_packet:
+            await websocket.send_text(json.dumps({
+                "type": "pulse",
+                "data": {
+                    "timestamp": last_packet.timestamp,
+                    "cycle_id": last_packet.cycle_id,
+                    "system_state": last_packet.system_state,
+                    "active_agents": last_packet.active_agents,
+                    "queue_depth": last_packet.queue_depth,
+                    "frequency": last_packet.frequency
+                }
+            }))
+
+        # Send recent event history
+        recent_events = event_bus.get_history(limit=20)
+        for event in recent_events:
+            await websocket.send_text(json.dumps({
+                "type": "event",
+                "data": {
+                    "event_id": event.event_id,
+                    "timestamp": event.timestamp,
+                    "event_type": event.event_type,
+                    "agent_id": event.agent_id,
+                    "message": event.message,
+                    "color": event.get_color()
+                }
+            }))
+
+        # Keep connection alive and listen for keep-alives from client
+        while True:
+            data = await websocket.receive_text()
+            # Clients can send "ping" to verify connection
+            if data == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+
+    except WebSocketDisconnect:
+        logger.info("📡 WebSocket client disconnected")
+        await ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"❌ WebSocket error: {e}")
+        await ws_manager.disconnect(websocket)
+
 
 @app.get("/health")
 def health():

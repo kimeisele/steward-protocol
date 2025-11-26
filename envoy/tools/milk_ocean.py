@@ -27,6 +27,7 @@ import re
 import json
 import sqlite3
 import hashlib
+import asyncio
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List, Tuple
 from pathlib import Path
@@ -429,6 +430,37 @@ class MilkOceanRouter:
 
     # ==================== MAIN ROUTER ====================
 
+    def _emit_event_safe(self, event_type: str, message: str, details: Optional[Dict] = None):
+        """
+        Safely emit an event without blocking request routing
+        (Canto 10: Pulse System Integration)
+
+        This is a non-blocking helper that tries to emit an event
+        without disrupting the request processing pipeline.
+        """
+        try:
+            # Try to get or create event loop
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            # Import event bus
+            from vibe_core.event_bus import emit_event
+
+            # Schedule event emission (non-blocking)
+            if loop.is_running():
+                asyncio.create_task(emit_event(event_type, "envoy", message, details=details or {}))
+            else:
+                # Queue it for next iteration
+                try:
+                    loop.run_until_complete(emit_event(event_type, "envoy", message, details=details or {}))
+                except:
+                    pass  # Silently fail - don't disrupt routing
+        except Exception as e:
+            logger.debug(f"⚠️  Event emission failed (non-blocking): {e}")
+
     def process_prayer(self, user_input: str, agent_id: str = "unknown", critical: bool = False) -> Dict[str, Any]:
         """
         Main entry point: Route the user's "prayer" (request) through the gates
@@ -450,11 +482,27 @@ class MilkOceanRouter:
         logger.info(f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]" +
                    (" 🐘🚨 [CRITICAL PRIORITY - GAJENDRA PROTOCOL]" if critical else ""))
 
+        # Emit PRAYER_RECEIVED event
+        self._emit_event_safe("PRAYER_RECEIVED", f"Prayer received from {agent_id}", {
+            "request_id": request_id,
+            "agent_id": agent_id,
+            "critical": critical,
+            "preview": user_input[:100]
+        })
+
         # ========== GATE 0: WATCHMAN ==========
         gate0_result = self._gate_0_watchman(user_input, agent_id)
 
         if gate0_result.priority == RequestPriority.BLOCKED:
             logger.warning(f"⛔ Watchman blocked {request_id}: {gate0_result.reason}")
+
+            # Emit ERROR event for blocked requests
+            self._emit_event_safe("ERROR", f"Prayer blocked by WATCHMAN: {gate0_result.reason}", {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "reason": gate0_result.reason
+            })
+
             return {
                 "status": "blocked",
                 "request_id": request_id,
@@ -468,6 +516,15 @@ class MilkOceanRouter:
         # Even under 1000 years of timeout (DDoS), this prayer is answered
         if critical:
             logger.warning(f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)")
+
+            # Emit CRITICAL_INTERRUPT event - full screen RED flash
+            self._emit_event_safe("CRITICAL_INTERRUPT", "🐘 GAJENDRA PROTOCOL ACTIVATED - Emergency Interrupt!", {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "protocol": "Gajendra Moksha",
+                "action": "kernel_direct_bypass"
+            })
+
             return {
                 "status": "critical",
                 "request_id": request_id,
@@ -492,6 +549,15 @@ class MilkOceanRouter:
         if gate1_result.priority == RequestPriority.LOW:
             # -> GATE 3: LAZY QUEUE
             logger.info(f"🌊 Routing {request_id} to Milk Ocean (lazy queue)")
+
+            # Emit ACTION event for queue routing
+            self._emit_event_safe("ACTION", f"Prayer routed to Milk Ocean (lazy queue)", {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "path": "lazy",
+                "priority": "LOW"
+            })
+
             self.lazy_queue.push(request_id, user_input, gate1_result, agent_id)
 
             return {
@@ -506,6 +572,14 @@ class MilkOceanRouter:
             # -> GATE 1: FLASH MODEL (would be Gemini Flash or Claude Haiku)
             logger.info(f"⚡ Routing {request_id} to Flash model (Envoy)")
 
+            # Emit ACTION event for flash routing
+            self._emit_event_safe("ACTION", f"Prayer routed to Flash (Envoy)", {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "path": "flash",
+                "priority": "MEDIUM"
+            })
+
             return {
                 "status": "routing",
                 "request_id": request_id,
@@ -519,6 +593,14 @@ class MilkOceanRouter:
             # -> GATE 2: PRO MODEL (Claude Pro, Opus, etc)
             logger.info(f"🔥 Routing {request_id} to Science (Pro model)")
 
+            # Emit ACTION event for science routing
+            self._emit_event_safe("ACTION", f"Prayer routed to Science (Pro model)", {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "path": "science",
+                "priority": "HIGH"
+            })
+
             return {
                 "status": "routing",
                 "request_id": request_id,
@@ -529,6 +611,11 @@ class MilkOceanRouter:
             }
 
         # Fallback
+        self._emit_event_safe("ERROR", f"Unknown routing decision for prayer {request_id}", {
+            "request_id": request_id,
+            "agent_id": agent_id
+        })
+
         return {
             "status": "error",
             "request_id": request_id,
