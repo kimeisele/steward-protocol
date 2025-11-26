@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "steward-protocol"
+version = "0.2.0"
+description = "Cryptographic Identity + Governance for AI Agents. A.G.I. Infrastructure."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "kimeisele", email = "contact@steward-protocol.io"},
+]
+keywords = ["ai", "agents", "governance", "cryptography", "identity", "autonomous", "protocol"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+
+dependencies = [
+    # Core Framework
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "ecdsa>=0.18.0",
+    "rich>=13.0.0",
+
+    # Semantic AI (PROJECT JNANA)
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+
+    # API & Web
+    "fastapi>=0.104.0",
+    "uvicorn>=0.24.0",
+    "requests>=2.31.0",
+    "aiofiles>=23.2.1",
+
+    # External APIs
+    "tavily-python>=0.3.0",
+    "tweepy>=4.14.0",
+    "praw>=7.7.0",
+    "PyGithub>=2.0.0",
+
+    # Utilities
+    "gitpython>=3.1.0",
+    "Pillow>=10.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4.0", "black>=23.0.0", "flake8>=6.1.0", "pytest-cov>=4.1.0"]
+
+[project.scripts]
+steward = "steward.cli:main"
+
+[project.urls]
+Documentation = "https://github.com/kimeisele/steward-protocol#readme"
+Source = "https://github.com/kimeisele/steward-protocol"
+Tracker = "https://github.com/kimeisele/steward-protocol/issues"
+Leaderboard = "https://steward-protocol.io/leaderboard"
+
+[tool.hatch.build.targets.wheel]
+packages = ["steward"]
