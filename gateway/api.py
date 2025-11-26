@@ -549,6 +549,10 @@ def get_queue_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
-# Wichtig: Das muss NACH @app.post kommen, sonst verschluckt es den API Call!
-if os.path.exists("docs/public"):
+# VIMANA: Serve the Cockpit from gateway/static/
+# This must come AFTER all @app.post endpoints to avoid shadowing API routes
+if os.path.exists("gateway/static"):
+    app.mount("/", StaticFiles(directory="gateway/static", html=True), name="static")
+elif os.path.exists("docs/public"):
+    # Fallback to legacy frontend if gateway/static doesn't exist
     app.mount("/", StaticFiles(directory="docs/public", html=True), name="static")
