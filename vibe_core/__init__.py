@@ -11,6 +11,8 @@ This stub allows standalone development and type checking.
 from .agent_protocol import VibeAgent, AgentManifest, Capability
 from .scheduling import Task, TaskStatus
 from .kernel import VibeKernel
+from .pulse import get_pulse_manager, PulseManager, PulseFrequency, SystemState
+from .event_bus import get_event_bus, EventBus, Event, EventType, emit_event
 
 __all__ = [
     "VibeAgent",
@@ -19,4 +21,13 @@ __all__ = [
     "Task",
     "TaskStatus",
     "VibeKernel",
+    "get_pulse_manager",
+    "PulseManager",
+    "PulseFrequency",
+    "SystemState",
+    "get_event_bus",
+    "EventBus",
+    "Event",
+    "EventType",
+    "emit_event",
 ]
