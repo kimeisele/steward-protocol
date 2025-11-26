@@ -41,7 +41,18 @@ try:
 except ImportError:
     emit_event = None
 
-# Import LLM Engine (GAD-6000)
+# Import Strategy Pattern Engines (GAD-7000: NEURAL INJECTION)
+try:
+    from provider.reflex_engine import ReflexEngine
+except ImportError:
+    ReflexEngine = None
+
+try:
+    from provider.llm_engine_adapter import LLMEngineAdapter
+except ImportError:
+    LLMEngineAdapter = None
+
+# Import Legacy LLM Engine (GAD-6000) - for backward compatibility
 try:
     from services.llm_engine import llm
 except ImportError:
@@ -174,7 +185,18 @@ class UniversalProvider:
         # Initialize the deterministic router with knowledge graphs
         self.router = DeterministicRouter(knowledge_dir=knowledge_dir)
 
-        # Initialize the Playbook Engine (GAD-5000: DETERMINISTIC INTELLIGENCE)
+        # === STRATEGY PATTERN ENGINES (GAD-7000: NEURAL INJECTION) ===
+
+        # Engine 1: ReflexEngine (Nanosecond responses for trivial inputs)
+        self.reflex_engine = None
+        if ReflexEngine:
+            try:
+                self.reflex_engine = ReflexEngine()
+                logger.info("⚡ Reflex Engine initialized - Instant response layer active")
+            except Exception as e:
+                logger.warning(f"⚠️  Reflex Engine initialization failed: {e}")
+
+        # Engine 2: PlaybookEngine (Deterministic multi-phase execution)
         self.playbook_engine = None
         if PlaybookEngine:
             try:
@@ -183,7 +205,16 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
 
-        logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with deterministic routing")
+        # Engine 3: LLMEngineAdapter (Intelligent fallback for conversational intents)
+        self.llm_engine = None
+        if LLMEngineAdapter:
+            try:
+                self.llm_engine = LLMEngineAdapter()
+                logger.info("🧠 LLM Engine Adapter initialized - Intelligent fallback active")
+            except Exception as e:
+                logger.warning(f"⚠️  LLM Engine Adapter initialization failed: {e}")
+
+        logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)")
 
     def resolve_intent(self, user_input: str) -> IntentVector:
         """
@@ -225,9 +256,12 @@ class UniversalProvider:
 
     async def route_and_execute(self, user_input: str) -> Dict[str, Any]:
         """
-        The Magic Entry Point for VibeChat (GAD-5000 DHARMIC).
-        Uses deterministic routing to decide between FAST-PATH (instant response),
-        PLAYBOOK PATH (deterministic sequences), and SLOW-PATH (async queueing).
+        The Magic Entry Point for VibeChat (GAD-5000 DHARMIC + GAD-7000 STRATEGY PATTERN).
+        Routes through three decision engines in sequence:
+        1. REFLEX ENGINE: Instant responses for trivial inputs (nanoseconds)
+        2. PLAYBOOK ENGINE: Deterministic multi-phase sequences
+        3. LLM ENGINE: Intelligent fallback for conversational intents
+        4. SLOW PATH: Async task queue for heavy operations
 
         NOW WITH PRANA: Emits events to the event bus for visualization.
         """
@@ -242,23 +276,19 @@ class UniversalProvider:
             except Exception as e:
                 logger.debug(f"Event emission failed: {e}")
 
-        # --- FIX: SIMPLE CHAT BYPASS (Operation Silent Key) ---
-        simple_intents = ["hi", "hello", "test", "status", "help"]
-        if any(x in user_input.lower() for x in simple_intents):
-            logger.info(f"✅ Simple intent detected: '{user_input}'. Bypassing playbook for fast chat.")
+        # --- STRATEGY 1: REFLEX CHECK (Nanosecond Response Layer) ---
+        # Operation Silent Key: Check if input matches trivial intent patterns
+        if self.reflex_engine and self.reflex_engine.check(user_input):
+            logger.info(f"✅ Reflex matched: '{user_input}'. Instant response.")
             if emit_event:
                 try:
-                    await emit_event("ACTION", "Executing Fast Chat (Simple Intent)", "provider", {
-                        "intent": user_input
+                    await emit_event("ACTION", "Executing Reflex Response (Instant)", "provider", {
+                        "intent": user_input,
+                        "path": "reflex"
                     })
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
-            return {
-                "status": "success",
-                "data": {
-                    "summary": f"**🤖 ENVOY:** Signal '{user_input}' received. Systems operational. Ready for instructions."
-                }
-            }
+            return self.reflex_engine.respond(user_input)
         # -----------------------------------------------
 
         vector = self.resolve_intent(user_input)
@@ -455,31 +485,54 @@ class UniversalProvider:
 
     def _fast_path_chat_response(self, vector: IntentVector) -> Dict[str, Any]:
         """
-        Natural conversation via LLM Engine (GAD-6000).
+        Natural conversation via LLM Engine Adapter (GAD-7000: Strategy Pattern).
         Immediate, dynamic response for casual queries.
         Routed to ENVOY agent with context.
+
+        Uses the modular LLMEngineAdapter strategy for consistency.
+        Falls back to legacy llm engine if adapter unavailable.
         """
         user_msg = vector.raw_input
         agent_name = "ENVOY"
-
-        # Generate context for LLM
         context = "Fast-path conversational response to casual user query"
 
-        # Generate dynamic response via LLM Engine
+        # Strategy: Use LLMEngineAdapter if available (GAD-7000)
+        if self.llm_engine:
+            try:
+                result = self.llm_engine.respond(agent_name, context, user_msg)
+                return {
+                    "status": result.get("status", "success"),
+                    "summary": result.get("data", {}).get("summary", ""),
+                    "path": result.get("path", "llm"),
+                    "intent": "chat"
+                }
+            except Exception as e:
+                logger.warning(f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine")
+
+        # Fallback: Use legacy llm engine if available (GAD-6000)
         if llm:
-            response = llm.speak(agent_name, context, user_msg)
-        else:
-            # Fallback to static response if LLM unavailable
-            response = (
-                f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
-                f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"
-                f"Just give me a command!"
-            )
+            try:
+                response = llm.speak(agent_name, context, user_msg)
+                return {
+                    "status": "success",
+                    "summary": response,
+                    "path": "fast",
+                    "intent": "chat"
+                }
+            except Exception as e:
+                logger.warning(f"⚠️  Legacy LLM engine failed: {e}")
+
+        # Ultimate fallback: Static response
+        response = (
+            f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
+            f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"
+            f"Just give me a command!"
+        )
 
         return {
             "status": "success",
             "summary": response,
-            "path": "fast",
+            "path": "fast_fallback",
             "intent": "chat"
         }
 
@@ -505,8 +558,10 @@ class UniversalProvider:
 
     def _generate_ack_message(self, vector: IntentVector, agent: str) -> str:
         """
-        Generates dynamic acknowledgment for slow-path tasks via LLM Engine.
+        Generates dynamic acknowledgment for slow-path tasks via LLM Engine Adapter (GAD-7000).
         Contextualizes the task type (creation, action, etc.) for natural language.
+
+        Uses strategy pattern: Try LLMEngineAdapter first, then legacy llm engine.
         """
         agent_display = agent.upper()
         user_input = vector.raw_input
@@ -519,16 +574,27 @@ class UniversalProvider:
         else:
             context = f"User initiated task. {agent_display} agent is processing. Confirm receipt."
 
-        # Generate dynamic acknowledgment via LLM Engine
+        # Strategy: Try LLMEngineAdapter first (GAD-7000)
+        if self.llm_engine:
+            try:
+                result = self.llm_engine.respond(agent_display, context, user_input)
+                return result.get("data", {}).get("summary", "")
+            except Exception as e:
+                logger.debug(f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine")
+
+        # Fallback: Use legacy llm engine (GAD-6000)
         if llm:
-            return llm.speak(agent_display, context, user_input)
-        else:
-            # Fallback to static response
-            if vector.intent_type == IntentType.CREATION:
-                return f"**{agent_display}** is drafting your content now. I'll keep you posted."
-            if vector.intent_type == IntentType.ACTION:
-                return f"**{agent_display}** is executing this governance action on the ledger. Standby."
-            return f"Request forwarded to **{agent_display}**. Processing..."
+            try:
+                return llm.speak(agent_display, context, user_input)
+            except Exception as e:
+                logger.debug(f"⚠️  Legacy LLM engine failed for ack: {e}")
+
+        # Ultimate fallback: Static response
+        if vector.intent_type == IntentType.CREATION:
+            return f"**{agent_display}** is drafting your content now. I'll keep you posted."
+        if vector.intent_type == IntentType.ACTION:
+            return f"**{agent_display}** is executing this governance action on the ledger. Standby."
+        return f"Request forwarded to **{agent_display}**. Processing..."
 
     def _find_best_agent(self, vector: IntentVector) -> Optional[str]:
         """
