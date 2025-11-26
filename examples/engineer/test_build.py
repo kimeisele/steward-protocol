@@ -10,7 +10,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from engineer.cartridge_main import EngineerCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
 
 def test_engineer():
     # Setup
