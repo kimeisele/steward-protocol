@@ -106,43 +106,55 @@ class StewardAgent(VibeAgent):
 
     def discover_agents(self) -> int:
         """
-        Scans agent_city for valid steward.json files and registers them.
+        Scan BOTH system_agents and agent_city/registry for steward.json manifests.
+        Load and register any new agents found.
+        
+        Returns:
+            Number of new agents discovered and registered
         """
         if not self.kernel:
-            logger.warning("⚠️  Steward has no kernel access yet. Skipping scan.")
+            logger.warning("⚠️  Steward has no kernel reference - cannot register agents")
             return 0
-
+        
         new_agents_count = 0
         
-        # Ensure agent_city exists
-        if not self.agent_city_path.exists():
-            logger.warning(f"⚠️  {self.agent_city_path} does not exist.")
-            return 0
-
-        # Walk through the city
-        for root, dirs, files in os.walk(self.agent_city_path):
-            if "steward.json" in files:
-                manifest_path = Path(root) / "steward.json"
+        # Scan both directories
+        scan_paths = [
+            Path("steward/system_agents"),  # System Agents
+            Path("agent_city/registry")      # Citizen Agents
+        ]
+        
+        for base_path in scan_paths:
+            if not base_path.exists():
+                logger.warning(f"⚠️  Path does not exist: {base_path}")
+                continue
                 
-                # Avoid re-processing if we can (simple check)
-                # In a real system, we'd check file hash or modification time
-                # For now, we rely on the kernel registry check
+            logger.info(f"🔍 Scanning {base_path} for agents...")
+            
+            # Find all steward.json files
+            for manifest_path in base_path.rglob("steward.json"):
+                agent_dir = manifest_path.parent
+                agent_id = agent_dir.name
                 
+                # Skip if already registered
+                if agent_id in self.kernel.agent_registry:
+                    logger.debug(f"   ⏭️  {agent_id} already registered")
+                    continue
+                
+                # Load and register the agent
                 try:
-                    agent = self._load_agent_from_manifest(manifest_path)
+                    agent = self._load_agent_from_manifest(manifest_path, agent_id)
                     if agent:
-                        # Check if already registered
-                        if agent.agent_id not in self.kernel.agent_registry:
-                            logger.info(f"✨ DISCOVERY: Found new agent '{agent.agent_id}' at {manifest_path}")
-                            self.kernel.register_agent(agent)
-                            new_agents_count += 1
-                            self.known_agents.add(agent.agent_id)
+                        self.kernel.register_agent(agent)
+                        new_agents_count += 1
+                        logger.info(f"   ✅ Registered new agent: {agent_id}")
                 except Exception as e:
-                    logger.error(f"❌ Failed to load agent from {manifest_path}: {e}")
-
+                    logger.error(f"   ❌ Failed to load {agent_id}: {e}")
+        
+        logger.info(f"🎯 Discovery complete: {new_agents_count} new agents registered")
         return new_agents_count
 
-    def _load_agent_from_manifest(self, manifest_path: Path) -> Optional[VibeAgent]:
+    def _load_agent_from_manifest(self, manifest_path: Path, agent_dir: Path) -> Optional[VibeAgent]:
         """
         Reads steward.json and creates a VibeAgent instance.
         """

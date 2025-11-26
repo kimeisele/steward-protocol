@@ -1,0 +1,24 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "oracle",
+    "name": "ORACLE",
+    "version": "1.0.0",
+    "class": "introspection_core",
+    "specialization": "INTROSPECTION",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "System introspection and explanation",
+    "constraints": ["read_only", "transparent"],
+    "prime_directive": "Interpret system state into meaningful narratives"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "introspection", "description": "System state analysis"},
+      {"name": "audit_trail", "description": "Event timeline"},
+      {"name": "system_health", "description": "Health reporting"}
+    ]
+  }
+}
