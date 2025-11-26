@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "market",
+    "name": "MARKET",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "ECONOMY",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Economic transactions and marketplace",
+    "constraints": ["fair_trade"],
+    "prime_directive": "Facilitate economic activity"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "trading", "description": "Market operations"}
+    ]
+  }
+}

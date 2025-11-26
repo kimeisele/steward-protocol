@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "temple",
+    "name": "TEMPLE",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "SPIRITUAL",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Spiritual guidance and offerings",
+    "constraints": ["respectful_practice"],
+    "prime_directive": "Provide spiritual support and guidance"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "offerings", "description": "Spiritual ceremonies"}
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "mechanic",
+    "name": "MECHANIC",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "MAINTENANCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "System maintenance and repairs",
+    "constraints": ["safe_operations"],
+    "prime_directive": "Keep systems running smoothly"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "maintenance", "description": "System upkeep"}
+    ]
+  }
+}

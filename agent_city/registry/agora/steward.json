@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "agora",
+    "name": "AGORA",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "COMMUNITY",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Community gathering and discussion",
+    "constraints": ["respectful_discourse"],
+    "prime_directive": "Foster community engagement and discussion"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "community_management", "description": "Discussion facilitation"}
+    ]
+  }
+}
