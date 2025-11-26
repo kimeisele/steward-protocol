@@ -120,9 +120,17 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
 
     try:
-        # 2. MILK OCEAN ROUTER: Gate the request through Brahma's protocol
-        # This implements the 4-tier filtering: Watchman -> Envoy -> Science -> Samadhi
-        routing_decision = milk_ocean.process_prayer(request.message, request.agent_id)
+        # 1. GUEST ACCESS (GAD-000: The Bypass)
+        if request.agent_id == "guest":
+            logger.info(f"🌊 GUEST ACCESS: Routing '{request.message}' to Milk Ocean")
+            # Direct route to Milk Ocean Router (Brahma Protocol)
+            # Guests don't get to invoke the Kernel directly, only query via Router
+            routing_decision = milk_ocean.process_prayer(request.message, agent_id="guest")
+        else:
+            # 2. CITIZEN ACCESS (GAD-1000 Verification)
+            # MILK OCEAN ROUTER: Gate the request through Brahma's protocol
+            # This implements the 4-tier filtering: Watchman -> Envoy -> Science -> Samadhi
+            routing_decision = milk_ocean.process_prayer(request.message, request.agent_id)
 
         # 2a. Handle blocked requests
         if routing_decision.get('status') == 'blocked':
