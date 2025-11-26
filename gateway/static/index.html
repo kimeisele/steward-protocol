@@ -644,9 +644,8 @@
                         class="command-input"
                         id="commandInput"
                         placeholder="What is your desire? Speak thy intent..."
-                        disabled
                     />
-                    <button class="command-send" id="commandSend" disabled>
+                    <button class="command-send" id="commandSend">
                         SEND
                     </button>
                 </div>
@@ -667,6 +666,34 @@
                             <div class="agent-status">Connected</div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERROR OVERLAY (For kernel crashes) -->
+    <div class="modal" id="errorOverlay">
+        <div class="modal-content" style="border-left: 5px solid var(--color-danger);">
+            <div class="modal-header" style="color: var(--color-danger);">🚨 SYSTEM ERROR</div>
+            <div class="modal-body">
+                <p id="errorMessage" style="font-size: 0.9rem; color: var(--color-warning); margin-bottom: 1rem;">
+                    Connection lost to VibeOS Kernel
+                </p>
+                <div id="errorTraceback" style="
+                    background: rgba(255, 51, 102, 0.1);
+                    border: 1px solid var(--color-danger);
+                    padding: 0.75rem;
+                    border-radius: 4px;
+                    font-size: 0.75rem;
+                    max-height: 300px;
+                    overflow-y: auto;
+                    font-family: monospace;
+                    color: var(--color-danger);
+                    margin-bottom: 1rem;
+                "></div>
+                <div class="button-group">
+                    <button class="button" id="retryBtn">RETRY</button>
+                    <button class="button button-secondary" id="dismissErrorBtn">DISMISS</button>
                 </div>
             </div>
         </div>
@@ -734,14 +761,20 @@
             }
 
             initializeUI() {
-                const authModal = document.getElementById('authModal');
                 const authToggle = document.getElementById('authToggle');
 
-                // Show auth modal on startup
-                authModal.classList.add('active');
-
                 authToggle.addEventListener('click', () => {
-                    authModal.classList.add('active');
+                    document.getElementById('authModal').classList.add('active');
+                });
+
+                // Setup error handlers
+                document.getElementById('retryBtn').addEventListener('click', () => {
+                    document.getElementById('errorOverlay').classList.remove('active');
+                    this.connectWebSocket();
+                });
+
+                document.getElementById('dismissErrorBtn').addEventListener('click', () => {
+                    document.getElementById('errorOverlay').classList.remove('active');
                 });
             }
 
@@ -846,11 +879,13 @@
                     this.ws.onerror = (error) => {
                         console.error('WebSocket error:', error);
                         this.updateConnectionStatus('ERROR');
+                        this.showErrorOverlay('VibeOS Kernel Connection Error', 'Failed to establish neural link to VibeOS Pulse');
                         this.addFeedItem('System', 'WebSocket connection error', 'error');
                     };
 
                     this.ws.onclose = () => {
                         this.updateConnectionStatus('OFFLINE');
+                        this.addFeedItem('System', 'Connection to VibeOS lost. Reconnecting...', 'error');
                         // Attempt reconnect after 3 seconds
                         setTimeout(() => this.connectWebSocket(), 3000);
                     };
@@ -868,6 +903,17 @@
                     'ERROR': '● ERROR'
                 };
                 badge.textContent = statusMap[status] || status;
+            }
+
+            showErrorOverlay(title, message, traceback = '') {
+                document.getElementById('errorOverlay').classList.add('active');
+                document.getElementById('errorMessage').textContent = message;
+                if (traceback) {
+                    document.getElementById('errorTraceback').textContent = traceback;
+                    document.getElementById('errorTraceback').style.display = 'block';
+                } else {
+                    document.getElementById('errorTraceback').style.display = 'none';
+                }
             }
 
             handlePulseMessage(message) {
