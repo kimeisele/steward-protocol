@@ -13,6 +13,7 @@ the Watchman's sword falls swift and merciless. No exceptions."
 import os
 import logging
 import sys
+import re
 from pathlib import Path
 
 # VibeOS Integration
@@ -61,7 +62,24 @@ class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
         ],
         "uninitialized_attr": [
             r"self\.(\w+)(?:\s*\[|\s*\.|\))",  # Need semantic analysis
-        ]
+        ],
+        # PRINCIPLE 4: NO UNAUTHORIZED CONNECTIONS (Cleanliness/Saucam)
+        "unauthorized_network": [
+            r"socket\s*\(",  # Direct socket creation without authorization
+            r"requests\.get\s*\(",  # HTTP without GAD-1000 verification
+            r"requests\.post\s*\(",
+            r"urllib.*urlopen",  # urllib without authorization
+            r"http\.client\s*\(",  # Low-level HTTP without checks
+            r"ftplib\.",  # FTP without authorization
+            r"telnetlib\.",  # Telnet without authorization
+        ],
+        "unverified_connections": [
+            r"socket.*bind\s*\(",  # Server socket without port whitelist check
+            r"socket.*listen\s*\(",  # Listening without authorization
+            r"socket.*connect\s*\(",  # Client connection without verification
+            r"\.recv\s*\(",  # Data receive without signature verification
+            r"\.send\s*\(",  # Data send without encryption/signing
+        ],
     }
 
     def __init__(self):
@@ -202,6 +220,37 @@ class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
                         "code": line.strip(),
                         "reason": f"Potential uninitialized attribute: self.mode in {agent_name}"
                     })
+
+                # PRINCIPLE 4: Check for unauthorized network operations (Cleanliness/Saucam)
+                # Check for raw socket operations without GAD-1000 verification
+                # Check unauthorized network patterns
+                for pattern in self.FORBIDDEN_PATTERNS.get("unauthorized_network", []):
+                    if re.search(pattern, line):
+                        # Allow if there's a safety comment or whitelist reference
+                        if "whitelist" not in lower_line and "authorized" not in lower_line and "gad_1000" not in lower_line:
+                            violations.append({
+                                "agent_id": agent_name,
+                                "file": str(file_path),
+                                "line": i,
+                                "pattern": "unauthorized_network",
+                                "code": line.strip(),
+                                "reason": f"Unauthorized network operation detected - violates Principle 4 (Saucam/Cleanliness). Must use GAD-1000 verification."
+                            })
+                            break  # Only report once per line
+
+                # Check unverified connection patterns
+                for pattern in self.FORBIDDEN_PATTERNS.get("unverified_connections", []):
+                    if re.search(pattern, line):
+                        if "signature" not in lower_line and "verify" not in lower_line and "gad_1000" not in lower_line:
+                            violations.append({
+                                "agent_id": agent_name,
+                                "file": str(file_path),
+                                "line": i,
+                                "pattern": "unverified_connections",
+                                "code": line.strip(),
+                                "reason": f"Unverified network connection detected - violates Principle 4. Must verify GAD-1000 identity before data exchange."
+                            })
+                            break
 
         except Exception as e:
             logger.warning(f"⚠️ Error scanning {file_path}: {e}")
