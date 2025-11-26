@@ -1,6 +1,7 @@
 
 import logging
 import os
+import sys
 import json
 import subprocess
 import asyncio
@@ -10,6 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any, Set
 from pathlib import Path
+
+# --- AGENT MIGRATION PATH FIX ---
+# Add migrated agent directories to sys.path so imports continue to work
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'steward', 'system_agents'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'agent_city', 'registry'))
 
 # KERNEL IMPORTS
 from vibe_core.kernel_impl import RealVibeKernel
@@ -21,6 +27,9 @@ from envoy.tools.milk_ocean import MilkOceanRouter
 # PULSE SYSTEM IMPORTS
 from vibe_core.pulse import get_pulse_manager, PulseFrequency
 from vibe_core.event_bus import get_event_bus, Event
+
+# STEWARD AGENT IMPORT
+from steward.system_agents.steward.agent import StewardAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
@@ -39,7 +48,17 @@ app.add_middleware(
 # --- BOOT SEQUENCE ---
 logger.info("⚙️  BOOTING KERNEL...")
 kernel = RealVibeKernel(ledger_path="data/vibe_ledger.db")
+
+# 1. Initialize Steward (The Guardian)
+logger.info("🧙‍♂️ SUMMONING THE STEWARD...")
+steward = StewardAgent(kernel)
+kernel.register_agent(steward)
+
+# 2. Boot Kernel (Loads other agents)
 kernel.boot()
+
+# 3. Start Steward's Watch (Autonomous Discovery)
+steward.start_monitoring(interval=10.0)
 
 logger.info("🧠 ACTIVATING PROVIDER...")
 provider = UniversalProvider(kernel)
