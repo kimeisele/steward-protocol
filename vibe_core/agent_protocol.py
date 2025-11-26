@@ -9,6 +9,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from enum import Enum
+import asyncio
+import logging
 
 
 class Capability(str, Enum):
@@ -138,3 +140,64 @@ class VibeAgent(ABC):
             "status": "RUNNING",
             "capabilities": self.capabilities,
         }
+
+    async def emit_event(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+        """
+        Emit an event for real-time monitoring (Canto 10: Pulse System)
+
+        This allows agents to broadcast their state changes to the event bus.
+        Events are visualized in real-time on the Live Darshan dashboard.
+
+        Args:
+            event_type: Type of event (THOUGHT, ACTION, ERROR, VIOLATION, etc.)
+            message: Human-readable event description
+            task_id: Optional task ID associated with this event
+            details: Optional dictionary with additional event details
+
+        Example:
+            await agent.emit_event("THOUGHT", "Planning response", task_id="t123")
+            await agent.emit_event("ACTION", "Posting to Twitter")
+            await agent.emit_event("ERROR", "Failed to validate signature", details={"error": "..."})
+        """
+        try:
+            # Import here to avoid circular dependency
+            from vibe_core.event_bus import emit_event
+            await emit_event(
+                event_type=event_type,
+                agent_id=self.agent_id,
+                message=message,
+                task_id=task_id,
+                details=details or {}
+            )
+        except Exception as e:
+            logger = logging.getLogger("VibeAgent")
+            logger.warning(f"⚠️  Failed to emit event: {e}")
+
+    def emit_event_sync(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+        """
+        Synchronous wrapper for emit_event (for use in non-async contexts)
+
+        This is a convenience method for agents that operate in sync contexts.
+        It tries to emit via the event bus if an event loop is available.
+
+        Args:
+            event_type: Type of event
+            message: Event description
+            task_id: Optional task ID
+            details: Optional event details
+        """
+        try:
+            # Try to get running loop
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Schedule the coroutine
+                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
+            else:
+                # No running loop, try to run in new task
+                asyncio.run(self.emit_event(event_type, message, task_id, details))
+        except RuntimeError:
+            # No event loop available, silently skip
+            pass
+        except Exception as e:
+            logger = logging.getLogger("VibeAgent")
+            logger.debug(f"⚠️  Sync event emission failed: {e}")
