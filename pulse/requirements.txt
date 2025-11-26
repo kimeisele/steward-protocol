@@ -1,0 +1,23 @@
+# PULSE System Requirements
+# Social Media Amplification & Real-time Distribution
+
+# Core
+python-dotenv>=1.0.0
+PyYAML>=6.0
+
+# Twitter/X Integration
+tweepy>=4.14.0
+x-api>=0.1.0
+
+# Environment & Config
+python-dotenv>=1.0.0
+
+# Async Support
+aiohttp>=3.9.0
+
+# Data
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Utilities
+gitpython>=3.1.0
