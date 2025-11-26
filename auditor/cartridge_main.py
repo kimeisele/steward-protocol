@@ -19,10 +19,16 @@ from typing import Dict, Any
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from vibe_core.scheduling.task import Task
 
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
-class AuditorCartridge(VibeAgent):
+class AuditorCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     AUDITOR - The Quality Gate Agent.
 
@@ -43,6 +49,12 @@ class AuditorCartridge(VibeAgent):
             capabilities=["verify_changes", "auditing"]
         )
         logger.info("🔍 AUDITOR is online (Quality Gate Ready)")
+
+        # Initialize Constitutional Oath
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            self.oath_sworn = True
+            logger.info("✅ AUDITOR has sworn the Constitutional Oath")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
