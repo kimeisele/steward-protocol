@@ -744,6 +744,82 @@
 
     <script>
         // ═══════════════════════════════════════════════════════════
+        // GAD-1000: IDENTITY WALLET - Cryptographic Signing
+        // ═══════════════════════════════════════════════════════════
+
+        class IdentityWallet {
+            constructor() {
+                this.privateKey = null;
+                this.publicKey = null;
+            }
+
+            async importKey(pem) {
+                try {
+                    // 1. Clean PEM header/footer
+                    const pemHeader = "-----BEGIN PRIVATE KEY-----";
+                    const pemFooter = "-----END PRIVATE KEY-----";
+                    const pemContents = pem
+                        .replace(pemHeader, "")
+                        .replace(pemFooter, "")
+                        .replace(/\s/g, "");
+
+                    // 2. Decode Base64
+                    const binaryDerString = window.atob(pemContents);
+                    const binaryDer = new Uint8Array(binaryDerString.length);
+                    for (let i = 0; i < binaryDerString.length; i++) {
+                        binaryDer[i] = binaryDerString.charCodeAt(i);
+                    }
+
+                    // 3. Import via WebCrypto
+                    this.privateKey = await window.crypto.subtle.importKey(
+                        "pkcs8",
+                        binaryDer.buffer,
+                        {
+                            name: "ECDSA",
+                            namedCurve: "P-256",
+                        },
+                        true,
+                        ["sign"]
+                    );
+
+                    console.log("🔐 Identity Wallet: Private Key Imported Successfully");
+                    return true;
+                } catch (e) {
+                    console.error("🔐 Identity Wallet Error:", e);
+                    throw new Error("Invalid Private Key format. Must be PKCS#8 PEM (EC P-256).");
+                }
+            }
+
+            async signMessage(message) {
+                if (!this.privateKey) throw new Error("No identity loaded. Cannot sign.");
+
+                const timestamp = Date.now();
+                const payload = JSON.stringify({ message, timestamp });
+                const encoder = new TextEncoder();
+                const data = encoder.encode(payload);
+
+                const signatureBuffer = await window.crypto.subtle.sign(
+                    {
+                        name: "ECDSA",
+                        hash: { name: "SHA-256" },
+                    },
+                    this.privateKey,
+                    data
+                );
+
+                // Convert signature to Base64
+                const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+
+                // Mock public key return (In real GAD-1000, we'd derive or store it)
+                return {
+                    signature: signature,
+                    timestamp: timestamp,
+                    publicKey: "DERIVED_ON_SERVER"
+                };
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // VIMANA COCKPIT - Main Application Logic
         // ═══════════════════════════════════════════════════════════
 
@@ -751,6 +827,7 @@
             constructor() {
                 this.mode = 'guest';
                 this.privateKey = null;
+                this.identityWallet = new IdentityWallet(); // GAD-1000: Initialize wallet
                 this.ws = null;
                 this.feedItems = [];
                 this.maxFeedItems = 50;
@@ -824,19 +901,29 @@
                 document.getElementById('citizenModeForm').style.display = mode === 'citizen' ? 'block' : 'none';
             }
 
-            confirmAuthentication() {
+            async confirmAuthentication() {
                 if (this.mode === 'citizen') {
                     const keyInput = document.getElementById('privateKeyInput');
                     const keyText = keyInput.value.trim();
 
                     if (!keyText) {
-                        alert('Please paste your private key');
+                        this.addFeedItem('System', 'Error: Please paste your private key', 'error');
                         return;
                     }
 
-                    this.privateKey = keyText;
+                    try {
+                        // GAD-1000: Import key into wallet
+                        await this.identityWallet.importKey(keyText);
+                        this.privateKey = keyText; // Keep for reference
+                        this.addFeedItem('System', '🔐 Identity Verified. Welcome, Citizen.', 'mercy');
+                    } catch (e) {
+                        this.addFeedItem('System', `Auth Failed: ${e.message}`, 'error');
+                        this.mode = 'guest'; // Fallback to guest
+                        return;
+                    }
                 } else {
                     // Guest mode - no key needed
+                    this.addFeedItem('System', 'Guest Mode Active. Read-Only / Router Access.', 'thought');
                 }
 
                 // Update the UI to reflect the mode
@@ -844,7 +931,6 @@
 
                 document.getElementById('authModal').classList.remove('active');
                 this.enableCommandInput();
-                this.addFeedItem('System', 'Ready to receive commands.', 'action');
             }
 
             updateModeDisplay(text) {
