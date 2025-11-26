@@ -699,48 +699,7 @@
         </div>
     </div>
 
-    <!-- AUTHENTICATION MODAL -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <div class="modal-header">⚔️ ENTER THE FEDERATION</div>
-            <div class="modal-body">
-                <div class="mode-selector">
-                    <button class="mode-button active" id="guestModeBtn" data-mode="guest">
-                        GUEST<br><span style="font-size: 0.7rem;">Read-only</span>
-                    </button>
-                    <button class="mode-button" id="citizenModeBtn" data-mode="citizen">
-                        CITIZEN<br><span style="font-size: 0.7rem;">Authenticated</span>
-                    </button>
-                </div>
-
-                <div id="guestModeForm" style="display: block;">
-                    <p style="font-size: 0.85rem; color: var(--color-text-dim);">
-                        Observe the City without interference. Limited credits available.
-                    </p>
-                </div>
-
-                <div id="citizenModeForm" style="display: none;">
-                    <div class="input-group">
-                        <label class="input-label">PRIVATE KEY (PEM FORMAT)</label>
-                        <textarea
-                            class="input-field"
-                            id="privateKeyInput"
-                            placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
-                            rows="6"
-                        ></textarea>
-                    </div>
-                    <p style="font-size: 0.75rem; color: var(--color-warning); margin-top: 0.5rem;">
-                        ⚠️  Key is held in memory only. Never written to disk.
-                    </p>
-                </div>
-
-                <div class="button-group">
-                    <button class="button" id="confirmBtn">ENTER</button>
-                    <button class="button button-secondary" id="cancelBtn">CANCEL</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- AUTHENTICATION MODAL - REMOVED (GAD-000: SILENT KEY PROTOCOL) -->
 
     <script>
         // ═══════════════════════════════════════════════════════════
@@ -838,11 +797,14 @@
             }
 
             initializeUI() {
-                const authToggle = document.getElementById('authToggle');
+                // GAD-000: Silent Key - No Modals, No Questions.
+                this.addFeedItem('System', 'Initializing Vimana Cockpit...', 'thought');
 
-                authToggle.addEventListener('click', () => {
-                    document.getElementById('authModal').classList.add('active');
-                });
+                // Auto-connect
+                this.connectWebSocket();
+
+                // Command Bar Focus
+                document.getElementById('commandInput').focus();
 
                 // Setup error handlers
                 document.getElementById('retryBtn').addEventListener('click', () => {
@@ -856,23 +818,7 @@
             }
 
             setupEventListeners() {
-                // Mode selection
-                document.getElementById('guestModeBtn').addEventListener('click', (e) => {
-                    this.selectMode('guest', e.target.closest('.mode-button'));
-                });
-
-                document.getElementById('citizenModeBtn').addEventListener('click', (e) => {
-                    this.selectMode('citizen', e.target.closest('.mode-button'));
-                });
-
-                // Modal buttons
-                document.getElementById('confirmBtn').addEventListener('click', () => {
-                    this.confirmAuthentication();
-                });
-
-                document.getElementById('cancelBtn').addEventListener('click', () => {
-                    document.getElementById('authModal').classList.remove('active');
-                });
+                // GAD-000: SILENT KEY PROTOCOL - No modal auth
 
                 // Command input
                 document.getElementById('commandInput').addEventListener('keypress', (e) => {
@@ -1098,90 +1044,36 @@
                 input.value = '';
 
                 try {
-                    let payload;
-
-                    if (this.mode === 'citizen') {
-                        // GAD-1000: Sign Request (Citizen)
-                        const signature = await this.identityWallet.signMessage(message);
-                        payload = {
-                            message: message,
-                            agent_id: "HIL", // Human In Loop
-                            signature: signature.signature,
-                            public_key: signature.publicKey,
-                            timestamp: signature.timestamp
-                        };
-                    } else {
-                        // GAD-000: Guest Access (Unsigned)
-                        // Wir senden ein "Guest Ticket"
-                        payload = {
-                            message: message,
-                            agent_id: "guest",
-                            signature: "guest_pass", // Bypass Token
-                            public_key: "none",
-                            timestamp: Date.now()
-                        };
-                    }
+                    // GAD-000: SILENT KEY PROTOCOL
+                    // We send raw text. The Backend signs it because it holds the key.
+                    const payload = {
+                        message: message,
+                        agent_id: "HIL", // Human In Loop
+                        signature: "silent_key_mode",
+                        public_key: "backend_managed",
+                        timestamp: Date.now()
+                    };
 
                     const response = await fetch('/v1/chat', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-API-Key': 'steward-secret-key' // Default internal key
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
                     const data = await response.json();
 
-                    // 2. SHOW RESPONSE - Intelligent Parsing
+                    // Visual Feedback logic
                     if (data.error) {
-                        // Error case
                         this.addFeedItem('Error', `🛑 ${data.error}`, 'error');
                     } else if (data.status === 'queued') {
-                        // Milk Ocean (lazy queue)
                         this.addFeedItem('Milk Ocean', `🌊 ${data.message}`, 'mercy');
-                    } else if (data.status === 'blocked') {
-                        // Security block
-                        this.addFeedItem('Security', `🚫 ${data.reason}`, 'error');
-                    } else if (data.status === 'critical') {
-                        // Critical interrupt (Gajendra)
-                        this.addFeedItem('CRITICAL', `🐘 ${data.message}`, 'error');
-                    } else if (data.status === 'routing') {
-                        // Routing decision
-                        this.addFeedItem('Router', `⚡ ${data.message}`, 'thought');
-                    } else if (data.status === 'success') {
-                        // Provider response - extract the best text
-                        let displayText = '';
-
-                        if (data.summary) {
-                            // Primary: summary field (this is the human-friendly text)
-                            displayText = data.summary;
-                        } else if (data.result) {
-                            // Secondary: result field
-                            displayText = data.result;
-                        } else if (data.data && data.data.summary) {
-                            // Tertiary: nested summary
-                            displayText = data.data.summary;
-                        } else {
-                            // Fallback: JSON (should not reach here with good API)
-                            displayText = JSON.stringify(data, null, 2);
-                        }
-
-                        // Determine message type based on path
-                        const messageType = data.path === 'slow' ? 'action' : 'thought';
-                        this.addFeedItem('System', displayText, messageType);
-                    } else if (data.status === 'SUBMITTED' || data.path === 'slow') {
-                        // Task submitted
-                        const msg = data.summary || data.message || JSON.stringify(data);
-                        this.addFeedItem('Task Queue', msg, 'action');
                     } else {
-                        // Unknown format - try to extract human-readable text
-                        let displayText = data.summary || data.message || data.result || JSON.stringify(data);
-                        this.addFeedItem('System', displayText, 'thought');
+                        let text = data.result || (data.data ? data.data.summary : JSON.stringify(data));
+                        this.addFeedItem('System', text, 'thought');
                     }
 
                 } catch (error) {
-                    this.addFeedItem('System', `Connection Error: ${error.message}`, 'error');
+                    this.addFeedItem('System', `Error: ${error.message}`, 'error');
                 }
             }
         }
