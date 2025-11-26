@@ -8,6 +8,10 @@ pyyaml>=6.0
 ecdsa>=0.18.0
 rich>=13.0.0
 
+# Semantic AI (PROJECT JNANA)
+sentence-transformers>=2.2.0
+numpy>=1.24.0
+
 # API & Web
 fastapi>=0.104.0
 uvicorn>=0.24.0

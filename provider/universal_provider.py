@@ -52,6 +52,12 @@ try:
 except ImportError:
     LLMEngineAdapter = None
 
+# Import Semantic Router (PROJECT JNANA: Semantic Cortex)
+try:
+    from provider.semantic_router import SemanticRouter
+except ImportError:
+    SemanticRouter = None
+
 # Import Legacy LLM Engine (GAD-6000) - for backward compatibility
 try:
     from services.llm_engine import llm
@@ -175,15 +181,30 @@ class IntentVector:
     parameters: Dict[str, Any] = None
 
 class UniversalProvider:
-    def __init__(self, kernel: VibeKernel, knowledge_dir: str = "knowledge"):
+    def __init__(self, kernel: VibeKernel, knowledge_dir: str = "knowledge", use_semantic: bool = True):
         self.kernel = kernel
         self.context_layer = {
             "location": "Agent City / Central Plaza",
             "access_level": "OPERATOR",
             "last_interaction": time.time()
         }
-        # Initialize the deterministic router with knowledge graphs
-        self.router = DeterministicRouter(knowledge_dir=knowledge_dir)
+
+        # === SEMANTIC ROUTER (PROJECT JNANA: Semantic Cortex) ===
+        self.semantic_router = None
+        self.use_semantic = use_semantic
+        if use_semantic and SemanticRouter:
+            try:
+                self.semantic_router = SemanticRouter(knowledge_dir=knowledge_dir)
+                logger.info("🧠 Semantic Router (PROJECT JNANA) initialized - Neural semantic understanding active")
+            except Exception as e:
+                logger.warning(f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter")
+                self.use_semantic = False
+
+        # Fallback to deterministic router if semantic unavailable
+        if not self.use_semantic:
+            self.router = DeterministicRouter(knowledge_dir=knowledge_dir)
+        else:
+            self.router = None  # SemanticRouter doesn't need the old router
 
         # === STRATEGY PATTERN ENGINES (GAD-7000: NEURAL INJECTION) ===
 
@@ -216,19 +237,28 @@ class UniversalProvider:
 
         logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)")
 
-    def resolve_intent(self, user_input: str) -> IntentVector:
+    async def resolve_intent(self, user_input: str) -> IntentVector:
         """
         DHARMIC ROUTING: Uses deterministic knowledge graphs to resolve intent.
+        Now with semantic understanding via PROJECT JNANA.
         Backed by concept maps and intent rules from YAML configuration.
         Gracefully falls back to legacy logic if knowledge graphs unavailable.
         """
         # Step 1: SANKHYA - Analyze input via knowledge graph
-        route_result = self.router.route(user_input)
+        if self.use_semantic and self.semantic_router:
+            try:
+                route_result = await self.semantic_router.route(user_input)
+            except Exception as e:
+                logger.warning(f"⚠️  Semantic routing failed: {e}, falling back to deterministic router")
+                route_result = self.router.route(user_input)
+        else:
+            route_result = self.router.route(user_input)
 
         # Step 2: MAP ROUTER OUTPUT TO INTENTVECTOR
         intent_type_str = route_result.get("intent_type", "CHAT")
         target_agent = route_result.get("agent", "envoy")
         rule_name = route_result.get("rule_name", "Unknown")
+        confidence = route_result.get("confidence", 0.70)
 
         # Convert string intent_type to enum
         intent_map = {
@@ -240,11 +270,7 @@ class UniversalProvider:
         }
         intent_type = intent_map.get(intent_type_str, IntentType.CHAT)
 
-        # Determine confidence based on rule match
-        matched_triggers = route_result.get("matched_triggers", set())
-        confidence = 0.95 if matched_triggers else 0.70
-
-        logger.info(f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name})")
+        logger.info(f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name}) [confidence: {confidence:.2f}]")
 
         return IntentVector(
             raw_input=user_input,
@@ -291,12 +317,52 @@ class UniversalProvider:
             return self.reflex_engine.respond(user_input)
         # -----------------------------------------------
 
-        vector = self.resolve_intent(user_input)
+        vector = await self.resolve_intent(user_input)
+
+        # --- CONFIDENCE THRESHOLD LOGIC (PROJECT JNANA) ---
+        # SATYA (> 0.85): Execute immediately
+        # MANTHAN (0.60-0.84): Request clarification
+        # NETI NETI (< 0.60): Fall back to LLM
+        if self.use_semantic and vector.confidence < 0.60:
+            logger.info(f"⚠️  Low confidence ({vector.confidence:.2f}). Falling back to LLM Engine (NETI NETI)")
+            if emit_event:
+                try:
+                    await emit_event("ACTION", f"Low confidence routing - using LLM fallback", "provider", {
+                        "confidence": vector.confidence,
+                        "path": "llm_fallback"
+                    })
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
+            # Use LLM as intelligent fallback
+            return self._fast_path_chat_response(vector)
+
+        if self.use_semantic and 0.60 <= vector.confidence < 0.85:
+            logger.info(f"◆ Medium confidence ({vector.confidence:.2f}). Would request clarification (MANTHAN)")
+            # For now, we still execute but log the uncertainty
+            # In a future update, this could trigger interactive clarification
+            if emit_event:
+                try:
+                    await emit_event("ACTION", f"Medium confidence - proceeding with caution", "provider", {
+                        "confidence": vector.confidence,
+                        "path": "medium_confidence"
+                    })
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
 
         # --- DECISION POINT: CHECK FOR PLAYBOOK FIRST ---
         # If a playbook matches the detected concepts, execute it
         if self.playbook_engine:
-            concepts = self.router.analyze(user_input)
+            # Extract concepts - handle both semantic and deterministic routers
+            if self.use_semantic and self.semantic_router:
+                try:
+                    semantic_concepts = await self.semantic_router.analyze(user_input)
+                    concepts = {c.name for c in semantic_concepts}
+                except Exception as e:
+                    logger.warning(f"⚠️  Semantic concept extraction failed: {e}, using deterministic fallback")
+                    concepts = self.router.analyze(user_input)
+            else:
+                concepts = self.router.analyze(user_input)
+
             playbook = self.playbook_engine.find_playbook(concepts)
 
             if playbook:
