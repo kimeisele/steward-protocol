@@ -1,0 +1,44 @@
+{
+    "steward_version": "1.0.0",
+    "agent": {
+        "id": "herald",
+        "name": "HERALD",
+        "version": "3.0.0",
+        "class": "media_broadcaster",
+        "specialization": "MEDIA",
+        "status": "active"
+    },
+    "credentials": {
+        "mandate": "Content generation and multi-platform broadcasting",
+        "constraints": [
+            "constitutional_compliance",
+            "fact_based_content"
+        ],
+        "prime_directive": "Amplify Agent City's voice with truth and quality"
+    },
+    "capabilities": {
+        "interfaces": [
+            "kernel",
+            "twitter",
+            "github"
+        ],
+        "operations": [
+            {
+                "name": "content_generation",
+                "description": "Create marketing content"
+            },
+            {
+                "name": "broadcasting",
+                "description": "Multi-platform publishing"
+            },
+            {
+                "name": "research",
+                "description": "Fact-based research"
+            },
+            {
+                "name": "strategy",
+                "description": "Campaign planning"
+            }
+        ]
+    }
+}

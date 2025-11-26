@@ -1,0 +1,24 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "chronicle",
+    "name": "CHRONICLE",
+    "version": "1.0.0",
+    "class": "infrastructure_core",
+    "specialization": "INFRASTRUCTURE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Git operations and code history management",
+    "constraints": ["cryptographic_signing"],
+    "prime_directive": "Maintain immutable code timeline"
+  },
+  "capabilities": {
+    "interfaces": ["kernel", "git"],
+    "operations": [
+      {"name": "content_generation", "description": "Commit creation"},
+      {"name": "ledger", "description": "History recording"},
+      {"name": "orchestration", "description": "Branch management"}
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "forum",
+    "name": "FORUM",
+    "version": "1.0.0",
+    "class": "governance_core",
+    "specialization": "GOVERNANCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Democratic voting and proposal management",
+    "constraints": ["constitutional_compliance"],
+    "prime_directive": "Enable democratic governance through proposals and voting"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "governance", "description": "Proposal management"},
+      {"name": "voting", "description": "Democratic voting"},
+      {"name": "proposal_management", "description": "Proposal lifecycle"}
+    ]
+  }
+}

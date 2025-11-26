@@ -1,0 +1,23 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "watchman",
+    "name": "WATCHMAN",
+    "version": "1.0.0",
+    "class": "infrastructure_monitor",
+    "specialization": "INFRASTRUCTURE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "System monitoring and infrastructure oversight",
+    "constraints": ["constitutional_compliance"],
+    "prime_directive": "Monitor system health and enforce infrastructure rules"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "monitoring", "description": "System health checks"},
+      {"name": "alerting", "description": "Issue detection"}
+    ]
+  }
+}

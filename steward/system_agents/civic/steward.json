@@ -1,0 +1,25 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "civic",
+    "name": "CIVIC",
+    "version": "2.0.0",
+    "class": "governance_core",
+    "specialization": "GOVERNANCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Core governance and registry management",
+    "constraints": ["constitutional_compliance"],
+    "prime_directive": "Maintain agent registry and enforce governance rules"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "registry", "description": "Agent registration and lifecycle"},
+      {"name": "licensing", "description": "Broadcasting licenses"},
+      {"name": "ledger", "description": "Credit management"},
+      {"name": "governance", "description": "Constitutional enforcement"}
+    ]
+  }
+}
