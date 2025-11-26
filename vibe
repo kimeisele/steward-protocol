@@ -1,0 +1,27 @@
+#!/bin/bash
+# ╔════════════════════════════════════════════════════════════════════════════╗
+# ║                        PROJECT VIMANA: LAUNCHER                            ║
+# ║                      "One Binary to rule them all"                         ║
+# ║                                                                            ║
+# ║  Shell wrapper for the VibeOS bootloader. Makes launching the system      ║
+# ║  as simple as running: ./vibe                                             ║
+# ╚════════════════════════════════════════════════════════════════════════════╝
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Change to project directory
+cd "$SCRIPT_DIR" || exit 1
+
+# Check if Python 3 is available
+if ! command -v python3 &> /dev/null; then
+    echo "❌ ERROR: Python 3 is not installed or not in PATH"
+    echo "Please install Python 3.10 or later and try again."
+    exit 1
+fi
+
+# Get Python version
+PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+
+# Run the launcher with all arguments passed through
+exec python3 vibe_launcher.py "$@"
