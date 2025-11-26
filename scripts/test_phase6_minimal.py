@@ -69,7 +69,7 @@ def main():
         [
             ("Class StewardBootLoader", r"class StewardBootLoader"),
             ("boot_kernel() method", r"def boot_kernel\("),
-            ("All 11 cartridges imported", r"from herald|from civic|from forum|from science|from envoy|from archivist|from auditor|from engineer|from oracle|from watchman|from artisan"),
+            ("All 11 cartridges imported", r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan"),
             ("verify_envoy() method", r"def verify_envoy\("),
             ("start_gateway() method", r"def start_gateway\("),
             ("Kernel boot sequence", r"RealVibeKernel"),
@@ -87,7 +87,7 @@ def main():
             ("/v1/chat endpoint", r"@app.post\(\"/v1/chat\""),
             ("/health endpoint", r"@app.get\(\"/health\""),
             ("/help endpoint", r"@app.get\(\"/help\""),
-            ("All 11 agents imported", r"from herald|from civic|from forum|from science|from envoy|from archivist|from auditor|from engineer|from oracle|from watchman|from artisan"),
+            ("All 11 agents imported", r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan"),
             ("Kernel initialization", r"get_kernel\("),
             ("HIL Assistant logic", r"summary"),
             ("CORS middleware", r"CORSMiddleware"),

@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 # Add repo to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from auditor.tools.invariant_tool import get_judge, InvariantEngine
-from auditor.tools.watchdog_tool import Watchdog, WatchdogConfig
+from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantEngine
+from steward.system_agents.auditor.tools.watchdog_tool import Watchdog, WatchdogConfig
 
 
 def demo_section(title: str):

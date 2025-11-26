@@ -37,7 +37,7 @@ class KernelWithSemanticAuditor:
         
         # ========== NEW: Load AUDITOR cartridge ==========
         logger.info("🔍 Loading AUDITOR cartridge")
-        from auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         
         self.auditor = AuditorCartridge(root_path=root_path)
         
@@ -221,7 +221,7 @@ def minimal_integration_example():
         # ... existing kernel init ...
         
         # ADD THESE THREE LINES:
-        from auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         self.auditor = AuditorCartridge()
         self.auditor.start_watchdog()
     

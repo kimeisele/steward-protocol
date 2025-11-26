@@ -18,9 +18,9 @@ from pathlib import Path
 sys.path.insert(0, '/home/user/steward-protocol')
 
 from vibe_core.scheduling.task import Task
-from engineer.cartridge_main import EngineerCartridge
-from auditor.cartridge_main import AuditorCartridge
-from archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
 
 # Setup Dummy Environment
 SANDBOX_DIR = "./workspaces/sandbox_test"

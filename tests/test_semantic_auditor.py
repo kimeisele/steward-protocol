@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
-from auditor.tools.invariant_tool import (
+from steward.system_agents.auditor.tools.invariant_tool import (
     InvariantEngine,
     InvariantRule,
     InvariantSeverity,
@@ -23,7 +23,7 @@ from auditor.tools.invariant_tool import (
     get_judge
 )
 
-from auditor.tools.watchdog_tool import (
+from steward.system_agents.auditor.tools.watchdog_tool import (
     Watchdog,
     WatchdogConfig,
     ViolationEvent,
@@ -291,7 +291,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_has_judge(self):
         """Test that AUDITOR cartridge has Judge"""
-        from auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         
         with tempfile.TemporaryDirectory() as tmpdir:
             auditor = AuditorCartridge(Path(tmpdir))
@@ -300,7 +300,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_has_watchdog(self):
         """Test that AUDITOR cartridge has Watchdog"""
-        from auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         
         with tempfile.TemporaryDirectory() as tmpdir:
             auditor = AuditorCartridge(Path(tmpdir))
@@ -310,7 +310,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_version_updated(self):
         """Test that AUDITOR version reflects semantic capabilities"""
-        from auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         
         auditor = AuditorCartridge()
         assert auditor.version >= "2.0.0"  # Must be 2.0+ for semantic verification
