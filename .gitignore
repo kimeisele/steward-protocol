@@ -53,6 +53,7 @@ my_agent/
 # Temporary state files
 agent-city/registry/pending.json
 data/state/*.json
+.playbook_state/
 
 # Runtime snapshot (auto-generated, changes every tick)
 vibe_snapshot.json
