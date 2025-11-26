@@ -106,15 +106,22 @@ def get_ledger(limit: int = Query(100, ge=1, le=1000)):
     GAD-000: "Don't Trust. Verify."
     """
     try:
-        # Get ledger from kernel
-        ledger_entries = kernel.ledger.get_entries(limit=limit)
+        # Get all ledger events (immutable + hash-verified)
+        all_events = kernel.ledger.get_all_events()
+
+        # Apply limit (most recent first)
+        ledger_entries = all_events[-limit:] if limit else all_events
+
+        # Verify chain integrity
+        integrity_check = kernel.ledger.verify_chain_integrity()
 
         return {
             "status": "success",
             "count": len(ledger_entries),
+            "total_events": len(all_events),
             "limit": limit,
             "entries": ledger_entries,
-            "integrity": kernel.ledger.verify_integrity()
+            "integrity": integrity_check
         }
     except Exception as e:
         logger.error(f"❌ Ledger fetch failed: {e}")
@@ -129,7 +136,8 @@ def get_agents():
     """
     try:
         agents_list = []
-        for agent_id, agent in kernel.agent_registry.agents.items():
+        # agent_registry is already a Dict[agent_id: agent]
+        for agent_id, agent in kernel.agent_registry.items():
             try:
                 manifest = agent.get_manifest()
                 agents_list.append({
