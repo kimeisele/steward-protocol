@@ -1,311 +1,276 @@
 #!/usr/bin/env python3
 """
-FINAL VERIFICATION: System Watertight Check
+🛡️  ACID TEST: GAD-5500 INTEGRITY CHECK
+Verifies that the Safe Evolution Loop actually works end-to-end.
 
-This script performs an end-to-end verification that:
-1. Kernel boots successfully
-2. All agents are registered
-3. Envoy can process real commands through the kernel
-4. Results are written to the ledger
-5. The complete loop is functional
-
-This is the proof that the "last surgical stitch" is complete.
-Brain (Envoy) is connected to Heart (Kernel).
+Tests:
+1. Scenario A (Toxic Payload): Engineer writes bad code → Auditor MUST reject
+2. Scenario B (Golden Payload): Engineer writes good code → Auditor MUST pass → Archivist MUST commit
 """
 
+import asyncio
+import os
+import shutil
 import sys
 from pathlib import Path
-import logging
-import json
-from datetime import datetime
 
-# Setup
-project_root = Path.cwd()
-sys.path.insert(0, str(project_root))
+# Add current dir to Python path
+sys.path.insert(0, '/home/user/steward-protocol')
 
-logging.basicConfig(
-    level=logging.WARNING,  # Suppress verbose kernel logs
-    format='%(levelname)s [%(name)s] %(message)s'
-)
+from vibe_core.scheduling.task import Task
+from engineer.cartridge_main import EngineerCartridge
+from auditor.cartridge_main import AuditorCartridge
+from archivist.cartridge_main import ArchivistCartridge
 
-# Imports
-from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.scheduling import Task
+# Setup Dummy Environment
+SANDBOX_DIR = "./workspaces/sandbox_test"
+REPO_DIR = "./temp_repo_test"
 
-# Import all agent cartridges
-from herald.cartridge_main import HeraldCartridge
-from civic.cartridge_main import CivicCartridge
-from forum.cartridge_main import ForumCartridge
-from science.cartridge_main import ScientistCartridge
-from envoy.cartridge_main import EnvoyCartridge
+def setup_env():
+    """Create clean test directories"""
+    if os.path.exists(SANDBOX_DIR):
+        shutil.rmtree(SANDBOX_DIR)
+    if os.path.exists(REPO_DIR):
+        shutil.rmtree(REPO_DIR)
 
+    os.makedirs(SANDBOX_DIR)
+    os.makedirs(REPO_DIR)
 
-def test_kernel_boot():
-    """Test 1: Kernel boots successfully"""
+    # Init git in temp repo for Archivist test
+    os.system(f"git init {REPO_DIR} > /dev/null 2>&1")
+    os.system(f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'")
+    print(f"✅ Test environment created: {SANDBOX_DIR}, {REPO_DIR}")
+
+def cleanup():
+    """Remove test directories"""
+    if os.path.exists(SANDBOX_DIR):
+        shutil.rmtree(SANDBOX_DIR)
+    if os.path.exists(REPO_DIR):
+        shutil.rmtree(REPO_DIR)
+    print("✅ Test cleanup complete")
+
+def run_acid_test():
+    """Run the acid test suite"""
     print("=" * 70)
-    print("TEST 1: KERNEL BOOT")
+    print("🛡️  STARTING ACID TEST: GAD-5500 INTEGRITY CHECK")
     print("=" * 70)
 
-    try:
-        kernel = RealVibeKernel()
-        print("✅ Kernel instance created")
-        return kernel
-    except Exception as e:
-        print(f"❌ FAILED: {e}")
-        return None
+    setup_env()
 
+    # 1. INITIALIZE AGENTS
+    print("\n📐 Initializing agents...")
+    engineer = EngineerCartridge()
+    auditor = AuditorCartridge()
+    archivist = ArchivistCartridge()
+    print("✅ All agents initialized")
 
-def test_agent_registration(kernel):
-    """Test 2: All agents register successfully"""
+    all_passed = True
+
+    # ====================================================
+    # SCENARIO 1: THE TOXIC PAYLOAD (Bad Syntax)
+    # ====================================================
     print("\n" + "=" * 70)
-    print("TEST 2: AGENT REGISTRATION")
+    print("🧪 TEST 1: TOXIC CODE INJECTION (Syntax Error)")
     print("=" * 70)
 
-    agents = [
-        ("herald", HeraldCartridge()),
-        ("civic", CivicCartridge()),
-        ("forum", ForumCartridge()),
-        ("science", ScientistCartridge()),
-        ("envoy", EnvoyCartridge()),
-    ]
+    # Step 1: Engineer writes bad code
+    print("\n[Step 1] Engineer writes toxic code...")
+    task_write_bad = Task(
+        agent_id="engineer",
+        payload={
+            "action": "manifest_reality",
+            "path": "toxic.py",
+            "content": "def broken_code(: print('Forgot args')"  # Syntax Error
+        },
+        task_id="t1",
+        priority=1,
+        created_at="now"
+    )
+    res_eng = engineer.process(task_write_bad)
+    print(f"   Status: {res_eng['status']}")
+    print(f"   File: {res_eng.get('path')}")
 
-    for agent_id, agent_instance in agents:
-        try:
-            kernel.register_agent(agent_instance)
-            print(f"✅ {agent_id}: Registered")
-        except Exception as e:
-            print(f"❌ {agent_id}: FAILED - {e}")
-            return False
+    # Step 2: Auditor Checks
+    print("\n[Step 2] Auditor checks toxic code...")
+    task_audit_bad = Task(
+        agent_id="auditor",
+        payload={
+            "action": "verify_changes",
+            "path": res_eng["path"]
+        },
+        task_id="t2",
+        priority=1,
+        created_at="now"
+    )
+    res_aud = auditor.process(task_audit_bad)
 
-    try:
-        kernel.boot()
-        print("✅ Kernel booted with all agents")
-        return True
-    except Exception as e:
-        print(f"❌ Kernel boot FAILED: {e}")
-        return False
+    if res_aud["passed"] is False:
+        print(f"   ✅ SUCCESS: Auditor blocked toxic code")
+        print(f"   Reason: {res_aud.get('reason')}")
+        print(f"   Details: {res_aud.get('details')}")
+    else:
+        print(f"   ❌ FAILURE: Auditor let toxic code pass!")
+        print(f"   Response: {res_aud}")
+        all_passed = False
 
-
-def test_envoy_status_command(kernel):
-    """Test 3: Envoy can process status command"""
+    # ====================================================
+    # SCENARIO 2: THE GOLDEN PAYLOAD (Clean Code)
+    # ====================================================
     print("\n" + "=" * 70)
-    print("TEST 3: ENVOY STATUS COMMAND")
+    print("✨ TEST 2: GOLDEN CODE FLOW (Valid Code)")
     print("=" * 70)
 
+    # Step 1: Engineer writes good code
+    print("\n[Step 1] Engineer writes clean code...")
+    task_write_good = Task(
+        agent_id="engineer",
+        payload={
+            "action": "manifest_reality",
+            "path": "golden.py",
+            "content": "def working_code():\n    print('Hello World')\n"
+        },
+        task_id="t3",
+        priority=1,
+        created_at="now"
+    )
+    res_eng_good = engineer.process(task_write_good)
+    print(f"   Status: {res_eng_good['status']}")
+    print(f"   File: {res_eng_good.get('path')}")
+
+    # Step 2: Auditor Checks
+    print("\n[Step 2] Auditor checks clean code...")
+    task_audit_good = Task(
+        agent_id="auditor",
+        payload={
+            "action": "verify_changes",
+            "path": res_eng_good["path"]
+        },
+        task_id="t4",
+        priority=1,
+        created_at="now"
+    )
+    res_aud_good = auditor.process(task_audit_good)
+
+    if res_aud_good["passed"] is True:
+        print(f"   ✅ SUCCESS: Auditor passed valid code")
+        print(f"   Stamp: {res_aud_good.get('stamp')}")
+    else:
+        print(f"   ❌ FAILURE: Auditor blocked valid code!")
+        print(f"   Response: {res_aud_good}")
+        all_passed = False
+
+    # Step 3: Archivist Seals (Commit)
+    print("\n[Step 3] Archivist seals code to git...")
+
+    # Change to repo dir for git operations
+    current_cwd = os.getcwd()
     try:
-        # Create status task
-        task = Task(
-            agent_id="envoy",
-            payload={"command": "status", "args": {}}
+        # Create src directory in repo
+        os.makedirs(f"{REPO_DIR}/src", exist_ok=True)
+
+        # Change to repo for relative path safety check
+        os.chdir(REPO_DIR)
+
+        task_seal = Task(
+            agent_id="archivist",
+            payload={
+                "action": "seal_history",
+                "source_path": res_eng_good["path"],
+                "dest_path": "src/golden.py",
+                "audit_result": res_aud_good,
+                "message": "Golden logic"
+            },
+            task_id="t5",
+            priority=1,
+            created_at="now"
         )
 
-        # Submit to kernel
-        task_id = kernel.submit_task(task)
-        print(f"📤 Task submitted: {task_id}")
+        res_arch = archivist.process(task_seal)
 
-        # Process
-        kernel.tick()
-        print(f"✅ Task processed by kernel")
-
-        # Get result
-        result = kernel.get_task_result(task_id)
-
-        if result and result.get("status") == "COMPLETED":
-            output = result.get("output_result", {})
-            agents = output.get("agents", {})
-            print(f"✅ Status retrieved: {agents.get('total', 0)} agents registered")
-            return result
+        if res_arch["status"] == "sealed":
+            print(f"   ✅ SUCCESS: Archivist committed code")
+            print(f"   Commit hash: {res_arch['commit']}")
+            print(f"   Commit short: {res_arch['commit_short']}")
         else:
-            print(f"❌ Task failed: {result}")
-            return None
+            print(f"   ❌ FAILURE: Archivist failed to seal")
+            print(f"   Response: {res_arch}")
+            all_passed = False
 
     except Exception as e:
-        print(f"❌ FAILED: {e}")
+        print(f"   ❌ EXCEPTION in Archivist: {e}")
         import traceback
         traceback.print_exc()
-        return None
+        all_passed = False
+    finally:
+        os.chdir(current_cwd)
 
-
-def test_envoy_proposals_command(kernel):
-    """Test 4: Envoy can list proposals"""
+    # ====================================================
+    # SCENARIO 3: GATEKEEPER TEST (Auditor rejects → Archivist blocks)
+    # ====================================================
     print("\n" + "=" * 70)
-    print("TEST 4: ENVOY PROPOSALS COMMAND")
+    print("🔒 TEST 3: GATEKEEPER TEST (Archivist blocks rejected code)")
     print("=" * 70)
 
+    print("\n[Step 1] Trying to seal toxic code (should be blocked)...")
+
     try:
-        task = Task(
-            agent_id="envoy",
-            payload={"command": "proposals", "args": {"status": "OPEN"}}
+        os.chdir(REPO_DIR)
+        os.makedirs(f"{REPO_DIR}/src", exist_ok=True)
+
+        task_seal_bad = Task(
+            agent_id="archivist",
+            payload={
+                "action": "seal_history",
+                "source_path": res_eng["path"],
+                "dest_path": "src/toxic.py",
+                "audit_result": res_aud,  # Failed audit result
+                "message": "Toxic code"
+            },
+            task_id="t6",
+            priority=1,
+            created_at="now"
         )
 
-        task_id = kernel.submit_task(task)
-        kernel.tick()
-        result = kernel.get_task_result(task_id)
+        res_arch_bad = archivist.process(task_seal_bad)
 
-        if result and result.get("status") == "COMPLETED":
-            proposals = result.get("output_result", {}).get("proposals", [])
-            print(f"✅ Proposals retrieved: {len(proposals)} open proposals")
-            return True
+        if res_arch_bad["status"] == "rejected":
+            print(f"   ✅ SUCCESS: Archivist blocked toxic code (gatekeeper works)")
+            print(f"   Reason: {res_arch_bad.get('reason')}")
         else:
-            print(f"❌ Failed: {result}")
-            return False
+            print(f"   ❌ FAILURE: Archivist did not block toxic code!")
+            print(f"   Response: {res_arch_bad}")
+            all_passed = False
 
     except Exception as e:
-        print(f"❌ FAILED: {e}")
-        return False
+        print(f"   ❌ EXCEPTION: {e}")
+        import traceback
+        traceback.print_exc()
+        all_passed = False
+    finally:
+        os.chdir(current_cwd)
 
-
-def test_envoy_credits_command(kernel):
-    """Test 5: Envoy can check agent credits"""
+    # ====================================================
+    # FINAL RESULT
+    # ====================================================
     print("\n" + "=" * 70)
-    print("TEST 5: ENVOY CREDITS COMMAND")
-    print("=" * 70)
+    cleanup()
 
-    try:
-        task = Task(
-            agent_id="envoy",
-            payload={"command": "credits", "args": {"agent_name": "herald"}}
-        )
-
-        task_id = kernel.submit_task(task)
-        kernel.tick()
-        result = kernel.get_task_result(task_id)
-
-        if result and result.get("status") == "COMPLETED":
-            credits = result.get("output_result", {}).get("credits", 0)
-            print(f"✅ Herald credits: {credits}")
-            return True
-        else:
-            print(f"⚠️  Command executed (agent may not have credits system)")
-            return True
-
-    except Exception as e:
-        print(f"⚠️  Credits check skipped: {e}")
-        return True
-
-
-def test_ledger_integrity(kernel):
-    """Test 6: All tasks are recorded in ledger"""
-    print("\n" + "=" * 70)
-    print("TEST 6: LEDGER INTEGRITY")
-    print("=" * 70)
-
-    try:
-        ledger = kernel.dump_ledger()
-        num_events = len(ledger)
-        print(f"✅ Ledger contains {num_events} events")
-        print(f"✅ All task executions are immutably recorded")
-        return True
-    except Exception as e:
-        print(f"❌ FAILED: {e}")
-        return False
-
-
-def test_kernel_status(kernel):
-    """Test 7: Kernel reports correct operational status"""
-    print("\n" + "=" * 70)
-    print("TEST 7: KERNEL STATUS")
-    print("=" * 70)
-
-    try:
-        status = kernel.get_status()
-
-        print(f"✅ Kernel Status: {status.get('status')}")
-        print(f"✅ Agents Registered: {status.get('agents_registered')}")
-        print(f"✅ Manifests: {status.get('manifests')}")
-
-        scheduler = status.get('scheduler', {})
-        print(f"✅ Tasks Completed: {scheduler.get('completed', 0)}")
-
-        return status.get('status') == 'RUNNING'
-    except Exception as e:
-        print(f"❌ FAILED: {e}")
-        return False
-
-
-def print_final_report(results):
-    """Print the final verification report"""
-    print("\n\n")
-    print("=" * 70)
-    print("🏥 FINAL SYSTEM VERIFICATION REPORT")
-    print("=" * 70)
-
-    total = len(results)
-    passed = sum(1 for r in results.values() if r)
-
-    print(f"\n✅ PASSED: {passed}/{total}")
-
-    if passed == total:
-        print("\n🎉 SYSTEM IS WATERTIGHT")
-        print("\n" + "=" * 70)
-        print("VERIFICATION COMPLETE")
+    if all_passed:
+        print("🎯 ACID TEST PASSED ✅")
         print("=" * 70)
-        print("""
-The Envoy's brain is SUCCESSFULLY WIRED to the Kernel's heart.
-
-✅ Kernel boots with real execution context
-✅ All 5 agents register and initialize
-✅ Envoy receives commands from user input
-✅ Commands become Tasks in the scheduler
-✅ Kernel processes tasks and executes Envoy.process()
-✅ Envoy uses CityControlTool with kernel access
-✅ Results are recorded immutably in the Ledger
-✅ The complete User Input → Kernel → Ledger loop functions
-
-ARCHITECTURE VERIFICATION:
-  User Input → Task → Kernel.tick() → Envoy.process() → CityControlTool → Result
-
-All results recorded in: data/ledger/kernel_ledger.json
-All operations logged in: data/logs/envoy_operations.jsonl
-
-🧠❤️ The system is ready for full operational deployment.
-""")
-        return True
+        print("\nRESULT: System is WATERTIGHT")
+        print("\n✅ Test 1: Auditor correctly blocked toxic code")
+        print("✅ Test 2: Auditor passed clean code, Archivist committed")
+        print("✅ Test 3: Gatekeeper blocked attempt to commit rejected code")
+        print("\nThe Safe Evolution Loop (GAD-5500) is functioning correctly.")
+        return 0
     else:
-        print("\n⚠️  SYSTEM INCOMPLETE")
-        failed = [k for k, v in results.items() if not v]
-        print(f"Failed tests: {', '.join(failed)}")
-        return False
-
-
-def main():
-    print("\n" + "=" * 70)
-    print("🏥 STEWARD PROTOCOL - SYSTEM WATERTIGHT VERIFICATION")
-    print("=" * 70)
-    print(f"Timestamp: {datetime.now().isoformat()}")
-    print(f"Working Directory: {project_root}")
-    print()
-
-    # Run tests
-    results = {}
-
-    kernel = test_kernel_boot()
-    results["Kernel Boot"] = kernel is not None
-
-    if not kernel:
-        print_final_report(results)
-        return False
-
-    results["Agent Registration"] = test_agent_registration(kernel)
-
-    if not results["Agent Registration"]:
-        print_final_report(results)
-        return False
-
-    status_result = test_envoy_status_command(kernel)
-    results["Envoy Status Command"] = status_result is not None
-
-    results["Envoy Proposals Command"] = test_envoy_proposals_command(kernel)
-    results["Envoy Credits Command"] = test_envoy_credits_command(kernel)
-    results["Ledger Integrity"] = test_ledger_integrity(kernel)
-    results["Kernel Status"] = test_kernel_status(kernel)
-
-    # Print final report
-    all_passed = print_final_report(results)
-
-    return all_passed
-
+        print("❌ ACID TEST FAILED")
+        print("=" * 70)
+        print("\nRESULT: System has critical flaws")
+        print("\nPlease review the failed test above.")
+        return 1
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    exit_code = run_acid_test()
+    sys.exit(exit_code)

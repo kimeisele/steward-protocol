@@ -340,7 +340,7 @@ class PlaybookEngine:
         execution.status = "COMPLETED" if current_phase_id == "COMPLETE" else "FAILED"
         execution.completed_at = datetime.now().timestamp()
 
-        logger.info(f"✅ Playbook execution complete: {execution.id} ({execution.status})")
+        logger.info(f"✅ Playbook execution complete: {execution.execution_id} ({execution.status})")
 
         return self._format_execution_result(execution, playbook)
 

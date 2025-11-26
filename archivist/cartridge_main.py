@@ -16,12 +16,19 @@ import subprocess
 import logging
 from typing import Dict, Any
 
-from vibe_core.agent_protocol import VibeAgent, Task, AgentManifest
+from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.scheduling.task import Task
+
+# Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
 
 logger = logging.getLogger("ARCHIVIST_CARTRIDGE")
 
 
-class ArchivistCartridge(VibeAgent):
+class ArchivistCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     ARCHIVIST - The History Keeper Agent.
 
@@ -43,6 +50,12 @@ class ArchivistCartridge(VibeAgent):
             capabilities=["seal_history", "ledger"]
         )
         logger.info("📜 ARCHIVIST is online (History Keeper Ready)")
+
+        # Initialize Constitutional Oath
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            self.oath_sworn = True
+            logger.info("✅ ARCHIVIST has sworn the Constitutional Oath")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
