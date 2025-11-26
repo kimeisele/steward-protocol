@@ -44,7 +44,7 @@ except ImportError:
 
 # Import Constitutional Oath verification (Governance Gate)
 try:
-    from steward.constitutional_oath import ConstitutionalOath
+    from vibe_core.bridge import ConstitutionalOath
     OATH_ENFORCEMENT_AVAILABLE = True
 except ImportError:
     OATH_ENFORCEMENT_AVAILABLE = False
