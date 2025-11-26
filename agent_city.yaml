@@ -41,6 +41,16 @@ residents:
     capabilities: ["meta_building", "scaffolding", "agent_creation"]
     oath_status: "REQUIRED"
 
+  - agent_id: "auditor"
+    role: "Guardian"
+    capabilities: ["auditing", "verification", "compliance"]
+    oath_status: "REQUIRED"
+
+  - agent_id: "archivist"
+    role: "Historian"
+    capabilities: ["ledger", "history", "sealing"]
+    oath_status: "REQUIRED"
+
   - agent_id: "oracle"
     role: "Sage"
     capabilities: ["system_introspection", "explanation", "self_awareness"]
