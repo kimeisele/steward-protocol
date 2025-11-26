@@ -14,6 +14,9 @@ from pathlib import Path
 from vibe_core.kernel_impl import RealVibeKernel
 from provider.universal_provider import UniversalProvider
 
+# MILK OCEAN ROUTER IMPORTS
+from envoy.tools.milk_ocean import MilkOceanRouter
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
 
@@ -35,6 +38,9 @@ kernel.boot()
 
 logger.info("🧠 ACTIVATING PROVIDER...")
 provider = UniversalProvider(kernel)
+
+logger.info("🌊 INITIALIZING MILK OCEAN ROUTER (Brahma Protocol)...")
+milk_ocean = MilkOceanRouter(kernel=kernel)
 
 # --- DATA MODELS ---
 class SignedChatRequest(BaseModel):
@@ -64,30 +70,65 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
 
     try:
-        # 2. Execute via Provider (GAD-4000: Fast-Path vs Slow-Path)
-        result = provider.route_and_execute(request.message)
+        # 2. MILK OCEAN ROUTER: Gate the request through Brahma's protocol
+        # This implements the 4-tier filtering: Watchman -> Envoy -> Science -> Samadhi
+        routing_decision = milk_ocean.process_prayer(request.message, request.agent_id)
 
-        # Handle both fast-path (instant response) and slow-path (task queued)
-        path = result.get('path', 'slow')
-        summary = result.get('summary', result.get('message', ''))
+        # 2a. Handle blocked requests
+        if routing_decision.get('status') == 'blocked':
+            logger.warning(f"⛔ Request blocked: {routing_decision.get('reason')}")
+            return {
+                "status": "error",
+                "message": routing_decision.get('message'),
+                "reason": routing_decision.get('reason'),
+                "request_id": routing_decision.get('request_id')
+            }
 
-        if path == 'fast' or path == 'fast_fallback':
-            # Fast-path: Return the natural language response directly
+        # 2b. Handle lazy queue requests (non-critical, batch processing)
+        elif routing_decision.get('status') == 'queued':
+            logger.info(f"🌊 Request queued for lazy processing: {routing_decision.get('request_id')}")
+            return {
+                "status": "queued",
+                "path": "lazy",
+                "message": routing_decision.get('message'),
+                "request_id": routing_decision.get('request_id'),
+                "next_check": "/api/queue/status"
+            }
+
+        # 2c. Handle fast-path requests (MEDIUM priority -> Flash/Haiku)
+        elif routing_decision.get('path') == 'flash':
+            logger.info(f"⚡ Routing to Flash model (Envoy): {routing_decision.get('request_id')}")
+            # Would call Gemini Flash or Claude Haiku here
+            # For now, fall through to provider
+            result = provider.route_and_execute(request.message)
             return {
                 "status": "success",
-                "path": path,
-                "summary": summary,
+                "path": "flash",
+                "request_id": routing_decision.get('request_id'),
                 "data": result
             }
+
+        # 2d. Handle complex requests (HIGH priority -> Pro/Opus)
+        elif routing_decision.get('path') == 'science':
+            logger.info(f"🔥 Routing to Science agent (Pro model): {routing_decision.get('request_id')}")
+            # Execute via Provider (which now knows to use Pro model)
+            result = provider.route_and_execute(request.message)
+
+            return {
+                "status": "success",
+                "path": "science",
+                "request_id": routing_decision.get('request_id'),
+                "data": result
+            }
+
         else:
-            # Slow-path: Acknowledge task submission with agent info
-            agent = result.get('details', {}).get('agent', 'UNKNOWN')
+            # Fallback to standard execution
+            result = provider.route_and_execute(request.message)
             return {
                 "status": "success",
-                "path": "slow",
-                "summary": summary,
                 "data": result
             }
+
     except Exception as e:
         logger.error(f"❌ ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -312,6 +353,26 @@ def initiate_yagya(request: YagyaRequest):
         raise  # Re-raise HTTPExceptions
     except Exception as e:
         logger.error(f"❌ Yagya initiation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- MILK OCEAN QUEUE STATUS ---
+@app.get("/api/queue/status")
+def get_queue_status():
+    """
+    MILK OCEAN QUEUE STATUS ENDPOINT
+
+    Returns the status of the lazy processing queue (Samadhi state).
+    Shows pending, processing, completed, and failed requests.
+    """
+    try:
+        status = milk_ocean.get_queue_status()
+        return {
+            "status": "success",
+            "message": "🌊 Milk Ocean Queue Status",
+            "data": status
+        }
+    except Exception as e:
+        logger.error(f"❌ Queue status fetch failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
