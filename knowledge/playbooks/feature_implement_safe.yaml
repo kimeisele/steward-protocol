@@ -46,57 +46,34 @@ playbook:
             target_files: "{{ target_files }}"
             context: "{{ project_context }}"
 
-      on_success: "phase_2_manifest_files"
+      on_success: "phase_2_audit_verify"
       on_failure: "phase_final_abort"
       timeout_seconds: 120  # Engineers need time
       requires_approval: false
       state_var: "code_written"
 
 
-    # ==================== PHASE 2: STAGE FILES ====================
-    - phase_id: "phase_2_manifest_files"
-      name: "Manifest Files (Stage for Audit)"
-      description: "CHRONICLE agent stages files for audit verification"
-
-      actions:
-        - action_type: "CALL_AGENT"
-          agent_id: "chronicle"
-          method: "manifest_reality"
-          params:
-            files: "{{ code_written.modified_files }}"
-
-      on_success: "phase_3_audit_verify"
-      on_failure: "phase_final_abort"
-      timeout_seconds: 30
-      state_var: "files_staged"
-
-
-    # ==================== PHASE 3: AUDITOR VERIFIES ====================
-    - phase_id: "phase_3_audit_verify"
+    # ==================== PHASE 2: AUDITOR VERIFIES ====================
+    - phase_id: "phase_2_audit_verify"
       name: "Auditor Verifies Code Quality"
-      description: "AUDITOR checks syntax, linting, tests, and compliance"
+      description: "AUDITOR checks syntax, linting, tests, and compliance (GAD-5500)"
 
       actions:
         - action_type: "CALL_AGENT"
           agent_id: "auditor"
-          method: "check_code_quality"
+          method: "verify_changes"
           params:
-            # These are from manifest
-            files: "{{ code_written.modified_files }}"
-            check_types:
-              - "syntax"
-              - "linting"
-              - "test_suite"
-              - "gad_compliance"
+            # Path comes from Engineer's manifest_reality output
+            path: "{{ code_written.path }}"
 
-      on_success: "phase_4_evaluate_audit"
-      on_failure: "phase_4_evaluate_audit"  # Go to eval even on "failure" (we handle it there)
+      on_success: "phase_3_evaluate_audit"
+      on_failure: "phase_3_evaluate_audit"  # Go to eval even on "failure" (we handle it there)
       timeout_seconds: 60  # Audits can take time
       state_var: "audit_result"
 
 
-    # ==================== PHASE 4: EVALUATE AUDIT RESULT ====================
-    - phase_id: "phase_4_evaluate_audit"
+    # ==================== PHASE 3: EVALUATE AUDIT RESULT ====================
+    - phase_id: "phase_3_evaluate_audit"
       name: "Evaluate Audit Result"
       description: "Gate: Check if audit PASSED. If FAILED, loop back to Engineer."
 
@@ -109,15 +86,15 @@ playbook:
             on_mismatch: "audit_failed"
 
       # If audit PASSED, proceed to commit
-      on_success: "phase_5_chronicle_seal"
+      on_success: "phase_4_chronicle_seal"
       # If audit FAILED, emit event and loop back
-      on_failure: "phase_4b_audit_failed_loop"
+      on_failure: "phase_3b_audit_failed_loop"
       timeout_seconds: 10
       state_var: "audit_validated"
 
 
-    # ==================== PHASE 4B: AUDIT FAILED - LOOP BACK ====================
-    - phase_id: "phase_4b_audit_failed_loop"
+    # ==================== PHASE 3B: AUDIT FAILED - LOOP BACK ====================
+    - phase_id: "phase_3b_audit_failed_loop"
       name: "Audit Failed - Report and Loop Back"
       description: "Auditor rejected code. Report failures and return to Engineer for fixes."
 
@@ -126,8 +103,7 @@ playbook:
         - action_type: "EMIT_EVENT"
           target: "audit_failed_notification"
           params:
-            failures: "{{ audit_result.failures }}"
-            reason: "{{ audit_result.reason }}"
+            failures: "{{ audit_result.reason }}"
             phase: "code_quality_check"
 
       # Loop back to Engineer
@@ -137,29 +113,30 @@ playbook:
       state_var: "audit_failed_reported"
 
 
-    # ==================== PHASE 5: CHRONICLE SEALS HISTORY ====================
-    - phase_id: "phase_5_chronicle_seal"
-      name: "Chronicle Seals History (Create Signed Commit)"
-      description: "ONLY after Audit PASSED: CHRONICLE creates signed commit"
+    # ==================== PHASE 4: ARCHIVIST SEALS HISTORY ====================
+    - phase_id: "phase_4_chronicle_seal"
+      name: "Archivist Seals History (Create Signed Commit)"
+      description: "ONLY after Audit PASSED: ARCHIVIST creates signed commit (GAD-5500)"
 
       actions:
         - action_type: "CALL_AGENT"
-          agent_id: "chronicle"
+          agent_id: "archivist"
           method: "seal_history"
           params:
-            message: "feat: {{ feature_name }} (audited and verified)"
-            files: "{{ code_written.modified_files }}"
-            sign: true  # Sign with GAD-1000 key
+            source_path: "{{ code_written.path }}"
+            dest_path: "{{ code_written.path }}"
+            audit_result: "{{ audit_result }}"
+            message: "{{ feature_name }} (audited and verified)"
 
-      on_success: "phase_6_complete_success"
+      on_success: "phase_5_complete_success"
       on_failure: "phase_final_abort"
       timeout_seconds: 30
       requires_approval: false  # No manual approval needed (Auditor already approved)
       state_var: "commit_sealed"
 
 
-    # ==================== PHASE 6: SUCCESS ====================
-    - phase_id: "phase_6_complete_success"
+    # ==================== PHASE 5: SUCCESS ====================
+    - phase_id: "phase_5_complete_success"
       name: "Complete - Feature Implemented"
       description: "Feature successfully implemented, audited, and committed"
 
@@ -168,7 +145,6 @@ playbook:
           target: "feature_implemented_success"
           params:
             feature_name: "{{ feature_name }}"
-            commit_hash: "{{ commit_sealed.commit_hash }}"
             status: "success"
             message: "✅ Feature implemented, audited, and committed"
 
