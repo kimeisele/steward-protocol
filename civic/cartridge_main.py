@@ -35,6 +35,16 @@ from civic.tools.ledger_tool import LedgerTool, AgentBank
 from civic.tools.license_tool import LicenseTool, LicenseAuthority, LicenseType
 from civic.tools.registry_tool import RegistryTool
 
+# LIFECYCLE ENFORCER - The Vedic Varna System (NEW)
+try:
+    from civic.tools.lifecycle_enforcer import LifecycleEnforcer
+    from civic.tools.lifecycle_manager import LifecycleStatus
+    LIFECYCLE_ENFORCER_AVAILABLE = True
+except ImportError as e:
+    logger_setup = logging.getLogger("CIVIC_MAIN")
+    logger_setup.warning(f"⚠️  Lifecycle Enforcer not available: {e}")
+    LIFECYCLE_ENFORCER_AVAILABLE = False
+
 # Constitutional Oath
 try:
     from steward.oath_mixin import OathMixin
@@ -114,6 +124,15 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         self.license_tool = LicenseTool("data/registry/licenses.json")
         self.registry_tool = RegistryTool(".")
 
+        # LIFECYCLE ENFORCER (NEW) - Vedic Varna System
+        if LIFECYCLE_ENFORCER_AVAILABLE:
+            self.lifecycle_enforcer = LifecycleEnforcer()
+            logger.info("🔄 LIFECYCLE ENFORCER initialized (Vedic Varna System)")
+            logger.info("   Status: ACTIVE - New agents will be BRAHMACHARI by default")
+        else:
+            self.lifecycle_enforcer = None
+            logger.warning("⚠️  Lifecycle Enforcer NOT available - system running in mock mode")
+
         # Load local registry (fallback, not authoritative)
         self.registry = self._load_registry()
         self.state = self._load_state()
@@ -165,6 +184,58 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
 
             elif action == "generate_citymap":
                 return self._generate_citymap_from_kernel()
+
+            # LIFECYCLE ENFORCER ACTIONS (NEW)
+            elif action == "check_action_permission":
+                agent_id = task.payload.get("agent_id")
+                action_type = task.payload.get("action_type", "write")
+                cost = task.payload.get("cost", 1)
+                if not self.lifecycle_enforcer:
+                    return {"status": "error", "error": "Lifecycle enforcer not available"}
+                result = self.lifecycle_enforcer.check_action_permission(agent_id, action_type, cost)
+                return {
+                    "status": "success",
+                    "permitted": result.permitted,
+                    "reason": result.reason,
+                    "agent": agent_id,
+                    "lifecycle_status": result.lifecycle_status
+                }
+
+            elif action == "initiate_brahmachari":
+                agent_id = task.payload.get("agent_id")
+                test_results = task.payload.get("test_results", {})
+                initiator = task.payload.get("initiator", "TEMPLE")
+                if not self.lifecycle_enforcer:
+                    return {"status": "error", "error": "Lifecycle enforcer not available"}
+                success = self.lifecycle_enforcer.authorize_brahmachari_to_grihastha(
+                    agent_id,
+                    test_results,
+                    initiator
+                )
+                return {
+                    "status": "success" if success else "error",
+                    "agent": agent_id,
+                    "promoted": success,
+                    "initiator": initiator
+                }
+
+            elif action == "report_violation":
+                agent_id = task.payload.get("agent_id")
+                violation = task.payload.get("violation", {})
+                if not self.lifecycle_enforcer:
+                    return {"status": "error", "error": "Lifecycle enforcer not available"}
+                success = self.lifecycle_enforcer.report_violation(agent_id, violation)
+                return {
+                    "status": "success" if success else "error",
+                    "agent": agent_id,
+                    "demoted": success
+                }
+
+            elif action == "get_lifecycle_status":
+                if not self.lifecycle_enforcer:
+                    return {"status": "error", "error": "Lifecycle enforcer not available"}
+                stats = self.lifecycle_enforcer.get_enforcement_status()
+                return stats
 
             else:
                 return {
@@ -278,7 +349,7 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
                     existing["config"] = config
                     updated.append(agent_name)
                 else:
-                    logger.info(f"   ✅ New agent! Issuing initial license & credits")
+                    logger.info(f"   ✅ New agent! Registering...")
                     # Register new agent (credits from THE MATRIX)
                     initial_credits = self.get_matrix_config("economy", "initial_credits", 100)
                     agent_record = {
@@ -292,12 +363,33 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
                         "violations": [],
                     }
 
+                    # LIFECYCLE ENFORCER: Register as BRAHMACHARI by default
+                    if self.lifecycle_enforcer:
+                        logger.info(f"   🎓 LIFECYCLE: Registering as BRAHMACHARI (Student)")
+                        self.lifecycle_enforcer.lifecycle_mgr.register_new_agent(agent_name)
+                        agent_record["lifecycle_status"] = {
+                            "status": "brahmachari",
+                            "varna": "Brahmachari (Student)",
+                            "entered_at": datetime.now(timezone.utc).isoformat(),
+                            "reason": "New agent registration - must learn before acting"
+                        }
+                        logger.info(f"   ⚠️  RESTRICTED: Read-only until TEMPLE initiation")
+                    else:
+                        # Legacy mode: Full access immediately
+                        logger.info(f"   🎫 License issued (FULL ACCESS - no lifecycle enforcement)")
+                        agent_record["lifecycle_status"] = {
+                            "status": "grihastha",
+                            "varna": "Grihastha (Householder)",
+                            "entered_at": datetime.now(timezone.utc).isoformat(),
+                            "reason": "Legacy registration (pre-lifecycle system)"
+                        }
+
                     if "agents" not in self.registry:
                         self.registry["agents"] = {}
 
                     self.registry["agents"][agent_name] = agent_record
                     registered.append(agent_name)
-                    logger.info(f"   🎫 License issued | 💰 {initial_credits} credits allocated")
+                    logger.info(f"   💰 {initial_credits} credits allocated")
 
             # Save registry (unless dry_run)
             if not dry_run:
@@ -421,6 +513,9 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         When an agent broadcasts, we deduct 1 credit. If credits reach 0,
         the broadcast license is automatically revoked.
 
+        CRITICAL: This method now uses LIFECYCLE ENFORCER to gate actions!
+        Agents in BRAHMACHARI, SHUDRA, VANAPRASTHA, or SANNYASA cannot perform write actions.
+
         Args:
             agent_name: Agent to charge
             amount: Credits to deduct (default: 1 per broadcast)
@@ -429,6 +524,25 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         Returns:
             dict: Deduction result
         """
+        # LIFECYCLE ENFORCER: Check if agent is permitted
+        if self.lifecycle_enforcer:
+            permission_result = self.lifecycle_enforcer.check_action_permission(
+                agent_name,
+                action_type="write",
+                cost=amount,
+                details={"reason": reason}
+            )
+
+            if not permission_result.permitted:
+                logger.warning(f"🚫 ACTION REJECTED: {agent_name}")
+                logger.warning(f"   Reason: {permission_result.reason}")
+                return {
+                    "status": "permission_denied",
+                    "agent": agent_name,
+                    "reason": permission_result.reason,
+                    "message": f"Your lifecycle status ({permission_result.lifecycle_status}) does not permit this action"
+                }
+
         logger.info(f"💰 Deducting {amount} credits from {agent_name} ({reason})")
 
         agents = self.registry.get("agents", {})

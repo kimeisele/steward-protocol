@@ -116,7 +116,8 @@
       "credits": 100,
       "total_broadcasts": 0,
       "violations": []
-    }
-  },
-  "notes": "This is the authoritative citizen registry maintained by CIVIC. All agents must be registered here to operate. Unregistered = illegal."
-}
+    },
+    "test_agent": {
+      "lifecycle_status": {
+        "agent_id": "test_agent",
+        "status": 
