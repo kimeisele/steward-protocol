@@ -327,3 +327,21 @@ if __name__ == "__main__":
 llm = LLMEngine()
 
 logger.info(f"🧠 LLM Engine initialized (Provider: {llm.provider}, Model: {llm.model})")
+
+
+# ===== PUBLIC API CONVENIENCE FUNCTION =====
+def ask_cortex(prompt: str, system_prompt: str = None) -> str:
+    """
+    Public API: Ask the Cortex (LLM Engine) for code generation.
+
+    This is the main interface that agents use to request code.
+    The caller doesn't need to know about LLMEngine internals.
+
+    Args:
+        prompt: The code generation request
+        system_prompt: Optional custom system prompt
+
+    Returns:
+        Generated Python code
+    """
+    return llm.generate_code(prompt, system_prompt)
