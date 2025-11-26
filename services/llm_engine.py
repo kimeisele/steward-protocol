@@ -4,71 +4,86 @@ The Voice of Agent City.
 Wraps LLM providers to give Agents personality and dynamic responses.
 
 Architecture:
-- Wraps multiple LLM providers (OpenAI, Anthropic, Local)
+- Wraps multiple LLM providers (OpenAI, Anthropic, Mock)
 - Generates dynamic, contextual responses for agents
+- Provides code generation interface for Engineer cartridge
 - Gracefully degrades to mock responses if no API key available
-- Ready for upgrade from Mock Mode to Real Mode
+- Lazy imports: Libraries only loaded when needed (graceful degradation)
 """
 
 import os
 import logging
-import json
-from typing import Dict, Any, Optional
-from enum import Enum
+from typing import Optional
 
 logger = logging.getLogger("LLM_ENGINE")
-
-
-class ProviderType(Enum):
-    """Supported LLM Providers"""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    MOCK = "mock"
 
 
 class LLMEngine:
     """
     🧠 Neuro-Symbolic Bridge
 
-    Generates dynamic agent responses based on:
-    - Agent persona (ENVOY, HERALD, CIVIC, etc.)
-    - Current context (execution mode, domain, etc.)
-    - User input (what they're asking/requesting)
+    Serves two primary functions:
+    1. Conversational: speak() for agent personality responses
+    2. Code Generation: generate_code() for Engineer/Builder use cases
 
     In Mock Mode: Simulates intelligent responses without API calls
-    In Real Mode: Would call actual LLM APIs (not yet implemented)
+    In Real Mode: Calls actual LLM APIs (OpenAI, Anthropic)
     """
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self):
         """
         Initialize LLM Engine with appropriate provider.
-
-        Args:
-            api_key: Optional override for API key
+        Auto-detects provider from environment variables.
         """
-        # Detect provider from environment
+        # Detect API key from environment (supports multiple sources)
         self.api_key = (
-            api_key
-            or os.getenv("OPENAI_API_KEY")
+            os.getenv("OPENAI_API_KEY")
+            or os.getenv("OPENROUTER_API_KEY")
             or os.getenv("ANTHROPIC_API_KEY")
         )
 
-        if os.getenv("OPENAI_API_KEY"):
-            self.provider = ProviderType.OPENAI
-            self.model = "gpt-4o"
-        elif os.getenv("ANTHROPIC_API_KEY"):
-            self.provider = ProviderType.ANTHROPIC
-            self.model = "claude-3-5-sonnet-20240620"
-        else:
-            self.provider = ProviderType.MOCK
-            self.model = "mock-synthetic"
+        # Detect provider preference
+        self.provider = os.getenv("LLM_PROVIDER", "").lower()
+
+        # Auto-detect if not explicitly set
+        if not self.provider:
+            if os.getenv("OPENAI_API_KEY"):
+                self.provider = "openai"
+            elif os.getenv("OPENROUTER_API_KEY"):
+                self.provider = "openrouter"
+            elif os.getenv("ANTHROPIC_API_KEY"):
+                self.provider = "anthropic"
+            else:
+                self.provider = "mock"
+
+        # Set model based on provider
+        self.model = os.getenv("LLM_MODEL")
+        if not self.model:
+            if self.provider == "openai" or self.provider == "openrouter":
+                self.model = "gpt-4o"
+            elif self.provider == "anthropic":
+                self.model = "claude-3-5-sonnet-20240620"
+            else:
+                self.model = "mock-synthetic"
+
+        # Support custom base URL (for OpenRouter or local deployments)
+        self.base_url = os.getenv("LLM_BASE_URL")
+
+        if self.provider == "mock":
             logger.warning(
                 "⚠️  NO API KEY FOUND. Running in MOCK MODE (Simulated Responses)."
             )
+        else:
+            logger.info(
+                f"🧠 LLM Engine initialized (Provider: {self.provider}, Model: {self.model})"
+            )
+
+    # ===== CONVERSATIONAL INTERFACE (Agent Persona) =====
 
     def speak(self, agent_name: str, context: str, user_input: str) -> str:
         """
         Generate a conversational response based on agent persona.
+        Uses mock mode deterministically (no API calls).
 
         Args:
             agent_name: Name of the agent (ENVOY, HERALD, CIVIC, etc.)
@@ -78,19 +93,14 @@ class LLMEngine:
         Returns:
             A formatted response string from the agent
         """
-        # For now, all modes use mock responses
-        # Real API integration would go in _call_openai() or _call_anthropic()
+        # For conversational mode, we use deterministic mock responses
+        # Future: Could use LLM for more dynamic personality
         return self._generate_response(agent_name, context, user_input)
 
     def _generate_response(self, agent_name: str, context: str, user_input: str) -> str:
         """
         Generate a synthetic response. In Mock Mode, this is deterministic.
-        Would be replaced with actual API calls in Real Mode.
-
-        Current Implementation: Mock Mode (AI_SIMULATION)
-        - Simulates intelligent agent behavior
-        - Deterministic for testing
-        - No API calls or costs
+        Used for agent personality and conversational responses.
         """
         agent_upper = agent_name.upper()
 
@@ -140,31 +150,180 @@ class LLMEngine:
             f"Ready to route to the appropriate execution path."
         )
 
-    # ===== FUTURE API INTEGRATIONS (Not Yet Implemented) =====
-    # These methods would be called in Real Mode
+    # ===== CODE GENERATION INTERFACE (Engineer/Builder) =====
 
-    def _call_openai(self, system_prompt: str, user_message: str) -> str:
+    def generate_code(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """
-        Call OpenAI API. Not implemented in current Mock Mode.
-        Would be used when OPENAI_API_KEY is set.
-        """
-        raise NotImplementedError(
-            "OpenAI integration requires 'openai' package. "
-            "Install with: pip install openai"
-        )
+        Generate code based on a feature specification.
+        This is the main interface for Engineer/BuilderTool.
 
-    def _call_anthropic(self, system_prompt: str, user_message: str) -> str:
+        Args:
+            prompt: Feature specification or code request
+            system_prompt: Optional custom system prompt for the model
+
+        Returns:
+            Generated Python code as a string
         """
-        Call Anthropic API. Not implemented in current Mock Mode.
-        Would be used when ANTHROPIC_API_KEY is set.
+        if not system_prompt:
+            system_prompt = (
+                "You are an Expert Senior Software Engineer. "
+                "Generate production-ready, clean Python code. "
+                "Include type hints and docstrings. "
+                "Output ONLY valid Python code, no markdown formatting or explanations."
+            )
+
+        logger.info(f"🧠 Generating code (provider: {self.provider})...")
+
+        # Provider routing
+        if self.provider == "mock":
+            return self._call_mock(prompt)
+        elif self.provider == "openai":
+            return self._call_openai(prompt, system_prompt)
+        elif self.provider == "openrouter":
+            return self._call_openrouter(prompt, system_prompt)
+        elif self.provider == "anthropic":
+            return self._call_anthropic(prompt, system_prompt)
+        else:
+            logger.warning(f"Unknown provider {self.provider}, falling back to mock")
+            return self._call_mock(prompt)
+
+    def _call_openai(self, prompt: str, system_prompt: str) -> str:
         """
-        raise NotImplementedError(
-            "Anthropic integration requires 'anthropic' package. "
-            "Install with: pip install anthropic"
-        )
+        Call OpenAI API for code generation.
+        Uses lazy imports: Only loads if actually called.
+        """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            logger.error(
+                "❌ OpenAI library not installed. Install with: pip install openai"
+            )
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+        try:
+            client = OpenAI(api_key=self.api_key)
+
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.0,  # Deterministic for code generation
+            )
+
+            content = response.choices[0].message.content
+            return self._clean_output(content)
+
+        except Exception as e:
+            logger.error(f"❌ OpenAI API call failed: {e}")
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+    def _call_openrouter(self, prompt: str, system_prompt: str) -> str:
+        """
+        Call OpenRouter API for code generation.
+        Compatible with OpenAI SDK via base_url override.
+        """
+        try:
+            from openai import OpenAI
+        except ImportError:
+            logger.error(
+                "❌ OpenAI library not installed. Install with: pip install openai"
+            )
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+        try:
+            base_url = self.base_url or "https://openrouter.ai/api/v1"
+            client = OpenAI(api_key=self.api_key, base_url=base_url)
+
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.0,
+            )
+
+            content = response.choices[0].message.content
+            return self._clean_output(content)
+
+        except Exception as e:
+            logger.error(f"❌ OpenRouter API call failed: {e}")
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+    def _call_anthropic(self, prompt: str, system_prompt: str) -> str:
+        """
+        Call Anthropic API for code generation.
+        Uses lazy imports: Only loads if actually called.
+        """
+        try:
+            from anthropic import Anthropic
+        except ImportError:
+            logger.error(
+                "❌ Anthropic library not installed. Install with: pip install anthropic"
+            )
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+        try:
+            client = Anthropic(api_key=self.api_key)
+
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=2048,
+                system=system_prompt,
+                messages=[{"role": "user", "content": prompt}],
+            )
+
+            content = response.content[0].text
+            return self._clean_output(content)
+
+        except Exception as e:
+            logger.error(f"❌ Anthropic API call failed: {e}")
+            logger.info("⚠️  Falling back to mock mode")
+            return self._call_mock(prompt)
+
+    def _call_mock(self, prompt: str) -> str:
+        """
+        Mock code generation (no API call).
+        Useful for testing and graceful degradation.
+        """
+        logger.info("🎭 MOCK LLM: Generating synthetic code")
+        # Return a reasonable template that reflects the prompt
+        return f"""# Auto-generated code from prompt
+# Prompt: {prompt[:50]}...
+
+def generated_function():
+    \"\"\"Generated implementation placeholder.\"\"\"
+    # TODO: Implement based on specification
+    pass
+
+
+if __name__ == "__main__":
+    result = generated_function()
+    print(f"Execution result: {{result}}")
+"""
+
+    def _clean_output(self, content: str) -> str:
+        """
+        Strips markdown code blocks and extra whitespace from LLM output.
+        Returns clean, executable Python code.
+        """
+        if not content:
+            return ""
+
+        # Remove markdown code fences
+        clean = content.replace("```python", "").replace("```", "").strip()
+
+        return clean
 
 
 # Singleton instance for module-level access
 llm = LLMEngine()
 
-logger.info(f"🧠 LLM Engine initialized (Provider: {llm.provider.value}, Model: {llm.model})")
+logger.info(f"🧠 LLM Engine initialized (Provider: {llm.provider}, Model: {llm.model})")

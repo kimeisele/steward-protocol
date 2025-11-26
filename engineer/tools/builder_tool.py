@@ -3,43 +3,32 @@ ENGINEER Builder Tool - Scaffolding and Code Generation.
 
 Capabilities:
 - Scaffold new agent directory structure
-- Generate cartridge code via LLM
+- Generate cartridge code via abstracted LLM service
+- NO vendor lock-in: Uses services.llm_engine for all LLM interactions
 """
 
 import os
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Optional
 
-# Reuse Herald's ContentTool for LLM access if available, 
-# otherwise we might need a direct client.
-# For simplicity and consistency, we'll use the same pattern as ContentTool
-# but tailored for code generation.
-try:
-    from openai import OpenAI
-except ImportError:
-    OpenAI = None
+# Import the abstracted LLM service (not vendor-specific)
+from services.llm_engine import llm
 
 logger = logging.getLogger("ENGINEER_BUILDER")
+
 
 class BuilderTool:
     """
     The Engineer's toolbox for creating new agents.
+    Delegates all LLM interactions to the abstracted LLMEngine service.
+    This tool is agnostic to which LLM provider is being used.
     """
 
     def __init__(self):
-        """Initialize builder tool."""
-        self.client = None
-        
-        # Try to initialize OpenAI client (using OpenRouter/Tavily keys from env)
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-        base_url = "https://openrouter.ai/api/v1"
-        
-        if api_key and OpenAI:
-            self.client = OpenAI(api_key=api_key, base_url=base_url)
-            logger.info("✅ Builder Tool initialized with LLM access")
-        else:
-            logger.warning("⚠️  Builder Tool: No API key or OpenAI lib found. Code generation disabled.")
+        """Initialize builder tool with LLM service."""
+        self.llm = llm  # Use singleton instance from services
+        logger.info("🔨 Builder Tool initialized (using LLMEngine service)")
 
     def scaffold_agent(self, name: str) -> bool:
         """
@@ -76,71 +65,123 @@ class BuilderTool:
     def generate_agent_code(self, name: str, mission: str) -> Optional[str]:
         """
         Generate the cartridge code for a new agent.
-        
+        Uses the abstracted LLMEngine service (no vendor lock-in).
+
         Args:
             name: Agent name
             mission: Description of what the agent does
-            
-        Returns:
-            str: Generated Python code or None
-        """
-        if not self.client:
-            return self._fallback_template(name, mission)
 
+        Returns:
+            str: Generated Python code or fallback template
+        """
         prompt = (
             f"You are THE ENGINEER, a meta-agent that builds other autonomous agents.\n"
             f"TASK: Write the Python code for a new agent named '{name}'.\n"
             f"MISSION: {mission}\n\n"
             f"REQUIREMENTS:\n"
             f"1. Class name: {name.capitalize()}Cartridge\n"
-            f"2. Must have a 'run()' method.\n"
-            f"3. Must use standard logging.\n"
-            f"4. Return ONLY the Python code, no markdown formatting.\n"
-            f"5. Include a docstring explaining the agent's role.\n"
+            f"2. Must inherit from VibeAgent.\n"
+            f"3. Must have a 'process(task: Task)' method.\n"
+            f"4. Must use standard logging.\n"
+            f"5. Return ONLY the Python code, no markdown formatting.\n"
+            f"6. Include a comprehensive docstring explaining the agent's role.\n"
+            f"7. Include type hints for all methods.\n"
+        )
+
+        system_prompt = (
+            "You are an Expert Agent Developer. "
+            "Generate production-ready Python code for autonomous agents. "
+            "Output ONLY valid Python code, no explanations."
         )
 
         try:
-            logger.info(f"🧠 Generating code for '{name}'...")
-            response = self.client.chat.completions.create(
-                model="anthropic/claude-3-haiku", # Fast & Good for code
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-                temperature=0.2
-            )
-            
-            code = response.choices[0].message.content.strip()
-            
-            # Strip markdown code blocks if present
-            if code.startswith("```python"):
-                code = code.replace("```python", "").replace("```", "")
-            elif code.startswith("```"):
-                code = code.replace("```", "")
-                
-            return code.strip()
+            logger.info(f"🧠 Generating code for agent '{name}' via LLMEngine...")
+            code = self.llm.generate_code(prompt, system_prompt)
+            return code
 
         except Exception as e:
             logger.error(f"❌ Code generation failed: {e}")
+            logger.info(f"⚠️  Falling back to template for '{name}'")
             return self._fallback_template(name, mission)
 
     def _fallback_template(self, name: str, mission: str) -> str:
-        """Return a basic template if LLM fails."""
+        """
+        Return a basic template if LLM fails.
+        This is a graceful fallback that matches the project's VibeAgent interface.
+        """
         class_name = f"{name.capitalize()}Cartridge"
-        return f"""
+        return f"""\"\"\"
+Agent: {name}
+Mission: {mission}
+Generated by: The Engineer (Fallback Mode)
+\"\"\"
+
 import logging
+from typing import Dict, Any
+
+from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.scheduling.task import Task
 
 logger = logging.getLogger("{name.upper()}_AGENT")
 
-class {class_name}:
+
+class {class_name}(VibeAgent):
     \"\"\"
-    Agent: {name}
+    {name.capitalize()} Agent Cartridge.
     Mission: {mission}
-    Generated by: The Engineer (Fallback Mode)
     \"\"\"
 
     def __init__(self):
-        logger.info("{name} is online.")
+        super().__init__(
+            agent_id="{name.lower()}",
+            name="{name.upper()}",
+            version="1.0.0",
+            author="The Engineer",
+            description="{mission}",
+            domain="GENERAL",
+            capabilities=["execute"]
+        )
+        logger.info(f"📍 {{self.name}} cartridge initialized.")
 
-    def run(self):
-        logger.info("{name} is running its mission: {mission}")
-        return {{"status": "success", "message": "{name} executed successfully"}}
+    def get_manifest(self) -> AgentManifest:
+        \"\"\"Return agent manifest.\"\"\"
+        return AgentManifest(
+            agent_id=self.agent_id,
+            name=self.name,
+            version=self.version,
+            author=self.author,
+            description=self.description,
+            domain=self.domain,
+            capabilities=self.capabilities,
+            dependencies=[]
+        )
+
+    def process(self, task: Task) -> Dict[str, Any]:
+        \"\"\"
+        Process an incoming task.
+
+        Args:
+            task: The task to process
+
+        Returns:
+            Task result dictionary
+        \"\"\"
+        logger.info(f"⚙️  {{self.name}} processing task: {{task.id}}")
+
+        # TODO: Implement actual task processing logic
+        return {{
+            "status": "success",
+            "message": f"{{self.name}} processed task {{task.id}}",
+            "agent": self.agent_id
+        }}
+
+    def report_status(self) -> Dict[str, Any]:
+        \"\"\"Report agent status.\"\"\"
+        return {{
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "RUNNING",
+            "domain": self.domain,
+            "capabilities": self.capabilities
+        }}
 """
