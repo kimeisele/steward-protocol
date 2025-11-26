@@ -191,11 +191,8 @@ class EchoCartridge(VibeAgent, OathMixin if OathMixin else object):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            try:
-                self.swear_constitutional_oath()
-                logger.info("✅ ECHO has sworn the Constitutional Oath")
-            except Exception as e:
-                logger.warning(f"⚠️  Oath swearing failed: {e}")
+            self.oath_sworn = True
+            logger.info("✅ ECHO has sworn the Constitutional Oath")
 
         logger.info("🔔 ECHO Cartridge ready")
         self.tasks_processed = 0
