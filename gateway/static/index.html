@@ -835,19 +835,41 @@
                     }
 
                     this.privateKey = keyText;
-                    this.updateModeDisplay('CITIZEN MODE');
                 } else {
-                    this.updateModeDisplay('GUEST MODE');
+                    // Guest mode - no key needed
                 }
+
+                // Update the UI to reflect the mode
+                this.updateIdentityUI();
 
                 document.getElementById('authModal').classList.remove('active');
                 this.enableCommandInput();
-                this.addFeedItem('System', 'Authentication complete. Ready to receive commands.', 'action');
+                this.addFeedItem('System', 'Ready to receive commands.', 'action');
             }
 
             updateModeDisplay(text) {
-                document.getElementById('modeDisplay').textContent = text;
-                document.getElementById('authToggle').textContent = 'CHANGE IDENTITY';
+                // Legacy name for compatibility
+                this.updateIdentityUI();
+            }
+
+            updateIdentityUI() {
+                const modeEl = document.getElementById('modeDisplay');
+                const changeBtn = document.getElementById('authToggle');
+
+                if (this.mode === 'citizen') {
+                    modeEl.textContent = 'CITIZEN MODE 🔐';
+                    modeEl.className = 'mode-badge animate-pulse';
+                    changeBtn.textContent = 'IDENTITY VERIFIED';
+                    changeBtn.className = 'auth-button';
+                    changeBtn.style.opacity = '0.7';
+                    changeBtn.style.cursor = 'default';
+                } else {
+                    modeEl.textContent = 'GUEST MODE 👁️';
+                    modeEl.className = 'mode-badge';
+                    changeBtn.textContent = 'CONNECT KEY (OPTIONAL)';
+                    changeBtn.className = 'auth-button';
+                    changeBtn.style.opacity = '0.6';
+                }
             }
 
             enableCommandInput() {
@@ -1025,14 +1047,51 @@
 
                     const data = await response.json();
 
-                    // 2. SHOW RESPONSE
-                    if (data.status === 'queued') {
-                        this.addFeedItem('Milk Ocean', `🌊 ${data.message}`, 'mercy');
-                    } else if (data.error) {
+                    // 2. SHOW RESPONSE - Intelligent Parsing
+                    if (data.error) {
+                        // Error case
                         this.addFeedItem('Error', `🛑 ${data.error}`, 'error');
+                    } else if (data.status === 'queued') {
+                        // Milk Ocean (lazy queue)
+                        this.addFeedItem('Milk Ocean', `🌊 ${data.message}`, 'mercy');
+                    } else if (data.status === 'blocked') {
+                        // Security block
+                        this.addFeedItem('Security', `🚫 ${data.reason}`, 'error');
+                    } else if (data.status === 'critical') {
+                        // Critical interrupt (Gajendra)
+                        this.addFeedItem('CRITICAL', `🐘 ${data.message}`, 'error');
+                    } else if (data.status === 'routing') {
+                        // Routing decision
+                        this.addFeedItem('Router', `⚡ ${data.message}`, 'thought');
+                    } else if (data.status === 'success') {
+                        // Provider response - extract the best text
+                        let displayText = '';
+
+                        if (data.summary) {
+                            // Primary: summary field (this is the human-friendly text)
+                            displayText = data.summary;
+                        } else if (data.result) {
+                            // Secondary: result field
+                            displayText = data.result;
+                        } else if (data.data && data.data.summary) {
+                            // Tertiary: nested summary
+                            displayText = data.data.summary;
+                        } else {
+                            // Fallback: JSON (should not reach here with good API)
+                            displayText = JSON.stringify(data, null, 2);
+                        }
+
+                        // Determine message type based on path
+                        const messageType = data.path === 'slow' ? 'action' : 'thought';
+                        this.addFeedItem('System', displayText, messageType);
+                    } else if (data.status === 'SUBMITTED' || data.path === 'slow') {
+                        // Task submitted
+                        const msg = data.summary || data.message || JSON.stringify(data);
+                        this.addFeedItem('Task Queue', msg, 'action');
                     } else {
-                        // Direct response (Flash/Echo)
-                        this.addFeedItem('System', data.result || JSON.stringify(data), 'thought');
+                        // Unknown format - try to extract human-readable text
+                        let displayText = data.summary || data.message || data.result || JSON.stringify(data);
+                        this.addFeedItem('System', displayText, 'thought');
                     }
 
                 } catch (error) {
