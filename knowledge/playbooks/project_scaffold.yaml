@@ -1,0 +1,90 @@
+# PLAYBOOK: PROJECT_SCAFFOLD_V1
+# Triggered by: CMD_CREATE (+ optional project context)
+# Outcome: Fully scaffolded project with git init, folder structure, etc.
+# Role: The HERALD and CIVIC work together to bring a new project to life
+
+playbook:
+  id: "PROJECT_SCAFFOLD_V1"
+  name: "Project Scaffolding"
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary: []  # Matches any create intent
+  description: "Deterministic project creation: structure + git + templates"
+
+  phases:
+    - phase_id: "phase_1_validate"
+      name: "Validate Project Input"
+      description: "Check that project name and parameters are valid"
+
+      actions:
+        - action_type: "CHECK_STATE"
+          target: "input_validation"
+          params:
+            required_fields: ["project_name"]
+            constraints:
+              project_name_pattern: "^[a-zA-Z0-9_-]+$"
+              max_length: 50
+
+      on_success: "phase_2_create_folder"
+      on_failure: "ABORT"
+      timeout_seconds: 5
+      state_var: "validated_params"
+
+    - phase_id: "phase_2_create_folder"
+      name: "Create Folder Structure"
+      description: "Create the project directory and standard folders"
+
+      actions:
+        - action_type: "EXECUTE_SCRIPT"
+          target: "scaffold.create_folders"
+          params:
+            base_path: "{{ project_root }}"
+            template: "standard"
+            folders:
+              - "src"
+              - "tests"
+              - "docs"
+              - "config"
+
+      on_success: "phase_3_git_init"
+      on_failure: "ABORT"
+      timeout_seconds: 10
+      state_var: "folders_created"
+
+    - phase_id: "phase_3_git_init"
+      name: "Initialize Git Repository"
+      description: "Create .git, add .gitignore, and initial commit"
+
+      actions:
+        - action_type: "EXECUTE_SCRIPT"
+          target: "scaffold.init_git"
+          params:
+            repo_path: "{{ project_root }}"
+            template: "standard"
+            initial_branch: "main"
+
+      on_success: "phase_4_notify"
+      on_failure: "ABORT"
+      timeout_seconds: 10
+      state_var: "git_initialized"
+
+    - phase_id: "phase_4_notify"
+      name: "Notify Completion"
+      description: "Emit completion event and return status"
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "project_created"
+          params:
+            project_name: "{{ project_name }}"
+            path: "{{ project_root }}"
+            status: "success"
+
+      on_success: "COMPLETE"
+      on_failure: "ABORT"
+      timeout_seconds: 5
+      state_var: "completed"
+
+  # Template variables (filled at runtime from intent)
+  variables:
+    project_root: "${working_dir}/${project_name}"

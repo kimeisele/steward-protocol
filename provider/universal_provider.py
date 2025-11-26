@@ -47,6 +47,12 @@ try:
 except ImportError:
     llm = None
 
+# Import Playbook Engine (GAD-5000: DETERMINISTIC INTELLIGENCE)
+try:
+    from envoy.playbook_engine import PlaybookEngine
+except ImportError:
+    PlaybookEngine = None
+
 logger = logging.getLogger("UNIVERSAL_PROVIDER")
 
 class DeterministicRouter:
@@ -167,6 +173,16 @@ class UniversalProvider:
         }
         # Initialize the deterministic router with knowledge graphs
         self.router = DeterministicRouter(knowledge_dir=knowledge_dir)
+
+        # Initialize the Playbook Engine (GAD-5000: DETERMINISTIC INTELLIGENCE)
+        self.playbook_engine = None
+        if PlaybookEngine:
+            try:
+                self.playbook_engine = PlaybookEngine(knowledge_dir=knowledge_dir)
+                logger.info("🎯 Playbook Engine initialized - Deterministic Intelligence active")
+            except Exception as e:
+                logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
+
         logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with deterministic routing")
 
     def resolve_intent(self, user_input: str) -> IntentVector:
@@ -210,8 +226,8 @@ class UniversalProvider:
     async def route_and_execute(self, user_input: str) -> Dict[str, Any]:
         """
         The Magic Entry Point for VibeChat (GAD-5000 DHARMIC).
-        Uses deterministic routing to decide between FAST-PATH (instant response)
-        and SLOW-PATH (async queueing).
+        Uses deterministic routing to decide between FAST-PATH (instant response),
+        PLAYBOOK PATH (deterministic sequences), and SLOW-PATH (async queueing).
 
         NOW WITH PRANA: Emits events to the event bus for visualization.
         """
@@ -227,6 +243,44 @@ class UniversalProvider:
                 logger.debug(f"Event emission failed: {e}")
 
         vector = self.resolve_intent(user_input)
+
+        # --- DECISION POINT: CHECK FOR PLAYBOOK FIRST ---
+        # If a playbook matches the detected concepts, execute it
+        if self.playbook_engine:
+            concepts = self.router.analyze(user_input)
+            playbook = self.playbook_engine.find_playbook(concepts)
+
+            if playbook:
+                logger.info(f"🎯 Found matching playbook: {playbook.id} ({playbook.name})")
+
+                if emit_event:
+                    try:
+                        await emit_event("ACTION", f"Found playbook: {playbook.name}", "provider", {
+                            "playbook_id": playbook.id,
+                            "playbook_name": playbook.name
+                        })
+                    except Exception as e:
+                        logger.debug(f"Event emission failed: {e}")
+
+                # Execute the playbook
+                try:
+                    result = await self.playbook_engine.execute(
+                        playbook_id=playbook.id,
+                        user_input=user_input,
+                        intent_vector=vector,
+                        kernel=self.kernel,
+                        emit_event=emit_event
+                    )
+                    return result
+                except Exception as e:
+                    logger.error(f"❌ Playbook execution failed: {e}")
+                    if emit_event:
+                        try:
+                            await emit_event("ERROR", f"Playbook execution failed: {str(e)}", "provider", {})
+                        except Exception as ex:
+                            logger.debug(f"Event emission failed: {ex}")
+                    # Fall through to normal intent routing if playbook fails
+                    pass
 
         # --- DECISION POINT: FAST vs SLOW PATH ---
         # FAST PATH: Instant gratification for reads and casual chat
