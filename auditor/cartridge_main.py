@@ -16,7 +16,8 @@ import subprocess
 import logging
 from typing import Dict, Any
 
-from vibe_core.agent_protocol import VibeAgent, Task, AgentManifest
+from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.scheduling.task import Task
 
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
