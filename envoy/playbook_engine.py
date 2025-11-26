@@ -13,11 +13,18 @@ Philosophy:
 - Input -> Semantic Graph (SANKHYA) -> Playbook Node -> Execution (KARMA)
 - No hallucinations. Just rules and state machines.
 - Each phase is deterministic: Check -> Execute -> Emit -> Continue.
+
+Enhancements (GOLDEN SHOT):
+- LLM Dynamic Routing: Use LLM for ambiguous path decisions
+- Evolutionary Loop (EAD): Generate playbook proposals when no match
+- Fractal/Nested Playbooks: Support playbooks triggering other playbooks
+- State Persistence: Save/restore execution state across restarts
 """
 
 import logging
 import yaml
 import asyncio
+import json
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional, Set
@@ -100,7 +107,19 @@ class PlaybookEngine:
         self.playbooks_dir = self.knowledge_dir / "playbooks"
         self.playbooks: Dict[str, PlaybookDefinition] = {}
         self.executions: Dict[str, PlaybookExecution] = {}
+        self.state_dir = Path(".playbook_state")  # Persistence directory
+        self.state_dir.mkdir(exist_ok=True)
+
+        # Import LLM Engine (GAD-6000)
+        self.llm = None
+        try:
+            from services.llm_engine import llm
+            self.llm = llm
+        except ImportError:
+            logger.warning("⚠️  LLM Engine not available (optional)")
+
         self._load_playbooks()
+        self._load_persisted_executions()
         logger.info(f"🎯 Playbook Engine initialized with {len(self.playbooks)} playbooks")
 
     def _load_playbooks(self):
@@ -291,7 +310,7 @@ class PlaybookEngine:
             # Execute phase actions
             phase.status = PhaseStatus.RUNNING
             phase_success = await self._execute_phase_actions(
-                phase, playbook, execution, intent_vector, kernel, emit_event
+                phase, playbook, execution, intent_vector, kernel, emit_event, execution.execution_id
             )
 
             if phase_success:
@@ -302,6 +321,9 @@ class PlaybookEngine:
             else:
                 phase.status = PhaseStatus.FAILED
                 current_phase_id = phase.on_failure
+
+            # Save execution state after each phase (KARMA LEDGER)
+            self._save_execution_state(execution)
 
             if emit_event:
                 try:
@@ -328,10 +350,12 @@ class PlaybookEngine:
                                      execution: PlaybookExecution,
                                      intent_vector: Any,
                                      kernel: Any = None,
-                                     emit_event=None) -> bool:
+                                     emit_event=None,
+                                     parent_execution_id: Optional[str] = None) -> bool:
         """
         Execute all actions within a phase.
         Returns True if successful, False if any action fails.
+        Supports nested/fractal playbooks via CALL_PLAYBOOK action.
         """
         if not phase.actions:
             return True
@@ -369,6 +393,24 @@ class PlaybookEngine:
                         pass
                     phase.result = {"agent": target, "params": params}
 
+                elif action_type == "CALL_PLAYBOOK":
+                    # Execute nested playbook (FRACTAL/NESTED SUPPORT)
+                    nested_playbook_id = target
+                    if nested_playbook_id in self.playbooks:
+                        logger.info(f"  🔗 Calling nested playbook: {nested_playbook_id}")
+                        nested_result = await self.execute_nested_playbook(
+                            playbook_id=nested_playbook_id,
+                            user_input=execution.user_input,
+                            intent_vector=intent_vector,
+                            kernel=kernel,
+                            emit_event=emit_event,
+                            parent_execution_id=parent_execution_id or execution.execution_id
+                        )
+                        phase.result = nested_result
+                    else:
+                        logger.warning(f"  ⚠️  Nested playbook not found: {nested_playbook_id}")
+                        return False
+
             except Exception as e:
                 logger.error(f"❌ Action failed: {action} - {e}")
                 return False
@@ -395,3 +437,191 @@ class PlaybookEngine:
             "duration_seconds": (execution.completed_at or datetime.now().timestamp()) - execution.started_at,
             "details": execution.phase_results
         }
+
+    # ===== STATE PERSISTENCE (KARMA LEDGER) =====
+    def _save_execution_state(self, execution: PlaybookExecution) -> None:
+        """Persist execution state to disk for recovery"""
+        state_file = self.state_dir / f"{execution.execution_id}.json"
+        try:
+            state_data = {
+                "execution_id": execution.execution_id,
+                "playbook_id": execution.playbook_id,
+                "user_input": execution.user_input,
+                "current_phase_id": execution.current_phase_id,
+                "phase_results": execution.phase_results,
+                "status": execution.status,
+                "started_at": execution.started_at,
+                "completed_at": execution.completed_at,
+                "error_message": execution.error_message
+            }
+            with open(state_file, 'w') as f:
+                json.dump(state_data, f, indent=2)
+            logger.info(f"💾 Saved execution state: {execution.execution_id}")
+        except Exception as e:
+            logger.error(f"❌ Failed to save execution state: {e}")
+
+    def _load_persisted_executions(self) -> None:
+        """Load previously persisted execution states"""
+        try:
+            for state_file in self.state_dir.glob("*.json"):
+                with open(state_file, 'r') as f:
+                    data = json.load(f)
+                    execution_id = data.get("execution_id")
+                    if execution_id:
+                        execution = PlaybookExecution(
+                            execution_id=execution_id,
+                            playbook_id=data.get("playbook_id", ""),
+                            user_input=data.get("user_input", ""),
+                            current_phase_id=data.get("current_phase_id"),
+                            phase_results=data.get("phase_results", {}),
+                            status=data.get("status", "RUNNING"),
+                            started_at=data.get("started_at", datetime.now().timestamp()),
+                            completed_at=data.get("completed_at"),
+                            error_message=data.get("error_message")
+                        )
+                        self.executions[execution_id] = execution
+            if self.executions:
+                logger.info(f"📂 Loaded {len(self.executions)} persisted execution states")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to load persisted executions: {e}")
+
+    # ===== LLM DYNAMIC ROUTING (HYBRID PATH) =====
+    async def get_llm_decision(self, context: str, options: List[str]) -> Optional[str]:
+        """
+        Use LLM to make decision when path is ambiguous.
+        Falls back to first option if LLM unavailable.
+        """
+        if not self.llm or len(options) == 1:
+            return options[0] if options else None
+
+        prompt = f"""Given the context: {context}
+
+Choose the most appropriate option:
+{chr(10).join([f'{i+1}. {opt}' for i, opt in enumerate(options)])}
+
+Reply with ONLY the number of your choice (1-{len(options)})."""
+
+        try:
+            response = self.llm.speak("PLAYBOOK_ENGINE", context, prompt)
+            # Extract first digit from response
+            for char in response:
+                if char.isdigit():
+                    idx = int(char) - 1
+                    if 0 <= idx < len(options):
+                        logger.info(f"🧠 LLM Decision: {options[idx]}")
+                        return options[idx]
+        except Exception as e:
+            logger.debug(f"LLM decision failed, using first option: {e}")
+
+        return options[0] if options else None
+
+    # ===== EVOLUTIONARY LOOP (EAD) =====
+    def generate_playbook_proposal(self, user_input: str, concepts: Set[str]) -> Dict[str, Any]:
+        """
+        Generate a PROPOSAL for a new playbook when no matching playbook found.
+        This is the safe self-improvement mechanism (EAD - Evolutionary Architecture Dimension).
+        The proposal must be approved by a Human (HIL Check) before being added to the system.
+        """
+        proposal_id = f"PROPOSAL_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+        # Infer playbook structure from user intent
+        concepts_list = list(concepts)
+        primary = concepts_list[0] if concepts_list else "CMD_UNKNOWN"
+        secondary = concepts_list[1:] if len(concepts_list) > 1 else []
+
+        proposal = {
+            "proposal_id": proposal_id,
+            "timestamp": datetime.now().isoformat(),
+            "user_input": user_input,
+            "detected_concepts": concepts_list,
+            "playbook_draft": {
+                "id": f"{primary}_V1",
+                "name": f"Auto-generated for {primary}",
+                "description": f"Playbook to handle: {user_input[:100]}",
+                "intent_match": {
+                    "primary": primary,
+                    "secondary": secondary
+                },
+                "phases": [
+                    {
+                        "phase_id": "phase_1_validation",
+                        "name": "Validation",
+                        "description": "Validate input parameters",
+                        "actions": [
+                            {
+                                "action_type": "CHECK_STATE",
+                                "target": "input_validation",
+                                "params": {}
+                            }
+                        ],
+                        "on_success": "phase_2_execution",
+                        "on_failure": "ABORT",
+                        "timeout_seconds": 5
+                    },
+                    {
+                        "phase_id": "phase_2_execution",
+                        "name": "Execution",
+                        "description": "Execute the requested operation",
+                        "actions": [
+                            {
+                                "action_type": "EMIT_EVENT",
+                                "target": "execution_started",
+                                "params": {"operation": "automatic"}
+                            }
+                        ],
+                        "on_success": "COMPLETE",
+                        "on_failure": "ABORT",
+                        "timeout_seconds": 60
+                    }
+                ]
+            },
+            "status": "PENDING_APPROVAL",
+            "approval_required": True,
+            "message": "⚠️  NEW PLAYBOOK PROPOSAL - Requires Human Approval (HIL Check) before activation"
+        }
+
+        logger.info(f"📝 Generated playbook proposal: {proposal_id}")
+        logger.info(f"   Status: PENDING_APPROVAL (awaiting HIL human review)")
+
+        return proposal
+
+    # ===== FRACTAL/NESTED PLAYBOOKS =====
+    async def execute_nested_playbook(self,
+                                     playbook_id: str,
+                                     user_input: str,
+                                     intent_vector: Any,
+                                     kernel: Any = None,
+                                     emit_event=None,
+                                     parent_execution_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Execute a playbook that can be called from another playbook.
+        Supports fractal/recursive playbook structures.
+        """
+        logger.info(f"🔗 Executing nested playbook: {playbook_id} (parent: {parent_execution_id})")
+        result = await self.execute(
+            playbook_id=playbook_id,
+            user_input=user_input,
+            intent_vector=intent_vector,
+            kernel=kernel,
+            emit_event=emit_event
+        )
+
+        if emit_event and parent_execution_id:
+            try:
+                await emit_event("ACTION",
+                    f"Nested playbook {playbook_id} completed",
+                    "playbook_engine",
+                    {"nested_playbook_id": playbook_id, "parent_id": parent_execution_id})
+            except Exception as e:
+                logger.debug(f"Event emission failed: {e}")
+
+        return result
+
+    def find_nested_playbook(self, phase_action: Dict[str, Any]) -> Optional[str]:
+        """
+        Check if a phase action references a nested playbook.
+        If action_type is 'CALL_PLAYBOOK', return the playbook ID.
+        """
+        if phase_action.get("action_type") == "CALL_PLAYBOOK":
+            return phase_action.get("target")
+        return None
