@@ -5,30 +5,10 @@ package:
   license: "MIT"
   author: "Vibe Inc."
 
-cartridges:
-  - name: "civic"
-    path: "./civic"
-    class: "CivicCartridge"
-    domain: "INFRASTRUCTURE"
-    capabilities: ["ledger", "registry", "licenses"]
+# Cartridges are now autonomously discovered by the Steward Agent
+# from the `agent_city` directory.
+# No hardcoded paths here.
 
-  - name: "herald"
-    path: "./herald"
-    class: "HeraldCartridge"
-    domain: "MEDIA"
-    capabilities: ["content", "broadcast"]
-
-  - name: "forum"
-    path: "./forum"
-    class: "ForumCartridge"
-    domain: "GOVERNANCE"
-    capabilities: ["proposals", "voting"]
-
-  - name: "science"
-    path: "./science"
-    class: "ScienceCartridge"
-    domain: "INTELLIGENCE"
-    capabilities: ["research", "search"]
 
 dependencies:
   - "vibe-agency >= 2.0.0"

@@ -21,6 +21,11 @@ import requests
 from contextlib import closing
 import threading
 
+# --- AGENT MIGRATION PATH FIX ---
+# Add migrated agent directories to sys.path so imports continue to work
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'steward', 'system_agents'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'agent_city', 'registry'))
+
 # --- CONFIGURATION ---
 DEFAULT_PORT = 8000
 MAX_PORT_RETRIES = 10
