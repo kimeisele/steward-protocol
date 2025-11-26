@@ -1,0 +1,107 @@
+# PLAYBOOK: CONTENT_GENERATION_V1
+# Triggered by: CMD_CREATE + DOM_CONTENT
+# Outcome: Fully generated content piece with review and publishing
+# Role: The HERALD drives this workflow
+
+playbook:
+  id: "CONTENT_GENERATION_V1"
+  name: "Content Generation Pipeline"
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary: ["DOM_CONTENT"]
+  description: "Research -> Draft -> Review -> Publish workflow"
+
+  phases:
+    - phase_id: "phase_1_research"
+      name: "Research & Analysis"
+      description: "Gather context and information for the content"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "envoy"
+          params:
+            task: "gather_research"
+            topic: "{{ content_topic }}"
+            sources: "web"
+            max_results: 10
+
+      on_success: "phase_2_draft"
+      on_failure: "phase_2_draft"  # Proceed even if research fails
+      timeout_seconds: 30
+      state_var: "research_complete"
+
+    - phase_id: "phase_2_draft"
+      name: "Generate Draft"
+      description: "Create the initial content draft"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "herald"
+          params:
+            task: "generate_content"
+            topic: "{{ content_topic }}"
+            format: "{{ content_format }}"
+            tone: "{{ content_tone }}"
+            research_data: "{{ research_complete.data }}"
+
+      on_success: "phase_3_review"
+      on_failure: "ABORT"
+      timeout_seconds: 60
+      state_var: "draft_generated"
+      requires_approval: false
+
+    - phase_id: "phase_3_review"
+      name: "Review & Approval"
+      description: "Human review of generated content"
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "content_ready_for_review"
+          params:
+            content_id: "{{ draft_generated.id }}"
+            reviewer_assignment: "assigned"
+
+      on_success: "phase_4_publish"
+      on_failure: "ABORT"
+      timeout_seconds: 300  # 5 minutes for human review
+      state_var: "review_approved"
+      requires_approval: true
+
+    - phase_id: "phase_4_publish"
+      name: "Publishing"
+      description: "Publish content to target platform"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "herald"
+          params:
+            task: "publish_content"
+            content_id: "{{ draft_generated.id }}"
+            platform: "{{ publish_platform }}"
+
+      on_success: "phase_5_notify"
+      on_failure: "ABORT"
+      timeout_seconds: 30
+      state_var: "published"
+
+    - phase_id: "phase_5_notify"
+      name: "Completion Notification"
+      description: "Notify user of successful publication"
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "content_published"
+          params:
+            content_id: "{{ draft_generated.id }}"
+            url: "{{ published.url }}"
+
+      on_success: "COMPLETE"
+      on_failure: "ABORT"
+      timeout_seconds: 5
+
+  # Template variables
+  variables:
+    content_topic: null  # From user input
+    content_format: "markdown"  # Default format
+    content_tone: "professional"  # Default tone
+    publish_platform: "internal"  # Where to publish

@@ -1,0 +1,57 @@
+# PLAYBOOK SCHEMA (GAD-5000: DETERMINISTIC INTELLIGENCE)
+# The Dungeon Master's Rulebook - Maps User Intent to Deterministic Execution Steps
+#
+# Philosophy:
+# - Input -> Semantic Graph (SANKHYA) -> Playbook Node -> Execution (KARMA)
+# - Each playbook is a sequence of deterministic phases
+# - No hallucinations, no "maybe". Just rules and execution.
+# - Playbook is visualized in Iron Shell as a progress checklist
+
+metadata:
+  version: "1.0"
+  description: "Schema for deterministic playbook execution in the Steward Protocol"
+
+# A Playbook defines a sequence of Phases that respond to a User Intent
+# Each Phase is:
+#  - A deterministic step with clear preconditions and postconditions
+#  - Can check state, run actions, or delegate to agents
+#  - Tracks progress (pending -> running -> completed/failed)
+
+playbook_structure:
+  name: string          # "PROJECT_SCAFFOLD", "CONTENT_GENERATION", etc.
+  intent_match: object  # Triggers that activate this playbook
+    - primary: string   # Main concept (e.g., "CMD_CREATE")
+    - secondary: [string]  # Optional domain (e.g., ["DOM_GOVERNANCE"])
+  description: string   # What does this playbook do?
+
+  phases: array
+    - phase_id: string  # "phase_1", "phase_2", etc.
+      name: string      # "Research", "Content Generation", "Publishing"
+      description: string
+
+      # Execution logic
+      actions: array    # What to do in this phase
+        - action_type: enum  # "CALL_AGENT", "CHECK_STATE", "EXECUTE_SCRIPT", "EMIT_EVENT"
+          target: string # Agent ID or script path
+          params: object # Payload for the action
+
+      # Control flow
+      on_success: string  # Next phase if this succeeds
+      on_failure: string  # Next phase if this fails (or "ABORT")
+
+      # Human checkpoint
+      requires_approval: boolean  # Does this need user sign-off?
+
+      # State tracking
+      state_var: string   # Name of state variable to set after success
+
+      # Timeout
+      timeout_seconds: integer
+
+# Example fields you can use in a playbook:
+#
+# intents:
+#   CMD_CREATE + DOM_GOVERNANCE -> CAMPAIGN_LAUNCH_V1
+#   CMD_CREATE + DOM_CONTENT -> CONTENT_GENERATION_V1
+#   CMD_EXECUTE -> DEPLOYMENT_V1
+#   CMD_VOTE + DOM_GOVERNANCE -> VOTING_SESSION_V1

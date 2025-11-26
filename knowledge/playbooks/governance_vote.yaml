@@ -1,0 +1,124 @@
+# PLAYBOOK: GOVERNANCE_VOTE_V1
+# Triggered by: CMD_VOTE + DOM_GOVERNANCE
+# Outcome: Completed voting session with immutable ledger entry
+# Role: The CIVIC agent orchestrates this with the WATCHMAN for compliance
+
+playbook:
+  id: "GOVERNANCE_VOTE_V1"
+  name: "Governance Voting Session"
+  intent_match:
+    primary: "CMD_VOTE"
+    secondary: ["DOM_GOVERNANCE"]
+  description: "Deterministic voting process with ledger recording"
+
+  phases:
+    - phase_id: "phase_1_validate_session"
+      name: "Validate Voting Session"
+      description: "Verify voting parameters and permissions"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "watchman"
+          params:
+            task: "validate_voting_session"
+            proposal_id: "{{ proposal_id }}"
+            voter_list: "{{ voters }}"
+            voting_rules: "standard"
+
+      on_success: "phase_2_open_voting"
+      on_failure: "ABORT"
+      timeout_seconds: 10
+      state_var: "session_validated"
+
+    - phase_id: "phase_2_open_voting"
+      name: "Open Voting"
+      description: "Signal that voting has begun"
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "voting_opened"
+          params:
+            proposal_id: "{{ proposal_id }}"
+            voting_deadline: "{{ voting_deadline }}"
+
+      on_success: "phase_3_collect_votes"
+      on_failure: "ABORT"
+      timeout_seconds: 5
+      state_var: "voting_opened"
+
+    - phase_id: "phase_3_collect_votes"
+      name: "Collect Votes"
+      description: "Wait for votes from registered voters"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "civic"
+          params:
+            task: "collect_votes"
+            proposal_id: "{{ proposal_id }}"
+            timeout_seconds: "{{ voting_duration }}"
+            voters: "{{ voters }}"
+
+      on_success: "phase_4_tally_results"
+      on_failure: "phase_4_tally_results"  # Count what we have
+      timeout_seconds: 3600  # 1 hour for votes
+      state_var: "votes_collected"
+
+    - phase_id: "phase_4_tally_results"
+      name: "Tally & Verify Results"
+      description: "Count votes and verify ledger integrity"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "civic"
+          params:
+            task: "tally_votes"
+            votes: "{{ votes_collected.votes }}"
+            rules: "democratic"
+
+      on_success: "phase_5_record_ledger"
+      on_failure: "ABORT"
+      timeout_seconds: 20
+      state_var: "results_tallied"
+
+    - phase_id: "phase_5_record_ledger"
+      name: "Record to Immutable Ledger"
+      description: "Write voting results to the distributed ledger"
+
+      actions:
+        - action_type: "CALL_AGENT"
+          target: "civic"
+          params:
+            task: "record_vote_ledger"
+            proposal_id: "{{ proposal_id }}"
+            result: "{{ results_tallied.result }}"
+            timestamp: "now"
+            voters_participated: "{{ results_tallied.participation }}"
+
+      on_success: "phase_6_notify_result"
+      on_failure: "ABORT"
+      timeout_seconds: 30
+      state_var: "ledger_recorded"
+
+    - phase_id: "phase_6_notify_result"
+      name: "Publish Results"
+      description: "Announce voting result to all stakeholders"
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "voting_completed"
+          params:
+            proposal_id: "{{ proposal_id }}"
+            result: "{{ results_tallied.result }}"
+            ledger_hash: "{{ ledger_recorded.hash }}"
+
+      on_success: "COMPLETE"
+      on_failure: "ABORT"
+      timeout_seconds: 10
+
+  # Template variables
+  variables:
+    proposal_id: null  # From user input
+    voters: []  # List of eligible voters
+    voting_deadline: null  # When voting ends
+    voting_duration: 3600  # Default 1 hour
