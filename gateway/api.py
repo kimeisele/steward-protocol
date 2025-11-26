@@ -513,22 +513,29 @@ def initiate_yagya(request: YagyaRequest):
 
     try:
 
-        # Run yagya script asynchronously
-        import subprocess
-        import threading
-
+        # Submit research task to Science agent via kernel
         def run_yagya():
             try:
-                cmd = [
-                    "python",
-                    "scripts/research_yagya.py",
-                    "--topic", topic,
-                    "--depth", depth
-                ]
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-                logger.info(f"🕯️ Yagya completed: {result.returncode}")
+                # Create task for Science agent
+                task = Task(
+                    agent_id="science",
+                    payload={
+                        "action": "research",
+                        "query": request.topic,
+                        "depth": request.depth
+                    }
+                )
+                
+                # Submit to kernel
+                task_id = kernel.submit_task(task)
+                logger.info(f"🔥 Yagya initiated: {task_id}")
+                
             except Exception as e:
-                logger.error(f"❌ Yagya execution failed: {e}")
+                logger.error(f"Yagya failed: {e}")
+
+        # Start yagya in background thread
+        import subprocess
+        import threading
 
         # Start yagya in background thread
         thread = threading.Thread(target=run_yagya, daemon=True)
