@@ -242,6 +242,25 @@ class UniversalProvider:
             except Exception as e:
                 logger.debug(f"Event emission failed: {e}")
 
+        # --- FIX: SIMPLE CHAT BYPASS (Operation Silent Key) ---
+        simple_intents = ["hi", "hello", "test", "status", "help"]
+        if any(x in user_input.lower() for x in simple_intents):
+            logger.info(f"✅ Simple intent detected: '{user_input}'. Bypassing playbook for fast chat.")
+            if emit_event:
+                try:
+                    await emit_event("ACTION", "Executing Fast Chat (Simple Intent)", "provider", {
+                        "intent": user_input
+                    })
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
+            return {
+                "status": "success",
+                "data": {
+                    "summary": f"**🤖 ENVOY:** Signal '{user_input}' received. Systems operational. Ready for instructions."
+                }
+            }
+        # -----------------------------------------------
+
         vector = self.resolve_intent(user_input)
 
         # --- DECISION POINT: CHECK FOR PLAYBOOK FIRST ---
