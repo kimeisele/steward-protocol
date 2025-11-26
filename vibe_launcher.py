@@ -19,6 +19,7 @@ import argparse
 import atexit
 import requests
 from contextlib import closing
+import threading
 
 # --- CONFIGURATION ---
 DEFAULT_PORT = 8000
@@ -75,6 +76,38 @@ def find_available_port(start_port):
 
     print("❌ CRITICAL FAILURE: No ports available in range. System overloaded.")
     sys.exit(1)
+
+def preload_semantic_model():
+    """
+    Background task: Pre-download sentence-transformers model on startup.
+    This ensures the model is cached before the gateway needs it.
+    Runs in a separate thread so startup isn't blocked.
+    """
+    def _download():
+        try:
+            print("   • Pre-caching semantic model (sentence-transformers/all-MiniLM-L6-v2)...")
+            os.makedirs("data/models", exist_ok=True)
+            os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
+
+            # Import and download in background
+            from sentence_transformers import SentenceTransformer
+            model = SentenceTransformer(
+                "sentence-transformers/all-MiniLM-L6-v2",
+                cache_folder="data/models"
+            )
+            print("   ✓ Semantic model cached successfully")
+            return True
+        except ImportError:
+            print("   ⚠️  sentence-transformers not installed. Install with: pip install sentence-transformers")
+            return False
+        except Exception as e:
+            print(f"   ⚠️  Semantic model pre-cache failed: {e} (will lazy-load on first use)")
+            return False
+
+    # Run in background thread (non-blocking)
+    thread = threading.Thread(target=_download, daemon=True)
+    thread.start()
+    return thread
 
 def wait_for_health(port, timeout=10):
     """
@@ -150,6 +183,10 @@ def main():
     print("║                        🛸 PROJECT VIMANA: THE LAUNCHER 🛸                  ║")
     print("║                     System Status: ONLINE | Protocol: GAD-000              ║")
     print("╚════════════════════════════════════════════════════════════════════════════╝\n")
+
+    # 0. PRE-LOAD SEMANTIC MODEL (PROJECT JNANA)
+    print("➜ INITIALIZING PROJECT JNANA (Semantic Cortex)...")
+    model_thread = preload_semantic_model()
 
     # 1. PORT STRATEGY
     if args.port:
