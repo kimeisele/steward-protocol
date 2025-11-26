@@ -1,0 +1,25 @@
+# AMBASSADOR System Requirements
+# Community Engagement & Developer Relations
+
+# Core
+python-dotenv>=1.0.0
+PyYAML>=6.0
+
+# Discord Integration
+discord.py>=2.3.0
+
+# GitHub Integration
+PyGithub>=2.1.1
+
+# NLP & Sentiment Analysis
+textblob>=0.17.0
+nltk>=3.8.0
+
+# Async Support
+aiohttp>=3.9.0
+
+# Data
+pandas>=2.0.0
+
+# Utilities
+gitpython>=3.1.0
