@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIMANA - The Universal Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg: #0a0e27;
+            --color-text: #00ff88;
+            --color-text-dim: #00aa55;
+            --color-accent: #00ffff;
+            --color-danger: #ff3366;
+            --color-warning: #ffaa00;
+            --color-success: #00ff88;
+            --color-info: #0088ff;
+            --color-gold: #ffd700;
+            --color-border: #00ff88;
+            --glow: 0 0 10px rgba(0, 255, 136, 0.5);
+            --glow-cyan: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* HEADER                                                      */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        .header {
+            background: linear-gradient(90deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+            border-bottom: 2px solid var(--color-border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px var(--color-text);
+            letter-spacing: 2px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-accent);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .mode-badge {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--color-success);
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: var(--glow);
+        }
+
+        .auth-button {
+            padding: 0.5rem 1rem;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: monospace;
+            transition: all 0.3s;
+        }
+
+        .auth-button:hover {
+            background: rgba(0, 255, 136, 0.4);
+            box-shadow: var(--glow);
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* MAIN CONTENT                                                */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 1rem;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        /* LEFT: MANDALA */
+        .left-panel {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .mandala-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 50, 100, 0.3);
+            border: 1px solid var(--color-accent);
+            border-radius: 8px;
+            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .mandala {
+            position: relative;
+            width: 250px;
+            height: 250px;
+        }
+
+        .mandala svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
+        }
+
+        .pulse-indicator {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-success);
+            box-shadow: var(--glow);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .stat-item {
+            padding: 0.75rem;
+            background: rgba(0, 255, 136, 0.05);
+            border: 1px solid var(--color-text-dim);
+            border-radius: 4px;
+        }
+
+        .stat-label {
+            color: var(--color-text-dim);
+            font-size: 0.7rem;
+        }
+
+        .stat-value {
+            color: var(--color-text);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* CENTER: FEED */
+        .center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .feed-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: rgba(0, 20, 50, 0.5);
+            overflow: hidden;
+        }
+
+        .feed-header {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--color-border);
+            background: rgba(0, 50, 100, 0.3);
+            font-size: 0.9rem;
+            color: var(--color-accent);
+            letter-spacing: 1px;
+        }
+
+        .feed-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .feed-item {
+            padding: 0.5rem;
+            border-left: 3px solid var(--color-text-dim);
+            background: rgba(0, 100, 150, 0.1);
+            border-radius: 3px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .feed-item.thought {
+            border-left-color: var(--color-info);
+            color: var(--color-info);
+        }
+
+        .feed-item.action {
+            border-left-color: var(--color-success);
+            color: var(--color-success);
+        }
+
+        .feed-item.mercy {
+            border-left-color: var(--color-gold);
+            color: var(--color-gold);
+        }
+
+        .feed-item.error {
+            border-left-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        .feed-timestamp {
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+
+        /* COMMAND BAR */
+        .command-bar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: rgba(0, 50, 100, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+        }
+
+        .command-input {
+            flex: 1;
+            padding: 0.75rem;
+            background: rgba(10, 14, 39, 0.8);
+            border: 1px solid var(--color-text-dim);
+            color: var(--color-text);
+            font-family: monospace;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .command-input::placeholder {
+            color: var(--color-text-dim);
+        }
+
+        .command-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .command-send {
+            padding: 0.75rem 1.5rem;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: monospace;
+            transition: all 0.3s;
+        }
+
+        .command-send:hover {
+            background: rgba(0, 255, 136, 0.4);
+            box-shadow: var(--glow);
+        }
+
+        .command-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* RIGHT PANEL: RADAR                                          */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        .right-panel {
+            flex: 0 0 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+        }
+
+        .radar-container {
+            flex: 1;
+            border: 1px solid var(--color-accent);
+            border-radius: 8px;
+            background: rgba(0, 50, 100, 0.3);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .radar-header {
+            font-size: 0.9rem;
+            color: var(--color-accent);
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .radar-display {
+            width: 150px;
+            height: 150px;
+            position: relative;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, rgba(0, 20, 50, 0.3) 100%);
+            border: 1px solid var(--color-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-center {
+            width: 20px;
+            height: 20px;
+            background: var(--color-success);
+            border-radius: 50%;
+            box-shadow: var(--glow);
+        }
+
+        .radar-ring {
+            position: absolute;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        .agents-list {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            padding: 1rem 0;
+            border-top: 1px solid var(--color-accent);
+        }
+
+        .agent-item {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: rgba(0, 255, 136, 0.05);
+            border-left: 2px solid var(--color-success);
+            font-size: 0.75rem;
+            border-radius: 3px;
+        }
+
+        .agent-name {
+            font-weight: bold;
+            color: var(--color-text);
+        }
+
+        .agent-status {
+            font-size: 0.7rem;
+            color: var(--color-text-dim);
+        }
+
+        /* ═══════════════════════════════════════════════════════════ */
+        /* MODAL: AUTHENTICATION                                       */
+        /* ═══════════════════════════════════════════════════════════ */
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-bg);
+            border: 2px solid var(--color-accent);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--color-accent);
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .mode-button {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--color-text-dim);
+            background: rgba(0, 20, 50, 0.5);
+            color: var(--color-text);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .mode-button:hover {
+            border-color: var(--color-border);
+            box-shadow: var(--glow);
+        }
+
+        .mode-button.active {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: var(--color-border);
+            box-shadow: var(--glow);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+        }
+
+        .input-field {
+            padding: 0.75rem;
+            background: rgba(10, 14, 39, 0.8);
+            border: 1px solid var(--color-text-dim);
+            color: var(--color-text);
+            font-family: monospace;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .button {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--color-border);
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--color-text);
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: monospace;
+            transition: all 0.3s;
+        }
+
+        .button:hover {
+            background: rgba(0, 255, 136, 0.4);
+            box-shadow: var(--glow);
+        }
+
+        .button-secondary {
+            background: rgba(0, 100, 150, 0.2);
+            border-color: var(--color-text-dim);
+        }
+
+        .button-secondary:hover {
+            background: rgba(0, 100, 150, 0.4);
+            border-color: var(--color-accent);
+            box-shadow: var(--glow-cyan);
+        }
+
+        /* ═════════════════════════════════════════════════════════ */
+        /* SCROLLBARS                                                 */
+        /* ═════════════════════════════════════════════════════════ */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 20, 50, 0.5);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.4);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <h1>🛸 VIMANA</h1>
+            </div>
+            <div class="header-right">
+                <div class="status-badge" id="connectionStatus">
+                    ● OFFLINE
+                </div>
+                <div class="mode-badge" id="modeDisplay">
+                    GUEST MODE
+                </div>
+                <button class="auth-button" id="authToggle">
+                    CONNECT IDENTITY
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- LEFT: MANDALA & STATS -->
+            <div class="left-panel">
+                <div class="mandala-container">
+                    <div class="mandala">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Concentric circles (Mandala) -->
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#00ffff" stroke-width="1" opacity="0.3"/>
+                            <circle cx="100" cy="100" r="70" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+                            <circle cx="100" cy="100" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.7"/>
+                            <circle cx="100" cy="100" r="30" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
+                            <circle cx="100" cy="100" r="10" fill="#00ff88" opacity="0.8"/>
+
+                            <!-- Cardinal points (N, E, S, W) -->
+                            <text x="100" y="20" text-anchor="middle" fill="#00ffff" font-size="10">N</text>
+                            <text x="180" y="105" text-anchor="middle" fill="#00ffff" font-size="10">E</text>
+                            <text x="100" y="190" text-anchor="middle" fill="#00ffff" font-size="10">S</text>
+                            <text x="20" y="105" text-anchor="middle" fill="#00ffff" font-size="10">W</text>
+                        </svg>
+                        <div class="pulse-indicator">
+                            <div class="pulse-dot"></div>
+                            <span id="pulseFreq">1.0 Hz</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <div class="stat-label">AGENTS</div>
+                        <div class="stat-value" id="agentCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">QUEUE</div>
+                        <div class="stat-value" id="queueDepth">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">CYCLE</div>
+                        <div class="stat-value" id="cycleId">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">STATE</div>
+                        <div class="stat-value" id="systemState">IDLE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CENTER: FEED & COMMAND -->
+            <div class="center-panel">
+                <div class="feed-container">
+                    <div class="feed-header">
+                        ► AGENT INTELLIGENCE FEED
+                    </div>
+                    <div class="feed-items" id="feedItems">
+                        <div class="feed-item">
+                            Awaiting connection to VibeOS Pulse...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-bar">
+                    <input
+                        type="text"
+                        class="command-input"
+                        id="commandInput"
+                        placeholder="What is your desire? Speak thy intent..."
+                        disabled
+                    />
+                    <button class="command-send" id="commandSend" disabled>
+                        SEND
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT: RADAR -->
+            <div class="right-panel">
+                <div class="radar-container">
+                    <div class="radar-header">FEDERATION RADAR</div>
+                    <div class="radar-display">
+                        <div class="radar-ring" style="width: 100px; height: 100px;"></div>
+                        <div class="radar-ring" style="width: 50px; height: 50px;"></div>
+                        <div class="radar-center"></div>
+                    </div>
+                    <div class="agents-list" id="agentsList">
+                        <div class="agent-item">
+                            <div class="agent-name">LOCAL CITY</div>
+                            <div class="agent-status">Connected</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION MODAL -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">⚔️ ENTER THE FEDERATION</div>
+            <div class="modal-body">
+                <div class="mode-selector">
+                    <button class="mode-button active" id="guestModeBtn" data-mode="guest">
+                        GUEST<br><span style="font-size: 0.7rem;">Read-only</span>
+                    </button>
+                    <button class="mode-button" id="citizenModeBtn" data-mode="citizen">
+                        CITIZEN<br><span style="font-size: 0.7rem;">Authenticated</span>
+                    </button>
+                </div>
+
+                <div id="guestModeForm" style="display: block;">
+                    <p style="font-size: 0.85rem; color: var(--color-text-dim);">
+                        Observe the City without interference. Limited credits available.
+                    </p>
+                </div>
+
+                <div id="citizenModeForm" style="display: none;">
+                    <div class="input-group">
+                        <label class="input-label">PRIVATE KEY (PEM FORMAT)</label>
+                        <textarea
+                            class="input-field"
+                            id="privateKeyInput"
+                            placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
+                            rows="6"
+                        ></textarea>
+                    </div>
+                    <p style="font-size: 0.75rem; color: var(--color-warning); margin-top: 0.5rem;">
+                        ⚠️  Key is held in memory only. Never written to disk.
+                    </p>
+                </div>
+
+                <div class="button-group">
+                    <button class="button" id="confirmBtn">ENTER</button>
+                    <button class="button button-secondary" id="cancelBtn">CANCEL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // VIMANA COCKPIT - Main Application Logic
+        // ═══════════════════════════════════════════════════════════
+
+        class ViamanaCockpit {
+            constructor() {
+                this.mode = 'guest';
+                this.privateKey = null;
+                this.ws = null;
+                this.feedItems = [];
+                this.maxFeedItems = 50;
+
+                this.initializeUI();
+                this.connectWebSocket();
+                this.setupEventListeners();
+            }
+
+            initializeUI() {
+                const authModal = document.getElementById('authModal');
+                const authToggle = document.getElementById('authToggle');
+
+                // Show auth modal on startup
+                authModal.classList.add('active');
+
+                authToggle.addEventListener('click', () => {
+                    authModal.classList.add('active');
+                });
+            }
+
+            setupEventListeners() {
+                // Mode selection
+                document.getElementById('guestModeBtn').addEventListener('click', (e) => {
+                    this.selectMode('guest', e.target.closest('.mode-button'));
+                });
+
+                document.getElementById('citizenModeBtn').addEventListener('click', (e) => {
+                    this.selectMode('citizen', e.target.closest('.mode-button'));
+                });
+
+                // Modal buttons
+                document.getElementById('confirmBtn').addEventListener('click', () => {
+                    this.confirmAuthentication();
+                });
+
+                document.getElementById('cancelBtn').addEventListener('click', () => {
+                    document.getElementById('authModal').classList.remove('active');
+                });
+
+                // Command input
+                document.getElementById('commandInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendCommand();
+                    }
+                });
+
+                document.getElementById('commandSend').addEventListener('click', () => {
+                    this.sendCommand();
+                });
+            }
+
+            selectMode(mode, button) {
+                this.mode = mode;
+
+                // Update button states
+                document.querySelectorAll('.mode-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+
+                // Show/hide forms
+                document.getElementById('guestModeForm').style.display = mode === 'guest' ? 'block' : 'none';
+                document.getElementById('citizenModeForm').style.display = mode === 'citizen' ? 'block' : 'none';
+            }
+
+            confirmAuthentication() {
+                if (this.mode === 'citizen') {
+                    const keyInput = document.getElementById('privateKeyInput');
+                    const keyText = keyInput.value.trim();
+
+                    if (!keyText) {
+                        alert('Please paste your private key');
+                        return;
+                    }
+
+                    this.privateKey = keyText;
+                    this.updateModeDisplay('CITIZEN MODE');
+                } else {
+                    this.updateModeDisplay('GUEST MODE');
+                }
+
+                document.getElementById('authModal').classList.remove('active');
+                this.enableCommandInput();
+                this.addFeedItem('System', 'Authentication complete. Ready to receive commands.', 'action');
+            }
+
+            updateModeDisplay(text) {
+                document.getElementById('modeDisplay').textContent = text;
+                document.getElementById('authToggle').textContent = 'CHANGE IDENTITY';
+            }
+
+            enableCommandInput() {
+                document.getElementById('commandInput').disabled = false;
+                document.getElementById('commandSend').disabled = false;
+            }
+
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/v1/pulse`;
+
+                try {
+                    this.ws = new WebSocket(wsUrl);
+
+                    this.ws.onopen = () => {
+                        this.updateConnectionStatus('CONNECTED');
+                        this.addFeedItem('System', 'Neural link established to VibeOS Pulse', 'action');
+                    };
+
+                    this.ws.onmessage = (event) => {
+                        try {
+                            const message = JSON.parse(event.data);
+                            this.handlePulseMessage(message);
+                        } catch (e) {
+                            console.error('Failed to parse message:', e);
+                        }
+                    };
+
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.updateConnectionStatus('ERROR');
+                        this.addFeedItem('System', 'WebSocket connection error', 'error');
+                    };
+
+                    this.ws.onclose = () => {
+                        this.updateConnectionStatus('OFFLINE');
+                        // Attempt reconnect after 3 seconds
+                        setTimeout(() => this.connectWebSocket(), 3000);
+                    };
+                } catch (e) {
+                    console.error('Failed to create WebSocket:', e);
+                    this.updateConnectionStatus('OFFLINE');
+                }
+            }
+
+            updateConnectionStatus(status) {
+                const badge = document.getElementById('connectionStatus');
+                const statusMap = {
+                    'CONNECTED': '● ONLINE',
+                    'OFFLINE': '● OFFLINE',
+                    'ERROR': '● ERROR'
+                };
+                badge.textContent = statusMap[status] || status;
+            }
+
+            handlePulseMessage(message) {
+                if (message.type === 'system') {
+                    // System message on connection
+                    this.addFeedItem('System', message.message, 'action');
+                } else if (message.type === 'pulse') {
+                    // Update mandala and stats
+                    this.updatePulseVisualization(message.data);
+                } else if (message.type === 'event') {
+                    // Agent event
+                    const event = message.data;
+                    const eventType = this.mapEventType(event.event_type);
+                    this.addFeedItem(event.agent_id, event.message, eventType);
+                }
+            }
+
+            updatePulseVisualization(data) {
+                document.getElementById('agentCount').textContent = data.active_agents?.length || 0;
+                document.getElementById('queueDepth').textContent = data.queue_depth || 0;
+                document.getElementById('cycleId').textContent = data.cycle_id || 0;
+                document.getElementById('systemState').textContent = data.system_state || 'UNKNOWN';
+                document.getElementById('pulseFreq').textContent = (data.frequency || 1.0).toFixed(2) + ' Hz';
+            }
+
+            mapEventType(eventType) {
+                const typeMap = {
+                    'THOUGHT': 'thought',
+                    'ACTION': 'action',
+                    'ERROR': 'error',
+                    'MERCY': 'mercy',
+                    'VIOLATION': 'error',
+                    'PRAYER_RECEIVED': 'thought',
+                    'CRITICAL_INTERRUPT': 'error'
+                };
+                return typeMap[eventType] || 'action';
+            }
+
+            addFeedItem(agent, message, type = 'action') {
+                const feedItems = document.getElementById('feedItems');
+
+                // Remove placeholder
+                if (feedItems.children.length === 1 &&
+                    feedItems.children[0].textContent.includes('Awaiting connection')) {
+                    feedItems.innerHTML = '';
+                }
+
+                const timestamp = new Date().toLocaleTimeString();
+                const item = document.createElement('div');
+                item.className = `feed-item ${type}`;
+                item.innerHTML = `
+                    <div><strong>${agent}</strong></div>
+                    <div>${message}</div>
+                    <div class="feed-timestamp">${timestamp}</div>
+                `;
+
+                feedItems.appendChild(item);
+                feedItems.scrollTop = feedItems.scrollHeight;
+
+                // Keep max items
+                while (feedItems.children.length > this.maxFeedItems) {
+                    feedItems.removeChild(feedItems.firstChild);
+                }
+            }
+
+            sendCommand() {
+                const input = document.getElementById('commandInput');
+                const command = input.value.trim();
+
+                if (!command) return;
+
+                this.addFeedItem('You', command, 'action');
+                input.value = '';
+                input.focus();
+
+                // In citizen mode, would sign and send via API
+                // For now, just log locally
+                if (this.mode === 'citizen') {
+                    this.addFeedItem('System', 'Command queued for CITIZEN processing...', 'thought');
+                } else {
+                    this.addFeedItem('System', 'GUEST mode: observation only (no commands)', 'error');
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // INITIALIZE ON PAGE LOAD
+        // ═══════════════════════════════════════════════════════════
+
+        window.addEventListener('DOMContentLoaded', () => {
+            new ViamanaCockpit();
+        });
+    </script>
+</body>
+</html>
