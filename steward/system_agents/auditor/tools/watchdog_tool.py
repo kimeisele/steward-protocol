@@ -161,7 +161,7 @@ class Watchdog:
         logger.info(f"👁️  WATCHDOG: Running invariant check (start={self.last_checked_index})")
         
         # Import Judge here to avoid circular imports
-        from auditor.tools.invariant_tool import get_judge
+        from steward.system_agents.auditor.tools.invariant_tool import get_judge
         
         # Get new events since last check
         new_events = self.read_ledger_events(self.last_checked_index)

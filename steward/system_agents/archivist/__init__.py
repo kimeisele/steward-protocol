@@ -13,4 +13,4 @@ This demonstrates multi-agent federation in the Steward Protocol.
 __version__ = "1.0.0"
 __all__ = ["ArchivistCartridge"]
 
-from archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.archivist.cartridge_main import ArchivistCartridge

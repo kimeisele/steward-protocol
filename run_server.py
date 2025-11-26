@@ -61,9 +61,9 @@ from civic.cartridge_main import CivicCartridge
 from forum.cartridge_main import ForumCartridge
 from science.cartridge_main import ScientistCartridge
 from envoy.cartridge_main import EnvoyCartridge
-from archivist.cartridge_main import ArchivistCartridge
-from auditor.cartridge_main import AuditorCartridge
-from engineer.cartridge_main import EngineerCartridge
+from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
 from oracle.cartridge_main import OracleCartridge
 from watchman.cartridge_main import WatchmanCartridge
 from artisan.cartridge_main import ArtisanCartridge

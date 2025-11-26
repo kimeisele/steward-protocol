@@ -35,7 +35,7 @@ from .ledger import InMemoryLedger, SQLiteLedger
 
 # Import Auditor for immune system
 try:
-    from auditor.tools.invariant_tool import get_judge, InvariantSeverity
+    from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
     AUDITOR_AVAILABLE = True
 except ImportError:
     AUDITOR_AVAILABLE = False

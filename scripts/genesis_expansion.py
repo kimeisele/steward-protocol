@@ -26,9 +26,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Steward Protocol imports
 from vibe_core.scheduling.task import Task
-from engineer.cartridge_main import EngineerCartridge
-from auditor.cartridge_main import AuditorCartridge
-from archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
 
 # ═════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -36,7 +36,7 @@ from archivist.cartridge_main import ArchivistCartridge
 
 REPO_ROOT = os.path.abspath(".")
 SANDBOX_ROOT = os.path.join(REPO_ROOT, "workspaces", "sandbox", "echo")
-ECHO_TARGET = os.path.join(REPO_ROOT, "echo")
+ECHO_TARGET = os.path.join(REPO_ROOT, "agent_city", "registry", "citizens", "echo")
 WORKSPACES_ROOT = os.path.join(REPO_ROOT, "workspaces", "sandbox")
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -543,7 +543,7 @@ def step5_validate() -> bool:
     try:
         # Add echo to path if needed
         sys.path.insert(0, REPO_ROOT)
-        from echo.cartridge_main import EchoCartridge
+        from agent_city.registry.citizens.echo.cartridge_main import EchoCartridge
 
         print_success("✓ EchoCartridge class can be imported")
 

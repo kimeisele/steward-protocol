@@ -35,7 +35,7 @@ from herald.core.memory import EventLog
 
 # ARCHIVIST (for verification)
 try:
-    from archivist.tools.audit_tool import AuditTool
+    from steward.system_agents.archivist.tools.audit_tool import AuditTool
 except ImportError:
     AuditTool = None
 
