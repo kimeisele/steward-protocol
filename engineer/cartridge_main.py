@@ -1,18 +1,23 @@
+#!/usr/bin/env python3
 """
 THE ENGINEER - Meta-Agent & Builder.
 Part of the Steward Protocol Federation.
 
 Role: The Generalist / Builder
-Mission: Self-Replication. Build new agents on demand.
+Mission: Manifest reality into code. Build new agents on demand.
+
+Updated for Safe Evolution Loop (GAD-5500):
+- manifest_reality: Write code to sandbox (input for Auditor)
+- Legacy create_agent: Still supported for agent scaffolding
 """
 
+import os
 import logging
-import sys
-from pathlib import Path
 from typing import Dict, Any
+from pathlib import Path
 
 # VibeOS Integration
-from vibe_core import VibeAgent, Task
+from vibe_core.agent_protocol import VibeAgent, Task, AgentManifest
 
 from engineer.tools.builder_tool import BuilderTool
 
@@ -23,121 +28,163 @@ except ImportError:
     OathMixin = None
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENGINEER_AGENT")
 
 
 class EngineerCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     The Engineer Agent Cartridge.
-    Capable of scaffolding and generating code for new agents.
+
+    Capabilities:
+    - manifest_reality: Write code to sandbox (Safe Evolution Loop)
+    - create_agent: Scaffold new agents (Legacy)
     """
 
     def __init__(self):
         """Initialize the Engineer as a VibeAgent."""
-        # Initialize VibeAgent base class
         super().__init__(
             agent_id="engineer",
             name="ENGINEER",
-            version="1.0.0",
+            version="2.0.0",
             author="Steward Protocol",
-            description="Meta-agent and builder for new agents",
+            description="Builder agent: manifests code and scaffolds new agents",
             domain="ENGINEERING",
-            capabilities=["agent_scaffolding", "code_generation", "agent_creation"]
+            capabilities=["manifest_reality", "agent_scaffolding", "code_generation"]
         )
 
         logger.info("📐 THE ENGINEER is online.")
 
-        # Initialize Constitutional Oath mixin (if available)
+        # Initialize Constitutional Oath
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            # SWEAR THE OATH IMMEDIATELY in __init__
             self.oath_sworn = True
             logger.info("✅ ENGINEER has sworn the Constitutional Oath")
 
         self.builder = BuilderTool()
 
-    def create_agent(self, name: str, mission: str) -> str:
-        """
-        Create a new agent from scratch.
-        
-        Args:
-            name: Name of the new agent (snake_case)
-            mission: Description of the agent's purpose
-            
-        Returns:
-            str: Path to the new agent's main file
-        """
-        logger.info(f"📐 Engineer received job: Build agent '{name}'")
-        logger.info(f"   Mission: {mission}")
-        
-        # 1. Scaffold
-        if not self.builder.scaffold_agent(name):
-            logger.error("❌ Scaffolding failed (directory might exist)")
-            return f"Error: Could not scaffold {name}"
-            
-        # 2. Generate Code
-        code = self.builder.generate_agent_code(name, mission)
-        
-        if not code:
-            logger.error("❌ Code generation failed")
-            return f"Error: Could not generate code for {name}"
-            
-        # 3. Write Code
-        file_path = Path(name) / "cartridge_main.py"
-        try:
-            with open(file_path, "w") as f:
-                f.write(code)
-            logger.info(f"✅ Agent code written to: {file_path}")
-            return str(file_path)
-        except Exception as e:
-            logger.error(f"❌ File write failed: {e}")
-            return f"Error: Could not write file {file_path}"
-
-    # ==================== VIBEOS AGENT INTERFACE ====================
+    def get_manifest(self) -> AgentManifest:
+        """Return agent manifest (VibeAgent interface)."""
+        return AgentManifest(
+            agent_id=self.agent_id,
+            name=self.name,
+            version=self.version,
+            author=self.author,
+            description=self.description,
+            domain=self.domain,
+            capabilities=self.capabilities,
+            dependencies=[]
+        )
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
-        Process a task from the VibeKernel scheduler.
+        Sync dispatch based on payload 'action' or 'method'.
 
-        ENGINEER responds to agent creation tasks:
-        - "create_agent": Create a new agent
+        Supported actions:
+        - manifest_reality: Write code to sandbox
+        - create_agent: Scaffold new agent
         """
-        try:
-            action = task.payload.get("action") or task.payload.get("command")
-            logger.info(f"📐 ENGINEER processing task: {action}")
+        action = task.payload.get("action") or task.payload.get("method")
+        logger.info(f"📐 ENGINEER processing: {action}")
 
-            if action == "create_agent":
-                name = task.payload.get("name")
-                mission = task.payload.get("mission")
-                if not name or not mission:
-                    return {"status": "error", "error": "name and mission required"}
-                result = self.create_agent(name, mission)
-                return {"status": "success", "result": result}
-            else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
-        except Exception as e:
-            logger.error(f"❌ ENGINEER processing error: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
+        if action == "manifest_reality" or action == "write_code":
+            return self.manifest_reality(task)
+        elif action == "create_agent":
+            return self.create_agent_legacy(task)
+        else:
+            return {"status": "ignored", "reason": f"Unknown action: {action}"}
+
+    def manifest_reality(self, task: Task) -> Dict[str, Any]:
+        """
+        Writes code to the sandbox (Safe Evolution Loop input).
+
+        Payload:
+        - feature_spec: Description of feature to implement
+        - path: Relative path (e.g., "src/auth.py")
+        - content: Code content (or generated from feature_spec)
+        """
+        feature_spec = task.payload.get("feature_spec", "Unknown feature")
+        relative_path = task.payload.get("path")
+
+        if not relative_path:
+            return {"status": "error", "reason": "No path provided"}
+
+        # Force Sandbox (Safety First)
+        sandbox_dir = os.path.abspath("./workspaces/sandbox")
+        os.makedirs(sandbox_dir, exist_ok=True)
+
+        full_path = os.path.join(sandbox_dir, os.path.basename(relative_path))
+
+        # Get code content (from payload or generate stub)
+        code_content = task.payload.get("content")
+        if not code_content:
+            code_content = f"""# Implementation of {feature_spec}
+# Generated by Engineer via Safe Evolution Loop
+
+def run():
+    \"\"\"Placeholder implementation.\"\"\"
+    pass
+"""
+
+        try:
+            with open(full_path, "w", encoding="utf-8") as f:
+                f.write(code_content)
+
+            logger.info(f"✅ Code manifested to: {full_path}")
+
             return {
-                "status": "error",
-                "error": str(e)
+                "status": "manifested",
+                "path": full_path,  # Absolute path for Auditor
+                "sandbox": True,
+                "feature": feature_spec
             }
+        except Exception as e:
+            logger.error(f"❌ manifest_reality failed: {e}")
+            return {"status": "error", "reason": str(e)}
+
+    def create_agent_legacy(self, task: Task) -> Dict[str, Any]:
+        """
+        Legacy method: Create a new agent from scratch.
+        Still supported for backward compatibility.
+        """
+        name = task.payload.get("name")
+        mission = task.payload.get("mission")
+
+        if not name or not mission:
+            return {"status": "error", "reason": "name and mission required"}
+
+        logger.info(f"📐 Engineer received job: Build agent '{name}'")
+        logger.info(f"   Mission: {mission}")
+
+        try:
+            # 1. Scaffold
+            if not self.builder.scaffold_agent(name):
+                return {"status": "error", "reason": f"Could not scaffold {name}"}
+
+            # 2. Generate Code
+            code = self.builder.generate_agent_code(name, mission)
+            if not code:
+                return {"status": "error", "reason": f"Code generation failed for {name}"}
+
+            # 3. Write Code
+            file_path = Path(name) / "cartridge_main.py"
+            with open(file_path, "w") as f:
+                f.write(code)
+
+            logger.info(f"✅ Agent code written to: {file_path}")
+            return {"status": "success", "path": str(file_path)}
+
+        except Exception as e:
+            logger.error(f"❌ create_agent_legacy failed: {e}")
+            return {"status": "error", "reason": str(e)}
 
     def report_status(self) -> Dict[str, Any]:
         """Report ENGINEER status (VibeAgent interface)."""
         return {
             "agent_id": "engineer",
-            "name": "ENGINEER",
+            "name": self.name,
             "status": "RUNNING",
-            "domain": "ENGINEERING",
+            "domain": self.domain,
             "capabilities": self.capabilities,
-            "description": "Meta-agent and builder for new agents"
+            "description": self.description
         }
