@@ -290,3 +290,7 @@ examples/herald/.steward/keys/private.pem
 
 # HERALD generated assets (images, artifacts)
 examples/herald/assets/
+
+# Temporary workspaces (test artifacts, sandbox files)
+workspaces/
+temp_repo_test/
