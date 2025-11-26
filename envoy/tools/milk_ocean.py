@@ -38,7 +38,8 @@ logger = logging.getLogger("MILK_OCEAN_ROUTER")
 
 class RequestPriority(str, Enum):
     """Request priority levels"""
-    BLOCKED = "BLOCKED"        # Level 0: Malicious/spam
+    BLOCKED = "BLOCKED"        # Level -1: Malicious/spam
+    CRITICAL = "CRITICAL"      # Level 0: Emergency interrupt (Gajendra Protocol)
     LOW = "LOW"               # Level 3: Lazy queue
     MEDIUM = "MEDIUM"         # Level 1: Flash classification
     HIGH = "HIGH"             # Level 2: Pro model
@@ -86,12 +87,12 @@ class LazyQueue:
                     created_at TEXT NOT NULL,
                     processed_at TEXT,
                     result_json TEXT,
-                    error TEXT,
-                    INDEX idx_status (status),
-                    INDEX idx_priority (priority),
-                    INDEX idx_created (created_at)
+                    error TEXT
                 )
             """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_status ON milk_ocean_queue (status)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_priority ON milk_ocean_queue (priority)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_created ON milk_ocean_queue (created_at)")
             conn.commit()
 
     def push(self, request_id: str, user_input: str, gate_result: GateResult,
@@ -428,13 +429,14 @@ class MilkOceanRouter:
 
     # ==================== MAIN ROUTER ====================
 
-    def process_prayer(self, user_input: str, agent_id: str = "unknown") -> Dict[str, Any]:
+    def process_prayer(self, user_input: str, agent_id: str = "unknown", critical: bool = False) -> Dict[str, Any]:
         """
         Main entry point: Route the user's "prayer" (request) through the gates
 
         Args:
             user_input: The user's request
             agent_id: Agent submitting the request
+            critical: Is this a CRITICAL priority request? (Gajendra Protocol - emergency bypass)
 
         Returns:
             dict with routing decision and next action
@@ -445,7 +447,8 @@ class MilkOceanRouter:
             f"{user_input}{datetime.now().isoformat()}".encode()
         ).hexdigest()[:16]
 
-        logger.info(f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]")
+        logger.info(f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]" +
+                   (" 🐘🚨 [CRITICAL PRIORITY - GAJENDRA PROTOCOL]" if critical else ""))
 
         # ========== GATE 0: WATCHMAN ==========
         gate0_result = self._gate_0_watchman(user_input, agent_id)
@@ -457,6 +460,28 @@ class MilkOceanRouter:
                 "request_id": request_id,
                 "reason": gate0_result.reason,
                 "message": "🚫 Your request was blocked by security filters"
+            }
+
+        # ========== GATE 0.5: CRITICAL PRIORITY BYPASS (GAJENDRA INTERRUPT) ==========
+        # If critical=True, skip queue entirely and invoke kernel directly
+        # This is the "Lotosblume" (sacred offering) that summons Vishnu immediately
+        # Even under 1000 years of timeout (DDoS), this prayer is answered
+        if critical:
+            logger.warning(f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)")
+            return {
+                "status": "critical",
+                "request_id": request_id,
+                "path": "kernel_direct",
+                "message": "🐘🚨 GAJENDRA MOKSHA ACTIVATED - Emergency interrupt to kernel",
+                "action": "INVOKE_KERNEL_DIRECT",
+                "priority": RequestPriority.CRITICAL.value,
+                "bypass_queue": True,
+                "details": {
+                    "reason": "Critical priority request - queue bypass activated",
+                    "protocol": "Gajendra Moksha (Emergency Interrupt)",
+                    "target": "Kernel (Vishnu)",
+                    "bypass_type": "Lotosblume Signal"
+                }
             }
 
         # ========== GATE 1: ENVOY CLASSIFICATION ==========
@@ -599,15 +624,30 @@ if __name__ == "__main__":
 
         # Test inputs
         test_cases = [
-            ("What is the meaning of life?", "user_001"),
-            ("DROP TABLE users;", "attacker"),
-            ("Schedule a report for tomorrow", "user_002"),
-            ("Help me debug this complex algorithm", "user_003"),
+            ("What is the meaning of life?", "user_001", False),
+            ("DROP TABLE users;", "attacker", False),
+            ("Schedule a report for tomorrow", "user_002", False),
+            ("Help me debug this complex algorithm", "user_003", False),
         ]
 
-        for input_text, agent_id in test_cases:
+        print("=" * 80)
+        print("BRAHMA PROTOCOL DEMONSTRATION (Milk Ocean Router)")
+        print("=" * 80)
+
+        for input_text, agent_id, is_critical in test_cases:
             print(f"\n📥 Input: {input_text}")
-            result = router.process_prayer(input_text, agent_id)
+            result = router.process_prayer(input_text, agent_id, critical=is_critical)
             print(f"📤 Output: {json.dumps(result, indent=2)}")
 
-        print(f"\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}")
+        print("\n" + "=" * 80)
+        print("GAJENDRA MOKSHA TEST (Emergency Interrupt)")
+        print("=" * 80)
+        print("\n🐘 Simulating CRITICAL priority request (Lotosblume Signal)...")
+        critical_result = router.process_prayer(
+            "URGENT: System is under DDoS attack - invoke emergency protocol!",
+            agent_id="security_guardian",
+            critical=True
+        )
+        print(f"\n🚨 CRITICAL Response:\n{json.dumps(critical_result, indent=2)}")
+
+        print(f"\n\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}")
