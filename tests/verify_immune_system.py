@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling import Task
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
-from auditor.tools.invariant_tool import get_judge, InvariantSeverity
+from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
 
 logging.basicConfig(
     level=logging.DEBUG,

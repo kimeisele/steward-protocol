@@ -36,9 +36,9 @@ async def run_live_fire():
     
     try:
         from vibe_core.kernel_impl import RealVibeKernel
-        from engineer.cartridge_main import EngineerCartridge
-        from auditor.cartridge_main import AuditorCartridge
-        from archivist.cartridge_main import ArchivistCartridge
+        from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
         
         # Create kernel instance
         kernel = RealVibeKernel(ledger_path=":memory:")

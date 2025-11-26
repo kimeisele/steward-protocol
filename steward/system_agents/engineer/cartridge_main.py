@@ -20,7 +20,7 @@ from pathlib import Path
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from vibe_core.scheduling.task import Task
 
-from engineer.tools.builder_tool import BuilderTool
+from steward.system_agents.engineer.tools.builder_tool import BuilderTool
 
 # Constitutional Oath
 try:
