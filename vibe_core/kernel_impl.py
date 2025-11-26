@@ -172,8 +172,8 @@ class SQLiteLedger(VibeLedger):
         if db_dir:
             os.makedirs(db_dir, exist_ok=True)
 
-        # Connect to database
-        self.connection = sqlite3.connect(self.db_path)
+        # Connect to database (check_same_thread=False for multi-threaded API access)
+        self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
 
         # Create table if not exists
