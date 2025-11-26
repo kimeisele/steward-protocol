@@ -221,10 +221,8 @@ DEBUG={self.config.debug}
         try:
             # Import kernel components (lazy import to avoid circular dependencies)
             from vibe_core.kernel_impl import RealVibeKernel
-            from vibe_core.ledger import VibeLedger
 
             ledger_path = self.project_root / self.config.data_dir / "vibe_ledger.db"
-            ledger = VibeLedger(str(ledger_path))
 
             kernel = RealVibeKernel(ledger_path=str(ledger_path))
 
@@ -232,7 +230,7 @@ DEBUG={self.config.debug}
             kernel.boot()
 
             self.status.add_check("Kernel", True, "initialized and booted")
-            self.status.add_check("Agent Registry", True, f"{len(kernel.agents)} agents loaded")
+            self.status.add_check("Agent Registry", True, f"{len(kernel.agent_registry)} agents loaded")
 
             # Store kernel reference for later
             self._kernel = kernel
