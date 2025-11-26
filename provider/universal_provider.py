@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import time
 import yaml
+import asyncio
 from pathlib import Path
 
 # Import Core Definitions
@@ -33,6 +34,12 @@ except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
     VibeKernel = Any
     Task = Any
+
+# Import Event Bus (Prana for visualization)
+try:
+    from vibe_core.event_bus import emit_event
+except ImportError:
+    emit_event = None
 
 # Import LLM Engine (GAD-6000)
 try:
@@ -200,30 +207,65 @@ class UniversalProvider:
             parameters={"rule": rule_name, "concepts": list(route_result.get("concepts", []))}
         )
 
-    def route_and_execute(self, user_input: str) -> Dict[str, Any]:
+    async def route_and_execute(self, user_input: str) -> Dict[str, Any]:
         """
         The Magic Entry Point for VibeChat (GAD-5000 DHARMIC).
         Uses deterministic routing to decide between FAST-PATH (instant response)
         and SLOW-PATH (async queueing).
+
+        NOW WITH PRANA: Emits events to the event bus for visualization.
         """
         logger.info(f"📨 Thinking about: '{user_input}'")
+
+        # EMIT: Thinking (Blue pulse)
+        if emit_event:
+            try:
+                await emit_event("THOUGHT", f"Analyzing intent: '{user_input}'", "provider", {
+                    "input": user_input
+                })
+            except Exception as e:
+                logger.debug(f"Event emission failed: {e}")
+
         vector = self.resolve_intent(user_input)
 
         # --- DECISION POINT: FAST vs SLOW PATH ---
         # FAST PATH: Instant gratification for reads and casual chat
         if vector.intent_type == IntentType.SYSTEM:
-            return self._fast_path_system_status(vector)
+            result = self._fast_path_system_status(vector)
+            if emit_event:
+                try:
+                    await emit_event("ACTION", "System status retrieved", "provider", {"path": "fast_system"})
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
+            return result
 
         if vector.intent_type == IntentType.CHAT:
-            return self._fast_path_chat_response(vector)
+            result = self._fast_path_chat_response(vector)
+            if emit_event:
+                try:
+                    await emit_event("ACTION", "Chat response generated", "provider", {"path": "fast_chat"})
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
+            return result
 
         if vector.intent_type == IntentType.QUERY:
-            return self._fast_path_query_response(vector)
+            result = self._fast_path_query_response(vector)
+            if emit_event:
+                try:
+                    await emit_event("ACTION", "Query response prepared", "provider", {"path": "fast_query"})
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
+            return result
 
         # --- SLOW PATH: Heavy lifting via Task Queue ---
         target_agent_id = self._find_best_agent(vector)
 
         if not target_agent_id:
+            if emit_event:
+                try:
+                    await emit_event("ERROR", f"No agent found for intent: {vector.intent_type.value}", "provider", {})
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
             return {
                 "status": "ERROR",
                 "message": f"No agent found for intent: {vector.intent_type.value}"
@@ -235,6 +277,17 @@ class UniversalProvider:
         try:
             task_id = self.kernel.submit_task(task)
             response_msg = self._generate_ack_message(vector, target_agent_id)
+
+            # EMIT: Action (Green pulse)
+            if emit_event:
+                try:
+                    await emit_event("ACTION", f"Task submitted to {target_agent_id}", "provider", {
+                        "task_id": task_id,
+                        "agent": target_agent_id,
+                        "path": "slow"
+                    })
+                except Exception as e:
+                    logger.debug(f"Event emission failed: {e}")
 
             return {
                 "status": "SUBMITTED",
@@ -248,6 +301,11 @@ class UniversalProvider:
             }
         except Exception as e:
             logger.error(f"Task submission failed: {e}")
+            if emit_event:
+                try:
+                    await emit_event("ERROR", f"Task submission failed: {str(e)}", "provider", {})
+                except Exception as ex:
+                    logger.debug(f"Event emission failed: {ex}")
             return {
                 "status": "FAILED",
                 "path": "slow",

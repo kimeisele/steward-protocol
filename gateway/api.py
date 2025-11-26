@@ -157,8 +157,8 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
         elif routing_decision.get('path') == 'flash':
             logger.info(f"⚡ Routing to Flash model (Envoy): {routing_decision.get('request_id')}")
             # Would call Gemini Flash or Claude Haiku here
-            # For now, fall through to provider
-            result = provider.route_and_execute(request.message)
+            # For now, fall through to provider (now with PRANA EVENTS!)
+            result = await provider.route_and_execute(request.message)
             return {
                 "status": "success",
                 "path": "flash",
@@ -169,8 +169,8 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
         # 2d. Handle complex requests (HIGH priority -> Pro/Opus)
         elif routing_decision.get('path') == 'science':
             logger.info(f"🔥 Routing to Science agent (Pro model): {routing_decision.get('request_id')}")
-            # Execute via Provider (which now knows to use Pro model)
-            result = provider.route_and_execute(request.message)
+            # Execute via Provider (which now knows to use Pro model and EMITS EVENTS!)
+            result = await provider.route_and_execute(request.message)
 
             return {
                 "status": "success",
@@ -180,8 +180,8 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
             }
 
         else:
-            # Fallback to standard execution
-            result = provider.route_and_execute(request.message)
+            # Fallback to standard execution (with PRANA!)
+            result = await provider.route_and_execute(request.message)
             return {
                 "status": "success",
                 "data": result
