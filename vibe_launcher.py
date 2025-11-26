@@ -162,11 +162,29 @@ def main():
 
     os.environ["VIBE_PORT"] = str(target_port)
 
-    # 2. IDENTITY CHECK
-    key_path = "data/keys/private.pem"
-    if os.path.exists(key_path) or os.environ.get("VIBE_PRIVATE_KEY"):
+    # 2. IDENTITY CHECK & AUTO-GENERATION (SILENT KEY PROTOCOL)
+    key_dir = "data/keys"
+    key_path = os.path.join(key_dir, "private.pem")
+
+    if not os.path.exists(key_path):
+        print(f"➜ GENERATING NEW IDENTITY (Auto-Citizen)...")
+        os.makedirs(key_dir, exist_ok=True)
+        # Simple ECDSA Key Gen (using openssl command for speed/robustness if avail, or python)
+        try:
+            # Generate NIST P-256 Key
+            subprocess.run(
+                ["openssl", "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", key_path],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            print(f"   ✓ Key forged at {key_path}")
+        except:
+            print(f"   ⚠️  OpenSSL not found. Please install or place key manually.")
+            # Fallback logic later if needed, but for Mac/Linux usually openssl is there
+
+    if os.path.exists(key_path):
         os.environ["VIBE_MODE"] = "CITIZEN"
-        print(f"➜ IDENTITY VERIFIED: Citizen Mode 🔐")
+        os.environ["VIBE_PRIVATE_KEY_PATH"] = key_path
+        print(f"➜ IDENTITY VERIFIED: Citizen Mode 🔐 (Silent Key Active)")
     else:
         os.environ["VIBE_MODE"] = "GUEST"
         print(f"➜ IDENTITY UNVERIFIED: Guest Mode 👁️")
