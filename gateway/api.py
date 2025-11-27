@@ -12,10 +12,12 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any, Set
 from pathlib import Path
 
-# --- AGENT MIGRATION PATH FIX ---
-# Add migrated agent directories to sys.path so imports continue to work
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'steward', 'system_agents'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'agent_city', 'registry'))
+# --- AGENT MIGRATION PATH FIX (ABSOLUTE PATHS FOR DOCKER) ---
+# Use absolute paths to ensure imports work in Docker containers
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "steward" / "system_agents"))
+sys.path.insert(0, str(PROJECT_ROOT / "agent_city" / "registry"))
 
 # KERNEL IMPORTS
 from vibe_core.kernel_impl import RealVibeKernel
