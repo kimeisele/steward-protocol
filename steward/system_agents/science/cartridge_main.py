@@ -30,6 +30,7 @@ from pathlib import Path
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
+from vibe_core.config import CityConfig, ScienceConfig
 
 from .tools.web_search_tool import WebSearchTool, SearchResult
 
@@ -66,8 +67,16 @@ class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
     HERALD with SCIENTIST = Denkfabrik (think tank)
     """
 
-    def __init__(self):
-        """Initialize THE SCIENTIST as a VibeAgent."""
+    def __init__(self, config: Optional[ScienceConfig] = None):
+        """Initialize THE SCIENTIST as a VibeAgent.
+
+        Args:
+            config: ScienceConfig instance from Phoenix Config (optional)
+                   If not provided, ScienceConfig defaults are used
+        """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or ScienceConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="science",
