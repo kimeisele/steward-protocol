@@ -4,7 +4,7 @@ SCRIBE Cartridge - The Documentarian (Documentation Agent)
 
 SCRIBE is the "Librarian" of Agent City. It:
 1. Auto-generates all documentation (AGENTS.md, CITYMAP.md, HELP.md, README.md)
-2. Keeps documentation synchronized with actual code
+2. Keeps documentation synchronized with actual code (3-layer architecture in CITYMAP.md)
 3. Runs periodically or on-demand to ensure freshness
 4. Uses unified Jinja2 templates for consistency
 
@@ -91,7 +91,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
             name="SCRIBE",
             version="1.0.0",
             author="Steward Protocol",
-            description="Documentation agent: auto-generates AGENTS.md, CITYMAP.md, HELP.md, README.md",
+            description="Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md",
             domain="INFRASTRUCTURE",
             capabilities=[
                 "documentation",
