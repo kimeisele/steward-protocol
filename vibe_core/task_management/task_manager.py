@@ -245,15 +245,23 @@ class TaskManager:
         except Exception as e:
             print(f"Error saving roadmap: {e}")
 
-    def add_task(self, title: str, description: str = "", priority: int = 0, assigned_agent: Optional[str] = None) -> Task:
+    def add_task(
+        self,
+        title: str,
+        description: str = "",
+        priority: int = 0,
+        assigned_agent: Optional[str] = None,
+        roadmap_id: Optional[str] = None
+    ) -> Task:
         """
-        Add a new task with topology-aware routing.
+        Add a new task with topology-aware routing and optional roadmap linking.
 
         Args:
             title: Task title
             description: Task description
             priority: Task priority (0-100)
             assigned_agent: Optional agent ID to assign task to (e.g., "herald", "civic")
+            roadmap_id: Optional roadmap ID to link task to (auto-links to active roadmap if None)
 
         Returns:
             The created task with topology annotations
@@ -276,6 +284,9 @@ class TaskManager:
                 f"Task blocked by Narasimha (Adharma Block): {threat.description}"
             )
 
+        # Auto-link to active roadmap if no roadmap_id provided
+        final_roadmap_id = roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+
         task = Task(
             id=str(uuid.uuid4()),
             title=title,
@@ -283,6 +294,7 @@ class TaskManager:
             priority=priority,
             status=TaskStatus.PENDING,
             assignee=assigned_agent,
+            roadmap_id=final_roadmap_id,
         )
 
         # NEW: Topology-aware routing (Gap 4.1 closure)
@@ -314,6 +326,12 @@ class TaskManager:
             )
         except Exception as e:
             print(f"⚠️  SQLite write failed: {e}")
+
+        # 4. Add task to roadmap if roadmap_id is set
+        if task.roadmap_id and self.roadmap and task.roadmap_id == self.roadmap.id:
+            if task.id not in self.roadmap.missions:
+                self.roadmap.missions.append(task.id)
+                self.update_roadmap(missions=self.roadmap.missions)
 
         return task
 
