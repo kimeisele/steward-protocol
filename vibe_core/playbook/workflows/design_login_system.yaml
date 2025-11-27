@@ -1,0 +1,51 @@
+# GAD-907: A/B Test Workflow (Lens vs No Lens)
+# Task: Design a secure login system
+# Purpose: Demonstrate mindset transformation with semantic lenses
+
+workflow:
+  id: "design_login_system_v1"
+  name: "Design Secure Login System"
+  version: "1.0"
+  intent: "Design a secure, user-friendly login system for a web application"
+
+  nodes:
+    - id: "design_architecture"
+      action: "design_system"
+      description: |
+        Design a secure login system for a web application.
+
+        Requirements:
+        - Must be secure against common attacks
+        - Should provide good user experience
+        - Needs to scale to 100,000 users
+        - Budget: Moderate (startup)
+
+        Deliverables:
+        1. High-level architecture
+        2. Security considerations
+        3. Technology choices with justification
+        4. Implementation approach
+
+      required_skills:
+        - "design"
+        - "reasoning"
+        - "critical_analysis"
+
+      timeout_seconds: 120
+      retries: 1
+
+  edges: []  # Single node workflow
+
+  entry_point: "design_architecture"
+  exit_points:
+    - "design_architecture"
+
+  metadata:
+    created: "2025-11-19"
+    author: "GAD-907"
+    tags:
+      - "ab_test"
+      - "lens_validation"
+      - "design"
+
+  estimated_cost_usd: 0.05

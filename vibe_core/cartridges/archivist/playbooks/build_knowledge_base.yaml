@@ -1,0 +1,66 @@
+# The Archivist Playbook: Build Knowledge Base
+# ARCH-050: Cartridge Execution Workflow
+
+name: "Build Knowledge Base"
+version: "1.0.0"
+description: "Read all documents in a folder and build a searchable knowledge index"
+cartridge: "archivist"
+
+# Workflow definition
+workflow:
+  steps:
+    - id: "scan"
+      name: "Scan Directory"
+      action: "scan_directory"
+      description: "Find all supported documents (MD, TXT, PDF)"
+      parameters:
+        folder_path: "{{ workspace.documents_folder }}"
+      error_handling: "fail"
+
+    - id: "validate"
+      name: "Validate Documents"
+      action: "validate_scan_results"
+      description: "Ensure we found documents to process"
+      parameters:
+        min_documents: 1
+      error_handling: "fail"
+
+    - id: "process"
+      name: "Process Documents"
+      action: "build_index"
+      description: "Extract text and generate summaries for all documents"
+      parameters:
+        folder_path: "{{ workflow.scan.folder }}"
+        output_path: "{{ workspace.inbox }}/knowledge_index.json"
+      error_handling: "continue"
+
+    - id: "report"
+      name: "Report Results"
+      action: "report_index"
+      description: "Summarize what was indexed"
+      parameters:
+        index: "{{ workflow.process.result }}"
+      error_handling: "log"
+
+# Configuration
+config:
+  timeout_minutes: 30
+  offline_capable: true
+  llm_provider: "smart_local"
+
+# Expected context variables
+variables:
+  workspace.documents_folder:
+    description: "Path to documents to index"
+    required: true
+    type: "string"
+  workspace.inbox:
+    description: "Output directory for index"
+    required: true
+    type: "string"
+
+# Success criteria
+success_criteria:
+  - "At least one document processed"
+  - "Index file created"
+  - "No critical errors"

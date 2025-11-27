@@ -1,0 +1,107 @@
+# GAD-903: Research Topic Workflow (v0.8 First Artifact)
+# ========================================================
+# Workflow: Research Topic Synthesis
+# Intent: Research and synthesize knowledge on a given topic
+#
+# The workflow demonstrates:
+# - Multi-step knowledge discovery
+# - Information synthesis and summarization
+# - Semantic action composition
+# - Practical value generation
+#
+# Version: 1.0 (Live Fire Ready)
+
+workflow:
+  id: research_topic
+  name: Research Topic Synthesis Workflow
+  intent: Analyze a research request, search knowledge sources, synthesize comprehensive report
+  description: |
+    Research workflow that produces actionable knowledge:
+    1. Analyzes research request to extract key concepts
+    2. Searches knowledge sources (web, databases, archives)
+    3. Synthesizes findings into structured report
+
+    This workflow demonstrates how VIBE generates business value
+    by transforming requests into knowledge artifacts.
+
+  version: "1.0"
+
+  # Workflow nodes (steps in the research process)
+  nodes:
+    - id: analyze_request
+      action: analyze
+      prompt_key: research.analyze_topic
+      knowledge_context: true
+      description: |
+        Analyze the research request to extract key concepts and scope.
+        - Parse research topic and learning objectives
+        - Identify key concepts and domains
+        - Define scope and constraints
+        - Extract search parameters
+      required_skills:
+        - information_analysis
+        - domain_knowledge
+        - reasoning
+      timeout_seconds: 120
+
+    - id: search_knowledge
+      action: research
+      prompt_key: research.search_knowledge
+      knowledge_context: true
+      description: |
+        Search and gather knowledge from multiple sources.
+        - Query knowledge base and web sources
+        - Collect relevant papers, articles, documentation
+        - Identify authoritative sources
+        - Organize findings by theme
+      required_skills:
+        - information_retrieval
+        - research
+        - web_search
+        - knowledge_synthesis
+      timeout_seconds: 600
+
+    - id: synthesize_report
+      action: implement
+      prompt_key: research.synthesize_report
+      description: |
+        Synthesize gathered knowledge into coherent report.
+        - Organize findings into logical sections
+        - Identify patterns and trends
+        - Evaluate source credibility
+        - Generate actionable insights
+        - Structure as professional report
+      required_skills:
+        - writing
+        - synthesis
+        - critical_analysis
+        - knowledge_organization
+      timeout_seconds: 300
+
+  # Graph edges define dependencies (control flow)
+  edges:
+    # analyze_request must complete before searching
+    - from: analyze_request
+      to: search_knowledge
+      condition: success
+
+    # search_knowledge must complete before synthesis
+    - from: search_knowledge
+      to: synthesize_report
+      condition: success
+
+  # Entry point: where execution starts
+  entry_point: analyze_request
+
+  # Exit points: where execution ends (success conditions)
+  exit_points:
+    - synthesize_report
+
+  # Estimated cost to run this workflow
+  estimated_cost_usd: 0.50
+
+  # Retry policy for robust execution
+  retry_policy:
+    max_retries: 2
+    backoff_factor: 2.0
+    timeout_seconds: 300

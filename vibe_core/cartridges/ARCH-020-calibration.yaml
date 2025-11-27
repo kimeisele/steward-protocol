@@ -1,0 +1,28 @@
+name: "ARCH-020: Factory Calibration"
+description: "A minimal test to prove the Playbook Engine works mechanically."
+version: "1.0"
+author: "System Architect"
+id: "ARCH-020-calibration"
+
+agents:
+  coder:
+    role: "Code Generator"
+    skills: ["file_creation", "scripting"]
+    config: {}
+  tester:
+    role: "Verification Agent"
+    skills: ["file_inspection", "validation"]
+    config: {}
+
+tools: {}
+
+phases:
+  - name: "Initialize Protocol"
+    description: "Create calibration log file with timestamp"
+    agents: ["coder"]
+    tools: []
+
+  - name: "Verify Protocol"
+    description: "Check calibration_log.txt and confirm factory is online"
+    agents: ["tester"]
+    tools: []
