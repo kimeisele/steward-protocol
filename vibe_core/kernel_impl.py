@@ -29,19 +29,23 @@ from .kernel import (
     ManifestRegistry,
     KernelStatus,
 )
-from .agent_protocol import VibeAgent, AgentManifest
+from .protocols import VibeAgent, AgentManifest
 from .scheduling import Task, TaskStatus
 from .ledger import InMemoryLedger, SQLiteLedger
 from .sarga import get_sarga, Cycle
 
-# Import Auditor for immune system
+# Import Auditor for immune system (optional)
+try:
+    from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
     AUDITOR_AVAILABLE = True
 except ImportError:
     AUDITOR_AVAILABLE = False
     logger_setup = logging.getLogger("VIBE_KERNEL")
     logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
-# Import Constitutional Oath verification (Governance Gate)
+# Import Constitutional Oath verification (Governance Gate - optional)
+try:
+    from vibe_core.bridge import ConstitutionalOath
     OATH_ENFORCEMENT_AVAILABLE = True
 except ImportError:
     OATH_ENFORCEMENT_AVAILABLE = False

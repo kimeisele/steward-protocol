@@ -14,7 +14,7 @@ agents:
   system_agents:
     # Discovery & Exploration
     - name: "DiscoveryAgent"
-      class: "steward.system_agents.discoverer.agent:DiscoveryAgent"
+      class: "steward.system_agents.discoverer.agent:Discoverer"
       protocol: "VibeAgent"
       enabled: true
 
