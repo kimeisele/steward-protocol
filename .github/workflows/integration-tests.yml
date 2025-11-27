@@ -1,0 +1,76 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [main, claude/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install UV
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install -e ".[dev]" --system
+
+      - name: Run Integration Tests
+        run: |
+          python -m pytest tests/integration/ -v --tb=short
+
+      - name: Test Gateway Boot (Smoke Test)
+        run: |
+          python -c "
+from vibe_core.kernel_impl import RealVibeKernel
+from steward.system_agents.steward.agent import StewardAgent
+
+kernel = RealVibeKernel(ledger_path=':memory:')
+steward = StewardAgent(kernel)
+kernel.register_agent(steward)
+kernel.boot()
+count = steward.discover_agents()
+print(f'✅ Boot OK: Kernel running with {len(kernel.agent_registry)} agents (discovered {count})')
+          "
+
+      - name: Verify Governance Gate
+        run: |
+          python -c "
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.agent_protocol import VibeAgent
+from vibe_core.scheduling import Task
+from typing import Dict, Any
+
+kernel = RealVibeKernel(ledger_path=':memory:')
+
+# Attempt to register an agent WITHOUT oath - should fail
+class UnswornAgent(VibeAgent):
+    def __init__(self):
+        super().__init__(agent_id='unsworn', name='Unsworn Agent')
+    def process(self, task: Task) -> Dict[str, Any]:
+        return {'status': 'ok'}
+
+try:
+    kernel.register_agent(UnswornAgent())
+    print('❌ FAILED: Governance gate allowed unsworn agent!')
+    exit(1)
+except Exception as e:
+    print(f'✅ Governance gate working: Rejected unsworn agent with: {type(e).__name__}')
+          "
+
+      - name: Test Results
+        if: always()
+        run: |
+          echo "Integration test suite completed"
