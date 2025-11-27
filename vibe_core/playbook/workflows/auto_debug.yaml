@@ -1,0 +1,123 @@
+# GAD-903: First Semantic Workflow Definition
+# =============================================
+# This is the first "program" in the VIBE Semantic OS.
+#
+# Workflow: Automated Debugging Workflow
+# Intent: Investigate and fix software bugs autonomously
+#
+# The workflow demonstrates:
+# - Graph-based control flow (dependencies)
+# - Semantic action composition
+# - Multi-agent capability matching
+# - Error analysis and recovery
+#
+# Version: 1.0 (Prototype)
+
+workflow:
+  id: auto_debug
+  name: Automated Debug & Fix Workflow
+  intent: Investigate failing code, identify root cause, generate and verify fixes
+  description: |
+    Autonomous debugging workflow that:
+    1. Analyzes error logs and test failures
+    2. Investigates root cause through code analysis
+    3. Generates potential fixes
+    4. Verifies fixes resolve the issue
+
+    This workflow demonstrates how VIBE can autonomously handle "Fix this bug" requests
+    without hardcoded business logic, using semantic actions and dynamic agent routing.
+
+  version: "1.0"
+
+  # Workflow nodes (steps in the debugging process)
+  nodes:
+    - id: analyze_logs
+      action: analyze
+      description: |
+        Analyze error logs and test failures to understand what went wrong.
+        - Parse error messages and stack traces
+        - Identify patterns in failures
+        - Summarize failure symptoms
+      required_skills:
+        - code_analysis
+        - debugging
+        - pattern_recognition
+      timeout_seconds: 300
+
+    - id: identify_root_cause
+      action: research
+      description: |
+        Investigate root cause of the identified failures.
+        - Trace error origin in codebase
+        - Analyze related code sections
+        - Determine systemic vs localized issues
+        - Propose hypothesis for root cause
+      required_skills:
+        - code_analysis
+        - debugging
+        - reasoning
+        - architecture_understanding
+      timeout_seconds: 600
+
+    - id: generate_fix
+      action: implement
+      description: |
+        Generate and implement the fix.
+        - Write code changes to resolve root cause
+        - Ensure fix is minimal and focused
+        - Update related tests if needed
+        - Consider edge cases and side effects
+      required_skills:
+        - coding
+        - testing
+        - refactoring
+        - architecture_understanding
+      timeout_seconds: 900
+
+    - id: verify_fix
+      action: test
+      description: |
+        Verify that the fix resolves the issue.
+        - Run failing tests to confirm they pass
+        - Run broader test suite to check for regressions
+        - Validate fix quality and completeness
+        - Generate summary of changes
+      required_skills:
+        - testing
+        - code_analysis
+        - validation
+      timeout_seconds: 300
+
+  # Graph edges define dependencies (control flow)
+  # Edge format: from_node -> to_node with optional condition
+  edges:
+    # analyze_logs must complete before identifying root cause
+    - from: analyze_logs
+      to: identify_root_cause
+      condition: success
+
+    # identify_root_cause must complete before generating fix
+    - from: identify_root_cause
+      to: generate_fix
+      condition: success
+
+    # generate_fix must complete before verifying
+    - from: generate_fix
+      to: verify_fix
+      condition: success
+
+  # Entry point: where execution starts
+  entry_point: analyze_logs
+
+  # Exit points: where execution ends (success conditions)
+  exit_points:
+    - verify_fix
+
+  # Estimated cost to run this workflow
+  estimated_cost_usd: 1.50
+
+  # Retry policy for robust execution
+  retry_policy:
+    max_retries: 3
+    backoff_factor: 2.0
+    timeout_seconds: 300
