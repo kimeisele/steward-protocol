@@ -21,17 +21,12 @@ from datetime import datetime
 from vibe_core import VibeAgent, Task
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AMBASSADOR_MAIN")
 
 
-class AmbassadorCartridge(VibeAgent, OathMixin if OathMixin else object):
+class AmbassadorCartridge(VibeAgent):
     """
     AMBASSADOR Agent Cartridge.
     Community Engagement & Developer Relations.

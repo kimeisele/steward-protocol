@@ -21,11 +21,6 @@ from enum import Enum
 
 from vibe_core import VibeAgent, Task
 
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AGORA_MAIN")
 
@@ -39,7 +34,7 @@ class AgoraMessageType(Enum):
     SYSTEM = "system"            # Infrastructure message
 
 
-class AgoraCartridge(VibeAgent, OathMixin if OathMixin else object):
+class AgoraCartridge(VibeAgent):
     """
     AGORA System Cartridge.
     One-Way Broadcast Channel for Steward Protocol.

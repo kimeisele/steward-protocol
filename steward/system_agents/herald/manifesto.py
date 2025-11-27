@@ -19,10 +19,6 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-try:
-    from herald.cartridge_main import HeraldCartridge
-except ImportError as e:
-    print(f"❌ Import error: {e}")
     print("Make sure you're running from the steward-protocol root directory")
     sys.exit(1)
 
