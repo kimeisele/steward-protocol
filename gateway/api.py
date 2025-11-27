@@ -407,6 +407,42 @@ def get_agents():
         logger.error(f"❌ Agent fetch failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# --- PULSE FALLBACK (HTTP polling if WebSocket fails) ---
+@app.get("/api/pulse")
+def get_pulse_snapshot():
+    """
+    HTTP FALLBACK FOR PULSE
+    Returns a snapshot of the current system state (for WebSocket fallback).
+    Useful if WebSocket connections aren't supported.
+    """
+    try:
+        last_packet = pulse_manager.get_last_packet()
+        if last_packet:
+            return {
+                "type": "pulse",
+                "data": {
+                    "timestamp": last_packet.timestamp,
+                    "cycle_id": last_packet.cycle_id,
+                    "system_state": last_packet.system_state,
+                    "active_agents": last_packet.active_agents,
+                    "queue_depth": last_packet.queue_depth,
+                    "frequency": last_packet.frequency
+                }
+            }
+        else:
+            return {
+                "type": "pulse",
+                "data": {
+                    "system_state": "INITIALIZING",
+                    "active_agents": 0,
+                    "queue_depth": 0,
+                    "frequency": 1.0
+                }
+            }
+    except Exception as e:
+        logger.error(f"❌ Pulse snapshot failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- VISA PROTOCOL: ONBOARDING ---
 @app.post("/api/visa")
 def submit_visa_application(request: VisaApplicationRequest):
