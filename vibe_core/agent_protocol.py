@@ -13,6 +13,22 @@ import asyncio
 import logging
 
 
+@dataclass
+class AgentResponse:
+    """Standard response from an agent"""
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary"""
+        return {
+            "success": self.success,
+            "data": self.data,
+            "error": self.error,
+        }
+
+
 class Capability(str, Enum):
     """Standard capabilities that agents can declare"""
     CONTENT_GENERATION = "content_generation"
