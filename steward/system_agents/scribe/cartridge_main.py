@@ -52,6 +52,7 @@ from .tools.agents_renderer import AgentsRenderer
 from .tools.citymap_renderer import CitymapRenderer
 from .tools.help_renderer import HelpRenderer
 from .tools.readme_renderer import ReadmeRenderer
+from .tools.infrastructure_renderer import InfrastructureRenderer
 
 # Constitutional Oath (optional)
 try:
@@ -91,7 +92,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
             name="SCRIBE",
             version="1.0.0",
             author="Steward Protocol",
-            description="Documentation agent: auto-generates AGENTS.md, CITYMAP.md, HELP.md, README.md",
+            description="Documentation agent: auto-generates AGENTS.md, CITYMAP.md, HELP.md, README.md, INFRASTRUCTURE.md",
             domain="INFRASTRUCTURE",
             capabilities=[
                 "documentation",
@@ -116,6 +117,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
         self.citymap_renderer = CitymapRenderer(root_dir)
         self.help_renderer = HelpRenderer(root_dir)
         self.readme_renderer = ReadmeRenderer(root_dir)
+        self.infrastructure_renderer = InfrastructureRenderer(root_dir)
 
         logger.info("✅ All documentation renderers initialized")
         logger.info("📚 SCRIBE: Ready for operation (awaiting kernel injection)")
@@ -139,7 +141,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
 
         Task format:
         {
-            "action": "generate_all" | "generate_agents" | "generate_citymap" | "generate_help" | "generate_readme",
+            "action": "generate_all" | "generate_agents" | "generate_citymap" | "generate_help" | "generate_readme" | "generate_infrastructure",
         }
         """
         action = task.input.get("action") if hasattr(task, 'input') else task.payload.get("action")
@@ -156,6 +158,8 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
                 result = self._generate_help()
             elif action == "generate_readme":
                 result = self._generate_readme()
+            elif action == "generate_infrastructure":
+                result = self._generate_infrastructure()
             else:
                 result = {
                     "success": False,
@@ -180,6 +184,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
             "citymap": self.citymap_renderer.render_to_file(),
             "help": self.help_renderer.render_to_file(),
             "readme": self.readme_renderer.render_to_file(),
+            "infrastructure": self.infrastructure_renderer.render_to_file(),
         }
 
         success = all(results.values())
@@ -234,6 +239,17 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
             "message": "README.md generated" if success else "Failed to generate README.md"
         }
 
+    def _generate_infrastructure(self) -> Dict[str, Any]:
+        """Generate INFRASTRUCTURE.md only."""
+        logger.info("🔄 Generating INFRASTRUCTURE.md...")
+
+        success = self.infrastructure_renderer.render_to_file()
+
+        return {
+            "success": success,
+            "message": "INFRASTRUCTURE.md generated" if success else "Failed to generate INFRASTRUCTURE.md"
+        }
+
     # Utility method for direct invocation (outside kernel)
     def generate_all(self) -> bool:
         """Direct method to generate all documentation (for standalone use)."""
@@ -244,6 +260,7 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
             self.citymap_renderer.render_to_file()
             self.help_renderer.render_to_file()
             self.readme_renderer.render_to_file()
+            self.infrastructure_renderer.render_to_file()
 
             logger.info("✅ SCRIBE: All documentation generated successfully")
             return True
