@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import json
+import yaml
 import uuid
 from datetime import datetime
 
@@ -62,6 +63,7 @@ class TaskManager:
 
         self._load_tasks()
         self._load_mission()
+        self._load_roadmap()
 
     def _load_tasks(self):
         """Load tasks from disk."""
@@ -135,6 +137,40 @@ class TaskManager:
             )
         except Exception as e:
             print(f"Error saving mission: {e}")
+
+    def _load_roadmap(self):
+        """Load roadmap from disk."""
+        roadmap_path = self.config_dir / "roadmap.yaml"
+
+        if roadmap_path.exists():
+            try:
+                with open(roadmap_path, 'r') as f:
+                    data = yaml.safe_load(f)
+
+                self.roadmap = Roadmap(
+                    id=data['id'],
+                    name=data['name'],
+                    description=data['description'],
+                    missions=data.get('missions', []),
+                    created_at=datetime.fromisoformat(data['created_at']),
+                    updated_at=datetime.fromisoformat(data['updated_at']),
+                    metadata=data.get('metadata', {})
+                )
+            except Exception as e:
+                print(f"Error loading roadmap: {e}")
+
+    def _save_roadmap(self):
+        """Save roadmap to disk."""
+        if not self.roadmap:
+            return
+
+        roadmap_path = self.config_dir / "roadmap.yaml"
+
+        try:
+            with open(roadmap_path, 'w') as f:
+                yaml.dump(self.roadmap.to_dict(), f)
+        except Exception as e:
+            print(f"Error saving roadmap: {e}")
 
     def add_task(self, title: str, description: str = "", priority: int = 0, assigned_agent: Optional[str] = None) -> Task:
         """
@@ -324,3 +360,68 @@ class TaskManager:
     def export_tasks_markdown(self, output_path: Path) -> bool:
         """Export tasks to Markdown."""
         return ExportEngine.export_to_markdown(self.tasks, output_path)
+
+    def create_roadmap(self, name: str, description: str, missions: List[str] = None) -> Roadmap:
+        """
+        Create a new roadmap.
+
+        Args:
+            name: Roadmap name
+            description: Roadmap description
+            missions: Optional list of mission IDs
+
+        Returns:
+            The created roadmap
+        """
+        roadmap = Roadmap(
+            id=str(uuid.uuid4()),
+            name=name,
+            description=description,
+            missions=missions or [],
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+
+        self.roadmap = roadmap
+        self._save_roadmap()
+        return roadmap
+
+    def update_roadmap(self, **kwargs) -> Optional[Roadmap]:
+        """
+        Update current roadmap.
+
+        Args:
+            **kwargs: Fields to update (name, description, missions, metadata)
+
+        Returns:
+            Updated roadmap, or None if no roadmap is active
+        """
+        if not self.roadmap:
+            return None
+
+        for key, value in kwargs.items():
+            if hasattr(self.roadmap, key):
+                setattr(self.roadmap, key, value)
+
+        self.roadmap.updated_at = datetime.now()
+        self._save_roadmap()
+
+        return self.roadmap
+
+    def assign_tasks_to_roadmap(self, task_ids: List[str], roadmap_id: str) -> bool:
+        """
+        Assign tasks to a roadmap.
+
+        Args:
+            task_ids: List of task IDs to assign
+            roadmap_id: Roadmap ID to assign to
+
+        Returns:
+            True if assignment succeeded
+        """
+        for task in self.tasks.values():
+            if task.id in task_ids:
+                task.roadmap_id = roadmap_id
+
+        self._save_tasks()
+        return True
