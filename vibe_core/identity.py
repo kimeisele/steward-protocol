@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
 
-from vibe_core.agent_protocol import AgentManifest, VibeAgent
+from vibe_core.protocols import AgentManifest, VibeAgent
 
 logger = logging.getLogger("IDENTITY")
 

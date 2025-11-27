@@ -28,7 +28,7 @@ from pathlib import Path
 
 # Import Core Definitions
 try:
-    from vibe_core.kernel import VibeKernel
+    from vibe_core.protocols import VibeKernel
     from vibe_core.scheduling import Task
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet

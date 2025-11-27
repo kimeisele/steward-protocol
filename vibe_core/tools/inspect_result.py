@@ -46,7 +46,7 @@ class InspectResultTool(Tool):
     - Useful for synchronization/orchestration workflows
 
     Example:
-        >>> from vibe_core.kernel import VibeKernel
+        >>> from vibe_core.protocols import VibeKernel
         >>> kernel = VibeKernel(":memory:")
         >>> tool = InspectResultTool(kernel)
         >>>

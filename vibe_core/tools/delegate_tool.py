@@ -39,7 +39,7 @@ from vibe_core.scheduling import Task
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 if TYPE_CHECKING:
-    from vibe_core.kernel import VibeKernel
+    from vibe_core.protocols import VibeKernel
 
 logger = logging.getLogger(__name__)
 

@@ -397,7 +397,7 @@ class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="oracle",
             name="ORACLE",

@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.protocols import VibeAgent, AgentManifest
 from vibe_core.scheduling import Task
 from steward.constitutional_oath import ConstitutionalOath
 

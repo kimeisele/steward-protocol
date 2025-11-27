@@ -1,0 +1,108 @@
+# Phoenix Configuration - Layer 3 Dynamic Wiring
+# This file defines HOW implementations are wired to protocols
+# Format: module_path:ClassName
+
+system:
+  kernel:
+    # Core kernel components
+    ledger: "vibe_core.kernel_impl:VibeLedgerImpl"
+    scheduler: "vibe_core.kernel_impl:VibeSchedulerImpl"
+    registry: "vibe_core.kernel_impl:ManifestRegistryImpl"
+    kernel: "vibe_core.kernel_impl:VibeKernelImpl"
+
+agents:
+  system_agents:
+    # Discovery & Exploration
+    - name: "DiscoveryAgent"
+      class: "steward.system_agents.discoverer.agent:DiscoveryAgent"
+      protocol: "VibeAgent"
+      enabled: true
+
+    # Knowledge Management
+    - name: "ArchivistAgent"
+      class: "steward.system_agents.archivist.cartridge_main:ArchivistCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    # Governance & Constitution
+    - name: "HeraldAgent"
+      class: "steward.system_agents.herald.cartridge_main:HeraldCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "CivicAgent"
+      class: "steward.system_agents.civic.cartridge_main:CivicCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "SupremeCourtAgent"
+      class: "steward.system_agents.supreme_court.cartridge_main:SupremeCourtCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    # Execution & Auditing
+    - name: "EngineerAgent"
+      class: "steward.system_agents.engineer.cartridge_main:EngineerCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "AuditorAgent"
+      class: "steward.system_agents.auditor.cartridge_main:AuditorCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "WatchmanAgent"
+      class: "steward.system_agents.watchman.cartridge_main:WatchmanCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    # Communication & Analysis
+    - name: "ForumAgent"
+      class: "steward.system_agents.forum.cartridge_main:ForumCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "OracleAgent"
+      class: "steward.system_agents.oracle.cartridge_main:OracleCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "ScienceAgent"
+      class: "steward.system_agents.science.cartridge_main:ScienceCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+    - name: "EnvoyAgent"
+      class: "steward.system_agents.envoy.cartridge_main:EnvoyCartridge"
+      protocol: "VibeAgent"
+      enabled: true
+
+  custom_agents: []
+
+playbook:
+  # Executor agent for playbook operations
+  executor_agent: "vibe_core.agents.llm_agent:SimpleLLMAgent"
+  fallback_agent: "vibe_core.agents.specialist_agent:SpecialistAgent"
+
+providers:
+  # LLM providers for different use cases
+  llm_provider: "vibe_core.runtime.providers.anthropic:AnthropicProvider"
+  fallback_provider: "vibe_core.runtime.providers.base:DefaultLLMProvider"
+
+imports:
+  # Explicit import order to avoid circular dependencies
+  # Layer 1 must be first, then Layer 2, then Layer 3
+  order:
+    - "vibe_core.protocols"          # Layer 1: Protocols/Interfaces
+    - "vibe_core.kernel_impl"        # Core implementations
+    - "vibe_core.agents"             # Agent implementations
+    - "vibe_core.runtime"            # Runtime components
+    - "steward.system_agents"        # System agent cartridges
+    - "vibe_core.playbook"           # Playbook execution
+
+# Feature flags
+features:
+  oauth_enforcement: true
+  live_fire_enabled: false
+  performance_metrics: true
+  debug_mode: false

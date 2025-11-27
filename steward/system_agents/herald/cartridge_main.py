@@ -44,17 +44,12 @@ from .core.memory import EventLog
 from .governance import HeraldConstitution
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HERALD_MAIN")
 
 
-class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
+class HeraldCartridge(VibeAgent):
     """
     The HERALD Agent Cartridge.
     Autonomous Technical Evangelist for Steward Protocol.
@@ -234,7 +229,7 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="herald",
             name="HERALD",

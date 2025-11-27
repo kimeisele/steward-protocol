@@ -16,7 +16,7 @@ import subprocess
 import logging
 from typing import Dict, Any
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.protocols import VibeAgent, AgentManifest
 from vibe_core.config import CityConfig, CityConfig
 from vibe_core.scheduling.task import Task
 

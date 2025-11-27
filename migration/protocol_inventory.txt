@@ -1,0 +1,54 @@
+PROTOCOL INVENTORY - BLOCKER #2
+Date: 2025-11-27
+Status: SCANNING
+
+=== CURRENT ABC LOCATIONS ===
+
+1. VibeAgent
+   - vibe_core/agent_protocol.py (OLD)
+   - vibe_core/protocols/agent.py (NEW - Layer 1)
+   - Status: DUPLICATE - need to consolidate
+
+2. VibeLedger
+   - vibe_core/kernel.py (OLD)
+   - vibe_core/protocols/ledger.py (NEW - Layer 1)
+   - Status: DUPLICATE - need to consolidate
+
+3. VibeScheduler
+   - vibe_core/kernel.py (OLD)
+   - vibe_core/protocols/scheduler.py (NEW - Layer 1)
+   - Status: DUPLICATE - need to consolidate
+
+4. VibeKernel
+   - vibe_core/kernel.py (OLD)
+   - vibe_core/protocols/ledger.py (NEW - Layer 1)
+   - Status: DUPLICATE - need to consolidate
+
+5. ManifestRegistry
+   - vibe_core/kernel.py (OLD)
+   - vibe_core/protocols/registry.py (NEW - Layer 1)
+   - vibe_core/protocols/ledger.py (NEW - Layer 1)
+   - Status: TRIPLE DUPLICATE!
+
+6. LLMProvider
+   - vibe_core/llm/provider.py (OLD)
+   - vibe_core/runtime/providers/base.py (ALT)
+   - Status: Needs consolidation
+
+7. Tool
+   - vibe_core/tools/tool_protocol.py
+   - Status: Check if Layer 1
+
+8. BaseSpecialist
+   - vibe_core/specialists/base_specialist.py
+   - Status: Check if Layer 1
+
+9. GovernanceContract
+   - steward/system_agents/herald/governance/constitution.py
+   - Status: Check Layer 1
+
+=== SUMMARY ===
+Total ABCs found: 9 types
+Current duplicates: 6+ instances
+try/except ImportError: 57 instances
+Status: Significant consolidation needed
