@@ -20,7 +20,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 
-from civic.tools.economy import CivicBank, InsufficientFundsError
+from .economy import CivicBank, InsufficientFundsError
 
 logger = logging.getLogger("CIVIC_LEDGER")
 

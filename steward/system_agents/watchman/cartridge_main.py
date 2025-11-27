@@ -19,7 +19,7 @@ from pathlib import Path
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from civic.tools.economy import CivicBank
+from steward.system_agents.civic.tools.economy import CivicBank
 
 # Constitutional Oath
 try:
@@ -292,6 +292,8 @@ class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="watchman",
             name="WATCHMAN",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="Monitoring and health checks",
             domain="MONITORING",
             capabilities=['monitoring', 'alerts', 'system_integrity']
         )

@@ -19,7 +19,7 @@ This system ensures consistent truth resolution across the entire OS.
 import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
-from dhruva.tools.truth_matrix import TruthMatrix, FactAuthority
+from .tools.truth_matrix import TruthMatrix, FactAuthority
 
 logger = logging.getLogger("REFERENCE_RESOLVER")
 

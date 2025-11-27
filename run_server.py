@@ -56,18 +56,18 @@ from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.config import ConfigLoader, CityConfig
 
 # Import all 12 agent cartridges
-from herald.cartridge_main import HeraldCartridge
-from civic.cartridge_main import CivicCartridge
-from forum.cartridge_main import ForumCartridge
-from science.cartridge_main import ScientistCartridge
-from envoy.cartridge_main import EnvoyCartridge
+from steward.system_agents.herald.cartridge_main import HeraldCartridge
+from steward.system_agents.civic.cartridge_main import CivicCartridge
+from steward.system_agents.forum.cartridge_main import ForumCartridge
+from steward.system_agents.science.cartridge_main import ScientistCartridge
+from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
 from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
 from steward.system_agents.auditor.cartridge_main import AuditorCartridge
 from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-from oracle.cartridge_main import OracleCartridge
-from watchman.cartridge_main import WatchmanCartridge
-from artisan.cartridge_main import ArtisanCartridge
-from chronicle.cartridge_main import ChronicleCartridge
+from steward.system_agents.oracle.cartridge_main import OracleCartridge
+from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
+from agent_city.registry.artisan.cartridge_main import ArtisanCartridge
+from steward.system_agents.chronicle.cartridge_main import ChronicleCartridge
 
 
 class StewardBootLoader:

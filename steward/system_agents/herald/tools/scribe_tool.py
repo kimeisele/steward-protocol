@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any
 import json
 
-from herald.core.memory import Event
+from ..core.memory import Event
 
 
 class Scribe:
