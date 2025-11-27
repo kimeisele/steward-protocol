@@ -25,6 +25,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 # VibeOS Integration
+from vibe_core.config import CityConfig
 try:
     from vibe_core import VibeAgent, Task, AgentManifest
 except ImportError:
@@ -84,8 +85,16 @@ class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
     No stale documentation, only live introspection."
     """
 
-    def __init__(self, root_dir: str = "."):
-        """Initialize SCRIBE (The Documentarian) as a VibeAgent."""
+    def __init__(self, root_dir: str = ".", config: Optional[CityConfig] = None):
+        """Initialize SCRIBE (The Documentarian) as a VibeAgent.
+
+        Args:
+            root_dir: Root directory for documentation output
+            config: CityConfig instance from Phoenix Config (optional)
+        """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="scribe",
