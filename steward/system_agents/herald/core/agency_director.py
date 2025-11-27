@@ -15,23 +15,23 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 
 # INPUT Tools
-from herald.tools.scout_tool import ScoutTool
-from herald.tools.research_tool import ResearchTool
+from .tools.scout_tool import ScoutTool
+from .tools.research_tool import ResearchTool
 
 # PROCESS Tools
-from herald.tools.content_tool import ContentTool
-from herald.tools.strategy_tool import StrategyTool
-from herald.tools.visual_tool import VisualTool
+from .tools.content_tool import ContentTool
+from .tools.strategy_tool import StrategyTool
+from .tools.visual_tool import VisualTool
 
 # VALIDATE Tools
-from herald.governance.constitution import HeraldConstitution
-from herald.tools.identity_tool import IdentityTool
+from .governance.constitution import HeraldConstitution
+from .tools.identity_tool import IdentityTool
 
 # OUTPUT Tools
-from herald.tools.broadcast_tool import BroadcastTool
+from .tools.broadcast_tool import BroadcastTool
 
 # MEMORY
-from herald.core.memory import EventLog
+from .memory import EventLog
 
 # ARCHIVIST (for verification)
 try:

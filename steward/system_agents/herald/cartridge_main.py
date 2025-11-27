@@ -31,16 +31,16 @@ from pathlib import Path
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from herald.tools.research_tool import ResearchTool
-from herald.tools.content_tool import ContentTool
-from herald.tools.broadcast_tool import BroadcastTool
-from herald.tools.identity_tool import IdentityTool
-from herald.tools.scribe_tool import Scribe
-from herald.tools.scout_tool import ScoutTool
-from herald.tools.tidy_tool import TidyTool
-from herald.tools.strategy_tool import StrategyTool
-from herald.core.memory import EventLog
-from herald.governance import HeraldConstitution
+from .tools.research_tool import ResearchTool
+from .tools.content_tool import ContentTool
+from .tools.broadcast_tool import BroadcastTool
+from .tools.identity_tool import IdentityTool
+from .tools.scribe_tool import Scribe
+from .tools.scout_tool import ScoutTool
+from .tools.tidy_tool import TidyTool
+from .tools.strategy_tool import StrategyTool
+from .core.memory import EventLog
+from .governance import HeraldConstitution
 
 # Constitutional Oath
 try:
@@ -230,6 +230,8 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="herald",
             name="HERALD",
             version=self.version if hasattr(self, 'version') else "3.0.0",
+            author="Steward Protocol",
+            description="Content generation and broadcasting agent",
             domain="MEDIA",
             capabilities=["content_generation", "broadcasting", "research", "strategy"]
         )

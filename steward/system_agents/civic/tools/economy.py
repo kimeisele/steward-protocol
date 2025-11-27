@@ -61,8 +61,8 @@ class CivicBank:
         try:
             from .vault import CivicVault
             self.vault = CivicVault(self.conn)
-        except ImportError:
-            logger.warning("⚠️  Vault unavailable (cryptography not installed)")
+        except (ImportError, Exception) as e:
+            logger.warning(f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)")
             self.vault = None
 
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")

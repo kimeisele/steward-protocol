@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from oracle.tools.introspection_tool import IntrospectionTool, IntrospectionError
+from .tools.introspection_tool import IntrospectionTool, IntrospectionError
 
 # Constitutional Oath
 try:
@@ -397,6 +397,8 @@ class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="oracle",
             name="ORACLE",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="System introspection and self-awareness",
             domain="INTROSPECTION",
             capabilities=['system_state', 'health_check', 'diagnostics']
         )

@@ -31,14 +31,14 @@ from datetime import datetime, timezone
 from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 
 # Import tools
-from civic.tools.ledger_tool import LedgerTool, AgentBank
-from civic.tools.license_tool import LicenseTool, LicenseAuthority, LicenseType
-from civic.tools.registry_tool import RegistryTool
+from .tools.ledger_tool import LedgerTool, AgentBank
+from .tools.license_tool import LicenseTool, LicenseAuthority, LicenseType
+from .tools.registry_tool import RegistryTool
 
 # LIFECYCLE ENFORCER - The Vedic Varna System (NEW)
 try:
-    from civic.tools.lifecycle_enforcer import LifecycleEnforcer
-    from civic.tools.lifecycle_manager import LifecycleStatus
+    from steward.system_agents.civic.tools.lifecycle_enforcer import LifecycleEnforcer
+    from steward.system_agents.civic.tools.lifecycle_manager import LifecycleStatus
     LIFECYCLE_ENFORCER_AVAILABLE = True
 except ImportError as e:
     logger_setup = logging.getLogger("CIVIC_MAIN")
@@ -258,6 +258,8 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="civic",
             name="CIVIC",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="Governance and Registry",
             domain="GOVERNANCE",
             capabilities=['licensing', 'registry', 'economy', 'lifecycle_management']
         )

@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from vibe_core import VibeAgent, Task
 
 # Civic imports for license operations
-from civic.tools.license_tool import LicenseType
+from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # Constitutional Oath
 try:
@@ -170,6 +170,8 @@ class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="forum",
             name="FORUM",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="Democratic voting and proposal management",
             domain="GOVERNANCE",
             capabilities=['proposal_management', 'voting', 'consensus_building']
         )
