@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.ambassador"
+  name: "AMBASSADOR Agent (Diplomatic Relations)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Ambassador of Agent City - Handles external relations"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "diplomacy"
+    - "external_relations"
+    - "communication"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

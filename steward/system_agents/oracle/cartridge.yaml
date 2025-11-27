@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.oracle"
+  name: "ORACLE Agent (System Introspection)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The System Oracle - Provides introspection and health monitoring"
+
+agent:
+  domain: "INTROSPECTION"
+  capabilities:
+    - "system_state"
+    - "health_check"
+    - "diagnostics"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

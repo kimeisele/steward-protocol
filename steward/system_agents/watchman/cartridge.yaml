@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.watchman"
+  name: "WATCHMAN Agent (Monitoring & Alerts)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The System Watchman - Monitors system health and triggers alerts"
+
+agent:
+  domain: "MONITORING"
+  capabilities:
+    - "monitoring"
+    - "alerts"
+    - "system_integrity"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

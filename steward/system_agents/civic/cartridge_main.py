@@ -251,6 +251,18 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "status": "error",
                 "error": str(e)
             }
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="civic",
+            name="CIVIC",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="GOVERNANCE",
+            capabilities=['licensing', 'registry', 'economy', 'lifecycle_management']
+        )
+
+
 
     def report_status(self) -> Dict[str, Any]:
         """Report CIVIC status (VibeAgent interface) - Deep Introspection."""

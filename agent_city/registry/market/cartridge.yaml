@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.market"
+  name: "MARKET Agent (Economic Trading)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Marketplace of Agent City - Economic operations and trading"
+
+agent:
+  domain: "ECONOMY"
+  capabilities:
+    - "trading"
+    - "market_operations"
+    - "commerce"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

@@ -137,6 +137,18 @@ class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "status": "error",
                 "error": str(e)
             }
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="science",
+            name="SCIENTIST",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="SCIENCE",
+            capabilities=['research', 'web_search', 'fact_verification']
+        )
+
+
 
     def report_status(self) -> Dict[str, Any]:
         """Report SCIENCE status (VibeAgent interface) - Deep Introspection."""

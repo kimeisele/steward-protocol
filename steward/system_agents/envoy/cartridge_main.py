@@ -175,6 +175,18 @@ class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
             logger.exception(f"❌ ENVOY task {task.task_id} failed: {e}")
             self._log_operation(task.task_id, "unknown", {}, error_result)
             return error_result
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="envoy",
+            name="ENVOY",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="ORCHESTRATION",
+            capabilities=['playbook_execution', 'orchestration']
+        )
+
+
 
     def _route_command(self, command: str, args: Dict[str, Any], task_id: str) -> Dict[str, Any]:
         """

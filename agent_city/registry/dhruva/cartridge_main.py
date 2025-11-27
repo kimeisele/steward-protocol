@@ -110,6 +110,17 @@ class DhruvaAnchorCartridge(VibeAgent):
             capabilities=self.capabilities,
             dependencies=[]
         )
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "dhruva",
+            "name": "DHRUVA",
+            "status": "healthy",
+            "domain": "KNOWLEDGE",
+            "capabilities": ['data_management', 'knowledge_base']
+        }
+
+
 
     def process(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
