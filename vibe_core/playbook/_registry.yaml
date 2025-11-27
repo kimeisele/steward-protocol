@@ -1,0 +1,189 @@
+# PLAYBOOK REGISTRY - Semantic Router Configuration
+# Purpose: Maps user intent to playbook workflows via embedding similarity
+# Location: docs/playbook/_registry.yaml
+
+version: "1.0"
+description: |
+  Semantic routing configuration for vibe-agency playbook system.
+  Uses embedding-based intent classification to route user input to appropriate workflows.
+
+# ============================================================================
+# ROUTING STRATEGY
+# ============================================================================
+# 
+# Tier 1: Embedding Match (Fast, <100ms)
+#   - Compute embedding of user input
+#   - Cosinus similarity against intent_patterns
+#   - Route if similarity > threshold
+#
+# Tier 2: Fallback to STEWARD (if similarity < threshold)
+#   - STEWARD analyzes ambiguous input
+#   - Suggests 2-3 relevant routes
+#   - User picks or STEWARD infers
+#
+# ============================================================================
+
+routes:
+  # ==========================================================================
+  # CORE WORKFLOWS
+  # ==========================================================================
+  
+  - name: "bootstrap"
+    description: "First-time system initialization"
+    intent_patterns:
+      - "start"
+      - "initialize"
+      - "begin"
+      - "hello"
+      - "hi claude"
+    threshold: 0.70
+    target_chain: "core/bootstrap.md"
+    priority: "HIGH"
+  
+  - name: "session_resume"
+    description: "Continue existing work from handoff"
+    intent_patterns:
+      - "continue"
+      - "resume"
+      - "keep going"
+      - "what's next"
+      - "pick up where we left off"
+    threshold: 0.75
+    target_chain: "core/session_resume.md"
+    priority: "HIGH"
+  
+  - name: "status_check"
+    description: "Show current project status"
+    intent_patterns:
+      - "status"
+      - "show me progress"
+      - "where are we"
+      - "what's the state"
+    threshold: 0.75
+    target_chain: "core/status_check.md"
+    priority: "MEDIUM"
+
+  # ==========================================================================
+  # DOMAIN-SPECIFIC WORKFLOWS
+  # ==========================================================================
+  
+  - name: "restaurant_app"
+    description: "Restaurant/hospitality domain workflow"
+    intent_patterns:
+      - "restaurant app"
+      - "food ordering system"
+      - "table reservations"
+      - "menu management"
+      - "POS integration"
+      - "online ordering"
+      - "hospitality software"
+    threshold: 0.80
+    target_chain: "domains/hospitality/restaurant.yaml"
+    priority: "MEDIUM"
+    metadata:
+      domain: "hospitality"
+      complexity: "medium"
+      typical_duration: "20-30 min"
+  
+  - name: "healthcare_app"
+    description: "Healthcare/medical domain workflow"
+    intent_patterns:
+      - "healthcare app"
+      - "medical records"
+      - "patient management"
+      - "HIPAA compliance"
+      - "clinic software"
+      - "telemedicine"
+    threshold: 0.80
+    target_chain: "domains/healthcare/clinic.yaml"
+    priority: "MEDIUM"
+    metadata:
+      domain: "healthcare"
+      complexity: "high"
+      typical_duration: "30-45 min"
+  
+  - name: "ecommerce_app"
+    description: "E-commerce/retail domain workflow"
+    intent_patterns:
+      - "online store"
+      - "e-commerce"
+      - "shopping cart"
+      - "product catalog"
+      - "payment integration"
+      - "shopify"
+    threshold: 0.80
+    target_chain: "domains/ecommerce/store.yaml"
+    priority: "MEDIUM"
+    metadata:
+      domain: "ecommerce"
+      complexity: "medium"
+      typical_duration: "25-35 min"
+
+  # ==========================================================================
+  # FALLBACK ROUTES
+  # ==========================================================================
+  
+  - name: "clarification"
+    description: "Request clarification for ambiguous input"
+    intent_patterns:
+      - "unclear"
+      - "ambiguous"
+      - "don't understand"
+    threshold: 0.60
+    target_chain: "core/clarification.md"
+    priority: "LOW"
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+config:
+  # Default threshold for all routes (can be overridden per route)
+  default_threshold: 0.75
+  
+  # Embedding model for semantic similarity
+  # Options: "text-embedding-3-small" (OpenAI), "voyage-2" (Voyage)
+  embedding_model: "text-embedding-3-small"
+  
+  # Fallback behavior when no route matches
+  fallback_strategy: "steward_analysis"
+  
+  # Maximum number of suggestions when similarity is low
+  max_suggestions: 3
+  
+  # Enable logging of routing decisions
+  log_routing: true
+
+# ============================================================================
+# METADATA FOR DLOL (Deklarative LLM Orchestration Layer)
+# ============================================================================
+
+metadata:
+  version: "1.0"
+  created: "2025-11-18"
+  purpose: "Semantic routing for vibe-agency playbook system"
+  maintainer: "vibe-agency core team"
+  
+# ============================================================================
+# USAGE NOTES
+# ============================================================================
+#
+# How to add a new route:
+# 1. Add entry to routes list above
+# 2. Create corresponding playbook file (e.g., domains/fintech/banking.yaml)
+# 3. Test with: ./bin/playbook-test.sh "user input here"
+#
+# How semantic matching works:
+# 1. User input gets embedded (vector representation)
+# 2. Cosine similarity computed against all intent_patterns
+# 3. Route with highest similarity (above threshold) wins
+# 4. If multiple routes match, highest priority wins
+# 5. If no match, fallback to STEWARD for analysis
+#
+# Threshold tuning:
+# - 0.90+: Very strict (only exact matches)
+# - 0.80-0.89: Strict (clear semantic match)
+# - 0.70-0.79: Moderate (some flexibility)
+# - 0.60-0.69: Loose (risk of false positives)
+#
+# ============================================================================

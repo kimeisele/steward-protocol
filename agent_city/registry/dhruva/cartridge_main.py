@@ -45,6 +45,13 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
+
+# Constitutional Oath binding
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 from dhruva.tools.truth_matrix import TruthMatrix, Fact, FactAuthority
 from dhruva.tools.genesis_keeper import GenesisKeeper
 from dhruva.tools.reference_resolver import ReferenceResolver
@@ -53,7 +60,7 @@ from dhruva.tools.data_ethics import DataEthicsEnforcer, ResourceMiningPolicy
 logger = logging.getLogger("DHRUVA_ANCHOR")
 
 
-class DhruvaAnchorCartridge(VibeAgent):
+class DhruvaAnchorCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     DHRUVA ANCHOR - The Immutable Truth Reference & Stability System.
 
@@ -85,6 +92,12 @@ class DhruvaAnchorCartridge(VibeAgent):
                 "data_ethics"
             ]
         )
+
+        # Bind to Constitutional Oath (GAD-000 compliance)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            self.oath_sworn = True
+            logger.info("✅ DHRUVA ANCHOR has sworn the Constitutional Oath")
 
         logger.info("🧭 DHRUVA ANCHOR v1.0: Initializing Immutable Reference System")
 

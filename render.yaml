@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: steward-gateway
+    runtime: docker
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: GOVERNANCE_MODE
+        value: SERVERLESS_BYPASS
+      - key: ENV
+        value: production
+      - key: PYTHONPATH
+        value: /app
