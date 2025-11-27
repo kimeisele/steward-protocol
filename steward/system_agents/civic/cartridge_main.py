@@ -29,6 +29,7 @@ from datetime import datetime, timezone
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
+from vibe_core.config import CityConfig, CivicConfig
 
 # Import delegated components
 from .registry_agent import RegistryAgent
@@ -63,8 +64,16 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
     You want credits? Prove you're not spam. Break the rules? License revoked."
     """
 
-    def __init__(self):
-        """Initialize CIVIC (The Bureaucrat) as a VibeAgent."""
+    def __init__(self, config: Optional[CivicConfig] = None):
+        """Initialize CIVIC (The Bureaucrat) as a VibeAgent.
+
+        Args:
+            config: CivicConfig instance from Phoenix Config (optional)
+                   If not provided, CivicConfig defaults are used
+        """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CivicConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="civic",
@@ -81,7 +90,7 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
             ]
         )
 
-        logger.info("🏛️  CIVIC Cartridge initializing (VibeAgent v2.0)...")
+        logger.info(f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
