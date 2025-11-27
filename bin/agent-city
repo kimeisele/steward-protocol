@@ -10,7 +10,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from vibe_core.task_management import TaskManager
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.boot_orchestrator import quick_boot
 
 
 def cmd_task_add(args):
@@ -71,8 +71,8 @@ def cmd_task_list(args):
 def cmd_status(args):
     """Show system status."""
     try:
-        kernel = RealVibeKernel()
-        kernel.boot()
+        # Use unified boot orchestrator (discovers all 23 agents)
+        kernel = quick_boot()
         status = kernel.get_status()
 
         print("✅ Agent City Status:")
