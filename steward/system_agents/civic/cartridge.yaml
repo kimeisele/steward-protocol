@@ -1,0 +1,25 @@
+meta:
+  id: "agent.steward.civic"
+  name: "CIVIC Agent (Governance & Registry)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The System Registry Agent - Manages agent licensing, credits, and lifecycle states"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "licensing"
+    - "registry"
+    - "economy"
+    - "lifecycle_management"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+  - "ecdsa"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

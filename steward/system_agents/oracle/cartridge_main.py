@@ -390,6 +390,18 @@ class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "status": "error",
                 "error": str(e)
             }
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="oracle",
+            name="ORACLE",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="INTROSPECTION",
+            capabilities=['system_state', 'health_check', 'diagnostics']
+        )
+
+
 
     def report_status(self) -> Dict[str, Any]:
         """Report ORACLE status (VibeAgent interface)."""

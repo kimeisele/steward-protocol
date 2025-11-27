@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.mechanic"
+  name: "MECHANIC Agent (SDLC Manager)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Mechanic - Self-diagnosis, self-healing, and SDLC management"
+
+agent:
+  domain: "INFRASTRUCTURE"
+  capabilities:
+    - "system_diagnosis"
+    - "self_healing"
+    - "sdlc_management"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

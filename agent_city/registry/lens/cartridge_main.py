@@ -251,3 +251,14 @@ class LensCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = LensCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "lens",
+            "name": "LENS",
+            "status": "healthy",
+            "domain": "ANALYTICS",
+            "capabilities": ['analytics', 'visualization']
+        }
+
+

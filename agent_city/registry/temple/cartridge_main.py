@@ -25,11 +25,6 @@ try:
 except ImportError:
     OathMixin = None
 
-try:
-    from civic.tools.economy import CivicBank
-except ImportError:
-    CivicBank = None
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TEMPLE_MAIN")
 
@@ -83,14 +78,8 @@ class TempleCartridge(VibeAgent, OathMixin if OathMixin else object):
             self.oath_sworn = True
             logger.info("✅ TEMPLE has sworn the Constitutional Oath")
 
-        # Try to initialize CivicBank for economic tracking
+        # Economic tracking (via kernel/CIVIC agent)
         self.bank = None
-        if CivicBank:
-            try:
-                self.bank = CivicBank()
-                logger.info("✅ TEMPLE connected to CivicBank (economy-aware)")
-            except Exception as e:
-                logger.warning(f"⚠️  CivicBank unavailable: {e}")
 
         # State tracking
         self.blessings_given = 0
@@ -320,3 +309,14 @@ class TempleCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = TempleCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "temple",
+            "name": "TEMPLE",
+            "status": "healthy",
+            "domain": "INFRASTRUCTURE",
+            "capabilities": ['core_services']
+        }
+
+

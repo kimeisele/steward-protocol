@@ -97,6 +97,17 @@ class SupremeCourtCartridge(VibeAgent):
             capabilities=self.capabilities,
             dependencies=["auditor"]
         )
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "supreme_court",
+            "name": "SUPREME_COURT",
+            "status": "healthy",
+            "domain": "GOVERNANCE",
+            "capabilities": ['appeals', 'precedent']
+        }
+
+
 
     def process(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """

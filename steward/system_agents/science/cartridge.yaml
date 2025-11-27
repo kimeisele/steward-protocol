@@ -1,0 +1,24 @@
+meta:
+  id: "agent.steward.science"
+  name: "SCIENTIST Agent (Research & Intelligence)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Research Intelligence Agent - Performs web research and fact synthesis"
+
+agent:
+  domain: "SCIENCE"
+  capabilities:
+    - "research"
+    - "web_search"
+    - "fact_verification"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+  - "tavily-python"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

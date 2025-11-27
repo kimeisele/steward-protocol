@@ -1,0 +1,22 @@
+meta:
+  id: "agent.steward.temple"
+  name: "TEMPLE Agent (Core Services)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Temple of Agent City - Core services and infrastructure"
+
+agent:
+  domain: "INFRASTRUCTURE"
+  capabilities:
+    - "core_services"
+    - "initialization"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

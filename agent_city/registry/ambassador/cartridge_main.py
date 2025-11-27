@@ -271,3 +271,14 @@ class AmbassadorCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = AmbassadorCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "ambassador",
+            "name": "AMBASSADOR",
+            "status": "healthy",
+            "domain": "GOVERNANCE",
+            "capabilities": ['diplomacy', 'external_relations']
+        }
+
+
