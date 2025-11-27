@@ -163,6 +163,18 @@ class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "status": "error",
                 "error": str(e)
             }
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="forum",
+            name="FORUM",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="GOVERNANCE",
+            capabilities=['proposal_management', 'voting', 'consensus_building']
+        )
+
+
 
     def report_status(self) -> Dict[str, Any]:
         """Report FORUM status (VibeAgent interface) - Deep Introspection."""

@@ -109,3 +109,27 @@ STEWARD ensures that the system maintains integrity, transparency, and accountab
 
 **Last Updated**: 2025-11-26
 **Status**: ✅ Active & Operational
+
+
+---
+
+## Cryptographic Signature
+
+**Signed:** ✅ Authorized  
+**Algorithm:** ECDSA-SHA256 (NIST P-256)  
+**Public Key:**
+```
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+MGv3EuueIeVdodPuqnN+b6YQ4WzKFEdcHOav3QRNo+q4ljf480E1PMWHNSYQJ3+ZMpMUolQqWe457wJ4SCWjg==
+```
+
+**Signature:**
+```
+0/WcdOwu2BUiDS7yCpuW1grfXc8dSljehXb3Xb5c35nKV1HH2AplLlc7cjjNbCq8wrVAG9kkbRsArbG3tLnCQA==
+```
+
+**Verification:** `steward verify STEWARD.md`
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+MGv3EuueIeVdodPuqnN+b6YQ4WzKFEdcHOav3QRNo+q4ljf480E1PMWHNSYQJ3+ZMpMUolQqWe457wJ4SCWjg==`
+
+- **key:** `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+MGv3EuueIeVdodPuqnN+b6YQ4WzKFEdcHOav3QRNo+q4ljf480E1PMWHNSYQJ3+ZMpMUolQqWe457wJ4SCWjg==`
+
+<!-- STEWARD_SIGNATURE: uNdSUFRNMSp6z1y0jRHgQA8/3Kzrwy/a7w+DSEtROsCMKjyk0up9ZP/CiDO7/FP+HSmrL/J4G3efTuOgI9woVA== -->

@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.lens"
+  name: "LENS Agent (Analytics & Visualization)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Lens of Agent City - Provides analytics and visualization"
+
+agent:
+  domain: "ANALYTICS"
+  capabilities:
+    - "analytics"
+    - "visualization"
+    - "reporting"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

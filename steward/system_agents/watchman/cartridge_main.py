@@ -285,6 +285,18 @@ class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "status": "error",
                 "error": str(e)
             }
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="watchman",
+            name="WATCHMAN",
+            version=self.version if hasattr(self, 'version') else "1.0.0",
+            domain="MONITORING",
+            capabilities=['monitoring', 'alerts', 'system_integrity']
+        )
+
+
 
     def report_status(self) -> dict:
         """Report WATCHMAN status (VibeAgent interface)."""

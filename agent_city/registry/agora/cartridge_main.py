@@ -326,3 +326,14 @@ class AgoraCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = AgoraCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "agora",
+            "name": "AGORA",
+            "status": "healthy",
+            "domain": "GOVERNANCE",
+            "capabilities": ['public_forum', 'discussion']
+        }
+
+

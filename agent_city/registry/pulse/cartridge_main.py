@@ -219,3 +219,14 @@ class PulseCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = PulseCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "pulse",
+            "name": "PULSE",
+            "status": "healthy",
+            "domain": "MONITORING",
+            "capabilities": ['health_monitoring', 'metrics']
+        }
+
+
