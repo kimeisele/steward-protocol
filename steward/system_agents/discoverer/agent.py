@@ -30,7 +30,7 @@ class Discoverer(VibeAgent):
     The Discoverer Agent is the autonomous administrator of Agent City.
     It runs a background loop to discover and register new agents.
     """
-    def __init__(self, kernel=None):
+    def __init__(self, kernel=None, config=None):
         super().__init__(
             agent_id="steward",
             name="The Steward",
@@ -42,7 +42,8 @@ class Discoverer(VibeAgent):
         self.monitor_thread = None
         self.known_agents = set()
         self.agent_city_path = Path("agent_city")
-        
+        self.config = config  # BLOCKER #0: Phoenix Config integration
+
         # GOVERNANCE GATE: Swear the Oath (Genesis Agent bootstrap)
         self.oath_sworn = True
         self.oath_event = {
@@ -51,7 +52,7 @@ class Discoverer(VibeAgent):
             "signature": "steward_genesis_signature_001",
             "status": "SWORN"
         }
-        
+
         # If kernel is provided during init (optional), set it
         if kernel:
             self.set_kernel(kernel)
