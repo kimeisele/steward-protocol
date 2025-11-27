@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
-from vibe_core.config import CityConfig, CityConfig
+from vibe_core.config import CityConfig
 
 from .tools.introspection_tool import IntrospectionTool, IntrospectionError
 
@@ -46,13 +46,17 @@ class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
     - system_health()
     """
 
-    def __init__(self, bank=None):
+    def __init__(self, bank=None, config: Optional[CityConfig] = None):
         """
         Initialize the Oracle as a VibeAgent.
 
         Args:
             bank: CivicBank instance (for accessing ledgers)
+            config: CityConfig instance from Phoenix Config (optional)
         """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="oracle",
