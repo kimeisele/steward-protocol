@@ -31,6 +31,10 @@ class Task:
     tags: List[str] = field(default_factory=list)
     subtasks: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    # Topology-aware routing fields
+    topology_layer: Optional[str] = None  # Bhu Mandala layer (BRAHMALOKA|JANALOKA|...|BHURLOKA)
+    varna: Optional[str] = None           # Vedic class (BRAHMANA|KSHATRIYA|VAISHYA|SHUDRA)
+    routing_priority: Optional[int] = None # MilkOcean priority (0-3)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert task to dictionary."""
@@ -47,6 +51,9 @@ class Task:
             "tags": self.tags,
             "subtasks": self.subtasks,
             "metadata": self.metadata,
+            "topology_layer": self.topology_layer,
+            "varna": self.varna,
+            "routing_priority": self.routing_priority,
         }
 
 

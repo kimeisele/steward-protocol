@@ -57,6 +57,21 @@ class Agent:
     is_critical: bool = False  # Critical infrastructure (freezes city if compromised)
 
 
+@dataclass
+class AgentPlacement:
+    """Agent placement in Bhu-Mandala topology"""
+    agent_id: str
+    agent_name: str
+    layer: str  # Bhu Mandala layer (BRAHMALOKA, JANALOKA, ..., BHURLOKA)
+    varna: str  # Vedic class (BRAHMANA, KSHATRIYA, VAISHYA, SHUDRA)
+    radius: int  # Distance from center (0-6)
+    angle: int  # Position in ring (0-359)
+    authority_level: int  # Authority level (4-10)
+    is_critical: bool  # Critical infrastructure
+    domain: str  # Agent domain (GOVERNANCE, MEDIA, etc.)
+    role: str  # Agent role description
+
+
 class BhuMandalaTopology:
     """
     The Sacred Geometry of Agent City.
@@ -447,6 +462,67 @@ class BhuMandalaTopology:
 
         return (len(errors) == 0, errors)
 
+    def _get_varsha_to_layer_map(self) -> Dict[str, str]:
+        """Map Varsha to Bhu-Mandala layers (Brahmaloka, Janaloka, etc.)"""
+        return {
+            "ilavrta": "BRAHMALOKA",        # Creators (Brahma's realm)
+            "bhadrashva": "BHADRASHVA",     # Media/Broadcasting
+            "kimpurasha": "KIMPURASHA",     # Creative Builders
+            "hari_varsha": "JANALOKA",      # Knowledge/Research (Wisdom realm)
+            "nishada": "TAPOLOKA",          # Democracy/Voice (Austerity realm)
+            "krauncha": "MAHARLOKA",        # Protection/Audit (Great realm)
+            "loka_loka": "BHURLOKA",        # Boundary/Firewall (Earth realm)
+        }
+
+    def _get_varsha_to_varna_map(self) -> Dict[str, str]:
+        """Map Varsha to primary Vedic class (Varna)"""
+        return {
+            "ilavrta": "BRAHMANA",          # Creators = Brahmins (wisdom)
+            "bhadrashva": "BRAHMANA",       # Media = Brahmins (knowledge)
+            "kimpurasha": "KSHATRIYA",      # Builders = Warriors (action)
+            "hari_varsha": "BRAHMANA",      # Knowledge = Brahmins (wisdom)
+            "nishada": "VAISHYA",           # Democracy = Merchants (many voices)
+            "krauncha": "KSHATRIYA",        # Enforcement = Warriors (protection)
+            "loka_loka": "SHUDRA",          # Boundary = Service (interface)
+        }
+
+    def get_agent_placement(self, agent_id: str) -> Optional[AgentPlacement]:
+        """
+        Get Bhu-Mandala placement for an agent.
+
+        Returns placement information including:
+        - Bhu-Mandala layer (BRAHMALOKA → BHURLOKA)
+        - Vedic class / Varna (BRAHMANA, KSHATRIYA, VAISHYA, SHUDRA)
+        - Topological position (radius, angle)
+        - Authority level (0-10)
+
+        Args:
+            agent_id: Agent identifier (e.g., "herald", "civic")
+
+        Returns:
+            AgentPlacement with all topology information, or None if agent not found
+        """
+        agent = self.get_agent(agent_id)
+        if not agent:
+            return None
+
+        varsha_key = agent.varsha.value
+        layer_map = self._get_varsha_to_layer_map()
+        varna_map = self._get_varsha_to_varna_map()
+
+        return AgentPlacement(
+            agent_id=agent_id.lower(),
+            agent_name=agent.name,
+            layer=layer_map.get(varsha_key, "UNKNOWN"),
+            varna=varna_map.get(varsha_key, "UNKNOWN"),
+            radius=agent.radius,
+            angle=agent.angle,
+            authority_level=self.authority_level(agent_id),
+            is_critical=agent.is_critical,
+            domain=agent.domain,
+            role=agent.role,
+        )
+
     def __repr__(self) -> str:
         return f"BhuMandalaTopology({len(self.agents)} agents, {len(self.get_critical_agents())} critical)"
 
@@ -464,6 +540,26 @@ def get_topology() -> BhuMandalaTopology:
         if not is_valid:
             logger.warning(f"Topology validation errors: {errors}")
     return _topology_instance
+
+
+def get_agent_placement(agent_id: str) -> Optional[AgentPlacement]:
+    """
+    Get the Bhu-Mandala placement for an agent.
+
+    This is the main entry point for TaskManager to wire topology awareness
+    into task routing. Returns complete placement information including:
+    - Bhu-Mandala layer (BRAHMALOKA → BHURLOKA)
+    - Vedic class / Varna (BRAHMANA, KSHATRIYA, VAISHYA, SHUDRA)
+    - Authority level (4-10)
+
+    Args:
+        agent_id: Agent identifier (e.g., "herald", "civic")
+
+    Returns:
+        AgentPlacement with topology information, or None if not found
+    """
+    topology = get_topology()
+    return topology.get_agent_placement(agent_id)
 
 
 def print_mandala():

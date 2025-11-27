@@ -15,17 +15,19 @@ from .batch_operations import BatchOperations
 from .next_task_generator import NextTaskGenerator
 from .export_engine import ExportEngine
 from vibe_core.narasimha import get_narasimha, ThreatLevel
+from vibe_core.topology import get_agent_placement
 
 
 class TaskManager:
     """Main task management system."""
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path, milk_ocean_router=None):
         """
         Initialize task manager.
 
         Args:
             project_root: Root directory of the project
+            milk_ocean_router: Optional MilkOceanRouter instance for request routing
         """
         self.project_root = Path(project_root)
         self.tasks_dir = self.project_root / ".vibe" / "state"
@@ -42,6 +44,16 @@ class TaskManager:
         self.metrics_collector = MetricsCollector()
         self.archive = TaskArchive(self.tasks_dir / "archive")
         self.lock = FileLock(self.tasks_dir / ".lock")
+
+        # MilkOcean Router for task request routing (Gap 4.1 closure)
+        self.milk_ocean_router = milk_ocean_router
+        if not self.milk_ocean_router:
+            try:
+                from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+                self.milk_ocean_router = MilkOceanRouter()
+            except ImportError:
+                # MilkOceanRouter not available, fall back to None
+                self.milk_ocean_router = None
 
         # Load data
         self.tasks: Dict[str, Task] = {}
@@ -124,17 +136,18 @@ class TaskManager:
         except Exception as e:
             print(f"Error saving mission: {e}")
 
-    def add_task(self, title: str, description: str = "", priority: int = 0) -> Task:
+    def add_task(self, title: str, description: str = "", priority: int = 0, assigned_agent: Optional[str] = None) -> Task:
         """
-        Add a new task.
+        Add a new task with topology-aware routing.
 
         Args:
             title: Task title
             description: Task description
             priority: Task priority (0-100)
+            assigned_agent: Optional agent ID to assign task to (e.g., "herald", "civic")
 
         Returns:
-            The created task
+            The created task with topology annotations
 
         Raises:
             ValidationError if task is invalid or blocked by Narasimha
@@ -160,7 +173,18 @@ class TaskManager:
             description=description,
             priority=priority,
             status=TaskStatus.PENDING,
+            assignee=assigned_agent,
         )
+
+        # NEW: Topology-aware routing (Gap 4.1 closure)
+        if assigned_agent:
+            placement = get_agent_placement(assigned_agent)
+            if placement:
+                # Annotate task with Bhu-Mandala placement
+                task.topology_layer = placement.layer
+                task.varna = placement.varna
+                # routing_priority set by MilkOcean if available (0-3)
+                task.routing_priority = 1  # Default medium priority
 
         # Validate
         self.validator_registry.validate_task(task)
