@@ -284,6 +284,9 @@ class TaskManager:
                 f"Task blocked by Narasimha (Adharma Block): {threat.description}"
             )
 
+        # Auto-link to active roadmap if no roadmap_id provided
+        final_roadmap_id = roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+
         task = Task(
             id=str(uuid.uuid4()),
             title=title,
@@ -291,6 +294,7 @@ class TaskManager:
             priority=priority,
             status=TaskStatus.PENDING,
             assignee=assigned_agent,
+            roadmap_id=final_roadmap_id,
         )
 
         # NEW: Topology-aware routing (Gap 4.1 closure)
