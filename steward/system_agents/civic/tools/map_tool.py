@@ -91,7 +91,7 @@ class MapTool:
         """Extract imports from other agents."""
         imports = set()
 
-        # Find all imports like: from herald.tools.X import Y
+        # Find all imports like: from steward.system_agents.herald.tools.X import Y
         # or: from civic.cartridge_main import CivicCartridge
         pattern = r'from\s+([\w.]+)\s+import'
         matches = re.findall(pattern, content)

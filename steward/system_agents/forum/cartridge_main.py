@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 from vibe_core import VibeAgent, Task
 
 # Civic imports for license operations
-from civic.tools.license_tool import LicenseType
+from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # Constitutional Oath
 try:

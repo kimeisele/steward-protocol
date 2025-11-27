@@ -52,10 +52,10 @@ try:
 except ImportError:
     OathMixin = None
 
-from dhruva.tools.truth_matrix import TruthMatrix, Fact, FactAuthority
-from dhruva.tools.genesis_keeper import GenesisKeeper
-from dhruva.tools.reference_resolver import ReferenceResolver
-from dhruva.tools.data_ethics import DataEthicsEnforcer, ResourceMiningPolicy
+from .tools.truth_matrix import TruthMatrix, Fact, FactAuthority
+from .tools.genesis_keeper import GenesisKeeper
+from .tools.reference_resolver import ReferenceResolver
+from .tools.data_ethics import DataEthicsEnforcer, ResourceMiningPolicy
 
 logger = logging.getLogger("DHRUVA_ANCHOR")
 

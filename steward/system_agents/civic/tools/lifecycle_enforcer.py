@@ -22,8 +22,8 @@ from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
-from civic.tools.economy import CivicBank
+from .lifecycle_manager import LifecycleManager, LifecycleStatus
+from .economy import CivicBank
 
 logger = logging.getLogger("LIFECYCLE_ENFORCER")
 

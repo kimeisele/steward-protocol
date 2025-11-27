@@ -17,8 +17,8 @@ Standalone Execution:
     python herald/shim.py --action publish
 """
 
-from herald.cartridge_main import HeraldCartridge
-from herald.tools import ResearchTool, ContentTool, BroadcastTool
+from .cartridge_main import HeraldCartridge
+from .tools import ResearchTool, ContentTool, BroadcastTool
 
 __version__ = "3.0.0"
 __author__ = "Steward Protocol"

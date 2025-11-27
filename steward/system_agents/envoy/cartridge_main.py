@@ -25,12 +25,12 @@ from pathlib import Path
 from vibe_core import VibeAgent, Task
 
 # Envoy's toolset
-from envoy.tools.city_control_tool import CityControlTool
-from envoy.tools.diplomacy_tool import DiplomacyTool
-from envoy.tools.curator_tool import CuratorTool
-from envoy.tools.run_campaign_tool import RunCampaignTool
-from envoy.tools.gap_report_tool import GAPReportTool
-from envoy.tools.hil_assistant_tool import HILAssistantTool
+from .tools.city_control_tool import CityControlTool
+from .tools.diplomacy_tool import DiplomacyTool
+from .tools.curator_tool import CuratorTool
+from .tools.run_campaign_tool import RunCampaignTool
+from .tools.gap_report_tool import GAPReportTool
+from .tools.hil_assistant_tool import HILAssistantTool
 
 # Constitutional Oath
 try:

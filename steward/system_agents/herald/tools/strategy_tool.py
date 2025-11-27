@@ -23,7 +23,7 @@ try:
 except ImportError:
     OpenAI = None
 
-from herald.governance import HeraldConstitution
+from .governance import HeraldConstitution
 
 logger = logging.getLogger("HERALD_STRATEGY")
 

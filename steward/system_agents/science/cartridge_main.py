@@ -31,7 +31,7 @@ from pathlib import Path
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from science.tools.web_search_tool import WebSearchTool, SearchResult
+from .tools.web_search_tool import WebSearchTool, SearchResult
 
 # Constitutional Oath
 try:

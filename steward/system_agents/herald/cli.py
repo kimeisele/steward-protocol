@@ -21,7 +21,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 
-from herald.core.agency_director import AgencyDirector
+from .core.agency_director import AgencyDirector
 
 # Setup logging
 logging.basicConfig(
