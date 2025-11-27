@@ -24,7 +24,7 @@ from vibe_core.scheduling import Task
 
 logger = logging.getLogger("STEWARD")
 
-class DiscovererAgent(VibeAgent):
+class Discoverer(VibeAgent):
     """
     The Discoverer Agent is the autonomous administrator of Agent City.
     It runs a background loop to discover and register new agents.
@@ -212,4 +212,7 @@ class GenericAgent(VibeAgent):
 
 # Make it importable
 def get_steward():
-    return DiscovererAgent()
+    return Discoverer()
+
+# Backward compatibility alias (deprecated)
+DiscovererAgent = Discoverer
