@@ -7,12 +7,8 @@ for all vibe-agency components. No implementations here.
 Protocol Modules:
 - agent: VibeAgent ABC
 - ledger: VibeLedger ABC
-- playbook: Playbook and related ABCs
-- store: Store ABC
 - scheduler: VibeScheduler ABC
 - registry: ManifestRegistry ABC
-- oath: OathProtocol (Constitutional oath interface)
-- config: Configuration protocol (CityConfig)
 
 These are pure interfaces. All implementations belong in Layer 2.
 All wiring belongs in Layer 3 (runtime/).
@@ -20,20 +16,19 @@ All wiring belongs in Layer 3 (runtime/).
 BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
-from .agent import VibeAgent, AgentManifest, Task
-from .ledger import VibeLedger
-from .playbook import Playbook
-from .store import VibeStore
-from .scheduler import VibeScheduler
-from .registry import ManifestRegistry
+from .agent import VibeAgent, AgentManifest, AgentResponse, Capability
+from .ledger import VibeLedger, VibeScheduler, VibeKernel, ManifestRegistry, KernelStatus
+from .registry import ManifestRegistry as _ManifestRegistry  # Avoid duplicate
+from .scheduler import VibeScheduler as _VibeScheduler  # Avoid duplicate
 
 __all__ = [
     "VibeAgent",
     "AgentManifest",
-    "Task",
+    "AgentResponse",
+    "Capability",
     "VibeLedger",
-    "Playbook",
-    "VibeStore",
     "VibeScheduler",
+    "VibeKernel",
     "ManifestRegistry",
+    "KernelStatus",
 ]

@@ -21,17 +21,12 @@ from datetime import datetime
 from vibe_core import VibeAgent, Task
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("LENS_MAIN")
 
 
-class LensCartridge(VibeAgent, OathMixin if OathMixin else object):
+class LensCartridge(VibeAgent):
     """
     LENS Agent Cartridge.
     Campaign Analytics & Quantitative Data Strategy.

@@ -27,8 +27,6 @@ import asyncio
 from pathlib import Path
 
 # Import Core Definitions
-try:
-    from vibe_core.kernel import VibeKernel
     from vibe_core.scheduling import Task
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
@@ -36,10 +34,6 @@ except ImportError:
     Task = Any
 
 # Import Event Bus (Prana for visualization)
-try:
-    from vibe_core.event_bus import emit_event
-except ImportError:
-    emit_event = None
 
 # Import Strategy Pattern Engines (GAD-7000: NEURAL INJECTION)
 try:

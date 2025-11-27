@@ -21,11 +21,6 @@ from enum import Enum
 
 from vibe_core import VibeAgent, Task
 
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MARKET_MAIN")
 
@@ -40,7 +35,7 @@ class ServiceType(Enum):
     BROADCASTING = "broadcasting"   # Pulse broadcasting
 
 
-class MarketCartridge(VibeAgent, OathMixin if OathMixin else object):
+class MarketCartridge(VibeAgent):
     """
     MARKET System Cartridge.
     The Exchange Economy (Vaishya Function).

@@ -21,7 +21,7 @@ be orchestrated by the Kernel using the same dispatch mechanism as LLM agents.
 import logging
 from pathlib import Path
 
-from vibe_core.agent_protocol import AgentResponse, VibeAgent
+from vibe_core.protocols import AgentResponse, VibeAgent
 from vibe_core.scheduling import Task
 from vibe_core.specialists.base_specialist import BaseSpecialist, MissionContext, SpecialistResult
 

@@ -37,17 +37,12 @@ from .economy_agent import EconomyAgent
 from .lifecycle_agent import LifecycleAgent
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CIVIC_MAIN")
 
 
-class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
+class CivicCartridge(VibeAgent):
     """
     The CIVIC Agent Cartridge (The Bureaucrat).
 
@@ -175,7 +170,7 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="civic",
             name="CIVIC",

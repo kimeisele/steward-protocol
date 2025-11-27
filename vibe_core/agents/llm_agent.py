@@ -11,7 +11,7 @@ import json
 import logging
 from typing import Any, Optional
 
-from vibe_core.agent_protocol import AgentResponse, VibeAgent
+from vibe_core.protocols import AgentResponse, VibeAgent
 from vibe_core.llm import LLMProvider
 from vibe_core.scheduling import Task
 

@@ -362,13 +362,11 @@ class GraphExecutor:
 
         try:
             from vibe_core.config import get_config
-
             config = get_config()
             live_fire_enabled = config.safety.live_fire_enabled
-        except ImportError:
+        except (ImportError, AttributeError):
             # Fallback: Use environment variable if Phoenix config unavailable
             import os
-
             live_fire_enabled = os.getenv("VIBE_LIVE_FIRE", "false").lower() == "true"
 
         node = graph.nodes[node_id]

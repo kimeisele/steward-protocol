@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from vibe_core.cartridges.base import CartridgeBase
-from vibe_core.kernel import VibeKernel
+from vibe_core.protocols import VibeKernel
 from vibe_core.scheduling import Task
 
 logger = logging.getLogger(__name__)

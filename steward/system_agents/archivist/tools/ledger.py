@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 
 # BLOCKER #1: Import canonical VibeLedger ABC
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-from vibe_core.kernel import VibeLedger
+from vibe_core.protocols import VibeLedger
 
 logger = logging.getLogger("ARCHIVIST_LEDGER")
 

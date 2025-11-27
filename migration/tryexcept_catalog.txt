@@ -1,0 +1,227 @@
+vibe_core/cartridges/archivist/cartridge_main.py-                            text.append(page.extract_text())
+vibe_core/cartridges/archivist/cartridge_main.py-                    return "\n".join(text)
+vibe_core/cartridges/archivist/cartridge_main.py:                except ImportError:
+--
+vibe_core/playbook/executor.py-            config = get_config()
+vibe_core/playbook/executor.py-            live_fire_enabled = config.safety.live_fire_enabled
+vibe_core/playbook/executor.py:        except ImportError:
+--
+vibe_core/playbook/runner.py-                self.orchestrator = CoreOrchestrator(repo_root=repo_root)
+vibe_core/playbook/runner.py-                logger.info("Lazy-loaded CoreOrchestrator")
+vibe_core/playbook/runner.py:            except ImportError as e:
+--
+vibe_core/tools/tool_registry.py-try:
+vibe_core/tools/tool_registry.py-    from vibe_core.governance.invariants import InvariantChecker, SoulResult
+vibe_core/tools/tool_registry.py:except ImportError:
+--
+vibe_core/kernel_impl.py-    from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
+vibe_core/kernel_impl.py-    AUDITOR_AVAILABLE = True
+vibe_core/kernel_impl.py:except ImportError:
+--
+vibe_core/kernel_impl.py-    from vibe_core.bridge import ConstitutionalOath
+vibe_core/kernel_impl.py-    OATH_ENFORCEMENT_AVAILABLE = True
+vibe_core/kernel_impl.py:except ImportError:
+--
+vibe_core/specialists/base_specialist.py-            return playbook
+vibe_core/specialists/base_specialist.py-
+vibe_core/specialists/base_specialist.py:        except ImportError:
+--
+vibe_core/specialists/base_specialist.py-            return response.content
+vibe_core/specialists/base_specialist.py-
+vibe_core/specialists/base_specialist.py:        except ImportError as e:
+--
+vibe_core/task_management/task_manager.py-                from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+vibe_core/task_management/task_manager.py-                self.milk_ocean_router = MilkOceanRouter()
+vibe_core/task_management/task_manager.py:            except ImportError:
+--
+vibe_core/runtime/quota_manager.py-
+vibe_core/runtime/quota_manager.py-    _PHOENIX_AVAILABLE = True
+vibe_core/runtime/quota_manager.py:except ImportError:
+--
+vibe_core/runtime/prompt_runtime.py-    else:
+vibe_core/runtime/prompt_runtime.py-        raise ImportError(f"workspace_utils.py not found at {_WORKSPACE_UTILS_PATH}")
+vibe_core/runtime/prompt_runtime.py:except ImportError as e:
+--
+vibe_core/runtime/prompt_registry.py-    else:
+vibe_core/runtime/prompt_registry.py-        raise ImportError(f"workspace_utils.py not found at {_WORKSPACE_UTILS_PATH}")
+vibe_core/runtime/prompt_registry.py:except ImportError as e:
+--
+vibe_core/runtime/providers/anthropic.py-            self.client = Anthropic(api_key=self.api_key)
+vibe_core/runtime/providers/anthropic.py-            logger.info("Anthropic provider initialized successfully")
+vibe_core/runtime/providers/anthropic.py:        except ImportError as e:
+--
+vibe_core/runtime/providers/google.py-            self.genai = genai
+vibe_core/runtime/providers/google.py-            logger.info("Google Gemini provider initialized successfully (transport=REST)")
+vibe_core/runtime/providers/google.py:        except ImportError as e:
+--
+steward/system_agents/forum/cartridge_main.py-try:
+steward/system_agents/forum/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/forum/cartridge_main.py:except ImportError:
+--
+steward/system_agents/scribe/cartridge_main.py-try:
+steward/system_agents/scribe/cartridge_main.py-    from vibe_core import VibeAgent, Task, AgentManifest
+steward/system_agents/scribe/cartridge_main.py:except ImportError:
+--
+steward/system_agents/scribe/cartridge_main.py-try:
+steward/system_agents/scribe/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/scribe/cartridge_main.py:except ImportError:
+--
+steward/system_agents/civic/tools/license_tool.py-try:
+steward/system_agents/civic/tools/license_tool.py-    from steward.constitutional_oath import ConstitutionalOath
+steward/system_agents/civic/tools/license_tool.py:except ImportError:
+--
+steward/system_agents/civic/cartridge_main.py-try:
+steward/system_agents/civic/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/civic/cartridge_main.py:except ImportError:
+--
+steward/system_agents/civic/lifecycle_agent.py-    from .tools.lifecycle_manager import LifecycleStatus
+steward/system_agents/civic/lifecycle_agent.py-    LIFECYCLE_AVAILABLE = True
+steward/system_agents/civic/lifecycle_agent.py:except ImportError as e:
+--
+steward/system_agents/science/tools/web_search_tool.py-try:
+steward/system_agents/science/tools/web_search_tool.py-    from tavily import TavilyClient
+steward/system_agents/science/tools/web_search_tool.py:except ImportError:
+--
+steward/system_agents/science/cartridge_main.py-try:
+steward/system_agents/science/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/science/cartridge_main.py:except ImportError:
+--
+steward/system_agents/herald/capabilities/broadcast.py-try:
+steward/system_agents/herald/capabilities/broadcast.py-    import tweepy
+steward/system_agents/herald/capabilities/broadcast.py:except ImportError:
+--
+steward/system_agents/herald/manifesto.py-try:
+steward/system_agents/herald/manifesto.py-    from herald.cartridge_main import HeraldCartridge
+steward/system_agents/herald/manifesto.py:except ImportError as e:
+--
+steward/system_agents/herald/manifesto.py-try:
+steward/system_agents/herald/manifesto.py-    from openai import OpenAI
+steward/system_agents/herald/manifesto.py:except ImportError:
+--
+steward/system_agents/herald/tools/research_tool.py-try:
+steward/system_agents/herald/tools/research_tool.py-    from tavily import TavilyClient
+steward/system_agents/herald/tools/research_tool.py:except ImportError:
+--
+steward/system_agents/herald/tools/strategy_tool.py-try:
+steward/system_agents/herald/tools/strategy_tool.py-    from openai import OpenAI
+steward/system_agents/herald/tools/strategy_tool.py:except ImportError:
+--
+steward/system_agents/herald/tools/broadcast_tool.py-try:
+steward/system_agents/herald/tools/broadcast_tool.py-    import tweepy
+steward/system_agents/herald/tools/broadcast_tool.py:except ImportError:
+--
+steward/system_agents/herald/tools/broadcast_tool.py-try:
+steward/system_agents/herald/tools/broadcast_tool.py-    import praw
+steward/system_agents/herald/tools/broadcast_tool.py:except ImportError:
+--
+steward/system_agents/herald/tools/identity_tool.py-    from steward.client import StewardClient
+steward/system_agents/herald/tools/identity_tool.py-    from steward import crypto
+steward/system_agents/herald/tools/identity_tool.py:except ImportError:
+--
+steward/system_agents/herald/tools/content_tool.py-try:
+steward/system_agents/herald/tools/content_tool.py-    from openai import OpenAI
+steward/system_agents/herald/tools/content_tool.py:except ImportError:
+--
+steward/system_agents/herald/core/agency_director.py-try:
+steward/system_agents/herald/core/agency_director.py-    from steward.system_agents.archivist.tools.audit_tool import AuditTool
+steward/system_agents/herald/core/agency_director.py:except ImportError:
+--
+steward/system_agents/herald/core/memory.py-try:
+steward/system_agents/herald/core/memory.py-    from steward.crypto import sign_content
+steward/system_agents/herald/core/memory.py:except ImportError:
+--
+steward/system_agents/herald/cartridge_main.py-try:
+steward/system_agents/herald/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/herald/cartridge_main.py:except ImportError:
+--
+steward/system_agents/watchman/cartridge_main.py-try:
+steward/system_agents/watchman/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/watchman/cartridge_main.py:except ImportError:
+--
+steward/system_agents/archivist/tools/audit_tool.py-try:
+steward/system_agents/archivist/tools/audit_tool.py-    from steward import crypto
+steward/system_agents/archivist/tools/audit_tool.py:except ImportError:
+--
+steward/system_agents/archivist/cartridge_main.py-try:
+steward/system_agents/archivist/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/archivist/cartridge_main.py:except ImportError:
+--
+steward/system_agents/engineer/cartridge_main.py-try:
+steward/system_agents/engineer/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/engineer/cartridge_main.py:except ImportError:
+--
+steward/system_agents/chronicle/cartridge_main.py-try:
+steward/system_agents/chronicle/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/chronicle/cartridge_main.py:except ImportError:
+--
+steward/system_agents/auditor/cartridge_main.py-try:
+steward/system_agents/auditor/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/auditor/cartridge_main.py:except ImportError:
+--
+steward/system_agents/envoy/tools/diplomacy_tool.py-        try:
+steward/system_agents/envoy/tools/diplomacy_tool.py-            from github import Github
+steward/system_agents/envoy/tools/diplomacy_tool.py:        except ImportError:
+--
+steward/system_agents/envoy/tools/curator_tool.py-        try:
+steward/system_agents/envoy/tools/curator_tool.py-            from github import Github
+steward/system_agents/envoy/tools/curator_tool.py:        except ImportError:
+--
+steward/system_agents/envoy/deterministic_executor.py-            from services.llm_engine import llm
+steward/system_agents/envoy/deterministic_executor.py-            self.llm = llm
+steward/system_agents/envoy/deterministic_executor.py:        except ImportError:
+--
+steward/system_agents/envoy/cartridge_main.py-try:
+steward/system_agents/envoy/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/envoy/cartridge_main.py:except ImportError:
+--
+steward/system_agents/supreme_court/cartridge_main.py-try:
+steward/system_agents/supreme_court/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/supreme_court/cartridge_main.py:except ImportError:
+--
+steward/system_agents/oracle/cartridge_main.py-try:
+steward/system_agents/oracle/cartridge_main.py-    from steward.oath_mixin import OathMixin
+steward/system_agents/oracle/cartridge_main.py:except ImportError:
+--
+steward/game/card_generator.py-try:
+steward/game/card_generator.py-    from PIL import Image, ImageDraw, ImageFont
+steward/game/card_generator.py:except ImportError:
+--
+steward/cli.py-    from rich.panel import Panel
+steward/cli.py-    from rich.table import Table
+steward/cli.py:except ImportError:
+--
+provider/semantic_router.py-            logger.info("✓ Semantic model loaded and cached")
+provider/semantic_router.py-            return _model
+provider/semantic_router.py:        except ImportError:
+--
+provider/llm_engine_adapter.py-try:
+provider/llm_engine_adapter.py-    from services.llm_engine import LLMEngine as BaseLLMEngine
+provider/llm_engine_adapter.py:except ImportError:
+--
+provider/universal_provider.py-    from vibe_core.kernel import VibeKernel
+provider/universal_provider.py-    from vibe_core.scheduling import Task
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from vibe_core.event_bus import emit_event
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from provider.reflex_engine import ReflexEngine
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from provider.llm_engine_adapter import LLMEngineAdapter
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from provider.semantic_router import SemanticRouter
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from services.llm_engine import llm
+provider/universal_provider.py:except ImportError:
+--
+provider/universal_provider.py-try:
+provider/universal_provider.py-    from envoy.deterministic_executor import DeterministicExecutor
+provider/universal_provider.py:except ImportError:

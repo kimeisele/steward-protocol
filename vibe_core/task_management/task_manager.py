@@ -55,9 +55,7 @@ class TaskManager:
         # MilkOcean Router for task request routing (Gap 4.1 closure)
         self.milk_ocean_router = milk_ocean_router
         if not self.milk_ocean_router:
-            try:
-                from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
-                self.milk_ocean_router = MilkOceanRouter()
+                            self.milk_ocean_router = MilkOceanRouter()
             except ImportError:
                 # MilkOceanRouter not available, fall back to None
                 self.milk_ocean_router = None

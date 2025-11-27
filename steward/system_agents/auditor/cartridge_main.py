@@ -14,22 +14,17 @@ import os
 import ast
 import subprocess
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
-from vibe_core.config import CityConfig, CityConfig
+from vibe_core.protocols import VibeAgent, AgentManifest
+from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
-class AuditorCartridge(VibeAgent, OathMixin if OathMixin else object):
+class AuditorCartridge(VibeAgent):
     """
     AUDITOR - The Quality Gate Agent.
 

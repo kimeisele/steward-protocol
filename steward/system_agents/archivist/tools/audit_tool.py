@@ -11,10 +11,6 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger("ARCHIVIST_AUDIT")
 
-try:
-    from steward import crypto
-except ImportError:
-    crypto = None
     logger.warning("⚠️  Steward crypto module not available")
 
 

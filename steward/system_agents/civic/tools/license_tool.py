@@ -24,10 +24,6 @@ from enum import Enum
 logger = logging.getLogger("CIVIC_LICENSE")
 
 # Import constitutional oath verification
-try:
-    from steward.constitutional_oath import ConstitutionalOath
-except ImportError:
-    ConstitutionalOath = None
 
 
 class LicenseType(Enum):

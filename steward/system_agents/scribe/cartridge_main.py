@@ -26,10 +26,6 @@ from pathlib import Path
 
 # VibeOS Integration
 from vibe_core.config import CityConfig
-try:
-    from vibe_core import VibeAgent, Task, AgentManifest
-except ImportError:
-    # Fallback for testing without vibe_core
     class VibeAgent:
         def __init__(self, agent_id, name, version, author, description, domain, capabilities):
             self.agent_id = agent_id
@@ -56,17 +52,12 @@ from .tools.help_renderer import HelpRenderer
 from .tools.readme_renderer import ReadmeRenderer
 
 # Constitutional Oath (optional)
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCRIBE_CARTRIDGE")
 
 
-class ScribeCartridge(VibeAgent, OathMixin if OathMixin else object):
+class ScribeCartridge(VibeAgent):
     """
     The SCRIBE Agent Cartridge (The Documentarian).
 
