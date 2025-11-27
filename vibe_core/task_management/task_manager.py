@@ -14,6 +14,7 @@ from .archive import TaskArchive
 from .batch_operations import BatchOperations
 from .next_task_generator import NextTaskGenerator
 from .export_engine import ExportEngine
+from vibe_core.narasimha import get_narasimha, ThreatLevel
 
 
 class TaskManager:
@@ -136,8 +137,23 @@ class TaskManager:
             The created task
 
         Raises:
-            ValidationError if task is invalid
+            ValidationError if task is invalid or blocked by Narasimha
         """
+        # Security check: Scan task content through Narasimha (Adharma Block)
+        narasimha = get_narasimha()
+        task_content = f"{title}\n{description}"
+
+        threat = narasimha.audit_agent(
+            agent_id="TASK_MANAGER",
+            agent_code=task_content,
+            agent_state={}
+        )
+
+        if threat and threat.severity.value in ["red", "apocalypse"]:
+            raise ValidationError(
+                f"Task blocked by Narasimha (Adharma Block): {threat.description}"
+            )
+
         task = Task(
             id=str(uuid.uuid4()),
             title=title,

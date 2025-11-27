@@ -49,6 +49,19 @@ class Element(Enum):
     PRITHVI = "prithvi"    # Earth (Persistence/Database)
 
 
+class Cycle(Enum):
+    """The Cycle of Brahma - Creation and Maintenance Cycles
+
+    From Brahma Purana: The day-night cycle of Brahma
+    - DAY_OF_BRAHMA (Brahmakalpa): Creation, innovation, new task creation (4.32 billion years)
+    - NIGHT_OF_BRAHMA (Brahmakalpa night): Maintenance, consolidation, bug fixes only
+
+    Used to restrict task types based on cosmic timing.
+    """
+    DAY_OF_BRAHMA = "day"      # Creation cycle - allow all task types
+    NIGHT_OF_BRAHMA = "night"  # Maintenance cycle - only allow maintenance tasks
+
+
 @dataclass
 class SargaPhase:
     """A single phase of creation"""
@@ -99,6 +112,10 @@ class SargaBootSequence:
         self.boot_complete = False
         self.phase_handlers: Dict[Element, Callable] = {}
 
+        # Cycle of Brahma - determines what tasks are allowed
+        # By default, we're in DAY_OF_BRAHMA (creation cycle)
+        self.current_cycle: Cycle = Cycle.DAY_OF_BRAHMA
+
         # Define the standard phases
         self._initialize_phases()
 
@@ -136,6 +153,15 @@ class SargaBootSequence:
             agent_id="CIVIC",
             description="Earth/Solidity: Database mounts (persistent reality)",
         )
+
+    def set_cycle(self, cycle: Cycle) -> None:
+        """Set the current Cycle of Brahma (creation or maintenance)"""
+        self.current_cycle = cycle
+        logger.info(f"🔄 Cycle of Brahma set to: {cycle.value.upper()}")
+
+    def get_cycle(self) -> Cycle:
+        """Get the current Cycle of Brahma"""
+        return self.current_cycle
 
     def register_phase_handler(self, element: Element, handler: Callable) -> None:
         """

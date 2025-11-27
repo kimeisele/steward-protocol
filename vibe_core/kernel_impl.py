@@ -32,6 +32,7 @@ from .kernel import (
 from .agent_protocol import VibeAgent, AgentManifest
 from .scheduling import Task, TaskStatus
 from .ledger import InMemoryLedger, SQLiteLedger
+from .sarga import get_sarga, Cycle
 
 # Import Auditor for immune system
 try:
@@ -56,7 +57,26 @@ logger = logging.getLogger("VIBE_KERNEL")
 
 
 class InMemoryScheduler(VibeScheduler):
-    """FIFO Task Scheduler - Real-time queue management"""
+    """FIFO Task Scheduler - Real-time queue management
+
+    PHASE 3 WIRING: Respects Sarga Cycle (Brahma's creation/maintenance cycles)
+    - DAY_OF_BRAHMA: All task types allowed (creation, implementation, features)
+    - NIGHT_OF_BRAHMA: Only maintenance tasks allowed (bugfix, refactor, maintenance)
+    """
+
+    # Task types allowed during NIGHT_OF_BRAHMA
+    MAINTENANCE_TASK_TYPES = {
+        "bugfix",
+        "fix",
+        "maintenance",
+        "refactor",
+        "cleanup",
+        "optimization",
+        "performance",
+        "security",
+        "test",
+        "debug",
+    }
 
     def __init__(self):
         self.queue: deque = deque()
@@ -64,7 +84,34 @@ class InMemoryScheduler(VibeScheduler):
         self.completed: Dict[str, Task] = {}
 
     def submit_task(self, task: Task) -> str:
-        """Submit task to queue, return task_id"""
+        """Submit task to queue, return task_id
+
+        PHASE 3: Checks Sarga cycle before allowing task submission
+        """
+        # Get current Brahma cycle
+        sarga = get_sarga()
+        current_cycle = sarga.get_cycle()
+
+        # During NIGHT_OF_BRAHMA, restrict task types
+        if current_cycle == Cycle.NIGHT_OF_BRAHMA:
+            task_type = task.payload.get("type", "").lower() if task.payload else ""
+
+            # Check if task type is allowed during night cycle
+            if task_type and task_type not in self.MAINTENANCE_TASK_TYPES:
+                logger.warning(
+                    f"🌙 Task {task.task_id} blocked: type '{task_type}' not allowed during NIGHT_OF_BRAHMA. "
+                    f"Only maintenance tasks permitted."
+                )
+                raise ValueError(
+                    f"Task type '{task_type}' not allowed during NIGHT_OF_BRAHMA. "
+                    f"Only maintenance tasks are permitted: {', '.join(self.MAINTENANCE_TASK_TYPES)}"
+                )
+
+            logger.info(f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)")
+
+        elif current_cycle == Cycle.DAY_OF_BRAHMA:
+            logger.info(f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)")
+
         self.queue.append(task)
         logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
         return task.task_id

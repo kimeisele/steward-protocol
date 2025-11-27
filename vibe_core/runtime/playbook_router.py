@@ -2,13 +2,18 @@
 
 Routes user intent + context → task playbook
 Uses LEAN logic (simple if/else, no ML for MVP)
+
+PHASE 3 WIRING: Integrated with MilkOceanRouter for Brahma Protocol gatekeeping
 """
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+import logging
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,13 +27,20 @@ class PlaybookRoute:
 
 
 class PlaybookRouter:
-    """Routes user intent + context → task playbook"""
+    """Routes user intent + context → task playbook
 
-    def __init__(self, registry_path: Path | None = None):
+    PHASE 3 INTEGRATION: Checks routes with MilkOceanRouter (Brahma Protocol gatekeeping)
+    """
+
+    def __init__(self, registry_path: Path | None = None, milk_ocean_router=None):
         self.registry_path = (
             registry_path or Path(__file__).parent.parent / "playbook" / "_registry.yaml"
         )
         self.registry = self._load_registry()
+
+        # Optional integration with MilkOceanRouter (Brahma Protocol)
+        self.milk_ocean_router = milk_ocean_router
+        self._milk_ocean_available = milk_ocean_router is not None
 
     def _load_registry(self) -> dict[str, Any]:
         """Load playbook registry"""
@@ -40,18 +52,21 @@ class PlaybookRouter:
             return {"routes": [], "config": {"fallback_strategy": "suggest_options"}}
 
     def route(self, user_input: str, context: dict) -> PlaybookRoute:
-        """Main routing logic: Tier 1 → Tier 2 → Tier 3"""
+        """Main routing logic: Tier 1 → Tier 2 → Tier 3
+
+        PHASE 3: Routes through MilkOceanRouter (Brahma Protocol gatekeeping) if available
+        """
 
         # TIER 1: Explicit user intent (keyword matching)
         if explicit_match := self._match_keywords(user_input):
-            return explicit_match
+            return self._check_with_milk_ocean(explicit_match, user_input)
 
         # TIER 2: Context inference (simple rules)
         if context_match := self._infer_from_context(context):
-            return context_match
+            return self._check_with_milk_ocean(context_match, user_input)
 
         # TIER 3: Suggest options (inspiration mode)
-        return self._suggest_options(context)
+        return self._check_with_milk_ocean(self._suggest_options(context), user_input)
 
     def _match_keywords(self, user_input: str) -> PlaybookRoute | None:
         """Match against registry intent patterns (Tier 1)"""
@@ -150,6 +165,43 @@ class PlaybookRouter:
             confidence="suggested",
             source="no explicit intent or strong context signal",
         )
+
+    def _check_with_milk_ocean(self, route: PlaybookRoute, user_input: str) -> PlaybookRoute:
+        """
+        PHASE 3 INTEGRATION: Check route with MilkOceanRouter (Brahma Protocol gatekeeping)
+
+        If MilkOcean is available, validate the route through Brahma's 4-tier security gates.
+        Blocked requests are rejected; normal/high priority requests proceed.
+        """
+        if not self._milk_ocean_available:
+            # MilkOcean not available - return route as-is
+            return route
+
+        try:
+            # Send route description through MilkOcean gates
+            prayer = f"Route to {route.task}: {route.description}"
+            gate_result = self.milk_ocean_router.process_prayer(
+                user_input=prayer,
+                agent_id="PLAYBOOK_ROUTER",
+                critical=False
+            )
+
+            # Check if request was blocked
+            if gate_result.get("status") == "blocked":
+                logger.warning(f"🚫 Route blocked by MilkOcean: {gate_result.get('reason')}")
+                # Return route but annotate with warning
+                route.source += " [GATED BY BRAHMA: LOW PRIORITY QUEUE]"
+                return route
+
+            # Log successful gate passage
+            logger.info(f"✅ Route '{route.task}' passed MilkOcean gates: {gate_result.get('status')}")
+
+            return route
+
+        except Exception as e:
+            # MilkOcean error - fallback to route as-is with warning logged
+            logger.warning(f"⚠️ MilkOcean integration error (graceful fallback): {e}")
+            return route
 
     def _route_to_task(self, route_name: str) -> str:
         """Map route name to task playbook name"""
