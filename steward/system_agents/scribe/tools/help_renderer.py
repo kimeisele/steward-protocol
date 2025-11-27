@@ -46,13 +46,10 @@ python scripts/summon.py
 ### 2️⃣ Then, Explore the Agents
 Read **[AGENTS.md](./AGENTS.md)** to see all registered agents in the system.
 
-### 3️⃣ Understand the Architecture
-Check **[CITYMAP.md](./CITYMAP.md)** to see how agents interact.
+### 3️⃣ Understand the Complete Architecture
+Check **[CITYMAP.md](./CITYMAP.md)** for the 3-layer city map (kernel, routing, agents).
 
-### 4️⃣ Deep Dive into Infrastructure
-See **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)** for the complete system plumbing (boot, security, routing, economy, etc.)
-
-### 5️⃣ Review the Constitution
+### 4️⃣ Review the Constitution
 All agents operate under **[CONSTITUTION.md](./CONSTITUTION.md)** rules.
 
 ---
@@ -119,10 +116,9 @@ python scripts/summon.py
 python scripts/verify_docs.py
 ```
 
-### Viewing Agents
+### Viewing System
 - See all agents: **[AGENTS.md](./AGENTS.md)**
-- See architecture: **[CITYMAP.md](./CITYMAP.md)**
-- See infrastructure: **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)**
+- See 3-layer architecture: **[CITYMAP.md](./CITYMAP.md)** (kernel + routing + agents)
 
 ### Governance
 - View constitution: **[CONSTITUTION.md](./CONSTITUTION.md)**
@@ -137,8 +133,7 @@ python scripts/verify_docs.py
 | **[README.md](./README.md)** | Project overview and purpose |
 | **[CONSTITUTION.md](./CONSTITUTION.md)** | Immutable rules all agents follow |
 | **[AGENTS.md](./AGENTS.md)** | Registry of all active agents (auto-generated) |
-| **[CITYMAP.md](./CITYMAP.md)** | Architecture and dependency graph (auto-generated) |
-| **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)** | Complete infrastructure map: boot, security, routing, economy (auto-generated) |
+| **[CITYMAP.md](./CITYMAP.md)** | Complete 3-layer city map: kernel, routing, agents (auto-generated) |
 | **[HELP.md](./HELP.md)** | This file — system help (auto-generated) |
 
 ---
@@ -156,8 +151,7 @@ python scripts/verify_docs.py
 
 These docs are **auto-generated** from actual code:
 - `AGENTS.md` — Updated by SCRIBE (agents_renderer.py)
-- `CITYMAP.md` — Updated by SCRIBE (citymap_renderer.py)
-- `INFRASTRUCTURE.md` — Updated by SCRIBE (infrastructure_renderer.py)
+- `CITYMAP.md` — Updated by SCRIBE (citymap_renderer.py with 3-layer introspection)
 - `HELP.md` — Updated by SCRIBE (help_renderer.py)
 - `README.md` — Updated by SCRIBE (readme_renderer.py)
 
@@ -218,8 +212,7 @@ python -m steward.system_agents.scribe.cartridge_main
 
 For detailed information:
 - Agent details → **[AGENTS.md](./AGENTS.md)**
-- Architecture → **[CITYMAP.md](./CITYMAP.md)**
-- Infrastructure → **[INFRASTRUCTURE.md](./INFRASTRUCTURE.md)**
+- Complete architecture (3 layers) → **[CITYMAP.md](./CITYMAP.md)**
 - Rules → **[CONSTITUTION.md](./CONSTITUTION.md)**
 - Code → Check `*/cartridge_main.py` files
 
