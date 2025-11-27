@@ -191,7 +191,7 @@ python scripts/mission_execution.py  # Hardcoded script
 **"STEWARD" means 4 different things:**
 
 1. **STEWARD Protocol** - The constitutional governance framework (GAD-000)
-2. **StewardAgent** (steward/system_agents/steward/agent.py) - The discovery agent
+2. **DiscovererAgent** (steward/system_agents/steward/agent.py) - The discovery agent
 3. **steward-protocol repo** - This entire codebase
 4. **The Steward** - Philosophical concept (guardian, orchestrator)
 
@@ -331,7 +331,7 @@ steward-protocol repo/
     └── gateway/           # REST API (already exists)
 ```
 
-**Rename "StewardAgent" → "DiscovererAgent"** (clearer purpose)
+**Rename "DiscovererAgent" → "DiscovererAgent"** (clearer purpose)
 
 ---
 
@@ -462,7 +462,7 @@ DO NOT START YET. Wait for approval of this plan.
 ## ❓ OPEN QUESTIONS FOR SENIOR
 
 1. **Is Agent City "VibeOS 1.5"?** Or should we keep it as app on VibeOS?
-2. **Rename StewardAgent?** To avoid "steward" overload?
+2. **Rename DiscovererAgent?** To avoid "steward" overload?
 3. **HERALD refactor scope?** Extract advertising → separate app?
 4. **Vedic topology priority?** Implement Varna/Ashrama enforcement now or later?
 5. **vibe-agency merge strategy?** Fork it, or keep separate?

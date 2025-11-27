@@ -49,15 +49,15 @@ The Phoenix Protocol implementation is **substantially complete** (~70% of plann
 
 ---
 
-### Gap 3.2: StewardAgent → DiscovererAgent Rename
+### Gap 3.2: DiscovererAgent → DiscovererAgent Rename
 
 **Planned:**
-- Rename StewardAgent to DiscovererAgent
-- Avoid "steward" overload (steward-protocol, steward/, StewardAgent)
+- Rename DiscovererAgent to DiscovererAgent
+- Avoid "steward" overload (steward-protocol, steward/, DiscovererAgent)
 - Update all references (57 across codebase)
 
 **Reality:**
-- **StewardAgent exists:** ✅ steward/system_agents/steward/agent.py (215 lines)
+- **DiscovererAgent exists:** ✅ steward/system_agents/steward/agent.py (215 lines)
 - **Naming conflicts:** THREE levels of "steward" (protocol name, directory, class)
 - **References count:** 57 occurrences across 11 files
   - Docs: DEPLOYMENT.md (8), README.md (3), PHOENIX_INTEGRATION_PLAN.md (2)
@@ -65,7 +65,7 @@ The Phoenix Protocol implementation is **substantially complete** (~70% of plann
   - Code: gateway/api.py (2 refs)
 
 **Impact Analysis:**
-- **Confusion level:** MEDIUM. New developers see "steward" = protocol, steward/ = agents, StewardAgent = class. Semantic overload.
+- **Confusion level:** MEDIUM. New developers see "steward" = protocol, steward/ = agents, DiscovererAgent = class. Semantic overload.
 - **Developer onboarding:** Manageable but confusing. Need to explain the triple meaning.
 - **GAD-000 transparency:** Naming clarity IS transparency. Ambiguous names violate GAD-000 principle "code is law".
 
@@ -486,7 +486,7 @@ Shalmalidvipa = External clients
 | Gap ID | Phase | Name | Criticality | Status | Recommendation |
 |--------|-------|------|-------------|--------|-----------------|
 | 3.1 | 3 | HERALD Refactor | P2 | ✅ | DEFER (not needed) |
-| 3.2 | 3 | Rename StewardAgent | P1 | ❌ | FIX SOON (57 refs) |
+| 3.2 | 3 | Rename DiscovererAgent | P1 | ❌ | FIX SOON (57 refs) |
 | 3.3 | 3 | Define 12 Adityas | P1 | ❌ | FIX SOON (formalize) |
 | 3.4 | 3 | Workspace System | P2 | ❌ | DEFER (clarify use case) |
 | 4.1 | 4 | Topology Integration | **P0** | ❌ | **FIX IMMEDIATELY** |
@@ -527,7 +527,7 @@ Shalmalidvipa = External clients
    - Enable community contributions
    - Document agent creation pattern
 
-2. **Gap 3.2: StewardAgent Rename** (2 days)
+2. **Gap 3.2: DiscovererAgent Rename** (2 days)
    - 57-point refactor
    - Improves transparency (GAD-000)
 
@@ -576,7 +576,7 @@ Based on this audit, I recommend:
 - Then: SHIP
 
 **Then P1 gaps (parallel work):**
-- StewardAgent rename
+- DiscovererAgent rename
 - Define 12 Adityas formally
 - Create AGENT_DEVELOPMENT.md
 - Document Supreme Court/Chronicle
@@ -586,7 +586,7 @@ Based on this audit, I recommend:
 - ✅ ARCHITECTURE_MAP.md exists (P0)
 - ✅ AGENT_DEVELOPMENT.md exists (P1)
 - ✅ 12 Adityas formalized (P1)
-- ✅ StewardAgent → DiscovererAgent (P1)
+- ✅ DiscovererAgent → DiscovererAgent (P1)
 - ✅ Undocumented agents documented (P1)
 
 ---
