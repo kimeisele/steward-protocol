@@ -93,7 +93,7 @@ class WebSearchTool:
         if bank is None or vault is None:
             # Lazy import CivicBank to avoid circular imports
             try:
-                from civic.tools.economy import CivicBank
+                from steward.system_agents.civic.tools.economy import CivicBank
                 _bank = bank or CivicBank()
                 _vault = vault or _bank.vault
             except Exception as e:

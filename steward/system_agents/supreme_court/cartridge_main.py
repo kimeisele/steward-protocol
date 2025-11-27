@@ -43,10 +43,10 @@ try:
 except ImportError:
     OathMixin = None
 
-from supreme_court.tools.appeals_tool import AppealsTool, Appeal, AppealStatus
-from supreme_court.tools.verdict_tool import VerdictTool, Verdict, VerdictType
-from supreme_court.tools.precedent_tool import PrecedentTool
-from supreme_court.tools.justice_ledger import JusticeLedger
+from .tools.appeals_tool import AppealsTool, Appeal, AppealStatus
+from .tools.verdict_tool import VerdictTool, Verdict, VerdictType
+from .tools.precedent_tool import PrecedentTool
+from .tools.justice_ledger import JusticeLedger
 
 logger = logging.getLogger("SUPREME_COURT")
 

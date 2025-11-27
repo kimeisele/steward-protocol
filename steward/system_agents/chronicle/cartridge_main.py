@@ -21,6 +21,7 @@ Every commit is a verse. Every branch is a possible universe."
 
 import logging
 import json
+import asyncio
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 from datetime import datetime, timezone
@@ -29,7 +30,7 @@ from datetime import datetime, timezone
 from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 
 # Import Git Tools
-from chronicle.tools.git_tools import GitTools
+from .tools.git_tools import GitTools
 
 # Constitutional Oath
 try:
@@ -80,9 +81,9 @@ class ChronicleCartridge(VibeAgent, OathMixin if OathMixin else object):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            # Swear the oath
+            # Swear the oath (async operation)
             try:
-                self.swear_constitutional_oath()
+                asyncio.run(self.swear_constitutional_oath())
                 logger.info("✅ CHRONICLE has sworn the Constitutional Oath")
             except Exception as e:
                 logger.warning(f"⚠️  Oath swearing failed (non-critical): {e}")

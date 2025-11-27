@@ -6,7 +6,7 @@ All governance rules are hardcoded as Python logic, not YAML configs.
 This makes governance immutable and architecturally enforced.
 """
 
-from herald.governance.constitution import (
+from .constitution import (
     GovernanceContract,
     HeraldConstitution,
 )

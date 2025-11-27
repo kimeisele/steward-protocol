@@ -19,7 +19,7 @@ from pathlib import Path
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from civic.tools.economy import CivicBank
+from steward.system_agents.civic.tools.economy import CivicBank
 
 # Constitutional Oath
 try:

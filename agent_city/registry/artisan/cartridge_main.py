@@ -13,7 +13,7 @@ from typing import Dict, Any
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
 
-from artisan.tools.media_tool import MediaTool
+from .tools.media_tool import MediaTool
 
 # Constitutional Oath
 try:

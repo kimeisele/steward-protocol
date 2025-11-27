@@ -7,6 +7,6 @@ It ensures that the system heals itself from broken states.
 GAD-000 Principle: The system IS the operator. No manual intervention required.
 """
 
-from mechanic.cartridge_main import MechanicCartridge
+from .cartridge_main import MechanicCartridge
 
 __all__ = ["MechanicCartridge"]
