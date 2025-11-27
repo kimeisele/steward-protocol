@@ -1,0 +1,257 @@
+🎯 GOLDEN SHOT #6: FIX ROADMAP FEATURE (P0 BLOCKER)
+Builder: Haiku
+Mission Code: PHOENIX-ROADMAP-IMPLEMENTATION-06
+Branch: Create new: claude/roadmap-feature-fix-[session-id]
+Priority: P0 - BLOCKS ALL P2 WORK
+
+📋 THE MISSION
+OBJECTIVE:
+Implement Roadmap functionality COMPLETELY. Not just models - full TaskManager integration.
+
+WHY:
+Architect (me) lied. Said vibe-agency features were merged. They're not. Roadmap is broken.
+
+WHAT'S BROKEN:
+
+Roadmap class exists but TaskManager doesn't use it
+No roadmap create command
+No roadmap list command
+No mission → roadmap grouping
+Tasks exist but no organization structure
+🎯 WHAT TO BUILD
+1. TaskManager Roadmap Methods
+File: vibe_core/task_management/task_manager.py
+
+Add:
+
+def create_roadmap(self, name: str, description: str, missions: List[str] = None) -> Roadmap:
+    """Create a new roadmap."""
+    roadmap = Roadmap(
+        id=str(uuid.uuid4()),
+        name=name,
+        description=description,
+        missions=missions or [],
+        created_at=datetime.now(),
+        updated_at=datetime.now()
+    )
+    
+    # Save to .vibe/config/roadmap.yaml
+    roadmap_path = self.config_dir / "roadmap.yaml"
+    with open(roadmap_path, 'w') as f:
+        yaml.dump(roadmap.to_dict(), f)
+    
+    self.roadmap = roadmap
+    return roadmap
+
+def load_roadmap(self) -> Optional[Roadmap]:
+    """Load roadmap from disk."""
+    roadmap_path = self.config_dir / "roadmap.yaml"
+    if not roadmap_path.exists():
+        return None
+    
+    with open(roadmap_path, 'r') as f:
+        data = yaml.safe_load(f)
+    
+    return Roadmap(
+        id=data['id'],
+        name=data['name'],
+        description=data['description'],
+        missions=data['missions'],
+        created_at=datetime.fromisoformat(data['created_at']),
+        updated_at=datetime.fromisoformat(data['updated_at']),
+        metadata=data.get('metadata', {})
+    )
+
+def update_roadmap(self, **kwargs) -> Roadmap:
+    """Update current roadmap."""
+    if not self.roadmap:
+        raise ValueError("No active roadmap")
+    
+    for key, value in kwargs.items():
+        if hasattr(self.roadmap, key):
+            setattr(self.roadmap, key, value)
+    
+    self.roadmap.updated_at = datetime.now()
+    
+    # Save
+    roadmap_path = self.config_dir / "roadmap.yaml"
+    with open(roadmap_path, 'w') as f:
+        yaml.dump(self.roadmap.to_dict(), f)
+    
+    return self.roadmap
+
+Update init:
+
+def __init__(self, project_root: Path, milk_ocean_router=None):
+    # ... existing code ...
+    
+    # Load roadmap if exists
+    self.roadmap = self.load_roadmap()
+
+2. CLI Commands
+File: bin/agent-city
+
+Add:
+
+def cmd_roadmap_create(args):
+    """Create a new roadmap."""
+    tm = TaskManager(PROJECT_ROOT)
+    roadmap = tm.create_roadmap(
+        name=args.name,
+        description=args.description,
+        missions=[]
+    )
+    print(f"✅ Roadmap created: {roadmap.name}")
+    print(f"   ID: {roadmap.id}")
+    return 0
+
+def cmd_roadmap_show(args):
+    """Show current roadmap."""
+    tm = TaskManager(PROJECT_ROOT)
+    if not tm.roadmap:
+        print("❌ No active roadmap")
+        return 1
+    
+    print(f"📋 Roadmap: {tm.roadmap.name}")
+    print(f"   Description: {tm.roadmap.description}")
+    print(f"   Missions: {len(tm.roadmap.missions)}")
+    if tm.roadmap.missions:
+        for i, mission in enumerate(tm.roadmap.missions, 1):
+            print(f"   {i}. {mission}")
+    return 0
+
+# Update main()
+def main():
+    # ... existing code ...
+    
+    # roadmap subcommand
+    roadmap_parser = subparsers.add_parser("roadmap")
+    roadmap_subparsers = roadmap_parser.add_subparsers(dest="roadmap_command")
+    
+    # roadmap create
+    roadmap_create = roadmap_subparsers.add_parser("create")
+    roadmap_create.add_argument("name")
+    roadmap_create.add_argument("description")
+    roadmap_create.set_defaults(func=cmd_roadmap_create)
+    
+    # roadmap show
+    roadmap_show = roadmap_subparsers.add_parser("show")
+    roadmap_show.set_defaults(func=cmd_roadmap_show)
+
+3. Create 2 Roadmaps
+After implementation, run:
+
+# Roadmap 1: OS Feature Completion
+bin/agent-city roadmap create \
+  "OS Feature Completion Phase" \
+  "Missing vibe-agency features that MUST be implemented before architecture refactoring"
+
+# Roadmap 2: Architecture Refactoring  
+# (will create after roadmap 1 tasks are done)
+
+4. Group Existing Tasks
+Update tasks to reference roadmap:
+
+Add field to Task model:
+
+@dataclass
+class Task:
+    # ... existing fields ...
+    roadmap_id: Optional[str] = None  # Which roadmap this belongs to
+
+Method to assign tasks:
+
+def assign_tasks_to_roadmap(self, task_ids: List[str], roadmap_id: str):
+    """Assign tasks to a roadmap."""
+    for task in self.tasks:
+        if task.id in task_ids:
+            task.roadmap_id = roadmap_id
+    self._save_tasks()
+
+📦 DELIVERABLES
+After completion:
+
+✅ TaskManager has create_roadmap(), load_roadmap(), update_roadmap()
+✅ CLI has roadmap create, roadmap show commands
+✅ .vibe/config/roadmap.yaml is created and loaded
+✅ Tasks can be assigned to roadmaps
+✅ Tests written for roadmap functionality
+Then create 2 roadmaps:
+
+Roadmap 1: "OS Feature Completion"
+
+Missing vibe-agency features
+MUST complete before P2
+Roadmap 2: "Architecture Refactoring"
+
+P2 tasks (Civic, Herald, Forum, Vedic, REPL)
+Cannot start until Roadmap 1 complete
+🧪 TESTING
+def test_roadmap_create():
+    tm = TaskManager(Path.cwd())
+    roadmap = tm.create_roadmap("Test Roadmap", "Test description")
+    assert roadmap.name == "Test Roadmap"
+    assert tm.roadmap == roadmap
+
+def test_roadmap_persistence():
+    tm = TaskManager(Path.cwd())
+    tm.create_roadmap("Test", "Test")
+    
+    # Reload
+    tm2 = TaskManager(Path.cwd())
+    assert tm2.roadmap is not None
+    assert tm2.roadmap.name == "Test"
+
+📦 COMMIT STRATEGY
+git add vibe_core/task_management/ bin/agent-city tests/
+git commit -m "fix: Implement Roadmap feature properly - CRITICAL
+
+BEFORE: Roadmap class existed but TaskManager didn't use it
+AFTER: Full roadmap functionality implemented
+
+Changes:
+- TaskManager.create_roadmap(), load_roadmap(), update_roadmap()
+- CLI commands: roadmap create, roadmap show
+- Roadmap persistence in .vibe/config/roadmap.yaml
+- Task → roadmap assignment
+- Tests added
+
+This was a BROKEN PROMISE from Phase 1-2 merge.
+vibe-agency features were NOT properly integrated.
+NOW they are.
+
+Next: Create 2 roadmaps (OS Features, Architecture)"
+
+git push -u origin claude/roadmap-feature-fix-[session-id]
+
+⏱️ TIMELINE
+Implementation: 1 day
+Testing: 4 hours
+Create 2 roadmaps: 1 hour
+Total: 1.5 days
+
+🎯 THE GOLDEN SHOT (Plain Language)
+I lied. I said Phase 1-2 was complete. It's not.
+
+Roadmap class exists in models.py but TaskManager doesn't use it.
+
+Fix it. Implement it properly:
+
+TaskManager methods for roadmap CRUD
+CLI commands to create/show roadmaps
+Persistence in .vibe/config/roadmap.yaml
+Test it
+Then create 2 roadmaps:
+
+"OS Feature Completion" - missing vibe-agency features
+"Architecture Refactoring" - P2 tasks
+Roadmap 1 BLOCKS Roadmap 2. Sequential.
+
+Fix this. Then we can actually organize work properly.
+
+Execute. 🔥
+
+ARCHITECT AUTHORIZATION: ✅ Sonnet (admitting failure)
+PRIORITY: 🔴 P0 - BLOCKS ALL P2 WORK
+MISSION STATUS: 🟢 GREENLIT
+EXECUTION: Deploy Haiku NOW
