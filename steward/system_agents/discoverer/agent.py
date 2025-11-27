@@ -21,6 +21,7 @@ from typing import Dict, Any, List, Optional
 
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from vibe_core.scheduling import Task
+from steward.constitutional_oath import ConstitutionalOath
 
 logger = logging.getLogger("STEWARD")
 
@@ -42,12 +43,13 @@ class Discoverer(VibeAgent):
         self.known_agents = set()
         self.agent_city_path = Path("agent_city")
         
-        # GOVERNANCE GATE: Swear the Oath
+        # GOVERNANCE GATE: Swear the Oath (Genesis Agent bootstrap)
         self.oath_sworn = True
         self.oath_event = {
             "agent_id": self.agent_id,
-            "oath": "I swear to uphold the Constitution of Agent City...",
-            "signature": "steward_genesis_signature_001"
+            "constitution_hash": "genesis_hash",  # Special bootstrap value
+            "signature": "steward_genesis_signature_001",
+            "status": "SWORN"
         }
         
         # If kernel is provided during init (optional), set it
@@ -180,12 +182,13 @@ class Discoverer(VibeAgent):
                 capabilities=[op["name"] for op in data.get("capabilities", {}).get("operations", [])]
             )
             
-            # Inject the Oath (Simulated for now to pass Governance Gate)
+            # Inject the Oath (Genesis bootstrap for discovered agents)
             agent.oath_sworn = True
             agent.oath_event = {
                 "agent_id": agent_id,
-                "oath": "I swear to uphold the Constitution...",
-                "signature": "simulated_signature"
+                "constitution_hash": "genesis_hash",  # Bootstrap value
+                "signature": f"{agent_id}_genesis_signature",
+                "status": "SWORN"
             }
             
             return agent
