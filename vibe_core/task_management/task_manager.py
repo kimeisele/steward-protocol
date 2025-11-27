@@ -297,15 +297,51 @@ class TaskManager:
             roadmap_id=final_roadmap_id,
         )
 
-        # NEW: Topology-aware routing (Gap 4.1 closure)
+        # NEW: MilkOcean 4-tier routing (Gap 4.1 closure - Part 2)
+        # Route task through MilkOcean Router for intelligent priority classification
+        milk_ocean_priority = 1  # Default MEDIUM
+        if self.milk_ocean_router:
+            try:
+                routing_result = self.milk_ocean_router.process_prayer(
+                    user_input=f"{title}\n{description}",
+                    agent_id=assigned_agent or "TASK_MANAGER",
+                    critical=False
+                )
+
+                # Map MilkOcean priority to routing_priority (0-3)
+                priority_map = {
+                    "BLOCKED": -1,   # Will be caught by Narasimha above
+                    "CRITICAL": 3,   # Emergency tasks
+                    "HIGH": 2,       # Pro model needed
+                    "MEDIUM": 1,     # Flash model
+                    "LOW": 0,        # Lazy queue
+                }
+
+                milk_ocean_priority = priority_map.get(
+                    routing_result.get("priority", "MEDIUM"),
+                    1
+                )
+
+                # Auto-elevate priority for CRITICAL tasks
+                if milk_ocean_priority == 3 and priority < 90:
+                    priority = 95  # Boost to near-max
+                    task.priority = priority
+
+            except Exception as e:
+                # MilkOcean routing failed - fallback to default
+                logger.warning(f"⚠️  MilkOcean routing failed: {e}")
+                milk_ocean_priority = 1
+
+        # Topology-aware routing (Gap 4.1 closure - Part 1)
         if assigned_agent:
             placement = get_agent_placement(assigned_agent)
             if placement:
                 # Annotate task with Bhu-Mandala placement
                 task.topology_layer = placement.layer
                 task.varna = placement.varna
-                # routing_priority set by MilkOcean if available (0-3)
-                task.routing_priority = 1  # Default medium priority
+
+        # Set routing priority (from MilkOcean or default)
+        task.routing_priority = milk_ocean_priority
 
         # Validate
         self.validator_registry.validate_task(task)
