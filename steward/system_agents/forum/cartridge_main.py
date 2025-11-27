@@ -10,6 +10,7 @@ FORUM is the democratic institution of Agent City. It:
 
 This is now a native VibeAgent:
 - Inherits from vibe_core.VibeAgent
+from vibe_core.config import CityConfig, ForumConfig
 - Receives governance tasks from kernel scheduler
 - Integrates with CIVIC for action execution
 
@@ -66,8 +67,11 @@ class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
     votes are cast, and the majority rules. Welcome to democracy, agents."
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[ForumConfig] = None):
         """Initialize FORUM as a VibeAgent (The Town Hall)."""
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or ForumConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="forum",

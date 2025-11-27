@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
+from vibe_core.config import CityConfig, CityConfig
 
 from .tools.introspection_tool import IntrospectionTool, IntrospectionError
 

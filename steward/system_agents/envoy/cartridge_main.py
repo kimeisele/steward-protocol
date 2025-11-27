@@ -23,6 +23,7 @@ from pathlib import Path
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
+from vibe_core.config import CityConfig, CityConfig
 
 # Envoy's toolset
 from .tools.city_control_tool import CityControlTool
@@ -58,8 +59,11 @@ class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
     The Envoy.process() method decides what to do.
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize the ENVOY as a VibeAgent."""
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="envoy",
