@@ -16,17 +16,27 @@ from .base_agent import BaseAgent, ExecutionResult, KnowledgeResult
 from .base_specialist import BaseSpecialist, MissionContext, SpecialistResult
 from .registry import AgentRegistry
 
-# Specialist implementations (aliases for compatibility)
+# Specialist implementations (placeholder classes for Phase 2)
+# TODO: Implement full specialization in v2.0
+# Why: These are placeholder subclasses created during Phase 2 migration
+# to support the HAP (Hierarchical Agent Pattern) framework architecture.
+# Currently they inherit BaseSpecialist without custom logic.
+# Phase 3: These remain as-is (no removal, for backward compatibility)
+# Phase 4: Either implement specialized logic or remove if unused
+
+
 class PlanningSpecialist(BaseSpecialist):
-    """Planning phase specialist agent"""
+    """Planning phase specialist agent (Phase 2 placeholder)"""
     pass
+
 
 class CodingSpecialist(BaseSpecialist):
-    """Coding phase specialist agent"""
+    """Coding phase specialist agent (Phase 2 placeholder)"""
     pass
 
+
 class TestingSpecialist(BaseSpecialist):
-    """Testing phase specialist agent"""
+    """Testing phase specialist agent (Phase 2 placeholder)"""
     pass
 
 __all__ = [
