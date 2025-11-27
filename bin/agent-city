@@ -1,573 +1,129 @@
 #!/usr/bin/env python3
-"""
-AGENT CITY LAUNCHER - The Envoy Interface (Kernel-Integrated Version)
+"""Agent City CLI - Unified interface for Agent City OS (Phase 1)"""
 
-This script launches the Universal Operator interface for Agent City.
-It boots the real VibeOS kernel, registers all agents, and wires the Envoy as the
-operational hub.
-
-This is the final wiring: User Input → Task → Kernel → Envoy → CityControlTool → Agents
-
-Usage:
-  ./bin/agent-city                    # Start interactive session with kernel
-  ./bin/agent-city --status           # Quick kernel status check
-  ./bin/agent-city --kernel-status    # Detailed kernel state
-  ./bin/agent-city --help             # Show help
-
-ARCH CHANGE:
-- OLD: bin/agent-city → CityControlTool (DIRECT mode, no kernel)
-- NEW: bin/agent-city → RealVibeKernel → Envoy → CityControlTool (KERNEL mode)
-
-The brain is now connected to the heart.
-"""
-
-import sys
-import os
-from pathlib import Path
 import argparse
-import json
-import time
-import logging
+import sys
+from pathlib import Path
 
 # Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(levelname)s [%(name)s] %(message)s'
-)
-logger = logging.getLogger("AGENT_CITY_LAUNCHER")
-
-# Import VibeOS kernel and agents
+from vibe_core.task_management import TaskManager
 from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.scheduling import Task
 
-# Import all agent cartridges
-from herald.cartridge_main import HeraldCartridge
-from civic.cartridge_main import CivicCartridge
-from forum.cartridge_main import ForumCartridge
-from science.cartridge_main import ScientistCartridge
-from envoy.cartridge_main import EnvoyCartridge
 
-# ANSI colors for terminal output
-class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-
-def print_banner():
-    """Print the Agent City banner."""
-    banner = f"""
-{Colors.CYAN}╔════════════════════════════════════════════════════════════════════╗
-║                                                                    ║
-║                   👁️  THE ENVOY - Agent City Interface            ║
-║                                                                    ║
-║        "The bridge between Human Intent and Agent Execution"      ║
-║                                                                    ║
-╚════════════════════════════════════════════════════════════════════╝{Colors.END}
-"""
-    print(banner)
-
-
-def load_system_prompt() -> str:
-    """Load the Envoy system prompt."""
-    prompt_path = project_root / "prompts" / "envoy.md"
-
-    if not prompt_path.exists():
-        logger.warning(f"Envoy system prompt not found at {prompt_path}")
-        return ""
-
-    return prompt_path.read_text()
-
-
-def load_policies() -> str:
-    """Load POLICIES.md for context."""
-    policies_path = project_root / "POLICIES.md"
-
-    if not policies_path.exists():
-        logger.warning("POLICIES.md not found")
-        return ""
-
-    return policies_path.read_text()
-
-
-def clean_old_artifacts(clean: bool = False):
-    """
-    Remove old snapshot and ledger artifacts for a fresh start.
-    
-    Args:
-        clean: If True, remove artifacts. If False, skip.
-    """
-    if not clean:
-        return
-    
-    logger.info("🧹 Cleaning old artifacts for fresh boot...")
-    
-    # Remove old snapshot
-    snapshot_path = project_root / ".steward" / "vibe_snapshot.json"
-    if snapshot_path.exists():
-        snapshot_path.unlink()
-        logger.info(f"   ✅ Removed: {snapshot_path}")
-    
-    # Remove old ledger if in-file
-    ledger_path = project_root / ".steward" / "ledger.json"
-    if ledger_path.exists():
-        ledger_path.unlink()
-        logger.info(f"   ✅ Removed: {ledger_path}")
-    
-    logger.info("🧹 Fresh boot environment ready")
-
-
-def boot_kernel(clean: bool = False) -> RealVibeKernel:
-    """
-    Boot the real VibeOS kernel and register all agents.
-
-    Args:
-        clean: If True, remove old artifacts first for a fresh start.
-
-    Returns:
-        RealVibeKernel: The booted kernel with all agents registered
-    """
-    logger.info("=" * 70)
-    logger.info("⚙️  KERNEL BOOT SEQUENCE INITIATED")
-    logger.info("=" * 70)
-
-    # Clean artifacts if requested
-    clean_old_artifacts(clean)
-
-    # Create kernel
-    kernel = RealVibeKernel()
-    logger.info("✅ Kernel instance created")
-
-    # Create and register agents
-    agents_to_register = [
-        ("herald", HeraldCartridge()),
-        ("civic", CivicCartridge()),
-        ("forum", ForumCartridge()),
-        ("science", ScientistCartridge()),
-        ("envoy", EnvoyCartridge()),
-    ]
-
-    for agent_id, agent_instance in agents_to_register:
-        try:
-            kernel.register_agent(agent_instance)
-            logger.info(f"✅ Agent registered: {agent_id}")
-        except Exception as e:
-            logger.error(f"❌ Failed to register {agent_id}: {e}")
-            raise
-
-    # Boot kernel (register manifests and start)
-    kernel.boot()
-    
-    # Trigger initial pulse to capture production state
-    logger.info("📸 Writing initial pulse...")
-    kernel._pulse()
-
-    return kernel
-
-
-def generate_snapshot(kernel: RealVibeKernel = None, clean: bool = False):
-    """
-    Generate a comprehensive system snapshot (the USB stick of truth).
-
-    Collects status from all agents and kernel, writes to vibe_snapshot.json.
-
-    Args:
-        kernel: Optional kernel instance. If not provided, will boot a new one.
-        clean: If True, clean old artifacts before booting.
-    """
-    print_banner()
-    print(f"\n{Colors.BOLD}📸 GENERATING SYSTEM SNAPSHOT...{Colors.END}\n")
-
-    # Boot if needed
-    if not kernel:
-        try:
-            print(f"{Colors.CYAN}Booting kernel...{Colors.END}")
-            kernel = boot_kernel(clean=clean)
-        except Exception as e:
-            print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
-            return
-
-    from datetime import datetime, timezone
-
-    # Get kernel status
-    kernel_status = kernel.get_status()
-
-    # Collect agent statuses
-    agents_status = {}
-    for agent_id, agent in kernel.agent_registry.items():
-        try:
-            status = agent.report_status()
-            agents_status[agent_id] = status
-            print(f"{Colors.GREEN}✅{Colors.END} {agent_id.upper()}: {status.get('status', 'Unknown')}")
-        except Exception as e:
-            print(f"{Colors.RED}❌{Colors.END} {agent_id.upper()}: {str(e)}")
-            agents_status[agent_id] = {
-                "status": "ERROR",
-                "error": str(e)
-            }
-
-    # Build snapshot
-    snapshot = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "git_commit": _get_git_commit(),
-        "kernel": {
-            "status": kernel_status.get("status", "UNKNOWN"),
-            "agents_registered": kernel_status.get("agents_registered", 0),
-            "manifests": kernel_status.get("manifests", 0),
-            "ledger_events": kernel_status.get("ledger_events", 0),
-            "scheduler": kernel_status.get("scheduler", {}),
-        },
-        "agents": agents_status,
-    }
-
-    # Write snapshot
-    snapshot_path = project_root / ".steward" / "vibe_snapshot.json"
-    snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        snapshot_path.write_text(json.dumps(snapshot, indent=2))
-        print(f"\n{Colors.GREEN}✅ SNAPSHOT GENERATED{Colors.END}")
-        print(f"{Colors.CYAN}📁 Location: {snapshot_path}{Colors.END}")
-        print(f"{Colors.CYAN}📊 Agents captured: {len(agents_status)}{Colors.END}")
-        print(f"{Colors.CYAN}🧬 Timestamp: {snapshot['timestamp']}{Colors.END}\n")
-    except Exception as e:
-        print(f"{Colors.RED}❌ Failed to write snapshot: {e}{Colors.END}")
-
-
-def _get_git_commit() -> str:
-    """Get current git commit hash."""
-    try:
-        import subprocess
-        result = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=project_root,
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        return result.stdout.strip() if result.returncode == 0 else "unknown"
-    except:
-        return "unknown"
-
-
-def quick_status(kernel: RealVibeKernel = None, clean: bool = False):
-    """
-    Run a quick status check and exit.
-
-    Args:
-        kernel: Optional kernel instance. If not provided, will boot a new one.
-        clean: If True, clean old artifacts before booting.
-    """
-    print_banner()
-    print(f"\n{Colors.BOLD}📊 KERNEL STATUS{Colors.END}\n")
-
-    # Boot if needed
-    if not kernel:
-        try:
-            kernel = boot_kernel(clean=clean)
-        except Exception as e:
-            print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
-            return
-
-    # Get kernel status
-    status = kernel.get_status()
-
-    print(f"{Colors.CYAN}⚙️  Kernel Status:{Colors.END} {status.get('status', 'Unknown')}")
-    print(f"{Colors.CYAN}🤖 Agents Registered:{Colors.END} {status.get('agents_registered', 0)}")
-    print(f"{Colors.CYAN}📋 Manifests:{Colors.END} {status.get('manifests', 0)}")
-    print(f"{Colors.CYAN}📝 Ledger Events:{Colors.END} {status.get('ledger_events', 0)}")
-
-    scheduler = status.get('scheduler', {})
-    print(f"{Colors.CYAN}📨 Scheduler:{Colors.END}")
-    print(f"{Colors.CYAN}   ├─ Queue Length: {scheduler.get('queue_length', 0)}{Colors.END}")
-    print(f"{Colors.CYAN}   └─ Completed: {scheduler.get('completed', 0)}{Colors.END}")
-
-    # List agents
-    agents = list(kernel.agent_registry.keys())
-    if agents:
-        print(f"\n{Colors.BOLD}🤖 REGISTERED AGENTS:{Colors.END}")
-        for agent_id in agents:
-            manifest = kernel.get_agent_manifest(agent_id)
-            if manifest:
-                print(f"   • {agent_id}: {manifest.description}")
-
-    print(f"\n{Colors.GREEN}✅ KERNEL OPERATIONAL{Colors.END}\n")
-
-
-def interactive_mode(clean: bool = False):
-    """
-    Start interactive REPL session with the Envoy.
-
-    This is the main user interface. All commands are converted to Tasks
-    and sent to the Envoy through the kernel scheduler.
-
-    Flow: User Input → Task → Kernel Scheduler → Envoy.process() → CityControlTool → Agents
-    """
-    print_banner()
-
-    # Load context
-    system_prompt = load_system_prompt()
-    policies = load_policies()
-
-    # Boot the kernel
-    print(f"\n{Colors.BOLD}🚀 Starting kernel boot...{Colors.END}\n")
-    try:
-        kernel = boot_kernel(clean=clean)
-    except Exception as e:
-        print(f"{Colors.RED}❌ Failed to boot kernel: {e}{Colors.END}")
-        import traceback
-        traceback.print_exc()
-        return
-
-    # Get the Envoy agent
-    envoy = kernel.agent_registry.get("envoy")
-    if not envoy:
-        print(f"{Colors.RED}❌ Envoy not found in kernel registry{Colors.END}")
-        return
-
-    # Startup sequence
-    print(f"\n{Colors.GREEN}✅ THE ENVOY - Brain Connected to Heart{Colors.END}")
-    print(f"{Colors.CYAN}📜 System Prompt Loaded: prompts/envoy.md{Colors.END}")
-    print(f"{Colors.CYAN}📋 Policies Loaded: POLICIES.md{Colors.END}")
-    print(f"{Colors.CYAN}🧠❤️ Envoy: Connected to RealVibeKernel{Colors.END}")
-    print(f"{Colors.CYAN}🤖 Agents: {len(kernel.agent_registry)} registered{Colors.END}\n")
-
-    # Show kernel status
-    print(f"{Colors.BOLD}📊 Kernel Status:{Colors.END}")
-    kernel_status = kernel.get_status()
-    print(f"   Status: {kernel_status.get('status')}")
-    print(f"   Agents: {kernel_status.get('agents_registered')}")
-    print(f"   Manifests: {kernel_status.get('manifests')}\n")
-
-    # Show available commands
-    print(f"{Colors.BOLD}Available Commands:{Colors.END}")
-    print(f"   {Colors.CYAN}status{Colors.END}              - Get city status")
-    print(f"   {Colors.CYAN}proposals{Colors.END}           - List governance proposals")
-    print(f"   {Colors.CYAN}credits <agent>{Colors.END}     - Check agent credits")
-    print(f"   {Colors.CYAN}vote <id> <choice>{Colors.END}  - Vote on proposal (YES/NO/ABSTAIN)")
-    print(f"   {Colors.CYAN}execute <id>{Colors.END}        - Execute approved proposal")
-    print(f"   {Colors.CYAN}trigger <agent> <action>{Colors.END} - Trigger agent action")
-    print(f"   {Colors.CYAN}kernel-status{Colors.END}       - Show kernel internal state")
-    print(f"   {Colors.CYAN}kernel-ledger{Colors.END}       - Dump ledger events")
-    print(f"   {Colors.CYAN}help{Colors.END}                - Show this help")
-    print(f"   {Colors.CYAN}exit{Colors.END}                - Exit\n")
-
-    print(f"{Colors.BOLD}How can I help?{Colors.END}\n")
-
-    task_counter = 0
-
-    # REPL loop
-    while True:
-        try:
-            user_input = input(f"{Colors.GREEN}>{Colors.END} ").strip()
-
-            if not user_input:
-                continue
-
-            # Parse command
-            parts = user_input.split()
-            command = parts[0].lower()
-            args = parts[1:]
-
-            # Handle commands
-            if command in ['exit', 'quit', 'q']:
-                print(f"\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
-                break
-
-            elif command == 'help':
-                print(f"\n{Colors.BOLD}Available Commands:{Colors.END}")
-                print(f"   status              - Get city status")
-                print(f"   proposals           - List governance proposals")
-                print(f"   credits <agent>     - Check agent credits")
-                print(f"   vote <id> <choice>  - Vote on proposal")
-                print(f"   execute <id>        - Execute approved proposal")
-                print(f"   trigger <agent> <action> - Trigger agent action")
-                print(f"   kernel-status       - Show kernel state")
-                print(f"   kernel-ledger       - Dump ledger")
-                print(f"   help                - Show this help")
-                print(f"   exit                - Exit\n")
-
-            elif command == 'kernel-status':
-                status = kernel.get_status()
-                print(json.dumps(status, indent=2))
-
-            elif command == 'kernel-ledger':
-                ledger = kernel.dump_ledger()
-                print(json.dumps(ledger, indent=2))
-
-            else:
-                # Route all other commands through the Envoy via kernel
-                # Convert user input to a task for the Envoy
-                task_counter += 1
-                task = Task(
-                    agent_id="envoy",
-                    payload={
-                        "command": command,
-                        "args": _parse_args(command, args)
-                    }
-                )
-
-                # Submit task to kernel scheduler
-                task_id = kernel.submit_task(task)
-                logger.info(f"📤 Task submitted to kernel: {task_id} for command '{command}'")
-
-                # Process the task immediately (single-threaded tick)
-                kernel.tick()
-
-                # Retrieve result from ledger
-                result = kernel.get_task_result(task_id)
-
-                if result:
-                    if result.get('status') == 'COMPLETED':
-                        output = result.get('output_result')
-                        if isinstance(output, dict):
-                            print(json.dumps(output, indent=2))
-                        else:
-                            print(output)
-                    elif result.get('status') == 'FAILED':
-                        print(f"{Colors.RED}❌ Error: {result.get('error')}{Colors.END}")
-                else:
-                    print(f"{Colors.YELLOW}⚠️  Task result not found{Colors.END}")
-
-            print()  # Empty line for readability
-
-        except KeyboardInterrupt:
-            print(f"\n\n{Colors.CYAN}👋 The Envoy disconnects. Om Tat Sat.{Colors.END}\n")
-            break
-        except Exception as e:
-            logger.exception(f"Error processing command: {e}")
-            print(f"{Colors.RED}❌ Error: {e}{Colors.END}")
-
-
-def _parse_args(command: str, args: list) -> dict:
-    """
-    Parse command-line arguments into a dict for the Envoy task payload.
-
-    Args:
-        command: The command name
-        args: List of argument strings
-
-    Returns:
-        dict: Parsed arguments for the command
-    """
-    if command == 'status':
-        return {}
-
-    elif command == 'proposals':
-        return {
-            'status': args[0] if args else 'OPEN'
-        }
-
-    elif command == 'credits':
-        return {
-            'agent_name': args[0] if args else None
-        }
-
-    elif command == 'vote':
-        return {
-            'proposal_id': args[0] if len(args) > 0 else None,
-            'choice': args[1] if len(args) > 1 else None,
-            'voter': 'operator'
-        }
-
-    elif command == 'execute':
-        return {
-            'proposal_id': args[0] if args else None
-        }
-
-    elif command == 'trigger':
-        return {
-            'agent_name': args[0] if len(args) > 0 else None,
-            'action': args[1] if len(args) > 1 else None,
-            'kwargs': {}
-        }
-
+def cmd_task_add(args):
+    """Add a task."""
+    tm = TaskManager(PROJECT_ROOT)
+    task = tm.add_task(args.description, priority=args.priority)
+    print(f"✅ Task added: {args.description}")
+    print(f"   ID: {task.id}")
+    return 0
+
+
+def cmd_task_list(args):
+    """List tasks."""
+    tm = TaskManager(PROJECT_ROOT)
+    mission = tm.get_active_mission()
+    tasks = tm.list_tasks()
+
+    if mission and mission.current_task:
+        print(f"📋 Current task: {mission.current_task}")
+    elif tasks:
+        next_task = tm.get_next_task()
+        if next_task:
+            print(f"📋 Next task: {next_task.title}")
+
+    if tasks:
+        print(f"\n📊 Tasks ({len(tasks)}):")
+        for task in tasks[:10]:  # Show top 10
+            status_icon = {
+                "PENDING": "⏳",
+                "IN_PROGRESS": "▶️",
+                "COMPLETED": "✅",
+                "BLOCKED": "🚫",
+            }.get(task.status.value, "❓")
+            print(f"  {status_icon} P{task.priority}: {task.title}")
     else:
-        return {}
+        print("📭 No tasks yet. Add one with: agent-city task add \"your task\"")
+
+    return 0
+
+
+def cmd_status(args):
+    """Show system status."""
+    try:
+        kernel = RealVibeKernel()
+        kernel.boot()
+        status = kernel.get_status()
+
+        print("✅ Agent City Status:")
+        print(f"   Agents registered: {status.get('agents_registered', 0)}")
+        print(f"   Manifests: {status.get('manifests', 0)}")
+        print(f"   Ledger events: {status.get('ledger_events', 0)}")
+
+        return 0
+    except Exception as e:
+        print(f"❌ Error getting status: {e}")
+        return 1
+
+
+def cmd_mission(args):
+    """Execute a mission."""
+    print(f"🚀 Mission mode: {args.description}")
+    print("   (Mission execution coming in Phase 2)")
+    return 0
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Agent City Launcher - Kernel-Integrated Version",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  ./bin/agent-city                    # Start interactive session with kernel
-  ./bin/agent-city --status           # Quick kernel status check
-  ./bin/agent-city --kernel-status    # Detailed kernel state
-
-ARCHITECTURE:
-  User Input → Task → RealVibeKernel → Envoy.process() → CityControlTool → Agents
-
-The Envoy's brain is now wired to the Kernel's heart.
-        """
+        prog="agent-city",
+        description="Agent City CLI - Control the multi-agent system"
     )
 
+    # Global options
     parser.add_argument(
-        '--status',
-        action='store_true',
-        help='Show quick kernel status and exit'
+        "--mission",
+        dest="mission_desc",
+        help="Run in mission mode with description"
     )
 
-    parser.add_argument(
-        '--kernel-status',
-        action='store_true',
-        help='Show detailed kernel internal state'
-    )
+    subparsers = parser.add_subparsers(dest="command")
 
-    parser.add_argument(
-        '--clean',
-        action='store_true',
-        help='Clean old artifacts (snapshot, ledger) for fresh boot'
-    )
+    # task subcommand
+    task_parser = subparsers.add_parser("task")
+    task_subparsers = task_parser.add_subparsers(dest="task_command")
 
-    parser.add_argument(
-        '--snapshot',
-        action='store_true',
-        help='Generate system snapshot (vibe_snapshot.json) and exit'
-    )
+    # task add
+    task_add = task_subparsers.add_parser("add")
+    task_add.add_argument("description")
+    task_add.add_argument("-p", "--priority", type=int, default=0, help="Task priority (0-100)")
+    task_add.set_defaults(func=cmd_task_add)
 
-    parser.add_argument(
-        '--version',
-        action='version',
-        version='Agent City Launcher v2.0.0 (Kernel-Integrated)'
-    )
+    # task list
+    task_list = task_subparsers.add_parser("list")
+    task_list.set_defaults(func=cmd_task_list)
 
+    # status subcommand
+    status_parser = subparsers.add_parser("status")
+    status_parser.set_defaults(func=cmd_status)
+
+    # Parse arguments
     args = parser.parse_args()
 
-    # Set environment variables for VibeOS integration
-    os.environ['VIBE_SYSTEM_PROMPT'] = str(project_root / "prompts" / "envoy.md")
-    os.environ['AGENT_CITY_ROOT'] = str(project_root)
+    # Handle mission mode
+    if args.mission_desc:
+        return cmd_mission(type('Args', (), {'description': args.mission_desc})())
 
-    # Route to appropriate mode
-    if args.snapshot:
-        generate_snapshot(clean=args.clean)
-    elif args.status:
-        quick_status(clean=args.clean)
-    elif args.kernel_status:
-        kernel = boot_kernel(clean=args.clean)
-        status = kernel.get_status()
-        print("\n" + "=" * 70)
-        print("KERNEL INTERNAL STATE")
-        print("=" * 70)
-        print(json.dumps(status, indent=2))
-        print("\nLedger Events:")
-        ledger = kernel.dump_ledger()
-        print(json.dumps(ledger, indent=2))
+    # Handle subcommands
+    if hasattr(args, 'func'):
+        return args.func(args)
     else:
-        interactive_mode(clean=args.clean)
+        parser.print_help()
+        return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

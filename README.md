@@ -82,11 +82,50 @@ cd steward-protocol
 pytest tests/
 ```
 
+### Testing & Validation
+
+**Integration Test Suite** — Proves Agent City boots and discovers agents:
+
+```bash
+# Run integration tests
+pytest tests/integration/test_system_boot.py -v
+
+# What it validates:
+# ✅ Kernel boots without errors
+# ✅ StewardAgent registers successfully
+# ✅ Steward discovers 10+ agents from steward.json manifests
+# ✅ All agents pass Governance Gate (oath_sworn=True)
+# ✅ Constitutional enforcement is active
+```
+
+**CI/CD Pipeline** — Automatic validation on every push:
+- Runs on all `claude/*` branches and `main`
+- Executes full integration test suite
+- Verifies governance gate rejection of unsworn agents
+- See: `.github/workflows/integration-tests.yml`
+
+**Smoke Test** — Quick verification Agent City boots:
+
+```bash
+python -c "
+from vibe_core.kernel_impl import RealVibeKernel
+from steward.system_agents.steward.agent import StewardAgent
+
+kernel = RealVibeKernel(ledger_path=':memory:')
+steward = StewardAgent(kernel)
+kernel.register_agent(steward)
+kernel.boot()
+count = steward.discover_agents()
+print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} discovered)')
+"
+```
+
 **Learn the system:**
 1. [A.G.I. Manifesto](AGI_MANIFESTO.md) — Why governance matters
 2. [ARCHITECTURE.md](ARCHITECTURE.md) — How it works
 3. [CONSTITUTION.md](CONSTITUTION.md) — The rules
-4. [vibe_core/](./vibe_core/) — Kernel integration
+4. [DEPLOYMENT.md](DEPLOYMENT.md) — Boot, deploy, and operate Agent City
+5. [vibe_core/](./vibe_core/) — Kernel integration
 
 **For AI Assistants:** Paste [MISSION_BRIEFING.md](./MISSION_BRIEFING.md) into your context to activate as a governed agent.
 

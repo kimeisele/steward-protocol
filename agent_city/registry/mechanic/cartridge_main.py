@@ -81,6 +81,12 @@ class MechanicCartridge(VibeAgent, OathMixin):
             domain="INFRASTRUCTURE",
             capabilities=["system_diagnosis", "self_healing", "sdlc_management"]
         )
+
+        # Bind to Constitutional Oath (GAD-000 compliance)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ MECHANIC has sworn the Constitutional Oath")
+
         self.project_root = Path(project_root or os.getcwd()).resolve()
         self.diagnostics: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),

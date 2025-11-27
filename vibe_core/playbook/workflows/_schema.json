@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VIBE Workflow Schema",
+  "description": "Graph-based workflow definition for VIBE Agency (OPERATION SEMANTIC MOTOR)",
+  "version": "0.1",
+  "type": "object",
+  "properties": {
+    "workflow": {
+      "type": "object",
+      "description": "Root workflow definition",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique workflow identifier (e.g., 'debug_test_failures')"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable workflow name"
+        },
+        "intent": {
+          "type": "string",
+          "description": "The semantic intent of this workflow"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of what the workflow does"
+        },
+        "version": {
+          "type": "string",
+          "description": "Workflow version"
+        },
+        "nodes": {
+          "type": "array",
+          "description": "Workflow steps (the nodes in the graph)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique node identifier (e.g., 'analyze_logs')"
+              },
+              "action": {
+                "type": "string",
+                "description": "Semantic action to execute"
+              },
+              "description": {
+                "type": "string"
+              },
+              "required_skills": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Skills required from agent"
+              },
+              "timeout_seconds": {
+                "type": "integer",
+                "description": "Timeout for this step"
+              }
+            },
+            "required": ["id", "action"]
+          }
+        },
+        "edges": {
+          "type": "array",
+          "description": "Graph edges defining step dependencies (control flow)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Source node ID"
+              },
+              "to": {
+                "type": "string",
+                "description": "Target node ID"
+              },
+              "condition": {
+                "type": "string",
+                "description": "Optional condition for edge (e.g., 'success', 'failure')"
+              }
+            },
+            "required": ["from", "to"]
+          }
+        },
+        "entry_point": {
+          "type": "string",
+          "description": "ID of the first node to execute"
+        },
+        "exit_points": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "IDs of final nodes (workflow completion points)"
+        },
+        "estimated_cost_usd": {
+          "type": "number",
+          "description": "Estimated total cost to execute workflow"
+        },
+        "retry_policy": {
+          "type": "object",
+          "properties": {
+            "max_retries": {"type": "integer"},
+            "backoff_factor": {"type": "number"},
+            "timeout_seconds": {"type": "integer"}
+          }
+        }
+      },
+      "required": ["id", "name", "intent", "nodes", "edges", "entry_point", "exit_points"]
+    }
+  },
+  "required": ["workflow"],
+  "examples": [
+    {
+      "workflow": {
+        "id": "debug_test_failures",
+        "name": "Debug Test Failures",
+        "intent": "Investigate and fix test failures",
+        "description": "Graph-based workflow to analyze failing tests and propose fixes",
+        "version": "1.0",
+        "nodes": [
+          {
+            "id": "analyze_logs",
+            "action": "analyze",
+            "description": "Analyze test output and error logs",
+            "required_skills": ["code_analysis", "debugging"],
+            "timeout_seconds": 300
+          },
+          {
+            "id": "identify_root_cause",
+            "action": "research",
+            "description": "Investigate root cause of failures",
+            "required_skills": ["code_analysis", "debugging", "reasoning"],
+            "timeout_seconds": 600
+          },
+          {
+            "id": "generate_fix",
+            "action": "implement",
+            "description": "Generate and implement fix",
+            "required_skills": ["coding", "testing"],
+            "timeout_seconds": 900
+          },
+          {
+            "id": "verify_fix",
+            "action": "test",
+            "description": "Verify fix resolves the issue",
+            "required_skills": ["testing", "code_analysis"],
+            "timeout_seconds": 300
+          }
+        ],
+        "edges": [
+          {
+            "from": "analyze_logs",
+            "to": "identify_root_cause",
+            "condition": "success"
+          },
+          {
+            "from": "identify_root_cause",
+            "to": "generate_fix",
+            "condition": "success"
+          },
+          {
+            "from": "generate_fix",
+            "to": "verify_fix",
+            "condition": "success"
+          }
+        ],
+        "entry_point": "analyze_logs",
+        "exit_points": ["verify_fix"],
+        "estimated_cost_usd": 1.5,
+        "retry_policy": {
+          "max_retries": 3,
+          "backoff_factor": 2.0,
+          "timeout_seconds": 300
+        }
+      }
+    }
+  ]
+}

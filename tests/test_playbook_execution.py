@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 🎼 ORCHESTRATION TEST: PLAYBOOK ENGINE + SAFE EVOLUTION LOOP (GAD-5500)
-Verifies that the PlaybookEngine correctly orchestrates the ENGINEER, AUDITOR, and CHRONICLE/ARCHIVIST.
+Verifies that the DeterministicExecutor correctly orchestrates the ENGINEER, AUDITOR, and CHRONICLE/ARCHIVIST.
 
 CRITICAL BLIND SPOT #2: Agent Mapping
 The playbook references:
@@ -23,7 +23,7 @@ sys.path.insert(0, '/home/user/steward-protocol')
 
 from vibe_core.scheduling.task import Task
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
-from envoy.playbook_engine import PlaybookEngine
+from envoy.deterministic_executor import DeterministicExecutor
 from steward.system_agents.engineer.cartridge_main import EngineerCartridge
 from steward.system_agents.auditor.cartridge_main import AuditorCartridge
 from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
@@ -117,7 +117,7 @@ async def test_playbook_loads():
     print("TEST 1: PLAYBOOK LOADING")
     print("=" * 70)
 
-    engine = PlaybookEngine(knowledge_dir="knowledge")
+    engine = DeterministicExecutor(knowledge_dir="knowledge")
 
     if "FEATURE_IMPLEMENT_SAFE_V1" in engine.playbooks:
         playbook = engine.playbooks["FEATURE_IMPLEMENT_SAFE_V1"]
