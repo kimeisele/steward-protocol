@@ -126,17 +126,18 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         Process a task from the VibeKernel scheduler.
 
         CIVIC delegates to three specialized agents (P1 Refactor):
-        - Registry Agent: scan_and_register, get_registry, generate_citymap
+        - Registry Agent: scan_and_register, get_registry (governance only, no documentation)
         - Economy Agent: check_license, deduct_credits, refill_credits, revoke_license
         - Lifecycle Agent: check_action_permission, authorize_brahmachari_to_grihastha, report_violation, get_lifecycle_status
+
+        Note: Documentation (AGENTS.md, CITYMAP, etc.) is handled by SCRIBE (The Documentarian).
         """
         try:
             action = task.payload.get("action")
             logger.info(f"🏛️  CIVIC routing task: {action}")
 
-            # Route to Registry Agent
-            if action in ["scan_and_register", "update_agents_registry", "get_registry", "generate_citymap"]:
-                task.payload["action"] = action if action not in ["generate_citymap"] else "get_registry"
+            # Route to Registry Agent (governance only)
+            if action in ["scan_and_register", "get_registry"]:
                 return self.registry_agent.process(task)
 
             # Route to Economy Agent
