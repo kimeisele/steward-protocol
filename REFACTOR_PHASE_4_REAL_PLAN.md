@@ -13,6 +13,8 @@
 **The Real Problem:**
 - Tests pass but code is in **Compatibility Mode**
 - Phase 2 was **Copy-Paste Merge**, not Integration
+- **PHOENIX CONFIG PORTED BUT NOT INTEGRATED** ← THE ROOT CAUSE
+- Agents never receive loaded config, run blind with legacy patterns
 - 79 files have Circular Import Workarounds (band-aids)
 - 11 Ledger classes exist (no single source of truth)
 - Agents initialized with **MockAgent** (never wired up)
@@ -21,17 +23,96 @@
 - Specialists are empty stubs
 
 **Why This Must Be Fixed Now:**
-1. ❌ Can't add real agent features while MockAgent defaults exist
-2. ❌ Can't consolidate systems while circular imports are band-aided
-3. ❌ Can't debug when 79 files hide import problems
-4. ❌ Can't scale when 11 Ledger variants exist
-5. ❌ Can't proceed to Production (none exists) with this foundation
+1. ❌ **Phoenix Config loaded at startup, then DROPPED - never reaches agents** (ROOT CAUSE)
+2. ❌ Agents run with hardcoded defaults + legacy patterns instead of unified config
+3. ❌ Can't add real agent features while MockAgent defaults exist
+4. ❌ Can't consolidate systems while circular imports are band-aided
+5. ❌ Can't debug when 79 files hide import problems
+6. ❌ Can't scale when 11 Ledger variants exist
+7. ❌ Can't proceed to Production (none exists) with this foundation
 
 **Commitment:** This is NOT another documentation phase. This is REAL CODE CHANGES.
 
 ---
 
-## CRITICAL PATH: TOP 3 BLOCKERS
+## CRITICAL PATH: TOP 4 BLOCKERS (PRIORITY ORDER)
+
+### BLOCKER #0: Phoenix Config Integration (THE ROOT CAUSE) ⭐ START HERE
+**Current State:**
+- ✅ `vibe_core/config/schema.py` - Complete CityConfig with 15 model classes
+- ✅ `vibe_core/config/loader.py` - ConfigLoader implementation
+- ✅ `run_server.py` - Loads config at startup
+- ❌ `BootOrchestrator.__init__()` - NO config parameter
+- ❌ `Discoverer.discover_agents()` - NO config passed to agents
+- ❌ All agents - Instantiated without config injection
+- Result: **Config loaded once, then ABANDONED. Agents run blind.**
+
+**Proof of Disconnection:**
+```python
+# run_server.py lines 92-93: Config loaded here
+loader = ConfigLoader(self.config_path)
+self.config = loader.load()
+
+# run_server.py line 149: But NEVER passed here!
+self.orchestrator.boot()  # ❌ NO config parameter!
+
+# BootOrchestrator line 82-87: Kernel created without config
+kernel = RealVibeKernel(ledger_path=...)  # ❌ NO config
+discoverer = Discoverer(kernel=...)        # ❌ NO config
+```
+
+**Impact:**
+- Herald reads from hardcoded paths, not CityConfig.agents.herald
+- Forum (not implemented) would never read from CityConfig.agents.forum
+- Civic reads from citizens.json, not CityConfig.agents.civic
+- Each agent has legacy config patterns instead of unified approach
+- Changing config/matrix.yaml does NOT affect agent behavior
+
+**The Fix:**
+1. **Create config parameter chain:**
+   ```python
+   # 1. StewardBootLoader passes config
+   def boot_kernel(self):
+       self.orchestrator = BootOrchestrator(config=self.config)
+
+   # 2. BootOrchestrator stores and passes config
+   def __init__(self, config: CityConfig):
+       self.config = config
+       self.discoverer = Discoverer(kernel=kernel, config=config)
+
+   # 3. Discoverer passes config to agents
+   def discover_agents(self):
+       agent = self._load_agent_from_manifest(
+           manifest_path, agent_id,
+           config=self.config.agents.get(agent_id)  # ✅ Config injection
+       )
+   ```
+
+2. **Update each agent to accept config:**
+   ```python
+   # Herald example
+   class HeraldCartridge(VibeAgent):
+       def __init__(self, agent_id: str, config: Optional[HeraldConfig] = None):
+           self.config = config or HeraldConfig()  # Use passed or default
+           self.posting_frequency = self.config.posting_frequency_hours
+           self.content_style = self.config.content_style
+   ```
+
+3. **Remove legacy config patterns:**
+   - Replace hardcoded paths with config.paths.data
+   - Replace os.getenv() with config.integrations.twitter.bearer_token
+   - Replace dict-based config with CityConfig access
+
+4. **Add validation:**
+   - Agents assert they received proper config
+   - Tests verify agents use CityConfig values
+
+**Time Estimate:** 2-3 hours (simpler than it looks - mostly parameter passing)
+**Risk:** MEDIUM (config flow is clear, but touches boot sequence)
+**Test Impact:** Tests will verify agents receive and use config
+**PRIORITY:** 🔴 DO THIS FIRST - Everything else depends on this
+
+---
 
 ### BLOCKER #1: The Ledger Mess (Foundation)
 **Current State:**
@@ -210,7 +291,36 @@
 
 ---
 
-## EXECUTION PLAN: WEEK 1
+## EXECUTION PLAN: WEEK 1 (MONDAY-FRIDAY) + SUNDAY PREP
+
+### Sunday (BEFORE Monday): Phoenix Config Integration Foundation
+**Goal:** Wire config from load → boot orchestrator → agents
+```bash
+# 1. Update BootOrchestrator signature
+# File: boot_orchestrator.py
+# Change: __init__(self) → __init__(self, config: CityConfig)
+
+# 2. Update Discoverer to accept config
+# File: agent_city/discoverer.py
+# Change: __init__(self, kernel) → __init__(self, kernel, config)
+
+# 3. Update StewardBootLoader to pass config
+# File: run_server.py line 149
+# Change: self.orchestrator.boot() → self.orchestrator.boot(config=self.config)
+
+# 4. Update each agent to accept config
+# Files: herald/cartridge_main.py, civic/cartridge_main.py, etc.
+# Change: def __init__(self) → def __init__(self, config=None)
+
+# 5. Test that config flows through
+pytest tests/test_config_integration.py -v
+
+# 6. Commit
+git commit -m "feat: Wire Phoenix Config through boot sequence - foundation for agent configuration"
+```
+
+**Time:** 2-3 hours
+**Impact:** Config now REACHABLE by agents (fixes root cause)
 
 ### Monday: Ledger Architecture
 **Goal:** One canonical Ledger interface + implementations
