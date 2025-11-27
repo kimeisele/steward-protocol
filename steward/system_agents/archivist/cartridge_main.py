@@ -17,6 +17,7 @@ import logging
 from typing import Dict, Any
 
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.config import CityConfig, CityConfig
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
@@ -38,8 +39,11 @@ class ArchivistCartridge(VibeAgent, OathMixin if OathMixin else object):
     CRITICAL: Only commits if audit_result.passed == true
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize ARCHIVIST as a VibeAgent."""
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         super().__init__(
             agent_id="archivist",
             name="ARCHIVIST",

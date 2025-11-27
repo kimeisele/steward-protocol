@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Optional
 
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.config import CityConfig
 from steward.system_agents.discoverer.agent import Discoverer
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
@@ -43,7 +44,8 @@ class BootOrchestrator:
     def __init__(
         self,
         ledger_path: Optional[str] = None,
-        project_root: Optional[Path] = None
+        project_root: Optional[Path] = None,
+        config: Optional[CityConfig] = None
     ):
         """
         Initialize the boot orchestrator.
@@ -51,9 +53,11 @@ class BootOrchestrator:
         Args:
             ledger_path: Path to SQLite ledger (default: data/vibe_ledger.db)
             project_root: Project root directory (default: auto-detected)
+            config: CityConfig instance (REQUIRED: Phoenix Config for agents)
         """
         self.ledger_path = ledger_path or "data/vibe_ledger.db"
         self.project_root = project_root or Path.cwd()
+        self.config = config  # BLOCKER #0: Phoenix Config integration
         self.kernel: Optional[RealVibeKernel] = None
         self.discoverer: Optional[Discoverer] = None
 
@@ -84,7 +88,7 @@ class BootOrchestrator:
 
         # Step 2: Register Discoverer (Genesis Agent)
         logger.info("\n[2/4] Registering Discoverer (Genesis Agent)...")
-        self.discoverer = Discoverer(kernel=self.kernel)
+        self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
 
         try:
             self.kernel.register_agent(self.discoverer)

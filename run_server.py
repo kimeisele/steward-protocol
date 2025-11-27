@@ -161,9 +161,11 @@ class StewardBootLoader:
         logger.info("=" * 80)
 
         # Use BootOrchestrator for unified agent discovery
+        # BLOCKER #0: Pass Phoenix Config to orchestrator
         orchestrator = BootOrchestrator(
             ledger_path=self.ledger_path,
-            project_root=project_root
+            project_root=project_root,
+            config=self.config
         )
 
         try:

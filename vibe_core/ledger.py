@@ -6,7 +6,7 @@ The Immutable Memory of Agent City.
 Provides append-only event recording with cryptographic hash chaining for tamper detection.
 
 Implements:
-- VibeLedger: Abstract base class
+- VibeLedger: Abstract base class (imported from kernel.py)
 - InMemoryLedger: Fast, volatile ledger (for testing)
 - SQLiteLedger: Persistent, hash-chained ledger (for production)
 """
@@ -20,29 +20,10 @@ from datetime import datetime
 from pathlib import Path
 import os
 
+# BLOCKER #1: Import canonical VibeLedger ABC from kernel.py
+from .kernel import VibeLedger
+
 logger = logging.getLogger("VIBE_LEDGER")
-
-
-class VibeLedger:
-    """Abstract Base Class for the Ledger"""
-
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
-        raise NotImplementedError
-
-    def record_start(self, task) -> None:
-        raise NotImplementedError
-
-    def record_completion(self, task, result: Any) -> None:
-        raise NotImplementedError
-
-    def record_failure(self, task, error: str) -> None:
-        raise NotImplementedError
-
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
-        raise NotImplementedError
-
-    def get_all_events(self) -> List[Dict[str, Any]]:
-        raise NotImplementedError
 
 
 class InMemoryLedger(VibeLedger):

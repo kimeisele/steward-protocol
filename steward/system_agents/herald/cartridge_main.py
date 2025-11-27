@@ -30,6 +30,7 @@ from pathlib import Path
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
+from vibe_core.config import CityConfig, HeraldConfig
 
 from .tools.research_tool import ResearchTool
 from .tools.content_tool import ContentTool
@@ -72,8 +73,16 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
     - OATH-BOUND: Constitutional binding via Genesis Ceremony
     """
 
-    def __init__(self):
-        """Initialize HERALD as a VibeAgent."""
+    def __init__(self, config: Optional[HeraldConfig] = None):
+        """Initialize HERALD as a VibeAgent.
+
+        Args:
+            config: HeraldConfig instance from Phoenix Config (optional)
+                   If not provided, HeraldConfig defaults are used
+        """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or HeraldConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="herald",
@@ -90,7 +99,7 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
             ]
         )
 
-        logger.info("🦅 HERALD (VibeAgent v3.0) is online.")
+        logger.info(f"🦅 HERALD (VibeAgent v3.0) is online (config: {self.config.posting_frequency_hours}h frequency).")
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
