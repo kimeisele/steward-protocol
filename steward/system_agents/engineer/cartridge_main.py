@@ -13,12 +13,12 @@ Updated for Safe Evolution Loop (GAD-5500):
 
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pathlib import Path
 
 # VibeOS Integration
 from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.config import CityConfig, CityConfig
+from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 from steward.system_agents.engineer.tools.builder_tool import BuilderTool

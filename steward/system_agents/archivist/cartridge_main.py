@@ -14,10 +14,10 @@ import os
 import shutil
 import subprocess
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.config import CityConfig, CityConfig
+from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
