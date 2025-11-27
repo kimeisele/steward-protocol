@@ -33,7 +33,7 @@ Check the logs for these success indicators:
 ```
 ✅ KERNEL RUNNING
 🎯 Discovery complete: X new agents registered
-🧙‍♂️ DiscovererAgent monitoring (interval=10.0s)
+🧙‍♂️ Discoverer monitoring (interval=10.0s)
 ```
 
 Access the web interface: **http://localhost:8000**
@@ -48,7 +48,7 @@ Access the web interface: **http://localhost:8000**
 1. RealVibeKernel instantiation
    └─ Creates SQLite ledger for immutable event log
 
-2. DiscovererAgent initialization
+2. Discoverer initialization
    └─ Registers with kernel
 
 3. Kernel boot
@@ -212,7 +212,7 @@ pytest tests/integration/ --cov=vibe_core --cov=steward --cov-report=html
 ### What Integration Tests Verify
 
 ✅ Kernel boots without errors
-✅ DiscovererAgent registers successfully
+✅ Discoverer registers successfully
 ✅ Steward discovers at least 10 agents
 ✅ All agents pass Governance Gate
 ✅ Agent manifests are valid
@@ -291,11 +291,11 @@ print(f"oath_sworn: {agent.oath_sworn}")  # Should print: True
 
 **Manual trigger:**
 ```python
-from steward.system_agents.discoverer.agent import DiscovererAgent
+from steward.system_agents.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 
 kernel = RealVibeKernel()
-steward = DiscovererAgent(kernel)
+steward = Discoverer(kernel)
 kernel.register_agent(steward)
 kernel.boot()
 
@@ -354,7 +354,7 @@ kernel.tick()  # Execute next task
 
 ### Steward Agent (steward/system_agents/steward/agent.py)
 
-The **DiscovererAgent** provides:
+The **Discoverer** provides:
 
 - **Agent Discovery** - Autonomous manifest scanning
 - **Registration** - Auto-registers discovered agents
@@ -364,7 +364,7 @@ The **DiscovererAgent** provides:
 **Key Methods:**
 
 ```python
-steward = DiscovererAgent(kernel)
+steward = Discoverer(kernel)
 
 # Scan filesystem and register new agents
 count = steward.discover_agents()
@@ -562,7 +562,7 @@ python vibe_launcher.py
 ```python
 # Pattern 1: Boot and discover
 kernel = RealVibeKernel()
-steward = DiscovererAgent(kernel)
+steward = Discoverer(kernel)
 kernel.register_agent(steward)
 kernel.boot()
 steward.discover_agents()
