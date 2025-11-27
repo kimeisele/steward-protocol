@@ -12,7 +12,7 @@ import time
 import logging
 from pathlib import Path
 from vibe_core.kernel_impl import RealVibeKernel
-from steward.system_agents.steward.agent import StewardAgent
+from steward.system_agents.discoverer.agent import DiscovererAgent
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +27,7 @@ def test_discovery():
     # 2. Initialize Kernel & Steward
     logger.info("⚙️  Initializing Kernel...")
     kernel = RealVibeKernel(ledger_path=":memory:")
-    steward = StewardAgent(kernel)
+    steward = DiscovererAgent(kernel)
     kernel.register_agent(steward)
     kernel.boot()
     
