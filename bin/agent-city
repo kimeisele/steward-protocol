@@ -17,13 +17,15 @@ def cmd_task_add(args):
     """Add a task."""
     tm = TaskManager(PROJECT_ROOT)
 
-    # Resolve roadmap
+    # Resolve roadmap: accept UUID directly or match current roadmap name
     roadmap_id = None
     if hasattr(args, 'roadmap') and args.roadmap:
-        if tm.roadmap and (args.roadmap == tm.roadmap.name or args.roadmap == tm.roadmap.id):
+        # Check if it's already a UUID (36 chars with dashes)
+        if len(args.roadmap) == 36 and args.roadmap.count('-') == 4:
+            roadmap_id = args.roadmap
+        # Otherwise try to match current roadmap name
+        elif tm.roadmap and args.roadmap == tm.roadmap.name:
             roadmap_id = tm.roadmap.id
-        else:
-            print(f"⚠️  Roadmap '{args.roadmap}' not found, task added without roadmap")
 
     task = tm.add_task(
         title=args.description,
