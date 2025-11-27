@@ -980,6 +980,132 @@ class SQLiteStore:
         return tasks
 
     # ========================================================================
+    # ROADMAP PERSISTENCE (GAD-3000 VIMANA)
+    # ========================================================================
+
+    def add_roadmap(
+        self,
+        roadmap_id: str,
+        name: str,
+        description: str,
+        missions: list[str] | None = None,
+        created_at: str = None,
+        updated_at: str = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
+        """
+        Add or update a roadmap (UPSERT operation).
+
+        Args:
+            roadmap_id: Unique roadmap identifier
+            name: Roadmap name
+            description: Roadmap description
+            missions: List of mission IDs (optional)
+            created_at: ISO 8601 timestamp (optional)
+            updated_at: ISO 8601 timestamp (optional)
+            metadata: Additional data (optional)
+
+        Returns:
+            roadmap_id
+        """
+        if created_at is None:
+            created_at = datetime.utcnow().isoformat() + "Z"
+        if updated_at is None:
+            updated_at = created_at
+
+        with self._lock:
+            # Check if roadmap exists
+            cursor = self.conn.execute(
+                "SELECT id FROM roadmaps WHERE id = ?",
+                (roadmap_id,),
+            )
+            existing = cursor.fetchone()
+
+            if existing:
+                # Update existing
+                self.conn.execute(
+                    """
+                    UPDATE roadmaps
+                    SET name = ?, description = ?, missions = ?, updated_at = ?, metadata = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        name,
+                        description,
+                        json.dumps(missions) if missions else None,
+                        updated_at,
+                        json.dumps(metadata) if metadata else None,
+                        roadmap_id,
+                    ),
+                )
+            else:
+                # Insert new
+                self.conn.execute(
+                    """
+                    INSERT INTO roadmaps (id, name, description, missions, created_at, updated_at, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        roadmap_id,
+                        name,
+                        description,
+                        json.dumps(missions) if missions else None,
+                        created_at,
+                        updated_at,
+                        json.dumps(metadata) if metadata else None,
+                    ),
+                )
+            self._commit()
+
+        return roadmap_id
+
+    def get_roadmap(self, roadmap_id: str) -> dict[str, Any] | None:
+        """
+        Get roadmap by ID.
+
+        Args:
+            roadmap_id: Roadmap ID
+
+        Returns:
+            Roadmap dict or None if not found
+        """
+        cursor = self.conn.execute(
+            "SELECT * FROM roadmaps WHERE id = ?",
+            (roadmap_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        roadmap = dict(row)
+        # Parse JSON fields
+        if roadmap.get("missions"):
+            roadmap["missions"] = json.loads(roadmap["missions"])
+        if roadmap.get("metadata"):
+            roadmap["metadata"] = json.loads(roadmap["metadata"])
+        return roadmap
+
+    def get_all_roadmaps(self) -> list[dict[str, Any]]:
+        """
+        Get all roadmaps.
+
+        Returns:
+            List of roadmap dicts
+        """
+        cursor = self.conn.execute(
+            "SELECT * FROM roadmaps ORDER BY created_at DESC"
+        )
+        roadmaps = []
+        for row in cursor.fetchall():
+            roadmap = dict(row)
+            if roadmap.get("missions"):
+                roadmap["missions"] = json.loads(roadmap["missions"])
+            if roadmap.get("metadata"):
+                roadmap["metadata"] = json.loads(roadmap["metadata"])
+            roadmaps.append(roadmap)
+        return roadmaps
+
+    # ========================================================================
     # LEGACY MIGRATION (ARCH-003)
     # ========================================================================
 
