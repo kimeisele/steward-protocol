@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from vibe_core.cartridges.registry import get_default_cartridge_registry
-from vibe_core.kernel import VibeKernel
+from vibe_core.protocols import VibeKernel
 
 logger = logging.getLogger(__name__)
 

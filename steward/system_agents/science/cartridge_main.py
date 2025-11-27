@@ -35,17 +35,12 @@ from vibe_core.config import CityConfig, ScienceConfig
 from .tools.web_search_tool import WebSearchTool, SearchResult
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCIENTIST_MAIN")
 
 
-class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
+class ScientistCartridge(VibeAgent):
     """
     THE SCIENTIST Agent - External Intelligence Module.
 
@@ -148,7 +143,7 @@ class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="science",
             name="SCIENTIST",

@@ -181,7 +181,7 @@ class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
             return error_result
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="envoy",
             name="ENVOY",
