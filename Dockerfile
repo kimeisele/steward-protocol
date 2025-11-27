@@ -32,6 +32,7 @@ USER steward
 ENV PORT=8080
 ENV GOVERNANCE_MODE=SERVERLESS_BYPASS
 ENV ENV=production
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Run the application
 CMD ["uvicorn", "gateway.api:app", "--host", "0.0.0.0", "--port", "8080"]
