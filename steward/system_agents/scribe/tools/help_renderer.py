@@ -1,144 +1,29 @@
 #!/usr/bin/env python3
 """
-CIVIC Help Tool - Dynamic System Documentation Generator
-
-This tool generates HELP.md by introspecting the running system:
-1. Current Agent Status (from AGENTS.md registry)
-2. How to Start the System (from existing binaries and scripts)
-3. Governance State (from ledger and proposal history)
-4. Architecture Overview (from CITYMAP.md)
-5. Quick Reference for common operations
-
-Philosophy:
-"A system that documents itself is a system that evolves with truth.
-No stale documentation, only live introspection."
+SCRIBE Help Renderer - Generate HELP.md
 """
 
 import json
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
-import re
+from pathlib import Path
+from typing import Dict, List, Any
+from .introspector import CartridgeIntrospector, ScriptIntrospector, ConfigIntrospector
 
 
-class HelpTool:
-    """
-    CIVIC's Help Generator Tool.
-
-    Creates HELP.md by reading the actual system state.
-    This is the "onboarding manual" that never lies.
-    """
+class HelpRenderer:
+    """Render HELP.md from system state."""
 
     def __init__(self, root_dir: str = "."):
-        """Initialize help tool with root directory."""
         self.root_dir = Path(root_dir)
-        self.agents = []
-        self.scripts = []
-        self.ledger = None
+        self.cart_introspector = CartridgeIntrospector(root_dir)
+        self.script_introspector = ScriptIntrospector(root_dir)
+        self.config_introspector = ConfigIntrospector(root_dir)
 
-    def discover_entry_points(self) -> List[Dict[str, str]]:
-        """
-        Find all executable entry points in scripts/.
-
-        Returns:
-            List of {name, path, description} dicts
-        """
-        scripts_dir = self.root_dir / "scripts"
-        entry_points = []
-
-        if not scripts_dir.exists():
-            return entry_points
-
-        for script_file in sorted(scripts_dir.glob("*.py")):
-            if script_file.name == "__init__.py":
-                continue
-
-            name = script_file.stem
-            description = self._extract_script_doc(script_file)
-
-            entry_points.append({
-                "name": name,
-                "path": str(script_file.relative_to(self.root_dir)),
-                "description": description
-            })
-
-        return entry_points
-
-    def _extract_script_doc(self, script_file: Path) -> str:
-        """Extract docstring from a script file."""
-        try:
-            content = script_file.read_text()
-            match = re.search(r'"""(.*?)"""', content, re.DOTALL)
-            if match:
-                text = match.group(1).strip()
-                first_line = text.split('\n')[0].strip()
-                return first_line
-            return ""
-        except:
-            return ""
-
-    def load_agents_from_registry(self) -> List[Dict[str, str]]:
-        """
-        Extract agent list from AGENTS.md.
-
-        Returns:
-            List of agent names found in registry
-        """
-        agents_file = self.root_dir / "AGENTS.md"
-        agents = []
-
-        if not agents_file.exists():
-            return agents
-
-        try:
-            content = agents_file.read_text()
-            # Extract agent headers like "### 🤖 AGENTNAME"
-            pattern = r'### 🤖 (\w+)'
-            matches = re.findall(pattern, content)
-            agents = list(dict.fromkeys(matches))  # Remove duplicates, preserve order
-        except:
-            pass
-
-        return agents
-
-    def check_ledger_status(self) -> Dict[str, Any]:
-        """
-        Check if ledger exists and return its status.
-
-        Returns:
-            Dict with ledger info or empty if not found
-        """
-        ledger_file = self.root_dir / ".steward" / "ledger.json"
-
-        if not ledger_file.exists():
-            return {
-                "exists": False,
-                "message": "Ledger not yet initialized. Run `python scripts/summon.py` to start."
-            }
-
-        try:
-            data = json.loads(ledger_file.read_text())
-            entries = data.get("chain_of_trust", {}).get("entries", [])
-
-            return {
-                "exists": True,
-                "total_entries": len(entries),
-                "initialized": True,
-                "last_update": entries[-1].get("timestamp", "unknown") if entries else "never"
-            }
-        except:
-            return {"exists": True, "readable": False}
-
-    def generate_help_markdown(self) -> str:
-        """
-        Generate the complete HELP.md content.
-
-        Returns:
-            Markdown string for HELP.md
-        """
-        agents = self.load_agents_from_registry()
-        entry_points = self.discover_entry_points()
-        ledger_status = self.check_ledger_status()
+    def scan_and_render(self) -> str:
+        """Scan system and render HELP.md."""
+        agents = self._load_agents_from_registry()
+        entry_points = self.script_introspector.discover_entry_points()
+        ledger_status = self._check_ledger_status()
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -341,41 +226,43 @@ For detailed information:
 
         return content
 
-    def write_help(self, output_file: str = "HELP.md") -> bool:
-        """
-        Write the help document to HELP.md.
+    def _load_agents_from_registry(self) -> List[str]:
+        """Extract agent names from AGENTS.md."""
+        return self.config_introspector.load_agents_from_registry()
 
-        Args:
-            output_file: Output filename (default: HELP.md)
+    def _check_ledger_status(self) -> Dict[str, Any]:
+        """Check if ledger exists."""
+        ledger_file = self.root_dir / ".steward" / "ledger.json"
 
-        Returns:
-            True if successful, False otherwise
-        """
+        if not ledger_file.exists():
+            return {
+                "exists": False,
+                "message": "Ledger not yet initialized. Run `python scripts/summon.py` to start."
+            }
+
         try:
-            content = self.generate_help_markdown()
+            data = json.loads(ledger_file.read_text())
+            entries = data.get("chain_of_trust", {}).get("entries", [])
+
+            return {
+                "exists": True,
+                "total_entries": len(entries),
+                "initialized": True,
+                "last_update": entries[-1].get("timestamp", "unknown") if entries else "never"
+            }
+        except:
+            return {"exists": True, "readable": False}
+
+    def render_to_file(self, output_file: str = "HELP.md") -> bool:
+        """Render and write to file."""
+        try:
+            content = self.scan_and_render()
             output_path = self.root_dir / output_file
 
             output_path.write_text(content)
-
-            print(f"✅ Help generated: {output_path}")
-            agents = self.load_agents_from_registry()
-            scripts = self.discover_entry_points()
-            print(f"📚 {len(agents)} agents documented")
-            print(f"📋 {len(scripts)} scripts documented")
+            print(f"✅ HELP.md generated: {output_path}")
 
             return True
         except Exception as e:
-            print(f"❌ Error writing help: {e}")
+            print(f"❌ Error writing HELP.md: {e}")
             return False
-
-
-def main():
-    """Main entry point."""
-    import sys
-    root_dir = sys.argv[1] if len(sys.argv) > 1 else "."
-    tool = HelpTool(root_dir)
-    tool.write_help()
-
-
-if __name__ == "__main__":
-    main()

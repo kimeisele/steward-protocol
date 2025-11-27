@@ -19,6 +19,12 @@ cartridges:
     domain: "INFRASTRUCTURE"
     capabilities: ["archive", "history", "records"]
 
+  - name: "scribe"
+    path: "./steward/system_agents/scribe"
+    class: "ScribeCartridge"
+    domain: "INFRASTRUCTURE"
+    capabilities: ["documentation", "introspection", "publishing"]
+
   # --- CORE PROTOCOL ---
   - name: "civic"
     path: "./civic"
