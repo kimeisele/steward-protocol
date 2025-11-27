@@ -82,7 +82,21 @@ class TaskManager:
                             priority=task_data.get("priority", 0),
                             assignee=task_data.get("assignee"),
                             tags=task_data.get("tags", []),
+                            subtasks=task_data.get("subtasks", []),
+                            metadata=task_data.get("metadata", {}),
+                            topology_layer=task_data.get("topology_layer"),
+                            varna=task_data.get("varna"),
+                            routing_priority=task_data.get("routing_priority"),
+                            roadmap_id=task_data.get("roadmap_id"),
                         )
+                        # Load datetime fields
+                        if task_data.get("created_at"):
+                            task.created_at = datetime.fromisoformat(task_data["created_at"])
+                        if task_data.get("updated_at"):
+                            task.updated_at = datetime.fromisoformat(task_data["updated_at"])
+                        if task_data.get("completed_at"):
+                            task.completed_at = datetime.fromisoformat(task_data["completed_at"])
+
                         self.tasks[task_id] = task
             except Exception as e:
                 print(f"Error loading tasks: {e}")
