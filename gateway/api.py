@@ -585,24 +585,21 @@ def get_queue_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
-# Mount static files ONLY if directory exists AND has files
-# Use /ui path instead of / to avoid shadowing API routes
+# Mount static files at ROOT (/) to serve as the main website
 if os.path.exists("gateway/static") and os.listdir("gateway/static"):
-    app.mount("/ui", StaticFiles(directory="gateway/static", html=True), name="static")
+    app.mount("/", StaticFiles(directory="gateway/static", html=True), name="static")
 elif os.path.exists("docs/public") and os.listdir("docs/public"):
-    app.mount("/ui", StaticFiles(directory="docs/public", html=True), name="static")
+    app.mount("/", StaticFiles(directory="docs/public", html=True), name="static")
 else:
     logger.warning("⚠️  No static files found - API-only mode")
-
-# Add simple root endpoint
-@app.get("/")
-def root():
-    return {
-        "service": "Agent City Gateway",
-        "status": "online",
-        "endpoints": {
-            "health": "/health",
-            "agents": "/api/agents",
-            "ui": "/ui (if available)"
+    # Fallback root endpoint if no static files
+    @app.get("/")
+    def root():
+        return {
+            "service": "Agent City Gateway",
+            "status": "online",
+            "endpoints": {
+                "health": "/health",
+                "agents": "/api/agents"
+            }
         }
-    }
