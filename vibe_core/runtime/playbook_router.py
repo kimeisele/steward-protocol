@@ -1,4 +1,4 @@
-"""Playbook Engine - Conveyor Belt #2: Route to task
+"""Playbook Router - Conveyor Belt #2: Route to task
 
 Routes user intent + context → task playbook
 Uses LEAN logic (simple if/else, no ML for MVP)
@@ -21,7 +21,7 @@ class PlaybookRoute:
     source: str  # What triggered this route
 
 
-class PlaybookEngine:
+class PlaybookRouter:
     """Routes user intent + context → task playbook"""
 
     def __init__(self, registry_path: Path | None = None):

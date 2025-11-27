@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from vibe_core.runtime.context_loader import ContextLoader
-from vibe_core.runtime.playbook_engine import PlaybookEngine
+from vibe_core.runtime.playbook_router import PlaybookRouter
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
 from vibe_core.store.sqlite_store import SQLiteStore
@@ -25,7 +25,7 @@ class BootSequence:
     def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or Path.cwd()
         self.context_loader = ContextLoader(self.project_root)
-        self.playbook_engine = PlaybookEngine()
+        self.playbook_engine = PlaybookRouter()
         self.prompt_composer = PromptComposer()
 
         # Initialize SQLite persistence (ARCH-003: Dual Write Mode)

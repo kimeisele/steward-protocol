@@ -18,8 +18,5 @@ This enables dynamic agent assignment, custom domains, and reusable workflows.
 
 from vibe_core.playbook.executor import GraphExecutor
 
-# Alias for compatibility
-PlaybookEngine = GraphExecutor
-
 __version__ = "0.1"
-__all__ = ["PlaybookEngine", "GraphExecutor"]
+__all__ = ["GraphExecutor"]

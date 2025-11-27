@@ -1,5 +1,5 @@
 """
-🎯 PLAYBOOK ENGINE (GAD-5000: DETERMINISTIC EXECUTION)
+🎯 DETERMINISTIC EXECUTOR (GAD-5000: DETERMINISTIC EXECUTION)
 The Dungeon Master - Executes deterministic playbook sequences.
 
 Role:
@@ -31,7 +31,7 @@ from typing import Dict, Any, List, Optional, Set
 from pathlib import Path
 from datetime import datetime
 
-logger = logging.getLogger("PLAYBOOK_ENGINE")
+logger = logging.getLogger("DETERMINISTIC_EXECUTOR")
 
 
 class PhaseStatus(Enum):
@@ -96,9 +96,9 @@ class PlaybookExecution:
         return self.status in ["COMPLETED", "FAILED"]
 
 
-class PlaybookEngine:
+class DeterministicExecutor:
     """
-    The Dungeon Master.
+    The Dungeon Master - GAD-5000 Deterministic Execution Engine.
     Loads playbooks, matches intents, and executes phases deterministically.
     """
 
