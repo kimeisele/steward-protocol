@@ -64,11 +64,11 @@ try:
 except ImportError:
     llm = None
 
-# Import Playbook Engine (GAD-5000: DETERMINISTIC INTELLIGENCE)
+# Import Deterministic Executor (GAD-5000: DETERMINISTIC INTELLIGENCE)
 try:
-    from envoy.playbook_engine import PlaybookEngine
+    from envoy.deterministic_executor import DeterministicExecutor
 except ImportError:
-    PlaybookEngine = None
+    DeterministicExecutor = None
 
 logger = logging.getLogger("UNIVERSAL_PROVIDER")
 
@@ -217,12 +217,12 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  Reflex Engine initialization failed: {e}")
 
-        # Engine 2: PlaybookEngine (Deterministic multi-phase execution)
+        # Engine 2: DeterministicExecutor (Deterministic multi-phase execution)
         self.playbook_engine = None
-        if PlaybookEngine:
+        if DeterministicExecutor:
             try:
-                self.playbook_engine = PlaybookEngine(knowledge_dir=knowledge_dir)
-                logger.info("🎯 Playbook Engine initialized - Deterministic Intelligence active")
+                self.playbook_engine = DeterministicExecutor(knowledge_dir=knowledge_dir)
+                logger.info("🎯 Deterministic Executor initialized - Deterministic Intelligence active")
             except Exception as e:
                 logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
 
