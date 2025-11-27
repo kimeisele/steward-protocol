@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "artisan",
+    "name": "ARTISAN",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "MEDIA",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Media and technical operations",
+    "constraints": ["quality_standards"],
+    "prime_directive": "Create high-quality media assets"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "media_production", "description": "Asset creation"}
+    ]
+  }
+}

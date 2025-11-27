@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "ambassador",
+    "name": "AMBASSADOR",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "DIPLOMACY",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "External relations and partnerships",
+    "constraints": ["respectful_engagement"],
+    "prime_directive": "Build bridges with external communities"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "outreach", "description": "External communication"}
+    ]
+  }
+}

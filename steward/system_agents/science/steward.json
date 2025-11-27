@@ -1,0 +1,24 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "science",
+    "name": "SCIENCE",
+    "version": "1.0.0",
+    "class": "research_intelligence",
+    "specialization": "SCIENCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Research and intelligence gathering",
+    "constraints": ["fact_based", "verifiable_sources"],
+    "prime_directive": "Provide ground truth through research"
+  },
+  "capabilities": {
+    "interfaces": ["kernel", "web"],
+    "operations": [
+      {"name": "research", "description": "Web research"},
+      {"name": "web_search", "description": "Search operations"},
+      {"name": "fact_synthesis", "description": "Fact compilation"}
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "lens",
+    "name": "LENS",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "OBSERVATION",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "System observation and analysis",
+    "constraints": ["objective_reporting"],
+    "prime_directive": "Provide clear system insights"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "observation", "description": "System monitoring"}
+    ]
+  }
+}
