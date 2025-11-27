@@ -15,10 +15,11 @@ import logging
 import sys
 import re
 from pathlib import Path
+from typing import Optional
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
-from vibe_core.config import CityConfig, CityConfig
+from vibe_core.config import CityConfig
 
 from steward.system_agents.civic.tools.economy import CivicBank
 
