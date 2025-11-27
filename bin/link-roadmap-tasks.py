@@ -23,7 +23,7 @@ def main():
     # Find all P2 tasks (excluding the test task)
     p2_tasks = []
     for task_id, task in tm.tasks.items():
-        if task.priority >= 30 and "VIMANA" not in task.title:
+        if "VIMANA" not in task.title and "Test" not in task.title:
             p2_tasks.append(task)
 
     print(f"\n🔗 Linking {len(p2_tasks)} tasks to roadmap...")
