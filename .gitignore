@@ -294,3 +294,4 @@ examples/herald/assets/
 # Temporary workspaces (test artifacts, sandbox files)
 workspaces/
 temp_repo_test/
+.vibe/
