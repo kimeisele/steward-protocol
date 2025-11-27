@@ -98,9 +98,10 @@ def cmd_roadmap_show(args):
 
     print(f"📋 Roadmap: {tm.roadmap.name}")
     print(f"   Description: {tm.roadmap.description}")
-    print(f"   Missions: {len(tm.roadmap.missions)}")
-    if tm.roadmap.missions:
-        for i, mission in enumerate(tm.roadmap.missions, 1):
+    missions = tm.roadmap.missions or []
+    print(f"   Missions: {len(missions)}")
+    if missions:
+        for i, mission in enumerate(missions, 1):
             print(f"   {i}. {mission}")
     return 0
 
