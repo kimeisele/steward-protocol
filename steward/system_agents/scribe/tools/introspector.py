@@ -44,7 +44,7 @@ class CartridgeIntrospector:
         module_doc = self._extract_module_docstring(content)
 
         # Extract class name
-        class_match = re.search(r'class\s+(\w+Cartridge)\s*:', content)
+        class_match = re.search(r'class\s+(\w+Cartridge)\s*\(', content)
         if not class_match:
             return None
         class_name = class_match.group(1)
@@ -79,7 +79,7 @@ class CartridgeIntrospector:
 
     def _extract_class_docstring(self, content: str, class_name: str) -> str:
         """Extract class docstring."""
-        pattern = rf'class\s+{class_name}\s*:.*?"""(.*?)"""'
+        pattern = rf'class\s+{class_name}\s*\(.*?"""(.*?)"""'
         match = re.search(pattern, content, re.DOTALL)
         if match:
             text = match.group(1).strip()
