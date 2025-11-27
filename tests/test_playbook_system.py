@@ -15,7 +15,7 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 
 # Import the systems under test
 try:
-    from envoy.playbook_engine import PlaybookEngine, PlaybookExecution
+    from envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
     from provider.universal_provider import UniversalProvider, DeterministicRouter
     IMPORTS_OK = True
 except ImportError as e:
@@ -55,19 +55,19 @@ class MockEventEmitter:
 
 
 @pytest.mark.skipif(not IMPORTS_OK, reason="Imports not available")
-class TestPlaybookEngine:
-    """Test the PlaybookEngine core functionality"""
+class TestDeterministicExecutor:
+    """Test the DeterministicExecutor core functionality"""
 
     def setup_method(self):
         """Setup for each test"""
-        self.engine = PlaybookEngine(knowledge_dir="knowledge")
+        self.engine = DeterministicExecutor(knowledge_dir="knowledge")
         self.event_emitter = MockEventEmitter()
 
     def test_playbook_engine_initialization(self):
-        """Test that PlaybookEngine initializes correctly"""
+        """Test that DeterministicExecutor initializes correctly"""
         assert self.engine is not None
         assert len(self.engine.playbooks) > 0
-        logger.info(f"✅ PlaybookEngine initialized with {len(self.engine.playbooks)} playbooks")
+        logger.info(f"✅ DeterministicExecutor initialized with {len(self.engine.playbooks)} playbooks")
 
     def test_playbook_loading(self):
         """Test that playbooks are loaded from YAML"""
@@ -195,7 +195,7 @@ class TestPlaybookExecution:
 
     def setup_method(self):
         """Setup for each test"""
-        self.engine = PlaybookEngine(knowledge_dir="knowledge")
+        self.engine = DeterministicExecutor(knowledge_dir="knowledge")
         self.kernel = MockKernel()
         self.event_emitter = MockEventEmitter()
 
@@ -248,7 +248,7 @@ class TestUniversalProviderIntegration:
         assert self.provider is not None
         assert self.provider.playbook_engine is not None
         assert self.provider.router is not None
-        logger.info(f"✅ UniversalProvider initialized with PlaybookEngine")
+        logger.info(f"✅ UniversalProvider initialized with DeterministicExecutor")
 
     @pytest.mark.asyncio
     async def test_intent_resolution_to_playbook(self):
@@ -296,7 +296,7 @@ def print_test_summary():
     print("🧪 GAD-5000 PLAYBOOK SYSTEM - TEST SUMMARY")
     print("="*60)
     print("\nTests cover:")
-    print("  ✅ PlaybookEngine initialization and YAML loading")
+    print("  ✅ DeterministicExecutor initialization and YAML loading")
     print("  ✅ Concept detection (SANKHYA)")
     print("  ✅ Intent routing (DHARMA)")
     print("  ✅ Playbook matching and execution")

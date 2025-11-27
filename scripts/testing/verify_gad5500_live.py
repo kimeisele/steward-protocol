@@ -87,10 +87,10 @@ async def run_live_fire():
     print("-" * 80)
     
     try:
-        from envoy.playbook_engine import PlaybookEngine
-        
-        engine = PlaybookEngine(knowledge_dir="knowledge")
-        logger.info(f"✅ PlaybookEngine initialized with {len(engine.playbooks)} playbooks")
+        from envoy.deterministic_executor import DeterministicExecutor
+
+        engine = DeterministicExecutor(knowledge_dir="knowledge")
+        logger.info(f"✅ DeterministicExecutor initialized with {len(engine.playbooks)} playbooks")
         
         # Check for the GAD-5500 playbook
         if "FEATURE_IMPLEMENT_SAFE_V1" not in engine.playbooks:
