@@ -18,6 +18,7 @@ from pathlib import Path
 
 # VibeOS Integration
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.config import CityConfig, CityConfig
 from vibe_core.scheduling.task import Task
 
 from steward.system_agents.engineer.tools.builder_tool import BuilderTool
@@ -42,8 +43,11 @@ class EngineerCartridge(VibeAgent, OathMixin if OathMixin else object):
     - create_agent: Scaffold new agents (Legacy)
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize the Engineer as a VibeAgent."""
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         super().__init__(
             agent_id="engineer",
             name="ENGINEER",

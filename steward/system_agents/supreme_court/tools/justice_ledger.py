@@ -18,11 +18,16 @@ import logging
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 from datetime import datetime, timezone
+import sys
+
+# BLOCKER #1: Import canonical VibeLedger ABC
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+from vibe_core.kernel import VibeLedger
 
 logger = logging.getLogger("JUSTICE_LEDGER")
 
 
-class JusticeLedger:
+class JusticeLedger(VibeLedger):
     """
     Immutable ledger of Supreme Court proceedings.
 
@@ -40,9 +45,9 @@ class JusticeLedger:
 
         logger.info("⚖️  Justice Ledger initialized")
 
-    def record_event(self, event: Dict[str, Any]) -> None:
+    def _append_event(self, event: Dict[str, Any]) -> None:
         """
-        Record an event in the justice ledger (append-only).
+        Internal method to append an event to the justice ledger (append-only).
 
         Args:
             event: Event to record (should include event_type and timestamp)
@@ -56,6 +61,29 @@ class JusticeLedger:
             f.write(json.dumps(event) + "\n")
 
         logger.debug(f"⚖️  LEDGER: {event.get('event_type')}")
+
+    def record_event(self, event_type_or_dict, agent_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> Optional[str]:
+        """
+        Record an event in the justice ledger.
+
+        Supports both signatures:
+        - Domain-specific: record_event(event: Dict) for Supreme Court events
+        - VibeLedger ABC: record_event(event_type, agent_id, details) -> str
+        """
+        if isinstance(event_type_or_dict, dict):
+            # Domain-specific signature: record_event(event_dict)
+            self._append_event(event_type_or_dict)
+            return None
+        else:
+            # VibeLedger ABC signature: record_event(event_type, agent_id, details) -> str
+            full_event = {
+                "event_type": event_type_or_dict,
+                "agent_id": agent_id,
+                "details": details,
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+            self._append_event(full_event)
+            return f"EVT-{len(self.get_events())}"  # Return event_id
 
     def get_events(self, event_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """
@@ -141,3 +169,41 @@ class JusticeLedger:
         except Exception as e:
             logger.error(f"❌ Justice ledger integrity check failed: {str(e)}")
             return False
+
+    # ==================== VibeLedger Interface Adapters ====================
+    # BLOCKER #1: Implement VibeLedger ABC interface to satisfy inheritance contract
+
+    def record_start(self, task) -> None:
+        """Record task start (VibeLedger interface)"""
+        self.record_event({
+            "event_type": "TASK_START",
+            "task_id": getattr(task, "task_id", None),
+            "agent_id": getattr(task, "agent_id", "unknown"),
+            "payload": getattr(task, "payload", None)
+        })
+
+    def record_completion(self, task, result: Any) -> None:
+        """Record task completion (VibeLedger interface)"""
+        self.record_event({
+            "event_type": "TASK_COMPLETED",
+            "task_id": getattr(task, "task_id", None),
+            "agent_id": getattr(task, "agent_id", "unknown"),
+            "result": result
+        })
+
+    def record_failure(self, task, error: str) -> None:
+        """Record task failure (VibeLedger interface)"""
+        self.record_event({
+            "event_type": "TASK_FAILED",
+            "task_id": getattr(task, "task_id", None),
+            "agent_id": getattr(task, "agent_id", "unknown"),
+            "error": error
+        })
+
+    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Query task result (VibeLedger interface)"""
+        events = self.get_events()
+        for event in reversed(events):
+            if event.get("task_id") == task_id:
+                return event
+        return None

@@ -10,6 +10,7 @@ CHRONICLE is the Vyasa of Agent City - the historian and scribe who:
 
 This is a VibeAgent that:
 - Inherits from vibe_core.VibeAgent
+from vibe_core.config import CityConfig, CityConfig
 - Receives tasks from the kernel scheduler
 - Executes deterministic Git operations
 - Maintains immutable code history with cryptographic signatures
@@ -59,8 +60,11 @@ class ChronicleCartridge(VibeAgent, OathMixin if OathMixin else object):
     "Every piece of code has a story. I am the keeper of that story."
     """
 
-    def __init__(self):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize CHRONICLE (The Historian) as a VibeAgent."""
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CityConfig()
+
         # Initialize VibeAgent base class
         super().__init__(
             agent_id="chronicle",

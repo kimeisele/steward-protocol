@@ -6,14 +6,19 @@ The ledger is append-only and stores all verification results.
 
 import logging
 import json
+import sys
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
+# BLOCKER #1: Import canonical VibeLedger ABC
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+from vibe_core.kernel import VibeLedger
+
 logger = logging.getLogger("ARCHIVIST_LEDGER")
 
 
-class AuditLedger:
+class AuditLedger(VibeLedger):
     """
     Append-only ledger for audit attestations.
 
@@ -141,3 +146,67 @@ class AuditLedger:
             "ledger_path": str(self.ledger_path),
             "entries_written_this_session": self.entries_written,
         }
+
+    # ==================== VibeLedger Interface Implementation ====================
+    # BLOCKER #1: Implement VibeLedger ABC interface to satisfy inheritance contract
+
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+        """Record a generic event (VibeLedger ABC interface)"""
+        attestation = {
+            "event_type": event_type,
+            "agent_id": agent_id,
+            "details": details,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "RECORDED"
+        }
+        self.append(attestation)
+        return f"EVT-{self.entries_written}"
+
+    def record_start(self, task) -> None:
+        """Record task start (VibeLedger interface)"""
+        attestation = {
+            "event_type": "TASK_START",
+            "target_event": {
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "STARTED"
+        }
+        self.append(attestation)
+
+    def record_completion(self, task, result: Any) -> None:
+        """Record task completion (VibeLedger interface)"""
+        attestation = {
+            "event_type": "TASK_COMPLETED",
+            "target_event": {
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+            },
+            "result": result,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "VERIFIED"
+        }
+        self.append(attestation)
+
+    def record_failure(self, task, error: str) -> None:
+        """Record task failure (VibeLedger interface)"""
+        attestation = {
+            "event_type": "TASK_FAILED",
+            "target_event": {
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+            },
+            "error": error,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "FAILED"
+        }
+        self.append(attestation)
+
+    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
+        """Query task result (VibeLedger interface)"""
+        attestations = self.read_all()
+        for attestation in reversed(attestations):
+            if attestation.get("target_event", {}).get("task_id") == task_id:
+                return attestation
+        return None

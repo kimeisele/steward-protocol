@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
+from vibe_core.config import CityConfig, CivicConfig
 
 # Constitutional Oath binding
 try:
@@ -65,8 +66,16 @@ class SupremeCourtCartridge(VibeAgent, OathMixin if OathMixin else object):
     - Maintains appellate record
     """
 
-    def __init__(self, root_path: Path = Path(".")):
-        """Initialize SupremeCourt cartridge."""
+    def __init__(self, root_path: Path = Path("."), config: Optional[CivicConfig] = None):
+        """Initialize SupremeCourt cartridge.
+
+        Args:
+            root_path: Root path for ledger storage
+            config: CivicConfig instance from Phoenix Config (optional)
+        """
+        # BLOCKER #0: Accept Phoenix Config
+        self.config = config or CivicConfig()
+
         super().__init__(
             agent_id="supreme_court",
             name="Supreme Court",
