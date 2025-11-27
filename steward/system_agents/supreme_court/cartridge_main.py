@@ -36,6 +36,13 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
+
+# Constitutional Oath binding
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 from supreme_court.tools.appeals_tool import AppealsTool, Appeal, AppealStatus
 from supreme_court.tools.verdict_tool import VerdictTool, Verdict, VerdictType
 from supreme_court.tools.precedent_tool import PrecedentTool
@@ -44,7 +51,7 @@ from supreme_court.tools.justice_ledger import JusticeLedger
 logger = logging.getLogger("SUPREME_COURT")
 
 
-class SupremeCourtCartridge(VibeAgent):
+class SupremeCourtCartridge(VibeAgent, OathMixin if OathMixin else object):
     """
     SUPREME COURT - The Appellate Justice & Mercy System for STEWARD Protocol.
 
@@ -72,6 +79,12 @@ class SupremeCourtCartridge(VibeAgent):
                 Capability.AUDITING.value,
             ]
         )
+
+        # Bind to Constitutional Oath (GAD-000 compliance)
+        if OathMixin:
+            self.oath_mixin_init(self.agent_id)
+            self.oath_sworn = True
+            logger.info("✅ SUPREME COURT has sworn the Constitutional Oath")
 
         logger.info("⚖️  SUPREME COURT v1.0: Initializing Appellate System")
 
