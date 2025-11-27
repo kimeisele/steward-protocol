@@ -337,7 +337,7 @@ agent-city status  # Shows 22 agents
    - Keep only content generation
    - Reduce from 943 → ~400 lines
 
-2. **Rename StewardAgent → DiscovererAgent**
+2. **Rename DiscovererAgent → DiscovererAgent**
    - Avoid "steward" overload
    - Update all references
 
@@ -487,7 +487,7 @@ agent-city status  # Shows 22 agents
 | **HERALD** | 943 lines (content + advertising) | ~400 lines (content only) | Separation of concerns |
 | **CIVIC** | 989 lines (registry + economy + lifecycle) | 3 agents (~300 each) | Single responsibility |
 | **FORUM** | 648 lines (proposals + voting) | 2 agents (~300 each) | Single responsibility |
-| **StewardAgent** | "steward" (ambiguous) | "DiscovererAgent" | Naming clarity |
+| **DiscovererAgent** | "steward" (ambiguous) | "DiscovererAgent" | Naming clarity |
 
 ---
 

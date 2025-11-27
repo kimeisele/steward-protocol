@@ -1,6 +1,6 @@
 """
-🧙‍♂️ THE STEWARD AGENT 🧙‍♂️
-=========================
+🧙‍♂️ THE DISCOVERER AGENT 🧙‍♂️
+===========================
 The First Citizen. The Guardian of the Realm.
 The only agent authorized to issue Visas and onboard other agents.
 
@@ -24,9 +24,9 @@ from vibe_core.scheduling import Task
 
 logger = logging.getLogger("STEWARD")
 
-class StewardAgent(VibeAgent):
+class DiscovererAgent(VibeAgent):
     """
-    The Steward Agent is the autonomous administrator of Agent City.
+    The Discoverer Agent is the autonomous administrator of Agent City.
     It runs a background loop to discover and register new agents.
     """
     def __init__(self, kernel=None):
@@ -212,4 +212,4 @@ class GenericAgent(VibeAgent):
 
 # Make it importable
 def get_steward():
-    return StewardAgent()
+    return DiscovererAgent()

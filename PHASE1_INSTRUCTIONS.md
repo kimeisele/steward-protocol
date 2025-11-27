@@ -142,7 +142,7 @@ task_management/
 
    from vibe_core.task_management import TaskManager
    from vibe_core.kernel_impl import RealVibeKernel
-   from steward.system_agents.steward.agent import StewardAgent
+   from steward.system_agents.steward.agent import DiscovererAgent
 
    def cmd_task_add(args):
        tm = TaskManager(PROJECT_ROOT)
@@ -156,7 +156,7 @@ task_management/
 
    def cmd_status(args):
        kernel = RealVibeKernel(ledger_path=":memory:")
-       steward = StewardAgent(kernel)
+       steward = DiscovererAgent(kernel)
        kernel.register_agent(steward)
        kernel.boot()
        count = steward.discover_agents()

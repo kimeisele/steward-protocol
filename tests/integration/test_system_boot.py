@@ -7,7 +7,7 @@ This test PROVES that Agent City can boot and discover all agents.
 
 PASS CONDITIONS:
 - ✅ Kernel boots successfully
-- ✅ StewardAgent registers
+- ✅ DiscovererAgent registers
 - ✅ Steward discovers at least 10 agents from steward.json manifests
 - ✅ All discovered agents pass Governance Gate (oath_sworn=True)
 - ✅ No import errors, no crashes
@@ -27,7 +27,7 @@ import pytest
 from vibe_core.kernel_impl import RealVibeKernel, KernelStatus
 from vibe_core.scheduling import Task
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
-from steward.system_agents.steward.agent import StewardAgent, GenericAgent
+from steward.system_agents.discoverer.agent import DiscovererAgent, GenericAgent
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,42 +86,42 @@ class TestKernelBoot:
 
 
 class TestStewardRegistration:
-    """Test that StewardAgent can be registered and functions"""
+    """Test that DiscovererAgent can be registered and functions"""
 
     def test_steward_instantiation(self):
-        """Test that StewardAgent can be instantiated"""
+        """Test that DiscovererAgent can be instantiated"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
 
         assert steward is not None
         assert steward.agent_id == "steward"
-        logger.info("✅ StewardAgent instantiated successfully")
+        logger.info("✅ DiscovererAgent instantiated successfully")
 
     def test_steward_registration(self):
-        """Test that StewardAgent can be registered with kernel"""
+        """Test that DiscovererAgent can be registered with kernel"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
 
         # Register steward
         kernel.register_agent(steward)
 
         assert "steward" in kernel.agent_registry
         assert kernel.agent_registry["steward"] == steward
-        logger.info("✅ StewardAgent registered with kernel")
+        logger.info("✅ DiscovererAgent registered with kernel")
 
     def test_steward_has_discovery_method(self):
-        """Test that StewardAgent has discover_agents method"""
+        """Test that DiscovererAgent has discover_agents method"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
 
         assert hasattr(steward, "discover_agents")
         assert callable(steward.discover_agents)
-        logger.info("✅ StewardAgent has discover_agents method")
+        logger.info("✅ DiscovererAgent has discover_agents method")
 
     def test_steward_can_process_tasks(self):
-        """Test that StewardAgent can process tasks"""
+        """Test that DiscovererAgent can process tasks"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
 
         # Create a test task
@@ -135,7 +135,7 @@ class TestStewardRegistration:
 
         assert result is not None
         assert isinstance(result, dict)
-        logger.info("✅ StewardAgent can process tasks")
+        logger.info("✅ DiscovererAgent can process tasks")
 
 
 class TestAgentDiscovery:
@@ -144,7 +144,7 @@ class TestAgentDiscovery:
     def test_discovery_finds_agents(self):
         """Test that steward.discover_agents() finds agents"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -158,7 +158,7 @@ class TestAgentDiscovery:
     def test_discovery_populates_registry(self):
         """Test that discovered agents are in kernel registry"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -176,7 +176,7 @@ class TestAgentDiscovery:
     def test_discovered_agents_are_in_registry(self):
         """Test that specific discovered agents can be found in registry"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -198,7 +198,7 @@ class TestAgentDiscovery:
     def test_discovered_agents_are_vibeagents(self):
         """Test that discovered agents are VibeAgent instances"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -214,7 +214,7 @@ class TestAgentDiscovery:
     def test_discovered_agents_have_manifests(self):
         """Test that discovered agents have valid manifests"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -237,7 +237,7 @@ class TestGovernanceGate:
     def test_agents_have_oath_sworn_attribute(self):
         """Test that all registered agents have oath_sworn attribute"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
 
@@ -311,7 +311,7 @@ class TestSystemIntegration:
         assert kernel.status == KernelStatus.STOPPED
 
         # Create and register steward
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         assert "steward" in kernel.agent_registry
 
@@ -333,7 +333,7 @@ class TestSystemIntegration:
         """Smoke test: Agent City boots without raising exceptions"""
         try:
             kernel = RealVibeKernel(ledger_path=":memory:")
-            steward = StewardAgent(kernel)
+            steward = DiscovererAgent(kernel)
             kernel.register_agent(steward)
             kernel.boot()
             steward.discover_agents()
@@ -346,7 +346,7 @@ class TestSystemIntegration:
     def test_discovered_agent_count(self):
         """Test that a reasonable number of agents are discovered"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
         steward.discover_agents()
@@ -361,7 +361,7 @@ class TestSystemIntegration:
     def test_agent_manifests_are_registered(self):
         """Test that agent manifests are registered after boot"""
         kernel = RealVibeKernel(ledger_path=":memory:")
-        steward = StewardAgent(kernel)
+        steward = DiscovererAgent(kernel)
         kernel.register_agent(steward)
         kernel.boot()
         steward.discover_agents()
