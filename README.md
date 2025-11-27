@@ -92,7 +92,7 @@ pytest tests/integration/test_system_boot.py -v
 
 # What it validates:
 # ✅ Kernel boots without errors
-# ✅ DiscovererAgent registers successfully
+# ✅ Discoverer registers successfully
 # ✅ Steward discovers 10+ agents from steward.json manifests
 # ✅ All agents pass Governance Gate (oath_sworn=True)
 # ✅ Constitutional enforcement is active
@@ -109,10 +109,10 @@ pytest tests/integration/test_system_boot.py -v
 ```bash
 python -c "
 from vibe_core.kernel_impl import RealVibeKernel
-from steward.system_agents.discoverer.agent import DiscovererAgent
+from steward.system_agents.discoverer.agent import Discoverer
 
 kernel = RealVibeKernel(ledger_path=':memory:')
-steward = DiscovererAgent(kernel)
+steward = Discoverer(kernel)
 kernel.register_agent(steward)
 kernel.boot()
 count = steward.discover_agents()
