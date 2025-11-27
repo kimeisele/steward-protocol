@@ -5,10 +5,34 @@ package:
   license: "MIT"
   author: "Vibe Inc."
 
-# Cartridges are now autonomously discovered by the Steward Agent
-# from the `agent_city` directory.
-# No hardcoded paths here.
+cartridges:
+  # --- SYSTEM AGENTS (The Immune System) ---
+  - name: "auditor"
+    path: "./steward/system_agents/auditor"
+    class: "AuditorCartridge"
+    domain: "GOVERNANCE"
+    capabilities: ["audit", "validation"]
 
+  - name: "archivist"
+    path: "./steward/system_agents/archivist"
+    class: "ArchivistCartridge"
+    domain: "INFRASTRUCTURE"
+    capabilities: ["archive", "history", "records"]
+
+  # --- CORE PROTOCOL ---
+  - name: "civic"
+    path: "./civic"
+    class: "CivicCartridge"
+    domain: "INFRASTRUCTURE"
+    capabilities: ["ledger", "registry", "licenses"]
+
+
+  # --- CITIZENS (Agent City) ---
+  - name: "echo"
+    path: "./agent_city/registry/citizens/echo"
+    class: "EchoCartridge"
+    domain: "GOVERNANCE"
+    capabilities: ["proposal", "transparency"]
 
 dependencies:
   - "vibe-agency >= 2.0.0"

@@ -72,5 +72,9 @@ Source = "https://github.com/kimeisele/steward-protocol"
 Tracker = "https://github.com/kimeisele/steward-protocol/issues"
 Leaderboard = "https://steward-protocol.io/leaderboard"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["steward"]
