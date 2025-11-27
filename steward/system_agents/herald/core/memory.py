@@ -18,10 +18,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, asdict, field
 
-try:
-    from steward.crypto import sign_content
-except ImportError:
-    sign_content = None
 
 logger = logging.getLogger("HERALD_MEMORY")
 

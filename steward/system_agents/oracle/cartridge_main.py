@@ -27,15 +27,10 @@ from vibe_core.config import CityConfig
 from .tools.introspection_tool import IntrospectionTool, IntrospectionError
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logger = logging.getLogger("ORACLE")
 
 
-class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
+class OracleCartridge(VibeAgent):
     """
     THE ORACLE - System Introspection & Explanation Agent.
 
@@ -397,7 +392,7 @@ class OracleCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="oracle",
             name="ORACLE",

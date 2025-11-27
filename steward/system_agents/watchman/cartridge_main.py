@@ -23,15 +23,10 @@ from vibe_core.config import CityConfig, CityConfig
 from steward.system_agents.civic.tools.economy import CivicBank
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logger = logging.getLogger("WATCHMAN")
 
 
-class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
+class WatchmanCartridge(VibeAgent):
     """
     THE WATCHMAN - System Integrity Enforcer.
 
@@ -291,7 +286,7 @@ class WatchmanCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="watchman",
             name="WATCHMAN",

@@ -20,16 +20,11 @@ from datetime import datetime
 
 from vibe_core import VibeAgent, Task
 
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TEMPLE_MAIN")
 
 
-class TempleCartridge(VibeAgent, OathMixin if OathMixin else object):
+class TempleCartridge(VibeAgent):
     """
     TEMPLE System Cartridge.
     The Blessing Service (Brahmin Function).

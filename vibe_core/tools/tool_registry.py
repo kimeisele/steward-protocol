@@ -11,10 +11,6 @@ from typing import Optional
 from vibe_core.tools.tool_protocol import Tool, ToolCall, ToolResult
 
 # Import Soul Governance (ARCH-029)
-try:
-    from vibe_core.governance.invariants import InvariantChecker, SoulResult
-except ImportError:
-    # Graceful fallback if governance not available
     InvariantChecker = None  # type: ignore
     SoulResult = None  # type: ignore
 

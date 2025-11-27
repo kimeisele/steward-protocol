@@ -47,11 +47,6 @@ from enum import Enum
 from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
 
 # Constitutional Oath binding
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 from .tools.truth_matrix import TruthMatrix, Fact, FactAuthority
 from .tools.genesis_keeper import GenesisKeeper
 from .tools.reference_resolver import ReferenceResolver
@@ -60,7 +55,7 @@ from .tools.data_ethics import DataEthicsEnforcer, ResourceMiningPolicy
 logger = logging.getLogger("DHRUVA_ANCHOR")
 
 
-class DhruvaAnchorCartridge(VibeAgent, OathMixin if OathMixin else object):
+class DhruvaAnchorCartridge(VibeAgent):
     """
     DHRUVA ANCHOR - The Immutable Truth Reference & Stability System.
 

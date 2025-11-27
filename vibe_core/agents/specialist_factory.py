@@ -33,7 +33,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from vibe_core.agent_protocol import VibeAgent
+from vibe_core.protocols import VibeAgent
 from vibe_core.runtime.tool_safety_guard import ToolSafetyGuard
 from vibe_core.scheduling import Task
 from vibe_core.specialists.base_specialist import BaseSpecialist

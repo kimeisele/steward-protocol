@@ -35,11 +35,6 @@ from vibe_core import VibeAgent, Task
 from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Import tools (to be created)
 # from forum.tools.proposal_tool import ProposalTool
 # from forum.tools.voting_tool import VotingTool
@@ -50,7 +45,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FORUM_MAIN")
 
 
-class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
+class ForumCartridge(VibeAgent):
     """
     The FORUM Agent Cartridge (The Town Hall).
 
@@ -169,7 +164,7 @@ class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
             }
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
-        from vibe_core.agent_protocol import AgentManifest
+        from vibe_core.protocols import AgentManifest
         return AgentManifest(
             agent_id="forum",
             name="FORUM",

@@ -120,12 +120,41 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
 "
 ```
 
+### System Architecture
+
+This project uses a **clean 3-layer architecture** to eliminate circular dependencies:
+
+**Layer 1 - Protocols** (`vibe_core/protocols/`)
+- Pure abstract base classes (ABCs) that define interfaces
+- No implementations, only method contracts
+- Exported via `vibe_core.__init__` for backward compatibility
+
+**Layer 2 - Implementations**
+- Business logic and concrete implementations
+- Agents (`steward/system_agents/`, `vibe_core/agents/`)
+- Runtime components (`vibe_core/runtime/`, `provider/`)
+- All import from Layer 1 only (unidirectional)
+
+**Layer 3 - Dynamic Wiring** (`vibe_core/phoenix_config.py`)
+- Dependency injection engine (Phoenix)
+- Configuration via `config/phoenix.yaml`
+- Handles optional components gracefully
+
+**Result:** Zero circular imports, testable, extensible system.
+
+**Details:**
+- [ADR-002: Three-Layer Architecture](docs/ADR-002-three-layer-architecture.md)
+- [Developer Guidelines](docs/DEVELOPER_GUIDELINES.md)
+
+---
+
 **Learn the system:**
 1. [A.G.I. Manifesto](AGI_MANIFESTO.md) — Why governance matters
 2. [ARCHITECTURE.md](ARCHITECTURE.md) — How it works
 3. [CONSTITUTION.md](CONSTITUTION.md) — The rules
 4. [DEPLOYMENT.md](DEPLOYMENT.md) — Boot, deploy, and operate Agent City
 5. [vibe_core/](./vibe_core/) — Kernel integration
+6. [Developer Guidelines](docs/DEVELOPER_GUIDELINES.md) — How to extend the system
 
 **For AI Assistants:** Paste [MISSION_BRIEFING.md](./MISSION_BRIEFING.md) into your context to activate as a governed agent.
 

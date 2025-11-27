@@ -18,7 +18,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from vibe_core.agent_protocol import AgentResponse, VibeAgent
+from vibe_core.protocols import AgentResponse, VibeAgent
 from vibe_core.scheduling import Task
 
 logger = logging.getLogger(__name__)

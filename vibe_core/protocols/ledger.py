@@ -12,8 +12,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from enum import Enum
 
-from .agent_protocol import VibeAgent, AgentManifest
-from .scheduling import Task
+from .agent import VibeAgent, AgentManifest
 
 
 class KernelStatus(str, Enum):
@@ -28,12 +27,12 @@ class VibeScheduler(ABC):
     """Task scheduler interface"""
 
     @abstractmethod
-    def submit_task(self, task: Task) -> str:
+    def submit_task(self, task: Any) -> str:
         """Submit a task to the queue, return task_id"""
         pass
 
     @abstractmethod
-    def next_task(self) -> Optional[Task]:
+    def next_task(self) -> Optional[Any]:
         """Pop next task from queue"""
         pass
 
@@ -61,17 +60,17 @@ class VibeLedger(ABC):
         pass
 
     @abstractmethod
-    def record_start(self, task: Task) -> None:
+    def record_start(self, task: Any) -> None:
         """Record task start"""
         pass
 
     @abstractmethod
-    def record_completion(self, task: Task, result: Any) -> None:
+    def record_completion(self, task: Any, result: Any) -> None:
         """Record task completion"""
         pass
 
     @abstractmethod
-    def record_failure(self, task: Task, error: str) -> None:
+    def record_failure(self, task: Any, error: str) -> None:
         """Record task failure"""
         pass
 

@@ -17,24 +17,19 @@ from typing import Dict, Any
 from pathlib import Path
 
 # VibeOS Integration
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.protocols import VibeAgent, AgentManifest
 from vibe_core.config import CityConfig, CityConfig
 from vibe_core.scheduling.task import Task
 
 from steward.system_agents.engineer.tools.builder_tool import BuilderTool
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENGINEER_AGENT")
 
 
-class EngineerCartridge(VibeAgent, OathMixin if OathMixin else object):
+class EngineerCartridge(VibeAgent):
     """
     The Engineer Agent Cartridge.
 
