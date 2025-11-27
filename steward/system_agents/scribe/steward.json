@@ -1,0 +1,11 @@
+{
+  "agent_id": "scribe",
+  "name": "SCRIBE",
+  "version": "1.0.0",
+  "author": "Steward Protocol",
+  "description": "Documentation agent: auto-generates system documentation",
+  "domain": "INFRASTRUCTURE",
+  "capabilities": ["documentation", "introspection", "publishing"],
+  "class_name": "ScribeCartridge",
+  "module": "steward.system_agents.scribe.cartridge_main"
+}

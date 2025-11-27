@@ -51,6 +51,11 @@ residents:
     capabilities: ["ledger", "history", "sealing"]
     oath_status: "REQUIRED"
 
+  - agent_id: "scribe"
+    role: "Documentarian"
+    capabilities: ["documentation", "introspection", "publishing"]
+    oath_status: "REQUIRED"
+
   - agent_id: "oracle"
     role: "Sage"
     capabilities: ["system_introspection", "explanation", "self_awareness"]

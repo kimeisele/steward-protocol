@@ -1,0 +1,85 @@
+name: 📚 SCRIBE - Auto-Generate Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - claude/*
+    paths:
+      - 'steward/system_agents/**'
+      - 'scripts/**'
+      - 'pyproject.toml'
+      - 'agent_city.yaml'
+      - 'steward.yaml'
+  workflow_dispatch:
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    name: Generate Documentation with SCRIBE
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: 🚀 Run SCRIBE - Generate all documentation
+        run: |
+          python -c "
+          from steward.system_agents.scribe.cartridge_main import ScribeCartridge
+          import sys
+
+          print('📚 SCRIBE: Auto-generating documentation...')
+          scribe = ScribeCartridge('.')
+
+          if scribe.generate_all():
+              print('✅ SUCCESS: All documentation generated')
+              sys.exit(0)
+          else:
+              print('❌ FAILED: Documentation generation failed')
+              sys.exit(1)
+          "
+
+      - name: 📝 Check for documentation changes
+        id: check-changes
+        run: |
+          if git diff --quiet HEAD; then
+            echo "status=clean" >> $GITHUB_OUTPUT
+          else
+            echo "status=changed" >> $GITHUB_OUTPUT
+            git diff --name-only
+          fi
+
+      - name: 📤 Commit and push documentation updates
+        if: steps.check-changes.outputs.status == 'changed'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "SCRIBE Bot"
+          git add README.md AGENTS.md CITYMAP.md HELP.md
+          git commit -m "chore: Auto-generate documentation via SCRIBE
+
+- Updated README.md
+- Updated AGENTS.md (agent registry)
+- Updated CITYMAP.md (system architecture)
+- Updated HELP.md (system help)
+
+[skip ci]"
+          git push
+
+      - name: ✅ Documentation Status
+        run: |
+          echo "📊 Documentation generation complete"
+          echo "Files updated:"
+          echo "  - README.md"
+          echo "  - AGENTS.md"
+          echo "  - CITYMAP.md"
+          echo "  - HELP.md"
