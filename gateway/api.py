@@ -585,10 +585,24 @@ def get_queue_status():
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
-# VIMANA: Serve the Cockpit from gateway/static/
-# This must come AFTER all @app.post endpoints to avoid shadowing API routes
-if os.path.exists("gateway/static"):
-    app.mount("/", StaticFiles(directory="gateway/static", html=True), name="static")
-elif os.path.exists("docs/public"):
-    # Fallback to legacy frontend if gateway/static doesn't exist
-    app.mount("/", StaticFiles(directory="docs/public", html=True), name="static")
+# Mount static files ONLY if directory exists AND has files
+# Use /ui path instead of / to avoid shadowing API routes
+if os.path.exists("gateway/static") and os.listdir("gateway/static"):
+    app.mount("/ui", StaticFiles(directory="gateway/static", html=True), name="static")
+elif os.path.exists("docs/public") and os.listdir("docs/public"):
+    app.mount("/ui", StaticFiles(directory="docs/public", html=True), name="static")
+else:
+    logger.warning("⚠️  No static files found - API-only mode")
+
+# Add simple root endpoint
+@app.get("/")
+def root():
+    return {
+        "service": "Agent City Gateway",
+        "status": "online",
+        "endpoints": {
+            "health": "/health",
+            "agents": "/api/agents",
+            "ui": "/ui (if available)"
+        }
+    }
