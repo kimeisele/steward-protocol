@@ -19,8 +19,11 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add project root and agent paths to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'steward' / 'system_agents'))
+sys.path.insert(0, str(project_root / 'agent_city' / 'registry'))
 
 # Core imports
 from civic.tools.economy import CivicBank

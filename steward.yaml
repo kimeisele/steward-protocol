@@ -26,23 +26,6 @@ cartridges:
     domain: "INFRASTRUCTURE"
     capabilities: ["ledger", "registry", "licenses"]
 
-  - name: "herald"
-    path: "./herald"
-    class: "HeraldCartridge"
-    domain: "MEDIA"
-    capabilities: ["content", "broadcast"]
-
-  - name: "forum"
-    path: "./forum"
-    class: "ForumCartridge"
-    domain: "GOVERNANCE"
-    capabilities: ["proposals", "voting"]
-
-  - name: "science"
-    path: "./science"
-    class: "ScienceCartridge"
-    domain: "INTELLIGENCE"
-    capabilities: ["research", "search"]
 
   # --- CITIZENS (Agent City) ---
   - name: "echo"

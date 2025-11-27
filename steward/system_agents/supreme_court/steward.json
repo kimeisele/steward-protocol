@@ -1,0 +1,23 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "supreme_court",
+    "name": "SUPREME COURT",
+    "version": "1.0.0",
+    "class": "governance_core",
+    "specialization": "GOVERNANCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Appellate justice and mercy system",
+    "constraints": ["constitutional_compliance"],
+    "prime_directive": "Review violations and apply mercy protocols"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "governance", "description": "Appellate review"},
+      {"name": "auditing", "description": "Violation review"}
+    ]
+  }
+}

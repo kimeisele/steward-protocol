@@ -1,0 +1,47 @@
+{
+    "steward_version": "1.0.0",
+    "agent": {
+        "id": "envoy",
+        "name": "ENVOY",
+        "version": "2.0.0",
+        "class": "orchestration_operator",
+        "specialization": "ORCHESTRATION",
+        "status": "active"
+    },
+    "credentials": {
+        "mandate": "Universal operator interface and system shell",
+        "constraints": [
+            "constitutional_compliance"
+        ],
+        "prime_directive": "Bridge user intent to kernel execution"
+    },
+    "capabilities": {
+        "interfaces": [
+            "kernel",
+            "cli",
+            "api"
+        ],
+        "operations": [
+            {
+                "name": "orchestration",
+                "description": "Multi-agent coordination"
+            },
+            {
+                "name": "governance",
+                "description": "Governance operations"
+            },
+            {
+                "name": "broadcasting",
+                "description": "Campaign execution"
+            },
+            {
+                "name": "registry",
+                "description": "Agent queries"
+            },
+            {
+                "name": "auditing",
+                "description": "System reporting"
+            }
+        ]
+    }
+}

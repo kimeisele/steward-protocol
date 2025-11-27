@@ -1,0 +1,23 @@
+{
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "dhruva",
+    "name": "DHRUVA",
+    "version": "1.0.0",
+    "class": "citizen_service",
+    "specialization": "DATA_ETHICS",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Data ethics and truth verification",
+    "constraints": ["ethical_data_use"],
+    "prime_directive": "Maintain data integrity and ethical standards"
+  },
+  "capabilities": {
+    "interfaces": ["kernel"],
+    "operations": [
+      {"name": "data_ethics", "description": "Ethical review"},
+      {"name": "truth_verification", "description": "Fact checking"}
+    ]
+  }
+}
