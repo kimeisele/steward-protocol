@@ -49,25 +49,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("STEWARD_BOOTLOADER")
 
-# Import VibeOS Kernel
+# Import VibeOS Kernel and Boot Orchestrator
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.boot_orchestrator import BootOrchestrator
 
 # Import Configuration (GAD-100: Phoenix Configuration)
 from vibe_core.config import ConfigLoader, CityConfig
-
-# Import all 12 agent cartridges
-from steward.system_agents.herald.cartridge_main import HeraldCartridge
-from steward.system_agents.civic.cartridge_main import CivicCartridge
-from steward.system_agents.forum.cartridge_main import ForumCartridge
-from steward.system_agents.science.cartridge_main import ScientistCartridge
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
-from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-from steward.system_agents.oracle.cartridge_main import OracleCartridge
-from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
-from agent_city.registry.artisan.cartridge_main import ArtisanCartridge
-from steward.system_agents.chronicle.cartridge_main import ChronicleCartridge
 
 
 class StewardBootLoader:
@@ -161,77 +148,38 @@ class StewardBootLoader:
 
     def boot_kernel(self) -> RealVibeKernel:
         """
-        Boot the VibeOS Kernel and register all agents.
+        Boot the VibeOS Kernel using unified BootOrchestrator.
+
+        This replaces the old hardcoded 12-agent boot with dynamic discovery
+        of all 23 agents via steward.json manifests.
 
         Returns:
-            RealVibeKernel: The initialized and booted kernel
+            RealVibeKernel: The initialized and booted kernel with all agents
         """
         logger.info("=" * 80)
-        logger.info("⚙️  KERNEL BOOT SEQUENCE INITIATED")
+        logger.info("⚙️  KERNEL BOOT SEQUENCE - Using BootOrchestrator")
         logger.info("=" * 80)
 
-        # 1. Create kernel instance
-        logger.info(f"🔧 Creating RealVibeKernel (ledger: {self.ledger_path})")
-        self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
+        # Use BootOrchestrator for unified agent discovery
+        orchestrator = BootOrchestrator(
+            ledger_path=self.ledger_path,
+            project_root=project_root
+        )
 
-        # 2. Create and register all 12 agent cartridges
-        logger.info("🤖 Loading all 12 CORE CARTRIDGES...")
-
-        cartridges = [
-            ("herald", HeraldCartridge(), "Content & Broadcasting"),
-            ("civic", CivicCartridge(), "Governance & Registry"),
-            ("forum", ForumCartridge(), "Voting & Proposals"),
-            ("science", ScientistCartridge(), "Research & Knowledge"),
-            ("envoy", EnvoyCartridge(), "User Interface & Orchestration"),
-            ("archivist", ArchivistCartridge(), "Auditing & Verification"),
-            ("auditor", AuditorCartridge(), "Compliance & GAD Enforcement"),
-            ("engineer", EngineerCartridge(), "Meta-builder & Scaffolding"),
-            ("oracle", OracleCartridge(), "System Introspection & Self-Awareness"),
-            ("watchman", WatchmanCartridge(), "Monitoring & Health Checks"),
-            ("artisan", ArtisanCartridge(), "Media Operations & Branding"),
-            ("chronicle", ChronicleCartridge(), "Temporal agent: git operations"),
-        ]
-
-        for agent_id, agent_instance, purpose in cartridges:
-            try:
-                # Check if agent is a VibeAgent (has required interface)
-                if not hasattr(agent_instance, 'get_manifest') or not hasattr(agent_instance, 'process'):
-                    logger.warning(f"   ⏭️  {agent_id.upper():12} | SKIPPED (legacy cartridge, not VibeAgent)")
-                    continue
-
-                self.kernel.register_agent(agent_instance)
-                self.agents.append((agent_id, agent_instance))
-                logger.info(f"   ✅ {agent_id.upper():12} | {purpose}")
-            except Exception as e:
-                logger.error(f"   ❌ {agent_id.upper():12} | Failed: {e}")
-                raise RuntimeError(f"Failed to register {agent_id}: {e}")
-
-        logger.info(f"\n🎖️  All {len(self.agents)} agents registered successfully")
-
-        # 3. Boot the kernel (this initializes manifests, ledger, etc)
-        logger.info("\n🔥 Booting kernel (initializing ledger, manifests, registry)...")
         try:
-            self.kernel.boot()
-            logger.info("✅ Kernel boot complete")
+            self.kernel = orchestrator.boot()
+            logger.info("✅ BootOrchestrator completed successfully")
         except Exception as e:
-            logger.error(f"❌ Kernel boot failed: {e}")
+            logger.error(f"❌ BootOrchestrator failed: {e}")
             raise
 
-        # 4. Execute initial pulse (Constitutional Oath verification)
+        # Execute initial pulse (Constitutional Oath verification)
         logger.info("\n📸 Executing initial pulse (Constitutional Oath ceremony)...")
         try:
             self.kernel._pulse()
             logger.info("✅ Initial pulse captured")
         except Exception as e:
             logger.warning(f"⚠️  Initial pulse failed (non-critical): {e}")
-
-        # 5. Verify kernel status
-        status = self.kernel.get_status()
-        logger.info("\n📊 KERNEL STATUS:")
-        logger.info(f"   Status: {status.get('status')}")
-        logger.info(f"   Agents Registered: {status.get('agents_registered')}")
-        logger.info(f"   Manifests: {status.get('manifests')}")
-        logger.info(f"   Ledger Events: {status.get('ledger_events')}")
 
         return self.kernel
 

@@ -36,7 +36,7 @@ print("=" * 70)
 print("Phase 0: Mechanic Self-Diagnosis & Healing")
 print("=" * 70 + "\n")
 
-from mechanic.cartridge_main import MechanicCartridge
+from agent_city.registry.mechanic.cartridge_main import MechanicCartridge
 
 mechanic = MechanicCartridge(project_root=PROJECT_ROOT)
 system_ready = mechanic.execute_bootstrap()
