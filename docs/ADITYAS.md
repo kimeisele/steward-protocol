@@ -33,13 +33,13 @@ The 12 Adityas are the **canonical system agents** of Steward Protocol. These ar
 
 ## CURRENT STATUS
 
-**Implemented:** 13 system agents (1 extra)
+**Implemented:** 14 system agents (2 extended)
 
-**Extra Agent:** CHRONICLE (git operations)
-- **Status:** Operational but not in original 12 Adityas plan
-- **Decision:** Treated as extended system agent (see Extended System Agents section)
+**Extended Agents:** Beyond the canonical 12 Adityas
+- **CHRONICLE** (git operations) - Operational, planned extension
+- **SUPREME COURT** (appellate governance) - Operational, planned extension
 
-**Missing Agents:** None (all 12 Adityas implemented)
+**Missing Agents:** None (all 12 Adityas implemented + 2 extended agents)
 
 ---
 
@@ -66,12 +66,26 @@ Beyond the 12 Adityas, these agents provide specialized functionality:
 
 ### CHRONICLE
 - **Agent ID:** chronicle
-- **Domain:** TEMPORAL
-- **Purpose:** Git operations, version control, temporal tracking
+- **Domain:** INFRASTRUCTURE
+- **Specialization:** INFRASTRUCTURE
+- **Purpose:** Git operations, version control, temporal tracking, commit creation, immutable code timeline
 - **Status:** Operational
 - **Varna:** VAISHYA
 - **Layer:** Bhuvarloka
 - **Implementation Path:** `steward/system_agents/chronicle/`
+- **Key Capabilities:** content_generation, ledger, orchestration
+
+### SUPREME COURT
+- **Agent ID:** supreme_court
+- **Domain:** GOVERNANCE
+- **Specialization:** GOVERNANCE
+- **Purpose:** Appellate review, justice and mercy system, violation review
+- **Status:** Operational
+- **Varna:** BRAHMANA
+- **Layer:** Maharloka
+- **Implementation Path:** `steward/system_agents/supreme_court/`
+- **Key Capabilities:** governance (appellate review), auditing (violation review)
+- **Prime Directive:** Review violations and apply mercy protocols
 
 ---
 
