@@ -14,7 +14,8 @@ from typing import Dict, List, Tuple, Optional, Any
 import json
 from datetime import datetime
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest, OathMixin
+from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from steward.oath_mixin import OathMixin
 from vibe_core.scheduling.task import Task
 
 # Configure logging
