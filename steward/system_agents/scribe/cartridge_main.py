@@ -10,7 +10,6 @@ SCRIBE is the "Librarian" of Agent City. It:
 
 This is a VibeAgent that:
 - Inherits from vibe_core.VibeAgent
-from vibe_core.config import CityConfig, CityConfig
 - Receives tasks from the kernel scheduler
 - Generates documentation autonomously
 - Validates that all docs are current and consistent
@@ -25,25 +24,9 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 # VibeOS Integration
+from vibe_core.protocols import VibeAgent, AgentManifest
 from vibe_core.config import CityConfig
-    class VibeAgent:
-        def __init__(self, agent_id, name, version, author, description, domain, capabilities):
-            self.agent_id = agent_id
-            self.name = name
-            self.version = version
-            self.author = author
-            self.description = description
-            self.domain = domain
-            self.capabilities = capabilities
-
-    class Task:
-        def __init__(self, task_id="test", input=None):
-            self.task_id = task_id
-            self.input = input or {}
-
-    class AgentManifest:
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
+from vibe_core.scheduling.task import Task
 
 # Import documentation tools
 from .tools.agents_renderer import AgentsRenderer
