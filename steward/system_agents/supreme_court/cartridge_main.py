@@ -36,6 +36,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
+from vibe_core.config import CityConfig, CivicConfig
 
 # Constitutional Oath binding
 try:
