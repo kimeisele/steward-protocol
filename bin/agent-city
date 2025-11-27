@@ -16,9 +16,24 @@ from vibe_core.kernel_impl import RealVibeKernel
 def cmd_task_add(args):
     """Add a task."""
     tm = TaskManager(PROJECT_ROOT)
-    task = tm.add_task(args.description, priority=args.priority)
+
+    # Resolve roadmap
+    roadmap_id = None
+    if hasattr(args, 'roadmap') and args.roadmap:
+        if tm.roadmap and (args.roadmap == tm.roadmap.name or args.roadmap == tm.roadmap.id):
+            roadmap_id = tm.roadmap.id
+        else:
+            print(f"⚠️  Roadmap '{args.roadmap}' not found, task added without roadmap")
+
+    task = tm.add_task(
+        title=args.description,
+        priority=args.priority,
+        roadmap_id=roadmap_id
+    )
     print(f"✅ Task added: {args.description}")
     print(f"   ID: {task.id}")
+    if task.roadmap_id:
+        print(f"   Roadmap: {tm.roadmap.name if tm.roadmap else task.roadmap_id}")
     return 0
 
 
@@ -130,6 +145,7 @@ def main():
     task_add = task_subparsers.add_parser("add")
     task_add.add_argument("description")
     task_add.add_argument("-p", "--priority", type=int, default=0, help="Task priority (0-100)")
+    task_add.add_argument("-r", "--roadmap", help="Roadmap name or ID to link task to")
     task_add.set_defaults(func=cmd_task_add)
 
     # task list
