@@ -182,6 +182,8 @@ class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="envoy",
             name="ENVOY",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="User interface and orchestration",
             domain="ORCHESTRATION",
             capabilities=['playbook_execution', 'orchestration']
         )

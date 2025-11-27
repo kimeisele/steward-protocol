@@ -170,6 +170,8 @@ class ForumCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="forum",
             name="FORUM",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="Democratic voting and proposal management",
             domain="GOVERNANCE",
             capabilities=['proposal_management', 'voting', 'consensus_building']
         )

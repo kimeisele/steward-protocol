@@ -144,6 +144,8 @@ class ScientistCartridge(VibeAgent, OathMixin if OathMixin else object):
             agent_id="science",
             name="SCIENTIST",
             version=self.version if hasattr(self, 'version') else "1.0.0",
+            author="Steward Protocol",
+            description="Research and knowledge analysis",
             domain="SCIENCE",
             capabilities=['research', 'web_search', 'fact_verification']
         )
