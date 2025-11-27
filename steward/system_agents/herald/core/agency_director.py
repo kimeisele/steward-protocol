@@ -34,10 +34,6 @@ from .tools.broadcast_tool import BroadcastTool
 from .memory import EventLog
 
 # ARCHIVIST (for verification)
-try:
-    from steward.system_agents.archivist.tools.audit_tool import AuditTool
-except ImportError:
-    AuditTool = None
 
 logger = logging.getLogger("HERALD_DIRECTOR")
 

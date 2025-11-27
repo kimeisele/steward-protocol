@@ -34,17 +34,12 @@ from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 from .tools.git_tools import GitTools
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CHRONICLE_CARTRIDGE")
 
 
-class ChronicleCartridge(VibeAgent, OathMixin if OathMixin else object):
+class ChronicleCartridge(VibeAgent):
     """
     The CHRONICLE Agent Cartridge (The Historian).
 

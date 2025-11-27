@@ -36,7 +36,6 @@ except ImportError:
         def print(self, msg):
             print(msg)
     Panel = None
-    Table = None
 
 from steward import crypto
 

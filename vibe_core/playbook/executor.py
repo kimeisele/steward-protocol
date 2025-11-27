@@ -360,9 +360,7 @@ class GraphExecutor:
         # Lazy import to avoid circular dependencies
         live_fire_enabled = False  # Default: safe mode
 
-        try:
-            from vibe_core.config import get_config
-
+        
             config = get_config()
             live_fire_enabled = config.safety.live_fire_enabled
         except ImportError:

@@ -16,11 +16,6 @@ from vibe_core import VibeAgent, Task
 from .tools.media_tool import MediaTool
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -29,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger("ARTISAN_AGENT")
 
 
-class ArtisanCartridge(VibeAgent, OathMixin if OathMixin else object):
+class ArtisanCartridge(VibeAgent):
     """
     The Artisan Agent Cartridge.
     Specialized in media processing and technical operations.

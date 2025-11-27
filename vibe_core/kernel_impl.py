@@ -35,8 +35,6 @@ from .ledger import InMemoryLedger, SQLiteLedger
 from .sarga import get_sarga, Cycle
 
 # Import Auditor for immune system
-try:
-    from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
     AUDITOR_AVAILABLE = True
 except ImportError:
     AUDITOR_AVAILABLE = False
@@ -44,8 +42,6 @@ except ImportError:
     logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
 # Import Constitutional Oath verification (Governance Gate)
-try:
-    from vibe_core.bridge import ConstitutionalOath
     OATH_ENFORCEMENT_AVAILABLE = True
 except ImportError:
     OATH_ENFORCEMENT_AVAILABLE = False

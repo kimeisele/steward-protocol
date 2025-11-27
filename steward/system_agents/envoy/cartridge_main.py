@@ -34,17 +34,12 @@ from .tools.gap_report_tool import GAPReportTool
 from .tools.hil_assistant_tool import HILAssistantTool
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENVOY_CARTRIDGE")
 
 
-class EnvoyCartridge(VibeAgent, OathMixin if OathMixin else object):
+class EnvoyCartridge(VibeAgent):
     """
     The ENVOY Agent Cartridge - Brain of Agent City
 

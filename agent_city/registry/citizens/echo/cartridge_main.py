@@ -19,15 +19,10 @@ from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
-
 logger = logging.getLogger("ECHO_CARTRIDGE")
 
 
-class EchoCartridge(VibeAgent, OathMixin if OathMixin else object):
+class EchoCartridge(VibeAgent):
     """
     The ECHO Agent Cartridge (Test Agent).
 
