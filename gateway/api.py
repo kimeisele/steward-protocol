@@ -31,7 +31,7 @@ from vibe_core.pulse import get_pulse_manager, PulseFrequency
 from vibe_core.event_bus import get_event_bus, Event
 
 # STEWARD AGENT IMPORT
-from steward.system_agents.discoverer.agent import DiscovererAgent
+from steward.system_agents.discoverer.agent import Discoverer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
@@ -53,7 +53,7 @@ kernel = RealVibeKernel(ledger_path="data/vibe_ledger.db")
 
 # 1. Initialize Steward (The Guardian)
 logger.info("🧙‍♂️ SUMMONING THE STEWARD...")
-steward = DiscovererAgent(kernel)
+steward = Discoverer(kernel)
 kernel.register_agent(steward)
 
 # 2. Boot Kernel (Loads other agents)
