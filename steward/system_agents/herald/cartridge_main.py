@@ -41,8 +41,6 @@ from herald.tools.tidy_tool import TidyTool
 from herald.tools.strategy_tool import StrategyTool
 from herald.core.memory import EventLog
 from herald.governance import HeraldConstitution
-from artisan.cartridge_main import ArtisanCartridge
-from science.cartridge_main import ScientistCartridge
 
 # Constitutional Oath
 try:
@@ -108,8 +106,6 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
         self.research = ResearchTool()
         self.strategy = StrategyTool()
         self.scout = ScoutTool()
-        self.artisan = ArtisanCartridge()
-        self.scientist = ScientistCartridge()
         self.identity = IdentityTool()
 
         # Initialize governance (immutable rules as code)
@@ -227,6 +223,17 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
                 "error": str(e)
             }
 
+    def get_manifest(self):
+        """Return agent manifest for kernel registry."""
+        from vibe_core.agent_protocol import AgentManifest
+        return AgentManifest(
+            agent_id="herald",
+            name="HERALD",
+            version=self.version if hasattr(self, 'version') else "3.0.0",
+            domain="MEDIA",
+            capabilities=["content_generation", "broadcasting", "research", "strategy"]
+        )
+
     def report_status(self) -> Dict[str, Any]:
         """Report HERALD status (VibeAgent interface) - Deep Introspection."""
         # Get event log statistics
@@ -279,30 +286,20 @@ class HeraldCartridge(VibeAgent, OathMixin if OathMixin else object):
             dict: Campaign result with status and generated content
         """
         try:
-            logger.info("🦅 PHASE 1: RESEARCH (with SCIENTIST)")
+            logger.info("🦅 PHASE 1: RESEARCH")
             logger.info("=" * 70)
 
-            # Step 1: Research via SCIENTIST (external intelligence)
-            logger.info("[SCIENTIST] Researching current trends...")
-            briefing = self.scientist.research(
-                query="AI agents autonomous governance 2025",
-                max_results=5
-            )
+            # Step 1: Research via local ResearchTool
+            logger.info("[RESEARCH] Researching current trends...")
+            trending = self.research.find_trending_topic()
 
             research_context = None
-            if briefing and briefing.get("summary"):
-                research_context = briefing.get("summary")
-                logger.info(f"✅ SCIENTIST briefing ready: {len(research_context)} chars")
-                logger.info(f"   Sources analyzed: {briefing.get('source_count', 0)}")
-                logger.info(f"   Key insights: {len(briefing.get('key_insights', []))}")
+            if trending:
+                research_context = trending.get("article", {}).get("content")
+                logger.info(f"✅ Trending topic found: {trending.get('search_query')}")
+                logger.info(f"   Query: {trending.get('search_query')}")
             else:
-                logger.warning("⚠️  SCIENTIST research failed, using fallback...")
-                trending = self.research.find_trending_topic()
-                if trending:
-                    research_context = trending.get("article", {}).get("content")
-                    logger.info(f"✅ Fallback trending topic: {trending.get('search_query')}")
-                else:
-                    logger.warning("⚠️  No trending topic, using generic context")
+                logger.warning("⚠️  No trending topic found, using generic context")
 
             # Step 2: Generate Content
             logger.info("\n🦅 PHASE 2: CREATION")

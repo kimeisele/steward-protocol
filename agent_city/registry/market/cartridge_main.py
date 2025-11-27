@@ -26,11 +26,6 @@ try:
 except ImportError:
     OathMixin = None
 
-try:
-    from civic.tools.economy import CivicBank
-except ImportError:
-    CivicBank = None
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MARKET_MAIN")
 
@@ -91,14 +86,8 @@ class MarketCartridge(VibeAgent, OathMixin if OathMixin else object):
             self.oath_sworn = True
             logger.info("✅ MARKET has sworn the Constitutional Oath")
 
-        # Initialize CivicBank
+        # Economic tracking (via kernel/CIVIC agent)
         self.bank = None
-        if CivicBank:
-            try:
-                self.bank = CivicBank()
-                logger.info("✅ MARKET connected to CivicBank")
-            except Exception as e:
-                logger.warning(f"⚠️  CivicBank unavailable: {e}")
 
         # Service catalog (posted prices)
         self.services: Dict[str, Dict[str, Any]] = {
@@ -428,3 +417,14 @@ class MarketCartridge(VibeAgent, OathMixin if OathMixin else object):
 if __name__ == "__main__":
     cartridge = MarketCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+    def report_status(self):
+        """Report agent status for kernel health monitoring."""
+        return {
+            "agent_id": "market",
+            "name": "MARKET",
+            "status": "healthy",
+            "domain": "ECONOMY",
+            "capabilities": ['trading', 'commerce']
+        }
+
+

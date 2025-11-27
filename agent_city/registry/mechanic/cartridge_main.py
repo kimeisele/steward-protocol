@@ -14,6 +14,9 @@ from typing import Dict, List, Tuple, Optional, Any
 import json
 from datetime import datetime
 
+from vibe_core.agent_protocol import VibeAgent, AgentManifest, OathMixin
+from vibe_core.scheduling.task import Task
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MechanicCartridge:
+class MechanicCartridge(VibeAgent, OathMixin):
     """Self-preservation and SDLC management agent.
 
     The Mechanic:
@@ -71,6 +74,13 @@ class MechanicCartridge:
         Args:
             project_root: Path to project root. Auto-detected if None.
         """
+        super().__init__(
+            agent_id="mechanic",
+            name="MECHANIC",
+            version="1.0.0",
+            domain="INFRASTRUCTURE",
+            capabilities=["system_diagnosis", "self_healing", "sdlc_management"]
+        )
         self.project_root = Path(project_root or os.getcwd()).resolve()
         self.diagnostics: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
@@ -81,6 +91,71 @@ class MechanicCartridge:
             "git_hooks_status": None,
         }
         self.logger = logger
+
+    # =========================================================================
+    # REQUIRED VIBEAGENT INTERFACE
+    # =========================================================================
+
+    def process(self, task: Task) -> Dict[str, Any]:
+        """Process a task from the kernel scheduler.
+
+        Args:
+            task: Task to process
+
+        Returns:
+            Dict with result and status
+        """
+        if task.payload.get("action") == "diagnose":
+            return {
+                "status": "success",
+                "diagnostics": self.get_diagnostics()
+            }
+        elif task.payload.get("action") == "heal":
+            success = self.heal()
+            return {
+                "status": "success" if success else "error",
+                "healed": success
+            }
+        elif task.payload.get("action") == "validate":
+            success = self.validate_integrity()
+            return {
+                "status": "success" if success else "error",
+                "valid": success
+            }
+        else:
+            # Default: run full bootstrap sequence
+            success = self.execute_bootstrap()
+            return {
+                "status": "success" if success else "error",
+                "bootstrap_success": success
+            }
+
+    def get_manifest(self) -> AgentManifest:
+        """Return agent manifest for registry.
+
+        Returns:
+            AgentManifest with agent identity
+        """
+        return AgentManifest(
+            agent_id=self.agent_id,
+            name=self.name,
+            version=self.version,
+            domain=self.domain,
+            capabilities=self.capabilities
+        )
+
+    def report_status_vibeagent(self) -> Dict[str, Any]:
+        """Report agent status for kernel health monitoring.
+
+        Returns:
+            Dict with status information
+        """
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "healthy",
+            "diagnostics": self.get_diagnostics()
+        }
 
     # =========================================================================
     # PHASE 1: SELF-DIAGNOSIS

@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.artisan"
+  name: "ARTISAN Agent (Media & Content)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Artisan of Agent City - Creates media and content"
+
+agent:
+  domain: "MEDIA"
+  capabilities:
+    - "media_operations"
+    - "content_creation"
+    - "design"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true
