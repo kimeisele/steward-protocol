@@ -76,6 +76,35 @@ def cmd_mission(args):
     return 0
 
 
+def cmd_roadmap_create(args):
+    """Create a new roadmap."""
+    tm = TaskManager(PROJECT_ROOT)
+    roadmap = tm.create_roadmap(
+        name=args.name,
+        description=args.description,
+        missions=[]
+    )
+    print(f"✅ Roadmap created: {roadmap.name}")
+    print(f"   ID: {roadmap.id}")
+    return 0
+
+
+def cmd_roadmap_show(args):
+    """Show current roadmap."""
+    tm = TaskManager(PROJECT_ROOT)
+    if not tm.roadmap:
+        print("❌ No active roadmap")
+        return 1
+
+    print(f"📋 Roadmap: {tm.roadmap.name}")
+    print(f"   Description: {tm.roadmap.description}")
+    print(f"   Missions: {len(tm.roadmap.missions)}")
+    if tm.roadmap.missions:
+        for i, mission in enumerate(tm.roadmap.missions, 1):
+            print(f"   {i}. {mission}")
+    return 0
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -109,6 +138,20 @@ def main():
     # status subcommand
     status_parser = subparsers.add_parser("status")
     status_parser.set_defaults(func=cmd_status)
+
+    # roadmap subcommand
+    roadmap_parser = subparsers.add_parser("roadmap")
+    roadmap_subparsers = roadmap_parser.add_subparsers(dest="roadmap_command")
+
+    # roadmap create
+    roadmap_create = roadmap_subparsers.add_parser("create")
+    roadmap_create.add_argument("name")
+    roadmap_create.add_argument("description")
+    roadmap_create.set_defaults(func=cmd_roadmap_create)
+
+    # roadmap show
+    roadmap_show = roadmap_subparsers.add_parser("show")
+    roadmap_show.set_defaults(func=cmd_roadmap_show)
 
     # Parse arguments
     args = parser.parse_args()
