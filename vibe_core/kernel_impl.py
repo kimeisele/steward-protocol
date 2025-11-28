@@ -212,22 +212,26 @@ class RealVibeKernel(VibeKernel):
         self._bank = None
         self._vault = None
 
-    def get_bank(self):
+    def get_bank(self) -> "CivicBank":
         """
-        Get the CivicBank instance (Lazy Loaded).
+        Lazy-load the CivicBank.
         
-        This prevents import-time crashes by only loading the heavy economic
-        substrate when actually requested by an agent.
+        Phase 4c: Use VFS path for database to ensure it's in sandbox.
         """
         if self._bank is None:
             try:
-                # Lazy import to avoid circular dependencies and startup crashes
                 from steward.system_agents.civic.tools.economy import CivicBank
-                self._bank = CivicBank()
-                logger.info("🏦 Kernel loaded CivicBank (Lazy)")
-            except Exception as e:
+                
+                # Phase 4c: Create bank with VFS-isolated database path
+                # Note: Kernel itself doesn't have a sandbox, so we use a dedicated path
+                from pathlib import Path
+                kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
+                kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                self._bank = CivicBank(db_path=str(kernel_data_path))
+                logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
+            except ImportError as e:
                 logger.error(f"❌ Failed to load CivicBank: {e}")
-                # Graceful degradation could go here (MockBank)
                 raise
         return self._bank
 
