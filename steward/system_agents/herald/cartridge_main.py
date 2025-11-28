@@ -222,19 +222,18 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 return self.broadcast.publish(content, platform=platform)
 
             elif action == "check_license":
-                if self.kernel:
-                    # Ask CIVIC for broadcast license
-                    civic = self.kernel.agent_registry.get("civic")
-                    if civic:
-                        license_task = Task(
-                            agent_id="civic",
-                            payload={
-                                "action": "check_license",
-                                "agent_id": "herald"
-                            }
-                        )
-                        return civic.process(license_task)
-                return {"status": "error", "reason": "civic_not_available"}
+                # PHASE 4 (WIRING): Use system interface for inter-agent calls
+                # Article V (Consent) compliance: Governed data exchange
+                if self.system:
+                    try:
+                        return self.system.call_agent("civic", {
+                            "action": "check_license",
+                            "agent_id": "herald"
+                        })
+                    except (ValueError, RuntimeError) as e:
+                        logger.warning(f"⚠️  Civic not available for license check: {e}")
+                        return {"status": "error", "reason": "civic_not_available", "detail": str(e)}
+                return {"status": "error", "reason": "system_interface_not_available"}
 
             else:
                 return {

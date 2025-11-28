@@ -553,12 +553,15 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
     def _get_agent_type(self, agent_id: str) -> str:
         """Get the type/domain of an agent."""
+        # PHASE 4 (WIRING): Use kernel's public API instead of direct registry access
+        # Article V (Consent) compliance: Use governed interface
         if not self.kernel:
             return "unknown"
 
         try:
-            agent = self.kernel.agent_registry.get(agent_id)
-            return agent.domain if agent else "unknown"
+            # Use kernel's public API (get_agent_manifest)
+            manifest = self.kernel.get_agent_manifest(agent_id)
+            return manifest.domain if manifest else "unknown"
         except:
             return "unknown"
 
