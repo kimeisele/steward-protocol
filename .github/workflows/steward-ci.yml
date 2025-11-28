@@ -132,7 +132,32 @@ jobs:
           fi
 
   # =========================================================================
-  # JOB 3: Watchman Deep Inspection (Phase 3.3)
+  # JOB 3: Infrastructure Health Check (Layer 0)
+  # =========================================================================
+  infrastructure-check:
+    name: Infrastructure Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check git hooks installation
+        run: |
+          echo "🔍 Checking git hooks installation..."
+          python scripts/setup_hooks.py
+
+          # Note: In CI, hooks may not be installed (clean checkout)
+          # This is informational - we don't fail the build
+          echo "✅ Infrastructure check complete"
+
+  # =========================================================================
+  # JOB 4: Watchman Deep Inspection (Phase 3.3)
   # =========================================================================
   watchman-inspection:
     name: Watchman Deep Inspection
@@ -267,7 +292,7 @@ jobs:
             });
 
   # =========================================================================
-  # JOB 4: Auditor Constitutional Verdict (Phase 3.4)
+  # JOB 5: Auditor Constitutional Verdict (Phase 3.4)
   # =========================================================================
   auditor-verdict:
     name: Auditor Constitutional Verdict
@@ -426,7 +451,7 @@ jobs:
             });
 
   # =========================================================================
-  # JOB 5: Kernel Boot Test
+  # JOB 6: Kernel Boot Test
   # =========================================================================
   kernel-boot:
     name: Kernel Boot Test
@@ -502,7 +527,7 @@ jobs:
           python test_kernel_boot.py
 
   # =========================================================================
-  # JOB 6: STEWARD CLI Test
+  # JOB 7: STEWARD CLI Test
   # =========================================================================
   cli-test:
     name: STEWARD CLI Test
@@ -537,7 +562,7 @@ jobs:
           done
 
   # =========================================================================
-  # JOB 7: Documentation Check
+  # JOB 8: Documentation Check
   # =========================================================================
   docs-check:
     name: Documentation Check
@@ -597,7 +622,7 @@ jobs:
           echo "✅ PASS: Documentation structure correct"
 
   # =========================================================================
-  # JOB 8: Security Scan
+  # JOB 9: Security Scan
   # =========================================================================
   security:
     name: Security Scan
@@ -623,12 +648,12 @@ jobs:
           echo "Security scan complete"
 
   # =========================================================================
-  # JOB 9: Build Summary
+  # JOB 10: Build Summary
   # =========================================================================
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [lint, verify-agents, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security]
+    needs: [lint, verify-agents, infrastructure-check, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security]
     if: always()
 
     steps:
@@ -646,8 +671,10 @@ jobs:
           echo "  Phase 3.2: ✅ Watchman Deep Inspection (Layer 2 - AST)"
           echo "  Phase 3.3: ✅ CI/CD Enforcement (Watchman in CI)"
           echo "  Phase 3.4: ✅ Auditor Verdict (Layer 3 - Constitutional)"
+          echo "  Phase 3.5: ✅ Infrastructure Health Check (Layer 0 - Foundation)"
           echo ""
           echo "Defense in Depth Architecture:"
+          echo "  Layer 0: Infrastructure health (git hooks, system setup) - foundation"
           echo "  Layer 1: Pre-commit hook (fast grep) - 95% violation block"
           echo "  Layer 2: Watchman CI (AST analysis) - architectural violations"
           echo "  Layer 3: Auditor Verdict (constitutional judgment) - supreme law"
