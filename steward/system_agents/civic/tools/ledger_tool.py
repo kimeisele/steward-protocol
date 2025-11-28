@@ -66,14 +66,33 @@ class LedgerTool:
                 New ledger is in data/economy.db
         """
         logger.info("🏦 Initializing LedgerTool (wrapping CivicBank)...")
-        self.bank = CivicBank()
+        self._bank = None  # Lazy load
+        self._last_hash = None
 
         # For backward compatibility with code that reads .entries
         # This is a cached list of recent transactions
         self.entries: List[LedgerEntry] = []
-        self.last_hash = self.bank.get_last_hash()
+        
+        logger.info(f"💰 Ledger Tool initialized (Lazy)")
 
-        logger.info(f"💰 Ledger Tool initialized (using SQLite backend)")
+    @property
+    def bank(self):
+        """Lazy load CivicBank"""
+        if self._bank is None:
+            self._bank = CivicBank()
+            self._last_hash = self._bank.get_last_hash()
+        return self._bank
+
+    @property
+    def last_hash(self):
+        """Get last hash (ensure bank is loaded)"""
+        if self._bank is None:
+            _ = self.bank  # Trigger load
+        return self._last_hash
+
+    @last_hash.setter
+    def last_hash(self, value):
+        self._last_hash = value
 
     def allocate_credits(
         self,
