@@ -35,6 +35,8 @@ from .ledger import InMemoryLedger, SQLiteLedger
 from .sarga import get_sarga, Cycle
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
+from .vfs import VirtualFileSystem  # Phase 4: Filesystem Isolation
+from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 
 # Import Auditor for immune system (optional)
 try:
@@ -202,6 +204,9 @@ class RealVibeKernel(VibeKernel):
         # Phase 3: Resource Manager
         self.resource_manager = ResourceManager()
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
+
+        # Phase 4: Network Proxy
+        self.network = KernelNetworkProxy(kernel=self)
 
         # Economic Substrate (Lazy Loaded)
         self._bank = None
