@@ -22,11 +22,11 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "oracle",
+    "name": "ORACLE"
   },
   "specs": {
-    "description": "",
+    "description": "System introspection and explanation agent",
     "domain": "SYSTEM",
     "version": "1.0.0"
   }

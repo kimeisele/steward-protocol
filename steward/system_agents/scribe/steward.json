@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "scribe",
+    "name": "SCRIBE"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Autonomous documentation generation agent",
+    "domain": "INFRASTRUCTURE",
     "version": "1.0.0"
   }
 }

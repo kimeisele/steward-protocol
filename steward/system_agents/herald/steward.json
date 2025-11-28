@@ -26,12 +26,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "herald",
+    "name": "HERALD"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Content generation and broadcasting agent",
+    "domain": "MEDIA",
     "version": "1.0.0"
   }
 }
