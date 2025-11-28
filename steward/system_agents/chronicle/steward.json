@@ -22,11 +22,11 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "chronicle",
+    "name": "CHRONICLE"
   },
   "specs": {
-    "description": "",
+    "description": "Temporal operations and event tracking",
     "domain": "SYSTEM",
     "version": "1.0.0"
   }

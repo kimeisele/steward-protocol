@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "science",
+    "name": "SCIENCE"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "External intelligence module via web research",
+    "domain": "INTELLIGENCE",
     "version": "1.0.0"
   }
 }

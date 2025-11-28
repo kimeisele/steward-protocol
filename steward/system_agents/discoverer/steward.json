@@ -22,11 +22,11 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "steward",
-    "name": "The Steward"
+    "agent_id": "discoverer",
+    "name": "DISCOVERER"
   },
   "specs": {
-    "description": "Agent discovery, registration, and governance",
+    "description": "Agent discovery, verification, and registration",
     "domain": "GOVERNANCE",
     "version": "1.0.0"
   }

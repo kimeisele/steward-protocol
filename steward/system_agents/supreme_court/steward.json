@@ -18,12 +18,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "supreme_court",
+    "name": "SUPREME_COURT"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Appellate justice system with mercy protocol",
+    "domain": "JUSTICE",
     "version": "1.0.0"
   }
 }
