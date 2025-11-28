@@ -58,6 +58,140 @@ except ImportError:
     logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
 
 
+# ==============================================================================
+# GRACEFUL DEGRADATION: Check Cryptography Availability
+# ==============================================================================
+# Test if cryptography module works BEFORE trying to load CivicBank.
+# The pyo3 Rust panic cannot be caught by Python - we must detect it early.
+# ==============================================================================
+
+CRYPTOGRAPHY_AVAILABLE = False
+
+def _check_cryptography():
+    """
+    Check if cryptography module is functional.
+
+    The Rust bindings can panic and kill Python before exception handling.
+    We detect this by checking for _cffi_backend first.
+    """
+    global CRYPTOGRAPHY_AVAILABLE
+    try:
+        # Step 1: Check if cffi backend exists (required by cryptography)
+        import _cffi_backend  # noqa
+    except ImportError:
+        return False
+
+    try:
+        # Step 2: Try importing cryptography
+        from cryptography.fernet import Fernet
+        # Step 3: Test that it actually works
+        _test_key = Fernet.generate_key()
+        return True
+    except Exception:
+        return False
+
+# Run the check at module load time
+try:
+    CRYPTOGRAPHY_AVAILABLE = _check_cryptography()
+except Exception:
+    CRYPTOGRAPHY_AVAILABLE = False
+
+if not CRYPTOGRAPHY_AVAILABLE:
+    _crypto_logger = logging.getLogger("VIBE_KERNEL")
+    _crypto_logger.warning("⚠️ Cryptography unavailable - economic features will use MockBank/MockVault")
+
+
+# ==============================================================================
+# GRACEFUL DEGRADATION: Mock Economic Substrate
+# ==============================================================================
+# When cryptography module crashes (Rust panic), these mocks keep kernel alive.
+# Economic features will be disabled, but core OS functionality continues.
+# ==============================================================================
+
+class MockBank:
+    """
+    Graceful degradation mock when CivicBank unavailable.
+
+    This happens when the cryptography library crashes (pyo3 Rust panic).
+    The kernel continues operating, but economic features are disabled.
+    """
+    def __init__(self):
+        self._warning_logged = False
+
+    def _log_warning(self):
+        if not self._warning_logged:
+            logging.getLogger("VIBE_KERNEL").warning(
+                "⚠️ MockBank active - economic features disabled"
+            )
+            self._warning_logged = True
+
+    def get_balance(self, agent_id: str) -> int:
+        self._log_warning()
+        return 0
+
+    def transfer(self, from_id: str, to_id: str, amount: int, memo: str = "") -> bool:
+        self._log_warning()
+        return False
+
+    def credit(self, agent_id: str, amount: int, memo: str = "") -> bool:
+        self._log_warning()
+        return False
+
+    def debit(self, agent_id: str, amount: int, memo: str = "") -> bool:
+        self._log_warning()
+        return False
+
+    def get_system_stats(self) -> dict:
+        """Return empty stats for graceful degradation."""
+        self._log_warning()
+        return {
+            "accounts": 0,
+            "total_balance": 0,
+            "total_supply": 0,
+            "num_transactions": 0,
+            "status": "MOCK_MODE"
+        }
+
+    @property
+    def conn(self):
+        """No real connection available."""
+        return None
+
+
+class MockVault:
+    """
+    Graceful degradation mock when CivicVault unavailable.
+
+    Encryption/decryption features disabled, but kernel survives.
+    """
+    def __init__(self):
+        self._warning_logged = False
+
+    def _log_warning(self):
+        if not self._warning_logged:
+            logging.getLogger("VIBE_KERNEL").warning(
+                "⚠️ MockVault active - encryption features disabled"
+            )
+            self._warning_logged = True
+
+    def encrypt(self, data: bytes) -> bytes:
+        self._log_warning()
+        return data  # No-op: return unencrypted
+
+    def decrypt(self, data: bytes) -> bytes:
+        self._log_warning()
+        return data  # No-op: return as-is
+
+    def store_secret(self, key: str, value: str) -> bool:
+        self._log_warning()
+        return False
+
+    def get_secret(self, key: str) -> Optional[str]:
+        self._log_warning()
+        return None
+
+
+
 logger = logging.getLogger("VIBE_KERNEL")
 
 
@@ -220,30 +354,36 @@ class RealVibeKernel(VibeKernel):
 
     def get_bank(self) -> "CivicBank":
         """
-        Lazy-load the CivicBank.
-        
+        Lazy-load the CivicBank with graceful degradation.
+
         Phase 4c: Use VFS path for database to ensure it's in sandbox.
+        Graceful degradation: Returns MockBank if cryptography fails (Rust panic).
         """
         if self._bank is None:
-            try:
-                from steward.system_agents.civic.tools.economy import CivicBank
-                
-                # Phase 4c: Create bank with VFS-isolated database path
-                # Note: Kernel itself doesn't have a sandbox, so we use a dedicated path
-                from pathlib import Path
-                kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
-                kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
-                
-                self._bank = CivicBank(db_path=str(kernel_data_path))
-                logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load CivicBank: {e}")
-                raise
+            # Check cryptography availability FIRST to avoid Rust panic
+            if not CRYPTOGRAPHY_AVAILABLE:
+                logger.warning("⚠️ CivicBank skipped (cryptography unavailable), using MockBank")
+                self._bank = MockBank()
+            else:
+                try:
+                    from steward.system_agents.civic.tools.economy import CivicBank
+
+                    # Phase 4c: Create bank with VFS-isolated database path
+                    from pathlib import Path
+                    kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
+                    kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    self._bank = CivicBank(db_path=str(kernel_data_path))
+                    logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
+                except Exception as e:
+                    # Graceful degradation: Use MockBank when anything fails
+                    logger.warning(f"⚠️ CivicBank unavailable ({type(e).__name__}), using MockBank")
+                    self._bank = MockBank()
         return self._bank
 
     def get_vault(self):
         """
-        Get the CivicVault instance (Lazy Loaded).
+        Get the CivicVault instance (Lazy Loaded) with graceful degradation.
         """
         if self._vault is None:
             try:
@@ -251,11 +391,15 @@ class RealVibeKernel(VibeKernel):
                 from steward.system_agents.civic.tools.vault import CivicVault
                 # Vault needs a DB connection, usually from the bank
                 bank = self.get_bank()
+                if isinstance(bank, MockBank):
+                    # Can't have real vault without real bank
+                    raise RuntimeError("MockBank active, CivicVault unavailable")
                 self._vault = CivicVault(bank.conn)
                 logger.info("🔐 Kernel loaded CivicVault (Lazy)")
             except Exception as e:
-                logger.error(f"❌ Failed to load CivicVault: {e}")
-                raise
+                # Graceful degradation: Use MockVault when unavailable
+                logger.warning(f"⚠️ CivicVault unavailable ({type(e).__name__}), using MockVault")
+                self._vault = MockVault()
         return self._vault
 
     @property
