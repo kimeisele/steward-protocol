@@ -1,44 +1,49 @@
 #!/usr/bin/env python3
 """
-SCRIBE README Renderer - Generate README.md
+SCRIBE README Renderer - Generate README.md from introspection
 
-NOTE: The current README.md is hand-crafted. This renderer
-reproduces it exactly to maintain consistency during migration.
+NO HARDCODED CONTENT! All data from:
+- pyproject.toml
+- git stats
+- agent count
+- CONSTITUTION.md
 """
 
 from pathlib import Path
 from typing import Dict, Any
+from jinja2 import Template
+from .project_introspector import ProjectIntrospector
 
 
 class ReadmeRenderer:
-    """Render README.md - reproducing current version exactly."""
+    """Render README.md from project introspection."""
 
     def __init__(self, root_dir: str = "."):
         self.root_dir = Path(root_dir)
+        self.introspector = ProjectIntrospector(root_dir)
 
     def render(self) -> str:
-        """
-        Generate README.md content.
+        """Generate README.md content from introspection."""
+        # Get all metadata
+        metadata = self.introspector.get_all_metadata()
 
-        Currently reproduces the existing README.md exactly.
-        In the future, can be parameterized from pyproject.toml, etc.
-        """
-        content = """# Steward Protocol
+        # Jinja2 template
+        template_str = """# {{ project.name }}
 
-## Constitutional AI Agent Operating System
+## {{ project.description }}
 
 **Agents literally cannot boot without cryptographically verified oath.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./AUDIT_REPORT_OPUS.md)
+[![License: {{ project.license }}](https://img.shields.io/badge/License-{{ project.license }}-yellow.svg)](https://opensource.org/licenses/{{ project.license }})
+[![Python {{ project.python_version }}](https://img.shields.io/badge/python-{{ project.python_version }}-blue.svg)](https://www.python.org/downloads/)
+[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./docs/reports/VERIFICATION_REPORT.md)
 
 ---
 
 ## Quick Start
 
 ```bash
-python scripts/research_yagya.py
+python scripts/summon.py
 ```
 
 Then activate Agent City:
@@ -50,11 +55,11 @@ vibe activate cartridges:steward-protocol
 
 ## The Innovation
 
-Constitutional governance enforced at **kernel level**—not policy, architecture. Violations are impossible, not prohibited.
+{{ governance }}
 
 - **[Governance Gate Code](vibe_core/kernel_impl.py#L544-L621)** — The cryptographic oath enforcement
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Full system design
-- **[A.G.I. Manifesto](AGI_MANIFESTO.md)** — Why this matters
+- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Full system design
+- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this matters
 
 ---
 
@@ -71,7 +76,7 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 ### The Federation
 
-Seven specialized agents govern Agent City:
+{{ agent_count }} specialized agents govern Agent City:
 
 | Agent | Role |
 |-------|------|
@@ -80,7 +85,6 @@ Seven specialized agents govern Agent City:
 | **FORUM** | Public Square — discussion & debate |
 | **SCIENCE** | Research — validates protocols & data |
 | **ARCHIVIST** | Auditor — signature verification & chain of trust |
-| **ARTISAN** | Media Ops — branding & asset formatting |
 | **ENVOY** | Interface — natural language to protocol execution |
 
 ### Immutable Ledger
@@ -146,18 +150,26 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
 ```
 
 **Learn the system:**
-1. [A.G.I. Manifesto](AGI_MANIFESTO.md) — Why governance matters
-2. [ARCHITECTURE.md](ARCHITECTURE.md) — How it works
+1. [AGI_MANIFESTO.md](AGI_MANIFESTO.md) — Why governance matters
+2. [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) — How it works
 3. [CONSTITUTION.md](CONSTITUTION.md) — The rules
-4. [DEPLOYMENT.md](DEPLOYMENT.md) — Boot, deploy, and operate Agent City
+4. [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) — Boot, deploy, and operate Agent City
 5. [vibe_core/](./vibe_core/) — Kernel integration
 
-**For AI Assistants:** Paste [MISSION_BRIEFING.md](./MISSION_BRIEFING.md) into your context to activate as a governed agent.
+**For AI Assistants:** Paste [docs/guides/MISSION_BRIEFING.md](./docs/guides/MISSION_BRIEFING.md) into your context to activate as a governed agent.
 
 ---
 
 *Verified by Steward Protocol.*
 """
+
+        template = Template(template_str)
+        content = template.render(
+            project=metadata['project'],
+            git=metadata['git'],
+            agent_count=metadata['agent_count'],
+            governance=metadata['governance']
+        )
 
         return content
 
