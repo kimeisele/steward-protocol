@@ -311,3 +311,66 @@ class AgentSystemInterface:
         Note: Only use this for debugging. Normal file I/O should use write_file/read_file.
         """
         return self.vfs.get_sandbox_path()
+
+    def publish_artifact(self, sandbox_path: str, target_path: str) -> bool:
+        """
+        Publish an artifact from agent sandbox to project root.
+
+        CRITICAL SECURITY: Only whitelisted agents can publish to root.
+        This prevents unauthorized writes while allowing controlled publishing.
+
+        Args:
+            sandbox_path: Path relative to agent sandbox (e.g., "docs/README.md")
+            target_path: Path relative to project root (e.g., "README.md")
+
+        Returns:
+            True if published successfully
+
+        Raises:
+            PermissionError: If agent is not authorized to publish
+            FileNotFoundError: If source file doesn't exist in sandbox
+
+        Example:
+            # Scribe writes to sandbox, then publishes to root
+            self.system.write_file("docs/README.md", content)
+            self.system.publish_artifact("docs/README.md", "README.md")
+        """
+        # PHASE 2.5: Whitelist - Only these agents can publish to root
+        PUBLISH_WHITELIST = ["scribe"]
+
+        if self.agent_id not in PUBLISH_WHITELIST:
+            raise PermissionError(
+                f"Agent {self.agent_id} is not authorized to publish to project root. "
+                f"Only {PUBLISH_WHITELIST} can publish artifacts."
+            )
+
+        # Resolve source path (in sandbox)
+        source = self.vfs.get_sandbox_path() / sandbox_path
+
+        if not source.exists():
+            raise FileNotFoundError(
+                f"Source file not found in sandbox: {sandbox_path} "
+                f"(resolved to: {source})"
+            )
+
+        # Resolve target path (in project root)
+        target = (Path(".") / target_path).resolve()
+        project_root = Path(".").resolve()
+
+        # SECURITY: Path Traversal Protection
+        # Ensure target is within project root (prevent ../../../etc/passwd)
+        if not str(target).startswith(str(project_root)):
+            raise PermissionError(
+                f"Path traversal attempt blocked: {target_path} "
+                f"(resolves to: {target}, outside project root: {project_root})"
+            )
+
+        # Create target directory if needed
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        # Atomic copy (copy2 preserves metadata)
+        import shutil
+        shutil.copy2(source, target)
+
+        logger.info(f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}")
+        return True
