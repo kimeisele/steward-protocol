@@ -368,6 +368,10 @@ class RealVibeKernel(VibeKernel):
             import time
             time.sleep(0.1)  # Give process time to start
             self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
+        
+        # Phase 4b: Grant repo access to Scribe/Archivist
+        if agent.agent_id in ["scribe", "archivist"]:
+            self._grant_repo_access(agent.agent_id)
 
         logger.info(
             f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' "
@@ -530,6 +534,33 @@ class RealVibeKernel(VibeKernel):
             
         except Exception as e:
             logger.debug(f"⚠️  Quota sync failed: {e}")
+
+    def _grant_repo_access(self, agent_id: str) -> None:
+        """
+        Phase 4b: Grant controlled repo access via symlink.
+        
+        Scribe and Archivist need to read the main repo.
+        We create a symlink in their sandbox pointing to the repo.
+        
+        Security: This is a controlled escape. Only specific agents get it.
+        """
+        try:
+            from vibe_core.vfs import VirtualFileSystem
+            import os
+            
+            vfs = VirtualFileSystem(agent_id)
+            repo_path = os.getcwd()  # /Users/ss/Downloads/steward-protocol
+            
+            # Create symlink: sandbox/repo -> actual repo
+            vfs.create_symlink(repo_path, "repo")
+            
+            logger.info(
+                f"🔗 {agent_id} granted repo access: "
+                f"{vfs.get_sandbox_path()}/repo -> {repo_path}"
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
 
     def _check_system_health(self) -> None:
         """
