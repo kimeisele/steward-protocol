@@ -32,9 +32,9 @@ Usage (in agent code):
 """
 
 import logging
-from typing import Any, Dict, List, Optional, IO
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, IO, List, Optional
 
 logger = logging.getLogger("AGENT_INTERFACE")
 
