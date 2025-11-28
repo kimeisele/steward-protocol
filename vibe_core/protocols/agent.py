@@ -123,23 +123,25 @@ class VibeAgent(ABC):
         """
         Inject IPC Pipe for Process Isolation.
         
-        In Phase 2 (Process Isolation), agents run in separate processes.
-        They cannot access 'self.kernel' directly.
-        They must communicate via this pipe.
+        Phase 4b: MONKEY PATCH builtins to redirect to VFS/Network Proxy.
         
-        Phase 4: Also inject VFS and Network proxy.
+        This is system call interception at Python level.
+        Agents use open() and requests.get() as normal,
+        but we redirect them to sandboxed versions.
         """
+        import logging
+        logger = logging.getLogger(f"AGENT.{self.agent_id}")
+        
         self.kernel_pipe = pipe
         
         # Phase 4: Initialize VFS and Network for this agent
-        # These will be created in the agent's process
         try:
             from vibe_core.vfs import VirtualFileSystem
             from vibe_core.network_proxy import KernelNetworkProxy
             
             self.vfs = VirtualFileSystem(self.agent_id)
-            # Network proxy needs agent_id for logging
-            # We'll create a wrapper that auto-injects agent_id
+            
+            # Network proxy wrapper
             class AgentNetworkProxy:
                 def __init__(self, agent_id, kernel_network):
                     self.agent_id = agent_id
@@ -154,14 +156,92 @@ class VibeAgent(ABC):
                 def post(self, url, **kwargs):
                     return self._kernel_network.post(self.agent_id, url, **kwargs)
             
-            # Note: In process isolation, we can't directly access kernel.network
-            # We'll need to send network requests via IPC
-            # For now, create a local proxy (this will be refined)
             self.network = AgentNetworkProxy(self.agent_id, KernelNetworkProxy())
             
+            # ============================================================
+            # MONKEY PATCH: Override builtins.open
+            # ============================================================
+            import builtins
+            original_open = builtins.open
+            vfs = self.vfs  # Capture in closure
+            agent_id = self.agent_id
+            
+            def vfs_open(file, mode='r', *args, **kwargs):
+                """
+                Intercepted open() that redirects to VFS.
+                
+                WARNING: This does NOT intercept C-level file operations
+                (e.g., sqlite3, pandas). Those must be configured explicitly.
+                """
+                # Only intercept string paths
+                if isinstance(file, str):
+                    logger.info(f"[VFS-INTERCEPT] {agent_id} open('{file}', '{mode}')")
+                    try:
+                        return vfs.open(file, mode, *args, **kwargs)
+                    except PermissionError as e:
+                        logger.warning(f"[VFS-BLOCKED] {agent_id} denied access to '{file}': {e}")
+                        raise
+                else:
+                    # File-like object, pass through
+                    return original_open(file, mode, *args, **kwargs)
+            
+            # Replace open in builtins
+            builtins.open = vfs_open
+            logger.info(f"🔧 {self.agent_id}: Monkey-patched builtins.open → VFS")
+            
+            # ============================================================
+            # MONKEY PATCH: Override requests module
+            # ============================================================
+            try:
+                import sys
+                import requests as original_requests
+                
+                network = self.network  # Capture in closure
+                
+                class VFSRequests:
+                    """
+                    Wrapper that redirects all requests to network proxy.
+                    """
+                    def __init__(self):
+                        # Preserve original for internal use if needed
+                        self._original = original_requests
+                    
+                    def request(self, method, url, **kwargs):
+                        logger.info(f"[NET-INTERCEPT] {agent_id} {method} {url}")
+                        try:
+                            return network.request(method, url, **kwargs)
+                        except PermissionError as e:
+                            logger.warning(f"[NET-BLOCKED] {agent_id} denied {url}: {e}")
+                            raise
+                    
+                    def get(self, url, **kwargs):
+                        return self.request('GET', url, **kwargs)
+                    
+                    def post(self, url, **kwargs):
+                        return self.request('POST', url, **kwargs)
+                    
+                    def put(self, url, **kwargs):
+                        return self.request('PUT', url, **kwargs)
+                    
+                    def delete(self, url, **kwargs):
+                        return self.request('DELETE', url, **kwargs)
+                    
+                    # Preserve common attributes
+                    Session = original_requests.Session
+                    Response = original_requests.Response
+                    HTTPError = original_requests.HTTPError
+                
+                # Replace requests in sys.modules
+                sys.modules['requests'] = VFSRequests()
+                logger.info(f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy")
+                
+            except ImportError:
+                logger.debug(f"⚠️  requests module not available, skipping network patch")
+            
         except Exception as e:
-            import logging
-            logging.warning(f"Failed to initialize VFS/Network for {self.agent_id}: {e}")
+            logger.error(f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}")
+            import traceback
+            traceback.print_exc()
 
     def send_to_kernel(self, message: Dict[str, Any]) -> None:
         """
