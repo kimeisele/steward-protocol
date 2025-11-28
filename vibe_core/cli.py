@@ -15,6 +15,10 @@ COMMANDS:
   ps                  List running agents
   boot                Start the kernel daemon
   stop                Graceful kernel shutdown
+  init <agent_id>     Initialize new agent manifest (steward.json)
+  discover            Discover all registered agents
+  introspect          Show detailed kernel state and statistics
+  delegate            Submit task to agent (TODO)
 
 SAFEGUARDS:
   ✅ Read-only SQLite access (prevents database locks)
@@ -522,6 +526,201 @@ class StewardCLI:
         print("  - Send SIGKILL if timeout")
         return 1
 
+    # =========================================================================
+    # COMMAND: steward init
+    # =========================================================================
+
+    def cmd_init(self, agent_id: str) -> int:
+        """
+        Initialize a new agent with steward.json manifest.
+
+        Creates a minimal steward.json in current directory.
+        """
+        print(f"📝 Initializing agent: {agent_id}")
+        print()
+
+        manifest_path = Path(f"steward.json")
+        if manifest_path.exists():
+            print(f"❌ Manifest already exists: {manifest_path}")
+            return 1
+
+        # Create minimal manifest
+        manifest = {
+            "identity": {
+                "agent_id": agent_id,
+                "name": agent_id.upper()
+            },
+            "specs": {
+                "version": "1.0.0",
+                "domain": "CUSTOM",
+                "description": ""
+            },
+            "capabilities": {
+                "operations": []
+            },
+            "governance": {
+                "constitution_hash": "",
+                "compliance_level": 1,
+                "issued_at": datetime.utcnow().isoformat() + "Z",
+                "issuer": "manual"
+            }
+        }
+
+        try:
+            with open(manifest_path, 'w') as f:
+                json.dump(manifest, f, indent=2)
+            print(f"✅ Created: {manifest_path}")
+            print()
+            print("Next steps:")
+            print("  1. Edit steward.json (fill in domain, description, capabilities)")
+            print("  2. Run: steward verify <agent_id>")
+            return 0
+        except Exception as e:
+            print(f"❌ Error creating manifest: {e}")
+            return 1
+
+    # =========================================================================
+    # COMMAND: steward discover
+    # =========================================================================
+
+    def cmd_discover(self) -> int:
+        """
+        Discover all registered agents in the system.
+
+        Reads Parampara chain for AGENT_REGISTERED events.
+        """
+        print("🔍 AGENT DISCOVERY")
+        print("=" * 70)
+        print()
+
+        if not self.lineage_db.exists():
+            print("❌ Parampara chain not found")
+            return 1
+
+        try:
+            # Read-only mode
+            conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+            cursor = conn.cursor()
+
+            # Find all AGENT_REGISTERED events
+            cursor.execute("""
+                SELECT agent_id, timestamp, data FROM blocks
+                WHERE event_type = 'AGENT_REGISTERED'
+                ORDER BY idx
+            """)
+
+            agents = cursor.fetchall()
+            conn.close()
+
+            if len(agents) == 0:
+                print("⚠️  No agents registered")
+                return 1
+
+            print(f"{'AGENT ID':<20} {'REGISTERED AT':<25} {'STATUS':<10}")
+            print("-" * 70)
+
+            for agent_id, timestamp, data in agents:
+                ts_str = timestamp[:19].replace('T', ' ')
+
+                # Check if agent has passport
+                manifest_path = MANIFESTS_DIR / agent_id / "steward.json"
+                status = "✅ CERTIFIED" if manifest_path.exists() else "⚠️  NO PASSPORT"
+
+                print(f"{agent_id:<20} {ts_str:<25} {status:<10}")
+
+            print()
+            print(f"Total agents: {len(agents)}")
+            return 0
+
+        except Exception as e:
+            print(f"❌ Error discovering agents: {e}")
+            return 1
+
+    # =========================================================================
+    # COMMAND: steward introspect
+    # =========================================================================
+
+    def cmd_introspect(self) -> int:
+        """
+        Show detailed kernel state and statistics.
+
+        Combines status, agent count, chain stats, and resource info.
+        """
+        print("🔬 KERNEL INTROSPECTION")
+        print("=" * 70)
+        print()
+
+        # Kernel pulse
+        kernel_running = self._check_kernel_pulse()
+        print(f"Kernel Status:    {'✅ RUNNING' if kernel_running else '❌ OFFLINE'}")
+
+        if kernel_running:
+            pulse_age = self._get_pulse_age()
+            print(f"Last Heartbeat:   {pulse_age:.1f}s ago")
+
+        # Parampara stats
+        if self.lineage_db.exists():
+            try:
+                conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+                cursor = conn.cursor()
+
+                # Total blocks
+                cursor.execute("SELECT COUNT(*) FROM blocks")
+                total_blocks = cursor.fetchone()[0]
+
+                # Event type counts
+                cursor.execute("""
+                    SELECT event_type, COUNT(*) FROM blocks
+                    GROUP BY event_type
+                    ORDER BY COUNT(*) DESC
+                """)
+                event_counts = cursor.fetchall()
+
+                conn.close()
+
+                print(f"Chain Blocks:     {total_blocks}")
+                print()
+                print("Event Breakdown:")
+                for event_type, count in event_counts:
+                    print(f"  {event_type:<25} {count:>3}")
+
+            except Exception as e:
+                print(f"Chain Error:      {e}")
+        else:
+            print("Chain Status:     ❌ NOT INITIALIZED")
+
+        print()
+
+        # Agent stats
+        certified_count = self._count_certified_agents()
+        print(f"Certified Agents: {certified_count}")
+
+        return 0
+
+    # =========================================================================
+    # COMMAND: steward delegate
+    # =========================================================================
+
+    def cmd_delegate(self, agent_id: str, task_description: str) -> int:
+        """
+        Submit a task to an agent via the kernel.
+
+        TODO: Implement kernel task submission interface.
+        """
+        print(f"📤 TASK DELEGATION")
+        print("=" * 70)
+        print()
+        print(f"Agent:       {agent_id}")
+        print(f"Task:        {task_description}")
+        print()
+        print("⚠️  Task delegation not yet implemented")
+        print()
+        print("TODO (Phase 7.2): Implement task submission")
+        print("  - Kernel task queue interface")
+        print("  - Task ID generation and tracking")
+        print("  - Result polling mechanism")
+        return 1
+
 
 def main():
     """Main CLI entry point"""
@@ -553,6 +752,21 @@ def main():
     # steward stop
     subparsers.add_parser('stop', help='Graceful kernel shutdown')
 
+    # steward init <agent_id>
+    init_parser = subparsers.add_parser('init', help='Initialize new agent manifest')
+    init_parser.add_argument('agent_id', help='Agent ID to initialize')
+
+    # steward discover
+    subparsers.add_parser('discover', help='Discover all registered agents')
+
+    # steward introspect
+    subparsers.add_parser('introspect', help='Show detailed kernel state')
+
+    # steward delegate <agent_id> <task>
+    delegate_parser = subparsers.add_parser('delegate', help='Submit task to agent')
+    delegate_parser.add_argument('agent_id', help='Agent ID to delegate to')
+    delegate_parser.add_argument('task', help='Task description')
+
     # Parse args
     args = parser.parse_args()
 
@@ -571,6 +785,14 @@ def main():
         return cli.cmd_boot()
     elif args.command == 'stop':
         return cli.cmd_stop()
+    elif args.command == 'init':
+        return cli.cmd_init(args.agent_id)
+    elif args.command == 'discover':
+        return cli.cmd_discover()
+    elif args.command == 'introspect':
+        return cli.cmd_introspect()
+    elif args.command == 'delegate':
+        return cli.cmd_delegate(args.agent_id, args.task)
     else:
         parser.print_help()
         return 1
