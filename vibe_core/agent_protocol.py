@@ -89,6 +89,7 @@ class VibeAgent(ABC):
         description: str = "",
         domain: str = "",
         capabilities: Optional[List[str]] = None,
+        config: Optional[Any] = None,
     ):
         """Initialize a VibeAgent"""
         self.agent_id = agent_id
@@ -98,7 +99,31 @@ class VibeAgent(ABC):
         self.description = description
         self.domain = domain
         self.capabilities = capabilities or []
+        self.config = config
         self.kernel = None  # Will be injected by VibeKernel.boot()
+        self.kernel_pipe = None  # IPC Pipe for Process Isolation
+
+    def set_kernel_pipe(self, pipe: Any) -> None:
+        """
+        Inject IPC Pipe for Process Isolation.
+        
+        In Phase 2 (Process Isolation), agents run in separate processes.
+        They cannot access 'self.kernel' directly.
+        They must communicate via this pipe.
+        """
+        self.kernel_pipe = pipe
+
+    def send_to_kernel(self, message: Dict[str, Any]) -> None:
+        """
+        Send a message to the Kernel via IPC.
+        """
+        if self.kernel_pipe:
+            self.kernel_pipe.send(message)
+        elif self.kernel:
+            # Fallback for legacy in-process mode (if needed)
+            pass
+        else:
+            logging.warning(f"Agent {self.agent_id} has no kernel connection")
 
     def set_kernel(self, kernel: "VibeKernel") -> None:
         """
