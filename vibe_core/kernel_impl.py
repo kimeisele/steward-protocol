@@ -58,6 +58,7 @@ except ImportError:
     logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
 
 
+
 logger = logging.getLogger("VIBE_KERNEL")
 
 
@@ -221,41 +222,34 @@ class RealVibeKernel(VibeKernel):
     def get_bank(self) -> "CivicBank":
         """
         Lazy-load the CivicBank.
-        
+
         Phase 4c: Use VFS path for database to ensure it's in sandbox.
+        Requires: cryptography package (see pyproject.toml)
         """
         if self._bank is None:
-            try:
-                from steward.system_agents.civic.tools.economy import CivicBank
-                
-                # Phase 4c: Create bank with VFS-isolated database path
-                # Note: Kernel itself doesn't have a sandbox, so we use a dedicated path
-                from pathlib import Path
-                kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
-                kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
-                
-                self._bank = CivicBank(db_path=str(kernel_data_path))
-                logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
-            except ImportError as e:
-                logger.error(f"❌ Failed to load CivicBank: {e}")
-                raise
+            from steward.system_agents.civic.tools.economy import CivicBank
+            from pathlib import Path
+
+            # Phase 4c: Create bank with VFS-isolated database path
+            kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
+            kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
+
+            self._bank = CivicBank(db_path=str(kernel_data_path))
+            logger.info("🏦 Kernel loaded CivicBank (VFS-isolated)")
         return self._bank
 
     def get_vault(self):
         """
         Get the CivicVault instance (Lazy Loaded).
+
+        Requires: cryptography package (see pyproject.toml)
         """
         if self._vault is None:
-            try:
-                # Lazy import
-                from steward.system_agents.civic.tools.vault import CivicVault
-                # Vault needs a DB connection, usually from the bank
-                bank = self.get_bank()
-                self._vault = CivicVault(bank.conn)
-                logger.info("🔐 Kernel loaded CivicVault (Lazy)")
-            except Exception as e:
-                logger.error(f"❌ Failed to load CivicVault: {e}")
-                raise
+            from steward.system_agents.civic.tools.vault import CivicVault
+
+            bank = self.get_bank()
+            self._vault = CivicVault(bank.conn)
+            logger.info("🔐 Kernel loaded CivicVault (Lazy)")
         return self._vault
 
     @property
