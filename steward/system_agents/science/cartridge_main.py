@@ -104,13 +104,27 @@ class ScientistCartridge(VibeAgent, OathMixin):
         self.search = WebSearchTool()
         logger.info(f"   Search mode: {self.search.mode.upper()}")
 
-        # Data paths for caching and results
-        self.cache_dir = Path("data/science/cache")
-        self.results_dir = Path("data/science/results")
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.results_dir.mkdir(parents=True, exist_ok=True)
+        # PHASE 2.2: Lazy-load data paths after system interface injection
+        self._cache_dir = None
+        self._results_dir = None
 
-        logger.info("✅ SCIENTIST: Ready for operation")
+        logger.info("✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)")
+
+    @property
+    def cache_dir(self):
+        """Lazy-load cache directory (sandboxed)."""
+        if self._cache_dir is None:
+            self._cache_dir = self.system.get_sandbox_path() / "science" / "cache"
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+        return self._cache_dir
+
+    @property
+    def results_dir(self):
+        """Lazy-load results directory (sandboxed)."""
+        if self._results_dir is None:
+            self._results_dir = self.system.get_sandbox_path() / "science" / "results"
+            self._results_dir.mkdir(parents=True, exist_ok=True)
+        return self._results_dir
 
     def process(self, task: Task) -> Dict[str, Any]:
         """

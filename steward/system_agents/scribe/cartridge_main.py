@@ -62,11 +62,10 @@ class ScribeCartridge(VibeAgent, OathMixin):
     No stale documentation, only live introspection."
     """
 
-    def __init__(self, root_dir: str = ".", config: Optional[CityConfig] = None):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize SCRIBE (The Documentarian) as a VibeAgent.
 
         Args:
-            root_dir: Root directory for documentation output
             config: CityConfig instance from Phoenix Config (optional)
         """
         # BLOCKER #0: Accept Phoenix Config
@@ -95,17 +94,17 @@ class ScribeCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ SCRIBE has sworn the Constitutional Oath")
 
-        # Set root directory
-        self.root_dir = Path(root_dir)
+        # PHASE 2.3: Lazy-load root_dir after system interface injection
+        # CRITICAL: Scribe writes to SANDBOX, not project root
+        # Future: Kernel will provide publish() mechanism to copy sandbox → root
+        self._root_dir = None
+        self._agents_renderer = None
+        self._citymap_renderer = None
+        self._help_renderer = None
+        self._readme_renderer = None
 
-        # Initialize all documentation renderers
-        self.agents_renderer = AgentsRenderer(root_dir)
-        self.citymap_renderer = CitymapRenderer(root_dir)
-        self.help_renderer = HelpRenderer(root_dir)
-        self.readme_renderer = ReadmeRenderer(root_dir)
-
-        logger.info("✅ All documentation renderers initialized")
-        logger.info("📚 SCRIBE: Ready for operation (awaiting kernel injection)")
+        logger.info("✅ SCRIBE renderers pending initialization")
+        logger.info("📚 SCRIBE: Ready for operation (awaiting system injection)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
@@ -119,6 +118,68 @@ class ScribeCartridge(VibeAgent, OathMixin):
             capabilities=self.capabilities,
             dependencies=[]
         )
+
+    # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
+    @property
+    def sandbox_dir(self):
+        """Lazy-load sandbox directory for output files.
+
+        CRITICAL: Scribe writes to SANDBOX (/tmp/vibe_os/agents/scribe/docs/),
+        NOT to project root. This prevents unauthorized writes to README.md, etc.
+
+        After rendering to sandbox, use system.publish_artifact() to copy to root.
+        """
+        if self._root_dir is None:
+            self._root_dir = self.system.get_sandbox_path() / "docs"
+            self._root_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"📁 SCRIBE sandbox initialized: {self._root_dir}")
+        return self._root_dir
+
+    @property
+    def agents_renderer(self):
+        """Lazy-load AgentsRenderer.
+
+        CRITICAL: Pass PROJECT ROOT (not sandbox) for source code introspection.
+        Scribe needs to READ real source, but WRITE to sandbox.
+        """
+        if self._agents_renderer is None:
+            # Use "." (project root) for introspection, NOT sandbox
+            self._agents_renderer = AgentsRenderer(root_dir=".")
+            logger.debug("📋 AgentsRenderer initialized (source: project root)")
+        return self._agents_renderer
+
+    @property
+    def citymap_renderer(self):
+        """Lazy-load CitymapRenderer.
+
+        CRITICAL: Pass PROJECT ROOT for architecture introspection.
+        """
+        if self._citymap_renderer is None:
+            self._citymap_renderer = CitymapRenderer(root_dir=".")
+            logger.debug("🗺️  CitymapRenderer initialized (source: project root)")
+        return self._citymap_renderer
+
+    @property
+    def help_renderer(self):
+        """Lazy-load HelpRenderer.
+
+        CRITICAL: Pass PROJECT ROOT for codebase introspection.
+        """
+        if self._help_renderer is None:
+            self._help_renderer = HelpRenderer(root_dir=".")
+            logger.debug("❓ HelpRenderer initialized (source: project root)")
+        return self._help_renderer
+
+    @property
+    def readme_renderer(self):
+        """Lazy-load ReadmeRenderer.
+
+        CRITICAL: Pass PROJECT ROOT for project introspection.
+        """
+        if self._readme_renderer is None:
+            self._readme_renderer = ReadmeRenderer(root_dir=".")
+            logger.debug("📖 ReadmeRenderer initialized (source: project root)")
+        return self._readme_renderer
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
@@ -159,92 +220,160 @@ class ScribeCartridge(VibeAgent, OathMixin):
             }
 
     def _generate_all(self) -> Dict[str, Any]:
-        """Generate all documentation files."""
+        """Generate all documentation files.
+
+        PHASE 2.5: Two-step process:
+        1. Render to sandbox (safe writes)
+        2. Publish to project root (controlled via whitelist)
+        """
         logger.info("🔄 Generating ALL documentation...")
 
-        results = {
-            "agents": self.agents_renderer.render_to_file(),
-            "citymap": self.citymap_renderer.render_to_file(),
-            "help": self.help_renderer.render_to_file(),
-            "readme": self.readme_renderer.render_to_file(),
+        # Step 1: Render all docs to sandbox
+        rendered = {}
+        published = {}
+
+        docs = {
+            "AGENTS.md": self.agents_renderer,
+            "CITYMAP.md": self.citymap_renderer,
+            "HELP.md": self.help_renderer,
+            "README.md": self.readme_renderer,
         }
 
-        success = all(results.values())
+        for doc_name, renderer in docs.items():
+            try:
+                # Generate content via introspection
+                # Try scan_and_render() first, fall back to render()
+                if hasattr(renderer, 'scan_and_render'):
+                    content = renderer.scan_and_render()
+                elif hasattr(renderer, 'render'):
+                    content = renderer.render()
+                else:
+                    raise AttributeError(f"Renderer for {doc_name} has no render method")
+
+                # Write to sandbox
+                sandbox_file = self.sandbox_dir / doc_name
+                sandbox_file.write_text(content)
+                rendered[doc_name] = True
+                logger.info(f"   ✅ Rendered {doc_name} to sandbox ({len(content)} bytes)")
+
+            except Exception as e:
+                logger.error(f"   ❌ Failed to render {doc_name}: {e}")
+                rendered[doc_name] = False
+                published[doc_name] = False
+                continue
+
+            # Step 2: Publish to project root
+            try:
+                self.system.publish_artifact(f"docs/{doc_name}", doc_name)
+                published[doc_name] = True
+                logger.info(f"   📤 Published {doc_name} to project root")
+
+            except Exception as e:
+                logger.error(f"   ❌ Failed to publish {doc_name}: {e}")
+                published[doc_name] = False
+
+        all_success = all(rendered.values()) and all(published.values())
 
         return {
-            "success": success,
-            "message": "All documentation generated" if success else "Some generation failed",
-            "details": results
+            "success": all_success,
+            "message": "All documentation generated and published" if all_success else "Some steps failed",
+            "rendered": rendered,
+            "published": published
         }
 
     def _generate_agents(self) -> Dict[str, Any]:
-        """Generate AGENTS.md only."""
-        logger.info("🔄 Generating AGENTS.md...")
-
-        success = self.agents_renderer.render_to_file()
-
-        return {
-            "success": success,
-            "message": "AGENTS.md generated" if success else "Failed to generate AGENTS.md"
-        }
+        """Generate AGENTS.md only (with sandbox+publish)."""
+        return self._generate_single_doc("AGENTS.md", self.agents_renderer)
 
     def _generate_citymap(self) -> Dict[str, Any]:
-        """Generate CITYMAP.md only."""
-        logger.info("🔄 Generating CITYMAP.md...")
-
-        success = self.citymap_renderer.render_to_file()
-
-        return {
-            "success": success,
-            "message": "CITYMAP.md generated" if success else "Failed to generate CITYMAP.md"
-        }
+        """Generate CITYMAP.md only (with sandbox+publish)."""
+        return self._generate_single_doc("CITYMAP.md", self.citymap_renderer)
 
     def _generate_help(self) -> Dict[str, Any]:
-        """Generate HELP.md only."""
-        logger.info("🔄 Generating HELP.md...")
-
-        success = self.help_renderer.render_to_file()
-
-        return {
-            "success": success,
-            "message": "HELP.md generated" if success else "Failed to generate HELP.md"
-        }
+        """Generate HELP.md only (with sandbox+publish)."""
+        return self._generate_single_doc("HELP.md", self.help_renderer)
 
     def _generate_readme(self) -> Dict[str, Any]:
-        """Generate README.md only."""
-        logger.info("🔄 Generating README.md...")
+        """Generate README.md only (with sandbox+publish)."""
+        return self._generate_single_doc("README.md", self.readme_renderer)
 
-        success = self.readme_renderer.render_to_file()
+    def _generate_single_doc(self, doc_name: str, renderer) -> Dict[str, Any]:
+        """Helper: Generate single doc with 2-step render+publish.
 
-        return {
-            "success": success,
-            "message": "README.md generated" if success else "Failed to generate README.md"
-        }
+        Args:
+            doc_name: Filename (e.g., "README.md")
+            renderer: Renderer instance with scan_and_render() or render() method
+
+        Returns:
+            Result dict with success status
+        """
+        logger.info(f"🔄 Generating {doc_name}...")
+
+        try:
+            # Step 1: Render to sandbox
+            # Try scan_and_render() first, fall back to render()
+            if hasattr(renderer, 'scan_and_render'):
+                content = renderer.scan_and_render()
+            elif hasattr(renderer, 'render'):
+                content = renderer.render()
+            else:
+                raise AttributeError(f"Renderer has no scan_and_render() or render() method")
+
+            sandbox_file = self.sandbox_dir / doc_name
+            sandbox_file.write_text(content)
+            logger.info(f"   ✅ Rendered {doc_name} to sandbox ({len(content)} bytes)")
+
+            # Step 2: Publish to root
+            self.system.publish_artifact(f"docs/{doc_name}", doc_name)
+            logger.info(f"   📤 Published {doc_name} to project root")
+
+            return {
+                "success": True,
+                "message": f"{doc_name} generated and published",
+                "bytes": len(content)
+            }
+
+        except Exception as e:
+            logger.error(f"   ❌ Failed to generate {doc_name}: {e}")
+            return {
+                "success": False,
+                "message": f"Failed to generate {doc_name}",
+                "error": str(e)
+            }
 
     # Utility method for direct invocation (outside kernel)
     def generate_all(self) -> bool:
-        """Direct method to generate all documentation (for standalone use)."""
-        logger.info("🔄 SCRIBE: Generating all documentation...")
+        """Direct method to generate all documentation.
+
+        DEPRECATED after Phase 2.3: Requires kernel registration for system interface.
+        This method is kept for backwards compatibility but will fail without kernel.
+        """
+        logger.warning("⚠️  generate_all() is deprecated. Use kernel.dispatch_task() instead.")
 
         try:
-            self.agents_renderer.render_to_file()
-            self.citymap_renderer.render_to_file()
-            self.help_renderer.render_to_file()
-            self.readme_renderer.render_to_file()
-
-            logger.info("✅ SCRIBE: All documentation generated successfully")
-            return True
+            result = self._generate_all()
+            return result["success"]
         except Exception as e:
             logger.error(f"❌ SCRIBE: Generation failed: {e}")
+            logger.error("   Hint: SCRIBE requires kernel registration after Phase 2.3")
             return False
 
 
 def main():
-    """Main entry point for standalone usage."""
+    """Main entry point for standalone usage.
+
+    WARNING: Standalone mode is deprecated. SCRIBE now requires kernel registration
+    for system interface injection (sandboxed filesystem access).
+
+    Use via kernel:
+        kernel.register_agent(ScribeCartridge())
+        kernel.dispatch_task("scribe", {"action": "generate_all"})
+    """
+    logger.error("❌ SCRIBE standalone mode is deprecated after Phase 2.3 migration")
+    logger.error("   SCRIBE requires kernel registration for sandboxed filesystem access")
+    logger.error("   Use: kernel.register_agent(ScribeCartridge())")
     import sys
-    root_dir = sys.argv[1] if len(sys.argv) > 1 else "."
-    scribe = ScribeCartridge(root_dir)
-    scribe.generate_all()
+    sys.exit(1)
 
 
 if __name__ == "__main__":

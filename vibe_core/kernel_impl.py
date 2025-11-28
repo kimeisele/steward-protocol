@@ -362,6 +362,18 @@ class RealVibeKernel(VibeKernel):
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
 
+        # PHASE 1.1: INJECT SYSTEM INTERFACE (The Bridge)
+        # Give agent standardized access to:
+        # - Dependency Management (replaces requirements.txt)
+        # - VFS (replaces direct Path() access)
+        # - Config (replaces hardcoded values)
+        from vibe_core.agent_interface import AgentSystemInterface
+        agent.system = AgentSystemInterface(self, agent.agent_id)
+        logger.info(
+            f"🔌 {agent.agent_id} received system interface "
+            f"(sandbox: {agent.system.get_sandbox_path()})"
+        )
+
         # Phase 2: Spawn Process
         self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, 'config', None))
 
