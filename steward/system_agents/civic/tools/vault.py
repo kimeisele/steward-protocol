@@ -19,13 +19,10 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict
 
-try:
-    from cryptography.fernet import Fernet, InvalidToken
-except (ImportError, Exception) as e:
-    # If cryptography fails to import, provide graceful error
-    Fernet = None
-    InvalidToken = None
-    import_error = str(e)
+# Lazy import for cryptography to prevent import-time crashes
+Fernet = None
+InvalidToken = None
+import_error = None
 
 logger = logging.getLogger("CIVIC_VAULT")
 
@@ -78,11 +75,17 @@ class CivicVault:
         Args:
             db_connection: SQLite connection from CivicBank
         """
+        # Lazy load cryptography
+        global Fernet, InvalidToken, import_error
         if Fernet is None:
-            raise ImportError(
-                "❌ cryptography library failed to initialize. "
-                f"Error: {import_error}"
-            )
+            try:
+                from cryptography.fernet import Fernet, InvalidToken
+            except (ImportError, Exception) as e:
+                import_error = str(e)
+                raise ImportError(
+                    "❌ cryptography library failed to initialize. "
+                    f"Error: {import_error}"
+                )
 
         self.conn = db_connection
         self._ensure_master_key()
