@@ -267,7 +267,166 @@ jobs:
             });
 
   # =========================================================================
-  # JOB 4: Kernel Boot Test
+  # JOB 4: Auditor Constitutional Verdict (Phase 3.4)
+  # =========================================================================
+  auditor-verdict:
+    name: Auditor Constitutional Verdict
+    runs-on: ubuntu-latest
+    needs: [watchman-inspection]  # Run AFTER Watchman (Layer 3)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Render Constitutional Verdict
+        id: verdict
+        run: |
+          cat > run_constitutional_verdict.py << 'EOF'
+          """
+          Phase 3.4: Auditor Constitutional Verdict (Layer 3)
+
+          This is the final authority on code quality - constitutional judgment.
+          Defense in Depth:
+          - Layer 1: Pre-commit hook (fast grep) - blocks 95% of violations
+          - Layer 2: Watchman (AST analysis) - catches architectural violations
+          - Layer 3: THIS - constitutional judgment (supreme authority)
+          """
+          import sys
+          import json
+          from pathlib import Path
+
+          # Initialize kernel and load Auditor
+          from vibe_core.kernel_impl import RealVibeKernel
+          from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+
+          print("⚖️  Initializing Auditor...")
+          kernel = RealVibeKernel()
+          auditor = AuditorCartridge()
+
+          # Inject system interface (required for compliance checks)
+          from vibe_core.agent_interface import AgentSystemInterface
+          auditor.system = AgentSystemInterface(kernel, "auditor")
+
+          print("⚖️  Rendering Constitutional Verdict (Layer 3)...")
+
+          # Create task for constitutional verdict
+          from vibe_core.scheduling.task import Task
+          task = Task(
+              id="constitutional_verdict",
+              payload={"action": "constitutional_verdict"}
+          )
+
+          verdict = auditor.render_constitutional_verdict(task)
+
+          # Save full verdict
+          verdict_path = Path("auditor_verdict.json")
+          verdict_path.write_text(json.dumps(verdict, indent=2))
+          print(f"⚖️  Full verdict saved: {verdict_path}")
+
+          # Print summary
+          print("\n" + "="*70)
+          print("AUDITOR CONSTITUTIONAL VERDICT")
+          print("="*70)
+          print(f"Verdict: {verdict['verdict']}")
+          print(f"Total violations: {verdict['total_violations']}")
+
+          if verdict['total_violations'] > 0:
+              print("\nViolations by severity:")
+              for severity, count in verdict['by_severity'].items():
+                  if count > 0:
+                      print(f"  • {severity}: {count}")
+
+              if verdict.get('by_article'):
+                  print("\nViolations by article:")
+                  for article, count in verdict['by_article'].items():
+                      print(f"  • {article}: {count}")
+
+          print(f"\nConstitution Hash: {verdict.get('constitutional_hash', 'N/A')}")
+
+          # Determine exit code
+          if verdict['should_fail_build']:
+              print("\n❌ BUILD FAILED - Constitutional violations detected")
+              print("\nThe Constitution is the supreme law. These violations cannot be ignored.")
+              print("\nTo fix:")
+              print("  1. Review violations in the uploaded artifact")
+              print("  2. Ensure agents have steward.json and STEWARD.md")
+              print("  3. Add logging/audit trails for accountability")
+              print("  4. Implement VibeAgent protocol for interoperability")
+              print("  5. See CONSTITUTION.md for full requirements")
+              sys.exit(1)
+          elif verdict['total_violations'] > 0:
+              print("\n⚠️  BUILD WARNING - Non-critical violations detected")
+              print("Consider addressing these to improve constitutional alignment")
+              sys.exit(0)
+          else:
+              print("\n✅ BUILD PASSED - All agents uphold the Constitution")
+              sys.exit(0)
+          EOF
+
+          python run_constitutional_verdict.py
+
+      - name: Upload Verdict Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditor-constitutional-verdict
+          path: auditor_verdict.json
+          retention-days: 30
+
+      - name: Comment on PR (if violations found)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const verdict = JSON.parse(fs.readFileSync('auditor_verdict.json', 'utf8'));
+
+            let comment = '## ⚖️ AUDITOR Constitutional Verdict\n\n';
+            comment += `**Verdict:** ❌ ${verdict.verdict}\n\n`;
+            comment += `**Total violations:** ${verdict.total_violations}\n\n`;
+
+            comment += '### Violations by Severity\n\n';
+            for (const [severity, count] of Object.entries(verdict.by_severity)) {
+              if (count > 0) {
+                comment += `- **${severity}:** ${count}\n`;
+              }
+            }
+
+            if (verdict.by_article) {
+              comment += '\n### Violations by Article\n\n';
+              for (const [article, count] of Object.entries(verdict.by_article)) {
+                comment += `- **${article}:** ${count}\n`;
+              }
+            }
+
+            comment += '\n### How to Fix\n\n';
+            comment += '1. Ensure all agents have `steward.json` and `STEWARD.md`\n';
+            comment += '2. Add logging/audit trails (Article II: Accountability)\n';
+            comment += '3. Implement `VibeAgent` protocol (Article VI: Interoperability)\n';
+            comment += '4. Use `AgentSystemInterface` for governed operations (Article III)\n';
+            comment += '5. Review the full verdict in the CI artifacts\n\n';
+            comment += `📖 **Constitution Hash:** ${verdict.constitutional_hash}\n`;
+            comment += '📜 **Reference:** See `CONSTITUTION.md` for full requirements\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  # =========================================================================
+  # JOB 5: Kernel Boot Test
   # =========================================================================
   kernel-boot:
     name: Kernel Boot Test
@@ -343,7 +502,7 @@ jobs:
           python test_kernel_boot.py
 
   # =========================================================================
-  # JOB 4: STEWARD CLI Test
+  # JOB 6: STEWARD CLI Test
   # =========================================================================
   cli-test:
     name: STEWARD CLI Test
@@ -378,7 +537,7 @@ jobs:
           done
 
   # =========================================================================
-  # JOB 5: Documentation Check
+  # JOB 7: Documentation Check
   # =========================================================================
   docs-check:
     name: Documentation Check
@@ -427,7 +586,7 @@ jobs:
           echo "✅ PASS: Documentation structure correct"
 
   # =========================================================================
-  # JOB 6: Security Scan
+  # JOB 8: Security Scan
   # =========================================================================
   security:
     name: Security Scan
@@ -453,12 +612,12 @@ jobs:
           echo "Security scan complete"
 
   # =========================================================================
-  # JOB 7: Build Summary
+  # JOB 9: Build Summary
   # =========================================================================
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [lint, verify-agents, watchman-inspection, kernel-boot, cli-test, docs-check, security]
+    needs: [lint, verify-agents, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security]
     if: always()
 
     steps:
@@ -471,10 +630,15 @@ jobs:
           echo "✅ All quality gates passed!"
           echo ""
           echo "Phase Status:"
-          echo "  Phase 1-5: ✅ Complete"
-          echo "  Phase 6: ✅ Agent Certification Complete"
-          echo "  Phase 7: ✅ CLI Complete"
-          echo "  Phase 8: ✅ Documentation Complete"
-          echo "  Phase 9: ✅ CI/CD Active (THIS WORKFLOW)"
+          echo "  Phase 1-2: ✅ Foundation & Migration Complete"
+          echo "  Phase 3.1: ✅ Pre-commit Hook (Layer 1 - Electric Fence)"
+          echo "  Phase 3.2: ✅ Watchman Deep Inspection (Layer 2 - AST)"
+          echo "  Phase 3.3: ✅ CI/CD Enforcement (Watchman in CI)"
+          echo "  Phase 3.4: ✅ Auditor Verdict (Layer 3 - Constitutional)"
+          echo ""
+          echo "Defense in Depth Architecture:"
+          echo "  Layer 1: Pre-commit hook (fast grep) - 95% violation block"
+          echo "  Layer 2: Watchman CI (AST analysis) - architectural violations"
+          echo "  Layer 3: Auditor Verdict (constitutional judgment) - supreme law"
           echo ""
           echo "System is ready for deployment."
