@@ -1,24 +1,33 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "chronicle",
-    "name": "CHRONICLE",
-    "version": "1.0.0",
-    "class": "infrastructure_core",
-    "specialization": "INFRASTRUCTURE",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "Git operations and code history management",
-    "constraints": ["cryptographic_signing"],
-    "prime_directive": "Maintain immutable code timeline"
-  },
   "capabilities": {
-    "interfaces": ["kernel", "git"],
     "operations": [
-      {"name": "content_generation", "description": "Commit creation"},
-      {"name": "ledger", "description": "History recording"},
-      {"name": "orchestration", "description": "Branch management"}
+      {
+        "description": "content_generation operation",
+        "name": "content_generation"
+      },
+      {
+        "description": "ledger operation",
+        "name": "ledger"
+      },
+      {
+        "description": "orchestration operation",
+        "name": "orchestration"
+      }
     ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.889687Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "chronicle",
+    "name": "CHRONICLE"
+  },
+  "specs": {
+    "description": "Git operations and code history management",
+    "domain": "INFRASTRUCTURE",
+    "version": "1.0.0"
   }
 }

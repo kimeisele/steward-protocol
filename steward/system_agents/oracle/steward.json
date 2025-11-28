@@ -1,24 +1,33 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "oracle",
-    "name": "ORACLE",
-    "version": "1.0.0",
-    "class": "introspection_core",
-    "specialization": "INTROSPECTION",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "System introspection and explanation",
-    "constraints": ["read_only", "transparent"],
-    "prime_directive": "Interpret system state into meaningful narratives"
-  },
   "capabilities": {
-    "interfaces": ["kernel"],
     "operations": [
-      {"name": "introspection", "description": "System state analysis"},
-      {"name": "audit_trail", "description": "Event timeline"},
-      {"name": "system_health", "description": "Health reporting"}
+      {
+        "description": "introspection operation",
+        "name": "introspection"
+      },
+      {
+        "description": "audit_trail operation",
+        "name": "audit_trail"
+      },
+      {
+        "description": "system_health operation",
+        "name": "system_health"
+      }
     ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.935350Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "oracle",
+    "name": "ORACLE"
+  },
+  "specs": {
+    "description": "System introspection and explanation",
+    "domain": "INTROSPECTION",
+    "version": "1.0.0"
   }
 }

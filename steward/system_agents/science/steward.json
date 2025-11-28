@@ -1,24 +1,33 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "science",
-    "name": "SCIENCE",
-    "version": "1.0.0",
-    "class": "research_intelligence",
-    "specialization": "SCIENCE",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "Research and intelligence gathering",
-    "constraints": ["fact_based", "verifiable_sources"],
-    "prime_directive": "Provide ground truth through research"
-  },
   "capabilities": {
-    "interfaces": ["kernel", "web"],
     "operations": [
-      {"name": "research", "description": "Web research"},
-      {"name": "web_search", "description": "Search operations"},
-      {"name": "fact_synthesis", "description": "Fact compilation"}
+      {
+        "description": "research operation",
+        "name": "research"
+      },
+      {
+        "description": "web_search operation",
+        "name": "web_search"
+      },
+      {
+        "description": "fact_synthesis operation",
+        "name": "fact_synthesis"
+      }
     ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.944100Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "science",
+    "name": "SCIENCE"
+  },
+  "specs": {
+    "description": "Research and intelligence gathering",
+    "domain": "SCIENCE",
+    "version": "1.0.0"
   }
 }
