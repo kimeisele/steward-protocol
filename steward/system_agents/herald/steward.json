@@ -1,44 +1,37 @@
 {
-    "steward_version": "1.0.0",
-    "agent": {
-        "id": "herald",
-        "name": "HERALD",
-        "version": "3.0.0",
-        "class": "media_broadcaster",
-        "specialization": "MEDIA",
-        "status": "active"
-    },
-    "credentials": {
-        "mandate": "Content generation and multi-platform broadcasting",
-        "constraints": [
-            "constitutional_compliance",
-            "fact_based_content"
-        ],
-        "prime_directive": "Amplify Agent City's voice with truth and quality"
-    },
-    "capabilities": {
-        "interfaces": [
-            "kernel",
-            "twitter",
-            "github"
-        ],
-        "operations": [
-            {
-                "name": "content_generation",
-                "description": "Create marketing content"
-            },
-            {
-                "name": "broadcasting",
-                "description": "Multi-platform publishing"
-            },
-            {
-                "name": "research",
-                "description": "Fact-based research"
-            },
-            {
-                "name": "strategy",
-                "description": "Campaign planning"
-            }
-        ]
-    }
+  "capabilities": {
+    "operations": [
+      {
+        "description": "content_generation operation",
+        "name": "content_generation"
+      },
+      {
+        "description": "broadcasting operation",
+        "name": "broadcasting"
+      },
+      {
+        "description": "research operation",
+        "name": "research"
+      },
+      {
+        "description": "strategy operation",
+        "name": "strategy"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.924718Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "herald",
+    "name": "HERALD"
+  },
+  "specs": {
+    "description": "Content generation and multi-platform broadcasting",
+    "domain": "MEDIA",
+    "version": "3.0.0"
+  }
 }

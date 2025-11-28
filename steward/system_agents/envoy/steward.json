@@ -1,47 +1,41 @@
 {
-    "steward_version": "1.0.0",
-    "agent": {
-        "id": "envoy",
-        "name": "ENVOY",
-        "version": "2.0.0",
-        "class": "orchestration_operator",
-        "specialization": "ORCHESTRATION",
-        "status": "active"
-    },
-    "credentials": {
-        "mandate": "Universal operator interface and system shell",
-        "constraints": [
-            "constitutional_compliance"
-        ],
-        "prime_directive": "Bridge user intent to kernel execution"
-    },
-    "capabilities": {
-        "interfaces": [
-            "kernel",
-            "cli",
-            "api"
-        ],
-        "operations": [
-            {
-                "name": "orchestration",
-                "description": "Multi-agent coordination"
-            },
-            {
-                "name": "governance",
-                "description": "Governance operations"
-            },
-            {
-                "name": "broadcasting",
-                "description": "Campaign execution"
-            },
-            {
-                "name": "registry",
-                "description": "Agent queries"
-            },
-            {
-                "name": "auditing",
-                "description": "System reporting"
-            }
-        ]
-    }
+  "capabilities": {
+    "operations": [
+      {
+        "description": "orchestration operation",
+        "name": "orchestration"
+      },
+      {
+        "description": "governance operation",
+        "name": "governance"
+      },
+      {
+        "description": "broadcasting operation",
+        "name": "broadcasting"
+      },
+      {
+        "description": "registry operation",
+        "name": "registry"
+      },
+      {
+        "description": "auditing operation",
+        "name": "auditing"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.907546Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "envoy",
+    "name": "ENVOY"
+  },
+  "specs": {
+    "description": "Universal operator interface and system shell",
+    "domain": "ORCHESTRATION",
+    "version": "2.0.0"
+  }
 }
