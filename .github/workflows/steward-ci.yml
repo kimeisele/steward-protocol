@@ -558,12 +558,23 @@ jobs:
       - name: Check core docs exist
         run: |
           missing=0
-          for doc in README.md ARCHITECTURE.md CONSTITUTION.md GAD-000.md UNIVERSE_MIGRATION_PLAN.md; do
+          # Root docs
+          for doc in README.md CONSTITUTION.md GAD-000.md STEWARD.md AGI_MANIFESTO.md; do
             if [ ! -f "$doc" ]; then
               echo "❌ Missing: $doc"
               missing=$((missing + 1))
             else
               echo "✅ Found: $doc"
+            fi
+          done
+
+          # Architecture docs (moved to docs/architecture/)
+          for doc in ARCHITECTURE.md UNIVERSE_MIGRATION_PLAN.md SYSTEM_OVERVIEW.md; do
+            if [ ! -f "docs/architecture/$doc" ]; then
+              echo "❌ Missing: docs/architecture/$doc"
+              missing=$((missing + 1))
+            else
+              echo "✅ Found: docs/architecture/$doc"
             fi
           done
 
