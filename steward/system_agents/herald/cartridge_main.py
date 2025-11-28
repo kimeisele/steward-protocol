@@ -120,10 +120,14 @@ class HeraldCartridge(VibeAgent, OathMixin):
         logger.info("⚖️  Governance loaded: HeraldConstitution (immutable code-based rules)")
 
         # Initialize event sourcing (state as event ledger)
-        self.event_log = EventLog(ledger_path=Path("data/events/herald.jsonl"))
-        logger.info("📖 EventLog initialized: All actions will be recorded and signed")
+        # PHASE 2.1: Lazy-load EventLog after system interface injection
+        # EventLog will be initialized on first access via _get_event_log()
+        self._event_log = None
+        self.agent_state = {}  # Initialize empty, will be populated on first log access
+        self.safe_mode = False
 
         # Initialize living documentation (Auto-Scribe)
+        # Note: Scribe/Tidy require repo access - will be migrated in later phase
         self.scribe = Scribe(chronicle_path=Path("docs/chronicles.md"))
         self.scribe.initialize_logbook_section()
         logger.info("✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md")
@@ -132,20 +136,37 @@ class HeraldCartridge(VibeAgent, OathMixin):
         self.tidy = TidyTool(root_path=Path("."), steward_path=Path("STEWARD.md"))
         logger.info("🧹 Tidy Tool initialized: Repository hygiene enabled")
 
-        # Rebuild state from event ledger (self-correction on startup)
-        self.agent_state = self.event_log.rebuild_state()
-        self.safe_mode = self.agent_state.get("safe_mode", False)
-
-        if self.safe_mode:
-            logger.warning("⚠️  SAFE MODE ENABLED: Last execution had errors")
-            logger.warning(f"   Last failure: {self.agent_state.get('last_failure')}")
-            logger.info("   Reduce operation scope and increase validation checks")
-
         # Execution metadata
         self.execution_id = None
         self.last_result = None
 
         logger.info("✅ HERALD: Ready for operation")
+
+    @property
+    def event_log(self):
+        """
+        Lazy-load EventLog after system interface injection.
+
+        PHASE 2.1: EventLog initialization requires self.system (injected by kernel).
+        This property ensures EventLog is created only after kernel registration.
+        """
+        if self._event_log is None:
+            # Initialize EventLog with sandboxed path
+            event_log_path = self.system.get_sandbox_path() / "events.jsonl"
+            self._event_log = EventLog(ledger_path=event_log_path)
+
+            # Rebuild state from event ledger (self-correction on startup)
+            self.agent_state = self._event_log.rebuild_state()
+            self.safe_mode = self.agent_state.get("safe_mode", False)
+
+            logger.info(f"📖 EventLog initialized (sandboxed): {event_log_path}")
+
+            if self.safe_mode:
+                logger.warning("⚠️  SAFE MODE ENABLED: Last execution had errors")
+                logger.warning(f"   Last failure: {self.agent_state.get('last_failure')}")
+                logger.info("   Reduce operation scope and increase validation checks")
+
+        return self._event_log
 
     async def boot(self):
         """
@@ -834,9 +855,11 @@ class HeraldCartridge(VibeAgent, OathMixin):
         """
         logger.info("\n🦅 PHASE 1: LISTENING")
         logger.info("=" * 70)
-        
-        # Load state
-        state_path = Path("data/state/twitter_state.json")
+
+        # Load state (PHASE 3.2.1: Fixed - use sandboxed path)
+        state_path = self.system.get_sandbox_path() / "state" / "twitter_state.json"
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+
         state = {}
         if state_path.exists():
             try:

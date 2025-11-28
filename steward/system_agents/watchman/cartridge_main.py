@@ -24,6 +24,9 @@ from vibe_core.config import CityConfig
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 
+# Phase 3.2: Deep inspection tool
+from .tools.standards_inspection import StandardsInspectionTool, Violation
+
 # CivicBank is lazily imported to avoid cryptography issues at boot time
 # (see __init__ for lazy loading)
 
@@ -115,6 +118,10 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
         except Exception as e:
             logger.warning(f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)")
+
+        # Phase 3.2: Initialize deep inspection tool
+        self.standards_tool = StandardsInspectionTool()
+        logger.info("🔬 Standards Inspection Tool initialized (AST-based analysis)")
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -266,6 +273,71 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         return violations
 
+    def run_deep_inspection(self) -> dict:
+        """
+        Execute deep AST-based inspection (Phase 3.2).
+
+        This is more thorough than run_patrol() but also slower (~500ms).
+        Should be run in CI/CD, NOT in pre-commit hooks.
+
+        Returns:
+            Report dict with violations and compliance status
+        """
+        logger.info("\n" + "=" * 70)
+        logger.info("🔬 WATCHMAN DEEP INSPECTION INITIATED (Phase 3.2)")
+        logger.info("=" * 70)
+
+        system_agents_path = Path("steward/system_agents")
+
+        if not system_agents_path.exists():
+            logger.error(f"❌ Path not found: {system_agents_path}")
+            return {
+                "status": "error",
+                "error": f"Path not found: {system_agents_path}"
+            }
+
+        # Run deep inspection
+        violations = self.standards_tool.inspect_all_agents(system_agents_path)
+
+        # Generate compliance report
+        report = self.standards_tool.generate_report(violations)
+
+        # Log summary
+        logger.info("\n" + "=" * 70)
+        logger.info("📊 DEEP INSPECTION SUMMARY")
+        logger.info("=" * 70)
+        logger.info(f"Total violations: {report['total_violations']}")
+        logger.info(f"By severity:")
+        for severity, count in report['by_severity'].items():
+            if count > 0:
+                logger.info(f"  • {severity}: {count}")
+
+        logger.info(f"\nBy agent:")
+        for agent_id, count in report['by_agent'].items():
+            logger.info(f"  • {agent_id}: {count} violation(s)")
+
+        # Determine overall status
+        if report['should_fail_build']:
+            logger.error("\n❌ BUILD SHOULD FAIL - CRITICAL violations detected")
+            status = "VIOLATIONS_DETECTED"
+        elif report['total_violations'] > 0:
+            logger.warning("\n⚠️  VIOLATIONS DETECTED - Review recommended")
+            status = "WARNINGS_DETECTED"
+        else:
+            logger.info("\n✅ SYSTEM CLEAN - All agents compliant")
+            status = "COMPLIANT"
+
+        logger.info("=" * 70 + "\n")
+
+        return {
+            "status": status,
+            "should_fail_build": report['should_fail_build'],
+            "total_violations": report['total_violations'],
+            "critical_count": report['critical_count'],
+            "report": report,
+            "violations": report['violations']
+        }
+
     # ==================== VIBEOS AGENT INTERFACE ====================
 
     def process(self, task: Task) -> dict:
@@ -273,7 +345,8 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         Process a task from the VibeKernel scheduler.
 
         WATCHMAN responds to enforcement tasks:
-        - "patrol": Run full system integrity check
+        - "patrol": Run full system integrity check (legacy grep-based)
+        - "deep_inspection": Run AST-based deep analysis (Phase 3.2)
         """
         try:
             action = task.payload.get("action") or task.payload.get("command")
@@ -281,6 +354,8 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
             if action == "patrol":
                 return self.run_patrol()
+            elif action == "deep_inspection":
+                return self.run_deep_inspection()
             else:
                 return {
                     "status": "error",
