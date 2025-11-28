@@ -14,16 +14,16 @@
   "governance": {
     "compliance_level": 2,
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
-    "issued_at": "2025-11-28T11:15:45.961225Z",
+    "issued_at": "2025-11-28T12:07:50.362037Z",
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "supreme_court",
-    "name": "SUPREME COURT"
+    "agent_id": "unknown",
+    "name": "Unknown"
   },
   "specs": {
-    "description": "Appellate justice and mercy system",
-    "domain": "GOVERNANCE",
+    "description": "",
+    "domain": "SYSTEM",
     "version": "1.0.0"
   }
 }
