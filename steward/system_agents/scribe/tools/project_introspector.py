@@ -143,11 +143,35 @@ class ProjectIntrospector:
 
         return "Constitutional governance enforced at kernel level"
 
+    def get_agent_list(self) -> List[Dict[str, str]]:
+        """Get list of actual agents with their metadata"""
+        from .introspector import CartridgeIntrospector
+
+        agents_dir = self.root_dir / "steward" / "system_agents"
+        if not agents_dir.exists():
+            return []
+
+        introspector = CartridgeIntrospector(str(self.root_dir))
+        agents_data = introspector.scan_all(agents_dir)
+
+        # Convert to simple list format for template
+        agents_list = []
+        for agent_name, metadata in sorted(agents_data.items()):
+            agents_list.append({
+                'name': agent_name.upper(),
+                'role': metadata.get('description', 'Specialized Agent'),
+                'class': metadata.get('class_name', ''),
+                'version': metadata.get('version', '1.0.0')
+            })
+
+        return agents_list
+
     def get_all_metadata(self) -> Dict[str, Any]:
         """Get all project metadata"""
         return {
             'project': self.get_project_metadata(),
             'git': self.get_git_stats(),
             'agent_count': self.count_system_agents(),
-            'governance': self.get_governance_summary()
+            'governance': self.get_governance_summary(),
+            'agents': self.get_agent_list()
         }

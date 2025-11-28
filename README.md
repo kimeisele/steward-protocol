@@ -1,19 +1,19 @@
-# Steward Protocol
+# steward-protocol
 
-## Constitutional AI Agent Operating System
+## Cryptographic Identity + Governance for AI Agents. A.G.I. Infrastructure.
 
 **Agents literally cannot boot without cryptographically verified oath.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./AUDIT_REPORT_OPUS.md)
+[![Python >=3.8](https://img.shields.io/badge/python->=3.8-blue.svg)](https://www.python.org/downloads/)
+[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./docs/reports/VERIFICATION_REPORT.md)
 
 ---
 
 ## Quick Start
 
 ```bash
-python scripts/research_yagya.py
+python scripts/summon.py
 ```
 
 Then activate Agent City:
@@ -25,11 +25,11 @@ vibe activate cartridges:steward-protocol
 
 ## The Innovation
 
-Constitutional governance enforced at **kernel level**—not policy, architecture. Violations are impossible, not prohibited.
+**Version:** 1.0 (Genesis) **Layer:** 0 (The Immutable Foundation)
 
 - **[Governance Gate Code](vibe_core/kernel_impl.py#L544-L621)** — The cryptographic oath enforcement
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Full system design
-- **[A.G.I. Manifesto](AGI_MANIFESTO.md)** — Why this matters
+- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Full system design
+- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this matters
 
 ---
 
@@ -46,17 +46,24 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 ### The Federation
 
-Seven specialized agents govern Agent City:
+13 specialized agents govern Agent City:
 
 | Agent | Role |
 |-------|------|
-| **HERALD** | Creative Director — governance-aligned narratives |
-| **CIVIC** | Governance Engine — proposals, voting, treasury |
-| **FORUM** | Public Square — discussion & debate |
-| **SCIENCE** | Research — validates protocols & data |
-| **ARCHIVIST** | Auditor — signature verification & chain of trust |
-| **ARTISAN** | Media Ops — branding & asset formatting |
-| **ENVOY** | Interface — natural language to protocol execution |
+| **ARCHIVIST** | History keeper: seals verified code into git history |
+| **AUDITOR** | Quality gate: verifies code syntax and linting before commit |
+| **CHRONICLE** | Temporal agent: manages git operations, commits, branches, and code history |
+| **CIVIC** | Governance agent: enforces rules, manages licenses, audits credits |
+| **ENGINEER** | Builder agent: manifests code and scaffolds new agents |
+| **ENVOY** | Universal Operator Interface - diplomatic and operational bridge |
+| **FORUM** | Democratic decision-making and proposal voting system |
+| **HERALD** | Autonomous intelligence and content distribution agent |
+| **ORACLE** | System introspection and explanation agent |
+| **SCIENCE** | External intelligence and fact research agent |
+| **SCRIBE** | Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md |
+| **SUPREME_COURT** | Appellate justice and mercy system (Canto 6: Ajamila Protocol) |
+| **WATCHMAN** | System integrity enforcer and governance enforcer |
+
 
 ### Immutable Ledger
 
@@ -121,13 +128,13 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
 ```
 
 **Learn the system:**
-1. [A.G.I. Manifesto](AGI_MANIFESTO.md) — Why governance matters
-2. [ARCHITECTURE.md](ARCHITECTURE.md) — How it works
+1. [AGI_MANIFESTO.md](AGI_MANIFESTO.md) — Why governance matters
+2. [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) — How it works
 3. [CONSTITUTION.md](CONSTITUTION.md) — The rules
-4. [DEPLOYMENT.md](DEPLOYMENT.md) — Boot, deploy, and operate Agent City
+4. [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) — Boot, deploy, and operate Agent City
 5. [vibe_core/](./vibe_core/) — Kernel integration
 
-**For AI Assistants:** Paste [MISSION_BRIEFING.md](./MISSION_BRIEFING.md) into your context to activate as a governed agent.
+**For AI Assistants:** Paste [docs/guides/MISSION_BRIEFING.md](./docs/guides/MISSION_BRIEFING.md) into your context to activate as a governed agent.
 
 ---
 
