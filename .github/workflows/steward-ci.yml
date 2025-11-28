@@ -150,7 +150,7 @@ jobs:
       - name: Check git hooks installation
         run: |
           echo "🔍 Checking git hooks installation..."
-          python scripts/setup_hooks.py
+          python scripts/setup_hooks.py || true
 
           # Note: In CI, hooks may not be installed (clean checkout)
           # This is informational - we don't fail the build

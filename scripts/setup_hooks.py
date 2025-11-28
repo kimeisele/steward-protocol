@@ -17,14 +17,7 @@ def check_hooks_installed(repo_root: Path) -> dict:
     git_hooks_dir = repo_root / ".git" / "hooks"
     source_hooks_dir = repo_root / ".githooks"
 
-    status = {
-        "pre-commit": {
-            "installed": False,
-            "source_exists": False,
-            "is_symlink": False,
-            "valid": False
-        }
-    }
+    status = {"pre-commit": {"installed": False, "source_exists": False, "is_symlink": False, "valid": False}}
 
     # Check source exists
     source_hook = source_hooks_dir / "pre-commit"
@@ -44,9 +37,7 @@ def check_hooks_installed(repo_root: Path) -> dict:
         else:
             # Compare content
             if source_hook.exists():
-                status["pre-commit"]["valid"] = (
-                    installed_hook.read_text() == source_hook.read_text()
-                )
+                status["pre-commit"]["valid"] = installed_hook.read_text() == source_hook.read_text()
 
     return status
 
@@ -131,12 +122,7 @@ def main():
     """Main entry point."""
     # Try to find repo root via git
     try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
         repo_root = Path(result.stdout.strip())
     except subprocess.CalledProcessError:
         print("❌ Not in a git repository")
