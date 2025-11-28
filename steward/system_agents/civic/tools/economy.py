@@ -50,8 +50,19 @@ class CivicBank:
 
     DB_PATH = Path("data/economy.db")
 
-    def __init__(self):
-        """Initialize the bank and SQLite schema."""
+    def __init__(self, db_path: Optional[str] = None):
+        """
+        Initialize the bank and SQLite schema.
+        
+        Args:
+            db_path: Path to database file. If None, uses default data/economy.db
+                     For VFS isolation, pass agent.get_sandbox_path() + "/economy.db"
+        """
+        if db_path:
+            self.DB_PATH = Path(db_path)
+        else:
+            self.DB_PATH = Path("data/economy.db")
+            
         self.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.DB_PATH), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row

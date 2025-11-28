@@ -242,6 +242,23 @@ class VibeAgent(ABC):
             logger.error(f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}")
             import traceback
             traceback.print_exc()
+    
+    def get_sandbox_path(self) -> str:
+        """
+        Get absolute path to agent's sandbox directory.
+        
+        This is for C-extensions (sqlite3, pandas, etc.) that bypass
+        Python monkey-patching and need explicit paths.
+        
+        Returns:
+            Absolute path to sandbox (e.g., /tmp/vibe_os/agents/{agent_id})
+        """
+        if self.vfs:
+            return str(self.vfs.get_sandbox_path())
+        else:
+            # Fallback if VFS not initialized yet
+            from pathlib import Path
+            return str(Path(f"/tmp/vibe_os/agents/{self.agent_id}").resolve())
 
     def send_to_kernel(self, message: Dict[str, Any]) -> None:
         """
