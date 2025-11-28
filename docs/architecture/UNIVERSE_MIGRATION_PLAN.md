@@ -77,7 +77,7 @@ This is NOT a chatbot framework. This is NOT an orchestration layer.
 
 ---
 
-### AGENT CITY (19 Agents - The User-Space)
+### AGENT CITY (13 System Agents - The User-Space)
 
 **System Agents (13):**
 1. CIVIC - Governance, Registry, Economy, Lifecycle
@@ -94,21 +94,17 @@ This is NOT a chatbot framework. This is NOT an orchestration layer.
 12. CHRONICLE - Temporal Operations
 13. SCRIBE - Documentation
 
-**Citizen Agents (6+):**
-14. DHRUVA - Data Ethics, Truth
-15. MARKET - Trading
-16. TEMPLE - Offerings
-17. AMBASSADOR - Outreach
-18. PULSE - Twitter API
-19. MECHANIC - Self-Healing, SDLC
-20. ARTISAN - Media Production
-21. AGORA - Community
-22. LENS - Observation
+**Citizen Agents:**
+- ❌ **NOT IMPLEMENTED** - The 6+ Citizen Agents (DHRUVA, MARKET, TEMPLE, AMBASSADOR, PULSE, MECHANIC, ARTISAN, AGORA, LENS) listed in earlier plans were never implemented.
+- Only 2 example citizen agents exist in `agent_city/registry/` (lens, ambassador) as test/example code.
+- See [REALITY_CHECK_2025-11-28.md](../reports/REALITY_CHECK_2025-11-28.md) for full details.
 
-**Current Status:**
-- ✅ 5 working (Oracle, Watchman, Forum, Supreme Court, Herald)
-- ❌ 8 crashing (Civic, Science, Engineer, Archivist, Auditor, Envoy, Chronicle, Scribe)
-- ❓ Citizens unknown status
+**Current Status (2025-11-28):**
+- ✅ **ALL 13 System Agents working!** (Verified by stress_test_city.py)
+- ✅ Kernel boots successfully
+- ✅ All agents register and spawn in isolated processes
+- ✅ Parampara chain initialized
+- ✅ Economy/Ledger functional
 
 ---
 
@@ -117,7 +113,7 @@ This is NOT a chatbot framework. This is NOT an orchestration layer.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  LAYER 3: USER-SPACE (Agent Applications)              │
-│  19 autonomous agents (System + Citizens)               │
+│  13 system agents (Citizens not yet implemented)        │
 ├─────────────────────────────────────────────────────────┤
 │  LAYER 2: MIDDLEWARE (Routing & Execution)              │
 │  - Universal Provider (Dharmic Edition)                 │

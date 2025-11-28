@@ -1,5 +1,22 @@
 {
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "supreme_court",
+    "name": "SUPREME_COURT",
+    "version": "1.0.0",
+    "class": "system_service",
+    "specialization": "JUSTICE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "Appellate justice system with mercy protocol",
+    "constraints": [],
+    "prime_directive": "Serve the system"
+  },
   "capabilities": {
+    "interfaces": [
+      "kernel"
+    ],
     "operations": [
       {
         "description": "governance operation",
@@ -16,14 +33,5 @@
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
     "issued_at": "2025-11-28T12:07:50.362037Z",
     "issuer": "passport_office"
-  },
-  "identity": {
-    "agent_id": "supreme_court",
-    "name": "SUPREME_COURT"
-  },
-  "specs": {
-    "description": "Appellate justice system with mercy protocol",
-    "domain": "JUSTICE",
-    "version": "1.0.0"
   }
 }
