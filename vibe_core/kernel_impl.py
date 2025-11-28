@@ -33,6 +33,7 @@ from .protocols import VibeAgent, AgentManifest
 from .scheduling import Task, TaskStatus
 from .ledger import InMemoryLedger, SQLiteLedger
 from .sarga import get_sarga, Cycle
+from .process_manager import ProcessManager  # Phase 2: Process Isolation
 
 # Import Auditor for immune system (optional)
 try:
@@ -194,6 +195,9 @@ class RealVibeKernel(VibeKernel):
             self._auditor = get_judge()
             logger.info("🛡️  Immune system loaded (Auditor attached)")
 
+        # Phase 2: Process Manager
+        self.process_manager = ProcessManager()
+
         # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
@@ -343,11 +347,16 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
-        agent.set_kernel(self)
+        
+        # Phase 2: Spawn Process
+        # We need to pass the class, not the instance, but for now we'll assume
+        # the agent instance carries enough info or we re-instantiate.
+        # Ideally, we'd register the class. But to keep it simple for now:
+        self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, 'config', None))
 
         logger.info(
             f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' "
-            f"registered with Constitutional Oath binding"
+            f"registered and spawned in isolated process."
         )
 
     def boot(self) -> None:
@@ -390,19 +399,35 @@ class RealVibeKernel(VibeKernel):
             # Record start
             self._ledger.record_start(task)
 
-            # Execute task
-            logger.info(f"⚡ Processing task {task.task_id} with {task.agent_id}")
-            result = agent.process(task)
+            # Execute task via Process Manager (IPC)
+            logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
+            
+            try:
+                self.process_manager.send_task(task.agent_id, task)
+                # Note: Result is now async via pipe. We don't get it immediately here.
+                # The ProcessManager loop handles results.
+                # For this synchronous tick, we might need to wait or change architecture.
+                # For Phase 2 MVP, we'll assume fire-and-forget or polling.
+                
+            except ValueError as e:
+                logger.error(f"❌ Dispatch failed: {e}")
+                self._ledger.record_failure(task, str(e))
+                return
 
-            # Record completion
-            self._ledger.record_completion(task, result)
-            logger.info(f"✅ Task {task.task_id} completed")
+            # Record completion (Optimistic for now, or move to callback)
+            # In a real async kernel, we'd wait for the result event.
+            # self._ledger.record_completion(task, result) 
+            # logger.info(f"✅ Task {task.task_id} completed")
             
             # PULSE: Update snapshot after task completion
             self._pulse()
             
             # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
             self._check_system_health()
+            
+            # Phase 2: Monitor Health & Process Events
+            self.process_manager.check_health()
+            self._process_ipc_events()
 
         except Exception as e:
             error = str(e)
@@ -419,6 +444,34 @@ class RealVibeKernel(VibeKernel):
             "ledger_events": len(self._ledger.get_all_events()),
             "total_credits": 1000,  # Placeholder - would be fetched from state
         }
+
+    def _process_ipc_events(self) -> None:
+        """
+        Phase 2: Process IPC messages from agents (Task Results, Crashes, etc.)
+        """
+        messages = self.process_manager.get_pending_messages()
+        for agent_id, msg in messages:
+            msg_type = msg.get("type")
+            
+            if msg_type == "TASK_RESULT":
+                task_id = msg.get("task_id")
+                status = msg.get("status")
+                
+                if status == "success":
+                    result = msg.get("result")
+                    logger.info(f"✅ Task {task_id} completed (Async IPC)")
+                    # We need to reconstruct the Task object or look it up if we want to record properly
+                    # For now, we'll just log. In a real system, we'd have a pending_tasks map.
+                    # self._ledger.record_completion(task_id, result) 
+                    
+                else:
+                    error = msg.get("error")
+                    logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
+                    
+            elif msg_type == "CRASH":
+                error = msg.get("error")
+                logger.critical(f"💥 Agent {agent_id} CRASHED: {error}")
+                # Narasimha handles restart in check_health
 
     def _check_system_health(self) -> None:
         """
@@ -471,6 +524,11 @@ class RealVibeKernel(VibeKernel):
         """Gracefully shut down the kernel"""
         self._status = KernelStatus.STOPPED
         logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
+        
+        # Phase 2: Shutdown processes
+        if hasattr(self, 'process_manager'):
+            self.process_manager.shutdown()
+            
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
 
