@@ -1,6 +1,6 @@
 # AGENT CLI ENFORCEMENT PLAN
 
-**Status:** In Progress - Phase 1.1
+**Status:** In Progress - Phase 2.1 COMPLETE
 **Goal:** Stop agents from hallucinating requirements.txt and direct filesystem access
 **Strategy:** Bridge Kernel capabilities to Agents via System Interface
 
@@ -58,9 +58,12 @@ tomlkit preserves structure → maintainable pyproject.toml.
 1. ✅ Build DependencyManager (Backend) - `vibe_core/dependency_manager.py`
 2. ✅ Define AgentSystemInterface (The Bridge) - `vibe_core/agent_interface.py`
 3. ✅ Activate Kernel Injection (The Enforcement) - `kernel_impl.py:365-375`
-4. ⏳ Migrate Herald (Proof of Concept)
-5. ⏳ Roll out to all agents
+4. ✅ Migrate Herald (Proof of Concept) - `steward/system_agents/herald/`
+   - Dependencies in pyproject.toml ✅
+   - requirements.txt DELETED ✅
+   - EventLog sandboxed via system.get_sandbox_path() ✅
+5. ⏳ Roll out to remaining 12 agents
 6. ⏳ Enable enforcement hooks
 
-**Status:** Phase 1.1 COMPLETE ✅
-**Next:** Phase 2.1 - Migrate Herald as proof of concept
+**Status:** Phase 2.1 COMPLETE ✅ (Herald = Proof of Concept)
+**Next:** Phase 2.2+ - Migrate remaining agents (Forum, Civic, etc.)
