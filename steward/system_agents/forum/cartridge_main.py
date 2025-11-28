@@ -95,23 +95,52 @@ class ForumCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ FORUM has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        # Governance paths
-        self.proposals_path = Path("data/governance/proposals")
-        self.votes_path = Path("data/governance/votes")
-        self.executed_path = Path("data/governance/executed")
-        self.votes_ledger_path = Path("data/governance/votes/votes.jsonl")
+        # PHASE 2.2: Lazy-load governance paths after system interface injection
+        # Paths will be initialized on first access via properties
+        self._proposals_path = None
+        self._votes_path = None
+        self._executed_path = None
+        self._votes_ledger_path = None
+        self.proposals = {}
+        self.next_proposal_id = 1
 
-        # Ensure directories exist
-        self.proposals_path.mkdir(parents=True, exist_ok=True)
-        self.votes_path.mkdir(parents=True, exist_ok=True)
-        self.executed_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)")
 
-        # Load existing proposals
-        self.proposals = self._load_all_proposals()
-        self.next_proposal_id = self._get_next_proposal_id()
+    @property
+    def proposals_path(self):
+        """Lazy-load proposals path (sandboxed)."""
+        if self._proposals_path is None:
+            self._proposals_path = self.system.get_sandbox_path() / "governance" / "proposals"
+            self._proposals_path.mkdir(parents=True, exist_ok=True)
+            # Load proposals after path is initialized
+            if not self.proposals:
+                self.proposals = self._load_all_proposals()
+                self.next_proposal_id = self._get_next_proposal_id()
+                logger.info(f"📋 Proposals loaded: {len(self.proposals)} total (sandboxed)")
+        return self._proposals_path
 
-        logger.info(f"📋 Proposals loaded: {len(self.proposals)} total")
-        logger.info(f"🗳️  FORUM: Ready for operation")
+    @property
+    def votes_path(self):
+        """Lazy-load votes path (sandboxed)."""
+        if self._votes_path is None:
+            self._votes_path = self.system.get_sandbox_path() / "governance" / "votes"
+            self._votes_path.mkdir(parents=True, exist_ok=True)
+        return self._votes_path
+
+    @property
+    def executed_path(self):
+        """Lazy-load executed path (sandboxed)."""
+        if self._executed_path is None:
+            self._executed_path = self.system.get_sandbox_path() / "governance" / "executed"
+            self._executed_path.mkdir(parents=True, exist_ok=True)
+        return self._executed_path
+
+    @property
+    def votes_ledger_path(self):
+        """Lazy-load votes ledger path (sandboxed)."""
+        if self._votes_ledger_path is None:
+            self._votes_ledger_path = self.system.get_sandbox_path() / "governance" / "votes" / "votes.jsonl"
+        return self._votes_ledger_path
 
     def process(self, task: Task) -> Dict[str, Any]:
         """

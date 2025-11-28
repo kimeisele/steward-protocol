@@ -107,14 +107,10 @@ class CivicCartridge(VibeAgent, OathMixin):
             logger.warning("⚠️  THE MATRIX not found, using defaults")
             self.matrix = self._default_matrix()
 
-        # Persistence paths (local fallback)
-        self.registry_path = Path("data/registry/citizens.json")
-        self.agents_md_path = Path("AGENTS.md")
-        self.state_path = Path("data/state/civic_state.json")
-
-        # Ensure directories exist
-        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
-        self.state_path.parent.mkdir(parents=True, exist_ok=True)
+        # PHASE 2.2: Lazy-load persistence paths after system interface injection
+        self._registry_path = None
+        self._agents_md_path = None
+        self._state_path = None
 
         # Initialize delegated agents (P1 Refactor: Split into Registry/Economy/Lifecycle)
         logger.info("🏛️  Initializing delegated agents (P1 Refactor)")
@@ -127,6 +123,29 @@ class CivicCartridge(VibeAgent, OathMixin):
         self.state = self._load_state()
 
         logger.info(f"🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
+
+    @property
+    def registry_path(self):
+        """Lazy-load registry path (sandboxed)."""
+        if self._registry_path is None:
+            self._registry_path = self.system.get_sandbox_path() / "registry" / "citizens.json"
+            self._registry_path.parent.mkdir(parents=True, exist_ok=True)
+        return self._registry_path
+
+    @property
+    def agents_md_path(self):
+        """Lazy-load agents.md path (sandboxed)."""
+        if self._agents_md_path is None:
+            self._agents_md_path = self.system.get_sandbox_path() / "AGENTS.md"
+        return self._agents_md_path
+
+    @property
+    def state_path(self):
+        """Lazy-load state path (sandboxed)."""
+        if self._state_path is None:
+            self._state_path = self.system.get_sandbox_path() / "state" / "civic_state.json"
+            self._state_path.parent.mkdir(parents=True, exist_ok=True)
+        return self._state_path
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
