@@ -160,29 +160,38 @@ class Discoverer(VibeAgent):
     def _load_agent_from_manifest(self, manifest_path: Path, agent_dir: Path) -> Optional[VibeAgent]:
         """
         Reads steward.json and creates a VibeAgent instance.
+
+        BLOCKER #0: Now distributes Phoenix Config to each agent!
         """
         try:
             with open(manifest_path, "r") as f:
                 data = json.load(f)
-            
+
             # Basic Validation (Schema check would go here)
             agent_data = data.get("agent", {})
             agent_id = agent_data.get("id")
-            
+
             if not agent_id:
                 logger.warning(f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID")
                 return None
 
+            # Extract config for this agent (if available in Phoenix Config)
+            agent_config = None
+            if self.config and hasattr(self.config, 'agents'):
+                agent_config = getattr(self.config.agents, agent_id, None)
+
             # Create a Generic Agent instance
+            # BLOCKER #0: Pass config to agent during initialization
             agent = GenericAgent(
                 agent_id=agent_id,
                 name=agent_data.get("name", agent_id),
                 version=agent_data.get("version", "0.0.1"),
                 description=agent_data.get("description", ""),
                 domain=agent_data.get("specialization", "GENERAL"),
-                capabilities=[op["name"] for op in data.get("capabilities", {}).get("operations", [])]
+                capabilities=[op["name"] for op in data.get("capabilities", {}).get("operations", [])],
+                config=agent_config  # ✅ NOW PASSES CONFIG
             )
-            
+
             # Inject the Oath (Genesis bootstrap for discovered agents)
             agent.oath_sworn = True
             agent.oath_event = {
@@ -191,7 +200,7 @@ class Discoverer(VibeAgent):
                 "signature": f"{agent_id}_genesis_signature",
                 "status": "SWORN"
             }
-            
+
             return agent
 
         except json.JSONDecodeError:
@@ -205,7 +214,22 @@ class GenericAgent(VibeAgent):
     """
     A generic agent container for agents discovered via steward.json
     that do not yet have a specialized Python implementation.
+
+    BLOCKER #0: Now accepts and stores Phoenix Config
     """
+    def __init__(self, agent_id: str, name: str, version: str, description: str,
+                 domain: str, capabilities: List[str], config: Optional[Any] = None):
+        """Initialize GenericAgent with optional config support."""
+        super().__init__(
+            agent_id=agent_id,
+            name=name,
+            description=description,
+            domain=domain,
+            capabilities=capabilities
+        )
+        self.version = version
+        self.config = config  # ✅ BLOCKER #0: Store Phoenix Config
+
     def process(self, task: Task) -> Dict[str, Any]:
         logger.info(f"🤖 {self.agent_id} received task: {task.task_id}")
         return {

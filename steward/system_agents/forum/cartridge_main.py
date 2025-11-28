@@ -10,7 +10,6 @@ FORUM is the democratic institution of Agent City. It:
 
 This is now a native VibeAgent:
 - Inherits from vibe_core.VibeAgent
-from vibe_core.config import CityConfig, ForumConfig
 - Receives governance tasks from kernel scheduler
 - Integrates with CIVIC for action execution
 
@@ -30,6 +29,7 @@ from datetime import datetime, timezone
 
 # VibeOS Integration
 from vibe_core import VibeAgent, Task
+from vibe_core.config import CityConfig, ForumConfig
 
 # Civic imports for license operations
 from steward.system_agents.civic.tools.license_tool import LicenseType
