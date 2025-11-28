@@ -36,6 +36,7 @@ from .tools.agents_renderer import AgentsRenderer
 from .tools.citymap_renderer import CitymapRenderer
 from .tools.help_renderer import HelpRenderer
 from .tools.readme_renderer import ReadmeRenderer
+from .tools.index_renderer import IndexRenderer
 
 # Constitutional Oath (optional)
 # Setup logging
@@ -102,6 +103,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
         self._citymap_renderer = None
         self._help_renderer = None
         self._readme_renderer = None
+        self._index_renderer = None
 
         logger.info("✅ SCRIBE renderers pending initialization")
         logger.info("📚 SCRIBE: Ready for operation (awaiting system injection)")
@@ -181,6 +183,17 @@ class ScribeCartridge(VibeAgent, OathMixin):
             logger.debug("📖 ReadmeRenderer initialized (source: project root)")
         return self._readme_renderer
 
+    @property
+    def index_renderer(self):
+        """Lazy-load IndexRenderer.
+
+        CRITICAL: Pass PROJECT ROOT for filesystem introspection.
+        """
+        if self._index_renderer is None:
+            self._index_renderer = IndexRenderer(root_dir=".")
+            logger.debug("📑 IndexRenderer initialized (source: project root)")
+        return self._index_renderer
+
     def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the kernel scheduler.
@@ -237,6 +250,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             "CITYMAP.md": self.citymap_renderer,
             "HELP.md": self.help_renderer,
             "README.md": self.readme_renderer,
+            "INDEX.md": self.index_renderer,
         }
 
         for doc_name, renderer in docs.items():

@@ -1,4 +1,42 @@
-# STEWARD PROTOCOL - Documentation Index
+#!/usr/bin/env python3
+"""
+SCRIBE Index Renderer - Generate INDEX.md from filesystem introspection
+
+Scans:
+- Root .md files (categorize by type)
+- docs/ subdirectories
+- Generates navigation hub automatically
+"""
+
+from pathlib import Path
+from typing import Dict, List, Set
+from datetime import datetime, timezone
+
+
+class IndexRenderer:
+    """Generate INDEX.md from filesystem introspection."""
+
+    def __init__(self, root_dir: str = "."):
+        self.root_dir = Path(root_dir)
+
+        # Categories
+        self.governance_docs = []
+        self.auto_gen_docs = []
+        self.architecture_docs = []
+        self.deployment_docs = []
+        self.philosophy_docs = []
+        self.guides_docs = []
+        self.reports_docs = []
+        self.archive_docs = []
+
+    def scan_and_render(self) -> str:
+        """Scan filesystem and generate INDEX.md."""
+        self._scan_root()
+        self._scan_docs()
+
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+
+        content = f"""# STEWARD PROTOCOL - Documentation Index
 
 **Navigation hub for all project documentation**
 
@@ -37,18 +75,8 @@
 ## 🏗️ ARCHITECTURE
 
 ### Current Architecture
-- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - Main architecture document
-- **[docs/architecture/SYSTEM_OVERVIEW.md](docs/architecture/SYSTEM_OVERVIEW.md)** - Complete system overview
-- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
-- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Semantic Auditor overview
+{self._render_docs_section(self.architecture_docs, 'docs/architecture')}
 - **[CITYMAP.md](CITYMAP.md)** - Agent City 3-layer architecture (auto-generated)
-
-### Detailed Architecture Docs
-- **[docs/architecture/ARCHITECTURE_MAP.md](docs/architecture/ARCHITECTURE_MAP.md)** - Architecture mapping
-- **[docs/architecture/ARCHITECTURE_PLAN.md](docs/architecture/ARCHITECTURE_PLAN.md)** - Architecture planning
-- **[docs/architecture/ORACLE_ARCHITECTURE.md](docs/architecture/ORACLE_ARCHITECTURE.md)** - Oracle agent design
-- **[docs/architecture/VAULT_ARCHITECTURE.md](docs/architecture/VAULT_ARCHITECTURE.md)** - Vault security design
-- **[docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md](docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md)** - Auditor design
 
 ---
 
@@ -60,7 +88,7 @@
 
 ### System Agents (14)
 Each agent has a STEWARD.md file documenting its capabilities:
-- **steward/system_agents/{agent_name}/STEWARD.md**
+- **steward/system_agents/{{agent_name}}/STEWARD.md**
 
 Agents:
 1. archivist - Event Verification & Audit Trail
@@ -97,9 +125,8 @@ Agents:
   - `steward-cli stop` - Stop kernel (TODO daemon mode)
 
 ### Deployment & Operations
-- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deployment guide
-- **[docs/deployment/AUTOMATION.md](docs/deployment/AUTOMATION.md)** - Automation workflows
-- **[docs/guides/DEMO.md](docs/guides/DEMO.md)** - Demo scenarios
+{self._render_docs_section(self.deployment_docs, 'docs/deployment')}
+{self._render_docs_section(self.guides_docs, 'docs/guides', prefix='Demo: ')}
 
 ---
 
@@ -122,26 +149,21 @@ Agents:
 ## 📝 GUIDES & STORIES
 
 ### Project Context
-- **[docs/philosophy/STORY.md](docs/philosophy/STORY.md)** - Project narrative and history
-- **[docs/philosophy/PROOF_OF_LIVE.md](docs/philosophy/PROOF_OF_LIVE.md)** - Evidence of system capabilities
-- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - Contribution guidelines
+{self._render_docs_section(self.philosophy_docs, 'docs/philosophy')}
+{self._render_docs_section([d for d in self.guides_docs if 'CONTRIBUTING' in d], 'docs/guides')}
 
 ---
 
 ## 📦 REPORTS & ARCHIVE
 
 ### Current Reports
-- **[docs/reports/PROGRESS_REPORT.md](docs/reports/PROGRESS_REPORT.md)** - Current progress status
-- **[docs/reports/VERIFICATION_REPORT.md](docs/reports/VERIFICATION_REPORT.md)** - System verification
-- **[docs/reports/GAP_ANALYSIS_REPORT.md](docs/reports/GAP_ANALYSIS_REPORT.md)** - Gap analysis
+{self._render_docs_section(self.reports_docs, 'docs/reports')}
 
 ### Migration Status
-- **[docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md](docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md)** - Implementation status
-- **[docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md](docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md)** - Blocker 2 status
-- **[docs/reports/migrations/GOLDEN_THREAD_STATUS.md](docs/reports/migrations/GOLDEN_THREAD_STATUS.md)** - Golden thread tracking
+{self._render_migration_docs()}
 
 ### Historical Archive
-- **[docs/archive/migrations/](docs/archive/migrations/)** - 28 archived migration files
+- **[docs/archive/migrations/](docs/archive/migrations/)** - Historical migration files
 
 Includes:
 - BLOCKER completion reports
@@ -194,7 +216,7 @@ steward-protocol/
 
 ---
 
-## 🎯 CURRENT STATUS (2025-11-28)
+## 🎯 CURRENT STATUS ({timestamp})
 
 ### Completed ✅
 - **Phase 1:** Emergency Triage (lazy loading)
@@ -204,9 +226,9 @@ steward-protocol/
 - **Phase 5:** Parampara Blockchain (lineage chain)
 - **Phase 6:** Agent Certification (14/14 system agents)
 - **Phase 7:** STEWARD CLI (10/11 commands)
+- **Phase 8:** Documentation Cleanup
 
 ### In Progress 🟡
-- **Phase 8:** Documentation Cleanup (this INDEX.md is part of it)
 - **Phase 7.1:** Daemon mode for boot/stop
 
 ### Pending ⏭️
@@ -237,6 +259,117 @@ steward-protocol/
 
 ---
 
-**Last Updated:** 2025-11-28
-**Maintainer:** SCRIBE (auto-generation coming soon)
-**Status:** Phase 8 (Documentation Cleanup) in progress
+**Last Updated:** {timestamp}
+**Maintainer:** SCRIBE (auto-generated)
+**Status:** Phase 8 (Documentation Cleanup) complete
+"""
+
+        return content
+
+    def _scan_root(self):
+        """Scan root directory for markdown files."""
+        # Already known from structure - we categorize these manually
+        # since they're essential and their placement is intentional
+        pass
+
+    def _scan_docs(self):
+        """Scan docs/ directory structure."""
+        docs_dir = self.root_dir / "docs"
+
+        # Architecture
+        arch_dir = docs_dir / "architecture"
+        if arch_dir.exists():
+            self.architecture_docs = sorted([
+                f.name for f in arch_dir.glob("*.md")
+            ])
+
+        # Deployment
+        deploy_dir = docs_dir / "deployment"
+        if deploy_dir.exists():
+            self.deployment_docs = sorted([
+                f.name for f in deploy_dir.glob("*.md")
+            ])
+
+        # Philosophy
+        phil_dir = docs_dir / "philosophy"
+        if phil_dir.exists():
+            self.philosophy_docs = sorted([
+                f.name for f in phil_dir.glob("*.md")
+            ])
+
+        # Guides
+        guides_dir = docs_dir / "guides"
+        if guides_dir.exists():
+            self.guides_docs = sorted([
+                f.name for f in guides_dir.glob("*.md")
+            ])
+
+        # Reports
+        reports_dir = docs_dir / "reports"
+        if reports_dir.exists():
+            self.reports_docs = sorted([
+                f.name for f in reports_dir.glob("*.md")
+            ])
+
+    def _render_docs_section(self, docs: List[str], base_path: str, prefix: str = "") -> str:
+        """Render a list of docs as markdown links."""
+        if not docs:
+            return ""
+
+        lines = []
+        for doc in docs:
+            # Create readable name from filename
+            name = doc.replace('.md', '').replace('_', ' ').title()
+            if prefix:
+                name = prefix + name
+            # Determine description based on filename
+            desc = self._get_description(doc)
+            lines.append(f"- **[{base_path}/{doc}]({base_path}/{doc})** - {desc}")
+
+        return '\n'.join(lines)
+
+    def _get_description(self, filename: str) -> str:
+        """Get description for a file."""
+        descriptions = {
+            'ARCHITECTURE.md': 'Main architecture document',
+            'SYSTEM_OVERVIEW.md': 'Complete system overview',
+            'UNIVERSE_MIGRATION_PLAN.md': 'The master plan (Phases 0-9)',
+            'SEMANTIC_AUDITOR.md': 'Semantic Auditor overview',
+            'DEPLOYMENT.md': 'Deployment guide',
+            'AUTOMATION.md': 'Automation workflows',
+            'DEMO.md': 'Demo scenarios',
+            'STORY.md': 'Project narrative and history',
+            'PROOF_OF_LIVE.md': 'Evidence of system capabilities',
+            'CONTRIBUTING.md': 'Contribution guidelines',
+            'PROGRESS_REPORT.md': 'Current progress status',
+            'VERIFICATION_REPORT.md': 'System verification',
+            'GAP_ANALYSIS_REPORT.md': 'Gap analysis',
+        }
+        return descriptions.get(filename, filename.replace('.md', '').replace('_', ' '))
+
+    def _render_migration_docs(self) -> str:
+        """Render migration status docs."""
+        migrations_dir = self.root_dir / "docs" / "reports" / "migrations"
+        if not migrations_dir.exists():
+            return ""
+
+        migration_docs = sorted(migrations_dir.glob("*.md"))
+        if not migration_docs:
+            return ""
+
+        lines = []
+        for doc in migration_docs:
+            name = doc.stem.replace('_', ' ').title()
+            desc = self._get_migration_description(doc.name)
+            lines.append(f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}")
+
+        return '\n'.join(lines)
+
+    def _get_migration_description(self, filename: str) -> str:
+        """Get description for migration files."""
+        descriptions = {
+            'UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md': 'Implementation status',
+            'BLOCKER2_HONEST_COMPLETION_STATUS.md': 'Blocker 2 status',
+            'GOLDEN_THREAD_STATUS.md': 'Golden thread tracking',
+        }
+        return descriptions.get(filename, 'Migration tracking')
