@@ -32,6 +32,9 @@ from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig, ForumConfig
 
 # Civic imports for license operations
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # Constitutional Oath
@@ -45,7 +48,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("FORUM_MAIN")
 
 
-class ForumCartridge(VibeAgent):
+class ForumCartridge(VibeAgent, OathMixin):
     """
     The FORUM Agent Cartridge (The Town Hall).
 

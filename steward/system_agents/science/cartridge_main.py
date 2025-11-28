@@ -32,6 +32,9 @@ from pathlib import Path
 from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig, ScienceConfig
 
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .tools.web_search_tool import WebSearchTool, SearchResult
 
 # Constitutional Oath

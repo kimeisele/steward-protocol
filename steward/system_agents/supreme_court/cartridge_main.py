@@ -39,6 +39,9 @@ from vibe_core.protocols import VibeAgent, Capability, AgentManifest
 from vibe_core.config import CityConfig, CivicConfig
 
 # Constitutional Oath binding
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .tools.appeals_tool import AppealsTool, Appeal, AppealStatus
 from .tools.verdict_tool import VerdictTool, Verdict, VerdictType
 from .tools.precedent_tool import PrecedentTool
@@ -47,7 +50,7 @@ from .tools.justice_ledger import JusticeLedger
 logger = logging.getLogger("SUPREME_COURT")
 
 
-class SupremeCourtCartridge(VibeAgent):
+class SupremeCourtCartridge(VibeAgent, OathMixin):
     """
     SUPREME COURT - The Appellate Justice & Mercy System for STEWARD Protocol.
 

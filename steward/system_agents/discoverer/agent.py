@@ -161,13 +161,16 @@ class Discoverer(VibeAgent):
         """
         Reads steward.json and creates a VibeAgent instance.
 
-        BLOCKER #0: Now distributes Phoenix Config to each agent!
+        BLOCKER #2 System Integration: Try to load REAL cartridge implementation first,
+        fallback to GenericAgent only if real implementation doesn't exist.
+
+        BLOCKER #0: Distributes Phoenix Config to each agent!
         """
         try:
             with open(manifest_path, "r") as f:
                 data = json.load(f)
 
-            # Basic Validation (Schema check would go here)
+            # Basic Validation
             agent_data = data.get("agent", {})
             agent_id = agent_data.get("id")
 
@@ -180,8 +183,15 @@ class Discoverer(VibeAgent):
             if self.config and hasattr(self.config, 'agents'):
                 agent_config = getattr(self.config.agents, agent_id, None)
 
-            # Create a Generic Agent instance
-            # BLOCKER #0: Pass config to agent during initialization
+            # BLOCKER #2: Try to load REAL cartridge implementation first
+            agent = self._try_load_real_cartridge(agent_id, agent_config)
+
+            if agent:
+                # ✅ Real cartridge loaded successfully
+                return agent
+
+            # Fallback: Create a Generic Agent instance
+            logger.debug(f"   ℹ️  No real cartridge for {agent_id}, using GenericAgent placeholder")
             agent = GenericAgent(
                 agent_id=agent_id,
                 name=agent_data.get("name", agent_id),
@@ -189,7 +199,7 @@ class Discoverer(VibeAgent):
                 description=agent_data.get("description", ""),
                 domain=agent_data.get("specialization", "GENERAL"),
                 capabilities=[op["name"] for op in data.get("capabilities", {}).get("operations", [])],
-                config=agent_config  # ✅ NOW PASSES CONFIG
+                config=agent_config  # ✅ BLOCKER #0: NOW PASSES CONFIG
             )
 
             # Inject the Oath (Genesis bootstrap for discovered agents)
@@ -208,6 +218,78 @@ class Discoverer(VibeAgent):
             return None
         except Exception as e:
             logger.error(f"❌ Error parsing {manifest_path}: {e}")
+            return None
+
+    def _try_load_real_cartridge(self, agent_id: str, config: Optional[Any] = None) -> Optional[VibeAgent]:
+        """
+        BLOCKER #2: Try to dynamically load REAL cartridge implementation.
+
+        Maps agent_id to cartridge module path and tries to instantiate the real class.
+        If it fails, returns None to fallback to GenericAgent.
+
+        Returns:
+            VibeAgent instance if real cartridge exists and loads, None otherwise
+        """
+        # Mapping of agent_id to (module_path, class_name)
+        CARTRIDGE_MAP = {
+            "herald": ("steward.system_agents.herald.cartridge_main", "HeraldCartridge"),
+            "civic": ("steward.system_agents.civic.cartridge_main", "CivicCartridge"),
+            "science": ("steward.system_agents.science.cartridge_main", "ScienceCartridge"),
+            "forum": ("steward.system_agents.forum.cartridge_main", "ForumCartridge"),
+            "supreme_court": ("steward.system_agents.supreme_court.cartridge_main", "SupremeCourtCartridge"),
+            "engineer": ("steward.system_agents.engineer.cartridge_main", "EngineerCartridge"),
+            "watchman": ("steward.system_agents.watchman.cartridge_main", "WatchmanCartridge"),
+            "archivist": ("steward.system_agents.archivist.cartridge_main", "ArchivistCartridge"),
+            "auditor": ("steward.system_agents.auditor.cartridge_main", "AuditorCartridge"),
+            "oracle": ("steward.system_agents.oracle.cartridge_main", "OracleCartridge"),
+            "envoy": ("steward.system_agents.envoy.cartridge_main", "EnvoyCartridge"),
+            "chronicle": ("steward.system_agents.chronicle.cartridge_main", "ChronicleCartridge"),
+            "scribe": ("steward.system_agents.scribe.cartridge_main", "ScribeCartridge"),
+        }
+
+        if agent_id not in CARTRIDGE_MAP:
+            return None  # No real cartridge defined for this agent
+
+        module_path, class_name = CARTRIDGE_MAP[agent_id]
+
+        try:
+            # Dynamically import the module
+            parts = module_path.split(".")
+            module = __import__(module_path, fromlist=[class_name])
+            CartridgeClass = getattr(module, class_name)
+
+            # Instantiate with config
+            agent = None
+            try:
+                if config:
+                    try:
+                        agent = CartridgeClass(config=config)
+                    except TypeError:
+                        # Cartridge doesn't accept config parameter
+                        agent = CartridgeClass()
+                else:
+                    agent = CartridgeClass()
+            except Exception as init_err:
+                # Cartridge initialization failed - log and fallback
+                logger.debug(f"   ℹ️  Cartridge init error for {class_name}: {type(init_err).__name__}")
+                return None
+
+            if agent is None:
+                return None
+
+            # Verify it's a VibeAgent
+            if not isinstance(agent, VibeAgent):
+                logger.debug(f"   ℹ️  {class_name} is not a VibeAgent: {type(agent)}")
+                return None
+
+            logger.info(f"   ✅ Loaded REAL cartridge: {class_name} ({agent.agent_id})")
+            return agent
+
+        except ImportError as e:
+            logger.debug(f"   ℹ️  Cannot import {module_path}: {str(e)[:80]}")
+            return None
+        except Exception as e:
+            logger.debug(f"   ℹ️  Error loading {agent_id} cartridge: {type(e).__name__}: {str(e)[:100]}")
             return None
 
 class GenericAgent(VibeAgent):
