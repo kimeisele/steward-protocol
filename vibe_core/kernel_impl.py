@@ -37,6 +37,7 @@ from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .vfs import VirtualFileSystem  # Phase 4: Filesystem Isolation
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
+from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
 
 # Import Auditor for immune system (optional)
 try:
@@ -208,6 +209,11 @@ class RealVibeKernel(VibeKernel):
         # Phase 4: Network Proxy
         self.network = KernelNetworkProxy(kernel=self)
 
+        # Phase 5: Parampara Lineage Chain
+        lineage_path = "/tmp/vibe_os/kernel/lineage.db"
+        self.lineage = LineageChain(db_path=lineage_path)
+        logger.info("⛓️  Parampara chain initialized")
+
         # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
@@ -361,10 +367,10 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
-        
+
         # Phase 2: Spawn Process
         self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, 'config', None))
-        
+
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
         proc_info = self.process_manager.processes.get(agent.agent_id)
@@ -372,10 +378,38 @@ class RealVibeKernel(VibeKernel):
             import time
             time.sleep(0.1)  # Give process time to start
             self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
-        
+
         # Phase 4b: Grant repo access to Scribe/Archivist
         if agent.agent_id in ["scribe", "archivist"]:
             self._grant_repo_access(agent.agent_id)
+
+        # Phase 5: Record in Parampara Lineage
+        manifest = agent.get_manifest()
+        self.lineage.add_block(
+            event_type=LineageEventType.AGENT_REGISTERED,
+            agent_id=agent.agent_id,
+            data={
+                "name": manifest.name,
+                "version": manifest.version,
+                "author": manifest.author,
+                "capabilities": manifest.capabilities,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
+        # Phase 5: Record Oath Sworn (The Sacred Moment)
+        if oath_event:
+            self.lineage.add_block(
+                event_type=LineageEventType.OATH_SWORN,
+                agent_id=agent.agent_id,
+                data={
+                    "oath_event": oath_event,
+                    "constitution_hash": oath_event.get("constitution_hash", "unknown"),
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "verified": True
+                }
+            )
+            logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
         logger.info(
             f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' "
@@ -387,6 +421,17 @@ class RealVibeKernel(VibeKernel):
         self._status = KernelStatus.BOOTING
         logger.info("⚙️  KERNEL BOOTING...")
 
+        # Phase 5: Record Kernel Boot in Parampara
+        self.lineage.add_block(
+            event_type=LineageEventType.KERNEL_BOOT,
+            agent_id=None,
+            data={
+                "version": "2.0.0",
+                "timestamp": datetime.utcnow().isoformat(),
+                "agents_registered": len(self._agent_registry),
+            }
+        )
+
         # Register all agent manifests
         for agent_id, agent in self._agent_registry.items():
             manifest = agent.get_manifest()
@@ -395,7 +440,7 @@ class RealVibeKernel(VibeKernel):
 
         self._status = KernelStatus.RUNNING
         logger.info("✅ KERNEL RUNNING")
-        
+
         # PULSE: Write initial snapshot on boot
         self._pulse()
 
@@ -615,13 +660,27 @@ class RealVibeKernel(VibeKernel):
 
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
+        # Phase 5: Record Kernel Shutdown in Parampara (before changing status)
+        if hasattr(self, 'lineage'):
+            self.lineage.add_block(
+                event_type=LineageEventType.KERNEL_SHUTDOWN,
+                agent_id=None,
+                data={
+                    "reason": reason,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "agents_active": len(self._agent_registry),
+                }
+            )
+            # Close lineage chain
+            self.lineage.close()
+
         self._status = KernelStatus.STOPPED
         logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
-        
+
         # Phase 2: Shutdown processes
         if hasattr(self, 'process_manager'):
             self.process_manager.shutdown()
-            
+
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
 
