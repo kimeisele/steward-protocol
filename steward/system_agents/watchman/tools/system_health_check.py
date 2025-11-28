@@ -35,12 +35,7 @@ class SystemHealthCheck:
 
     def check_all(self) -> Dict[str, Any]:
         """Run all health checks and return comprehensive report."""
-        report = {
-            "status": "healthy",
-            "checks": {},
-            "violations": [],
-            "recommendations": []
-        }
+        report = {"status": "healthy", "checks": {}, "violations": [], "recommendations": []}
 
         # Check git hooks
         hooks_status = self._check_git_hooks()
@@ -49,9 +44,7 @@ class SystemHealthCheck:
         if not hooks_status["all_ok"]:
             report["status"] = "unhealthy"
             report["violations"].extend(hooks_status["violations"])
-            report["recommendations"].append(
-                "Run: python scripts/setup_hooks.py --fix"
-            )
+            report["recommendations"].append("Run: python scripts/setup_hooks.py --fix")
 
         return report
 
@@ -59,11 +52,7 @@ class SystemHealthCheck:
         """Check git hooks installation status (READ-ONLY)."""
         required_hooks = ["pre-commit"]
 
-        status = {
-            "all_ok": True,
-            "hooks": {},
-            "violations": []
-        }
+        status = {"all_ok": True, "hooks": {}, "violations": []}
 
         for hook_name in required_hooks:
             hook_status = self._check_single_hook(hook_name)
@@ -71,12 +60,14 @@ class SystemHealthCheck:
 
             if not hook_status["ok"]:
                 status["all_ok"] = False
-                status["violations"].append({
-                    "severity": "warning",
-                    "component": f"git_hook_{hook_name}",
-                    "issue": hook_status["issue"],
-                    "remediation": f"Run scripts/setup_hooks.py --fix"
-                })
+                status["violations"].append(
+                    {
+                        "severity": "warning",
+                        "component": f"git_hook_{hook_name}",
+                        "issue": hook_status["issue"],
+                        "remediation": f"Run scripts/setup_hooks.py --fix",
+                    }
+                )
 
         return status
 
@@ -91,7 +82,7 @@ class SystemHealthCheck:
             "source_exists": source_hook.exists(),
             "installed": installed_hook.exists(),
             "is_symlink": False,
-            "valid": False
+            "valid": False,
         }
 
         # Check source exists
@@ -121,9 +112,7 @@ class SystemHealthCheck:
         else:
             # Verify content matches
             try:
-                hook_status["valid"] = (
-                    installed_hook.read_text() == source_hook.read_text()
-                )
+                hook_status["valid"] = installed_hook.read_text() == source_hook.read_text()
             except Exception as e:
                 hook_status["ok"] = False
                 hook_status["issue"] = f"Cannot read hook: {e}"
@@ -176,12 +165,7 @@ def main():
     """Main entry point for standalone execution."""
     try:
         # Find repo root
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
         repo_root = Path(result.stdout.strip())
     except subprocess.CalledProcessError:
         print("❌ Not in a git repository")
