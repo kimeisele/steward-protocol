@@ -27,6 +27,9 @@ from steward.oath_mixin import OathMixin
 # Phase 3.2: Deep inspection tool
 from .tools.standards_inspection import StandardsInspectionTool, Violation
 
+# Phase 3.3: System health monitoring (read-only)
+from .tools.system_health_check import SystemHealthCheck
+
 # CivicBank is lazily imported to avoid cryptography issues at boot time
 # (see __init__ for lazy loading)
 
@@ -122,6 +125,10 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         # Phase 3.2: Initialize deep inspection tool
         self.standards_tool = StandardsInspectionTool()
         logger.info("🔬 Standards Inspection Tool initialized (AST-based analysis)")
+
+        # Phase 3.3: Initialize system health monitor (read-only)
+        self.health_checker = SystemHealthCheck()
+        logger.info("🏥 System Health Monitor initialized (read-only infrastructure check)")
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -338,6 +345,36 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "violations": report['violations']
         }
 
+    def run_health_check(self) -> dict:
+        """
+        Execute system health check (Phase 3.3).
+
+        READ-ONLY monitoring of infrastructure:
+        - Git hooks installation
+        - Hook validity and freshness
+        - Critical system files
+
+        Philosophy: "The Watchman observes. The Operator acts."
+        This agent NEVER modifies infrastructure, only reports violations.
+
+        Returns:
+            Health report dict with status and recommendations
+        """
+        logger.info("\n" + "=" * 70)
+        logger.info("🏥 WATCHMAN SYSTEM HEALTH CHECK")
+        logger.info("=" * 70)
+
+        # Run health check
+        report = self.health_checker.check_all()
+
+        # Log formatted report
+        formatted = self.health_checker.format_report(report)
+        for line in formatted.split("\n"):
+            if line.strip():
+                logger.info(line)
+
+        return report
+
     # ==================== VIBEOS AGENT INTERFACE ====================
 
     def process(self, task: Task) -> dict:
@@ -347,6 +384,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         WATCHMAN responds to enforcement tasks:
         - "patrol": Run full system integrity check (legacy grep-based)
         - "deep_inspection": Run AST-based deep analysis (Phase 3.2)
+        - "system_health": Run infrastructure health check (Phase 3.3, read-only)
         """
         try:
             action = task.payload.get("action") or task.payload.get("command")
@@ -356,6 +394,8 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 return self.run_patrol()
             elif action == "deep_inspection":
                 return self.run_deep_inspection()
+            elif action == "system_health":
+                return self.run_health_check()
             else:
                 return {
                     "status": "error",
