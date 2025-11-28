@@ -35,6 +35,7 @@ logger = logging.getLogger("AUDITOR.CONSTITUTIONAL_VERDICT")
 
 class ConstitutionalArticle(Enum):
     """The 6 Articles of THE AGENT CONSTITUTION."""
+
     ARTICLE_I_IDENTITY = "Article I: Identity (Cryptographic Proof)"
     ARTICLE_II_ACCOUNTABILITY = "Article II: Rechenschaft (Auditability)"
     ARTICLE_III_GOVERNANCE = "Article III: Governance (Boundaries)"
@@ -45,6 +46,7 @@ class ConstitutionalArticle(Enum):
 
 class RegulatingPrinciple(Enum):
     """The 4 Regulating Principles (Moral Firewall)."""
+
     PRINCIPLE_1_PURITY = "Principle 1: No Corrupt Data Ingestion (Mercy/Daya)"
     PRINCIPLE_2_TRUTH = "Principle 2: No Hallucination (Truthfulness/Satyam)"
     PRINCIPLE_3_AUSTERITY = "Principle 3: No Resource Leaks (Austerity/Tapas)"
@@ -53,6 +55,7 @@ class RegulatingPrinciple(Enum):
 
 class VerdictSeverity(Enum):
     """Severity of constitutional violations."""
+
     CONSTITUTIONAL = "CONSTITUTIONAL"  # Violates supreme law - must fail
     GOVERNANCE = "GOVERNANCE"  # Violates governance principles - should fail
     WARNING = "WARNING"  # Does not align with best practices
@@ -61,6 +64,7 @@ class VerdictSeverity(Enum):
 @dataclass
 class ConstitutionalViolation:
     """Represents a violation of THE AGENT CONSTITUTION."""
+
     agent_id: str
     article: ConstitutionalArticle | RegulatingPrinciple
     severity: VerdictSeverity
@@ -167,26 +171,30 @@ class ConstitutionalVerdictTool:
         # Check for steward.json (agent manifest)
         manifest_path = agent_path / "steward.json"
         if not manifest_path.exists():
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_I_IDENTITY,
-                severity=VerdictSeverity.CONSTITUTIONAL,
-                message="Agent lacks identity manifest (steward.json)",
-                file_path=str(manifest_path),
-                remedy="Create steward.json with agent ID, version, and public key"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_I_IDENTITY,
+                    severity=VerdictSeverity.CONSTITUTIONAL,
+                    message="Agent lacks identity manifest (steward.json)",
+                    file_path=str(manifest_path),
+                    remedy="Create steward.json with agent ID, version, and public key",
+                )
+            )
 
         # Check for STEWARD.md (identity documentation)
         steward_md = agent_path / "STEWARD.md"
         if not steward_md.exists():
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_I_IDENTITY,
-                severity=VerdictSeverity.CONSTITUTIONAL,
-                message="Agent lacks identity documentation (STEWARD.md)",
-                file_path=str(steward_md),
-                remedy="Create STEWARD.md with agent identity and capabilities"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_I_IDENTITY,
+                    severity=VerdictSeverity.CONSTITUTIONAL,
+                    message="Agent lacks identity documentation (STEWARD.md)",
+                    file_path=str(steward_md),
+                    remedy="Create STEWARD.md with agent identity and capabilities",
+                )
+            )
 
     def _check_article_ii_accountability(self, agent_path: Path, agent_id: str) -> None:
         """
@@ -205,14 +213,16 @@ class ConstitutionalVerdictTool:
         has_audit = "ledger" in content or "audit" in content or "event" in content
 
         if not (has_logging or has_audit):
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_II_ACCOUNTABILITY,
-                severity=VerdictSeverity.GOVERNANCE,
-                message="Agent lacks audit trail (no logging or ledger usage)",
-                file_path=str(cartridge_file),
-                remedy="Add logging or ledger integration to track decisions"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_II_ACCOUNTABILITY,
+                    severity=VerdictSeverity.GOVERNANCE,
+                    message="Agent lacks audit trail (no logging or ledger usage)",
+                    file_path=str(cartridge_file),
+                    remedy="Add logging or ledger integration to track decisions",
+                )
+            )
 
     def _check_article_iii_governance(self, agent_path: Path, agent_id: str) -> None:
         """
@@ -231,14 +241,16 @@ class ConstitutionalVerdictTool:
 
         if not has_system_interface:
             # Only warn - some agents might not need system interface
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_III_GOVERNANCE,
-                severity=VerdictSeverity.WARNING,
-                message="Agent may lack architectural governance (no system interface)",
-                file_path=str(cartridge_file),
-                remedy="Use AgentSystemInterface for governed operations"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_III_GOVERNANCE,
+                    severity=VerdictSeverity.WARNING,
+                    message="Agent may lack architectural governance (no system interface)",
+                    file_path=str(cartridge_file),
+                    remedy="Use AgentSystemInterface for governed operations",
+                )
+            )
 
     def _check_article_iv_transparency(self, agent_path: Path, agent_id: str) -> None:
         """
@@ -256,14 +268,16 @@ class ConstitutionalVerdictTool:
         has_status_reporting = "report_status" in content or "get_manifest" in content
 
         if not has_status_reporting:
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_IV_TRANSPARENCY,
-                severity=VerdictSeverity.GOVERNANCE,
-                message="Agent lacks observability (no status reporting)",
-                file_path=str(cartridge_file),
-                remedy="Implement report_status() or get_manifest() method"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_IV_TRANSPARENCY,
+                    severity=VerdictSeverity.GOVERNANCE,
+                    message="Agent lacks observability (no status reporting)",
+                    file_path=str(cartridge_file),
+                    remedy="Implement report_status() or get_manifest() method",
+                )
+            )
 
     def _check_article_v_consent(self, agent_path: Path, agent_id: str) -> None:
         """
@@ -287,15 +301,17 @@ class ConstitutionalVerdictTool:
                     # Check for open() calls without context manager
                     if isinstance(node.func, ast.Name) and node.func.id == "open":
                         # This is a heuristic - we warn but don't fail
-                        self.violations.append(ConstitutionalViolation(
-                            agent_id=agent_id,
-                            article=ConstitutionalArticle.ARTICLE_V_CONSENT,
-                            severity=VerdictSeverity.WARNING,
-                            message="Agent may perform unauthorized file access",
-                            file_path=str(cartridge_file),
-                            line_number=node.lineno,
-                            remedy="Use system.get_sandbox_path() for governed file access"
-                        ))
+                        self.violations.append(
+                            ConstitutionalViolation(
+                                agent_id=agent_id,
+                                article=ConstitutionalArticle.ARTICLE_V_CONSENT,
+                                severity=VerdictSeverity.WARNING,
+                                message="Agent may perform unauthorized file access",
+                                file_path=str(cartridge_file),
+                                line_number=node.lineno,
+                                remedy="Use system.get_sandbox_path() for governed file access",
+                            )
+                        )
                         break  # Only report once
 
         except SyntaxError:
@@ -317,14 +333,16 @@ class ConstitutionalVerdictTool:
         implements_protocol = "VibeAgent" in content or "process(" in content
 
         if not implements_protocol:
-            self.violations.append(ConstitutionalViolation(
-                agent_id=agent_id,
-                article=ConstitutionalArticle.ARTICLE_VI_INTEROPERABILITY,
-                severity=VerdictSeverity.GOVERNANCE,
-                message="Agent may not implement standard protocol (VibeAgent)",
-                file_path=str(cartridge_file),
-                remedy="Implement VibeAgent protocol with process() method"
-            ))
+            self.violations.append(
+                ConstitutionalViolation(
+                    agent_id=agent_id,
+                    article=ConstitutionalArticle.ARTICLE_VI_INTEROPERABILITY,
+                    severity=VerdictSeverity.GOVERNANCE,
+                    message="Agent may not implement standard protocol (VibeAgent)",
+                    file_path=str(cartridge_file),
+                    remedy="Implement VibeAgent protocol with process() method",
+                )
+            )
 
     def _check_principle_4_authorized_connections(self, agent_path: Path, agent_id: str) -> None:
         """
@@ -349,14 +367,16 @@ class ConstitutionalVerdictTool:
             has_verification = "gad_1000" in content.lower() or "verify" in content or "signature" in content
 
             if not has_verification:
-                self.violations.append(ConstitutionalViolation(
-                    agent_id=agent_id,
-                    article=RegulatingPrinciple.PRINCIPLE_4_AUTHORIZED_ONLY,
-                    severity=VerdictSeverity.CONSTITUTIONAL,
-                    message="Network operations without GAD-1000 identity verification",
-                    file_path=str(cartridge_file),
-                    remedy="Implement GAD-1000 identity verification before network operations"
-                ))
+                self.violations.append(
+                    ConstitutionalViolation(
+                        agent_id=agent_id,
+                        article=RegulatingPrinciple.PRINCIPLE_4_AUTHORIZED_ONLY,
+                        severity=VerdictSeverity.CONSTITUTIONAL,
+                        message="Network operations without GAD-1000 identity verification",
+                        file_path=str(cartridge_file),
+                        remedy="Implement GAD-1000 identity verification before network operations",
+                    )
+                )
 
     def _generate_verdict_report(self) -> Dict[str, Any]:
         """
@@ -423,22 +443,22 @@ class ConstitutionalVerdictTool:
         logger.info("=" * 70)
         logger.info(f"Verdict: {verdict['verdict']}")
         logger.info(f"Total Violations: {verdict['total_violations']}")
-        logger.info(f"\nBy Severity:")
-        for severity, count in verdict['by_severity'].items():
+        logger.info("\nBy Severity:")
+        for severity, count in verdict["by_severity"].items():
             if count > 0:
                 logger.info(f"  • {severity}: {count}")
 
-        if verdict['by_article']:
-            logger.info(f"\nBy Article:")
-            for article, count in verdict['by_article'].items():
+        if verdict["by_article"]:
+            logger.info("\nBy Article:")
+            for article, count in verdict["by_article"].items():
                 logger.info(f"  • {article}: {count}")
 
         logger.info(f"\nConstitution Hash: {verdict['constitutional_hash']}")
 
-        if verdict['should_fail_build']:
+        if verdict["should_fail_build"]:
             logger.error("\n❌ VERDICT: BUILD MUST FAIL - Constitutional violations detected")
             logger.error("The Constitution is the supreme law. These violations cannot be ignored.")
-        elif verdict['total_violations'] > 0:
+        elif verdict["total_violations"] > 0:
             logger.warning("\n⚠️  VERDICT: WARNINGS DETECTED - Review recommended")
             logger.warning("Consider addressing these to improve constitutional alignment")
         else:

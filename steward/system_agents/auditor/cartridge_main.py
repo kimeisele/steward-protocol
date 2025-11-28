@@ -52,7 +52,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Quality gate: verifies code syntax and linting before commit",
             domain="SECURITY",
-            capabilities=["verify_changes", "auditing", "constitutional_verdict"]
+            capabilities=["verify_changes", "auditing", "constitutional_verdict"],
         )
         logger.info("🔍 AUDITOR is online (Quality Gate Ready)")
 
@@ -76,7 +76,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -127,71 +127,40 @@ class AuditorCartridge(VibeAgent, OathMixin):
 
         # ===== CHECK 1: HARD - AST Syntax =====
         try:
-            with open(target_path, 'r', encoding='utf-8') as f:
+            with open(target_path, "r", encoding="utf-8") as f:
                 ast.parse(f.read())
             logger.info("✅ Syntax check passed")
         except SyntaxError as e:
             logger.error(f"❌ SYNTAX ERROR at line {e.lineno}: {e.msg}")
-            return {
-                "passed": False,
-                "reason": "SYNTAX ERROR",
-                "details": f"Line {e.lineno}: {e.msg}"
-            }
+            return {"passed": False, "reason": "SYNTAX ERROR", "details": f"Line {e.lineno}: {e.msg}"}
         except Exception as e:
             logger.error(f"❌ AST Parse Failed: {e}")
-            return {
-                "passed": False,
-                "reason": "AST Parse Failed",
-                "details": str(e)
-            }
+            return {"passed": False, "reason": "AST Parse Failed", "details": str(e)}
 
         # ===== CHECK 2: SOFT - Flake8 Linting =====
         try:
-            result = subprocess.run(
-                ["flake8", target_path, "--isolated"],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+            result = subprocess.run(["flake8", target_path, "--isolated"], capture_output=True, text=True, timeout=30)
 
             if result.returncode != 0:
                 output = result.stdout.strip() or result.stderr.strip()
                 logger.error(f"❌ LINTING FAILED:\n{output}")
-                return {
-                    "passed": False,
-                    "reason": "LINTING FAILED (flake8)",
-                    "details": output
-                }
+                return {"passed": False, "reason": "LINTING FAILED (flake8)", "details": output}
 
             logger.info("✅ Linting check passed")
 
         except FileNotFoundError:
             logger.error("❌ flake8 binary not found")
-            return {
-                "passed": False,
-                "reason": "System Error: flake8 binary not found"
-            }
+            return {"passed": False, "reason": "System Error: flake8 binary not found"}
         except subprocess.TimeoutExpired:
             logger.error("❌ Linting timeout")
-            return {
-                "passed": False,
-                "reason": "Linting timeout (code too complex?)"
-            }
+            return {"passed": False, "reason": "Linting timeout (code too complex?)"}
         except Exception as e:
             logger.error(f"❌ Flake8 check error: {e}")
-            return {
-                "passed": False,
-                "reason": f"Linting error: {str(e)}"
-            }
+            return {"passed": False, "reason": f"Linting error: {str(e)}"}
 
         # ===== GREEN LIGHT =====
         logger.info(f"✅ AUDITOR PASSED: {target_path}")
-        return {
-            "passed": True,
-            "stamp": "AUDITED_CLEAN",
-            "checker": "flake8",
-            "file": target_path
-        }
+        return {"passed": True, "stamp": "AUDITED_CLEAN", "checker": "flake8", "file": target_path}
 
     def render_constitutional_verdict(self, task: Task) -> Dict[str, Any]:
         """
@@ -219,11 +188,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
 
         if not system_agents_path.exists():
             logger.error(f"❌ Path not found: {system_agents_path}")
-            return {
-                "verdict": "ERROR",
-                "should_fail_build": True,
-                "error": f"Path not found: {system_agents_path}"
-            }
+            return {"verdict": "ERROR", "should_fail_build": True, "error": f"Path not found: {system_agents_path}"}
 
         # Render constitutional verdict
         verdict = self.verdict_tool.render_verdict(system_agents_path)
@@ -238,5 +203,5 @@ class AuditorCartridge(VibeAgent, OathMixin):
             "status": "RUNNING",
             "domain": self.domain,
             "capabilities": self.capabilities,
-            "description": self.description
+            "description": self.description,
         }
