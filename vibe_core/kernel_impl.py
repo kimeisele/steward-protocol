@@ -194,6 +194,46 @@ class RealVibeKernel(VibeKernel):
             self._auditor = get_judge()
             logger.info("🛡️  Immune system loaded (Auditor attached)")
 
+        # Economic Substrate (Lazy Loaded)
+        self._bank = None
+        self._vault = None
+
+    def get_bank(self):
+        """
+        Get the CivicBank instance (Lazy Loaded).
+        
+        This prevents import-time crashes by only loading the heavy economic
+        substrate when actually requested by an agent.
+        """
+        if self._bank is None:
+            try:
+                # Lazy import to avoid circular dependencies and startup crashes
+                from steward.system_agents.civic.tools.economy import CivicBank
+                self._bank = CivicBank()
+                logger.info("🏦 Kernel loaded CivicBank (Lazy)")
+            except Exception as e:
+                logger.error(f"❌ Failed to load CivicBank: {e}")
+                # Graceful degradation could go here (MockBank)
+                raise
+        return self._bank
+
+    def get_vault(self):
+        """
+        Get the CivicVault instance (Lazy Loaded).
+        """
+        if self._vault is None:
+            try:
+                # Lazy import
+                from steward.system_agents.civic.tools.vault import CivicVault
+                # Vault needs a DB connection, usually from the bank
+                bank = self.get_bank()
+                self._vault = CivicVault(bank.conn)
+                logger.info("🔐 Kernel loaded CivicVault (Lazy)")
+            except Exception as e:
+                logger.error(f"❌ Failed to load CivicVault: {e}")
+                raise
+        return self._vault
+
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
         """Get all registered agents {agent_id: agent}"""

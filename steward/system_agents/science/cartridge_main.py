@@ -43,7 +43,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCIENTIST_MAIN")
 
 
-class ScientistCartridge(VibeAgent):
+class ScientistCartridge(VibeAgent, OathMixin):
     """
     THE SCIENTIST Agent - External Intelligence Module.
 
