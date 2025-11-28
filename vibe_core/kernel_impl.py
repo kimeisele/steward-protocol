@@ -219,6 +219,11 @@ class RealVibeKernel(VibeKernel):
         self._bank = None
         self._vault = None
 
+        # Phase 4: Data Exchange Store (Inter-Agent Communication)
+        # {agent_id: {key: value}} - Published data from agents
+        self._data_store: Dict[str, Dict[str, Any]] = {}
+        logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
+
     def get_bank(self) -> "CivicBank":
         """
         Lazy-load the CivicBank.
