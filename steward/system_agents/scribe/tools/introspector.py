@@ -26,13 +26,14 @@ class CartridgeIntrospector:
 
         for cartridge_file in cartridge_files:
             agent_name = cartridge_file.parent.name
-            metadata = self._extract_metadata(cartridge_file, agent_name)
+            agent_path = cartridge_file.parent  # Store full path
+            metadata = self._extract_metadata(cartridge_file, agent_name, agent_path)
             if metadata:
                 self.agents[agent_name] = metadata
 
         return self.agents
 
-    def _extract_metadata(self, cartridge_file: Path, agent_name: str) -> Optional[Dict[str, Any]]:
+    def _extract_metadata(self, cartridge_file: Path, agent_name: str, agent_path: Path) -> Optional[Dict[str, Any]]:
         """Extract metadata from a cartridge file."""
         try:
             content = cartridge_file.read_text()
@@ -63,7 +64,7 @@ class CartridgeIntrospector:
             'description': self._extract_field(content, 'description'),
             'author': self._extract_field(content, 'author'),
             'domain': self._extract_field(content, 'domain'),
-            'tools': self._discover_tools(agent_name),
+            'tools': self._discover_tools(agent_path),  # Pass full path!
         }
 
         return metadata
@@ -95,9 +96,9 @@ class CartridgeIntrospector:
             return match.group(1)
         return "1.0.0" if field_name == "version" else ""
 
-    def _discover_tools(self, agent_name: str) -> List[Dict[str, str]]:
+    def _discover_tools(self, agent_path: Path) -> List[Dict[str, str]]:
         """Find all tools for an agent."""
-        tools_dir = self.root_dir / agent_name / "tools"
+        tools_dir = agent_path / "tools"
         tools = []
 
         if tools_dir.exists():
