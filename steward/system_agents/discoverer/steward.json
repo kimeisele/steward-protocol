@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "steward",
+    "name": "The Steward"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Agent discovery, registration, and governance",
+    "domain": "GOVERNANCE",
     "version": "1.0.0"
   }
 }

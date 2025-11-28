@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "archivist",
+    "name": "ARCHIVIST"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Event monitoring and cryptographic verification",
+    "domain": "VERIFICATION",
     "version": "1.0.0"
   }
 }

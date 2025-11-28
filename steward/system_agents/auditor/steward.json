@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "auditor",
+    "name": "AUDITOR"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "GAD-000 compliance enforcement and system integrity",
+    "domain": "GOVERNANCE",
     "version": "1.0.0"
   }
 }
