@@ -110,6 +110,43 @@ def count_system_agents():
     return len(cartridges)
 
 
+def get_agent_list():
+    """Get list of actual agents with their metadata"""
+    import re
+
+    agents_dir = Path("steward/system_agents")
+    if not agents_dir.exists():
+        return []
+
+    agents_list = []
+    for cartridge_file in sorted(agents_dir.glob("*/cartridge_main.py")):
+        agent_name = cartridge_file.parent.name
+
+        try:
+            content = cartridge_file.read_text()
+
+            # Extract description from class docstring
+            class_match = re.search(r'class\s+\w+Cartridge.*?"""(.*?)"""', content, re.DOTALL)
+            description = "Specialized Agent"
+            if class_match:
+                doc = class_match.group(1).strip()
+                first_line = doc.split('\n')[0].strip()
+                description = first_line if first_line else "Specialized Agent"
+
+            agents_list.append({
+                'name': agent_name.upper(),
+                'role': description
+            })
+        except Exception as e:
+            print(f"Warning: Could not parse {agent_name}: {e}")
+            agents_list.append({
+                'name': agent_name.upper(),
+                'role': "Specialized Agent"
+            })
+
+    return agents_list
+
+
 def get_governance_summary():
     """Extract governance summary from CONSTITUTION.md"""
     constitution = Path("CONSTITUTION.md")
@@ -149,10 +186,12 @@ def main():
     git = get_git_stats()
     agent_count = count_system_agents()
     governance = get_governance_summary()
+    agents = get_agent_list()
 
     print(f"\n📊 Introspection results:")
     print(f"   Project: {project['name']} v{project['version']}")
     print(f"   Agent count: {agent_count}")
+    print(f"   Agents discovered: {len(agents)}")
     print(f"   Git commits: {git['commit_count']}")
 
     # Jinja2 template (from readme_renderer.py)
@@ -208,13 +247,9 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 | Agent | Role |
 |-------|------|
-| **HERALD** | Creative Director — governance-aligned narratives |
-| **CIVIC** | Governance Engine — proposals, voting, treasury |
-| **FORUM** | Public Square — discussion & debate |
-| **SCIENCE** | Research — validates protocols & data |
-| **ARCHIVIST** | Auditor — signature verification & chain of trust |
-| **ARTISAN** | Media Ops — branding & asset formatting |
-| **ENVOY** | Interface — natural language to protocol execution |
+{% for agent in agents -%}
+| **{{ agent.name }}** | {{ agent.role }} |
+{% endfor %}
 
 ### Immutable Ledger
 
@@ -297,7 +332,8 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
         project=project,
         git=git,
         agent_count=agent_count,
-        governance=governance
+        governance=governance,
+        agents=agents
     )
 
     # Write to README.md

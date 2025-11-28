@@ -50,13 +50,20 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 | Agent | Role |
 |-------|------|
-| **HERALD** | Creative Director — governance-aligned narratives |
-| **CIVIC** | Governance Engine — proposals, voting, treasury |
-| **FORUM** | Public Square — discussion & debate |
-| **SCIENCE** | Research — validates protocols & data |
-| **ARCHIVIST** | Auditor — signature verification & chain of trust |
-| **ARTISAN** | Media Ops — branding & asset formatting |
-| **ENVOY** | Interface — natural language to protocol execution |
+| **ARCHIVIST** | ARCHIVIST - The History Keeper Agent. |
+| **AUDITOR** | AUDITOR - The Quality Gate Agent. |
+| **CHRONICLE** | The CHRONICLE Agent Cartridge (The Historian). |
+| **CIVIC** | The CIVIC Agent Cartridge (The Bureaucrat). |
+| **ENGINEER** | The Engineer Agent Cartridge. |
+| **ENVOY** | The ENVOY Agent Cartridge - Brain of Agent City |
+| **FORUM** | The FORUM Agent Cartridge (The Town Hall). |
+| **HERALD** | The HERALD Agent Cartridge. |
+| **ORACLE** | THE ORACLE - System Introspection & Explanation Agent. |
+| **SCIENCE** | THE SCIENTIST Agent - External Intelligence Module. |
+| **SCRIBE** | The SCRIBE Agent Cartridge (The Documentarian). |
+| **SUPREME_COURT** | SUPREME COURT - The Appellate Justice & Mercy System for STEWARD Protocol. |
+| **WATCHMAN** | THE WATCHMAN - System Integrity Enforcer. |
+
 
 ### Immutable Ledger
 
