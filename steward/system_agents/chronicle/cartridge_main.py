@@ -30,6 +30,9 @@ from datetime import datetime, timezone
 # VibeOS Integration
 from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
+
 # Import Git Tools
 from .tools.git_tools import GitTools
 
@@ -39,7 +42,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CHRONICLE_CARTRIDGE")
 
 
-class ChronicleCartridge(VibeAgent):
+class ChronicleCartridge(VibeAgent, OathMixin):
     """
     The CHRONICLE Agent Cartridge (The Historian).
 

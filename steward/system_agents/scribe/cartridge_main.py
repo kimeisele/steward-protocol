@@ -29,6 +29,9 @@ from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 # Import documentation tools
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .tools.agents_renderer import AgentsRenderer
 from .tools.citymap_renderer import CitymapRenderer
 from .tools.help_renderer import HelpRenderer
@@ -40,7 +43,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCRIBE_CARTRIDGE")
 
 
-class ScribeCartridge(VibeAgent):
+class ScribeCartridge(VibeAgent, OathMixin):
     """
     The SCRIBE Agent Cartridge (The Documentarian).
 

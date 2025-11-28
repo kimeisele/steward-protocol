@@ -24,13 +24,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig
 
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .tools.introspection_tool import IntrospectionTool, IntrospectionError
 
 # Constitutional Oath
 logger = logging.getLogger("ORACLE")
 
 
-class OracleCartridge(VibeAgent):
+class OracleCartridge(VibeAgent, OathMixin):
     """
     THE ORACLE - System Introspection & Explanation Agent.
 
