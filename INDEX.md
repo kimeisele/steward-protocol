@@ -10,10 +10,10 @@
 1. **[README.md](README.md)** - Project overview and quick start
 2. **[GAD-000.md](GAD-000.md)** - Operator Inversion (foundational philosophy)
 3. **[CONSTITUTION.md](CONSTITUTION.md)** - Governance rules and principles
-4. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Current system architecture
+4. **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - Current system architecture
 
 ### Current Status
-- **[UNIVERSE_MIGRATION_PLAN.md](UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
+- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
 - **[OPERATIONS.md](OPERATIONS.md)** - Live system status (auto-generated)
 - **[AGENTS.md](AGENTS.md)** - Agent registry (auto-generated)
 - **[CITYMAP.md](CITYMAP.md)** - System map (auto-generated)
@@ -37,8 +37,10 @@
 ## 🏗️ ARCHITECTURE
 
 ### Current Architecture
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Main architecture document
-- **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Complete system overview
+- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - Main architecture document
+- **[docs/architecture/SYSTEM_OVERVIEW.md](docs/architecture/SYSTEM_OVERVIEW.md)** - Complete system overview
+- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
+- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Semantic Auditor overview
 - **[CITYMAP.md](CITYMAP.md)** - Agent City 3-layer architecture (auto-generated)
 
 ### Detailed Architecture Docs
@@ -95,9 +97,9 @@ Agents:
   - `steward-cli stop` - Stop kernel (TODO daemon mode)
 
 ### Deployment & Operations
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide
-- **[AUTOMATION.md](AUTOMATION.md)** - Automation workflows
-- **[DEMO.md](DEMO.md)** - Demo scenarios
+- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deployment guide
+- **[docs/deployment/AUTOMATION.md](docs/deployment/AUTOMATION.md)** - Automation workflows
+- **[docs/guides/DEMO.md](docs/guides/DEMO.md)** - Demo scenarios
 
 ---
 
@@ -108,7 +110,7 @@ Agents:
 - **[POLICIES.md](POLICIES.md)** - Security policies
 
 ### Semantic Auditor
-- **[SEMANTIC_AUDITOR.md](SEMANTIC_AUDITOR.md)** - Overview
+- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Overview
 - **[docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md](docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md)** - Quick reference
 - **[docs/guides/SEMANTIC_AUDITOR_ROADMAP.md](docs/guides/SEMANTIC_AUDITOR_ROADMAP.md)** - Roadmap
 
@@ -120,24 +122,31 @@ Agents:
 ## 📝 GUIDES & STORIES
 
 ### Project Context
-- **[STORY.md](STORY.md)** - Project narrative and history
-- **[PROOF_OF_LIVE.md](PROOF_OF_LIVE.md)** - Evidence of system capabilities
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[docs/philosophy/STORY.md](docs/philosophy/STORY.md)** - Project narrative and history
+- **[docs/philosophy/PROOF_OF_LIVE.md](docs/philosophy/PROOF_OF_LIVE.md)** - Evidence of system capabilities
+- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - Contribution guidelines
 
 ---
 
-## 📦 ARCHIVE
+## 📦 REPORTS & ARCHIVE
 
-### Migration History
-All historical migration docs, phase reports, and analysis documents have been moved to:
-- **[docs/archive/migrations/](docs/archive/migrations/)** - 32 archived files
+### Current Reports
+- **[docs/reports/PROGRESS_REPORT.md](docs/reports/PROGRESS_REPORT.md)** - Current progress status
+- **[docs/reports/VERIFICATION_REPORT.md](docs/reports/VERIFICATION_REPORT.md)** - System verification
+- **[docs/reports/GAP_ANALYSIS_REPORT.md](docs/reports/GAP_ANALYSIS_REPORT.md)** - Gap analysis
+
+### Migration Status
+- **[docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md](docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md)** - Implementation status
+- **[docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md](docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md)** - Blocker 2 status
+- **[docs/reports/migrations/GOLDEN_THREAD_STATUS.md](docs/reports/migrations/GOLDEN_THREAD_STATUS.md)** - Golden thread tracking
+
+### Historical Archive
+- **[docs/archive/migrations/](docs/archive/migrations/)** - 28 archived migration files
 
 Includes:
 - BLOCKER completion reports
-- PHASE instructions and reports
-- Gap analysis and audit reports
-- Old implementation status docs
-- Previous migration plans (GMP_FINAL_PLAN.md, etc.)
+- PHASE instructions and completion reports
+- Previous migration plans and analyses
 
 ---
 
@@ -172,7 +181,11 @@ steward-protocol/
 │       └── discoverer/       # Discovery
 ├── docs/
 │   ├── architecture/         # Architecture docs
+│   ├── deployment/           # Deployment guides
 │   ├── guides/               # Guides and references
+│   ├── philosophy/           # Manifestos and philosophy
+│   ├── reports/              # Status reports
+│   │   └── migrations/       # Migration tracking
 │   └── archive/
 │       └── migrations/       # Historical migrations
 ├── scripts/                  # Operational scripts
@@ -207,20 +220,20 @@ steward-protocol/
 ## 🔗 QUICK LINKS
 
 ### For Developers
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - How to contribute
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design
+- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - How to contribute
+- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - System design
 - **[AGENTS.md](AGENTS.md)** - Agent capabilities
 - **[vibe_core/cli.py](vibe_core/cli.py)** - CLI source
 
 ### For Operators
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deploy the system
+- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deploy the system
 - **[OPERATIONS.md](OPERATIONS.md)** - Live system status
 - **CLI:** `steward-cli status`, `steward-cli ps`, `steward-cli lineage`
 
 ### For Researchers
 - **[GAD-000.md](GAD-000.md)** - Operator Inversion philosophy
 - **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** - Governed Intelligence
-- **[UNIVERSE_MIGRATION_PLAN.md](UNIVERSE_MIGRATION_PLAN.md)** - Building a TRUE OS
+- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - Building a TRUE OS
 
 ---
 
