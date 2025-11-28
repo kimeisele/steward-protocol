@@ -4,7 +4,17 @@
 
 Git hooks in `.githooks/` are NOT automatically activated (they need to be in `.git/hooks/`).
 
-To install the hooks:
+**Recommended:** Use the automated installer:
+
+```bash
+# Check if hooks are installed
+python scripts/setup_hooks.py
+
+# Auto-install/repair hooks
+python scripts/setup_hooks.py --fix
+```
+
+**Manual installation:**
 
 ```bash
 # Option 1: Symlink (recommended - auto-updates)
@@ -64,10 +74,37 @@ git commit --no-verify
 
 ## Defense in Depth
 
-The pre-commit hook is **Layer 1** of a 3-layer defense:
+The pre-commit hook is part of a **4-layer defense** architecture:
 
-1. **Pre-Commit** (this) - Fast pattern matching, blocks 95% of violations
-2. **Watchman** (CI/CD) - AST-based deep analysis via StandardsInspectionTool
-3. **Auditor** (CI/CD) - Constitutional verdict, build gate
+0. **Infrastructure Health** (Layer 0) - Foundation checks
+   - `scripts/setup_hooks.py` - Hook installation/repair (operator-run)
+   - WATCHMAN `system_health` check - Read-only monitoring (agent)
+   - CI job: `infrastructure-check`
+
+1. **Pre-Commit** (Layer 1) - Fast pattern matching, blocks 95% of violations
+   - `.githooks/pre-commit` - grep-based, <50ms
+   - Guards against: requirements.txt, Path("data/..."), hardcoded paths
+
+2. **Watchman** (Layer 2) - AST-based deep analysis via StandardsInspectionTool
+   - CI job: `watchman-inspection`
+   - Detects: architectural violations, mock returns, placeholders
+
+3. **Auditor** (Layer 3) - Constitutional verdict, build gate
+   - CI job: `auditor-verdict`
+   - Enforces: STEWARD.md, steward.json, VibeAgent protocol
+
+## AGENT CITY Architecture
+
+This follows AGENT CITY principles:
+
+- **Layer 0 (Infrastructure)**: Operator-run scripts in `scripts/`
+  - `scripts/setup_hooks.py` modifies `.git/hooks/` (requires filesystem access)
+  - WATCHMAN agent monitors (read-only) via `system_health` action
+
+- **Layers 1-3 (Enforcement)**: Kernel-integrated agents
+  - WATCHMAN: Code quality enforcement
+  - AUDITOR: Constitutional compliance
+
+**Philosophy**: "Agents monitor. Operators execute infrastructure changes."
 
 See: `docs/AGENT_CLI_ENFORCEMENT_PLAN.md`
