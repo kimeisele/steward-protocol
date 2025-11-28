@@ -1,6 +1,6 @@
 # AGENT CLI ENFORCEMENT PLAN
 
-**Status:** In Progress - Phase 2.2 COMPLETE
+**Status:** Phase 2 COMPLETE ✅ (All 14 agents processed)
 **Goal:** Stop agents from hallucinating requirements.txt and direct filesystem access
 **Strategy:** Bridge Kernel capabilities to Agents via System Interface
 
@@ -67,8 +67,15 @@ tomlkit preserves structure → maintainable pyproject.toml.
    - Civic: 3 paths sandboxed (registry, agents_md, state) ✅
    - Science: 2 paths sandboxed (cache, results) ✅
    - Total: 9 filesystem violations eliminated ✅
-6. ⏳ Roll out to remaining 10 agents
+6. ✅ Phase 2.3 - Remaining agents migrated/verified:
+   - **Batch 1**: Envoy (1 path sandboxed), Engineer (CLEAN), Oracle (CLEAN) ✅
+   - **Batch 2**: Archivist (CLEAN), Auditor (CLEAN), Chronicle (CLEAN) ✅
+   - **Batch 3**: Supreme Court (root_path + 4 tools sandboxed), Scribe (root_dir + 4 renderers sandboxed, SANDBOX-ONLY writes), Watchman (CLEAN - scans code only) ✅
+   - **Batch 4**: Discoverer (CLEAN - scans manifests only) ✅
+   - **Total Phase 2.3**: 2 agents migrated, 7 agents verified clean ✅
 7. ⏳ Enable enforcement hooks
 
-**Status:** Phase 2.2 COMPLETE ✅ (4/14 agents migrated)
-**Next:** Phase 2.3+ - Migrate remaining 10 agents (Engineer, Oracle, Envoy, Archivist, Auditor, Chronicle, Watchman, Supreme Court, Scribe, Discoverer)
+**Status:** Phase 2 COMPLETE ✅ (14/14 agents processed)
+- **Migrated (7)**: Herald, Forum, Civic, Science, Envoy, Supreme Court, Scribe
+- **Clean (7)**: Engineer, Oracle, Archivist, Auditor, Chronicle, Watchman, Discoverer
+**Next:** Phase 3 - Enforcement hooks (pre-commit, CI/CD checks)
