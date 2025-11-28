@@ -132,7 +132,142 @@ jobs:
           fi
 
   # =========================================================================
-  # JOB 3: Kernel Boot Test
+  # JOB 3: Watchman Deep Inspection (Phase 3.3)
+  # =========================================================================
+  watchman-inspection:
+    name: Watchman Deep Inspection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run Watchman Deep Inspection
+        id: watchman
+        run: |
+          cat > run_watchman_inspection.py << 'EOF'
+          """
+          Phase 3.3: Run Watchman Deep Inspection in CI/CD
+
+          This is Layer 2 of Defense in Depth:
+          - Layer 1: Pre-commit hook (fast grep) - blocks 95% of violations
+          - Layer 2: THIS - AST-based deep analysis (~500ms)
+          - Layer 3: Auditor verdict (constitutional judgment)
+          """
+          import sys
+          import json
+          from pathlib import Path
+
+          # Initialize kernel and load Watchman
+          from vibe_core.kernel_impl import RealVibeKernel
+          from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
+
+          print("⚔️  Initializing Watchman...")
+          kernel = RealVibeKernel()
+          watchman = WatchmanCartridge()
+
+          # Inject system interface (required for compliance checks)
+          from vibe_core.agent_interface import AgentSystemInterface
+          watchman.system = AgentSystemInterface(kernel, "watchman")
+
+          print("🔬 Running Deep Inspection (AST-based analysis)...")
+          result = watchman.run_deep_inspection()
+
+          # Save full report
+          report_path = Path("watchman_report.json")
+          report_path.write_text(json.dumps(result, indent=2))
+          print(f"📊 Full report saved: {report_path}")
+
+          # Print summary
+          print("\n" + "="*70)
+          print("WATCHMAN DEEP INSPECTION SUMMARY")
+          print("="*70)
+          print(f"Status: {result['status']}")
+          print(f"Total violations: {result['total_violations']}")
+          print(f"Critical violations: {result['critical_count']}")
+
+          if result['total_violations'] > 0:
+              print("\nViolations by agent:")
+              for agent_id, count in result['report']['by_agent'].items():
+                  print(f"  • {agent_id}: {count}")
+
+              print("\nViolations by severity:")
+              for severity, count in result['report']['by_severity'].items():
+                  if count > 0:
+                      print(f"  • {severity}: {count}")
+
+          # Determine exit code
+          if result['should_fail_build']:
+              print("\n❌ BUILD FAILED - Critical violations detected")
+              print("\nTo fix:")
+              print("  1. Review violations in the uploaded artifact")
+              print("  2. Use agent.system.get_sandbox_path() instead of Path('data/...')")
+              print("  3. Remove any requirements.txt files")
+              print("  4. See Phase 2 migration examples (Herald, Forum, Civic)")
+              sys.exit(1)
+          elif result['total_violations'] > 0:
+              print("\n⚠️  BUILD WARNING - Non-critical violations detected")
+              print("Consider addressing these in a future PR")
+              sys.exit(0)
+          else:
+              print("\n✅ BUILD PASSED - All agents compliant")
+              sys.exit(0)
+          EOF
+
+          python run_watchman_inspection.py
+
+      - name: Upload Watchman Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchman-inspection-report
+          path: watchman_report.json
+          retention-days: 30
+
+      - name: Comment on PR (if violations found)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('watchman_report.json', 'utf8'));
+
+            let comment = '## ⚔️ WATCHMAN Deep Inspection Report\n\n';
+            comment += `**Status:** ❌ CRITICAL VIOLATIONS DETECTED\n\n`;
+            comment += `**Total violations:** ${report.total_violations}\n`;
+            comment += `**Critical violations:** ${report.critical_count}\n\n`;
+
+            comment += '### Violations by Agent\n\n';
+            for (const [agent, count] of Object.entries(report.report.by_agent)) {
+              comment += `- **${agent}:** ${count} violation(s)\n`;
+            }
+
+            comment += '\n### How to Fix\n\n';
+            comment += '1. Use `agent.system.get_sandbox_path()` instead of `Path("data/...")`\n';
+            comment += '2. Remove any `requirements.txt` files (use `pyproject.toml`)\n';
+            comment += '3. See Phase 2 migration examples (Herald, Forum, Civic)\n';
+            comment += '4. Review the full report in the CI artifacts\n\n';
+            comment += '📖 **Documentation:** See `.githooks/README.md` for Defense in Depth architecture\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  # =========================================================================
+  # JOB 4: Kernel Boot Test
   # =========================================================================
   kernel-boot:
     name: Kernel Boot Test
@@ -323,7 +458,7 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [lint, verify-agents, kernel-boot, cli-test, docs-check, security]
+    needs: [lint, verify-agents, watchman-inspection, kernel-boot, cli-test, docs-check, security]
     if: always()
 
     steps:
