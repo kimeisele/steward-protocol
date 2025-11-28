@@ -62,11 +62,10 @@ class ScribeCartridge(VibeAgent, OathMixin):
     No stale documentation, only live introspection."
     """
 
-    def __init__(self, root_dir: str = ".", config: Optional[CityConfig] = None):
+    def __init__(self, config: Optional[CityConfig] = None):
         """Initialize SCRIBE (The Documentarian) as a VibeAgent.
 
         Args:
-            root_dir: Root directory for documentation output
             config: CityConfig instance from Phoenix Config (optional)
         """
         # BLOCKER #0: Accept Phoenix Config
@@ -95,17 +94,17 @@ class ScribeCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ SCRIBE has sworn the Constitutional Oath")
 
-        # Set root directory
-        self.root_dir = Path(root_dir)
+        # PHASE 2.3: Lazy-load root_dir after system interface injection
+        # CRITICAL: Scribe writes to SANDBOX, not project root
+        # Future: Kernel will provide publish() mechanism to copy sandbox → root
+        self._root_dir = None
+        self._agents_renderer = None
+        self._citymap_renderer = None
+        self._help_renderer = None
+        self._readme_renderer = None
 
-        # Initialize all documentation renderers
-        self.agents_renderer = AgentsRenderer(root_dir)
-        self.citymap_renderer = CitymapRenderer(root_dir)
-        self.help_renderer = HelpRenderer(root_dir)
-        self.readme_renderer = ReadmeRenderer(root_dir)
-
-        logger.info("✅ All documentation renderers initialized")
-        logger.info("📚 SCRIBE: Ready for operation (awaiting kernel injection)")
+        logger.info("✅ SCRIBE renderers pending initialization")
+        logger.info("📚 SCRIBE: Ready for operation (awaiting system injection)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
@@ -119,6 +118,55 @@ class ScribeCartridge(VibeAgent, OathMixin):
             capabilities=self.capabilities,
             dependencies=[]
         )
+
+    # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
+    @property
+    def root_dir(self):
+        """Lazy-load root_dir after system interface injection.
+
+        CRITICAL: Scribe writes to SANDBOX (/tmp/vibe_os/agents/scribe/docs/),
+        NOT to project root. This prevents unauthorized writes to README.md, etc.
+
+        Future: Kernel will provide publish() mechanism to copy sandbox → root.
+        """
+        if self._root_dir is None:
+            self._root_dir = self.system.get_sandbox_path() / "docs"
+            self._root_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"📁 SCRIBE root_dir initialized (sandboxed): {self._root_dir}")
+            logger.warning("⚠️  SCRIBE writes to SANDBOX. Use kernel.publish() to copy to project root (future feature)")
+        return self._root_dir
+
+    @property
+    def agents_renderer(self):
+        """Lazy-load AgentsRenderer."""
+        if self._agents_renderer is None:
+            self._agents_renderer = AgentsRenderer(str(self.root_dir))
+            logger.debug("📋 AgentsRenderer initialized")
+        return self._agents_renderer
+
+    @property
+    def citymap_renderer(self):
+        """Lazy-load CitymapRenderer."""
+        if self._citymap_renderer is None:
+            self._citymap_renderer = CitymapRenderer(str(self.root_dir))
+            logger.debug("🗺️  CitymapRenderer initialized")
+        return self._citymap_renderer
+
+    @property
+    def help_renderer(self):
+        """Lazy-load HelpRenderer."""
+        if self._help_renderer is None:
+            self._help_renderer = HelpRenderer(str(self.root_dir))
+            logger.debug("❓ HelpRenderer initialized")
+        return self._help_renderer
+
+    @property
+    def readme_renderer(self):
+        """Lazy-load ReadmeRenderer."""
+        if self._readme_renderer is None:
+            self._readme_renderer = ReadmeRenderer(str(self.root_dir))
+            logger.debug("📖 ReadmeRenderer initialized")
+        return self._readme_renderer
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
@@ -240,11 +288,20 @@ class ScribeCartridge(VibeAgent, OathMixin):
 
 
 def main():
-    """Main entry point for standalone usage."""
+    """Main entry point for standalone usage.
+
+    WARNING: Standalone mode is deprecated. SCRIBE now requires kernel registration
+    for system interface injection (sandboxed filesystem access).
+
+    Use via kernel:
+        kernel.register_agent(ScribeCartridge())
+        kernel.dispatch_task("scribe", {"action": "generate_all"})
+    """
+    logger.error("❌ SCRIBE standalone mode is deprecated after Phase 2.3 migration")
+    logger.error("   SCRIBE requires kernel registration for sandboxed filesystem access")
+    logger.error("   Use: kernel.register_agent(ScribeCartridge())")
     import sys
-    root_dir = sys.argv[1] if len(sys.argv) > 1 else "."
-    scribe = ScribeCartridge(root_dir)
-    scribe.generate_all()
+    sys.exit(1)
 
 
 if __name__ == "__main__":

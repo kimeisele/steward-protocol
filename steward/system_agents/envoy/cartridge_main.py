@@ -98,12 +98,19 @@ class EnvoyCartridge(VibeAgent, OathMixin):
         self.gap_report = GAPReportTool()  # Initialize governance audit proof reporting
         self.hil_assistant = HILAssistantTool()  # Initialize HIL Assistant (VAD Layer)
 
-        # Operation logs (state)
+        # PHASE 2.3: Lazy-load operation log path after system interface injection
         self.operation_log = []
-        self.log_path = Path("data/logs/envoy_operations.jsonl")
-        self.log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._log_path = None
 
         logger.info("✅ ENVOY ready (awaiting kernel injection)")
+
+    @property
+    def log_path(self):
+        """Lazy-load log path (sandboxed)."""
+        if self._log_path is None:
+            self._log_path = self.system.get_sandbox_path() / "logs" / "envoy_operations.jsonl"
+            self._log_path.parent.mkdir(parents=True, exist_ok=True)
+        return self._log_path
 
     def set_kernel(self, kernel):
         """

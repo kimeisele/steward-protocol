@@ -64,11 +64,10 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
     - Maintains appellate record
     """
 
-    def __init__(self, root_path: Path = Path("."), config: Optional[CivicConfig] = None):
+    def __init__(self, config: Optional[CivicConfig] = None):
         """Initialize SupremeCourt cartridge.
 
         Args:
-            root_path: Root path for ledger storage
             config: CivicConfig instance from Phoenix Config (optional)
         """
         # BLOCKER #0: Accept Phoenix Config
@@ -95,15 +94,14 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         logger.info("⚖️  SUPREME COURT v1.0: Initializing Appellate System")
 
-        self.root_path = Path(root_path)
+        # PHASE 2.3: Lazy-load root_path after system interface injection
+        self._root_path = None
+        self._appeals = None
+        self._verdict = None
+        self._precedent = None
+        self._ledger = None
 
-        # Initialize tools
-        self.appeals = AppealsTool(root_path=self.root_path)
-        self.verdict = VerdictTool(root_path=self.root_path)
-        self.precedent = PrecedentTool(root_path=self.root_path)
-        self.ledger = JusticeLedger(root_path=self.root_path)
-
-        logger.info("✅ SUPREME COURT v1.0: Ready for appellate review")
+        logger.info("✅ SUPREME COURT v1.0: Ready for appellate review (awaiting system injection)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest."""
@@ -117,6 +115,49 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             capabilities=self.capabilities,
             dependencies=["auditor"]
         )
+
+    # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
+    @property
+    def root_path(self):
+        """Lazy-load root_path after system interface injection."""
+        if self._root_path is None:
+            self._root_path = self.system.get_sandbox_path() / "justice"
+            self._root_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"📁 SUPREME COURT root_path initialized (sandboxed): {self._root_path}")
+        return self._root_path
+
+    @property
+    def appeals(self):
+        """Lazy-load AppealsTool."""
+        if self._appeals is None:
+            self._appeals = AppealsTool(root_path=self.root_path)
+            logger.debug("📋 AppealsTool initialized")
+        return self._appeals
+
+    @property
+    def verdict(self):
+        """Lazy-load VerdictTool."""
+        if self._verdict is None:
+            self._verdict = VerdictTool(root_path=self.root_path)
+            logger.debug("⚖️  VerdictTool initialized")
+        return self._verdict
+
+    @property
+    def precedent(self):
+        """Lazy-load PrecedentTool."""
+        if self._precedent is None:
+            self._precedent = PrecedentTool(root_path=self.root_path)
+            logger.debug("📚 PrecedentTool initialized")
+        return self._precedent
+
+    @property
+    def ledger(self):
+        """Lazy-load JusticeLedger."""
+        if self._ledger is None:
+            self._ledger = JusticeLedger(root_path=self.root_path)
+            logger.debug("📖 JusticeLedger initialized")
+        return self._ledger
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
