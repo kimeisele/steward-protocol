@@ -1,52 +1,73 @@
-# Git Hooks - Automated Quality Gates
+# Steward Protocol Git Hooks
 
-Diese Hooks laufen AUTOMATISCH vor jedem Commit und verhindern broken Code in den Repo.
+## Installation
 
-## Installation (neue Entwickler)
+Git hooks in `.githooks/` are NOT automatically activated (they need to be in `.git/hooks/`).
 
-```bash
-git clone <repo>
-cd steward-protocol
-git config core.hooksPath .githooks
-```
-
-Das ist es! Die Hooks sind jetzt aktiv.
-
-## Was läuft automatisch?
-
-### `pre-commit` Hook
-- ✅ Läuft IMMER vor `git commit`
-- ✅ Testet: Health Check, E2E Pipeline, Dependencies
-- ✅ Blockiert Commit wenn Tests fehlschlagen
-- ✅ Zeigt klare Fehlermeldungen
-
-## Beispiel: Test fehlgeschlagen
-
-```
-🧪 Running HERALD E2E tests before commit...
-
-[TEST] Health Check
-❌ FAILED: Health Check
-STDERR: Missing module: praw
-
-🔴 COMMIT BLOCKED: E2E tests failed
-Fix the issues above and try again
-```
-
-**Fix:** Dependencies installieren
-```bash
-pip install -r examples/herald/requirements.txt
-```
-
-Dann nochmal versuchen zu committen:
-```bash
-git commit -m "..."
-```
-
-## Bypass (wenn absolut nötig)
+To install the hooks:
 
 ```bash
+# Option 1: Symlink (recommended - auto-updates)
+ln -sf ../../.githooks/pre-commit .git/hooks/pre-commit
+
+# Option 2: Copy (manual updates needed)
+cp .githooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+## Hooks
+
+### `pre-commit` - The Electric Fence (Phase 3.1)
+
+**Purpose:** Block architectural violations before they get committed.
+
+**Performance:** <50ms (fast pattern matching, no agent boot)
+
+**Guards:**
+1. ❌ Block `requirements.txt` in `steward/system_agents/*/`
+2. ❌ Block `Path("data/...")` patterns
+3. ⚠️  Warn about hardcoded paths in `__init__()`
+
+**Example output:**
+
+```
+⚡ Running Steward Protocol Pre-Commit Guards...
+  🔍 Checking for requirements.txt in agent dirs... OK
+  🔍 Checking for direct Path('data/...') calls... OK
+  🔍 Checking for hardcoded paths in __init__... OK
+✅ All pre-commit guards passed
+```
+
+**If blocked:**
+
+```
+❌ VIOLATION: Direct Path('data/...') detected
+
+Violations found:
+  • steward/system_agents/foo/cartridge_main.py:42: self.data = Path("data/foo")
+
+To fix:
+  1. Use agent.system.get_sandbox_path() instead
+  2. Convert to lazy-loading @property pattern
+  3. See Phase 2.3 migration examples (Herald, Forum, Civic)
+```
+
+## Bypassing Hooks (Emergency Only)
+
+```bash
+# Skip pre-commit (use only in emergencies)
 git commit --no-verify
+
+# NEVER use --no-verify to bypass architecture violations!
+# The CI/CD will still catch you (Watchman + Auditor)
 ```
 
-⚠️ **NICHT verwenden!** Das ist für echte Notfälle. Nutze es nicht regelmäßig.
+## Defense in Depth
+
+The pre-commit hook is **Layer 1** of a 3-layer defense:
+
+1. **Pre-Commit** (this) - Fast pattern matching, blocks 95% of violations
+2. **Watchman** (CI/CD) - AST-based deep analysis via StandardsInspectionTool
+3. **Auditor** (CI/CD) - Constitutional verdict, build gate
+
+See: `docs/AGENT_CLI_ENFORCEMENT_PLAN.md`
