@@ -2,27 +2,23 @@
   "capabilities": {
     "operations": [
       {
-        "description": "registry operation",
-        "name": "registry"
+        "description": "compliance_enforcement operation",
+        "name": "compliance_enforcement"
       },
       {
-        "description": "licensing operation",
-        "name": "licensing"
+        "description": "identity_verification operation",
+        "name": "identity_verification"
       },
       {
-        "description": "ledger operation",
-        "name": "ledger"
-      },
-      {
-        "description": "governance operation",
-        "name": "governance"
+        "description": "documentation_sync operation",
+        "name": "documentation_sync"
       }
     ]
   },
   "governance": {
     "compliance_level": 2,
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
-    "issued_at": "2025-11-28T12:07:50.276335Z",
+    "issued_at": "2025-11-28T12:07:50.258221Z",
     "issuer": "passport_office"
   },
   "identity": {

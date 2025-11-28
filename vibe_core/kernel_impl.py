@@ -507,13 +507,20 @@ class RealVibeKernel(VibeKernel):
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
+        try:
+            bank_stats = self.get_bank().get_system_stats()
+            total_credits = bank_stats["total_balance"]
+        except Exception as e:
+            logger.warning(f"CivicBank unavailable for status: {e}")
+            total_credits = 0
+
         return {
             "status": self._status.value,
             "agents_registered": len(self._agent_registry),
             "scheduler": self._scheduler.get_queue_status(),
             "manifests": len(self._manifest_registry.list_all()),
             "ledger_events": len(self._ledger.get_all_events()),
-            "total_credits": 1000,  # Placeholder - would be fetched from state
+            "total_credits": total_credits,
         }
 
     def _process_ipc_events(self) -> None:
