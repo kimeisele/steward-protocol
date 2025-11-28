@@ -80,12 +80,9 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 | Agent | Role |
 |-------|------|
-| **HERALD** | Creative Director — governance-aligned narratives |
-| **CIVIC** | Governance Engine — proposals, voting, treasury |
-| **FORUM** | Public Square — discussion & debate |
-| **SCIENCE** | Research — validates protocols & data |
-| **ARCHIVIST** | Auditor — signature verification & chain of trust |
-| **ENVOY** | Interface — natural language to protocol execution |
+{% for agent in agents -%}
+| **{{ agent.name }}** | {{ agent.role }} |
+{% endfor %}
 
 ### Immutable Ledger
 
@@ -168,7 +165,8 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
             project=metadata['project'],
             git=metadata['git'],
             agent_count=metadata['agent_count'],
-            governance=metadata['governance']
+            governance=metadata['governance'],
+            agents=metadata['agents']
         )
 
         return content
