@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "engineer",
+    "name": "ENGINEER"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Code generation, scaffolding, and automation",
+    "domain": "ORCHESTRATION",
     "version": "1.0.0"
   }
 }
