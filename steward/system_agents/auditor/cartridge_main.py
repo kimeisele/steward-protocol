@@ -24,6 +24,10 @@ from vibe_core.scheduling.task import Task
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
+
+# Phase 3.4: Constitutional Verdict Tool
+from .tools.constitutional_verdict import ConstitutionalVerdictTool
+
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
@@ -48,7 +52,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Quality gate: verifies code syntax and linting before commit",
             domain="SECURITY",
-            capabilities=["verify_changes", "auditing"]
+            capabilities=["verify_changes", "auditing", "constitutional_verdict"]
         )
         logger.info("🔍 AUDITOR is online (Quality Gate Ready)")
 
@@ -57,6 +61,10 @@ class AuditorCartridge(VibeAgent, OathMixin):
             self.oath_mixin_init(self.agent_id)
             self.oath_sworn = True
             logger.info("✅ AUDITOR has sworn the Constitutional Oath")
+
+        # Phase 3.4: Initialize Constitutional Verdict Tool
+        self.verdict_tool = ConstitutionalVerdictTool()
+        logger.info("⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
@@ -78,12 +86,15 @@ class AuditorCartridge(VibeAgent, OathMixin):
         Supported actions:
         - verify_changes: Gate check (syntax + linting)
         - check_code_quality: Alias for verify_changes
+        - constitutional_verdict: Layer 3 constitutional judgment (Phase 3.4)
         """
         action = task.payload.get("action") or task.payload.get("method")
         logger.info(f"🔍 AUDITOR processing: {action}")
 
         if action == "verify_changes" or action == "check_code_quality":
             return self.verify_changes(task)
+        elif action == "constitutional_verdict":
+            return self.render_constitutional_verdict(task)
         else:
             return {"status": "ignored", "reason": f"Unknown action: {action}"}
 
@@ -181,6 +192,43 @@ class AuditorCartridge(VibeAgent, OathMixin):
             "checker": "flake8",
             "file": target_path
         }
+
+    def render_constitutional_verdict(self, task: Task) -> Dict[str, Any]:
+        """
+        Render constitutional verdict (Phase 3.4 - Layer 3).
+
+        This is the final authority on code quality - constitutional judgment
+        that verifies adherence to THE AGENT CONSTITUTION.
+
+        Payload:
+        - system_agents_path: Path to steward/system_agents (optional)
+
+        Returns:
+        - verdict: CONSTITUTIONAL | GOVERNANCE_VIOLATIONS | WARNINGS | UNCONSTITUTIONAL
+        - should_fail_build: bool
+        - violations: List of constitutional violations
+        """
+        from pathlib import Path
+
+        # Get system agents path
+        system_agents_path = task.payload.get("system_agents_path")
+        if not system_agents_path:
+            system_agents_path = Path("steward/system_agents")
+        else:
+            system_agents_path = Path(system_agents_path)
+
+        if not system_agents_path.exists():
+            logger.error(f"❌ Path not found: {system_agents_path}")
+            return {
+                "verdict": "ERROR",
+                "should_fail_build": True,
+                "error": f"Path not found: {system_agents_path}"
+            }
+
+        # Render constitutional verdict
+        verdict = self.verdict_tool.render_verdict(system_agents_path)
+
+        return verdict
 
     def report_status(self) -> Dict[str, Any]:
         """Report AUDITOR status (VibeAgent interface)."""
