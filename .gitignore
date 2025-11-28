@@ -295,3 +295,4 @@ examples/herald/assets/
 workspaces/
 temp_repo_test/
 .vibe/
+.backup/
