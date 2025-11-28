@@ -32,8 +32,9 @@ Usage (in agent code):
 """
 
 import logging
-from typing import Any, Dict, List, Optional, IO
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, IO, List, Optional
 
 logger = logging.getLogger("AGENT_INTERFACE")
 
@@ -374,3 +375,249 @@ class AgentSystemInterface:
 
         logger.info(f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}")
         return True
+
+    # ============================================================================
+    # DATA EXCHANGE (PHASE 4: WIRING - INTER-AGENT COMMUNICATION)
+    # ============================================================================
+
+    def publish_data(self, key: str, value: Any) -> str:
+        """
+        Publish data for other agents to consume.
+
+        This enables consent-based data exchange between agents without
+        direct kernel access (Article V: Consent).
+
+        Args:
+            key: Data identifier (e.g., "citizens", "stats", "config")
+            value: Data to publish (must be JSON-serializable)
+
+        Returns:
+            event_id: Audit trail event ID
+
+        Example:
+            # Civic publishes citizen list
+            self.system.publish_data("citizens", ["alice", "bob"])
+
+            # Archivist publishes statistics
+            self.system.publish_data("stats", {"total_events": 42})
+
+        Note: Published data is accessible via request_data() by other agents.
+        """
+        # Initialize agent's data store if needed
+        if self.agent_id not in self.kernel._data_store:
+            self.kernel._data_store[self.agent_id] = {}
+
+        # Publish the data
+        self.kernel._data_store[self.agent_id][key] = value
+
+        # Audit trail
+        event_id = self.record_event(
+            "DATA_PUBLISHED",
+            {
+                "key": key,
+                "value_type": type(value).__name__,
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
+        logger.info(f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})")
+        return event_id
+
+    def request_data(self, agent_id: str, key: str, default: Any = None) -> Any:
+        """
+        Request data from another agent.
+
+        This replaces direct kernel.agent_registry access, ensuring
+        consent-based data exchange (Article V: Consent).
+
+        Args:
+            agent_id: Agent to request data from (e.g., "civic", "archivist")
+            key: Data key to request (e.g., "citizens", "stats")
+            default: Value to return if data doesn't exist
+
+        Returns:
+            Requested data or default
+
+        Raises:
+            ValueError: If agent_id or key doesn't exist AND no default provided
+
+        Example:
+            # Herald requests citizen list from Civic
+            citizens = self.system.request_data("civic", "citizens")
+
+            # Forum requests stats from Archivist (with fallback)
+            stats = self.system.request_data("archivist", "stats", default={})
+
+        Note: Agent must have published the data via publish_data() first.
+        """
+        # Check if agent has published any data
+        if agent_id not in self.kernel._data_store:
+            if default is not None:
+                logger.debug(
+                    f"📥 {self.agent_id} requested data from {agent_id} "
+                    f"(key: {key}) - agent has no published data, using default"
+                )
+                return default
+            raise ValueError(
+                f"Agent '{agent_id}' has not published any data. "
+                f"Available agents: {list(self.kernel._data_store.keys())}"
+            )
+
+        # Check if key exists
+        if key not in self.kernel._data_store[agent_id]:
+            if default is not None:
+                logger.debug(
+                    f"📥 {self.agent_id} requested data from {agent_id} "
+                    f"(key: {key}) - key not found, using default"
+                )
+                return default
+            raise ValueError(
+                f"Agent '{agent_id}' has not published data under key '{key}'. "
+                f"Available keys: {list(self.kernel._data_store[agent_id].keys())}"
+            )
+
+        # Get the data
+        value = self.kernel._data_store[agent_id][key]
+
+        # Audit trail
+        self.record_event(
+            "DATA_REQUESTED",
+            {
+                "source_agent": agent_id,
+                "key": key,
+                "value_type": type(value).__name__,
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
+        logger.info(
+            f"📥 {self.agent_id} requested data from {agent_id}: "
+            f"{key} (type: {type(value).__name__})"
+        )
+        return value
+
+    def list_published_data(self, agent_id: Optional[str] = None) -> Dict[str, List[str]]:
+        """
+        List all published data keys (for discovery).
+
+        Args:
+            agent_id: Specific agent to query (default: all agents)
+
+        Returns:
+            {agent_id: [key1, key2, ...]}
+
+        Example:
+            # Discover what Civic has published
+            civic_data = self.system.list_published_data("civic")
+            # Returns: {"civic": ["citizens", "licenses"]}
+
+            # Discover all published data
+            all_data = self.system.list_published_data()
+        """
+        if agent_id:
+            if agent_id in self.kernel._data_store:
+                return {agent_id: list(self.kernel._data_store[agent_id].keys())}
+            return {agent_id: []}
+
+        # Return all agents and their keys
+        return {
+            aid: list(data.keys())
+            for aid, data in self.kernel._data_store.items()
+        }
+
+    def call_agent(self, agent_id: str, payload: Dict[str, Any]) -> Any:
+        """
+        Call another agent synchronously (governed inter-agent communication).
+
+        This replaces direct kernel.agent_registry access for agent-to-agent
+        calls, ensuring proper audit trail (Article V: Consent).
+
+        Args:
+            agent_id: Agent to call (e.g., "civic", "oracle")
+            payload: Task payload (dict with "action" and other params)
+
+        Returns:
+            Result from the called agent's process() method
+
+        Raises:
+            ValueError: If agent doesn't exist
+            RuntimeError: If agent call fails
+
+        Example:
+            # Herald checks broadcast license with Civic
+            result = self.system.call_agent("civic", {
+                "action": "check_license",
+                "agent_id": "herald"
+            })
+
+            # Forum queries Oracle for system stats
+            stats = self.system.call_agent("oracle", {
+                "action": "get_stats"
+            })
+
+        Note: This is for synchronous tight-coupling scenarios. For async
+        operations, use kernel.scheduler.submit_task() instead.
+        """
+        # Check if agent exists
+        if agent_id not in self.kernel.agent_registry:
+            raise ValueError(
+                f"Agent '{agent_id}' not found in registry. "
+                f"Available agents: {list(self.kernel.agent_registry.keys())}"
+            )
+
+        # Get the agent
+        target_agent = self.kernel.agent_registry[agent_id]
+
+        # Create task
+        from vibe_core.scheduling import Task
+        task = Task(agent_id=agent_id, payload=payload)
+
+        # Audit trail BEFORE call
+        self.record_event(
+            "AGENT_CALL_INITIATED",
+            {
+                "target_agent": agent_id,
+                "action": payload.get("action", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
+        # Call the agent
+        try:
+            result = target_agent.process(task)
+
+            # Audit trail AFTER call
+            self.record_event(
+                "AGENT_CALL_COMPLETED",
+                {
+                    "target_agent": agent_id,
+                    "action": payload.get("action", "unknown"),
+                    "status": "success",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+
+            logger.info(
+                f"📞 {self.agent_id} called {agent_id} "
+                f"(action: {payload.get('action', 'unknown')})"
+            )
+            return result
+
+        except Exception as e:
+            # Audit trail on failure
+            self.record_event(
+                "AGENT_CALL_FAILED",
+                {
+                    "target_agent": agent_id,
+                    "action": payload.get("action", "unknown"),
+                    "error": str(e),
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
+
+            logger.error(
+                f"❌ {self.agent_id} failed to call {agent_id}: {e}"
+            )
+            raise RuntimeError(
+                f"Agent call failed: {agent_id}.{payload.get('action', 'unknown')} - {e}"
+            ) from e
