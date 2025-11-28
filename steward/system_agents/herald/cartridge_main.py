@@ -32,6 +32,9 @@ from pathlib import Path
 from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig, HeraldConfig
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
+
 from .tools.research_tool import ResearchTool
 from .tools.content_tool import ContentTool
 from .tools.broadcast_tool import BroadcastTool
@@ -49,7 +52,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HERALD_MAIN")
 
 
-class HeraldCartridge(VibeAgent):
+class HeraldCartridge(VibeAgent, OathMixin):
     """
     The HERALD Agent Cartridge.
     Autonomous Technical Evangelist for Steward Protocol.

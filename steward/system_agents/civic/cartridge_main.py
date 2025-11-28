@@ -32,6 +32,9 @@ from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
 from vibe_core.config import CityConfig, CivicConfig
 
 # Import delegated components
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .registry_agent import RegistryAgent
 from .economy_agent import EconomyAgent
 from .lifecycle_agent import LifecycleAgent
@@ -42,7 +45,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CIVIC_MAIN")
 
 
-class CivicCartridge(VibeAgent):
+class CivicCartridge(VibeAgent, OathMixin):
     """
     The CIVIC Agent Cartridge (The Bureaucrat).
 

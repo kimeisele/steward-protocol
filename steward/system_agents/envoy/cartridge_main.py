@@ -26,6 +26,9 @@ from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig, CityConfig
 
 # Envoy's toolset
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from .tools.city_control_tool import CityControlTool
 from .tools.diplomacy_tool import DiplomacyTool
 from .tools.curator_tool import CuratorTool
@@ -39,7 +42,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENVOY_CARTRIDGE")
 
 
-class EnvoyCartridge(VibeAgent):
+class EnvoyCartridge(VibeAgent, OathMixin):
     """
     The ENVOY Agent Cartridge - Brain of Agent City
 
