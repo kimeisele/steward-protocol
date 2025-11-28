@@ -242,7 +242,13 @@ class ScribeCartridge(VibeAgent, OathMixin):
         for doc_name, renderer in docs.items():
             try:
                 # Generate content via introspection
-                content = renderer.scan_and_render()
+                # Try scan_and_render() first, fall back to render()
+                if hasattr(renderer, 'scan_and_render'):
+                    content = renderer.scan_and_render()
+                elif hasattr(renderer, 'render'):
+                    content = renderer.render()
+                else:
+                    raise AttributeError(f"Renderer for {doc_name} has no render method")
 
                 # Write to sandbox
                 sandbox_file = self.sandbox_dir / doc_name
@@ -296,7 +302,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
 
         Args:
             doc_name: Filename (e.g., "README.md")
-            renderer: Renderer instance with scan_and_render() method
+            renderer: Renderer instance with scan_and_render() or render() method
 
         Returns:
             Result dict with success status
@@ -305,7 +311,14 @@ class ScribeCartridge(VibeAgent, OathMixin):
 
         try:
             # Step 1: Render to sandbox
-            content = renderer.scan_and_render()
+            # Try scan_and_render() first, fall back to render()
+            if hasattr(renderer, 'scan_and_render'):
+                content = renderer.scan_and_render()
+            elif hasattr(renderer, 'render'):
+                content = renderer.render()
+            else:
+                raise AttributeError(f"Renderer has no scan_and_render() or render() method")
+
             sandbox_file = self.sandbox_dir / doc_name
             sandbox_file.write_text(content)
             logger.info(f"   ✅ Rendered {doc_name} to sandbox ({len(content)} bytes)")
