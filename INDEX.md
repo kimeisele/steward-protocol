@@ -38,17 +38,15 @@
 
 ### Current Architecture
 - **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - Main architecture document
+- **[docs/architecture/ARCHITECTURE_MAP.md](docs/architecture/ARCHITECTURE_MAP.md)** - ARCHITECTURE MAP
+- **[docs/architecture/ARCHITECTURE_PLAN.md](docs/architecture/ARCHITECTURE_PLAN.md)** - ARCHITECTURE PLAN
+- **[docs/architecture/ORACLE_ARCHITECTURE.md](docs/architecture/ORACLE_ARCHITECTURE.md)** - ORACLE ARCHITECTURE
+- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Semantic Auditor overview
+- **[docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md](docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md)** - SEMANTIC AUDITOR ARCHITECTURE
 - **[docs/architecture/SYSTEM_OVERVIEW.md](docs/architecture/SYSTEM_OVERVIEW.md)** - Complete system overview
 - **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
-- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Semantic Auditor overview
+- **[docs/architecture/VAULT_ARCHITECTURE.md](docs/architecture/VAULT_ARCHITECTURE.md)** - VAULT ARCHITECTURE
 - **[CITYMAP.md](CITYMAP.md)** - Agent City 3-layer architecture (auto-generated)
-
-### Detailed Architecture Docs
-- **[docs/architecture/ARCHITECTURE_MAP.md](docs/architecture/ARCHITECTURE_MAP.md)** - Architecture mapping
-- **[docs/architecture/ARCHITECTURE_PLAN.md](docs/architecture/ARCHITECTURE_PLAN.md)** - Architecture planning
-- **[docs/architecture/ORACLE_ARCHITECTURE.md](docs/architecture/ORACLE_ARCHITECTURE.md)** - Oracle agent design
-- **[docs/architecture/VAULT_ARCHITECTURE.md](docs/architecture/VAULT_ARCHITECTURE.md)** - Vault security design
-- **[docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md](docs/architecture/SEMANTIC_AUDITOR_ARCHITECTURE.md)** - Auditor design
 
 ---
 
@@ -97,9 +95,17 @@ Agents:
   - `steward-cli stop` - Stop kernel (TODO daemon mode)
 
 ### Deployment & Operations
-- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deployment guide
 - **[docs/deployment/AUTOMATION.md](docs/deployment/AUTOMATION.md)** - Automation workflows
+- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deployment guide
+- **[docs/deployment/LAUNCH_OPERATIONS_GUIDE.md](docs/deployment/LAUNCH_OPERATIONS_GUIDE.md)** - LAUNCH OPERATIONS GUIDE
+- **[docs/deployment/LOCAL_TESTING.md](docs/deployment/LOCAL_TESTING.md)** - LOCAL TESTING
+- **[docs/deployment/RENDER_DEPLOYMENT.md](docs/deployment/RENDER_DEPLOYMENT.md)** - RENDER DEPLOYMENT
+- **[docs/deployment/SERVERLESS_GUIDE.md](docs/deployment/SERVERLESS_GUIDE.md)** - SERVERLESS GUIDE
+- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - Contribution guidelines
 - **[docs/guides/DEMO.md](docs/guides/DEMO.md)** - Demo scenarios
+- **[docs/guides/GOVERNANCE_GAPS.md](docs/guides/GOVERNANCE_GAPS.md)** - GOVERNANCE GAPS
+- **[docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md](docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md)** - SEMANTIC AUDITOR QUICK REFERENCE
+- **[docs/guides/SEMANTIC_AUDITOR_ROADMAP.md](docs/guides/SEMANTIC_AUDITOR_ROADMAP.md)** - SEMANTIC AUDITOR ROADMAP
 
 ---
 
@@ -122,8 +128,8 @@ Agents:
 ## 📝 GUIDES & STORIES
 
 ### Project Context
-- **[docs/philosophy/STORY.md](docs/philosophy/STORY.md)** - Project narrative and history
 - **[docs/philosophy/PROOF_OF_LIVE.md](docs/philosophy/PROOF_OF_LIVE.md)** - Evidence of system capabilities
+- **[docs/philosophy/STORY.md](docs/philosophy/STORY.md)** - Project narrative and history
 - **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - Contribution guidelines
 
 ---
@@ -131,17 +137,17 @@ Agents:
 ## 📦 REPORTS & ARCHIVE
 
 ### Current Reports
+- **[docs/reports/GAP_ANALYSIS_REPORT.md](docs/reports/GAP_ANALYSIS_REPORT.md)** - Gap analysis
 - **[docs/reports/PROGRESS_REPORT.md](docs/reports/PROGRESS_REPORT.md)** - Current progress status
 - **[docs/reports/VERIFICATION_REPORT.md](docs/reports/VERIFICATION_REPORT.md)** - System verification
-- **[docs/reports/GAP_ANALYSIS_REPORT.md](docs/reports/GAP_ANALYSIS_REPORT.md)** - Gap analysis
 
 ### Migration Status
-- **[docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md](docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md)** - Implementation status
 - **[docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md](docs/reports/migrations/BLOCKER2_HONEST_COMPLETION_STATUS.md)** - Blocker 2 status
 - **[docs/reports/migrations/GOLDEN_THREAD_STATUS.md](docs/reports/migrations/GOLDEN_THREAD_STATUS.md)** - Golden thread tracking
+- **[docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md](docs/reports/migrations/UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md)** - Implementation status
 
 ### Historical Archive
-- **[docs/archive/migrations/](docs/archive/migrations/)** - 28 archived migration files
+- **[docs/archive/migrations/](docs/archive/migrations/)** - Historical migration files
 
 Includes:
 - BLOCKER completion reports
@@ -204,9 +210,9 @@ steward-protocol/
 - **Phase 5:** Parampara Blockchain (lineage chain)
 - **Phase 6:** Agent Certification (14/14 system agents)
 - **Phase 7:** STEWARD CLI (10/11 commands)
+- **Phase 8:** Documentation Cleanup
 
 ### In Progress 🟡
-- **Phase 8:** Documentation Cleanup (this INDEX.md is part of it)
 - **Phase 7.1:** Daemon mode for boot/stop
 
 ### Pending ⏭️
@@ -238,5 +244,5 @@ steward-protocol/
 ---
 
 **Last Updated:** 2025-11-28
-**Maintainer:** SCRIBE (auto-generation coming soon)
-**Status:** Phase 8 (Documentation Cleanup) in progress
+**Maintainer:** SCRIBE (auto-generated)
+**Status:** Phase 8 (Documentation Cleanup) complete
