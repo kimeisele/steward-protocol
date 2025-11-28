@@ -102,6 +102,10 @@ class VibeAgent(ABC):
         self.config = config
         self.kernel = None  # Will be injected by VibeKernel.boot()
         self.kernel_pipe = None  # IPC Pipe for Process Isolation
+        
+        # Phase 4: Filesystem & Network (injected by kernel)
+        self.vfs = None  # Virtual Filesystem
+        self.network = None  # Network Proxy
 
     def set_kernel(self, kernel: "VibeKernel") -> None:
         """
@@ -122,8 +126,42 @@ class VibeAgent(ABC):
         In Phase 2 (Process Isolation), agents run in separate processes.
         They cannot access 'self.kernel' directly.
         They must communicate via this pipe.
+        
+        Phase 4: Also inject VFS and Network proxy.
         """
         self.kernel_pipe = pipe
+        
+        # Phase 4: Initialize VFS and Network for this agent
+        # These will be created in the agent's process
+        try:
+            from vibe_core.vfs import VirtualFileSystem
+            from vibe_core.network_proxy import KernelNetworkProxy
+            
+            self.vfs = VirtualFileSystem(self.agent_id)
+            # Network proxy needs agent_id for logging
+            # We'll create a wrapper that auto-injects agent_id
+            class AgentNetworkProxy:
+                def __init__(self, agent_id, kernel_network):
+                    self.agent_id = agent_id
+                    self._kernel_network = kernel_network
+                    
+                def request(self, method, url, **kwargs):
+                    return self._kernel_network.request(self.agent_id, method, url, **kwargs)
+                    
+                def get(self, url, **kwargs):
+                    return self._kernel_network.get(self.agent_id, url, **kwargs)
+                    
+                def post(self, url, **kwargs):
+                    return self._kernel_network.post(self.agent_id, url, **kwargs)
+            
+            # Note: In process isolation, we can't directly access kernel.network
+            # We'll need to send network requests via IPC
+            # For now, create a local proxy (this will be refined)
+            self.network = AgentNetworkProxy(self.agent_id, KernelNetworkProxy())
+            
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to initialize VFS/Network for {self.agent_id}: {e}")
 
     def send_to_kernel(self, message: Dict[str, Any]) -> None:
         """
