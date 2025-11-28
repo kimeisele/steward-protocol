@@ -34,6 +34,7 @@ from .scheduling import Task, TaskStatus
 from .ledger import InMemoryLedger, SQLiteLedger
 from .sarga import get_sarga, Cycle
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
+from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
 # Import Auditor for immune system (optional)
 try:
@@ -198,6 +199,10 @@ class RealVibeKernel(VibeKernel):
         # Phase 2: Process Manager
         self.process_manager = ProcessManager()
 
+        # Phase 3: Resource Manager
+        self.resource_manager = ResourceManager()
+        self._last_quota_sync = 0  # Timestamp of last credit→quota sync
+
         # Economic Substrate (Lazy Loaded)
         self._bank = None
         self._vault = None
@@ -349,10 +354,15 @@ class RealVibeKernel(VibeKernel):
         self._agent_registry[agent.agent_id] = agent
         
         # Phase 2: Spawn Process
-        # We need to pass the class, not the instance, but for now we'll assume
-        # the agent instance carries enough info or we re-instantiate.
-        # Ideally, we'd register the class. But to keep it simple for now:
         self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, 'config', None))
+        
+        # Phase 3: Set initial resource quota (default: 100 credits)
+        self.resource_manager.set_quota(agent.agent_id, credits=100)
+        proc_info = self.process_manager.processes.get(agent.agent_id)
+        if proc_info and proc_info.process.is_alive():
+            import time
+            time.sleep(0.1)  # Give process time to start
+            self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
 
         logger.info(
             f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' "
@@ -428,6 +438,9 @@ class RealVibeKernel(VibeKernel):
             # Phase 2: Monitor Health & Process Events
             self.process_manager.check_health()
             self._process_ipc_events()
+            
+            # Phase 3: Sync resource quotas periodically
+            self._sync_resource_quotas()
 
         except Exception as e:
             error = str(e)
@@ -472,6 +485,46 @@ class RealVibeKernel(VibeKernel):
                 error = msg.get("error")
                 logger.critical(f"💥 Agent {agent_id} CRASHED: {error}")
                 # Narasimha handles restart in check_health
+
+    def _sync_resource_quotas(self) -> None:
+        """
+        Phase 3: Sync resource quotas with CivicBank credits.
+        
+        This makes credits REAL by updating CPU/RAM limits based on balance.
+        Runs every 60 seconds to avoid excessive bank queries.
+        """
+        import time
+        
+        current_time = time.time()
+        if current_time - self._last_quota_sync < 60:  # Sync every 60 seconds
+            return
+            
+        try:
+            # Get CivicBank (lazy loaded)
+            bank = self.get_bank()
+            
+            # Update quotas for all agents
+            for agent_id in self._agent_registry.keys():
+                try:
+                    # Query credit balance
+                    balance = bank.get_balance(agent_id)
+                    
+                    # Update quota
+                    self.resource_manager.set_quota(agent_id, credits=balance)
+                    
+                    # Enforce on running process
+                    proc_info = self.process_manager.processes.get(agent_id)
+                    if proc_info and proc_info.process.is_alive():
+                        self.resource_manager.enforce_quota(agent_id, proc_info.process)
+                        
+                except Exception as e:
+                    logger.debug(f"⚠️  Failed to sync quota for {agent_id}: {e}")
+            
+            self._last_quota_sync = current_time
+            logger.debug("💰 Resource quotas synced with CivicBank")
+            
+        except Exception as e:
+            logger.debug(f"⚠️  Quota sync failed: {e}")
 
     def _check_system_health(self) -> None:
         """
