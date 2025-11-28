@@ -74,10 +74,12 @@ class VirtualFileSystem:
             full_path = Path(path).resolve()
         else:
             # Relative path - resolve relative to sandbox root
-            full_path = (self.root / path).resolve()
+            # IMPORTANT: Don't resolve symlinks yet, just get the path
+            full_path = (self.root / path)
         
-        # Security check: ensure path is within sandbox
+        # Security check: ensure path (before resolving symlinks) is within sandbox
         try:
+            # Check if the path itself (not its target) is in sandbox
             full_path.relative_to(self.root)
         except ValueError:
             logger.warning(
@@ -87,6 +89,9 @@ class VirtualFileSystem:
             raise PermissionError(
                 f"Access denied: {path} is outside agent sandbox"
             )
+        
+        # Now resolve symlinks - this may point outside sandbox (allowed for controlled escapes)
+        full_path = full_path.resolve()
         
         return full_path
     
