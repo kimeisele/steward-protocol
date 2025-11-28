@@ -855,9 +855,11 @@ class HeraldCartridge(VibeAgent, OathMixin):
         """
         logger.info("\n🦅 PHASE 1: LISTENING")
         logger.info("=" * 70)
-        
-        # Load state
-        state_path = Path("data/state/twitter_state.json")
+
+        # Load state (PHASE 3.2.1: Fixed - use sandboxed path)
+        state_path = self.system.get_sandbox_path() / "state" / "twitter_state.json"
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+
         state = {}
         if state_path.exists():
             try:
