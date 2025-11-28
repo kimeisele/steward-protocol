@@ -26,8 +26,8 @@
     "name": "ENGINEER"
   },
   "specs": {
-    "description": "Code generation, scaffolding, and automation",
-    "domain": "ORCHESTRATION",
+    "description": "Meta-agent for building new agents and code",
+    "domain": "INFRASTRUCTURE",
     "version": "1.0.0"
   }
 }

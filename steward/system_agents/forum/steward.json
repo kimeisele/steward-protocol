@@ -22,12 +22,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "forum",
+    "name": "FORUM"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Democratic decision layer for governance",
+    "domain": "GOVERNANCE",
     "version": "1.0.0"
   }
 }

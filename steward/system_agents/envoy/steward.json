@@ -30,12 +30,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "envoy",
+    "name": "ENVOY"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
+    "description": "Universal operator interface agent",
+    "domain": "INTERFACE",
     "version": "1.0.0"
   }
 }

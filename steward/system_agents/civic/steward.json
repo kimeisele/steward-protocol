@@ -26,12 +26,12 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "unknown",
-    "name": "Unknown"
+    "agent_id": "civic",
+    "name": "CIVIC"
   },
   "specs": {
-    "description": "",
-    "domain": "SYSTEM",
-    "version": "1.0.0"
+    "description": "Governance agent: enforces rules, manages licenses, audits credits",
+    "domain": "GOVERNANCE",
+    "version": "2.0.0"
   }
 }

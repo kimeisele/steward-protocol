@@ -26,8 +26,8 @@
     "name": "ARCHIVIST"
   },
   "specs": {
-    "description": "Event monitoring and cryptographic verification",
-    "domain": "VERIFICATION",
+    "description": "Event verification and audit trail agent",
+    "domain": "SYSTEM",
     "version": "1.0.0"
   }
 }
