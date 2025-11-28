@@ -21,10 +21,13 @@ from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 logger = logging.getLogger("ARCHIVIST_CARTRIDGE")
 
 
-class ArchivistCartridge(VibeAgent):
+class ArchivistCartridge(VibeAgent, OathMixin):
     """
     ARCHIVIST - The History Keeper Agent.
 

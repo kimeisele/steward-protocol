@@ -21,10 +21,13 @@ from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
-class AuditorCartridge(VibeAgent):
+class AuditorCartridge(VibeAgent, OathMixin):
     """
     AUDITOR - The Quality Gate Agent.
 

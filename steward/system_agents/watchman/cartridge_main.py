@@ -21,13 +21,17 @@ from typing import Optional
 from vibe_core import VibeAgent, Task
 from vibe_core.config import CityConfig
 
-from steward.system_agents.civic.tools.economy import CivicBank
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
+
+# CivicBank is lazily imported to avoid cryptography issues at boot time
+# (see __init__ for lazy loading)
 
 # Constitutional Oath
 logger = logging.getLogger("WATCHMAN")
 
 
-class WatchmanCartridge(VibeAgent):
+class WatchmanCartridge(VibeAgent, OathMixin):
     """
     THE WATCHMAN - System Integrity Enforcer.
 
@@ -104,8 +108,13 @@ class WatchmanCartridge(VibeAgent):
             self.oath_sworn = True
             logger.info("✅ WATCHMAN has sworn the Constitutional Oath")
 
-        self.bank = CivicBank()
-        logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
+        # Load CivicBank (optional - may fail due to cryptography issues)
+        self.bank = None
+        try:
+            self.bank = CivicBank()
+            logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
+        except Exception as e:
+            logger.warning(f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)")
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""

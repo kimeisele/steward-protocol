@@ -21,6 +21,9 @@ from vibe_core.protocols import VibeAgent, AgentManifest
 from vibe_core.config import CityConfig
 from vibe_core.scheduling.task import Task
 
+
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from steward.system_agents.engineer.tools.builder_tool import BuilderTool
 
 # Constitutional Oath
@@ -29,7 +32,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENGINEER_AGENT")
 
 
-class EngineerCartridge(VibeAgent):
+class EngineerCartridge(VibeAgent, OathMixin):
     """
     The Engineer Agent Cartridge.
 
