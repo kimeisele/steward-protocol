@@ -1,6 +1,6 @@
 # AGENT CLI ENFORCEMENT PLAN
 
-**Status:** In Progress - Phase 2.1 COMPLETE
+**Status:** In Progress - Phase 2.2 COMPLETE
 **Goal:** Stop agents from hallucinating requirements.txt and direct filesystem access
 **Strategy:** Bridge Kernel capabilities to Agents via System Interface
 
@@ -62,8 +62,13 @@ tomlkit preserves structure → maintainable pyproject.toml.
    - Dependencies in pyproject.toml ✅
    - requirements.txt DELETED ✅
    - EventLog sandboxed via system.get_sandbox_path() ✅
-5. ⏳ Roll out to remaining 12 agents
-6. ⏳ Enable enforcement hooks
+5. ✅ Migrate high-risk agents (Phase 2.2)
+   - Forum: 4 paths sandboxed (proposals, votes, executed, ledger) ✅
+   - Civic: 3 paths sandboxed (registry, agents_md, state) ✅
+   - Science: 2 paths sandboxed (cache, results) ✅
+   - Total: 9 filesystem violations eliminated ✅
+6. ⏳ Roll out to remaining 10 agents
+7. ⏳ Enable enforcement hooks
 
-**Status:** Phase 2.1 COMPLETE ✅ (Herald = Proof of Concept)
-**Next:** Phase 2.2+ - Migrate remaining agents (Forum, Civic, etc.)
+**Status:** Phase 2.2 COMPLETE ✅ (4/14 agents migrated)
+**Next:** Phase 2.3+ - Migrate remaining 10 agents (Engineer, Oracle, Envoy, Archivist, Auditor, Chronicle, Watchman, Supreme Court, Scribe, Discoverer)
