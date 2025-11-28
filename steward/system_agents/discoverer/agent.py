@@ -297,20 +297,53 @@ class GenericAgent(VibeAgent):
     A generic agent container for agents discovered via steward.json
     that do not yet have a specialized Python implementation.
 
-    BLOCKER #0: Now accepts and stores Phoenix Config
+    PHASE 2 FIX: Supports both explicit args AND config-based initialization.
+    This allows Process Manager to spawn agents with just config parameter.
     """
-    def __init__(self, agent_id: str, name: str, version: str, description: str,
-                 domain: str, capabilities: List[str], config: Optional[Any] = None):
-        """Initialize GenericAgent with optional config support."""
+    def __init__(self, agent_id: Optional[str] = None, name: Optional[str] = None,
+                 version: Optional[str] = None, description: Optional[str] = None,
+                 domain: Optional[str] = None, capabilities: Optional[List[str]] = None,
+                 config: Optional[Any] = None, **kwargs):
+        """
+        Initialize GenericAgent with flexible parameter support.
+
+        Supports two initialization modes:
+        1. Explicit args: GenericAgent(agent_id="foo", name="Foo", ...)
+        2. Config dict: GenericAgent(config={"agent_id": "foo", "name": "Foo", ...})
+
+        If config is provided and args are None, hydrate from config (manifest).
+        This enables Process Manager to spawn agents with: agent_class(config=config)
+        """
+        # Hydrate from config if args are missing
+        if config:
+            # Config can be a dict (from manifest) or Phoenix Config object
+            config_dict = config if isinstance(config, dict) else getattr(config, '__dict__', {})
+
+            agent_id = agent_id or config_dict.get('agent_id')
+            name = name or config_dict.get('name')
+            version = version or config_dict.get('version', '1.0.0')
+            description = description or config_dict.get('description', '')
+            domain = domain or config_dict.get('domain', 'SYSTEM')
+            capabilities = capabilities or config_dict.get('capabilities', [])
+
+        # Ensure required fields have defaults
+        agent_id = agent_id or "unknown_agent"
+        name = name or "Unknown Agent"
+        version = version or "1.0.0"
+        description = description or "Generic agent"
+        domain = domain or "SYSTEM"
+        capabilities = capabilities or []
+
+        # Call parent constructor
         super().__init__(
             agent_id=agent_id,
             name=name,
             description=description,
             domain=domain,
-            capabilities=capabilities
+            capabilities=capabilities,
+            config=config
         )
         self.version = version
-        self.config = config  # ✅ BLOCKER #0: Store Phoenix Config
 
     def process(self, task: Task) -> Dict[str, Any]:
         logger.info(f"🤖 {self.agent_id} received task: {task.task_id}")

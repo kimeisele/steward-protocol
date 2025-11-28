@@ -268,30 +268,36 @@ def stress_test_city():
         final_memory = get_memory_usage_mb()
         print(f"         Final memory: {final_memory:.1f} MB")
 
-        # Final chain check
+
+        # =====================================================================
+        # STEP 10: FINAL CHAIN VERIFICATION (BEFORE SHUTDOWN)
+        # =====================================================================
+        print("\n[STEP 10] Final chain verification (before shutdown)...")
+
         final_chain_length = kernel.lineage.get_chain_length()
         print(f"         Final chain length: {final_chain_length} blocks")
 
         if kernel.lineage.verify_chain():
-            print("         ✅ Final chain integrity verified")
+            print("         ✅ Chain integrity verified")
+            chain_intact = True
         else:
             print("         ❌ Chain corrupted!")
-            return False
+            chain_intact = False
 
         # =====================================================================
-        # STEP 10: GRACEFUL SHUTDOWN
+        # STEP 11: GRACEFUL SHUTDOWN
         # =====================================================================
-        print("\n[STEP 10] Shutting down Agent City...")
+        print("\n[STEP 11] Shutting down Agent City...")
 
         kernel.shutdown(reason="Stress test complete")
         print("         ✅ Shutdown complete")
 
         # =====================================================================
-        # STEP 11: POST-MORTEM ANALYSIS
+        # STEP 12: POST-MORTEM ANALYSIS
         # =====================================================================
-        print("\n[STEP 11] Post-mortem analysis...")
+        print("\n[STEP 12] Post-mortem analysis...")
 
-        # Reopen chain
+        # Reopen chain (kernel.shutdown closed it)
         post_chain = LineageChain(db_path=test_lineage_path)
 
         # Count events by type
@@ -318,9 +324,9 @@ def stress_test_city():
         # =====================================================================
         print("\n" + "=" * 70)
 
-        # Calculate success criteria
+        # Calculate success criteria (chain_intact set in Step 10)
         all_processes_survived = (final_alive == total_agents)
-        chain_intact = kernel.lineage.verify_chain()
+        # chain_intact already calculated before shutdown
         memory_reasonable = (final_memory < 2000)
         no_crashes = (final_alive >= alive_processes)
 
