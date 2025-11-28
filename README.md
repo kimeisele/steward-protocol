@@ -50,19 +50,19 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 | Agent | Role |
 |-------|------|
-| **ARCHIVIST** | ARCHIVIST - The History Keeper Agent. |
-| **AUDITOR** | AUDITOR - The Quality Gate Agent. |
-| **CHRONICLE** | The CHRONICLE Agent Cartridge (The Historian). |
-| **CIVIC** | The CIVIC Agent Cartridge (The Bureaucrat). |
-| **ENGINEER** | The Engineer Agent Cartridge. |
-| **ENVOY** | The ENVOY Agent Cartridge - Brain of Agent City |
-| **FORUM** | The FORUM Agent Cartridge (The Town Hall). |
-| **HERALD** | The HERALD Agent Cartridge. |
-| **ORACLE** | THE ORACLE - System Introspection & Explanation Agent. |
-| **SCIENCE** | THE SCIENTIST Agent - External Intelligence Module. |
-| **SCRIBE** | The SCRIBE Agent Cartridge (The Documentarian). |
-| **SUPREME_COURT** | SUPREME COURT - The Appellate Justice & Mercy System for STEWARD Protocol. |
-| **WATCHMAN** | THE WATCHMAN - System Integrity Enforcer. |
+| **ARCHIVIST** | History keeper: seals verified code into git history |
+| **AUDITOR** | Quality gate: verifies code syntax and linting before commit |
+| **CHRONICLE** | Temporal agent: manages git operations, commits, branches, and code history |
+| **CIVIC** | Governance agent: enforces rules, manages licenses, audits credits |
+| **ENGINEER** | Builder agent: manifests code and scaffolds new agents |
+| **ENVOY** | Universal Operator Interface - diplomatic and operational bridge |
+| **FORUM** | Democratic decision-making and proposal voting system |
+| **HERALD** | Autonomous intelligence and content distribution agent |
+| **ORACLE** | System introspection and explanation agent |
+| **SCIENCE** | External intelligence and fact research agent |
+| **SCRIBE** | Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md |
+| **SUPREME_COURT** | Appellate justice and mercy system (Canto 6: Ajamila Protocol) |
+| **WATCHMAN** | System integrity enforcer and governance enforcer |
 
 
 ### Immutable Ledger
