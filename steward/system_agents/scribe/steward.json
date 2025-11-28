@@ -1,11 +1,33 @@
 {
-  "agent_id": "scribe",
-  "name": "SCRIBE",
-  "version": "1.0.0",
-  "author": "Steward Protocol",
-  "description": "Documentation agent: auto-generates system documentation",
-  "domain": "INFRASTRUCTURE",
-  "capabilities": ["documentation", "introspection", "publishing"],
-  "class_name": "ScribeCartridge",
-  "module": "steward.system_agents.scribe.cartridge_main"
+  "capabilities": {
+    "operations": [
+      {
+        "description": "documentation operation",
+        "name": "documentation"
+      },
+      {
+        "description": "introspection operation",
+        "name": "introspection"
+      },
+      {
+        "description": "publishing operation",
+        "name": "publishing"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-28T11:15:45.952684Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "scribe",
+    "name": "SCRIBE"
+  },
+  "specs": {
+    "description": "Documentation agent: auto-generates system documentation",
+    "domain": "INFRASTRUCTURE",
+    "version": "1.0.0"
+  }
 }
