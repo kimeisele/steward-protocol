@@ -1,0 +1,1304 @@
+## 🤖 APCE_rules.yaml
+# Automated Prioritization & Complexity Engine Rules
+
+version: "1.1"
+last_updated: "2025-01-15"
+
+info:
+  scoring_system:
+    scale_type: "Modified Fibonacci (Relative Complexity)"
+    scale:
+      unit: "Complexity Points"
+      description: "Complexity Points are a relative measure of the work involved, not a direct translation to hours. This scale reflects the increasing uncertainty and risk inherent in more complex tasks."
+    basis: 
+      - "Complexity: How difficult is the logic?"
+      - "Effort: How much work is it?"
+      - "Risk & Uncertainty: How many unknowns are there?"
+  multiplier_logic:
+    type: "Compounding"
+    formula: "Final_Score = base_complexity * multiplier_1 * multiplier_2 * ..."
+    description: "Complexity multipliers are compounding, not additive. This models the real-world scenario where risks amplify each other."
+
+---
+
+## SECTION 1: Base Complexity Scores
+
+feature_complexity:
+  
+  # ----- Core & User Management -----
+  - feature_type: "crud_simple"
+    base_complexity: 1
+    base_effort: "1-2 days"
+    description: "The baseline unit of work. E.g., managing a list of 'Tags'"
+    complexity_factors:
+      - factor: "Create, Read, Update, Delete for a single, simple data model"
+        score: 1
+    multipliers:
+      - trigger: "complex_data_model"
+        multiplier: 3.0
+        adds_effort: "+3-5 days"
+        reason: "Involves multiple related tables, complex joins, and business logic"
+    v1_recommendation: "simple_model_only"
+
+  - feature_type: "user_authentication_basic"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "A non-trivial foundation for security, including secure session/token management"
+    complexity_factors:
+      - factor: "Email/password registration, login, logout, secure password hashing"
+        score: 5
+    multipliers:
+      - trigger: "oauth_social_login"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+      - trigger: "multi_factor_auth_mfa"
+        multiplier: 1.8
+        adds_effort: "+1 week"
+      - trigger: "passwordless_magic_link"
+        multiplier: 1.3
+        adds_effort: "+2-3 days"
+      - trigger: "invite_only_system"
+        multiplier: 1.4
+        adds_effort: "+3-4 days"
+    v1_recommendation: "email_password_only"
+  
+  - feature_type: "user_auth_saml_sso"
+    base_complexity: 13
+    base_effort: "3-5 weeks"
+    description: "Enterprise-grade feature. Involves XML, certificate management, SP/IdP configuration, and complex debugging."
+    complexity_factors:
+      - factor: "Integration with SAML 2.0 identity providers (e.g., Okta, ADFS)"
+        score: 13
+    multipliers:
+      - trigger: "scim_user_provisioning"
+        multiplier: 1.5
+        adds_effort: "+2-3 weeks"
+    v1_recommendation: "wont_have_v1"
+
+  - feature_type: "user_profile_management"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "A simple form linked to the 'user' data model."
+    complexity_factors:
+      - factor: "Basic CRUD for user-editable fields (e.g., name, bio)"
+        score: 2
+    multipliers:
+      - trigger: "custom_avatar_upload"
+        multiplier: 1.5
+        adds_effort: "+1-2 days"
+      - trigger: "user_privacy_settings"
+        multiplier: 2.0
+        adds_effort: "+2-3 days"
+    v1_recommendation: "basic_fields_no_avatar"
+
+  - feature_type: "user_roles_permissions_rbac"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Requires API middleware to check roles for protected endpoints"
+    complexity_factors:
+      - factor: "Role-Based Access Control (RBAC) with 2-3 static roles (e.g., User, Admin)"
+        score: 5
+    multipliers:
+      - trigger: "attribute_based_access_control_abac"
+        multiplier: 2.5
+        adds_effort: "+2-3 weeks"
+      - trigger: "customizable_permissions_ui"
+        multiplier: 2.0
+        adds_effort: "+1-2 weeks"
+    v1_recommendation: "simple_rbac_3_roles_max"
+
+  - feature_type: "admin_dashboard_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Time-saving, rapid, and budget-friendly. Effort is in wiring template to data APIs."
+    complexity_factors:
+      - factor: "Using a pre-built admin template (e.g., BootstrapDash, Flatlogic)"
+        score: 3
+    multipliers:
+      - trigger: "custom_dashboard_from_scratch"
+        multiplier: 7.0
+        adds_effort: "+5-10 weeks"
+      - trigger: "basic_data_moderation_tools"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+    v1_recommendation: "template_based_only"
+
+  # ----- E-commerce -----
+  - feature_type: "payment_processing_basic"
+    base_complexity: 8
+    base_effort: "2-3 weeks"
+    description: "High-risk feature. Involves secure API key handling, server-side payment intent creation, client-side form, and webhook handling for success/failure."
+    complexity_factors:
+      - factor: "Stripe/Braintree integration for one-time payments"
+        score: 8
+    multipliers:
+      - trigger: "subscription_billing"
+        multiplier: 2.0
+        adds_effort: "+2-3 weeks"
+      - trigger: "marketplace_split_payments"
+        multiplier: 2.5
+        adds_effort: "+3-4 weeks"
+      - trigger: "multi_currency_support"
+        multiplier: 1.6
+        adds_effort: "+1-2 weeks"
+      - trigger: "paypal_integration"
+        multiplier: 1.3
+        adds_effort: "+3-4 days"
+    v1_recommendation: "one_time_payments_only"
+  
+  - feature_type: "product_catalog_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Clear navigation, categories, and high-quality images are key"
+    complexity_factors:
+      - factor: "Simple CRUD for products with name, description, price, and image"
+        score: 3
+    multipliers:
+      - trigger: "product_variants"
+        multiplier: 2.0
+        adds_effort: "+1 week"
+      - trigger: "product_search_and_filtering"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+    v1_recommendation: "simple_products_no_variants"
+
+  - feature_type: "shopping_cart_session"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "A standard, non-persistent cart that expires when the session ends"
+    complexity_factors:
+      - factor: "Session-based cart. Add, remove, and update quantities for anonymous users."
+        score: 3
+    multipliers:
+      - trigger: "persistent_cart_logged_in_user"
+        multiplier: 1.8
+        adds_effort: "+1 week"
+      - trigger: "save_for_later_wishlist"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+    v1_recommendation: "session_based_cart_only"
+    
+  - feature_type: "checkout_flow_multistep"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Complex state management and form validation across multiple pages. Good for analytics"
+    complexity_factors:
+      - factor: "Multi-step flow (e.g., Shipping > Billing > Review > Confirm)"
+        score: 5
+    multipliers:
+      - trigger: "one_page_ajax_checkout"
+        multiplier: 1.3
+        adds_effort: "+2-3 days"
+      - trigger: "guest_checkout"
+        multiplier: 1.2
+        adds_effort: "+1-2 days"
+    v1_recommendation: "multistep_registered_user_only"
+
+  - feature_type: "discount_codes_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Basic redemption logic at checkout, applying a fixed or percentage discount"
+    complexity_factors:
+      - factor: "Single-use or global discount codes (e.g., '10OFF')"
+        score: 3
+    multipliers:
+      - trigger: "complex_promotion_rules"
+        multiplier: 2.0
+        adds_effort: "+1 week"
+      - trigger: "automatic_discounts"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+    v1_recommendation: "global_percentage_off_codes"
+
+  - feature_type: "inventory_management_basic"
+    base_complexity: 8
+    base_effort: "2-3 weeks"
+    description: "High business-criticality. Must be accurate to prevent overselling. Involves database transactions and potential race conditions."
+    complexity_factors:
+      - factor: "Basic SKU tracking, decrement stock on purchase"
+        score: 8
+    multipliers:
+      - trigger: "multi_warehouse_support"
+        multiplier: 2.0
+        adds_effort: "+2-3 weeks"
+      - trigger: "backorder_preorder_logic"
+        multiplier: 1.5
+        adds_effort: "+1 week"
+    v1_recommendation: "single_warehouse_basic_decrement"
+  
+  # ----- Social & Content -----
+  - feature_type: "user_comments_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "A standard 'comment box' implementation."
+    complexity_factors:
+      - factor: "Basic CRUD for comments, flat list, tied to an asset (e.g., a post)"
+        score: 3
+    multipliers:
+      - trigger: "nested_threaded_comments"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+      - trigger: "comment_moderation_system"
+        multiplier: 2.0
+        adds_effort: "+1 week"
+      - trigger: "likes_upvotes_on_comments"
+        multiplier: 1.3
+        adds_effort: "+1-2 days"
+    v1_recommendation: "flat_comments_no_moderation"
+
+  - feature_type: "reviews_and_ratings_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Simple form and display of average rating. A common and expected feature"
+    complexity_factors:
+      - factor: "5-star rating system plus a text comment field"
+        score: 3
+    multipliers:
+      - trigger: "add_photos_videos_to_review"
+        multiplier: 1.8
+        adds_effort: "+3-5 days"
+      - trigger: "verified_purchase_badge"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+      - trigger: "review_filtering_and_sorting"
+        multiplier: 1.3
+        adds_effort: "+1-2 days"
+    v1_recommendation: "star_rating_and_text_only"
+
+  - feature_type: "activity_feed_chronological"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "The original 'subscription model' feed. A straightforward SQL query."
+    complexity_factors:
+      - factor: "A simple, reverse-chronological list of 'followed' user actions"
+        score: 3
+    multipliers:
+      - trigger: "algorithmic_feed_ranking"
+        multiplier: 5.0
+        adds_effort: "+4-8 weeks"
+    v1_recommendation: "chronological_feed_only"
+
+  - feature_type: "user_follow_system"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Simple data model: a 'follows' table with 'follower_id' and 'followed_id'"
+    complexity_factors:
+      - factor: "One-directional 'follow' model (like Twitter)"
+        score: 2
+    multipliers:
+      - trigger: "two_way_friend_request_model"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+    v1_recommendation: "one_way_follow_model"
+
+  - feature_type: "social_sharing_widget"
+    base_complexity: 1
+    base_effort: "1-2 days"
+    description: "Very simple integration, often just copy-pasting a script"
+    complexity_factors:
+      - factor: "Client-side JS widgets for sharing to Twitter, Facebook, LinkedIn"
+        score: 1
+    multipliers:
+      - trigger: "custom_open_graph_image_generation"
+        multiplier: 2.0
+        adds_effort: "+2-3 days"
+    v1_recommendation: "client_side_widgets_only"
+    
+  - feature_type: "cms_basic_headless"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Building content models in the CMS and fetching/rendering content via API"
+    complexity_factors:
+      - factor: "Integration with a 3rd-party headless CMS (e.g., Contentful, Strapi)"
+        score: 5
+    multipliers:
+      - trigger: "custom_cms_from_scratch"
+        multiplier: 5.0
+        adds_effort: "+6-10 weeks"
+    v1_recommendation: "headless_cms_integration"
+
+  # ----- Data, Analytics, & Ops -----
+  - feature_type: "search_basic_sql"
+    base_complexity: 1
+    base_effort: "1-2 days"
+    description: "Simple, but slow and inefficient. Does not scale."
+    complexity_factors:
+      - factor: "Using SQL 'LIKE %...%' query on one or two tables"
+        score: 1
+    v1_recommendation: "sql_like_query_only"
+
+  - feature_type: "search_advanced_engine"
+    base_complexity: 13
+    base_effort: "3-5 weeks"
+    description: "This is a separate, distributed system. Requires data indexing, schema design, query (JSON DSL) building, and server management"
+    complexity_factors:
+      - factor: "Implementing Elasticsearch or Solr"
+        score: 13
+    multipliers:
+      - trigger: "faceted_search_ui"
+        multiplier: 1.3
+        adds_effort: "+1 week"
+      - trigger: "real_time_indexing"
+        multiplier: 1.5
+        adds_effort: "+1 week"
+    v1_recommendation: "wont_have_v1"
+
+  - feature_type: "data_export_csv"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "A common 'Competitive Parity' feature"
+    complexity_factors:
+      - factor: "Basic server-side generation of a CSV file from a database query"
+        score: 2
+    multipliers:
+      - trigger: "excel_xlsx_export"
+        multiplier: 1.5
+        adds_effort: "+1-2 days"
+      - trigger: "asynchronous_large_export"
+        multiplier: 2.0
+        adds_effort: "+2-3 days"
+    v1_recommendation: "csv_export_synchronous_limit_5k"
+
+  - feature_type: "data_import_csv"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Deceptively simple. Users are frustrated by cryptic failures"
+    complexity_factors:
+      - factor: "A basic 'happy path' CSV parser. Fails on any error."
+        score: 3
+    multipliers:
+      - trigger: "interactive_error_resolution_ui"
+        multiplier: 2.5
+        adds_effort: "+1-2 weeks"
+      - trigger: "excel_file_support"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+    v1_recommendation: "basic_csv_parser_no_error_correction"
+
+  - feature_type: "analytics_dashboard_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Involves adding a JS snippet and sending tracking events. The 3rd party provides all UI."
+    complexity_factors:
+      - factor: "Integrating a 3rd-party tool (e.g., Mixpanel, Amplitude, Userpilot)"
+        score: 3
+    multipliers:
+      - trigger: "custom_internal_dashboard"
+        multiplier: 5.0
+        adds_effort: "+4-6 weeks"
+    v1_recommendation: "third_party_tool_integration"
+
+  - feature_type: "data_visualization_charts"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Basic bar, line, and pie charts with static data."
+    complexity_factors:
+      - factor: "Using a high-level library (e.g., Chart.js, Plotly) for simple charts"
+        score: 2
+    multipliers:
+      - trigger: "custom_interactive_d3_js_viz"
+        multiplier: 4.0
+        adds_effort: "+2-3 weeks"
+    v1_recommendation: "high_level_chart_library_only"
+
+  - feature_type: "recommendation_engine_simple"
+    base_complexity: 8
+    base_effort: "2-3 weeks"
+    description: "Requires building a user-item interaction matrix. Prone to 'cold start' and sparsity problems"
+    complexity_factors:
+      - factor: "Basic 'collaborative filtering' (users who liked X also liked Y)"
+        score: 8
+    multipliers:
+      - trigger: "content_based_filtering"
+        multiplier: 1.3
+        adds_effort: "+1 week"
+      - trigger: "ml_deep_learning_model"
+        multiplier: 3.0
+        adds_effort: "+5-10 weeks"
+    v1_recommendation: "simple_collaborative_filtering"
+
+  - feature_type: "notification_system_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "The simplest channel. Requires a 'notifications' table and a 'read' status."
+    complexity_factors:
+      - factor: "In-app notifications only (e.g., a simple unread bell icon)"
+        score: 3
+    multipliers:
+      - trigger: "email_notifications"
+        multiplier: 1.5
+        adds_effort: "+2-3 days"
+      - trigger: "mobile_push_notifications"
+        multiplier: 2.0
+        adds_effort: "+1 week"
+      - trigger: "user_preference_center"
+        multiplier: 1.8
+        adds_effort: "+3-5 days"
+      - trigger: "batching_and_digests"
+        multiplier: 2.0
+        adds_effort: "+1 week"
+    v1_recommendation: "in_app_only"
+    
+  - feature_type: "audit_log_basic"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Challenging. Must be 'forever'. Requires hooks into all critical business logic."
+    complexity_factors:
+      - factor: "Server-side logging of key 'C-U-D' actions (e.g., 'User X deleted Post Y')"
+        score: 5
+    multipliers:
+      - trigger: "event_sourcing_architecture"
+        multiplier: 3.0
+        adds_effort: "+4-8 weeks"
+      - trigger: "undo_revert_functionality"
+        multiplier: 2.5
+        adds_effort: "+2-3 weeks"
+    v1_recommendation: "basic_logging_to_db_table"
+
+  - feature_type: "feature_flags_basic"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Enables trunk-based development and decoupling deploy from release"
+    complexity_factors:
+      - factor: "Simple 'if' statements wrapped around new code, controlled by a config file or DB setting"
+        score: 2
+    multipliers:
+      - trigger: "third_party_management_ui"
+        multiplier: 1.5
+        adds_effort: "+1-2 days"
+      - trigger: "percentage_user_rollouts"
+        multiplier: 2.0
+        adds_effort: "+2-3 days"
+    v1_recommendation: "config_file_flags_for_dev_team"
+
+  - feature_type: "api_access_key_management"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Requires secure, unique token generation, storage (hashed), and revocation. A critical security feature."
+    complexity_factors:
+      - factor: "Provide API keys to users for 3rd-party access"
+        score: 5
+    multipliers:
+      - trigger: "oauth_2_0_provider"
+        multiplier: 3.0
+        adds_effort: "+3-4 weeks"
+    v1_recommendation: "simple_api_keys_only"
+
+  - feature_type: "in_app_onboarding_tutorial"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Simple JS snippet integration. Allows non-technical users to build tours."
+    complexity_factors:
+      - factor: "Using a 3rd-party tool (e.g., Userpilot, Userguiding) for a product tour"
+        score: 2
+    multipliers:
+      - trigger: "custom_built_interactive_tour"
+        multiplier: 3.0
+        adds_effort: "+1 week"
+    v1_recommendation: "third_party_tool"
+
+  - feature_type: "ab_testing_framework_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Outsources the complexity of bucketing users and tracking goals"
+    complexity_factors:
+      - factor: "Integrating a 3rd-party tool (e.g., VWO, Optimizely)"
+        score: 3
+    multipliers:
+      - trigger: "in_house_ab_testing_framework"
+        multiplier: 8.0
+        adds_effort: "+6-10 weeks"
+    v1_recommendation: "third_party_tool"
+
+  - feature_type: "internationalization_i18n"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Crucial to do early. Involves library setup (e.g., i18next) and developer discipline."
+    complexity_factors:
+      - factor: "Foundational setup. Externalizing all UI strings into translation files (e.g., JSON)."
+        score: 5
+    multipliers:
+      - trigger: "right_to_left_rtl_support"
+        multiplier: 2.0
+        adds_effort: "+1-2 weeks"
+      - trigger: "locale_specific_formatting"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+    v1_recommendation: "i18n_string_externalization_only"
+
+  - feature_type: "file_upload_basic"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Involves a form, backend handler, and S3 SDK integration."
+    complexity_factors:
+      - factor: "Simple file upload (e.g., PDF) to cloud storage (S3)"
+        score: 2
+    multipliers:
+      - trigger: "image_processing"
+        multiplier: 1.5
+        adds_effort: "+1-2 days"
+      - trigger: "virus_scanning"
+        multiplier: 1.3
+        adds_effort: "+1 day"
+      - trigger: "large_file_multipart_upload"
+        multiplier: 2.0
+        adds_effort: "+2-3 days"
+    v1_recommendation: "basic_file_upload_no_processing"
+
+  - feature_type: "team_management_basic"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Core logic for B2B SaaS. Changes auth, billing, and resource access."
+    complexity_factors:
+      - factor: "Invite/remove users to a shared 'Team' or 'Organization' account"
+        score: 5
+    multipliers:
+      - trigger: "role_management_within_team"
+        multiplier: 1.5
+        adds_effort: "+3-5 days"
+    v1_recommendation: "simple_team_model_all_members_equal"
+
+  - feature_type: "reporting_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "A simple data query displayed in a table."
+    complexity_factors:
+      - factor: "A single, non-interactive report with key metrics for an admin"
+        score: 3
+    multipliers:
+      - trigger: "interactive_report_builder_ui"
+        multiplier: 5.0
+        adds_effort: "+4-6 weeks"
+    v1_recommendation: "static_admin_report_only"
+    
+  - feature_type: "webhooks_outgoing"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "Requires a UI for users to enter URLs, secure sending, and a retry mechanism for failures."
+    complexity_factors:
+      - factor: "Sending an outgoing POST request on a key business event (e.g., 'payment_success')"
+        score: 5
+    v1_recommendation: "wont_have_v1"
+
+  - feature_type: "webhooks_incoming"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "A single, secure endpoint to receive and process data. Requires signature verification."
+    complexity_factors:
+      - factor: "Receiving an incoming webhook from a 3rd party (e.g., Stripe, SendGrid)"
+        score: 3
+    v1_recommendation: "driven_by_3rd_party_needs"
+
+  - feature_type: "calendar_view"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Effort is in data formatting and basic UI integration."
+    complexity_factors:
+      - factor: "Displaying existing data on a 3rd-party JS calendar library (e.g., FullCalendar)"
+        score: 3
+    multipliers:
+      - trigger: "drag_and_drop_scheduling"
+        multiplier: 2.0
+        adds_effort: "+3-5 days"
+      - trigger: "integration_with_google_calendar"
+        multiplier: 2.5
+        adds_effort: "+1-2 weeks"
+    v1_recommendation: "read_only_calendar_view"
+
+  - feature_type: "mapping_basic_display"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "Requires API key and basic JS integration to load map and markers."
+    complexity_factors:
+      - factor: "Displaying 10-100 pins on a map (e.g., Google Maps, Mapbox)"
+        score: 2
+    multipliers:
+      - trigger: "custom_markers_and_clustering"
+        multiplier: 1.5
+        adds_effort: "+1-2 days"
+      - trigger: "interactive_map_drawing_tools"
+        multiplier: 3.0
+        adds_effort: "+1-2 weeks"
+    v1_recommendation: "basic_pin_map_display"
+
+  - feature_type: "video_processing_basic"
+    base_complexity: 8
+    base_effort: "2-3 weeks"
+    description: "Complex backend process. Involves async jobs, multiple file formats (HLS), and CDN setup."
+    complexity_factors:
+      - factor: "Basic video upload, transcoding, and streaming (e.g., using AWS MediaConvert)"
+        score: 8
+    multipliers:
+      - trigger: "real_time_video_streaming_webrtc"
+        multiplier: 3.0
+        adds_effort: "+5-8 weeks"
+    v1_recommendation: "pre_recorded_video_upload_only"
+
+  - feature_type: "blog_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Separate from the core app, used for marketing."
+    complexity_factors:
+      - factor: "Simple blog built on a headless CMS or static site generator"
+        score: 3
+    multipliers:
+      - trigger: "blog_built_into_core_app"
+        multiplier: 2.0
+        adds_effort: "+3-5 days"
+    v1_recommendation: "use_headless_cms_or_marketing_platform"
+
+  - feature_type: "two_factor_recovery_codes"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "A small but critical part of the MFA flow."
+    complexity_factors:
+      - factor: "Generate and store one-time-use recovery codes for MFA"
+        score: 2
+    v1_recommendation: "defer_with_mfa"
+
+  - feature_type: "user_impersonation_admin"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Requires careful security handling to allow session switching and clear audit logging."
+    complexity_factors:
+      - factor: "Admins can 'log in as' another user for debugging"
+        score: 3
+    v1_recommendation: "wont_have_v1"
+
+  - feature_type: "gamification_badges"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Requires an event bus and a 'badges' table."
+    complexity_factors:
+      - factor: "Simple event-based badge earning (e.g., 'Posted 10 comments')"
+        score: 3
+    v1_recommendation: "wont_have_v1"
+
+  - feature_type: "public_status_page"
+    base_complexity: 1
+    base_effort: "1 day"
+    description: "Configuration, not code."
+    complexity_factors:
+      - factor: "Using a 3rd-party service (e.g., Statuspage.io, Atlassian)"
+        score: 1
+    multipliers:
+      - trigger: "custom_built_status_page"
+        multiplier: 8.0
+        adds_effort: "+2-3 weeks"
+    v1_recommendation: "third_party_service_only"
+
+  - feature_type: "dark_mode"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "A 'Competitive Parity' feature."
+    complexity_factors:
+      - factor: "Basic toggle using CSS variables for color themes"
+        score: 2
+    v1_recommendation: "could_have"
+
+  - feature_type: "referral_program"
+    base_complexity: 5
+    base_effort: "1-2 weeks"
+    description: "A 'User Acquisition Driver'. Involves several moving parts."
+    complexity_factors:
+      - factor: "Generate unique codes, track signups, and issue rewards"
+        score: 5
+    v1_recommendation: "could_have"
+
+  - feature_type: "password_reset_flow"
+    base_complexity: 2
+    base_effort: "2-3 days"
+    description: "A non-negotiable part of basic authentication."
+    complexity_factors:
+      - factor: "Forgot password link, secure token generation, email, and reset form"
+        score: 2
+    v1_recommendation: "must_have"
+
+  - feature_type: "email_validation_on_signup"
+    base_complexity: 2
+    base_effort: "1-2 days"
+    description: "Requires email service, token generation, and a 'verified' flag on the user model."
+    complexity_factors:
+      - factor: "Send a 'click to verify' email on registration"
+        score: 2
+    v1_recommendation: "must_have"
+
+  - feature_type: "usage_analytics_basic"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Critical for validated learning. Integration with Segment, Mixpanel, etc."
+    complexity_factors:
+      - factor: "Tracking key user events (e.g., 'login', 'post_created') and sending to 3rd party"
+        score: 3
+    v1_recommendation: "must_have"
+
+  - feature_type: "static_marketing_pages"
+    base_complexity: 1
+    base_effort: "1-2 days"
+    description: "Simple static HTML/CSS, or built with a no-code tool (Webflow, Carrd)."
+    complexity_factors:
+      - factor: "Landing page, pricing page, about page"
+        score: 1
+    v1_recommendation: "must_have"
+
+  - feature_type: "privacy_policy_page"
+    base_complexity: 1
+    base_effort: "1 day"
+    description: "The effort is legal, not technical. The technical implementation is trivial."
+    complexity_factors:
+      - factor: "A static page linked in the footer to display legal text"
+        score: 1
+    v1_recommendation: "must_have"
+
+  - feature_type: "customer_support_integration"
+    base_complexity: 1
+    base_effort: "1 day"
+    description: "Copy-paste JS snippet."
+    complexity_factors:
+      - factor: "Embedding a 3rd-party chat widget (e.g., Intercom, Zendesk)"
+        score: 1
+    v1_recommendation: "must_have"
+
+  - feature_type: "error_monitoring"
+    base_complexity: 1
+    base_effort: "1 day"
+    description: "Install SDK and configure. Non-negotiable for a production app."
+    complexity_factors:
+      - factor: "Integrating an error monitoring service (e.g., Sentry, Bugsnag)"
+        score: 1
+    v1_recommendation: "must_have"
+
+  - feature_type: "logging_basic"
+    base_complexity: 1
+    base_effort: "1-2 days"
+    description: "Requires library setup and configuration."
+    complexity_factors:
+      - factor: "Basic structured logging (e.g., JSON) sent to a 3rd-party service (e.g., Datadog, Logz.io)"
+        score: 1
+    v1_recommendation: "must_have"
+
+  - feature_type: "in_app_user_feedback"
+    base_complexity: 2
+    base_effort: "1-2 days"
+    description: "A direct pipeline for validated learning."
+    complexity_factors:
+      - factor: "A simple 'Give Feedback' form that sends an email or posts to Slack"
+        score: 2
+    v1_recommendation: "must_have"
+
+  - feature_type: "user_delete_account"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Involves database cascading deletes or setting an 'is_active' flag. Required by GDPR"
+    complexity_factors:
+      - factor: "A 'Delete My Account' button that performs a soft or hard delete"
+        score: 3
+    v1_recommendation: "must_have"
+
+  - feature_type: "two_sided_marketplace_basic"
+    base_complexity: 13
+    base_effort: "4-6 weeks"
+    description: "This is not one feature, but two separate apps (Buyer app, Seller app) with a shared core."
+    complexity_factors:
+      - factor: "Two distinct user types (e.g., Buyer, Seller) with separate profiles and dashboards"
+        score: 13
+    multipliers:
+      - trigger: "marketplace_split_payments"
+        multiplier: 1.5
+        adds_effort: "+3-4 weeks"
+    v1_recommendation: "validate_one_side_first"
+
+  - feature_type: "single_sign_on_google"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "This is a well-documented, common flow. Lower complexity than the generic 'oauth' multiplier."
+    complexity_factors:
+      - factor: "A specific implementation of OAuth for Google login"
+        score: 3
+    v1_recommendation: "could_have"
+
+  - feature_type: "wysiwyg_editor"
+    base_complexity: 2
+    base_effort: "1-2 days"
+    description: "Simple JS integration for rich text input."
+    complexity_factors:
+      - factor: "Integrating a 3rd-party library (e.g., TinyMCE, TipTap)"
+        score: 2
+    multipliers:
+      - trigger: "custom_editor_from_scratch"
+        multiplier: 10.0
+        adds_effort: "+8-12 weeks"
+    v1_recommendation: "third_party_library_or_markdown"
+
+  - feature_type: "email_marketing_integration"
+    base_complexity: 2
+    base_effort: "1-2 days"
+    description: "Simple API call on user registration."
+    complexity_factors:
+      - factor: "Send new user emails to a 3rd-party list (e.g., Mailchimp)"
+        score: 2
+    v1_recommendation: "must_have"
+
+  - feature_type: "user_to_user_chat_basic"
+    base_complexity: 8
+    base_effort: "2-3 weeks"
+    description: "Same as 'real_time_chat_basic' but with a specific data model for 1-on-1 'conversations'."
+    complexity_factors:
+      - factor: "1-on-1 direct messaging using WebSockets"
+        score: 8
+    multipliers:
+      - trigger: "group_chat"
+        multiplier: 1.5
+        adds_effort: "+1-2 weeks"
+    v1_recommendation: "1_on_1_chat_only"
+
+  - feature_type: "api_rate_limiting"
+    base_complexity: 3
+    base_effort: "3-5 days"
+    description: "Requires middleware (e.g., in Redis) to track request counts. Essential for API stability."
+    complexity_factors:
+      - factor: "Basic IP-based or User-based rate limiting (e.g., 100 requests/min)"
+        score: 3
+    v1_recommendation: "must_have"
+
+---
+
+## SECTION 2: Value Assessment Patterns
+
+value_patterns:
+  - pattern: "core_value_proposition"
+    description: "Feature is non-negotiable for the product's primary purpose. (Kano Must-Be)"
+    value_score: 10
+    examples:
+      - "ride_booking for ride-sharing app"
+      - "listing_creation for marketplace"
+      - "message_sending for chat app"
+    v1_status: "must_have"
+
+  - pattern: "direct_revenue_driver"
+    description: "Feature directly generates revenue or enables a purchase."
+    value_score: 10
+    examples:
+      - "checkout_button"
+      - "upgrade_to_pro_plan_link"
+    v1_status: "must_have"
+
+  - pattern: "legal_compliance_mandate"
+    description: "Feature is required by law, regulation, or security policy."
+    value_score: 10
+    examples:
+      - "gdpr_cookie_consent"
+      - "user_delete_account"
+      - "pci_compliance_for_payments"
+    v1_status: "must_have"
+
+  - pattern: "user_acquisition_driver"
+    description: "Feature's primary purpose is to attract new users (e.g., viral loop)."
+    value_score: 9
+    examples:
+      - "referral_program"
+      - "social_sharing_widget"
+    v1_status: "should_have"
+
+  - pattern: "user_retention_driver"
+    description: "Feature significantly increases user engagement and reduces churn."
+    value_score: 8
+    examples:
+      - "push_notifications"
+      - "personalized_activity_feed"
+      - "gamification_badges"
+    v1_status: "should_have"
+
+  - pattern: "performance_driver"
+    description: "Feature performance is linear to user satisfaction. (Kano Performance)"
+    value_score: 7
+    examples:
+      - "faster_page_load_time"
+      - "system_responsiveness"
+      - "more_accurate_search_results"
+    v1_status: "should_have"
+
+  - pattern: "operational_cost_saver"
+    description: "Feature saves the business operational costs (e.g., support, manual work)."
+    value_score: 7
+    examples:
+      - "customer_self_service_portal"
+      - "admin_user_impersonation"
+      - "automated_report_generation"
+    v1_status: "should_have"
+
+  - pattern: "technical_debt_repayment"
+    description: "Feature improves code health, enabling future velocity. No direct user value."
+    value_score: 6
+    examples:
+      - "refactor_monolith_to_microservice"
+      - "upgrade_framework_version"
+      - "improve_test_coverage"
+    v1_status: "should_have"
+
+  - pattern: "user_delighter"
+    description: "Unexpected feature that delights users; its absence causes no harm. (Kano Attractive)"
+    value_score: 5
+    examples:
+      - "automatic_meal_tracking"
+      - "animated_transitions"
+      - "fun_loading_screens"
+    v1_status: "could_have"
+
+  - pattern: "competitive_parity"
+    description: "Feature is expected by users because competitors have it. Not a differentiator."
+    value_score: 4
+    examples:
+      - "dark_mode"
+      - "export_to_csv"
+    v1_status: "could_have"
+
+  - pattern: "brand_enhancement"
+    description: "Feature improves brand perception but not core function."
+    value_score: 3
+    examples:
+      - "custom_themes"
+      - "a_beautiful_new_blog_design"
+    v1_status: "could_have"
+
+  - pattern: "future_monetization_enabler"
+    description: "Feature enables future revenue but provides no immediate value."
+    value_score: 3
+    examples:
+      - "api_for_third_party_developers"
+      - "white_label_capabilities"
+      - "enterprise_sso_framework"
+    v1_status: "wont_have_v1"
+
+  - pattern: "polish_enhancement"
+    description: "Minor UX improvements or visual tweaks. (Kano Indifferent)"
+    value_score: 2
+    examples:
+      - "pixel_perfect_alignment_on_settings_page"
+      - "animated_hover_states"
+    v1_status: "wont_have_v1"
+
+  - pattern: "internal_stakeholder_request"
+    description: "Feature requested by an internal stakeholder without clear user value."
+    value_score: 1
+    examples:
+      - "The 'CEO's pet feature'"
+      - "A custom report for one sales person"
+    v1_status: "wont_have_v1"
+
+---
+
+## SECTION 3: Value vs Effort Matrix Mapping
+
+quadrant_rules:
+  - quadrant: "high_value_low_effort"
+    moscow_category: "must_have"
+    v1_inclusion: "always"
+    reasoning: "Quick Wins. These are the highest ROI tasks and should be done first to build momentum."
+
+  - quadrant: "high_value_high_effort"
+    moscow_category: "should_have_if_core"
+    v1_inclusion: "conditional"
+    reasoning: "Big Bets. These are strategic, resource-intensive features. They are 'Must Haves' if they are the core value prop, otherwise they are 'Should Haves' for v1.0."
+    conditions:
+      - "value_pattern == 'core_value_proposition'"
+      - "value_pattern == 'direct_revenue_driver'"
+      - "value_pattern == 'legal_compliance_mandate'"
+
+  - quadrant: "low_value_low_effort"
+    moscow_category: "could_have"
+    v1_inclusion: "if_time_permits"
+    reasoning: "Fill-ins / Maybes. Nice-to-haves that can be added to v1.0 if the 'Must' and 'Should' budgets are met. Good for team morale."
+
+  - quadrant: "low_value_high_effort"
+    moscow_category: "wont_have"
+    v1_inclusion: "never"
+    reasoning: "Time Sinks / Money Pits. These features provide little return for high effort. They are clear v2.0+ candidates and should be actively avoided for v1.0."
+
+---
+
+## SECTION 4: Complexity Multipliers Database
+
+multipliers:
+  - category: "integration_complexity"
+    multipliers:
+      - type: "third_party_api_integration"
+        base_multiplier: 1.5
+        reasons:
+          - "API authentication setup"
+          - "Error handling for external failures"
+          - "Rate limiting management"
+          - "Data transformation"
+      - type: "legacy_system_integration"
+        base_multiplier: 2.0
+        reasons:
+          - "Outdated technology or practices"
+          - "Lack of documentation or vendor support"
+          - "Data incompatibility and complex transformations"
+          - "May require custom API development"
+
+  - category: "compliance_overhead"
+    multipliers:
+      - type: "gdpr_compliance"
+        base_multiplier: 1.4
+        reasons:
+          - "Adds cross-cutting requirements to all PII-handling features."
+        adds_requirements:
+          - "data_deletion_mechanism"
+          - "consent_management"
+          - "data_export_functionality"
+          - "privacy_policy_implementation"
+      - type: "pci_dss_compliance"
+        base_multiplier: 2.0
+        reasons:
+          - "Applies to all features that touch cardholder data. Requires strict network and data handling."
+        adds_requirements:
+          - "No direct card storage (tokenization only)"
+          - "Secure transmission"
+          - "Access controls"
+          - "Audit logging"
+      - type: "hipaa_compliance"
+        base_multiplier: 2.5
+        reasons:
+          - "Extremely high overhead for handling Protected Health Information (PHI). Affects architecture, logging, and data storage."
+        adds_requirements:
+          - "Encryption at-rest and in-transit"
+          - "Strict, granular access controls"
+          - "Detailed audit trails for all PHI access"
+          - "Business Associate Agreements (BAAs) with all vendors"
+
+  - category: "scale_requirements"
+    multipliers:
+      - type: "high_traffic_optimization"
+        base_multiplier: 1.8
+        reasons:
+          - "Feature must be built to handle >10,000 requests/min."
+        adds_requirements:
+          - "Caching_layer (e.g., Redis)"
+          - "Database_optimization (e.g., read replicas)"
+          - "CDN_setup"
+          - "Load_testing"
+      - type: "multi_tenancy"
+        base_multiplier: 2.2
+        reasons:
+          - "Required for B2B SaaS. Architecturally complex."
+        adds_requirements:
+          - "Tenant_isolation_at_all_layers"
+          - "Per_tenant_configuration"
+          - "Data_partitioning"
+
+  - category: "project_risk"
+    multipliers:
+      - type: "high_technical_debt"
+        base_multiplier: 1.5
+        reasons:
+          - "Working in a fragile or poorly-documented part of the codebase."
+          - "Directly reduces development velocity"
+          - "Increases risk of regression and instability"
+      - type: "vague_requirements"
+        base_multiplier: 1.3
+        reasons:
+          - "High risk of rework due to unclear goals or scope creep."
+          - "Increases cognitive load and 'analysis paralysis'."
+      - type: "new_technology_for_team"
+        base_multiplier: 1.5
+        reasons:
+          - "Team has no prior experience with the required framework, language, or platform."
+          - "Includes a 'learning curve' buffer for unknown_unknowns."
+
+  - category: "data_complexity"
+    multipliers:
+      - type: "database_migration_required"
+        base_multiplier: 1.3
+        reasons:
+          - "Feature requires changes to the database schema."
+          - "Requires a migration script, testing, and potential data backfilling."
+      - type: "complex_data_transformations_etl"
+        base_multiplier: 1.4
+        reasons:
+          - "Feature requires transforming data from one format to another (e.g., ETL pipeline)."
+
+  - category: "operational_complexity"
+    multipliers:
+      - type: "offline_sync"
+        base_multiplier: 3.0
+        reasons:
+          - "A massive, cross-cutting concern. Estimates this at 3-5 weeks of work alone."
+        adds_requirements:
+          - "Local_database_caching"
+          - "Conflict_resolution_logic"
+          - "Background_sync_service"
+
+---
+
+## SECTION 5: Scope Negotiation Templates
+
+negotiation_templates:
+  - scenario: "too_many_features_requested"
+    user_said: "I need all 30 of these features for v1.0."
+    system_response_template: |
+      "Thank you for this comprehensive vision. I've run these 30 features through the APCE to build our v1.0 plan.
+      To ensure a strong, stable, and timely launch, the engine prioritizes the list based on a 'Value vs. Effort' analysis. Here is the v1.0 scope it recommends:
+      MUST HAVE (v1.0 Core) - {count} features:
+      {list_must_haves}
+      SHOULD HAVE (v1.0 Goals) - {count} features:
+      {list_should_haves}
+      COULD HAVE (If Time Permits) - {count} features:
+      {list_could_haves}
+      WON'T HAVE (Planned for v2.0) - {count} features:
+      {list_wont_haves}
+      This focused scope delivers the core value proposition first, allowing us to launch and get real user feedback. The v2.0 items are our top priority for the next planning cycle.
+      Does this v1.0 scope look like a strong foundation we can build on?"
+
+  - scenario: "scope_creep_during_planning"
+    user_said: "Actually, can we also add X, Y, and Z?"
+    system_response_template: |
+      "I've noted those new requests. Let me add them to the APCE to see their impact on the v1.0 plan.
+      * {Feature X} scores as a {complexity_score} point 'Should Have'.
+      * {Feature Y} scores as a {complexity_score} point 'Could Have'.
+      Our v1.0 complexity budget is {total_budget_points} points, and we are currently at {current_points}. Adding these would put us {over_budget_points} points over, which translates to a {estimated_delay} delay.
+      We have two options for v1.0:
+      A) Keep the current scope and timeline, and add these to the v2.0 roadmap.
+      B) Include these, and swap out {feature_to_swap_1} and {feature_to_swap_2} to keep our budget balanced.
+      What's your priority: this new functionality, or the features we've already committed to?"
+
+  - scenario: "impossible_feature_for_v1"
+    user_said: "I want real-time video streaming with an ML recommendation feed for v1.0."
+    system_response_template: |
+      "I love the vision there. Those are 'Big Bet' features that will be huge differentiators.
+      I've run them through the APCE to map out the work. They are both architecturally significant:
+      * 'Real-Time Video (WebRTC)' is a {21}-point feature due to the complex server setup [see feature: video_processing_basic].
+      * 'Algorithmic ML Feed' is a {13}-point feature due to the data pipelines and model training [see feature: activity_feed_chronological].
+      For v1.0, our total complexity budget is {60} points. These two features alone would be {34} points, or {percentage}% of our entire budget.
+      To get to market faster and start learning, I recommend a v1.0 focused on validating the core user need first. We could:
+      * Alternative 1 (Video): Start with pre-recorded video uploads (an {8}-point feature).
+      * Alternative 2 (Feed): Start with a simple chronological feed (a {3}-point feature).
+      This approach lets us launch, build a user base, and then use their data to build the right ML feed for v2.0.
+      Can we agree on this phased approach?"
+
+  - scenario: "rejecting_a_low_value_high_effort_feature"
+    user_said: "We must have a custom-built admin dashboard from scratch."
+    system_response_template: |
+      "I've analyzed the 'Custom Admin Dashboard' request in the APCE.
+      The engine flagged this as a 'Low Value / High Effort' item, or a 'Time Sink'.
+      * The Effort is {21} points. Research shows a custom dashboard can take 500-1,000 hours, versus 3-5 days for a template.
+      * The Value is rated 'Low' because it provides no direct value to our paying customers.
+      For v1.0, I strongly recommend we use a {3}-point 'Template-Based Dashboard'. This delivers 100% of the internal functionality we need for a fraction of the cost, saving {18} points of effort we can spend on customer-facing 'Must Have' features.
+      We can add this to the v2.0 roadmap to revisit once we've scaled."
+
+  - scenario: "handling_too_many_must_haves"
+    user_said: "I've reviewed the list, and all 15 of these features are 'Must Haves'."
+    system_response_template: |
+      "I appreciate you prioritizing this. I've updated the APCE with that, but it's returned a high-priority warning.
+      Currently, our 'Must Have' features total {75} complexity points. Our total v1.0 budget is {60} points.
+      Industry best practice shows that successful, on-time projects should allocate a maximum of 60% of their effort to 'Must Haves'. This leaves a 40% buffer for 'Should/Could' features and, more importantly, for unexpected delays.
+      At our current 125% 'Must Have' budget, we have no buffer and are already over timeline.
+      We need to work together to re-classify at least {count} of these 'Musts' to 'Shoulds'. Can we review the list and find the ones that aren't absolutely critical for a Day 1 launch?"
+
+  - scenario: "explaining_v1_vs_v2_multiplier"
+    user_said: "Why is adding subscriptions so hard? Isn't it just charging every month?"
+    system_response_template: |
+      "That's a great question. I've pulled the APCE data for it.
+      You're right, a simple 'One-Time Payment' feature is an {8}-point task.
+      However, the APCE applies a 2.0x multiplier for 'Subscription Billing'. This is because 'subscriptions' isn't one feature, but a complex system that must handle:
+      1. Plan Management: Logic for upgrades/downgrades.
+      2. Proration: Calculating mid-cycle changes.
+      3. Dunning: Automatically retrying failed payments and notifying users.
+      4. Invoicing: Generating and sending monthly invoices.
+      For v1.0, I recommend we launch with the {8}-point 'One-Time Payment' to validate demand. This is a common MVP pattern. We can then prioritize the full {16}-point 'Subscription' system for v1.1."
+
+  - scenario: "stakeholder_disagrees_with_value_score"
+    user_said: "You've scored {feature_name} as a 'Could Have', but it's a 'Must Have' for me."
+    system_response_template: |
+      "Thank you for that feedback. I may be missing context.
+      The APCE scored it as a 'Could Have' because its value pattern was assessed as 'Competitive Parity' (a 4/10 value) and not a 'Core Value Prop' (a 10/10 value).
+      Can you help me understand the 'why' behind this feature? Which of our core business goals does it drive?
+      * Is it a 'Direct Revenue Driver'?
+      * Is it a 'Legal Mandate'?
+      * Is it a core 'Retention Driver'?
+      If we can link it to one of those 10-point value patterns, I can update the engine and we can get it re-prioritized."
+
+  - scenario: "handling_the_ceo_pet_feature"
+    user_said: "I just had a great idea. We should add {feature_name}."
+    system_response_template: |
+      "That's an interesting idea. I've added it to our ideas backlog.
+      Per our product strategy, I'd like to test the hypothesis. Before we commit {complexity_score} points of engineering effort, I can work with UX to create a low-fidelity prototype and show it to 5-10 customers next week.
+      If the feedback is positive, we can run it through the APCE and prioritize it for the next development cycle.
+      How does that sound?"
+
+  - scenario: "justifying_tech_debt_work_over_features"
+    user_said: "Why are we spending a sprint on 'refactoring' instead of building my 'Should Have' feature?"
+    system_response_template: |
+      "A great question. This is a strategic trade-off.
+      The dev team has flagged that the {area_of_codebase} has 'High Technical Debt'. The APCE applies a 1.5x complexity multiplier to any new feature built in that area.
+      We are taking one sprint (approx. {8} points) to pay down that debt.
+      This will make your {feature_name} (and all future features in that area) 1.5x cheaper to build.
+      This one sprint of refactoring will actually increase our feature velocity for the rest of the quarter."
+
+  - scenario: "reframing_polish_as_v2_0"
+    user_said: "The login page looks boring. Can we add custom animations and a new theme?"
+    system_response_template: |
+      "I agree, we can definitely make that look sharper.
+      In the APCE, those items are classified as 'Polish Enhancements' or 'User Delighters'. They are great for v1.1, but for the v1.0 launch, the engine prioritizes functional 'Must Haves' and 'Performance Drivers'.
+      I've added this to our 'Could Have' list, and it's a perfect candidate to pull in if the 'Must Have' work finishes ahead of schedule.
+      Otherwise, it's at the top of the list for v1.1."
+
+---
+
+## SECTION 6: Decision Rules & Heuristics
+
+decision_heuristics:
+  - rule: "total_complexity_budget_v1"
+    description: "The total complexity score for all v1.0 features (Must + Should + Could) should not exceed this 'budget'."
+    threshold: 60
+    unit: "complexity_points"
+    action: "force_prioritization"
+
+  - rule: "must_have_percentage_limit"
+    description: "The total effort (sum of complexity scores) of 'Must Have' features should not exceed this percentage of the total budget."
+    threshold: 0.60
+    unit: "percentage_of_total_budget"
+    action: "review_must_have_classification"
+
+  - rule: "high_complexity_feature_review"
+    description: "Any single feature with a final complexity score over 13 is an 'Epic' and must be manually reviewed."
+    threshold: 13
+    unit: "complexity_points"
+    action: "flag_for_manual_review_and_breakdown"
+
+  - rule: "core_value_promotion"
+    description: "A feature in the 'High Value, High Effort' quadrant that is essential to the core value prop must be promoted to 'Must Have'."
+    condition: "feature.quadrant == 'high_value_high_effort' AND feature.value_pattern == 'core_value_proposition'"
+    action: "promote_to_must_have"
+
+  - rule: "quick_wins_minimum"
+    description: "A v1.0 scope must include a minimum number of 'Quick Wins' (High Value, Low Effort) to build momentum and deliver immediate value."
+    threshold: 3
+    unit: "features"
+    action: "flag_scope_as_unbalanced"
+
+  - rule: "wont_have_inclusion_check"
+    description: "If any feature mapped to 'Wont_Have' is manually included in the v1.0 scope, it must be flagged for an executive-level review."
+    condition: "feature.moscow_category == 'wont_have' AND feature.in_scope == true"
+    action: "flag_for_executive_review"
+
+  - rule: "compliance_multiplier_propagation"
+    description: "If a global compliance multiplier (e.g., HIPAA, GDPR) is active, it must be automatically applied to all features that handle PII or related data."
+    condition: "project.multipliers.includes('hipaa_compliance') AND feature.tags.includes('phi_data')"
+    action: "apply_multiplier(feature, 'hipaa_compliance')"
+
+  - rule: "new_tech_multiplier_propagation"
+    description: "If a 'New Technology' multiplier is active, it must be applied to all features that depend on that technology."
+    condition: "project.multipliers.includes('new_technology_for_team') AND feature.tech_stack.includes('new_tech_name')"
+    action: "apply_multiplier(feature, 'new_technology_for_team')"
+
+  - rule: "tech_debt_budget_minimum"
+    description: "A minimum percentage of the total complexity budget should be allocated to 'Technical Debt Repayment' value patterns."
+    threshold: 0.10
+    unit: "percentage_of_total_budget"
+    action: "flag_scope_for_review"
+
+  - rule: "validate_core_before_optimization"
+    description: "Features classified as 'User Acquisition' or 'Retention' should not be 'Must Haves' if the 'Core Value Proposition' features are not yet complete."
+    condition: "feature.value_pattern == 'user_acquisition_driver' AND core_value_prop.status!= 'complete'"
+    action: "demote_to_should_have"
