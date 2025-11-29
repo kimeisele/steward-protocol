@@ -13,14 +13,12 @@ Role:
 
 import json
 import logging
-import os
 import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from steward.constitutional_oath import ConstitutionalOath
-from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
 
 logger = logging.getLogger("STEWARD")
@@ -302,7 +300,6 @@ class Discoverer(VibeAgent):
 
         try:
             # Dynamically import the module
-            parts = module_path.split(".")
             module = __import__(module_path, fromlist=[class_name])
             CartridgeClass = getattr(module, class_name)
 
