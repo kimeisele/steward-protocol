@@ -6,16 +6,24 @@ Parses nodes, edges, constraints, and metrics from YAML format.
 """
 
 import logging
-import yaml
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+import yaml
 
 if TYPE_CHECKING:
     from .graph import UnifiedKnowledgeGraph
 
 from .schema import (
-    Node, Edge, Constraint, Metric,
-    NodeType, RelationType, ConstraintType, ConstraintAction, MetricType
+    Constraint,
+    ConstraintAction,
+    ConstraintType,
+    Edge,
+    Metric,
+    MetricType,
+    Node,
+    NodeType,
+    RelationType,
 )
 
 logger = logging.getLogger("KNOWLEDGE_LOADER")
@@ -89,7 +97,7 @@ class KnowledgeLoader:
                 name=node_data.get("name", node_data["id"]),
                 domain=node_data.get("domain", domain),
                 description=node_data.get("description", ""),
-                properties=node_data.get("properties", {})
+                properties=node_data.get("properties", {}),
             )
             self.graph.nodes[node.id] = node
 
@@ -104,7 +112,7 @@ class KnowledgeLoader:
                 target=edge_data["target"],
                 relation=relation,
                 weight=edge_data.get("weight", 1.0),
-                properties=edge_data.get("properties", {})
+                properties=edge_data.get("properties", {}),
             )
 
             if edge.source not in self.graph.edges:
@@ -125,7 +133,7 @@ class KnowledgeLoader:
                 condition=c_data.get("condition", ""),
                 action=action,
                 message=c_data.get("message", "Constraint violated"),
-                applies_to=c_data.get("applies_to", ["*"])
+                applies_to=c_data.get("applies_to", ["*"]),
             )
             self.graph.constraints[constraint.id] = constraint
 
@@ -141,7 +149,7 @@ class KnowledgeLoader:
                 metric_type=metric_type,
                 value=m_data.get("value", 0),
                 scale_min=m_data.get("scale_min", 0),
-                scale_max=m_data.get("scale_max", 10)
+                scale_max=m_data.get("scale_max", 10),
             )
 
             if metric.node_id not in self.graph.metrics:

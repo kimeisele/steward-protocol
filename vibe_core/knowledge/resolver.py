@@ -8,7 +8,7 @@ Provides semantic queries that map to graph operations.
 import logging
 from typing import Any, Dict, List, Optional
 
-from .graph import get_knowledge_graph, UnifiedKnowledgeGraph
+from .graph import UnifiedKnowledgeGraph, get_knowledge_graph
 from .schema import MetricType, NodeType, RelationType
 
 logger = logging.getLogger("KNOWLEDGE_RESOLVER")
@@ -138,6 +138,7 @@ class KnowledgeResolver:
 # ═══════════════════════════════════════════════════════════════════════════
 # CONVENIENCE FUNCTION
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 def get_resolver() -> KnowledgeResolver:
     """Get a KnowledgeResolver instance."""

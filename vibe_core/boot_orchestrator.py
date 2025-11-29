@@ -93,9 +93,11 @@ class BootOrchestrator:
             from vibe_core.knowledge.graph import get_knowledge_graph
 
             graph = get_knowledge_graph()
-            logger.info(f"      ✅ Knowledge loaded: {len(graph.nodes)} nodes, "
-                       f"{sum(len(e) for e in graph.edges.values())} edges, "
-                       f"{len(graph.constraints)} constraints")
+            logger.info(
+                f"      ✅ Knowledge loaded: {len(graph.nodes)} nodes, "
+                f"{sum(len(e) for e in graph.edges.values())} edges, "
+                f"{len(graph.constraints)} constraints"
+            )
         except Exception as e:
             logger.warning(f"      ⚠️  Knowledge loading failed: {e}")
             logger.warning("      → Continuing boot without knowledge graph")

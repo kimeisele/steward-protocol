@@ -8,15 +8,13 @@ Tests integration with:
 - Boot sequence
 """
 
-import pytest
-from pathlib import Path
 from vibe_core.knowledge import get_knowledge_graph, get_resolver
 from vibe_core.llm.degradation_chain import DegradationChain
-
 
 # ═══════════════════════════════════════════════════════════════════
 # BOOT SEQUENCE INTEGRATION
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_knowledge_graph_loads_on_import():
     """Test knowledge graph can be loaded."""
@@ -44,20 +42,17 @@ def test_resolver_singleton():
 # DEGRADATION CHAIN INTEGRATION
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_degradation_chain_accepts_concepts():
     """Test DegradationChain can receive concepts parameter."""
     chain = DegradationChain()
 
     # Should accept concepts parameter without error
-    response = chain.respond(
-        user_input="test input",
-        semantic_confidence=0.5,
-        concepts={"security", "governance"}
-    )
+    response = chain.respond(user_input="test input", semantic_confidence=0.5, concepts={"security", "governance"})
 
     assert response is not None
-    assert hasattr(response, 'content')
-    assert hasattr(response, 'fallback_used')
+    assert hasattr(response, "content")
+    assert hasattr(response, "fallback_used")
 
 
 def test_degradation_chain_compiles_knowledge():
@@ -65,7 +60,7 @@ def test_degradation_chain_compiles_knowledge():
     chain = DegradationChain()
 
     # The _compile_prompt method should be available
-    assert hasattr(chain, '_compile_prompt')
+    assert hasattr(chain, "_compile_prompt")
 
     # Test prompt compilation
     prompt = chain._compile_prompt("test", "knowledge context here")
@@ -76,11 +71,7 @@ def test_degradation_chain_with_empty_concepts():
     """Test DegradationChain handles empty concepts gracefully."""
     chain = DegradationChain()
 
-    response = chain.respond(
-        user_input="test input",
-        semantic_confidence=0.5,
-        concepts=set()
-    )
+    response = chain.respond(user_input="test input", semantic_confidence=0.5, concepts=set())
 
     assert response is not None
 
@@ -89,11 +80,7 @@ def test_degradation_chain_with_none_concepts():
     """Test DegradationChain handles None concepts gracefully."""
     chain = DegradationChain()
 
-    response = chain.respond(
-        user_input="test input",
-        semantic_confidence=0.5,
-        concepts=None
-    )
+    response = chain.respond(user_input="test input", semantic_confidence=0.5, concepts=None)
 
     assert response is not None
 
@@ -101,6 +88,7 @@ def test_degradation_chain_with_none_concepts():
 # ═══════════════════════════════════════════════════════════════════
 # KNOWLEDGE RESOLVER INTEGRATION
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_resolver_concept_to_agent_mapping():
     """Test complete concept→agent mapping flow."""
@@ -152,6 +140,7 @@ def test_resolver_constraint_enforcement():
 # SEMANTIC ROUTER INTEGRATION
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_knowledge_available_for_routing():
     """Test knowledge graph is available for semantic router."""
     resolver = get_resolver()
@@ -180,12 +169,11 @@ def test_agent_handles_relations():
 # UNIVERSAL PROVIDER INTEGRATION
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_concepts_can_be_extracted():
     """Test that concepts can be extracted from parameters."""
     # Simulate IntentVector parameters
-    parameters = {
-        "concepts": ["security", "governance", "content"]
-    }
+    parameters = {"concepts": ["security", "governance", "content"]}
 
     # Should be able to convert to set
     concepts = set(parameters["concepts"])
@@ -196,6 +184,7 @@ def test_concepts_can_be_extracted():
 # ═══════════════════════════════════════════════════════════════════
 # END-TO-END SCENARIOS
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_end_to_end_security_query():
     """Test complete security query flow."""
@@ -261,6 +250,7 @@ def test_end_to_end_governance_flow():
 # KNOWLEDGE COMPILATION FOR LLM
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_knowledge_context_compilation():
     """Test compiling knowledge for LLM prompts."""
     resolver = get_resolver()
@@ -293,6 +283,7 @@ def test_multiple_concepts_compilation():
 # ═══════════════════════════════════════════════════════════════════
 # ERROR HANDLING
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_handles_missing_knowledge_gracefully():
     """Test system handles missing knowledge gracefully."""
