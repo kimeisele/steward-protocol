@@ -1,13 +1,17 @@
 """
-HERALD Broadcast Tool - Social media publishing (Twitter, Reddit).
+HERALD Broadcast Tool - Social media publishing (Twitter, Reddit) (Tool Protocol).
 
 Handles publishing to multiple platforms with graceful fallback.
 Offline-capable with dry-run modes for safety.
+
+This tool implements the Tool Protocol for kernel-managed execution.
 """
 
 import logging
 import os
-from typing import Optional
+from typing import Any, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 try:
     import tweepy
@@ -22,7 +26,7 @@ except ImportError:
 logger = logging.getLogger("HERALD_BROADCAST")
 
 
-class BroadcastTool:
+class BroadcastTool(Tool):
     """
     Multi-platform content distribution.
 
@@ -39,6 +43,175 @@ class BroadcastTool:
         self.reddit_client = None
         self._init_twitter()
         self._init_reddit()
+
+    @property
+    def name(self) -> str:
+        return "herald.broadcast"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Publish content, scan mentions, and reply on social media platforms (Twitter, Reddit)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action to perform: 'publish', 'scan_mentions', 'reply', 'verify_credentials'",
+            },
+            "content": {
+                "type": "string",
+                "required": False,
+                "description": "Content to publish/reply (required for publish and reply actions)",
+            },
+            "platform": {
+                "type": "string",
+                "required": False,
+                "description": "Platform: 'twitter' or 'reddit' (default: twitter)",
+            },
+            "tweet_id": {
+                "type": "string",
+                "required": False,
+                "description": "Tweet ID for replies (required for reply action)",
+            },
+            "since_id": {
+                "type": "string",
+                "required": False,
+                "description": "Last processed mention ID for scanning",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """
+        Validate broadcast parameters.
+
+        Args:
+            parameters: Tool parameters
+
+        Raises:
+            ValueError: If required parameter missing or invalid
+            TypeError: If parameter has wrong type
+        """
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["publish", "scan_mentions", "reply", "verify_credentials"]:
+            raise ValueError(
+                f"Invalid action: {action}. Must be 'publish', 'scan_mentions', 'reply', or 'verify_credentials'"
+            )
+
+        # Validate action-specific parameters
+        if action == "publish":
+            if "content" not in parameters:
+                raise ValueError("publish action requires 'content' parameter")
+            if not isinstance(parameters["content"], str):
+                raise TypeError("content must be a string")
+
+        elif action == "reply":
+            if "content" not in parameters:
+                raise ValueError("reply action requires 'content' parameter")
+            if "tweet_id" not in parameters:
+                raise ValueError("reply action requires 'tweet_id' parameter")
+            if not isinstance(parameters["content"], str):
+                raise TypeError("content must be a string")
+            if not isinstance(parameters["tweet_id"], str):
+                raise TypeError("tweet_id must be a string")
+
+        # Validate platform if specified
+        if "platform" in parameters:
+            platform = parameters["platform"]
+            if platform not in ["twitter", "reddit"]:
+                raise ValueError(f"Invalid platform: {platform}. Must be 'twitter' or 'reddit'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """
+        Execute broadcast operation.
+
+        Args:
+            parameters: Validated tool parameters
+
+        Returns:
+            ToolResult with operation results
+        """
+        try:
+            action = parameters["action"]
+            platform = parameters.get("platform", "twitter")
+
+            if action == "publish":
+                content = parameters["content"]
+                success = self._publish_twitter(content) if platform == "twitter" else self._publish_reddit(content)
+
+                return ToolResult(
+                    success=success,
+                    output={
+                        "published": success,
+                        "platform": platform,
+                        "content_preview": content[:80] + "..." if len(content) > 80 else content,
+                    },
+                    metadata={
+                        "action": "publish",
+                        "platform": platform,
+                    },
+                )
+
+            elif action == "scan_mentions":
+                since_id = parameters.get("since_id")
+                mentions = self._scan_twitter_mentions(since_id) if platform == "twitter" else []
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "mentions": mentions,
+                        "count": len(mentions),
+                        "platform": platform,
+                    },
+                    metadata={
+                        "action": "scan_mentions",
+                        "platform": platform,
+                        "mention_count": len(mentions),
+                    },
+                )
+
+            elif action == "reply":
+                tweet_id = parameters["tweet_id"]
+                content = parameters["content"]
+                success = self._reply_twitter(tweet_id, content)
+
+                return ToolResult(
+                    success=success,
+                    output={
+                        "replied": success,
+                        "tweet_id": tweet_id,
+                        "content_preview": content[:80] + "..." if len(content) > 80 else content,
+                    },
+                    metadata={
+                        "action": "reply",
+                        "tweet_id": tweet_id,
+                    },
+                )
+
+            elif action == "verify_credentials":
+                verified = self.verify_credentials(platform)
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "verified": verified,
+                        "platform": platform,
+                        "status": "authenticated" if verified else "offline",
+                    },
+                    metadata={
+                        "action": "verify_credentials",
+                        "platform": platform,
+                    },
+                )
+
+        except Exception as e:
+            error_msg = f"Broadcast operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"BroadcastTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def _init_twitter(self) -> None:
         """Initialize Twitter client."""
@@ -94,7 +267,7 @@ class BroadcastTool:
 
     def verify_credentials(self, platform: str = "twitter") -> bool:
         """
-        Verify platform credentials are available.
+        Internal method: Verify platform credentials are available.
 
         Args:
             platform: "twitter" or "reddit"
@@ -110,23 +283,6 @@ class BroadcastTool:
             available = self.reddit_client is not None
             logger.info(f"✅ Reddit credentials verified" if available else "❌ Reddit offline")
             return available
-        return False
-
-    def publish(self, content: str, platform: str = "twitter") -> bool:
-        """
-        Publish content to platform.
-
-        Args:
-            content: Text to publish
-            platform: "twitter" or "reddit"
-
-        Returns:
-            bool: True if successful, False otherwise
-        """
-        if platform == "twitter":
-            return self._publish_twitter(content)
-        elif platform == "reddit":
-            return self._publish_reddit(content)
         return False
 
     def _publish_twitter(self, content: str) -> bool:
@@ -148,34 +304,6 @@ class BroadcastTool:
         logger.warning("🛑 Reddit: Simulation mode (draft_only)")
         logger.info(f"   Would post to r/LocalLLaMA: {content[:80]}...")
         return True  # Success simulation
-
-    def scan_mentions(self, since_id: Optional[str] = None, platform: str = "twitter") -> list:
-        """
-        Scan for mentions on platform.
-
-        Args:
-            since_id: ID of last processed mention
-            platform: "twitter"
-
-        Returns:
-            list: List of mention objects (dict)
-        """
-        if platform == "twitter":
-            return self._scan_twitter_mentions(since_id)
-        return []
-
-    def reply_to_tweet(self, tweet_id: str, content: str) -> bool:
-        """
-        Reply to a specific tweet.
-
-        Args:
-            tweet_id: ID of tweet to reply to
-            content: Reply text
-
-        Returns:
-            bool: True if successful
-        """
-        return self._reply_twitter(tweet_id, content)
 
     def _scan_twitter_mentions(self, since_id: Optional[str]) -> list:
         """Fetch mentions from Twitter."""
