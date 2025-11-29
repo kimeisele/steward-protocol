@@ -17,6 +17,7 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 try:
     from envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
     from provider.universal_provider import UniversalProvider, DeterministicRouter
+
     IMPORTS_OK = True
 except ImportError as e:
     logger.warning(f"⚠️  Import failed: {e}")
@@ -25,11 +26,12 @@ except ImportError as e:
 
 class MockKernel:
     """Mock VibeKernel for testing"""
+
     def __init__(self):
         self.agent_registry = ["envoy", "herald", "civic", "watchman"]
         self._status = {
             "agents_registered": len(self.agent_registry),
-            "ledger_events": 42
+            "ledger_events": 42,
         }
 
     def get_status(self) -> Dict[str, Any]:
@@ -41,16 +43,19 @@ class MockKernel:
 
 class MockEventEmitter:
     """Mock event emitter for testing"""
+
     def __init__(self):
         self.events = []
 
     async def emit(self, event_type: str, message: str, source: str, data: Dict = None):
-        self.events.append({
-            "type": event_type,
-            "message": message,
-            "source": source,
-            "data": data or {}
-        })
+        self.events.append(
+            {
+                "type": event_type,
+                "message": message,
+                "source": source,
+                "data": data or {},
+            }
+        )
         logger.info(f"📨 EVENT: [{event_type}] {message}")
 
 
@@ -67,7 +72,9 @@ class TestDeterministicExecutor:
         """Test that DeterministicExecutor initializes correctly"""
         assert self.engine is not None
         assert len(self.engine.playbooks) > 0
-        logger.info(f"✅ DeterministicExecutor initialized with {len(self.engine.playbooks)} playbooks")
+        logger.info(
+            f"✅ DeterministicExecutor initialized with {len(self.engine.playbooks)} playbooks"
+        )
 
     def test_playbook_loading(self):
         """Test that playbooks are loaded from YAML"""
@@ -75,9 +82,15 @@ class TestDeterministicExecutor:
         logger.info(f"Loaded playbooks: {loaded_ids}")
 
         # Check for expected playbooks
-        expected_playbooks = ["PROJECT_SCAFFOLD_V1", "CONTENT_GENERATION_V1", "GOVERNANCE_VOTE_V1"]
+        expected_playbooks = [
+            "PROJECT_SCAFFOLD_V1",
+            "CONTENT_GENERATION_V1",
+            "GOVERNANCE_VOTE_V1",
+        ]
         for pb_id in expected_playbooks:
-            assert pb_id in self.engine.playbooks, f"Expected playbook {pb_id} not found"
+            assert (
+                pb_id in self.engine.playbooks
+            ), f"Expected playbook {pb_id} not found"
 
         logger.info(f"✅ All expected playbooks loaded: {expected_playbooks}")
 
@@ -106,7 +119,7 @@ class TestDeterministicExecutor:
             user_input="Create a test project",
             current_phase_id="phase_1",
             phase_results={"test": "data"},
-            status="RUNNING"
+            status="RUNNING",
         )
 
         # Save it
@@ -172,8 +185,9 @@ class TestDeterministicRouter:
         for text, expected_concepts in test_cases:
             concepts = self.router.analyze(text)
             # At least one expected concept should be found
-            assert any(c in concepts for c in expected_concepts), \
-                f"Expected {expected_concepts} in {concepts} for input: {text}"
+            assert any(
+                c in concepts for c in expected_concepts
+            ), f"Expected {expected_concepts} in {concepts} for input: {text}"
             logger.info(f"✅ Detected concepts for '{text}': {concepts}")
 
     def test_intent_routing(self):
@@ -209,11 +223,12 @@ class TestPlaybookExecution:
 
         # Create mock intent vector
         from provider.universal_provider import IntentVector, IntentType
+
         intent_vector = IntentVector(
             raw_input="Create a test project",
             intent_type=IntentType.CREATION,
             target_domain="test",
-            confidence=0.95
+            confidence=0.95,
         )
 
         # Execute the playbook
@@ -222,7 +237,7 @@ class TestPlaybookExecution:
             user_input="Create a test project",
             intent_vector=intent_vector,
             kernel=self.kernel,
-            emit_event=self.event_emitter.emit
+            emit_event=self.event_emitter.emit,
         )
 
         assert result is not None
@@ -285,16 +300,19 @@ class TestUniversalProviderIntegration:
             assert "proposal_id" in result
         else:
             # Playbook was found and executed
-            logger.info(f"✅ Playbook found and executed: {result.get('playbook_name', 'unknown')}")
+            logger.info(
+                f"✅ Playbook found and executed: {result.get('playbook_name', 'unknown')}"
+            )
 
 
 # === HELPER FUNCTIONS FOR MANUAL TESTING ===
 
+
 def print_test_summary():
     """Print a summary of all tests"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🧪 GAD-5000 PLAYBOOK SYSTEM - TEST SUMMARY")
-    print("="*60)
+    print("=" * 60)
     print("\nTests cover:")
     print("  ✅ DeterministicExecutor initialization and YAML loading")
     print("  ✅ Concept detection (SANKHYA)")
@@ -304,7 +322,7 @@ def print_test_summary():
     print("  ✅ Evolutionary Loop (EAD) - Proposal generation")
     print("  ✅ LLM Dynamic Routing")
     print("  ✅ UniversalProvider integration")
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
 
 
 if __name__ == "__main__":

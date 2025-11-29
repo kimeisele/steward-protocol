@@ -61,8 +61,8 @@ class AmbassadorCartridge(VibeAgent):
                 "onboarding_protocol",
                 "sentiment_analysis",
                 "event_coordination",
-                "knowledge_base"
-            ]
+                "knowledge_base",
+            ],
         )
 
         logger.info("🤝 AMBASSADOR (VibeAgent v1.0) is online - Community Ready")
@@ -137,14 +137,14 @@ class AmbassadorCartridge(VibeAgent):
         self.active_conversations[user_id] = {
             "question": question,
             "timestamp": datetime.utcnow().isoformat(),
-            "status": "answered"
+            "status": "answered",
         }
 
         return {
             "status": "answered",
             "user_id": user_id,
             "answer": "Placeholder response - implement full answer",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _onboard_user(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -165,7 +165,7 @@ class AmbassadorCartridge(VibeAgent):
             "user_id": user_id,
             "user_name": user_name,
             "total_onboarded": len(self.onboarded_users),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _monitor_sentiment(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -184,7 +184,7 @@ class AmbassadorCartridge(VibeAgent):
             "channel": channel,
             "period": period,
             "sentiment_score": self.community_sentiment_score,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _manage_issues(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -203,7 +203,7 @@ class AmbassadorCartridge(VibeAgent):
             "action": action_type,
             "filter": issue_filter,
             "issues_resolved": self.issues_resolved,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _coordinate_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -223,7 +223,7 @@ class AmbassadorCartridge(VibeAgent):
             "event_name": event_name,
             "event_date": event_date,
             "event_type": event_type,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _manage_faq(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -241,7 +241,7 @@ class AmbassadorCartridge(VibeAgent):
         return {
             "status": "managing_faq",
             "action": action,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def _status(self) -> Dict[str, Any]:
@@ -253,8 +253,8 @@ class AmbassadorCartridge(VibeAgent):
             "users_onboarded": len(self.onboarded_users),
             "community_sentiment": self.community_sentiment_score,
             "issues_resolved": self.issues_resolved,
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -266,6 +266,7 @@ class AmbassadorCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = AmbassadorCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -273,7 +274,5 @@ if __name__ == "__main__":
             "name": "AMBASSADOR",
             "status": "healthy",
             "domain": "GOVERNANCE",
-            "capabilities": ['diplomacy', 'external_relations']
+            "capabilities": ["diplomacy", "external_relations"],
         }
-
-

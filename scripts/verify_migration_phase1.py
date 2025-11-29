@@ -71,7 +71,9 @@ def main():
 
     logger.info("==========================================")
     if failures:
-        logger.error(f"❌ VERIFICATION FAILED. {len(failures)} agents crashed: {', '.join(failures)}")
+        logger.error(
+            f"❌ VERIFICATION FAILED. {len(failures)} agents crashed: {', '.join(failures)}"
+        )
         sys.exit(1)
     else:
         logger.info("✅ VERIFICATION PASSED. All critical agents booted successfully.")

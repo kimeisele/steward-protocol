@@ -21,7 +21,9 @@ class AgentsRenderer:
     def scan_and_render(self) -> str:
         """Scan cartridges and render AGENTS.md."""
         # Discover all agents
-        self.agents = self.introspector.scan_all(self.root_dir / "steward" / "system_agents")
+        self.agents = self.introspector.scan_all(
+            self.root_dir / "steward" / "system_agents"
+        )
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -125,7 +127,9 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
             output_path.write_text(content)
             print(f"✅ AGENTS.md generated: {output_path}")
             print(f"📊 Discovered {len(self.agents)} agents")
-            print(f"🔧 Total tools: {sum(len(a['tools']) for a in self.agents.values())}")
+            print(
+                f"🔧 Total tools: {sum(len(a['tools']) for a in self.agents.values())}"
+            )
 
             return True
         except Exception as e:

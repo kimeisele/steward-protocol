@@ -52,10 +52,15 @@ class LocalLlamaProvider(LLMProvider):
         else:
             self._model_path = self._find_model()
 
-        if self._model_path and self._model_path.exists():
-            self._load_model()
-        else:
+        # Lazy load: Do not load model in __init__
+        # self._load_model() will be called on first use
+        if not self._model_path or not self._model_path.exists():
             logger.warning(f"No local model found. Install with: steward install-llm")
+
+    def _ensure_loaded(self):
+        """Lazy load the model if not already loaded."""
+        if not self._initialized and self._model_path and self._model_path.exists():
+            self._load_model()
 
     @staticmethod
     def model_exists() -> bool:
@@ -122,6 +127,8 @@ class LocalLlamaProvider(LLMProvider):
         **kwargs: Any,
     ) -> str:
         """Generate response from local LLM."""
+        self._ensure_loaded()
+
         if not self._initialized or self._llm is None:
             return "[Local LLM not initialized. Run: steward install-llm]"
 

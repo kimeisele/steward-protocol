@@ -120,7 +120,9 @@ class SearchFileTool(Tool):
             if len(matches) >= MAX_RESULTS:
                 output += f"\n\n(Truncated at {MAX_RESULTS} results)"
 
-            logger.info(f"SearchFileTool: Found {len(matches)} matches for '{pattern}' in {search_root}")
+            logger.info(
+                f"SearchFileTool: Found {len(matches)} matches for '{pattern}' in {search_root}"
+            )
 
             return ToolResult(
                 success=True,

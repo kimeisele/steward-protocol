@@ -23,8 +23,8 @@ import threading
 
 # --- AGENT MIGRATION PATH FIX ---
 # Add migrated agent directories to sys.path so imports continue to work
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'steward', 'system_agents'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'agent_city', 'registry'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steward", "system_agents"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "agent_city", "registry"))
 
 # --- CONFIGURATION ---
 DEFAULT_PORT = 8000
@@ -34,6 +34,7 @@ HEALTH_CHECK_INTERVAL = 2.0  # Seconds
 
 # Global process registry for cleanup
 active_processes = []
+
 
 def cleanup():
     """
@@ -55,15 +56,19 @@ def cleanup():
                 p.kill()
     print("✓ Workspace clean. Namaste.")
 
+
 # Register cleanup to run NO MATTER WHAT
 atexit.register(cleanup)
 
+
 def signal_handler(sig, frame):
     print("\n🛑 MANUAL INTERRUPT RECEIVED.")
-    sys.exit(0) # This triggers atexit.cleanup()
+    sys.exit(0)  # This triggers atexit.cleanup()
+
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
+
 
 def check_port(port):
     """Returns True if port is FREE, False if BUSY."""
@@ -71,6 +76,7 @@ def check_port(port):
         if sock.connect_ex((HOST, port)) == 0:
             return False
         return True
+
 
 def find_available_port(start_port):
     print(f"➜ PORT RECONNAISSANCE (Starting at {start_port})...")
@@ -82,37 +88,46 @@ def find_available_port(start_port):
     print("❌ CRITICAL FAILURE: No ports available in range. System overloaded.")
     sys.exit(1)
 
+
 def preload_semantic_model():
     """
     Background task: Pre-download sentence-transformers model on startup.
     This ensures the model is cached before the gateway needs it.
     Runs in a separate thread so startup isn't blocked.
     """
+
     def _download():
         try:
-            print("   • Pre-caching semantic model (sentence-transformers/all-MiniLM-L6-v2)...")
+            print(
+                "   • Pre-caching semantic model (sentence-transformers/all-MiniLM-L6-v2)..."
+            )
             os.makedirs("data/models", exist_ok=True)
             os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
 
             # Import and download in background
             from sentence_transformers import SentenceTransformer
+
             model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2",
-                cache_folder="data/models"
+                "sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models"
             )
             print("   ✓ Semantic model cached successfully")
             return True
         except ImportError:
-            print("   ⚠️  sentence-transformers not installed. Install with: pip install sentence-transformers")
+            print(
+                "   ⚠️  sentence-transformers not installed. Install with: pip install sentence-transformers"
+            )
             return False
         except Exception as e:
-            print(f"   ⚠️  Semantic model pre-cache failed: {e} (will lazy-load on first use)")
+            print(
+                f"   ⚠️  Semantic model pre-cache failed: {e} (will lazy-load on first use)"
+            )
             return False
 
     # Run in background thread (non-blocking)
     thread = threading.Thread(target=_download, daemon=True)
     thread.start()
     return thread
+
 
 def wait_for_health(port, timeout=10):
     """
@@ -121,7 +136,7 @@ def wait_for_health(port, timeout=10):
     """
     print("   • Waiting for Gateway heartbeat...")
     start_time = time.time()
-    url = f"http://{HOST}:{port}/" # Index check
+    url = f"http://{HOST}:{port}/"  # Index check
 
     while time.time() - start_time < timeout:
         try:
@@ -138,28 +153,34 @@ def wait_for_health(port, timeout=10):
     print("❌ TIMEOUT: Gateway process exists but is unresponsive.")
     return False
 
+
 def start_gateway(port):
     print(f"➜ INITIATING GATEWAY on Port {port}")
 
     env = os.environ.copy()
     env["VIBE_PORT"] = str(port)
-    env["PYTHONUNBUFFERED"] = "1" # Realtime logs
+    env["PYTHONUNBUFFERED"] = "1"  # Realtime logs
 
     try:
         # We use sys.executable to ensure we use the SAME python interpreter
         cmd = [
-            sys.executable, "-m", "uvicorn",
+            sys.executable,
+            "-m",
+            "uvicorn",
             "gateway.api:app",
-            "--host", HOST,
-            "--port", str(port),
-            "--log-level", "error" # Keep stdout clean
+            "--host",
+            HOST,
+            "--port",
+            str(port),
+            "--log-level",
+            "error",  # Keep stdout clean
         ]
 
         p = subprocess.Popen(
             cmd,
             env=env,
             stdout=sys.stdout if os.environ.get("VIBE_DEBUG") else subprocess.DEVNULL,
-            stderr=sys.stderr
+            stderr=sys.stderr,
         )
         active_processes.append(p)
         print(f"   ✓ Subprocess spawned (PID {p.pid})")
@@ -174,9 +195,12 @@ def start_gateway(port):
         print(f"❌ CRITICAL: Launch failed: {e}")
         sys.exit(1)
 
+
 def main():
     parser = argparse.ArgumentParser(description="VibeOS Vimana Launcher")
-    parser.add_argument("--port", type=int, help="Force specific port (Disables Rolling)")
+    parser.add_argument(
+        "--port", type=int, help="Force specific port (Disables Rolling)"
+    )
     parser.add_argument("--no-browser", action="store_true", help="Headless mode")
     parser.add_argument("--debug", action="store_true", help="Verbose output")
     args = parser.parse_args()
@@ -184,10 +208,18 @@ def main():
     if args.debug:
         os.environ["VIBE_DEBUG"] = "1"
 
-    print("\n╔════════════════════════════════════════════════════════════════════════════╗")
-    print("║                        🛸 PROJECT VIMANA: THE LAUNCHER 🛸                  ║")
-    print("║                     System Status: ONLINE | Protocol: GAD-000              ║")
-    print("╚════════════════════════════════════════════════════════════════════════════╝\n")
+    print(
+        "\n╔════════════════════════════════════════════════════════════════════════════╗"
+    )
+    print(
+        "║                        🛸 PROJECT VIMANA: THE LAUNCHER 🛸                  ║"
+    )
+    print(
+        "║                     System Status: ONLINE | Protocol: GAD-000              ║"
+    )
+    print(
+        "╚════════════════════════════════════════════════════════════════════════════╝\n"
+    )
 
     # 0. PRE-LOAD SEMANTIC MODEL (PROJECT JNANA)
     print("➜ INITIALIZING PROJECT JNANA (Semantic Cortex)...")
@@ -215,8 +247,19 @@ def main():
         try:
             # Generate NIST P-256 Key
             subprocess.run(
-                ["openssl", "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", key_path],
-                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                [
+                    "openssl",
+                    "ecparam",
+                    "-name",
+                    "prime256v1",
+                    "-genkey",
+                    "-noout",
+                    "-out",
+                    key_path,
+                ],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
             print(f"   ✓ Key forged at {key_path}")
         except:
@@ -248,8 +291,10 @@ def main():
                 # Check if child processes are still alive
                 for p in active_processes:
                     if p.poll() is not None:
-                        print(f"\n❌ ALERT: Critical process (PID {p.pid}) died unexpectedly.")
-                        sys.exit(1) # Triggers cleanup
+                        print(
+                            f"\n❌ ALERT: Critical process (PID {p.pid}) died unexpectedly."
+                        )
+                        sys.exit(1)  # Triggers cleanup
                 time.sleep(HEALTH_CHECK_INTERVAL)
 
         except KeyboardInterrupt:
@@ -258,6 +303,7 @@ def main():
     else:
         print("❌ ABORT: Startup sequence failed.")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

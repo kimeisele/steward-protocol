@@ -32,6 +32,7 @@ logger = logging.getLogger("SEMANTIC_ROUTER")
 _model = None
 _model_lock = asyncio.Lock()
 
+
 async def get_embedding_model():
     """
     Lazy-load sentence-transformers model.
@@ -51,26 +52,30 @@ async def get_embedding_model():
 
             # Specify cache directory to avoid re-downloads
             import os
+
             os.makedirs("data/models", exist_ok=True)
             os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
 
             logger.info("🧠 Loading sentence-transformers model (all-MiniLM-L6-v2)...")
             _model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2",
-                cache_folder="data/models"
+                "sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models"
             )
             logger.info("✓ Semantic model loaded and cached")
             return _model
         except ImportError:
-            logger.error("❌ sentence-transformers not installed. Install with: pip install sentence-transformers")
+            logger.error(
+                "❌ sentence-transformers not installed. Install with: pip install sentence-transformers"
+            )
             raise
         except Exception as e:
             logger.error(f"❌ Failed to load semantic model: {e}")
             raise
 
+
 @dataclass
 class SemanticConcept:
     """Represents a detected concept with confidence score"""
+
     name: str
     category: str  # 'actions', 'domains', 'entities', 'patterns'
     confidence: float
@@ -83,11 +88,14 @@ class SemanticConcept:
             return self.name == other.name
         return self.name == other
 
+
 class ConfidenceLevel(Enum):
     """Confidence tier classification for routing"""
-    HIGH = "high"      # > 0.85: Execute immediately (SATYA)
+
+    HIGH = "high"  # > 0.85: Execute immediately (SATYA)
     MEDIUM = "medium"  # 0.60-0.84: Request clarification (MANTHAN)
-    LOW = "low"        # < 0.60: Fall back to LLM (NETI NETI)
+    LOW = "low"  # < 0.60: Fall back to LLM (NETI NETI)
+
 
 class SemanticRouter:
     """
@@ -114,7 +122,7 @@ class SemanticRouter:
         """Load YAML file from knowledge directory"""
         filepath = self.knowledge_dir / filename
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 return yaml.safe_load(f)
         except FileNotFoundError:
             logger.warning(f"⚠️  Knowledge base not found: {filepath}")
@@ -179,15 +187,23 @@ class SemanticRouter:
 
         for concept_name, concept_embedding in self.embedding_cache.items():
             # Cosine similarity
-            similarity = float(np.dot(input_embedding, concept_embedding) /
-                             (np.linalg.norm(input_embedding) * np.linalg.norm(concept_embedding) + 1e-8))
+            similarity = float(
+                np.dot(input_embedding, concept_embedding)
+                / (
+                    np.linalg.norm(input_embedding) * np.linalg.norm(concept_embedding)
+                    + 1e-8
+                )
+            )
 
             # Clamp to [0, 1]
             similarity = max(0.0, min(1.0, similarity))
 
             # Track concepts above threshold (even low confidence is useful for context)
             if similarity > 0.30:  # Lower threshold to capture more nuance
-                if concept_name not in found_concepts or similarity > found_concepts[concept_name]:
+                if (
+                    concept_name not in found_concepts
+                    or similarity > found_concepts[concept_name]
+                ):
                     found_concepts[concept_name] = similarity
 
         # Convert to SemanticConcept objects
@@ -195,11 +211,11 @@ class SemanticRouter:
         for concept_name, confidence in found_concepts.items():
             # Find category for this concept
             category = self._find_category(concept_name)
-            result.add(SemanticConcept(
-                name=concept_name,
-                category=category,
-                confidence=confidence
-            ))
+            result.add(
+                SemanticConcept(
+                    name=concept_name, category=category, confidence=confidence
+                )
+            )
 
         return result
 
@@ -210,7 +226,9 @@ class SemanticRouter:
                 return category
         return "unknown"
 
-    async def route(self, text: str, fallback_rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+    async def route(
+        self, text: str, fallback_rules: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
         """
         KARMA (Routing): Deterministic path selection based on semantic concepts.
         Rules are evaluated top-to-bottom by priority.
@@ -222,7 +240,9 @@ class SemanticRouter:
         concept_names = {c.name for c in concepts_with_conf}
         max_confidence = max((c.confidence for c in concepts_with_conf), default=0.0)
 
-        logger.info(f"🔍 Detected Concepts: {concept_names} (max confidence: {max_confidence:.2f})")
+        logger.info(
+            f"🔍 Detected Concepts: {concept_names} (max confidence: {max_confidence:.2f})"
+        )
 
         rules_to_check = self.rules if self.rules else (fallback_rules or [])
 
@@ -241,7 +261,7 @@ class SemanticRouter:
                     "concepts": concept_names,
                     "concepts_with_confidence": concepts_with_conf,
                     "matched_triggers": triggers & concept_names if triggers else set(),
-                    "confidence": max_confidence
+                    "confidence": max_confidence,
                 }
 
         # Ultimate fallback
@@ -254,7 +274,7 @@ class SemanticRouter:
             "concepts": concept_names,
             "concepts_with_confidence": concepts_with_conf,
             "matched_triggers": set(),
-            "confidence": max_confidence
+            "confidence": max_confidence,
         }
 
     def _classify_confidence(self, confidence: float) -> ConfidenceLevel:
@@ -280,5 +300,5 @@ class SemanticRouter:
             "confidence_level": confidence_level.value,
             "should_execute": confidence_level == ConfidenceLevel.HIGH,
             "should_clarify": confidence_level == ConfidenceLevel.MEDIUM,
-            "should_fallback": confidence_level == ConfidenceLevel.LOW
+            "should_fallback": confidence_level == ConfidenceLevel.LOW,
         }

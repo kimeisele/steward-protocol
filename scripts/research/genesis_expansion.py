@@ -386,7 +386,9 @@ def step2_forge_body(engineer: EngineerCartridge) -> Optional[str]:
         return None
 
 
-def step3_gatekeeper(auditor: AuditorCartridge, python_path: str) -> Optional[Dict[str, Any]]:
+def step3_gatekeeper(
+    auditor: AuditorCartridge, python_path: str
+) -> Optional[Dict[str, Any]]:
     """
     STEP 3: Auditor verifies Python code (The Gatekeeper)
 
@@ -450,7 +452,9 @@ def step4_birth(
             print_error(f"Failed to seal Python: {result_py.get('reason', 'unknown')}")
             return False
 
-        print_success(f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py")
+        print_success(
+            f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py"
+        )
 
     except Exception as e:
         print_error(f"Exception sealing Python: {e}")

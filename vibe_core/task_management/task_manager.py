@@ -106,7 +106,9 @@ class TaskManager:
             self._hydrate_from_sqlite()
 
         # Update metrics
-        self.metrics_collector.update_from_tasks({task_id: task.to_dict() for task_id, task in self.tasks.items()})
+        self.metrics_collector.update_from_tasks(
+            {task_id: task.to_dict() for task_id, task in self.tasks.items()}
+        )
 
     def _hydrate_from_sqlite(self):
         """
@@ -128,7 +130,9 @@ class TaskManager:
                         else sqlite_task["description"]
                     ),
                     description=(
-                        sqlite_task["description"].split(":", 1)[1].strip() if ":" in sqlite_task["description"] else ""
+                        sqlite_task["description"].split(":", 1)[1].strip()
+                        if ":" in sqlite_task["description"]
+                        else ""
                     ),
                     status=TaskStatus(sqlite_task["status"].upper()),
                     priority=0,  # SQLite doesn't store priority, default to 0
@@ -169,7 +173,9 @@ class TaskManager:
 
         try:
             with self.lock:
-                tasks_data = {task_id: task.to_dict() for task_id, task in self.tasks.items()}
+                tasks_data = {
+                    task_id: task.to_dict() for task_id, task in self.tasks.items()
+                }
                 tasks_file.write_text(json.dumps(tasks_data, indent=2))
         except Exception as e:
             print(f"Error saving tasks: {e}")
@@ -228,8 +234,12 @@ class TaskManager:
                     name=latest["name"],
                     description=latest["description"],
                     missions=latest.get("missions", []),
-                    created_at=datetime.fromisoformat(latest["created_at"].replace("Z", "+00:00")),
-                    updated_at=datetime.fromisoformat(latest["updated_at"].replace("Z", "+00:00")),
+                    created_at=datetime.fromisoformat(
+                        latest["created_at"].replace("Z", "+00:00")
+                    ),
+                    updated_at=datetime.fromisoformat(
+                        latest["updated_at"].replace("Z", "+00:00")
+                    ),
                     metadata=latest.get("metadata", {}),
                 )
                 print(f"🔄 VIMANA: Hydrated roadmap '{self.roadmap.name}' from SQLite")
@@ -279,13 +289,19 @@ class TaskManager:
         narasimha = get_narasimha()
         task_content = f"{title}\n{description}"
 
-        threat = narasimha.audit_agent(agent_id="TASK_MANAGER", agent_code=task_content, agent_state={})
+        threat = narasimha.audit_agent(
+            agent_id="TASK_MANAGER", agent_code=task_content, agent_state={}
+        )
 
         if threat and threat.severity.value in ["red", "apocalypse"]:
-            raise ValidationError(f"Task blocked by Narasimha (Adharma Block): {threat.description}")
+            raise ValidationError(
+                f"Task blocked by Narasimha (Adharma Block): {threat.description}"
+            )
 
         # Auto-link to active roadmap if no roadmap_id provided
-        final_roadmap_id = roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+        final_roadmap_id = (
+            roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+        )
 
         task = Task(
             id=str(uuid.uuid4()),
@@ -317,7 +333,9 @@ class TaskManager:
                     "LOW": 0,  # Lazy queue
                 }
 
-                milk_ocean_priority = priority_map.get(routing_result.get("priority", "MEDIUM"), 1)
+                milk_ocean_priority = priority_map.get(
+                    routing_result.get("priority", "MEDIUM"), 1
+                )
 
                 # Auto-elevate priority for CRITICAL tasks
                 if milk_ocean_priority == 3 and priority < 90:
@@ -508,7 +526,9 @@ class TaskManager:
         """Export tasks to Markdown."""
         return ExportEngine.export_to_markdown(self.tasks, output_path)
 
-    def create_roadmap(self, name: str, description: str, missions: List[str] = None) -> Roadmap:
+    def create_roadmap(
+        self, name: str, description: str, missions: List[str] = None
+    ) -> Roadmap:
         """
         Create a new roadmap.
 

@@ -94,7 +94,9 @@ class VerdictTool:
         if verdict_type == VerdictType.MERCY_GRANTED:
             logger.info(f"🛡️  MERCY GRANTED: Verdict {verdict_id} for agent {agent_id}")
         elif verdict_type == VerdictType.MERCY_CONDITIONAL:
-            logger.info(f"⚠️  CONDITIONAL MERCY: Verdict {verdict_id} for agent {agent_id}")
+            logger.info(
+                f"⚠️  CONDITIONAL MERCY: Verdict {verdict_id} for agent {agent_id}"
+            )
         else:
             logger.info(f"💀 UPHELD: Verdict {verdict_id} for agent {agent_id}")
 
@@ -102,7 +104,11 @@ class VerdictTool:
             verdict_id=verdict_id,
             appeal_id=appeal_id,
             agent_id=agent_id,
-            verdict_type=(verdict_type.value if isinstance(verdict_type, VerdictType) else verdict_type),
+            verdict_type=(
+                verdict_type.value
+                if isinstance(verdict_type, VerdictType)
+                else verdict_type
+            ),
             justification=justification,
             override_auditor=override_auditor,
             conditions=conditions or [],
@@ -136,7 +142,11 @@ class VerdictTool:
     def get_mercy_count(self) -> int:
         """Count how many times mercy has been granted."""
         verdicts = self._load_verdicts()
-        return sum(1 for v in verdicts if v.get("verdict_type") == VerdictType.MERCY_GRANTED.value)
+        return sum(
+            1
+            for v in verdicts
+            if v.get("verdict_type") == VerdictType.MERCY_GRANTED.value
+        )
 
     def get_verdicts_that_override(self) -> List[Dict[str, Any]]:
         """Get all verdicts that override AUDITOR decisions."""

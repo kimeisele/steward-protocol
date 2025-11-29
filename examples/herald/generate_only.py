@@ -21,8 +21,7 @@ from pathlib import Path
 
 # Setup Logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("HERALD_GENERATOR")
 
@@ -101,7 +100,7 @@ def main():
     payload = {
         "text": content,
         "image_filename": image_filename,
-        "image_path": str(image_path) if image_path else None
+        "image_path": str(image_path) if image_path else None,
     }
 
     content_file = dist_dir / "content.json"
@@ -117,7 +116,7 @@ def main():
         output_file = os.environ["GITHUB_OUTPUT"]
         with open(output_file, "a") as gh_out:
             # Escape newlines for GitHub Actions
-            clean_text = content.replace('\n', ' ').replace('"', '\\"')
+            clean_text = content.replace("\n", " ").replace('"', '\\"')
             gh_out.write(f"preview_text={clean_text}\n")
             gh_out.write(f"has_image={'true' if image_filename else 'false'}\n")
         logger.info(f"✅ GitHub Output written")

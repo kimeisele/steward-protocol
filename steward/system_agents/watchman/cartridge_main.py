@@ -126,9 +126,13 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         if CivicBank is not None:
             try:
                 self.bank = CivicBank()
-                logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
+                logger.info(
+                    "✅ Connected to CIVIC Central Bank (Enforcement Authority)"
+                )
             except Exception as e:
-                logger.warning(f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)")
+                logger.warning(
+                    f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)"
+                )
         else:
             logger.warning("⚠️  CivicBank not available (running in audit-only mode)")
 
@@ -138,7 +142,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         # Phase 3.3: Initialize system health monitor (read-only)
         self.health_checker = SystemHealthCheck()
-        logger.info("🏥 System Health Monitor initialized (read-only infrastructure check)")
+        logger.info(
+            "🏥 System Health Monitor initialized (read-only infrastructure check)"
+        )
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -221,7 +227,11 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 # Check for mock patterns
                 lower_line = line.lower()
 
-                if "return true" in lower_line and "#" not in lower_line and "def " not in lower_line:
+                if (
+                    "return true" in lower_line
+                    and "#" not in lower_line
+                    and "def " not in lower_line
+                ):
                     if "success simulation" in lower_line or "offline" in lower_line:
                         violations.append(
                             {
@@ -289,7 +299,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                             break  # Only report once per line
 
                 # Check unverified connection patterns
-                for pattern in self.FORBIDDEN_PATTERNS.get("unverified_connections", []):
+                for pattern in self.FORBIDDEN_PATTERNS.get(
+                    "unverified_connections", []
+                ):
                     if re.search(pattern, line):
                         if (
                             "signature" not in lower_line

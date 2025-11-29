@@ -173,7 +173,9 @@ class SargaBootSequence:
         Handler signature: handler() -> bool (success/failure)
         """
         self.phase_handlers[element] = handler
-        logger.debug(f"Phase handler registered for {element.value}: {handler.__name__}")
+        logger.debug(
+            f"Phase handler registered for {element.value}: {handler.__name__}"
+        )
 
     def begin_boot(self) -> None:
         """Start the boot sequence."""
@@ -203,7 +205,9 @@ class SargaBootSequence:
             return False
 
         logger.info("")
-        logger.info(f"{phase.emoji}  PHASE {element.value.upper()}: {phase.description}")
+        logger.info(
+            f"{phase.emoji}  PHASE {element.value.upper()}: {phase.description}"
+        )
         logger.info("-" * 70)
 
         phase.status = "active"
@@ -224,7 +228,9 @@ class SargaBootSequence:
 
             if success:
                 phase.status = "complete"
-                logger.info(f"✅ {element.value.upper()} complete ({phase.duration:.3f}s)")
+                logger.info(
+                    f"✅ {element.value.upper()} complete ({phase.duration:.3f}s)"
+                )
                 return True
             else:
                 phase.status = "failed"
@@ -281,7 +287,9 @@ class SargaBootSequence:
         return {
             "boot_complete": self.boot_complete,
             "boot_start_time": self.boot_start_time,
-            "total_duration": (time.time() - self.boot_start_time if self.boot_start_time else None),
+            "total_duration": (
+                time.time() - self.boot_start_time if self.boot_start_time else None
+            ),
             "phases": {
                 element.value: {
                     "status": phase.status,
@@ -312,7 +320,11 @@ class SargaBootSequence:
         ]:
             phase = self.phases[element]
             emoji = phase.emoji
-            status_char = "✅" if phase.status == "complete" else "❌" if phase.status == "failed" else "⏳"
+            status_char = (
+                "✅"
+                if phase.status == "complete"
+                else "❌" if phase.status == "failed" else "⏳"
+            )
             duration_str = f"{phase.duration:.3f}s" if phase.duration else "—"
 
             lines.append(
@@ -322,7 +334,9 @@ class SargaBootSequence:
         lines.append("")
 
         if self.boot_complete:
-            total_time = time.time() - self.boot_start_time if self.boot_start_time else 0
+            total_time = (
+                time.time() - self.boot_start_time if self.boot_start_time else 0
+            )
             lines.append(f"⏱️  Total Boot Time: {total_time:.3f}s")
             lines.append("")
             lines.append("🌍 STATUS: ALIVE AND CONSCIOUS")

@@ -301,7 +301,9 @@ steward-protocol/
         if reports_dir.exists():
             self.reports_docs = sorted([f.name for f in reports_dir.glob("*.md")])
 
-    def _render_docs_section(self, docs: List[str], base_path: str, prefix: str = "") -> str:
+    def _render_docs_section(
+        self, docs: List[str], base_path: str, prefix: str = ""
+    ) -> str:
         """Render a list of docs as markdown links."""
         if not docs:
             return ""
@@ -351,7 +353,9 @@ steward-protocol/
         for doc in migration_docs:
             name = doc.stem.replace("_", " ").title()
             desc = self._get_migration_description(doc.name)
-            lines.append(f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}")
+            lines.append(
+                f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}"
+            )
 
         return "\n".join(lines)
 

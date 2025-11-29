@@ -76,7 +76,10 @@ class StatusBar:
             if self.steward_json.exists():
                 with open(self.steward_json) as f:
                     config = json.load(f)
-                    if "preferences" in config and "operator_tone" in config["preferences"]:
+                    if (
+                        "preferences" in config
+                        and "operator_tone" in config["preferences"]
+                    ):
                         return config["preferences"]["operator_tone"]
         except Exception:
             pass
@@ -100,7 +103,9 @@ class StatusBar:
         """
         # Get live context
         context_engine = get_prompt_context()
-        context = context_engine.resolve(["inbox_count", "agenda_summary", "git_sync_status", "system_time"])
+        context = context_engine.resolve(
+            ["inbox_count", "agenda_summary", "git_sync_status", "system_time"]
+        )
 
         inbox_count = context.get("inbox_count", "0")
         agenda_summary = json.loads(context.get("agenda_summary", '{"total": 0}'))
@@ -138,7 +143,10 @@ class StatusBar:
             inbox_count = "0"
             agenda_total = 0
 
-        return f"🤖 VIBE OS | {user_name} | 🎭 {operator_tone} " f"| 📨 {inbox_count} | 📋 {agenda_total}"
+        return (
+            f"🤖 VIBE OS | {user_name} | 🎭 {operator_tone} "
+            f"| 📨 {inbox_count} | 📋 {agenda_total}"
+        )
 
 
 class CapabilitiesMenu:
@@ -248,7 +256,9 @@ class HintSystem:
         """
         try:
             context_engine = get_prompt_context()
-            context = context_engine.resolve(["inbox_count", "agenda_summary", "git_sync_status"])
+            context = context_engine.resolve(
+                ["inbox_count", "agenda_summary", "git_sync_status"]
+            )
 
             inbox_count = int(context.get("inbox_count", "0"))
             agenda_summary = json.loads(context.get("agenda_summary", '{"total": 0}'))

@@ -32,10 +32,7 @@ sys.path.insert(0, str(project_root))
 from herald.core.agency_director import AgencyDirector
 
 # Setup detailed logging for simulation
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("HERALD_SIMULATION")
 
 
@@ -100,7 +97,9 @@ class SimulationHarness:
             if result.status == "SUCCESS":
                 print(f"✅ SUCCESS ({result.draft[:50]}...)")
             elif result.status == "VALIDATION_FAILED":
-                violations_str = ", ".join(result.violations[:2]) if result.violations else "unknown"
+                violations_str = (
+                    ", ".join(result.violations[:2]) if result.violations else "unknown"
+                )
                 print(f"⚠️  VALIDATION_FAILED ({violations_str})")
             else:
                 print(f"❌ ERROR ({result.error})")
@@ -137,18 +136,26 @@ class SimulationHarness:
             return {}
 
         successful = sum(1 for r in self.results if r["status"] == "SUCCESS")
-        failed_validation = sum(1 for r in self.results if r["status"] == "VALIDATION_FAILED")
+        failed_validation = sum(
+            1 for r in self.results if r["status"] == "VALIDATION_FAILED"
+        )
         errors = sum(1 for r in self.results if r["status"] == "ERROR")
 
         total_violations = sum(r.get("violations_count", 0) for r in self.results)
-        avg_draft_length = sum(r.get("draft_length", 0) for r in self.results) / len(self.results) if self.results else 0
+        avg_draft_length = (
+            sum(r.get("draft_length", 0) for r in self.results) / len(self.results)
+            if self.results
+            else 0
+        )
 
         return {
             "total_cycles": len(self.results),
             "successful": successful,
             "validation_failed": failed_validation,
             "errors": errors,
-            "success_rate": (successful / len(self.results) * 100) if self.results else 0,
+            "success_rate": (
+                (successful / len(self.results) * 100) if self.results else 0
+            ),
             "total_violations_caught": total_violations,
             "avg_draft_length": avg_draft_length,
         }
@@ -162,7 +169,9 @@ class SimulationHarness:
         print("Simulation Summary:")
         print(f"{'='*70}")
         print(f"Total Cycles:        {stats['total_cycles']}")
-        print(f"Successful:          {stats['successful']}/{stats['total_cycles']} ({stats['success_rate']:.1f}%)")
+        print(
+            f"Successful:          {stats['successful']}/{stats['total_cycles']} ({stats['success_rate']:.1f}%)"
+        )
         print(f"Validation Failed:   {stats['validation_failed']}")
         print(f"Errors:              {stats['errors']}")
         print(f"Violations Caught:   {stats['total_violations_caught']}")
@@ -175,10 +184,18 @@ class SimulationHarness:
         events = self.director.event_log.get_all_events()
         print(f"📖 Event Log Status:")
         print(f"   Total events: {len(events)}")
-        print(f"   Content generated: {len(self.director.event_log.get_events_by_type('content_generated'))}")
-        print(f"   Content published: {len(self.director.event_log.get_events_by_type('content_published'))}")
-        print(f"   Content rejected: {len(self.director.event_log.get_events_by_type('content_rejected'))}")
-        print(f"   System errors: {len(self.director.event_log.get_events_by_type('system_error'))}")
+        print(
+            f"   Content generated: {len(self.director.event_log.get_events_by_type('content_generated'))}"
+        )
+        print(
+            f"   Content published: {len(self.director.event_log.get_events_by_type('content_published'))}"
+        )
+        print(
+            f"   Content rejected: {len(self.director.event_log.get_events_by_type('content_rejected'))}"
+        )
+        print(
+            f"   System errors: {len(self.director.event_log.get_events_by_type('system_error'))}"
+        )
 
     def export_json(self, filepath: Path) -> None:
         """Export simulation results to JSON."""
@@ -207,31 +224,20 @@ without human intervention or real platform posts.
 
 Example:
     python tests/simulation.py --cycles 10 --theme auto --verbose
-        """
+        """,
     )
 
     parser.add_argument(
-        "--cycles",
-        type=int,
-        default=5,
-        help="Number of cycles to run (default: 5)"
+        "--cycles", type=int, default=5, help="Number of cycles to run (default: 5)"
     )
     parser.add_argument(
         "--theme",
         choices=["auto", "tech_deep_dive", "campaign", "agent_city"],
         default="auto",
-        help="Content generation theme (default: auto)"
+        help="Content generation theme (default: auto)",
     )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Print detailed logs"
-    )
-    parser.add_argument(
-        "--export",
-        type=str,
-        help="Export results to JSON file"
-    )
+    parser.add_argument("--verbose", action="store_true", help="Print detailed logs")
+    parser.add_argument("--export", type=str, help="Export results to JSON file")
 
     args = parser.parse_args()
 

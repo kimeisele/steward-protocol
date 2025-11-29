@@ -37,6 +37,7 @@ class TestRunner:
             self.failed += 1
             self.errors.append((name, error_msg))
             import traceback
+
             traceback.print_exc()
         except Exception as e:
             error_msg = str(e) if str(e) else repr(e)
@@ -44,17 +45,18 @@ class TestRunner:
             self.failed += 1
             self.errors.append((name, error_msg))
             import traceback
+
             traceback.print_exc()
 
     def report(self):
         """Print test summary."""
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print(f"TESTS: {self.passed} passed, {self.failed} failed")
         if self.errors:
             print("\nFAILURES:")
             for name, error in self.errors:
                 print(f"  - {name}: {error}")
-        print("="*70)
+        print("=" * 70)
         return self.failed == 0
 
 
@@ -62,12 +64,17 @@ class TestRunner:
 # TEST: Kernel Boot
 # =============================================================================
 
+
 def test_kernel_boots():
     """Test that kernel can boot without crashing."""
     kernel = RealVibeKernel()
     assert kernel is not None
     # Status is an Enum, check its value
-    status_value = kernel._status.value if hasattr(kernel._status, 'value') else str(kernel._status)
+    status_value = (
+        kernel._status.value
+        if hasattr(kernel._status, "value")
+        else str(kernel._status)
+    )
     assert status_value in ["INIT", "RUNNING", "BOOTED", "STOPPED"]
 
 
@@ -115,10 +122,11 @@ def test_kernel_status_has_credits():
 # TEST: Process Isolation
 # =============================================================================
 
+
 def test_process_manager_exists():
     """Test that kernel has ProcessManager."""
     kernel = RealVibeKernel()
-    assert hasattr(kernel, 'process_manager')
+    assert hasattr(kernel, "process_manager")
     assert kernel.process_manager is not None
     assert isinstance(kernel.process_manager, ProcessManager)
 
@@ -129,17 +137,18 @@ def test_process_health_monitoring():
     pm = ProcessManager()
 
     # Verify health monitoring methods exist (actual method is check_health)
-    assert hasattr(pm, 'check_health')
+    assert hasattr(pm, "check_health")
     assert callable(pm.check_health)
 
     # Verify spawn capability exists
-    assert hasattr(pm, 'spawn_agent')
+    assert hasattr(pm, "spawn_agent")
     assert callable(pm.spawn_agent)
 
 
 # =============================================================================
 # TEST: Parampara Integrity
 # =============================================================================
+
 
 def test_genesis_block_creation():
     """Test that Genesis Block is created correctly."""
@@ -174,7 +183,7 @@ def test_chain_integrity_verification():
         chain.add_block(
             event_type=LineageEventType.KERNEL_BOOT,
             agent_id="test_kernel",
-            data={"timestamp": "2025-11-28T12:00:00Z"}
+            data={"timestamp": "2025-11-28T12:00:00Z"},
         )
 
         # Verify chain integrity
@@ -193,9 +202,9 @@ def test_chain_integrity_verification():
 # =============================================================================
 
 if __name__ == "__main__":
-    print("="*70)
+    print("=" * 70)
     print("INTEGRATION TEST SUITE")
-    print("="*70)
+    print("=" * 70)
     print()
 
     runner = TestRunner()

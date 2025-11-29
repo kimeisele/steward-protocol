@@ -1,4 +1,8 @@
 {
+  "agent": {
+    "id": "envoy",
+    "name": "ENVOY"
+  },
   "capabilities": {
     "operations": [
       {

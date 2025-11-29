@@ -114,7 +114,9 @@ class Referee:
             return 0
 
         if verified_events > 0:
-            logger.debug(f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP")
+            logger.debug(
+                f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP"
+            )
 
         return max(0, xp)  # XP never goes below 0
 

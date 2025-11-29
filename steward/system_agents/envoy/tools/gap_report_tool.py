@@ -124,7 +124,9 @@ class GAPReportTool:
             # Generate cryptographic hash for immutability proof
             report_hash = self._generate_report_hash(report)
             report["verification"]["sha256_hash"] = report_hash
-            report["verification"]["hash_timestamp"] = datetime.now(timezone.utc).isoformat()
+            report["verification"]["hash_timestamp"] = datetime.now(
+                timezone.utc
+            ).isoformat()
 
             logger.info(f"   ✓ Report hash: {report_hash[:16]}...")
             logger.info("✅ G.A.P. Report generated successfully")
@@ -417,7 +419,9 @@ class GAPReportTool:
         # Header
         metadata = report.get("metadata", {})
         md.append(f"# {metadata.get('title', 'G.A.P. Report')}\n")
-        md.append(f"**Type:** {metadata.get('report_type', 'Governability Audit Proof')}\n")
+        md.append(
+            f"**Type:** {metadata.get('report_type', 'Governability Audit Proof')}\n"
+        )
         md.append(f"**Generated:** {metadata.get('generated_at', 'Unknown')}\n")
         md.append(f"**Version:** {metadata.get('version', '1.0')}\n\n")
 
@@ -437,8 +441,12 @@ class GAPReportTool:
         # Verification
         verification = report.get("verification", {})
         md.append("## Verification\n\n")
-        md.append(f"**Report Hash (SHA-256):** `{verification.get('sha256_hash', 'N/A')}`\n\n")
-        md.append(f"**Hash Timestamp:** {verification.get('hash_timestamp', 'N/A')}\n\n")
+        md.append(
+            f"**Report Hash (SHA-256):** `{verification.get('sha256_hash', 'N/A')}`\n\n"
+        )
+        md.append(
+            f"**Hash Timestamp:** {verification.get('hash_timestamp', 'N/A')}\n\n"
+        )
 
         # Conclusion
         md.append("## Conclusion\n\n")

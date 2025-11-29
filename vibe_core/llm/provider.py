@@ -35,7 +35,9 @@ class LLMProvider(ABC):
     """
 
     @abstractmethod
-    def chat(self, messages: list[dict[str, str]], model: str | None = None, **kwargs) -> str:
+    def chat(
+        self, messages: list[dict[str, str]], model: str | None = None, **kwargs
+    ) -> str:
         """
         Send messages to the LLM and get a response.
 

@@ -69,7 +69,9 @@ def main():
             except Exception as e:
                 print(f"❌ ERROR: {e}")
         else:
-            print(f"ℹ️  {agent.upper():>10s} already has {current_bal} credits (skipping)")
+            print(
+                f"ℹ️  {agent.upper():>10s} already has {current_bal} credits (skipping)"
+            )
 
     print("-" * 70)
     print(f"✅ Total distributed: {total_distributed} credits")
@@ -94,7 +96,9 @@ def main():
     print(f"   Total Transactions:    {stats['transactions']}")
     print(f"   Total Credits Issued:  {stats['total_credits_issued']}")
     print(f"   Total Balances:        {stats['total_balance']}")
-    print(f"   System Integrity:      {'✅ VERIFIED' if stats['integrity'] else '❌ FAILED'}")
+    print(
+        f"   System Integrity:      {'✅ VERIFIED' if stats['integrity'] else '❌ FAILED'}"
+    )
 
     # Print Audit Trail (Recent Transactions)
     print("\n📜 Recent Transactions:")

@@ -44,7 +44,9 @@ class LLMEngineAdapter:
         try:
             if BaseLLMEngine:
                 self.llm_engine = BaseLLMEngine()
-                logger.info("🧠 LLM Engine Adapter initialized - Intelligent fallback active")
+                logger.info(
+                    "🧠 LLM Engine Adapter initialized - Intelligent fallback active"
+                )
             else:
                 logger.warning("⚠️  Base LLM Engine unavailable")
         except Exception as e:
@@ -88,9 +90,7 @@ class LLMEngineAdapter:
                 return {
                     "status": "success",
                     "path": "llm",
-                    "data": {
-                        "summary": response_text
-                    }
+                    "data": {"summary": response_text},
                 }
             except Exception as e:
                 logger.warning(f"⚠️  LLM generation failed: {e}, using fallback")
@@ -119,7 +119,5 @@ class LLMEngineAdapter:
         return {
             "status": "success",
             "path": "llm_fallback",
-            "data": {
-                "summary": fallback_msg
-            }
+            "data": {"summary": fallback_msg},
         }

@@ -95,7 +95,9 @@ class LedgerTool:
     def last_hash(self, value):
         self._last_hash = value
 
-    def allocate_credits(self, agent_name: str, amount: int, reason: str = "initial_allocation") -> LedgerEntry:
+    def allocate_credits(
+        self, agent_name: str, amount: int, reason: str = "initial_allocation"
+    ) -> LedgerEntry:
         """
         Allocate credits to an agent (admin operation).
 
@@ -131,7 +133,9 @@ class LedgerTool:
 
         return entry
 
-    def deduct_credits(self, agent_name: str, amount: int = 1, reason: str = "broadcast") -> Optional[LedgerEntry]:
+    def deduct_credits(
+        self, agent_name: str, amount: int = 1, reason: str = "broadcast"
+    ) -> Optional[LedgerEntry]:
         """
         Deduct credits from an agent (automatic on action).
 
@@ -147,7 +151,9 @@ class LedgerTool:
         """
         try:
             # Transfer to a burn account (consumed credits)
-            tx_id = self.bank.transfer(agent_name, "CIVIC_TREASURY", amount, reason, "deduction")
+            tx_id = self.bank.transfer(
+                agent_name, "CIVIC_TREASURY", amount, reason, "deduction"
+            )
 
             balance = self.bank.get_balance(agent_name)
             entry = LedgerEntry(
@@ -172,7 +178,9 @@ class LedgerTool:
             logger.warning(f"   {str(e)}")
             return None
 
-    def refill_credits(self, agent_name: str, amount: int = 100, admin_key: Optional[str] = None) -> LedgerEntry:
+    def refill_credits(
+        self, agent_name: str, amount: int = 100, admin_key: Optional[str] = None
+    ) -> LedgerEntry:
         """
         Refill an agent's credits (admin operation).
 
@@ -187,7 +195,9 @@ class LedgerTool:
             The ledger entry
         """
         # Transfer from MINT to agent
-        tx_id = self.bank.transfer("MINT", agent_name, amount, "admin_refill", "refilling")
+        tx_id = self.bank.transfer(
+            "MINT", agent_name, amount, "admin_refill", "refilling"
+        )
 
         balance = self.bank.get_balance(agent_name)
         entry = LedgerEntry(
@@ -250,7 +260,9 @@ class LedgerTool:
         """
         return self.bank.get_balance(agent_name)
 
-    def get_agent_history(self, agent_name: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_agent_history(
+        self, agent_name: str, limit: int = 10
+    ) -> List[Dict[str, Any]]:
         """
         Get transaction history for an agent.
 
@@ -363,7 +375,9 @@ def main():
     history = ledger.get_agent_history("herald")
     print(f"\nTransaction history:")
     for entry in history:
-        print(f"  {entry['timestamp']}: {entry['operation']} {entry['amount']} - {entry['reason']}")
+        print(
+            f"  {entry['timestamp']}: {entry['operation']} {entry['amount']} - {entry['reason']}"
+        )
 
     # Verify integrity
     print(f"\n✅ System Integrity: {ledger.bank.verify_integrity()}")

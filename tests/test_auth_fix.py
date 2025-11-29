@@ -12,7 +12,11 @@ import os
 import pytest
 from unittest.mock import MagicMock, patch
 
-from examples.herald.publisher import TwitterPublisher, LinkedInPublisher, MultiChannelPublisher
+from examples.herald.publisher import (
+    TwitterPublisher,
+    LinkedInPublisher,
+    MultiChannelPublisher,
+)
 
 
 class TestTwitterPublisher:
@@ -205,7 +209,9 @@ class TestLinkedInPublisher:
         publisher = LinkedInPublisher()
 
         # Mock get_author_urn to return a valid URN
-        with patch.object(publisher, "get_author_urn", return_value="urn:li:person:123"):
+        with patch.object(
+            publisher, "get_author_urn", return_value="urn:li:person:123"
+        ):
             with patch("examples.herald.publisher.requests.post") as mock_post:
                 mock_response = MagicMock()
                 mock_response.status_code = 201

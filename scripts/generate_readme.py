@@ -81,7 +81,9 @@ def get_git_stats():
             stats["contributors"] = sorted(list(contributors))[:5]
 
         # Get recent commits
-        result = subprocess.run(["git", "log", "--oneline", "-3"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["git", "log", "--oneline", "-3"], capture_output=True, text=True, timeout=5
+        )
         if result.returncode == 0:
             commits = result.stdout.strip().split("\n")
             stats["recent_commits"] = [c.strip() for c in commits if c.strip()]
@@ -118,7 +120,9 @@ def get_agent_list():
             content = cartridge_file.read_text()
 
             # Extract description from class docstring
-            class_match = re.search(r'class\s+\w+Cartridge.*?"""(.*?)"""', content, re.DOTALL)
+            class_match = re.search(
+                r'class\s+\w+Cartridge.*?"""(.*?)"""', content, re.DOTALL
+            )
             description = "Specialized Agent"
             if class_match:
                 doc = class_match.group(1).strip()
@@ -128,7 +132,9 @@ def get_agent_list():
             agents_list.append({"name": agent_name.upper(), "role": description})
         except Exception as e:
             print(f"Warning: Could not parse {agent_name}: {e}")
-            agents_list.append({"name": agent_name.upper(), "role": "Specialized Agent"})
+            agents_list.append(
+                {"name": agent_name.upper(), "role": "Specialized Agent"}
+            )
 
     return agents_list
 

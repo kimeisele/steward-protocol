@@ -9,10 +9,7 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("TEST_LIFECYCLE_SIMPLE")
 
 
@@ -70,7 +67,9 @@ def test_lifecycle_manager():
     logger.info("TEST 3: Initiate to GRIHASTHA (promotion)")
     logger.info("-" * 80)
 
-    state = mgr.initiate_to_grihastha(agent, initiator_agent="TEMPLE", reason="Passed tests")
+    state = mgr.initiate_to_grihastha(
+        agent, initiator_agent="TEMPLE", reason="Passed tests"
+    )
     logger.info(f"✅ Promoted to GRIHASTHA")
     logger.info(f"   Status: {state.status.value}")
     logger.info(f"   Diksha passed: {state.diksha_passed}")
@@ -139,7 +138,9 @@ def test_lifecycle_manager():
     logger.info("TEST 7: Retire to VANAPRASTHA")
     logger.info("-" * 80)
 
-    state = mgr.deprecate_to_vanaprastha(agent, reason="Deprecated code", archive_path="/archive/test_v1")
+    state = mgr.deprecate_to_vanaprastha(
+        agent, reason="Deprecated code", archive_path="/archive/test_v1"
+    )
     logger.info(f"✅ Retired to VANAPRASTHA")
     logger.info(f"   Status: {state.status.value}")
 
@@ -150,7 +151,9 @@ def test_lifecycle_manager():
     logger.info("TEST 8: Merge to SANNYASA (final state)")
     logger.info("-" * 80)
 
-    state = mgr.merge_to_sannyasa(agent, "/core/vibe_core.py", reason="Merged into core")
+    state = mgr.merge_to_sannyasa(
+        agent, "/core/vibe_core.py", reason="Merged into core"
+    )
     logger.info(f"✅ Merged to SANNYASA")
     logger.info(f"   Status: {state.status.value}")
 
@@ -205,5 +208,6 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"❌ Test failed with exception: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

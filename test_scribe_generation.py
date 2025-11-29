@@ -4,7 +4,8 @@ Test SCRIBE generation - prove zero hardcoding
 """
 
 import sys
-sys.path.insert(0, '.')
+
+sys.path.insert(0, ".")
 
 from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
 from steward.system_agents.scribe.tools.project_introspector import ProjectIntrospector
@@ -17,23 +18,23 @@ print("=" * 70)
 # 1. Test AGENTS introspection
 print("\n1️⃣ AGENTS.md INTROSPECTION TEST")
 print("-" * 70)
-cart_intro = CartridgeIntrospector('.')
-agents = cart_intro.scan_all(Path('.') / 'steward' / 'system_agents')
+cart_intro = CartridgeIntrospector(".")
+agents = cart_intro.scan_all(Path(".") / "steward" / "system_agents")
 
 print(f"✅ Agents discovered: {len(agents)}")
 print(f"✅ Total tools found: {sum(len(a['tools']) for a in agents.values())}")
 print("\nSample agents with tools:")
 for name in sorted(agents.keys())[:6]:
-    tools_count = len(agents[name]['tools'])
+    tools_count = len(agents[name]["tools"])
     print(f"   {name:15} → {tools_count:2} tools")
     if tools_count > 0:
-        for tool in agents[name]['tools'][:2]:
+        for tool in agents[name]["tools"][:2]:
             print(f"      - {tool['name']}")
 
 # 2. Test README introspection
 print("\n2️⃣ README.md INTROSPECTION TEST")
 print("-" * 70)
-proj_intro = ProjectIntrospector('.')
+proj_intro = ProjectIntrospector(".")
 metadata = proj_intro.get_all_metadata()
 
 print(f"✅ Project name: {metadata['project']['name']}")
@@ -48,12 +49,12 @@ print(f"✅ Agent count: {metadata['agent_count']}")
 # 3. Test INDEX introspection
 print("\n3️⃣ INDEX.md INTROSPECTION TEST")
 print("-" * 70)
-docs_dir = Path('docs')
+docs_dir = Path("docs")
 
-arch_docs = sorted([f.name for f in (docs_dir / 'architecture').glob('*.md')])
-deploy_docs = sorted([f.name for f in (docs_dir / 'deployment').glob('*.md')])
-phil_docs = sorted([f.name for f in (docs_dir / 'philosophy').glob('*.md')])
-guides_docs = sorted([f.name for f in (docs_dir / 'guides').glob('*.md')])
+arch_docs = sorted([f.name for f in (docs_dir / "architecture").glob("*.md")])
+deploy_docs = sorted([f.name for f in (docs_dir / "deployment").glob("*.md")])
+phil_docs = sorted([f.name for f in (docs_dir / "philosophy").glob("*.md")])
+guides_docs = sorted([f.name for f in (docs_dir / "guides").glob("*.md")])
 
 print(f"✅ Architecture docs ({len(arch_docs)}): {arch_docs[:3]}...")
 print(f"✅ Deployment docs ({len(deploy_docs)}): {deploy_docs}")

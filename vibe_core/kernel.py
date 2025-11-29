@@ -48,7 +48,9 @@ class VibeLedger(ABC):
     """Immutable event ledger interface"""
 
     @abstractmethod
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (used by agents for governance actions)
 
         Args:

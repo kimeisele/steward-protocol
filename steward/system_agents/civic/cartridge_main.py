@@ -86,7 +86,9 @@ class CivicCartridge(VibeAgent, OathMixin):
             capabilities=["registry", "licensing", "ledger", "governance"],
         )
 
-        logger.info(f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
+        logger.info(
+            f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config"
+        )
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
@@ -128,7 +130,9 @@ class CivicCartridge(VibeAgent, OathMixin):
     def registry_path(self):
         """Lazy-load registry path (sandboxed)."""
         if self._registry_path is None:
-            self._registry_path = self.system.get_sandbox_path() / "registry" / "citizens.json"
+            self._registry_path = (
+                self.system.get_sandbox_path() / "registry" / "citizens.json"
+            )
             self._registry_path.parent.mkdir(parents=True, exist_ok=True)
         return self._registry_path
 
@@ -143,7 +147,9 @@ class CivicCartridge(VibeAgent, OathMixin):
     def state_path(self):
         """Lazy-load state path (sandboxed)."""
         if self._state_path is None:
-            self._state_path = self.system.get_sandbox_path() / "state" / "civic_state.json"
+            self._state_path = (
+                self.system.get_sandbox_path() / "state" / "civic_state.json"
+            )
             self._state_path.parent.mkdir(parents=True, exist_ok=True)
         return self._state_path
 

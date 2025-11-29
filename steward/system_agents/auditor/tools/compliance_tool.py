@@ -262,7 +262,9 @@ class ComplianceTool:
                         check_type="documentation_sync",
                         severity="warning",
                         message="STEWARD.md missing public key field",
-                        details={"recommendation": "Add 'key:' field to Agent Identity section"},
+                        details={
+                            "recommendation": "Add 'key:' field to Agent Identity section"
+                        },
                     )
                 )
                 details.append("⚠️  STEWARD.md: No 'key:' field found")
@@ -278,7 +280,9 @@ class ComplianceTool:
                         check_type="documentation_sync",
                         severity="warning",
                         message="STEWARD.md not cryptographically signed",
-                        details={"recommendation": "Sign STEWARD.md with organization key"},
+                        details={
+                            "recommendation": "Sign STEWARD.md with organization key"
+                        },
                     )
                 )
                 details.append("⚠️  STEWARD.md: No cryptographic signature")
@@ -326,7 +330,9 @@ class ComplianceTool:
                     details={"expected_path": str(events_dir)},
                 )
             )
-            details.append("⚠️  Events directory not found (will be created on first run)")
+            details.append(
+                "⚠️  Events directory not found (will be created on first run)"
+            )
             return True, details  # Not a critical failure
 
         # Find all .jsonl files
@@ -369,7 +375,9 @@ class ComplianceTool:
                                         },
                                     )
                                 )
-                                details.append(f"❌ {jsonl_file.name}: Corrupt JSON at line {line_num}")
+                                details.append(
+                                    f"❌ {jsonl_file.name}: Corrupt JSON at line {line_num}"
+                                )
                                 passed = False
 
                 total_events += event_count
@@ -437,7 +445,9 @@ class ComplianceTool:
         if passed:
             summary = f"✅ GAD-000 COMPLIANCE: PASSED ({len(self.warnings)} warnings)"
         else:
-            summary = f"❌ GAD-000 COMPLIANCE: FAILED ({len(self.violations)} violations)"
+            summary = (
+                f"❌ GAD-000 COMPLIANCE: FAILED ({len(self.violations)} violations)"
+            )
 
         # Create report
         report = ComplianceReport(

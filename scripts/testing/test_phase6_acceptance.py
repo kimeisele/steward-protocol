@@ -80,7 +80,9 @@ def test_all_agents_importable():
             module = __import__(f"{module_name}.cartridge_main", fromlist=[class_name])
             agent_class = getattr(module, class_name)
             instance = agent_class()
-            print(f"   ✅ {module_name:12} | {instance.name:20} | {instance.description[:40]}")
+            print(
+                f"   ✅ {module_name:12} | {instance.name:20} | {instance.description[:40]}"
+            )
         except Exception as e:
             print(f"   ❌ {module_name:12} | FAILED: {e}")
             all_passed = False

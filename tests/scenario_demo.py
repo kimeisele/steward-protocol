@@ -21,15 +21,18 @@ from typing import Dict, List, Any
 # --- MOCK VIBE OS KERNEL INFRASTRUCTURE ---
 # In production, this is imported from vibe_core
 
+
 @dataclass
 class Task:
     agent_id: str
     payload: Dict[str, Any]
     id: str = "task-001"
 
+
 class MockLedger:
     def record(self, event_type, details):
         print(f"📝 LEDGER: {event_type} - {details}")
+
 
 class MockKernel:
     def __init__(self):
@@ -44,7 +47,9 @@ class MockKernel:
         self.state[f"{to_agent}_credits"] += amount
         self.ledger.record("TRANSFER", f"{amount} credits -> {to_agent}")
 
+
 # --- AGENT CITY LOGIC (Simplified for Demo) ---
+
 
 class CivicAgent:
     def __init__(self, kernel):
@@ -53,9 +58,12 @@ class CivicAgent:
     def check_license(self, agent_id):
         credits = self.kernel.state.get(f"{agent_id}_credits", 0)
         if credits <= 0:
-            self.kernel.log("CIVIC", f"❌ BLOCK: {agent_id} has 0 credits. License suspended.")
+            self.kernel.log(
+                "CIVIC", f"❌ BLOCK: {agent_id} has 0 credits. License suspended."
+            )
             return False
         return True
+
 
 class ForumAgent:
     def __init__(self, kernel):
@@ -63,7 +71,12 @@ class ForumAgent:
 
     def create_proposal(self, title, proposer):
         prop_id = f"PROP-{len(self.kernel.state['proposals'])+1:03d}"
-        proposal = {"id": prop_id, "title": title, "proposer": proposer, "status": "OPEN"}
+        proposal = {
+            "id": prop_id,
+            "title": title,
+            "proposer": proposer,
+            "status": "OPEN",
+        }
         self.kernel.state["proposals"].append(proposal)
         self.kernel.log("FORUM", f"🗳️  NEW PROPOSAL {prop_id}: '{title}' by {proposer}")
         return prop_id
@@ -74,6 +87,7 @@ class ForumAgent:
             self.kernel.log("FORUM", f"✅ PROPOSAL {prop_id} PASSED!")
             return True
         return False
+
 
 class HeraldAgent:
     def __init__(self, kernel, civic, forum):
@@ -96,10 +110,12 @@ class HeraldAgent:
         self.kernel.ledger.record("BROADCAST", content)
         return {"status": "SUCCESS"}
 
+
 # --- THE SIMULATION SCENARIO ---
 
+
 def run_scenario():
-    print("\n🏙️  INITIATING AGENT CITY SIMULATION...\n" + "="*40)
+    print("\n🏙️  INITIATING AGENT CITY SIMULATION...\n" + "=" * 40)
 
     # Boot
     kernel = MockKernel()
@@ -123,7 +139,7 @@ def run_scenario():
         print(f"⚠️  System Halted. Proposal {prop_id} pending.")
         choice = input(f"❓ Steward, do you approve {prop_id}? (y/n): ")
 
-        if choice.lower() == 'y':
+        if choice.lower() == "y":
             passed = forum.vote(prop_id, "YES")
             if passed:
                 print("\n🎬 ACT 3: THE EXECUTION")
@@ -134,6 +150,7 @@ def run_scenario():
                 print("\n✅ SCENARIO COMPLETE: System recovered autonomously.")
         else:
             print("\n❌ VOTE FAILED. Herald remains silent.")
+
 
 if __name__ == "__main__":
     run_scenario()

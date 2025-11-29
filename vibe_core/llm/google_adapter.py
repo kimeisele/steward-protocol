@@ -66,7 +66,8 @@ class GoogleProvider(LLMProvider):
 
         if not self.api_key:
             raise ProviderNotAvailableError(
-                "Google API key required. Set GOOGLE_API_KEY environment variable " "or pass api_key parameter."
+                "Google API key required. Set GOOGLE_API_KEY environment variable "
+                "or pass api_key parameter."
             )
 
         # Initialize the runtime provider
@@ -75,7 +76,9 @@ class GoogleProvider(LLMProvider):
             self._default_model = model
             logger.info(f"GoogleProvider initialized (model={model})")
         except Exception as e:
-            raise ProviderNotAvailableError(f"Failed to initialize GoogleProvider: {e}") from e
+            raise ProviderNotAvailableError(
+                f"Failed to initialize GoogleProvider: {e}"
+            ) from e
 
     def chat(
         self,

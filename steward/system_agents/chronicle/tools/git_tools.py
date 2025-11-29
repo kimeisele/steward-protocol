@@ -71,7 +71,9 @@ class GitTools:
         cmd = ["git"] + args
 
         try:
-            result = subprocess.run(cmd, cwd=str(self.repo_path), capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                cmd, cwd=str(self.repo_path), capture_output=True, text=True, timeout=30
+            )
 
             if check and result.returncode != 0:
                 error_msg = result.stderr or result.stdout
@@ -90,7 +92,9 @@ class GitTools:
             self.logger.error(f"❌ {msg}")
             return (1, "", msg)
 
-    def seal_history(self, message: str, files: Optional[List[str]] = None, sign: bool = True) -> Dict[str, any]:
+    def seal_history(
+        self, message: str, files: Optional[List[str]] = None, sign: bool = True
+    ) -> Dict[str, any]:
         """
         Seal the timeline: Create a signed commit.
 
@@ -131,7 +135,9 @@ class GitTools:
                 self._run_git_command(["add", "-A"], check=False)
 
             # 2. Check if there's anything to commit
-            code, out, err = self._run_git_command(["diff", "--cached", "--quiet"], check=False)
+            code, out, err = self._run_git_command(
+                ["diff", "--cached", "--quiet"], check=False
+            )
             if code == 0:
                 # No changes
                 self.logger.warning("⚠️  No changes to commit")
@@ -165,7 +171,9 @@ class GitTools:
 
         return result
 
-    def read_history(self, pattern: Optional[str] = None, limit: int = 10) -> Dict[str, any]:
+    def read_history(
+        self, pattern: Optional[str] = None, limit: int = 10
+    ) -> Dict[str, any]:
         """
         Read the timeline: Query git log.
 
@@ -256,7 +264,9 @@ class GitTools:
                 self.logger.info(f"   → Auto-prefixed: {branch_name}")
 
             # Create and checkout branch
-            code, out, err = self._run_git_command(["checkout", "-b", branch_name], check=False)
+            code, out, err = self._run_git_command(
+                ["checkout", "-b", branch_name], check=False
+            )
 
             if code != 0:
                 self.logger.error(f"❌ Branch creation failed: {err}")
@@ -320,7 +330,9 @@ class GitTools:
 
         try:
             # Get current branch
-            code, branch, _ = self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"], check=False)
+            code, branch, _ = self._run_git_command(
+                ["rev-parse", "--abbrev-ref", "HEAD"], check=False
+            )
             if code == 0:
                 result["branch"] = branch
 
@@ -337,7 +349,9 @@ class GitTools:
 
         return result
 
-    def push_to_remote(self, remote: str = "origin", branch: Optional[str] = None) -> Dict[str, any]:
+    def push_to_remote(
+        self, remote: str = "origin", branch: Optional[str] = None
+    ) -> Dict[str, any]:
         """
         Push commits to remote (manifest timeline across network).
 
@@ -359,7 +373,9 @@ class GitTools:
         try:
             # Get current branch if not specified
             if not branch:
-                code, branch_out, _ = self._run_git_command(["rev-parse", "--abbrev-ref", "HEAD"], check=False)
+                code, branch_out, _ = self._run_git_command(
+                    ["rev-parse", "--abbrev-ref", "HEAD"], check=False
+                )
                 if code == 0:
                     branch = branch_out
                 else:
@@ -367,7 +383,9 @@ class GitTools:
                     return result
 
             # Push with -u flag (track remote)
-            code, out, err = self._run_git_command(["push", "-u", remote, branch], check=False)
+            code, out, err = self._run_git_command(
+                ["push", "-u", remote, branch], check=False
+            )
 
             if code != 0:
                 self.logger.error(f"❌ Push failed: {err}")

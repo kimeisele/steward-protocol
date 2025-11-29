@@ -96,7 +96,7 @@ class HeraldArtist:
 
                     if response.status_code == 200:
                         # Save to disk
-                        with open(filename, 'wb') as f:
+                        with open(filename, "wb") as f:
                             f.write(response.content)
 
                         file_size_kb = filename.stat().st_size / 1024
@@ -121,7 +121,9 @@ class HeraldArtist:
                         return None
 
                 except requests.exceptions.Timeout:
-                    logger.error("❌ ARTIST: Request timeout (Pollinations taking too long)")
+                    logger.error(
+                        "❌ ARTIST: Request timeout (Pollinations taking too long)"
+                    )
                     return None
 
         except Exception as e:
@@ -149,7 +151,9 @@ class HeraldArtist:
             if i < len(prompt_texts) - 1:
                 time.sleep(1)
 
-        logger.info(f"✅ ARTIST: Batch complete ({len(results)}/{len(prompt_texts)} images)")
+        logger.info(
+            f"✅ ARTIST: Batch complete ({len(results)}/{len(prompt_texts)} images)"
+        )
         return results
 
 
@@ -161,7 +165,9 @@ if __name__ == "__main__":
     artist = HeraldArtist()
 
     # Test prompt
-    test_prompt = "Agent identity is the missing layer in the AI stack cryptographic verification"
+    test_prompt = (
+        "Agent identity is the missing layer in the AI stack cryptographic verification"
+    )
     logger.info(f"\nGenerating visual for:\n  '{test_prompt}'")
 
     image_path = artist.generate_visual(test_prompt)
@@ -169,6 +175,8 @@ if __name__ == "__main__":
     if image_path:
         logger.info(f"✅ SUCCESS: Image generated at {image_path}")
     else:
-        logger.warning("⚠️  FAILED: Could not generate image (check internet connection)")
+        logger.warning(
+            "⚠️  FAILED: Could not generate image (check internet connection)"
+        )
 
     logger.info("=" * 60)

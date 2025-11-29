@@ -89,7 +89,9 @@ async def run_live_fire():
         from envoy.deterministic_executor import DeterministicExecutor
 
         engine = DeterministicExecutor(knowledge_dir="knowledge")
-        logger.info(f"✅ DeterministicExecutor initialized with {len(engine.playbooks)} playbooks")
+        logger.info(
+            f"✅ DeterministicExecutor initialized with {len(engine.playbooks)} playbooks"
+        )
 
         # Check for the GAD-5500 playbook
         if "FEATURE_IMPLEMENT_SAFE_V1" not in engine.playbooks:
@@ -97,7 +99,9 @@ async def run_live_fire():
             return False
 
         playbook = engine.playbooks["FEATURE_IMPLEMENT_SAFE_V1"]
-        logger.info(f"✅ Playbook loaded: {playbook.name} ({len(playbook.phases)} phases)")
+        logger.info(
+            f"✅ Playbook loaded: {playbook.name} ({len(playbook.phases)} phases)"
+        )
 
     except Exception as e:
         logger.error(f"❌ PLAYBOOK INIT FAILED: {e}")

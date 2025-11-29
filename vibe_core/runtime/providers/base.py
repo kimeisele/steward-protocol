@@ -95,7 +95,9 @@ class LLMProvider(ABC):
         pass
 
     @abstractmethod
-    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, model: str
+    ) -> float:
         """
         Calculate cost for token usage (provider-specific pricing).
 
@@ -168,7 +170,9 @@ class NoOpProvider(LLMProvider):
     ) -> LLMResponse:
         """Return mock empty response"""
         if self.logger:
-            self.logger.warning("NoOpProvider: Skipping LLM call (no provider available)")
+            self.logger.warning(
+                "NoOpProvider: Skipping LLM call (no provider available)"
+            )
 
         usage = LLMUsage(
             input_tokens=0,
@@ -186,7 +190,9 @@ class NoOpProvider(LLMProvider):
             provider="noop",
         )
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, model: str
+    ) -> float:
         """NoOp provider has zero cost"""
         return 0.0
 

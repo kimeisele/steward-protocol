@@ -22,7 +22,9 @@ from pathlib import Path
 from datetime import datetime
 
 # GAD-000: Structured Logging for traceability
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("HERALD_PUBLISHER")
 
 
@@ -53,8 +55,17 @@ class TwitterPublisher:
         self.access_token_secret = os.getenv("TWITTER_ACCESS_SECRET")
 
         # 2. Initialisierung versuchen
-        if not all([self.consumer_key, self.consumer_secret, self.access_token, self.access_token_secret]):
-            logger.warning("⚠️  TWITTER: Missing OAuth 1.0a credentials. Write access will fail.")
+        if not all(
+            [
+                self.consumer_key,
+                self.consumer_secret,
+                self.access_token,
+                self.access_token_secret,
+            ]
+        ):
+            logger.warning(
+                "⚠️  TWITTER: Missing OAuth 1.0a credentials. Write access will fail."
+            )
             # Wir lassen self.client auf None, damit publish() sofort abbricht
         else:
             try:
@@ -62,7 +73,7 @@ class TwitterPublisher:
                     consumer_key=self.consumer_key,
                     consumer_secret=self.consumer_secret,
                     access_token=self.access_token,
-                    access_token_secret=self.access_token_secret
+                    access_token_secret=self.access_token_secret,
                 )
                 logger.info("✅ TWITTER: Client initialized with OAuth 1.0a context.")
             except Exception as e:
@@ -81,7 +92,9 @@ class TwitterPublisher:
             # get_me() proves we have valid OAuth 1.0a User Context
             me = self.client.get_me()
             if me and me.data:
-                logger.info(f"✅ TWITTER AUTH VERIFIED: Connected as @{me.data.username}")
+                logger.info(
+                    f"✅ TWITTER AUTH VERIFIED: Connected as @{me.data.username}"
+                )
                 return True
             else:
                 logger.error("❌ TWITTER: get_me() returned no data")
@@ -102,7 +115,9 @@ class TwitterPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.client:
-            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
+            logger.error(
+                "❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials)."
+            )
             return False
 
         # Safety Check: Twitter Limit ist 280 Zeichen
@@ -110,11 +125,13 @@ class TwitterPublisher:
         if tags:
             tag_string = " " + " ".join(tags)
             if len(tweet) + len(tag_string) > 280:
-                tweet = tweet[:280 - len(tag_string)].strip()
+                tweet = tweet[: 280 - len(tag_string)].strip()
             tweet += tag_string
 
         if len(tweet) > 280:
-            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
+            logger.warning(
+                f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating..."
+            )
             tweet = tweet[:277] + "..."
 
         try:
@@ -122,16 +139,20 @@ class TwitterPublisher:
             response = self.client.create_tweet(text=tweet)
 
             # Prüfung der Response
-            if response and response.data and 'id' in response.data:
+            if response and response.data and "id" in response.data:
                 logger.info(f"🚀 TWEET SENT: ID {response.data['id']}")
                 return True
             else:
-                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
+                logger.error(
+                    f"❌ TWITTER: API call returned unexpected data: {response}"
+                )
                 return False
 
         except tweepy.errors.Forbidden as e:
             logger.critical(f"⛔ TWITTER 403 FORBIDDEN: {e}")
-            logger.critical("HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?")
+            logger.critical(
+                "HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?"
+            )
             return False
         except tweepy.errors.Unauthorized as e:
             logger.critical(f"⛔ TWITTER 401 UNAUTHORIZED: Check your keys/tokens. {e}")
@@ -153,11 +174,14 @@ class TwitterPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.client:
-            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
+            logger.error(
+                "❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials)."
+            )
             return False
 
         # Validate image exists
         from pathlib import Path
+
         image_file = Path(image_path)
         if not image_file.exists():
             logger.error(f"❌ TWITTER: Image file not found: {image_path}")
@@ -168,11 +192,13 @@ class TwitterPublisher:
         if tags:
             tag_string = " " + " ".join(tags)
             if len(tweet) + len(tag_string) > 280:
-                tweet = tweet[:280 - len(tag_string)].strip()
+                tweet = tweet[: 280 - len(tag_string)].strip()
             tweet += tag_string
 
         if len(tweet) > 280:
-            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
+            logger.warning(
+                f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating..."
+            )
             tweet = tweet[:277] + "..."
 
         try:
@@ -184,7 +210,7 @@ class TwitterPublisher:
                 self.consumer_key,
                 self.consumer_secret,
                 self.access_token,
-                self.access_token_secret
+                self.access_token_secret,
             )
             api_v1 = tweepy.API(auth)
 
@@ -194,28 +220,31 @@ class TwitterPublisher:
 
             # Now post the tweet with media
             logger.info("🚀 TWITTER: Publishing tweet with media...")
-            response = self.client.create_tweet(
-                text=tweet,
-                media_ids=[media.media_id]
-            )
+            response = self.client.create_tweet(text=tweet, media_ids=[media.media_id])
 
-            if response and response.data and 'id' in response.data:
+            if response and response.data and "id" in response.data:
                 logger.info(f"🚀 TWEET SENT WITH MEDIA: ID {response.data['id']}")
                 logger.info(f"   Image: {image_file.name}")
                 return True
             else:
-                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
+                logger.error(
+                    f"❌ TWITTER: API call returned unexpected data: {response}"
+                )
                 return False
 
         except tweepy.errors.Forbidden as e:
             logger.critical(f"⛔ TWITTER 403 FORBIDDEN: {e}")
-            logger.critical("HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?")
+            logger.critical(
+                "HINT: Check 'User authentication settings' in Dev Portal -> OAuth 1.0a turned ON? Read/Write permissions?"
+            )
             return False
         except tweepy.errors.Unauthorized as e:
             logger.critical(f"⛔ TWITTER 401 UNAUTHORIZED: Check your keys/tokens. {e}")
             return False
         except Exception as e:
-            logger.error(f"❌ TWITTER MEDIA PUBLISH ERROR: {type(e).__name__} - {str(e)}")
+            logger.error(
+                f"❌ TWITTER MEDIA PUBLISH ERROR: {type(e).__name__} - {str(e)}"
+            )
             logger.info("   Attempting fallback: publishing text-only version...")
             # Fallback to text-only publish
             return self.publish(text_content, tags=tags)
@@ -249,16 +278,13 @@ class LinkedInPublisher:
 
         headers = {
             "Authorization": f"Bearer {self.access_token}",
-            "Accept": "application/json"
+            "Accept": "application/json",
         }
 
         try:
             import requests
-            response = requests.get(
-                self.userinfo_url,
-                headers=headers,
-                timeout=10
-            )
+
+            response = requests.get(self.userinfo_url, headers=headers, timeout=10)
             if response.status_code == 200:
                 user_info = response.json()
                 user_id = user_info.get("sub")  # LinkedIn uses 'sub' for user ID
@@ -280,13 +306,17 @@ class LinkedInPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.access_token:
-            logger.warning("⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication.")
+            logger.warning(
+                "⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication."
+            )
             return False
 
         # Fetch author URN
         author_urn = self.get_author_urn()
         if not author_urn:
-            logger.error("❌ Failed to determine LinkedIn User ID. Check your access token.")
+            logger.error(
+                "❌ Failed to determine LinkedIn User ID. Check your access token."
+            )
             return False
 
         # Prepare post data (LinkedIn UGC Post format)
@@ -295,32 +325,26 @@ class LinkedInPublisher:
             "lifecycleState": "PUBLISHED",
             "specificContent": {
                 "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {
-                        "text": text_content
-                    },
-                    "shareMediaCategory": "NONE"
+                    "shareCommentary": {"text": text_content},
+                    "shareMediaCategory": "NONE",
                 }
             },
-            "visibility": {
-                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-            }
+            "visibility": {"com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"},
         }
 
         # Prepare headers
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
-            "X-Restli-Protocol-Version": "2.0.0"
+            "X-Restli-Protocol-Version": "2.0.0",
         }
 
         # Send POST request
         try:
             import requests
+
             response = requests.post(
-                self.api_url,
-                headers=headers,
-                json=post_data,
-                timeout=10
+                self.api_url, headers=headers, json=post_data, timeout=10
             )
 
             if response.status_code == 201:
@@ -396,11 +420,7 @@ class MultiChannelPublisher:
         Returns:
             dict: Publishing results per platform
         """
-        results = {
-            "twitter": False,
-            "linkedin": False,
-            "summary": []
-        }
+        results = {"twitter": False, "linkedin": False, "summary": []}
 
         # Twitter: Always publish (if token configured)
         if self.twitter.consumer_key:
@@ -425,7 +445,9 @@ class MultiChannelPublisher:
                 else:
                     results["summary"].append("❌ LinkedIn")
             else:
-                logger.info("⏸️  LinkedIn: Saved for Friday publication (weekly strategy)")
+                logger.info(
+                    "⏸️  LinkedIn: Saved for Friday publication (weekly strategy)"
+                )
                 results["summary"].append("⏸️  LinkedIn (weekly)")
         else:
             logger.info("⚠️  LinkedIn: Token not configured")

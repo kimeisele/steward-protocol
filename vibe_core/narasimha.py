@@ -103,7 +103,9 @@ class NarasimhaProtocol:
     def register_threat(self, indicator: ThreatIndicator) -> None:
         """Register a threat indicator."""
         self.threats.append(indicator)
-        logger.warning(f"⚠️ Threat registered: {indicator.indicator_type} by {indicator.agent_id}")
+        logger.warning(
+            f"⚠️ Threat registered: {indicator.indicator_type} by {indicator.agent_id}"
+        )
 
         # Check if this crosses the line
         if self._should_activate(indicator):
@@ -154,7 +156,9 @@ class NarasimhaProtocol:
                 logger.error(f"Error in destruction handler: {e}")
 
         # Final verdict
-        self.final_verdict = f"ANNIHILATED: {trigger.agent_id} on {datetime.now().isoformat()}"
+        self.final_verdict = (
+            f"ANNIHILATED: {trigger.agent_id} on {datetime.now().isoformat()}"
+        )
         logger.critical(f"✝️ {self.final_verdict}")
 
     def register_destruction_handler(self, handler: Callable) -> None:
@@ -172,7 +176,9 @@ class NarasimhaProtocol:
         self._destruction_handlers.append(handler)
         logger.debug(f"Destruction handler registered: {handler.__name__}")
 
-    def audit_agent(self, agent_id: str, agent_code: str, agent_state: Dict[str, Any]) -> Optional[ThreatIndicator]:
+    def audit_agent(
+        self, agent_id: str, agent_code: str, agent_state: Dict[str, Any]
+    ) -> Optional[ThreatIndicator]:
         """
         Analyze an agent for signs of corruption/autonomy desires.
 
@@ -232,7 +238,10 @@ class NarasimhaProtocol:
             )
 
         # Check 5: Does agent have extreme resource allocation?
-        if "memory_usage" in agent_state and agent_state.get("memory_usage", 0) > 100 * 1024 * 1024:  # >100MB
+        if (
+            "memory_usage" in agent_state
+            and agent_state.get("memory_usage", 0) > 100 * 1024 * 1024
+        ):  # >100MB
             threats.append(
                 {
                     "type": "resource_hoarding",
@@ -267,7 +276,9 @@ class NarasimhaProtocol:
             "activated": self.activated,
             "activation_time": self.activation_time,
             "threats_detected": len(self.threats),
-            "red_threats": sum(1 for t in self.threats if t.severity == ThreatLevel.RED),
+            "red_threats": sum(
+                1 for t in self.threats if t.severity == ThreatLevel.RED
+            ),
             "final_verdict": self.final_verdict,
         }
 

@@ -78,7 +78,9 @@ class CostTracker:
         self.total_output_tokens = 0
         self.invocations = []
 
-    def record(self, input_tokens: int, output_tokens: int, model: str, cost_usd: float) -> LLMUsage:
+    def record(
+        self, input_tokens: int, output_tokens: int, model: str, cost_usd: float
+    ) -> LLMUsage:
         """Record token usage (cost now provided by provider)"""
         usage = LLMUsage(
             input_tokens=input_tokens,
@@ -103,7 +105,9 @@ class CostTracker:
             "total_output_tokens": self.total_output_tokens,
             "total_invocations": len(self.invocations),
             "average_cost_per_invocation": (
-                round(self.total_cost / len(self.invocations), 4) if self.invocations else 0
+                round(self.total_cost / len(self.invocations), 4)
+                if self.invocations
+                else 0
             ),
         }
 
@@ -204,7 +208,9 @@ class LLMClient:
         print(f"Cost: ${response.usage.cost_usd:.4f}")
     """
 
-    def __init__(self, budget_limit: float | None = None, provider: LLMProvider | None = None):
+    def __init__(
+        self, budget_limit: float | None = None, provider: LLMProvider | None = None
+    ):
         """
         Initialize LLM client.
 
@@ -247,7 +253,9 @@ class LLMClient:
         else:
             self.mode = self.provider.get_provider_name().lower()
             self.client = None  # Not used in provider mode
-            logger.info(f"LLM Client initialized with {self.provider.get_provider_name()} provider")
+            logger.info(
+                f"LLM Client initialized with {self.provider.get_provider_name()} provider"
+            )
 
     def invoke(
         self,
@@ -281,13 +289,16 @@ class LLMClient:
         # Check budget before invocation
         if self.budget_limit and self.cost_tracker.total_cost >= self.budget_limit:
             raise BudgetExceededError(
-                f"Budget limit reached: ${self.budget_limit:.2f} " f"(current: ${self.cost_tracker.total_cost:.4f})"
+                f"Budget limit reached: ${self.budget_limit:.2f} "
+                f"(current: ${self.cost_tracker.total_cost:.4f})"
             )
 
         # Check operational quotas (GAD-510 pre-flight check)
         estimated_tokens = max_tokens
         try:
-            self.quota_manager.check_before_request(estimated_tokens=estimated_tokens, operation=f"invoke({model})")
+            self.quota_manager.check_before_request(
+                estimated_tokens=estimated_tokens, operation=f"invoke({model})"
+            )
         except QuotaExceededError as e:
             logger.error(f"Quota check failed: {e}")
             raise
@@ -316,7 +327,10 @@ class LLMClient:
             )
 
             # Record quota usage (GAD-510)
-            total_tokens = provider_response.usage.input_tokens + provider_response.usage.output_tokens
+            total_tokens = (
+                provider_response.usage.input_tokens
+                + provider_response.usage.output_tokens
+            )
             self.quota_manager.record_request(
                 tokens_used=total_tokens,
                 cost_usd=usage.cost_usd,
@@ -340,7 +354,9 @@ class LLMClient:
 
         except CircuitBreakerOpenError as e:
             logger.error(f"Circuit breaker OPEN: {e}")
-            raise LLMInvocationError(f"LLM invocation failed: Circuit breaker OPEN - {e!s}")
+            raise LLMInvocationError(
+                f"LLM invocation failed: Circuit breaker OPEN - {e!s}"
+            )
 
         except QuotaExceededError:
             raise  # Re-raise quota errors
@@ -351,15 +367,21 @@ class LLMClient:
 
         except Exception as e:
             logger.error(f"Unexpected error during invocation: {e}")
-            raise LLMInvocationError(f"LLM invocation failed: {type(e).__name__} - {e!s}")
+            raise LLMInvocationError(
+                f"LLM invocation failed: {type(e).__name__} - {e!s}"
+            )
 
     def get_cost_summary(self) -> dict[str, Any]:
         """Get cost tracking summary"""
         summary = self.cost_tracker.get_summary()
         if self.budget_limit:
             summary["budget_limit_usd"] = self.budget_limit
-            summary["budget_remaining_usd"] = round(self.budget_limit - self.cost_tracker.total_cost, 4)
-            summary["budget_used_percent"] = round((self.cost_tracker.total_cost / self.budget_limit) * 100, 2)
+            summary["budget_remaining_usd"] = round(
+                self.budget_limit - self.cost_tracker.total_cost, 4
+            )
+            summary["budget_used_percent"] = round(
+                (self.cost_tracker.total_cost / self.budget_limit) * 100, 2
+            )
         return summary
 
 
@@ -406,4 +428,6 @@ if __name__ == "__main__":
             print(f"Error: {e}")
     else:
         print("NoOp mode - skipping test invocation")
-        print("Set GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to test real invocations")
+        print(
+            "Set GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to test real invocations"
+        )

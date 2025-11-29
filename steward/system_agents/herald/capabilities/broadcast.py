@@ -180,7 +180,9 @@ class BroadcastCapability:
             logger.error(f"❌ BROADCAST: Unknown platform: {platform}")
             return False
 
-    def publish_with_media(self, content: str, media_path: str, platform: str = "twitter") -> bool:
+    def publish_with_media(
+        self, content: str, media_path: str, platform: str = "twitter"
+    ) -> bool:
         """
         Publish content with media attachment.
 

@@ -131,11 +131,15 @@ class ConstitutionalOath:
                     logger.warning("⚠️ Allowing GENESIS_HASH bypass for bootstrapping")
                     return True, "Genesis Bootstrap Authorized"
 
-                reason = f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
+                reason = (
+                    f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
+                )
                 logger.warning(f"⚠️  {reason}")
                 return False, reason
 
-            logger.info(f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}")
+            logger.info(
+                f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}"
+            )
             return True, "Oath is valid"
 
         except Exception as e:

@@ -227,7 +227,9 @@ class IntrospectionTool:
 
     # ==================== AUDIT TRAIL ====================
 
-    def audit_trail(self, limit: int = 20, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def audit_trail(
+        self, limit: int = 20, agent_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Get audit trail of recent transactions.
 

@@ -109,7 +109,9 @@ class NextTaskGenerator:
             List of next tasks, up to count (topology-sorted)
         """
         # Get all non-archived tasks
-        candidates = [task for task in tasks.values() if task.status != TaskStatus.ARCHIVED]
+        candidates = [
+            task for task in tasks.values() if task.status != TaskStatus.ARCHIVED
+        ]
 
         # Sort by status priority, then by topology-aware key
         status_priority = {
@@ -140,7 +142,9 @@ class NextTaskGenerator:
         Returns:
             List of critical tasks (priority >= 80)
         """
-        return BatchOperations.filter_by_priority(tasks, min_priority=80, max_priority=100)
+        return BatchOperations.filter_by_priority(
+            tasks, min_priority=80, max_priority=100
+        )
 
     @staticmethod
     def suggest_next_action(tasks: Dict[str, Task]) -> str:
@@ -154,7 +158,9 @@ class NextTaskGenerator:
             Suggestion message
         """
         pending = len(BatchOperations.filter_by_status(tasks, TaskStatus.PENDING))
-        in_progress = len(BatchOperations.filter_by_status(tasks, TaskStatus.IN_PROGRESS))
+        in_progress = len(
+            BatchOperations.filter_by_status(tasks, TaskStatus.IN_PROGRESS)
+        )
         blocked = len(BatchOperations.filter_by_status(tasks, TaskStatus.BLOCKED))
 
         if blocked > 0:

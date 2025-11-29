@@ -13,10 +13,7 @@ def test_create_roadmap():
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
-        roadmap = tm.create_roadmap(
-            name="Test Roadmap",
-            description="Test description"
-        )
+        roadmap = tm.create_roadmap(name="Test Roadmap", description="Test description")
 
         assert roadmap.name == "Test Roadmap"
         assert roadmap.description == "Test description"
@@ -31,8 +28,7 @@ def test_roadmap_persistence():
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
         roadmap = tm.create_roadmap(
-            name="Persistent Roadmap",
-            description="Should persist"
+            name="Persistent Roadmap", description="Should persist"
         )
         roadmap_id = roadmap.id
 
@@ -49,14 +45,10 @@ def test_update_roadmap():
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
-        tm.create_roadmap(
-            name="Original Name",
-            description="Original description"
-        )
+        tm.create_roadmap(name="Original Name", description="Original description")
 
         updated = tm.update_roadmap(
-            name="Updated Name",
-            description="Updated description"
+            name="Updated Name", description="Updated description"
         )
 
         assert updated.name == "Updated Name"
@@ -81,9 +73,7 @@ def test_roadmap_with_missions():
         tm = TaskManager(temp_project)
         missions = ["mission1", "mission2", "mission3"]
         roadmap = tm.create_roadmap(
-            name="Multi-mission Roadmap",
-            description="Has missions",
-            missions=missions
+            name="Multi-mission Roadmap", description="Has missions", missions=missions
         )
 
         assert roadmap.missions == missions
@@ -105,10 +95,7 @@ def test_assign_tasks_to_roadmap():
         roadmap = tm.create_roadmap("Test Roadmap", "Test")
 
         # Assign tasks to roadmap
-        tm.assign_tasks_to_roadmap(
-            [task1.id, task2.id],
-            roadmap.id
-        )
+        tm.assign_tasks_to_roadmap([task1.id, task2.id], roadmap.id)
 
         # Verify assignments
         assert tm.get_task(task1.id).roadmap_id == roadmap.id
@@ -122,10 +109,7 @@ def test_roadmap_yaml_format():
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
-        tm.create_roadmap(
-            name="YAML Test",
-            description="Testing YAML format"
-        )
+        tm.create_roadmap(name="YAML Test", description="Testing YAML format")
 
         roadmap_path = temp_project / ".vibe" / "config" / "roadmap.yaml"
         assert roadmap_path.exists()

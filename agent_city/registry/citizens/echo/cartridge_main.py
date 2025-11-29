@@ -39,7 +39,7 @@ class EchoCartridge(VibeAgent):
             author="Genesis Protocol",
             description="Test agent: echoes messages with timestamp",
             domain="TESTING",
-            capabilities=["echo_back"]
+            capabilities=["echo_back"],
         )
 
         logger.info("🔔 ECHO Cartridge initializing...")
@@ -64,7 +64,7 @@ class EchoCartridge(VibeAgent):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
 
     def report_status(self) -> Dict[str, Any]:
@@ -74,7 +74,7 @@ class EchoCartridge(VibeAgent):
             "name": self.name,
             "status": "operational",
             "tasks_processed": self.tasks_processed,
-            "tasks_successful": self.tasks_successful
+            "tasks_successful": self.tasks_successful,
         }
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -99,27 +99,20 @@ class EchoCartridge(VibeAgent):
             if action == "echo_back":
                 result = self._echo_back(params)
             else:
-                result = {
-                    "success": False,
-                    "error": f"Unknown action: {action}"
-                }
+                result = {"success": False, "error": f"Unknown action: {action}"}
 
             if result.get("success"):
                 self.tasks_successful += 1
                 logger.info(f"✅ Task {task.task_id} completed")
             else:
-                err_msg = result.get('error')
+                err_msg = result.get("error")
                 logger.warning(f"⚠️  Task {task.task_id} failed: {err_msg}")
 
             return result
 
         except Exception as e:
             logger.error(f"❌ Task processing failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "task_id": task.task_id
-            }
+            return {"success": False, "error": str(e), "task_id": task.task_id}
 
     def _echo_back(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -131,10 +124,7 @@ class EchoCartridge(VibeAgent):
         message = params.get("message")
 
         if not message:
-            return {
-                "success": False,
-                "error": "Missing required param: message"
-            }
+            return {"success": False, "error": "Missing required param: message"}
 
         timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -143,5 +133,5 @@ class EchoCartridge(VibeAgent):
             "action": "echo_back",
             "message": message,
             "timestamp": timestamp,
-            "echo_id": f"{self.agent_id}_{timestamp}"
+            "echo_id": f"{self.agent_id}_{timestamp}",
         }

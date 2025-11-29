@@ -124,7 +124,9 @@ class AgentProcess:
                             )
 
                     elif msg.get("type") == "PING":
-                        self.pipe.send({"type": "PONG", "status": agent.report_status()})
+                        self.pipe.send(
+                            {"type": "PONG", "status": agent.report_status()}
+                        )
 
                 # 2. Agent autonomous loop (if any)
                 # agent.tick()
@@ -169,7 +171,9 @@ class ProcessManager:
         self.processes: Dict[str, AgentProcessInfo] = {}
         multiprocessing.set_start_method("spawn", force=True)  # Safer for macOS/Linux
 
-    def spawn_agent(self, agent_id: str, agent_class: Type[VibeAgent], config: Any = None):
+    def spawn_agent(
+        self, agent_id: str, agent_class: Type[VibeAgent], config: Any = None
+    ):
         """Spawn a new agent process."""
         logger.info(f"🌱 Spawning process for {agent_id}...")
 
@@ -240,11 +244,15 @@ class ProcessManager:
         info = self.processes[agent_id]
 
         if info.restarts >= self.MAX_RESTARTS:
-            logger.critical(f"⛔ {agent_id} exceeded max restarts ({self.MAX_RESTARTS}). QUARANTINED.")
+            logger.critical(
+                f"⛔ {agent_id} exceeded max restarts ({self.MAX_RESTARTS}). QUARANTINED."
+            )
             info.status = ProcessStatus.QUARANTINED
             return
 
-        logger.info(f"♻️  Restarting {agent_id} (Attempt {info.restarts + 1}/{self.MAX_RESTARTS})...")
+        logger.info(
+            f"♻️  Restarting {agent_id} (Attempt {info.restarts + 1}/{self.MAX_RESTARTS})..."
+        )
 
         # We need the class and config to restart.
         # In a real implementation, we'd store these in a registry or the info object.

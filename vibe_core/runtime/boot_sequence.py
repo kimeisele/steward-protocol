@@ -90,7 +90,11 @@ class BootSequence:
                 check=True,
             )
 
-            uncommitted = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+            uncommitted = [
+                line.strip()
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
+            ]
 
             return {
                 "has_uncommitted": len(uncommitted) > 0,
@@ -321,9 +325,15 @@ DO:
         """Show all available playbook routes"""
         routes = self.playbook_engine.list_available_routes()
 
-        print("\n╔══════════════════════════════════════════════════════════════════════════════╗")
-        print("║                        📚 AVAILABLE PLAYBOOK ROUTES                          ║")
-        print("╚══════════════════════════════════════════════════════════════════════════════╝\n")
+        print(
+            "\n╔══════════════════════════════════════════════════════════════════════════════╗"
+        )
+        print(
+            "║                        📚 AVAILABLE PLAYBOOK ROUTES                          ║"
+        )
+        print(
+            "╚══════════════════════════════════════════════════════════════════════════════╝\n"
+        )
 
         for route in routes:
             print(f"🎯 {route['name'].upper()}")
@@ -373,7 +383,9 @@ DO:
                 print(f"   Backup: {backup_path.name}", file=sys.stderr)
             else:
                 # Mission already in DB - just log it
-                print(f"ℹ️  Mission '{mission_uuid}' already in database", file=sys.stderr)
+                print(
+                    f"ℹ️  Mission '{mission_uuid}' already in database", file=sys.stderr
+                )
 
         except json.JSONDecodeError as e:
             print(f"⚠️ Failed to parse legacy JSON: {e}", file=sys.stderr)

@@ -61,8 +61,8 @@ class LensCartridge(VibeAgent):
                 "trend_analysis",
                 "roi_calculation",
                 "metrics_reporting",
-                "predictive_analysis"
-            ]
+                "predictive_analysis",
+            ],
         )
 
         logger.info("📊 LENS (VibeAgent v1.0) is online - Analytics Ready")
@@ -128,18 +128,20 @@ class LensCartridge(VibeAgent):
         value = payload.get("value", 0)
 
         self.kpis[kpi_name] = value
-        self.historical_data.append({
-            "kpi": kpi_name,
-            "value": value,
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        self.historical_data.append(
+            {
+                "kpi": kpi_name,
+                "value": value,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         return {
             "status": "tracked",
             "kpi": kpi_name,
             "value": value,
             "total_kpis": len(self.kpis),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _generate_report(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -156,7 +158,7 @@ class LensCartridge(VibeAgent):
             "campaign_id": campaign_id,
             "kpi_count": len(self.kpis),
             "data_points": len(self.historical_data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _analyze_trends(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -174,7 +176,7 @@ class LensCartridge(VibeAgent):
             "metric": metric_name,
             "period": period,
             "data_points_analyzed": len(self.historical_data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _calculate_roi(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -189,7 +191,7 @@ class LensCartridge(VibeAgent):
             "investment": investment,
             "returns": returns,
             "roi_percentage": roi,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _compare_campaigns(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -204,7 +206,7 @@ class LensCartridge(VibeAgent):
         return {
             "status": "comparing",
             "campaigns_compared": len(campaigns),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _forecast_metrics(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -222,7 +224,7 @@ class LensCartridge(VibeAgent):
             "metric": metric_name,
             "forecast_period": forecast_period,
             "historical_data_points": len(self.historical_data),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def _status(self) -> Dict[str, Any]:
@@ -233,8 +235,8 @@ class LensCartridge(VibeAgent):
             "kpis_tracked": len(self.kpis),
             "data_points": len(self.historical_data),
             "campaigns_analyzed": self.campaigns_analyzed,
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -246,6 +248,7 @@ class LensCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = LensCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -253,7 +256,5 @@ if __name__ == "__main__":
             "name": "LENS",
             "status": "healthy",
             "domain": "ANALYTICS",
-            "capabilities": ['analytics', 'visualization']
+            "capabilities": ["analytics", "visualization"],
         }
-
-

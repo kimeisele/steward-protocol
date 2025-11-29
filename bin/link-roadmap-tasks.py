@@ -10,6 +10,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from vibe_core.task_management.task_manager import TaskManager
 
+
 def main():
     tm = TaskManager(PROJECT_ROOT)
 
@@ -42,6 +43,7 @@ def main():
     print(f"   Roadmap missions: {len(tm.roadmap.missions)}")
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

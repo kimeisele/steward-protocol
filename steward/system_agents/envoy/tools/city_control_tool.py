@@ -106,7 +106,9 @@ class CityControlTool:
             civic = self._get_civic()
             if civic:
                 registry_data = (
-                    civic._get_registry_from_kernel() if self.kernel else {"agents": civic.registry.get("agents", {})}
+                    civic._get_registry_from_kernel()
+                    if self.kernel
+                    else {"agents": civic.registry.get("agents", {})}
                 )
                 agent_count = len(registry_data.get("agents", {}))
             else:
@@ -129,8 +131,16 @@ class CityControlTool:
                     "registry": list(registry_data.get("agents", {}).keys()),
                 },
                 "economy": {
-                    "total_credits_allocated": (operations_data.get("credits_allocated", 0) if operations_data else 0),
-                    "total_transactions": (operations_data.get("total_transactions", 0) if operations_data else 0),
+                    "total_credits_allocated": (
+                        operations_data.get("credits_allocated", 0)
+                        if operations_data
+                        else 0
+                    ),
+                    "total_transactions": (
+                        operations_data.get("total_transactions", 0)
+                        if operations_data
+                        else 0
+                    ),
                 },
                 "governance": {
                     "open_proposals": len(open_proposals),
@@ -147,7 +157,9 @@ class CityControlTool:
                 "health": "🟢 OPERATIONAL",
             }
 
-            logger.info(f"✅ City status retrieved: {agent_count} agents, {len(open_proposals)} open proposals")
+            logger.info(
+                f"✅ City status retrieved: {agent_count} agents, {len(open_proposals)} open proposals"
+            )
             return status
 
         except Exception as e:
@@ -184,7 +196,9 @@ class CityControlTool:
             logger.error(f"❌ Failed to list proposals: {e}")
             return []
 
-    def vote_proposal(self, proposal_id: str, choice: str, voter: str = "operator") -> Dict[str, Any]:
+    def vote_proposal(
+        self, proposal_id: str, choice: str, voter: str = "operator"
+    ) -> Dict[str, Any]:
         """
         Vote on a proposal.
 
