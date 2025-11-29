@@ -14,11 +14,11 @@ def get_project_metadata():
     """Extract metadata from pyproject.toml"""
     pyproject = Path("pyproject.toml")
     metadata = {
-        'name': 'Steward Protocol',
-        'version': '1.0.0',
-        'description': 'Constitutional AI Agent Operating System',
-        'python_version': '3.11+',
-        'license': 'MIT'
+        "name": "Steward Protocol",
+        "version": "1.0.0",
+        "description": "Constitutional AI Agent Operating System",
+        "python_version": "3.11+",
+        "license": "MIT",
     }
 
     if not pyproject.exists():
@@ -30,22 +30,22 @@ def get_project_metadata():
         # Extract name
         name_match = re.search(r'name\s*=\s*["\']([^"\']+)["\']', content)
         if name_match:
-            metadata['name'] = name_match.group(1)
+            metadata["name"] = name_match.group(1)
 
         # Extract version
         version_match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
         if version_match:
-            metadata['version'] = version_match.group(1)
+            metadata["version"] = version_match.group(1)
 
         # Extract description
         desc_match = re.search(r'description\s*=\s*["\']([^"\']+)["\']', content)
         if desc_match:
-            metadata['description'] = desc_match.group(1)
+            metadata["description"] = desc_match.group(1)
 
         # Extract python version
         python_match = re.search(r'python\s*=\s*["\']([^"\']+)["\']', content)
         if python_match:
-            metadata['python_version'] = python_match.group(1)
+            metadata["python_version"] = python_match.group(1)
 
     except Exception as e:
         print(f"Warning: Could not parse pyproject.toml: {e}")
@@ -55,44 +55,37 @@ def get_project_metadata():
 
 def get_git_stats():
     """Extract git statistics"""
-    stats = {
-        'commit_count': 0,
-        'contributors': [],
-        'recent_commits': []
-    }
+    stats = {"commit_count": 0, "contributors": [], "recent_commits": []}
 
     try:
         # Get commit count
         result = subprocess.run(
-            ['git', 'rev-list', '--count', 'HEAD'],
+            ["git", "rev-list", "--count", "HEAD"],
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0:
-            stats['commit_count'] = int(result.stdout.strip())
+            stats["commit_count"] = int(result.stdout.strip())
 
         # Get contributors
         result = subprocess.run(
-            ['git', 'log', '--format=%an', '--all'],
+            ["git", "log", "--format=%an", "--all"],
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0:
-            contributors = set(result.stdout.strip().split('\n'))
-            stats['contributors'] = sorted(list(contributors))[:5]
+            contributors = set(result.stdout.strip().split("\n"))
+            stats["contributors"] = sorted(list(contributors))[:5]
 
         # Get recent commits
         result = subprocess.run(
-            ['git', 'log', '--oneline', '-3'],
-            capture_output=True,
-            text=True,
-            timeout=5
+            ["git", "log", "--oneline", "-3"], capture_output=True, text=True, timeout=5
         )
         if result.returncode == 0:
-            commits = result.stdout.strip().split('\n')
-            stats['recent_commits'] = [c.strip() for c in commits if c.strip()]
+            commits = result.stdout.strip().split("\n")
+            stats["recent_commits"] = [c.strip() for c in commits if c.strip()]
 
     except Exception as e:
         print(f"Warning: Could not extract git stats: {e}")
@@ -126,23 +119,21 @@ def get_agent_list():
             content = cartridge_file.read_text()
 
             # Extract description from class docstring
-            class_match = re.search(r'class\s+\w+Cartridge.*?"""(.*?)"""', content, re.DOTALL)
+            class_match = re.search(
+                r'class\s+\w+Cartridge.*?"""(.*?)"""', content, re.DOTALL
+            )
             description = "Specialized Agent"
             if class_match:
                 doc = class_match.group(1).strip()
-                first_line = doc.split('\n')[0].strip()
+                first_line = doc.split("\n")[0].strip()
                 description = first_line if first_line else "Specialized Agent"
 
-            agents_list.append({
-                'name': agent_name.upper(),
-                'role': description
-            })
+            agents_list.append({"name": agent_name.upper(), "role": description})
         except Exception as e:
             print(f"Warning: Could not parse {agent_name}: {e}")
-            agents_list.append({
-                'name': agent_name.upper(),
-                'role': "Specialized Agent"
-            })
+            agents_list.append(
+                {"name": agent_name.upper(), "role": "Specialized Agent"}
+            )
 
     return agents_list
 
@@ -156,11 +147,11 @@ def get_governance_summary():
     try:
         content = constitution.read_text()
         # Extract first paragraph after title
-        lines = content.split('\n')
+        lines = content.split("\n")
         summary_lines = []
         in_summary = False
         for line in lines:
-            if line.strip().startswith('#'):
+            if line.strip().startswith("#"):
                 in_summary = True
                 continue
             if in_summary and line.strip():
@@ -169,7 +160,7 @@ def get_governance_summary():
                     break
 
         if summary_lines:
-            return ' '.join(summary_lines)
+            return " ".join(summary_lines)
     except:
         pass
 
@@ -333,7 +324,7 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
         git=git,
         agent_count=agent_count,
         governance=governance,
-        agents=agents
+        agents=agents,
     )
 
     # Write to README.md

@@ -29,16 +29,19 @@ logger = logging.getLogger("CIVIC_VAULT")
 
 class VaultError(Exception):
     """Raised when vault operations fail."""
+
     pass
 
 
 class InsufficientFundsError(Exception):
     """Raised when Agent lacks credits to lease a secret."""
+
     pass
 
 
 class SecretNotFoundError(Exception):
     """Raised when a secret doesn't exist in the vault."""
+
     pass
 
 
@@ -102,14 +105,14 @@ class CivicVault:
         self.MASTER_KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
 
         if self.MASTER_KEY_PATH.exists():
-            with open(self.MASTER_KEY_PATH, 'rb') as f:
+            with open(self.MASTER_KEY_PATH, "rb") as f:
                 master_key = f.read()
             logger.debug("✅ Master Key loaded from disk")
             return master_key
         else:
             # Generate new Master Key
             master_key = Fernet.generate_key()
-            with open(self.MASTER_KEY_PATH, 'wb') as f:
+            with open(self.MASTER_KEY_PATH, "wb") as f:
                 f.write(master_key)
             # Restrict permissions (Unix)
             os.chmod(self.MASTER_KEY_PATH, 0o600)
@@ -118,7 +121,7 @@ class CivicVault:
 
     def _get_cipher(self) -> Fernet:
         """Get Fernet cipher using Master Key."""
-        with open(self.MASTER_KEY_PATH, 'rb') as f:
+        with open(self.MASTER_KEY_PATH, "rb") as f:
             master_key = f.read()
         return Fernet(master_key)
 
@@ -127,17 +130,20 @@ class CivicVault:
         cur = self.conn.cursor()
 
         # 1. VAULT_ASSETS (The Encrypted Safe)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS vault_assets (
                 key_name TEXT PRIMARY KEY,
                 encrypted_value BLOB NOT NULL,
                 created_at DATETIME,
                 rotated_at DATETIME
             )
-        """)
+        """
+        )
 
         # 2. VAULT_LEASES (The Access Log)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS vault_leases (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id TEXT,
@@ -147,7 +153,8 @@ class CivicVault:
                 tx_id TEXT,
                 FOREIGN KEY(key_name) REFERENCES vault_assets(key_name)
             )
-        """)
+        """
+        )
 
         self.conn.commit()
         logger.debug("✅ Vault schema initialized")
@@ -165,16 +172,19 @@ class CivicVault:
         """
         try:
             cipher = self._get_cipher()
-            encrypted = cipher.encrypt(raw_value.encode('utf-8'))
+            encrypted = cipher.encrypt(raw_value.encode("utf-8"))
 
             cur = self.conn.cursor()
             now = datetime.now().isoformat()
 
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT OR REPLACE INTO vault_assets
                 (key_name, encrypted_value, created_at, rotated_at)
                 VALUES (?, ?, ?, ?)
-            """, (key_name, encrypted, now, now))
+            """,
+                (key_name, encrypted, now, now),
+            )
 
             self.conn.commit()
             logger.info(f"✅ Secret stored in vault: {key_name}")
@@ -201,7 +211,10 @@ class CivicVault:
         """
         try:
             cur = self.conn.cursor()
-            cur.execute("SELECT encrypted_value FROM vault_assets WHERE key_name = ?", (key_name,))
+            cur.execute(
+                "SELECT encrypted_value FROM vault_assets WHERE key_name = ?",
+                (key_name,),
+            )
             row = cur.fetchone()
 
             if not row:
@@ -209,12 +222,14 @@ class CivicVault:
 
             encrypted_value = row[0]
             cipher = self._get_cipher()
-            decrypted = cipher.decrypt(encrypted_value).decode('utf-8')
+            decrypted = cipher.decrypt(encrypted_value).decode("utf-8")
 
             return decrypted
 
         except InvalidToken:
-            raise VaultError(f"❌ Decryption failed for '{key_name}' (corrupted or wrong key)")
+            raise VaultError(
+                f"❌ Decryption failed for '{key_name}' (corrupted or wrong key)"
+            )
         except Exception as e:
             raise VaultError(f"❌ Failed to retrieve secret '{key_name}': {e}")
 
@@ -222,7 +237,7 @@ class CivicVault:
         self,
         agent_id: str,
         key_name: str,
-        bank=None  # CivicBank instance for charging credits
+        bank=None,  # CivicBank instance for charging credits
     ) -> str:
         """
         Lease a secret to an Agent (requires Credits).
@@ -256,7 +271,7 @@ class CivicVault:
                         receiver="VAULT",
                         amount=self.LEASE_COST,
                         reason=f"LEASE_SECRET_{key_name}",
-                        service_type="lease"
+                        service_type="lease",
                     )
                 except Exception as bank_error:
                     # Check if it's an insufficient funds error
@@ -267,16 +282,19 @@ class CivicVault:
                         )
                     raise VaultError(f"❌ Bank transaction failed: {bank_error}")
             else:
-                tx_id = "MOCK_TX" # For testing without bank
+                tx_id = "MOCK_TX"  # For testing without bank
 
             # 3. Log the lease access
             cur = self.conn.cursor()
             now = datetime.now().isoformat()
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO vault_leases
                 (agent_id, key_name, lease_time, credits_charged, tx_id)
                 VALUES (?, ?, ?, ?, ?)
-            """, (agent_id, key_name, now, self.LEASE_COST, tx_id))
+            """,
+                (agent_id, key_name, now, self.LEASE_COST, tx_id),
+            )
             self.conn.commit()
 
             logger.info(
@@ -305,20 +323,26 @@ class CivicVault:
         cur = self.conn.cursor()
 
         if agent_id:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT agent_id, key_name, lease_time, credits_charged, tx_id
                 FROM vault_leases
                 WHERE agent_id = ?
                 ORDER BY lease_time DESC
                 LIMIT ?
-            """, (agent_id, limit))
+            """,
+                (agent_id, limit),
+            )
         else:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT agent_id, key_name, lease_time, credits_charged, tx_id
                 FROM vault_leases
                 ORDER BY lease_time DESC
                 LIMIT ?
-            """, (limit,))
+            """,
+                (limit,),
+            )
 
         rows = cur.fetchall()
         return [
@@ -327,7 +351,7 @@ class CivicVault:
                 "key_name": row[1],
                 "lease_time": row[2],
                 "credits_charged": row[3],
-                "tx_id": row[4]
+                "tx_id": row[4],
             }
             for row in rows
         ]
@@ -342,16 +366,19 @@ class CivicVault:
         """
         try:
             cipher = self._get_cipher()
-            encrypted = cipher.encrypt(new_value.encode('utf-8'))
+            encrypted = cipher.encrypt(new_value.encode("utf-8"))
 
             cur = self.conn.cursor()
             now = datetime.now().isoformat()
 
-            cur.execute("""
+            cur.execute(
+                """
                 UPDATE vault_assets
                 SET encrypted_value = ?, rotated_at = ?
                 WHERE key_name = ?
-            """, (encrypted, now, key_name))
+            """,
+                (encrypted, now, key_name),
+            )
 
             self.conn.commit()
             logger.info(f"✅ Secret rotated: {key_name}")
@@ -371,10 +398,6 @@ class CivicVault:
         rows = cur.fetchall()
 
         return [
-            {
-                "key_name": row[0],
-                "created_at": row[1],
-                "rotated_at": row[2]
-            }
+            {"key_name": row[0], "created_at": row[1], "rotated_at": row[2]}
             for row in rows
         ]

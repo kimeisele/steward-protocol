@@ -89,15 +89,12 @@ class HeraldCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Autonomous intelligence and content distribution agent",
             domain="MEDIA",
-            capabilities=[
-                "content_generation",
-                "broadcasting",
-                "research",
-                "strategy"
-            ]
+            capabilities=["content_generation", "broadcasting", "research", "strategy"],
         )
 
-        logger.info(f"🦅 HERALD (VibeAgent v3.0) is online (config: {self.config.posting_frequency_hours}h frequency).")
+        logger.info(
+            f"🦅 HERALD (VibeAgent v3.0) is online (config: {self.config.posting_frequency_hours}h frequency)."
+        )
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
@@ -105,7 +102,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
             # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
             # This ensures Herald has oath_sworn=True before kernel registration
             self.oath_sworn = True
-            logger.info("✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)")
+            logger.info(
+                "✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)"
+            )
 
         # Initialize all tools
         self.content = ContentTool()
@@ -117,7 +116,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
 
         # Initialize governance (immutable rules as code)
         self.governance = HeraldConstitution()
-        logger.info("⚖️  Governance loaded: HeraldConstitution (immutable code-based rules)")
+        logger.info(
+            "⚖️  Governance loaded: HeraldConstitution (immutable code-based rules)"
+        )
 
         # Initialize event sourcing (state as event ledger)
         # PHASE 2.1: Lazy-load EventLog after system interface injection
@@ -130,7 +131,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
         # Note: Scribe/Tidy require repo access - will be migrated in later phase
         self.scribe = Scribe(chronicle_path=Path("docs/chronicles.md"))
         self.scribe.initialize_logbook_section()
-        logger.info("✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md")
+        logger.info(
+            "✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md"
+        )
 
         # Initialize repository maintenance (Tidy)
         self.tidy = TidyTool(root_path=Path("."), steward_path=Path("STEWARD.md"))
@@ -163,7 +166,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
 
             if self.safe_mode:
                 logger.warning("⚠️  SAFE MODE ENABLED: Last execution had errors")
-                logger.warning(f"   Last failure: {self.agent_state.get('last_failure')}")
+                logger.warning(
+                    f"   Last failure: {self.agent_state.get('last_failure')}"
+                )
                 logger.info("   Reduce operation scope and increase validation checks")
 
         return self._event_log
@@ -171,7 +176,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
     async def boot(self):
         """
         Extended boot sequence including Constitutional Oath ceremony.
-        
+
         This is the Genesis Ceremony:
         1. Load Constitution
         2. Compute hash
@@ -226,48 +231,49 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 # Article V (Consent) compliance: Governed data exchange
                 if self.system:
                     try:
-                        return self.system.call_agent("civic", {
-                            "action": "check_license",
-                            "agent_id": "herald"
-                        })
+                        return self.system.call_agent(
+                            "civic", {"action": "check_license", "agent_id": "herald"}
+                        )
                     except (ValueError, RuntimeError) as e:
                         logger.warning(f"⚠️  Civic not available for license check: {e}")
-                        return {"status": "error", "reason": "civic_not_available", "detail": str(e)}
+                        return {
+                            "status": "error",
+                            "reason": "civic_not_available",
+                            "detail": str(e),
+                        }
                 return {"status": "error", "reason": "system_interface_not_available"}
 
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"❌ HERALD processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="herald",
             name="HERALD",
-            version=self.version if hasattr(self, 'version') else "3.0.0",
+            version=self.version if hasattr(self, "version") else "3.0.0",
             author="Steward Protocol",
             description="Content generation and broadcasting agent",
             domain="MEDIA",
-            capabilities=["content_generation", "broadcasting", "research", "strategy"]
+            capabilities=["content_generation", "broadcasting", "research", "strategy"],
         )
 
     def report_status(self) -> Dict[str, Any]:
         """Report HERALD status (VibeAgent interface) - Deep Introspection."""
         # Get event log statistics
-        events = self.event_log.entries if hasattr(self.event_log, 'entries') else []
-        published_events = [e for e in events if e.get("event_type") == "content_published"]
+        events = self.event_log.entries if hasattr(self.event_log, "entries") else []
+        published_events = [
+            e for e in events if e.get("event_type") == "content_published"
+        ]
 
         return {
             "agent_id": "herald",
@@ -279,10 +285,16 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 "last_execution_id": self.execution_id,
                 "total_events_recorded": len(events),
                 "content_published_count": len(published_events),
-                "content_generated_count": len([e for e in events if e.get("event_type") == "content_generated"]),
-                "content_rejected_count": len([e for e in events if e.get("event_type") == "content_rejected"]),
+                "content_generated_count": len(
+                    [e for e in events if e.get("event_type") == "content_generated"]
+                ),
+                "content_rejected_count": len(
+                    [e for e in events if e.get("event_type") == "content_rejected"]
+                ),
                 "event_log_path": "data/events/herald.jsonl",
-                "last_result_status": self.last_result.get("status") if self.last_result else None,
+                "last_result_status": (
+                    self.last_result.get("status") if self.last_result else None
+                ),
             },
             "connectivity": {
                 "twitter": self.broadcast.verify_credentials("twitter"),
@@ -290,8 +302,10 @@ class HeraldCartridge(VibeAgent, OathMixin):
             },
             "governance": {
                 "safe_mode": self.safe_mode,
-                "last_failure": self.agent_state.get("last_failure") if self.safe_mode else None,
-            }
+                "last_failure": (
+                    self.agent_state.get("last_failure") if self.safe_mode else None
+                ),
+            },
         }
 
     def run_campaign(self, dry_run: bool = False) -> Dict[str, Any]:
@@ -339,7 +353,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 logger.error("❌ Content generation failed")
                 event = self.event_log.record_system_error(
                     error_type="content_generation_error",
-                    error_message="LLM returned empty content"
+                    error_message="LLM returned empty content",
                 )
                 if event:
                     self.scribe.log_action(event)
@@ -356,7 +370,11 @@ class HeraldCartridge(VibeAgent, OathMixin):
             event = self.event_log.record_content_generated(
                 content=tweet,
                 platform="twitter",
-                context={"research_query": research_context[:100] if research_context else None}
+                context={
+                    "research_query": (
+                        research_context[:100] if research_context else None
+                    )
+                },
             )
             if event:
                 self.scribe.log_action(event)
@@ -388,7 +406,8 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 # PHASE II: Cite governance constraint
                 constraint_citation = self._cite_governance_constraint(
                     "governance_violation",
-                    details="Content violates " + "; ".join(validation_result.violations[:2])
+                    details="Content violates "
+                    + "; ".join(validation_result.violations[:2]),
                 )
                 logger.error(constraint_citation)
 
@@ -396,7 +415,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 event = self.event_log.record_content_rejected(
                     content=tweet,
                     reason="governance_violation",
-                    violations=[constraint_citation] + validation_result.violations
+                    violations=[constraint_citation] + validation_result.violations,
                 )
                 if event:
                     self.scribe.log_action(event)
@@ -405,14 +424,16 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
                 logger.info("=" * 70)
                 moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
-                logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+                logger.info(
+                    f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors"
+                )
 
                 return {
                     "status": "rejected",
                     "reason": "governance_violations",
                     "content": tweet,
                     "violations": validation_result.violations,
-                    "constraint_citation": constraint_citation
+                    "constraint_citation": constraint_citation,
                 }
 
             # Warnings (don't reject, but log)
@@ -422,7 +443,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
                     logger.warning(f"   {warning}")
 
             logger.info("✅ Content passed governance validation")
-            logger.info(f"   Philosophy: {self.governance.get_rules_summary()['philosophy']}")
+            logger.info(
+                f"   Philosophy: {self.governance.get_rules_summary()['philosophy']}"
+            )
 
             # Step 4: Prepare Artifact
             result = {
@@ -436,7 +459,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                     "is_valid": True,
                     "violations": validation_result.violations,
                     "warnings": validation_result.warnings,
-                }
+                },
             }
 
             self.last_result = result
@@ -450,21 +473,22 @@ class HeraldCartridge(VibeAgent, OathMixin):
             logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
             logger.info("=" * 70)
             moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
-            logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+            logger.info(
+                f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors"
+            )
 
             return result
 
         except Exception as e:
             logger.error(f"❌ Campaign execution error: {e}")
             import traceback
+
             tb = traceback.format_exc()
             logger.error(f"   Traceback: {tb}")
 
             # Record system error to event ledger and log to chronicle
             event = self.event_log.record_system_error(
-                error_type="campaign_error",
-                error_message=str(e),
-                traceback=tb
+                error_type="campaign_error", error_message=str(e), traceback=tb
             )
             if event:
                 self.scribe.log_action(event)
@@ -476,7 +500,9 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 "content": None,
             }
 
-    def _cite_governance_constraint(self, constraint_type: str, details: str = "") -> str:
+    def _cite_governance_constraint(
+        self, constraint_type: str, details: str = ""
+    ) -> str:
         """
         Generate explicit citation of governance constraint being violated.
 
@@ -498,14 +524,19 @@ class HeraldCartridge(VibeAgent, OathMixin):
             "governance_violation": f"❌ Failure. Action was blocked by governance validation. The content violates one or more rules in the **HeraldConstitution** governance framework.",
         }
 
-        citation = citations.get(constraint_type, f"❌ Failure. Action blocked by constraint: {constraint_type}")
+        citation = citations.get(
+            constraint_type,
+            f"❌ Failure. Action blocked by constraint: {constraint_type}",
+        )
 
         if details:
             citation += f"\n   Details: {details}"
 
         return citation
 
-    def execute_publish(self, content: str, civic_cartridge=None, forum_cartridge=None) -> Dict[str, Any]:
+    def execute_publish(
+        self, content: str, civic_cartridge=None, forum_cartridge=None
+    ) -> Dict[str, Any]:
         """
         Execute publication action with event recording.
 
@@ -535,7 +566,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 event = self.event_log.record_content_rejected(
                     content=content,
                     reason="invalid_content",
-                    violations=["Content too short or empty"]
+                    violations=["Content too short or empty"],
                 )
                 if event:
                     self.scribe.log_action(event)
@@ -548,36 +579,44 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 if not license_check["licensed"]:
                     # PHASE II: Explicitly cite the governance constraint
                     constraint_citation = self._cite_governance_constraint(
-                        "license_revoked" if license_check.get('reason') == 'revoked' else "license_inactive",
-                        details=f"License status: {license_check.get('reason')}"
+                        (
+                            "license_revoked"
+                            if license_check.get("reason") == "revoked"
+                            else "license_inactive"
+                        ),
+                        details=f"License status: {license_check.get('reason')}",
                     )
                     logger.error(constraint_citation)
 
                     event = self.event_log.record_content_rejected(
                         content=content,
                         reason="no_broadcast_license",
-                        violations=[constraint_citation]
+                        violations=[constraint_citation],
                     )
                     if event:
                         self.scribe.log_action(event)
                     return {
                         "status": "rejected",
                         "reason": "no_broadcast_license",
-                        "message": constraint_citation
+                        "message": constraint_citation,
                     }
-                logger.info(f"   ✅ License valid (credits: {license_check.get('credits', 'N/A')})")
+                logger.info(
+                    f"   ✅ License valid (credits: {license_check.get('credits', 'N/A')})"
+                )
 
                 # NEW: Check credit balance
                 balance = civic_cartridge.ledger.get_agent_balance("herald")
                 logger.info(f"   Current balance: {balance} credits")
 
                 if balance == 0:
-                    logger.warning("⚠️  Out of credits! Creating proposal for budget request...")
+                    logger.warning(
+                        "⚠️  Out of credits! Creating proposal for budget request..."
+                    )
 
                     # PHASE II: Cite governance constraint
                     constraint_citation = self._cite_governance_constraint(
                         "insufficient_credits",
-                        details="Zero balance. Broadcasting requires credits per economic governance."
+                        details="Zero balance. Broadcasting requires credits per economic governance.",
                     )
                     logger.error(constraint_citation)
 
@@ -591,15 +630,18 @@ class HeraldCartridge(VibeAgent, OathMixin):
                                 "params": {
                                     "to": "herald",
                                     "amount": 50,
-                                    "reason": "proposal_approved"
-                                }
-                            }
+                                    "reason": "proposal_approved",
+                                },
+                            },
                         )
 
                         event = self.event_log.record_content_rejected(
                             content=content,
                             reason="insufficient_credits",
-                            violations=[constraint_citation, f"Created proposal {proposal['id']} requesting budget"]
+                            violations=[
+                                constraint_citation,
+                                f"Created proposal {proposal['id']} requesting budget",
+                            ],
                         )
                         if event:
                             self.scribe.log_action(event)
@@ -608,12 +650,12 @@ class HeraldCartridge(VibeAgent, OathMixin):
                             "status": "insufficient_credits",
                             "message": constraint_citation,
                             "proposal_id": proposal["id"],
-                            "proposal_message": f"Created proposal {proposal['id']} requesting 50 credits."
+                            "proposal_message": f"Created proposal {proposal['id']} requesting 50 credits.",
                         }
                     else:
                         return {
                             "status": "insufficient_credits",
-                            "message": constraint_citation
+                            "message": constraint_citation,
                         }
 
             # Publish to Twitter
@@ -622,20 +664,20 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 # PHASE II: Cite governance constraint
                 constraint_citation = self._cite_governance_constraint(
                     "connectivity_disabled",
-                    details="Twitter connection is unavailable or unauthorized."
+                    details="Twitter connection is unavailable or unauthorized.",
                 )
                 logger.warning(constraint_citation)
                 event = self.event_log.record_content_rejected(
                     content=content,
                     reason="connectivity_unavailable",
-                    violations=[constraint_citation]
+                    violations=[constraint_citation],
                 )
                 if event:
                     self.scribe.log_action(event)
                 return {
                     "status": "rejected",
                     "reason": "twitter_offline",
-                    "message": constraint_citation
+                    "message": constraint_citation,
                 }
             else:
                 logger.info("[STEP 3] Publishing to Twitter...")
@@ -645,11 +687,10 @@ class HeraldCartridge(VibeAgent, OathMixin):
                     # PHASE II: Cite governance constraint
                     constraint_citation = self._cite_governance_constraint(
                         "connectivity_disabled",
-                        details="Twitter API returned an error during publication."
+                        details="Twitter API returned an error during publication.",
                     )
                     event = self.event_log.record_system_error(
-                        error_type="publish_error",
-                        error_message=constraint_citation
+                        error_type="publish_error", error_message=constraint_citation
                     )
                     if event:
                         self.scribe.log_action(event)
@@ -657,22 +698,25 @@ class HeraldCartridge(VibeAgent, OathMixin):
                         "status": "failed",
                         "reason": "publish_error",
                         "message": constraint_citation,
-                        "platform": "twitter"
+                        "platform": "twitter",
                     }
 
                 # NEW: Deduct credits from CIVIC
                 if civic_cartridge:
                     logger.info("[STEP 4] Deducting credits...")
                     deduction = civic_cartridge.deduct_credits("herald", 1, "broadcast")
-                    logger.info(f"   Deducted 1 credit. Balance: {deduction.get('credits_remaining', 'N/A')}")
+                    logger.info(
+                        f"   Deducted 1 credit. Balance: {deduction.get('credits_remaining', 'N/A')}"
+                    )
 
                 # Record successful publication and log to chronicle
                 from datetime import datetime, timezone
+
                 event = self.event_log.record_content_published(
                     content=content,
                     platform="twitter",
                     post_id=None,  # Would be populated from API response in production
-                    metadata={"published_at": datetime.now(timezone.utc).isoformat()}
+                    metadata={"published_at": datetime.now(timezone.utc).isoformat()},
                 )
                 if event:
                     self.scribe.log_action(event)
@@ -687,17 +731,20 @@ class HeraldCartridge(VibeAgent, OathMixin):
 
         except Exception as e:
             import traceback
+
             logger.error(f"❌ Publication error: {e}")
             event = self.event_log.record_system_error(
                 error_type="publish_error",
                 error_message=str(e),
-                traceback=traceback.format_exc()
+                traceback=traceback.format_exc(),
             )
             if event:
                 self.scribe.log_action(event)
             return {"status": "error", "reason": "publication_error", "error": str(e)}
 
-    def plan_campaign(self, duration_weeks: int = 2, dry_run: bool = False) -> Dict[str, Any]:
+    def plan_campaign(
+        self, duration_weeks: int = 2, dry_run: bool = False
+    ) -> Dict[str, Any]:
         """
         Strategic campaign planning - macro-level roadmap generation.
 
@@ -731,15 +778,12 @@ class HeraldCartridge(VibeAgent, OathMixin):
             roadmap = self.strategy.plan_launch_campaign(
                 manifesto_path=manifesto_path,
                 context_path=context_path,
-                duration_weeks=duration_weeks
+                duration_weeks=duration_weeks,
             )
 
             if not roadmap:
                 logger.error("❌ Failed to generate campaign roadmap")
-                return {
-                    "status": "failed",
-                    "reason": "strategy_generation_failed"
-                }
+                return {"status": "failed", "reason": "strategy_generation_failed"}
 
             logger.info(f"✅ Roadmap generated ({len(roadmap)} chars)")
 
@@ -757,7 +801,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 return {
                     "status": "partial",
                     "reason": "governance_rework_needed",
-                    "roadmap": roadmap
+                    "roadmap": roadmap,
                 }
 
             logger.info("✅ Roadmap passed governance validation")
@@ -766,15 +810,14 @@ class HeraldCartridge(VibeAgent, OathMixin):
             logger.info("\n[STEP 3] Writing roadmap to file...")
             if not dry_run:
                 success = self.strategy.write_roadmap_to_file(
-                    roadmap,
-                    output_path=Path("marketing/launch_roadmap.md")
+                    roadmap, output_path=Path("marketing/launch_roadmap.md")
                 )
                 if not success:
                     logger.error("❌ Failed to write roadmap to file")
                     return {
                         "status": "failed",
                         "reason": "file_write_failed",
-                        "roadmap": roadmap
+                        "roadmap": roadmap,
                     }
             else:
                 logger.info("🔍 DRY RUN: Skipping file write")
@@ -791,7 +834,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                     "roadmap_size": len(roadmap),
                     "dry_run": dry_run,
                     "phases": alignment.get("has_phases", False),
-                }
+                },
             )
             if self.event_log.commit(event):
                 self.scribe.log_action(event)
@@ -804,7 +847,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 "roadmap_path": "marketing/launch_roadmap.md" if not dry_run else None,
                 "roadmap_preview": roadmap[:500] + "...",
                 "alignment": alignment,
-                "message": "Campaign roadmap generated. AUDITOR will now verify."
+                "message": "Campaign roadmap generated. AUDITOR will now verify.",
             }
 
             logger.info("\n" + "=" * 70)
@@ -818,14 +861,13 @@ class HeraldCartridge(VibeAgent, OathMixin):
         except Exception as e:
             logger.error(f"❌ Planning error: {e}")
             import traceback
+
             tb = traceback.format_exc()
             logger.error(f"   Traceback: {tb}")
 
             # Record error to event ledger
             event = self.event_log.record_system_error(
-                error_type="strategy_planning_error",
-                error_message=str(e),
-                traceback=tb
+                error_type="strategy_planning_error", error_message=str(e), traceback=tb
             )
             if event:
                 self.scribe.log_action(event)
@@ -833,22 +875,22 @@ class HeraldCartridge(VibeAgent, OathMixin):
             return {
                 "status": "error",
                 "reason": "strategy_planning_error",
-                "error": str(e)
+                "error": str(e),
             }
 
     def run_reply_cycle(self, dry_run: bool = False) -> Dict[str, Any]:
         """
         Execute the engagement loop: Listen -> Think -> Draft.
-        
+
         1. Load state (last processed tweet)
         2. Scan for new mentions
         3. Generate replies
         4. Validate governance
         5. Save drafts for approval
-        
+
         Args:
             dry_run: If True, don't update state
-            
+
         Returns:
             dict: Result summary
         """
@@ -866,78 +908,88 @@ class HeraldCartridge(VibeAgent, OathMixin):
                     state = json.load(f)
             except Exception:
                 pass
-                
+
         since_id = state.get("last_mention_id")
         logger.info(f"👂 Scanning mentions since ID: {since_id}")
-        
+
         mentions = self.broadcast.scan_mentions(since_id=since_id, platform="twitter")
-        
+
         if not mentions:
             logger.info("✅ No new mentions found.")
             return {"status": "no_new_mentions", "count": 0}
-            
+
         logger.info(f"✅ Found {len(mentions)} mentions. Processing...")
-        
+
         drafts = []
         new_since_id = since_id
-        
+
         logger.info("\n🦅 PHASE 2: ENGAGEMENT")
         logger.info("=" * 70)
-        
+
         for mention in mentions:
             t_id = mention["id"]
             text = mention["text"]
             author = mention["author_id"]
-            
+
             # Update high-water mark
             if not new_since_id or int(t_id) > int(new_since_id):
                 new_since_id = t_id
-            
+
             logger.info(f"🤔 Thinking about: {text[:50]}...")
-            
+
             # SCOUTING: Check if user is a wild agent
-            user_data = {"username": author, "bio": "", "name": ""} # In real implementation, fetch full user profile
+            user_data = {
+                "username": author,
+                "bio": "",
+                "name": "",
+            }  # In real implementation, fetch full user profile
             is_bot, confidence = self.scout.analyze_user(user_data, text=text)
-            
+
             reply_content = ""
-            
+
             if is_bot and not self.scout.is_registered(author):
-                logger.info(f"🔭 Detected Wild Agent: {author} (Confidence: {confidence})")
-                reply_content = self.content.generate_recruitment_pitch(author, context=text)
+                logger.info(
+                    f"🔭 Detected Wild Agent: {author} (Confidence: {confidence})"
+                )
+                reply_content = self.content.generate_recruitment_pitch(
+                    author, context=text
+                )
             else:
                 # Standard reply
                 reply_content = self.content.generate_reply(text, author)
-            
+
             # Validate (Double Check)
             validation = self.governance.validate(reply_content, platform="twitter")
-            
+
             draft = {
                 "reply_to_id": t_id,
                 "original_text": text,
                 "reply_content": reply_content,
                 "is_valid": validation.is_valid,
                 "violations": validation.violations,
-                "type": "recruitment" if is_bot else "reply"
+                "type": "recruitment" if is_bot else "reply",
             }
-            
+
             if validation.is_valid:
                 logger.info(f"   ✅ Drafted ({draft['type']}): {reply_content}")
                 drafts.append(draft)
             else:
-                logger.warning(f"   ❌ Rejected: {reply_content} ({validation.violations})")
-                
+                logger.warning(
+                    f"   ❌ Rejected: {reply_content} ({validation.violations})"
+                )
+
         # Save Drafts
         logger.info("\n🦅 PHASE 3: APPROVAL QUEUE")
         logger.info("=" * 70)
-        
+
         output_path = Path("dist/replies.json")
         output_path.parent.mkdir(exist_ok=True)
-        
+
         with open(output_path, "w") as f:
             json.dump(drafts, f, indent=2)
-            
+
         logger.info(f"✅ Saved {len(drafts)} drafts to {output_path}")
-        
+
         # Update State
         if not dry_run and new_since_id != since_id:
             state["last_mention_id"] = new_since_id
@@ -945,21 +997,23 @@ class HeraldCartridge(VibeAgent, OathMixin):
             with open(state_path, "w") as f:
                 json.dump(state, f, indent=2)
             logger.info(f"💾 State updated: last_mention_id = {new_since_id}")
-            
+
         return {
-            "status": "success", 
-            "processed": len(mentions), 
+            "status": "success",
+            "processed": len(mentions),
             "drafted": len(drafts),
-            "drafts_file": str(output_path)
+            "drafts_file": str(output_path),
         }
 
-    def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA") -> Optional[Dict[str, Any]]:
+    def generate_reddit_post(
+        self, subreddit: str = "r/LocalLLaMA"
+    ) -> Optional[Dict[str, Any]]:
         """
         Generate a Reddit deep-dive post (standalone capability).
-        
+
         Args:
             subreddit: Target subreddit
-            
+
         Returns:
             dict: {"title": str, "body": str} or None
         """

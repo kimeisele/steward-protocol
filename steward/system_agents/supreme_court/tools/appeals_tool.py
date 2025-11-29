@@ -22,15 +22,17 @@ logger = logging.getLogger("APPEALS_TOOL")
 
 class AppealStatus(str, Enum):
     """Status of an appeal throughout its lifecycle"""
-    FILED = "filed"                    # Initial submission
-    UNDER_REVIEW = "under_review"     # Being examined by court
+
+    FILED = "filed"  # Initial submission
+    UNDER_REVIEW = "under_review"  # Being examined by court
     HEARING_SCHEDULED = "hearing_scheduled"  # Waiting for hearing
-    CLOSED = "closed"                 # Decision issued
+    CLOSED = "closed"  # Decision issued
 
 
 @dataclass
 class Appeal:
     """Record of a single appeal"""
+
     appeal_id: str
     agent_id: str
     violation_id: str
@@ -69,7 +71,7 @@ class AppealsTool:
         agent_id: str,
         violation_id: str,
         justification: str = "",
-        has_oath: bool = False
+        has_oath: bool = False,
     ) -> Dict[str, Any]:
         """
         File a new appeal.
@@ -94,7 +96,7 @@ class AppealsTool:
             justification=justification,
             has_oath=has_oath,
             filed_at=now,
-            updated_at=now
+            updated_at=now,
         )
 
         # Persist to ledger

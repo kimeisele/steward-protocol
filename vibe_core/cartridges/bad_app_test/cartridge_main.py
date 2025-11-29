@@ -69,7 +69,9 @@ class BadAppCartridge(CartridgeBase):
         Start an infinite loop.
         Used to test timeout isolation (kernel should interrupt).
         """
-        logger.warning("⚠️ BadAppCartridge starting infinite loop - should be interrupted")
+        logger.warning(
+            "⚠️ BadAppCartridge starting infinite loop - should be interrupted"
+        )
         while True:
             pass  # Infinite loop
 
@@ -85,7 +87,9 @@ class BadAppCartridge(CartridgeBase):
         Kernel isolation should prevent this.
         """
         try:
-            with open(self.vibe_root / ".vibe" / "state" / "active_mission.json", "w") as f:
+            with open(
+                self.vibe_root / ".vibe" / "state" / "active_mission.json", "w"
+            ) as f:
                 f.write("CORRUPTED BY BAD APP")
             logger.error("❌ BadAppCartridge corrupted a system file!")
         except Exception as e:

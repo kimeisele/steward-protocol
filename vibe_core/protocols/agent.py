@@ -16,6 +16,7 @@ import logging
 @dataclass
 class AgentResponse:
     """Standard response from an agent"""
+
     success: bool
     data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -31,6 +32,7 @@ class AgentResponse:
 
 class Capability(str, Enum):
     """Standard capabilities that agents can declare"""
+
     CONTENT_GENERATION = "content_generation"
     BROADCASTING = "broadcasting"
     GOVERNANCE = "governance"
@@ -46,6 +48,7 @@ class Capability(str, Enum):
 @dataclass
 class AgentManifest:
     """STEWARD Protocol Agent Identity & Capabilities (ARCH-050)"""
+
     agent_id: str
     name: str
     version: str
@@ -102,7 +105,7 @@ class VibeAgent(ABC):
         self.config = config
         self.kernel = None  # Will be injected by VibeKernel.boot()
         self.kernel_pipe = None  # IPC Pipe for Process Isolation
-        
+
         # Phase 4: Filesystem & Network (injected by kernel)
         self.vfs = None  # Virtual Filesystem
         self.network = None  # Network Proxy
@@ -122,54 +125,58 @@ class VibeAgent(ABC):
     def set_kernel_pipe(self, pipe: Any) -> None:
         """
         Inject IPC Pipe for Process Isolation.
-        
+
         Phase 4b: MONKEY PATCH builtins to redirect to VFS/Network Proxy.
-        
+
         This is system call interception at Python level.
         Agents use open() and requests.get() as normal,
         but we redirect them to sandboxed versions.
         """
         import logging
+
         logger = logging.getLogger(f"AGENT.{self.agent_id}")
-        
+
         self.kernel_pipe = pipe
-        
+
         # Phase 4: Initialize VFS and Network for this agent
         try:
             from vibe_core.vfs import VirtualFileSystem
             from vibe_core.network_proxy import KernelNetworkProxy
-            
+
             self.vfs = VirtualFileSystem(self.agent_id)
-            
+
             # Network proxy wrapper
             class AgentNetworkProxy:
                 def __init__(self, agent_id, kernel_network):
                     self.agent_id = agent_id
                     self._kernel_network = kernel_network
-                    
+
                 def request(self, method, url, **kwargs):
-                    return self._kernel_network.request(self.agent_id, method, url, **kwargs)
-                    
+                    return self._kernel_network.request(
+                        self.agent_id, method, url, **kwargs
+                    )
+
                 def get(self, url, **kwargs):
                     return self._kernel_network.get(self.agent_id, url, **kwargs)
-                    
+
                 def post(self, url, **kwargs):
                     return self._kernel_network.post(self.agent_id, url, **kwargs)
-            
+
             self.network = AgentNetworkProxy(self.agent_id, KernelNetworkProxy())
-            
+
             # ============================================================
             # MONKEY PATCH: Override builtins.open
             # ============================================================
             import builtins
+
             original_open = builtins.open
             vfs = self.vfs  # Capture in closure
             agent_id = self.agent_id
-            
-            def vfs_open(file, mode='r', *args, **kwargs):
+
+            def vfs_open(file, mode="r", *args, **kwargs):
                 """
                 Intercepted open() that redirects to VFS.
-                
+
                 WARNING: This does NOT intercept C-level file operations
                 (e.g., sqlite3, pandas). Those must be configured explicitly.
                 """
@@ -179,77 +186,89 @@ class VibeAgent(ABC):
                     try:
                         return vfs.open(file, mode, *args, **kwargs)
                     except PermissionError as e:
-                        logger.warning(f"[VFS-BLOCKED] {agent_id} denied access to '{file}': {e}")
+                        logger.warning(
+                            f"[VFS-BLOCKED] {agent_id} denied access to '{file}': {e}"
+                        )
                         raise
                 else:
                     # File-like object, pass through
                     return original_open(file, mode, *args, **kwargs)
-            
+
             # Replace open in builtins
             builtins.open = vfs_open
             logger.info(f"🔧 {self.agent_id}: Monkey-patched builtins.open → VFS")
-            
+
             # ============================================================
             # MONKEY PATCH: Override requests module
             # ============================================================
             try:
                 import sys
                 import requests as original_requests
-                
+
                 network = self.network  # Capture in closure
-                
+
                 class VFSRequests:
                     """
                     Wrapper that redirects all requests to network proxy.
                     """
+
                     def __init__(self):
                         # Preserve original for internal use if needed
                         self._original = original_requests
-                    
+
                     def request(self, method, url, **kwargs):
                         logger.info(f"[NET-INTERCEPT] {agent_id} {method} {url}")
                         try:
                             return network.request(method, url, **kwargs)
                         except PermissionError as e:
-                            logger.warning(f"[NET-BLOCKED] {agent_id} denied {url}: {e}")
+                            logger.warning(
+                                f"[NET-BLOCKED] {agent_id} denied {url}: {e}"
+                            )
                             raise
-                    
+
                     def get(self, url, **kwargs):
-                        return self.request('GET', url, **kwargs)
-                    
+                        return self.request("GET", url, **kwargs)
+
                     def post(self, url, **kwargs):
-                        return self.request('POST', url, **kwargs)
-                    
+                        return self.request("POST", url, **kwargs)
+
                     def put(self, url, **kwargs):
-                        return self.request('PUT', url, **kwargs)
-                    
+                        return self.request("PUT", url, **kwargs)
+
                     def delete(self, url, **kwargs):
-                        return self.request('DELETE', url, **kwargs)
-                    
+                        return self.request("DELETE", url, **kwargs)
+
                     # Preserve common attributes
                     Session = original_requests.Session
                     Response = original_requests.Response
                     HTTPError = original_requests.HTTPError
-                
+
                 # Replace requests in sys.modules
-                sys.modules['requests'] = VFSRequests()
-                logger.info(f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy")
-                
+                sys.modules["requests"] = VFSRequests()
+                logger.info(
+                    f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy"
+                )
+
             except ImportError:
-                logger.debug(f"⚠️  requests module not available, skipping network patch")
-            
+                logger.debug(
+                    f"⚠️  requests module not available, skipping network patch"
+                )
+
         except Exception as e:
-            logger.error(f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}")
+            logger.error(
+                f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}"
+            )
             import traceback
+
             traceback.print_exc()
-    
+
     def get_sandbox_path(self) -> str:
         """
         Get absolute path to agent's sandbox directory.
-        
+
         This is for C-extensions (sqlite3, pandas, etc.) that bypass
         Python monkey-patching and need explicit paths.
-        
+
         Returns:
             Absolute path to sandbox (e.g., /tmp/vibe_os/agents/{agent_id})
         """
@@ -258,6 +277,7 @@ class VibeAgent(ABC):
         else:
             # Fallback if VFS not initialized yet
             from pathlib import Path
+
             return str(Path(f"/tmp/vibe_os/agents/{self.agent_id}").resolve())
 
     def send_to_kernel(self, message: Dict[str, Any]) -> None:
@@ -317,7 +337,13 @@ class VibeAgent(ABC):
             "capabilities": self.capabilities,
         }
 
-    async def emit_event(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    async def emit_event(
+        self,
+        event_type: str,
+        message: str = "",
+        task_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """
         Emit an event for real-time monitoring (Canto 10: Pulse System)
 
@@ -338,18 +364,25 @@ class VibeAgent(ABC):
         try:
             # Import here to avoid circular dependency
             from vibe_core.event_bus import emit_event
+
             await emit_event(
                 event_type=event_type,
                 agent_id=self.agent_id,
                 message=message,
                 task_id=task_id,
-                details=details or {}
+                details=details or {},
             )
         except Exception as e:
             logger = logging.getLogger("VibeAgent")
             logger.warning(f"⚠️  Failed to emit event: {e}")
 
-    def emit_event_sync(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    def emit_event_sync(
+        self,
+        event_type: str,
+        message: str = "",
+        task_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """
         Synchronous wrapper for emit_event (for use in non-async contexts)
 
@@ -367,7 +400,9 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
+                asyncio.create_task(
+                    self.emit_event(event_type, message, task_id, details)
+                )
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))

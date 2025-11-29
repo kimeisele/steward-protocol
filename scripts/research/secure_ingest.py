@@ -115,7 +115,7 @@ def list_vaulted_assets():
         for asset in assets:
             print(f"   • {asset['key_name']}")
             print(f"     Created: {asset['created_at']}")
-            if asset['rotated_at'] != asset['created_at']:
+            if asset["rotated_at"] != asset["created_at"]:
                 print(f"     Rotated: {asset['rotated_at']}")
     else:
         print(f"\n📦 VAULT IS EMPTY")
@@ -153,17 +153,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ingest",
         action="store_true",
-        help="Ingest secrets from environment into vault"
+        help="Ingest secrets from environment into vault",
     )
     parser.add_argument(
-        "--list-assets",
-        action="store_true",
-        help="List all vaulted assets"
+        "--list-assets", action="store_true", help="List all vaulted assets"
     )
     parser.add_argument(
-        "--audit-trail",
-        action="store_true",
-        help="Show vault access audit trail"
+        "--audit-trail", action="store_true", help="Show vault access audit trail"
     )
 
     args = parser.parse_args()

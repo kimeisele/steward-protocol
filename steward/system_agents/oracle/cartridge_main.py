@@ -63,7 +63,7 @@ class OracleCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="System introspection and explanation agent",
             domain="INTROSPECTION",
-            capabilities=["introspection", "audit_trail", "system_health"]
+            capabilities=["introspection", "audit_trail", "system_health"],
         )
 
         logger.info("🔮 ORACLE awakened")
@@ -100,15 +100,17 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "evidence": {
                     "balance": status["balance"],
                     "status": status["status"],
-                    "recent_transactions": status["account"].get("recent_transactions", [])
-                }
+                    "recent_transactions": status["account"].get(
+                        "recent_transactions", []
+                    ),
+                },
             }
 
         except IntrospectionError as e:
             return {
                 "query": f"Status of {agent_id}",
                 "error": str(e),
-                "message": f"Could not retrieve status for {agent_id}"
+                "message": f"Could not retrieve status for {agent_id}",
             }
 
     def explain_freeze(self, agent_id: str) -> Dict[str, Any]:
@@ -128,16 +130,15 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "agent_id": agent_id,
                 "raw_data": freeze_info,
                 "narrative": narrative,
-                "remediation": self._suggest_remediation(freeze_info)
+                "remediation": self._suggest_remediation(freeze_info),
             }
 
         except IntrospectionError as e:
-            return {
-                "query": f"Why is {agent_id} frozen?",
-                "error": str(e)
-            }
+            return {"query": f"Why is {agent_id} frozen?", "error": str(e)}
 
-    def audit_timeline(self, limit: int = 20, agent_id: Optional[str] = None) -> Dict[str, Any]:
+    def audit_timeline(
+        self, limit: int = 20, agent_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Get a narrative timeline of recent events.
 
@@ -149,18 +150,16 @@ class OracleCartridge(VibeAgent, OathMixin):
             narrative = self._build_timeline_narrative(trail, agent_id)
 
             return {
-                "query": f"Timeline of recent events" + (f" for {agent_id}" if agent_id else ""),
+                "query": f"Timeline of recent events"
+                + (f" for {agent_id}" if agent_id else ""),
                 "timestamp": datetime.now().isoformat(),
                 "event_count": len(trail),
                 "raw_data": trail,
-                "narrative": narrative
+                "narrative": narrative,
             }
 
         except IntrospectionError as e:
-            return {
-                "query": "Timeline",
-                "error": str(e)
-            }
+            return {"query": "Timeline", "error": str(e)}
 
     def system_health(self) -> Dict[str, Any]:
         """
@@ -176,14 +175,11 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "timestamp": datetime.now().isoformat(),
                 "raw_data": stats,
                 "narrative": narrative,
-                "alerts": self._identify_alerts(stats)
+                "alerts": self._identify_alerts(stats),
             }
 
         except IntrospectionError as e:
-            return {
-                "query": "System health",
-                "error": str(e)
-            }
+            return {"query": "System health", "error": str(e)}
 
     # ==================== NARRATIVE BUILDERS ====================
 
@@ -194,46 +190,56 @@ class OracleCartridge(VibeAgent, OathMixin):
         lines.append(f"Status: {status['status'].upper()}")
         lines.append(f"Balance: {status['balance']} Credits")
 
-        if status['status'] == 'frozen':
+        if status["status"] == "frozen":
             lines.append("⚠️  THIS AGENT IS FROZEN")
 
         # Recent activity
-        recent_txs = status['account'].get('recent_transactions', [])
+        recent_txs = status["account"].get("recent_transactions", [])
         if recent_txs:
             lines.append(f"\nRecent Activity ({len(recent_txs)} transactions):")
             for tx in recent_txs[:3]:
-                lines.append(f"  • TX {tx['tx_id']}: {tx['sender_id']} → {tx['receiver_id']} "
-                            f"({tx['amount']} Credits) - {tx['reason']}")
+                lines.append(
+                    f"  • TX {tx['tx_id']}: {tx['sender_id']} → {tx['receiver_id']} "
+                    f"({tx['amount']} Credits) - {tx['reason']}"
+                )
 
         # Vault leases
-        if status['recent_leases']:
+        if status["recent_leases"]:
             lines.append(f"\nVault Leases ({len(status['recent_leases'])} recent):")
-            for lease in status['recent_leases'][:3]:
-                lines.append(f"  • {lease['key_name']}: {lease['credits_charged']} Credits "
-                            f"at {lease['lease_time']}")
+            for lease in status["recent_leases"][:3]:
+                lines.append(
+                    f"  • {lease['key_name']}: {lease['credits_charged']} Credits "
+                    f"at {lease['lease_time']}"
+                )
 
         return "\n".join(lines)
 
-    def _build_freeze_narrative(self, agent_id: str, freeze_info: Dict[str, Any]) -> str:
+    def _build_freeze_narrative(
+        self, agent_id: str, freeze_info: Dict[str, Any]
+    ) -> str:
         """Build a narrative explaining a freeze."""
-        if not freeze_info.get('is_frozen'):
+        if not freeze_info.get("is_frozen"):
             return f"{agent_id} is not frozen. Agents operate freely."
 
         lines = []
         lines.append(f"🔒 {agent_id} IS FROZEN")
         lines.append(f"Freeze Time: {freeze_info.get('freeze_timestamp', 'unknown')}")
 
-        violation = freeze_info.get('violation', {})
+        violation = freeze_info.get("violation", {})
         lines.append(f"\nViolation Type: {violation.get('type', 'Unknown')}")
         lines.append(f"Severity: {violation.get('severity', 'Unknown')}")
         lines.append(f"Description: {violation.get('description', 'No description')}")
 
-        lines.append(f"\nRoot Cause: {freeze_info.get('freeze_reason', 'No reason recorded')}")
+        lines.append(
+            f"\nRoot Cause: {freeze_info.get('freeze_reason', 'No reason recorded')}"
+        )
         lines.append(f"Evidence TX: {freeze_info.get('freeze_tx_id', 'N/A')}")
 
         return "\n".join(lines)
 
-    def _build_timeline_narrative(self, trail: list, agent_id: Optional[str] = None) -> str:
+    def _build_timeline_narrative(
+        self, trail: list, agent_id: Optional[str] = None
+    ) -> str:
         """Build a narrative timeline of transactions."""
         if not trail:
             return "No transactions recorded."
@@ -245,11 +251,11 @@ class OracleCartridge(VibeAgent, OathMixin):
             lines.append("System Transaction Timeline:")
 
         for tx in trail[:10]:  # Show top 10
-            timestamp = tx.get('timestamp', 'unknown')
-            sender = tx.get('sender_id', '?')
-            receiver = tx.get('receiver_id', '?')
-            amount = tx.get('amount', 0)
-            reason = tx.get('reason', 'unknown')
+            timestamp = tx.get("timestamp", "unknown")
+            sender = tx.get("sender_id", "?")
+            receiver = tx.get("receiver_id", "?")
+            amount = tx.get("amount", 0)
+            reason = tx.get("reason", "unknown")
 
             lines.append(f"  {timestamp}: {sender} → {receiver} ({amount} Credits)")
             lines.append(f"    Reason: {reason}")
@@ -275,7 +281,9 @@ class OracleCartridge(VibeAgent, OathMixin):
         lines.append(f"  Total in System: {stats['total_credits']}")
         lines.append(f"  Circulating: {stats['circulating_credits']}")
 
-        lines.append(f"\nIntegrity: {'✅ VERIFIED' if stats['integrity_verified'] else '❌ COMPROMISED'}")
+        lines.append(
+            f"\nIntegrity: {'✅ VERIFIED' if stats['integrity_verified'] else '❌ COMPROMISED'}"
+        )
 
         return "\n".join(lines)
 
@@ -283,13 +291,17 @@ class OracleCartridge(VibeAgent, OathMixin):
 
     def _suggest_remediation(self, freeze_info: Dict[str, Any]) -> Dict[str, Any]:
         """Suggest how to unfreeze an agent."""
-        if not freeze_info.get('is_frozen'):
+        if not freeze_info.get("is_frozen"):
             return {"action": "none", "message": "Agent is not frozen"}
 
-        violation = freeze_info.get('violation', {})
-        violation_type = violation.get('type', '')
+        violation = freeze_info.get("violation", {})
+        violation_type = violation.get("type", "")
 
-        if 'Mock' in violation_type or 'Placeholder' in violation_type or 'Stub' in violation_type:
+        if (
+            "Mock" in violation_type
+            or "Placeholder" in violation_type
+            or "Stub" in violation_type
+        ):
             return {
                 "action": "code_fix",
                 "message": "Remove mock/placeholder code and implement real logic",
@@ -298,36 +310,36 @@ class OracleCartridge(VibeAgent, OathMixin):
                     "2. Replace mock implementation with real logic",
                     "3. Test thoroughly",
                     "4. Commit and push",
-                    "5. Watchman will thaw on next patrol"
-                ]
+                    "5. Watchman will thaw on next patrol",
+                ],
             }
         else:
             return {
                 "action": "investigate",
-                "message": "Review violation details and contact system administrator"
+                "message": "Review violation details and contact system administrator",
             }
 
     def _identify_alerts(self, stats: Dict[str, Any]) -> list:
         """Identify system alerts."""
         alerts = []
 
-        if stats['frozen_agents'] > 0:
-            alerts.append({
-                "severity": "HIGH",
-                "message": f"{stats['frozen_agents']} agents are frozen"
-            })
+        if stats["frozen_agents"] > 0:
+            alerts.append(
+                {
+                    "severity": "HIGH",
+                    "message": f"{stats['frozen_agents']} agents are frozen",
+                }
+            )
 
-        if not stats['integrity_verified']:
-            alerts.append({
-                "severity": "CRITICAL",
-                "message": "System integrity check failed"
-            })
+        if not stats["integrity_verified"]:
+            alerts.append(
+                {"severity": "CRITICAL", "message": "System integrity check failed"}
+            )
 
-        if stats['active_agents'] == 0:
-            alerts.append({
-                "severity": "CRITICAL",
-                "message": "No active agents in the system"
-            })
+        if stats["active_agents"] == 0:
+            alerts.append(
+                {"severity": "CRITICAL", "message": "No active agents in the system"}
+            )
 
         return alerts
 
@@ -345,7 +357,7 @@ class OracleCartridge(VibeAgent, OathMixin):
         return {
             "query": "Vault access log",
             "timestamp": datetime.now().isoformat(),
-            "leases": self.introspection.vault_access_log(limit=limit)
+            "leases": self.introspection.vault_access_log(limit=limit),
         }
 
     # ==================== VIBEOS AGENT INTERFACE ====================
@@ -381,32 +393,27 @@ class OracleCartridge(VibeAgent, OathMixin):
                 agent_id = task.payload.get("agent_id")
                 return self.audit_timeline(limit=limit, agent_id=agent_id)
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
         except Exception as e:
             logger.error(f"❌ ORACLE processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="oracle",
             name="ORACLE",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="System introspection and self-awareness",
             domain="INTROSPECTION",
-            capabilities=['system_state', 'health_check', 'diagnostics']
+            capabilities=["system_state", "health_check", "diagnostics"],
         )
-
-
 
     def report_status(self) -> Dict[str, Any]:
         """Report ORACLE status (VibeAgent interface)."""
@@ -416,5 +423,5 @@ class OracleCartridge(VibeAgent, OathMixin):
             "status": "RUNNING",
             "domain": "INTROSPECTION",
             "capabilities": self.capabilities,
-            "description": "System introspection and explanation agent"
+            "description": "System introspection and explanation agent",
         }

@@ -19,6 +19,7 @@ sys.path.insert(0, str(project_root))
 from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.herald.cartridge_main import HeraldCartridge
 
+
 def test_herald_migration():
     """Test Herald migration to system interface."""
 
@@ -46,7 +47,7 @@ def test_herald_migration():
 
     # Step 3: Verify system interface injection
     print("\n3️⃣  Verifying system interface injection...")
-    if hasattr(herald, 'system'):
+    if hasattr(herald, "system"):
         print(f"   ✅ herald.system injected")
         print(f"   📁 Sandbox: {herald.system.get_sandbox_path()}")
     else:
@@ -71,6 +72,7 @@ def test_herald_migration():
     except Exception as e:
         print(f"   ❌ EventLog initialization failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -87,6 +89,7 @@ def test_herald_migration():
     print("✅ Phase 2.1 Herald Migration: ALL TESTS PASSED")
     print("=" * 60)
     return True
+
 
 if __name__ == "__main__":
     success = test_herald_migration()

@@ -11,6 +11,9 @@ from typing import Optional
 from vibe_core.tools.tool_protocol import Tool, ToolCall, ToolResult
 
 # Import Soul Governance (ARCH-029)
+try:
+    from vibe_core.governance import InvariantChecker, SoulResult
+except ImportError:
     InvariantChecker = None  # type: ignore
     SoulResult = None  # type: ignore
 
@@ -169,9 +172,7 @@ class ToolRegistry:
         # Step 1: Look up tool
         tool = self.get(tool_name)
         if tool is None:
-            error_msg = (
-                f"Tool '{tool_name}' not found in registry. Available tools: {self.list_tools()}"
-            )
+            error_msg = f"Tool '{tool_name}' not found in registry. Available tools: {self.list_tools()}"
             logger.error(f"ToolRegistry: {error_msg}")
             return ToolResult(success=False, error=error_msg)
 
@@ -187,7 +188,10 @@ class ToolRegistry:
                 return ToolResult(
                     success=False,
                     error=f"Governance Violation: {soul_check.reason}",
-                    metadata={"blocked_by_soul": True, "rule_reason": soul_check.reason},
+                    metadata={
+                        "blocked_by_soul": True,
+                        "rule_reason": soul_check.reason,
+                    },
                 )
 
         # Step 3: Validate parameters
@@ -201,7 +205,9 @@ class ToolRegistry:
         # Step 4: Execute tool
         try:
             result = tool.execute(tool_call.parameters)
-            logger.info(f"ToolRegistry: Tool '{tool_name}' completed (success={result.success})")
+            logger.info(
+                f"ToolRegistry: Tool '{tool_name}' completed (success={result.success})"
+            )
             return result
         except Exception as e:
             # Fallback error handling (tools should catch their own exceptions)

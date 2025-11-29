@@ -105,9 +105,11 @@ class CityControlTool:
             # Get agent registry from Civic
             civic = self._get_civic()
             if civic:
-                registry_data = civic._get_registry_from_kernel() if self.kernel else {
-                    "agents": civic.registry.get("agents", {})
-                }
+                registry_data = (
+                    civic._get_registry_from_kernel()
+                    if self.kernel
+                    else {"agents": civic.registry.get("agents", {})}
+                )
                 agent_count = len(registry_data.get("agents", {}))
             else:
                 agent_count = 0
@@ -126,11 +128,19 @@ class CityControlTool:
                 "mode": self.mode,
                 "agents": {
                     "total": agent_count,
-                    "registry": list(registry_data.get("agents", {}).keys())
+                    "registry": list(registry_data.get("agents", {}).keys()),
                 },
                 "economy": {
-                    "total_credits_allocated": operations_data.get("credits_allocated", 0) if operations_data else 0,
-                    "total_transactions": operations_data.get("total_transactions", 0) if operations_data else 0,
+                    "total_credits_allocated": (
+                        operations_data.get("credits_allocated", 0)
+                        if operations_data
+                        else 0
+                    ),
+                    "total_transactions": (
+                        operations_data.get("total_transactions", 0)
+                        if operations_data
+                        else 0
+                    ),
                 },
                 "governance": {
                     "open_proposals": len(open_proposals),
@@ -139,14 +149,17 @@ class CityControlTool:
                             "id": p.get("id"),
                             "title": p.get("title"),
                             "proposer": p.get("proposer"),
-                            "status": p.get("status")
-                        } for p in open_proposals
-                    ]
+                            "status": p.get("status"),
+                        }
+                        for p in open_proposals
+                    ],
                 },
-                "health": "🟢 OPERATIONAL"
+                "health": "🟢 OPERATIONAL",
             }
 
-            logger.info(f"✅ City status retrieved: {agent_count} agents, {len(open_proposals)} open proposals")
+            logger.info(
+                f"✅ City status retrieved: {agent_count} agents, {len(open_proposals)} open proposals"
+            )
             return status
 
         except Exception as e:
@@ -154,7 +167,7 @@ class CityControlTool:
             return {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "error": str(e),
-                "health": "🔴 ERROR"
+                "health": "🔴 ERROR",
             }
 
     def list_proposals(self, status: str = "OPEN") -> List[Dict[str, Any]]:
@@ -184,10 +197,7 @@ class CityControlTool:
             return []
 
     def vote_proposal(
-        self,
-        proposal_id: str,
-        choice: str,
-        voter: str = "operator"
+        self, proposal_id: str, choice: str, voter: str = "operator"
     ) -> Dict[str, Any]:
         """
         Vote on a proposal.
@@ -224,10 +234,7 @@ class CityControlTool:
 
         except Exception as e:
             logger.error(f"❌ Failed to vote: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def execute_proposal(self, proposal_id: str) -> Dict[str, Any]:
         """
@@ -253,17 +260,9 @@ class CityControlTool:
 
         except Exception as e:
             logger.error(f"❌ Failed to execute proposal: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
-    def trigger_agent(
-        self,
-        agent_name: str,
-        action: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+    def trigger_agent(self, agent_name: str, action: str, **kwargs) -> Dict[str, Any]:
         """
         Trigger an agent action.
 
@@ -286,26 +285,15 @@ class CityControlTool:
             elif agent_name == "forum":
                 agent = self._get_forum()
             else:
-                return {
-                    "status": "error",
-                    "reason": f"unknown_agent: {agent_name}"
-                }
+                return {"status": "error", "reason": f"unknown_agent: {agent_name}"}
 
             if not agent:
-                return {
-                    "status": "error",
-                    "reason": "agent_not_available"
-                }
+                return {"status": "error", "reason": "agent_not_available"}
 
             # Create task
             from vibe_core.scheduling import Task
-            task = Task(
-                agent_id=agent_name,
-                payload={
-                    "action": action,
-                    **kwargs
-                }
-            )
+
+            task = Task(agent_id=agent_name, payload={"action": action, **kwargs})
 
             # Process task
             result = agent.process(task)
@@ -315,11 +303,9 @@ class CityControlTool:
         except Exception as e:
             logger.error(f"❌ Failed to trigger agent: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def check_credits(self, agent_name: str) -> Dict[str, Any]:
         """
@@ -343,10 +329,7 @@ class CityControlTool:
 
         except Exception as e:
             logger.error(f"❌ Failed to check credits: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def refill_credits(self, agent_name: str, amount: int = 50) -> Dict[str, Any]:
         """
@@ -371,10 +354,7 @@ class CityControlTool:
 
         except Exception as e:
             logger.error(f"❌ Failed to refill credits: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     # ==================== CARTRIDGE MANAGEMENT (DIRECT MODE) ====================
 
@@ -386,6 +366,7 @@ class CityControlTool:
         if not self._herald:
             try:
                 from herald.cartridge_main import HeraldCartridge
+
                 self._herald = HeraldCartridge()
                 logger.debug("📦 Herald cartridge loaded")
             except Exception as e:
@@ -401,6 +382,7 @@ class CityControlTool:
         if not self._civic:
             try:
                 from civic.cartridge_main import CivicCartridge
+
                 self._civic = CivicCartridge()
                 logger.debug("📦 Civic cartridge loaded")
             except Exception as e:
@@ -416,6 +398,7 @@ class CityControlTool:
         if not self._forum:
             try:
                 from forum.cartridge_main import ForumCartridge
+
                 self._forum = ForumCartridge()
                 logger.debug("📦 Forum cartridge loaded")
             except Exception as e:
@@ -436,19 +419,19 @@ class CityControlTool:
             data = {}
 
             # Total Transactions
-            match = re.search(r'\| Total Transactions \| (\d+) \|', content)
+            match = re.search(r"\| Total Transactions \| (\d+) \|", content)
             if match:
-                data['total_transactions'] = int(match.group(1))
+                data["total_transactions"] = int(match.group(1))
 
             # Credits Allocated
-            match = re.search(r'\| Credits Allocated \| (\d+) \|', content)
+            match = re.search(r"\| Credits Allocated \| (\d+) \|", content)
             if match:
-                data['credits_allocated'] = int(match.group(1))
+                data["credits_allocated"] = int(match.group(1))
 
             # Credits Spent
-            match = re.search(r'\| Credits Spent \| (\d+) \|', content)
+            match = re.search(r"\| Credits Spent \| (\d+) \|", content)
             if match:
-                data['credits_spent'] = int(match.group(1))
+                data["credits_spent"] = int(match.group(1))
 
             return data
 
@@ -458,6 +441,7 @@ class CityControlTool:
 
 
 # ==================== CONVENIENCE FUNCTIONS ====================
+
 
 def create_city_controller(kernel=None) -> CityControlTool:
     """

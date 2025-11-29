@@ -74,8 +74,8 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             capabilities=[
                 "content_generation",  # Can create commits
                 "ledger",  # Records to immutable ledger
-                "orchestration"  # Coordinates with other agents
-            ]
+                "orchestration",  # Coordinates with other agents
+            ],
         )
 
         logger.info("🗡️  CHRONICLE Cartridge initializing (VibeAgent v1.0)...")
@@ -108,7 +108,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
 
     def report_status(self) -> Dict[str, Any]:
@@ -119,7 +119,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             "status": "operational",
             "tasks_processed": self.tasks_processed,
             "tasks_successful": self.tasks_successful,
-            "git_status": self.git_tools.get_status()
+            "git_status": self.git_tools.get_status(),
         }
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -153,26 +153,21 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             elif action == "manifest_reality":
                 result = self._manifest_reality(params)
             else:
-                result = {
-                    "success": False,
-                    "error": f"Unknown action: {action}"
-                }
+                result = {"success": False, "error": f"Unknown action: {action}"}
 
             if result.get("success"):
                 self.tasks_successful += 1
                 logger.info(f"✅ Task {task.task_id} completed successfully")
             else:
-                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}")
+                logger.warning(
+                    f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}"
+                )
 
             return result
 
         except Exception as e:
             logger.error(f"❌ Task processing failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "task_id": task.task_id
-            }
+            return {"success": False, "error": str(e), "task_id": task.task_id}
 
     def _seal_history(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -188,25 +183,18 @@ class ChronicleCartridge(VibeAgent, OathMixin):
         sign = params.get("sign", True)
 
         if not message:
-            return {
-                "success": False,
-                "error": "Missing required param: message"
-            }
+            return {"success": False, "error": "Missing required param: message"}
 
         logger.info(f"🔐 Sealing history with message: {message[:50]}...")
 
-        result = self.git_tools.seal_history(
-            message=message,
-            files=files,
-            sign=sign
-        )
+        result = self.git_tools.seal_history(message=message, files=files, sign=sign)
 
         return {
             "success": result["success"],
             "action": "seal_history",
             "commit_hash": result.get("commit_hash"),
             "message": result.get("message"),
-            "timestamp": result.get("timestamp")
+            "timestamp": result.get("timestamp"),
         }
 
     def _read_history(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -222,16 +210,13 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"📖 Reading history (limit: {limit})...")
 
-        result = self.git_tools.read_history(
-            pattern=pattern,
-            limit=limit
-        )
+        result = self.git_tools.read_history(pattern=pattern, limit=limit)
 
         return {
             "success": result["success"],
             "action": "read_history",
             "commits": result.get("commits", []),
-            "message": result.get("message")
+            "message": result.get("message"),
         }
 
     def _fork_reality(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -244,10 +229,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
         branch_name = params.get("branch_name")
 
         if not branch_name:
-            return {
-                "success": False,
-                "error": "Missing required param: branch_name"
-            }
+            return {"success": False, "error": "Missing required param: branch_name"}
 
         logger.info(f"🔀 Forking reality: {branch_name}...")
 
@@ -257,7 +239,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             "success": result["success"],
             "action": "fork_reality",
             "branch": result.get("branch"),
-            "message": result.get("message")
+            "message": result.get("message"),
         }
 
     def _manifest_reality(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -270,10 +252,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
         files = params.get("files")
 
         if not files:
-            return {
-                "success": False,
-                "error": "Missing required param: files"
-            }
+            return {"success": False, "error": "Missing required param: files"}
 
         logger.info(f"📋 Manifesting {len(files)} files...")
 
@@ -283,5 +262,5 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             "success": result["success"],
             "action": "manifest_reality",
             "staged_files": result.get("staged_files", []),
-            "message": result.get("message")
+            "message": result.get("message"),
         }

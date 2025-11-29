@@ -204,7 +204,9 @@ class KernelOracle:
         cartridges = self.get_cartridges()
         if cartridges:
             for cartridge in cartridges:
-                lines.append(f"   • {cartridge['name'].upper()}: {cartridge['description']}")
+                lines.append(
+                    f"   • {cartridge['name'].upper()}: {cartridge['description']}"
+                )
         else:
             lines.append("   (No cartridges registered)")
         lines.append("")
@@ -297,7 +299,9 @@ class KernelOracle:
 _default_oracle: KernelOracle | None = None
 
 
-def get_kernel_oracle(kernel: VibeKernel, vibe_root: Path | None = None) -> KernelOracle:
+def get_kernel_oracle(
+    kernel: VibeKernel, vibe_root: Path | None = None
+) -> KernelOracle:
     """
     Get or create the default KernelOracle instance.
 

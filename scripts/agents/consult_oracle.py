@@ -60,50 +60,37 @@ Examples:
   %(prog)s --timeline --limit 10
   %(prog)s --health
   %(prog)s --tx TX-abc123
-        """
+        """,
     )
 
     # Query types
     parser.add_argument(
         "--ask",
         type=str,
-        help="Ask a free-form question (e.g., 'Why is Herald frozen?')"
+        help="Ask a free-form question (e.g., 'Why is Herald frozen?')",
     )
     parser.add_argument(
-        "--status",
-        type=str,
-        metavar="AGENT_ID",
-        help="Get status of specific agent"
+        "--status", type=str, metavar="AGENT_ID", help="Get status of specific agent"
     )
     parser.add_argument(
-        "--timeline",
-        action="store_true",
-        help="Show transaction timeline"
+        "--timeline", action="store_true", help="Show transaction timeline"
     )
     parser.add_argument(
-        "--health",
-        action="store_true",
-        help="Show system health status"
+        "--health", action="store_true", help="Show system health status"
     )
     parser.add_argument(
-        "--tx",
-        type=str,
-        metavar="TX_ID",
-        help="Trace specific transaction"
+        "--tx", type=str, metavar="TX_ID", help="Trace specific transaction"
     )
 
     # Options
     parser.add_argument(
-        "--limit",
-        type=int,
-        default=20,
-        help="Limit results (default: 20)"
+        "--limit", type=int, default=20, help="Limit results (default: 20)"
     )
     parser.add_argument(
         "--format",
         choices=["narrative", "json"],
         default="narrative",
-        help="Output format (default: narrative)"
+        help="Output format (default: narrative)",
     )
 
     args = parser.parse_args()
@@ -178,7 +165,15 @@ def _extract_agent_from_question(question: str) -> str:
     question_lower = question.lower()
 
     # Common agent names
-    agents = ["herald", "science", "watchman", "archivist", "auditor", "envoy", "steward"]
+    agents = [
+        "herald",
+        "science",
+        "watchman",
+        "archivist",
+        "auditor",
+        "envoy",
+        "steward",
+    ]
 
     for agent in agents:
         if agent in question_lower:

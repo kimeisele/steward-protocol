@@ -35,7 +35,14 @@ class TwitterPublisher:
             logger.info("⚠️  Twitter: Disabled in config")
             return
 
-        if not all([self.consumer_key, self.consumer_secret, self.access_token, self.access_token_secret]):
+        if not all(
+            [
+                self.consumer_key,
+                self.consumer_secret,
+                self.access_token,
+                self.access_token_secret,
+            ]
+        ):
             logger.warning("⚠️  TWITTER: Missing OAuth 1.0a credentials")
             return
 
@@ -48,7 +55,7 @@ class TwitterPublisher:
                 consumer_key=self.consumer_key,
                 consumer_secret=self.consumer_secret,
                 access_token=self.access_token,
-                access_token_secret=self.access_token_secret
+                access_token_secret=self.access_token_secret,
             )
             logger.info("✅ TWITTER: Client initialized (OAuth 1.0a)")
         except Exception as e:
@@ -109,16 +116,13 @@ class TwitterPublisher:
                 self.consumer_key,
                 self.consumer_secret,
                 self.access_token,
-                self.access_token_secret
+                self.access_token_secret,
             )
             api_v1 = tweepy.API(auth)
             media = api_v1.media_upload(filename=str(image_file))
             logger.info(f"✅ Media uploaded (ID: {media.media_id})")
 
-            response = self.client.create_tweet(
-                text=text,
-                media_ids=[media.media_id]
-            )
+            response = self.client.create_tweet(text=text, media_ids=[media.media_id])
 
             if response and response.data and "id" in response.data:
                 logger.info(f"🚀 TWEET SENT WITH MEDIA: ID {response.data['id']}")
@@ -176,7 +180,9 @@ class BroadcastCapability:
             logger.error(f"❌ BROADCAST: Unknown platform: {platform}")
             return False
 
-    def publish_with_media(self, content: str, media_path: str, platform: str = "twitter") -> bool:
+    def publish_with_media(
+        self, content: str, media_path: str, platform: str = "twitter"
+    ) -> bool:
         """
         Publish content with media attachment.
 

@@ -306,9 +306,9 @@ def step1_forge_soul(engineer: EngineerCartridge) -> Optional[str]:
             "feature_spec": "cartridge.yaml for Echo test agent",
             "path": "echo/cartridge.yaml",
             "content": ECHO_YAML_TEMPLATE,
-            "use_brain": False
+            "use_brain": False,
         },
-        task_id="genesis_yaml"
+        task_id="genesis_yaml",
     )
 
     try:
@@ -349,9 +349,9 @@ def step2_forge_body(engineer: EngineerCartridge) -> Optional[str]:
             "feature_spec": "cartridge_main.py for Echo test agent",
             "path": "echo/cartridge_main.py",
             "content": ECHO_PYTHON_TEMPLATE,
-            "use_brain": False
+            "use_brain": False,
         },
-        task_id="genesis_python"
+        task_id="genesis_python",
     )
 
     try:
@@ -371,8 +371,8 @@ def step2_forge_body(engineer: EngineerCartridge) -> Optional[str]:
 
         # Quick syntax check
         try:
-            with open(python_path, 'r') as f:
-                compile(f.read(), python_path, 'exec')
+            with open(python_path, "r") as f:
+                compile(f.read(), python_path, "exec")
             print_success("Python syntax validated")
         except SyntaxError as e:
             print_error(f"Python syntax error: {e}")
@@ -385,8 +385,9 @@ def step2_forge_body(engineer: EngineerCartridge) -> Optional[str]:
         return None
 
 
-def step3_gatekeeper(auditor: AuditorCartridge, python_path: str) -> Optional[
-    Dict[str, Any]]:
+def step3_gatekeeper(
+    auditor: AuditorCartridge, python_path: str
+) -> Optional[Dict[str, Any]]:
     """
     STEP 3: Auditor verifies Python code (The Gatekeeper)
 
@@ -396,11 +397,8 @@ def step3_gatekeeper(auditor: AuditorCartridge, python_path: str) -> Optional[
 
     task = Task(
         agent_id="auditor",
-        payload={
-            "action": "verify_changes",
-            "path": python_path
-        },
-        task_id="genesis_audit"
+        payload={"action": "verify_changes", "path": python_path},
+        task_id="genesis_audit",
     )
 
     try:
@@ -423,7 +421,7 @@ def step4_birth(
     archivist: ArchivistCartridge,
     yaml_path: str,
     python_path: str,
-    audit_result: Dict[str, Any]
+    audit_result: Dict[str, Any],
 ) -> bool:
     """
     STEP 4: Archivist commits files to /echo/ (The Birth)
@@ -440,9 +438,9 @@ def step4_birth(
             "source_path": python_path,
             "dest_path": "echo/cartridge_main.py",
             "audit_result": audit_result,
-            "message": "Genesis of Echo Agent (Implementation)"
+            "message": "Genesis of Echo Agent (Implementation)",
         },
-        task_id="seal_python"
+        task_id="seal_python",
     )
 
     try:
@@ -450,13 +448,12 @@ def step4_birth(
         result_py = archivist.process(task_py)
 
         if result_py.get("status") != "sealed":
-            print_error(
-                f"Failed to seal Python: {result_py.get('reason', 'unknown')}"
-            )
+            print_error(f"Failed to seal Python: {result_py.get('reason', 'unknown')}")
             return False
 
-        print_success(f"Sealed: {result_py.get('commit_short')} - "
-                      f"cartridge_main.py")
+        print_success(
+            f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py"
+        )
 
     except Exception as e:
         print_error(f"Exception sealing Python: {e}")
@@ -470,9 +467,9 @@ def step4_birth(
             "source_path": yaml_path,
             "dest_path": "echo/cartridge.yaml",
             "audit_result": audit_result,
-            "message": "Genesis of Echo Agent (Manifest)"
+            "message": "Genesis of Echo Agent (Manifest)",
         },
-        task_id="seal_yaml"
+        task_id="seal_yaml",
     )
 
     try:
@@ -480,13 +477,10 @@ def step4_birth(
         result_yaml = archivist.process(task_yaml)
 
         if result_yaml.get("status") != "sealed":
-            print_error(
-                f"Failed to seal YAML: {result_yaml.get('reason', 'unknown')}"
-            )
+            print_error(f"Failed to seal YAML: {result_yaml.get('reason', 'unknown')}")
             return False
 
-        print_success(f"Sealed: {result_yaml.get('commit_short')} - "
-                      f"cartridge.yaml")
+        print_success(f"Sealed: {result_yaml.get('commit_short')} - " f"cartridge.yaml")
         return True
 
     except Exception as e:
@@ -527,8 +521,8 @@ def step5_validate() -> bool:
 
     # Validate Python syntax
     try:
-        with open(python_path, 'r') as f:
-            compile(f.read(), python_path, 'exec')
+        with open(python_path, "r") as f:
+            compile(f.read(), python_path, "exec")
         print_success("✓ Python syntax valid")
     except SyntaxError as e:
         print_error(f"Python syntax error: {e}")
@@ -544,15 +538,14 @@ def step5_validate() -> bool:
 
         # Try to instantiate
         echo = EchoCartridge()
-        print_success(f"✓ EchoCartridge instantiated: {echo.name} v"
-                      f"{echo.version}")
+        print_success(f"✓ EchoCartridge instantiated: {echo.name} v" f"{echo.version}")
 
         # Check required methods
-        if not hasattr(echo, 'process'):
+        if not hasattr(echo, "process"):
             print_error("Missing process() method")
             return False
 
-        if not hasattr(echo, 'get_manifest'):
+        if not hasattr(echo, "get_manifest"):
             print_error("Missing get_manifest() method")
             return False
 
@@ -567,6 +560,7 @@ def step5_validate() -> bool:
     except Exception as e:
         print_error(f"Failed to import/validate: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

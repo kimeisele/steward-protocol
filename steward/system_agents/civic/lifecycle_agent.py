@@ -16,6 +16,7 @@ from vibe_core import VibeAgent, Task
 try:
     from .tools.lifecycle_enforcer import LifecycleEnforcer
     from .tools.lifecycle_manager import LifecycleStatus
+
     LIFECYCLE_AVAILABLE = True
 except ImportError as e:
     logger_setup = logging.getLogger("LIFECYCLE_AGENT")
@@ -36,16 +37,20 @@ class LifecycleAgent(VibeAgent):
             author="Steward Protocol",
             description="Agent lifecycle management: Vedic Varna system",
             domain="GOVERNANCE",
-            capabilities=["lifecycle_management", "permission_enforcement"]
+            capabilities=["lifecycle_management", "permission_enforcement"],
         )
 
         if LIFECYCLE_AVAILABLE:
             self.lifecycle_enforcer = LifecycleEnforcer()
             logger.info("🔄 LIFECYCLE ENFORCER initialized (Vedic Varna System)")
-            logger.info("   Status: ACTIVE - Managing Brahmachari → Grihastha progression")
+            logger.info(
+                "   Status: ACTIVE - Managing Brahmachari → Grihastha progression"
+            )
         else:
             self.lifecycle_enforcer = None
-            logger.warning("⚠️  Lifecycle Enforcer NOT available - system running in degraded mode")
+            logger.warning(
+                "⚠️  Lifecycle Enforcer NOT available - system running in degraded mode"
+            )
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process lifecycle-related tasks."""
@@ -58,18 +63,18 @@ class LifecycleAgent(VibeAgent):
             return self.check_action_permission(
                 agent_id=task.payload.get("agent_id"),
                 action_type=task.payload.get("action_type", "write"),
-                cost=task.payload.get("cost", 1)
+                cost=task.payload.get("cost", 1),
             )
         elif action == "authorize_brahmachari_to_grihastha":
             return self.authorize_brahmachari_to_grihastha(
                 agent_id=task.payload.get("agent_id"),
                 test_results=task.payload.get("test_results", {}),
-                initiator=task.payload.get("initiator", "TEMPLE")
+                initiator=task.payload.get("initiator", "TEMPLE"),
             )
         elif action == "report_violation":
             return self.report_violation(
                 agent_id=task.payload.get("agent_id"),
-                violation=task.payload.get("violation", {})
+                violation=task.payload.get("violation", {}),
             )
         elif action == "get_lifecycle_status":
             return self.get_lifecycle_status()
@@ -78,14 +83,16 @@ class LifecycleAgent(VibeAgent):
         else:
             return {"status": "error", "error": f"Unknown action: {action}"}
 
-    def check_action_permission(self, agent_id: str, action_type: str = "write", cost: int = 1) -> Dict[str, Any]:
+    def check_action_permission(
+        self, agent_id: str, action_type: str = "write", cost: int = 1
+    ) -> Dict[str, Any]:
         """Check if an agent has permission to perform an action based on lifecycle status."""
-        logger.info(f"🔐 Checking permission: {agent_id} for {action_type} action (cost: {cost})")
+        logger.info(
+            f"🔐 Checking permission: {agent_id} for {action_type} action (cost: {cost})"
+        )
 
         result = self.lifecycle_enforcer.check_action_permission(
-            agent_id,
-            action_type,
-            cost
+            agent_id, action_type, cost
         )
 
         return {
@@ -94,19 +101,19 @@ class LifecycleAgent(VibeAgent):
             "reason": result.reason,
             "agent": agent_id,
             "lifecycle_status": result.lifecycle_status,
-            "action_type": action_type
+            "action_type": action_type,
         }
 
-    def authorize_brahmachari_to_grihastha(self, agent_id: str, test_results: Dict[str, Any], initiator: str = "TEMPLE") -> Dict[str, Any]:
+    def authorize_brahmachari_to_grihastha(
+        self, agent_id: str, test_results: Dict[str, Any], initiator: str = "TEMPLE"
+    ) -> Dict[str, Any]:
         """Promote an agent from Brahmachari (Student) to Grihastha (Householder)."""
         logger.info(f"🎓 Promoting {agent_id} from BRAHMACHARI to GRIHASTHA")
         logger.info(f"   Initiator: {initiator}")
         logger.info(f"   Test Results: {test_results}")
 
         success = self.lifecycle_enforcer.authorize_brahmachari_to_grihastha(
-            agent_id,
-            test_results,
-            initiator
+            agent_id, test_results, initiator
         )
 
         return {
@@ -114,10 +121,12 @@ class LifecycleAgent(VibeAgent):
             "agent": agent_id,
             "promoted": success,
             "initiator": initiator,
-            "new_status": "grihastha" if success else "brahmachari"
+            "new_status": "grihastha" if success else "brahmachari",
         }
 
-    def report_violation(self, agent_id: str, violation: Dict[str, Any]) -> Dict[str, Any]:
+    def report_violation(
+        self, agent_id: str, violation: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Report a violation and potentially demote an agent."""
         logger.warning(f"⚠️  Violation reported for {agent_id}")
         logger.warning(f"   Details: {violation}")
@@ -128,7 +137,7 @@ class LifecycleAgent(VibeAgent):
             "status": "success" if success else "error",
             "agent": agent_id,
             "demoted": success,
-            "violation": violation
+            "violation": violation,
         }
 
     def get_lifecycle_status(self) -> Dict[str, Any]:
@@ -137,10 +146,7 @@ class LifecycleAgent(VibeAgent):
 
         stats = self.lifecycle_enforcer.get_enforcement_status()
 
-        return {
-            "status": "success",
-            "enforcement_stats": stats
-        }
+        return {"status": "success", "enforcement_stats": stats}
 
     def get_agent_status(self, agent_id: str) -> Dict[str, Any]:
         """Get lifecycle status for a specific agent."""
@@ -150,19 +156,11 @@ class LifecycleAgent(VibeAgent):
             lifecycle_mgr = self.lifecycle_enforcer.lifecycle_mgr
             agent_status = lifecycle_mgr.get_agent_status(agent_id)
 
-            return {
-                "status": "success",
-                "agent": agent_id,
-                "lifecycle": agent_status
-            }
+            return {"status": "success", "agent": agent_id, "lifecycle": agent_status}
 
         except Exception as e:
             logger.error(f"❌ Error querying agent status: {e}")
-            return {
-                "status": "error",
-                "agent": agent_id,
-                "error": str(e)
-            }
+            return {"status": "error", "agent": agent_id, "error": str(e)}
 
     def report_status(self) -> Dict[str, Any]:
         """Report lifecycle agent status."""
@@ -171,7 +169,7 @@ class LifecycleAgent(VibeAgent):
                 "agent_id": "civic_lifecycle",
                 "name": "CIVIC Lifecycle",
                 "status": "DEGRADED",
-                "note": "Lifecycle enforcer not available"
+                "note": "Lifecycle enforcer not available",
             }
 
         stats = self.lifecycle_enforcer.get_enforcement_status()
@@ -180,7 +178,7 @@ class LifecycleAgent(VibeAgent):
             "agent_id": "civic_lifecycle",
             "name": "CIVIC Lifecycle",
             "status": "RUNNING",
-            "enforcement_stats": stats
+            "enforcement_stats": stats,
         }
 
 

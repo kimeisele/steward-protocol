@@ -75,8 +75,8 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 "governance",
                 "broadcasting",
                 "registry",
-                "auditing"
-            ]
+                "auditing",
+            ],
         )
 
         # Initialize Constitutional Oath mixin (if available)
@@ -108,7 +108,9 @@ class EnvoyCartridge(VibeAgent, OathMixin):
     def log_path(self):
         """Lazy-load log path (sandboxed)."""
         if self._log_path is None:
-            self._log_path = self.system.get_sandbox_path() / "logs" / "envoy_operations.jsonl"
+            self._log_path = (
+                self.system.get_sandbox_path() / "logs" / "envoy_operations.jsonl"
+            )
             self._log_path.parent.mkdir(parents=True, exist_ok=True)
         return self._log_path
 
@@ -155,7 +157,7 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 return {
                     "status": "error",
                     "task_id": task.task_id,
-                    "error": "No command specified in payload"
+                    "error": "No command specified in payload",
                 }
 
             # Ensure CityControlTool is initialized
@@ -163,7 +165,7 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 return {
                     "status": "error",
                     "task_id": task.task_id,
-                    "error": "CityControlTool not initialized (kernel not injected)"
+                    "error": "CityControlTool not initialized (kernel not injected)",
                 }
 
             # Route the command to appropriate handler
@@ -172,34 +174,34 @@ class EnvoyCartridge(VibeAgent, OathMixin):
             # Log operation
             self._log_operation(task.task_id, command, args, result)
 
-            logger.info(f"✅ ENVOY task {task.task_id} completed: {result.get('status')}")
+            logger.info(
+                f"✅ ENVOY task {task.task_id} completed: {result.get('status')}"
+            )
             return result
 
         except Exception as e:
-            error_result = {
-                "status": "error",
-                "task_id": task.task_id,
-                "error": str(e)
-            }
+            error_result = {"status": "error", "task_id": task.task_id, "error": str(e)}
             logger.exception(f"❌ ENVOY task {task.task_id} failed: {e}")
             self._log_operation(task.task_id, "unknown", {}, error_result)
             return error_result
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="envoy",
             name="ENVOY",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="User interface and orchestration",
             domain="ORCHESTRATION",
-            capabilities=['playbook_execution', 'orchestration']
+            capabilities=["playbook_execution", "orchestration"],
         )
 
-
-
-    def _route_command(self, command: str, args: Dict[str, Any], task_id: str) -> Dict[str, Any]:
+    def _route_command(
+        self, command: str, args: Dict[str, Any], task_id: str
+    ) -> Dict[str, Any]:
         """
         Route command to appropriate handler
 
@@ -227,7 +229,7 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 status = args.get("status", "OPEN")
                 return {
                     "status": "success",
-                    "proposals": self.city_control.list_proposals(status=status)
+                    "proposals": self.city_control.list_proposals(status=status),
                 }
 
             elif command == "vote":
@@ -235,7 +237,10 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 choice = args.get("choice")
                 voter = args.get("voter", "operator")
                 if not proposal_id or not choice:
-                    return {"status": "error", "error": "proposal_id and choice required"}
+                    return {
+                        "status": "error",
+                        "error": "proposal_id and choice required",
+                    }
                 return self.city_control.vote_proposal(proposal_id, choice, voter)
 
             elif command == "execute":
@@ -249,7 +254,10 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 agent_name = args.get("agent_name")
                 action = args.get("action")
                 if not agent_name or not action:
-                    return {"status": "error", "error": "agent_name and action required"}
+                    return {
+                        "status": "error",
+                        "error": "agent_name and action required",
+                    }
                 kwargs = args.get("kwargs", {})
                 return self.city_control.trigger_agent(agent_name, action, **kwargs)
 
@@ -273,9 +281,12 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 if not goal:
                     return {"status": "error", "error": "goal required for campaign"}
                 # Extract additional parameters
-                campaign_params = {k: v for k, v in args.items()
-                                  if k not in ["goal", "campaign_type"]}
-                return self.campaign_tool.run_campaign(goal, campaign_type, **campaign_params)
+                campaign_params = {
+                    k: v for k, v in args.items() if k not in ["goal", "campaign_type"]
+                }
+                return self.campaign_tool.run_campaign(
+                    goal, campaign_type, **campaign_params
+                )
 
             elif command == "report":
                 report_type = args.get("report_type", "gap")
@@ -293,56 +304,62 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                         "report_type": "gap",
                         "title": title,
                         "report_path": report_path,
-                        "report_hash": report.get("verification", {}).get("sha256_hash"),
-                        "sections": list(report.get("sections", {}).keys())
+                        "report_hash": report.get("verification", {}).get(
+                            "sha256_hash"
+                        ),
+                        "sections": list(report.get("sections", {}).keys()),
                     }
                 else:
-                    return {"status": "error", "error": f"Unknown report type: {report_type}"}
+                    return {
+                        "status": "error",
+                        "error": f"Unknown report type: {report_type}",
+                    }
 
             elif command == "next_action":
                 # HIL Assistant: Get Next Best Action
                 # 1. Try to get the latest report content if available
                 report_content = args.get("report_content", "")
-                
+
                 # If no content provided, try to find the latest G.A.P. report
                 if not report_content:
                     try:
                         import glob
                         import os
-                        list_of_files = glob.glob('data/reports/GAP_Report_*.markdown')
+
+                        list_of_files = glob.glob("data/reports/GAP_Report_*.markdown")
                         if list_of_files:
                             latest_file = max(list_of_files, key=os.path.getctime)
-                            with open(latest_file, 'r') as f:
+                            with open(latest_file, "r") as f:
                                 report_content = f.read()
                     except Exception as e:
                         logger.warning(f"Could not auto-load latest report: {e}")
                         report_content = "No report available."
 
                 summary = self.hil_assistant.get_next_action_summary(report_content)
-                
+
                 return {
                     "status": "success",
                     "action": "strategic_briefing",
-                    "summary": summary
+                    "summary": summary,
                 }
 
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown command: {command}"
-                }
+                return {"status": "error", "error": f"Unknown command: {command}"}
 
         except Exception as e:
             logger.error(f"❌ Command routing failed: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
             return {
                 "status": "error",
                 "error": str(e),
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
 
-    def _log_operation(self, task_id: str, command: str, args: Dict, result: Dict) -> None:
+    def _log_operation(
+        self, task_id: str, command: str, args: Dict, result: Dict
+    ) -> None:
         """Log operation to file for audit trail"""
         try:
             from datetime import datetime, timezone
@@ -352,7 +369,7 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 "task_id": task_id,
                 "command": command,
                 "args": args,
-                "result_status": result.get("status", "unknown")
+                "result_status": result.get("status", "unknown"),
             }
 
             self.operation_log.append(log_entry)
@@ -387,6 +404,6 @@ class EnvoyCartridge(VibeAgent, OathMixin):
                 "operations_logged_persistent": operations_count,
                 "kernel_injected": self.kernel is not None,
                 "log_path": str(self.log_path),
-                "hil_assistant_active": True
-            }
+                "hil_assistant_active": True,
+            },
         }

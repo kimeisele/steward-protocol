@@ -27,6 +27,7 @@ logger = logging.getLogger("DASHBOARD")
 @dataclass
 class DashboardMetrics:
     """Metrics snapshot for the city."""
+
     total_transactions: int
     unique_agents: int
     total_credits_allocated: int
@@ -210,9 +211,13 @@ class DashboardGenerator:
             md_lines.append("")
 
             if metrics.top_agent:
-                md_lines.append(f"**Wealthiest Agent:** {metrics.top_agent['agent']} ({metrics.top_agent['balance']} credits)")
+                md_lines.append(
+                    f"**Wealthiest Agent:** {metrics.top_agent['agent']} ({metrics.top_agent['balance']} credits)"
+                )
             if metrics.top_spender:
-                md_lines.append(f"**Top Spender:** {metrics.top_spender['agent']} ({metrics.top_spender['deducted']} credits spent)")
+                md_lines.append(
+                    f"**Top Spender:** {metrics.top_spender['agent']} ({metrics.top_spender['deducted']} credits spent)"
+                )
             md_lines.append("")
 
         # Configuration Status
@@ -223,19 +228,33 @@ class DashboardGenerator:
         if "governance" in self.matrix:
             gov = self.matrix["governance"]
             md_lines.append("### Governance")
-            md_lines.append(f"- Voting Threshold: {gov.get('voting_threshold', 'N/A')} (50% majority required)")
-            md_lines.append(f"- Quorum Required: {gov.get('quorum_required', 'N/A')} (30% must participate)")
-            md_lines.append(f"- Proposal Cost: {gov.get('proposal_cost', 'N/A')} credits")
+            md_lines.append(
+                f"- Voting Threshold: {gov.get('voting_threshold', 'N/A')} (50% majority required)"
+            )
+            md_lines.append(
+                f"- Quorum Required: {gov.get('quorum_required', 'N/A')} (30% must participate)"
+            )
+            md_lines.append(
+                f"- Proposal Cost: {gov.get('proposal_cost', 'N/A')} credits"
+            )
             md_lines.append("")
 
         # Economy
         if "economy" in self.matrix:
             econ = self.matrix["economy"]
             md_lines.append("### Economy")
-            md_lines.append(f"- Initial Credits per Agent: {econ.get('initial_credits', 'N/A')}")
-            md_lines.append(f"- Broadcast Cost: {econ.get('broadcast_cost', 'N/A')} credits")
-            md_lines.append(f"- Research Cost: {econ.get('research_cost', 'N/A')} credits")
-            md_lines.append(f"- Credit Supply Cap: {econ.get('total_credit_supply_cap', 'N/A')}")
+            md_lines.append(
+                f"- Initial Credits per Agent: {econ.get('initial_credits', 'N/A')}"
+            )
+            md_lines.append(
+                f"- Broadcast Cost: {econ.get('broadcast_cost', 'N/A')} credits"
+            )
+            md_lines.append(
+                f"- Research Cost: {econ.get('research_cost', 'N/A')} credits"
+            )
+            md_lines.append(
+                f"- Credit Supply Cap: {econ.get('total_credit_supply_cap', 'N/A')}"
+            )
             md_lines.append("")
 
         # Agent Parameters
@@ -277,15 +296,21 @@ class DashboardGenerator:
             md_lines.append("## 🔍 Ledger Health")
             md_lines.append("")
             md_lines.append(f"- Total Entries: {len(self.ledger_entries)}")
-            md_lines.append(f"- First Entry: {self.ledger_entries[0].get('timestamp', 'N/A')}")
-            md_lines.append(f"- Last Entry: {self.ledger_entries[-1].get('timestamp', 'N/A')}")
+            md_lines.append(
+                f"- First Entry: {self.ledger_entries[0].get('timestamp', 'N/A')}"
+            )
+            md_lines.append(
+                f"- Last Entry: {self.ledger_entries[-1].get('timestamp', 'N/A')}"
+            )
             md_lines.append("")
 
         # Policy Recommendations
         md_lines.append("## 💡 Policy Notes")
         md_lines.append("")
         md_lines.append("Edit `config/matrix.yaml` to adjust:")
-        md_lines.append("- Agent behavior parameters (posting frequency, research, etc.)")
+        md_lines.append(
+            "- Agent behavior parameters (posting frequency, research, etc.)"
+        )
         md_lines.append("- Economic settings (costs, rewards, inflation)")
         md_lines.append("- Governance thresholds (voting majority, quorum)")
         md_lines.append("")

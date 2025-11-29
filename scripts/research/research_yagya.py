@@ -22,8 +22,8 @@ from pathlib import Path
 # Add project root and agent paths to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(project_root / 'steward' / 'system_agents'))
-sys.path.insert(0, str(project_root / 'agent_city' / 'registry'))
+sys.path.insert(0, str(project_root / "steward" / "system_agents"))
+sys.path.insert(0, str(project_root / "agent_city" / "registry"))
 
 # Core imports
 from civic.tools.economy import CivicBank
@@ -32,10 +32,7 @@ from science.cartridge_main import ScientistCartridge
 from vibe_core import Task
 
 # Logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("YAGYA")
 
 
@@ -104,7 +101,7 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
                 receiver="science",
                 amount=required_balance - science_balance,
                 reason="YAGYA_GRANT",
-                service_type="grant"
+                service_type="grant",
             )
             print_ritual(f"   ✓ Granted credits via TX: {tx_id}")
             science_balance = bank.get_balance("science")
@@ -146,16 +143,22 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
                         "Service (Shudra function) is not degrading—it is liberation through perfect execution.",
                         "The Civic Bank enforces integrity by making all transactions immutable and transparent.",
                         "Watchman enforcement prevents mock implementations and maintains system quality.",
-                        "Research quality (Brahmin function) depends on integrity at every level."
+                        "Research quality (Brahmin function) depends on integrity at every level.",
                     ],
                     "sources": [
-                        {"url": "internal://vibe-core", "title": "VibeCore Architecture"},
+                        {
+                            "url": "internal://vibe-core",
+                            "title": "VibeCore Architecture",
+                        },
                         {"url": "internal://civic-bank", "title": "Civic Central Bank"},
-                        {"url": "internal://watchman", "title": "Watchman Integrity Enforcer"}
-                    ]
+                        {
+                            "url": "internal://watchman",
+                            "title": "Watchman Integrity Enforcer",
+                        },
+                    ],
                 },
                 "status": "cached",
-                "note": "Live API unavailable - using internal knowledge base"
+                "note": "Live API unavailable - using internal knowledge base",
             }
 
         # Deduct API usage fee (only if we used real API)
@@ -166,7 +169,7 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
                     receiver="CIVIC",
                     amount=5,
                     reason="API_USAGE_FEE",
-                    service_type="platform_fee"
+                    service_type="platform_fee",
                 )
                 print_ritual("   ✓ 5 Credits sacrificed to Platform.")
             except Exception as fee_error:
@@ -177,6 +180,7 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
     except Exception as e:
         print_ritual(f"❌ Research failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -192,7 +196,7 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
         output_file = output_dir / f"yagya_{timestamp}.json"
 
         # Save the result
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(result, f, indent=2)
 
         print_ritual(f"   ✓ Knowledge preserved in: {output_file}")
@@ -206,9 +210,13 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
                     if "title" in briefing:
                         print_ritual(f"   Title: {briefing['title']}")
                     if "key_findings" in briefing:
-                        print_ritual(f"   Key Findings: {len(briefing['key_findings'])} found")
+                        print_ritual(
+                            f"   Key Findings: {len(briefing['key_findings'])} found"
+                        )
                     if "sources" in briefing:
-                        print_ritual(f"   Sources Consulted: {len(briefing['sources'])}")
+                        print_ritual(
+                            f"   Sources Consulted: {len(briefing['sources'])}"
+                        )
 
     except Exception as e:
         print_ritual(f"❌ Failed to preserve knowledge: {e}")
@@ -227,17 +235,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Execute the Research Yagya")
     parser.add_argument(
-        "--topic",
-        type=str,
-        default=None,
-        help="Research topic to investigate"
+        "--topic", type=str, default=None, help="Research topic to investigate"
     )
     parser.add_argument(
         "--depth",
         type=str,
         default="advanced",
         choices=["quick", "standard", "advanced"],
-        help="Research depth level"
+        help="Research depth level",
     )
 
     args = parser.parse_args()

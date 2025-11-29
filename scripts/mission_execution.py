@@ -24,11 +24,13 @@ from forum.cartridge_main import ForumCartridge
 from science.cartridge_main import ScienceCartridge
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("MISSION_EXECUTION")
+
 
 class MockKernel:
     """Simulates the VibeOS Kernel for agent orchestration."""
+
     def __init__(self):
         self.agent_registry = {}
         logger.info("🖥️  MockKernel Initialized")
@@ -42,9 +44,9 @@ class MockKernel:
 
 
 def main():
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🚀 MISSION EXECUTION: Cost-Efficient Scaling")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # 1. Initialize Kernel and Agents
     kernel = MockKernel()
@@ -69,24 +71,21 @@ def main():
     # We'll assume they are self-contained or don't strictly need it for this flow
     # But let's try to inject if they have the method
     for agent in [herald, civic, forum, science]:
-        if hasattr(agent, 'set_kernel'):
+        if hasattr(agent, "set_kernel"):
             agent.set_kernel(kernel)
 
     print("\n✅ System Initialized. Starting Mission...\n")
 
     # 2. Phase 1: Closure (Crisis Loop) - Execute PROP-009
-    print("\n" + "-"*40)
+    print("\n" + "-" * 40)
     print("🔐 PHASE 1: CLOSURE (Execute PROP-009)")
     print("-" * 40)
-    
+
     task1 = Task(
         agent_id="envoy",
-        payload={
-            "command": "execute",
-            "args": {"proposal_id": "PROP-009"}
-        }
+        payload={"command": "execute", "args": {"proposal_id": "PROP-009"}},
     )
-    
+
     result1 = envoy.process(task1)
     print(f"\n📝 Result Phase 1: {json.dumps(result1, indent=2)}")
 
@@ -94,10 +93,10 @@ def main():
         print("❌ Phase 1 Failed. Aborting.")
         # Proceeding anyway for demonstration if it was already executed
         if "already executed" not in str(result1.get("error", "")).lower():
-             pass # In a real script we might exit, but here we continue to try Phase 2
+            pass  # In a real script we might exit, but here we continue to try Phase 2
 
     # 3. Phase 2: Launch (New Mission) - Start Campaign
-    print("\n" + "-"*40)
+    print("\n" + "-" * 40)
     print("📢 PHASE 2: LAUNCH (Start Campaign)")
     print("-" * 40)
 
@@ -109,16 +108,16 @@ def main():
                 "goal": "starte die Kampagne zur Veröffentlichung des G.A.P. Reports und skaliere diese Kampagne so kosten-effizient wie möglich auf allen Kanälen. Fokussiere dich auf den Proof, dass Governed Intelligence günstig routet.",
                 "campaign_type": "awareness",
                 "focus": "cost_efficiency",
-                "proof": "governed_intelligence"
-            }
-        }
+                "proof": "governed_intelligence",
+            },
+        },
     )
 
     result2 = envoy.process(task2)
     print(f"\n📝 Result Phase 2: {json.dumps(result2, indent=2)}")
 
     # 4. Generate G.A.P. Report (Explicitly to ensure it's fresh and we get the path)
-    print("\n" + "-"*40)
+    print("\n" + "-" * 40)
     print("📊 GENERATING G.A.P. REPORT")
     print("-" * 40)
 
@@ -129,17 +128,18 @@ def main():
             "args": {
                 "title": "Mission Cost-Efficient Scaling Proof",
                 "report_type": "gap",
-                "format": "markdown"
-            }
-        }
+                "format": "markdown",
+            },
+        },
     )
-    
+
     result3 = envoy.process(task3)
     print(f"\n📝 Result Report Generation: {json.dumps(result3, indent=2)}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🏁 MISSION COMPLETE")
-    print("="*60)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

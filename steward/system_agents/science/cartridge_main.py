@@ -83,11 +83,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="External intelligence and fact research agent",
             domain="SCIENCE",
-            capabilities=[
-                "research",
-                "web_search",
-                "fact_synthesis"
-            ]
+            capabilities=["research", "web_search", "fact_synthesis"],
         )
 
         # Initialize Constitutional Oath mixin (if available)
@@ -96,7 +92,9 @@ class ScientistCartridge(VibeAgent, OathMixin):
             # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
             # This ensures SCIENCE has oath_sworn=True before kernel registration
             self.oath_sworn = True
-            logger.info("✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)")
+            logger.info(
+                "✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)"
+            )
 
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
@@ -108,7 +106,9 @@ class ScientistCartridge(VibeAgent, OathMixin):
         self._cache_dir = None
         self._results_dir = None
 
-        logger.info("✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)")
+        logger.info(
+            "✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)"
+        )
 
     @property
     def cache_dir(self):
@@ -145,39 +145,38 @@ class ScientistCartridge(VibeAgent, OathMixin):
                 return self.research(query, max_results, use_cache)
 
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"❌ SCIENCE processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="science",
             name="SCIENTIST",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="Research and knowledge analysis",
             domain="SCIENCE",
-            capabilities=['research', 'web_search', 'fact_verification']
+            capabilities=["research", "web_search", "fact_verification"],
         )
-
-
 
     def report_status(self) -> Dict[str, Any]:
         """Report SCIENCE status (VibeAgent interface) - Deep Introspection."""
         # Count cached results
-        cache_files = list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
-        results_files = list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
+        cache_files = (
+            list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
+        )
+        results_files = (
+            list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
+        )
 
         return {
             "agent_id": "science",
@@ -191,7 +190,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
                 "results_generated": len(results_files),
                 "cache_dir": str(self.cache_dir),
                 "results_dir": str(self.results_dir),
-            }
+            },
         }
 
     def research(
@@ -265,7 +264,9 @@ class ScientistCartridge(VibeAgent, OathMixin):
         # Synthesize into comprehensive briefing
         comprehensive = self._synthesize_multiple_briefings(topic, all_results)
 
-        logger.info(f"✅ Comprehensive briefing created: {len(all_results)} perspectives")
+        logger.info(
+            f"✅ Comprehensive briefing created: {len(all_results)} perspectives"
+        )
         return comprehensive
 
     def fact_check(self, claim: str, context: Optional[str] = None) -> Dict[str, Any]:
@@ -286,8 +287,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
 
         # Simple heuristic: Check if claim appears in results
         claim_found = any(
-            claim.lower() in source["content"].lower()
-            for source in briefing["sources"]
+            claim.lower() in source["content"].lower() for source in briefing["sources"]
         )
 
         confidence = 0.8 if claim_found else 0.3

@@ -32,6 +32,7 @@ vault = None
 
 class InsufficientFundsError(Exception):
     """Raised when an agent lacks sufficient credits for a transaction."""
+
     pass
 
 
@@ -53,7 +54,7 @@ class CivicBank:
     def __init__(self, db_path: Optional[str] = None):
         """
         Initialize the bank and SQLite schema.
-        
+
         Args:
             db_path: Path to database file. If None, uses default data/economy.db
                      For VFS isolation, pass agent.get_sandbox_path() + "/economy.db"
@@ -62,7 +63,7 @@ class CivicBank:
             self.DB_PATH = Path(db_path)
         else:
             self.DB_PATH = Path("data/economy.db")
-            
+
         self.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.DB_PATH), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
@@ -71,9 +72,12 @@ class CivicBank:
         # Initialize the Civic Vault (lazy import to avoid circular imports)
         try:
             from .vault import CivicVault
+
             self.vault = CivicVault(self.conn)
         except (ImportError, Exception) as e:
-            logger.warning(f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)")
+            logger.warning(
+                f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)"
+            )
             self.vault = None
 
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")
@@ -83,17 +87,20 @@ class CivicBank:
         cur = self.conn.cursor()
 
         # 1. ACCOUNTS (State Cache - Denormalized)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS accounts (
                 agent_id TEXT PRIMARY KEY,
                 balance INTEGER DEFAULT 0,
                 is_frozen BOOLEAN DEFAULT 0,
                 updated_at DATETIME
             )
-        """)
+        """
+        )
 
         # 2. TRANSACTIONS (The Event Log - Chained & Immutable)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS transactions (
                 tx_id TEXT PRIMARY KEY,
                 timestamp DATETIME,
@@ -106,10 +113,12 @@ class CivicBank:
                 previous_hash TEXT,
                 tx_hash TEXT
             )
-        """)
+        """
+        )
 
         # 3. ENTRIES (The Double-Entry Detail)
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS entries (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tx_id TEXT,
@@ -118,18 +127,19 @@ class CivicBank:
                 amount INTEGER,
                 FOREIGN KEY(tx_id) REFERENCES transactions(tx_id)
             )
-        """)
+        """
+        )
 
         # GENESIS: Ensure special accounts exist
         genesis_accounts = [
-            ('MINT', 1000000000),      # Infinite money fountain
-            ('VAULT', 0),              # Vault asset management (receives lease fees)
-            ('CIVIC', 0),              # Platform operations (receives platform fees)
+            ("MINT", 1000000000),  # Infinite money fountain
+            ("VAULT", 0),  # Vault asset management (receives lease fees)
+            ("CIVIC", 0),  # Platform operations (receives platform fees)
         ]
         for agent_id, initial_balance in genesis_accounts:
             cur.execute(
                 "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, ?)",
-                (agent_id, initial_balance)
+                (agent_id, initial_balance),
             )
         self.conn.commit()
         logger.info("✅ Schema initialized (MINT, VAULT, CIVIC accounts ready)")
@@ -144,7 +154,7 @@ class CivicBank:
         cur = self.conn.cursor()
         cur.execute("SELECT tx_hash FROM transactions ORDER BY timestamp DESC LIMIT 1")
         row = cur.fetchone()
-        return row['tx_hash'] if row else "GENESIS_HASH"
+        return row["tx_hash"] if row else "GENESIS_HASH"
 
     def get_balance(self, agent_id: str) -> int:
         """
@@ -159,7 +169,7 @@ class CivicBank:
         cur = self.conn.cursor()
         cur.execute("SELECT balance FROM accounts WHERE agent_id = ?", (agent_id,))
         row = cur.fetchone()
-        return row['balance'] if row else 0
+        return row["balance"] if row else 0
 
     def transfer(
         self,
@@ -167,7 +177,7 @@ class CivicBank:
         receiver: str,
         amount: int,
         reason: str,
-        service_type: str = "transfer"
+        service_type: str = "transfer",
     ) -> str:
         """
         Execute an atomic Double-Entry Transaction.
@@ -216,23 +226,36 @@ class CivicBank:
             tx_id = f"TX-{tx_hash[:8]}"
 
             # 3. RECORD TRANSACTION (Master Record - Immutable)
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO transactions
                 (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (tx_id, timestamp, sender, receiver, amount, reason, service_type, prev_hash, tx_hash))
+            """,
+                (
+                    tx_id,
+                    timestamp,
+                    sender,
+                    receiver,
+                    amount,
+                    reason,
+                    service_type,
+                    prev_hash,
+                    tx_hash,
+                ),
+            )
 
             # 4. RECORD ENTRIES (Double-Entry Detail)
             # Entry 1: Sender loses money (DEBIT)
             cur.execute(
                 "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'DEBIT', ?)",
-                (tx_id, sender, amount)
+                (tx_id, sender, amount),
             )
 
             # Entry 2: Receiver gains money (CREDIT)
             cur.execute(
                 "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'CREDIT', ?)",
-                (tx_id, receiver, amount)
+                (tx_id, receiver, amount),
             )
 
             # 5. UPDATE BALANCES (Denormalized State Cache)
@@ -240,17 +263,17 @@ class CivicBank:
             if sender != "MINT":
                 cur.execute(
                     "UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE agent_id = ?",
-                    (amount, timestamp, sender)
+                    (amount, timestamp, sender),
                 )
 
             # Ensure Receiver exists and update
             cur.execute(
                 "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, 0)",
-                (receiver,)
+                (receiver,),
             )
             cur.execute(
                 "UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE agent_id = ?",
-                (amount, timestamp, receiver)
+                (amount, timestamp, receiver),
             )
 
             logger.info(f"💸 Transfer: {sender} → {receiver} ({amount} credits)")
@@ -272,8 +295,7 @@ class CivicBank:
         with self.conn:
             cur = self.conn.cursor()
             cur.execute(
-                "UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?",
-                (agent_id,)
+                "UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_id,)
             )
             logger.warning(f"🔒 Account frozen: {agent_id} ({reason})")
 
@@ -292,16 +314,19 @@ class CivicBank:
             # Update account
             cur.execute(
                 "UPDATE accounts SET is_frozen = 0, updated_at = ? WHERE agent_id = ?",
-                (timestamp, agent_id)
+                (timestamp, agent_id),
             )
 
             # Record in ledger (AMNESTY transaction)
             tx_id = f"THAW-{hashlib.sha256((timestamp + agent_id).encode()).hexdigest()[:8]}"
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO transactions
                 (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
                 VALUES (?, ?, 'WATCHMAN', ?, 0, ?, 'AMNESTY', ?, ?)
-            """, (tx_id, timestamp, agent_id, reason, self.get_last_hash(), tx_id))
+            """,
+                (tx_id, timestamp, agent_id, reason, self.get_last_hash(), tx_id),
+            )
 
             logger.info(f"✅ Account unfrozen: {agent_id} ({reason})")
 
@@ -318,7 +343,7 @@ class CivicBank:
         cur = self.conn.cursor()
         cur.execute("SELECT is_frozen FROM accounts WHERE agent_id = ?", (agent_id,))
         row = cur.fetchone()
-        return bool(row['is_frozen']) if row else False
+        return bool(row["is_frozen"]) if row else False
 
     def audit_trail(self, limit: int = 10) -> List[Dict]:
         """
@@ -334,8 +359,7 @@ class CivicBank:
         """
         cur = self.conn.cursor()
         cur.execute(
-            "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT ?",
-            (limit,)
+            "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT ?", (limit,)
         )
         return [dict(row) for row in cur.fetchall()]
 
@@ -358,14 +382,14 @@ class CivicBank:
             WHERE sender_id = ? OR receiver_id = ?
             ORDER BY timestamp DESC LIMIT 10
             """,
-            (agent_id, agent_id)
+            (agent_id, agent_id),
         )
         transactions = [dict(row) for row in cur.fetchall()]
 
         return {
             "agent_id": agent_id,
             "balance": balance,
-            "recent_transactions": transactions
+            "recent_transactions": transactions,
         }
 
     def verify_integrity(self) -> bool:
@@ -384,12 +408,14 @@ class CivicBank:
 
         # Check 1: Accounting Equation
         cur.execute("SELECT SUM(amount) as total FROM entries WHERE side='DEBIT'")
-        debits = cur.fetchone()['total'] or 0
+        debits = cur.fetchone()["total"] or 0
         cur.execute("SELECT SUM(amount) as total FROM entries WHERE side='CREDIT'")
-        credits = cur.fetchone()['total'] or 0
+        credits = cur.fetchone()["total"] or 0
 
         if debits != credits:
-            logger.error(f"❌ ACCOUNTING ERROR: Debits ({debits}) != Credits ({credits})")
+            logger.error(
+                f"❌ ACCOUNTING ERROR: Debits ({debits}) != Credits ({credits})"
+            )
             return False
 
         logger.info(f"✅ Accounting Equation Verified: {debits} == {credits}")
@@ -398,7 +424,9 @@ class CivicBank:
         cur.execute("SELECT agent_id, balance FROM accounts WHERE balance < 0")
         negative = cur.fetchall()
         if negative:
-            logger.error(f"❌ NEGATIVE BALANCE ALERT: {len(negative)} accounts with negative balance")
+            logger.error(
+                f"❌ NEGATIVE BALANCE ALERT: {len(negative)} accounts with negative balance"
+            )
             for row in negative:
                 logger.error(f"   {row['agent_id']}: {row['balance']}")
             return False
@@ -417,21 +445,21 @@ class CivicBank:
         cur = self.conn.cursor()
 
         cur.execute("SELECT COUNT(*) as count FROM accounts")
-        account_count = cur.fetchone()['count']
+        account_count = cur.fetchone()["count"]
 
         cur.execute("SELECT COUNT(*) as count FROM transactions")
-        transaction_count = cur.fetchone()['count']
+        transaction_count = cur.fetchone()["count"]
 
         cur.execute("SELECT SUM(amount) as total FROM entries WHERE side='CREDIT'")
-        total_credits = cur.fetchone()['total'] or 0
+        total_credits = cur.fetchone()["total"] or 0
 
         cur.execute("SELECT SUM(balance) as total FROM accounts")
-        total_balance = cur.fetchone()['total'] or 0
+        total_balance = cur.fetchone()["total"] or 0
 
         return {
             "accounts": account_count,
             "transactions": transaction_count,
             "total_credits_issued": total_credits,
             "total_balance": total_balance,
-            "integrity": self.verify_integrity()
+            "integrity": self.verify_integrity(),
         }

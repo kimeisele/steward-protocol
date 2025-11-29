@@ -23,13 +23,14 @@ from forum.cartridge_main import ForumCartridge
 from science.cartridge_main import ScienceCartridge
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("FINAL_LAUNCH")
 
+
 def main():
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🚀 GAD-900: FINAL STRATEGIC LAUNCH")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     # 1. Initialize System
     envoy = EnvoyCartridge()
@@ -44,14 +45,13 @@ def main():
     print("-" * 50)
     print("🧠 STEP 1: STRATEGIC BRIEFING (HIL Assistant)")
     print("-" * 50)
-    
+
     # Auto-load latest report for context
     task_briefing = Task(
-        agent_id="envoy",
-        payload={"command": "next_action", "args": {}}
+        agent_id="envoy", payload={"command": "next_action", "args": {}}
     )
     result_briefing = envoy.process(task_briefing)
-    
+
     if result_briefing.get("status") == "success":
         print(f"\n{result_briefing.get('summary')}\n")
     else:
@@ -61,7 +61,9 @@ def main():
     print("-" * 50)
     print("👤 STEP 2: HIL AUTHORIZATION")
     print("-" * 50)
-    print("\n> HIL: \"ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports...\"")
+    print(
+        '\n> HIL: "ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports..."'
+    )
     print("\n✅ AUTHORIZATION GRANTED. EXECUTING.\n")
 
     # 4. Step 3: The Execution (Hard Interface)
@@ -70,7 +72,7 @@ def main():
     print("-" * 50)
 
     launch_command = "starte die Kampagne zur Veröffentlichung des G.A.P. Reports und skaliere diese Kampagne so kosten-effizient wie möglich auf allen Kanälen. Fokussiere dich auf den Proof, dass Governed Intelligence günstig routet."
-    
+
     task_launch = Task(
         agent_id="envoy",
         payload={
@@ -78,9 +80,9 @@ def main():
             "args": {
                 "goal": launch_command,
                 "campaign_type": "publication",
-                "focus": "cost_efficiency_proof"
-            }
-        }
+                "focus": "cost_efficiency_proof",
+            },
+        },
     )
 
     result_launch = envoy.process(task_launch)
@@ -89,11 +91,12 @@ def main():
     print(json.dumps(result_launch, indent=2))
 
     if result_launch.get("status") == "complete":
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("🎉 MISSION ACCOMPLISHED: GAD-900 CONTRACT FULFILLED")
-        print("="*70)
+        print("=" * 70)
     else:
         print("\n❌ MISSION FAILED")
+
 
 if __name__ == "__main__":
     main()

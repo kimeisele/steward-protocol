@@ -16,6 +16,7 @@ import logging
 @dataclass
 class AgentResponse:
     """Standard response from an agent"""
+
     success: bool
     data: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -31,6 +32,7 @@ class AgentResponse:
 
 class Capability(str, Enum):
     """Standard capabilities that agents can declare"""
+
     CONTENT_GENERATION = "content_generation"
     BROADCASTING = "broadcasting"
     GOVERNANCE = "governance"
@@ -46,6 +48,7 @@ class Capability(str, Enum):
 @dataclass
 class AgentManifest:
     """STEWARD Protocol Agent Identity & Capabilities (ARCH-050)"""
+
     agent_id: str
     name: str
     version: str
@@ -106,7 +109,7 @@ class VibeAgent(ABC):
     def set_kernel_pipe(self, pipe: Any) -> None:
         """
         Inject IPC Pipe for Process Isolation.
-        
+
         In Phase 2 (Process Isolation), agents run in separate processes.
         They cannot access 'self.kernel' directly.
         They must communicate via this pipe.
@@ -182,7 +185,13 @@ class VibeAgent(ABC):
             "capabilities": self.capabilities,
         }
 
-    async def emit_event(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    async def emit_event(
+        self,
+        event_type: str,
+        message: str = "",
+        task_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """
         Emit an event for real-time monitoring (Canto 10: Pulse System)
 
@@ -203,18 +212,25 @@ class VibeAgent(ABC):
         try:
             # Import here to avoid circular dependency
             from vibe_core.event_bus import emit_event
+
             await emit_event(
                 event_type=event_type,
                 agent_id=self.agent_id,
                 message=message,
                 task_id=task_id,
-                details=details or {}
+                details=details or {},
             )
         except Exception as e:
             logger = logging.getLogger("VibeAgent")
             logger.warning(f"⚠️  Failed to emit event: {e}")
 
-    def emit_event_sync(self, event_type: str, message: str = "", task_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None):
+    def emit_event_sync(
+        self,
+        event_type: str,
+        message: str = "",
+        task_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         """
         Synchronous wrapper for emit_event (for use in non-async contexts)
 
@@ -232,7 +248,9 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
+                asyncio.create_task(
+                    self.emit_event(event_type, message, task_id, details)
+                )
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))

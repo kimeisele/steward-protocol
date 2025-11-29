@@ -80,15 +80,12 @@ class CivicCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Governance agent: enforces rules, manages licenses, audits credits",
             domain="GOVERNANCE",
-            capabilities=[
-                "registry",
-                "licensing",
-                "ledger",
-                "governance"
-            ]
+            capabilities=["registry", "licensing", "ledger", "governance"],
         )
 
-        logger.info(f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
+        logger.info(
+            f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config"
+        )
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
@@ -102,7 +99,9 @@ class CivicCartridge(VibeAgent, OathMixin):
         self.matrix = self._load_matrix()
         if self.matrix:
             city_name = self.matrix.get("city_name", "Agent City")
-            logger.info(f"🎛️  THE MATRIX loaded: {city_name} (Federation v{self.matrix.get('federation_version', 'unknown')})")
+            logger.info(
+                f"🎛️  THE MATRIX loaded: {city_name} (Federation v{self.matrix.get('federation_version', 'unknown')})"
+            )
         else:
             logger.warning("⚠️  THE MATRIX not found, using defaults")
             self.matrix = self._default_matrix()
@@ -128,7 +127,9 @@ class CivicCartridge(VibeAgent, OathMixin):
     def registry_path(self):
         """Lazy-load registry path (sandboxed)."""
         if self._registry_path is None:
-            self._registry_path = self.system.get_sandbox_path() / "registry" / "citizens.json"
+            self._registry_path = (
+                self.system.get_sandbox_path() / "registry" / "citizens.json"
+            )
             self._registry_path.parent.mkdir(parents=True, exist_ok=True)
         return self._registry_path
 
@@ -143,7 +144,9 @@ class CivicCartridge(VibeAgent, OathMixin):
     def state_path(self):
         """Lazy-load state path (sandboxed)."""
         if self._state_path is None:
-            self._state_path = self.system.get_sandbox_path() / "state" / "civic_state.json"
+            self._state_path = (
+                self.system.get_sandbox_path() / "state" / "civic_state.json"
+            )
             self._state_path.parent.mkdir(parents=True, exist_ok=True)
         return self._state_path
 
@@ -167,43 +170,49 @@ class CivicCartridge(VibeAgent, OathMixin):
                 return self.registry_agent.process(task)
 
             # Route to Economy Agent
-            elif action in ["check_license", "deduct_credits", "refill_credits", "revoke_license"]:
+            elif action in [
+                "check_license",
+                "deduct_credits",
+                "refill_credits",
+                "revoke_license",
+            ]:
                 return self.economy_agent.process(task)
 
             # Route to Lifecycle Agent
-            elif action in ["check_action_permission", "authorize_brahmachari_to_grihastha", "report_violation", "get_lifecycle_status", "initiate_brahmachari"]:
+            elif action in [
+                "check_action_permission",
+                "authorize_brahmachari_to_grihastha",
+                "report_violation",
+                "get_lifecycle_status",
+                "initiate_brahmachari",
+            ]:
                 if action == "initiate_brahmachari":
                     task.payload["action"] = "authorize_brahmachari_to_grihastha"
                 return self.lifecycle_agent.process(task)
 
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"❌ CIVIC processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="civic",
             name="CIVIC",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="Governance and Registry",
             domain="GOVERNANCE",
-            capabilities=['licensing', 'registry', 'economy', 'lifecycle_management']
+            capabilities=["licensing", "registry", "economy", "lifecycle_management"],
         )
-
-
 
     def report_status(self) -> Dict[str, Any]:
         """Report CIVIC status (VibeAgent interface) - Aggregated from delegated agents."""
@@ -218,14 +227,18 @@ class CivicCartridge(VibeAgent, OathMixin):
             "status": "RUNNING",
             "domain": "GOVERNANCE",
             "version": "2.0.0 (P1 Refactor: Registry/Economy/Lifecycle)",
-            "capabilities": ["governance", "registry", "economy", "lifecycle_management"],
+            "capabilities": [
+                "governance",
+                "registry",
+                "economy",
+                "lifecycle_management",
+            ],
             "delegated_agents": {
                 "registry": registry_status,
                 "economy": economy_status,
-                "lifecycle": lifecycle_status
-            }
+                "lifecycle": lifecycle_status,
+            },
         }
-
 
     def _load_state(self) -> Dict[str, Any]:
         """Load CIVIC state or initialize."""

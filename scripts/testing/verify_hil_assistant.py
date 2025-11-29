@@ -19,13 +19,14 @@ from vibe_core import VibeAgent, Task
 from envoy.cartridge_main import EnvoyCartridge
 
 # Setup logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("VERIFICATION")
 
+
 def main():
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("🧠 VERIFICATION: HIL Assistant (VAD Layer)")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     # 1. Initialize Envoy
     envoy = EnvoyCartridge()
@@ -36,17 +37,17 @@ def main():
     print("-" * 40)
     print("🤖 TESTING: 'next_action' Command")
     print("-" * 40)
-    
+
     task = Task(
         agent_id="envoy",
         payload={
             "command": "next_action",
-            "args": {} # Should auto-load the latest G.A.P. report
-        }
+            "args": {},  # Should auto-load the latest G.A.P. report
+        },
     )
-    
+
     result = envoy.process(task)
-    
+
     print(f"\n📝 Result:\n")
     if result.get("status") == "success":
         print(result.get("summary"))
@@ -54,7 +55,8 @@ def main():
     else:
         print(f"❌ VERIFICATION FAILED: {result.get('error')}")
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
+
 
 if __name__ == "__main__":
     main()

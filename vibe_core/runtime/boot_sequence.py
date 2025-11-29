@@ -91,7 +91,9 @@ class BootSequence:
             )
 
             uncommitted = [
-                line.strip() for line in result.stdout.strip().split("\n") if line.strip()
+                line.strip()
+                for line in result.stdout.strip().split("\n")
+                if line.strip()
             ]
 
             return {
@@ -255,7 +257,12 @@ DO:
             }
         except Exception as e:
             # Graceful fallback - don't break boot
-            return {"behind": False, "commits_behind": 0, "status": "unknown", "error": str(e)}
+            return {
+                "behind": False,
+                "commits_behind": 0,
+                "status": "unknown",
+                "error": str(e),
+            }
 
     def _display_dashboard(self, context: dict, route) -> None:
         """Display kernel-style boot output (lean, visual, actionable)"""
@@ -318,9 +325,15 @@ DO:
         """Show all available playbook routes"""
         routes = self.playbook_engine.list_available_routes()
 
-        print("\n╔══════════════════════════════════════════════════════════════════════════════╗")
-        print("║                        📚 AVAILABLE PLAYBOOK ROUTES                          ║")
-        print("╚══════════════════════════════════════════════════════════════════════════════╝\n")
+        print(
+            "\n╔══════════════════════════════════════════════════════════════════════════════╗"
+        )
+        print(
+            "║                        📚 AVAILABLE PLAYBOOK ROUTES                          ║"
+        )
+        print(
+            "╚══════════════════════════════════════════════════════════════════════════════╝\n"
+        )
 
         for route in routes:
             print(f"🎯 {route['name'].upper()}")
@@ -370,7 +383,9 @@ DO:
                 print(f"   Backup: {backup_path.name}", file=sys.stderr)
             else:
                 # Mission already in DB - just log it
-                print(f"ℹ️  Mission '{mission_uuid}' already in database", file=sys.stderr)
+                print(
+                    f"ℹ️  Mission '{mission_uuid}' already in database", file=sys.stderr
+                )
 
         except json.JSONDecodeError as e:
             print(f"⚠️ Failed to parse legacy JSON: {e}", file=sys.stderr)
@@ -387,7 +402,10 @@ DO:
 
             # Check critical components
             git_ok = context.get("git", {}).get("status") == "available"
-            env_ok = context.get("environment", {}).get("status") in ["ready", "needs_setup"]
+            env_ok = context.get("environment", {}).get("status") in [
+                "ready",
+                "needs_setup",
+            ]
 
             if not git_ok:
                 print("⚠️ Git not available", file=sys.stderr)

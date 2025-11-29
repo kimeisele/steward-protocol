@@ -84,7 +84,9 @@ class GoogleProvider(LLMProvider):
             # Force REST transport to avoid gRPC SSL issues in restricted environments
             genai.configure(api_key=self.api_key, transport="rest")
             self.genai = genai
-            logger.info("Google Gemini provider initialized successfully (transport=REST)")
+            logger.info(
+                "Google Gemini provider initialized successfully (transport=REST)"
+            )
         except ImportError as e:
             raise ProviderNotAvailableError(
                 "google-generativeai package not installed. Install with: pip install google-generativeai>=0.8.0"
@@ -146,8 +148,12 @@ class GoogleProvider(LLMProvider):
                 output_tokens = 0
 
                 if hasattr(response, "usage_metadata") and response.usage_metadata:
-                    input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0)
-                    output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0)
+                    input_tokens = getattr(
+                        response.usage_metadata, "prompt_token_count", 0
+                    )
+                    output_tokens = getattr(
+                        response.usage_metadata, "candidates_token_count", 0
+                    )
 
                 # Calculate cost
                 cost = self.calculate_cost(
@@ -196,7 +202,11 @@ class GoogleProvider(LLMProvider):
                 error_name = type(e).__name__
 
                 # Check if retryable error
-                retryable_errors = ["ResourceExhausted", "ServiceUnavailable", "DeadlineExceeded"]
+                retryable_errors = [
+                    "ResourceExhausted",
+                    "ServiceUnavailable",
+                    "DeadlineExceeded",
+                ]
                 is_retryable = any(err in error_name for err in retryable_errors)
 
                 if is_retryable and attempt < max_retries - 1:
@@ -209,7 +219,9 @@ class GoogleProvider(LLMProvider):
                     time.sleep(wait_time)
                 else:
                     # Non-retryable error or max retries reached
-                    logger.error(f"Google Gemini invocation failed: {error_name} - {e!s}")
+                    logger.error(
+                        f"Google Gemini invocation failed: {error_name} - {e!s}"
+                    )
                     break
 
         # All retries failed
@@ -218,7 +230,9 @@ class GoogleProvider(LLMProvider):
             f"Last error: {type(last_error).__name__} - {last_error!s}"
         )
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, model: str
+    ) -> float:
         """
         Calculate cost based on Google Gemini pricing.
 

@@ -97,7 +97,9 @@ class StewardCLI:
         else:
             print(f"   Pulse:      ❌ LOST (dashboard stale)")
 
-        print(f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)")
+        print(
+            f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)"
+        )
         print(f"   Agents:     {certified_agents} certified")
         print()
 
@@ -123,7 +125,7 @@ class StewardCLI:
     def _get_pulse_age(self) -> float:
         """Get age of OPERATIONS.md file in seconds"""
         if not self.operations_file.exists():
-            return float('inf')
+            return float("inf")
         return time.time() - self.operations_file.stat().st_mtime
 
     def _check_parampara(self) -> tuple:
@@ -139,7 +141,7 @@ class StewardCLI:
 
         try:
             # SAFEGUARD #1: Read-only mode (prevents database locks)
-            conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+            conn = sqlite3.connect(f"file:{self.lineage_db}?mode=ro", uri=True)
             cursor = conn.cursor()
 
             # Count blocks
@@ -164,18 +166,28 @@ class StewardCLI:
         """
         try:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT idx, timestamp, event_type, agent_id, data, previous_hash, hash
                 FROM blocks
                 ORDER BY idx
-            """)
+            """
+            )
 
             blocks = cursor.fetchall()
             if len(blocks) == 0:
                 return False
 
             # Verify each block
-            for i, (idx, timestamp, event_type, agent_id, data, previous_hash, block_hash) in enumerate(blocks):
+            for i, (
+                idx,
+                timestamp,
+                event_type,
+                agent_id,
+                data,
+                previous_hash,
+                block_hash,
+            ) in enumerate(blocks):
                 # Calculate expected hash (same method as LineageChain._calculate_hash)
                 block_dict = {
                     "index": idx,
@@ -194,7 +206,7 @@ class StewardCLI:
 
                 # Verify chain link (except for genesis)
                 if i > 0:
-                    prev_block_hash = blocks[i-1][6]  # hash from previous block
+                    prev_block_hash = blocks[i - 1][6]  # hash from previous block
                     if previous_hash != prev_block_hash:
                         return False
 
@@ -236,7 +248,7 @@ class StewardCLI:
             return 1
 
         try:
-            with open(manifest_path, 'r') as f:
+            with open(manifest_path, "r") as f:
                 manifest = json.load(f)
         except Exception as e:
             print(f"❌ Failed to read manifest: {e}")
@@ -253,13 +265,16 @@ class StewardCLI:
 
         try:
             # SAFEGUARD #1: Read-only mode
-            conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+            conn = sqlite3.connect(f"file:{self.lineage_db}?mode=ro", uri=True)
             cursor = conn.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT idx, data, hash FROM blocks
                 WHERE event_type = 'PASSPORT_ISSUED' AND agent_id = ?
-            """, (agent_id,))
+            """,
+                (agent_id,),
+            )
 
             result = cursor.fetchone()
             conn.close()
@@ -281,8 +296,12 @@ class StewardCLI:
                 print("✅ PASSPORT VERIFIED")
                 print(f"   Manifest signature valid")
                 print(f"   Anchored in Block #{block_idx}")
-                print(f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}...")
-                print(f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}")
+                print(
+                    f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}..."
+                )
+                print(
+                    f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}"
+                )
                 return 0
             else:
                 print()
@@ -297,8 +316,8 @@ class StewardCLI:
 
     def _calculate_manifest_hash(self, manifest: Dict[str, Any]) -> str:
         """Calculate SHA-256 hash of manifest (canonical JSON)"""
-        canonical_json = json.dumps(manifest, sort_keys=True, separators=(',', ':'))
-        return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()
+        canonical_json = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
     # =========================================================================
     # COMMAND: steward lineage [--tail N]
@@ -324,15 +343,17 @@ class StewardCLI:
 
         try:
             # SAFEGUARD #1: Read-only mode
-            conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+            conn = sqlite3.connect(f"file:{self.lineage_db}?mode=ro", uri=True)
             cursor = conn.cursor()
 
             # Get all blocks
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT idx, timestamp, event_type, agent_id, data, hash
                 FROM blocks
                 ORDER BY idx DESC
-            """)
+            """
+            )
 
             blocks = cursor.fetchall()
             conn.close()
@@ -358,11 +379,17 @@ class StewardCLI:
                 if event_type == "GENESIS":
                     data_json = json.loads(data)
                     anchors = data_json.get("anchors", {})
-                    print(f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}...")
-                    print(f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}...")
+                    print(
+                        f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}..."
+                    )
+                    print(
+                        f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}..."
+                    )
                 elif event_type == "PASSPORT_ISSUED":
                     data_json = json.loads(data)
-                    print(f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}...")
+                    print(
+                        f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}..."
+                    )
                     print(f"          Version:  {data_json.get('version', 'N/A')}")
 
                 print()
@@ -373,6 +400,7 @@ class StewardCLI:
         except Exception as e:
             print(f"❌ Error reading Parampara: {e}")
             import traceback
+
             traceback.print_exc()
             return 1
 
@@ -405,43 +433,41 @@ class StewardCLI:
 
         # Parse OPERATIONS.md
         try:
-            with open(self.operations_file, 'r') as f:
+            with open(self.operations_file, "r") as f:
                 content = f.read()
 
             # Extract agent status (simple parsing)
             # Look for lines like: "- steward: RUNNING (PID 12345)"
             agents = []
-            for line in content.split('\n'):
-                if 'RUNNING' in line or 'STOPPED' in line or 'CRASHED' in line:
+            for line in content.split("\n"):
+                if "RUNNING" in line or "STOPPED" in line or "CRASHED" in line:
                     # Parse agent status
-                    if '-' in line and ':' in line:
-                        parts = line.split('-', 1)[1].split(':')
+                    if "-" in line and ":" in line:
+                        parts = line.split("-", 1)[1].split(":")
                         if len(parts) >= 2:
                             agent_name = parts[0].strip()
                             status_part = parts[1].strip()
 
                             # Extract PID if present
                             pid = "N/A"
-                            if 'PID' in status_part:
-                                pid_start = status_part.find('PID') + 4
-                                pid_end = status_part.find(')', pid_start)
+                            if "PID" in status_part:
+                                pid_start = status_part.find("PID") + 4
+                                pid_end = status_part.find(")", pid_start)
                                 if pid_end > pid_start:
                                     pid = status_part[pid_start:pid_end].strip()
 
                             # Extract status
                             status = "UNKNOWN"
-                            if 'RUNNING' in status_part:
+                            if "RUNNING" in status_part:
                                 status = "RUNNING"
-                            elif 'STOPPED' in status_part:
+                            elif "STOPPED" in status_part:
                                 status = "STOPPED"
-                            elif 'CRASHED' in status_part:
+                            elif "CRASHED" in status_part:
                                 status = "CRASHED"
 
-                            agents.append({
-                                'name': agent_name,
-                                'status': status,
-                                'pid': pid
-                            })
+                            agents.append(
+                                {"name": agent_name, "status": status, "pid": pid}
+                            )
 
             if len(agents) == 0:
                 print("⚠️  No agents found in OPERATIONS.md")
@@ -451,8 +477,10 @@ class StewardCLI:
             print(f"{'AGENT':<20} {'STATUS':<12} {'PID':<10}")
             print("-" * 70)
             for agent in agents:
-                status_icon = "✅" if agent['status'] == "RUNNING" else "❌"
-                print(f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}")
+                status_icon = "✅" if agent["status"] == "RUNNING" else "❌"
+                print(
+                    f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}"
+                )
 
             print()
             print(f"Total agents: {len(agents)}")
@@ -546,28 +574,19 @@ class StewardCLI:
 
         # Create minimal manifest
         manifest = {
-            "identity": {
-                "agent_id": agent_id,
-                "name": agent_id.upper()
-            },
-            "specs": {
-                "version": "1.0.0",
-                "domain": "CUSTOM",
-                "description": ""
-            },
-            "capabilities": {
-                "operations": []
-            },
+            "identity": {"agent_id": agent_id, "name": agent_id.upper()},
+            "specs": {"version": "1.0.0", "domain": "CUSTOM", "description": ""},
+            "capabilities": {"operations": []},
             "governance": {
                 "constitution_hash": "",
                 "compliance_level": 1,
                 "issued_at": datetime.utcnow().isoformat() + "Z",
-                "issuer": "manual"
-            }
+                "issuer": "manual",
+            },
         }
 
         try:
-            with open(manifest_path, 'w') as f:
+            with open(manifest_path, "w") as f:
                 json.dump(manifest, f, indent=2)
             print(f"✅ Created: {manifest_path}")
             print()
@@ -599,15 +618,17 @@ class StewardCLI:
 
         try:
             # Read-only mode
-            conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+            conn = sqlite3.connect(f"file:{self.lineage_db}?mode=ro", uri=True)
             cursor = conn.cursor()
 
             # Find all AGENT_REGISTERED events
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT agent_id, timestamp, data FROM blocks
                 WHERE event_type = 'AGENT_REGISTERED'
                 ORDER BY idx
-            """)
+            """
+            )
 
             agents = cursor.fetchall()
             conn.close()
@@ -620,7 +641,7 @@ class StewardCLI:
             print("-" * 70)
 
             for agent_id, timestamp, data in agents:
-                ts_str = timestamp[:19].replace('T', ' ')
+                ts_str = timestamp[:19].replace("T", " ")
 
                 # Check if agent has passport
                 manifest_path = MANIFESTS_DIR / agent_id / "steward.json"
@@ -661,7 +682,7 @@ class StewardCLI:
         # Parampara stats
         if self.lineage_db.exists():
             try:
-                conn = sqlite3.connect(f'file:{self.lineage_db}?mode=ro', uri=True)
+                conn = sqlite3.connect(f"file:{self.lineage_db}?mode=ro", uri=True)
                 cursor = conn.cursor()
 
                 # Total blocks
@@ -669,11 +690,13 @@ class StewardCLI:
                 total_blocks = cursor.fetchone()[0]
 
                 # Event type counts
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT event_type, COUNT(*) FROM blocks
                     GROUP BY event_type
                     ORDER BY COUNT(*) DESC
-                """)
+                """
+                )
                 event_counts = cursor.fetchall()
 
                 conn.close()
@@ -725,47 +748,47 @@ class StewardCLI:
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
-        prog='steward',
-        description='🎛️  STEWARD Protocol - Agent OS Control Interface',
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        prog="steward",
+        description="🎛️  STEWARD Protocol - Agent OS Control Interface",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     # steward status
-    subparsers.add_parser('status', help='Show system health and kernel pulse')
+    subparsers.add_parser("status", help="Show system health and kernel pulse")
 
     # steward verify <agent_id>
-    verify_parser = subparsers.add_parser('verify', help='Verify agent passport')
-    verify_parser.add_argument('agent_id', help='Agent ID to verify')
+    verify_parser = subparsers.add_parser("verify", help="Verify agent passport")
+    verify_parser.add_argument("agent_id", help="Agent ID to verify")
 
     # steward lineage [--tail N]
-    lineage_parser = subparsers.add_parser('lineage', help='Show Parampara blockchain')
-    lineage_parser.add_argument('--tail', type=int, help='Show only last N blocks')
+    lineage_parser = subparsers.add_parser("lineage", help="Show Parampara blockchain")
+    lineage_parser.add_argument("--tail", type=int, help="Show only last N blocks")
 
     # steward ps
-    subparsers.add_parser('ps', help='List running agents')
+    subparsers.add_parser("ps", help="List running agents")
 
     # steward boot
-    subparsers.add_parser('boot', help='Start kernel daemon')
+    subparsers.add_parser("boot", help="Start kernel daemon")
 
     # steward stop
-    subparsers.add_parser('stop', help='Graceful kernel shutdown')
+    subparsers.add_parser("stop", help="Graceful kernel shutdown")
 
     # steward init <agent_id>
-    init_parser = subparsers.add_parser('init', help='Initialize new agent manifest')
-    init_parser.add_argument('agent_id', help='Agent ID to initialize')
+    init_parser = subparsers.add_parser("init", help="Initialize new agent manifest")
+    init_parser.add_argument("agent_id", help="Agent ID to initialize")
 
     # steward discover
-    subparsers.add_parser('discover', help='Discover all registered agents')
+    subparsers.add_parser("discover", help="Discover all registered agents")
 
     # steward introspect
-    subparsers.add_parser('introspect', help='Show detailed kernel state')
+    subparsers.add_parser("introspect", help="Show detailed kernel state")
 
     # steward delegate <agent_id> <task>
-    delegate_parser = subparsers.add_parser('delegate', help='Submit task to agent')
-    delegate_parser.add_argument('agent_id', help='Agent ID to delegate to')
-    delegate_parser.add_argument('task', help='Task description')
+    delegate_parser = subparsers.add_parser("delegate", help="Submit task to agent")
+    delegate_parser.add_argument("agent_id", help="Agent ID to delegate to")
+    delegate_parser.add_argument("task", help="Task description")
 
     # Parse args
     args = parser.parse_args()
@@ -773,30 +796,30 @@ def main():
     # Execute command
     cli = StewardCLI()
 
-    if args.command == 'status':
+    if args.command == "status":
         return cli.cmd_status()
-    elif args.command == 'verify':
+    elif args.command == "verify":
         return cli.cmd_verify(args.agent_id)
-    elif args.command == 'lineage':
+    elif args.command == "lineage":
         return cli.cmd_lineage(tail=args.tail)
-    elif args.command == 'ps':
+    elif args.command == "ps":
         return cli.cmd_ps()
-    elif args.command == 'boot':
+    elif args.command == "boot":
         return cli.cmd_boot()
-    elif args.command == 'stop':
+    elif args.command == "stop":
         return cli.cmd_stop()
-    elif args.command == 'init':
+    elif args.command == "init":
         return cli.cmd_init(args.agent_id)
-    elif args.command == 'discover':
+    elif args.command == "discover":
         return cli.cmd_discover()
-    elif args.command == 'introspect':
+    elif args.command == "introspect":
         return cli.cmd_introspect()
-    elif args.command == 'delegate':
+    elif args.command == "delegate":
         return cli.cmd_delegate(args.agent_id, args.task)
     else:
         parser.print_help()
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

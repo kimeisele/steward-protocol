@@ -321,7 +321,9 @@ class SystemMaintenanceAgent(VibeAgent):
                     status = "DIVERGED"
                 else:
                     behind_count = int(behind_result.stdout.strip())
-                    status = f"BEHIND_BY_{behind_count}" if behind_count > 0 else "DIVERGED"
+                    status = (
+                        f"BEHIND_BY_{behind_count}" if behind_count > 0 else "DIVERGED"
+                    )
 
             return AgentResponse(
                 agent_id=self.agent_id,
@@ -419,7 +421,9 @@ class SystemMaintenanceAgent(VibeAgent):
                 }
 
             # Count commits pulled (rough heuristic)
-            commits_pulled = result.stdout.count("Fast-forward") + result.stdout.count("Updating")
+            commits_pulled = result.stdout.count("Fast-forward") + result.stdout.count(
+                "Updating"
+            )
 
             return {
                 "success": True,
@@ -462,7 +466,9 @@ class SystemMaintenanceAgent(VibeAgent):
                 }
 
             # Count packages updated (rough heuristic)
-            packages_updated = result.stdout.count("Installed") + result.stdout.count("Updated")
+            packages_updated = result.stdout.count("Installed") + result.stdout.count(
+                "Updated"
+            )
 
             return {
                 "success": True,

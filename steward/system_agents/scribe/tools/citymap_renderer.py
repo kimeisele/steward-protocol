@@ -46,7 +46,9 @@ class CitymapRenderer:
         self.tools = self.tools_introspector.scan_all()
 
         # Layer 3: Agents (cartridges)
-        self.agents = self.cart_introspector.scan_all(self.root_dir / "steward" / "system_agents")
+        self.agents = self.cart_introspector.scan_all(
+            self.root_dir / "steward" / "system_agents"
+        )
 
         # Runtime state
         system_status = self.runtime_inspector.get_system_status()
@@ -273,7 +275,7 @@ python -m steward.system_agents.scribe.cartridge_main
         for module_name, metadata in sorted(self.vibe_modules.items()):
             output += f"**{module_name}** (`{metadata['file']}` - {metadata['lines']} lines)\n"
             output += f"- {metadata['purpose']}\n"
-            if metadata.get('features'):
+            if metadata.get("features"):
                 output += f"- Key components: {', '.join(metadata['features'][:3])}\n"
             output += "\n"
 
@@ -287,7 +289,7 @@ python -m steward.system_agents.scribe.cartridge_main
         output = ""
 
         # Highlight key routing agents
-        key_agents = ['envoy', 'civic']
+        key_agents = ["envoy", "civic"]
 
         for agent_name in key_agents:
             if agent_name not in self.tools:
@@ -296,7 +298,9 @@ python -m steward.system_agents.scribe.cartridge_main
             output += f"### 🔧 {agent_name.upper()} Tools\n\n"
 
             for tool in self.tools[agent_name]:
-                output += f"**{tool['name']}** (`{tool['file']}` - {tool['lines']} lines)\n"
+                output += (
+                    f"**{tool['name']}** (`{tool['file']}` - {tool['lines']} lines)\n"
+                )
                 output += f"- {tool['purpose']}\n\n"
 
         return output
@@ -329,7 +333,7 @@ python -m steward.system_agents.scribe.cartridge_main
         """Render economic system status."""
         output = f"- **Status:** {econ_status.get('status', 'Unknown')}\n"
 
-        if econ_status.get('status') == 'OPERATIONAL':
+        if econ_status.get("status") == "OPERATIONAL":
             output += f"- **Credits in Circulation:** {econ_status.get('total_credits', 0)} CR\n"
             output += f"- **Transactions Recorded:** {econ_status.get('transaction_count', 0)}\n"
             output += f"- **Ledger Entries:** {econ_status.get('ledger_entries', 0)}\n"
@@ -343,7 +347,9 @@ python -m steward.system_agents.scribe.cartridge_main
         output = f"- **Threat Level:** {sec_status.get('threat_level', 'Unknown')}\n"
         output += f"- **Status:** {sec_status.get('status', 'Unknown')}\n"
         output += f"- **Threats Detected:** {sec_status.get('threats_detected', 0)}\n"
-        output += f"- **Description:** {sec_status.get('description', 'No information')}\n"
+        output += (
+            f"- **Description:** {sec_status.get('description', 'No information')}\n"
+        )
 
         return output
 
@@ -355,7 +361,9 @@ python -m steward.system_agents.scribe.cartridge_main
 
             output_path.write_text(content)
             print(f"✅ CITYMAP.md generated: {output_path}")
-            print(f"📊 Layers: {len(self.vibe_modules)} kernel modules, {sum(len(t) for t in self.tools.values())} tools, {len(self.agents)} agents")
+            print(
+                f"📊 Layers: {len(self.vibe_modules)} kernel modules, {sum(len(t) for t in self.tools.values())} tools, {len(self.agents)} agents"
+            )
 
             return True
         except Exception as e:

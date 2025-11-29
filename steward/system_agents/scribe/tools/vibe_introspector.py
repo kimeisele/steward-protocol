@@ -43,8 +43,8 @@ class VibeCoreIntrospector:
             metadata = self._extract_module_metadata(py_file)
 
             if metadata:
-                metadata['file'] = str(py_file.relative_to(self.root_dir))
-                metadata['lines'] = self._count_lines(py_file)
+                metadata["file"] = str(py_file.relative_to(self.root_dir))
+                metadata["lines"] = self._count_lines(py_file)
                 modules[module_name] = metadata
 
         return modules
@@ -62,16 +62,16 @@ class VibeCoreIntrospector:
             return None
 
         # Parse docstring for purpose and features
-        lines = docstring.split('\n')
+        lines = docstring.split("\n")
         purpose = lines[0].strip() if lines else "Unknown purpose"
 
         # Look for key concepts/features in docstring
         features = self._extract_features(docstring, content)
 
         return {
-            'purpose': purpose,
-            'description': docstring[:200],  # First 200 chars
-            'features': features,
+            "purpose": purpose,
+            "description": docstring[:200],  # First 200 chars
+            "features": features,
         }
 
     def _extract_docstring(self, content: str) -> str:
@@ -86,18 +86,18 @@ class VibeCoreIntrospector:
         features = []
 
         # Look for enums (common pattern in vibe_core)
-        enum_matches = re.findall(r'class\s+(\w+)\(.*?Enum\)', content)
+        enum_matches = re.findall(r"class\s+(\w+)\(.*?Enum\)", content)
         if enum_matches:
             features.extend([f"{name} enum" for name in enum_matches[:3]])
 
         # Look for main classes
-        class_matches = re.findall(r'class\s+(\w+)(?!\(.*?Enum)', content)
+        class_matches = re.findall(r"class\s+(\w+)(?!\(.*?Enum)", content)
         if class_matches:
             features.extend([f"{name} class" for name in class_matches[:2]])
 
         # Look for key functions
-        func_matches = re.findall(r'def\s+(\w+)\(', content)
-        key_funcs = [f for f in func_matches if not f.startswith('_')][:3]
+        func_matches = re.findall(r"def\s+(\w+)\(", content)
+        key_funcs = [f for f in func_matches if not f.startswith("_")][:3]
         if key_funcs:
             features.extend([f"{name}()" for name in key_funcs])
 
@@ -106,7 +106,7 @@ class VibeCoreIntrospector:
     def _count_lines(self, py_file: Path) -> int:
         """Count lines in file."""
         try:
-            return len(py_file.read_text().split('\n'))
+            return len(py_file.read_text().split("\n"))
         except:
             return 0
 
@@ -156,8 +156,8 @@ class ToolsIntrospector:
 
                 tool_metadata = self._extract_tool_metadata(tool_file)
                 if tool_metadata:
-                    tool_metadata['file'] = str(tool_file.relative_to(self.root_dir))
-                    tool_metadata['lines'] = self._count_lines(tool_file)
+                    tool_metadata["file"] = str(tool_file.relative_to(self.root_dir))
+                    tool_metadata["lines"] = self._count_lines(tool_file)
                     tools.append(tool_metadata)
 
             if tools:
@@ -174,12 +174,12 @@ class ToolsIntrospector:
 
         # Extract module docstring
         docstring = self._extract_docstring(content)
-        purpose = docstring.split('\n')[0].strip() if docstring else "Unknown tool"
+        purpose = docstring.split("\n")[0].strip() if docstring else "Unknown tool"
 
         return {
-            'name': tool_file.stem,
-            'purpose': purpose,
-            'description': docstring[:150] if docstring else "",
+            "name": tool_file.stem,
+            "purpose": purpose,
+            "description": docstring[:150] if docstring else "",
         }
 
     def _extract_docstring(self, content: str) -> str:
@@ -192,6 +192,6 @@ class ToolsIntrospector:
     def _count_lines(self, tool_file: Path) -> int:
         """Count lines in file."""
         try:
-            return len(tool_file.read_text().split('\n'))
+            return len(tool_file.read_text().split("\n"))
         except:
             return 0

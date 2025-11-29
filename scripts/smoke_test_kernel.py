@@ -48,8 +48,7 @@ from steward.system_agents.discoverer.agent import Discoverer
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("SMOKE_TEST")
 
@@ -195,14 +194,18 @@ def smoke_test_kernel():
         print("\n         Verifying expected events...")
         for expected_idx, expected_type, expected_agent in expected_events:
             if expected_idx >= len(all_blocks):
-                print(f"         ⚠️  Block {expected_idx} missing (expected {expected_type})")
+                print(
+                    f"         ⚠️  Block {expected_idx} missing (expected {expected_type})"
+                )
                 continue
 
             block = all_blocks[expected_idx]
             if block.event_type == expected_type and block.agent_id == expected_agent:
                 print(f"         ✅ Block {expected_idx}: {expected_type} correct")
             else:
-                print(f"         ❌ Block {expected_idx}: Expected {expected_type}/{expected_agent}, got {block.event_type}/{block.agent_id}")
+                print(
+                    f"         ❌ Block {expected_idx}: Expected {expected_type}/{expected_agent}, got {block.event_type}/{block.agent_id}"
+                )
 
         # =====================================================================
         # STEP 7: VERIFY CHAIN INTEGRITY
@@ -250,7 +253,9 @@ def smoke_test_kernel():
             shutdown_reason = final_block.data.get("reason", "unknown")
             print(f"            Reason: {shutdown_reason}")
         else:
-            print("         ⚠️  KERNEL_SHUTDOWN event not found (might be OK if process killed)")
+            print(
+                "         ⚠️  KERNEL_SHUTDOWN event not found (might be OK if process killed)"
+            )
 
         # Final chain verification
         if post_chain.verify_chain():
@@ -289,6 +294,7 @@ def smoke_test_kernel():
     except Exception as e:
         print(f"\n❌ SMOKE TEST FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -296,7 +302,7 @@ def smoke_test_kernel():
         # Cleanup
         if kernel:
             try:
-                if hasattr(kernel, 'lineage'):
+                if hasattr(kernel, "lineage"):
                     kernel.lineage.close()
             except:
                 pass

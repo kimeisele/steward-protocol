@@ -258,7 +258,9 @@ class CircuitBreaker:
         timestamp = datetime.utcnow().isoformat() + "Z"
         self.metrics.state_changes.append((timestamp, old_state, new_state.value))
 
-        logger.info(f"Circuit Breaker state transition: {old_state} → {new_state.value}")
+        logger.info(
+            f"Circuit Breaker state transition: {old_state} → {new_state.value}"
+        )
 
     def get_status(self) -> dict[str, Any]:
         """

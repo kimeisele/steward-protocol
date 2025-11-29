@@ -109,10 +109,7 @@ class AuditLedger(VibeLedger):
         all_attestations = self.read_all()
         return all_attestations[-count:] if all_attestations else []
 
-    def get_attestations_for_agent(
-        self,
-        agent_id: str
-    ) -> List[Dict[str, Any]]:
+    def get_attestations_for_agent(self, agent_id: str) -> List[Dict[str, Any]]:
         """
         Get all attestations for a specific agent.
 
@@ -124,7 +121,8 @@ class AuditLedger(VibeLedger):
         """
         all_attestations = self.read_all()
         return [
-            a for a in all_attestations
+            a
+            for a in all_attestations
             if a.get("target_event", {}).get("agent_id") == agent_id
         ]
 
@@ -150,14 +148,16 @@ class AuditLedger(VibeLedger):
     # ==================== VibeLedger Interface Implementation ====================
     # BLOCKER #1: Implement VibeLedger ABC interface to satisfy inheritance contract
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (VibeLedger ABC interface)"""
         attestation = {
             "event_type": event_type,
             "agent_id": agent_id,
             "details": details,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "RECORDED"
+            "status": "RECORDED",
         }
         self.append(attestation)
         return f"EVT-{self.entries_written}"
@@ -171,7 +171,7 @@ class AuditLedger(VibeLedger):
                 "agent_id": getattr(task, "agent_id", "unknown"),
             },
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "STARTED"
+            "status": "STARTED",
         }
         self.append(attestation)
 
@@ -185,7 +185,7 @@ class AuditLedger(VibeLedger):
             },
             "result": result,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "VERIFIED"
+            "status": "VERIFIED",
         }
         self.append(attestation)
 
@@ -199,7 +199,7 @@ class AuditLedger(VibeLedger):
             },
             "error": error,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "FAILED"
+            "status": "FAILED",
         }
         self.append(attestation)
 

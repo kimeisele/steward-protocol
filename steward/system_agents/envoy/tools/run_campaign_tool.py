@@ -30,6 +30,7 @@ logger = logging.getLogger("RUN_CAMPAIGN_TOOL")
 
 class CampaignPhase(Enum):
     """Campaign execution phases"""
+
     PLANNING = "planning"
     RESEARCH = "research"
     CREATION = "creation"
@@ -65,7 +66,9 @@ class RunCampaignTool:
         self.kernel = kernel
         logger.info("🧠 RunCampaignTool connected to VibeOS kernel")
 
-    def run_campaign(self, goal: str, campaign_type: str = "recruitment", **kwargs) -> Dict[str, Any]:
+    def run_campaign(
+        self, goal: str, campaign_type: str = "recruitment", **kwargs
+    ) -> Dict[str, Any]:
         """
         Run a multi-agent marketing campaign.
 
@@ -94,7 +97,7 @@ class RunCampaignTool:
             "status": "running",
             "results": {},
             "errors": [],
-            "metadata": kwargs
+            "metadata": kwargs,
         }
 
         self.campaigns[campaign_id] = campaign
@@ -105,7 +108,9 @@ class RunCampaignTool:
             resource_check = self._check_resources()
             if not resource_check["ready"]:
                 campaign["status"] = "failed"
-                campaign["errors"].append(f"Resource check failed: {resource_check['reason']}")
+                campaign["errors"].append(
+                    f"Resource check failed: {resource_check['reason']}"
+                )
                 logger.error(f"   ❌ {resource_check['reason']}")
                 return self._campaign_result(campaign)
 
@@ -119,7 +124,9 @@ class RunCampaignTool:
             research_result = self._execute_research(goal, campaign_type, **kwargs)
             if research_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(f"Research phase failed: {research_result.get('error')}")
+                campaign["errors"].append(
+                    f"Research phase failed: {research_result.get('error')}"
+                )
                 logger.error(f"   ❌ Research phase failed")
                 return self._campaign_result(campaign)
 
@@ -131,13 +138,13 @@ class RunCampaignTool:
             campaign["phase"] = CampaignPhase.CREATION.value
 
             content_result = self._execute_content_creation(
-                goal=goal,
-                research_data=research_result.get("data"),
-                **kwargs
+                goal=goal, research_data=research_result.get("data"), **kwargs
             )
             if content_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(f"Content creation failed: {content_result.get('error')}")
+                campaign["errors"].append(
+                    f"Content creation failed: {content_result.get('error')}"
+                )
                 logger.error(f"   ❌ Content creation failed")
                 return self._campaign_result(campaign)
 
@@ -149,13 +156,13 @@ class RunCampaignTool:
             campaign["phase"] = CampaignPhase.EXECUTION.value
 
             execution_result = self._execute_publishing(
-                goal=goal,
-                content=content_result.get("content"),
-                **kwargs
+                goal=goal, content=content_result.get("content"), **kwargs
             )
             if execution_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(f"Publishing failed: {execution_result.get('error')}")
+                campaign["errors"].append(
+                    f"Publishing failed: {execution_result.get('error')}"
+                )
                 logger.error(f"   ❌ Publishing failed")
                 return self._campaign_result(campaign)
 
@@ -167,8 +174,12 @@ class RunCampaignTool:
             campaign["phase"] = CampaignPhase.COMPLETE.value
 
             logger.info(f"\n✅ Campaign {campaign_id} completed successfully")
-            logger.info(f"   Research Insights: {len(research_result.get('data', {}).get('insights', []))} items")
-            logger.info(f"   Content Generated: {execution_result.get('publications', 0)} publications")
+            logger.info(
+                f"   Research Insights: {len(research_result.get('data', {}).get('insights', []))} items"
+            )
+            logger.info(
+                f"   Content Generated: {execution_result.get('publications', 0)} publications"
+            )
 
             return self._campaign_result(campaign)
 
@@ -177,6 +188,7 @@ class RunCampaignTool:
             campaign["errors"].append(str(e))
             logger.error(f"❌ Campaign error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
             return self._campaign_result(campaign)
 
@@ -197,40 +209,34 @@ class RunCampaignTool:
                 "research_available": True,
                 "herald_available": True,
                 "civic_available": True,
-                "note": "simulated_mode"
+                "note": "simulated_mode",
             }
 
         try:
             # Get CIVIC cartridge
             civic = self.kernel.get_agent("civic")
             if not civic:
-                return {
-                    "ready": False,
-                    "reason": "CIVIC not available"
-                }
+                return {"ready": False, "reason": "CIVIC not available"}
 
             # Check HERALD's broadcast license
             herald_license = civic.check_broadcast_license("herald")
             if not herald_license.get("licensed"):
                 return {
                     "ready": False,
-                    "reason": f"HERALD broadcast license not active: {herald_license.get('reason')}"
+                    "reason": f"HERALD broadcast license not active: {herald_license.get('reason')}",
                 }
 
             # Check HERALD's credits
             agents = civic.registry.get("agents", {})
             herald_agent = agents.get("herald")
             if not herald_agent:
-                return {
-                    "ready": False,
-                    "reason": "HERALD not registered"
-                }
+                return {"ready": False, "reason": "HERALD not registered"}
 
             credits = herald_agent.get("credits", 0)
             if credits <= 0:
                 return {
                     "ready": False,
-                    "reason": "HERALD has no credits for campaign execution"
+                    "reason": "HERALD has no credits for campaign execution",
                 }
 
             return {
@@ -239,16 +245,15 @@ class RunCampaignTool:
                 "herald_credits": credits,
                 "research_available": True,
                 "herald_available": True,
-                "civic_available": True
+                "civic_available": True,
             }
 
         except Exception as e:
-            return {
-                "ready": False,
-                "reason": f"Resource check error: {str(e)}"
-            }
+            return {"ready": False, "reason": f"Resource check error: {str(e)}"}
 
-    def _execute_research(self, goal: str, campaign_type: str, **kwargs) -> Dict[str, Any]:
+    def _execute_research(
+        self, goal: str, campaign_type: str, **kwargs
+    ) -> Dict[str, Any]:
         """
         Phase I: Trigger SCIENCE agent for market research.
         """
@@ -265,14 +270,15 @@ class RunCampaignTool:
 
             # Trigger SCIENCE analysis via kernel task
             from vibe_core.scheduling import Task
+
             task = Task(
                 agent_id="science",
                 payload={
                     "action": "market_analysis",
                     "goal": goal,
                     "campaign_type": campaign_type,
-                    "parameters": kwargs
-                }
+                    "parameters": kwargs,
+                },
             )
 
             result = science.process(task)
@@ -284,7 +290,7 @@ class RunCampaignTool:
                     "agent": "science",
                     "data": result.get("data", {}),
                     "insights": result.get("insights", []),
-                    "timestamp": result.get("timestamp")
+                    "timestamp": result.get("timestamp"),
                 }
             else:
                 # Fallback if SCIENCE returns error
@@ -309,12 +315,14 @@ class RunCampaignTool:
                     "Founder recruitment responds to credibility signals",
                     "Technical founders value transparency and governance",
                     "Agent-based systems are emerging opportunity",
-                    "Multi-agent orchestration is compelling narrative"
-                ]
-            }
+                    "Multi-agent orchestration is compelling narrative",
+                ],
+            },
         }
 
-    def _execute_content_creation(self, goal: str, research_data: Dict[str, Any] = None, **kwargs) -> Dict[str, Any]:
+    def _execute_content_creation(
+        self, goal: str, research_data: Dict[str, Any] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Phase II: Trigger HERALD for content generation.
         """
@@ -330,14 +338,15 @@ class RunCampaignTool:
 
             # Trigger HERALD content generation
             from vibe_core.scheduling import Task
+
             task = Task(
                 agent_id="herald",
                 payload={
                     "action": "generate_campaign_content",
                     "goal": goal,
                     "research_data": research_data or {},
-                    "parameters": kwargs
-                }
+                    "parameters": kwargs,
+                },
             )
 
             result = herald.process(task)
@@ -348,7 +357,7 @@ class RunCampaignTool:
                     "agent": "herald",
                     "content": result.get("content", ""),
                     "metadata": result.get("metadata", {}),
-                    "timestamp": result.get("timestamp")
+                    "timestamp": result.get("timestamp"),
                 }
             else:
                 return self._simulate_content_creation(goal, research_data)
@@ -357,7 +366,9 @@ class RunCampaignTool:
             logger.warning(f"⚠️  HERALD content generation failed, using template: {e}")
             return self._simulate_content_creation(goal, research_data)
 
-    def _simulate_content_creation(self, goal: str, research_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _simulate_content_creation(
+        self, goal: str, research_data: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Generate template content when HERALD is not available."""
         content = f"""
 # {goal.title()} - Multi-Agent Protocol Initiative
@@ -391,8 +402,8 @@ Experience the power of agentic governance. Steward Protocol is live.
             "metadata": {
                 "tone": "professional",
                 "audience": "technical_founders",
-                "length": "medium"
-            }
+                "length": "medium",
+            },
         }
 
     def _execute_publishing(self, goal: str, content: str, **kwargs) -> Dict[str, Any]:
@@ -405,7 +416,7 @@ Experience the power of agentic governance. Steward Protocol is live.
                 "status": "success",
                 "publications": 1,
                 "platforms": ["simulated"],
-                "note": "HERALD not available, publishing simulated"
+                "note": "HERALD not available, publishing simulated",
             }
 
         try:
@@ -416,19 +427,20 @@ Experience the power of agentic governance. Steward Protocol is live.
                     "status": "success",
                     "publications": 0,
                     "platforms": [],
-                    "note": "HERALD not available, publishing simulated"
+                    "note": "HERALD not available, publishing simulated",
                 }
 
             # Trigger HERALD publishing
             from vibe_core.scheduling import Task
+
             task = Task(
                 agent_id="herald",
                 payload={
                     "action": "publish_campaign",
                     "content": content,
                     "goal": goal,
-                    "parameters": kwargs
-                }
+                    "parameters": kwargs,
+                },
             )
 
             result = herald.process(task)
@@ -440,22 +452,19 @@ Experience the power of agentic governance. Steward Protocol is live.
                     "publications": result.get("publications", 1),
                     "platforms": result.get("platforms", []),
                     "transaction_hash": result.get("transaction_hash"),
-                    "timestamp": result.get("timestamp")
+                    "timestamp": result.get("timestamp"),
                 }
             else:
                 return {
                     "status": "success",
                     "publications": 1,
                     "platforms": ["simulated"],
-                    "note": "HERALD unavailable, publishing recorded"
+                    "note": "HERALD unavailable, publishing recorded",
                 }
 
         except Exception as e:
             logger.error(f"❌ Publishing error: {e}")
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     # ========== HELPER METHODS ==========
 
@@ -475,7 +484,7 @@ Experience the power of agentic governance. Steward Protocol is live.
             "Governance-first protocols gaining traction",
             "Multi-agent coordination emerging as critical",
             "Trustless systems valued over permissioned",
-            "Founder interest in protocol governance"
+            "Founder interest in protocol governance",
         ]
 
     def _get_messaging_strategies(self, goal: str) -> List[str]:
@@ -485,12 +494,13 @@ Experience the power of agentic governance. Steward Protocol is live.
             "Emphasize technical rigor and security",
             "Show working examples and proofs",
             "Build credibility through ledger transparency",
-            "Appeal to pioneering mindset"
+            "Appeal to pioneering mindset",
         ]
 
     def _generate_campaign_id(self) -> str:
         """Generate unique campaign ID."""
         import time
+
         timestamp = int(time.time() * 1000) % 1000000
         return f"CAMP-{timestamp:06d}"
 
@@ -503,7 +513,7 @@ Experience the power of agentic governance. Steward Protocol is live.
             "phase": campaign["phase"],
             "results": campaign["results"],
             "errors": campaign["errors"] if campaign["errors"] else None,
-            "message": self._get_result_message(campaign)
+            "message": self._get_result_message(campaign),
         }
 
     def _get_result_message(self, campaign: Dict[str, Any]) -> str:

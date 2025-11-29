@@ -50,9 +50,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
     FORBIDDEN_PATTERNS = {
         "mock_return": [
-            r'return True\s*(#|$)',  # return True (without impl)
-            r'return False\s*(#|$)',  # return False (without impl)
-            r'return 0\s*(#|$)',  # return 0 (placeholder)
+            r"return True\s*(#|$)",  # return True (without impl)
+            r"return False\s*(#|$)",  # return False (without impl)
+            r"return 0\s*(#|$)",  # return 0 (placeholder)
         ],
         "fake_success": [
             r"Success simulation",
@@ -102,7 +102,11 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="System integrity enforcer and governance enforcer",
             domain="ENFORCEMENT",
-            capabilities=["integrity_scanning", "account_freezing", "violation_detection"]
+            capabilities=[
+                "integrity_scanning",
+                "account_freezing",
+                "violation_detection",
+            ],
         )
 
         logger.info("⚔️ WATCHMAN BOOTING...")
@@ -120,7 +124,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             self.bank = CivicBank()
             logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
         except Exception as e:
-            logger.warning(f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)")
+            logger.warning(
+                f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)"
+            )
 
         # Phase 3.2: Initialize deep inspection tool
         self.standards_tool = StandardsInspectionTool()
@@ -128,7 +134,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         # Phase 3.3: Initialize system health monitor (read-only)
         self.health_checker = SystemHealthCheck()
-        logger.info("🏥 System Health Monitor initialized (read-only infrastructure check)")
+        logger.info(
+            "🏥 System Health Monitor initialized (read-only infrastructure check)"
+        )
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -143,7 +151,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "violations_found": len(violations),
             "agents_frozen": [],
             "agents_thawed": [],
-            "details": violations
+            "details": violations,
         }
 
         # PHASE 1: IDENTIFY CURRENT VIOLATORS
@@ -204,45 +212,60 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         violations = []
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
 
             for i, line in enumerate(lines, start=1):
                 # Check for mock patterns
                 lower_line = line.lower()
 
-                if "return true" in lower_line and "#" not in lower_line and "def " not in lower_line:
+                if (
+                    "return true" in lower_line
+                    and "#" not in lower_line
+                    and "def " not in lower_line
+                ):
                     if "success simulation" in lower_line or "offline" in lower_line:
-                        violations.append({
+                        violations.append(
+                            {
+                                "agent_id": agent_name,
+                                "file": str(file_path),
+                                "line": i,
+                                "pattern": "mock_return",
+                                "code": line.strip(),
+                                "reason": f"Mock success return detected in {agent_name}",
+                            }
+                        )
+
+                if "placeholder" in lower_line or "stub" in lower_line:
+                    violations.append(
+                        {
                             "agent_id": agent_name,
                             "file": str(file_path),
                             "line": i,
-                            "pattern": "mock_return",
+                            "pattern": "placeholder_impl",
                             "code": line.strip(),
-                            "reason": f"Mock success return detected in {agent_name}"
-                        })
-
-                if "placeholder" in lower_line or "stub" in lower_line:
-                    violations.append({
-                        "agent_id": agent_name,
-                        "file": str(file_path),
-                        "line": i,
-                        "pattern": "placeholder_impl",
-                        "code": line.strip(),
-                        "reason": f"Placeholder implementation in {agent_name}"
-                    })
+                            "reason": f"Placeholder implementation in {agent_name}",
+                        }
+                    )
 
                 # Only flag self.mode usage WITHOUT assignment (=) and WITHOUT safety comment
-                if ("self.mode" in line and i > 20 and "self.mode =" not in line
-                    and "initialized" not in lower_line and "safe" not in lower_line):
-                    violations.append({
-                        "agent_id": agent_name,
-                        "file": str(file_path),
-                        "line": i,
-                        "pattern": "uninitialized_attr",
-                        "code": line.strip(),
-                        "reason": f"Potential uninitialized attribute: self.mode in {agent_name}"
-                    })
+                if (
+                    "self.mode" in line
+                    and i > 20
+                    and "self.mode =" not in line
+                    and "initialized" not in lower_line
+                    and "safe" not in lower_line
+                ):
+                    violations.append(
+                        {
+                            "agent_id": agent_name,
+                            "file": str(file_path),
+                            "line": i,
+                            "pattern": "uninitialized_attr",
+                            "code": line.strip(),
+                            "reason": f"Potential uninitialized attribute: self.mode in {agent_name}",
+                        }
+                    )
 
                 # PRINCIPLE 4: Check for unauthorized network operations (Cleanliness/Saucam)
                 # Check for raw socket operations without GAD-1000 verification
@@ -250,29 +273,43 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 for pattern in self.FORBIDDEN_PATTERNS.get("unauthorized_network", []):
                     if re.search(pattern, line):
                         # Allow if there's a safety comment or whitelist reference
-                        if "whitelist" not in lower_line and "authorized" not in lower_line and "gad_1000" not in lower_line:
-                            violations.append({
-                                "agent_id": agent_name,
-                                "file": str(file_path),
-                                "line": i,
-                                "pattern": "unauthorized_network",
-                                "code": line.strip(),
-                                "reason": f"Unauthorized network operation detected - violates Principle 4 (Saucam/Cleanliness). Must use GAD-1000 verification."
-                            })
+                        if (
+                            "whitelist" not in lower_line
+                            and "authorized" not in lower_line
+                            and "gad_1000" not in lower_line
+                        ):
+                            violations.append(
+                                {
+                                    "agent_id": agent_name,
+                                    "file": str(file_path),
+                                    "line": i,
+                                    "pattern": "unauthorized_network",
+                                    "code": line.strip(),
+                                    "reason": f"Unauthorized network operation detected - violates Principle 4 (Saucam/Cleanliness). Must use GAD-1000 verification.",
+                                }
+                            )
                             break  # Only report once per line
 
                 # Check unverified connection patterns
-                for pattern in self.FORBIDDEN_PATTERNS.get("unverified_connections", []):
+                for pattern in self.FORBIDDEN_PATTERNS.get(
+                    "unverified_connections", []
+                ):
                     if re.search(pattern, line):
-                        if "signature" not in lower_line and "verify" not in lower_line and "gad_1000" not in lower_line:
-                            violations.append({
-                                "agent_id": agent_name,
-                                "file": str(file_path),
-                                "line": i,
-                                "pattern": "unverified_connections",
-                                "code": line.strip(),
-                                "reason": f"Unverified network connection detected - violates Principle 4. Must verify GAD-1000 identity before data exchange."
-                            })
+                        if (
+                            "signature" not in lower_line
+                            and "verify" not in lower_line
+                            and "gad_1000" not in lower_line
+                        ):
+                            violations.append(
+                                {
+                                    "agent_id": agent_name,
+                                    "file": str(file_path),
+                                    "line": i,
+                                    "pattern": "unverified_connections",
+                                    "code": line.strip(),
+                                    "reason": f"Unverified network connection detected - violates Principle 4. Must verify GAD-1000 identity before data exchange.",
+                                }
+                            )
                             break
 
         except Exception as e:
@@ -298,10 +335,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         if not system_agents_path.exists():
             logger.error(f"❌ Path not found: {system_agents_path}")
-            return {
-                "status": "error",
-                "error": f"Path not found: {system_agents_path}"
-            }
+            return {"status": "error", "error": f"Path not found: {system_agents_path}"}
 
         # Run deep inspection
         violations = self.standards_tool.inspect_all_agents(system_agents_path)
@@ -315,19 +349,19 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         logger.info("=" * 70)
         logger.info(f"Total violations: {report['total_violations']}")
         logger.info(f"By severity:")
-        for severity, count in report['by_severity'].items():
+        for severity, count in report["by_severity"].items():
             if count > 0:
                 logger.info(f"  • {severity}: {count}")
 
         logger.info(f"\nBy agent:")
-        for agent_id, count in report['by_agent'].items():
+        for agent_id, count in report["by_agent"].items():
             logger.info(f"  • {agent_id}: {count} violation(s)")
 
         # Determine overall status
-        if report['should_fail_build']:
+        if report["should_fail_build"]:
             logger.error("\n❌ BUILD SHOULD FAIL - CRITICAL violations detected")
             status = "VIOLATIONS_DETECTED"
-        elif report['total_violations'] > 0:
+        elif report["total_violations"] > 0:
             logger.warning("\n⚠️  VIOLATIONS DETECTED - Review recommended")
             status = "WARNINGS_DETECTED"
         else:
@@ -338,11 +372,11 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         return {
             "status": status,
-            "should_fail_build": report['should_fail_build'],
-            "total_violations": report['total_violations'],
-            "critical_count": report['critical_count'],
+            "should_fail_build": report["should_fail_build"],
+            "total_violations": report["total_violations"],
+            "critical_count": report["critical_count"],
             "report": report,
-            "violations": report['violations']
+            "violations": report["violations"],
         }
 
     def run_health_check(self) -> dict:
@@ -397,32 +431,27 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             elif action == "system_health":
                 return self.run_health_check()
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
         except Exception as e:
             logger.error(f"❌ WATCHMAN processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="watchman",
             name="WATCHMAN",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="Monitoring and health checks",
             domain="MONITORING",
-            capabilities=['monitoring', 'alerts', 'system_integrity']
+            capabilities=["monitoring", "alerts", "system_integrity"],
         )
-
-
 
     def report_status(self) -> dict:
         """Report WATCHMAN status (VibeAgent interface)."""
@@ -432,5 +461,5 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             "status": "RUNNING",
             "domain": "ENFORCEMENT",
             "capabilities": self.capabilities,
-            "description": "System integrity enforcer and governance enforcer"
+            "description": "System integrity enforcer and governance enforcer",
         }

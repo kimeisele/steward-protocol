@@ -66,11 +66,17 @@ class ProjectMemoryManager:
                 from datetime import datetime
 
                 timestamp = datetime.utcnow().isoformat() + "Z"
-                self.sqlite_store._map_project_memory_to_sql(memory, mission_id, timestamp)
-                logger.debug(f"✅ Dual-write project memory to SQLite: mission_id={mission_id}")
+                self.sqlite_store._map_project_memory_to_sql(
+                    memory, mission_id, timestamp
+                )
+                logger.debug(
+                    f"✅ Dual-write project memory to SQLite: mission_id={mission_id}"
+                )
             except Exception as e:
                 # Non-fatal - JSON is source of truth in Shadow Mode Phase 1
-                logger.warning(f"⚠️ SQLite dual-write for project memory failed (non-fatal): {e}")
+                logger.warning(
+                    f"⚠️ SQLite dual-write for project memory failed (non-fatal): {e}"
+                )
 
     def update_after_session(
         self,
@@ -192,34 +198,54 @@ class ProjectMemoryManager:
         # Payment/billing related
         if any(kw in user_lower for kw in ["payment", "stripe", "billing", "checkout"]):
             intents.append(
-                {"session": session_num, "intent": "payment integration", "confidence": "high"}
+                {
+                    "session": session_num,
+                    "intent": "payment integration",
+                    "confidence": "high",
+                }
             )
 
         # Testing related
         if any(kw in user_lower for kw in ["test", "pytest", "failing test"]):
             intents.append(
-                {"session": session_num, "intent": "fix failing tests", "confidence": "high"}
+                {
+                    "session": session_num,
+                    "intent": "fix failing tests",
+                    "confidence": "high",
+                }
             )
 
         # Deployment related
         if any(kw in user_lower for kw in ["deploy", "production", "release"]):
-            intents.append({"session": session_num, "intent": "deployment", "confidence": "high"})
+            intents.append(
+                {"session": session_num, "intent": "deployment", "confidence": "high"}
+            )
 
         # Documentation
         if any(kw in user_lower for kw in ["document", "readme", "docs"]):
             intents.append(
-                {"session": session_num, "intent": "documentation", "confidence": "high"}
+                {
+                    "session": session_num,
+                    "intent": "documentation",
+                    "confidence": "high",
+                }
             )
 
         # Refactoring
         if any(kw in user_lower for kw in ["refactor", "cleanup", "improve"]):
             intents.append(
-                {"session": session_num, "intent": "refactoring", "confidence": "medium"}
+                {
+                    "session": session_num,
+                    "intent": "refactoring",
+                    "confidence": "medium",
+                }
             )
 
         # Bug fixing
         if any(kw in user_lower for kw in ["bug", "fix", "error", "issue"]):
-            intents.append({"session": session_num, "intent": "bug fixing", "confidence": "high"})
+            intents.append(
+                {"session": session_num, "intent": "bug fixing", "confidence": "high"}
+            )
 
         return intents
 

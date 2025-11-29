@@ -14,6 +14,7 @@ from datetime import datetime
 
 class TaskStatus(str, Enum):
     """Task lifecycle states"""
+
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     COMPLETED = "COMPLETED"
@@ -28,7 +29,8 @@ class Task:
 
     Represents a unit of work that an agent should perform.
     """
-    agent_id: str          # Target agent ID
+
+    agent_id: str  # Target agent ID
     payload: Dict[str, Any]  # Task data/parameters
     task_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     priority: int = 0
