@@ -102,8 +102,12 @@ class LineageChain:
 
         # Indexes for fast queries
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_id ON blocks(agent_id)")
-        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_event_type ON blocks(event_type)")
-        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON blocks(timestamp)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_event_type ON blocks(event_type)"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_timestamp ON blocks(timestamp)"
+        )
 
         self.conn.commit()
 
@@ -122,7 +126,9 @@ class LineageChain:
         """
         # Calculate foundation hashes
         gad_000_hash = self._hash_file("/home/user/steward-protocol/GAD-000.md")
-        constitution_hash = self._hash_file("/home/user/steward-protocol/CONSTITUTION.md")
+        constitution_hash = self._hash_file(
+            "/home/user/steward-protocol/CONSTITUTION.md"
+        )
 
         genesis = LineageBlock(
             index=0,
@@ -159,7 +165,9 @@ class LineageChain:
 
         return genesis
 
-    def add_block(self, event_type: str, agent_id: Optional[str], data: Dict[str, Any]) -> LineageBlock:
+    def add_block(
+        self, event_type: str, agent_id: Optional[str], data: Dict[str, Any]
+    ) -> LineageBlock:
         """
         ⛓️  ADD A NEW BLOCK TO THE CHAIN ⛓️
 
@@ -199,7 +207,10 @@ class LineageChain:
         # Store in DB
         self._store_block(block)
 
-        logger.info(f"⛓️  Block {block.index}: {event_type} " f"({agent_id or 'SYSTEM'}) → {block.hash[:16]}...")
+        logger.info(
+            f"⛓️  Block {block.index}: {event_type} "
+            f"({agent_id or 'SYSTEM'}) → {block.hash[:16]}..."
+        )
 
         return block
 
@@ -290,8 +301,12 @@ class LineageChain:
             if i > 0:
                 if block.previous_hash != blocks[i - 1].hash:
                     logger.critical(f"💥 CHAIN BROKEN AT INDEX {i}: Link broken!")
-                    logger.critical(f"   Previous block hash: {blocks[i-1].hash[:16]}...")
-                    logger.critical(f"   This block's prev_hash: {block.previous_hash[:16]}...")
+                    logger.critical(
+                        f"   Previous block hash: {blocks[i-1].hash[:16]}..."
+                    )
+                    logger.critical(
+                        f"   This block's prev_hash: {block.previous_hash[:16]}..."
+                    )
                     return False
 
         logger.info(f"✅ Parampara chain verified ({len(blocks)} blocks)")

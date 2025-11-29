@@ -93,7 +93,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
             # This ensures SCIENCE has oath_sworn=True before kernel registration
             self.oath_sworn = True
-            logger.info("✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)")
+            logger.info(
+                "✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)"
+            )
 
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
@@ -107,7 +109,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
         self._cache_dir = None
         self._results_dir = None
 
-        logger.info("✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)")
+        logger.info(
+            "✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)"
+        )
 
     @property
     def cache_dir(self):
@@ -170,8 +174,12 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
     def report_status(self) -> Dict[str, Any]:
         """Report SCIENCE status (VibeAgent interface) - Deep Introspection."""
         # Count cached results
-        cache_files = list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
-        results_files = list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
+        cache_files = (
+            list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
+        )
+        results_files = (
+            list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
+        )
 
         return {
             "agent_id": "science",
@@ -188,7 +196,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             },
         }
 
-    def research(self, query: str, max_results: int = 5, use_cache: bool = True) -> Dict[str, Any]:
+    def research(
+        self, query: str, max_results: int = 5, use_cache: bool = True
+    ) -> Dict[str, Any]:
         """
         Main research interface.
 
@@ -257,7 +267,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
         # Synthesize into comprehensive briefing
         comprehensive = self._synthesize_multiple_briefings(topic, all_results)
 
-        logger.info(f"✅ Comprehensive briefing created: {len(all_results)} perspectives")
+        logger.info(
+            f"✅ Comprehensive briefing created: {len(all_results)} perspectives"
+        )
         return comprehensive
 
     def fact_check(self, claim: str, context: Optional[str] = None) -> Dict[str, Any]:
@@ -277,7 +289,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
         briefing = self.research(claim, max_results=3)
 
         # Simple heuristic: Check if claim appears in results
-        claim_found = any(claim.lower() in source["content"].lower() for source in briefing["sources"])
+        claim_found = any(
+            claim.lower() in source["content"].lower() for source in briefing["sources"]
+        )
 
         confidence = 0.8 if claim_found else 0.3
         status = "verified" if claim_found else "unverified"
@@ -356,7 +370,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
 
         return expansions["default"]
 
-    def _synthesize_multiple_briefings(self, topic: str, briefings: list) -> Dict[str, Any]:
+    def _synthesize_multiple_briefings(
+        self, topic: str, briefings: list
+    ) -> Dict[str, Any]:
         """Synthesize multiple briefings into one comprehensive briefing."""
         all_sources = []
         all_insights = []

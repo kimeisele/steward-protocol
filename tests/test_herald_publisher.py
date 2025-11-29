@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from examples.herald.publisher import TwitterPublisher, MultiChannelPublisher
 
+
 class TestTwitterPublisher:
     @pytest.fixture(autouse=True)
     def setup_env(self, monkeypatch):

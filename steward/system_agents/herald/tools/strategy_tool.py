@@ -52,7 +52,9 @@ class StrategyTool:
 
         # A.G.I. framing for strategies
         self.agi_definition = "A.G.I. = Artificial Governed Intelligence"
-        self.strategy_ethos = "Strategy must prove what it claims. Proof first, narrative second."
+        self.strategy_ethos = (
+            "Strategy must prove what it claims. Proof first, narrative second."
+        )
 
         if self.api_key and OpenAI:
             try:
@@ -64,7 +66,9 @@ class StrategyTool:
             except Exception as e:
                 logger.warning(f"⚠️  Strategy Tool: LLM init failed: {e}")
         else:
-            logger.warning("⚠️  Strategy Tool: LLM unavailable (planning in offline mode)")
+            logger.warning(
+                "⚠️  Strategy Tool: LLM unavailable (planning in offline mode)"
+            )
 
         # Load campaign themes for content rotation
         self.campaign_themes = self._load_campaign_themes()
@@ -126,11 +130,15 @@ class StrategyTool:
 
         if theme_key and theme_key in self.campaign_themes:
             theme = self.campaign_themes[theme_key]
-            logger.info(f"📅 Today's campaign theme ({day_name}): {theme.get('name', 'Unknown')}")
+            logger.info(
+                f"📅 Today's campaign theme ({day_name}): {theme.get('name', 'Unknown')}"
+            )
             return theme
         else:
             # Off-days: fall back to the nearest upcoming theme
-            logger.debug(f"📅 Today ({day_name}) is not a campaign day. Using default theme.")
+            logger.debug(
+                f"📅 Today ({day_name}) is not a campaign day. Using default theme."
+            )
             return None
 
     def get_content_focus_areas(self) -> List[str]:
@@ -178,8 +186,12 @@ class StrategyTool:
         """
 
         # Load foundational documents
-        manifesto_content = self._read_document(manifesto_path or Path("AGI_MANIFESTO.md"))
-        context_content = self._read_document(context_path or Path("docs/herald/WHY_DOWNVOTED.md"))
+        manifesto_content = self._read_document(
+            manifesto_path or Path("AGI_MANIFESTO.md")
+        )
+        context_content = self._read_document(
+            context_path or Path("docs/herald/WHY_DOWNVOTED.md")
+        )
 
         if not manifesto_content or not context_content:
             logger.warning("⚠️  Strategy: Missing foundational documents for planning")
@@ -187,12 +199,16 @@ class StrategyTool:
 
         # Generate strategic narrative
         if self.client:
-            return self._llm_plan_campaign(manifesto_content, context_content, duration_weeks)
+            return self._llm_plan_campaign(
+                manifesto_content, context_content, duration_weeks
+            )
         else:
             logger.debug("⚠️  Strategy: LLM unavailable, using template-based planning")
             return self._template_based_plan(duration_weeks)
 
-    def _llm_plan_campaign(self, manifesto: str, context: str, weeks: int) -> Optional[str]:
+    def _llm_plan_campaign(
+        self, manifesto: str, context: str, weeks: int
+    ) -> Optional[str]:
         """Generate campaign plan via LLM."""
 
         prompt = f"""
@@ -250,10 +266,14 @@ Generate the roadmap now:
 
             # Governance check
             if self._governance_check_strategy(roadmap):
-                logger.info("✅ Strategy: Campaign plan generated and governance-checked")
+                logger.info(
+                    "✅ Strategy: Campaign plan generated and governance-checked"
+                )
                 return roadmap
             else:
-                logger.warning("⚠️  Strategy: Plan failed governance check, using template")
+                logger.warning(
+                    "⚠️  Strategy: Plan failed governance check, using template"
+                )
                 return self._template_based_plan(weeks)
 
         except Exception as e:
@@ -282,7 +302,9 @@ Generate the roadmap now:
         found = sum(1 for req in required if req.lower() in strategy_text.lower())
 
         if found < 2:  # At least 2 required concepts
-            logger.warning("❌ Strategy failed governance: Missing proof/accountability language")
+            logger.warning(
+                "❌ Strategy failed governance: Missing proof/accountability language"
+            )
             return False
 
         logger.info("✅ Strategy passed governance check")
@@ -423,7 +445,9 @@ A {weeks}-week campaign to establish A.G.I. positioning.
 **Status**: This is a template. Run strategy tool with proper context documents.
 """
 
-    def write_roadmap_to_file(self, roadmap_text: str, output_path: Optional[Path] = None) -> bool:
+    def write_roadmap_to_file(
+        self, roadmap_text: str, output_path: Optional[Path] = None
+    ) -> bool:
         """
         Write roadmap to file.
 
@@ -464,5 +488,8 @@ A {weeks}-week campaign to establish A.G.I. positioning.
             "has_phases": roadmap_text.count("##") >= 3,
             "includes_proof": "proof" in roadmap_text.lower(),
             "proof_heavy": roadmap_text.count("proof") + roadmap_text.count("verify"),
-            "hype_free": not any(p.lower() in roadmap_text.lower() for p in self.governance.BANNED_PHRASES[:3]),
+            "hype_free": not any(
+                p.lower() in roadmap_text.lower()
+                for p in self.governance.BANNED_PHRASES[:3]
+            ),
         }

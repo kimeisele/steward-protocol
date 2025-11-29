@@ -110,8 +110,12 @@ class WebSearchTool:
         if self.vault is not None:
             try:
                 # Lease the Tavily API key from the Vault
-                self.api_key = self.vault.lease_secret(agent_id="science", key_name="tavily_api", bank=self.bank)
-                logger.info("✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)")
+                self.api_key = self.vault.lease_secret(
+                    agent_id="science", key_name="tavily_api", bank=self.bank
+                )
+                logger.info(
+                    "✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)"
+                )
             except Exception as vault_error:
                 logger.warning(f"⚠️  Vault lease failed: {vault_error}")
                 # Fallback to environment variable
@@ -121,13 +125,16 @@ class WebSearchTool:
         if not self.api_key:
             self.api_key = os.getenv("TAVILY_API_KEY")
             if self.api_key:
-                logger.info("✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)")
+                logger.info(
+                    "✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)"
+                )
 
         # Initialize Tavily client if we have the key
         if self.api_key:
             if not TavilyClient:
                 raise ImportError(
-                    "❌ CRITICAL: tavily package not installed. " "Install via: pip install tavily-python"
+                    "❌ CRITICAL: tavily package not installed. "
+                    "Install via: pip install tavily-python"
                 )
 
             try:
@@ -142,7 +149,8 @@ class WebSearchTool:
         else:
             # No API key available - we'll operate in offline mode
             logger.warning(
-                "⚠️  TAVILY_API_KEY not found in Vault or environment. " "Search will operate in offline mode."
+                "⚠️  TAVILY_API_KEY not found in Vault or environment. "
+                "Search will operate in offline mode."
             )
             self.mode = "offline"
 
@@ -165,13 +173,19 @@ class WebSearchTool:
         """
         if self.mode == "offline":
             if self.chain:
-                logger.info(f"⚠️  Offline mode: Fallback to DegradationChain for '{query}'")
+                logger.info(
+                    f"⚠️  Offline mode: Fallback to DegradationChain for '{query}'"
+                )
                 try:
                     # Ask the chain (local LLM) for general knowledge
                     prompt = f"Research query: {query}\nProvide a factual summary based on your internal knowledge."
-                    response = self.chain.respond(user_input=prompt, semantic_confidence=0.5, detected_intent="research")
+                    response = self.chain.respond(
+                        user_input=prompt,
+                        semantic_confidence=0.5,
+                        detected_intent="research",
+                    )
                     answer = response.content
-                    
+
                     return [
                         SearchResult(
                             title="Local Knowledge (Offline)",
@@ -184,7 +198,9 @@ class WebSearchTool:
                     logger.error(f"❌ Fallback failed: {e}")
                     return []
             else:
-                logger.warning(f"⚠️  Offline mode: Cannot search '{query}' (No chain available)")
+                logger.warning(
+                    f"⚠️  Offline mode: Cannot search '{query}' (No chain available)"
+                )
                 return []
 
         return self._search_tavily(query, max_results)
@@ -233,7 +249,9 @@ class WebSearchTool:
                 f"System requires real search results. No mocks. No fallbacks."
             )
 
-    def synthesize_fact_sheet(self, query: str, results: List[SearchResult]) -> Dict[str, Any]:
+    def synthesize_fact_sheet(
+        self, query: str, results: List[SearchResult]
+    ) -> Dict[str, Any]:
         """
         Synthesize search results into a structured fact sheet.
 

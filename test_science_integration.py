@@ -127,13 +127,14 @@ def test_herald_integration():
 
         if hasattr(herald, "scientist"):
             scientist_status = herald.scientist.report_status()
-            logger.info(f"   SCIENTIST search mode: {scientist_status['search_mode'].upper()}")
+            logger.info(
+                f"   SCIENTIST search mode: {scientist_status['search_mode'].upper()}"
+            )
 
             # Test the integration: Get briefing through HERALD
             logger.info("\n   [Integration] Running SCIENTIST research via HERALD...")
             briefing = herald.scientist.research(
-                query="cryptographic verification agents",
-                max_results=2
+                query="cryptographic verification agents", max_results=2
             )
             logger.info(f"   ✅ Briefing obtained: {briefing['source_count']} sources")
             logger.info(f"   Summary: {briefing['summary'][:80]}...")

@@ -33,7 +33,9 @@ class InMemoryLedger(VibeLedger):
         self.events: List[Dict[str, Any]] = []
         self._event_counter = 0
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (governance action)"""
         self._event_counter += 1
         event_id = f"EVT-{self._event_counter:06d}"
@@ -142,7 +144,9 @@ class SQLiteLedger(VibeLedger):
         logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
         logger.info(f"⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (governance action)"""
         # Get previous hash for the chain
         previous_hash = self._get_previous_hash()
@@ -229,7 +233,9 @@ class SQLiteLedger(VibeLedger):
     def _get_previous_hash(self) -> str:
         """Get hash of last event, or genesis hash if first event"""
         cursor = self.connection.cursor()
-        row = cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1").fetchone()
+        row = cursor.execute(
+            "SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1"
+        ).fetchone()
         return row[0] if row else "0" * 64
 
     def _compute_hash(self, event_data: str, previous_hash: str) -> str:
@@ -373,7 +379,9 @@ class SQLiteLedger(VibeLedger):
             previous_hash = stored_current
 
         if corruptions:
-            logger.error(f"🚨 CORRUPTION DETECTED in ledger! {len(corruptions)} events tampered")
+            logger.error(
+                f"🚨 CORRUPTION DETECTED in ledger! {len(corruptions)} events tampered"
+            )
             return {
                 "status": "CORRUPTED",
                 "message": "DATA TAMPERING DETECTED - Ledger chain broken",
@@ -383,7 +391,9 @@ class SQLiteLedger(VibeLedger):
                 "top_hash": previous_hash,
             }
 
-        logger.info(f"✅ Ledger chain integrity verified ({len(events)} events, chain unbroken)")
+        logger.info(
+            f"✅ Ledger chain integrity verified ({len(events)} events, chain unbroken)"
+        )
         return {
             "status": "CLEAN",
             "message": "All events verified - chain integrity intact",
@@ -395,7 +405,9 @@ class SQLiteLedger(VibeLedger):
     def get_top_hash(self) -> str:
         """Get the fingerprint (top hash) of current ledger state"""
         cursor = self.connection.cursor()
-        row = cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1").fetchone()
+        row = cursor.execute(
+            "SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1"
+        ).fetchone()
         return row[0] if row else "0" * 64
 
     def close(self) -> None:

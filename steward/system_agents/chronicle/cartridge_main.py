@@ -169,7 +169,9 @@ class ChronicleCartridge(VibeAgent, OathMixin):
                 self.tasks_successful += 1
                 logger.info(f"✅ Task {task.task_id} completed successfully")
             else:
-                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}")
+                logger.warning(
+                    f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}"
+                )
 
             return result
 

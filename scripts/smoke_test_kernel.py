@@ -48,7 +48,9 @@ from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.lineage import LineageChain, LineageEventType
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("SMOKE_TEST")
 
 
@@ -193,7 +195,9 @@ def smoke_test_kernel():
         print("\n         Verifying expected events...")
         for expected_idx, expected_type, expected_agent in expected_events:
             if expected_idx >= len(all_blocks):
-                print(f"         ⚠️  Block {expected_idx} missing (expected {expected_type})")
+                print(
+                    f"         ⚠️  Block {expected_idx} missing (expected {expected_type})"
+                )
                 continue
 
             block = all_blocks[expected_idx]
@@ -250,7 +254,9 @@ def smoke_test_kernel():
             shutdown_reason = final_block.data.get("reason", "unknown")
             print(f"            Reason: {shutdown_reason}")
         else:
-            print("         ⚠️  KERNEL_SHUTDOWN event not found (might be OK if process killed)")
+            print(
+                "         ⚠️  KERNEL_SHUTDOWN event not found (might be OK if process killed)"
+            )
 
         # Final chain verification
         if post_chain.verify_chain():

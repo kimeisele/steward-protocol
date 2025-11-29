@@ -37,7 +37,9 @@ class IdentityTool:
     Fallback: If Steward Protocol unavailable, uses native HMAC-SHA256 signing
     """
 
-    def __init__(self, identity_file: str = "herald/STEWARD.md", agent_id: str = "herald"):
+    def __init__(
+        self, identity_file: str = "herald/STEWARD.md", agent_id: str = "herald"
+    ):
         """
         Initialize identity tool with HERALD's identity file.
 
@@ -56,13 +58,17 @@ class IdentityTool:
         if StewardClient and crypto:
             try:
                 self.client = StewardClient(identity_file=str(self.identity_file))
-                logger.info(f"✅ Identity: Steward client initialized with {self.identity_file}")
+                logger.info(
+                    f"✅ Identity: Steward client initialized with {self.identity_file}"
+                )
                 return
             except Exception as e:
                 logger.warning(f"⚠️  Identity: Failed to initialize Steward client: {e}")
 
         # Fallback to native HMAC-SHA256 signing
-        logger.info("🔐 Identity: Using native HMAC-SHA256 signing (Steward unavailable)")
+        logger.info(
+            "🔐 Identity: Using native HMAC-SHA256 signing (Steward unavailable)"
+        )
         self._use_native = True
         self._ensure_native_keys()
 
@@ -98,7 +104,9 @@ class IdentityTool:
                 with open(public_key_file, "w") as f:
                     f.write(self.public_key)
 
-                logger.info(f"🔐 Identity: Generated new native keypair for {self.agent_id}")
+                logger.info(
+                    f"🔐 Identity: Generated new native keypair for {self.agent_id}"
+                )
             except Exception as e:
                 logger.error(f"❌ Identity: Failed to save native keys: {e}")
 
@@ -158,7 +166,9 @@ class IdentityTool:
         if self._use_native and self._private_key:
             try:
                 message = content.strip().encode("utf-8")
-                signature = hmac.new(self._private_key, message, hashlib.sha256).digest()
+                signature = hmac.new(
+                    self._private_key, message, hashlib.sha256
+                ).digest()
                 signature_hex = signature.hex()
                 logger.info(
                     f"✅ Identity: Content signed with native HMAC-SHA256 ({len(signature_hex)} char signature)"
@@ -172,7 +182,9 @@ class IdentityTool:
         if self.client:
             try:
                 signature = self.client.sign_artifact(content.strip())
-                logger.info(f"✅ Identity: Content signed via Steward ({len(signature)} char signature)")
+                logger.info(
+                    f"✅ Identity: Content signed via Steward ({len(signature)} char signature)"
+                )
                 return signature
             except Exception as e:
                 logger.error(f"❌ Identity: Steward signing failed: {e}")
@@ -202,10 +214,14 @@ class IdentityTool:
                 try:
                     with open(public_key_file, "r") as f:
                         self.public_key = f.read().strip()
-                    logger.debug(f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)")
+                    logger.debug(
+                        f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)"
+                    )
                     return self.public_key
                 except Exception as e:
-                    logger.warning(f"⚠️  Identity: Could not read native public key: {e}")
+                    logger.warning(
+                        f"⚠️  Identity: Could not read native public key: {e}"
+                    )
             return None
 
         if not crypto:
@@ -214,7 +230,9 @@ class IdentityTool:
 
         try:
             self.public_key = crypto.get_public_key_string()
-            logger.debug(f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)")
+            logger.debug(
+                f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)"
+            )
             return self.public_key
         except Exception as e:
             logger.warning(f"⚠️  Identity: Could not retrieve public key: {e}")

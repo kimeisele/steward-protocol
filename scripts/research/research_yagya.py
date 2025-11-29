@@ -211,9 +211,13 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
                     if "title" in briefing:
                         print_ritual(f"   Title: {briefing['title']}")
                     if "key_findings" in briefing:
-                        print_ritual(f"   Key Findings: {len(briefing['key_findings'])} found")
+                        print_ritual(
+                            f"   Key Findings: {len(briefing['key_findings'])} found"
+                        )
                     if "sources" in briefing:
-                        print_ritual(f"   Sources Consulted: {len(briefing['sources'])}")
+                        print_ritual(
+                            f"   Sources Consulted: {len(briefing['sources'])}"
+                        )
 
     except Exception as e:
         print_ritual(f"❌ Failed to preserve knowledge: {e}")
@@ -231,7 +235,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Execute the Research Yagya")
-    parser.add_argument("--topic", type=str, default=None, help="Research topic to investigate")
+    parser.add_argument(
+        "--topic", type=str, default=None, help="Research topic to investigate"
+    )
     parser.add_argument(
         "--depth",
         type=str,

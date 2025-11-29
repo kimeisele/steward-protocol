@@ -138,7 +138,10 @@ def show_vault_audit_trail(limit: int = 5):
     if leases:
         print(f"\n🔍 VAULT AUDIT TRAIL (recent {limit} leases)")
         for lease in leases:
-            print(f"   {lease['agent_id']} <- {lease['key_name']} " f"({lease['credits_charged']} Credits)")
+            print(
+                f"   {lease['agent_id']} <- {lease['key_name']} "
+                f"({lease['credits_charged']} Credits)"
+            )
     else:
         print(f"\n🔍 VAULT AUDIT TRAIL (no leases yet)")
 
@@ -152,8 +155,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Ingest secrets from environment into vault",
     )
-    parser.add_argument("--list-assets", action="store_true", help="List all vaulted assets")
-    parser.add_argument("--audit-trail", action="store_true", help="Show vault access audit trail")
+    parser.add_argument(
+        "--list-assets", action="store_true", help="List all vaulted assets"
+    )
+    parser.add_argument(
+        "--audit-trail", action="store_true", help="Show vault access audit trail"
+    )
 
     args = parser.parse_args()
 

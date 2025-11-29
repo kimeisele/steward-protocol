@@ -22,12 +22,15 @@ AGENTS = [
     "chronicle",
     "supreme_court",
     "scribe",
-    "oracle"
+    "oracle",
 ]
+
 
 def verify_agent(agent_name: str) -> dict:
     """Verify a single agent has proper config integration."""
-    agent_path = Path(f"/home/user/steward-protocol/steward/system_agents/{agent_name}/cartridge_main.py")
+    agent_path = Path(
+        f"/home/user/steward-protocol/steward/system_agents/{agent_name}/cartridge_main.py"
+    )
 
     result = {
         "agent": agent_name,
@@ -37,7 +40,7 @@ def verify_agent(agent_name: str) -> dict:
         "has_config_param": False,
         "has_self_config": False,
         "has_config_import": False,
-        "errors": []
+        "errors": [],
     }
 
     if not agent_path.exists():
@@ -45,7 +48,7 @@ def verify_agent(agent_name: str) -> dict:
         return result
 
     try:
-        with open(agent_path, 'r') as f:
+        with open(agent_path, "r") as f:
             content = f.read()
 
         # Check for syntax errors
@@ -62,7 +65,9 @@ def verify_agent(agent_name: str) -> dict:
             result["errors"].append("Missing: from vibe_core.config import ...")
 
         # Check for config parameter in __init__
-        result["has_config_param"] = "config: Optional[" in content or "config=" in content
+        result["has_config_param"] = (
+            "config: Optional[" in content or "config=" in content
+        )
         if not result["has_config_param"]:
             result["errors"].append("Missing: config parameter in __init__")
 
@@ -75,6 +80,7 @@ def verify_agent(agent_name: str) -> dict:
         result["errors"].append(f"Error reading file: {e}")
 
     return result
+
 
 def main():
     """Verify all agents and report results."""
@@ -90,7 +96,16 @@ def main():
 
     # Print detailed results
     for result in results:
-        status = "✅ PASS" if (result["syntax_valid"] and result["has_config_param"] and result["has_self_config"] and result["has_config_import"]) else "❌ FAIL"
+        status = (
+            "✅ PASS"
+            if (
+                result["syntax_valid"]
+                and result["has_config_param"]
+                and result["has_self_config"]
+                and result["has_config_import"]
+            )
+            else "❌ FAIL"
+        )
         print(f"{status}  {result['agent']:20} ({result['path']})")
 
         if result["errors"]:
@@ -99,7 +114,16 @@ def main():
         print()
 
     # Summary
-    passed = sum(1 for r in results if (r["syntax_valid"] and r["has_config_param"] and r["has_self_config"] and r["has_config_import"]))
+    passed = sum(
+        1
+        for r in results
+        if (
+            r["syntax_valid"]
+            and r["has_config_param"]
+            and r["has_self_config"]
+            and r["has_config_import"]
+        )
+    )
     total = len(results)
 
     print("=" * 80)
@@ -107,10 +131,18 @@ def main():
     print("=" * 80)
 
     # Details
-    print(f"✅ Syntax Valid:      {sum(1 for r in results if r['syntax_valid'])}/{total}")
-    print(f"✅ Config Import:     {sum(1 for r in results if r['has_config_import'])}/{total}")
-    print(f"✅ Config Parameter:  {sum(1 for r in results if r['has_config_param'])}/{total}")
-    print(f"✅ Self Config Assign: {sum(1 for r in results if r['has_self_config'])}/{total}")
+    print(
+        f"✅ Syntax Valid:      {sum(1 for r in results if r['syntax_valid'])}/{total}"
+    )
+    print(
+        f"✅ Config Import:     {sum(1 for r in results if r['has_config_import'])}/{total}"
+    )
+    print(
+        f"✅ Config Parameter:  {sum(1 for r in results if r['has_config_param'])}/{total}"
+    )
+    print(
+        f"✅ Self Config Assign: {sum(1 for r in results if r['has_self_config'])}/{total}"
+    )
     print()
 
     if passed == total:
@@ -119,6 +151,7 @@ def main():
     else:
         print(f"⚠️  {total - passed} agent(s) failed verification")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

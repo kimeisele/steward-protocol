@@ -414,7 +414,9 @@ class BhuMandalaTopology:
 
         critical = self.get_critical_agents()
         for agent in sorted(critical, key=lambda a: a.radius):
-            report.append(f"  • {agent.name} (Radius {agent.radius}, Authority {self.authority_level(agent.name)}/10)")
+            report.append(
+                f"  • {agent.name} (Radius {agent.radius}, Authority {self.authority_level(agent.name)}/10)"
+            )
 
         return "\n".join(report)
 
@@ -434,7 +436,9 @@ class BhuMandalaTopology:
         errors = []
 
         required_critical = {"civic", "herald", "watchman", "auditor", "agora"}
-        present_critical = {a.lower() for a in self.agents.keys() if self.agents[a].is_critical}
+        present_critical = {
+            a.lower() for a in self.agents.keys() if self.agents[a].is_critical
+        }
 
         missing = required_critical - present_critical
         if missing:
@@ -449,14 +453,21 @@ class BhuMandalaTopology:
 
         # Radius 0 should have exactly 1 agent (Mount Meru)
         if radius_counts.get(0, 0) != 1:
-            errors.append(f"Mount Meru (radius 0) should have 1 agent, has {radius_counts.get(0, 0)}")
+            errors.append(
+                f"Mount Meru (radius 0) should have 1 agent, has {radius_counts.get(0, 0)}"
+            )
 
         # Check authority levels decrease with radius
         for radius in sorted(radius_counts.keys()):
             if radius == 0:
                 continue
-            auth_at_radius = [self.authority_level(a.name) for a in self.get_agents_by_radius(radius)]
-            auth_at_prev = [self.authority_level(a.name) for a in self.get_agents_by_radius(radius - 1)]
+            auth_at_radius = [
+                self.authority_level(a.name) for a in self.get_agents_by_radius(radius)
+            ]
+            auth_at_prev = [
+                self.authority_level(a.name)
+                for a in self.get_agents_by_radius(radius - 1)
+            ]
 
             if auth_at_radius and auth_at_prev:
                 if max(auth_at_radius) > min(auth_at_prev):

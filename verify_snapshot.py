@@ -19,16 +19,17 @@ import sys
 import subprocess
 from pathlib import Path
 
+
 # Colors for terminal output
 class Colors:
-    HEADER = '\033[95m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    END = '\033[0m'
-    BOLD = '\033[1m'
+    HEADER = "\033[95m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    END = "\033[0m"
+    BOLD = "\033[1m"
 
 
 def print_header(text: str):
@@ -39,7 +40,11 @@ def print_header(text: str):
 
 def print_check(name: str, passed: bool, message: str = ""):
     """Print a check result."""
-    status = f"{Colors.GREEN}✅ PASS{Colors.END}" if passed else f"{Colors.RED}❌ FAIL{Colors.END}"
+    status = (
+        f"{Colors.GREEN}✅ PASS{Colors.END}"
+        if passed
+        else f"{Colors.RED}❌ FAIL{Colors.END}"
+    )
     msg = f" - {message}" if message else ""
     print(f"   {status} {name}{msg}")
     return passed
@@ -62,7 +67,7 @@ def main():
             cwd=project_root,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
 
         if result.returncode != 0:

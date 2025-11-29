@@ -69,7 +69,9 @@ class CircuitBreakerMetrics:
     successful_requests: int = 0
     failed_requests: int = 0
     rejected_requests: int = 0  # Requests rejected due to OPEN state
-    state_changes: list[tuple[str, str]] = field(default_factory=list)  # (timestamp, old_state, new_state)
+    state_changes: list[tuple[str, str]] = field(
+        default_factory=list
+    )  # (timestamp, old_state, new_state)
     last_failure_time: datetime | None = None
     last_failure_error: str | None = None
 
@@ -147,7 +149,8 @@ class CircuitBreaker:
                 )
             else:  # HALF_OPEN
                 raise CircuitBreakerHalfOpenError(
-                    f"Circuit breaker HALF_OPEN: {reason}. " f"Testing recovery with probe request only."
+                    f"Circuit breaker HALF_OPEN: {reason}. "
+                    f"Testing recovery with probe request only."
                 )
 
         # Execute the function
@@ -255,7 +258,9 @@ class CircuitBreaker:
         timestamp = datetime.utcnow().isoformat() + "Z"
         self.metrics.state_changes.append((timestamp, old_state, new_state.value))
 
-        logger.info(f"Circuit Breaker state transition: {old_state} → {new_state.value}")
+        logger.info(
+            f"Circuit Breaker state transition: {old_state} → {new_state.value}"
+        )
 
     def get_status(self) -> dict[str, Any]:
         """

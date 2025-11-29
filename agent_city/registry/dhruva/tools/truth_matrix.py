@@ -27,18 +27,20 @@ logger = logging.getLogger("TRUTH_MATRIX")
 
 class FactAuthority(str, Enum):
     """Authority level of fact sources"""
+
     CONSTITUTIONAL = "constitutional"  # From Constitution (absolute)
-    LEDGER = "ledger"                 # From immutable ledger (high)
-    AUDITOR = "auditor"               # Verified by AUDITOR (high)
-    ORACLE = "oracle"                 # Self-verified (medium)
-    HERALD = "herald"                 # Published fact (medium)
-    SCIENCE = "science"               # Researched fact (medium-low)
-    WITNESS = "witness"               # Reported by agent (low)
+    LEDGER = "ledger"  # From immutable ledger (high)
+    AUDITOR = "auditor"  # Verified by AUDITOR (high)
+    ORACLE = "oracle"  # Self-verified (medium)
+    HERALD = "herald"  # Published fact (medium)
+    SCIENCE = "science"  # Researched fact (medium-low)
+    WITNESS = "witness"  # Reported by agent (low)
 
 
 @dataclass
 class Fact:
     """Record of a verified fact"""
+
     fact_id: str
     fact_type: str  # e.g., "system_state", "constitutional", "historical"
     statement: str  # The actual fact
@@ -74,7 +76,7 @@ class TruthMatrix:
         fact_type: str,
         statement: str,
         authority: str,
-        evidence: Optional[Dict[str, Any]] = None
+        evidence: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Record a verified fact.
@@ -98,7 +100,7 @@ class TruthMatrix:
             authority=authority,
             evidence=evidence or {},
             recorded_at=now,
-            verified=True
+            verified=True,
         )
 
         # Persist fact
@@ -157,7 +159,7 @@ class TruthMatrix:
             "by_type": type_counts,
             "by_authority": authority_counts,
             "first_fact": facts[0]["recorded_at"] if facts else None,
-            "last_fact": facts[-1]["recorded_at"] if facts else None
+            "last_fact": facts[-1]["recorded_at"] if facts else None,
         }
 
     def verify_integrity(self) -> bool:

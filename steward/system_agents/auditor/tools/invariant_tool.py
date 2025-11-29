@@ -46,7 +46,9 @@ class InvariantRule:
     severity: InvariantSeverity
     check_function: callable
 
-    def check(self, events: List[Dict[str, Any]], context: Dict[str, Any] = None) -> Tuple[bool, Optional[str]]:
+    def check(
+        self, events: List[Dict[str, Any]], context: Dict[str, Any] = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Execute the invariant check.
 
@@ -124,7 +126,9 @@ class InvariantEngine:
         """Register the core set of invariant rules"""
 
         # INVARIANT 1: Broadcast License Requirement
-        def check_broadcast_license(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_broadcast_license(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Every BROADCAST event must have a preceding LICENSE_VALID
             in the same task context.
@@ -161,7 +165,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 2: Credit Transfer Proposal Requirement
-        def check_credit_transfer_proposal(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_credit_transfer_proposal(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Every CREDIT_TRANSFER must have a preceding PROPOSAL_PASSED
             in the same task context.
@@ -198,7 +204,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 3: No Orphaned Events
-        def check_no_orphaned_events(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_no_orphaned_events(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Every event must have task_id and agent_id.
             No orphaned/incomplete events allowed.
@@ -225,7 +233,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 4: Event Sequence Integrity
-        def check_event_sequence(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_event_sequence(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Events within a task must be in chronological order.
             """
@@ -239,7 +249,9 @@ class InvariantEngine:
                     continue
 
                 try:
-                    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                    timestamp = datetime.fromisoformat(
+                        timestamp_str.replace("Z", "+00:00")
+                    )
                 except:
                     return (False, f"Event at index {i} has invalid timestamp format")
 
@@ -273,7 +285,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 5: No Duplicate Events
-        def check_no_duplicates(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_no_duplicates(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: No two events should have the same task_id + event_type + timestamp
             (which would indicate a replay or duplicate).
@@ -308,7 +322,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 6: PROPOSAL_VOTED_YES only after PROPOSAL_CREATED
-        def check_proposal_workflow(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_proposal_workflow(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: PROPOSAL_VOTED_YES events must have a preceding PROPOSAL_CREATED
             for the same proposal_id.
@@ -345,7 +361,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 7: No Critical Voids (Null/Empty Detection)
-        def check_no_critical_voids(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_no_critical_voids(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Critical system state fields must never be null/empty.
             Detects "silent failures" where operations complete but state is corrupted.
@@ -414,7 +432,9 @@ class InvariantEngine:
         )
 
         # INVARIANT 8: Semantic Compliance Requirement (The Curator)
-        def check_semantic_compliance(events: List[Dict], ctx: Dict) -> Tuple[bool, Optional[str]]:
+        def check_semantic_compliance(
+            events: List[Dict], ctx: Dict
+        ) -> Tuple[bool, Optional[str]]:
             """
             RULE: Policy and governance documents must maintain semantic integrity.
             No marketing hype, existential overreach, or AI slop allowed.
@@ -491,7 +511,9 @@ class InvariantEngine:
                                         "line": line_num,
                                         "word": red_flag,
                                         "context": content[
-                                            max(0, match.start() - 30) : min(len(content), match.end() + 30)
+                                            max(0, match.start() - 30) : min(
+                                                len(content), match.end() + 30
+                                            )
                                         ],
                                     }
                                 )
@@ -501,9 +523,13 @@ class InvariantEngine:
 
             # Report violations
             if violations:
-                summary = f"Found {len(violations)} red-flag words in governance documents: "
+                summary = (
+                    f"Found {len(violations)} red-flag words in governance documents: "
+                )
                 words_found = ", ".join(sorted(set(v["word"] for v in violations)))
-                examples = "; ".join([f"{v['file']}:{v['line']}" for v in violations[:3]])
+                examples = "; ".join(
+                    [f"{v['file']}:{v['line']}" for v in violations[:3]]
+                )
                 detail_msg = f"{summary}{words_found}. Examples: {examples}"
 
                 return (False, detail_msg)
@@ -520,7 +546,9 @@ class InvariantEngine:
             )
         )
 
-        logger.info(f"⚖️  JUDGE: {len(self.rules)} core invariant rules registered (including Curator)")
+        logger.info(
+            f"⚖️  JUDGE: {len(self.rules)} core invariant rules registered (including Curator)"
+        )
 
     def register_rule(self, rule: InvariantRule):
         """Register a new invariant rule"""
@@ -537,7 +565,9 @@ class InvariantEngine:
         Returns:
             VerificationReport with all violations found
         """
-        logger.info(f"⚖️  JUDGE: Verifying {len(events)} events against {len(self.rules)} invariants")
+        logger.info(
+            f"⚖️  JUDGE: Verifying {len(events)} events against {len(self.rules)} invariants"
+        )
 
         report = VerificationReport()
         report.checked_events = len(events)
@@ -561,7 +591,9 @@ class InvariantEngine:
                     },
                 )
 
-                logger.warning(f"⚖️  VIOLATION: {rule_name} ({rule.severity.value}) - {message}")
+                logger.warning(
+                    f"⚖️  VIOLATION: {rule_name} ({rule.severity.value}) - {message}"
+                )
 
                 report.add_violation(violation)
             else:

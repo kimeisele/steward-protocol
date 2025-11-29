@@ -20,8 +20,7 @@ from vibe_core.scheduling.task import Task
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [MECHANIC] %(levelname)s: %(message)s'
+    level=logging.INFO, format="%(asctime)s [MECHANIC] %(levelname)s: %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -80,7 +79,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             name="MECHANIC",
             version="1.0.0",
             domain="INFRASTRUCTURE",
-            capabilities=["system_diagnosis", "self_healing", "sdlc_management"]
+            capabilities=["system_diagnosis", "self_healing", "sdlc_management"],
         )
 
         # Bind to Constitutional Oath (GAD-000 compliance)
@@ -113,28 +112,19 @@ class MechanicCartridge(VibeAgent, OathMixin):
             Dict with result and status
         """
         if task.payload.get("action") == "diagnose":
-            return {
-                "status": "success",
-                "diagnostics": self.get_diagnostics()
-            }
+            return {"status": "success", "diagnostics": self.get_diagnostics()}
         elif task.payload.get("action") == "heal":
             success = self.heal()
-            return {
-                "status": "success" if success else "error",
-                "healed": success
-            }
+            return {"status": "success" if success else "error", "healed": success}
         elif task.payload.get("action") == "validate":
             success = self.validate_integrity()
-            return {
-                "status": "success" if success else "error",
-                "valid": success
-            }
+            return {"status": "success" if success else "error", "valid": success}
         else:
             # Default: run full bootstrap sequence
             success = self.execute_bootstrap()
             return {
                 "status": "success" if success else "error",
-                "bootstrap_success": success
+                "bootstrap_success": success,
             }
 
     def get_manifest(self) -> AgentManifest:
@@ -148,7 +138,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             name=self.name,
             version=self.version,
             domain=self.domain,
-            capabilities=self.capabilities
+            capabilities=self.capabilities,
         )
 
     def report_status_vibeagent(self) -> Dict[str, Any]:
@@ -161,7 +151,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             "agent_id": self.agent_id,
             "name": self.name,
             "status": "healthy",
-            "diagnostics": self.get_diagnostics()
+            "diagnostics": self.get_diagnostics(),
         }
 
     # =========================================================================
@@ -223,9 +213,17 @@ class MechanicCartridge(VibeAgent, OathMixin):
 
         # Check cartridge imports (will fail at Oracle)
         cartridges = [
-            "herald", "civic", "forum", "science", "envoy",
-            "archivist", "auditor", "engineer", "oracle",
-            "watchman", "artisan"
+            "herald",
+            "civic",
+            "forum",
+            "science",
+            "envoy",
+            "archivist",
+            "auditor",
+            "engineer",
+            "oracle",
+            "watchman",
+            "artisan",
         ]
 
         for cartridge in cartridges:
@@ -236,7 +234,9 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 # Expected to fail for oracle (OracleCartridge doesn't exist yet)
                 error_msg = str(e)
                 if "OracleCartridge" in error_msg:
-                    self.logger.warning(f"  ✗ oracle: OracleCartridge import error (fixable)")
+                    self.logger.warning(
+                        f"  ✗ oracle: OracleCartridge import error (fixable)"
+                    )
                     broken.append(("oracle.cartridge_main", error_msg))
                 else:
                     self.logger.warning(f"  ✗ {cartridge}: {e}")
@@ -292,7 +292,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
             current_branch = result.stdout.strip()
             self.logger.debug(f"  Current branch: {current_branch}")
@@ -303,7 +303,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
             dirty = len(result.stdout.strip()) > 0
 
@@ -316,7 +316,9 @@ class MechanicCartridge(VibeAgent, OathMixin):
             # Determine if we're on the right branch
             # For now, just check if it's a claude/* branch (development branch)
             if not current_branch.startswith("claude/"):
-                self.logger.warning(f"  ✗ Not on a development branch: {current_branch}")
+                self.logger.warning(
+                    f"  ✗ Not on a development branch: {current_branch}"
+                )
                 self.diagnostics["branch_mismatch"] = True
                 return False
 
@@ -335,7 +337,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
             hooks_path = result.stdout.strip()
 
@@ -371,7 +373,9 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 missing_docs.append(doc_name)
 
         if missing_docs:
-            self.logger.warning(f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}")
+            self.logger.warning(
+                f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}"
+            )
             self.logger.info("  → Only the Archivist (User) can restore history")
         else:
             self.logger.debug("  ✓ All documentation present")
@@ -432,7 +436,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 result = subprocess.run(
                     [sys.executable, "-m", "pip", "install", "-r", str(req_file)],
                     cwd=self.project_root,
-                    timeout=300
+                    timeout=300,
                 )
                 if result.returncode == 0:
                     self.logger.info("  ✓ Dependencies installed successfully")
@@ -442,8 +446,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             for spec in self.diagnostics["missing_deps"]:
                 self.logger.info(f"  Installing {spec}...")
                 result = subprocess.run(
-                    [sys.executable, "-m", "pip", "install", spec],
-                    timeout=60
+                    [sys.executable, "-m", "pip", "install", spec], timeout=60
                 )
                 if result.returncode != 0:
                     self.logger.warning(f"  Failed to install {spec}")
@@ -468,7 +471,9 @@ class MechanicCartridge(VibeAgent, OathMixin):
 
         oracle_file = self.project_root / "oracle" / "cartridge_main.py"
         if not oracle_file.exists():
-            self.logger.warning("  Oracle cartridge not found, fetching from recovery branch...")
+            self.logger.warning(
+                "  Oracle cartridge not found, fetching from recovery branch..."
+            )
             return self._fetch_from_recovery_branch()
 
         try:
@@ -482,10 +487,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             if "class Oracle:" in content:
                 self.logger.info("  Renaming Oracle to OracleCartridge...")
                 # Rename class
-                fixed = content.replace(
-                    "class Oracle:",
-                    "class OracleCartridge:"
-                )
+                fixed = content.replace("class Oracle:", "class OracleCartridge:")
                 oracle_file.write_text(fixed)
                 self.logger.info("  ✓ Oracle class renamed successfully")
                 return True
@@ -502,21 +504,29 @@ class MechanicCartridge(VibeAgent, OathMixin):
         Returns:
             bool: True if successful, False otherwise
         """
-        self.logger.info(f"Fetching from recovery branch: {self.ORACLE_RECOVERY_BRANCH}...")
+        self.logger.info(
+            f"Fetching from recovery branch: {self.ORACLE_RECOVERY_BRANCH}..."
+        )
 
         try:
             # Fetch the recovery branch
             subprocess.run(
                 ["git", "fetch", "origin", self.ORACLE_RECOVERY_BRANCH],
                 cwd=self.project_root,
-                timeout=30
+                timeout=30,
             )
 
             # Check out that specific path
             subprocess.run(
-                ["git", "checkout", f"origin/{self.ORACLE_RECOVERY_BRANCH}", "--", "oracle/"],
+                [
+                    "git",
+                    "checkout",
+                    f"origin/{self.ORACLE_RECOVERY_BRANCH}",
+                    "--",
+                    "oracle/",
+                ],
                 cwd=self.project_root,
-                timeout=30
+                timeout=30,
             )
 
             self.logger.info("  ✓ Oracle cartridge fetched from recovery branch")
@@ -542,7 +552,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 cwd=self.project_root,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
 
             if result.stdout.strip():
@@ -550,7 +560,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 subprocess.run(
                     ["git", "stash", "push", "-m", "emergency_stash"],
                     cwd=self.project_root,
-                    timeout=10
+                    timeout=10,
                 )
                 self.logger.info("  ✓ Changes stashed to 'emergency_stash'")
 
@@ -572,7 +582,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 subprocess.run(
                     ["git", "config", "core.hooksPath", ".githooks"],
                     cwd=self.project_root,
-                    timeout=5
+                    timeout=5,
                 )
                 self.logger.info("  ✓ Git hooks configured at .githooks")
             else:
@@ -635,8 +645,12 @@ class MechanicCartridge(VibeAgent, OathMixin):
             config = load_config(str(config_path))
             self.logger.info(f"  ✓ Configuration valid: {config.city_name}")
             self.logger.info(f"    Version: {config.federation_version}")
-            self.logger.info(f"    Economy: {config.economy.initial_credits} initial credits")
-            self.logger.info(f"    Security: Signatures {'required' if config.security.require_signatures else 'optional'}")
+            self.logger.info(
+                f"    Economy: {config.economy.initial_credits} initial credits"
+            )
+            self.logger.info(
+                f"    Security: Signatures {'required' if config.security.require_signatures else 'optional'}"
+            )
 
             return True
 

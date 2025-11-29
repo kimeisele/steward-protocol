@@ -53,13 +53,13 @@ def test_chain_integrity_verification():
         chain.add_block(
             event_type=LineageEventType.KERNEL_BOOT,
             agent_id="test_kernel",
-            data={"timestamp": "2025-11-28T12:00:00Z"}
+            data={"timestamp": "2025-11-28T12:00:00Z"},
         )
 
         chain.add_block(
             event_type=LineageEventType.AGENT_REGISTERED,
             agent_id="test_agent",
-            data={"capabilities": ["test"]}
+            data={"capabilities": ["test"]},
         )
 
         # Verify chain integrity
@@ -73,7 +73,7 @@ def test_chain_integrity_verification():
         # Verify each block links to previous
         for i in range(1, len(blocks)):
             current = blocks[i]
-            previous = blocks[i-1]
+            previous = blocks[i - 1]
             assert current.previous_hash == previous.hash
 
         chain.close()
@@ -92,13 +92,15 @@ def test_passport_issuance_recorded():
             data={
                 "manifest_hash": "abc123...",
                 "capabilities": ["broadcasting", "content_generation"],
-                "issued_at": "2025-11-28T12:00:00Z"
-            }
+                "issued_at": "2025-11-28T12:00:00Z",
+            },
         )
 
         # Verify it was recorded
         blocks = chain.get_all_blocks()
-        passport_blocks = [b for b in blocks if b.event_type == LineageEventType.PASSPORT_ISSUED]
+        passport_blocks = [
+            b for b in blocks if b.event_type == LineageEventType.PASSPORT_ISSUED
+        ]
         assert len(passport_blocks) == 1
 
         passport = passport_blocks[0]
@@ -118,7 +120,7 @@ def test_chain_immutability():
         chain.add_block(
             event_type=LineageEventType.AGENT_REGISTERED,
             agent_id="test_agent",
-            data={"test": "data"}
+            data={"test": "data"},
         )
 
         # Get original blocks

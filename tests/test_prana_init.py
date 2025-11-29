@@ -214,9 +214,7 @@ class TestPranaInitializer:
 
     def test_constitution_verification(self):
         """Test that constitution file exists"""
-        constitution_path = (
-            Path(__file__).parent.parent / "CONSTITUTION.md"
-        )
+        constitution_path = Path(__file__).parent.parent / "CONSTITUTION.md"
         assert constitution_path.exists(), "Constitution file should exist"
 
     def test_prana_initialization_without_kernel(self):
@@ -239,6 +237,7 @@ class TestPranaInitializer:
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 class TestIntegration:
     """End-to-end integration tests"""

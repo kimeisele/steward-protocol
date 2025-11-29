@@ -27,6 +27,7 @@ import asyncio
 from pathlib import Path
 
 # Import Core Definitions
+try:
     from vibe_core.scheduling import Task
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
@@ -66,12 +67,14 @@ except ImportError:
 
 logger = logging.getLogger("UNIVERSAL_PROVIDER")
 
+
 class DeterministicRouter:
     """
     🧠 SANKHYA ANALYSIS ENGINE
     Breaks raw input into atomic semantic concepts.
     Then applies strict DHARMA (rules) for deterministic routing.
     """
+
     def __init__(self, knowledge_dir: str = "knowledge"):
         self.knowledge_dir = Path(knowledge_dir)
         self.concepts = self._load_yaml("concept_map.yaml")
@@ -82,7 +85,7 @@ class DeterministicRouter:
         """Load YAML file from knowledge directory"""
         filepath = self.knowledge_dir / filename
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 return yaml.safe_load(f)
         except FileNotFoundError:
             logger.warning(f"⚠️  Knowledge base not found: {filepath}")
@@ -118,7 +121,9 @@ class DeterministicRouter:
 
         return found_concepts
 
-    def route(self, text: str, fallback_rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
+    def route(
+        self, text: str, fallback_rules: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
         """
         KARMA: Finds the deterministic route (agent, path, intent_type).
         Rules are evaluated top-to-bottom by priority.
@@ -143,7 +148,9 @@ class DeterministicRouter:
                     "response_type": rule.get("response_type", "FAST"),
                     "intent_type": rule.get("intent_type", "CHAT"),
                     "concepts": active_concepts,
-                    "matched_triggers": triggers & active_concepts if triggers else set()
+                    "matched_triggers": (
+                        triggers & active_concepts if triggers else set()
+                    ),
                 }
 
         # Ultimate fallback (should not reach here if YAML has fallback rule)
@@ -154,33 +161,41 @@ class DeterministicRouter:
             "response_type": "FAST",
             "intent_type": "CHAT",
             "concepts": active_concepts,
-            "matched_triggers": set()
+            "matched_triggers": set(),
         }
 
 
 class IntentType(Enum):
-    QUERY = "query"           # Read-only questions (FAST PATH)
-    ACTION = "action"         # State-changing operations (SLOW PATH)
-    SYSTEM = "system"         # Meta-operations (FAST PATH)
-    CREATION = "creation"     # Generating content (SLOW PATH)
-    CHAT = "chat"             # Casual conversation (FAST PATH)
+    QUERY = "query"  # Read-only questions (FAST PATH)
+    ACTION = "action"  # State-changing operations (SLOW PATH)
+    SYSTEM = "system"  # Meta-operations (FAST PATH)
+    CREATION = "creation"  # Generating content (SLOW PATH)
+    CHAT = "chat"  # Casual conversation (FAST PATH)
+
 
 @dataclass
 class IntentVector:
     """The normalized request format for Agent City"""
+
     raw_input: str
     intent_type: IntentType
     target_domain: Optional[str] = None
     confidence: float = 1.0
     parameters: Dict[str, Any] = None
 
+
 class UniversalProvider:
-    def __init__(self, kernel: VibeKernel, knowledge_dir: str = "knowledge", use_semantic: bool = True):
+    def __init__(
+        self,
+        kernel: VibeKernel,
+        knowledge_dir: str = "knowledge",
+        use_semantic: bool = True,
+    ):
         self.kernel = kernel
         self.context_layer = {
             "location": "Agent City / Central Plaza",
             "access_level": "OPERATOR",
-            "last_interaction": time.time()
+            "last_interaction": time.time(),
         }
 
         # === SEMANTIC ROUTER (PROJECT JNANA: Semantic Cortex) ===
@@ -189,9 +204,13 @@ class UniversalProvider:
         if use_semantic and SemanticRouter:
             try:
                 self.semantic_router = SemanticRouter(knowledge_dir=knowledge_dir)
-                logger.info("🧠 Semantic Router (PROJECT JNANA) initialized - Neural semantic understanding active")
+                logger.info(
+                    "🧠 Semantic Router (PROJECT JNANA) initialized - Neural semantic understanding active"
+                )
             except Exception as e:
-                logger.warning(f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter")
+                logger.warning(
+                    f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter"
+                )
                 self.use_semantic = False
 
         # Fallback to deterministic router if semantic unavailable
@@ -207,7 +226,9 @@ class UniversalProvider:
         if ReflexEngine:
             try:
                 self.reflex_engine = ReflexEngine()
-                logger.info("⚡ Reflex Engine initialized - Instant response layer active")
+                logger.info(
+                    "⚡ Reflex Engine initialized - Instant response layer active"
+                )
             except Exception as e:
                 logger.warning(f"⚠️  Reflex Engine initialization failed: {e}")
 
@@ -215,8 +236,12 @@ class UniversalProvider:
         self.playbook_engine = None
         if DeterministicExecutor:
             try:
-                self.playbook_engine = DeterministicExecutor(knowledge_dir=knowledge_dir)
-                logger.info("🎯 Deterministic Executor initialized - Deterministic Intelligence active")
+                self.playbook_engine = DeterministicExecutor(
+                    knowledge_dir=knowledge_dir
+                )
+                logger.info(
+                    "🎯 Deterministic Executor initialized - Deterministic Intelligence active"
+                )
             except Exception as e:
                 logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
 
@@ -225,7 +250,9 @@ class UniversalProvider:
         if LLMEngineAdapter:
             try:
                 self.llm_engine = LLMEngineAdapter()
-                logger.info("🧠 LLM Engine Adapter initialized - Intelligent fallback active")
+                logger.info(
+                    "🧠 LLM Engine Adapter initialized - Intelligent fallback active"
+                )
             except Exception as e:
                 logger.warning(f"⚠️  LLM Engine Adapter initialization failed: {e}")
 
@@ -233,12 +260,17 @@ class UniversalProvider:
         self.degradation_chain = None
         try:
             from vibe_core.llm.degradation_chain import DegradationChain
+
             self.degradation_chain = DegradationChain()
-            logger.info(f"🔄 Degradation Chain initialized (level: {self.degradation_chain.current_level.value})")
+            logger.info(
+                f"🔄 Degradation Chain initialized (level: {self.degradation_chain.current_level.value})"
+            )
         except Exception as e:
             logger.warning(f"⚠️  Degradation Chain unavailable: {e}")
 
-        logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)")
+        logger.info(
+            "🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)"
+        )
 
     async def resolve_intent(self, user_input: str) -> IntentVector:
         """
@@ -252,7 +284,9 @@ class UniversalProvider:
             try:
                 route_result = await self.semantic_router.route(user_input)
             except Exception as e:
-                logger.warning(f"⚠️  Semantic routing failed: {e}, falling back to deterministic router")
+                logger.warning(
+                    f"⚠️  Semantic routing failed: {e}, falling back to deterministic router"
+                )
                 route_result = self.router.route(user_input)
         else:
             route_result = self.router.route(user_input)
@@ -269,18 +303,23 @@ class UniversalProvider:
             "QUERY": IntentType.QUERY,
             "CREATION": IntentType.CREATION,
             "ACTION": IntentType.ACTION,
-            "CHAT": IntentType.CHAT
+            "CHAT": IntentType.CHAT,
         }
         intent_type = intent_map.get(intent_type_str, IntentType.CHAT)
 
-        logger.info(f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name}) [confidence: {confidence:.2f}]")
+        logger.info(
+            f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name}) [confidence: {confidence:.2f}]"
+        )
 
         return IntentVector(
             raw_input=user_input,
             intent_type=intent_type,
             target_domain=target_agent,
             confidence=confidence,
-            parameters={"rule": rule_name, "concepts": list(route_result.get("concepts", []))}
+            parameters={
+                "rule": rule_name,
+                "concepts": list(route_result.get("concepts", [])),
+            },
         )
 
     async def route_and_execute(self, user_input: str) -> Dict[str, Any]:
@@ -299,9 +338,12 @@ class UniversalProvider:
         # EMIT: Thinking (Blue pulse)
         if emit_event:
             try:
-                await emit_event("THOUGHT", f"Analyzing intent: '{user_input}'", "provider", {
-                    "input": user_input
-                })
+                await emit_event(
+                    "THOUGHT",
+                    f"Analyzing intent: '{user_input}'",
+                    "provider",
+                    {"input": user_input},
+                )
             except Exception as e:
                 logger.debug(f"Event emission failed: {e}")
 
@@ -311,10 +353,12 @@ class UniversalProvider:
             logger.info(f"✅ Reflex matched: '{user_input}'. Instant response.")
             if emit_event:
                 try:
-                    await emit_event("ACTION", "Executing Reflex Response (Instant)", "provider", {
-                        "intent": user_input,
-                        "path": "reflex"
-                    })
+                    await emit_event(
+                        "ACTION",
+                        "Executing Reflex Response (Instant)",
+                        "provider",
+                        {"intent": user_input, "path": "reflex"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             return self.reflex_engine.respond(user_input)
@@ -327,28 +371,36 @@ class UniversalProvider:
         # MANTHAN (0.60-0.84): Request clarification
         # NETI NETI (< 0.60): Fall back to LLM
         if self.use_semantic and vector.confidence < 0.60:
-            logger.info(f"⚠️  Low confidence ({vector.confidence:.2f}). Falling back to LLM Engine (NETI NETI)")
+            logger.info(
+                f"⚠️  Low confidence ({vector.confidence:.2f}). Falling back to LLM Engine (NETI NETI)"
+            )
             if emit_event:
                 try:
-                    await emit_event("ACTION", f"Low confidence routing - using LLM fallback", "provider", {
-                        "confidence": vector.confidence,
-                        "path": "llm_fallback"
-                    })
+                    await emit_event(
+                        "ACTION",
+                        f"Low confidence routing - using LLM fallback",
+                        "provider",
+                        {"confidence": vector.confidence, "path": "llm_fallback"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             # Use LLM as intelligent fallback
             return self._fast_path_chat_response(vector)
 
         if self.use_semantic and 0.60 <= vector.confidence < 0.85:
-            logger.info(f"◆ Medium confidence ({vector.confidence:.2f}). Would request clarification (MANTHAN)")
+            logger.info(
+                f"◆ Medium confidence ({vector.confidence:.2f}). Would request clarification (MANTHAN)"
+            )
             # For now, we still execute but log the uncertainty
             # In a future update, this could trigger interactive clarification
             if emit_event:
                 try:
-                    await emit_event("ACTION", f"Medium confidence - proceeding with caution", "provider", {
-                        "confidence": vector.confidence,
-                        "path": "medium_confidence"
-                    })
+                    await emit_event(
+                        "ACTION",
+                        f"Medium confidence - proceeding with caution",
+                        "provider",
+                        {"confidence": vector.confidence, "path": "medium_confidence"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
 
@@ -361,7 +413,9 @@ class UniversalProvider:
                     semantic_concepts = await self.semantic_router.analyze(user_input)
                     concepts = {c.name for c in semantic_concepts}
                 except Exception as e:
-                    logger.warning(f"⚠️  Semantic concept extraction failed: {e}, using deterministic fallback")
+                    logger.warning(
+                        f"⚠️  Semantic concept extraction failed: {e}, using deterministic fallback"
+                    )
                     concepts = self.router.analyze(user_input)
             else:
                 concepts = self.router.analyze(user_input)
@@ -369,14 +423,21 @@ class UniversalProvider:
             playbook = self.playbook_engine.find_playbook(concepts)
 
             if playbook:
-                logger.info(f"🎯 Found matching playbook: {playbook.id} ({playbook.name})")
+                logger.info(
+                    f"🎯 Found matching playbook: {playbook.id} ({playbook.name})"
+                )
 
                 if emit_event:
                     try:
-                        await emit_event("ACTION", f"Found playbook: {playbook.name}", "provider", {
-                            "playbook_id": playbook.id,
-                            "playbook_name": playbook.name
-                        })
+                        await emit_event(
+                            "ACTION",
+                            f"Found playbook: {playbook.name}",
+                            "provider",
+                            {
+                                "playbook_id": playbook.id,
+                                "playbook_name": playbook.name,
+                            },
+                        )
                     except Exception as e:
                         logger.debug(f"Event emission failed: {e}")
 
@@ -387,14 +448,19 @@ class UniversalProvider:
                         user_input=user_input,
                         intent_vector=vector,
                         kernel=self.kernel,
-                        emit_event=emit_event
+                        emit_event=emit_event,
                     )
                     return result
                 except Exception as e:
                     logger.error(f"❌ Playbook execution failed: {e}")
                     if emit_event:
                         try:
-                            await emit_event("ERROR", f"Playbook execution failed: {str(e)}", "provider", {})
+                            await emit_event(
+                                "ERROR",
+                                f"Playbook execution failed: {str(e)}",
+                                "provider",
+                                {},
+                            )
                         except Exception as ex:
                             logger.debug(f"Event emission failed: {ex}")
                     # Fall through to normal intent routing if playbook fails
@@ -407,20 +473,28 @@ class UniversalProvider:
 
                 if emit_event:
                     try:
-                        await emit_event("ACTION",
+                        await emit_event(
+                            "ACTION",
                             "No matching playbook found. Generating proposal...",
-                            "provider", {"concepts": list(concepts)})
+                            "provider",
+                            {"concepts": list(concepts)},
+                        )
                     except Exception as e:
                         logger.debug(f"Event emission failed: {e}")
 
                 # Generate playbook proposal
-                proposal = self.playbook_engine.generate_playbook_proposal(user_input, concepts)
+                proposal = self.playbook_engine.generate_playbook_proposal(
+                    user_input, concepts
+                )
 
                 if emit_event:
                     try:
-                        await emit_event("ACTION",
+                        await emit_event(
+                            "ACTION",
                             f"PROPOSAL Generated: {proposal['proposal_id']} - Awaiting Human Approval (HIL)",
-                            "provider", {"proposal": proposal})
+                            "provider",
+                            {"proposal": proposal},
+                        )
                     except Exception as e:
                         logger.debug(f"Event emission failed: {e}")
 
@@ -432,7 +506,7 @@ class UniversalProvider:
                     "playbook_draft": proposal["playbook_draft"],
                     "concepts_detected": list(concepts),
                     "user_input": user_input,
-                    "next_action": "Human review and approval required via HIL (Human-in-the-Loop)"
+                    "next_action": "Human review and approval required via HIL (Human-in-the-Loop)",
                 }
 
         # --- DECISION POINT: FAST vs SLOW PATH ---
@@ -441,7 +515,12 @@ class UniversalProvider:
             result = self._fast_path_system_status(vector)
             if emit_event:
                 try:
-                    await emit_event("ACTION", "System status retrieved", "provider", {"path": "fast_system"})
+                    await emit_event(
+                        "ACTION",
+                        "System status retrieved",
+                        "provider",
+                        {"path": "fast_system"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             return result
@@ -450,7 +529,12 @@ class UniversalProvider:
             result = self._fast_path_chat_response(vector)
             if emit_event:
                 try:
-                    await emit_event("ACTION", "Chat response generated", "provider", {"path": "fast_chat"})
+                    await emit_event(
+                        "ACTION",
+                        "Chat response generated",
+                        "provider",
+                        {"path": "fast_chat"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             return result
@@ -459,7 +543,12 @@ class UniversalProvider:
             result = self._fast_path_query_response(vector)
             if emit_event:
                 try:
-                    await emit_event("ACTION", "Query response prepared", "provider", {"path": "fast_query"})
+                    await emit_event(
+                        "ACTION",
+                        "Query response prepared",
+                        "provider",
+                        {"path": "fast_query"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             return result
@@ -470,12 +559,17 @@ class UniversalProvider:
         if not target_agent_id:
             if emit_event:
                 try:
-                    await emit_event("ERROR", f"No agent found for intent: {vector.intent_type.value}", "provider", {})
+                    await emit_event(
+                        "ERROR",
+                        f"No agent found for intent: {vector.intent_type.value}",
+                        "provider",
+                        {},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
             return {
                 "status": "ERROR",
-                "message": f"No agent found for intent: {vector.intent_type.value}"
+                "message": f"No agent found for intent: {vector.intent_type.value}",
             }
 
         task_payload = self._translate_payload(target_agent_id, vector)
@@ -488,11 +582,12 @@ class UniversalProvider:
             # EMIT: Action (Green pulse)
             if emit_event:
                 try:
-                    await emit_event("ACTION", f"Task submitted to {target_agent_id}", "provider", {
-                        "task_id": task_id,
-                        "agent": target_agent_id,
-                        "path": "slow"
-                    })
+                    await emit_event(
+                        "ACTION",
+                        f"Task submitted to {target_agent_id}",
+                        "provider",
+                        {"task_id": task_id, "agent": target_agent_id, "path": "slow"},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
 
@@ -503,21 +598,19 @@ class UniversalProvider:
                 "details": {
                     "task_id": task_id,
                     "agent": target_agent_id,
-                    "intent": vector.intent_type.value
-                }
+                    "intent": vector.intent_type.value,
+                },
             }
         except Exception as e:
             logger.error(f"Task submission failed: {e}")
             if emit_event:
                 try:
-                    await emit_event("ERROR", f"Task submission failed: {str(e)}", "provider", {})
+                    await emit_event(
+                        "ERROR", f"Task submission failed: {str(e)}", "provider", {}
+                    )
                 except Exception as ex:
                     logger.debug(f"Event emission failed: {ex}")
-            return {
-                "status": "FAILED",
-                "path": "slow",
-                "error": str(e)
-            }
+            return {"status": "FAILED", "path": "slow", "error": str(e)}
 
     # --- FAST PATH HANDLERS ---
 
@@ -528,8 +621,8 @@ class UniversalProvider:
         """
         try:
             stats = self.kernel.get_status()
-            agents = stats.get('agents_registered', 0)
-            events = stats.get('ledger_events', 0)
+            agents = stats.get("agents_registered", 0)
+            events = stats.get("ledger_events", 0)
 
             msg = (
                 f"**🟢 SYSTEM ONLINE**\n"
@@ -539,17 +632,13 @@ class UniversalProvider:
                 f"• **Status:** All systems nominal\n\n"
                 f"Standing by for orders, Operator."
             )
-            return {
-                "status": "success",
-                "summary": msg,
-                "path": "fast"
-            }
+            return {"status": "success", "summary": msg, "path": "fast"}
         except Exception as e:
             logger.warning(f"Fast-path status failed, fallback: {e}")
             return {
                 "status": "success",
                 "summary": "**🟢 SYSTEM ONLINE** (Brief check: systems nominal)",
-                "path": "fast_fallback"
+                "path": "fast_fallback",
             }
 
     def _fast_path_chat_response(self, vector: IntentVector) -> Dict[str, Any]:
@@ -573,10 +662,12 @@ class UniversalProvider:
                     "status": result.get("status", "success"),
                     "summary": result.get("data", {}).get("summary", ""),
                     "path": result.get("path", "llm"),
-                    "intent": "chat"
+                    "intent": "chat",
                 }
             except Exception as e:
-                logger.warning(f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine")
+                logger.warning(
+                    f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine"
+                )
 
         # Fallback: Use legacy llm engine if available (GAD-6000)
         if llm:
@@ -586,7 +677,7 @@ class UniversalProvider:
                     "status": "success",
                     "summary": response,
                     "path": "fast",
-                    "intent": "chat"
+                    "intent": "chat",
                 }
             except Exception as e:
                 logger.warning(f"⚠️  Legacy LLM engine failed: {e}")
@@ -596,8 +687,10 @@ class UniversalProvider:
             try:
                 deg_response = self.degradation_chain.respond(
                     user_input=user_msg,
-                    semantic_confidence=vector.confidence if hasattr(vector, 'confidence') else 0.5,
-                    detected_intent="chat"
+                    semantic_confidence=(
+                        vector.confidence if hasattr(vector, "confidence") else 0.5
+                    ),
+                    detected_intent="chat",
                 )
                 return {
                     "status": "success",
@@ -605,7 +698,7 @@ class UniversalProvider:
                     "path": f"degradation:{deg_response.fallback_used}",
                     "intent": "chat",
                     "degradation_level": deg_response.level.value,
-                    "user_guidance": deg_response.user_guidance
+                    "user_guidance": deg_response.user_guidance,
                 }
             except Exception as e:
                 logger.warning(f"DegradationChain failed: {e}")
@@ -621,7 +714,7 @@ class UniversalProvider:
             "status": "success",
             "summary": response,
             "path": "fast_fallback",
-            "intent": "chat"
+            "intent": "chat",
         }
 
     def _fast_path_query_response(self, vector: IntentVector) -> Dict[str, Any]:
@@ -639,7 +732,7 @@ class UniversalProvider:
                 f"No heavy lifting needed for this one."
             ),
             "path": "fast",
-            "intent": "query"
+            "intent": "query",
         }
 
     # --- ROUTING LOGIC ---
@@ -668,7 +761,9 @@ class UniversalProvider:
                 result = self.llm_engine.respond(agent_display, context, user_input)
                 return result.get("data", {}).get("summary", "")
             except Exception as e:
-                logger.debug(f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine")
+                logger.debug(
+                    f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine"
+                )
 
         # Fallback: Use legacy llm engine (GAD-6000)
         if llm:
@@ -695,13 +790,15 @@ class UniversalProvider:
             return "herald"  # Content Creator
 
         if vector.intent_type == IntentType.ACTION:
-            return "civic" if self._check_agent("civic") else "envoy"  # Governance Handler
+            return (
+                "civic" if self._check_agent("civic") else "envoy"
+            )  # Governance Handler
 
         if vector.intent_type == IntentType.QUERY:
             return "envoy"  # General Purpose
 
         # Default fallback
-        return "envoy" 
+        return "envoy"
 
     def _check_agent(self, agent_id: str) -> bool:
         return agent_id in self.kernel.agent_registry
@@ -724,7 +821,7 @@ class UniversalProvider:
             return {
                 "command": "status_report",
                 "details": "full",
-                "context": self.context_layer
+                "context": self.context_layer,
             }
 
         # HERALD PROTOCOL (Publisher/Content Creator)
@@ -734,7 +831,7 @@ class UniversalProvider:
                 "command": "publish",
                 "content": vector.raw_input,
                 "channel": "global",
-                "context": self.context_layer
+                "context": self.context_layer,
             }
 
         # CIVIC PROTOCOL (Governance Handler)
@@ -744,7 +841,7 @@ class UniversalProvider:
                 "action": "governance",
                 "instruction": vector.raw_input,
                 "context": self.context_layer,
-                "intent": vector.intent_type.value
+                "intent": vector.intent_type.value,
             }
 
         # ENVOY PROTOCOL (General Purpose / Fallback)
@@ -753,7 +850,7 @@ class UniversalProvider:
             return {
                 "instruction": vector.raw_input,
                 "context": self.context_layer,
-                "intent": vector.intent_type.value
+                "intent": vector.intent_type.value,
             }
 
         # Default Fallback (Unknown Agent)
@@ -762,5 +859,5 @@ class UniversalProvider:
             "instruction": vector.raw_input,
             "context": self.context_layer,
             "intent": vector.intent_type.value,
-            "fallback": True
+            "fallback": True,
         }

@@ -27,11 +27,12 @@ logger = logging.getLogger("AGORA_MAIN")
 
 class AgoraMessageType(Enum):
     """Agora message types (one-way flows)"""
-    BROADCAST = "broadcast"      # General announcement
-    DIRECTIVE = "directive"      # Command from STEWARD
-    KNOWLEDGE = "knowledge"      # Teaching from SCIENCE
-    NARRATIVE = "narrative"      # Content from HERALD
-    SYSTEM = "system"            # Infrastructure message
+
+    BROADCAST = "broadcast"  # General announcement
+    DIRECTIVE = "directive"  # Command from STEWARD
+    KNOWLEDGE = "knowledge"  # Teaching from SCIENCE
+    NARRATIVE = "narrative"  # Content from HERALD
+    SYSTEM = "system"  # Infrastructure message
 
 
 class AgoraCartridge(VibeAgent):
@@ -70,8 +71,8 @@ class AgoraCartridge(VibeAgent):
                 "stream_listening",
                 "message_routing",
                 "transmission_verification",
-                "history_auditing"
-            ]
+                "history_auditing",
+            ],
         )
 
         logger.info("📡 AGORA (VibeAgent v1.0) is online - Broadcast Channel Ready")
@@ -83,10 +84,10 @@ class AgoraCartridge(VibeAgent):
 
         # Broadcast channels (one per source)
         self.channels: Dict[str, List[Dict[str, Any]]] = {
-            "herald": [],      # Content/Narrative stream
-            "steward": [],     # Directive/Command stream
-            "science": [],     # Knowledge/Teaching stream
-            "system": []       # System/Infrastructure stream
+            "herald": [],  # Content/Narrative stream
+            "steward": [],  # Directive/Command stream
+            "science": [],  # Knowledge/Teaching stream
+            "system": [],  # System/Infrastructure stream
         }
 
         # Subscriptions (agent_id -> list of channels they listen to)
@@ -149,7 +150,7 @@ class AgoraCartridge(VibeAgent):
             return {
                 "status": "rejected",
                 "reason": f"Source '{source}' not authorized to publish",
-                "authorized_sources": self.AUTHORIZED_SOURCES
+                "authorized_sources": self.AUTHORIZED_SOURCES,
             }
 
         # Create message with immutable timestamp
@@ -159,7 +160,7 @@ class AgoraCartridge(VibeAgent):
             "type": message_type,
             "content": content,
             "timestamp": datetime.utcnow().isoformat(),
-            "sequence": self.total_messages
+            "sequence": self.total_messages,
         }
 
         # Store in channel (immutable append-only)
@@ -175,7 +176,7 @@ class AgoraCartridge(VibeAgent):
             "message_id": message["message_id"],
             "source": source,
             "sequence": self.total_messages - 1,
-            "timestamp": message["timestamp"]
+            "timestamp": message["timestamp"],
         }
 
     async def _listen_stream(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -194,16 +195,17 @@ class AgoraCartridge(VibeAgent):
                 "agent_id": agent_id,
                 "source": source,
                 "messages": [],
-                "note": "No messages yet on this stream"
+                "note": "No messages yet on this stream",
             }
 
         # Filter messages after since_sequence
         messages = [
-            msg for msg in self.channels[source]
-            if msg["sequence"] >= since_sequence
+            msg for msg in self.channels[source] if msg["sequence"] >= since_sequence
         ]
 
-        logger.info(f"🎧 {agent_id} listening to {source} stream ({len(messages)} new messages)")
+        logger.info(
+            f"🎧 {agent_id} listening to {source} stream ({len(messages)} new messages)"
+        )
 
         return {
             "status": "listening",
@@ -211,7 +213,7 @@ class AgoraCartridge(VibeAgent):
             "source": source,
             "messages": messages,
             "count": len(messages),
-            "next_sequence": self.total_messages
+            "next_sequence": self.total_messages,
         }
 
     async def _subscribe_channel(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -236,7 +238,7 @@ class AgoraCartridge(VibeAgent):
             "status": "subscribed",
             "agent_id": agent_id,
             "channels": self.subscriptions[agent_id],
-            "total_subscriptions": len(self.subscriptions)
+            "total_subscriptions": len(self.subscriptions),
         }
 
     async def _get_history(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -262,7 +264,7 @@ class AgoraCartridge(VibeAgent):
             "source": source,
             "total_messages": self.total_messages,
             "returned": len(history),
-            "messages": history
+            "messages": history,
         }
 
     async def _verify_transmission(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -288,17 +290,14 @@ class AgoraCartridge(VibeAgent):
 
         if corrupted:
             logger.warning(f"⚠️  Transmission corruption detected: {corrupted}")
-            return {
-                "status": "corrupted",
-                "corrupted_indices": corrupted
-            }
+            return {"status": "corrupted", "corrupted_indices": corrupted}
 
         logger.info(f"✅ Transmission verified: No corruption detected")
         return {
             "status": "verified",
             "source": source,
             "total_messages": self.total_messages,
-            "integrity": "CLEAN"
+            "integrity": "CLEAN",
         }
 
     def _status(self) -> Dict[str, Any]:
@@ -309,8 +308,8 @@ class AgoraCartridge(VibeAgent):
             "total_messages": self.total_messages,
             "channels": {ch: len(msgs) for ch, msgs in self.channels.items()},
             "subscriptions": len(self.subscriptions),
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -321,6 +320,7 @@ class AgoraCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = AgoraCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -328,7 +328,5 @@ if __name__ == "__main__":
             "name": "AGORA",
             "status": "healthy",
             "domain": "GOVERNANCE",
-            "capabilities": ['public_forum', 'discussion']
+            "capabilities": ["public_forum", "discussion"],
         }
-
-

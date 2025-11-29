@@ -47,7 +47,9 @@ def load_renderer(full_module_name, module_path):
 tools_dir = project_root / "steward/system_agents/scribe/tools"
 
 # Load introspector first (dependency for others)
-introspector_module = load_renderer("steward.system_agents.scribe.tools.introspector", tools_dir / "introspector.py")
+introspector_module = load_renderer(
+    "steward.system_agents.scribe.tools.introspector", tools_dir / "introspector.py"
+)
 
 project_introspector_module = load_renderer(
     "steward.system_agents.scribe.tools.project_introspector",
@@ -69,7 +71,9 @@ citymap_renderer_module = load_renderer(
     tools_dir / "citymap_renderer.py",
 )
 
-help_renderer_module = load_renderer("steward.system_agents.scribe.tools.help_renderer", tools_dir / "help_renderer.py")
+help_renderer_module = load_renderer(
+    "steward.system_agents.scribe.tools.help_renderer", tools_dir / "help_renderer.py"
+)
 
 index_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.index_renderer", tools_dir / "index_renderer.py"
@@ -187,7 +191,9 @@ def main():
     parser = argparse.ArgumentParser(description="Generate documentation files")
     parser.add_argument("--readme", action="store_true", help="Generate only README.md")
     parser.add_argument("--agents", action="store_true", help="Generate only AGENTS.md")
-    parser.add_argument("--citymap", action="store_true", help="Generate only CITYMAP.md")
+    parser.add_argument(
+        "--citymap", action="store_true", help="Generate only CITYMAP.md"
+    )
     parser.add_argument("--help-doc", action="store_true", help="Generate only HELP.md")
     parser.add_argument("--index", action="store_true", help="Generate only INDEX.md")
 
@@ -198,7 +204,9 @@ def main():
     print("=" * 70)
 
     # If no specific flag, generate all
-    generate_all = not any([args.readme, args.agents, args.citymap, args.help_doc, args.index])
+    generate_all = not any(
+        [args.readme, args.agents, args.citymap, args.help_doc, args.index]
+    )
 
     results = {}
 

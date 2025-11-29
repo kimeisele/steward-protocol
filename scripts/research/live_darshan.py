@@ -144,7 +144,10 @@ class BhuMandala:
 
             if 0 <= px < width and 0 <= py < width:
                 # Determine symbol based on flashing
-                is_flashing = agent_name in self.flashing_agents and self.flashing_agents[agent_name] > 0
+                is_flashing = (
+                    agent_name in self.flashing_agents
+                    and self.flashing_agents[agent_name] > 0
+                )
                 symbol = "◉" if is_flashing else "●"
 
                 # Get color
@@ -285,7 +288,12 @@ class LiveDarshan:
 
         # Header
         lines.append(ANSI.BOLD + "=" * 80 + ANSI.RESET)
-        lines.append(ANSI.BOLD + ANSI.CYAN + "✨ LIVE DARSHAN - VibeOS Real-Time Dashboard ✨" + ANSI.RESET)
+        lines.append(
+            ANSI.BOLD
+            + ANSI.CYAN
+            + "✨ LIVE DARSHAN - VibeOS Real-Time Dashboard ✨"
+            + ANSI.RESET
+        )
         lines.append(ANSI.BOLD + "=" * 80 + ANSI.RESET)
         lines.append("")
 
@@ -302,7 +310,9 @@ class LiveDarshan:
 
         lines.append(ANSI.BOLD + "📊 System Status" + ANSI.RESET)
         lines.append(f"  State: {state_color}{self.pulse.system_state}{ANSI.RESET}")
-        lines.append(f"  Heartbeat: {self.pulse.frequency}Hz (Cycle #{self.pulse.cycle_id})")
+        lines.append(
+            f"  Heartbeat: {self.pulse.frequency}Hz (Cycle #{self.pulse.cycle_id})"
+        )
         lines.append(f"  Active Agents: {len(self.pulse.active_agents)}")
         lines.append(f"  Queue Depth: {self.pulse.queue_depth}")
         lines.append("")
@@ -319,7 +329,11 @@ class LiveDarshan:
                 message = event.get("message", "")
 
                 # Format: [HH:MM:SS] AGENT_ID EVENT_TYPE: message
-                timestamp = event.get("timestamp", "").split("T")[1][:8] if event.get("timestamp") else "??:??:??"
+                timestamp = (
+                    event.get("timestamp", "").split("T")[1][:8]
+                    if event.get("timestamp")
+                    else "??:??:??"
+                )
 
                 color_str = f"\033[{color_code}m"
                 lines.append(
@@ -361,7 +375,9 @@ class LiveDarshan:
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="Live Darshan - VibeOS Real-Time Dashboard")
+    parser = argparse.ArgumentParser(
+        description="Live Darshan - VibeOS Real-Time Dashboard"
+    )
     parser.add_argument(
         "--url",
         default="ws://localhost:8000/v1/pulse",

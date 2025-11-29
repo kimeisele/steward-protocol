@@ -77,7 +77,9 @@ class AgentRegistry:
             ProjectPhase.MAINTENANCE: MaintenanceSpecialist,
         }
 
-        logger.info(f"✅ AgentRegistry initialized with {len(self._registry)} specialists")
+        logger.info(
+            f"✅ AgentRegistry initialized with {len(self._registry)} specialists"
+        )
 
     def get_specialist(self, phase: Enum) -> type[BaseSpecialist]:
         """
@@ -98,15 +100,20 @@ class AgentRegistry:
         """
         if phase not in self._registry:
             raise ValueError(
-                f"No specialist registered for phase: {phase}. " f"Available phases: {list(self._registry.keys())}"
+                f"No specialist registered for phase: {phase}. "
+                f"Available phases: {list(self._registry.keys())}"
             )
 
         specialist_class = self._registry[phase]
-        logger.debug(f"Retrieved specialist: {specialist_class.__name__} for phase: {phase.value}")
+        logger.debug(
+            f"Retrieved specialist: {specialist_class.__name__} for phase: {phase.value}"
+        )
 
         return specialist_class
 
-    def register_specialist(self, phase: Enum, specialist_class: type[BaseSpecialist]) -> None:
+    def register_specialist(
+        self, phase: Enum, specialist_class: type[BaseSpecialist]
+    ) -> None:
         """
         Register or override a specialist for a phase
 
@@ -127,17 +134,23 @@ class AgentRegistry:
             )
         """
         if not issubclass(specialist_class, BaseSpecialist):
-            raise TypeError(f"Specialist class must inherit from BaseSpecialist, " f"got: {specialist_class.__name__}")
+            raise TypeError(
+                f"Specialist class must inherit from BaseSpecialist, "
+                f"got: {specialist_class.__name__}"
+            )
 
         old_specialist = self._registry.get(phase)
         self._registry[phase] = specialist_class
 
         if old_specialist:
             logger.info(
-                f"🔄 Specialist override: {phase.value} " f"({old_specialist.__name__} → {specialist_class.__name__})"
+                f"🔄 Specialist override: {phase.value} "
+                f"({old_specialist.__name__} → {specialist_class.__name__})"
             )
         else:
-            logger.info(f"➕ Specialist registered: {phase.value} → {specialist_class.__name__}")
+            logger.info(
+                f"➕ Specialist registered: {phase.value} → {specialist_class.__name__}"
+            )
 
     def list_specialists(self) -> dict[str, str]:
         """
@@ -154,11 +167,16 @@ class AgentRegistry:
                 ...
             }
         """
-        return {phase.value: specialist.__name__ for phase, specialist in self._registry.items()}
+        return {
+            phase.value: specialist.__name__
+            for phase, specialist in self._registry.items()
+        }
 
     def __repr__(self) -> str:
         """String representation for debugging"""
-        specialists = ", ".join(f"{phase.value}→{cls.__name__}" for phase, cls in self._registry.items())
+        specialists = ", ".join(
+            f"{phase.value}→{cls.__name__}" for phase, cls in self._registry.items()
+        )
         return f"AgentRegistry({len(self._registry)} specialists: {specialists})"
 
 

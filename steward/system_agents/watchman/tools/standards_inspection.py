@@ -146,7 +146,10 @@ class InitMethodVisitor(ast.NodeVisitor):
         if self.in_init:
             # Check for self.path = Path(...) patterns
             if isinstance(node.value, ast.Call):
-                if isinstance(node.value.func, ast.Name) and node.value.func.id == "Path":
+                if (
+                    isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "Path"
+                ):
                     # Check if it's a hardcoded path (not lazy-loaded)
                     if node.value.args and isinstance(node.value.args[0], ast.Constant):
                         arg_value = node.value.args[0].value
@@ -298,7 +301,9 @@ class StandardsInspectionTool:
                 all_violations.extend(violations)
 
                 if violations:
-                    logger.warning(f"   ⚠️  Found {len(violations)} violation(s) in {agent_dir.name}")
+                    logger.warning(
+                        f"   ⚠️  Found {len(violations)} violation(s) in {agent_dir.name}"
+                    )
                 else:
                     logger.info(f"   ✅ {agent_dir.name} is compliant")
 
@@ -316,7 +321,9 @@ class StandardsInspectionTool:
         """
         # Group by severity
         by_severity = {
-            "CRITICAL": [v for v in violations if v.severity == ViolationSeverity.CRITICAL],
+            "CRITICAL": [
+                v for v in violations if v.severity == ViolationSeverity.CRITICAL
+            ],
             "HIGH": [v for v in violations if v.severity == ViolationSeverity.HIGH],
             "MEDIUM": [v for v in violations if v.severity == ViolationSeverity.MEDIUM],
             "LOW": [v for v in violations if v.severity == ViolationSeverity.LOW],
@@ -331,7 +338,9 @@ class StandardsInspectionTool:
 
         return {
             "total_violations": len(violations),
-            "by_severity": {severity: len(viols) for severity, viols in by_severity.items()},
+            "by_severity": {
+                severity: len(viols) for severity, viols in by_severity.items()
+            },
             "by_agent": {agent_id: len(viols) for agent_id, viols in by_agent.items()},
             "critical_count": len(by_severity["CRITICAL"]),
             "should_fail_build": len(by_severity["CRITICAL"]) > 0,

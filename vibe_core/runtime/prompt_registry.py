@@ -41,7 +41,9 @@ import yaml
 from vibe_core.runtime.prompt_runtime import PromptRuntime
 
 # Import workspace utilities without sys.path manipulation
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent  # vibe_core/runtime/ -> vibe_core/ -> repo root
+_REPO_ROOT = (
+    Path(__file__).resolve().parent.parent.parent
+)  # vibe_core/runtime/ -> vibe_core/ -> repo root
 _WORKSPACE_UTILS_PATH = _REPO_ROOT / "scripts" / "workspace_utils.py"
 
 try:
@@ -132,7 +134,9 @@ class PromptRegistry:
             GovernanceLoadError: If Guardian Directives can't be loaded
             ContextEnrichmentError: If workspace context enrichment fails
         """
-        logger.info(f"Composing prompt: agent={agent}, task={task}, workspace={workspace}")
+        logger.info(
+            f"Composing prompt: agent={agent}, task={task}, workspace={workspace}"
+        )
 
         # Initialize context if not provided
         if context is None:
@@ -151,7 +155,9 @@ class PromptRegistry:
 
         # If task is None, create a minimal context-only prompt
         if task is None:
-            logger.warning(f"No task specified for agent {agent} - creating meta-agent prompt")
+            logger.warning(
+                f"No task specified for agent {agent} - creating meta-agent prompt"
+            )
             base_prompt = cls._create_meta_agent_prompt(agent)
         else:
             base_prompt = runtime.execute_task(agent, task, context)
@@ -243,7 +249,9 @@ class PromptRegistry:
                 # Support both {variable} and {{variable}} formats
                 prompt = prompt.format(**context)
             except KeyError as e:
-                logger.warning(f"Context interpolation failed for key {key}: missing {e}")
+                logger.warning(
+                    f"Context interpolation failed for key {key}: missing {e}"
+                )
                 # Return prompt as-is if interpolation fails
 
         return prompt
@@ -261,7 +269,12 @@ class PromptRegistry:
             return cls._guardian_directives_cache
 
         # Load from file
-        directives_path = _REPO_ROOT / "system_steward_framework" / "knowledge" / "guardian_directives.yaml"
+        directives_path = (
+            _REPO_ROOT
+            / "system_steward_framework"
+            / "knowledge"
+            / "guardian_directives.yaml"
+        )
 
         if not directives_path.exists():
             raise GovernanceLoadError(
@@ -274,12 +287,16 @@ class PromptRegistry:
             with open(directives_path) as f:
                 data = yaml.safe_load(f)
         except yaml.YAMLError as e:
-            raise GovernanceLoadError(f"Invalid YAML in Guardian Directives: {e}") from e
+            raise GovernanceLoadError(
+                f"Invalid YAML in Guardian Directives: {e}"
+            ) from e
 
         # Use injection template from YAML
         template = data.get("injection_template", "")
         if not template:
-            raise GovernanceLoadError("Guardian Directives YAML missing 'injection_template' field")
+            raise GovernanceLoadError(
+                "Guardian Directives YAML missing 'injection_template' field"
+            )
 
         # Cache for future calls
         cls._guardian_directives_cache = template.strip()
@@ -312,7 +329,9 @@ class PromptRegistry:
                     manifest_data = load_workspace_manifest(workspace)
                     lines.append(f"**Manifest Path:** `{manifest_path}`\n")
             except Exception as e:
-                logger.warning(f"Could not load manifest for workspace {workspace}: {e}")
+                logger.warning(
+                    f"Could not load manifest for workspace {workspace}: {e}"
+                )
                 lines.append(f"**Manifest:** *(not available - {e})*\n")
         else:
             lines.append("**Manifest:** *(workspace_utils not available)*\n")
@@ -320,8 +339,12 @@ class PromptRegistry:
         # Add manifest state (if loaded)
         if manifest_data:
             lines.append("\n**Project State:**")
-            lines.append(f"- Project ID: `{manifest_data.get('project_id', 'unknown')}`")
-            lines.append(f"- Current Phase: `{manifest_data.get('current_phase', 'unknown')}`")
+            lines.append(
+                f"- Project ID: `{manifest_data.get('project_id', 'unknown')}`"
+            )
+            lines.append(
+                f"- Current Phase: `{manifest_data.get('current_phase', 'unknown')}`"
+            )
 
             # Artifacts summary
             artifacts = manifest_data.get("artifacts", {})
@@ -333,7 +356,9 @@ class PromptRegistry:
                     lines.append(f"  - ... and {len(artifacts) - 5} more")
 
             # Budget tracking
-            budget_used = manifest_data.get("budget_tracking", {}).get("total_tokens_used", 0)
+            budget_used = manifest_data.get("budget_tracking", {}).get(
+                "total_tokens_used", 0
+            )
             if budget_used:
                 lines.append(f"- Budget Used: {budget_used:,} tokens")
 
@@ -366,9 +391,23 @@ class PromptRegistry:
         # Note: Tool definitions location varies based on migration phase
         # Try multiple locations for backwards compatibility
         tool_defs_candidates = [
-            _REPO_ROOT / "apps" / "agency" / "orchestrator" / "tools" / "tool_definitions.yaml",
-            _REPO_ROOT / "vibe_core" / "orchestrator" / "tools" / "tool_definitions.yaml",
-            _REPO_ROOT / "agency_os" / "core_system" / "orchestrator" / "tools" / "tool_definitions.yaml",  # Legacy
+            _REPO_ROOT
+            / "apps"
+            / "agency"
+            / "orchestrator"
+            / "tools"
+            / "tool_definitions.yaml",
+            _REPO_ROOT
+            / "vibe_core"
+            / "orchestrator"
+            / "tools"
+            / "tool_definitions.yaml",
+            _REPO_ROOT
+            / "agency_os"
+            / "core_system"
+            / "orchestrator"
+            / "tools"
+            / "tool_definitions.yaml",  # Legacy
         ]
         tool_defs_path = None
         for candidate in tool_defs_candidates:
@@ -377,7 +416,9 @@ class PromptRegistry:
                 break
 
         if tool_defs_path is None:
-            tool_defs_path = tool_defs_candidates[0]  # Use first as default for error message
+            tool_defs_path = tool_defs_candidates[
+                0
+            ]  # Use first as default for error message
 
         if not tool_defs_path.exists():
             logger.warning(f"Tool definitions not found: {tool_defs_path}")
@@ -392,7 +433,9 @@ class PromptRegistry:
 
         # Filter to requested tools
         tools_dict = all_tools.get("tools", {})
-        filtered_tools = {name: tool for name, tool in tools_dict.items() if name in tool_names}
+        filtered_tools = {
+            name: tool for name, tool in tools_dict.items() if name in tool_names
+        }
 
         if not filtered_tools:
             return "# === TOOLS ===\n\n*(No matching tools found)*"
@@ -403,18 +446,30 @@ class PromptRegistry:
 
         for tool_name, tool_def in filtered_tools.items():
             lines.append(f"## Tool: `{tool_name}`\n")
-            lines.append(f"**Description:** {tool_def.get('description', 'No description')}\n")
+            lines.append(
+                f"**Description:** {tool_def.get('description', 'No description')}\n"
+            )
 
             # Parameters
             params = tool_def.get("parameters", {})
             if params:
                 lines.append("\n**Parameters:**")
                 for param_name, param_spec in params.items():
-                    required = " (required)" if param_spec.get("required", False) else " (optional)"
+                    required = (
+                        " (required)"
+                        if param_spec.get("required", False)
+                        else " (optional)"
+                    )
                     param_type = param_spec.get("type", "any")
                     param_desc = param_spec.get("description", "")
-                    default = f", default: `{param_spec['default']}`" if "default" in param_spec else ""
-                    lines.append(f"- `{param_name}` ({param_type}){required}: {param_desc}{default}")
+                    default = (
+                        f", default: `{param_spec['default']}`"
+                        if "default" in param_spec
+                        else ""
+                    )
+                    lines.append(
+                        f"- `{param_name}` ({param_type}){required}: {param_desc}{default}"
+                    )
 
             lines.append("\n---\n")
 

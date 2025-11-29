@@ -82,7 +82,9 @@ class ListDirectoryTool(Tool):
                 return ToolResult(success=False, error=f"Path not found: {path}")
 
             if not path.is_dir():
-                return ToolResult(success=False, error=f"Path is not a directory: {path}")
+                return ToolResult(
+                    success=False, error=f"Path is not a directory: {path}"
+                )
 
             # List contents
             items = []

@@ -211,11 +211,19 @@ class AgentMetadataRegistry:
 
     def get_agents_by_varna(self, varna: Varna) -> list:
         """Get all agents of a specific species"""
-        return [agent_id for agent_id, biology in self.biology.items() if biology.varna == varna]
+        return [
+            agent_id
+            for agent_id, biology in self.biology.items()
+            if biology.varna == varna
+        ]
 
     def get_agents_by_ashrama(self, ashrama: Ashrama) -> list:
         """Get all agents in a specific lifecycle stage"""
-        return [agent_id for agent_id, biology in self.biology.items() if biology.ashrama == ashrama]
+        return [
+            agent_id
+            for agent_id, biology in self.biology.items()
+            if biology.ashrama == ashrama
+        ]
 
     def transition_agent(self, agent_id: str, new_ashrama: Ashrama) -> bool:
         """Move agent to new lifecycle stage"""

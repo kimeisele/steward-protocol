@@ -107,7 +107,9 @@ def sign_content(content: str) -> str:
 
     # Sign the content using SHA256 hash
     content_bytes = content.encode("utf-8")
-    signature_bytes = private_key.sign(content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string)
+    signature_bytes = private_key.sign(
+        content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string
+    )
 
     # Encode as base64
     signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")

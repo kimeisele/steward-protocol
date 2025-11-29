@@ -338,7 +338,9 @@ class PlaybookRunner:
         self.registry.load_all()
         logger.info(f"Loaded {len(self.registry.list())} playbooks from registry")
 
-    def run_playbook(self, playbook_id: str, project_context: dict[str, Any] = None) -> dict[str, Any]:
+    def run_playbook(
+        self, playbook_id: str, project_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Execute a playbook by ID.
 
@@ -360,7 +362,9 @@ class PlaybookRunner:
 
         return self.execute_playbook(playbook, project_context)
 
-    def run_playbook_file(self, yaml_path: str | Path, project_context: dict[str, Any] = None) -> dict[str, Any]:
+    def run_playbook_file(
+        self, yaml_path: str | Path, project_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Execute a playbook from YAML file.
 
@@ -375,7 +379,9 @@ class PlaybookRunner:
         logger.info(f"Running playbook from file: {yaml_path}")
         return self.execute_playbook(playbook, project_context)
 
-    def execute_playbook(self, playbook: PlaybookDefinition, project_context: dict[str, Any] = None) -> dict[str, Any]:
+    def execute_playbook(
+        self, playbook: PlaybookDefinition, project_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """
         Execute a playbook definition.
 
@@ -440,7 +446,9 @@ class PlaybookRunner:
         self.execution_history.append(result)
         return result
 
-    def _execute_phase(self, phase: PlaybookPhase, playbook: PlaybookDefinition) -> dict[str, Any]:
+    def _execute_phase(
+        self, phase: PlaybookPhase, playbook: PlaybookDefinition
+    ) -> dict[str, Any]:
         """
         Execute a single phase.
 
@@ -483,7 +491,9 @@ class PlaybookRunner:
         return self.execution_history
 
 
-def run_playbook_cli(playbook_id_or_path: str, project_context: dict[str, Any] = None) -> dict[str, Any]:
+def run_playbook_cli(
+    playbook_id_or_path: str, project_context: dict[str, Any] = None
+) -> dict[str, Any]:
     """
     Convenience function to run a playbook from CLI or scripts.
 

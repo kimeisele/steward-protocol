@@ -9,7 +9,9 @@ class BatchOperations:
     """Handles batch operations on tasks."""
 
     @staticmethod
-    def filter_tasks(tasks: Dict[str, Task], predicate: Callable[[Task], bool]) -> List[Task]:
+    def filter_tasks(
+        tasks: Dict[str, Task], predicate: Callable[[Task], bool]
+    ) -> List[Task]:
         """
         Filter tasks based on predicate.
 
@@ -37,7 +39,9 @@ class BatchOperations:
         return [task for task in tasks.values() if task.status == status]
 
     @staticmethod
-    def filter_by_priority(tasks: Dict[str, Task], min_priority: int = 0, max_priority: int = 100) -> List[Task]:
+    def filter_by_priority(
+        tasks: Dict[str, Task], min_priority: int = 0, max_priority: int = 100
+    ) -> List[Task]:
         """
         Get tasks within a priority range.
 
@@ -49,7 +53,11 @@ class BatchOperations:
         Returns:
             List of tasks within priority range
         """
-        return [task for task in tasks.values() if min_priority <= task.priority <= max_priority]
+        return [
+            task
+            for task in tasks.values()
+            if min_priority <= task.priority <= max_priority
+        ]
 
     @staticmethod
     def filter_by_tag(tasks: Dict[str, Task], tag: str) -> List[Task]:
@@ -66,7 +74,9 @@ class BatchOperations:
         return [task for task in tasks.values() if tag in task.tags]
 
     @staticmethod
-    def bulk_update_status(tasks: Dict[str, Task], task_ids: List[str], new_status: TaskStatus) -> int:
+    def bulk_update_status(
+        tasks: Dict[str, Task], task_ids: List[str], new_status: TaskStatus
+    ) -> int:
         """
         Update status for multiple tasks.
 
@@ -126,7 +136,9 @@ class BatchOperations:
         return updated
 
     @staticmethod
-    def sort_tasks(tasks: List[Task], key: str = "priority", reverse: bool = True) -> List[Task]:
+    def sort_tasks(
+        tasks: List[Task], key: str = "priority", reverse: bool = True
+    ) -> List[Task]:
         """
         Sort tasks by a field.
 

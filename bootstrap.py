@@ -68,20 +68,15 @@ try:
         description="Steward Protocol - Autonomous Agent Orchestration"
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="API gateway port (default: 8000)"
+        "--port", type=int, default=8000, help="API gateway port (default: 8000)"
     )
     parser.add_argument(
-        "--host",
-        default="0.0.0.0",
-        help="API gateway host (default: 0.0.0.0)"
+        "--host", default="0.0.0.0", help="API gateway host (default: 0.0.0.0)"
     )
     parser.add_argument(
         "--ledger",
         default="data/vibe_ledger.db",
-        help="Path to vibe ledger database (default: data/vibe_ledger.db)"
+        help="Path to vibe ledger database (default: data/vibe_ledger.db)",
     )
 
     args = parser.parse_args()
@@ -106,5 +101,6 @@ except Exception as e:
     print("❌" * 35 + "\n")
     print(f"Error: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)

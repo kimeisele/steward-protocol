@@ -42,7 +42,12 @@ class TestDegradationChain:
         assert response.content is not None
         assert len(response.content) > 0
         # Should use template (not local_llm unless installed)
-        assert response.fallback_used in ["template:greeting", "template:status", "template:unknown", "local_llm"]
+        assert response.fallback_used in [
+            "template:greeting",
+            "template:status",
+            "template:unknown",
+            "local_llm",
+        ]
 
     def test_degradation_chain_high_confidence_bypass(self):
         """Test high confidence bypasses degradation (SATYA path)."""

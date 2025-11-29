@@ -102,7 +102,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         self._precedent = None
         self._ledger = None
 
-        logger.info("✅ SUPREME COURT v1.0: Ready for appellate review (awaiting system injection)")
+        logger.info(
+            "✅ SUPREME COURT v1.0: Ready for appellate review (awaiting system injection)"
+        )
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest."""
@@ -124,7 +126,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         if self._root_path is None:
             self._root_path = self.system.get_sandbox_path() / "justice"
             self._root_path.mkdir(parents=True, exist_ok=True)
-            logger.info(f"📁 SUPREME COURT root_path initialized (sandboxed): {self._root_path}")
+            logger.info(
+                f"📁 SUPREME COURT root_path initialized (sandboxed): {self._root_path}"
+            )
         return self._root_path
 
     @property
@@ -220,7 +224,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         justification = payload.get("justification", "")
         evidence = payload.get("evidence", {})
 
-        logger.info(f"📜 APPEAL FILED: Agent {agent_id} appeals violation {violation_id}")
+        logger.info(
+            f"📜 APPEAL FILED: Agent {agent_id} appeals violation {violation_id}"
+        )
 
         # Check if agent has signed constitution
         has_oath = self._verify_constitutional_oath(agent_id, evidence)
@@ -309,7 +315,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             }
         )
 
-        logger.info(f"📋 APPEAL REVIEW: Agent {agent_id} - Mercy eligible: {is_eligible_for_mercy}")
+        logger.info(
+            f"📋 APPEAL REVIEW: Agent {agent_id} - Mercy eligible: {is_eligible_for_mercy}"
+        )
 
         return {
             "status": "appeal_reviewed",
@@ -465,7 +473,11 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         """Get status of appeals (for monitoring)."""
         agent_id = payload.get("agent_id")
 
-        appeals_list = self.appeals.get_agent_appeals(agent_id) if agent_id else self.appeals.get_all_appeals()
+        appeals_list = (
+            self.appeals.get_agent_appeals(agent_id)
+            if agent_id
+            else self.appeals.get_all_appeals()
+        )
 
         return {
             "status": "ok",
@@ -487,7 +499,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
     # ========== HELPER METHODS ==========
 
-    def _verify_constitutional_oath(self, agent_id: str, evidence: Dict[str, Any]) -> bool:
+    def _verify_constitutional_oath(
+        self, agent_id: str, evidence: Dict[str, Any]
+    ) -> bool:
         """
         Verify that an agent has signed the Constitutional Oath.
 
@@ -500,7 +514,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         try:
             # Query kernel for agent's oath status
             ledger = self.kernel.ledger
-            oath_events = ledger.query_events(event_type="CONSTITUTIONAL_OATH", filters={"agent_id": agent_id})
+            oath_events = ledger.query_events(
+                event_type="CONSTITUTIONAL_OATH", filters={"agent_id": agent_id}
+            )
 
             has_oath = len(oath_events) > 0
             logger.debug(f"Agent {agent_id} constitutional oath status: {has_oath}")
@@ -520,9 +536,13 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             ledger = self.kernel.ledger
 
             # Sum all credit events for this agent
-            credit_events = ledger.query_events(event_type="CREDIT_TRANSFER", filters={"recipient": agent_id})
+            credit_events = ledger.query_events(
+                event_type="CREDIT_TRANSFER", filters={"recipient": agent_id}
+            )
 
-            debit_events = ledger.query_events(event_type="CREDIT_USED", filters={"agent": agent_id})
+            debit_events = ledger.query_events(
+                event_type="CREDIT_USED", filters={"agent": agent_id}
+            )
 
             credits = sum(e.get("amount", 0) for e in credit_events)
             debits = sum(e.get("amount", 0) for e in debit_events)
@@ -540,7 +560,9 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         try:
             ledger = self.kernel.ledger
-            violations = ledger.query_events(event_type="INVARIANT_VIOLATION", filters={"agent_id": agent_id})
+            violations = ledger.query_events(
+                event_type="INVARIANT_VIOLATION", filters={"agent_id": agent_id}
+            )
             return len(violations)
         except Exception as e:
             logger.warning(f"Could not count violations: {str(e)}")

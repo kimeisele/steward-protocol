@@ -29,7 +29,9 @@ class HILAssistantTool:
     def __init__(self):
         logger.info("🧠 HIL Assistant (VAD Layer) initialized")
 
-    def get_next_action_summary(self, full_report: str, context: Optional[Dict[str, Any]] = None) -> str:
+    def get_next_action_summary(
+        self, full_report: str, context: Optional[Dict[str, Any]] = None
+    ) -> str:
         """
         Analyze a full report and extract the Next Best Action.
 
@@ -71,17 +73,27 @@ class HILAssistantTool:
                     )
 
                 if campaign_id:
-                    summary.append(f"🚀 **Value Created:** Campaign `{campaign_id}` is live and compliant.")
+                    summary.append(
+                        f"🚀 **Value Created:** Campaign `{campaign_id}` is live and compliant."
+                    )
 
                 summary.append("\n👉 **NEXT BEST ACTION:**")
-                summary.append("   **Review the G.A.P. Report proof and authorize deployment to production channels.**")
-                summary.append("   *(No further intervention required for this mission)*")
+                summary.append(
+                    "   **Review the G.A.P. Report proof and authorize deployment to production channels.**"
+                )
+                summary.append(
+                    "   *(No further intervention required for this mission)*"
+                )
 
             elif is_failure:
                 summary.append("⚠️ **SYSTEM STATUS: ATTENTION REQUIRED**")
-                summary.append("The mission encountered an error that could not be self-corrected.")
+                summary.append(
+                    "The mission encountered an error that could not be self-corrected."
+                )
                 summary.append("\n👉 **NEXT BEST ACTION:**")
-                summary.append("   **Inspect the error logs in the report and provide manual guidance.**")
+                summary.append(
+                    "   **Inspect the error logs in the report and provide manual guidance.**"
+                )
 
         else:
             # Generic Report Handling

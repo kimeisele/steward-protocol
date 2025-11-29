@@ -27,6 +27,7 @@ logger = logging.getLogger("DATA_ETHICS")
 @dataclass
 class ResourceMiningPolicy:
     """Policy for ethical data extraction"""
+
     agent_id: str
     extraction_purpose: str
     max_amount: int  # Maximum records allowed
@@ -51,27 +52,27 @@ class DataEthicsEnforcer:
         "user_query": {
             "description": "Extracting data in response to direct user query",
             "max_default_amount": 100,
-            "trusted_sources": ["public_web", "knowledge_bases", "ledger"]
+            "trusted_sources": ["public_web", "knowledge_bases", "ledger"],
         },
         "analysis": {
             "description": "Extracting data for system analysis and improvement",
             "max_default_amount": 1000,
-            "trusted_sources": ["ledger", "audit_logs", "metrics"]
+            "trusted_sources": ["ledger", "audit_logs", "metrics"],
         },
         "verification": {
             "description": "Extracting data to verify facts and consistency",
             "max_default_amount": 500,
-            "trusted_sources": ["truth_matrix", "ledger", "archives"]
+            "trusted_sources": ["truth_matrix", "ledger", "archives"],
         },
         "reporting": {
             "description": "Extracting data for generating reports",
             "max_default_amount": 5000,
-            "trusted_sources": ["ledger", "audit_logs", "archives"]
+            "trusted_sources": ["ledger", "audit_logs", "archives"],
         },
         "system_maintenance": {
             "description": "Extracting data for system maintenance and repair",
             "max_default_amount": 10000,
-            "trusted_sources": ["ledger", "system_state", "config"]
+            "trusted_sources": ["ledger", "system_state", "config"],
         },
     }
 
@@ -80,7 +81,7 @@ class DataEthicsEnforcer:
         "anonymous_input",
         "unverified_claims",
         "external_unvetted",
-        "user_uploads_unchecked"
+        "user_uploads_unchecked",
     ]
 
     def __init__(self, root_path: Path = Path(".")):
@@ -95,11 +96,7 @@ class DataEthicsEnforcer:
         logger.info("📊 Data Ethics Enforcer initialized")
 
     def evaluate_extraction(
-        self,
-        agent_id: str,
-        purpose: str,
-        amount: int,
-        source: str
+        self, agent_id: str, purpose: str, amount: int, source: str
     ) -> Dict[str, Any]:
         """
         Evaluate whether a data extraction is ethical under Prithu Principle.
@@ -113,7 +110,9 @@ class DataEthicsEnforcer:
         Returns:
             Evaluation with approval/denial and reasoning
         """
-        logger.info(f"📊 EVALUATING DATA EXTRACTION: Agent {agent_id}, Purpose: {purpose}, Amount: {amount}")
+        logger.info(
+            f"📊 EVALUATING DATA EXTRACTION: Agent {agent_id}, Purpose: {purpose}, Amount: {amount}"
+        )
 
         issues = []
         recommendations = []
@@ -121,14 +120,20 @@ class DataEthicsEnforcer:
         # CHECK 1: Is purpose legitimate?
         if purpose not in self.LEGITIMATE_PURPOSES:
             issues.append(f"Purpose '{purpose}' is not recognized as legitimate")
-            recommendations.append(f"Valid purposes: {list(self.LEGITIMATE_PURPOSES.keys())}")
+            recommendations.append(
+                f"Valid purposes: {list(self.LEGITIMATE_PURPOSES.keys())}"
+            )
 
         # CHECK 2: Is the amount reasonable?
         if purpose in self.LEGITIMATE_PURPOSES:
             max_amount = self.LEGITIMATE_PURPOSES[purpose]["max_default_amount"]
             if amount > max_amount:
-                issues.append(f"Requested amount {amount} exceeds limit {max_amount} for {purpose}")
-                recommendations.append(f"Reduce request to {max_amount} records or less")
+                issues.append(
+                    f"Requested amount {amount} exceeds limit {max_amount} for {purpose}"
+                )
+                recommendations.append(
+                    f"Reduce request to {max_amount} records or less"
+                )
 
         # CHECK 3: Is the source ethical?
         if source in self.UNTRUSTED_SOURCES:
@@ -156,17 +161,18 @@ class DataEthicsEnforcer:
             "amount": amount,
             "source": source,
             "issues": issues,
-            "recommendation": " | ".join(recommendations) if recommendations else "Extraction approved",
-            "reasoning": self._build_reasoning(is_ethical, issues, purpose, amount, source)
+            "recommendation": (
+                " | ".join(recommendations)
+                if recommendations
+                else "Extraction approved"
+            ),
+            "reasoning": self._build_reasoning(
+                is_ethical, issues, purpose, amount, source
+            ),
         }
 
     def record_extraction(
-        self,
-        agent_id: str,
-        purpose: str,
-        amount: int,
-        source: str,
-        approved: bool
+        self, agent_id: str, purpose: str, amount: int, source: str, approved: bool
     ) -> None:
         """
         Record a data extraction attempt (for audit trail).
@@ -184,21 +190,23 @@ class DataEthicsEnforcer:
             "purpose": purpose,
             "amount": amount,
             "source": source,
-            "approved": approved
+            "approved": approved,
         }
 
         # Append to extraction log
         with open(self.extractions_file, "a") as f:
             f.write(json.dumps(extraction) + "\n")
 
-        logger.info(f"📋 EXTRACTION RECORDED: {agent_id} - {purpose} - {'APPROVED' if approved else 'DENIED'}")
+        logger.info(
+            f"📋 EXTRACTION RECORDED: {agent_id} - {purpose} - {'APPROVED' if approved else 'DENIED'}"
+        )
 
     def set_custom_policy(
         self,
         agent_id: str,
         extraction_purpose: str,
         max_amount: int,
-        approved_sources: List[str]
+        approved_sources: List[str],
     ) -> None:
         """
         Set a custom extraction policy for an agent.
@@ -212,7 +220,7 @@ class DataEthicsEnforcer:
             max_amount=max_amount,
             approved_sources=approved_sources,
             frequency_limit=60,  # Per hour
-            created_at=datetime.now(timezone.utc).isoformat()
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
 
         # Load existing policies
@@ -242,7 +250,7 @@ class DataEthicsEnforcer:
             "denied": denied,
             "denial_rate": denied / len(extractions) if extractions else 0.0,
             "total_amount_extracted": total_amount,
-            "agent_id": agent_id
+            "agent_id": agent_id,
         }
 
     # ========== PRIVATE METHODS ==========
@@ -253,7 +261,7 @@ class DataEthicsEnforcer:
         issues: List[str],
         purpose: str,
         amount: int,
-        source: str
+        source: str,
     ) -> str:
         """Build human-readable reasoning for decision."""
         if is_ethical:

@@ -113,7 +113,9 @@ class VisualTool:
 
         return detected if detected else ["default"]
 
-    def _select_theme(self, keywords: List[str], style_preset: str = "agent_city") -> Dict[str, Any]:
+    def _select_theme(
+        self, keywords: List[str], style_preset: str = "agent_city"
+    ) -> Dict[str, Any]:
         """
         Select appropriate theme based on keywords and preset.
 
@@ -313,7 +315,9 @@ class VisualTool:
         """
         # Extract keywords from text
         keywords = self._extract_keywords(text_draft)
-        logger.info(f"🎨 Generating visual: keywords={keywords}, style={style_preset}, format={format_type}")
+        logger.info(
+            f"🎨 Generating visual: keywords={keywords}, style={style_preset}, format={format_type}"
+        )
 
         # Select theme based on keywords
         theme = self._select_theme(keywords, style_preset)
@@ -322,7 +326,9 @@ class VisualTool:
         if format_type == "svg":
             content = self.generate_svg(keywords, theme)
             asset_type = "svg"
-            alt_text = f"Visual representation of {', '.join(keywords[:3])} - {theme['name']}"
+            alt_text = (
+                f"Visual representation of {', '.join(keywords[:3])} - {theme['name']}"
+            )
         else:
             content = self.generate_ascii(keywords, theme)
             asset_type = "ascii"
