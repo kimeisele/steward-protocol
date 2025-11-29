@@ -266,19 +266,28 @@ class PassportOffice:
             self.lineage.close()
 
 
-def discover_manifests() -> List[Path]:
+def discover_manifests(include_citizens: bool = True) -> List[Path]:
     """
     Discover all existing steward.json manifests.
+
+    Args:
+        include_citizens: If True, also scan agent_city/registry/ for citizen agents
 
     Returns:
         List of paths to steward.json files
     """
-    system_agents_path = Path("steward/system_agents")
     manifests = []
 
-    # Scan for all steward.json files
+    # Scan system agents
+    system_agents_path = Path("steward/system_agents")
     for manifest_path in system_agents_path.glob("*/steward.json"):
         manifests.append(manifest_path)
+
+    # Scan citizen agents (agent_city/registry/)
+    if include_citizens:
+        citizen_agents_path = Path("agent_city/registry")
+        for manifest_path in citizen_agents_path.glob("*/steward.json"):
+            manifests.append(manifest_path)
 
     return sorted(manifests)
 

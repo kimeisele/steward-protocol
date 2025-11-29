@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HERALD Cartridge - VibeAgent-Native Intelligence & Content Agent
+HERALD Cartridge - ContextAwareAgent with Offline-First Capabilities
 
 This cartridge demonstrates the Steward Protocol in action:
 1. Autonomous content generation for marketing
@@ -8,14 +8,16 @@ This cartridge demonstrates the Steward Protocol in action:
 3. Cryptographic identity via Steward Protocol
 4. Governance-first architecture (no marketing slop)
 
-This is now a native VibeAgent:
-- Inherits from vibe_core.VibeAgent
+This is now a ContextAwareAgent (extends VibeAgent):
+- Inherits from vibe_core.agents.ContextAwareAgent
 - Receives tasks from kernel scheduler
 - Can run standalone (legacy mode) or in VibeOS (native mode)
+- OFFLINE-FIRST: Uses DegradationChain for graceful fallback
 
 Architecture Change:
 - OLD: Standalone agent with own event loop (run_campaign)
 - NEW: Task-responsive agent (process method) within VibeOS kernel
+- NEW: Offline-capable via DegradationChain + LocalLLM
 
 GENESIS OATH INTEGRATION:
 - Each boot includes the Constitutional Oath ceremony
@@ -28,9 +30,17 @@ import json
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-# VibeOS Integration
-from vibe_core import VibeAgent, Task
-from vibe_core.config import CityConfig, HeraldConfig
+# VibeOS Integration - Now using ContextAwareAgent for offline capability
+from vibe_core import Task
+from vibe_core.agents import ContextAwareAgent
+
+# Config import with fallback (pydantic may not be available)
+try:
+    from vibe_core.config import CityConfig, HeraldConfig
+except ImportError:
+    # Fallback when pydantic is not available
+    CityConfig = None
+    HeraldConfig = None
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
@@ -52,48 +62,64 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("HERALD_MAIN")
 
 
-class HeraldCartridge(VibeAgent, OathMixin):
+class HeraldCartridge(ContextAwareAgent, OathMixin):
     """
     The HERALD Agent Cartridge.
     Autonomous Technical Evangelist for Steward Protocol.
 
     This cartridge encapsulates the complete workflow:
-    1. Research: Market trend analysis via Tavily
+    1. Research: Market trend analysis via Tavily (with offline fallback)
     2. Create: LLM-based content generation with governance
     3. Publish: Multi-platform distribution
     4. Observe: Full audit trail (GAD-000 compliance)
 
     Architecture:
-    - Vibe-OS compatible (ARCH-050 CartridgeBase)
-    - Offline-capable (graceful fallback)
+    - ContextAwareAgent (extends VibeAgent with DegradationChain)
+    - OFFLINE-FIRST: DegradationChain → LocalLLM → Templates
     - Identity-ready (Steward Protocol integration prepared)
     - Governance-first (no marketing clichés)
     - OATH-BOUND: Constitutional binding via Genesis Ceremony
     """
 
     def __init__(self, config: Optional[HeraldConfig] = None):
-        """Initialize HERALD as a VibeAgent.
+        """Initialize HERALD as a ContextAwareAgent.
 
         Args:
             config: HeraldConfig instance from Phoenix Config (optional)
                    If not provided, HeraldConfig defaults are used
         """
-        # BLOCKER #0: Accept Phoenix Config
-        self.config = config or HeraldConfig()
-
-        # Initialize VibeAgent base class
+        # Initialize ContextAwareAgent base class FIRST (includes DegradationChain)
+        # Note: VibeAgent sets self.config = config, we override it below
         super().__init__(
             agent_id="herald",
             name="HERALD",
-            version="3.0.0",
+            version="3.1.0",  # Bumped version for offline-first capability
             author="Steward Protocol",
-            description="Autonomous intelligence and content distribution agent",
+            description="Autonomous intelligence and content distribution agent (offline-first)",
             domain="MEDIA",
             capabilities=["content_generation", "broadcasting", "research", "strategy"],
+            config=config,  # Pass config to parent
         )
 
+        # BLOCKER #0: Accept Phoenix Config (with fallback for missing pydantic)
+        # Override self.config set by parent if needed
+        class FallbackConfig:
+            posting_frequency_hours = 4
+            dry_run = True
+
+        if config:
+            self.config = config
+        elif HeraldConfig is not None:
+            try:
+                self.config = HeraldConfig()
+            except Exception:
+                self.config = FallbackConfig()
+        else:
+            self.config = FallbackConfig()
+
         logger.info(
-            f"🦅 HERALD (VibeAgent v3.0) is online (config: {self.config.posting_frequency_hours}h frequency)."
+            f"🦅 HERALD (ContextAwareAgent v3.1) is online "
+            f"(config: {self.config.posting_frequency_hours}h frequency)."
         )
 
         # Initialize Constitutional Oath mixin (if available)
@@ -106,13 +132,24 @@ class HeraldCartridge(VibeAgent, OathMixin):
                 "✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)"
             )
 
-        # Initialize all tools
+        # Initialize all tools with DegradationChain injection for offline capability
+        # The DegradationChain is provided by ContextAwareAgent.get_degradation_chain()
+        degradation_chain = self.get_degradation_chain()
+
         self.content = ContentTool()
         self.broadcast = BroadcastTool()
-        self.research = ResearchTool()
+        # ResearchTool now uses DegradationChain for offline fallback
+        self.research = ResearchTool(degradation_chain=degradation_chain)
         self.strategy = StrategyTool()
         self.scout = ScoutTool()
         self.identity = IdentityTool()
+
+        # Log degradation status
+        deg_status = self.get_degradation_status()
+        logger.info(
+            f"📴 Offline capability: {deg_status.get('level', 'unknown')} "
+            f"(LocalLLM: {'✅' if deg_status.get('local_llm_available') else '❌'})"
+        )
 
         # Initialize governance (immutable rules as code)
         self.governance = HeraldConstitution()

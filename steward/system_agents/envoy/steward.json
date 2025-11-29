@@ -1,22 +1,5 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "envoy",
-    "name": "ENVOY",
-    "version": "1.0.0",
-    "class": "system_service",
-    "specialization": "INTERFACE",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "Universal operator interface agent",
-    "constraints": [],
-    "prime_directive": "Serve the system"
-  },
   "capabilities": {
-    "interfaces": [
-      "kernel"
-    ],
     "operations": [
       {
         "description": "orchestration operation",
@@ -43,7 +26,16 @@
   "governance": {
     "compliance_level": 2,
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
-    "issued_at": "2025-11-28T12:07:50.304701Z",
+    "issued_at": "2025-11-29T08:57:39.463665Z",
     "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "envoy",
+    "name": "ENVOY"
+  },
+  "specs": {
+    "description": "Universal operator interface agent",
+    "domain": "INTERFACE",
+    "version": "1.0.0"
   }
 }
