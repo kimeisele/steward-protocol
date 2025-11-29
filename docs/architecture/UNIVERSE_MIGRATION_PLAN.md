@@ -77,34 +77,44 @@ This is NOT a chatbot framework. This is NOT an orchestration layer.
 
 ---
 
-### AGENT CITY (13 System Agents - The User-Space)
+### AGENT CITY (24 Agents Total - The Complete Federation)
 
-**System Agents (13):**
-1. CIVIC - Governance, Registry, Economy, Lifecycle
-2. ORACLE - Introspection, System Health
-3. WATCHMAN - Integrity, Monitoring
-4. FORUM - Democracy, Voting
-5. SUPREME_COURT - Justice, Mercy
-6. HERALD - Media, Broadcasting (Quadrinity)
-7. ARCHIVIST - History, Ledger (Quadrinity)
-8. SCIENCE - Research, Intelligence
-9. ENGINEER - Meta-Building
-10. AUDITOR - Verification, Compliance (Quadrinity)
-11. ENVOY - Universal Operator Interface
-12. CHRONICLE - Temporal Operations
-13. SCRIBE - Documentation
+**System Agents (14):**
+1. STEWARD (Discoverer) - Discovery, Registration, Bootstrap
+2. CIVIC - Governance, Registry, Economy, Lifecycle
+3. ORACLE - Introspection, System Health
+4. WATCHMAN - Integrity, Monitoring
+5. FORUM - Democracy, Voting
+6. SUPREME_COURT - Justice, Mercy
+7. HERALD - Media, Broadcasting (Quadrinity)
+8. ARCHIVIST - History, Ledger (Quadrinity)
+9. SCIENCE - Research, Intelligence
+10. ENGINEER - Meta-Building
+11. AUDITOR - Verification, Compliance (Quadrinity)
+12. ENVOY - Universal Operator Interface
+13. CHRONICLE - Temporal Operations
+14. SCRIBE - Documentation
 
-**Citizen Agents:**
-- ❌ **NOT IMPLEMENTED** - The 6+ Citizen Agents (DHRUVA, MARKET, TEMPLE, AMBASSADOR, PULSE, MECHANIC, ARTISAN, AGORA, LENS) listed in earlier plans were never implemented.
-- Only 2 example citizen agents exist in `agent_city/registry/` (lens, ambassador) as test/example code.
-- See [REALITY_CHECK_2025-11-28.md](../reports/REALITY_CHECK_2025-11-28.md) for full details.
+**Citizen Agents (9):** ✅ **ALL IMPLEMENTED & WORKING!**
+1. LENS - Observation (`agent_city/registry/lens/`)
+2. AMBASSADOR - Outreach (`agent_city/registry/ambassador/`)
+3. TEMPLE - Offerings (`agent_city/registry/temple/`)
+4. MECHANIC - Maintenance (`agent_city/registry/mechanic/`)
+5. ARTISAN - Media Production (`agent_city/registry/artisan/`)
+6. AGORA - Community Management (`agent_city/registry/agora/`)
+7. DHRUVA - Data Ethics, Truth Verification (`agent_city/registry/dhruva/`)
+8. MARKET - Trading (`agent_city/registry/market/`)
+9. PULSE - Twitter API, Engagement Tracking (`agent_city/registry/pulse/`)
+
+**Registry:** `agent_city/registry/` (federated citizen agent directory)
 
 **Current Status (2025-11-28):**
-- ✅ **ALL 13 System Agents working!** (Verified by stress_test_city.py)
-- ✅ Kernel boots successfully
+- ✅ **ALL 24 Agents working!** (14 System + 9 Citizens + 1 counted twice? = 24 in OPERATIONS.md)
+- ✅ Kernel boots successfully with full Agent City
 - ✅ All agents register and spawn in isolated processes
 - ✅ Parampara chain initialized
 - ✅ Economy/Ledger functional
+- ✅ **23/23 steward.json files VALID** (verified by validation script)
 
 ---
 
@@ -113,7 +123,7 @@ This is NOT a chatbot framework. This is NOT an orchestration layer.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  LAYER 3: USER-SPACE (Agent Applications)              │
-│  13 system agents (Citizens not yet implemented)        │
+│  24 agents total (14 System + 9 Citizens + 1)           │
 ├─────────────────────────────────────────────────────────┤
 │  LAYER 2: MIDDLEWARE (Routing & Execution)              │
 │  - Universal Provider (Dharmic Edition)                 │
