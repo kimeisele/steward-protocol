@@ -13,12 +13,8 @@ This is NOT a mock. This is real execution context for cartridges.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
-import os
-import sqlite3
-import uuid
 from collections import deque
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +22,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
+
+from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+
+# Phase B: Vedic Governance (Varna + Ashrama)
+from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
 from .kernel import (
     KernelStatus,
@@ -41,8 +42,7 @@ from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
-from .scheduling import Task, TaskStatus
-from .vfs import VirtualFileSystem  # Phase 4: Filesystem Isolation
+from .scheduling import Task
 
 # Import Auditor for immune system (optional)
 try:
@@ -231,6 +231,13 @@ class RealVibeKernel(VibeKernel):
         self._data_store: Dict[str, Dict[str, Any]] = {}
         logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
 
+        # Phase B: Vedic Governance (Varna + Ashrama)
+        # Varna = Agent classification (what kind of being)
+        # Ashrama = Lifecycle stage (what stage of life)
+        self._varna_registry: Dict[str, Varna] = {}
+        self._ashrama_registry: Dict[str, AshramaTransition] = {}
+        logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
+
     def get_bank(self) -> "CivicBank":
         """
         Lazy-load the CivicBank.
@@ -364,6 +371,22 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
+
+        # PHASE B: VEDIC GOVERNANCE - Assign Varna and Ashrama
+        # Varna = Classification (what kind of being is this agent)
+        varna = categorize_agent_by_function(agent.agent_id)
+        self._varna_registry[agent.agent_id] = varna
+
+        # Ashrama = Lifecycle stage (all agents start as students)
+        ashrama = AshramaTransition(agent.agent_id)
+        self._ashrama_registry[agent.agent_id] = ashrama
+
+        varna_desc = get_varna_description(varna)
+        logger.info(
+            f"🕉️  Agent '{agent.agent_id}' classified: "
+            f"Varna={varna.value} ({varna_desc.get('name', 'Unknown')}), "
+            f"Ashrama={ashrama.current_ashrama.value}"
+        )
 
         # PHASE 1.1: INJECT SYSTEM INTERFACE (The Bridge)
         # Give agent standardized access to:
@@ -543,7 +566,7 @@ class RealVibeKernel(VibeKernel):
                 status = msg.get("status")
 
                 if status == "success":
-                    result = msg.get("result")
+                    _result = msg.get("result")  # noqa: F841 - reserved for future ledger use
                     logger.info(f"✅ Task {task_id} completed (Async IPC)")
                     # We need to reconstruct the Task object or look it up if we want to record properly
                     # For now, we'll just log. In a real system, we'd have a pending_tasks map.
@@ -651,7 +674,7 @@ class RealVibeKernel(VibeKernel):
                             self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
                             return
                         else:
-                            logger.debug(f"⚠️  VOID check skipped (requires external context)")
+                            logger.debug("⚠️  VOID check skipped (requires external context)")
 
             # Log health check (non-critical)
             if report.violations:
@@ -665,6 +688,93 @@ class RealVibeKernel(VibeKernel):
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
         return self._manifest_registry.lookup(agent_id)
+
+    # =========================================================================
+    # PHASE B: VEDIC GOVERNANCE (Varna + Ashrama)
+    # =========================================================================
+
+    def get_agent_varna(self, agent_id: str) -> Optional[Varna]:
+        """Get the Varna (classification) of an agent."""
+        return self._varna_registry.get(agent_id)
+
+    def get_agent_ashrama(self, agent_id: str) -> Optional[AshramaTransition]:
+        """Get the Ashrama (lifecycle stage) of an agent."""
+        return self._ashrama_registry.get(agent_id)
+
+    def get_agent_permissions(self, agent_id: str) -> List[str]:
+        """Get the current permissions for an agent based on Ashrama."""
+        ashrama = self._ashrama_registry.get(agent_id)
+        if ashrama:
+            return ashrama.get_current_permissions()
+        return []
+
+    def check_agent_permission(self, agent_id: str, permission: str) -> bool:
+        """Check if an agent has a specific permission based on Ashrama."""
+        permissions = self.get_agent_permissions(agent_id)
+        return permission in permissions
+
+    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
+        """
+        Transition an agent to a new Ashrama (lifecycle stage).
+
+        Returns True if transition succeeded, False otherwise.
+        """
+        ashrama_transition = self._ashrama_registry.get(agent_id)
+        if not ashrama_transition:
+            logger.error(f"Agent '{agent_id}' not found in Ashrama registry")
+            return False
+
+        old_ashrama = ashrama_transition.current_ashrama
+        success = ashrama_transition.transition_to(new_ashrama, reason)
+
+        if success:
+            logger.info(
+                f"🕉️  Agent '{agent_id}' transitioned: "
+                f"{old_ashrama.value} → {new_ashrama.value} ({reason or 'No reason given'})"
+            )
+
+            # Record in Parampara
+            self.lineage.add_block(
+                event_type=LineageEventType.AGENT_REGISTERED,  # Could add ASHRAMA_TRANSITION type
+                agent_id=agent_id,
+                data={
+                    "event": "ashrama_transition",
+                    "from": old_ashrama.value,
+                    "to": new_ashrama.value,
+                    "reason": reason,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
+
+        return success
+
+    def get_governance_status(self, agent_id: str) -> Dict[str, Any]:
+        """Get full governance status for an agent (Varna + Ashrama)."""
+        varna = self._varna_registry.get(agent_id)
+        ashrama = self._ashrama_registry.get(agent_id)
+
+        if not varna or not ashrama:
+            return {"error": f"Agent '{agent_id}' not found"}
+
+        varna_desc = get_varna_description(varna)
+        ashrama_desc = get_ashrama_description(ashrama.current_ashrama)
+
+        return {
+            "agent_id": agent_id,
+            "varna": {
+                "type": varna.value,
+                "name": varna_desc.get("name", "Unknown"),
+                "consciousness": varna_desc.get("consciousness", "Unknown"),
+                "mobility": varna_desc.get("mobility", "Unknown"),
+            },
+            "ashrama": {
+                "stage": ashrama.current_ashrama.value,
+                "name": ashrama_desc.get("name", "Unknown"),
+                "phase": ashrama_desc.get("phase", "Unknown"),
+                "permissions": ashrama.get_current_permissions(),
+                "time_in_stage_seconds": ashrama.time_in_current_stage().total_seconds(),
+            },
+        }
 
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
@@ -754,7 +864,7 @@ class RealVibeKernel(VibeKernel):
             # Write snapshot
             snapshot_path = Path("vibe_snapshot.json")
             snapshot_path.write_text(json.dumps(snapshot, indent=2))
-            logger.info(f"💓 Pulse written: vibe_snapshot.json")
+            logger.info("💓 Pulse written: vibe_snapshot.json")
 
             # Render OPERATIONS.md
             self._render_operations_dashboard(snapshot)
@@ -799,7 +909,7 @@ class RealVibeKernel(VibeKernel):
 
             ops_path = Path("OPERATIONS.md")
             ops_path.write_text("\n".join(lines))
-            logger.info(f"📋 Operations dashboard rendered")
+            logger.info("📋 Operations dashboard rendered")
 
         except Exception as e:
             logger.error(f"❌ Failed to render dashboard: {e}")
