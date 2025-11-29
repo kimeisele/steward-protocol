@@ -44,6 +44,7 @@ from vibe_core.protocols.operator_protocol import (
     Intent,
     IntentType,
     KernelStatusType,
+    OperatorType,
     SystemContext,
 )
 from vibe_core.sarga import Element, get_sarga
@@ -334,7 +335,7 @@ class BootOrchestrator:
             sarga_complete=sarga.boot_complete,
             git=git_state,
             available_agents=available_agents,
-            operator_type=self.operator_adapter.get_current_operator_type() if self.operator_adapter else None,
+            operator_type=self.operator_adapter.get_current_operator_type() if self.operator_adapter else OperatorType.HUMAN,
             degradation_level=self.operator_adapter.get_degradation_level() if self.operator_adapter else 0,
         )
 
