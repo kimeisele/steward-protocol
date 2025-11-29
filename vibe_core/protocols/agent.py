@@ -5,12 +5,18 @@ All agents running in VibeOS must implement this protocol.
 This is the contract between the kernel and cartridges.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core import Task
+    from vibe_core.kernel import VibeKernel
 
 
 @dataclass
@@ -110,7 +116,7 @@ class VibeAgent(ABC):
         self.vfs = None  # Virtual Filesystem
         self.network = None  # Network Proxy
 
-    def set_kernel(self, kernel: "VibeKernel") -> None:
+    def set_kernel(self, kernel: VibeKernel) -> None:
         """
         Kernel Injection Pattern
 
@@ -152,7 +158,9 @@ class VibeAgent(ABC):
                     self._kernel_network = kernel_network
 
                 def request(self, method, url, **kwargs):
-                    return self._kernel_network.request(self.agent_id, method, url, **kwargs)
+                    return self._kernel_network.request(
+                        self.agent_id, method, url, **kwargs
+                    )
 
                 def get(self, url, **kwargs):
                     return self._kernel_network.get(self.agent_id, url, **kwargs)
@@ -184,7 +192,9 @@ class VibeAgent(ABC):
                     try:
                         return vfs.open(file, mode, *args, **kwargs)
                     except PermissionError as e:
-                        logger.warning(f"[VFS-BLOCKED] {agent_id} denied access to '{file}': {e}")
+                        logger.warning(
+                            f"[VFS-BLOCKED] {agent_id} denied access to '{file}': {e}"
+                        )
                         raise
                 else:
                     # File-like object, pass through
@@ -218,7 +228,9 @@ class VibeAgent(ABC):
                         try:
                             return network.request(method, url, **kwargs)
                         except PermissionError as e:
-                            logger.warning(f"[NET-BLOCKED] {agent_id} denied {url}: {e}")
+                            logger.warning(
+                                f"[NET-BLOCKED] {agent_id} denied {url}: {e}"
+                            )
                             raise
 
                     def get(self, url, **kwargs):
@@ -240,13 +252,19 @@ class VibeAgent(ABC):
 
                 # Replace requests in sys.modules
                 sys.modules["requests"] = VFSRequests()
-                logger.info(f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy")
+                logger.info(
+                    f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy"
+                )
 
             except ImportError:
-                logger.debug(f"⚠️  requests module not available, skipping network patch")
+                logger.debug(
+                    f"⚠️  requests module not available, skipping network patch"
+                )
 
         except Exception as e:
-            logger.error(f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}")
+            logger.error(
+                f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}"
+            )
             import traceback
 
             traceback.print_exc()
@@ -282,7 +300,7 @@ class VibeAgent(ABC):
             logging.warning(f"Agent {self.agent_id} has no kernel connection")
 
     @abstractmethod
-    def process(self, task: "Task") -> Dict[str, Any]:
+    def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a Task from the kernel scheduler
 
@@ -389,7 +407,9 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
+                asyncio.create_task(
+                    self.emit_event(event_type, message, task_id, details)
+                )
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))
