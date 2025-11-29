@@ -1,23 +1,27 @@
 """
-TidyTool: Repository Organization & Maintenance Capability
+TidyTool: Repository Organization & Maintenance Capability (Tool Protocol)
 
 HERALD's housekeeping module. Ensures the repository stays organized
 by moving files to their proper locations based on Tidy Protocols
 defined in STEWARD.md.
 
 Philosophy: The agent cleans up after itself.
+
+This tool implements the Tool Protocol for kernel-managed execution.
 """
 
 import logging
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("HERALD_TIDY")
 
 
-class TidyTool:
+class TidyTool(Tool):
     """
     Repository maintenance and file organization capability for HERALD.
 
@@ -65,6 +69,101 @@ class TidyTool:
         self.moved_count = 0
         self.protected_count = 0
         self.error_count = 0
+
+    @property
+    def name(self) -> str:
+        return "herald.tidy"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Repository organization and maintenance - organize workspace, get status"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action to perform: 'organize_workspace', 'get_status'",
+            },
+            "dry_run": {
+                "type": "boolean",
+                "required": False,
+                "description": "If true, report what would be moved without actually moving (default: false)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """
+        Validate tidy parameters.
+
+        Args:
+            parameters: Tool parameters
+
+        Raises:
+            ValueError: If required parameter missing or invalid
+        """
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["organize_workspace", "get_status"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'organize_workspace' or 'get_status'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """
+        Execute tidy operation.
+
+        Args:
+            parameters: Validated tool parameters
+
+        Returns:
+            ToolResult with operation results
+        """
+        try:
+            action = parameters["action"]
+
+            if action == "organize_workspace":
+                dry_run = parameters.get("dry_run", False)
+                moved, protected, errors = self._organize_workspace(dry_run=dry_run)
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "moved_count": moved,
+                        "protected_count": protected,
+                        "error_count": errors,
+                        "dry_run": dry_run,
+                        "status": self._get_status_message(),
+                    },
+                    metadata={
+                        "action": "organize_workspace",
+                        "moved": moved,
+                        "protected": protected,
+                        "errors": errors,
+                    },
+                )
+
+            elif action == "get_status":
+                status = self._get_status_message()
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "status": status,
+                        "moved_count": self.moved_count,
+                        "protected_count": self.protected_count,
+                        "error_count": self.error_count,
+                    },
+                    metadata={
+                        "action": "get_status",
+                    },
+                )
+
+        except Exception as e:
+            error_msg = f"Tidy operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"TidyTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def _load_rules_from_steward(self) -> Dict[str, str]:
         """
@@ -199,9 +298,9 @@ class TidyTool:
             logger.error(f"❌ Failed to move {source.name}: {e}")
             return False
 
-    def organize_workspace(self, dry_run: bool = False) -> Tuple[int, int, int]:
+    def _organize_workspace(self, dry_run: bool = False) -> Tuple[int, int, int]:
         """
-        Scan and organize files in the repository.
+        Internal method: Scan and organize files in the repository.
 
         Args:
             dry_run: If True, report what would be moved without actually moving
@@ -263,9 +362,9 @@ class TidyTool:
 
         return self.moved_count, self.protected_count, self.error_count
 
-    def get_status_message(self) -> str:
+    def _get_status_message(self) -> str:
         """
-        Get a human-readable status message for Scribe logging.
+        Internal method: Get a human-readable status message for Scribe logging.
 
         Returns:
             Formatted message for chronicles
