@@ -4,11 +4,12 @@ Unit tests for KnowledgeResolver
 Tests high-level semantic queries for agents.
 """
 
-import pytest
 from pathlib import Path
-from vibe_core.knowledge.resolver import KnowledgeResolver, get_resolver
+
+import pytest
+
 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
-from vibe_core.knowledge.schema import MetricType
+from vibe_core.knowledge.resolver import KnowledgeResolver, get_resolver
 
 
 @pytest.fixture
@@ -24,6 +25,7 @@ def resolver():
 # ═══════════════════════════════════════════════════════════════════
 # AGENT QUERIES
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_get_agent_for_concept(resolver):
     """Test concept to agent mapping."""
@@ -90,6 +92,7 @@ def test_get_agents_by_authority(resolver):
 # TASK QUERIES
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_get_dependencies(resolver):
     """Test retrieving feature dependencies."""
     # Herald depends on CIVIC for licensing
@@ -115,6 +118,7 @@ def test_estimate_total_complexity(resolver):
 # ═══════════════════════════════════════════════════════════════════
 # CONSTRAINT QUERIES
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_is_action_allowed(resolver):
     """Test action permission checking."""
@@ -143,6 +147,7 @@ def test_get_blocked_features(resolver):
 # PROMPT COMPILATION
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_compile_context(resolver):
     """Test compiling knowledge context for prompts."""
     context = resolver.compile_context("security")
@@ -170,6 +175,7 @@ def test_get_response_template(resolver):
 # SINGLETON PATTERN
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_get_resolver_singleton():
     """Test get_resolver() returns a resolver instance."""
     resolver = get_resolver()
@@ -188,6 +194,7 @@ def test_get_resolver_uses_same_graph():
 # ═══════════════════════════════════════════════════════════════════
 # INTEGRATION SCENARIOS
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_full_routing_scenario(resolver):
     """Test complete routing scenario: concept → agent → authority."""

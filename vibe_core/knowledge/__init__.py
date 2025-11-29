@@ -11,8 +11,15 @@ Unified Knowledge Graph Module
 from .graph import UnifiedKnowledgeGraph, get_knowledge_graph
 from .resolver import KnowledgeResolver, get_resolver
 from .schema import (
-    Node, Edge, Constraint, Metric,
-    NodeType, RelationType, ConstraintType, ConstraintAction, MetricType
+    Constraint,
+    ConstraintAction,
+    ConstraintType,
+    Edge,
+    Metric,
+    MetricType,
+    Node,
+    NodeType,
+    RelationType,
 )
 
 __all__ = [

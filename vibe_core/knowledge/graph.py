@@ -19,8 +19,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 from .schema import (
-    Node, Edge, Constraint, Metric,
-    NodeType, RelationType, ConstraintType, MetricType
+    Constraint,
+    ConstraintType,
+    Edge,
+    Metric,
+    MetricType,
+    Node,
+    NodeType,
+    RelationType,
 )
 
 logger = logging.getLogger("KNOWLEDGE_GRAPH")
@@ -51,12 +57,15 @@ class UnifiedKnowledgeGraph:
     def load(self, knowledge_dir: Path) -> None:
         """Load all knowledge from YAML files."""
         from .loader import KnowledgeLoader
+
         loader = KnowledgeLoader(self)
         loader.load_all(knowledge_dir)
         self._loaded = True
-        logger.info(f"Knowledge graph loaded: {len(self.nodes)} nodes, "
-                   f"{sum(len(e) for e in self.edges.values())} edges, "
-                   f"{len(self.constraints)} constraints")
+        logger.info(
+            f"Knowledge graph loaded: {len(self.nodes)} nodes, "
+            f"{sum(len(e) for e in self.edges.values())} edges, "
+            f"{len(self.constraints)} constraints"
+        )
 
     # ═══════════════════════════════════════════════════════════════════
     # DIMENSION 1: ONTOLOGY QUERIES (What exists)
@@ -77,8 +86,7 @@ class UnifiedKnowledgeGraph:
     def search_nodes(self, query: str) -> List[Node]:
         """Simple keyword search in node names/descriptions."""
         query_lower = query.lower()
-        return [n for n in self.nodes.values()
-                if query_lower in n.name.lower() or query_lower in n.description.lower()]
+        return [n for n in self.nodes.values() if query_lower in n.name.lower() or query_lower in n.description.lower()]
 
     # ═══════════════════════════════════════════════════════════════════
     # DIMENSION 2: TOPOLOGY QUERIES (How things relate)
@@ -112,8 +120,9 @@ class UnifiedKnowledgeGraph:
         self._traverse_recursive(node_id, relation, depth, result, visited)
         return result
 
-    def _traverse_recursive(self, node_id: str, relation: RelationType,
-                           depth: int, result: Dict[str, Node], visited: Set[str]) -> None:
+    def _traverse_recursive(
+        self, node_id: str, relation: RelationType, depth: int, result: Dict[str, Node], visited: Set[str]
+    ) -> None:
         if depth < 0 or node_id in visited:
             return
         visited.add(node_id)
@@ -131,8 +140,9 @@ class UnifiedKnowledgeGraph:
         visited = set()
         return self._can_reach_recursive(from_id, to_id, relation, visited)
 
-    def _can_reach_recursive(self, current: str, target: str,
-                            relation: Optional[RelationType], visited: Set[str]) -> bool:
+    def _can_reach_recursive(
+        self, current: str, target: str, relation: Optional[RelationType], visited: Set[str]
+    ) -> bool:
         if current == target:
             return True
         if current in visited:
@@ -171,8 +181,7 @@ class UnifiedKnowledgeGraph:
         """Get constraints, optionally filtered by node."""
         if node_id is None:
             return list(self.constraints.values())
-        return [c for c in self.constraints.values()
-                if "*" in c.applies_to or node_id in c.applies_to]
+        return [c for c in self.constraints.values() if "*" in c.applies_to or node_id in c.applies_to]
 
     def check_constraint(self, constraint: Constraint, context: Dict[str, Any]) -> bool:
         """Check if a constraint condition is met. Returns True if VIOLATED."""
@@ -228,9 +237,9 @@ class UnifiedKnowledgeGraph:
             return 1
         return 0
 
-    def rank_by_metric(self, node_ids: List[str], metric_type: MetricType,
-                      descending: bool = True) -> List[str]:
+    def rank_by_metric(self, node_ids: List[str], metric_type: MetricType, descending: bool = True) -> List[str]:
         """Sort nodes by metric value."""
+
         def get_value(nid):
             v = self.get_metric(nid, metric_type)
             return v if v is not None else 0
@@ -248,12 +257,7 @@ class UnifiedKnowledgeGraph:
         Returns only the nodes/constraints/metrics relevant to the task,
         NOT the entire knowledge base.
         """
-        result = {
-            "nodes": {},
-            "edges": [],
-            "constraints": [],
-            "metrics": {}
-        }
+        result = {"nodes": {}, "edges": [], "constraints": [], "metrics": {}}
 
         # Find matching nodes
         matches = self.search_nodes(task_concept)

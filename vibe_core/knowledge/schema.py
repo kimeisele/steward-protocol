@@ -15,6 +15,7 @@ from typing import Any, Dict, List
 
 class NodeType(Enum):
     """Types of nodes in the knowledge graph."""
+
     AGENT = "agent"
     FEATURE = "feature"
     CONCEPT = "concept"
@@ -24,23 +25,26 @@ class NodeType(Enum):
 
 class RelationType(Enum):
     """Types of relations between nodes."""
-    DEPENDS_ON = "depends_on"       # A requires B
-    OVERRIDES = "overrides"         # A can override B
-    IMPLIES = "implies"             # A implies B
-    BLOCKS = "blocks"               # A blocks B
-    HANDLES = "handles"             # Agent handles Concept
-    BELONGS_TO = "belongs_to"       # Node belongs to Domain
+
+    DEPENDS_ON = "depends_on"  # A requires B
+    OVERRIDES = "overrides"  # A can override B
+    IMPLIES = "implies"  # A implies B
+    BLOCKS = "blocks"  # A blocks B
+    HANDLES = "handles"  # Agent handles Concept
+    BELONGS_TO = "belongs_to"  # Node belongs to Domain
 
 
 class ConstraintType(Enum):
     """Types of constraints."""
-    HARD = "hard"                   # Never violate (Narasimha)
-    SOFT = "soft"                   # Warn but allow
-    CONDITIONAL = "conditional"     # Depends on context
+
+    HARD = "hard"  # Never violate (Narasimha)
+    SOFT = "soft"  # Warn but allow
+    CONDITIONAL = "conditional"  # Depends on context
 
 
 class ConstraintAction(Enum):
     """Actions to take when constraint is violated."""
+
     BLOCK = "block"
     WARN = "warn"
     REQUIRE_APPROVAL = "require_approval"
@@ -48,15 +52,17 @@ class ConstraintAction(Enum):
 
 class MetricType(Enum):
     """Types of metrics."""
-    AUTHORITY = "authority"         # 1-10 scale
-    COMPLEXITY = "complexity"       # 1-21 Fibonacci
-    PRIORITY = "priority"           # 1-10 scale
-    CONFIDENCE = "confidence"       # 0.0-1.0 scale
+
+    AUTHORITY = "authority"  # 1-10 scale
+    COMPLEXITY = "complexity"  # 1-21 Fibonacci
+    PRIORITY = "priority"  # 1-10 scale
+    CONFIDENCE = "confidence"  # 0.0-1.0 scale
 
 
 @dataclass
 class Node:
     """A node in the knowledge graph (Ontology - Sattva)."""
+
     id: str
     type: NodeType
     name: str
@@ -68,8 +74,9 @@ class Node:
 @dataclass
 class Edge:
     """A relation between nodes (Topology - Rajas)."""
-    source: str          # Node ID
-    target: str          # Node ID
+
+    source: str  # Node ID
+    target: str  # Node ID
     relation: RelationType
     weight: float = 1.0  # Strength of relation
     properties: Dict[str, Any] = field(default_factory=dict)
@@ -78,9 +85,10 @@ class Edge:
 @dataclass
 class Constraint:
     """A rule that blocks actions (Constraints - Tamas)."""
+
     id: str
     type: ConstraintType
-    condition: str       # Python expression or keyword match
+    condition: str  # Python expression or keyword match
     action: ConstraintAction
     message: str
     applies_to: List[str] = field(default_factory=list)  # Node IDs or "*"
@@ -89,6 +97,7 @@ class Constraint:
 @dataclass
 class Metric:
     """A quantitative measure (Metrics - Karma)."""
+
     node_id: str
     metric_type: MetricType
     value: float

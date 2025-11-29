@@ -8,12 +8,18 @@ Tests all 4 dimensions:
 - METRICS (Scores)
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
 from vibe_core.knowledge.schema import (
-    Node, Edge, Constraint, Metric,
-    NodeType, RelationType, ConstraintType, ConstraintAction, MetricType
+    Constraint,
+    ConstraintAction,
+    ConstraintType,
+    MetricType,
+    NodeType,
+    RelationType,
 )
 
 
@@ -36,6 +42,7 @@ def loaded_graph():
 # ═══════════════════════════════════════════════════════════════════
 # DIMENSION 1: ONTOLOGY TESTS (Nodes)
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_graph_initialization(empty_graph):
     """Test graph initializes with empty structures."""
@@ -92,6 +99,7 @@ def test_search_nodes(loaded_graph):
 # DIMENSION 2: TOPOLOGY TESTS (Edges)
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_get_edges(loaded_graph):
     """Test retrieving edges from a node."""
     civic_edges = loaded_graph.get_edges("civic")
@@ -138,6 +146,7 @@ def test_get_path(loaded_graph):
 # DIMENSION 3: CONSTRAINT TESTS (Rules)
 # ═══════════════════════════════════════════════════════════════════
 
+
 def test_get_constraints(loaded_graph):
     """Test retrieving constraints."""
     all_constraints = loaded_graph.get_constraints()
@@ -153,7 +162,7 @@ def test_check_constraint(loaded_graph):
         condition=".git",
         action=ConstraintAction.BLOCK,
         message="Test constraint",
-        applies_to=["*"]
+        applies_to=["*"],
     )
 
     # Context with .git should violate
@@ -179,6 +188,7 @@ def test_is_allowed(loaded_graph):
 # ═══════════════════════════════════════════════════════════════════
 # DIMENSION 4: METRIC TESTS (Scores)
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_get_metric(loaded_graph):
     """Test retrieving metric values."""
@@ -218,6 +228,7 @@ def test_rank_by_metric(loaded_graph):
 # ═══════════════════════════════════════════════════════════════════
 # COMBINED TESTS
 # ═══════════════════════════════════════════════════════════════════
+
 
 def test_get_context_for_task(loaded_graph):
     """Test atomic context retrieval."""
