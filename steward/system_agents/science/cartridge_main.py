@@ -23,19 +23,19 @@ Architecture:
 - Integration with HERALD's content generation pipeline
 """
 
-import logging
 import json
-from typing import Dict, Any, Optional
+import logging
 from pathlib import Path
-
-# VibeOS Integration
-from vibe_core import VibeAgent, Task
-from vibe_core.config import CityConfig, ScienceConfig
-
+from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
-from .tools.web_search_tool import WebSearchTool, SearchResult
+
+# VibeOS Integration
+from vibe_core import Task, VibeAgent
+from vibe_core.config import CityConfig, ScienceConfig
+
+from .tools.web_search_tool import SearchResult, WebSearchTool
 
 # Constitutional Oath
 # Setup logging
@@ -92,9 +92,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
             # SWEAR THE OATH IMMEDIATELY in __init__ (synchronous)
             # This ensures SCIENCE has oath_sworn=True before kernel registration
             self.oath_sworn = True
-            logger.info(
-                "✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)"
-            )
+            logger.info("✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)")
 
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
@@ -106,9 +104,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
         self._cache_dir = None
         self._results_dir = None
 
-        logger.info(
-            "✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)"
-        )
+        logger.info("✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)")
 
     @property
     def cache_dir(self):
@@ -171,12 +167,8 @@ class ScientistCartridge(VibeAgent, OathMixin):
     def report_status(self) -> Dict[str, Any]:
         """Report SCIENCE status (VibeAgent interface) - Deep Introspection."""
         # Count cached results
-        cache_files = (
-            list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
-        )
-        results_files = (
-            list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
-        )
+        cache_files = list(self.cache_dir.glob("*.json")) if self.cache_dir.exists() else []
+        results_files = list(self.results_dir.glob("*.md")) if self.results_dir.exists() else []
 
         return {
             "agent_id": "science",
@@ -193,9 +185,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
             },
         }
 
-    def research(
-        self, query: str, max_results: int = 5, use_cache: bool = True
-    ) -> Dict[str, Any]:
+    def research(self, query: str, max_results: int = 5, use_cache: bool = True) -> Dict[str, Any]:
         """
         Main research interface.
 
@@ -264,9 +254,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
         # Synthesize into comprehensive briefing
         comprehensive = self._synthesize_multiple_briefings(topic, all_results)
 
-        logger.info(
-            f"✅ Comprehensive briefing created: {len(all_results)} perspectives"
-        )
+        logger.info(f"✅ Comprehensive briefing created: {len(all_results)} perspectives")
         return comprehensive
 
     def fact_check(self, claim: str, context: Optional[str] = None) -> Dict[str, Any]:
@@ -286,9 +274,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
         briefing = self.research(claim, max_results=3)
 
         # Simple heuristic: Check if claim appears in results
-        claim_found = any(
-            claim.lower() in source["content"].lower() for source in briefing["sources"]
-        )
+        claim_found = any(claim.lower() in source["content"].lower() for source in briefing["sources"])
 
         confidence = 0.8 if claim_found else 0.3
         status = "verified" if claim_found else "unverified"
@@ -367,9 +353,7 @@ class ScientistCartridge(VibeAgent, OathMixin):
 
         return expansions["default"]
 
-    def _synthesize_multiple_briefings(
-        self, topic: str, briefings: list
-    ) -> Dict[str, Any]:
+    def _synthesize_multiple_briefings(self, topic: str, briefings: list) -> Dict[str, Any]:
         """Synthesize multiple briefings into one comprehensive briefing."""
         all_sources = []
         all_insights = []

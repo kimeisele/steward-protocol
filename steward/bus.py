@@ -15,10 +15,10 @@ Future roadmap:
 """
 
 import logging
-from typing import Dict, List, Callable, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("STEWARD_BUS")
 
@@ -216,25 +216,17 @@ class SignalBus:
         if signal_type:
             if signal_type in self.listeners:
                 before = len(self.listeners[signal_type])
-                self.listeners[signal_type] = [
-                    l
-                    for l in self.listeners[signal_type]
-                    if l.listener_id != listener_id
-                ]
+                self.listeners[signal_type] = [l for l in self.listeners[signal_type] if l.listener_id != listener_id]
                 after = len(self.listeners[signal_type])
                 if before > after:
-                    logger.info(
-                        f"📡 Listener unregistered: {listener_id} from {signal_type.value}"
-                    )
+                    logger.info(f"📡 Listener unregistered: {listener_id} from {signal_type.value}")
                     return True
         else:
             # Unsubscribe from all signal types
             found = False
             for st in list(self.listeners.keys()):
                 before = len(self.listeners[st])
-                self.listeners[st] = [
-                    l for l in self.listeners[st] if l.listener_id != listener_id
-                ]
+                self.listeners[st] = [l for l in self.listeners[st] if l.listener_id != listener_id]
                 after = len(self.listeners[st])
                 if before > after:
                     found = True
@@ -261,9 +253,7 @@ class SignalBus:
 
         self.total_signals_emitted += 1
 
-        logger.debug(
-            f"📡 Signal emitted: {signal.signal_type.value} from {signal.source_agent}"
-        )
+        logger.debug(f"📡 Signal emitted: {signal.signal_type.value} from {signal.source_agent}")
 
         # Notify listeners
         handled_count = 0
@@ -272,9 +262,7 @@ class SignalBus:
                 if listener.handle(signal):
                     handled_count += 1
 
-        logger.info(
-            f"📡 Signal distributed: {signal.signal_type.value} to {handled_count} listener(s)"
-        )
+        logger.info(f"📡 Signal distributed: {signal.signal_type.value} to {handled_count} listener(s)")
 
         return handled_count
 
@@ -308,11 +296,7 @@ class SignalBus:
         Returns:
             List of signals (most recent first)
         """
-        signals = (
-            self.signal_history[-limit:]
-            if len(self.signal_history) > limit
-            else self.signal_history
-        )
+        signals = self.signal_history[-limit:] if len(self.signal_history) > limit else self.signal_history
 
         if signal_type:
             signals = [s for s in signals if s.signal_type == signal_type]
@@ -332,9 +316,7 @@ class SignalBus:
             "bus_id": self.bus_id,
             "total_signals_emitted": self.total_signals_emitted,
             "total_listeners": total_listeners,
-            "listeners_by_type": {
-                st.value: len(listeners) for st, listeners in self.listeners.items()
-            },
+            "listeners_by_type": {st.value: len(listeners) for st, listeners in self.listeners.items()},
             "history_size": len(self.signal_history),
         }
 

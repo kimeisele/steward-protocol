@@ -23,19 +23,17 @@ The Builder Agent should call this after every code change.
 This keeps git repo state synchronized with live kernel state.
 """
 
-import sys
 import json
 import logging
-from pathlib import Path
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("KERNEL_PULSE")
 
 

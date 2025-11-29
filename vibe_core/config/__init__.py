@@ -5,15 +5,15 @@ This module provides the configuration system for Steward Protocol.
 Configuration is the DNA of the system - if code dies, config resurrects it.
 """
 
+from .loader import ConfigLoader
 from .schema import (
     CityConfig,
+    CivicConfig,
+    ForumConfig,
     HeraldConfig,
     ScienceConfig,
-    ForumConfig,
-    CivicConfig,
     load_config,
 )
-from .loader import ConfigLoader
 
 # Alias for backward compatibility (Phase 2 compatibility)
 # TODO: Remove in v2.0

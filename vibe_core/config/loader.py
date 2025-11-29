@@ -5,10 +5,12 @@ Provides high-level interface for configuration management.
 """
 
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import yaml
 
-from .schema import CityConfig, load_config as schema_load_config
+from .schema import CityConfig
+from .schema import load_config as schema_load_config
 
 
 class ConfigLoader:
@@ -37,8 +39,7 @@ class ConfigLoader:
         """
         if not self.config_path.exists():
             raise FileNotFoundError(
-                f"Configuration file not found: {self.config_path}\n"
-                f"Expected at: {self.config_path.absolute()}"
+                f"Configuration file not found: {self.config_path}\n" f"Expected at: {self.config_path.absolute()}"
             )
 
         try:

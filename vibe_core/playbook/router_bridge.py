@@ -118,15 +118,11 @@ class RouterBridge:
         Returns:
             RouterBridgeContext with routed actions and phase assignment
         """
-        logger.info(
-            f"🌉 Bridging workflow: {workflow_graph.name} (intent: {workflow_graph.intent})"
-        )
+        logger.info(f"🌉 Bridging workflow: {workflow_graph.name} (intent: {workflow_graph.intent})")
 
         # Step 1: Determine target phase from workflow intent
         target_phase = self._map_intent_to_phase(workflow_graph.intent)
-        logger.debug(
-            f"   → Mapped intent '{workflow_graph.intent}' to phase: {target_phase}"
-        )
+        logger.debug(f"   → Mapped intent '{workflow_graph.intent}' to phase: {target_phase}")
 
         # Step 2: Route each workflow node
         routed_actions = self._route_nodes(workflow_graph.nodes, target_phase)
@@ -146,9 +142,7 @@ class RouterBridge:
             },
         )
 
-        logger.info(
-            f"   ✅ Workflow bridged: {len(routed_actions)} actions → {target_phase}"
-        )
+        logger.info(f"   ✅ Workflow bridged: {len(routed_actions)} actions → {target_phase}")
         return context
 
     def _map_intent_to_phase(self, intent: str) -> str:
@@ -177,38 +171,21 @@ class RouterBridge:
         # Pattern matching for common intents
         intent_lower = intent.lower()
 
-        if any(
-            word in intent_lower for word in ["plan", "research", "analysis", "design"]
-        ):
+        if any(word in intent_lower for word in ["plan", "research", "analysis", "design"]):
             return "PLANNING"
-        elif any(
-            word in intent_lower
-            for word in ["code", "implement", "develop", "generate"]
-        ):
+        elif any(word in intent_lower for word in ["code", "implement", "develop", "generate"]):
             return "CODING"
-        elif any(
-            word in intent_lower for word in ["test", "validate", "verify", "bug"]
-        ):
+        elif any(word in intent_lower for word in ["test", "validate", "verify", "bug"]):
             return "TESTING"
-        elif any(
-            word in intent_lower
-            for word in ["deploy", "release", "rollout", "production"]
-        ):
+        elif any(word in intent_lower for word in ["deploy", "release", "rollout", "production"]):
             return "DEPLOYMENT"
-        elif any(
-            word in intent_lower
-            for word in ["maintain", "monitor", "support", "incident"]
-        ):
+        elif any(word in intent_lower for word in ["maintain", "monitor", "support", "incident"]):
             return "MAINTENANCE"
 
-        logger.warning(
-            f"⚠️  Could not map intent '{intent}' to phase, defaulting to PLANNING"
-        )
+        logger.warning(f"⚠️  Could not map intent '{intent}' to phase, defaulting to PLANNING")
         return "PLANNING"
 
-    def _route_nodes(
-        self, nodes: dict[str, WorkflowNode], target_phase: str
-    ) -> list[RoutedAction]:
+    def _route_nodes(self, nodes: dict[str, WorkflowNode], target_phase: str) -> list[RoutedAction]:
         """
         Route workflow nodes to target phase.
 
@@ -259,14 +236,10 @@ class RouterBridge:
             return False
 
         if not context.routed_actions:
-            logger.warning(
-                "⚠️  Validation warning: No routed actions (may be empty workflow)"
-            )
+            logger.warning("⚠️  Validation warning: No routed actions (may be empty workflow)")
             return False
 
-        logger.debug(
-            f"✅ Validation passed: {context.workflow_id} → {context.target_phase}"
-        )
+        logger.debug(f"✅ Validation passed: {context.workflow_id} → {context.target_phase}")
         return True
 
 

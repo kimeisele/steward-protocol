@@ -19,10 +19,10 @@ This is the "Flute" that plays the Rasa Lila (Dance of Agents).
 import asyncio
 import json
 import logging
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Set, Callable
+from typing import Any, Callable, Dict, List, Optional, Set
 from uuid import uuid4
 
 logger = logging.getLogger("EVENT_BUS")
@@ -187,9 +187,7 @@ class EventBus:
         else:
             self._global_subscribers.discard(callback)
 
-    def get_history(
-        self, limit: int = 100, event_type: Optional[str] = None
-    ) -> List[Event]:
+    def get_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Event]:
         """Get event history (most recent first)"""
         if event_type:
             history = [e for e in self._event_history if e.event_type == event_type]

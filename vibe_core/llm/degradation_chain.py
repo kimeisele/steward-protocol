@@ -10,23 +10,25 @@ Fallback order:
 """
 
 import logging
-from enum import Enum
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger("DEGRADATION_CHAIN")
 
 
 class DegradationLevel(Enum):
     """Current system capability level."""
-    FULL = "full"           # Local LLM available
+
+    FULL = "full"  # Local LLM available
     TEMPLATES = "templates"  # Only templates available
-    MINIMAL = "minimal"      # Nothing available
+    MINIMAL = "minimal"  # Nothing available
 
 
 @dataclass
 class DegradationResponse:
     """Response with degradation metadata."""
+
     content: str
     level: DegradationLevel
     confidence: float
@@ -53,6 +55,7 @@ class DegradationChain:
         """Detect current system capability."""
         try:
             from vibe_core.llm.local_llama_provider import LocalLlamaProvider
+
             if LocalLlamaProvider.model_exists():
                 self._local_llm = LocalLlamaProvider()
                 if self._local_llm.is_available:
@@ -74,17 +77,11 @@ class DegradationChain:
             "status": "Agent City ist online. Alle Systeme nominal.",
             "unknown": "Ich verstehe deine Anfrage. Bitte sei spezifischer.",
             "error": "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
-            "no_llm": (
-                "Kein lokales LLM installiert. "
-                "Fuer bessere Antworten: steward install-llm"
-            ),
+            "no_llm": ("Kein lokales LLM installiert. " "Fuer bessere Antworten: steward install-llm"),
         }
 
     def respond(
-        self,
-        user_input: str,
-        semantic_confidence: float,
-        detected_intent: Optional[str] = None
+        self, user_input: str, semantic_confidence: float, detected_intent: Optional[str] = None
     ) -> DegradationResponse:
         """Generate response with graceful degradation."""
 
@@ -94,17 +91,14 @@ class DegradationChain:
                 content="[SATYA: Direct execution by SemanticRouter]",
                 level=self._level,
                 confidence=semantic_confidence,
-                fallback_used="none"
+                fallback_used="none",
             )
 
         # MANTHAN (0.60-0.85): Medium confidence
         if semantic_confidence >= 0.60:
             clarification = self._generate_clarification(user_input, detected_intent)
             return DegradationResponse(
-                content=clarification,
-                level=self._level,
-                confidence=semantic_confidence,
-                fallback_used="clarification"
+                content=clarification, level=self._level, confidence=semantic_confidence, fallback_used="clarification"
             )
 
         # NETI NETI (<0.60): Low confidence
@@ -122,14 +116,9 @@ class DegradationChain:
         # Try LocalLLM
         if self._local_llm is not None:
             try:
-                response = self._local_llm.chat([
-                    {"role": "user", "content": user_input}
-                ])
+                response = self._local_llm.chat([{"role": "user", "content": user_input}])
                 return DegradationResponse(
-                    content=response,
-                    level=DegradationLevel.FULL,
-                    confidence=confidence,
-                    fallback_used="local_llm"
+                    content=response, level=DegradationLevel.FULL, confidence=confidence, fallback_used="local_llm"
                 )
             except Exception as e:
                 logger.warning(f"LocalLLM failed: {e}")
@@ -146,7 +135,7 @@ class DegradationChain:
                 level=self._level,
                 confidence=confidence,
                 fallback_used=f"template:{template_key}",
-                user_guidance="Fuer intelligentere Antworten: steward install-llm"
+                user_guidance="Fuer intelligentere Antworten: steward install-llm",
             )
 
         # Last resort
@@ -155,7 +144,7 @@ class DegradationChain:
             level=DegradationLevel.MINIMAL,
             confidence=confidence,
             fallback_used="template:unknown",
-            user_guidance="Fuer intelligentere Antworten: steward install-llm"
+            user_guidance="Fuer intelligentere Antworten: steward install-llm",
         )
 
     def _match_template(self, user_input: str) -> Optional[str]:

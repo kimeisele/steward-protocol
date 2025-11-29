@@ -13,10 +13,10 @@ Capabilities:
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("ARCHIVIST_VISUALIZER")
 
@@ -37,9 +37,7 @@ class LedgerVisualizer:
 
         if ledger_path.exists():
             self._load_ledger()
-            logger.info(
-                f"✅ Ledger Visualizer initialized: {len(self.attestations)} attestations loaded"
-            )
+            logger.info(f"✅ Ledger Visualizer initialized: {len(self.attestations)} attestations loaded")
         else:
             logger.warning(f"⚠️  Ledger not found: {ledger_path}")
 
@@ -91,14 +89,10 @@ class LedgerVisualizer:
 
         # Event type breakdown
         event_types = defaultdict(int)
-        verification_by_type = defaultdict(
-            lambda: {"verified": 0, "failed": 0, "total": 0}
-        )
+        verification_by_type = defaultdict(lambda: {"verified": 0, "failed": 0, "total": 0})
 
         for attestation in self.attestations:
-            event_type = attestation.get("target_event", {}).get(
-                "event_type", "unknown"
-            )
+            event_type = attestation.get("target_event", {}).get("event_type", "unknown")
             event_types[event_type] += 1
 
             status = attestation.get("status", "unknown")
@@ -123,9 +117,7 @@ class LedgerVisualizer:
             "failed_count": failed,
             "verification_rate": round((verified / total * 100) if total > 0 else 0, 1),
             "event_types": dict(event_types),
-            "verification_by_type": {
-                k: dict(v) for k, v in verification_by_type.items()
-            },
+            "verification_by_type": {k: dict(v) for k, v in verification_by_type.items()},
             "agent_stats": {k: dict(v) for k, v in agent_stats.items()},
             "last_loaded": self.last_loaded.isoformat() if self.last_loaded else None,
         }
@@ -163,20 +155,14 @@ class LedgerVisualizer:
                 continue
 
             try:
-                timestamp = datetime.fromisoformat(
-                    timestamp_str.replace("+00:00", "+00:00")
-                )
+                timestamp = datetime.fromisoformat(timestamp_str.replace("+00:00", "+00:00"))
                 if timestamp >= cutoff:
                     timeline.append(
                         {
                             "timestamp": timestamp_str,
-                            "event_type": attestation.get("target_event", {}).get(
-                                "event_type"
-                            ),
+                            "event_type": attestation.get("target_event", {}).get("event_type"),
                             "status": attestation.get("status"),
-                            "agent_id": attestation.get("target_event", {}).get(
-                                "agent_id"
-                            ),
+                            "agent_id": attestation.get("target_event", {}).get("agent_id"),
                         }
                     )
             except ValueError:
@@ -255,9 +241,7 @@ class LedgerVisualizer:
 """
         return html
 
-    def generate_json_report(
-        self, output_path: Optional[Path] = None
-    ) -> Dict[str, Any]:
+    def generate_json_report(self, output_path: Optional[Path] = None) -> Dict[str, Any]:
         """
         Generate a complete JSON report of ledger statistics.
 

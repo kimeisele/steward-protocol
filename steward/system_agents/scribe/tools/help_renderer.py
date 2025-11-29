@@ -13,12 +13,13 @@ Dynamic discovery, zero hardcoding.
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Any
-from .introspector import CartridgeIntrospector, ScriptIntrospector, ConfigIntrospector
+from typing import Any, Dict, List
+
+from .introspector import CartridgeIntrospector, ConfigIntrospector, ScriptIntrospector
 from .operations_introspector import (
-    WorkflowIntrospector,
     GitActivityIntrospector,
     ParameterIntrospector,
+    WorkflowIntrospector,
 )
 
 
@@ -278,7 +279,9 @@ For detailed information:
         output = "**Current State:**\n\n"
         output += f"- **Branch:** `{branch}`\n"
         output += f"- **Status:** {status}\n"
-        output += f"- **Last Commit:** `{last_commit.get('hash', 'unknown')}` - {last_commit.get('message', 'unknown')}\n"
+        output += (
+            f"- **Last Commit:** `{last_commit.get('hash', 'unknown')}` - {last_commit.get('message', 'unknown')}\n"
+        )
         output += f"- **Author:** {last_commit.get('author', 'unknown')}\n"
         output += f"- **Time:** {last_commit.get('time', 'unknown')}\n"
 
@@ -292,22 +295,14 @@ For detailed information:
         output = "**Tunable Parameters:**\n\n"
 
         if "starting_credits" in economy:
-            output += (
-                f"- **Starting Credits:** {economy['starting_credits']} CR per agent\n"
-            )
-            output += (
-                "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
-            )
+            output += f"- **Starting Credits:** {economy['starting_credits']} CR per agent\n"
+            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
 
         if "api_cost" in economy:
             output += f"- **API Cost:** {economy['api_cost']} CR per call\n"
-            output += (
-                "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
-            )
+            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
 
-        output += (
-            "**Transparency:** See exactly what credits cost and where to change it.\n"
-        )
+        output += "**Transparency:** See exactly what credits cost and where to change it.\n"
 
         return output
 
@@ -328,9 +323,7 @@ For detailed information:
 
         return output
 
-    def _render_diagnostics(
-        self, ledger_status: Dict[str, Any], agents: List[str]
-    ) -> str:
+    def _render_diagnostics(self, ledger_status: Dict[str, Any], agents: List[str]) -> str:
         """Render diagnostics."""
         output = ""
 
@@ -402,9 +395,7 @@ For detailed information:
                 "exists": True,
                 "total_entries": len(entries),
                 "initialized": True,
-                "last_update": (
-                    entries[-1].get("timestamp", "unknown") if entries else "never"
-                ),
+                "last_update": (entries[-1].get("timestamp", "unknown") if entries else "never"),
             }
         except:
             return {"exists": True, "readable": False}

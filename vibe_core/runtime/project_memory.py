@@ -66,17 +66,11 @@ class ProjectMemoryManager:
                 from datetime import datetime
 
                 timestamp = datetime.utcnow().isoformat() + "Z"
-                self.sqlite_store._map_project_memory_to_sql(
-                    memory, mission_id, timestamp
-                )
-                logger.debug(
-                    f"✅ Dual-write project memory to SQLite: mission_id={mission_id}"
-                )
+                self.sqlite_store._map_project_memory_to_sql(memory, mission_id, timestamp)
+                logger.debug(f"✅ Dual-write project memory to SQLite: mission_id={mission_id}")
             except Exception as e:
                 # Non-fatal - JSON is source of truth in Shadow Mode Phase 1
-                logger.warning(
-                    f"⚠️ SQLite dual-write for project memory failed (non-fatal): {e}"
-                )
+                logger.warning(f"⚠️ SQLite dual-write for project memory failed (non-fatal): {e}")
 
     def update_after_session(
         self,
@@ -217,9 +211,7 @@ class ProjectMemoryManager:
 
         # Deployment related
         if any(kw in user_lower for kw in ["deploy", "production", "release"]):
-            intents.append(
-                {"session": session_num, "intent": "deployment", "confidence": "high"}
-            )
+            intents.append({"session": session_num, "intent": "deployment", "confidence": "high"})
 
         # Documentation
         if any(kw in user_lower for kw in ["document", "readme", "docs"]):
@@ -243,9 +235,7 @@ class ProjectMemoryManager:
 
         # Bug fixing
         if any(kw in user_lower for kw in ["bug", "fix", "error", "issue"]):
-            intents.append(
-                {"session": session_num, "intent": "bug fixing", "confidence": "high"}
-            )
+            intents.append({"session": session_num, "intent": "bug fixing", "confidence": "high"})
 
         return intents
 
@@ -269,9 +259,7 @@ class ProjectMemoryManager:
         # Track blockers from test failures
         tests = context.get("tests", {})
         if tests.get("failing"):
-            trajectory["blockers"] = [
-                f"{len(tests['failing'])} failing tests in {tests.get('framework', 'pytest')}"
-            ]
+            trajectory["blockers"] = [f"{len(tests['failing'])} failing tests in {tests.get('framework', 'pytest')}"]
         else:
             trajectory["blockers"] = []
 

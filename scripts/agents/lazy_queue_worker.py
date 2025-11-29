@@ -23,13 +23,13 @@ This ensures:
 ✅ Full audit trail of all processing
 """
 
-import sys
-import logging
 import argparse
-import time
+import logging
 import signal
-from pathlib import Path
+import sys
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -74,8 +74,9 @@ class LazyQueueWorker:
         """
         try:
             from envoy.tools.milk_ocean import LazyQueue
-            from vibe_core.kernel_impl import RealVibeKernel
+
             from provider.universal_provider import UniversalProvider
+            from vibe_core.kernel_impl import RealVibeKernel
 
             queue = LazyQueue()
             kernel = RealVibeKernel(ledger_path="data/vibe_ledger.db")
@@ -179,12 +180,8 @@ class LazyQueueWorker:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Lazy Queue Worker - Process queued requests from Milk Ocean"
-    )
-    parser.add_argument(
-        "--daemon", action="store_true", help="Run as daemon (continuous processing)"
-    )
+    parser = argparse.ArgumentParser(description="Lazy Queue Worker - Process queued requests from Milk Ocean")
+    parser.add_argument("--daemon", action="store_true", help="Run as daemon (continuous processing)")
     parser.add_argument(
         "--interval",
         type=int,

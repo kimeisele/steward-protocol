@@ -9,8 +9,8 @@ Focus: CivicCartridge and its dependencies (Economy, Bank, Vault, Cryptography).
 This script attempts to instantiate the agents that were previously reported to crash.
 """
 
-import sys
 import logging
+import sys
 import traceback
 
 # Configure logging
@@ -71,9 +71,7 @@ def main():
 
     logger.info("==========================================")
     if failures:
-        logger.error(
-            f"❌ VERIFICATION FAILED. {len(failures)} agents crashed: {', '.join(failures)}"
-        )
+        logger.error(f"❌ VERIFICATION FAILED. {len(failures)} agents crashed: {', '.join(failures)}")
         sys.exit(1)
     else:
         logger.info("✅ VERIFICATION PASSED. All critical agents booted successfully.")

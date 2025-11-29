@@ -14,12 +14,13 @@ Architecture:
 - Periodic Sync: Kernel syncs quotas with CivicBank every minute
 """
 
-import psutil
 import logging
 import time
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
 from multiprocessing import Process
+from typing import Any, Dict, Optional
+
+import psutil
 
 logger = logging.getLogger("RESOURCE_MANAGER")
 
@@ -89,10 +90,7 @@ class ResourceManager:
         """
         quota = self.calculate_quota_from_credits(credits)
         self.quotas[agent_id] = quota
-        logger.info(
-            f"💰 {agent_id}: {credits} credits → "
-            f"{quota.cpu_percent}% CPU, {quota.memory_mb} MB RAM"
-        )
+        logger.info(f"💰 {agent_id}: {credits} credits → " f"{quota.cpu_percent}% CPU, {quota.memory_mb} MB RAM")
 
     def enforce_quota(self, agent_id: str, process: Process) -> None:
         """
@@ -123,8 +121,7 @@ class ResourceManager:
             p.nice(int(nice_value))
 
             logger.debug(
-                f"🔧 {agent_id} (PID {process.pid}): "
-                f"nice={nice_value} for {quota.cpu_percent}% CPU target"
+                f"🔧 {agent_id} (PID {process.pid}): " f"nice={nice_value} for {quota.cpu_percent}% CPU target"
             )
 
             # Memory limits (Linux only, limited macOS support)
@@ -133,20 +130,16 @@ class ResourceManager:
             # or use cgroups (Linux only)
             # For now, we'll log a warning on macOS
             try:
-                import resource
                 import platform
+                import resource
 
                 if platform.system() == "Linux":
                     memory_bytes = quota.memory_mb * 1024 * 1024
                     # This would need to be set in the child process, not here
                     # resource.setrlimit(resource.RLIMIT_AS, (memory_bytes, memory_bytes))
-                    logger.debug(
-                        f"🔧 {agent_id}: RAM limit {quota.memory_mb} MB (Linux)"
-                    )
+                    logger.debug(f"🔧 {agent_id}: RAM limit {quota.memory_mb} MB (Linux)")
                 else:
-                    logger.debug(
-                        f"⚠️  {agent_id}: RAM limits not enforced on {platform.system()}"
-                    )
+                    logger.debug(f"⚠️  {agent_id}: RAM limits not enforced on {platform.system()}")
             except Exception as e:
                 logger.debug(f"⚠️  Memory limit failed: {e}")
 
@@ -178,9 +171,7 @@ class ResourceManager:
             memory_info = p.memory_info()
             memory_mb = memory_info.rss / (1024 * 1024)
 
-            quota = self.quotas.get(
-                agent_id, ResourceQuota(cpu_percent=5, memory_mb=50)
-            )
+            quota = self.quotas.get(agent_id, ResourceQuota(cpu_percent=5, memory_mb=50))
 
             return {
                 "agent_id": agent_id,
@@ -189,8 +180,7 @@ class ResourceManager:
                 "memory_mb": round(memory_mb, 2),
                 "quota_cpu": quota.cpu_percent,
                 "quota_memory": quota.memory_mb,
-                "cpu_within_quota": cpu_percent
-                <= quota.cpu_percent * 1.2,  # 20% tolerance
+                "cpu_within_quota": cpu_percent <= quota.cpu_percent * 1.2,  # 20% tolerance
                 "memory_within_quota": memory_mb <= quota.memory_mb * 1.2,
             }
         except psutil.NoSuchProcess:

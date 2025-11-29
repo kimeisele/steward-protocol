@@ -10,13 +10,14 @@ SCRIBE Citymap Renderer - Generate CITYMAP.md
 Dynamic discovery + Runtime state = Complete city map
 """
 
+from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Set, Any
-from collections import defaultdict
+from typing import Any, Dict, List, Set
+
 from .introspector import CartridgeIntrospector
-from .vibe_introspector import VibeCoreIntrospector, ToolsIntrospector
 from .runtime_inspector import RuntimeInspector
+from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
 
 
 class CitymapRenderer:
@@ -46,9 +47,7 @@ class CitymapRenderer:
         self.tools = self.tools_introspector.scan_all()
 
         # Layer 3: Agents (cartridges)
-        self.agents = self.cart_introspector.scan_all(
-            self.root_dir / "steward" / "system_agents"
-        )
+        self.agents = self.cart_introspector.scan_all(self.root_dir / "steward" / "system_agents")
 
         # Runtime state
         system_status = self.runtime_inspector.get_system_status()
@@ -298,9 +297,7 @@ python -m steward.system_agents.scribe.cartridge_main
             output += f"### 🔧 {agent_name.upper()} Tools\n\n"
 
             for tool in self.tools[agent_name]:
-                output += (
-                    f"**{tool['name']}** (`{tool['file']}` - {tool['lines']} lines)\n"
-                )
+                output += f"**{tool['name']}** (`{tool['file']}` - {tool['lines']} lines)\n"
                 output += f"- {tool['purpose']}\n\n"
 
         return output
@@ -325,7 +322,9 @@ python -m steward.system_agents.scribe.cartridge_main
 
         for agent_name in sorted(self.agents.keys()):
             agent = self.agents[agent_name]
-            output += f"| **{agent_name.upper()}** | {agent['domain']} | `{agent['class_name']}` | {agent['description']} |\n"
+            output += (
+                f"| **{agent_name.upper()}** | {agent['domain']} | `{agent['class_name']}` | {agent['description']} |\n"
+            )
 
         return output
 
@@ -347,9 +346,7 @@ python -m steward.system_agents.scribe.cartridge_main
         output = f"- **Threat Level:** {sec_status.get('threat_level', 'Unknown')}\n"
         output += f"- **Status:** {sec_status.get('status', 'Unknown')}\n"
         output += f"- **Threats Detected:** {sec_status.get('threats_detected', 0)}\n"
-        output += (
-            f"- **Description:** {sec_status.get('description', 'No information')}\n"
-        )
+        output += f"- **Description:** {sec_status.get('description', 'No information')}\n"
 
         return output
 

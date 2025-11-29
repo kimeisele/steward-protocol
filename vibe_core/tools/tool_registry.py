@@ -62,9 +62,7 @@ class ToolRegistry:
         self._invariant_checker = invariant_checker
 
         if invariant_checker:
-            logger.info(
-                f"🛡️ ToolRegistry initialized with Soul Governance ({invariant_checker.rule_count} rules)"
-            )
+            logger.info(f"🛡️ ToolRegistry initialized with Soul Governance ({invariant_checker.rule_count} rules)")
         else:
             logger.debug("ToolRegistry: Initialized (no governance)")
 
@@ -90,9 +88,7 @@ class ToolRegistry:
         tool_name = tool.name
 
         if tool_name in self.tools:
-            raise ValueError(
-                f"Tool '{tool_name}' is already registered. Cannot register duplicate tool names."
-            )
+            raise ValueError(f"Tool '{tool_name}' is already registered. Cannot register duplicate tool names.")
 
         self.tools[tool_name] = tool
         logger.info(f"ToolRegistry: Registered tool '{tool_name}'")
@@ -205,9 +201,7 @@ class ToolRegistry:
         # Step 4: Execute tool
         try:
             result = tool.execute(tool_call.parameters)
-            logger.info(
-                f"ToolRegistry: Tool '{tool_name}' completed (success={result.success})"
-            )
+            logger.info(f"ToolRegistry: Tool '{tool_name}' completed (success={result.success})")
             return result
         except Exception as e:
             # Fallback error handling (tools should catch their own exceptions)

@@ -4,15 +4,15 @@ Core logic for Chain of Trust verification and archival
 """
 
 import logging
-import sys
 import os
+import sys
 
 # Add tools to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "tools"))
 
+from ledger_tool import LedgerTool
 from observer_tool import ObserverTool
 from verifier_tool import VerifierTool
-from ledger_tool import LedgerTool
 
 logger = logging.getLogger("ARCHIVIST_CARTRIDGE")
 
@@ -73,9 +73,7 @@ class Archivist:
             self.logger.info("✅ ARCHIVAL CYCLE COMPLETE")
             self.logger.info("=" * 70)
             summary = self.ledger.get_ledger_summary()
-            self.logger.info(
-                f"📊 Ledger Status: {summary['total_entries']} entries recorded"
-            )
+            self.logger.info(f"📊 Ledger Status: {summary['total_entries']} entries recorded")
 
             return recorded
 
@@ -94,9 +92,7 @@ class Archivist:
                 valid_broadcasts.append(broadcast)
                 self.logger.info(f"✅ Valid broadcast: {broadcast['id']}")
             else:
-                self.logger.warning(
-                    f"❌ Invalid broadcast structure: {broadcast.get('id')}"
-                )
+                self.logger.warning(f"❌ Invalid broadcast structure: {broadcast.get('id')}")
 
         self.logger.info(f"📡 Observed {len(valid_broadcasts)} valid broadcasts")
         return valid_broadcasts

@@ -7,7 +7,7 @@ This module implements the core infrastructure for HERALD:
 - Cryptographic Proof: All events are signed with HERALD's identity
 """
 
-from .memory import EventLog, Event
+from .memory import Event, EventLog
 
 __all__ = [
     "EventLog",

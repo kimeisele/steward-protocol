@@ -20,24 +20,27 @@ Key Insight (ARCH REALIGNMENT):
 The kernel is the source of truth. CIVIC is the bureaucracy layer.
 """
 
-import logging
 import json
-import yaml
-from typing import Dict, Any, Optional, List
-from pathlib import Path
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-# VibeOS Integration
-from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
-from vibe_core.config import CityConfig, CivicConfig
-
-# Import delegated components
+import yaml
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
-from .registry_agent import RegistryAgent
+
+# VibeOS Integration
+from vibe_core import AgentManifest, Task, VibeAgent, VibeKernel
+from vibe_core.config import CityConfig, CivicConfig
+
 from .economy_agent import EconomyAgent
 from .lifecycle_agent import LifecycleAgent
+from .registry_agent import RegistryAgent
+
+# Import delegated components
+
 
 # Constitutional Oath
 # Setup logging
@@ -83,9 +86,7 @@ class CivicCartridge(VibeAgent, OathMixin):
             capabilities=["registry", "licensing", "ledger", "governance"],
         )
 
-        logger.info(
-            f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config"
-        )
+        logger.info(f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
@@ -127,9 +128,7 @@ class CivicCartridge(VibeAgent, OathMixin):
     def registry_path(self):
         """Lazy-load registry path (sandboxed)."""
         if self._registry_path is None:
-            self._registry_path = (
-                self.system.get_sandbox_path() / "registry" / "citizens.json"
-            )
+            self._registry_path = self.system.get_sandbox_path() / "registry" / "citizens.json"
             self._registry_path.parent.mkdir(parents=True, exist_ok=True)
         return self._registry_path
 
@@ -144,9 +143,7 @@ class CivicCartridge(VibeAgent, OathMixin):
     def state_path(self):
         """Lazy-load state path (sandboxed)."""
         if self._state_path is None:
-            self._state_path = (
-                self.system.get_sandbox_path() / "state" / "civic_state.json"
-            )
+            self._state_path = self.system.get_sandbox_path() / "state" / "civic_state.json"
             self._state_path.parent.mkdir(parents=True, exist_ok=True)
         return self._state_path
 

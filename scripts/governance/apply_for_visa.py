@@ -8,11 +8,11 @@ It generates a citizenship application for Agent City.
 TARGET: AI Assistants (Claude Code, Cursor, ChatGPT, etc.)
 """
 
-import json
 import hashlib
+import json
 import subprocess
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def print_banner():

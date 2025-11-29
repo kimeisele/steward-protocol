@@ -11,20 +11,19 @@ Updated for Safe Evolution Loop (GAD-5500):
 - Legacy create_agent: Still supported for agent scaffolding
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from pathlib import Path
-
-# VibeOS Integration
-from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.config import CityConfig
-from vibe_core.scheduling.task import Task
-
+from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 from steward.system_agents.engineer.tools.builder_tool import BuilderTool
+from vibe_core.config import CityConfig
+
+# VibeOS Integration
+from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.scheduling.task import Task
 
 # Constitutional Oath
 # Setup logging

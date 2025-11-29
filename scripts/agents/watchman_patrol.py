@@ -9,15 +9,15 @@ Report violations to ledger.
 "The guardian stands watch. Justice is swift."
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Setup path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from watchman.cartridge_main import WatchmanCartridge
 from civic.tools.economy import CivicBank
+from watchman.cartridge_main import WatchmanCartridge
 
 
 def main():
@@ -83,9 +83,7 @@ def main():
 
     print("\n" + "=" * 80)
     if report["agents_frozen"]:
-        print(
-            f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations"
-        )
+        print(f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations")
         print("These agents cannot execute until violations are resolved.")
     else:
         print("✅ GREEN LIGHT: System is clean. All agents operational.")

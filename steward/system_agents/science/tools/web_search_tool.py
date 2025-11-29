@@ -12,10 +12,10 @@ Philosophy:
 No mocks. No fake data. No building on lies."
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any, List
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 try:
     from tavily import TavilyClient
@@ -109,12 +109,8 @@ class WebSearchTool:
         if self.vault is not None:
             try:
                 # Lease the Tavily API key from the Vault
-                self.api_key = self.vault.lease_secret(
-                    agent_id="science", key_name="tavily_api", bank=self.bank
-                )
-                logger.info(
-                    "✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)"
-                )
+                self.api_key = self.vault.lease_secret(agent_id="science", key_name="tavily_api", bank=self.bank)
+                logger.info("✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)")
             except Exception as vault_error:
                 logger.warning(f"⚠️  Vault lease failed: {vault_error}")
                 # Fallback to environment variable
@@ -124,16 +120,13 @@ class WebSearchTool:
         if not self.api_key:
             self.api_key = os.getenv("TAVILY_API_KEY")
             if self.api_key:
-                logger.info(
-                    "✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)"
-                )
+                logger.info("✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)")
 
         # Initialize Tavily client if we have the key
         if self.api_key:
             if not TavilyClient:
                 raise ImportError(
-                    "❌ CRITICAL: tavily package not installed. "
-                    "Install via: pip install tavily-python"
+                    "❌ CRITICAL: tavily package not installed. " "Install via: pip install tavily-python"
                 )
 
             try:
@@ -148,8 +141,7 @@ class WebSearchTool:
         else:
             # No API key available - we'll operate in offline mode
             logger.warning(
-                "⚠️  TAVILY_API_KEY not found in Vault or environment. "
-                "Search will operate in offline mode."
+                "⚠️  TAVILY_API_KEY not found in Vault or environment. " "Search will operate in offline mode."
             )
             self.mode = "offline"
 
@@ -220,9 +212,7 @@ class WebSearchTool:
                 f"System requires real search results. No mocks. No fallbacks."
             )
 
-    def synthesize_fact_sheet(
-        self, query: str, results: List[SearchResult]
-    ) -> Dict[str, Any]:
+    def synthesize_fact_sheet(self, query: str, results: List[SearchResult]) -> Dict[str, Any]:
         """
         Synthesize search results into a structured fact sheet.
 

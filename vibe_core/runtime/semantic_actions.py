@@ -90,21 +90,13 @@ class SemanticAction:
     name: str  # e.g., "debug_test_failures"
     intent: str  # e.g., "Find and fix test failures"
     description: str  # Detailed description
-    required_skills: list[str] = field(
-        default_factory=list
-    )  # e.g., ["code_analysis", "debugging"]
-    input_schema: dict[str, Any] = field(
-        default_factory=dict
-    )  # Expected input structure
-    output_schema: dict[str, Any] = field(
-        default_factory=dict
-    )  # Expected output structure
+    required_skills: list[str] = field(default_factory=list)  # e.g., ["code_analysis", "debugging"]
+    input_schema: dict[str, Any] = field(default_factory=dict)  # Expected input structure
+    output_schema: dict[str, Any] = field(default_factory=dict)  # Expected output structure
     estimated_cost_usd: float = 0.0  # Estimated API cost
     timeout_seconds: int = 300  # Execution timeout
     prompt_key: str | None = None  # Optional key to lookup prompt in registry
-    knowledge_context: bool = (
-        False  # If True, inject relevant knowledge artifacts before execution
-    )
+    knowledge_context: bool = False  # If True, inject relevant knowledge artifacts before execution
 
     def __str__(self) -> str:
         return f"SemanticAction({self.name}: {self.intent})"
@@ -205,15 +197,9 @@ class SemanticActionsRegistry:
             if all(skill in action.required_skills for skill in required_skills)
         ]
 
-    def list_actions_by_type(
-        self, action_type: SemanticActionType
-    ) -> list[SemanticAction]:
+    def list_actions_by_type(self, action_type: SemanticActionType) -> list[SemanticAction]:
         """List all actions of a specific type"""
-        return [
-            action
-            for action in self.actions.values()
-            if action.action_type == action_type
-        ]
+        return [action for action in self.actions.values() if action.action_type == action_type]
 
     def get_total_estimated_cost(self, action_names: list[str]) -> float:
         """Calculate total estimated cost for a set of actions"""
@@ -253,6 +239,4 @@ if __name__ == "__main__":
 
     print("\n" + "=" * 60)
     print(f"Total Actions Registered: {len(registry.actions)}")
-    print(
-        f"Total Estimated Cost: ${registry.get_total_estimated_cost(list(registry.actions.keys())):.2f}"
-    )
+    print(f"Total Estimated Cost: ${registry.get_total_estimated_cost(list(registry.actions.keys())):.2f}")

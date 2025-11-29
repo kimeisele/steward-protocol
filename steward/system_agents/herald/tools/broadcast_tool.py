@@ -5,8 +5,8 @@ Handles publishing to multiple platforms with graceful fallback.
 Offline-capable with dry-run modes for safety.
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 try:
@@ -64,9 +64,7 @@ class BroadcastTool:
             except Exception as e:
                 logger.warning(f"⚠️  Broadcast: Twitter auth failed: {e}")
         else:
-            logger.warning(
-                "⚠️  Broadcast: Twitter credentials incomplete (simulation mode)"
-            )
+            logger.warning("⚠️  Broadcast: Twitter credentials incomplete (simulation mode)")
 
     def _init_reddit(self) -> None:
         """Initialize Reddit client."""
@@ -92,9 +90,7 @@ class BroadcastTool:
             except Exception as e:
                 logger.warning(f"⚠️  Broadcast: Reddit auth failed: {e}")
         else:
-            logger.warning(
-                "⚠️  Broadcast: Reddit credentials incomplete (simulation mode)"
-            )
+            logger.warning("⚠️  Broadcast: Reddit credentials incomplete (simulation mode)")
 
     def verify_credentials(self, platform: str = "twitter") -> bool:
         """
@@ -108,17 +104,11 @@ class BroadcastTool:
         """
         if platform == "twitter":
             available = self.twitter_client is not None
-            logger.info(
-                f"✅ Twitter credentials verified"
-                if available
-                else "❌ Twitter offline"
-            )
+            logger.info(f"✅ Twitter credentials verified" if available else "❌ Twitter offline")
             return available
         elif platform == "reddit":
             available = self.reddit_client is not None
-            logger.info(
-                f"✅ Reddit credentials verified" if available else "❌ Reddit offline"
-            )
+            logger.info(f"✅ Reddit credentials verified" if available else "❌ Reddit offline")
             return available
         return False
 
@@ -159,9 +149,7 @@ class BroadcastTool:
         logger.info(f"   Would post to r/LocalLLaMA: {content[:80]}...")
         return True  # Success simulation
 
-    def scan_mentions(
-        self, since_id: Optional[str] = None, platform: str = "twitter"
-    ) -> list:
+    def scan_mentions(self, since_id: Optional[str] = None, platform: str = "twitter") -> list:
         """
         Scan for mentions on platform.
 
@@ -235,15 +223,11 @@ class BroadcastTool:
     def _reply_twitter(self, tweet_id: str, content: str) -> bool:
         """Post reply on Twitter."""
         if not self.twitter_client:
-            logger.warning(
-                f"🛑 Twitter offline (would reply to {tweet_id}: {content[:50]}...)"
-            )
+            logger.warning(f"🛑 Twitter offline (would reply to {tweet_id}: {content[:50]}...)")
             return True
 
         try:
-            self.twitter_client.create_tweet(
-                text=content, in_reply_to_tweet_id=tweet_id
-            )
+            self.twitter_client.create_tweet(text=content, in_reply_to_tweet_id=tweet_id)
             logger.info(f"🚀 Replied to {tweet_id}")
             return True
         except Exception as e:

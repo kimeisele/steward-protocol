@@ -13,19 +13,19 @@ Steps:
 5. Send CRASH command -> Verify Kernel survives & Agent restarts
 """
 
-import sys
-import time
 import logging
 import os
-from typing import Dict, Any
+import sys
+import time
+from typing import Any, Dict
 
 # Ensure we can import vibe_core
 sys.path.append(os.getcwd())
 
+from steward.oath_mixin import OathMixin
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
-from steward.oath_mixin import OathMixin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")

@@ -71,27 +71,17 @@ def _load_quota_limits_from_config() -> dict[str, Any]:
                 "cost_per_day_usd": config.quotas.cost_per_day_usd,
             }
         except Exception as e:
-            logger.debug(
-                f"Phoenix config unavailable, falling back to environment variables: {e}"
-            )
+            logger.debug(f"Phoenix config unavailable, falling back to environment variables: {e}")
 
     # Fallback: Load from environment variables
     try:
         import os
 
         return {
-            "requests_per_minute": int(
-                os.environ.get("VIBE_QUOTA_REQUESTS_PER_MINUTE", "10")
-            ),
-            "tokens_per_minute": int(
-                os.environ.get("VIBE_QUOTA_TOKENS_PER_MINUTE", "10000")
-            ),
-            "cost_per_hour_usd": float(
-                os.environ.get("VIBE_QUOTA_COST_PER_HOUR_USD", "2.0")
-            ),
-            "cost_per_day_usd": float(
-                os.environ.get("VIBE_QUOTA_COST_PER_DAY_USD", "5.0")
-            ),
+            "requests_per_minute": int(os.environ.get("VIBE_QUOTA_REQUESTS_PER_MINUTE", "10")),
+            "tokens_per_minute": int(os.environ.get("VIBE_QUOTA_TOKENS_PER_MINUTE", "10000")),
+            "cost_per_hour_usd": float(os.environ.get("VIBE_QUOTA_COST_PER_HOUR_USD", "2.0")),
+            "cost_per_day_usd": float(os.environ.get("VIBE_QUOTA_COST_PER_DAY_USD", "5.0")),
         }
     except (ValueError, TypeError) as e:
         logger.warning(f"Invalid quota environment variables, using safe defaults: {e}")
@@ -213,10 +203,7 @@ class OperationalQuota:
             )
 
         # Check 2: Token rate limit
-        if (
-            self.metrics.tokens_this_minute + estimated_tokens
-            > self.limits.tokens_per_minute
-        ):
+        if self.metrics.tokens_this_minute + estimated_tokens > self.limits.tokens_per_minute:
             raise QuotaExceededError(
                 f"Token rate limit would be exceeded: "
                 f"{self.metrics.tokens_this_minute + estimated_tokens}/"
@@ -240,10 +227,7 @@ class OperationalQuota:
             )
 
         # Check 4: Hourly cost limit
-        if (
-            self.metrics.cost_this_hour_usd + estimated_cost
-            > self.limits.cost_per_hour_usd
-        ):
+        if self.metrics.cost_this_hour_usd + estimated_cost > self.limits.cost_per_hour_usd:
             remaining = self.limits.cost_per_hour_usd - self.metrics.cost_this_hour_usd
             logger.warning(
                 f"Hourly cost limit approaching: "
@@ -259,10 +243,7 @@ class OperationalQuota:
             )
 
         # Check 5: Daily cost limit
-        if (
-            self.metrics.cost_this_day_usd + estimated_cost
-            > self.limits.cost_per_day_usd
-        ):
+        if self.metrics.cost_this_day_usd + estimated_cost > self.limits.cost_per_day_usd:
             remaining = self.limits.cost_per_day_usd - self.metrics.cost_this_day_usd
             logger.warning(
                 f"Daily cost limit approaching: "
@@ -387,20 +368,12 @@ class OperationalQuota:
             "requests": {
                 "this_minute": self.metrics.requests_this_minute,
                 "limit": self.limits.requests_per_minute,
-                "percent_used": (
-                    self.metrics.requests_this_minute
-                    / self.limits.requests_per_minute
-                    * 100
-                ),
+                "percent_used": (self.metrics.requests_this_minute / self.limits.requests_per_minute * 100),
             },
             "tokens": {
                 "this_minute": self.metrics.tokens_this_minute,
                 "limit": self.limits.tokens_per_minute,
-                "percent_used": (
-                    self.metrics.tokens_this_minute
-                    / self.limits.tokens_per_minute
-                    * 100
-                ),
+                "percent_used": (self.metrics.tokens_this_minute / self.limits.tokens_per_minute * 100),
             },
             "cost": {
                 "this_hour_usd": round(self.metrics.cost_this_hour_usd, 4),

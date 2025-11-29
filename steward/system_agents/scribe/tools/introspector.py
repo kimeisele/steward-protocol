@@ -4,9 +4,9 @@ SCRIBE Introspection Module - Extract metadata from codebase
 """
 
 import re
-from pathlib import Path
-from typing import Dict, List, Set, Any, Optional
 from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 
 class CartridgeIntrospector:
@@ -33,9 +33,7 @@ class CartridgeIntrospector:
 
         return self.agents
 
-    def _extract_metadata(
-        self, cartridge_file: Path, agent_name: str, agent_path: Path
-    ) -> Optional[Dict[str, Any]]:
+    def _extract_metadata(self, cartridge_file: Path, agent_name: str, agent_path: Path) -> Optional[Dict[str, Any]]:
         """Extract metadata from a cartridge file."""
         try:
             content = cartridge_file.read_text()

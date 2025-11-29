@@ -20,8 +20,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
+from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling.task import Task
 
 

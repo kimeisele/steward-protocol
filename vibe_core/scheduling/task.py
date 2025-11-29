@@ -5,11 +5,11 @@ Tasks are the unit of work in VibeOS. Agents receive tasks from the kernel
 scheduler, process them, and return results.
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict
-from enum import Enum
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from typing import Any, Dict
 
 
 class TaskStatus(str, Enum):

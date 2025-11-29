@@ -5,12 +5,12 @@ All agents running in VibeOS must implement this protocol.
 This is the contract between the kernel and cartridges.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from enum import Enum
 import asyncio
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -248,9 +248,7 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(
-                    self.emit_event(event_type, message, task_id, details)
-                )
+                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))

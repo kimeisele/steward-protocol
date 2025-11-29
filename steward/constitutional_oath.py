@@ -12,11 +12,11 @@ This is the "Genesis Ceremony" – the moment an agent binds itself to Truth.
 """
 
 import hashlib
-import logging
 import json
-from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger("CONSTITUTIONAL_OATH")
 
@@ -131,15 +131,11 @@ class ConstitutionalOath:
                     logger.warning("⚠️ Allowing GENESIS_HASH bypass for bootstrapping")
                     return True, "Genesis Bootstrap Authorized"
 
-                reason = (
-                    f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
-                )
+                reason = f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
                 logger.warning(f"⚠️  {reason}")
                 return False, reason
 
-            logger.info(
-                f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}"
-            )
+            logger.info(f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}")
             return True, "Oath is valid"
 
         except Exception as e:

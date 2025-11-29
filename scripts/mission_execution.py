@@ -4,24 +4,25 @@ Mission Execution Script - Cost-Efficient Scaling
 Simulates VibeOS kernel to execute ENVOY commands for the mission.
 """
 
-import sys
-import logging
 import json
+import logging
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# Import Vibe Core and Cartridges
-from vibe_core import VibeAgent, Task
-from envoy.cartridge_main import EnvoyCartridge
-from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
+from envoy.cartridge_main import EnvoyCartridge
 from forum.cartridge_main import ForumCartridge
+from herald.cartridge_main import HeraldCartridge
 from science.cartridge_main import ScienceCartridge
+
+# Import Vibe Core and Cartridges
+from vibe_core import Task, VibeAgent
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")

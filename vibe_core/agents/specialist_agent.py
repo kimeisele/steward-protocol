@@ -88,9 +88,7 @@ class SpecialistAgent(VibeAgent):
             >>> print(agent.agent_id)  # "specialist-planning"
         """
         if not isinstance(specialist, BaseSpecialist):
-            raise TypeError(
-                f"specialist must be a BaseSpecialist instance, got {type(specialist).__name__}"
-            )
+            raise TypeError(f"specialist must be a BaseSpecialist instance, got {type(specialist).__name__}")
 
         self.specialist = specialist
 
@@ -285,9 +283,7 @@ class SpecialistAgent(VibeAgent):
         payload = task.payload
 
         if not isinstance(payload, dict):
-            raise TypeError(
-                f"Task payload must be a dict, got {type(payload).__name__}"
-            )
+            raise TypeError(f"Task payload must be a dict, got {type(payload).__name__}")
 
         # Extract required fields (will raise KeyError if missing)
         mission_id = payload["mission_id"]
@@ -307,9 +303,7 @@ class SpecialistAgent(VibeAgent):
             metadata=metadata,
         )
 
-    def _result_to_response(
-        self, task: Task, result: SpecialistResult
-    ) -> AgentResponse:
+    def _result_to_response(self, task: Task, result: SpecialistResult) -> AgentResponse:
         """
         Convert SpecialistResult to AgentResponse for kernel recording.
 
@@ -336,7 +330,4 @@ class SpecialistAgent(VibeAgent):
 
     def __repr__(self) -> str:
         """String representation for debugging"""
-        return (
-            f"SpecialistAgent(agent_id={self.agent_id!r}, "
-            f"specialist={self.specialist.__class__.__name__})"
-        )
+        return f"SpecialistAgent(agent_id={self.agent_id!r}, " f"specialist={self.specialist.__class__.__name__})"

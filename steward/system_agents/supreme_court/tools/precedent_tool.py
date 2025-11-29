@@ -9,13 +9,13 @@ In Vedic terms: This is the library of Dharma (cosmic law) application.
 """
 
 import json
-import uuid
 import logging
-from typing import Dict, List, Any, Optional
-from pathlib import Path
-from dataclasses import dataclass, asdict
+import uuid
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("PRECEDENT_TOOL")
 
@@ -30,9 +30,7 @@ class PrecedentCase:
     agent_id: str
     verdict_type: str  # mercy_granted, upheld, conditional
     justification: str
-    category: str = (
-        "general"  # For classification (e.g., "first_offense", "repeated_violations")
-    )
+    category: str = "general"  # For classification (e.g., "first_offense", "repeated_violations")
     recorded_at: str = ""
     citations: int = 0  # How many times cited in future appeals
 
@@ -137,9 +135,7 @@ class PrecedentTool:
 
         return similar
 
-    def get_precedent_cases(
-        self, category: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def get_precedent_cases(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get precedent cases, optionally filtered by category."""
         cases = self._load_cases()
 
@@ -174,9 +170,7 @@ class PrecedentTool:
             if case.get("case_id") == case_id:
                 case["citations"] = case.get("citations", 0) + 1
                 self._rewrite_cases(cases)
-                logger.info(
-                    f"Case {case_id} cited (total citations: {case['citations']})"
-                )
+                logger.info(f"Case {case_id} cited (total citations: {case['citations']})")
                 return True
 
         return False

@@ -19,10 +19,10 @@ Frequencies:
 import asyncio
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 logger = logging.getLogger("PULSE")
@@ -146,11 +146,7 @@ class PulseManager:
         self._cycle_id += 1
 
         # Show registered agents even if idle (for better system visibility)
-        active_agents = (
-            self._active_agents.copy()
-            if self._active_agents
-            else ["HERALD", "WATCHMAN", "ENVOY"]
-        )
+        active_agents = self._active_agents.copy() if self._active_agents else ["HERALD", "WATCHMAN", "ENVOY"]
 
         return PulsePacket(
             timestamp=datetime.utcnow().isoformat() + "Z",
@@ -190,9 +186,7 @@ class PulseManager:
         """
         if callback not in self._subscribers:
             self._subscribers.append(callback)
-            logger.debug(
-                f"📡 New subscriber registered (total: {len(self._subscribers)})"
-            )
+            logger.debug(f"📡 New subscriber registered (total: {len(self._subscribers)})")
 
         return str(uuid4())
 
@@ -205,9 +199,7 @@ class PulseManager:
     def set_frequency(self, frequency: PulseFrequency):
         """Change heartbeat frequency (IDLE/ACTIVE/STRESS)"""
         self._frequency = frequency
-        logger.info(
-            f"⚡ Pulse frequency changed to {frequency.value}Hz ({frequency.name})"
-        )
+        logger.info(f"⚡ Pulse frequency changed to {frequency.value}Hz ({frequency.name})")
 
     def set_system_state(self, state: SystemState):
         """Update system health state"""

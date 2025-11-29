@@ -1,10 +1,10 @@
 """File-based locking for concurrent access."""
 
+import json
 import os
 import time
 from pathlib import Path
 from typing import Optional
-import json
 
 
 class FileLock:

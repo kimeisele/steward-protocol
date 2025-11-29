@@ -16,14 +16,18 @@ No license = No broadcasting, period."
 
 import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("CIVIC_LICENSE")
 
 # Import constitutional oath verification
+try:
+    from steward.constitutional_oath import ConstitutionalOath
+except ImportError:
+    ConstitutionalOath = None
 
 
 class LicenseType(Enum):
@@ -70,15 +74,11 @@ class License:
         self.agent_name = agent_name
         self.license_type = license_type
         self.issued_at = issued_at or datetime.now(timezone.utc).isoformat()
-        self.expires_at = (
-            expires_at or (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
-        )
+        self.expires_at = expires_at or (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
         self.status = status
         self.restrictions = restrictions or []
         self.violation_count = violation_count
-        self.source_authority = (
-            source_authority  # NEW: tracks WHO authorized this license
-        )
+        self.source_authority = source_authority  # NEW: tracks WHO authorized this license
 
     def is_valid(self) -> bool:
         """Check if license is currently valid."""
@@ -118,9 +118,7 @@ class License:
             status=LicenseStatus(data.get("status", "active")),
             restrictions=data.get("restrictions", []),
             violation_count=data.get("violation_count", 0),
-            source_authority=data.get(
-                "source_authority"
-            ),  # NEW: restore source authority
+            source_authority=data.get("source_authority"),  # NEW: restore source authority
         )
 
 
@@ -171,9 +169,7 @@ class LicenseTool:
         if key in self.licenses:
             existing = self.licenses[key]
             if existing.is_valid():
-                logger.warning(
-                    f"⚠️  {agent_name} already has active {license_type.value} license"
-                )
+                logger.warning(f"⚠️  {agent_name} already has active {license_type.value} license")
                 return existing
 
         # Issue new license
@@ -190,9 +186,7 @@ class LicenseTool:
 
         # Log with source authority reference
         if source_authority:
-            logger.info(
-                f"🎫 Issued {license_type.value} license to {agent_name}, as mandated by {source_authority}"
-            )
+            logger.info(f"🎫 Issued {license_type.value} license to {agent_name}, as mandated by {source_authority}")
         else:
             logger.info(f"🎫 Issued {license_type.value} license to {agent_name}")
         return license
@@ -238,9 +232,7 @@ class LicenseTool:
                 f"🔴 Revoked {license_type.value} license from {agent_name} ({reason}), as mandated by {source_authority}"
             )
         else:
-            logger.warning(
-                f"🔴 Revoked {license_type.value} license from {agent_name} ({reason})"
-            )
+            logger.warning(f"🔴 Revoked {license_type.value} license from {agent_name} ({reason})")
         logger.warning(f"   Violation count: {license.violation_count}")
 
         return True
@@ -271,15 +263,11 @@ class LicenseTool:
         license = self.licenses[key]
         license.status = LicenseStatus.SUSPENDED
 
-        logger.warning(
-            f"⏸️  Suspended {license_type.value} license for {agent_name} ({duration_hours}h)"
-        )
+        logger.warning(f"⏸️  Suspended {license_type.value} license for {agent_name} ({duration_hours}h)")
 
         return True
 
-    def check_license(
-        self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST
-    ) -> Dict[str, Any]:
+    def check_license(self, agent_name: str, license_type: LicenseType = LicenseType.BROADCAST) -> Dict[str, Any]:
         """
         Check if an agent has a valid license.
 
@@ -398,9 +386,7 @@ class LicenseTool:
 
         return True
 
-    def add_restriction(
-        self, agent_name: str, license_type: LicenseType, restriction: str
-    ) -> bool:
+    def add_restriction(self, agent_name: str, license_type: LicenseType, restriction: str) -> bool:
         """
         Add a restriction to a license.
 
@@ -456,21 +442,16 @@ class LicenseTool:
         # Verify oath is valid (Constitution hash matches)
         if ConstitutionalOath:
             try:
-                is_valid, validation_msg = ConstitutionalOath.verify_oath(
-                    oath_event, identity_tool=None
-                )
+                is_valid, validation_msg = ConstitutionalOath.verify_oath(oath_event, identity_tool=None)
 
                 if not is_valid:
                     reason = (
-                        f"DENIED: {agent_name}'s Constitutional Oath is no longer valid. "
-                        f"Reason: {validation_msg}"
+                        f"DENIED: {agent_name}'s Constitutional Oath is no longer valid. " f"Reason: {validation_msg}"
                     )
                     logger.warning(f"🔴 {reason}")
                     return False, reason
 
-                logger.info(
-                    f"✅ {agent_name}'s oath is valid and Constitution is intact"
-                )
+                logger.info(f"✅ {agent_name}'s oath is valid and Constitution is intact")
                 return True, "Oath verified - license can be issued"
 
             except Exception as e:
@@ -479,9 +460,7 @@ class LicenseTool:
                 return False, reason
         else:
             # ConstitutionalOath module not available - allow with warning
-            logger.warning(
-                "⚠️  Constitutional Oath module not available for verification"
-            )
+            logger.warning("⚠️  Constitutional Oath module not available for verification")
             return (
                 True,
                 "Oath event present - license can be issued (verification unavailable)",
@@ -590,9 +569,7 @@ def main():
     tool.revoke_license("herald", LicenseType.BROADCAST, "posting_spam")
 
     # Check again
-    print(
-        f"HERALD can broadcast (after revocation): {authority.can_broadcast('herald')}"
-    )
+    print(f"HERALD can broadcast (after revocation): {authority.can_broadcast('herald')}")
 
     # List all licenses
     all_licenses = tool.list_all_licenses()

@@ -6,14 +6,14 @@ Interactive onboarding wizard for instant agent adoption.
 Choose your companion. Join the Federation.
 """
 
-import os
-import sys
 import json
+import os
+import platform
 import shutil
 import subprocess
-import platform
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 
 def check_prerequisites():
