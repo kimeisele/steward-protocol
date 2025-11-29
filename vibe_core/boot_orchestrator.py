@@ -21,9 +21,12 @@ USAGE:
 
     orchestrator = BootOrchestrator()
     kernel = orchestrator.boot()
-    # kernel now has all agents registered, Sarga complete
+
+    # THE OPERATOR LOOP - This is where intelligence flows
+    await orchestrator.run_with_operator()
 """
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import Optional
@@ -31,6 +34,18 @@ from typing import Optional
 from steward.system_agents.discoverer.agent import Discoverer
 from vibe_core.config import CityConfig
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.operator_adapter import (
+    LocalLLMOperator,
+    TerminalOperator,
+    UniversalOperatorAdapter,
+)
+from vibe_core.protocols.operator_protocol import (
+    GitState,
+    Intent,
+    IntentType,
+    KernelStatusType,
+    SystemContext,
+)
 from vibe_core.sarga import Element, get_sarga
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
@@ -66,6 +81,10 @@ class BootOrchestrator:
         # Sarga phase components (initialized during boot)
         self.prompt_context = None  # VAYU phase
         self.oracle = None  # AGNI phase
+
+        # Universal Operator Adapter - THE SOCKET
+        self.operator_adapter: Optional[UniversalOperatorAdapter] = None
+        self._running = False
 
     def boot(self) -> RealVibeKernel:
         """
@@ -261,6 +280,153 @@ class BootOrchestrator:
         """
         return self.discoverer
 
+    # =========================================================================
+    # OPERATOR LOOP - THE WIRING
+    # =========================================================================
+
+    def _init_operator_adapter(self) -> UniversalOperatorAdapter:
+        """Initialize the operator adapter with default chain."""
+        adapter = UniversalOperatorAdapter()
+        adapter.register_operator(TerminalOperator(), priority=1)
+        adapter.register_operator(LocalLLMOperator(), priority=2)
+        # DegradedOperator is auto-registered at priority 999
+        return adapter
+
+    def _build_system_context(self) -> SystemContext:
+        """Build SystemContext from current kernel state."""
+        if not self.kernel:
+            return SystemContext(
+                boot_id="not-booted",
+                kernel_status=KernelStatusType.SHUTDOWN,
+            )
+
+        status = self.kernel.get_status()
+        sarga = get_sarga()
+
+        # Get git state
+        git_state = GitState()
+        try:
+            import subprocess
+
+            branch = subprocess.run(
+                ["git", "branch", "--show-current"],
+                capture_output=True,
+                text=True,
+                cwd=self.project_root,
+            )
+            if branch.returncode == 0:
+                git_state = GitState(
+                    branch=branch.stdout.strip() or None,
+                    is_clean=True,  # Simplified for now
+                )
+        except Exception:
+            pass
+
+        # Get available agents
+        available_agents = list(self.kernel.agent_registry.keys()) if hasattr(self.kernel, "agent_registry") else []
+
+        return SystemContext(
+            boot_id=str(id(self.kernel)),
+            kernel_status=KernelStatusType.READY if sarga.boot_complete else KernelStatusType.BOOTING,
+            agents_registered=status.get("agents_registered", 0),
+            agents_healthy=status.get("agents_registered", 0),  # Assume healthy for now
+            sarga_phase=sarga.get_status().get("phases", {}).get("prithvi", {}).get("status"),
+            sarga_complete=sarga.boot_complete,
+            git=git_state,
+            available_agents=available_agents,
+            operator_type=self.operator_adapter.get_current_operator_type() if self.operator_adapter else None,
+            degradation_level=self.operator_adapter.get_degradation_level() if self.operator_adapter else 0,
+        )
+
+    async def _execute_intent(self, intent: Intent) -> str:
+        """Execute an intent and return result message."""
+        logger.info(f"Executing intent: {intent.intent_type.value} - {intent.raw_input}")
+
+        if intent.intent_type == IntentType.CONTROL:
+            if intent.raw_input.lower() in ("exit", "quit", "shutdown", "stop"):
+                self._running = False
+                return "Shutting down Agent City..."
+            elif intent.raw_input.lower() == "status":
+                status = self.kernel.get_status()
+                return f"Kernel: {status}"
+
+        elif intent.intent_type == IntentType.QUERY:
+            if not intent.raw_input or intent.raw_input.lower() == "status":
+                status = self.kernel.get_status()
+                return f"Agents: {status.get('agents_registered', 0)} | Sarga: complete"
+
+        elif intent.intent_type == IntentType.DELEGATION:
+            if intent.target_agent:
+                agent = self.kernel.agent_registry.get(intent.target_agent)
+                if agent:
+                    return f"Delegated to {intent.target_agent}: {intent.raw_input}"
+                return f"Agent not found: {intent.target_agent}"
+
+        elif intent.intent_type == IntentType.REFLEX:
+            # Reflexes are automatic, no action needed
+            return ""
+
+        # Default: treat as command
+        return f"Command received: {intent.raw_input}"
+
+    async def run_with_operator(self) -> None:
+        """
+        THE MAIN OPERATOR LOOP.
+
+        This is where the system comes alive.
+        The operator (Human, Claude Code, LLM, Local) controls the kernel.
+
+        Loop:
+        1. Build SystemContext from kernel state
+        2. Send context to operator
+        3. Get intent from operator
+        4. Execute intent
+        5. Repeat until shutdown
+        """
+        if not self.kernel:
+            raise RuntimeError("Cannot run without booted kernel. Call boot() first.")
+
+        # Initialize operator adapter
+        self.operator_adapter = self._init_operator_adapter()
+        self._running = True
+
+        logger.info("=" * 70)
+        logger.info("🚀 AGENT CITY OS - OPERATOR LOOP STARTED")
+        logger.info(f"   Operator: {self.operator_adapter.get_current_operator_type().value}")
+        logger.info("   Type 'exit' to shutdown")
+        logger.info("=" * 70)
+
+        while self._running:
+            try:
+                # 1. Build context from kernel state
+                context = self._build_system_context()
+
+                # 2. Get decision from operator (sends context, gets intent)
+                intent = await self.operator_adapter.get_decision(context)
+
+                # 3. Execute the intent
+                result = await self._execute_intent(intent)
+
+                # 4. Output result (if any)
+                if result:
+                    print(f"\n{result}\n")
+
+            except KeyboardInterrupt:
+                logger.info("Keyboard interrupt - shutting down")
+                self._running = False
+
+            except Exception as e:
+                logger.error(f"Operator loop error: {e}")
+                # Don't crash - degradation will handle it
+
+        logger.info("=" * 70)
+        logger.info("🔴 AGENT CITY OS - SHUTDOWN COMPLETE")
+        logger.info("=" * 70)
+
+    def stop(self) -> None:
+        """Stop the operator loop."""
+        self._running = False
+
 
 def quick_boot(ledger_path: Optional[str] = None) -> RealVibeKernel:
     """
@@ -278,3 +444,27 @@ def quick_boot(ledger_path: Optional[str] = None) -> RealVibeKernel:
     """
     orchestrator = BootOrchestrator(ledger_path=ledger_path)
     return orchestrator.boot()
+
+
+async def boot_and_run(ledger_path: Optional[str] = None) -> None:
+    """
+    Boot the system AND start the operator loop.
+
+    This is the main entry point for Agent City OS.
+
+    Args:
+        ledger_path: Optional custom ledger path
+
+    Example:
+        import asyncio
+        asyncio.run(boot_and_run())
+    """
+    orchestrator = BootOrchestrator(ledger_path=ledger_path)
+    orchestrator.boot()
+    await orchestrator.run_with_operator()
+
+
+if __name__ == "__main__":
+    # Entry point: python -m vibe_core.boot_orchestrator
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(boot_and_run())
