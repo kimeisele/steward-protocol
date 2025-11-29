@@ -7,9 +7,9 @@ PING Agent - Minimal agent to prove the system works.
 import logging
 from typing import Any, Dict
 
+from steward.oath_mixin import OathMixin
 from vibe_core.agents import ContextAwareAgent
 from vibe_core.protocols import AgentManifest
-from steward.oath_mixin import OathMixin
 
 logger = logging.getLogger("PING")
 
