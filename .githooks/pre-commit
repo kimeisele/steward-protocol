@@ -127,6 +127,68 @@ fi
 echo -e "${GREEN}OK${NC}"
 
 # ============================================================================
+# GUARD 4: Auto-format with black (don't block, just fix)
+# ============================================================================
+echo -n "  🎨 Running black formatter... "
+
+# Get ALL staged Python files (not just system_agents)
+ALL_PYTHON_FILES=$(echo "$STAGED_FILES" | grep "\.py$" || true)
+
+if [ -n "$ALL_PYTHON_FILES" ]; then
+    # Auto-format staged Python files
+    echo "$ALL_PYTHON_FILES" | xargs black --quiet 2>/dev/null || true
+
+    # Restage formatted files
+    echo "$ALL_PYTHON_FILES" | xargs git add 2>/dev/null || true
+
+    echo -e "${GREEN}OK (auto-formatted)${NC}"
+else
+    echo -e "${GREEN}SKIP (no Python files)${NC}"
+fi
+
+# ============================================================================
+# GUARD 5: Auto-fix imports with isort (don't block, just fix)
+# ============================================================================
+echo -n "  📦 Running isort... "
+
+if [ -n "$ALL_PYTHON_FILES" ]; then
+    # Auto-fix imports in staged Python files
+    echo "$ALL_PYTHON_FILES" | xargs isort --profile black --quiet 2>/dev/null || true
+
+    # Restage fixed files
+    echo "$ALL_PYTHON_FILES" | xargs git add 2>/dev/null || true
+
+    echo -e "${GREEN}OK (auto-fixed)${NC}"
+else
+    echo -e "${GREEN}SKIP (no Python files)${NC}"
+fi
+
+# ============================================================================
+# GUARD 6: Check critical syntax errors with flake8 (BLOCK on errors)
+# ============================================================================
+echo -n "  🔍 Running flake8 syntax check... "
+
+if [ -n "$ALL_PYTHON_FILES" ]; then
+    # Check for critical errors: E9 (runtime), F63 (invalid), F7 (syntax), F82 (undefined)
+    FLAKE8_ERRORS=$(echo "$ALL_PYTHON_FILES" | xargs flake8 --select=E9,F63,F7,F82 2>/dev/null || true)
+
+    if [ -n "$FLAKE8_ERRORS" ]; then
+        echo -e "${RED}BLOCKED${NC}"
+        echo ""
+        echo -e "${RED}❌ CRITICAL SYNTAX ERRORS DETECTED${NC}"
+        echo ""
+        echo "$FLAKE8_ERRORS"
+        echo ""
+        echo "Fix these errors before committing."
+        exit 1
+    fi
+
+    echo -e "${GREEN}OK${NC}"
+else
+    echo -e "${GREEN}SKIP (no Python files)${NC}"
+fi
+
+# ============================================================================
 # All guards passed
 # ============================================================================
 echo -e "${GREEN}✅ All pre-commit guards passed${NC}"
