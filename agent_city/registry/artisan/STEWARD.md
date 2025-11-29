@@ -1,11 +1,11 @@
-# 🤖 HERALD Agent Identity
+# 🤖 ARTISAN Agent Identity
 
 ## Agent Identity
 
-- **Agent ID:** herald
-- **Name:** HERALD
+- **Agent ID:** artisan
+- **Name:** ARTISAN
 - **Version:** 1.0.0
-- **Class:** system_service
+- **Class:** citizen_service
 - **Specialization:** MEDIA
 - **Status:** ✅ ACTIVE
 
@@ -15,16 +15,13 @@
 
 ## 🎯 What I Do
 
-Content generation and broadcasting agent
+Media and technical operations
 
 ---
 
 ## ✅ Core Capabilities
 
-- `content_generation` - content_generation operation
-- `broadcasting` - broadcasting operation
-- `research` - research operation
-- `strategy` - strategy operation
+- `media_production` - Asset creation
 
 ---
 
@@ -36,26 +33,26 @@ This agent is part of the STEWARD Protocol Agent OS. To interact with it:
 
 ```bash
 # Verify agent identity
-steward verify herald
+steward verify artisan
 
 # Discover this agent
 steward discover
 
 # Delegate task to this agent
-steward delegate herald "your task description"
+steward delegate artisan "your task description"
 ```
 
 ### Protocol-based Usage
 
 ```bash
 # Verify identity
-steward verify herald
+steward verify artisan
 
 # Check agent status
-steward ps | grep herald
+steward ps | grep artisan
 
 # View agent in Parampara blockchain
-steward lineage | grep HERALD
+steward lineage | grep ARTISAN
 ```
 
 ---
@@ -66,7 +63,7 @@ steward lineage | grep HERALD
 
 ```bash
 # Verify agent signature
-steward verify herald
+steward verify artisan
 
 # Expected output:
 # ✅ Identity verified

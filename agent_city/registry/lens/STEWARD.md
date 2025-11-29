@@ -1,12 +1,12 @@
-# 🤖 HERALD Agent Identity
+# 🤖 LENS Agent Identity
 
 ## Agent Identity
 
-- **Agent ID:** herald
-- **Name:** HERALD
+- **Agent ID:** lens
+- **Name:** LENS
 - **Version:** 1.0.0
-- **Class:** system_service
-- **Specialization:** MEDIA
+- **Class:** citizen_service
+- **Specialization:** OBSERVATION
 - **Status:** ✅ ACTIVE
 
 **Protocol Compliance:** Level 2
@@ -15,16 +15,13 @@
 
 ## 🎯 What I Do
 
-Content generation and broadcasting agent
+System observation and analysis
 
 ---
 
 ## ✅ Core Capabilities
 
-- `content_generation` - content_generation operation
-- `broadcasting` - broadcasting operation
-- `research` - research operation
-- `strategy` - strategy operation
+- `observation` - System monitoring
 
 ---
 
@@ -36,26 +33,26 @@ This agent is part of the STEWARD Protocol Agent OS. To interact with it:
 
 ```bash
 # Verify agent identity
-steward verify herald
+steward verify lens
 
 # Discover this agent
 steward discover
 
 # Delegate task to this agent
-steward delegate herald "your task description"
+steward delegate lens "your task description"
 ```
 
 ### Protocol-based Usage
 
 ```bash
 # Verify identity
-steward verify herald
+steward verify lens
 
 # Check agent status
-steward ps | grep herald
+steward ps | grep lens
 
 # View agent in Parampara blockchain
-steward lineage | grep HERALD
+steward lineage | grep LENS
 ```
 
 ---
@@ -66,7 +63,7 @@ steward lineage | grep HERALD
 
 ```bash
 # Verify agent signature
-steward verify herald
+steward verify lens
 
 # Expected output:
 # ✅ Identity verified

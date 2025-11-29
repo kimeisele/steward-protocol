@@ -1,12 +1,12 @@
-# 🤖 HERALD Agent Identity
+# 🤖 MARKET Agent Identity
 
 ## Agent Identity
 
-- **Agent ID:** herald
-- **Name:** HERALD
+- **Agent ID:** market
+- **Name:** MARKET
 - **Version:** 1.0.0
-- **Class:** system_service
-- **Specialization:** MEDIA
+- **Class:** citizen_service
+- **Specialization:** ECONOMY
 - **Status:** ✅ ACTIVE
 
 **Protocol Compliance:** Level 2
@@ -15,16 +15,13 @@
 
 ## 🎯 What I Do
 
-Content generation and broadcasting agent
+Economic transactions and marketplace
 
 ---
 
 ## ✅ Core Capabilities
 
-- `content_generation` - content_generation operation
-- `broadcasting` - broadcasting operation
-- `research` - research operation
-- `strategy` - strategy operation
+- `trading` - Market operations
 
 ---
 
@@ -36,26 +33,26 @@ This agent is part of the STEWARD Protocol Agent OS. To interact with it:
 
 ```bash
 # Verify agent identity
-steward verify herald
+steward verify market
 
 # Discover this agent
 steward discover
 
 # Delegate task to this agent
-steward delegate herald "your task description"
+steward delegate market "your task description"
 ```
 
 ### Protocol-based Usage
 
 ```bash
 # Verify identity
-steward verify herald
+steward verify market
 
 # Check agent status
-steward ps | grep herald
+steward ps | grep market
 
 # View agent in Parampara blockchain
-steward lineage | grep HERALD
+steward lineage | grep MARKET
 ```
 
 ---
@@ -66,7 +63,7 @@ steward lineage | grep HERALD
 
 ```bash
 # Verify agent signature
-steward verify herald
+steward verify market
 
 # Expected output:
 # ✅ Identity verified
