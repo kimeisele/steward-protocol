@@ -62,9 +62,7 @@ class AnthropicProvider(LLMProvider):
         self.api_key = api_key
 
         if not self.api_key:
-            raise ProviderNotAvailableError(
-                "Anthropic API key required. Set ANTHROPIC_API_KEY environment variable."
-            )
+            raise ProviderNotAvailableError("Anthropic API key required. Set ANTHROPIC_API_KEY environment variable.")
 
         try:
             from anthropic import Anthropic
@@ -76,9 +74,7 @@ class AnthropicProvider(LLMProvider):
                 "anthropic package not installed. Install with: pip install anthropic>=0.18.0"
             ) from e
         except Exception as e:
-            raise ProviderNotAvailableError(
-                f"Failed to initialize Anthropic client: {e}"
-            ) from e
+            raise ProviderNotAvailableError(f"Failed to initialize Anthropic client: {e}") from e
 
     def invoke(
         self,
@@ -181,9 +177,7 @@ class AnthropicProvider(LLMProvider):
             f"Last error: {type(last_error).__name__} - {last_error!s}"
         )
 
-    def calculate_cost(
-        self, input_tokens: int, output_tokens: int, model: str
-    ) -> float:
+    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
         """
         Calculate cost based on Anthropic pricing.
 
@@ -196,9 +190,7 @@ class AnthropicProvider(LLMProvider):
             Cost in USD
         """
         if model not in self.PRICING:
-            logger.warning(
-                f"Unknown Anthropic model pricing: {model}, using Sonnet defaults"
-            )
+            logger.warning(f"Unknown Anthropic model pricing: {model}, using Sonnet defaults")
             pricing = self.PRICING["claude-3-5-sonnet-20241022"]
         else:
             pricing = self.PRICING[model]

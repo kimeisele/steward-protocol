@@ -15,9 +15,9 @@ This is how Agent City LIVES - not just code, but rhythm.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("DAILY_RITUAL")
 
@@ -86,9 +86,7 @@ class DailyRitual:
         self.events_this_cycle = all_events
 
         logger.info("=" * 60)
-        logger.info(
-            f"🌙 DAY {self.cycle_count}: COMPLETE - {len(all_events)} events recorded"
-        )
+        logger.info(f"🌙 DAY {self.cycle_count}: COMPLETE - {len(all_events)} events recorded")
         logger.info("=" * 60)
 
         return {

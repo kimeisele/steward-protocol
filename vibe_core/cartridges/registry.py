@@ -64,9 +64,7 @@ class CartridgeRegistry:
             if (parent / ".vibe").exists():
                 return parent
 
-        raise RuntimeError(
-            "Could not detect vibe-agency root. Please set VIBE_ROOT environment variable."
-        )
+        raise RuntimeError("Could not detect vibe-agency root. Please set VIBE_ROOT environment variable.")
 
     def _auto_discover(self) -> None:
         """Auto-discover cartridges in vibe_core/cartridges/ directory."""
@@ -115,9 +113,7 @@ class CartridgeRegistry:
             cartridge_name: Name of the cartridge
         """
         try:
-            spec = importlib.util.spec_from_file_location(
-                f"cartridge_{cartridge_name}", file_path
-            )
+            spec = importlib.util.spec_from_file_location(f"cartridge_{cartridge_name}", file_path)
 
             if spec and spec.loader:
                 module = importlib.util.module_from_spec(spec)
@@ -126,27 +122,17 @@ class CartridgeRegistry:
                 # Find CartridgeBase subclass in the module
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
-                    if (
-                        isinstance(attr, type)
-                        and issubclass(attr, CartridgeBase)
-                        and attr is not CartridgeBase
-                    ):
+                    if isinstance(attr, type) and issubclass(attr, CartridgeBase) and attr is not CartridgeBase:
                         self._registry[cartridge_name] = attr
-                        logger.info(
-                            f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})"
-                        )
+                        logger.info(f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})")
                         return
 
-                logger.warning(
-                    f"⚠️ No CartridgeBase subclass found in {file_path} for {cartridge_name}"
-                )
+                logger.warning(f"⚠️ No CartridgeBase subclass found in {file_path} for {cartridge_name}")
 
         except Exception as e:
             logger.warning(f"⚠️ Failed to load cartridge {cartridge_name}: {e}")
 
-    def register_cartridge(
-        self, name: str, cartridge_class: type[CartridgeBase], override: bool = False
-    ) -> None:
+    def register_cartridge(self, name: str, cartridge_class: type[CartridgeBase], override: bool = False) -> None:
         """
         Manually register a cartridge.
 
@@ -160,22 +146,16 @@ class CartridgeRegistry:
             ValueError: If cartridge already registered and override=False
         """
         if not issubclass(cartridge_class, CartridgeBase):
-            raise TypeError(
-                f"Cartridge class must inherit from CartridgeBase, got: {cartridge_class.__name__}"
-            )
+            raise TypeError(f"Cartridge class must inherit from CartridgeBase, got: {cartridge_class.__name__}")
 
         if name in self._registry and not override:
-            raise ValueError(
-                f"Cartridge '{name}' already registered. Use override=True to replace."
-            )
+            raise ValueError(f"Cartridge '{name}' already registered. Use override=True to replace.")
 
         old_class = self._registry.get(name)
         self._registry[name] = cartridge_class
 
         if old_class:
-            logger.info(
-                f"🔄 Cartridge override: {name} ({old_class.__name__} → {cartridge_class.__name__})"
-            )
+            logger.info(f"🔄 Cartridge override: {name} ({old_class.__name__} → {cartridge_class.__name__})")
         else:
             logger.info(f"➕ Cartridge registered: {name} → {cartridge_class.__name__}")
 
@@ -194,9 +174,7 @@ class CartridgeRegistry:
             ValueError: If cartridge not found
         """
         if name not in self._registry:
-            raise ValueError(
-                f"Cartridge '{name}' not found. Available: {list(self._registry.keys())}"
-            )
+            raise ValueError(f"Cartridge '{name}' not found. Available: {list(self._registry.keys())}")
 
         # Return cached instance if requested
         if cached and name in self._instances:
@@ -236,9 +214,7 @@ class CartridgeRegistry:
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        cartridges = ", ".join(
-            f"{name}({cls.__name__})" for name, cls in self._registry.items()
-        )
+        cartridges = ", ".join(f"{name}({cls.__name__})" for name, cls in self._registry.items())
         return f"CartridgeRegistry({len(self._registry)} cartridges: {cartridges})"
 
 

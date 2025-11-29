@@ -44,9 +44,7 @@ class ArchivistCartridge(CartridgeBase):
 
     name = "archivist"
     version = "1.0.0"
-    description = (
-        "Knowledge base builder - reads documents and generates searchable index"
-    )
+    description = "Knowledge base builder - reads documents and generates searchable index"
     author = "Vibe Agency"
 
     def __init__(self, vibe_root: Path | None = None):
@@ -92,9 +90,7 @@ class ArchivistCartridge(CartridgeBase):
             # Check file size
             file_size = file_path.stat().st_size
             if file_size > self.max_document_size:
-                logger.warning(
-                    f"⚠️ Skipping oversized file: {file_path} ({file_size} bytes)"
-                )
+                logger.warning(f"⚠️ Skipping oversized file: {file_path} ({file_size} bytes)")
                 continue
 
             documents.append(
@@ -147,9 +143,7 @@ class ArchivistCartridge(CartridgeBase):
                             text.append(page.extract_text())
                     return "\n".join(text)
                 except ImportError:
-                    logger.warning(
-                        "⚠️ PyPDF2 not installed. PDF extraction unavailable."
-                    )
+                    logger.warning("⚠️ PyPDF2 not installed. PDF extraction unavailable.")
                     return None
 
         except Exception as e:
@@ -186,9 +180,7 @@ class ArchivistCartridge(CartridgeBase):
             logger.warning(f"⚠️ Summarization failed: {e}. Using text truncation.")
             return text[:max_length]
 
-    def build_index(
-        self, folder_path: str, output_path: str | None = None
-    ) -> dict[str, Any]:
+    def build_index(self, folder_path: str, output_path: str | None = None) -> dict[str, Any]:
         """
         Build a complete knowledge index from all documents in a folder.
 
@@ -251,9 +243,7 @@ class ArchivistCartridge(CartridgeBase):
                 logger.error(f"❌ Failed to save index: {e}")
 
         self.execution_count += 1
-        logger.info(
-            f"✅ Knowledge index built: {len(index['documents'])} documents indexed"
-        )
+        logger.info(f"✅ Knowledge index built: {len(index['documents'])} documents indexed")
 
         return index
 

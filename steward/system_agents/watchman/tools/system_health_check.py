@@ -18,10 +18,10 @@ This respects AGENT CITY architecture:
 """
 
 import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
-import subprocess
+from typing import Any, Dict, List
 
 
 class SystemHealthCheck:
@@ -117,9 +117,7 @@ class SystemHealthCheck:
         else:
             # Verify content matches
             try:
-                hook_status["valid"] = (
-                    installed_hook.read_text() == source_hook.read_text()
-                )
+                hook_status["valid"] = installed_hook.read_text() == source_hook.read_text()
             except Exception as e:
                 hook_status["ok"] = False
                 hook_status["issue"] = f"Cannot read hook: {e}"
@@ -148,17 +146,13 @@ class SystemHealthCheck:
             lines.append("\n📌 Git Hooks:")
             for hook_name, hook_info in report["checks"]["git_hooks"]["hooks"].items():
                 ok_emoji = "✅" if hook_info["ok"] else "❌"
-                lines.append(
-                    f"  {ok_emoji} {hook_name}: {'OK' if hook_info['ok'] else hook_info['issue']}"
-                )
+                lines.append(f"  {ok_emoji} {hook_name}: {'OK' if hook_info['ok'] else hook_info['issue']}")
 
         # Violations
         if report["violations"]:
             lines.append(f"\n🚨 Violations Found: {len(report['violations'])}")
             for v in report["violations"]:
-                lines.append(
-                    f"  • [{v['severity'].upper()}] {v['component']}: {v['issue']}"
-                )
+                lines.append(f"  • [{v['severity'].upper()}] {v['component']}: {v['issue']}")
                 lines.append(f"    → {v['remediation']}")
 
         # Recommendations

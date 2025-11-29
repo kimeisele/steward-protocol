@@ -6,7 +6,7 @@ Reads and monitors Twitter timeline for HERALD broadcasts
 import json
 import logging
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 logger = logging.getLogger("ARCHIVIST_OBSERVER")
 

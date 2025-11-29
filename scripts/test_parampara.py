@@ -13,15 +13,16 @@ Usage:
     python scripts/test_parampara.py
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from vibe_core.lineage import LineageChain, LineageEventType
 from datetime import datetime
+
+from vibe_core.lineage import LineageChain, LineageEventType
 
 
 def test_parampara():
@@ -59,9 +60,7 @@ def test_parampara():
     # Check anchors
     anchors = genesis.data.get("anchors", {})
     print(f"   GAD-000 Hash: {anchors.get('philosophy_hash', 'MISSING')[:16]}...")
-    print(
-        f"   CONSTITUTION Hash: {anchors.get('constitution_hash', 'MISSING')[:16]}..."
-    )
+    print(f"   CONSTITUTION Hash: {anchors.get('constitution_hash', 'MISSING')[:16]}...")
 
     # Test 2: Simulate Kernel Boot
     print("\n[TEST 2] Simulating Kernel Boot...")
@@ -171,9 +170,7 @@ def test_parampara():
     blocks = chain.get_all_blocks()
     for block in blocks:
         agent_str = f"({block.agent_id})" if block.agent_id else "(SYSTEM)"
-        print(
-            f"  Block {block.index:2d}: {block.event_type:20s} {agent_str:15s} {block.hash[:16]}..."
-        )
+        print(f"  Block {block.index:2d}: {block.event_type:20s} {agent_str:15s} {block.hash[:16]}...")
     print("-" * 70)
     print(f"Total blocks: {len(blocks)}")
 

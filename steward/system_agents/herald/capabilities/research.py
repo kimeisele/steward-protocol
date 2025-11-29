@@ -4,9 +4,10 @@ Provides market intelligence via Tavily API.
 Kernel-compatible module (configured via system.yaml).
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any, Dict, Optional
+
 from tavily import TavilyClient
 
 logger = logging.getLogger("HERALD_RESEARCH")
@@ -39,9 +40,7 @@ class ResearchCapability:
             except Exception as e:
                 logger.warning(f"⚠️  RESEARCH: Tavily init failed: {e}")
         elif not self.api_key:
-            logger.warning(
-                "⚠️  RESEARCH: No TAVILY_API_KEY found. Running in degraded mode."
-            )
+            logger.warning("⚠️  RESEARCH: No TAVILY_API_KEY found. Running in degraded mode.")
 
     def scan(self, query: str) -> Optional[str]:
         """
@@ -65,9 +64,7 @@ class ResearchCapability:
                 include_answer=True,
             )
 
-            result = response.get("answer") or response.get("results", [{}])[0].get(
-                "content"
-            )
+            result = response.get("answer") or response.get("results", [{}])[0].get("content")
             if result:
                 logger.info("📡 MARKET SIGNAL DETECTED")
             return result

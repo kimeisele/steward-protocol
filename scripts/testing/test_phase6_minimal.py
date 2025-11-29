@@ -13,8 +13,8 @@ It verifies:
 4. Command routing exists in Envoy
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
 
 project_root = Path(__file__).parent.parent
@@ -149,9 +149,7 @@ def main():
     features_ok = True
 
     # Check HIL Assistant exists
-    if check_file_exists(
-        "envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"
-    ):
+    if check_file_exists("envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"):
         pass
     else:
         features_ok = False

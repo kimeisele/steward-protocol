@@ -16,19 +16,20 @@ This demonstrates Option A+C: Engineer builds valid cartridge structure.
 """
 
 import os
-import sys
 import shutil
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+
 # Steward Protocol imports
 from vibe_core.scheduling.task import Task
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
 
 # ═════════════════════════════════════════════════════════════════════════
 # CONFIGURATION
@@ -385,9 +386,7 @@ def step2_forge_body(engineer: EngineerCartridge) -> Optional[str]:
         return None
 
 
-def step3_gatekeeper(
-    auditor: AuditorCartridge, python_path: str
-) -> Optional[Dict[str, Any]]:
+def step3_gatekeeper(auditor: AuditorCartridge, python_path: str) -> Optional[Dict[str, Any]]:
     """
     STEP 3: Auditor verifies Python code (The Gatekeeper)
 
@@ -451,9 +450,7 @@ def step4_birth(
             print_error(f"Failed to seal Python: {result_py.get('reason', 'unknown')}")
             return False
 
-        print_success(
-            f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py"
-        )
+        print_success(f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py")
 
     except Exception as e:
         print_error(f"Exception sealing Python: {e}")

@@ -22,15 +22,16 @@ NO IPs. NO Keys. NO Config. Just magic.
 ================================================================================
 """
 
+import logging
 import os
-import sys
+import signal
 import subprocess
+import sys
 import time
 import webbrowser
-import signal
-import psutil
-import logging
 from pathlib import Path
+
+import psutil
 
 # Setup logging
 logging.basicConfig(
@@ -51,9 +52,7 @@ def kill_existing_servers():
             cmdline = " ".join(proc.info["cmdline"] or [])
 
             # Kill if it's a run_server.py or uvicorn process (but not this script)
-            if (
-                "run_server.py" in cmdline or "uvicorn" in cmdline
-            ) and "magic_launch" not in cmdline:
+            if ("run_server.py" in cmdline or "uvicorn" in cmdline) and "magic_launch" not in cmdline:
                 logger.info(f"   Killing PID {proc.info['pid']}: {proc.info['name']}")
                 proc.kill()
                 killed_count += 1

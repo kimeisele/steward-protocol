@@ -14,19 +14,17 @@ Commands:
 
 import argparse
 import json
-import sys
 import logging
+import sys
 import time
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 from .core.agency_director import AgencyDirector
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("HERALD_CLI")
 
 
@@ -139,9 +137,7 @@ class HeraldCLI:
         interval = args.interval or 3600  # Default 1 hour
         max_cycles = args.cycles or None
 
-        logger.info(
-            f"🔄 Starting loop mode (interval: {interval}s, max_cycles: {max_cycles})"
-        )
+        logger.info(f"🔄 Starting loop mode (interval: {interval}s, max_cycles: {max_cycles})")
 
         cycle_count = 0
         try:
@@ -265,9 +261,7 @@ GAD-000 Compliance:
 
         # Status command
         status_parser = subparsers.add_parser("status", help="Show agency status")
-        status_parser.add_argument(
-            "--json", action="store_true", help="Output as JSON (for AI operators)"
-        )
+        status_parser.add_argument("--json", action="store_true", help="Output as JSON (for AI operators)")
 
         # Run command
         run_parser = subparsers.add_parser("run", help="Execute one I-P-V-O cycle")
@@ -277,14 +271,10 @@ GAD-000 Compliance:
             default="auto",
             help="Content generation theme",
         )
-        run_parser.add_argument(
-            "--json", action="store_true", help="Output as JSON (for AI operators)"
-        )
+        run_parser.add_argument("--json", action="store_true", help="Output as JSON (for AI operators)")
 
         # Loop command
-        loop_parser = subparsers.add_parser(
-            "loop", help="Run continuous cycles (daemon mode)"
-        )
+        loop_parser = subparsers.add_parser("loop", help="Run continuous cycles (daemon mode)")
         loop_parser.add_argument(
             "--interval",
             type=int,
@@ -309,9 +299,7 @@ GAD-000 Compliance:
         )
 
         # Simulate command
-        simulate_parser = subparsers.add_parser(
-            "simulate", help="Run simulation without real posts"
-        )
+        simulate_parser = subparsers.add_parser("simulate", help="Run simulation without real posts")
         simulate_parser.add_argument(
             "--cycles",
             type=int,
@@ -324,9 +312,7 @@ GAD-000 Compliance:
             default="auto",
             help="Content generation theme",
         )
-        simulate_parser.add_argument(
-            "--json", action="store_true", help="Output as JSON"
-        )
+        simulate_parser.add_argument("--json", action="store_true", help="Output as JSON")
 
         args = parser.parse_args(argv)
 

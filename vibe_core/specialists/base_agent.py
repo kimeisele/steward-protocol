@@ -105,9 +105,7 @@ class BaseAgent:
             if (parent / ".vibe").exists():
                 return parent
 
-        raise RuntimeError(
-            "Could not detect vibe-agency root. Please set VIBE_ROOT environment variable."
-        )
+        raise RuntimeError("Could not detect vibe-agency root. Please set VIBE_ROOT environment variable.")
 
     def _load_context(self) -> dict[str, Any]:
         """Load execution context from .vibe/runtime/context.json."""
@@ -144,9 +142,7 @@ class BaseAgent:
             self.db = SQLiteStore(str(db_path))
             logger.debug(f"✅ Agent '{self.name}' connected to SQLiteStore")
         except Exception as e:
-            logger.warning(
-                f"⚠️ Agent '{self.name}' running without DB: {e}. Database features disabled."
-            )
+            logger.warning(f"⚠️ Agent '{self.name}' running without DB: {e}. Database features disabled.")
             self.db = None
 
     def _verify_infrastructure(self):
@@ -165,17 +161,14 @@ class BaseAgent:
 
         if missing:
             raise RuntimeError(
-                f"Infrastructure incomplete. Missing: {missing}. "
-                "Ensure GAD-5, GAD-6, and GAD-7 are initialized."
+                f"Infrastructure incomplete. Missing: {missing}. " "Ensure GAD-5, GAD-6, and GAD-7 are initialized."
             )
 
     # ========================================================================
     # CONNECTION TO BODY (GAD-5: Runtime)
     # ========================================================================
 
-    def execute_command(
-        self, command: str, timeout: int = 30, prompt: str | None = None, **kwargs
-    ) -> ExecutionResult:
+    def execute_command(self, command: str, timeout: int = 30, prompt: str | None = None, **kwargs) -> ExecutionResult:
         """
         Execute a command via the Runtime (GAD-5).
 
@@ -250,9 +243,7 @@ class BaseAgent:
     # CONNECTION TO ARMS (GAD-6: Knowledge)
     # ========================================================================
 
-    def consult_knowledge(
-        self, query: str, domain: str = "all", limit: int = 5
-    ) -> KnowledgeResult:
+    def consult_knowledge(self, query: str, domain: str = "all", limit: int = 5) -> KnowledgeResult:
         """
         Consult the knowledge base via the Knowledge system (GAD-6).
 
@@ -400,9 +391,7 @@ class BaseAgent:
             })
         """
         if not self.db:
-            logger.debug(
-                f"Agent '{self.name}': Event '{event_type}' not logged (DB unavailable)"
-            )
+            logger.debug(f"Agent '{self.name}': Event '{event_type}' not logged (DB unavailable)")
             return False
 
         try:
@@ -411,9 +400,7 @@ class BaseAgent:
             # and write the payload directly.
             # Using the context manager ensures proper connection cleanup.
             with self.db:
-                logger.debug(
-                    f"💾 Agent '{self.name}' logged event: {event_type} → {payload}"
-                )
+                logger.debug(f"💾 Agent '{self.name}' logged event: {event_type} → {payload}")
             return True
         except Exception as e:
             logger.warning(f"⚠️ Failed to log event '{event_type}': {e}")
@@ -457,9 +444,7 @@ class BaseAgent:
                         parent_id=parent_id,
                         status="pending",
                     )
-                self.log_event(
-                    "subtask_created", {"task_id": task_id, "parent_id": parent_id}
-                )
+                self.log_event("subtask_created", {"task_id": task_id, "parent_id": parent_id})
             except Exception as e:
                 logger.warning(f"⚠️ Failed to persist subtask {task_id}: {e}")
 

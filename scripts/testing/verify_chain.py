@@ -10,18 +10,16 @@ Usage:
     python scripts/verify_chain.py [--db-path DATA_PATH] [--repair]
 """
 
-import sys
-import json
-import sqlite3
 import hashlib
+import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Tuple
+import sqlite3
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("CHAIN_VERIFIER")
 
 
@@ -172,9 +170,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Verify ledger chain integrity")
-    parser.add_argument(
-        "--db-path", default="data/vibe_ledger.db", help="Path to ledger database"
-    )
+    parser.add_argument("--db-path", default="data/vibe_ledger.db", help="Path to ledger database")
     parser.add_argument("--json", action="store_true", help="Output JSON format")
     args = parser.parse_args()
 

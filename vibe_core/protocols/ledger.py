@@ -9,10 +9,10 @@ This stub allows cartridges to be type-checked and developed standalone.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from .agent import VibeAgent, AgentManifest
+from .agent import AgentManifest, VibeAgent
 
 
 class KernelStatus(str, Enum):
@@ -47,9 +47,7 @@ class VibeLedger(ABC):
     """Immutable event ledger interface"""
 
     @abstractmethod
-    def record_event(
-        self, event_type: str, agent_id: str, details: Dict[str, Any]
-    ) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
         """Record a generic event (used by agents for governance actions)
 
         Args:

@@ -10,7 +10,6 @@ CHRONICLE is the Vyasa of Agent City - the historian and scribe who:
 
 This is a VibeAgent that:
 - Inherits from vibe_core.VibeAgent
-from vibe_core.config import CityConfig, CityConfig
 - Receives tasks from the kernel scheduler
 - Executes deterministic Git operations
 - Maintains immutable code history with cryptographic signatures
@@ -20,15 +19,21 @@ Philosophy:
 Every commit is a verse. Every branch is a possible universe."
 """
 
-import logging
-import json
 import asyncio
-from typing import Dict, Any, Optional, List
-from pathlib import Path
+import json
+import logging
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # VibeOS Integration
-from vibe_core import VibeAgent, Task, VibeKernel, AgentManifest
+from vibe_core import AgentManifest, Task, VibeAgent, VibeKernel
+
+# Config import with fallback
+try:
+    from vibe_core.config import CityConfig
+except ImportError:
+    CityConfig = None
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
@@ -58,10 +63,15 @@ class ChronicleCartridge(VibeAgent, OathMixin):
     "Every piece of code has a story. I am the keeper of that story."
     """
 
-    def __init__(self, config: Optional[CityConfig] = None):
+    def __init__(self, config=None):
         """Initialize CHRONICLE (The Historian) as a VibeAgent."""
         # BLOCKER #0: Accept Phoenix Config
-        self.config = config or CityConfig()
+        if config:
+            self.config = config
+        elif CityConfig is not None:
+            self.config = CityConfig()
+        else:
+            self.config = None
 
         # Initialize VibeAgent base class
         super().__init__(
@@ -159,9 +169,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
                 self.tasks_successful += 1
                 logger.info(f"✅ Task {task.task_id} completed successfully")
             else:
-                logger.warning(
-                    f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}"
-                )
+                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error', 'Unknown error')}")
 
             return result
 

@@ -13,8 +13,8 @@ Usage:
     python scripts/verify_lineage_chain.py [--export-json output.json]
 """
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add project root to path

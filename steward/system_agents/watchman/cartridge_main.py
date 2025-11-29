@@ -10,19 +10,19 @@ Philosophy:
 the Watchman's sword falls swift and merciless. No exceptions."
 """
 
-import os
 import logging
-import sys
+import os
 import re
+import sys
 from pathlib import Path
 from typing import Optional
 
-# VibeOS Integration
-from vibe_core import VibeAgent, Task
-from vibe_core.config import CityConfig
-
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
+
+# VibeOS Integration
+from vibe_core import Task, VibeAgent
+from vibe_core.config import CityConfig
 
 # Phase 3.2: Deep inspection tool
 from .tools.standards_inspection import StandardsInspectionTool, Violation
@@ -30,8 +30,11 @@ from .tools.standards_inspection import StandardsInspectionTool, Violation
 # Phase 3.3: System health monitoring (read-only)
 from .tools.system_health_check import SystemHealthCheck
 
-# CivicBank is lazily imported to avoid cryptography issues at boot time
-# (see __init__ for lazy loading)
+# CivicBank import with fallback (cryptography may not be available)
+try:
+    from steward.system_agents.civic.tools.economy_agent import CivicBank
+except ImportError:
+    CivicBank = None
 
 # Constitutional Oath
 logger = logging.getLogger("WATCHMAN")
@@ -120,13 +123,14 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         # Load CivicBank (optional - may fail due to cryptography issues)
         self.bank = None
-        try:
-            self.bank = CivicBank()
-            logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
-        except Exception as e:
-            logger.warning(
-                f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)"
-            )
+        if CivicBank is not None:
+            try:
+                self.bank = CivicBank()
+                logger.info("✅ Connected to CIVIC Central Bank (Enforcement Authority)")
+            except Exception as e:
+                logger.warning(f"⚠️  Could not load CivicBank: {type(e).__name__} (running in audit-only mode)")
+        else:
+            logger.warning("⚠️  CivicBank not available (running in audit-only mode)")
 
         # Phase 3.2: Initialize deep inspection tool
         self.standards_tool = StandardsInspectionTool()
@@ -134,9 +138,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
         # Phase 3.3: Initialize system health monitor (read-only)
         self.health_checker = SystemHealthCheck()
-        logger.info(
-            "🏥 System Health Monitor initialized (read-only infrastructure check)"
-        )
+        logger.info("🏥 System Health Monitor initialized (read-only infrastructure check)")
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -219,11 +221,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 # Check for mock patterns
                 lower_line = line.lower()
 
-                if (
-                    "return true" in lower_line
-                    and "#" not in lower_line
-                    and "def " not in lower_line
-                ):
+                if "return true" in lower_line and "#" not in lower_line and "def " not in lower_line:
                     if "success simulation" in lower_line or "offline" in lower_line:
                         violations.append(
                             {
@@ -291,9 +289,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                             break  # Only report once per line
 
                 # Check unverified connection patterns
-                for pattern in self.FORBIDDEN_PATTERNS.get(
-                    "unverified_connections", []
-                ):
+                for pattern in self.FORBIDDEN_PATTERNS.get("unverified_connections", []):
                     if re.search(pattern, line):
                         if (
                             "signature" not in lower_line

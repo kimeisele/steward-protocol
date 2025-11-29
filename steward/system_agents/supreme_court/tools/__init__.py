@@ -1,9 +1,9 @@
 """Supreme Court Tools Package"""
 
-from .appeals_tool import AppealsTool, Appeal, AppealStatus
-from .verdict_tool import VerdictTool, Verdict, VerdictType
-from .precedent_tool import PrecedentTool, PrecedentCase
+from .appeals_tool import Appeal, AppealStatus, AppealsTool
 from .justice_ledger import JusticeLedger
+from .precedent_tool import PrecedentCase, PrecedentTool
+from .verdict_tool import Verdict, VerdictTool, VerdictType
 
 __all__ = [
     "AppealsTool",

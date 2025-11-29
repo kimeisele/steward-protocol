@@ -1,22 +1,5 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "archivist",
-    "name": "ARCHIVIST",
-    "version": "1.0.0",
-    "class": "system_service",
-    "specialization": "SYSTEM",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "Event verification and audit trail agent",
-    "constraints": [],
-    "prime_directive": "Serve the system"
-  },
   "capabilities": {
-    "interfaces": [
-      "kernel"
-    ],
     "operations": [
       {
         "description": "event_monitoring operation",
@@ -35,7 +18,16 @@
   "governance": {
     "compliance_level": 2,
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
-    "issued_at": "2025-11-28T12:07:50.249338Z",
+    "issued_at": "2025-11-29T08:57:39.398111Z",
     "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "archivist",
+    "name": "ARCHIVIST"
+  },
+  "specs": {
+    "description": "Event verification and audit trail agent",
+    "domain": "SYSTEM",
+    "version": "1.0.0"
   }
 }

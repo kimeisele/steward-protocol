@@ -9,9 +9,9 @@ Handles:
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 try:
     from .tools.lifecycle_enforcer import LifecycleEnforcer
@@ -43,14 +43,10 @@ class LifecycleAgent(VibeAgent):
         if LIFECYCLE_AVAILABLE:
             self.lifecycle_enforcer = LifecycleEnforcer()
             logger.info("🔄 LIFECYCLE ENFORCER initialized (Vedic Varna System)")
-            logger.info(
-                "   Status: ACTIVE - Managing Brahmachari → Grihastha progression"
-            )
+            logger.info("   Status: ACTIVE - Managing Brahmachari → Grihastha progression")
         else:
             self.lifecycle_enforcer = None
-            logger.warning(
-                "⚠️  Lifecycle Enforcer NOT available - system running in degraded mode"
-            )
+            logger.warning("⚠️  Lifecycle Enforcer NOT available - system running in degraded mode")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process lifecycle-related tasks."""
@@ -83,17 +79,11 @@ class LifecycleAgent(VibeAgent):
         else:
             return {"status": "error", "error": f"Unknown action: {action}"}
 
-    def check_action_permission(
-        self, agent_id: str, action_type: str = "write", cost: int = 1
-    ) -> Dict[str, Any]:
+    def check_action_permission(self, agent_id: str, action_type: str = "write", cost: int = 1) -> Dict[str, Any]:
         """Check if an agent has permission to perform an action based on lifecycle status."""
-        logger.info(
-            f"🔐 Checking permission: {agent_id} for {action_type} action (cost: {cost})"
-        )
+        logger.info(f"🔐 Checking permission: {agent_id} for {action_type} action (cost: {cost})")
 
-        result = self.lifecycle_enforcer.check_action_permission(
-            agent_id, action_type, cost
-        )
+        result = self.lifecycle_enforcer.check_action_permission(agent_id, action_type, cost)
 
         return {
             "status": "success",
@@ -112,9 +102,7 @@ class LifecycleAgent(VibeAgent):
         logger.info(f"   Initiator: {initiator}")
         logger.info(f"   Test Results: {test_results}")
 
-        success = self.lifecycle_enforcer.authorize_brahmachari_to_grihastha(
-            agent_id, test_results, initiator
-        )
+        success = self.lifecycle_enforcer.authorize_brahmachari_to_grihastha(agent_id, test_results, initiator)
 
         return {
             "status": "success" if success else "error",
@@ -124,9 +112,7 @@ class LifecycleAgent(VibeAgent):
             "new_status": "grihastha" if success else "brahmachari",
         }
 
-    def report_violation(
-        self, agent_id: str, violation: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def report_violation(self, agent_id: str, violation: Dict[str, Any]) -> Dict[str, Any]:
         """Report a violation and potentially demote an agent."""
         logger.warning(f"⚠️  Violation reported for {agent_id}")
         logger.warning(f"   Details: {violation}")

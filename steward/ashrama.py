@@ -8,9 +8,9 @@ Every agent moves through these stages, creating natural lifecycle.
 Ashrama = "dwelling place" = stage of life
 """
 
-from enum import Enum
-from typing import Dict, Any
 from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict
 
 
 class Ashrama(Enum):
@@ -170,10 +170,7 @@ class AshramaTransition:
             "current_ashrama": self.current_ashrama.value,
             "entry_time": self.entry_time.isoformat(),
             "time_in_stage_seconds": self.time_in_current_stage().total_seconds(),
-            "transition_history": [
-                (ashrama.value, ts.isoformat())
-                for ashrama, ts in self.transition_history
-            ],
+            "transition_history": [(ashrama.value, ts.isoformat()) for ashrama, ts in self.transition_history],
         }
 
 

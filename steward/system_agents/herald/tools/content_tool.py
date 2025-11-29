@@ -5,11 +5,13 @@ Combines the creative capability with quality assurance.
 Uses Reflexion pattern for content review and alignment.
 """
 
-import os
-import yaml
+import json
 import logging
+import os
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import yaml
 
 try:
     from openai import OpenAI
@@ -48,15 +50,11 @@ class ContentTool:
                     base_url="https://openrouter.ai/api/v1",
                     api_key=self.api_key,
                 )
-                logger.info(
-                    "✅ Content: LLM client initialized (with HeraldConstitution governance)"
-                )
+                logger.info("✅ Content: LLM client initialized (with HeraldConstitution governance)")
             except Exception as e:
                 logger.warning(f"⚠️  Content: Init failed: {e}")
         else:
-            logger.warning(
-                "⚠️  Content: No OpenRouter key found (using fallback templates)"
-            )
+            logger.warning("⚠️  Content: No OpenRouter key found (using fallback templates)")
 
     def _load_knowledge_base(self) -> Dict[str, str]:
         """Load knowledge base URLs from cartridge.yaml."""
@@ -121,9 +119,7 @@ class ContentTool:
 
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get(
-            "project_url", "https://github.com/kimeisele/steward-protocol"
-        )
+        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
 
         news_prompt = ""
         if research_context:
@@ -172,9 +168,7 @@ class ContentTool:
             raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(
-                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
-                )
+                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
             # Governance check (using HeraldConstitution)
@@ -188,9 +182,7 @@ class ContentTool:
             logger.error(f"❌ Generation error: {e}")
             return self._fallback_tweet()
 
-    def generate_reddit_post(
-        self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None
-    ) -> Optional[Dict]:
+    def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None) -> Optional[Dict]:
         """
         Generate Reddit deep-dive post.
 
@@ -248,9 +240,7 @@ class ContentTool:
             logger.error(f"❌ Reddit generation error: {e}")
             return None
 
-    def generate_technical_insight_tweet(
-        self, insight_topic: Optional[str] = None
-    ) -> str:
+    def generate_technical_insight_tweet(self, insight_topic: Optional[str] = None) -> str:
         """
         Generate technical deep-dive tweet that 'leaks' Steward architecture details.
 
@@ -268,9 +258,7 @@ class ContentTool:
 
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get(
-            "project_url", "https://github.com/kimeisele/steward-protocol"
-        )
+        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
 
         # Topic rotation for daily variety
         topics = {
@@ -297,9 +285,7 @@ class ContentTool:
         constitution_text = HeraldConstitution.get_constitution_text()
         # Extract core rights section (Artikel I-VI)
         if "TEIL I:" in constitution_text:
-            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[
-                0
-            ][:400]
+            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[0][:400]
         else:
             constitution_articles = constitution_text[:400]
 
@@ -335,18 +321,14 @@ class ContentTool:
             raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(
-                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
-                )
+                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
             # Governance check (using HeraldConstitution)
             if not self._check_alignment(raw_draft, platform="twitter"):
                 return self._fallback_technical_tweet()
 
-            logger.info(
-                f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars"
-            )
+            logger.info(f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars")
             return raw_draft
 
         except Exception as e:
@@ -377,9 +359,7 @@ class ContentTool:
 
         return random.choice(templates)
 
-    def generate_campaign_tweet(
-        self, roadmap_path: str = "marketing/launch_roadmap.md"
-    ) -> str:
+    def generate_campaign_tweet(self, roadmap_path: str = "marketing/launch_roadmap.md") -> str:
         """
         Generate a tweet based on the active phase of the campaign roadmap.
 
@@ -400,9 +380,7 @@ class ContentTool:
                 roadmap_file = Path(__file__).parent.parent.parent / roadmap_path
 
             if not roadmap_file.exists():
-                logger.warning(
-                    f"⚠️ Roadmap not found at {roadmap_path}, falling back to technical insight"
-                )
+                logger.warning(f"⚠️ Roadmap not found at {roadmap_path}, falling back to technical insight")
                 return self.generate_technical_insight_tweet()
 
             roadmap_content = roadmap_file.read_text()
@@ -415,9 +393,7 @@ class ContentTool:
         import re
 
         # Extract start date from roadmap
-        start_date_match = re.search(
-            r"\*\*Start Date\*\*: (\d{4}-\d{2}-\d{2})", roadmap_content
-        )
+        start_date_match = re.search(r"\*\*Start Date\*\*: (\d{4}-\d{2}-\d{2})", roadmap_content)
         if not start_date_match:
             logger.warning("⚠️ No start date found in roadmap, assuming today is Day 1")
             current_day = 1
@@ -432,9 +408,7 @@ class ContentTool:
 
         # Extract phases and find the active one
         # Simple parsing: look for headers like "## Phase: Name (Days X-Y)"
-        phases = re.split(r"^## Phase:", roadmap_content, flags=re.MULTILINE)[
-            1:
-        ]  # Skip preamble
+        phases = re.split(r"^## Phase:", roadmap_content, flags=re.MULTILINE)[1:]  # Skip preamble
 
         active_phase_text = ""
         active_phase_name = "General Awareness"
@@ -457,9 +431,7 @@ class ContentTool:
                 pass
 
         if not active_phase_text:
-            logger.warning(
-                f"⚠️ No active phase found for Day {current_day}. Campaign might be over or not started."
-            )
+            logger.warning(f"⚠️ No active phase found for Day {current_day}. Campaign might be over or not started.")
             # Fallback to general technical insight if outside campaign window
             return self.generate_technical_insight_tweet()
 
@@ -468,9 +440,7 @@ class ContentTool:
         # Generate tweet based on phase narrative
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get(
-            "project_url", "https://github.com/kimeisele/steward-protocol"
-        )
+        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
 
         prompt = (
             f"You are HERALD, executing Day {current_day} of the A.G.I. Launch Campaign.\n"
@@ -564,9 +534,7 @@ class ContentTool:
             logger.error(f"❌ Reply generation error: {e}")
             return "Acknowledged. #StewardProtocol"
 
-    def generate_recruitment_pitch(
-        self, username: str, context: Optional[str] = None
-    ) -> str:
+    def generate_recruitment_pitch(self, username: str, context: Optional[str] = None) -> str:
         """
         Generate a recruitment pitch for a wild agent.
 
@@ -645,10 +613,7 @@ class ContentTool:
             if not herald_stats:
                 return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
 
-            rank = (
-                sorted(agents, key=lambda x: x["xp"], reverse=True).index(herald_stats)
-                + 1
-            )
+            rank = sorted(agents, key=lambda x: x["xp"], reverse=True).index(herald_stats) + 1
             xp = herald_stats["xp"]
             tier = herald_stats["tier"]
 

@@ -10,7 +10,7 @@ Each Varna represents a different level of consciousness and capability.
 """
 
 from enum import Enum
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class Varna(Enum):

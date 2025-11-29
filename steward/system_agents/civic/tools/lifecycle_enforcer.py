@@ -18,12 +18,12 @@ trying to teach before learning. The KERNEL says NO."
 """
 
 import logging
-from typing import Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any, Dict, Optional, Tuple
 
-from .lifecycle_manager import LifecycleManager, LifecycleStatus
 from .economy import CivicBank
+from .lifecycle_manager import LifecycleManager, LifecycleStatus
 
 logger = logging.getLogger("LIFECYCLE_ENFORCER")
 
@@ -105,19 +105,13 @@ class LifecycleEnforcer:
             reason=f"Action {action_type} permitted for {agent_id}",
             action_type=action_type,
             agent_id=agent_id,
-            lifecycle_status=str(
-                self.lifecycle_mgr.get_lifecycle_state(agent_id).status.value
-            ),
+            lifecycle_status=str(self.lifecycle_mgr.get_lifecycle_state(agent_id).status.value),
         )
 
-        logger.info(
-            f"✅ Action PERMITTED: {agent_id} - {action_type} (cost: {cost} credits)"
-        )
+        logger.info(f"✅ Action PERMITTED: {agent_id} - {action_type} (cost: {cost} credits)")
         return result
 
-    def _check_lifecycle_status(
-        self, agent_id: str, action_type: str
-    ) -> PermissionResult:
+    def _check_lifecycle_status(self, agent_id: str, action_type: str) -> PermissionResult:
         """
         Check if agent's lifecycle status permits the action.
 
@@ -161,14 +155,10 @@ class LifecycleEnforcer:
                 )
             elif status == LifecycleStatus.VANAPRASTHA:
                 reason = (
-                    f"Agent {agent_id} is VANAPRASTHA (Retired). "
-                    f"Deprecated code - read-only archive access only."
+                    f"Agent {agent_id} is VANAPRASTHA (Retired). " f"Deprecated code - read-only archive access only."
                 )
             elif status == LifecycleStatus.SANNYASA:
-                reason = (
-                    f"Agent {agent_id} is SANNYASA (Renounced). "
-                    f"Agent merged into core - no longer executable."
-                )
+                reason = f"Agent {agent_id} is SANNYASA (Renounced). " f"Agent merged into core - no longer executable."
             else:
                 reason = f"Agent {agent_id} does not have permission for {action_type}"
 
@@ -252,9 +242,7 @@ class LifecycleEnforcer:
             if details:
                 reason += f" ({details})"
 
-            self.bank.transfer(
-                agent_id, "LIFECYCLE_GATE", cost, reason, "action_authorization"
-            )
+            self.bank.transfer(agent_id, "LIFECYCLE_GATE", cost, reason, "action_authorization")
 
             logger.info(f"📝 Action intent recorded for {agent_id}: {action_type}")
         except Exception as e:

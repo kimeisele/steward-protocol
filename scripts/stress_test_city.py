@@ -30,8 +30,8 @@ Usage:
     python scripts/stress_test_city.py
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -39,15 +39,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 import time
+
 import psutil
+
+from steward.system_agents.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.lineage import LineageChain, LineageEventType
-from steward.system_agents.discoverer.agent import Discoverer
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("STRESS_TEST")
 
 
@@ -244,9 +244,7 @@ def stress_test_city():
 
             # Check for process crashes
             if alive_now < alive_processes:
-                print(
-                    f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died"
-                )
+                print(f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died")
 
         print("         ✅ Stress duration complete")
 

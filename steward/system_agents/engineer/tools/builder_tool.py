@@ -7,8 +7,8 @@ Capabilities:
 - NO vendor lock-in: Uses services.llm_engine for all LLM interactions
 """
 
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 

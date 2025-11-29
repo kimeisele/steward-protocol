@@ -16,13 +16,13 @@ All wiring belongs in Layer 3 (runtime/).
 BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
-from .agent import VibeAgent, AgentManifest, AgentResponse, Capability
+from .agent import AgentManifest, AgentResponse, Capability, VibeAgent
 from .ledger import (
+    KernelStatus,
+    ManifestRegistry,
+    VibeKernel,
     VibeLedger,
     VibeScheduler,
-    VibeKernel,
-    ManifestRegistry,
-    KernelStatus,
 )
 from .registry import ManifestRegistry as _ManifestRegistry  # Avoid duplicate
 from .scheduler import VibeScheduler as _VibeScheduler  # Avoid duplicate
