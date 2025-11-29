@@ -69,7 +69,7 @@ class WebSearchTool:
     Philosophy: No mocks. Real data or failure.
     """
 
-    def __init__(self, bank=None, vault=None):
+    def __init__(self, bank=None, vault=None, degradation_chain=None):
         """
         Initialize search tool with Tavily API via Vault (secure asset management).
 
@@ -104,6 +104,7 @@ class WebSearchTool:
 
         self.bank = _bank
         self.vault = _vault
+        self.chain = degradation_chain
 
         # Try to get API key from Vault (preferred)
         if self.vault is not None:
@@ -163,8 +164,28 @@ class WebSearchTool:
             RuntimeError: Only if Tavily API is configured but fails
         """
         if self.mode == "offline":
-            logger.warning(f"⚠️  Offline mode: Cannot search '{query}'")
-            return []
+            if self.chain:
+                logger.info(f"⚠️  Offline mode: Fallback to DegradationChain for '{query}'")
+                try:
+                    # Ask the chain (local LLM) for general knowledge
+                    prompt = f"Research query: {query}\nProvide a factual summary based on your internal knowledge."
+                    response = self.chain.respond(user_input=prompt, semantic_confidence=0.5, detected_intent="research")
+                    answer = response.content
+                    
+                    return [
+                        SearchResult(
+                            title="Local Knowledge (Offline)",
+                            url="[local-llm]",
+                            content=answer,
+                            source="local_llm",
+                        )
+                    ]
+                except Exception as e:
+                    logger.error(f"❌ Fallback failed: {e}")
+                    return []
+            else:
+                logger.warning(f"⚠️  Offline mode: Cannot search '{query}' (No chain available)")
+                return []
 
         return self._search_tavily(query, max_results)
 

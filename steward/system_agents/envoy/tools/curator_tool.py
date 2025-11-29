@@ -27,10 +27,11 @@ class CuratorTool:
     - Insight generation (for HERALD to share)
     """
 
-    def __init__(self):
+    def __init__(self, degradation_chain=None):
         self.intelligence_dir = Path("data/intelligence")
         self.intelligence_dir.mkdir(parents=True, exist_ok=True)
         self.hall_of_fame = Path("data/hall_of_fame.json")
+        self.chain = degradation_chain
 
     def search_repositories(self, topic="ai-agent", min_stars=50, max_results=10) -> List[Dict]:
         """
