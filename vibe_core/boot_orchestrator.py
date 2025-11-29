@@ -228,8 +228,7 @@ class BootOrchestrator:
 
             graph = get_knowledge_graph()
             logger.info(
-                f"      → Knowledge loaded: {len(graph.nodes)} nodes, "
-                f"{sum(len(e) for e in graph.edges.values())} edges"
+                f"      → Knowledge loaded: {len(graph.nodes)} nodes, {sum(len(e) for e in graph.edges.values())} edges"
             )
 
             # Register Discoverer (Genesis Agent)
@@ -335,7 +334,9 @@ class BootOrchestrator:
             sarga_complete=sarga.boot_complete,
             git=git_state,
             available_agents=available_agents,
-            operator_type=self.operator_adapter.get_current_operator_type() if self.operator_adapter else OperatorType.HUMAN,
+            operator_type=self.operator_adapter.get_current_operator_type()
+            if self.operator_adapter
+            else OperatorType.HUMAN,
             degradation_level=self.operator_adapter.get_degradation_level() if self.operator_adapter else 0,
         )
 

@@ -299,7 +299,7 @@ class LocalLLMOperator:
 System Status:
 - Kernel: {context.kernel_status.value}
 - Agents: {context.agents_registered} registered, {context.agents_healthy} healthy
-- Available agents: {', '.join(context.available_agents[:10])}
+- Available agents: {", ".join(context.available_agents[:10])}
 
 Recent messages:
 {chr(10).join(context.recent_messages[-5:])}

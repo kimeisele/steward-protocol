@@ -122,7 +122,7 @@ async def smoke_test():
     adapter = UniversalOperatorAdapter()
     adapter.register_operator(mock, priority=0)  # Highest priority
 
-    print(f"      ✅ Mock operator registered (priority 0)")
+    print("      ✅ Mock operator registered (priority 0)")
     print(f"      ✅ Test intents: {len(test_intents)}")
 
     # =========================================================================
@@ -145,7 +145,7 @@ async def smoke_test():
 
     results = []
     for i, test_intent in enumerate(test_intents):
-        print(f"\n      --- Intent {i+1}/{len(test_intents)} ---")
+        print(f"\n      --- Intent {i + 1}/{len(test_intents)} ---")
 
         # Get decision (this sends context and gets intent)
         intent = await adapter.get_decision(context)

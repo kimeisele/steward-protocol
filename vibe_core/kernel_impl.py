@@ -13,12 +13,8 @@ This is NOT a mock. This is real execution context for cartridges.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
-import os
-import sqlite3
-import uuid
 from collections import deque
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +22,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
+
+from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+
+# Phase B: Vedic Governance (Varna + Ashrama)
+from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
 from .kernel import (
     KernelStatus,
@@ -41,12 +42,7 @@ from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
-from .scheduling import Task, TaskStatus
-from .vfs import VirtualFileSystem  # Phase 4: Filesystem Isolation
-
-# Phase B: Vedic Governance (Varna + Ashrama)
-from steward.varna import Varna, categorize_agent_by_function, get_varna_description
-from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+from .scheduling import Task
 
 # Import Auditor for immune system (optional)
 try:
@@ -570,7 +566,7 @@ class RealVibeKernel(VibeKernel):
                 status = msg.get("status")
 
                 if status == "success":
-                    result = msg.get("result")
+                    _result = msg.get("result")  # noqa: F841 - reserved for future ledger use
                     logger.info(f"✅ Task {task_id} completed (Async IPC)")
                     # We need to reconstruct the Task object or look it up if we want to record properly
                     # For now, we'll just log. In a real system, we'd have a pending_tasks map.
@@ -678,7 +674,7 @@ class RealVibeKernel(VibeKernel):
                             self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
                             return
                         else:
-                            logger.debug(f"⚠️  VOID check skipped (requires external context)")
+                            logger.debug("⚠️  VOID check skipped (requires external context)")
 
             # Log health check (non-critical)
             if report.violations:
@@ -868,7 +864,7 @@ class RealVibeKernel(VibeKernel):
             # Write snapshot
             snapshot_path = Path("vibe_snapshot.json")
             snapshot_path.write_text(json.dumps(snapshot, indent=2))
-            logger.info(f"💓 Pulse written: vibe_snapshot.json")
+            logger.info("💓 Pulse written: vibe_snapshot.json")
 
             # Render OPERATIONS.md
             self._render_operations_dashboard(snapshot)
@@ -913,7 +909,7 @@ class RealVibeKernel(VibeKernel):
 
             ops_path = Path("OPERATIONS.md")
             ops_path.write_text("\n".join(lines))
-            logger.info(f"📋 Operations dashboard rendered")
+            logger.info("📋 Operations dashboard rendered")
 
         except Exception as e:
             logger.error(f"❌ Failed to render dashboard: {e}")
