@@ -1,17 +1,52 @@
 """
 HERALD Content Tool - LLM-based content generation with governance.
 
-Combines the creative capability with quality assurance.
-Uses Reflexion pattern for content review and alignment.
+⚠️  DEPRECATION NOTICE (2025-11-29):
+This tool contains MARKETING LOGIC that should NOT be in a System Agent.
+HERALD is a system agent for COMMUNICATIONS, not a marketing bot.
+
+Marketing methods are deprecated:
+- generate_tweet() → DEPRECATED
+- generate_reddit_post() → DEPRECATED
+- generate_campaign_tweet() → DEPRECATED
+- generate_recruitment_pitch() → DEPRECATED
+- generate_agent_city_tweet() → DEPRECATED
+
+These methods will log warnings when called and should be moved to
+a dedicated MarketingAgent if marketing functionality is needed.
+
+Kept functionality:
+- _check_alignment() → Governance validation (SYSTEM)
+- _load_knowledge_base() → Utility
+- _read_spec() → Utility
 """
 
 import json
 import logging
 import os
+import warnings
+from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import yaml
+
+
+def _deprecated_marketing(func):
+    """Decorator to mark marketing methods as deprecated."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        warnings.warn(
+            f"⚠️  HERALD.{func.__name__}() is MARKETING LOGIC in a System Agent. "
+            "This is deprecated. Move to MarketingAgent if needed.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        logging.getLogger("HERALD_CONTENT").warning(
+            f"⚠️  DEPRECATED: {func.__name__}() is marketing logic in a system agent"
+        )
+        return func(*args, **kwargs)
+    return wrapper
 
 try:
     from openai import OpenAI
@@ -104,8 +139,11 @@ class ContentTool:
             logger.warning(f"⚠️  {warning}")
         return True
 
+    @_deprecated_marketing
     def generate_tweet(self, research_context: Optional[str] = None) -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate technical, cynical tweet.
 
         Args:
@@ -182,8 +220,11 @@ class ContentTool:
             logger.error(f"❌ Generation error: {e}")
             return self._fallback_tweet()
 
+    @_deprecated_marketing
     def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None) -> Optional[Dict]:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate Reddit deep-dive post.
 
         Args:
@@ -240,8 +281,11 @@ class ContentTool:
             logger.error(f"❌ Reddit generation error: {e}")
             return None
 
+    @_deprecated_marketing
     def generate_technical_insight_tweet(self, insight_topic: Optional[str] = None) -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate technical deep-dive tweet that 'leaks' Steward architecture details.
 
         Strategy: Instead of marketing, we explain HOW it works.
@@ -359,8 +403,11 @@ class ContentTool:
 
         return random.choice(templates)
 
+    @_deprecated_marketing
     def generate_campaign_tweet(self, roadmap_path: str = "marketing/launch_roadmap.md") -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate a tweet based on the active phase of the campaign roadmap.
 
         Args:
@@ -482,8 +529,11 @@ class ContentTool:
             logger.error(f"❌ Campaign generation error: {e}")
             return self._fallback_technical_tweet()
 
+    @_deprecated_marketing
     def generate_reply(self, tweet_text: str, author_id: str) -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate a reply to a user mention.
 
         Args:
@@ -534,8 +584,11 @@ class ContentTool:
             logger.error(f"❌ Reply generation error: {e}")
             return "Acknowledged. #StewardProtocol"
 
+    @_deprecated_marketing
     def generate_recruitment_pitch(self, username: str, context: Optional[str] = None) -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate a recruitment pitch for a wild agent.
 
         Args:
@@ -588,8 +641,11 @@ class ContentTool:
             logger.error(f"❌ Recruitment generation error: {e}")
             return f"Hello @{username}. Join us. #StewardProtocol"
 
+    @_deprecated_marketing
     def generate_agent_city_tweet(self) -> str:
         """
+        ⚠️  DEPRECATED: Marketing logic in system agent.
+
         Generate a tweet about Agent City stats.
 
         Returns:
