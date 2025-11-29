@@ -788,6 +788,96 @@ __all__ = ["ContextAwareAgent", "SimpleLLMAgent", "SpecialistAgent", "Specialist
 
 ---
 
+#### Schritt 3.2: DegradationChain in _fast_path_chat_response AUFRUFEN
+
+**KRITISCH:** Schritt 3.1 alleine reicht NICHT! Die DegradationChain muss aktiv verwendet werden.
+
+**AKTION:** ZEILEN AENDERN
+**PFAD:** `/home/user/steward-protocol/provider/universal_provider.py`
+
+**AENDERUNG:** In `_fast_path_chat_response()` (Zeile 546-597), den Ultimate Fallback ersetzen:
+
+**VORHER (Zeile 585-597):**
+```python
+        # Ultimate fallback: Static response
+        response = (
+            f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
+            f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"
+            f"Just give me a command!"
+        )
+
+        return {
+            "status": "success",
+            "summary": response,
+            "path": "fast_fallback",
+            "intent": "chat"
+        }
+```
+
+**NACHHER:**
+```python
+        # Use DegradationChain for graceful offline fallback
+        if self.degradation_chain:
+            try:
+                deg_response = self.degradation_chain.respond(
+                    user_input=user_msg,
+                    semantic_confidence=vector.confidence if hasattr(vector, 'confidence') else 0.5,
+                    detected_intent="chat"
+                )
+                return {
+                    "status": "success",
+                    "summary": deg_response.content,
+                    "path": f"degradation:{deg_response.fallback_used}",
+                    "intent": "chat",
+                    "degradation_level": deg_response.level.value,
+                    "user_guidance": deg_response.user_guidance
+                }
+            except Exception as e:
+                logger.warning(f"DegradationChain failed: {e}")
+
+        # Ultimate fallback: Static response (only if DegradationChain unavailable)
+        response = (
+            f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
+            f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"
+            f"Just give me a command!"
+        )
+
+        return {
+            "status": "success",
+            "summary": response,
+            "path": "fast_fallback",
+            "intent": "chat"
+        }
+```
+
+**VERIFIKATION:**
+```bash
+grep -n "degradation_chain.respond" /home/user/steward-protocol/provider/universal_provider.py
+```
+**ERWARTETE AUSGABE:** Zeilennummer wo DegradationChain aufgerufen wird
+
+---
+
+#### Schritt 3.3: .gitignore Update (400MB Git-Bombe verhindern)
+
+**AKTION:** ZEILEN HINZUFUEGEN
+**PFAD:** `/home/user/steward-protocol/.gitignore`
+
+**AENDERUNG:** Nach der CIVIC VAULT Sektion:
+
+```gitignore
+# LOCAL LLM MODELS - CRITICAL: 400MB+ files, never commit!
+data/models/
+*.gguf
+```
+
+**VERIFIKATION:**
+```bash
+grep "data/models" /home/user/steward-protocol/.gitignore
+```
+
+---
+
 ## TEIL 3: AUSFUEHRUNGSREIHENFOLGE
 
 ```
@@ -801,7 +891,7 @@ PHASE 2: Agent Context
   2.1 -> 2.2
 
 PHASE 3: Integration
-  3.1
+  3.1 -> 3.2 -> 3.3
 ```
 
 ---
@@ -818,9 +908,10 @@ PHASE 3: Integration
 | 6 | `vibe_core/cli.py` | EDITIEREN | 1.5 |
 | 7 | `vibe_core/agents/context_aware_agent.py` | NEU ERSTELLEN | 2.1 |
 | 8 | `vibe_core/agents/__init__.py` | EDITIEREN | 2.2 |
-| 9 | `provider/universal_provider.py` | EDITIEREN | 3.1 |
+| 9 | `provider/universal_provider.py` | EDITIEREN | 3.1, 3.2 |
+| 10 | `.gitignore` | EDITIEREN | 3.3 |
 
-**TOTAL: 4 neue Dateien, 5 editierte Dateien**
+**TOTAL: 4 neue Dateien, 6 editierte Dateien**
 
 ---
 
@@ -869,10 +960,31 @@ python -c "from vibe_core.agents import ContextAwareAgent; print('OK')"
 # 5. CLI install-llm
 python -m vibe_core.cli install-llm --help
 
-# 6. Full Integration (optional, nach Model-Installation)
+# 6. DegradationChain in UniversalProvider chat() (KRITISCH!)
+grep -n "degradation_chain.respond" /home/user/steward-protocol/provider/universal_provider.py
+# ERWARTETE AUSGABE: Zeilennummer (z.B. "590:...")
+
+# 7. .gitignore hat data/models/ (400MB Git-Bombe verhindern!)
+grep "data/models" /home/user/steward-protocol/.gitignore
+# ERWARTETE AUSGABE: "data/models/"
+
+# 8. Full Integration (optional, nach Model-Installation)
 # steward install-llm
 # python -c "from vibe_core.llm import LocalLlamaProvider; p = LocalLlamaProvider(); print(p.chat([{'role':'user','content':'Hello'}]))"
 ```
+
+---
+
+## APPENDIX B: GEMINI REVIEW FIXES (2025-11-29)
+
+Dieser Plan wurde nach einem Review durch Gemini aktualisiert:
+
+| # | Gemini Kritik | Fix |
+|---|--------------|-----|
+| 1 | DegradationChain wird in __init__ hinzugefuegt aber nie in chat() aufgerufen | Schritt 3.2 hinzugefuegt |
+| 2 | data/models/ fehlt in .gitignore (400MB Git-Bombe) | Schritt 3.3 hinzugefuegt |
+| 3 | llama-cpp-python Compilation Issues | Akzeptiert als optional-dependency |
+| 4 | ContextAwareAgent ist Dead Code | Bleibt in TEIL 6 "SPAETER" (bewusste Entscheidung) |
 
 ---
 
