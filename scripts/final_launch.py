@@ -48,9 +48,7 @@ def main():
     print("-" * 50)
 
     # Auto-load latest report for context
-    task_briefing = Task(
-        agent_id="envoy", payload={"command": "next_action", "args": {}}
-    )
+    task_briefing = Task(agent_id="envoy", payload={"command": "next_action", "args": {}})
     result_briefing = envoy.process(task_briefing)
 
     if result_briefing.get("status") == "success":
@@ -62,9 +60,7 @@ def main():
     print("-" * 50)
     print("👤 STEP 2: HIL AUTHORIZATION")
     print("-" * 50)
-    print(
-        '\n> HIL: "ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports..."'
-    )
+    print('\n> HIL: "ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports..."')
     print("\n✅ AUTHORIZATION GRANTED. EXECUTING.\n")
 
     # 4. Step 3: The Execution (Hard Interface)

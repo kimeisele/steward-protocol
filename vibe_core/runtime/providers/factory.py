@@ -62,15 +62,11 @@ def create_provider(
 
     try:
         if provider_name == "anthropic":
-            logger.info(
-                f"Creating Anthropic provider (model: {model_name or 'default'})"
-            )
+            logger.info(f"Creating Anthropic provider (model: {model_name or 'default'})")
             return AnthropicProvider(api_key=api_key, **kwargs)
 
         elif provider_name == "google":
-            logger.info(
-                f"Creating Google Gemini provider (model: {model_name or 'gemini-2.5-flash-exp'})"
-            )
+            logger.info(f"Creating Google Gemini provider (model: {model_name or 'gemini-2.5-flash-exp'})")
             return GoogleProvider(api_key=api_key, **kwargs)
 
         elif provider_name == "openai":
@@ -96,14 +92,10 @@ def create_provider(
             return NoOpProvider()
 
     except ProviderNotAvailableError as e:
-        logger.warning(
-            f"Provider {provider_name} not available: {e}, using NoOp fallback"
-        )
+        logger.warning(f"Provider {provider_name} not available: {e}, using NoOp fallback")
         return NoOpProvider()
     except Exception as e:
-        logger.error(
-            f"Failed to create provider {provider_name}: {e}, using NoOp fallback"
-        )
+        logger.error(f"Failed to create provider {provider_name}: {e}, using NoOp fallback")
         return NoOpProvider()
 
 
@@ -174,9 +166,7 @@ def _detect_provider() -> str:
     elif is_valid_key(openai_key):
         return "openai"
     else:
-        logger.info(
-            "No API keys detected. Activating Mock/Offline Mode (NoOp provider)"
-        )
+        logger.info("No API keys detected. Activating Mock/Offline Mode (NoOp provider)")
         return "noop"
 
 

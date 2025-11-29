@@ -114,9 +114,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
     def log_path(self):
         """Lazy-load log path (sandboxed)."""
         if self._log_path is None:
-            self._log_path = (
-                self.system.get_sandbox_path() / "logs" / "envoy_operations.jsonl"
-            )
+            self._log_path = self.system.get_sandbox_path() / "logs" / "envoy_operations.jsonl"
             self._log_path.parent.mkdir(parents=True, exist_ok=True)
         return self._log_path
 
@@ -180,9 +178,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             # Log operation
             self._log_operation(task.task_id, command, args, result)
 
-            logger.info(
-                f"✅ ENVOY task {task.task_id} completed: {result.get('status')}"
-            )
+            logger.info(f"✅ ENVOY task {task.task_id} completed: {result.get('status')}")
             return result
 
         except Exception as e:
@@ -205,9 +201,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             capabilities=["playbook_execution", "orchestration"],
         )
 
-    def _route_command(
-        self, command: str, args: Dict[str, Any], task_id: str
-    ) -> Dict[str, Any]:
+    def _route_command(self, command: str, args: Dict[str, Any], task_id: str) -> Dict[str, Any]:
         """
         Route command to appropriate handler
 
@@ -287,12 +281,8 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 if not goal:
                     return {"status": "error", "error": "goal required for campaign"}
                 # Extract additional parameters
-                campaign_params = {
-                    k: v for k, v in args.items() if k not in ["goal", "campaign_type"]
-                }
-                return self.campaign_tool.run_campaign(
-                    goal, campaign_type, **campaign_params
-                )
+                campaign_params = {k: v for k, v in args.items() if k not in ["goal", "campaign_type"]}
+                return self.campaign_tool.run_campaign(goal, campaign_type, **campaign_params)
 
             elif command == "report":
                 report_type = args.get("report_type", "gap")
@@ -310,9 +300,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         "report_type": "gap",
                         "title": title,
                         "report_path": report_path,
-                        "report_hash": report.get("verification", {}).get(
-                            "sha256_hash"
-                        ),
+                        "report_hash": report.get("verification", {}).get("sha256_hash"),
                         "sections": list(report.get("sections", {}).keys()),
                     }
                 else:
@@ -363,9 +351,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 "traceback": traceback.format_exc(),
             }
 
-    def _log_operation(
-        self, task_id: str, command: str, args: Dict, result: Dict
-    ) -> None:
+    def _log_operation(self, task_id: str, command: str, args: Dict, result: Dict) -> None:
         """Log operation to file for audit trail"""
         try:
             from datetime import datetime, timezone

@@ -45,9 +45,7 @@ class LedgerTool:
             self._write_ledger(initial_ledger)
             self.logger.info("✅ New ledger created")
 
-    def write_entry(
-        self, broadcast: Dict[str, Any], verification_proof: Dict[str, Any]
-    ) -> bool:
+    def write_entry(self, broadcast: Dict[str, Any], verification_proof: Dict[str, Any]) -> bool:
         """
         Write verified broadcast entry to ledger
 
@@ -70,9 +68,7 @@ class LedgerTool:
                 "broadcast_timestamp": broadcast.get("timestamp"),
                 "original_signature": broadcast.get("signature"),
                 "verification_proof": verification_proof,
-                "archivist_signature": self._generate_archivist_signature(
-                    broadcast, verification_proof
-                ),
+                "archivist_signature": self._generate_archivist_signature(broadcast, verification_proof),
                 "entry_timestamp": datetime.now().isoformat(),
                 "sequence_number": len(ledger["chain_of_trust"]["entries"]) + 1,
             }
@@ -88,9 +84,7 @@ class LedgerTool:
             self.logger.error(f"❌ Failed to write entry: {e}")
             return False
 
-    def _generate_archivist_signature(
-        self, broadcast: Dict[str, Any], proof: Dict[str, Any]
-    ) -> str:
+    def _generate_archivist_signature(self, broadcast: Dict[str, Any], proof: Dict[str, Any]) -> str:
         """Generate ARCHIVIST's signature over the verification proof"""
         import hashlib
 

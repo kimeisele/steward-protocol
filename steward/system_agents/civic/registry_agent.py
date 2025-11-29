@@ -39,18 +39,14 @@ class RegistryAgent(VibeAgent):
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.registry = self._load_registry()
-        logger.info(
-            f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents"
-        )
+        logger.info(f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process registry-related tasks (governance only, no documentation)."""
         action = task.payload.get("action")
 
         if action == "scan_and_register":
-            return self.scan_and_register_agents(
-                dry_run=task.payload.get("dry_run", False)
-            )
+            return self.scan_and_register_agents(dry_run=task.payload.get("dry_run", False))
         elif action == "get_registry":
             return self.get_registry()
         elif action == "register_agent":
@@ -165,9 +161,7 @@ class RegistryAgent(VibeAgent):
             "agents": agents,
         }
 
-    def register_agent(
-        self, agent_name: str, config: Dict[str, Any], initial_credits: int
-    ) -> Dict[str, Any]:
+    def register_agent(self, agent_name: str, config: Dict[str, Any], initial_credits: int) -> Dict[str, Any]:
         """Register a single agent."""
         if "agents" not in self.registry:
             self.registry["agents"] = {}

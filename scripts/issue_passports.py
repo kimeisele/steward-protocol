@@ -41,9 +41,7 @@ from typing import Any, Dict, List, Optional
 from vibe_core.lineage import LineageChain, LineageEventType
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("PASSPORT_OFFICE")
 
 
@@ -63,13 +61,9 @@ class PassportOffice:
         # Get constitution hash from Genesis Block (The Anchor)
         genesis = self.lineage.get_genesis_block()
         if genesis:
-            self.constitution_hash = genesis.data.get("anchors", {}).get(
-                "constitution_hash", "unknown"
-            )
+            self.constitution_hash = genesis.data.get("anchors", {}).get("constitution_hash", "unknown")
         else:
-            logger.warning(
-                "⚠️  Genesis Block not found - using placeholder constitution hash"
-            )
+            logger.warning("⚠️  Genesis Block not found - using placeholder constitution hash")
             self.constitution_hash = "unknown"
 
         logger.info("📜 Passport Office initialized")
@@ -116,9 +110,7 @@ class PassportOffice:
                     "agent_id": agent_data.get("id", "unknown"),
                     "name": agent_data.get("name", "Unknown"),
                     "version": agent_data.get("version", "1.0.0"),
-                    "description": old_manifest.get("credentials", {}).get(
-                        "mandate", ""
-                    ),
+                    "description": old_manifest.get("credentials", {}).get("mandate", ""),
                     "domain": agent_data.get("specialization", "SYSTEM"),
                     "capabilities": capability_names,
                 }
@@ -131,9 +123,7 @@ class PassportOffice:
                 else:
                     # Fallback to operations format
                     operations = capabilities.get("operations", [])
-                    capability_names = [
-                        op.get("name") for op in operations if "name" in op
-                    ]
+                    capability_names = [op.get("name") for op in operations if "name" in op]
 
                 metadata = {
                     "agent_id": old_manifest.get("agent_id", "unknown"),
@@ -146,9 +136,7 @@ class PassportOffice:
 
             # GUARDRAIL #3: No Blank Cheques
             if not metadata["capabilities"] or len(metadata["capabilities"]) == 0:
-                logger.warning(
-                    f"⚠️  Agent '{metadata['agent_id']}' has no capabilities defined. Passport DENIED."
-                )
+                logger.warning(f"⚠️  Agent '{metadata['agent_id']}' has no capabilities defined. Passport DENIED.")
                 return None
 
             return metadata
@@ -180,10 +168,7 @@ class PassportOffice:
                 "description": metadata["description"],
             },
             "capabilities": {
-                "operations": [
-                    {"name": cap, "description": f"{cap} operation"}
-                    for cap in metadata["capabilities"]
-                ]
+                "operations": [{"name": cap, "description": f"{cap} operation"} for cap in metadata["capabilities"]]
             },
             "governance": {
                 "constitution_hash": self.constitution_hash,

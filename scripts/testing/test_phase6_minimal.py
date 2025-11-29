@@ -149,9 +149,7 @@ def main():
     features_ok = True
 
     # Check HIL Assistant exists
-    if check_file_exists(
-        "envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"
-    ):
+    if check_file_exists("envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"):
         pass
     else:
         features_ok = False

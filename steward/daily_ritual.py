@@ -86,9 +86,7 @@ class DailyRitual:
         self.events_this_cycle = all_events
 
         logger.info("=" * 60)
-        logger.info(
-            f"🌙 DAY {self.cycle_count}: COMPLETE - {len(all_events)} events recorded"
-        )
+        logger.info(f"🌙 DAY {self.cycle_count}: COMPLETE - {len(all_events)} events recorded")
         logger.info("=" * 60)
 
         return {

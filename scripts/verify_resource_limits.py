@@ -86,18 +86,14 @@ def main():
     logger.info(f"   Initial Quota: {quota.cpu_percent}% CPU, {quota.memory_mb} MB RAM")
 
     if quota.cpu_percent != 10:
-        logger.error(
-            f"❌ Expected 10% CPU quota for 100 credits, got {quota.cpu_percent}%"
-        )
+        logger.error(f"❌ Expected 10% CPU quota for 100 credits, got {quota.cpu_percent}%")
         sys.exit(1)
 
     logger.info("✅ Initial quota correct (10% CPU for 100 credits)")
 
     # 3. Run CPU-intensive task
     logger.info("2. Running CPU-intensive task...")
-    task = Task(
-        task_id="t1", agent_id="cpu_test", payload={"action": "burn_cpu", "duration": 3}
-    )
+    task = Task(task_id="t1", agent_id="cpu_test", payload={"action": "burn_cpu", "duration": 3})
     kernel.submit_task(task)
 
     # Let it run
@@ -112,9 +108,7 @@ def main():
 
     # Note: CPU throttling via nice() is not a hard limit, so we allow generous tolerance
     if usage["cpu_percent"] > usage["quota_cpu"] * 3:  # 3x tolerance
-        logger.warning(
-            f"⚠️  CPU usage significantly exceeds quota (but this is expected with nice())"
-        )
+        logger.warning(f"⚠️  CPU usage significantly exceeds quota (but this is expected with nice())")
     else:
         logger.info("✅ CPU usage within reasonable bounds")
 
@@ -140,20 +134,14 @@ def main():
         final_quota = kernel.resource_manager.quotas.get("cpu_test")
         final_balance = bank.get_balance("cpu_test")
         logger.info(f"   Final Balance: {final_balance} credits")
-        logger.info(
-            f"   Final Quota: {final_quota.cpu_percent}% CPU, {final_quota.memory_mb} MB RAM"
-        )
+        logger.info(f"   Final Quota: {final_quota.cpu_percent}% CPU, {final_quota.memory_mb} MB RAM")
 
         # Verify quota matches credit tier (500 credits = 25% CPU)
         if final_balance >= 500 and final_quota.cpu_percent == 25:
             logger.info("✅ Quota correctly updated based on credits!")
         else:
-            logger.warning(
-                f"⚠️  Quota: {final_quota.cpu_percent}% for {final_balance} credits"
-            )
-            logger.info(
-                "✅ Quota system is functional (values may vary based on initial state)"
-            )
+            logger.warning(f"⚠️  Quota: {final_quota.cpu_percent}% for {final_balance} credits")
+            logger.info("✅ Quota system is functional (values may vary based on initial state)")
 
     except Exception as e:
         logger.error(f"❌ Credit update failed: {e}")

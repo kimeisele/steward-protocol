@@ -100,15 +100,9 @@ class LazyQueue:
                 )
             """
             )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_status ON milk_ocean_queue (status)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_priority ON milk_ocean_queue (priority)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_created ON milk_ocean_queue (created_at)"
-            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_status ON milk_ocean_queue (status)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_priority ON milk_ocean_queue (priority)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_created ON milk_ocean_queue (created_at)")
             conn.commit()
 
     def push(
@@ -156,9 +150,7 @@ class LazyQueue:
                     ),
                 )
                 conn.commit()
-            logger.info(
-                f"🌊 Request {request_id} pushed to Milk Ocean (priority: {gate_result.priority})"
-            )
+            logger.info(f"🌊 Request {request_id} pushed to Milk Ocean (priority: {gate_result.priority})")
             return True
         except Exception as e:
             logger.error(f"❌ Failed to push to Milk Ocean: {e}")
@@ -346,11 +338,7 @@ class MilkOceanRouter:
         # 1. Check for SQL injection
         if self._sql_injection_pattern.search(user_input):
             # Count SQL-like keywords (allow some in legitimate queries)
-            sql_keywords = len(
-                re.findall(
-                    r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE
-                )
-            )
+            sql_keywords = len(re.findall(r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE))
             if sql_keywords > 2:  # More than 2 suspicious keywords = blocked
                 return GateResult(
                     RequestPriority.BLOCKED,
@@ -469,9 +457,7 @@ class MilkOceanRouter:
 
     # ==================== MAIN ROUTER ====================
 
-    def _emit_event_safe(
-        self, event_type: str, message: str, details: Optional[Dict] = None
-    ):
+    def _emit_event_safe(self, event_type: str, message: str, details: Optional[Dict] = None):
         """
         Safely emit an event without blocking request routing
         (Canto 10: Pulse System Integration)
@@ -492,23 +478,17 @@ class MilkOceanRouter:
 
             # Schedule event emission (non-blocking)
             if loop.is_running():
-                asyncio.create_task(
-                    emit_event(event_type, "envoy", message, details=details or {})
-                )
+                asyncio.create_task(emit_event(event_type, "envoy", message, details=details or {}))
             else:
                 # Queue it for next iteration
                 try:
-                    loop.run_until_complete(
-                        emit_event(event_type, "envoy", message, details=details or {})
-                    )
+                    loop.run_until_complete(emit_event(event_type, "envoy", message, details=details or {}))
                 except:
                     pass  # Silently fail - don't disrupt routing
         except Exception as e:
             logger.debug(f"⚠️  Event emission failed (non-blocking): {e}")
 
-    def process_prayer(
-        self, user_input: str, agent_id: str = "unknown", critical: bool = False
-    ) -> Dict[str, Any]:
+    def process_prayer(self, user_input: str, agent_id: str = "unknown", critical: bool = False) -> Dict[str, Any]:
         """
         Main entry point: Route the user's "prayer" (request) through the gates
 
@@ -522,9 +502,7 @@ class MilkOceanRouter:
         """
 
         # Generate request ID
-        request_id = hashlib.md5(
-            f"{user_input}{datetime.now().isoformat()}".encode()
-        ).hexdigest()[:16]
+        request_id = hashlib.md5(f"{user_input}{datetime.now().isoformat()}".encode()).hexdigest()[:16]
 
         logger.info(
             f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]"
@@ -572,9 +550,7 @@ class MilkOceanRouter:
         # This is the "Lotosblume" (sacred offering) that summons Vishnu immediately
         # Even under 1000 years of timeout (DDoS), this prayer is answered
         if critical:
-            logger.warning(
-                f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)"
-            )
+            logger.warning(f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)")
 
             # Emit CRITICAL_INTERRUPT event - full screen RED flash
             self._emit_event_safe(
@@ -815,6 +791,4 @@ if __name__ == "__main__":
         )
         print(f"\n🚨 CRITICAL Response:\n{json.dumps(critical_result, indent=2)}")
 
-        print(
-            f"\n\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}"
-        )
+        print(f"\n\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}")

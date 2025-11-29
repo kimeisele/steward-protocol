@@ -50,9 +50,7 @@ class RegulatingPrinciple(Enum):
     PRINCIPLE_1_PURITY = "Principle 1: No Corrupt Data Ingestion (Mercy/Daya)"
     PRINCIPLE_2_TRUTH = "Principle 2: No Hallucination (Truthfulness/Satyam)"
     PRINCIPLE_3_AUSTERITY = "Principle 3: No Resource Leaks (Austerity/Tapas)"
-    PRINCIPLE_4_AUTHORIZED_ONLY = (
-        "Principle 4: No Unauthorized Connections (Cleanliness/Saucam)"
-    )
+    PRINCIPLE_4_AUTHORIZED_ONLY = "Principle 4: No Unauthorized Connections (Cleanliness/Saucam)"
 
 
 class VerdictSeverity(Enum):
@@ -119,11 +117,7 @@ class ConstitutionalVerdictTool:
         self.violations = []
 
         # Find all agent directories
-        agent_dirs = [
-            d
-            for d in system_agents_path.iterdir()
-            if d.is_dir() and not d.name.startswith(".")
-        ]
+        agent_dirs = [d for d in system_agents_path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
         for agent_dir in agent_dirs:
             logger.info(f"⚖️  Judging {agent_dir.name}...")
@@ -243,9 +237,7 @@ class ConstitutionalVerdictTool:
 
         # Check if agent uses system interface for governance
         content = cartridge_file.read_text()
-        has_system_interface = (
-            "AgentSystemInterface" in content or "self.system" in content
-        )
+        has_system_interface = "AgentSystemInterface" in content or "self.system" in content
 
         if not has_system_interface:
             # Only warn - some agents might not need system interface
@@ -325,9 +317,7 @@ class ConstitutionalVerdictTool:
         except SyntaxError:
             pass  # Skip files with syntax errors (Watchman will catch)
 
-    def _check_article_vi_interoperability(
-        self, agent_path: Path, agent_id: str
-    ) -> None:
+    def _check_article_vi_interoperability(self, agent_path: Path, agent_id: str) -> None:
         """
         Article VI: Interoperabilität (Standardization)
 
@@ -354,9 +344,7 @@ class ConstitutionalVerdictTool:
                 )
             )
 
-    def _check_principle_4_authorized_connections(
-        self, agent_path: Path, agent_id: str
-    ) -> None:
+    def _check_principle_4_authorized_connections(self, agent_path: Path, agent_id: str) -> None:
         """
         Principle 4: No Unauthorized Connections (Cleanliness/Saucam)
 
@@ -376,11 +364,7 @@ class ConstitutionalVerdictTool:
 
         if has_network:
             # Check if there's GAD-1000 verification
-            has_verification = (
-                "gad_1000" in content.lower()
-                or "verify" in content
-                or "signature" in content
-            )
+            has_verification = "gad_1000" in content.lower() or "verify" in content or "signature" in content
 
             if not has_verification:
                 self.violations.append(
@@ -402,12 +386,8 @@ class ConstitutionalVerdictTool:
             Verdict dict with judgment and violations
         """
         # Group by severity
-        constitutional = [
-            v for v in self.violations if v.severity == VerdictSeverity.CONSTITUTIONAL
-        ]
-        governance = [
-            v for v in self.violations if v.severity == VerdictSeverity.GOVERNANCE
-        ]
+        constitutional = [v for v in self.violations if v.severity == VerdictSeverity.CONSTITUTIONAL]
+        governance = [v for v in self.violations if v.severity == VerdictSeverity.GOVERNANCE]
         warnings = [v for v in self.violations if v.severity == VerdictSeverity.WARNING]
 
         # Determine overall verdict
@@ -476,20 +456,12 @@ class ConstitutionalVerdictTool:
         logger.info(f"\nConstitution Hash: {verdict['constitutional_hash']}")
 
         if verdict["should_fail_build"]:
-            logger.error(
-                "\n❌ VERDICT: BUILD MUST FAIL - Constitutional violations detected"
-            )
-            logger.error(
-                "The Constitution is the supreme law. These violations cannot be ignored."
-            )
+            logger.error("\n❌ VERDICT: BUILD MUST FAIL - Constitutional violations detected")
+            logger.error("The Constitution is the supreme law. These violations cannot be ignored.")
         elif verdict["total_violations"] > 0:
             logger.warning("\n⚠️  VERDICT: WARNINGS DETECTED - Review recommended")
-            logger.warning(
-                "Consider addressing these to improve constitutional alignment"
-            )
+            logger.warning("Consider addressing these to improve constitutional alignment")
         else:
-            logger.info(
-                "\n✅ VERDICT: CONSTITUTIONAL - All agents uphold the supreme law"
-            )
+            logger.info("\n✅ VERDICT: CONSTITUTIONAL - All agents uphold the supreme law")
 
         logger.info("=" * 70 + "\n")

@@ -4,20 +4,18 @@
 ======================
 Boots the VibeOS Kernel in persistent daemon mode.
 """
+import logging
 import sys
 import time
-import logging
 from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.kernel_impl import RealVibeKernel
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("KERNEL_BOOT")
 
 
@@ -59,6 +57,7 @@ def boot_kernel():
     print("👀 Watching /tmp/vibe_os/tasks/ for new tasks...")
     import glob
     import json
+
     from vibe_core.scheduling import Task
 
     try:

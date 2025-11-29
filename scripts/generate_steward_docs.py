@@ -87,10 +87,7 @@ def generate_steward_md(agent_data: dict, agent_path: Path) -> str:
 
     # Extract operations from manifest
     operations = capabilities.get("operations", [])
-    op_descriptions = [
-        f"- `{op.get('name')}` - {op.get('description', 'Operation')}"
-        for op in operations
-    ]
+    op_descriptions = [f"- `{op.get('name')}` - {op.get('description', 'Operation')}" for op in operations]
 
     # Status icon
     status_icon = "✅" if status == "active" else "🟡"
@@ -271,9 +268,7 @@ def main():
                 with open(steward_md_path, "w") as f:
                     f.write(md_content)
 
-                print(
-                    f"✅ Generated: steward/system_agents/{agent_dir.name}/STEWARD.md"
-                )
+                print(f"✅ Generated: steward/system_agents/{agent_dir.name}/STEWARD.md")
                 generated += 1
             except Exception as e:
                 print(f"❌ Error generating {agent_dir.name}: {e}")

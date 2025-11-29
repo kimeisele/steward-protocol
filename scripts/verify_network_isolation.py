@@ -155,9 +155,7 @@ def test_subdomain_matching():
     proxy = KernelNetworkProxy()
 
     # github.com is whitelisted, so api.github.com should work
-    logger.info(
-        "1. Requesting https://api.github.com (subdomain of whitelisted github.com)..."
-    )
+    logger.info("1. Requesting https://api.github.com (subdomain of whitelisted github.com)...")
     try:
         response = proxy.get("test_agent", "https://api.github.com")
         logger.info("   ✅ Subdomain allowed")

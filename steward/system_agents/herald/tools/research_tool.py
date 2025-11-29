@@ -74,13 +74,10 @@ class ResearchTool(OfflineCapableMixin):
         else:
             if degradation_chain:
                 logger.info(
-                    f"📴 Research: Tavily unavailable, using DegradationChain "
-                    f"(level: {self.degradation_level})"
+                    f"📴 Research: Tavily unavailable, using DegradationChain " f"(level: {self.degradation_level})"
                 )
             else:
-                logger.warning(
-                    "⚠️  Research: Tavily unavailable (running in simulation mode)"
-                )
+                logger.warning("⚠️  Research: Tavily unavailable (running in simulation mode)")
 
     def scan(self, query: str) -> Optional[str]:
         """
@@ -97,12 +94,8 @@ class ResearchTool(OfflineCapableMixin):
             return self._fallback_context(query)
 
         try:
-            response = self.client.search(
-                query=query, search_depth="basic", max_results=3, include_answer=True
-            )
-            result = response.get("answer") or response.get("results", [{}])[0].get(
-                "content"
-            )
+            response = self.client.search(query=query, search_depth="basic", max_results=3, include_answer=True)
+            result = response.get("answer") or response.get("results", [{}])[0].get("content")
             if result:
                 logger.info("📡 Market signal detected")
             return result
@@ -153,15 +146,11 @@ class ResearchTool(OfflineCapableMixin):
 
                 # If we got a useful response from LocalLLM
                 if response.fallback_used == "local_llm":
-                    logger.info(
-                        f"📴 Research: Using LocalLLM fallback (level: {response.level.value})"
-                    )
+                    logger.info(f"📴 Research: Using LocalLLM fallback (level: {response.level.value})")
                     return response.content
 
                 # Otherwise fall through to static templates
-                logger.debug(
-                    f"Research: DegradationChain used {response.fallback_used}"
-                )
+                logger.debug(f"Research: DegradationChain used {response.fallback_used}")
 
             except Exception as e:
                 logger.warning(f"DegradationChain fallback failed: {e}")

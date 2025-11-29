@@ -89,9 +89,7 @@ class QualityEditor:
                 return draft
             else:
                 refined = verdict.replace('"', "").replace("'", "'")
-                logger.info(
-                    f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}..."
-                )
+                logger.info(f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}...")
                 return refined
 
         except Exception as e:
@@ -152,9 +150,7 @@ class CreativeCapability:
                             logger.debug(f"📚 Loaded knowledge_base from {config_path}")
                             return kb
                 except Exception as e:
-                    logger.debug(
-                        f"⚠️  Could not load knowledge_base from {config_path}: {e}"
-                    )
+                    logger.debug(f"⚠️  Could not load knowledge_base from {config_path}: {e}")
 
         logger.warning("⚠️  KNOWLEDGE_BASE CONFIG NOT FOUND: Using fallback URLs")
         return {
@@ -204,9 +200,7 @@ class CreativeCapability:
 
         spec_text = self._read_spec()
         knowledge_base = self._load_knowledge_base_config()
-        project_url = knowledge_base.get(
-            "project_url", "https://github.com/kimeisele/steward-protocol"
-        )
+        project_url = knowledge_base.get("project_url", "https://github.com/kimeisele/steward-protocol")
         news_prompt = ""
 
         if research_context:
@@ -238,18 +232,14 @@ class CreativeCapability:
             raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(
-                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
-                )
+                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
             logger.info(f"✅ CONTENT DRAFT GENERATED: {len(raw_draft)} chars")
 
             # Quality gate
             if self.editor:
-                final_content = self.editor.critique_and_refine(
-                    raw_draft, platform="twitter"
-                )
+                final_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
             else:
                 final_content = raw_draft
 
@@ -260,9 +250,7 @@ class CreativeCapability:
             logger.error(f"❌ CREATIVE ERROR: {e}")
             return self._fallback_content()
 
-    def generate_reddit_post(
-        self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None
-    ) -> Optional[Dict]:
+    def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None) -> Optional[Dict]:
         """
         Generate Reddit deep-dive post.
 
@@ -314,15 +302,11 @@ class CreativeCapability:
 
             content = response.choices[0].message.content
             draft_result = json.loads(content)
-            logger.info(
-                f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars"
-            )
+            logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
 
             # Quality gate
             if self.editor and draft_result.get("body"):
-                refined_body = self.editor.critique_and_refine(
-                    draft_result["body"], platform="reddit"
-                )
+                refined_body = self.editor.critique_and_refine(draft_result["body"], platform="reddit")
                 draft_result["body"] = refined_body
 
             return draft_result

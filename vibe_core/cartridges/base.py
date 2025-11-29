@@ -133,9 +133,7 @@ class CartridgeBase:
             if (parent / ".vibe").exists():
                 return parent
 
-        raise RuntimeError(
-            "Could not detect vibe-agency root. Please set VIBE_ROOT environment variable."
-        )
+        raise RuntimeError("Could not detect vibe-agency root. Please set VIBE_ROOT environment variable.")
 
     def _init_llm_provider(self):
         """Initialize the LLM provider (offline-first)."""
@@ -145,9 +143,7 @@ class CartridgeBase:
 
             return LLMProviderFactory.create("smart_local")
         except Exception:
-            logger.debug(
-                f"Could not initialize LLM provider for {self.name} (fallback to local mode)"
-            )
+            logger.debug(f"Could not initialize LLM provider for {self.name} (fallback to local mode)")
             return None
 
     def _load_playbooks(self) -> dict[str, Any]:
@@ -161,9 +157,7 @@ class CartridgeBase:
             Dictionary mapping playbook names to their definitions
         """
         playbooks = {}
-        playbook_dir = (
-            self.vibe_root / "vibe_core" / "cartridges" / self.name / "playbooks"
-        )
+        playbook_dir = self.vibe_root / "vibe_core" / "cartridges" / self.name / "playbooks"
 
         if playbook_dir.exists():
             for playbook_file in playbook_dir.glob("*.yaml"):
@@ -231,9 +225,7 @@ class CartridgeBase:
         }
 
     def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
-        )
+        return f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
 
     def __str__(self) -> str:
         return f"{self.name} v{self.version} - {self.description}"

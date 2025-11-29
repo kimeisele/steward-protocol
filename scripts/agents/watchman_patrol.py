@@ -83,9 +83,7 @@ def main():
 
     print("\n" + "=" * 80)
     if report["agents_frozen"]:
-        print(
-            f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations"
-        )
+        print(f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations")
         print("These agents cannot execute until violations are resolved.")
     else:
         print("✅ GREEN LIGHT: System is clean. All agents operational.")

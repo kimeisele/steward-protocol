@@ -4,17 +4,17 @@ Verify Operation Whole Brain
 Checks if ENVOY and SCIENCE are correctly migrated to ContextAwareAgent
 and if tools have DegradationChain injected.
 """
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
 from steward.system_agents.science.cartridge_main import ScientistCartridge
+from vibe_core.agents.context_aware_agent import ContextAwareAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("VERIFY_BRAIN")
@@ -36,9 +36,7 @@ def verify_agent(agent_class, agent_name, tool_checks):
         # 2. Check DegradationChain
         chain = agent.get_degradation_chain()
         if chain:
-            print(
-                f"✅ {agent_name} has DegradationChain (Level: {chain.current_level.value})"
-            )
+            print(f"✅ {agent_name} has DegradationChain (Level: {chain.current_level.value})")
         else:
             print(f"❌ {agent_name} missing DegradationChain")
             return False
@@ -48,10 +46,7 @@ def verify_agent(agent_class, agent_name, tool_checks):
             tool = getattr(agent, tool_attr)
             if hasattr(tool, "chain") and tool.chain is not None:
                 print(f"✅ Tool '{tool_name}' has chain injected")
-            elif (
-                hasattr(tool, "_degradation_chain")
-                and tool._degradation_chain is not None
-            ):  # For mixin
+            elif hasattr(tool, "_degradation_chain") and tool._degradation_chain is not None:  # For mixin
                 print(f"✅ Tool '{tool_name}' has chain injected (Mixin)")
             else:
                 # Check if it was assigned to self.chain in __init__ as per our changes
@@ -99,9 +94,7 @@ def main():
     print("=======================================")
 
     # Verify ENVOY
-    envoy = verify_agent(
-        EnvoyCartridge, "ENVOY", {"Diplomacy": "diplomacy", "Curator": "curator"}
-    )
+    envoy = verify_agent(EnvoyCartridge, "ENVOY", {"Diplomacy": "diplomacy", "Curator": "curator"})
     if not envoy:
         return 1
 

@@ -40,9 +40,7 @@ class ResearchCapability:
             except Exception as e:
                 logger.warning(f"⚠️  RESEARCH: Tavily init failed: {e}")
         elif not self.api_key:
-            logger.warning(
-                "⚠️  RESEARCH: No TAVILY_API_KEY found. Running in degraded mode."
-            )
+            logger.warning("⚠️  RESEARCH: No TAVILY_API_KEY found. Running in degraded mode.")
 
     def scan(self, query: str) -> Optional[str]:
         """
@@ -66,9 +64,7 @@ class ResearchCapability:
                 include_answer=True,
             )
 
-            result = response.get("answer") or response.get("results", [{}])[0].get(
-                "content"
-            )
+            result = response.get("answer") or response.get("results", [{}])[0].get("content")
             if result:
                 logger.info("📡 MARKET SIGNAL DETECTED")
             return result

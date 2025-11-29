@@ -165,9 +165,7 @@ class BaseSpecialist(ABC):
         self.started_at: str | None = None
         self.completed_at: str | None = None
 
-        logger.info(
-            f"Initialized {self.__class__.__name__} (role={role}, mission_id={mission_id})"
-        )
+        logger.info(f"Initialized {self.__class__.__name__} (role={role}, mission_id={mission_id})")
 
     def _detect_playbook_root(self) -> Path:
         """
@@ -196,9 +194,7 @@ class BaseSpecialist(ABC):
         # Fallback: Return a path that may not exist (some specialists don't need playbooks)
         # This allows specialists to initialize without failing, but _load_playbook will fail
         # if actually called on a specialist that needs playbooks
-        logger.debug(
-            "Playbook directory not found. Using fallback (playbooks may not be required)"
-        )
+        logger.debug("Playbook directory not found. Using fallback (playbooks may not be required)")
         return Path.cwd() / "playbooks"
 
     # ========================================================================
@@ -229,9 +225,7 @@ class BaseSpecialist(ABC):
         Raises:
             NotImplementedError: If subclass doesn't implement this method
         """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement execute(context)"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} must implement execute(context)")
 
     @abstractmethod
     def validate_preconditions(self, context: MissionContext) -> bool:
@@ -253,9 +247,7 @@ class BaseSpecialist(ABC):
         Raises:
             NotImplementedError: If subclass doesn't implement this method
         """
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement validate_preconditions(context)"
-        )
+        raise NotImplementedError(f"{self.__class__.__name__} must implement validate_preconditions(context)")
 
     # ========================================================================
     # PERSISTENCE - IMPLEMENTED WITH SENSIBLE DEFAULTS
@@ -283,9 +275,7 @@ class BaseSpecialist(ABC):
             data=self.state,
         )
 
-        logger.info(
-            f"{self.role}: State persisted to SQLite (mission_id={self.mission_id})"
-        )
+        logger.info(f"{self.role}: State persisted to SQLite (mission_id={self.mission_id})")
 
     def load_state(self) -> dict[str, Any]:
         """
@@ -302,9 +292,7 @@ class BaseSpecialist(ABC):
             decisions = self.sqlite_store.get_decisions_for_mission(self.mission_id)
 
             # Filter for STATE_CHECKPOINT decisions, most recent first
-            checkpoints = [
-                d for d in decisions if d.get("decision_type") == "STATE_CHECKPOINT"
-            ]
+            checkpoints = [d for d in decisions if d.get("decision_type") == "STATE_CHECKPOINT"]
 
             if not checkpoints:
                 logger.info(f"{self.role}: No saved state found (clean start)")
@@ -315,16 +303,12 @@ class BaseSpecialist(ABC):
             state_data = latest.get("context", {})
 
             self.state = state_data
-            logger.info(
-                f"{self.role}: State loaded from SQLite (mission_id={self.mission_id})"
-            )
+            logger.info(f"{self.role}: State loaded from SQLite (mission_id={self.mission_id})")
 
             return state_data
 
         except Exception as e:
-            logger.warning(
-                f"{self.role}: Failed to load state (proceeding with clean state): {e}"
-            )
+            logger.warning(f"{self.role}: Failed to load state (proceeding with clean state): {e}")
             return {}
 
     # ========================================================================
@@ -344,9 +328,7 @@ class BaseSpecialist(ABC):
             context: Mission context
         """
         self.started_at = datetime.utcnow().isoformat() + "Z"
-        logger.info(
-            f"{self.role}: Starting execution (mission_id={self.mission_id}, phase={context.phase})"
-        )
+        logger.info(f"{self.role}: Starting execution (mission_id={self.mission_id}, phase={context.phase})")
 
     def on_complete(self, context: MissionContext, result: SpecialistResult) -> None:
         """
@@ -401,17 +383,13 @@ class BaseSpecialist(ABC):
         self.state["failed_at"] = datetime.utcnow().isoformat() + "Z"
         self.persist_state()
 
-        return SpecialistResult(
-            success=False, error=f"{self.__class__.__name__} failed: {error}"
-        )
+        return SpecialistResult(success=False, error=f"{self.__class__.__name__} failed: {error}")
 
     # ========================================================================
     # SHARED UTILITY METHODS
     # ========================================================================
 
-    def _log_decision(
-        self, decision_type: str, rationale: str, data: dict[str, Any] | None = None
-    ) -> None:
+    def _log_decision(self, decision_type: str, rationale: str, data: dict[str, Any] | None = None) -> None:
         """
         Log a decision to SQLite for audit trail.
 
@@ -477,9 +455,7 @@ class BaseSpecialist(ABC):
 
             json_path = playbook_path.with_suffix(".json")
             if not json_path.exists():
-                raise FileNotFoundError(
-                    f"Playbook not found (tried .yaml and .json): {playbook_path}"
-                )
+                raise FileNotFoundError(f"Playbook not found (tried .yaml and .json): {playbook_path}")
 
             with open(json_path) as f:
                 return json.load(f)
@@ -517,9 +493,7 @@ class BaseSpecialist(ABC):
         """
         mission = self.sqlite_store.get_mission(self.mission_id)
         if not mission:
-            raise ValueError(
-                f"Mission not found in database: mission_id={self.mission_id}"
-            )
+            raise ValueError(f"Mission not found in database: mission_id={self.mission_id}")
         return mission
 
     def __repr__(self) -> str:

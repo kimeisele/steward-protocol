@@ -110,17 +110,13 @@ class WorkflowLoader:
             jsonschema.validate(data, self.schema)
             logger.info("Workflow validated against schema")
         except jsonschema.ValidationError as e:
-            raise WorkflowValidationError(
-                f"Workflow validation failed: {e.message} (at {e.json_path})"
-            )
+            raise WorkflowValidationError(f"Workflow validation failed: {e.message} (at {e.json_path})")
 
         # Convert to WorkflowGraph
         workflow_def = data["workflow"]
         return self._build_workflow_graph(workflow_def, yaml_path)
 
-    def _build_workflow_graph(
-        self, workflow_def: dict[str, Any], source_path: Path
-    ) -> WorkflowGraph:
+    def _build_workflow_graph(self, workflow_def: dict[str, Any], source_path: Path) -> WorkflowGraph:
         """
         Convert YAML workflow definition to WorkflowGraph object.
 
@@ -176,15 +172,10 @@ class WorkflowLoader:
             estimated_cost_usd=estimated_cost,
         )
 
-        logger.info(
-            f"Built WorkflowGraph: {name} ({workflow_id}) with "
-            f"{len(nodes)} nodes, {len(edges)} edges"
-        )
+        logger.info(f"Built WorkflowGraph: {name} ({workflow_id}) with " f"{len(nodes)} nodes, {len(edges)} edges")
         return graph
 
-    def load_workflows_from_directory(
-        self, directory: str | Path
-    ) -> dict[str, WorkflowGraph]:
+    def load_workflows_from_directory(self, directory: str | Path) -> dict[str, WorkflowGraph]:
         """
         Load all YAML workflows from a directory.
 

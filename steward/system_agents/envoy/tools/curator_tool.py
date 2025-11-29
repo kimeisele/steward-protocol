@@ -34,9 +34,7 @@ class CuratorTool:
         self.hall_of_fame = Path("hall_of_fame.json")
         self.chain = degradation_chain
 
-    def search_repositories(
-        self, topic="ai-agent", min_stars=50, max_results=10
-    ) -> List[Dict]:
+    def search_repositories(self, topic="ai-agent", min_stars=50, max_results=10) -> List[Dict]:
         """
         Search GitHub for AI agent repositories.
         Returns list of candidate repositories with metadata.
@@ -45,9 +43,7 @@ class CuratorTool:
             ImportError: If PyGithub is not installed
             RuntimeError: If GitHub search fails
         """
-        print(
-            f"\n🔍 CURATOR: Scanning GitHub for '{topic}' projects (min {min_stars}⭐)..."
-        )
+        print(f"\n🔍 CURATOR: Scanning GitHub for '{topic}' projects (min {min_stars}⭐)...")
 
         try:
             from github import Github
@@ -82,9 +78,7 @@ class CuratorTool:
                         "language": repo.language,
                         "url": repo.html_url,
                         "topics": repo.get_topics(),
-                        "updated_at": (
-                            repo.updated_at.isoformat() if repo.updated_at else None
-                        ),
+                        "updated_at": (repo.updated_at.isoformat() if repo.updated_at else None),
                         "open_issues": repo.open_issues_count,
                     }
                 )

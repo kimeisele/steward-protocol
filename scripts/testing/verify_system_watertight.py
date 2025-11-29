@@ -92,15 +92,10 @@ class WatertightnessVerifier:
                     if "{{" in line and "}}" in line:
                         continue
                     # Allow "Permeable Prompts" module (prompt_context.py, context_loader.py)
-                    if "prompt" in str(file_path).lower() or "context_loader" in str(
-                        file_path
-                    ):
+                    if "prompt" in str(file_path).lower() or "context_loader" in str(file_path):
                         continue
                     # Allow "replace_placeholder" function names
-                    if (
-                        "def replace_placeholder" in line
-                        or "replace_placeholder(" in line
-                    ):
+                    if "def replace_placeholder" in line or "replace_placeholder(" in line:
                         continue
 
                 # "mock" appears in many legitimate contexts

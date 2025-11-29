@@ -53,9 +53,7 @@ class SessionContext:
     files_read: set[str] = field(default_factory=set)
     files_written: set[str] = field(default_factory=set)
     violations: list[SafetyViolation] = field(default_factory=list)
-    session_start: str = field(
-        default_factory=lambda: datetime.utcnow().isoformat() + "Z"
-    )
+    session_start: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
 
 
 class ToolSafetyGuardError(Exception):
@@ -100,13 +98,10 @@ class ToolSafetyGuard:
         self.context = SessionContext()
 
         logger.info(
-            f"Tool Safety Guard initialized (strict_mode={enable_strict_mode}). "
-            f"Iron Dome protection active."
+            f"Tool Safety Guard initialized (strict_mode={enable_strict_mode}). " f"Iron Dome protection active."
         )
 
-    def check_action(
-        self, tool_name: str, args: dict[str, Any]
-    ) -> tuple[bool, SafetyViolation | None]:
+    def check_action(self, tool_name: str, args: dict[str, Any]) -> tuple[bool, SafetyViolation | None]:
         """
         Check if a tool action is safe to execute.
 
@@ -252,16 +247,8 @@ class ToolSafetyGuard:
             "files_written": len(self.context.files_written),
             "violations": {
                 "total": len(self.context.violations),
-                "blocking": sum(
-                    1
-                    for v in self.context.violations
-                    if v.severity == ViolationSeverity.BLOCKING
-                ),
-                "warning": sum(
-                    1
-                    for v in self.context.violations
-                    if v.severity == ViolationSeverity.WARNING
-                ),
+                "blocking": sum(1 for v in self.context.violations if v.severity == ViolationSeverity.BLOCKING),
+                "warning": sum(1 for v in self.context.violations if v.severity == ViolationSeverity.WARNING),
             },
             "recent_violations": [
                 {

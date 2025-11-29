@@ -37,9 +37,7 @@ class EconomyAgent(VibeAgent):
         self.license_tool = LicenseTool("data/registry/licenses.json")
 
         logger.info(f"💰 Ledger initialized: {len(self.ledger.entries)} transactions")
-        logger.info(
-            f"🎫 License database initialized: {len(self.license_tool.licenses)} licenses"
-        )
+        logger.info(f"🎫 License database initialized: {len(self.license_tool.licenses)} licenses")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process economy-related tasks."""
@@ -69,9 +67,7 @@ class EconomyAgent(VibeAgent):
 
     def check_broadcast_license(self, agent_name: str) -> Dict[str, Any]:
         """Check if an agent has broadcast license."""
-        license_info = self.license_tool.check_license(
-            agent_name, LicenseType.BROADCAST
-        )
+        license_info = self.license_tool.check_license(agent_name, LicenseType.BROADCAST)
 
         if license_info and license_info.get("status") == "ACTIVE":
             logger.info(f"✅ {agent_name} has active broadcast license")
@@ -84,9 +80,7 @@ class EconomyAgent(VibeAgent):
             "reason": "license_revoked" if license_info else "not_registered",
         }
 
-    def deduct_credits(
-        self, agent_name: str, amount: int = 1, reason: str = "broadcast"
-    ) -> Dict[str, Any]:
+    def deduct_credits(self, agent_name: str, amount: int = 1, reason: str = "broadcast") -> Dict[str, Any]:
         """
         Deduct credits from an agent's account.
 
@@ -116,9 +110,7 @@ class EconomyAgent(VibeAgent):
             logger.error(f"❌ Credit deduction error: {e}")
             return {"status": "error", "agent": agent_name, "error": str(e)}
 
-    def refill_credits(
-        self, agent_name: str, amount: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def refill_credits(self, agent_name: str, amount: Optional[int] = None) -> Dict[str, Any]:
         """Refill an agent's credits (admin operation)."""
         if amount is None:
             amount = 50  # Default refill amount
@@ -160,9 +152,7 @@ class EconomyAgent(VibeAgent):
             )
 
             if not success:
-                logger.warning(
-                    f"⚠️  License revocation failed: {agent_name} has no active broadcast license"
-                )
+                logger.warning(f"⚠️  License revocation failed: {agent_name} has no active broadcast license")
                 return {
                     "status": "error",
                     "reason": "license_not_found",
@@ -186,13 +176,7 @@ class EconomyAgent(VibeAgent):
 
     def report_status(self) -> Dict[str, Any]:
         """Report economy status."""
-        active_licenses = len(
-            [
-                lic
-                for lic in self.license_tool.licenses.values()
-                if lic.get("status") == "ACTIVE"
-            ]
-        )
+        active_licenses = len([lic for lic in self.license_tool.licenses.values() if lic.get("status") == "ACTIVE"])
 
         return {
             "agent_id": "civic_economy",

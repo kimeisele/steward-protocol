@@ -18,9 +18,7 @@ class VerifierTool:
         self.logger.info("✅ Verifier Tool initialized")
         self.trusted_signers = {"HERALD_Agent": "HERALD_PUBLIC_KEY_PLACEHOLDER"}
 
-    def verify_signature(
-        self, content: str, signature: str, signer: str
-    ) -> Tuple[bool, str]:
+    def verify_signature(self, content: str, signature: str, signer: str) -> Tuple[bool, str]:
         """
         Verify signature of HERALD broadcast
 
@@ -55,9 +53,7 @@ class VerifierTool:
         hash_obj = hashlib.sha256(f"{content}:{signer}".encode())
         return f"HERALD_SIG_{hash_obj.hexdigest()[:3].upper()}"
 
-    def create_verification_proof(
-        self, verified_content: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def create_verification_proof(self, verified_content: Dict[str, Any]) -> Dict[str, Any]:
         """
         Create cryptographic proof of verification
 

@@ -65,9 +65,7 @@ class KernelNetworkProxy:
         self.whitelist = set(self.DEFAULT_WHITELIST)
         self.request_log: List[Dict[str, Any]] = []
 
-        logger.info(
-            f"🌐 Network Proxy initialized with {len(self.whitelist)} whitelisted domains"
-        )
+        logger.info(f"🌐 Network Proxy initialized with {len(self.whitelist)} whitelisted domains")
 
     def add_to_whitelist(self, domain: str) -> None:
         """
@@ -119,9 +117,7 @@ class KernelNetworkProxy:
             logger.error(f"❌ Error parsing URL {url}: {e}")
             return False
 
-    def request(
-        self, agent_id: str, method: str, url: str, **kwargs
-    ) -> requests.Response:
+    def request(self, agent_id: str, method: str, url: str, **kwargs) -> requests.Response:
         """
         Make HTTP request on behalf of agent.
 
@@ -139,10 +135,7 @@ class KernelNetworkProxy:
         """
         # Check whitelist
         if not self._is_allowed(url):
-            logger.warning(
-                f"🚫 {agent_id} blocked from accessing {url} "
-                f"(domain not whitelisted)"
-            )
+            logger.warning(f"🚫 {agent_id} blocked from accessing {url} " f"(domain not whitelisted)")
             raise PermissionError(
                 f"Network access denied: {urlparse(url).netloc} not whitelisted. "
                 f"Contact kernel administrator to whitelist this domain."
@@ -162,9 +155,7 @@ class KernelNetworkProxy:
         # Make request
         try:
             response = requests.request(method, url, **kwargs)
-            logger.debug(
-                f"   ← {response.status_code} " f"({len(response.content)} bytes)"
-            )
+            logger.debug(f"   ← {response.status_code} " f"({len(response.content)} bytes)")
             return response
         except Exception as e:
             logger.error(f"❌ Request failed: {e}")
@@ -197,9 +188,7 @@ class KernelNetworkProxy:
             List of request log entries
         """
         if agent_id:
-            return [
-                entry for entry in self.request_log if entry["agent_id"] == agent_id
-            ]
+            return [entry for entry in self.request_log if entry["agent_id"] == agent_id]
         return self.request_log
 
     def clear_log(self) -> None:

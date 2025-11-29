@@ -79,9 +79,7 @@ class LifecycleState:
         # Manually convert to avoid Enum serialization issues
         return {
             "agent_id": self.agent_id,
-            "status": (
-                self.status.value if self.status else None
-            ),  # Convert enum to string
+            "status": (self.status.value if self.status else None),  # Convert enum to string
             "varna": self.varna,
             "entered_at": self.entered_at,
             "initiator_agent": self.initiator_agent,
@@ -133,9 +131,7 @@ class LifecycleManager:
                     for agent_name, agent_data in data.get("agents", {}).items():
                         lifecycle = agent_data.get("lifecycle_status")
                         if lifecycle:
-                            self._lifecycle_states[agent_name] = self._dict_to_state(
-                                lifecycle, agent_name
-                            )
+                            self._lifecycle_states[agent_name] = self._dict_to_state(lifecycle, agent_name)
                         else:
                             # For backward compatibility: agents without lifecycle_status
                             # are assumed to be GRIHASTHA (legacy full-access agents)
@@ -204,9 +200,7 @@ class LifecycleManager:
 
         logger.info(f"🎓 New agent {agent_id} registered as BRAHMACHARI")
         logger.info(f"   Status: Read-only access only")
-        logger.info(
-            f"   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA"
-        )
+        logger.info(f"   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA")
 
         return state
 
@@ -236,9 +230,7 @@ class LifecycleManager:
             return None
 
         if current.status != LifecycleStatus.BRAHMACHARI:
-            logger.error(
-                f"❌ Agent {agent_id} is {current.status.value}, not BRAHMACHARI"
-            )
+            logger.error(f"❌ Agent {agent_id} is {current.status.value}, not BRAHMACHARI")
             return None
 
         state = LifecycleState(
@@ -287,9 +279,7 @@ class LifecycleManager:
             return None
 
         violations = current.violations or []
-        violations.append(
-            {"timestamp": datetime.now(timezone.utc).isoformat(), **violation}
-        )
+        violations.append({"timestamp": datetime.now(timezone.utc).isoformat(), **violation})
 
         state = LifecycleState(
             agent_id=agent_id,
@@ -357,9 +347,7 @@ class LifecycleManager:
 
         return state
 
-    def merge_to_sannyasa(
-        self, agent_id: str, merge_location: str, reason: str = "Merged into core"
-    ) -> LifecycleState:
+    def merge_to_sannyasa(self, agent_id: str, merge_location: str, reason: str = "Merged into core") -> LifecycleState:
         """
         Final state: SANNYASA (renounced/merged).
 
@@ -498,11 +486,7 @@ class LifecycleManager:
 
     def get_all_agents_by_status(self, status: LifecycleStatus) -> List[str]:
         """Get all agents in a specific lifecycle status."""
-        return [
-            agent_id
-            for agent_id, state in self._lifecycle_states.items()
-            if state.status == status
-        ]
+        return [agent_id for agent_id, state in self._lifecycle_states.items() if state.status == status]
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get lifecycle statistics."""

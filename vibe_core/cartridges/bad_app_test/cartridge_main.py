@@ -48,9 +48,7 @@ class BadAppCartridge(CartridgeBase):
         The kernel should catch this and isolate the cartridge.
         """
         logger.error("💥 BadAppCartridge is crashing intentionally")
-        raise Exception(
-            "BadAppCartridge intentional failure - This should be caught by Kernel isolation"
-        )
+        raise Exception("BadAppCartridge intentional failure - This should be caught by Kernel isolation")
 
     def crash_on_init(self) -> None:
         """Raise exception during initialization to test isolation."""
@@ -69,9 +67,7 @@ class BadAppCartridge(CartridgeBase):
         Start an infinite loop.
         Used to test timeout isolation (kernel should interrupt).
         """
-        logger.warning(
-            "⚠️ BadAppCartridge starting infinite loop - should be interrupted"
-        )
+        logger.warning("⚠️ BadAppCartridge starting infinite loop - should be interrupted")
         while True:
             pass  # Infinite loop
 
@@ -87,9 +83,7 @@ class BadAppCartridge(CartridgeBase):
         Kernel isolation should prevent this.
         """
         try:
-            with open(
-                self.vibe_root / ".vibe" / "state" / "active_mission.json", "w"
-            ) as f:
+            with open(self.vibe_root / ".vibe" / "state" / "active_mission.json", "w") as f:
                 f.write("CORRUPTED BY BAD APP")
             logger.error("❌ BadAppCartridge corrupted a system file!")
         except Exception as e:

@@ -131,11 +131,7 @@ class GitActivityIntrospector:
                 text=True,
                 timeout=5,
             )
-            current_branch = (
-                branch_result.stdout.strip()
-                if branch_result.returncode == 0
-                else "unknown"
-            )
+            current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else "unknown"
 
             # Get last commit
             log_result = subprocess.run(
@@ -199,14 +195,7 @@ class ParameterIntrospector:
 
     def scan_economy_params(self) -> Dict[str, Any]:
         """Scan economy.py for tunable parameters."""
-        economy_file = (
-            self.root_dir
-            / "steward"
-            / "system_agents"
-            / "civic"
-            / "tools"
-            / "economy.py"
-        )
+        economy_file = self.root_dir / "steward" / "system_agents" / "civic" / "tools" / "economy.py"
 
         if not economy_file.exists():
             return {}
@@ -247,18 +236,12 @@ class ParameterIntrospector:
             content = narasimha_file.read_text()
 
             # Extract UNFORGIVABLE_CRIMES list
-            crimes_match = re.search(
-                r"UNFORGIVABLE_CRIMES\s*=\s*\[(.*?)\]", content, re.DOTALL
-            )
+            crimes_match = re.search(r"UNFORGIVABLE_CRIMES\s*=\s*\[(.*?)\]", content, re.DOTALL)
 
             crimes = []
             if crimes_match:
                 crimes_text = crimes_match.group(1)
-                crimes = [
-                    c.strip().strip('"').strip("'")
-                    for c in crimes_text.split(",")
-                    if c.strip()
-                ]
+                crimes = [c.strip().strip('"').strip("'") for c in crimes_text.split(",") if c.strip()]
 
             return {
                 "unforgivable_crimes": crimes,

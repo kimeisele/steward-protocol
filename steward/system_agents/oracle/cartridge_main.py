@@ -100,9 +100,7 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "evidence": {
                     "balance": status["balance"],
                     "status": status["status"],
-                    "recent_transactions": status["account"].get(
-                        "recent_transactions", []
-                    ),
+                    "recent_transactions": status["account"].get("recent_transactions", []),
                 },
             }
 
@@ -136,9 +134,7 @@ class OracleCartridge(VibeAgent, OathMixin):
         except IntrospectionError as e:
             return {"query": f"Why is {agent_id} frozen?", "error": str(e)}
 
-    def audit_timeline(
-        self, limit: int = 20, agent_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def audit_timeline(self, limit: int = 20, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get a narrative timeline of recent events.
 
@@ -150,8 +146,7 @@ class OracleCartridge(VibeAgent, OathMixin):
             narrative = self._build_timeline_narrative(trail, agent_id)
 
             return {
-                "query": f"Timeline of recent events"
-                + (f" for {agent_id}" if agent_id else ""),
+                "query": f"Timeline of recent events" + (f" for {agent_id}" if agent_id else ""),
                 "timestamp": datetime.now().isoformat(),
                 "event_count": len(trail),
                 "raw_data": trail,
@@ -208,15 +203,12 @@ class OracleCartridge(VibeAgent, OathMixin):
             lines.append(f"\nVault Leases ({len(status['recent_leases'])} recent):")
             for lease in status["recent_leases"][:3]:
                 lines.append(
-                    f"  • {lease['key_name']}: {lease['credits_charged']} Credits "
-                    f"at {lease['lease_time']}"
+                    f"  • {lease['key_name']}: {lease['credits_charged']} Credits " f"at {lease['lease_time']}"
                 )
 
         return "\n".join(lines)
 
-    def _build_freeze_narrative(
-        self, agent_id: str, freeze_info: Dict[str, Any]
-    ) -> str:
+    def _build_freeze_narrative(self, agent_id: str, freeze_info: Dict[str, Any]) -> str:
         """Build a narrative explaining a freeze."""
         if not freeze_info.get("is_frozen"):
             return f"{agent_id} is not frozen. Agents operate freely."
@@ -230,16 +222,12 @@ class OracleCartridge(VibeAgent, OathMixin):
         lines.append(f"Severity: {violation.get('severity', 'Unknown')}")
         lines.append(f"Description: {violation.get('description', 'No description')}")
 
-        lines.append(
-            f"\nRoot Cause: {freeze_info.get('freeze_reason', 'No reason recorded')}"
-        )
+        lines.append(f"\nRoot Cause: {freeze_info.get('freeze_reason', 'No reason recorded')}")
         lines.append(f"Evidence TX: {freeze_info.get('freeze_tx_id', 'N/A')}")
 
         return "\n".join(lines)
 
-    def _build_timeline_narrative(
-        self, trail: list, agent_id: Optional[str] = None
-    ) -> str:
+    def _build_timeline_narrative(self, trail: list, agent_id: Optional[str] = None) -> str:
         """Build a narrative timeline of transactions."""
         if not trail:
             return "No transactions recorded."
@@ -281,9 +269,7 @@ class OracleCartridge(VibeAgent, OathMixin):
         lines.append(f"  Total in System: {stats['total_credits']}")
         lines.append(f"  Circulating: {stats['circulating_credits']}")
 
-        lines.append(
-            f"\nIntegrity: {'✅ VERIFIED' if stats['integrity_verified'] else '❌ COMPROMISED'}"
-        )
+        lines.append(f"\nIntegrity: {'✅ VERIFIED' if stats['integrity_verified'] else '❌ COMPROMISED'}")
 
         return "\n".join(lines)
 
@@ -297,11 +283,7 @@ class OracleCartridge(VibeAgent, OathMixin):
         violation = freeze_info.get("violation", {})
         violation_type = violation.get("type", "")
 
-        if (
-            "Mock" in violation_type
-            or "Placeholder" in violation_type
-            or "Stub" in violation_type
-        ):
+        if "Mock" in violation_type or "Placeholder" in violation_type or "Stub" in violation_type:
             return {
                 "action": "code_fix",
                 "message": "Remove mock/placeholder code and implement real logic",
@@ -332,14 +314,10 @@ class OracleCartridge(VibeAgent, OathMixin):
             )
 
         if not stats["integrity_verified"]:
-            alerts.append(
-                {"severity": "CRITICAL", "message": "System integrity check failed"}
-            )
+            alerts.append({"severity": "CRITICAL", "message": "System integrity check failed"})
 
         if stats["active_agents"] == 0:
-            alerts.append(
-                {"severity": "CRITICAL", "message": "No active agents in the system"}
-            )
+            alerts.append({"severity": "CRITICAL", "message": "No active agents in the system"})
 
         return alerts
 

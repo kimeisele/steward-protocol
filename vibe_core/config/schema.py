@@ -30,18 +30,10 @@ class GovernanceConfig(BaseModel):
         le=1.0,
         description="Fraction of agents required to vote for quorum",
     )
-    proposal_cost: float = Field(
-        default=5, ge=0, description="Credits required to submit a proposal"
-    )
-    proposal_duration_hours: int = Field(
-        default=24, ge=1, description="Hours voting stays open"
-    )
-    license_revocation_enabled: bool = Field(
-        default=True, description="Whether CIVIC can revoke agent licenses"
-    )
-    credit_audit_frequency_hours: int = Field(
-        default=6, ge=1, description="How often to audit agent credits"
-    )
+    proposal_cost: float = Field(default=5, ge=0, description="Credits required to submit a proposal")
+    proposal_duration_hours: int = Field(default=24, ge=1, description="Hours voting stays open")
+    license_revocation_enabled: bool = Field(default=True, description="Whether CIVIC can revoke agent licenses")
+    credit_audit_frequency_hours: int = Field(default=6, ge=1, description="How often to audit agent credits")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -54,37 +46,23 @@ class GovernanceConfig(BaseModel):
 class EconomyConfig(BaseModel):
     """Credit System Parameters"""
 
-    initial_credits: float = Field(
-        default=100, ge=0, description="Starting credits for each agent"
-    )
-    refill_amount: float = Field(
-        default=50, ge=0, description="Credits in emergency refill"
-    )
-    refill_frequency_hours: int = Field(
-        default=12, ge=1, description="How often agents can request refills"
-    )
+    initial_credits: float = Field(default=100, ge=0, description="Starting credits for each agent")
+    refill_amount: float = Field(default=50, ge=0, description="Credits in emergency refill")
+    refill_frequency_hours: int = Field(default=12, ge=1, description="How often agents can request refills")
 
     # Costs
     broadcast_cost: float = Field(default=1, ge=0, description="Cost per post")
     proposal_cost: float = Field(default=5, ge=0, description="Cost per proposal")
-    research_cost: float = Field(
-        default=2, ge=0, description="Cost per research search"
-    )
+    research_cost: float = Field(default=2, ge=0, description="Cost per research search")
     media_cost: float = Field(default=1, ge=0, description="Cost per image generation")
 
     # Rewards
     vote_reward: float = Field(default=0, ge=0, description="Reward for voting")
-    verification_reward: float = Field(
-        default=1, ge=0, description="Reward for verification"
-    )
+    verification_reward: float = Field(default=1, ge=0, description="Reward for verification")
 
     # Supply control
-    total_credit_supply_cap: float = Field(
-        default=100000, ge=0, description="Maximum credits in circulation"
-    )
-    inflation_monthly_percent: float = Field(
-        default=5, ge=0, le=100, description="Monthly inflation rate"
-    )
+    total_credit_supply_cap: float = Field(default=100000, ge=0, description="Maximum credits in circulation")
+    inflation_monthly_percent: float = Field(default=5, ge=0, le=100, description="Monthly inflation rate")
 
     model_config = ConfigDict(extra="forbid")
 

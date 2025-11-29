@@ -53,9 +53,7 @@ class OathMixin:
         Raises:
             RuntimeError: If oath cannot be sworn
         """
-        logger.info(
-            f"🕉️  GENESIS CEREMONY: {self.agent_id} swearing Constitutional Oath..."
-        )
+        logger.info(f"🕉️  GENESIS CEREMONY: {self.agent_id} swearing Constitutional Oath...")
 
         try:
             # Step 1: Compute Constitution hash
@@ -133,9 +131,7 @@ class OathMixin:
         if not self.oath_sworn or self.oath_event is None:
             return False, f"{self.agent_id} has not sworn Constitutional Oath"
 
-        is_valid, reason = ConstitutionalOath.verify_oath(
-            self.oath_event, getattr(self, "identity_tool", None)
-        )
+        is_valid, reason = ConstitutionalOath.verify_oath(self.oath_event, getattr(self, "identity_tool", None))
 
         return is_valid, reason
 

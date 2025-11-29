@@ -180,12 +180,8 @@ class LazyQueueWorker:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Lazy Queue Worker - Process queued requests from Milk Ocean"
-    )
-    parser.add_argument(
-        "--daemon", action="store_true", help="Run as daemon (continuous processing)"
-    )
+    parser = argparse.ArgumentParser(description="Lazy Queue Worker - Process queued requests from Milk Ocean")
+    parser.add_argument("--daemon", action="store_true", help="Run as daemon (continuous processing)")
     parser.add_argument(
         "--interval",
         type=int,

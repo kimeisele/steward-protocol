@@ -90,9 +90,7 @@ class PromptContext:
         # ARCH-064: Oracle resolver (system capabilities for Steward)
         self.register("kernel_capabilities", self._resolve_kernel_capabilities)
 
-        logger.debug(
-            "✅ Registered 10 core context resolvers (5 legacy + 4 kernel state + 1 oracle)"
-        )
+        logger.debug("✅ Registered 10 core context resolvers (5 legacy + 4 kernel state + 1 oracle)")
 
     def register(self, key: str, resolver: Callable[[], str]) -> None:
         """
@@ -237,9 +235,7 @@ class PromptContext:
                 return
 
             try:
-                entries = sorted(
-                    [e for e in path.iterdir() if e.is_dir()], key=lambda x: x.name
-                )
+                entries = sorted([e for e in path.iterdir() if e.is_dir()], key=lambda x: x.name)
 
                 for i, entry in enumerate(entries):
                     is_last = i == len(entries) - 1
@@ -367,9 +363,7 @@ class PromptContext:
             if outstanding_idx == -1 or completed_idx == -1:
                 return '{"HIGH": 0, "MEDIUM": 0, "LOW": 0, "total": 0}'
 
-            outstanding_section = content[
-                outstanding_idx + len("## Outstanding Tasks") : completed_idx
-            ]
+            outstanding_section = content[outstanding_idx + len("## Outstanding Tasks") : completed_idx]
 
             # Count tasks by priority
             counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
@@ -418,9 +412,7 @@ class PromptContext:
             if outstanding_idx == -1 or completed_idx == -1:
                 return "[No agenda tasks. Backlog is clear.]"
 
-            outstanding_section = content[
-                outstanding_idx + len("## Outstanding Tasks") : completed_idx
-            ]
+            outstanding_section = content[outstanding_idx + len("## Outstanding Tasks") : completed_idx]
 
             # Parse tasks by priority
             high_tasks = []
@@ -456,9 +448,7 @@ class PromptContext:
                 for task in medium_tasks[: max_display - display_count]:
                     output_lines.append(task)
                     display_count += 1
-                remaining_medium = len(medium_tasks) - min(
-                    max_display - len(high_tasks), len(medium_tasks)
-                )
+                remaining_medium = len(medium_tasks) - min(max_display - len(high_tasks), len(medium_tasks))
             else:
                 remaining_medium = len(medium_tasks)
 
@@ -519,10 +509,7 @@ class PromptContext:
             Formatted capability text for prompt injection
         """
         if self._kernel is None:
-            return (
-                "[Kernel capabilities unavailable - kernel not initialized. "
-                "Use set_kernel() after boot.]"
-            )
+            return "[Kernel capabilities unavailable - kernel not initialized. " "Use set_kernel() after boot.]"
 
         try:
             from vibe_core.runtime.oracle import KernelOracle
