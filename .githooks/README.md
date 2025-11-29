@@ -37,6 +37,12 @@ chmod +x .git/hooks/pre-commit
 1. ❌ Block `requirements.txt` in `steward/system_agents/*/`
 2. ❌ Block `Path("data/...")` patterns
 3. ⚠️  Warn about hardcoded paths in `__init__()`
+4. 🎨 Auto-format + auto-fix with **ruff** (replaces black + isort + flake8)
+   - Formats code to 120 char line length
+   - Fixes import sorting automatically
+   - Catches critical syntax errors (E9, F63, F7, F82)
+
+**Tools:** `ruff` (single unified tool - replaced black, flake8, isort)
 
 **Example output:**
 
@@ -45,6 +51,7 @@ chmod +x .git/hooks/pre-commit
   🔍 Checking for requirements.txt in agent dirs... OK
   🔍 Checking for direct Path('data/...') calls... OK
   🔍 Checking for hardcoded paths in __init__... OK
+  🎨 Running ruff format + check... OK (auto-formatted + checked)
 ✅ All pre-commit guards passed
 ```
 
@@ -61,6 +68,31 @@ To fix:
   2. Convert to lazy-loading @property pattern
   3. See Phase 2.3 migration examples (Herald, Forum, Civic)
 ```
+
+## Migration to Ruff (Phase 3.6)
+
+**What changed:**
+- Replaced `black`, `flake8`, and `isort` with single `ruff` tool
+- All configuration now in `pyproject.toml` (SSOT)
+- 10-100x faster linting and formatting
+- Same or better error detection
+- Simpler dependency management (1 tool instead of 3)
+
+**For developers:**
+```bash
+# Format code locally (optional, CI enforces)
+ruff format .
+
+# Check for issues
+ruff check .
+
+# Auto-fix safe issues
+ruff check --fix .
+```
+
+**CI enforcement:** All linting enforced in CI - local hook installation is optional.
+
+---
 
 ## Bypassing Hooks (Emergency Only)
 

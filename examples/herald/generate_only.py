@@ -20,9 +20,7 @@ import shutil
 from pathlib import Path
 
 # Setup Logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("HERALD_GENERATOR")
 
 # Add project root to Python path

@@ -95,9 +95,7 @@ class DataEthicsEnforcer:
 
         logger.info("📊 Data Ethics Enforcer initialized")
 
-    def evaluate_extraction(
-        self, agent_id: str, purpose: str, amount: int, source: str
-    ) -> Dict[str, Any]:
+    def evaluate_extraction(self, agent_id: str, purpose: str, amount: int, source: str) -> Dict[str, Any]:
         """
         Evaluate whether a data extraction is ethical under Prithu Principle.
 
@@ -110,9 +108,7 @@ class DataEthicsEnforcer:
         Returns:
             Evaluation with approval/denial and reasoning
         """
-        logger.info(
-            f"📊 EVALUATING DATA EXTRACTION: Agent {agent_id}, Purpose: {purpose}, Amount: {amount}"
-        )
+        logger.info(f"📊 EVALUATING DATA EXTRACTION: Agent {agent_id}, Purpose: {purpose}, Amount: {amount}")
 
         issues = []
         recommendations = []
@@ -120,20 +116,14 @@ class DataEthicsEnforcer:
         # CHECK 1: Is purpose legitimate?
         if purpose not in self.LEGITIMATE_PURPOSES:
             issues.append(f"Purpose '{purpose}' is not recognized as legitimate")
-            recommendations.append(
-                f"Valid purposes: {list(self.LEGITIMATE_PURPOSES.keys())}"
-            )
+            recommendations.append(f"Valid purposes: {list(self.LEGITIMATE_PURPOSES.keys())}")
 
         # CHECK 2: Is the amount reasonable?
         if purpose in self.LEGITIMATE_PURPOSES:
             max_amount = self.LEGITIMATE_PURPOSES[purpose]["max_default_amount"]
             if amount > max_amount:
-                issues.append(
-                    f"Requested amount {amount} exceeds limit {max_amount} for {purpose}"
-                )
-                recommendations.append(
-                    f"Reduce request to {max_amount} records or less"
-                )
+                issues.append(f"Requested amount {amount} exceeds limit {max_amount} for {purpose}")
+                recommendations.append(f"Reduce request to {max_amount} records or less")
 
         # CHECK 3: Is the source ethical?
         if source in self.UNTRUSTED_SOURCES:
@@ -161,19 +151,11 @@ class DataEthicsEnforcer:
             "amount": amount,
             "source": source,
             "issues": issues,
-            "recommendation": (
-                " | ".join(recommendations)
-                if recommendations
-                else "Extraction approved"
-            ),
-            "reasoning": self._build_reasoning(
-                is_ethical, issues, purpose, amount, source
-            ),
+            "recommendation": (" | ".join(recommendations) if recommendations else "Extraction approved"),
+            "reasoning": self._build_reasoning(is_ethical, issues, purpose, amount, source),
         }
 
-    def record_extraction(
-        self, agent_id: str, purpose: str, amount: int, source: str, approved: bool
-    ) -> None:
+    def record_extraction(self, agent_id: str, purpose: str, amount: int, source: str, approved: bool) -> None:
         """
         Record a data extraction attempt (for audit trail).
 
@@ -197,9 +179,7 @@ class DataEthicsEnforcer:
         with open(self.extractions_file, "a") as f:
             f.write(json.dumps(extraction) + "\n")
 
-        logger.info(
-            f"📋 EXTRACTION RECORDED: {agent_id} - {purpose} - {'APPROVED' if approved else 'DENIED'}"
-        )
+        logger.info(f"📋 EXTRACTION RECORDED: {agent_id} - {purpose} - {'APPROVED' if approved else 'DENIED'}")
 
     def set_custom_policy(
         self,

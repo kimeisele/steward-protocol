@@ -168,7 +168,7 @@ class StewardProvider(LLMProvider):
         For StewardProvider, the system prompt is informational only
         (displayed to Claude Code for context).
         """
-        return "You are the STEWARD (Claude Code) providing LLM completions " "in place of unavailable external APIs."
+        return "You are the STEWARD (Claude Code) providing LLM completions in place of unavailable external APIs."
 
     def _messages_to_prompt(self, messages: list[dict[str, str]]) -> str:
         """

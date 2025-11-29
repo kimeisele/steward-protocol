@@ -90,7 +90,7 @@ class ResourceManager:
         """
         quota = self.calculate_quota_from_credits(credits)
         self.quotas[agent_id] = quota
-        logger.info(f"💰 {agent_id}: {credits} credits → " f"{quota.cpu_percent}% CPU, {quota.memory_mb} MB RAM")
+        logger.info(f"💰 {agent_id}: {credits} credits → {quota.cpu_percent}% CPU, {quota.memory_mb} MB RAM")
 
     def enforce_quota(self, agent_id: str, process: Process) -> None:
         """
@@ -120,9 +120,7 @@ class ResourceManager:
             nice_value = max(0, min(19, 20 - (quota.cpu_percent // 2.5)))
             p.nice(int(nice_value))
 
-            logger.debug(
-                f"🔧 {agent_id} (PID {process.pid}): " f"nice={nice_value} for {quota.cpu_percent}% CPU target"
-            )
+            logger.debug(f"🔧 {agent_id} (PID {process.pid}): nice={nice_value} for {quota.cpu_percent}% CPU target")
 
             # Memory limits (Linux only, limited macOS support)
             # Note: This sets the limit in the PARENT process, not the child

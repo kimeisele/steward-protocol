@@ -84,9 +84,7 @@ class HeraldArtist:
             logger.debug(f"   URL: {url[:100]}...")
 
             # Add proper HTTP headers to mimic browser request
-            headers = {
-                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
-            }
+            headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
 
             # Request image from Pollinations with retry logic
             max_retries = 2
@@ -105,25 +103,19 @@ class HeraldArtist:
 
                         return str(filename)
                     elif response.status_code == 403:
-                        logger.warning(
-                            f"⚠️  ARTIST: HTTP {response.status_code} (Rate limit/Auth issue)"
-                        )
+                        logger.warning(f"⚠️  ARTIST: HTTP {response.status_code} (Rate limit/Auth issue)")
                         if attempt < max_retries - 1:
                             logger.info("   Retrying in 2 seconds...")
                             time.sleep(2)
                         else:
                             return None
                     else:
-                        logger.warning(
-                            f"⚠️  ARTIST: Pollinations returned {response.status_code}"
-                        )
+                        logger.warning(f"⚠️  ARTIST: Pollinations returned {response.status_code}")
                         logger.debug(f"   Response: {response.text[:200]}")
                         return None
 
                 except requests.exceptions.Timeout:
-                    logger.error(
-                        "❌ ARTIST: Request timeout (Pollinations taking too long)"
-                    )
+                    logger.error("❌ ARTIST: Request timeout (Pollinations taking too long)")
                     return None
 
         except Exception as e:
@@ -143,7 +135,7 @@ class HeraldArtist:
         """
         results = []
         for i, text in enumerate(prompt_texts):
-            logger.info(f"🎨 ARTIST: Batch generation {i+1}/{len(prompt_texts)}")
+            logger.info(f"🎨 ARTIST: Batch generation {i + 1}/{len(prompt_texts)}")
             image_path = self.generate_visual(text, style=style)
             if image_path:
                 results.append(image_path)
@@ -151,9 +143,7 @@ class HeraldArtist:
             if i < len(prompt_texts) - 1:
                 time.sleep(1)
 
-        logger.info(
-            f"✅ ARTIST: Batch complete ({len(results)}/{len(prompt_texts)} images)"
-        )
+        logger.info(f"✅ ARTIST: Batch complete ({len(results)}/{len(prompt_texts)} images)")
         return results
 
 
@@ -165,9 +155,7 @@ if __name__ == "__main__":
     artist = HeraldArtist()
 
     # Test prompt
-    test_prompt = (
-        "Agent identity is the missing layer in the AI stack cryptographic verification"
-    )
+    test_prompt = "Agent identity is the missing layer in the AI stack cryptographic verification"
     logger.info(f"\nGenerating visual for:\n  '{test_prompt}'")
 
     image_path = artist.generate_visual(test_prompt)
@@ -175,8 +163,6 @@ if __name__ == "__main__":
     if image_path:
         logger.info(f"✅ SUCCESS: Image generated at {image_path}")
     else:
-        logger.warning(
-            "⚠️  FAILED: Could not generate image (check internet connection)"
-        )
+        logger.warning("⚠️  FAILED: Could not generate image (check internet connection)")
 
     logger.info("=" * 60)

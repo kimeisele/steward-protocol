@@ -118,8 +118,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             self.config = FallbackConfig()
 
         logger.info(
-            f"🦅 HERALD (ContextAwareAgent v3.1) is online "
-            f"(config: {self.config.posting_frequency_hours}h frequency)."
+            f"🦅 HERALD (ContextAwareAgent v3.1) is online (config: {self.config.posting_frequency_hours}h frequency)."
         )
 
         # Initialize Constitutional Oath mixin (if available)

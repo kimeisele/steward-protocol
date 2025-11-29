@@ -88,8 +88,7 @@ class DiplomacyTool:
 
         except Exception as e:
             raise RuntimeError(
-                f"❌ CRITICAL: GitHub search failed: {e}. "
-                f"No mocks. Real search required. Check API limits and network."
+                f"❌ CRITICAL: GitHub search failed: {e}. No mocks. Real search required. Check API limits and network."
             )
 
     def analyze_project(self, repo_info):

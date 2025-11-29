@@ -46,9 +46,7 @@ def check_read_access(token):
     }
 
     try:
-        response = requests.get(
-            "https://api.twitter.com/2/users/me", headers=headers, timeout=10
-        )
+        response = requests.get("https://api.twitter.com/2/users/me", headers=headers, timeout=10)
 
         if response.status_code == 200:
             user_data = response.json()
@@ -92,9 +90,7 @@ def check_write_access(token):
     }
 
     # Test payload - a diagnostic tweet
-    payload = {
-        "text": f"🧪 HERALD Diagnostic Test - {datetime.now().isoformat()}\n\n#StewardProtocol #HERALD"
-    }
+    payload = {"text": f"🧪 HERALD Diagnostic Test - {datetime.now().isoformat()}\n\n#StewardProtocol #HERALD"}
 
     try:
         response = requests.post(

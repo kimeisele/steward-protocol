@@ -51,9 +51,7 @@ class VibeAligner:
         if self.policy:
             logger.info("✅ VIBE ALIGNER: Governance policy loaded")
         else:
-            logger.warning(
-                "⚠️ VIBE ALIGNER: No governance policy found (running without guardrails)"
-            )
+            logger.warning("⚠️ VIBE ALIGNER: No governance policy found (running without guardrails)")
 
     def _load_policy(self) -> Optional[Dict[str, Any]]:
         """Load governance.yaml from disk."""
@@ -66,9 +64,7 @@ class VibeAligner:
                 return None
         return None
 
-    def align(
-        self, content: str, platform: str = "twitter", client=None
-    ) -> Optional[str]:
+    def align(self, content: str, platform: str = "twitter", client=None) -> Optional[str]:
         """
         The Alignment Gate.
         Checks content against governance rules.
@@ -154,11 +150,7 @@ class VibeAligner:
         LAYER 2: Platform-Specific Rules.
         Twitter has different rules than Reddit.
         """
-        rules = (
-            self.policy.get("constraints", {})
-            .get("platform_rules", {})
-            .get(platform, {})
-        )
+        rules = self.policy.get("constraints", {}).get("platform_rules", {}).get(platform, {})
 
         # Check length constraints
         if "max_length" in rules:
@@ -183,9 +175,7 @@ class VibeAligner:
 
         return None
 
-    def _check_soft_constraints(
-        self, content: str, platform: str, client
-    ) -> Optional[str]:
+    def _check_soft_constraints(self, content: str, platform: str, client) -> Optional[str]:
         """
         LAYER 3: LLM Judgment.
         Ask the model: Is this hype? Is this valuable? Is this honest?
@@ -226,11 +216,7 @@ class VibeAligner:
 
             if "BLOCK" in verdict:
                 # Extract the reason
-                reason = (
-                    verdict.split("BLOCK:")[-1].strip()
-                    if "BLOCK:" in verdict
-                    else "Policy violation"
-                )
+                reason = verdict.split("BLOCK:")[-1].strip() if "BLOCK:" in verdict else "Policy violation"
                 return reason
 
             logger.debug(f"✅ LLM Verdict: {verdict}")

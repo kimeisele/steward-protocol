@@ -361,9 +361,9 @@ Generate the roadmap now:
 """
 
         for phase in phases:
-            markdown += f"""## Phase: {phase['theme']} (Days {phase['days']})
+            markdown += f"""## Phase: {phase["theme"]} (Days {phase["days"]})
 
-**Proof Point**: {phase['proof']}
+**Proof Point**: {phase["proof"]}
 
 **Narrative**:
 """

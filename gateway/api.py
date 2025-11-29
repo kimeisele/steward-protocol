@@ -96,9 +96,7 @@ class WebSocketManager:
     async def disconnect(self, websocket: WebSocket):
         async with self.lock:
             self.active_connections.discard(websocket)
-        logger.info(
-            f"📡 WebSocket disconnected (total: {len(self.active_connections)})"
-        )
+        logger.info(f"📡 WebSocket disconnected (total: {len(self.active_connections)})")
 
     async def broadcast(self, message: str):
         """Broadcast message to all connected clients (fault-tolerant)"""
@@ -160,16 +158,12 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
             logger.info(f"🌊 GUEST ACCESS: Routing '{request.message}' to Milk Ocean")
             # Direct route to Milk Ocean Router (Brahma Protocol)
             # Guests don't get to invoke the Kernel directly, only query via Router
-            routing_decision = milk_ocean.process_prayer(
-                request.message, agent_id="guest"
-            )
+            routing_decision = milk_ocean.process_prayer(request.message, agent_id="guest")
         else:
             # 2. CITIZEN ACCESS (GAD-1000 Verification)
             # MILK OCEAN ROUTER: Gate the request through Brahma's protocol
             # This implements the 4-tier filtering: Watchman -> Envoy -> Science -> Samadhi
-            routing_decision = milk_ocean.process_prayer(
-                request.message, request.agent_id
-            )
+            routing_decision = milk_ocean.process_prayer(request.message, request.agent_id)
 
         # 2a. Handle blocked requests
         if routing_decision.get("status") == "blocked":
@@ -183,9 +177,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 
         # 2b. Handle lazy queue requests (non-critical, batch processing)
         elif routing_decision.get("status") == "queued":
-            logger.info(
-                f"🌊 Request queued for lazy processing: {routing_decision.get('request_id')}"
-            )
+            logger.info(f"🌊 Request queued for lazy processing: {routing_decision.get('request_id')}")
             return {
                 "status": "queued",
                 "path": "lazy",
@@ -196,9 +188,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 
         # 2c. Handle fast-path requests (MEDIUM priority -> Flash/Haiku)
         elif routing_decision.get("path") == "flash":
-            logger.info(
-                f"⚡ Routing to Flash model (Envoy): {routing_decision.get('request_id')}"
-            )
+            logger.info(f"⚡ Routing to Flash model (Envoy): {routing_decision.get('request_id')}")
             # Would call Gemini Flash or Claude Haiku here
             # For now, fall through to provider (now with PRANA EVENTS!)
             result = await provider.route_and_execute(request.message)
@@ -211,9 +201,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 
         # 2d. Handle complex requests (HIGH priority -> Pro/Opus)
         elif routing_decision.get("path") == "science":
-            logger.info(
-                f"🔥 Routing to Science agent (Pro model): {routing_decision.get('request_id')}"
-            )
+            logger.info(f"🔥 Routing to Science agent (Pro model): {routing_decision.get('request_id')}")
             # Execute via Provider (which now knows to use Pro model and EMITS EVENTS!)
             result = await provider.route_and_execute(request.message)
 
@@ -430,9 +418,7 @@ def get_agents():
                 )
             except Exception as e:
                 logger.warning(f"Could not fetch manifest for {agent_id}: {e}")
-                agents_list.append(
-                    {"agent_id": agent_id, "status": "active", "tools": []}
-                )
+                agents_list.append({"agent_id": agent_id, "status": "active", "tools": []})
 
         return {"status": "success", "total": len(agents_list), "agents": agents_list}
     except Exception as e:
@@ -490,9 +476,7 @@ def submit_visa_application(request: VisaApplicationRequest):
     import re
 
     if not request.agent_id or len(request.agent_id) < 3:
-        raise HTTPException(
-            status_code=400, detail="Agent ID must be at least 3 characters"
-        )
+        raise HTTPException(status_code=400, detail="Agent ID must be at least 3 characters")
 
     if not re.match(r"^[a-zA-Z0-9_-]+$", request.agent_id):
         raise HTTPException(
@@ -509,9 +493,7 @@ def submit_visa_application(request: VisaApplicationRequest):
 
         # Verify the resolved path is still within output_dir (security check)
         if not str(citizen_file).startswith(str(output_dir)):
-            raise HTTPException(
-                status_code=400, detail="Invalid agent ID (path traversal detected)"
-            )
+            raise HTTPException(status_code=400, detail="Invalid agent ID (path traversal detected)")
 
         citizen_data = {
             "agent_id": request.agent_id,
@@ -589,16 +571,11 @@ def initiate_yagya(request: YagyaRequest):
 
     # Input length limits
     if len(topic) > 500:
-        raise HTTPException(
-            status_code=400, detail="Topic too long (max 500 characters)"
-        )
+        raise HTTPException(status_code=400, detail="Topic too long (max 500 characters)")
     if depth not in ["quick", "standard", "advanced"]:
-        raise HTTPException(
-            status_code=400, detail="Depth must be: quick, standard, or advanced"
-        )
+        raise HTTPException(status_code=400, detail="Depth must be: quick, standard, or advanced")
 
     try:
-
         # Submit research task to Science agent via kernel
         def run_yagya():
             try:

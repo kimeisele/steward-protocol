@@ -53,12 +53,12 @@ def main():
         cards_html += f"""
         <div class="agent-card" style="border-color: {color}">
             <div class="rank">#{rank}</div>
-            <h3>{agent['agent_id']}</h3>
-            <p class="role">{agent['role']}</p>
+            <h3>{agent["agent_id"]}</h3>
+            <p class="role">{agent["role"]}</p>
             <div class="stats">
-                <p class="tier" style="color: {color}">{agent['tier']}</p>
-                <p class="xp">{agent['xp']} XP</p>
-                <p class="detail">{agent['recruits']} Recruits | {agent['actions']} Actions</p>
+                <p class="tier" style="color: {color}">{agent["tier"]}</p>
+                <p class="xp">{agent["xp"]} XP</p>
+                <p class="detail">{agent["recruits"]} Recruits | {agent["actions"]} Actions</p>
             </div>
         </div>
         """
@@ -190,7 +190,7 @@ def main():
                 <div class="stat-label">Total XP</div>
             </div>
             <div class="stat-box">
-                <div class="stat-value">{sum(1 for a in agents if a['tier'] == 'Legend')}</div>
+                <div class="stat-value">{sum(1 for a in agents if a["tier"] == "Legend")}</div>
                 <div class="stat-label">Legendary Agents</div>
             </div>
         </div>

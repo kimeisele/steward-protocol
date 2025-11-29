@@ -36,11 +36,7 @@ class LLMEngine:
         Auto-detects provider from environment variables.
         """
         # Detect API key from environment (supports multiple sources)
-        self.api_key = (
-            os.getenv("OPENAI_API_KEY")
-            or os.getenv("OPENROUTER_API_KEY")
-            or os.getenv("ANTHROPIC_API_KEY")
-        )
+        self.api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
 
         # Detect provider preference
         self.provider = os.getenv("LLM_PROVIDER", "").lower()
@@ -70,13 +66,9 @@ class LLMEngine:
         self.base_url = os.getenv("LLM_BASE_URL")
 
         if self.provider == "mock":
-            logger.warning(
-                "⚠️  NO API KEY FOUND. Running in MOCK MODE (Simulated Responses)."
-            )
+            logger.warning("⚠️  NO API KEY FOUND. Running in MOCK MODE (Simulated Responses).")
         else:
-            logger.info(
-                f"🧠 LLM Engine initialized (Provider: {self.provider}, Model: {self.model})"
-            )
+            logger.info(f"🧠 LLM Engine initialized (Provider: {self.provider}, Model: {self.model})")
 
     # ===== CONVERSATIONAL INTERFACE (Agent Persona) =====
 
@@ -195,9 +187,7 @@ class LLMEngine:
         try:
             from openai import OpenAI
         except ImportError:
-            logger.error(
-                "❌ OpenAI library not installed. Install with: pip install openai"
-            )
+            logger.error("❌ OpenAI library not installed. Install with: pip install openai")
             logger.info("⚠️  Falling back to mock mode")
             return self._call_mock(prompt)
 
@@ -229,9 +219,7 @@ class LLMEngine:
         try:
             from openai import OpenAI
         except ImportError:
-            logger.error(
-                "❌ OpenAI library not installed. Install with: pip install openai"
-            )
+            logger.error("❌ OpenAI library not installed. Install with: pip install openai")
             logger.info("⚠️  Falling back to mock mode")
             return self._call_mock(prompt)
 
@@ -264,9 +252,7 @@ class LLMEngine:
         try:
             from anthropic import Anthropic
         except ImportError:
-            logger.error(
-                "❌ Anthropic library not installed. Install with: pip install anthropic"
-            )
+            logger.error("❌ Anthropic library not installed. Install with: pip install anthropic")
             logger.info("⚠️  Falling back to mock mode")
             return self._call_mock(prompt)
 

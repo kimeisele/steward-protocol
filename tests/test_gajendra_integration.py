@@ -58,9 +58,7 @@ def test_gajendra_protocol_full_scenario():
 
     # Scenario: Normal load
     print("\n📊 Scenario: Normal Operation")
-    normal_result = router.process_prayer(
-        "What is the current system status?", agent_id="monitoring_service"
-    )
+    normal_result = router.process_prayer("What is the current system status?", agent_id="monitoring_service")
     assert normal_result["status"] == "routing", "Normal request routes normally"
     print(f"  ✓ Normal request: {normal_result['path']}")
 
@@ -82,16 +80,12 @@ def test_gajendra_protocol_full_scenario():
     # Verify critical response
     assert critical_result["status"] == "critical"
     assert critical_result["bypass_queue"] == True
-    print(
-        f"  ✓ CRITICAL request bypasses {queue_status['ocean_status']['total']} queued items"
-    )
+    print(f"  ✓ CRITICAL request bypasses {queue_status['ocean_status']['total']} queued items")
     print(f"  ✓ Kernel invoked directly: {critical_result['action']}")
 
     # Verify queue was not modified
     final_status = router.get_queue_status()
-    assert (
-        final_status["ocean_status"]["total"] == queue_status["ocean_status"]["total"]
-    )
+    assert final_status["ocean_status"]["total"] == queue_status["ocean_status"]["total"]
     print(f"  ✓ Queue unchanged: still {final_status['ocean_status']['total']} items")
 
     print("\n✅ Full Gajendra Moksha protocol verified!")

@@ -69,9 +69,7 @@ def test_launcher_kernel_boot():
         logger.info(f"   Manifests Loaded: {manifests_count}")
 
         # CRITICAL: Check that we have 5 agents, not 0
-        assert (
-            agents_count == 5
-        ), f"Expected 5 agents, got {agents_count} (EMPTY KERNEL)"
+        assert agents_count == 5, f"Expected 5 agents, got {agents_count} (EMPTY KERNEL)"
         assert manifests_count == 5, f"Expected 5 manifests, got {manifests_count}"
 
         logger.info("\n✅ KERNEL IS NOT EMPTY - All agents loaded!")
@@ -83,9 +81,7 @@ def test_launcher_kernel_boot():
         expected_agents = {"herald", "civic", "forum", "science", "envoy"}
         actual_agents = set(registry_keys)
 
-        assert (
-            actual_agents == expected_agents
-        ), f"Expected {expected_agents}, got {actual_agents}"
+        assert actual_agents == expected_agents, f"Expected {expected_agents}, got {actual_agents}"
 
         logger.info("✅ All expected agents present in registry")
 
@@ -124,15 +120,11 @@ def test_snapshot_has_agents():
         logger.info(f"   IDs: {', '.join(agent_ids)}")
 
         # CRITICAL: Check that we have 5 agents
-        assert (
-            agent_count == 5
-        ), f"Expected 5 agents in snapshot, got {agent_count} (EMPTY SNAPSHOT)"
+        assert agent_count == 5, f"Expected 5 agents in snapshot, got {agent_count} (EMPTY SNAPSHOT)"
 
         expected_agents = {"herald", "civic", "forum", "science", "envoy"}
         actual_agents = set(agent_ids)
-        assert (
-            actual_agents == expected_agents
-        ), f"Expected {expected_agents}, got {actual_agents}"
+        assert actual_agents == expected_agents, f"Expected {expected_agents}, got {actual_agents}"
 
         # Check all agents are RUNNING
         logger.info(f"\n✅ Agent Statuses:")

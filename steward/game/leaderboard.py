@@ -77,13 +77,13 @@ def _generate_html(agents: list, output_path: Path):
     for i, agent in enumerate(agents):
         rank = i + 1
         cards_html += f"""
-        <div class="agent-card" style="border-color: {agent['tier_color']}">
+        <div class="agent-card" style="border-color: {agent["tier_color"]}">
             <div class="rank">#{rank}</div>
-            <img src="{agent['card_path']}" alt="{agent['agent_id']} Card">
+            <img src="{agent["card_path"]}" alt="{agent["agent_id"]} Card">
             <div class="stats">
-                <h3>{agent['agent_id']}</h3>
-                <p class="role">{agent['role']}</p>
-                <p class="xp" style="color: {agent['tier_color']}">{agent['xp']} XP</p>
+                <h3>{agent["agent_id"]}</h3>
+                <p class="role">{agent["role"]}</p>
+                <p class="xp" style="color: {agent["tier_color"]}">{agent["xp"]} XP</p>
             </div>
         </div>
         """

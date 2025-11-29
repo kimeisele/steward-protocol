@@ -68,9 +68,7 @@ class CivicVault:
             Base64-encoded HMAC-SHA256 signature
         """
         # 1. Derive agent key (Deterministic but secure)
-        agent_key = hmac.new(
-            self.master_key, agent_id.encode(), hashlib.sha256
-        ).digest()
+        agent_key = hmac.new(self.master_key, agent_id.encode(), hashlib.sha256).digest()
 
         # 2. Canonicalize payload (sort keys for consistency)
         message = json.dumps(payload, sort_keys=True).encode()
@@ -206,10 +204,7 @@ class LifecycleEnforcer:
                 logger.info(reason)
                 return True, reason
             else:
-                reason = (
-                    f"🛑 DHARMA VIOLATION: Only core system (SANNYASA) "
-                    f"can {action}, not {current_stage.value}"
-                )
+                reason = f"🛑 DHARMA VIOLATION: Only core system (SANNYASA) can {action}, not {current_stage.value}"
                 logger.warning(reason)
                 return False, reason
 
@@ -240,9 +235,7 @@ class LifecycleEnforcer:
 
         # Check 2: Initiator must be authorized (Grihastha or higher)
         if initiator_stage not in [Ashrama.GRIHASTHA, Ashrama.SANNYASA]:
-            reason = (
-                f"❌ {initiator} ({initiator_stage.value}) cannot authorize promotions"
-            )
+            reason = f"❌ {initiator} ({initiator_stage.value}) cannot authorize promotions"
             logger.warning(reason)
             return False, reason
 
@@ -297,9 +290,7 @@ class LifecycleEnforcer:
 
 def setup_logging():
     """Configure logging for the test."""
-    logging.basicConfig(
-        level=logging.INFO, format="%(name)-20s | %(levelname)-8s | %(message)s"
-    )
+    logging.basicConfig(level=logging.INFO, format="%(name)-20s | %(levelname)-8s | %(message)s")
 
 
 def test_brahmachari_cannot_act():

@@ -77,7 +77,7 @@ class DegradationChain:
             "status": "Agent City ist online. Alle Systeme nominal.",
             "unknown": "Ich verstehe deine Anfrage. Bitte sei spezifischer.",
             "error": "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
-            "no_llm": ("Kein lokales LLM installiert. " "Fuer bessere Antworten: steward install-llm"),
+            "no_llm": ("Kein lokales LLM installiert. Fuer bessere Antworten: steward install-llm"),
         }
 
     def respond(

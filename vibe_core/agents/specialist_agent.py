@@ -330,4 +330,4 @@ class SpecialistAgent(VibeAgent):
 
     def __repr__(self) -> str:
         """String representation for debugging"""
-        return f"SpecialistAgent(agent_id={self.agent_id!r}, " f"specialist={self.specialist.__class__.__name__})"
+        return f"SpecialistAgent(agent_id={self.agent_id!r}, specialist={self.specialist.__class__.__name__})"

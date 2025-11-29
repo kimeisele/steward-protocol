@@ -98,9 +98,7 @@ def test_passport_issuance_recorded():
 
         # Verify it was recorded
         blocks = chain.get_all_blocks()
-        passport_blocks = [
-            b for b in blocks if b.event_type == LineageEventType.PASSPORT_ISSUED
-        ]
+        passport_blocks = [b for b in blocks if b.event_type == LineageEventType.PASSPORT_ISSUED]
         assert len(passport_blocks) == 1
 
         passport = passport_blocks[0]

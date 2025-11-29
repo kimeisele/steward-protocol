@@ -40,11 +40,7 @@ def print_header(text: str):
 
 def print_check(name: str, passed: bool, message: str = ""):
     """Print a check result."""
-    status = (
-        f"{Colors.GREEN}✅ PASS{Colors.END}"
-        if passed
-        else f"{Colors.RED}❌ FAIL{Colors.END}"
-    )
+    status = f"{Colors.GREEN}✅ PASS{Colors.END}" if passed else f"{Colors.RED}❌ FAIL{Colors.END}"
     msg = f" - {message}" if message else ""
     print(f"   {status} {name}{msg}")
     return passed

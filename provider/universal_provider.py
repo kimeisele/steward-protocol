@@ -285,10 +285,7 @@ class UniversalProvider:
         }
         intent_type = intent_map.get(intent_type_str, IntentType.CHAT)
 
-        logger.info(
-            f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} "
-            f"({rule_name}) [confidence: {confidence:.2f}]"
-        )
+        logger.info(f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name}) [confidence: {confidence:.2f}]")
 
         return IntentVector(
             raw_input=user_input,

@@ -172,7 +172,7 @@ class WorkflowLoader:
             estimated_cost_usd=estimated_cost,
         )
 
-        logger.info(f"Built WorkflowGraph: {name} ({workflow_id}) with " f"{len(nodes)} nodes, {len(edges)} edges")
+        logger.info(f"Built WorkflowGraph: {name} ({workflow_id}) with {len(nodes)} nodes, {len(edges)} edges")
         return graph
 
     def load_workflows_from_directory(self, directory: str | Path) -> dict[str, WorkflowGraph]:

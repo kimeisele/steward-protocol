@@ -247,12 +247,12 @@ class ResearchReport:
         """
         return f"""
 Research Finding:
-Title: {self.research['title']}
-URL: {self.research['url']}
-Relevance: {self.research['relevance_score']:.1%}
+Title: {self.research["title"]}
+URL: {self.research["url"]}
+Relevance: {self.research["relevance_score"]:.1%}
 
 Content Preview:
-{self.research['content_preview']}
+{self.research["content_preview"]}
 
 Task:
 Create a compelling Twitter hot take and a longer LinkedIn post about this topic,
@@ -280,10 +280,7 @@ Include the source URL and relevant hashtags.
         """
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        filename = (
-            Path(output_dir)
-            / f"{self.created_at.strftime('%Y-%m-%d_%H%M%S')}_research.json"
-        )
+        filename = Path(output_dir) / f"{self.created_at.strftime('%Y-%m-%d_%H%M%S')}_research.json"
 
         with open(filename, "w") as f:
             json.dump(

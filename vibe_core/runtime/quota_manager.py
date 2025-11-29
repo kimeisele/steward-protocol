@@ -305,9 +305,7 @@ class OperationalQuota:
 
         if self.metrics.cost_this_day_usd > self.limits.cost_per_day_usd * 0.8:
             logger.warning(
-                f"Daily cost at 80% of limit: "
-                f"${self.metrics.cost_this_day_usd:.2f}/"
-                f"${self.limits.cost_per_day_usd:.2f}"
+                f"Daily cost at 80% of limit: ${self.metrics.cost_this_day_usd:.2f}/${self.limits.cost_per_day_usd:.2f}"
             )
 
     def _update_rolling_windows(self):

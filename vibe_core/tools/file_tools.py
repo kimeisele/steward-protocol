@@ -235,7 +235,7 @@ class WriteFileTool(Tool):
                 else:
                     return ToolResult(
                         success=False,
-                        error=f"Parent directory does not exist: {parent}. " f"Use create_dirs=true to create it.",
+                        error=f"Parent directory does not exist: {parent}. Use create_dirs=true to create it.",
                     )
 
             # Write file

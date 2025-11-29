@@ -138,7 +138,7 @@ def show_vault_audit_trail(limit: int = 5):
     if leases:
         print(f"\n🔍 VAULT AUDIT TRAIL (recent {limit} leases)")
         for lease in leases:
-            print(f"   {lease['agent_id']} <- {lease['key_name']} " f"({lease['credits_charged']} Credits)")
+            print(f"   {lease['agent_id']} <- {lease['key_name']} ({lease['credits_charged']} Credits)")
     else:
         print(f"\n🔍 VAULT AUDIT TRAIL (no leases yet)")
 

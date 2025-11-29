@@ -487,13 +487,13 @@ class HeraldConstitution(GovernanceContract):
         if "max_length" in constraints:
             if len(content) > constraints["max_length"]:
                 violations.append(
-                    f"Content too long for {platform}: " f"{len(content)} chars (max {constraints['max_length']})"
+                    f"Content too long for {platform}: {len(content)} chars (max {constraints['max_length']})"
                 )
 
         if "min_length" in constraints:
             if len(content) < constraints["min_length"]:
                 violations.append(
-                    f"Content too short for {platform}: " f"{len(content)} chars (min {constraints['min_length']})"
+                    f"Content too short for {platform}: {len(content)} chars (min {constraints['min_length']})"
                 )
 
         # Check for required tags (Twitter)

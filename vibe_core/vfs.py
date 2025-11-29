@@ -84,8 +84,7 @@ class VirtualFileSystem:
             full_path.relative_to(self.root)
         except ValueError:
             logger.warning(
-                f"🚫 {self.agent_id} attempted to access {path} "
-                f"(resolved to {full_path}, outside sandbox {self.root})"
+                f"🚫 {self.agent_id} attempted to access {path} (resolved to {full_path}, outside sandbox {self.root})"
             )
             raise PermissionError(f"Access denied: {path} is outside agent sandbox")
 

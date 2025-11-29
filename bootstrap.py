@@ -64,15 +64,9 @@ try:
     # Parse command-line arguments
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Steward Protocol - Autonomous Agent Orchestration"
-    )
-    parser.add_argument(
-        "--port", type=int, default=8000, help="API gateway port (default: 8000)"
-    )
-    parser.add_argument(
-        "--host", default="0.0.0.0", help="API gateway host (default: 0.0.0.0)"
-    )
+    parser = argparse.ArgumentParser(description="Steward Protocol - Autonomous Agent Orchestration")
+    parser.add_argument("--port", type=int, default=8000, help="API gateway port (default: 8000)")
+    parser.add_argument("--host", default="0.0.0.0", help="API gateway host (default: 0.0.0.0)")
     parser.add_argument(
         "--ledger",
         default="data/vibe_ledger.db",

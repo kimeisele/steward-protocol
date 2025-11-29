@@ -219,23 +219,23 @@ class LedgerVisualizer:
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
         <div>
             <strong>Total Events</strong><br>
-            <span style="font-size: 1.5em; color: #2c3e50;">{stats['total_events']}</span>
+            <span style="font-size: 1.5em; color: #2c3e50;">{stats["total_events"]}</span>
         </div>
         <div>
             <strong>Verified</strong><br>
-            <span style="font-size: 1.5em; color: #27ae60;">{stats['verified_count']}</span>
+            <span style="font-size: 1.5em; color: #27ae60;">{stats["verified_count"]}</span>
         </div>
         <div>
             <strong>Failed</strong><br>
-            <span style="font-size: 1.5em; color: #e74c3c;">{stats['failed_count']}</span>
+            <span style="font-size: 1.5em; color: #e74c3c;">{stats["failed_count"]}</span>
         </div>
         <div>
             <strong>Verification Rate</strong><br>
-            <span style="font-size: 1.5em; color: #{trust['color']};">{trust['verification_rate']}%</span>
+            <span style="font-size: 1.5em; color: #{trust["color"]};">{trust["verification_rate"]}%</span>
         </div>
     </div>
     <p style="margin-top: 15px; color: #7f8c8d; font-size: 0.9em;">
-        Last updated: {stats.get('last_loaded', 'Unknown')}
+        Last updated: {stats.get("last_loaded", "Unknown")}
     </p>
 </div>
 """

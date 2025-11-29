@@ -193,9 +193,7 @@ Tone: Helpful peer sharing what they learned, NOT company marketing.
             quality_score=0.0,  # To be scored by quality control
         )
 
-    def generate_reddit_post(
-        self, research: Dict, topic: str, subreddit: str
-    ) -> ContentPiece:
+    def generate_reddit_post(self, research: Dict, topic: str, subreddit: str) -> ContentPiece:
         """
         Generate Reddit post following subreddit culture
 
@@ -321,8 +319,7 @@ REJECT if promotional, spammy, or low-value.
         today_posts = [
             p
             for p in self.post_history
-            if p["platform"] == platform
-            and (now - datetime.fromisoformat(p["timestamp"])).days < 1
+            if p["platform"] == platform and (now - datetime.fromisoformat(p["timestamp"])).days < 1
         ]
 
         limits = {"twitter": 10, "reddit": 1}
@@ -486,9 +483,7 @@ if __name__ == "__main__":
     herald = HeraldAgent(config_path="herald_config.json")
 
     # Example 1: Post educational thread about agent identity
-    herald.create_and_post(
-        topic="cryptographic identity for AI agents", platform="twitter"
-    )
+    herald.create_and_post(topic="cryptographic identity for AI agents", platform="twitter")
 
     # Example 2: Post to Reddit about multi-agent systems
     herald.create_and_post(

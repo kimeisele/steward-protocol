@@ -85,7 +85,7 @@ class CivicVault:
                 from cryptography.fernet import Fernet, InvalidToken
             except (ImportError, Exception) as e:
                 import_error = str(e)
-                raise ImportError("❌ cryptography library failed to initialize. " f"Error: {import_error}")
+                raise ImportError(f"❌ cryptography library failed to initialize. Error: {import_error}")
 
         self.conn = db_connection
         self._ensure_master_key()
@@ -272,7 +272,7 @@ class CivicVault:
                     # Check if it's an insufficient funds error
                     if "insufficient" in str(bank_error).lower():
                         raise InsufficientFundsError(
-                            f"❌ Agent '{agent_id}' lacks {self.LEASE_COST} Credits " f"to lease secret '{key_name}'"
+                            f"❌ Agent '{agent_id}' lacks {self.LEASE_COST} Credits to lease secret '{key_name}'"
                         )
                     raise VaultError(f"❌ Bank transaction failed: {bank_error}")
             else:
@@ -291,7 +291,7 @@ class CivicVault:
             )
             self.conn.commit()
 
-            logger.info(f"🔓 Secret leased: {agent_id} <- {key_name} " f"({self.LEASE_COST} Credits via {tx_id})")
+            logger.info(f"🔓 Secret leased: {agent_id} <- {key_name} ({self.LEASE_COST} Credits via {tx_id})")
 
             return secret
 

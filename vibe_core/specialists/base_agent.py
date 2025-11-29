@@ -161,7 +161,7 @@ class BaseAgent:
 
         if missing:
             raise RuntimeError(
-                f"Infrastructure incomplete. Missing: {missing}. " "Ensure GAD-5, GAD-6, and GAD-7 are initialized."
+                f"Infrastructure incomplete. Missing: {missing}. Ensure GAD-5, GAD-6, and GAD-7 are initialized."
             )
 
     # ========================================================================

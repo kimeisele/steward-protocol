@@ -74,7 +74,7 @@ class ResearchTool(OfflineCapableMixin):
         else:
             if degradation_chain:
                 logger.info(
-                    f"📴 Research: Tavily unavailable, using DegradationChain " f"(level: {self.degradation_level})"
+                    f"📴 Research: Tavily unavailable, using DegradationChain (level: {self.degradation_level})"
                 )
             else:
                 logger.warning("⚠️  Research: Tavily unavailable (running in simulation mode)")

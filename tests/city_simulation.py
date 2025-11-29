@@ -30,9 +30,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("SIMULATION_DOME")
 
 
@@ -44,9 +42,7 @@ class CitySimulation:
     runs scenarios, and reports on system health.
     """
 
-    def __init__(
-        self, config_path: str = "config/matrix.yaml", ledger_path: str = ":memory:"
-    ):
+    def __init__(self, config_path: str = "config/matrix.yaml", ledger_path: str = ":memory:"):
         """
         Initialize the Simulation Dome.
 
@@ -139,13 +135,9 @@ class CitySimulation:
                         # Fallback: manually set oath_sworn if available
                         if hasattr(agent, "oath_sworn"):
                             agent.oath_sworn = True
-                            logger.info(
-                                f"   ✓ {agent_id.upper():12} oath set (fallback)"
-                            )
+                            logger.info(f"   ✓ {agent_id.upper():12} oath set (fallback)")
                         else:
-                            logger.warning(
-                                f"   ⚠️  {agent_id.upper():12} has no oath mechanism"
-                            )
+                            logger.warning(f"   ⚠️  {agent_id.upper():12} has no oath mechanism")
                 except Exception as e:
                     logger.warning(f"   ⚠️  {agent_id.upper():12} oath ceremony: {e}")
                     # Continue even if oath fails - try to proceed anyway
@@ -284,9 +276,7 @@ class CitySimulation:
             # Check manifests
             # Get manifests from registry (supports both old and new API)
             registry = self.kernel.manifest_registry
-            if hasattr(registry, "get_all_manifests") and callable(
-                registry.get_all_manifests
-            ):
+            if hasattr(registry, "get_all_manifests") and callable(registry.get_all_manifests):
                 manifests = registry.get_all_manifests()
             elif hasattr(registry, "manifests"):
                 manifests = list(registry.manifests.values())
@@ -343,9 +333,7 @@ class CitySimulation:
             logger.info(f"  City: {config.city_name}")
             logger.info(f"  Version: {config.federation_version}")
             logger.info(f"  Initial Credits: {config.economy.initial_credits}")
-            logger.info(
-                f"  Voting Threshold: {int(config.governance.voting_threshold * 100)}%"
-            )
+            logger.info(f"  Voting Threshold: {int(config.governance.voting_threshold * 100)}%")
 
             # Validate report
             report = loader.validate()

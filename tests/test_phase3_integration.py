@@ -211,9 +211,7 @@ class TestPhase3SchedulerSargaWiring:
         self.sarga.set_cycle(Cycle.NIGHT_OF_BRAHMA)
 
         # Submit maintenance task during night
-        maintenance_task = Task(
-            agent_id="ENGINEER", payload={"type": "bugfix", "description": "Fix bug"}
-        )
+        maintenance_task = Task(agent_id="ENGINEER", payload={"type": "bugfix", "description": "Fix bug"})
         self.scheduler.submit_task(maintenance_task)
 
         # Check queue has both tasks
