@@ -70,7 +70,7 @@ def test_initial_state():
     test_task = Task(
         task_id="test-persistence-001",
         agent_id="herald",
-        payload={"action": "test_persistence", "message": "This is a persistence test"}
+        payload={"action": "test_persistence", "message": "This is a persistence test"},
     )
 
     kernel.submit_task(test_task)
@@ -118,11 +118,13 @@ def test_restart_persistence(db_path: str):
     print(f"✅ After restart: Database still has {count} events")
 
     # Show event details
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT event_type, agent_id, task_id
         FROM ledger_events
         ORDER BY id
-    """)
+    """
+    )
     print("\n   Event log:")
     for event_type, agent_id, task_id in cursor.fetchall():
         print(f"   - {event_type:20} | {agent_id:10} | {task_id}")
@@ -196,6 +198,7 @@ def main():
         print_section("❌ TEST FAILED")
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

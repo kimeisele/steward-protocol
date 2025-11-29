@@ -14,29 +14,30 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DASHBOARD")
 
+
 def main():
     logger.info("📊 Rendering dashboard...")
-    
+
     # Paths
     stats_path = Path("agent-city/stats/global.json")
     output_path = Path("docs/agent-city/index.html")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     if not stats_path.exists():
         logger.error("❌ Stats file not found!")
         return
-    
+
     # Load stats
     with open(stats_path) as f:
         data = json.load(f)
-    
+
     agents = data.get("agents", [])
     total_agents = data.get("total_agents", 0)
     total_xp = data.get("total_xp", 0)
-    
+
     # Sort by XP
     agents.sort(key=lambda x: x["xp"], reverse=True)
-    
+
     # Generate agent cards HTML
     cards_html = ""
     for i, agent in enumerate(agents):
@@ -45,10 +46,10 @@ def main():
             "Legend": "#FFD700",
             "Guardian": "#9932CC",
             "Scout": "#00BFFF",
-            "Novice": "#808080"
+            "Novice": "#808080",
         }
         color = tier_colors.get(agent["tier"], "#808080")
-        
+
         cards_html += f"""
         <div class="agent-card" style="border-color: {color}">
             <div class="rank">#{rank}</div>
@@ -61,7 +62,7 @@ def main():
             </div>
         </div>
         """
-    
+
     # Generate HTML
     html = f"""
     <!DOCTYPE html>
@@ -205,11 +206,12 @@ def main():
     </body>
     </html>
     """
-    
+
     with open(output_path, "w") as f:
         f.write(html)
-    
+
     logger.info(f"✅ Dashboard saved to {output_path}")
+
 
 if __name__ == "__main__":
     main()

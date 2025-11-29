@@ -62,8 +62,8 @@ class TempleCartridge(VibeAgent):
                 "purity_checking",
                 "purification_ritual",
                 "darshan_service",
-                "sanctity_maintenance"
-            ]
+                "sanctity_maintenance",
+            ],
         )
 
         logger.info("🏛️  TEMPLE (VibeAgent v1.0) is online - Blessing Service Ready")
@@ -135,7 +135,7 @@ class TempleCartridge(VibeAgent):
                     receiver="TEMPLE",
                     amount=self.BLESSING_COST,
                     reason="BLESSING_REQUEST",
-                    service_type="blessing"
+                    service_type="blessing",
                 )
                 logger.info(f"💰 Blessing transaction: {tx_id}")
             except Exception as e:
@@ -143,7 +143,7 @@ class TempleCartridge(VibeAgent):
                 return {
                     "status": "insufficient_credits",
                     "required": self.BLESSING_COST,
-                    "reason": str(e)
+                    "reason": str(e),
                 }
 
         # Check system purity
@@ -154,14 +154,16 @@ class TempleCartridge(VibeAgent):
             "blessing_type": blessing_type,
             "is_pure": is_pure,
             "timestamp": datetime.utcnow().isoformat(),
-            "cost": self.BLESSING_COST
+            "cost": self.BLESSING_COST,
         }
 
         self.blessings_given += 1
         self.total_credits_collected += self.BLESSING_COST
         self.last_blessing_time = datetime.utcnow().isoformat()
 
-        status_msg = "✨ System is Pure ✨" if is_pure else "⚠️ System needs purification"
+        status_msg = (
+            "✨ System is Pure ✨" if is_pure else "⚠️ System needs purification"
+        )
 
         return {
             "status": "blessed",
@@ -169,7 +171,7 @@ class TempleCartridge(VibeAgent):
             "blessing": status_msg,
             "is_pure": is_pure,
             "blessing_count": self.blessings_given,
-            "timestamp": blessing["timestamp"]
+            "timestamp": blessing["timestamp"],
         }
 
     async def _check_purity(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -190,15 +192,12 @@ class TempleCartridge(VibeAgent):
                 "ledger_integrity": "CLEAN",
                 "oath_binding": "VALID",
                 "governance_compliance": "COMPLIANT",
-                "transaction_history": "VERIFIED"
+                "transaction_history": "VERIFIED",
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
-        return {
-            "status": "purity_check_complete",
-            "purity_report": report
-        }
+        return {"status": "purity_check_complete", "purity_report": report}
 
     async def _purification_ritual(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -215,12 +214,12 @@ class TempleCartridge(VibeAgent):
                     receiver="TEMPLE",
                     amount=self.PURIFICATION_COST,
                     reason="PURIFICATION_RITUAL",
-                    service_type="purification"
+                    service_type="purification",
                 )
             except Exception as e:
                 return {
                     "status": "insufficient_credits",
-                    "required": self.PURIFICATION_COST
+                    "required": self.PURIFICATION_COST,
                 }
 
         logger.info(f"🕉️  PURIFICATION RITUAL for {agent_id}...")
@@ -237,7 +236,7 @@ class TempleCartridge(VibeAgent):
             "ritual": "COMPLETE",
             "result": "All aspects verified and blessed",
             "cost": self.PURIFICATION_COST,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _request_darshan(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -256,13 +255,10 @@ class TempleCartridge(VibeAgent):
                     receiver="TEMPLE",
                     amount=self.DARSHAN_COST,
                     reason="DARSHAN_REQUEST",
-                    service_type="darshan"
+                    service_type="darshan",
                 )
             except Exception as e:
-                return {
-                    "status": "insufficient_credits",
-                    "required": self.DARSHAN_COST
-                }
+                return {"status": "insufficient_credits", "required": self.DARSHAN_COST}
 
         # Darshan response
         response = f"The temple gazes upon {agent_id}. Your question: '{question}' has been witnessed."
@@ -272,7 +268,7 @@ class TempleCartridge(VibeAgent):
             "agent": agent_id,
             "darshan": response,
             "cost": self.DARSHAN_COST,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _check_system_pure(self, agent_id: str) -> bool:
@@ -292,8 +288,8 @@ class TempleCartridge(VibeAgent):
             "blessings_given": self.blessings_given,
             "credits_collected": self.total_credits_collected,
             "last_blessing": self.last_blessing_time,
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -304,6 +300,7 @@ class TempleCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = TempleCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -311,7 +308,5 @@ if __name__ == "__main__":
             "name": "TEMPLE",
             "status": "healthy",
             "domain": "INFRASTRUCTURE",
-            "capabilities": ['core_services']
+            "capabilities": ["core_services"],
         }
-
-

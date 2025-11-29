@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 # Add current dir to Python path
-sys.path.insert(0, '/home/user/steward-protocol')
+sys.path.insert(0, "/home/user/steward-protocol")
 
 from vibe_core.scheduling.task import Task
 from steward.system_agents.engineer.cartridge_main import EngineerCartridge
@@ -25,6 +25,7 @@ from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
 # Setup Dummy Environment
 SANDBOX_DIR = "./workspaces/sandbox_test"
 REPO_DIR = "./temp_repo_test"
+
 
 def setup_env():
     """Create clean test directories"""
@@ -38,8 +39,11 @@ def setup_env():
 
     # Init git in temp repo for Archivist test
     os.system(f"git init {REPO_DIR} > /dev/null 2>&1")
-    os.system(f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'")
+    os.system(
+        f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'"
+    )
     print(f"✅ Test environment created: {SANDBOX_DIR}, {REPO_DIR}")
+
 
 def cleanup():
     """Remove test directories"""
@@ -48,6 +52,7 @@ def cleanup():
     if os.path.exists(REPO_DIR):
         shutil.rmtree(REPO_DIR)
     print("✅ Test cleanup complete")
+
 
 def run_acid_test():
     """Run the acid test suite"""
@@ -80,11 +85,11 @@ def run_acid_test():
         payload={
             "action": "manifest_reality",
             "path": "toxic.py",
-            "content": "def broken_code(: print('Forgot args')"  # Syntax Error
+            "content": "def broken_code(: print('Forgot args')",  # Syntax Error
         },
         task_id="t1",
         priority=1,
-        created_at="now"
+        created_at="now",
     )
     res_eng = engineer.process(task_write_bad)
     print(f"   Status: {res_eng['status']}")
@@ -94,13 +99,10 @@ def run_acid_test():
     print("\n[Step 2] Auditor checks toxic code...")
     task_audit_bad = Task(
         agent_id="auditor",
-        payload={
-            "action": "verify_changes",
-            "path": res_eng["path"]
-        },
+        payload={"action": "verify_changes", "path": res_eng["path"]},
         task_id="t2",
         priority=1,
-        created_at="now"
+        created_at="now",
     )
     res_aud = auditor.process(task_audit_bad)
 
@@ -127,11 +129,11 @@ def run_acid_test():
         payload={
             "action": "manifest_reality",
             "path": "golden.py",
-            "content": "def working_code():\n    print('Hello World')\n"
+            "content": "def working_code():\n    print('Hello World')\n",
         },
         task_id="t3",
         priority=1,
-        created_at="now"
+        created_at="now",
     )
     res_eng_good = engineer.process(task_write_good)
     print(f"   Status: {res_eng_good['status']}")
@@ -141,13 +143,10 @@ def run_acid_test():
     print("\n[Step 2] Auditor checks clean code...")
     task_audit_good = Task(
         agent_id="auditor",
-        payload={
-            "action": "verify_changes",
-            "path": res_eng_good["path"]
-        },
+        payload={"action": "verify_changes", "path": res_eng_good["path"]},
         task_id="t4",
         priority=1,
-        created_at="now"
+        created_at="now",
     )
     res_aud_good = auditor.process(task_audit_good)
 
@@ -178,11 +177,11 @@ def run_acid_test():
                 "source_path": res_eng_good["path"],
                 "dest_path": "src/golden.py",
                 "audit_result": res_aud_good,
-                "message": "Golden logic"
+                "message": "Golden logic",
             },
             task_id="t5",
             priority=1,
-            created_at="now"
+            created_at="now",
         )
 
         res_arch = archivist.process(task_seal)
@@ -199,6 +198,7 @@ def run_acid_test():
     except Exception as e:
         print(f"   ❌ EXCEPTION in Archivist: {e}")
         import traceback
+
         traceback.print_exc()
         all_passed = False
     finally:
@@ -224,11 +224,11 @@ def run_acid_test():
                 "source_path": res_eng["path"],
                 "dest_path": "src/toxic.py",
                 "audit_result": res_aud,  # Failed audit result
-                "message": "Toxic code"
+                "message": "Toxic code",
             },
             task_id="t6",
             priority=1,
-            created_at="now"
+            created_at="now",
         )
 
         res_arch_bad = archivist.process(task_seal_bad)
@@ -244,6 +244,7 @@ def run_acid_test():
     except Exception as e:
         print(f"   ❌ EXCEPTION: {e}")
         import traceback
+
         traceback.print_exc()
         all_passed = False
     finally:
@@ -270,6 +271,7 @@ def run_acid_test():
         print("\nRESULT: System has critical flaws")
         print("\nPlease review the failed test above.")
         return 1
+
 
 if __name__ == "__main__":
     exit_code = run_acid_test()

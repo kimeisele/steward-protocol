@@ -42,14 +42,12 @@ def check_read_access(token):
 
     headers = {
         "Authorization": f"Bearer {token}",
-        "User-Agent": "HERALD-Diagnostic/1.0"
+        "User-Agent": "HERALD-Diagnostic/1.0",
     }
 
     try:
         response = requests.get(
-            "https://api.twitter.com/2/users/me",
-            headers=headers,
-            timeout=10
+            "https://api.twitter.com/2/users/me", headers=headers, timeout=10
         )
 
         if response.status_code == 200:
@@ -90,7 +88,7 @@ def check_write_access(token):
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
-        "User-Agent": "HERALD-Diagnostic/1.0"
+        "User-Agent": "HERALD-Diagnostic/1.0",
     }
 
     # Test payload - a diagnostic tweet
@@ -103,7 +101,7 @@ def check_write_access(token):
             "https://api.twitter.com/2/tweets",
             json=payload,
             headers=headers,
-            timeout=10
+            timeout=10,
         )
 
         if response.status_code == 201:

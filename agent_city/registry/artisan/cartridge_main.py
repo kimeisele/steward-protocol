@@ -18,8 +18,7 @@ from .tools.media_tool import MediaTool
 # Constitutional Oath
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("ARTISAN_AGENT")
 
@@ -40,7 +39,7 @@ class ArtisanCartridge(VibeAgent):
             author="Steward Protocol",
             description="Media and technical operations agent",
             domain="MEDIA_OPS",
-            capabilities=["media_processing", "image_optimization", "asset_branding"]
+            capabilities=["media_processing", "image_optimization", "asset_branding"],
         )
 
         logger.info("🔨 THE ARTISAN is online.")
@@ -57,17 +56,17 @@ class ArtisanCartridge(VibeAgent):
     def process_media(self, file_path: str) -> str:
         """
         Process a media file (Crop, Brand, Optimize).
-        
+
         Args:
             file_path: Path to raw media file
-            
+
         Returns:
             str: Path to processed file (or original if failed)
         """
         logger.info(f"🔨 Artisan received job: Process {file_path}")
-        
+
         processed_path = self.media_tool.process_image(file_path)
-        
+
         if processed_path:
             logger.info(f"✅ Artisan finished job: {processed_path}")
             return processed_path
@@ -95,30 +94,25 @@ class ArtisanCartridge(VibeAgent):
                 result = self.process_media(file_path)
                 return {"status": "success", "result": result}
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
         except Exception as e:
             logger.error(f"❌ ARTISAN processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.agent_protocol import AgentManifest
+
         return AgentManifest(
             agent_id="artisan",
             name="ARTISAN",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             domain="MEDIA",
-            capabilities=['media_operations', 'content_creation']
+            capabilities=["media_operations", "content_creation"],
         )
-
-
 
     def report_status(self) -> Dict[str, Any]:
         """Report ARTISAN status (VibeAgent interface)."""
@@ -128,5 +122,5 @@ class ArtisanCartridge(VibeAgent):
             "status": "RUNNING",
             "domain": "MEDIA_OPS",
             "capabilities": self.capabilities,
-            "description": "Media and technical operations agent"
+            "description": "Media and technical operations agent",
         }

@@ -23,10 +23,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("TEST_LIFECYCLE")
 
 
@@ -87,13 +84,11 @@ def test_lifecycle_enforcer():
     test_results = {
         "passed": True,
         "tests": ["philosophy_101", "coding_ethics", "constitutional_oath"],
-        "score": 95
+        "score": 95,
     }
 
     success = enforcer.authorize_brahmachari_to_grihastha(
-        test_agent,
-        test_results,
-        initiator="TEMPLE"
+        test_agent, test_results, initiator="TEMPLE"
     )
 
     if not success:
@@ -103,7 +98,9 @@ def test_lifecycle_enforcer():
     # Verify state changed
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
     if state.status != LifecycleStatus.GRIHASTHA:
-        logger.error(f"❌ TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA")
+        logger.error(
+            f"❌ TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA"
+        )
         return False
 
     logger.info("✅ TEST 3 PASSED: Agent promoted to GRIHASTHA")
@@ -134,7 +131,7 @@ def test_lifecycle_enforcer():
         "type": "constitutional_violation",
         "reason": "Attempted to bypass LIFECYCLE ENFORCER",
         "severity": "high",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
     success = enforcer.report_violation(test_agent, violation)
@@ -145,7 +142,9 @@ def test_lifecycle_enforcer():
 
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
     if state.status != LifecycleStatus.SHUDRA:
-        logger.error(f"❌ TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA")
+        logger.error(
+            f"❌ TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA"
+        )
         return False
 
     logger.info("✅ TEST 5 PASSED: Agent demoted to SHUDRA")
@@ -173,8 +172,11 @@ def test_lifecycle_enforcer():
     logger.info("-" * 80)
 
     # Create new instance (simulating restart)
-    logger.info("   Creating new LifecycleManager instance (simulating server restart)...")
+    logger.info(
+        "   Creating new LifecycleManager instance (simulating server restart)..."
+    )
     from civic.tools.lifecycle_manager import LifecycleManager
+
     manager2 = LifecycleManager()
 
     state_after = manager2.get_lifecycle_state(test_agent)
@@ -184,7 +186,9 @@ def test_lifecycle_enforcer():
         return False
 
     if state_after.status != LifecycleStatus.SHUDRA:
-        logger.error(f"❌ TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA")
+        logger.error(
+            f"❌ TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA"
+        )
         return False
 
     logger.info("✅ TEST 7 PASSED: KARMA confirmed - state persisted across restart")
@@ -198,7 +202,7 @@ def test_lifecycle_enforcer():
     state = enforcer.lifecycle_mgr.deprecate_to_vanaprastha(
         test_agent,
         reason="Code deprecated in favor of newer version",
-        archive_path="/archive/test_pulse_v1"
+        archive_path="/archive/test_pulse_v1",
     )
 
     if state.status != LifecycleStatus.VANAPRASTHA:

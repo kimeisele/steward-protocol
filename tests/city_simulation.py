@@ -31,8 +31,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 )
 logger = logging.getLogger("SIMULATION_DOME")
 
@@ -45,8 +44,9 @@ class CitySimulation:
     runs scenarios, and reports on system health.
     """
 
-    def __init__(self, config_path: str = "config/matrix.yaml",
-                 ledger_path: str = ":memory:"):
+    def __init__(
+        self, config_path: str = "config/matrix.yaml", ledger_path: str = ":memory:"
+    ):
         """
         Initialize the Simulation Dome.
 
@@ -61,7 +61,7 @@ class CitySimulation:
             "scenarios": {},
             "total_passed": 0,
             "total_failed": 0,
-            "summary": {}
+            "summary": {},
         }
 
     async def boot_async(self) -> bool:
@@ -79,6 +79,7 @@ class CitySimulation:
             # Load configuration
             logger.info("📋 Loading configuration...")
             from vibe_core.config import ConfigLoader
+
             loader = ConfigLoader(self.config_path)
             config = loader.load()
             logger.info(f"   ✓ Config loaded: {config.city_name}")
@@ -86,6 +87,7 @@ class CitySimulation:
             # Create kernel
             logger.info("⚙️  Creating kernel...")
             from vibe_core.kernel_impl import RealVibeKernel
+
             self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
 
             # Load all cartridges
@@ -95,7 +97,9 @@ class CitySimulation:
             from forum.cartridge_main import ForumCartridge
             from science.cartridge_main import ScientistCartridge
             from envoy.cartridge_main import EnvoyCartridge
-            from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+            from steward.system_agents.archivist.cartridge_main import (
+                ArchivistCartridge,
+            )
             from steward.system_agents.auditor.cartridge_main import AuditorCartridge
             from steward.system_agents.engineer.cartridge_main import EngineerCartridge
             from oracle.cartridge_main import Oracle as OracleCartridge
@@ -126,20 +130,26 @@ class CitySimulation:
             for agent_id, agent in cartridges:
                 try:
                     # Check if agent has swear_constitutional_oath method
-                    if hasattr(agent, 'swear_constitutional_oath') and callable(getattr(agent, 'swear_constitutional_oath')):
+                    if hasattr(agent, "swear_constitutional_oath") and callable(
+                        getattr(agent, "swear_constitutional_oath")
+                    ):
                         await agent.swear_constitutional_oath()
                         logger.info(f"   ✓ {agent_id.upper():12} oath sworn")
                     else:
                         # Fallback: manually set oath_sworn if available
-                        if hasattr(agent, 'oath_sworn'):
+                        if hasattr(agent, "oath_sworn"):
                             agent.oath_sworn = True
-                            logger.info(f"   ✓ {agent_id.upper():12} oath set (fallback)")
+                            logger.info(
+                                f"   ✓ {agent_id.upper():12} oath set (fallback)"
+                            )
                         else:
-                            logger.warning(f"   ⚠️  {agent_id.upper():12} has no oath mechanism")
+                            logger.warning(
+                                f"   ⚠️  {agent_id.upper():12} has no oath mechanism"
+                            )
                 except Exception as e:
                     logger.warning(f"   ⚠️  {agent_id.upper():12} oath ceremony: {e}")
                     # Continue even if oath fails - try to proceed anyway
-                    if hasattr(agent, 'oath_sworn'):
+                    if hasattr(agent, "oath_sworn"):
                         agent.oath_sworn = True
 
             # Step 2: Register agents with kernel
@@ -164,6 +174,7 @@ class CitySimulation:
         except Exception as e:
             logger.error(f"\n❌ BOOT FAILED: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -179,6 +190,7 @@ class CitySimulation:
         except Exception as e:
             logger.error(f"\n❌ BOOT FAILED: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -222,8 +234,8 @@ class CitySimulation:
 
             self.results["scenarios"]["economic_cycle"] = {
                 "status": "PASS",
-                "agents": status.get('agents_registered'),
-                "ledger_events": status.get('ledger_events')
+                "agents": status.get("agents_registered"),
+                "ledger_events": status.get("ledger_events"),
             }
             self.results["total_passed"] += 1
 
@@ -234,7 +246,7 @@ class CitySimulation:
             logger.error(f"\n❌ SCENARIO 1 FAILED: {e}")
             self.results["scenarios"]["economic_cycle"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.results["total_failed"] += 1
             return False
@@ -272,9 +284,11 @@ class CitySimulation:
             # Check manifests
             # Get manifests from registry (supports both old and new API)
             registry = self.kernel.manifest_registry
-            if hasattr(registry, 'get_all_manifests') and callable(registry.get_all_manifests):
+            if hasattr(registry, "get_all_manifests") and callable(
+                registry.get_all_manifests
+            ):
                 manifests = registry.get_all_manifests()
-            elif hasattr(registry, 'manifests'):
+            elif hasattr(registry, "manifests"):
                 manifests = list(registry.manifests.values())
             else:
                 manifests = []
@@ -288,7 +302,7 @@ class CitySimulation:
             self.results["scenarios"]["agent_coordination"] = {
                 "status": "PASS",
                 "agents_count": len(agents),
-                "manifests_count": len(manifests)
+                "manifests_count": len(manifests),
             }
             self.results["total_passed"] += 1
 
@@ -299,7 +313,7 @@ class CitySimulation:
             logger.error(f"\n❌ SCENARIO 2 FAILED: {e}")
             self.results["scenarios"]["agent_coordination"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.results["total_failed"] += 1
             return False
@@ -329,7 +343,9 @@ class CitySimulation:
             logger.info(f"  City: {config.city_name}")
             logger.info(f"  Version: {config.federation_version}")
             logger.info(f"  Initial Credits: {config.economy.initial_credits}")
-            logger.info(f"  Voting Threshold: {int(config.governance.voting_threshold * 100)}%")
+            logger.info(
+                f"  Voting Threshold: {int(config.governance.voting_threshold * 100)}%"
+            )
 
             # Validate report
             report = loader.validate()
@@ -341,7 +357,7 @@ class CitySimulation:
             self.results["scenarios"]["config_validation"] = {
                 "status": "PASS",
                 "city": config.city_name,
-                "version": config.federation_version
+                "version": config.federation_version,
             }
             self.results["total_passed"] += 1
 
@@ -352,7 +368,7 @@ class CitySimulation:
             logger.error(f"\n❌ SCENARIO 3 FAILED: {e}")
             self.results["scenarios"]["config_validation"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.results["total_failed"] += 1
             return False

@@ -86,11 +86,7 @@ class TavilyResearcher:
         }
 
         try:
-            response = requests.post(
-                self.api_url,
-                json=payload,
-                timeout=15
-            )
+            response = requests.post(self.api_url, json=payload, timeout=15)
 
             if response.status_code == 200:
                 return response.json()
@@ -284,7 +280,10 @@ Include the source URL and relevant hashtags.
         """
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-        filename = Path(output_dir) / f"{self.created_at.strftime('%Y-%m-%d_%H%M%S')}_research.json"
+        filename = (
+            Path(output_dir)
+            / f"{self.created_at.strftime('%Y-%m-%d_%H%M%S')}_research.json"
+        )
 
         with open(filename, "w") as f:
             json.dump(
@@ -293,7 +292,7 @@ Include the source URL and relevant hashtags.
                     "created_at": self.created_at.isoformat(),
                 },
                 f,
-                indent=2
+                indent=2,
             )
 
         print(f"💾 Research saved: {filename}")

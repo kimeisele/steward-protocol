@@ -95,7 +95,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         # Initialize the Golden Straw (CityControlTool)
         # NOTE: The kernel will be injected later via set_kernel()
         self.city_control = None  # Will be initialized after kernel injection
-        
+
         # Inject DegradationChain for offline capability
         chain = self.get_degradation_chain()
         self.diplomacy = DiplomacyTool(degradation_chain=chain)

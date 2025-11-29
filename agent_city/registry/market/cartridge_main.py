@@ -27,12 +27,13 @@ logger = logging.getLogger("MARKET_MAIN")
 
 class ServiceType(Enum):
     """Service types available in the market"""
-    RESEARCH = "research"           # Science services
-    CONTENT = "content"             # Herald content creation
-    ANALYSIS = "analysis"           # Lens data analysis
-    ENGINEERING = "engineering"     # Engineer infrastructure
-    MEDIA = "media"                 # Artisan media creation
-    BROADCASTING = "broadcasting"   # Pulse broadcasting
+
+    RESEARCH = "research"  # Science services
+    CONTENT = "content"  # Herald content creation
+    ANALYSIS = "analysis"  # Lens data analysis
+    ENGINEERING = "engineering"  # Engineer infrastructure
+    MEDIA = "media"  # Artisan media creation
+    BROADCASTING = "broadcasting"  # Pulse broadcasting
 
 
 class MarketCartridge(VibeAgent):
@@ -70,8 +71,8 @@ class MarketCartridge(VibeAgent):
                 "transaction_execution",
                 "delivery_verification",
                 "dispute_handling",
-                "price_discovery"
-            ]
+                "price_discovery",
+            ],
         )
 
         logger.info("🏪 MARKET (VibeAgent v1.0) is online - Exchange Ready")
@@ -90,38 +91,38 @@ class MarketCartridge(VibeAgent):
                 "provider": "science",
                 "description": "Research service - topic analysis",
                 "price": 50,  # Credits
-                "delivery_time": "24h"
+                "delivery_time": "24h",
             },
             "content": {
                 "provider": "herald",
                 "description": "Content creation - article/tweet",
                 "price": 30,
-                "delivery_time": "4h"
+                "delivery_time": "4h",
             },
             "analysis": {
                 "provider": "lens",
                 "description": "Data analysis - metrics report",
                 "price": 40,
-                "delivery_time": "12h"
+                "delivery_time": "12h",
             },
             "engineering": {
                 "provider": "engineer",
                 "description": "Code development - feature implementation",
                 "price": 100,
-                "delivery_time": "3d"
+                "delivery_time": "3d",
             },
             "media": {
                 "provider": "artisan",
                 "description": "Visual creation - graphics/video",
                 "price": 60,
-                "delivery_time": "2d"
+                "delivery_time": "2d",
             },
             "broadcasting": {
                 "provider": "pulse",
                 "description": "Social media broadcast - multi-post",
                 "price": 25,
-                "delivery_time": "2h"
-            }
+                "delivery_time": "2h",
+            },
         }
 
         # Active orders
@@ -190,7 +191,7 @@ class MarketCartridge(VibeAgent):
                 "description": info["description"],
                 "price": info["price"],
                 "currency": "Credits",
-                "delivery_time": info["delivery_time"]
+                "delivery_time": info["delivery_time"],
             }
             for name, info in services.items()
         }
@@ -199,7 +200,7 @@ class MarketCartridge(VibeAgent):
             "status": "services_listed",
             "service_count": len(formatted_services),
             "services": formatted_services,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _post_service(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -220,19 +221,21 @@ class MarketCartridge(VibeAgent):
             "description": description,
             "price": price,
             "delivery_time": delivery_time,
-            "posted_at": datetime.utcnow().isoformat()
+            "posted_at": datetime.utcnow().isoformat(),
         }
 
         self.services[service_name] = new_service
 
-        logger.info(f"📢 Service posted: {service_name} by {provider} ({price} Credits)")
+        logger.info(
+            f"📢 Service posted: {service_name} by {provider} ({price} Credits)"
+        )
 
         return {
             "status": "service_posted",
             "service_name": service_name,
             "price": price,
             "provider": provider,
-            "timestamp": new_service["posted_at"]
+            "timestamp": new_service["posted_at"],
         }
 
     async def _request_service(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -249,7 +252,7 @@ class MarketCartridge(VibeAgent):
             return {
                 "status": "error",
                 "reason": f"Service '{service_name}' not found",
-                "available_services": list(self.services.keys())
+                "available_services": list(self.services.keys()),
             }
 
         service = self.services[service_name]
@@ -268,7 +271,7 @@ class MarketCartridge(VibeAgent):
             "price": price,
             "parameters": parameters,
             "status": "pending_payment",
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         self.orders[order_id] = order
@@ -282,7 +285,7 @@ class MarketCartridge(VibeAgent):
             "service": service_name,
             "price": price,
             "next_step": "execute_trade",
-            "timestamp": order["created_at"]
+            "timestamp": order["created_at"],
         }
 
     async def _execute_trade(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -308,7 +311,7 @@ class MarketCartridge(VibeAgent):
                     receiver=provider,
                     amount=price,
                     reason=f"SERVICE_TRADE_{order_id}",
-                    service_type="service"
+                    service_type="service",
                 )
                 logger.info(f"💰 Trade executed: {tx_id}")
             except Exception as e:
@@ -317,7 +320,7 @@ class MarketCartridge(VibeAgent):
                 return {
                     "status": "trade_failed",
                     "order_id": order_id,
-                    "reason": str(e)
+                    "reason": str(e),
                 }
 
         # Update order status
@@ -335,7 +338,7 @@ class MarketCartridge(VibeAgent):
             "provider": provider,
             "amount": price,
             "transaction_id": order.get("execution_tx"),
-            "timestamp": order["executed_at"]
+            "timestamp": order["executed_at"],
         }
 
     async def _verify_delivery(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -366,7 +369,7 @@ class MarketCartridge(VibeAgent):
             "order_id": order_id,
             "result": result_msg,
             "order_status": order["status"],
-            "timestamp": order.get("completed_at") or order.get("dispute_reason")
+            "timestamp": order.get("completed_at") or order.get("dispute_reason"),
         }
 
     async def _dispute_resolution(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -387,7 +390,7 @@ class MarketCartridge(VibeAgent):
             "order_id": order_id,
             "reason": reason,
             "next_step": "arbitration",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def _status(self) -> Dict[str, Any]:
@@ -396,12 +399,14 @@ class MarketCartridge(VibeAgent):
             "agent_id": self.agent_id,
             "status": "online",
             "services_available": len(self.services),
-            "active_orders": len([o for o in self.orders.values() if o["status"] != "completed"]),
+            "active_orders": len(
+                [o for o in self.orders.values() if o["status"] != "completed"]
+            ),
             "total_trades": self.total_trades,
             "total_volume": self.total_volume,
             "completed_orders": self.completed_orders,
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -412,6 +417,7 @@ class MarketCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = MarketCartridge()
     print(f"✅ {cartridge.name} system cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -419,7 +425,5 @@ if __name__ == "__main__":
             "name": "MARKET",
             "status": "healthy",
             "domain": "ECONOMY",
-            "capabilities": ['trading', 'commerce']
+            "capabilities": ["trading", "commerce"],
         }
-
-

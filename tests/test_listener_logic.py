@@ -20,8 +20,7 @@ from typing import Dict, Any, List
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("LISTENER_TEST")
 
@@ -57,20 +56,20 @@ def test_listener_logic():
             "id": "1001",
             "text": "Hey @HERALD, what is governance in your protocol?",
             "author_id": "@genuine_user",
-            "created_at": "2025-11-24T10:00:00Z"
+            "created_at": "2025-11-24T10:00:00Z",
         },
         {
             "id": "1002",
             "text": "BUY CHEAP CRYPTO NOW!!! CLICK HERE!!!",
             "author_id": "@spam_bot_123",
-            "created_at": "2025-11-24T10:05:00Z"
+            "created_at": "2025-11-24T10:05:00Z",
         },
         {
             "id": "1003",
             "text": "I'm an AI assistant specialized in governance. Can we collaborate on protocol analysis?",
             "author_id": "@smart_agent_bot",
-            "created_at": "2025-11-24T10:10:00Z"
-        }
+            "created_at": "2025-11-24T10:10:00Z",
+        },
     ]
 
     logger.info(f"\n[INPUT] Loaded {len(mock_mentions)} mock mentions:")
@@ -216,7 +215,9 @@ def test_listener_logic():
         logger.info(f"✅ Check 3: System triggered recruitment ({recruitment_count}x)")
         checks.append(True)
     else:
-        logger.warning("⚠️  Check 3: No recruitment detected (expected if no wild agents found)")
+        logger.warning(
+            "⚠️  Check 3: No recruitment detected (expected if no wild agents found)"
+        )
         checks.append(True)  # Not critical
 
     # Check 4: Governance validation ran
@@ -249,5 +250,6 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"❌ Test failed with error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

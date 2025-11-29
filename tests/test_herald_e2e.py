@@ -36,7 +36,7 @@ def test_health_check():
     """Test 1: Health Check (GAD-000)"""
     success = run_command(
         "python3 examples/herald/health_check.py",
-        "Health Check: Verify all dependencies"
+        "Health Check: Verify all dependencies",
     )
 
     if success:
@@ -45,7 +45,7 @@ def test_health_check():
             "python3 examples/herald/health_check.py",
             shell=True,
             capture_output=True,
-            text=True
+            text=True,
         )
         report = json.loads(result.stdout)
 
@@ -66,8 +66,7 @@ def test_generate_content():
         return True
 
     return run_command(
-        "python3 examples/herald/generate_only.py",
-        "Generate Content: Brain + Artist"
+        "python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist"
     )
 
 
@@ -82,14 +81,14 @@ def test_dashboard_generation():
         dist_dir.mkdir(exist_ok=True)
         mock_content = {
             "text": "Test tweet from HERALD pipeline",
-            "image_filename": None
+            "image_filename": None,
         }
-        with open(content_file, 'w') as f:
+        with open(content_file, "w") as f:
             json.dump(mock_content, f)
 
     success = run_command(
         "python3 examples/herald/generate_dashboard.py > /tmp/dashboard_test.md",
-        "Dashboard Generation: Extract content for approval gate"
+        "Dashboard Generation: Extract content for approval gate",
     )
 
     if success:
@@ -107,9 +106,9 @@ def test_dashboard_generation():
 
 def main():
     """Run all E2E tests."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🦅 HERALD E2E TEST SUITE")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
     tests = [
         ("Health Check", test_health_check),
@@ -124,9 +123,9 @@ def main():
         results.append((name, test_func()))
 
     # Summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)

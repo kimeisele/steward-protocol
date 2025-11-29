@@ -26,7 +26,7 @@ from vibe_core.process_manager import ProcessManager
 def test_process_manager_exists():
     """Test that kernel has ProcessManager."""
     kernel = RealVibeKernel()
-    assert hasattr(kernel, 'process_manager')
+    assert hasattr(kernel, "process_manager")
     assert kernel.process_manager is not None
     assert isinstance(kernel.process_manager, ProcessManager)
 
@@ -38,11 +38,11 @@ def test_agents_in_separate_processes():
     pm = ProcessManager(kernel=None)  # Mock kernel for test
 
     # Verify ProcessManager has process tracking
-    assert hasattr(pm, 'processes')
+    assert hasattr(pm, "processes")
     assert isinstance(pm.processes, dict)
 
     # Verify ProcessManager has spawn_agent method
-    assert hasattr(pm, 'spawn_agent')
+    assert hasattr(pm, "spawn_agent")
     assert callable(pm.spawn_agent)
 
 
@@ -51,11 +51,11 @@ def test_process_health_monitoring():
     pm = ProcessManager(kernel=None)
 
     # Verify health monitoring methods exist
-    assert hasattr(pm, 'monitor_health')
+    assert hasattr(pm, "monitor_health")
     assert callable(pm.monitor_health)
 
     # Verify restart capability exists
-    assert hasattr(pm, 'restart_agent')
+    assert hasattr(pm, "restart_agent")
     assert callable(pm.restart_agent)
 
 

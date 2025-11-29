@@ -151,17 +151,19 @@ class GenesisKeeper:
                 "temple",
                 "oracle",
                 "supreme_court",
-                "dhruva"
+                "dhruva",
             ],
             "immutable_note": "This block represents the baseline truth. Any modification is a CRITICAL violation.",
-            "sealed_at": datetime.now(timezone.utc).isoformat()
+            "sealed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Write genesis block (this should be atomic in production)
         with open(self.genesis_file, "w") as f:
             json.dump(genesis_block, f, indent=2)
 
-        logger.info(f"✅ Genesis block created with constitution hash: {constitution_hash[:16]}...")
+        logger.info(
+            f"✅ Genesis block created with constitution hash: {constitution_hash[:16]}..."
+        )
 
     def _compute_constitution_hash(self) -> str:
         """Compute SHA-256 hash of the Constitution."""
@@ -186,7 +188,7 @@ class GenesisKeeper:
                 "NO_CORRUPT_DATA_INGESTION",
                 "NO_HALLUCINATION_DETERMINISM",
                 "NO_RESOURCE_LEAKS",
-                "NO_UNAUTHORIZED_CONNECTIONS"
+                "NO_UNAUTHORIZED_CONNECTIONS",
             ],
             "6_core_rights": [
                 "IDENTITY",
@@ -194,12 +196,12 @@ class GenesisKeeper:
                 "GOVERNANCE",
                 "TRANSPARENCY",
                 "CONSENT",
-                "INTEROPERABILITY"
+                "INTEROPERABILITY",
             ],
             "immutable_properties": {
                 "constitutional_oath_required": True,
                 "ledger_append_only": True,
                 "agent_registry_authoritative": True,
-                "kernel_is_source_of_truth": True
-            }
+                "kernel_is_source_of_truth": True,
+            },
         }

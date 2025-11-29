@@ -31,6 +31,7 @@ from enum import Enum
 # PART 1: NATIVE CRYPTO VAULT
 # ════════════════════════════════════════════════════════════════
 
+
 class CivicVault:
     """
     The Treasury & Identity Vault.
@@ -68,20 +69,14 @@ class CivicVault:
         """
         # 1. Derive agent key (Deterministic but secure)
         agent_key = hmac.new(
-            self.master_key,
-            agent_id.encode(),
-            hashlib.sha256
+            self.master_key, agent_id.encode(), hashlib.sha256
         ).digest()
 
         # 2. Canonicalize payload (sort keys for consistency)
         message = json.dumps(payload, sort_keys=True).encode()
 
         # 3. Sign with agent's derived key
-        signature = hmac.new(
-            agent_key,
-            message,
-            hashlib.sha256
-        ).digest()
+        signature = hmac.new(agent_key, message, hashlib.sha256).digest()
 
         return base64.b64encode(signature).decode()
 
@@ -105,17 +100,20 @@ class CivicVault:
 # PART 2: ASHRAMA LIFECYCLE SYSTEM
 # ════════════════════════════════════════════════════════════════
 
+
 class Ashrama(Enum):
     """The four life stages from Vedic philosophy."""
-    BRAHMACHARI = "student"      # Learning phase (Read-Only)
-    GRIHASTHA = "householder"    # Working phase (Read-Write-Trade)
-    VANAPRASTHA = "retired"      # Advisory phase (Read-Only, archived)
-    SANNYASA = "renounced"       # System core level (ROOT)
+
+    BRAHMACHARI = "student"  # Learning phase (Read-Only)
+    GRIHASTHA = "householder"  # Working phase (Read-Write-Trade)
+    VANAPRASTHA = "retired"  # Advisory phase (Read-Only, archived)
+    SANNYASA = "renounced"  # System core level (ROOT)
 
 
 # ════════════════════════════════════════════════════════════════
 # PART 3: THE DHARMA ENFORCER (Permission Gate)
 # ════════════════════════════════════════════════════════════════
+
 
 class LifecycleEnforcer:
     """
@@ -130,9 +128,9 @@ class LifecycleEnforcer:
 
     def __init__(self):
         self.registry = {
-            "pulse": Ashrama.BRAHMACHARI,   # Pulse = junior/student
-            "civic": Ashrama.GRIHASTHA,    # CIVIC = established/worker
-            "herald": Ashrama.GRIHASTHA,   # Herald = messenger/worker
+            "pulse": Ashrama.BRAHMACHARI,  # Pulse = junior/student
+            "civic": Ashrama.GRIHASTHA,  # CIVIC = established/worker
+            "herald": Ashrama.GRIHASTHA,  # Herald = messenger/worker
             "forum": Ashrama.BRAHMACHARI,  # Forum = new/learning
         }
         self.vault = CivicVault()
@@ -174,13 +172,15 @@ class LifecycleEnforcer:
                     f"but tried to '{action}'. Only Grihasthas can do economic actions."
                 )
                 logger.warning(reason)
-                self.action_log.append({
-                    "agent": agent_id,
-                    "action": action,
-                    "stage": current_stage.value,
-                    "result": "DENIED",
-                    "timestamp": datetime.now().isoformat()
-                })
+                self.action_log.append(
+                    {
+                        "agent": agent_id,
+                        "action": action,
+                        "stage": current_stage.value,
+                        "result": "DENIED",
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
                 return False, reason
 
         # ─────────────────────────────────────────────────────────
@@ -240,7 +240,9 @@ class LifecycleEnforcer:
 
         # Check 2: Initiator must be authorized (Grihastha or higher)
         if initiator_stage not in [Ashrama.GRIHASTHA, Ashrama.SANNYASA]:
-            reason = f"❌ {initiator} ({initiator_stage.value}) cannot authorize promotions"
+            reason = (
+                f"❌ {initiator} ({initiator_stage.value}) cannot authorize promotions"
+            )
             logger.warning(reason)
             return False, reason
 
@@ -251,7 +253,7 @@ class LifecycleEnforcer:
             "from": current_stage.value,
             "to": Ashrama.GRIHASTHA.value,
             "initiator": initiator,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         signature = self.vault.sign_message(initiator, promotion_payload)
@@ -266,14 +268,16 @@ class LifecycleEnforcer:
         )
         logger.info(reason)
 
-        self.action_log.append({
-            "agent": agent_id,
-            "action": "promote_to_grihastha",
-            "initiator": initiator,
-            "signature": signature,
-            "timestamp": datetime.now().isoformat(),
-            "result": "SUCCESS"
-        })
+        self.action_log.append(
+            {
+                "agent": agent_id,
+                "action": "promote_to_grihastha",
+                "initiator": initiator,
+                "signature": signature,
+                "timestamp": datetime.now().isoformat(),
+                "result": "SUCCESS",
+            }
+        )
 
         return True, reason
 
@@ -282,7 +286,7 @@ class LifecycleEnforcer:
         return {
             "registry": {k: v.value for k, v in self.registry.items()},
             "action_log": self.action_log,
-            "log_size": len(self.action_log)
+            "log_size": len(self.action_log),
         }
 
 
@@ -290,19 +294,19 @@ class LifecycleEnforcer:
 # PART 4: THE TEST SUITE
 # ════════════════════════════════════════════════════════════════
 
+
 def setup_logging():
     """Configure logging for the test."""
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(name)-20s | %(levelname)-8s | %(message)s'
+        level=logging.INFO, format="%(name)-20s | %(levelname)-8s | %(message)s"
     )
 
 
 def test_brahmachari_cannot_act():
     """TEST 1: A student (Brahmachari) cannot perform economic actions."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 1: Impatient Student (Pulse tries to transfer money)")
-    print("="*70)
+    print("=" * 70)
 
     enforcer = LifecycleEnforcer()
 
@@ -320,9 +324,9 @@ def test_brahmachari_cannot_act():
 
 def test_brahmachari_can_learn():
     """TEST 2: A student can read and query (learning actions)."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 2: Student Learning (Pulse reads the knowledge base)")
-    print("="*70)
+    print("=" * 70)
 
     enforcer = LifecycleEnforcer()
 
@@ -340,9 +344,9 @@ def test_brahmachari_can_learn():
 
 def test_grihastha_can_act():
     """TEST 3: A householder (Grihastha) can perform economic actions."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 3: Established Agent (CIVIC performs economic action)")
-    print("="*70)
+    print("=" * 70)
 
     enforcer = LifecycleEnforcer()
 
@@ -360,9 +364,9 @@ def test_grihastha_can_act():
 
 def test_promotion_requires_authorization():
     """TEST 4: Promotion from Brahmachari to Grihastha requires authorization."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 4: Authorized Promotion (Forum promoted to Grihastha by CIVIC)")
-    print("="*70)
+    print("=" * 70)
 
     enforcer = LifecycleEnforcer()
 
@@ -396,18 +400,14 @@ def test_promotion_requires_authorization():
 
 def test_vault_signature_verification():
     """TEST 5: Vault signatures are mathematically verifiable."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST 5: Cryptographic Signature Verification (Native HMAC)")
-    print("="*70)
+    print("=" * 70)
 
     vault = CivicVault()
 
     # Create a payload (represents an agent action)
-    payload = {
-        "action": "transfer",
-        "amount": 100,
-        "recipient": "civic"
-    }
+    payload = {"action": "transfer", "amount": 100, "recipient": "civic"}
 
     # Agent "herald" signs the payload
     signature = vault.sign_message("herald", payload)
@@ -423,11 +423,7 @@ def test_vault_signature_verification():
         return False
 
     # Try to verify with a different payload (tampering detection)
-    tampered = {
-        "action": "transfer",
-        "amount": 1000,  # Changed!
-        "recipient": "civic"
-    }
+    tampered = {"action": "transfer", "amount": 1000, "recipient": "civic"}  # Changed!
 
     tampered_valid = vault.verify_signature("herald", tampered, signature)
 
@@ -443,14 +439,16 @@ def run_all_tests():
     """Run the complete test suite."""
     setup_logging()
 
-    print("""
+    print(
+        """
     ╔══════════════════════════════════════════════════════════════════╗
     ║         LIFECYCLE ENFORCER TEST SUITE - Native Crypto             ║
     ║                   (Senior Builder Implementation)                 ║
     ║                                                                  ║
     ║  Philosophy: "Sthāne sthitāḥ" (each in their proper station)    ║
     ╚══════════════════════════════════════════════════════════════════╝
-    """)
+    """
+    )
 
     tests = [
         ("Brahmachari cannot act", test_brahmachari_cannot_act),
@@ -468,15 +466,16 @@ def run_all_tests():
         except Exception as e:
             print(f"\n❌ TEST CRASHED: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((test_name, False))
 
     # ────────────────────────────────────────────────────────
     # SUMMARY
     # ────────────────────────────────────────────────────────
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
 
     passed = sum(1 for _, result in results if result)
     total = len(results)
@@ -485,9 +484,9 @@ def run_all_tests():
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"{status} | {test_name}")
 
-    print("="*70)
+    print("=" * 70)
     print(f"Result: {passed}/{total} tests passed")
-    print("="*70)
+    print("=" * 70)
 
     if passed == total:
         print("\n🔥 SYSTEM IS ROBUST - DHARMA UPHELD 🔥")

@@ -39,7 +39,7 @@ def main():
         "status": "healthy",
         "dependencies": "ok",
         "missing_modules": [],
-        "checked_at": "pre-flight"
+        "checked_at": "pre-flight",
     }
 
     # Check each dependency
