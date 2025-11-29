@@ -60,11 +60,13 @@ class PulseCartridge(VibeAgent):
                 "trend_analysis",
                 "engagement_tracking",
                 "viral_loop",
-                "community_sentiment"
-            ]
+                "community_sentiment",
+            ],
         )
 
-        logger.info("📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready")
+        logger.info(
+            "📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready"
+        )
 
         # Initialize Constitutional Oath mixin
         if OathMixin:
@@ -131,7 +133,7 @@ class PulseCartridge(VibeAgent):
             "status": "composed",
             "draft": content,
             "validation": "pending",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _post_tweet(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -149,7 +151,7 @@ class PulseCartridge(VibeAgent):
             "status": "posted",
             "content": content,
             "post_id": f"PULSE-{self.tweets_posted:05d}",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _track_engagement(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -163,7 +165,7 @@ class PulseCartridge(VibeAgent):
             "metric_type": metric_type,
             "engagement_score": self.engagement_score,
             "posts_monitored": self.tweets_posted,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _analyze_trends(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -179,7 +181,7 @@ class PulseCartridge(VibeAgent):
             "status": "analyzing",
             "keywords_monitored": keywords,
             "trending_topics": self.trending_topics,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     async def _schedule_campaign(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -191,7 +193,7 @@ class PulseCartridge(VibeAgent):
             "status": "scheduled",
             "campaign_name": campaign_name,
             "tweets_scheduled": len(tweets),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def _status(self) -> Dict[str, Any]:
@@ -201,8 +203,8 @@ class PulseCartridge(VibeAgent):
             "status": "online",
             "tweets_posted": self.tweets_posted,
             "engagement_score": self.engagement_score,
-            "oath_sworn": getattr(self, 'oath_sworn', False),
-            "timestamp": datetime.utcnow().isoformat()
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def get_manifest(self):
@@ -214,6 +216,7 @@ class PulseCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = PulseCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -221,7 +224,5 @@ if __name__ == "__main__":
             "name": "PULSE",
             "status": "healthy",
             "domain": "MONITORING",
-            "capabilities": ['health_monitoring', 'metrics']
+            "capabilities": ["health_monitoring", "metrics"],
         }
-
-

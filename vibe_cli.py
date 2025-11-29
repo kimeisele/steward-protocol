@@ -27,11 +27,12 @@ API_KEY = "steward-secret-key"
 RESET = "\033[0m"
 BOLD = "\033[1m"
 DIM = "\033[2m"
-CYAN = "\033[96m"   # Thoughts / Akasha
+CYAN = "\033[96m"  # Thoughts / Akasha
 GREEN = "\033[92m"  # Action / Earth
-GOLD = "\033[93m"   # Mercy / Truth
-RED = "\033[91m"    # Error / Fire
-BLUE = "\033[94m"   # Deep System
+GOLD = "\033[93m"  # Mercy / Truth
+RED = "\033[91m"  # Error / Fire
+BLUE = "\033[94m"  # Deep System
+
 
 def check_connection():
     """Ping the Milk Ocean Router"""
@@ -41,13 +42,25 @@ def check_connection():
     except:
         return False
 
+
 def print_header():
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"{BLUE}╔══════════════════════════════════════════════════════════════╗{RESET}")
-    print(f"{BLUE}║               VIBE OS - IRON SHELL v1.0                      ║{RESET}")
-    print(f"{BLUE}║          Connected to Node: {BASE_URL}                     ║{RESET}")
-    print(f"{BLUE}╚══════════════════════════════════════════════════════════════╝{RESET}")
-    print(f"\nType '{BOLD}exit{RESET}' to quit. Type '{BOLD}status{RESET}' for system health.\n")
+    os.system("cls" if os.name == "nt" else "clear")
+    print(
+        f"{BLUE}╔══════════════════════════════════════════════════════════════╗{RESET}"
+    )
+    print(
+        f"{BLUE}║               VIBE OS - IRON SHELL v1.0                      ║{RESET}"
+    )
+    print(
+        f"{BLUE}║          Connected to Node: {BASE_URL}                     ║{RESET}"
+    )
+    print(
+        f"{BLUE}╚══════════════════════════════════════════════════════════════╝{RESET}"
+    )
+    print(
+        f"\nType '{BOLD}exit{RESET}' to quit. Type '{BOLD}status{RESET}' for system health.\n"
+    )
+
 
 def send_prayer(message, agent_id="guest"):
     """Sents a request to the Milk Ocean Router"""
@@ -59,7 +72,7 @@ def send_prayer(message, agent_id="guest"):
         "agent_id": agent_id,
         "signature": "cli_override",
         "public_key": "cli_key",
-        "timestamp": int(time.time() * 1000)
+        "timestamp": int(time.time() * 1000),
     }
 
     try:
@@ -74,9 +87,11 @@ def send_prayer(message, agent_id="guest"):
         print(f"\n{RED}❌ TRANSMISSION ERROR: {e}{RESET}")
         return None
 
+
 def parse_response(data):
     """Parses the intelligent JSON output from UniversalProvider"""
-    if not data: return
+    if not data:
+        return
 
     # 1. Check for Queue
     if data.get("status") == "queued":
@@ -110,6 +125,7 @@ def parse_response(data):
     print(f"\n{BOLD}🤖 ENVOY:{RESET}")
     print(f"{GOLD}{content}{RESET}\n")
 
+
 def main():
     # 1. Wait for Kernel
     print(f"{DIM}Waiting for VibeOS Kernel at {BASE_URL}...{RESET}")
@@ -120,7 +136,9 @@ def main():
         sys.stdout.flush()
         retries += 1
         if retries > 10:
-            print(f"\n{RED}❌ KERNEL NOT FOUND. Did you run './vibe' in another tab?{RESET}")
+            print(
+                f"\n{RED}❌ KERNEL NOT FOUND. Did you run './vibe' in another tab?{RESET}"
+            )
             sys.exit(1)
 
     print_header()
@@ -128,7 +146,7 @@ def main():
     # 2. Identity Check
     identity = "guest"
     if os.path.exists("data/keys/private.pem"):
-        identity = "HIL" # Human In Loop
+        identity = "HIL"  # Human In Loop
         print(f"{GREEN}🔐 IDENTITY VERIFIED: CITIZEN MODE{RESET}")
     else:
         print(f"{DIM}👁️  IDENTITY UNVERIFIED: GUEST MODE{RESET}")
@@ -138,7 +156,7 @@ def main():
         try:
             user_input = input(f"{BLUE}YOU > {RESET}")
 
-            if user_input.lower() in ['exit', 'quit']:
+            if user_input.lower() in ["exit", "quit"]:
                 print(f"{DIM}Closing Neural Link...{RESET}")
                 break
 
@@ -153,6 +171,7 @@ def main():
             break
         except Exception as e:
             print(f"{RED}CRASH: {e}{RESET}")
+
 
 if __name__ == "__main__":
     main()

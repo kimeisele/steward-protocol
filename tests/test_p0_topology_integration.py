@@ -23,7 +23,7 @@ def test_topology_annotation():
         title="HERALD task - high authority",
         description="Generate content for blog post",
         priority=50,
-        assigned_agent="herald"
+        assigned_agent="herald",
     )
 
     # Verify topology annotation
@@ -37,7 +37,9 @@ def test_topology_annotation():
     assert task.topology_layer == placement.layer
     assert task.varna == placement.varna
 
-    print(f"✅ Task annotated: layer={task.topology_layer}, varna={task.varna}, routing={task.routing_priority}")
+    print(
+        f"✅ Task annotated: layer={task.topology_layer}, varna={task.varna}, routing={task.routing_priority}"
+    )
 
 
 def test_milk_ocean_routing():
@@ -45,25 +47,30 @@ def test_milk_ocean_routing():
     router = MilkOceanRouter()
 
     # Test 1: Normal task → Should route (not blocked)
-    result = router.process_prayer(
-        user_input="Fix minor UI bug",
-        agent_id="TEST"
+    result = router.process_prayer(user_input="Fix minor UI bug", agent_id="TEST")
+    assert (
+        result["status"] != "blocked"
+    ), f"Normal task should not be blocked, got {result['status']}"
+    print(
+        f"✅ MilkOcean routed 'minor bug': status={result['status']}, path={result.get('path', 'N/A')}"
     )
-    assert result["status"] != "blocked", f"Normal task should not be blocked, got {result['status']}"
-    print(f"✅ MilkOcean routed 'minor bug': status={result['status']}, path={result.get('path', 'N/A')}")
 
     # Test 2: Complex task → Should route to Science/HIGH
     result = router.process_prayer(
         user_input="Implement complex algorithm with performance optimization",
-        agent_id="TEST"
+        agent_id="TEST",
     )
-    assert result["status"] != "blocked", f"Complex task should not be blocked, got {result['status']}"
-    print(f"✅ MilkOcean routed 'complex algorithm': status={result['status']}, path={result.get('path', 'N/A')}")
+    assert (
+        result["status"] != "blocked"
+    ), f"Complex task should not be blocked, got {result['status']}"
+    print(
+        f"✅ MilkOcean routed 'complex algorithm': status={result['status']}, path={result.get('path', 'N/A')}"
+    )
 
     # Test 3: Very large input → Should be rejected
     result = router.process_prayer(
         user_input="x" * 10000,  # 10k chars - should trigger size limit
-        agent_id="SPAMMER"
+        agent_id="SPAMMER",
     )
     # Note: If not blocked, that's OK - Narasimha will catch it
     # MilkOcean focuses on routing, Narasimha on content security
@@ -86,7 +93,7 @@ def test_topology_aware_sorting():
     task1 = tm.add_task(
         title="Governance decision - CIVIC",
         priority=50,  # Same user priority
-        assigned_agent="civic"
+        assigned_agent="civic",
     )
     tasks.append(task1)
 
@@ -94,7 +101,7 @@ def test_topology_aware_sorting():
     task2 = tm.add_task(
         title="Security patrol - WATCHMAN",
         priority=50,  # Same user priority
-        assigned_agent="watchman"
+        assigned_agent="watchman",
     )
     tasks.append(task2)
 
@@ -102,7 +109,7 @@ def test_topology_aware_sorting():
     task3 = tm.add_task(
         title="Content generation - HERALD",
         priority=50,  # Same user priority
-        assigned_agent="herald"
+        assigned_agent="herald",
     )
     tasks.append(task3)
 
@@ -110,10 +117,14 @@ def test_topology_aware_sorting():
     next_task = tm.get_next_task()
 
     assert next_task is not None
-    assert next_task.assignee in ["civic", "herald"], \
-        f"Topology sort should prioritize CIVIC or HERALD, got {next_task.assignee} (title={next_task.title})"
+    assert next_task.assignee in [
+        "civic",
+        "herald",
+    ], f"Topology sort should prioritize CIVIC or HERALD, got {next_task.assignee} (title={next_task.title})"
 
-    print(f"✅ Topology-aware sort prioritized: {next_task.assignee} (layer={next_task.topology_layer})")
+    print(
+        f"✅ Topology-aware sort prioritized: {next_task.assignee} (layer={next_task.topology_layer})"
+    )
 
     # Cleanup
     for task in tasks:
@@ -131,14 +142,16 @@ def test_milk_ocean_integration_in_task_manager():
     task = tm.add_task(
         title="CRITICAL: System down emergency",
         description="Immediate attention required",
-        priority=100
+        priority=100,
     )
 
     # routing_priority should be set (0-3)
     assert task.routing_priority is not None
     assert 0 <= task.routing_priority <= 3
 
-    print(f"✅ MilkOcean set routing_priority={task.routing_priority} for critical task")
+    print(
+        f"✅ MilkOcean set routing_priority={task.routing_priority} for critical task"
+    )
 
     # Cleanup
     tm.update_task(task.id, status=TaskStatus.COMPLETED)
@@ -159,7 +172,7 @@ def test_fractal_architecture_end_to_end():
         title="Update constitutional amendment",
         description="Critical governance decision",
         priority=80,
-        assigned_agent="civic"
+        assigned_agent="civic",
     )
 
     # Step 2: Create low-priority WATCHMAN task
@@ -167,7 +180,7 @@ def test_fractal_architecture_end_to_end():
         title="Routine security patrol",
         description="Check system health",
         priority=80,  # SAME user priority as CIVIC
-        assigned_agent="watchman"
+        assigned_agent="watchman",
     )
 
     # Step 3: Verify both tasks have topology metadata
@@ -186,20 +199,25 @@ def test_fractal_architecture_end_to_end():
     watchman_placement = get_agent_placement("watchman")
 
     print(f"CIVIC placement: {civic_placement.layer if civic_placement else 'None'}")
-    print(f"WATCHMAN placement: {watchman_placement.layer if watchman_placement else 'None'}")
+    print(
+        f"WATCHMAN placement: {watchman_placement.layer if watchman_placement else 'None'}"
+    )
     print(f"Next task chosen: {next_task.assignee} (layer={next_task.topology_layer})")
 
     # Civic should have higher authority than Watchman
     if civic_placement and watchman_placement:
-        assert civic_placement.authority_level > watchman_placement.authority_level, \
-            "CIVIC should have higher authority than WATCHMAN"
+        assert (
+            civic_placement.authority_level > watchman_placement.authority_level
+        ), "CIVIC should have higher authority than WATCHMAN"
 
     # Cleanup
     tm.update_task(civic_task.id, status=TaskStatus.COMPLETED)
     tm.update_task(watchman_task.id, status=TaskStatus.COMPLETED)
 
     print("✅ Fractal architecture works end-to-end!")
-    print("   Tasks route through: Narasimha → MilkOcean → Topology → NextTaskGenerator")
+    print(
+        "   Tasks route through: Narasimha → MilkOcean → Topology → NextTaskGenerator"
+    )
     print("   Cosmological hierarchy is REAL, not decorative")
 
 

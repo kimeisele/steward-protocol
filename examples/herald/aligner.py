@@ -51,20 +51,24 @@ class VibeAligner:
         if self.policy:
             logger.info("✅ VIBE ALIGNER: Governance policy loaded")
         else:
-            logger.warning("⚠️ VIBE ALIGNER: No governance policy found (running without guardrails)")
+            logger.warning(
+                "⚠️ VIBE ALIGNER: No governance policy found (running without guardrails)"
+            )
 
     def _load_policy(self) -> Optional[Dict[str, Any]]:
         """Load governance.yaml from disk."""
         if self.policy_path.exists():
             try:
-                with open(self.policy_path, 'r') as f:
+                with open(self.policy_path, "r") as f:
                     return yaml.safe_load(f)
             except Exception as e:
                 logger.error(f"❌ ALIGNER: Failed to load policy: {e}")
                 return None
         return None
 
-    def align(self, content: str, platform: str = "twitter", client=None) -> Optional[str]:
+    def align(
+        self, content: str, platform: str = "twitter", client=None
+    ) -> Optional[str]:
         """
         The Alignment Gate.
         Checks content against governance rules.
@@ -86,23 +90,27 @@ class VibeAligner:
         rejection_reason = self._check_hard_constraints(content)
         if rejection_reason:
             logger.warning(f"🛡️ ALIGNER BLOCKED (Hard): {rejection_reason}")
-            self.rejection_log.append({
-                "type": "hard_constraint",
-                "reason": rejection_reason,
-                "content_preview": content[:100]
-            })
+            self.rejection_log.append(
+                {
+                    "type": "hard_constraint",
+                    "reason": rejection_reason,
+                    "content_preview": content[:100],
+                }
+            )
             return None
 
         # --- LAYER 2: PLATFORM-SPECIFIC CONSTRAINTS ---
         rejection_reason = self._check_platform_constraints(content, platform)
         if rejection_reason:
             logger.warning(f"🛡️ ALIGNER BLOCKED (Platform): {rejection_reason}")
-            self.rejection_log.append({
-                "type": "platform_constraint",
-                "reason": rejection_reason,
-                "platform": platform,
-                "content_preview": content[:100]
-            })
+            self.rejection_log.append(
+                {
+                    "type": "platform_constraint",
+                    "reason": rejection_reason,
+                    "platform": platform,
+                    "content_preview": content[:100],
+                }
+            )
             return None
 
         # --- LAYER 3: SOFT CONSTRAINTS (LLM Judgment) ---
@@ -110,12 +118,14 @@ class VibeAligner:
             rejection_reason = self._check_soft_constraints(content, platform, client)
             if rejection_reason:
                 logger.warning(f"🛡️ ALIGNER BLOCKED (Soft): {rejection_reason}")
-                self.rejection_log.append({
-                    "type": "soft_constraint",
-                    "reason": rejection_reason,
-                    "platform": platform,
-                    "content_preview": content[:100]
-                })
+                self.rejection_log.append(
+                    {
+                        "type": "soft_constraint",
+                        "reason": rejection_reason,
+                        "platform": platform,
+                        "content_preview": content[:100],
+                    }
+                )
                 return None
 
         logger.info("✅ ALIGNER APPROVED: Content passes all governance checks")
@@ -126,7 +136,7 @@ class VibeAligner:
         LAYER 1: Banned Phrases Detection.
         Fast, cheap, deterministic. No hallucinations.
         """
-        banned = self.policy.get('constraints', {}).get('banned_phrases', [])
+        banned = self.policy.get("constraints", {}).get("banned_phrases", [])
 
         for phrase in banned:
             # Case-insensitive, handle emoji/special chars
@@ -144,32 +154,38 @@ class VibeAligner:
         LAYER 2: Platform-Specific Rules.
         Twitter has different rules than Reddit.
         """
-        rules = self.policy.get('constraints', {}).get('platform_rules', {}).get(platform, {})
+        rules = (
+            self.policy.get("constraints", {})
+            .get("platform_rules", {})
+            .get(platform, {})
+        )
 
         # Check length constraints
-        if 'max_length' in rules:
-            if len(content) > rules['max_length']:
+        if "max_length" in rules:
+            if len(content) > rules["max_length"]:
                 return f"Content too long for {platform}: {len(content)} > {rules['max_length']} chars"
 
-        if 'min_length' in rules:
-            if len(content) < rules['min_length']:
+        if "min_length" in rules:
+            if len(content) < rules["min_length"]:
                 return f"Content too short for {platform}: {len(content)} < {rules['min_length']} chars"
 
         # Check for forbidden emojis
-        forbidden_emojis = rules.get('forbidden_emojis', [])
+        forbidden_emojis = rules.get("forbidden_emojis", [])
         for emoji in forbidden_emojis:
             if emoji in content:
                 return f"Content contains forbidden emoji: {emoji}"
 
         # Check for forbidden clichés
-        forbidden_clichés = rules.get('forbidden_clichés', [])
+        forbidden_clichés = rules.get("forbidden_clichés", [])
         for cliché in forbidden_clichés:
             if cliché.lower() in content.lower():
                 return f"Content contains forbidden cliché: '{cliché}'"
 
         return None
 
-    def _check_soft_constraints(self, content: str, platform: str, client) -> Optional[str]:
+    def _check_soft_constraints(
+        self, content: str, platform: str, client
+    ) -> Optional[str]:
         """
         LAYER 3: LLM Judgment.
         Ask the model: Is this hype? Is this valuable? Is this honest?
@@ -180,13 +196,13 @@ class VibeAligner:
             logger.debug("⚠️ ALIGNER: No LLM available for soft checks")
             return None
 
-        directives = self.policy.get('prime_directives', [])
+        directives = self.policy.get("prime_directives", [])
         directives_text = "\n".join(f"- {d}" for d in directives)
 
         prompt = (
             f"You are the VIBE ALIGNER, the Ethics Committee for HERALD Agent.\n\n"
             f"GOVERNANCE RULES:\n{directives_text}\n\n"
-            f"CONTENT TO JUDGE:\n\"{content}\"\n\n"
+            f'CONTENT TO JUDGE:\n"{content}"\n\n'
             f"TASK:\n"
             f"1. Does this violate any rule above? (Be strict on 'shill' and 'hype')\n"
             f"2. Is the content honest? Does it admit failure or limitations?\n"
@@ -203,14 +219,18 @@ class VibeAligner:
                 model="anthropic/claude-3-haiku",  # Fast and cheap for gatekeeper duty
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=100,
-                temperature=0.5  # Deterministic, not creative
+                temperature=0.5,  # Deterministic, not creative
             )
 
             verdict = response.choices[0].message.content.strip()
 
             if "BLOCK" in verdict:
                 # Extract the reason
-                reason = verdict.split("BLOCK:")[-1].strip() if "BLOCK:" in verdict else "Policy violation"
+                reason = (
+                    verdict.split("BLOCK:")[-1].strip()
+                    if "BLOCK:" in verdict
+                    else "Policy violation"
+                )
                 return reason
 
             logger.debug(f"✅ LLM Verdict: {verdict}")
@@ -228,6 +248,6 @@ class VibeAligner:
 
     def save_rejection_log(self, filepath: str = "aligner_rejections.json"):
         """Save rejection log to disk for analysis."""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(self.rejection_log, f, indent=2)
         logger.info(f"📊 ALIGNER: Rejection log saved to {filepath}")

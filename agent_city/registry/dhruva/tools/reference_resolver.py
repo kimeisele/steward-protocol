@@ -43,7 +43,9 @@ class ReferenceResolver:
         FactAuthority.WITNESS.value: 1,
     }
 
-    def __init__(self, root_path: Path = Path("."), truth_matrix: Optional[TruthMatrix] = None):
+    def __init__(
+        self, root_path: Path = Path("."), truth_matrix: Optional[TruthMatrix] = None
+    ):
         """Initialize Reference Resolver."""
         self.root_path = Path(root_path)
         self.truth_matrix = truth_matrix or TruthMatrix(root_path)
@@ -51,11 +53,7 @@ class ReferenceResolver:
         logger.info("⚖️  Reference Resolver initialized")
 
     def resolve_conflict(
-        self,
-        claim_a: str,
-        authority_a: str,
-        claim_b: str,
-        authority_b: str
+        self, claim_a: str, authority_a: str, claim_b: str, authority_b: str
     ) -> Dict[str, Any]:
         """
         Resolve a conflict between two claims.
@@ -103,11 +101,15 @@ class ReferenceResolver:
                 if claim_a < claim_b:
                     authoritative_claim = claim_a
                     authoritative_authority = authority_a
-                    reason = "Same authority; using lexicographic ordering (tie-breaker)"
+                    reason = (
+                        "Same authority; using lexicographic ordering (tie-breaker)"
+                    )
                 else:
                     authoritative_claim = claim_b
                     authoritative_authority = authority_b
-                    reason = "Same authority; using lexicographic ordering (tie-breaker)"
+                    reason = (
+                        "Same authority; using lexicographic ordering (tie-breaker)"
+                    )
 
         logger.info(f"✅ CONFLICT RESOLVED: '{authoritative_claim}'")
 
@@ -116,13 +118,11 @@ class ReferenceResolver:
             "authority": authoritative_authority,
             "reason": reason,
             "authority_level_winner": max(level_a, level_b),
-            "claims_compared": 2
+            "claims_compared": 2,
         }
 
     def find_conflicting_facts(
-        self,
-        statement: str,
-        fact_type: Optional[str] = None
+        self, statement: str, fact_type: Optional[str] = None
     ) -> Optional[str]:
         """
         Check if a statement contradicts any existing facts.
@@ -145,7 +145,9 @@ class ReferenceResolver:
 
             # Check for explicit contradiction
             if self._statements_contradict(statement_lower, existing_statement):
-                logger.warning(f"⚠️  CONFLICT DETECTED: '{statement}' contradicts existing fact")
+                logger.warning(
+                    f"⚠️  CONFLICT DETECTED: '{statement}' contradicts existing fact"
+                )
                 return existing_statement
 
         return None
@@ -183,8 +185,9 @@ class ReferenceResolver:
         ]
 
         for positive, negative in opposite_pairs:
-            if (positive in statement_a and negative in statement_b) or \
-               (negative in statement_a and positive in statement_b):
+            if (positive in statement_a and negative in statement_b) or (
+                negative in statement_a and positive in statement_b
+            ):
                 return True
 
         return False

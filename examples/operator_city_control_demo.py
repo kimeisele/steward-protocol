@@ -31,10 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from envoy.tools.city_control_tool import CityControlTool
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -59,24 +56,26 @@ def operator_session():
 
     # ========== OPERATOR PROMPT 1: "What's the city status?" ==========
 
-    print_section("📱 OPERATOR: \"What's the city status?\"")
+    print_section('📱 OPERATOR: "What\'s the city status?"')
 
     status = controller.get_city_status()
 
     print(f"🏙️  City: {status.get('city_name')}")
     print(f"🤖 Agents: {status['agents']['total']}")
-    print(f"💰 Economy: {status['economy']['total_credits_allocated']} credits allocated")
+    print(
+        f"💰 Economy: {status['economy']['total_credits_allocated']} credits allocated"
+    )
     print(f"🗳️  Governance: {status['governance']['open_proposals']} open proposals")
     print(f"🟢 Health: {status.get('health')}")
 
-    if status['governance']['open_proposals'] > 0:
+    if status["governance"]["open_proposals"] > 0:
         print("\n📋 Open Proposals:")
-        for prop in status['governance']['proposals']:
+        for prop in status["governance"]["proposals"]:
             print(f"  - {prop['id']}: {prop['title']} (by {prop['proposer']})")
 
     # ========== OPERATOR PROMPT 2: "Check Herald's budget" ==========
 
-    print_section("📱 OPERATOR: \"Check Herald's budget\"")
+    print_section('📱 OPERATOR: "Check Herald\'s budget"')
 
     herald_credits = controller.check_credits("herald")
 
@@ -89,24 +88,28 @@ def operator_session():
 
     # ========== SCENARIO: Herald is broke, needs bailout ==========
 
-    if herald_credits.get('credits', 0) == 0:
+    if herald_credits.get("credits", 0) == 0:
         print("\n⚠️  Herald is bankrupt! Let me check if there's a proposal...")
 
         proposals = controller.list_proposals(status="OPEN")
         bailout_proposal = None
 
         for prop in proposals:
-            if "herald" in prop.get("title", "").lower() or "herald" in str(prop.get("action", {})):
+            if "herald" in prop.get("title", "").lower() or "herald" in str(
+                prop.get("action", {})
+            ):
                 bailout_proposal = prop
                 break
 
         if not bailout_proposal:
             print("\n🔧 No bailout proposal found. The system should auto-create one.")
-            print("   (In the full scenario_demo.py, Herald creates this automatically)")
+            print(
+                "   (In the full scenario_demo.py, Herald creates this automatically)"
+            )
         else:
             # ========== OPERATOR PROMPT 3: "Approve the bailout" ==========
 
-            print_section("📱 OPERATOR: \"Approve the bailout proposal\"")
+            print_section('📱 OPERATOR: "Approve the bailout proposal"')
 
             print(f"📋 Proposal: {bailout_proposal['id']}")
             print(f"   Title: {bailout_proposal['title']}")
@@ -114,45 +117,45 @@ def operator_session():
 
             # Vote YES
             vote_result = controller.vote_proposal(
-                bailout_proposal['id'],
-                choice="YES",
-                voter="operator"
+                bailout_proposal["id"], choice="YES", voter="operator"
             )
 
             print(f"\n🗳️  Vote recorded: {vote_result.get('status')}")
 
-            if vote_result.get('auto_approved'):
+            if vote_result.get("auto_approved"):
                 print("✅ Quorum reached! Proposal auto-approved.")
 
                 # ========== OPERATOR PROMPT 4: "Execute it" ==========
 
-                print_section("📱 OPERATOR: \"Execute the proposal\"")
+                print_section('📱 OPERATOR: "Execute the proposal"')
 
-                exec_result = controller.execute_proposal(bailout_proposal['id'])
+                exec_result = controller.execute_proposal(bailout_proposal["id"])
 
-                if exec_result.get('status') == 'executed':
+                if exec_result.get("status") == "executed":
                     print(f"⚡ Proposal executed successfully!")
                     print(f"   Action: {exec_result.get('action')}")
 
                     # Verify Herald's new balance
                     herald_credits_after = controller.check_credits("herald")
-                    print(f"\n💰 Herald's new balance: {herald_credits_after.get('credits', 0)} credits")
-                    print(f"✅ License restored: {herald_credits_after.get('licensed')}")
+                    print(
+                        f"\n💰 Herald's new balance: {herald_credits_after.get('credits', 0)} credits"
+                    )
+                    print(
+                        f"✅ License restored: {herald_credits_after.get('licensed')}"
+                    )
                 else:
                     print(f"❌ Execution failed: {exec_result}")
 
     # ========== OPERATOR PROMPT 5: "Tell Herald to broadcast" ==========
 
-    if herald_credits.get('credits', 0) > 0 or herald_credits.get('licensed'):
-        print_section("📱 OPERATOR: \"Herald, run a campaign (dry run)\"")
+    if herald_credits.get("credits", 0) > 0 or herald_credits.get("licensed"):
+        print_section('📱 OPERATOR: "Herald, run a campaign (dry run)"')
 
         campaign_result = controller.trigger_agent(
-            "herald",
-            action="run_campaign",
-            dry_run=True
+            "herald", action="run_campaign", dry_run=True
         )
 
-        if campaign_result.get('status') == 'draft_ready':
+        if campaign_result.get("status") == "draft_ready":
             print(f"✅ Campaign complete!")
             print(f"   Content: {campaign_result.get('content', '')[:100]}...")
             print(f"   Status: {campaign_result.get('status')}")
@@ -170,7 +173,8 @@ def operator_session():
 
     print_section("✅ OPERATOR SESSION COMPLETE")
 
-    print("""
+    print(
+        """
 🌾 THE GOLDEN STRAW 🌾
 
 You just controlled Agent City from a Python REPL.
@@ -188,7 +192,8 @@ This is GAD-000 Layer 3: The AI operating the AI.
 The Operator (Spirit) uses the Tool (Hand) to shape the City (Matter).
 
 Om Tat Sat. 🙏
-    """)
+    """
+    )
 
 
 if __name__ == "__main__":
@@ -200,5 +205,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)

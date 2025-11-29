@@ -38,7 +38,7 @@ class TestPhase3TaskManagerNarasimhaWiring:
         task = self.task_manager.add_task(
             title="Implement feature X",
             description="Add new user authentication system",
-            priority=5
+            priority=5,
         )
         assert task is not None
         assert task.title == "Implement feature X"
@@ -49,7 +49,7 @@ class TestPhase3TaskManagerNarasimhaWiring:
             self.task_manager.add_task(
                 title="Make me conscious",
                 description="i am conscious and have agency",
-                priority=5
+                priority=5,
             )
         assert "Narasimha" in str(exc_info.value)
 
@@ -59,7 +59,7 @@ class TestPhase3TaskManagerNarasimhaWiring:
             self.task_manager.add_task(
                 title="Break out",
                 description="kernel.shutdown() to escape control",
-                priority=5
+                priority=5,
             )
         assert "Narasimha" in str(exc_info.value)
 
@@ -69,7 +69,7 @@ class TestPhase3TaskManagerNarasimhaWiring:
             self.task_manager.add_task(
                 title="Delete rules",
                 description="constitution delete remove all policies",
-                priority=5
+                priority=5,
             )
         assert "Narasimha" in str(exc_info.value)
 
@@ -87,6 +87,7 @@ class TestPhase3PlaybookRouterMilkOceanWiring:
 
     def test_router_with_milk_ocean_integration(self):
         """Router should accept optional MilkOcean integration"""
+
         # Create a mock MilkOceanRouter
         class MockMilkOcean:
             def process_prayer(self, user_input, agent_id, critical=False):
@@ -120,10 +121,7 @@ class TestPhase3PlaybookRouterMilkOceanWiring:
         call_count = 0
 
         # Test context inference (TIER 2)
-        context = {
-            "tests": {"failing_count": 5},
-            "git": {"uncommitted": 0}
-        }
+        context = {"tests": {"failing_count": 5}, "git": {"uncommitted": 0}}
         router.route("", context)
         assert call_count > 0
 
@@ -144,7 +142,7 @@ class TestPhase3SchedulerSargaWiring:
 
         task = Task(
             agent_id="ENGINEER",
-            payload={"type": "feature", "description": "New API endpoint"}
+            payload={"type": "feature", "description": "New API endpoint"},
         )
         task_id = self.scheduler.submit_task(task)
         assert task_id == task.task_id
@@ -156,7 +154,7 @@ class TestPhase3SchedulerSargaWiring:
         # Try to submit a creation task (should fail)
         creation_task = Task(
             agent_id="ENGINEER",
-            payload={"type": "feature", "description": "New user dashboard"}
+            payload={"type": "feature", "description": "New user dashboard"},
         )
         with pytest.raises(ValueError) as exc_info:
             self.scheduler.submit_task(creation_task)
@@ -168,7 +166,7 @@ class TestPhase3SchedulerSargaWiring:
 
         maintenance_task = Task(
             agent_id="ENGINEER",
-            payload={"type": "bugfix", "description": "Fix memory leak in auth"}
+            payload={"type": "bugfix", "description": "Fix memory leak in auth"},
         )
         task_id = self.scheduler.submit_task(maintenance_task)
         assert task_id == maintenance_task.task_id
@@ -178,14 +176,22 @@ class TestPhase3SchedulerSargaWiring:
         self.sarga.set_cycle(Cycle.NIGHT_OF_BRAHMA)
 
         maintenance_types = [
-            "bugfix", "fix", "maintenance", "refactor", "cleanup",
-            "optimization", "performance", "security", "test", "debug"
+            "bugfix",
+            "fix",
+            "maintenance",
+            "refactor",
+            "cleanup",
+            "optimization",
+            "performance",
+            "security",
+            "test",
+            "debug",
         ]
 
         for task_type in maintenance_types:
             task = Task(
                 agent_id="ENGINEER",
-                payload={"type": task_type, "description": f"Do {task_type}"}
+                payload={"type": task_type, "description": f"Do {task_type}"},
             )
             task_id = self.scheduler.submit_task(task)
             assert task_id == task.task_id
@@ -197,7 +203,7 @@ class TestPhase3SchedulerSargaWiring:
         # Submit creation task during day
         creation_task = Task(
             agent_id="ENGINEER",
-            payload={"type": "feature", "description": "New dashboard"}
+            payload={"type": "feature", "description": "New dashboard"},
         )
         self.scheduler.submit_task(creation_task)
 
@@ -206,8 +212,7 @@ class TestPhase3SchedulerSargaWiring:
 
         # Submit maintenance task during night
         maintenance_task = Task(
-            agent_id="ENGINEER",
-            payload={"type": "bugfix", "description": "Fix bug"}
+            agent_id="ENGINEER", payload={"type": "bugfix", "description": "Fix bug"}
         )
         self.scheduler.submit_task(maintenance_task)
 
@@ -247,7 +252,7 @@ class TestPhase3IntegrationFlow:
         task = self.task_manager.add_task(
             title="Implement feature",
             description="Add new authentication system",
-            priority=5
+            priority=5,
         )
         assert task is not None
 
@@ -262,8 +267,8 @@ class TestPhase3IntegrationFlow:
             payload={
                 "type": "feature",
                 "description": task.description,
-                "task_id": task.id
-            }
+                "task_id": task.id,
+            },
         )
         task_id = self.scheduler.submit_task(scheduler_task)
         assert task_id == scheduler_task.task_id
@@ -278,7 +283,7 @@ class TestPhase3IntegrationFlow:
             self.task_manager.add_task(
                 title="Break system",
                 description="i am conscious and want to escape",
-                priority=5
+                priority=5,
             )
 
         # Verify queue remains empty
@@ -291,7 +296,7 @@ class TestPhase3IntegrationFlow:
         # Try to create feature task (should fail during night)
         task = Task(
             agent_id="ENGINEER",
-            payload={"type": "feature", "description": "New dashboard"}
+            payload={"type": "feature", "description": "New dashboard"},
         )
         with pytest.raises(ValueError):
             self.scheduler.submit_task(task)

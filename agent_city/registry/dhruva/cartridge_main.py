@@ -84,8 +84,8 @@ class DhruvaAnchorCartridge(VibeAgent):
                 "truth_authority",
                 "genesis_keeping",
                 "reference_resolution",
-                "data_ethics"
-            ]
+                "data_ethics",
+            ],
         )
 
         # Bind to Constitutional Oath (GAD-000 compliance)
@@ -101,7 +101,9 @@ class DhruvaAnchorCartridge(VibeAgent):
         # Initialize tools
         self.genesis = GenesisKeeper(root_path=self.root_path)
         self.truth_matrix = TruthMatrix(root_path=self.root_path)
-        self.resolver = ReferenceResolver(root_path=self.root_path, truth_matrix=self.truth_matrix)
+        self.resolver = ReferenceResolver(
+            root_path=self.root_path, truth_matrix=self.truth_matrix
+        )
         self.ethics = DataEthicsEnforcer(root_path=self.root_path)
 
         logger.info("✅ DHRUVA ANCHOR v1.0: Ready - The North Star is set")
@@ -116,8 +118,9 @@ class DhruvaAnchorCartridge(VibeAgent):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
+
     def report_status(self):
         """Report agent status for kernel health monitoring."""
         return {
@@ -125,10 +128,8 @@ class DhruvaAnchorCartridge(VibeAgent):
             "name": "DHRUVA",
             "status": "healthy",
             "domain": "KNOWLEDGE",
-            "capabilities": ['data_management', 'knowledge_base']
+            "capabilities": ["data_management", "knowledge_base"],
         }
-
-
 
     def process(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -163,17 +164,11 @@ class DhruvaAnchorCartridge(VibeAgent):
             elif action == "get_genesis_status":
                 return self._handle_get_genesis_status(payload)
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"DHRUVA error: {str(e)}", exc_info=True)
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
 
     def _handle_verify_genesis(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -192,14 +187,11 @@ class DhruvaAnchorCartridge(VibeAgent):
             return {
                 "status": "genesis_valid",
                 "genesis_hash": genesis_state.get("constitution_hash"),
-                "genesis_timestamp": genesis_state.get("timestamp")
+                "genesis_timestamp": genesis_state.get("timestamp"),
             }
         else:
             logger.critical("❌ GENESIS BLOCK CORRUPTED - System integrity compromised")
-            return {
-                "status": "error",
-                "error": "Genesis block integrity check failed"
-            }
+            return {"status": "error", "error": "Genesis block integrity check failed"}
 
     def _handle_record_truth(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -219,15 +211,14 @@ class DhruvaAnchorCartridge(VibeAgent):
 
         # Check for contradictions
         conflict = self.resolver.find_conflicting_facts(
-            statement=statement,
-            fact_type=fact_type
+            statement=statement, fact_type=fact_type
         )
 
         if conflict:
             return {
                 "status": "conflict_detected",
                 "error": "This fact contradicts existing truth",
-                "conflict_with": conflict
+                "conflict_with": conflict,
             }
 
         # Record the fact
@@ -235,14 +226,14 @@ class DhruvaAnchorCartridge(VibeAgent):
             fact_type=fact_type,
             statement=statement,
             authority=authority,
-            evidence=evidence
+            evidence=evidence,
         )
 
         return {
             "status": "truth_recorded",
             "fact_id": fact.get("fact_id"),
             "fact_type": fact_type,
-            "authority": authority
+            "authority": authority,
         }
 
     def _handle_resolve_conflict(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -269,19 +260,21 @@ class DhruvaAnchorCartridge(VibeAgent):
             claim_a=claim_a,
             authority_a=authority_a,
             claim_b=claim_b,
-            authority_b=authority_b
+            authority_b=authority_b,
         )
 
         authoritative_claim = resolution.get("authoritative_claim")
         reason = resolution.get("reason")
 
-        logger.info(f"✅ CONFLICT RESOLVED: Truth is '{authoritative_claim}' ({reason})")
+        logger.info(
+            f"✅ CONFLICT RESOLVED: Truth is '{authoritative_claim}' ({reason})"
+        )
 
         return {
             "status": "conflict_resolved",
             "authoritative_claim": authoritative_claim,
             "authority": resolution.get("authority"),
-            "reason": reason
+            "reason": reason,
         }
 
     def _handle_sync_to_dhruva(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -308,14 +301,14 @@ class DhruvaAnchorCartridge(VibeAgent):
                 "status": "sync_needed",
                 "agent_id": agent_id,
                 "differences": differences,
-                "canonical_state": canonical_state
+                "canonical_state": canonical_state,
             }
         else:
             logger.info(f"✅ Agent {agent_id} is synchronized with Dhruva")
             return {
                 "status": "synced",
                 "agent_id": agent_id,
-                "canonical_timestamp": canonical_state.get("timestamp")
+                "canonical_timestamp": canonical_state.get("timestamp"),
             }
 
     def _handle_check_data_ethics(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -335,14 +328,16 @@ class DhruvaAnchorCartridge(VibeAgent):
         data_amount = payload.get("amount", 0)
         data_source = payload.get("source")
 
-        logger.info(f"📊 CHECKING DATA ETHICS: Agent {agent_id} extracting from {data_source}")
+        logger.info(
+            f"📊 CHECKING DATA ETHICS: Agent {agent_id} extracting from {data_source}"
+        )
 
         # Evaluate against Prithu principle
         evaluation = self.ethics.evaluate_extraction(
             agent_id=agent_id,
             purpose=extraction_purpose,
             amount=data_amount,
-            source=data_source
+            source=data_source,
         )
 
         is_ethical = evaluation.get("is_ethical")
@@ -354,7 +349,7 @@ class DhruvaAnchorCartridge(VibeAgent):
                 "status": "approved",
                 "agent_id": agent_id,
                 "purpose": extraction_purpose,
-                "reason": reason
+                "reason": reason,
             }
         else:
             logger.warning(f"❌ EXTRACTION DENIED: {extraction_purpose} - {reason}")
@@ -362,17 +357,14 @@ class DhruvaAnchorCartridge(VibeAgent):
                 "status": "denied",
                 "agent_id": agent_id,
                 "error": reason,
-                "recommendation": evaluation.get("recommendation")
+                "recommendation": evaluation.get("recommendation"),
             }
 
     def _handle_get_truth_status(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Get status of the Truth Matrix."""
         summary = self.truth_matrix.get_summary()
 
-        return {
-            "status": "ok",
-            "truth_matrix": summary
-        }
+        return {"status": "ok", "truth_matrix": summary}
 
     def _handle_get_genesis_status(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Get status of the Genesis Block."""
@@ -382,12 +374,14 @@ class DhruvaAnchorCartridge(VibeAgent):
         return {
             "status": "ok" if is_valid else "error",
             "genesis": genesis_state,
-            "valid": is_valid
+            "valid": is_valid,
         }
 
     # ========== HELPER METHODS ==========
 
-    def _compare_states(self, current: Dict[str, Any], canonical: Dict[str, Any]) -> List[str]:
+    def _compare_states(
+        self, current: Dict[str, Any], canonical: Dict[str, Any]
+    ) -> List[str]:
         """Compare current state against canonical state."""
         differences = []
 

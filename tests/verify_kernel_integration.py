@@ -23,10 +23,7 @@ import logging
 from pathlib import Path
 
 # Setup logging to see everything
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s | %(name)s | %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("INTEGRATION_TEST")
 
 # ============================================================================
@@ -35,6 +32,7 @@ logger = logging.getLogger("INTEGRATION_TEST")
 
 try:
     from vibe_core.kernel_impl import RealVibeKernel
+
     logger.info("🔌 CONNECTED: Real VibeOS Kernel imported")
 except ImportError as e:
     logger.error(f"❌ FATAL: Could not import real kernel: {e}")
@@ -46,6 +44,7 @@ except ImportError as e:
 
 try:
     from herald.cartridge_main import HeraldCartridge
+
     logger.info("🔌 CONNECTED: Herald Cartridge imported")
 except ImportError as e:
     logger.error(f"❌ FATAL: Could not import Herald: {e}")
@@ -53,6 +52,7 @@ except ImportError as e:
 
 try:
     from civic.cartridge_main import CivicCartridge
+
     logger.info("🔌 CONNECTED: Civic Cartridge imported")
 except ImportError as e:
     logger.error(f"❌ FATAL: Could not import Civic: {e}")
@@ -61,6 +61,7 @@ except ImportError as e:
 # Import Task for task creation
 try:
     from vibe_core import Task
+
     logger.info("🔌 CONNECTED: Task class imported")
 except ImportError as e:
     logger.error(f"❌ FATAL: Could not import Task: {e}")
@@ -153,10 +154,7 @@ def run_integration_test():
 
     print("\n[PHASE 5] ⚡ SUBMITTING TASK: CIVIC status report...")
 
-    task_civic = Task(
-        agent_id="civic",
-        payload={"action": "report_status"}
-    )
+    task_civic = Task(agent_id="civic", payload={"action": "report_status"})
 
     task_id_civic = kernel.submit_task(task_civic)
     print(f"   📨 Task submitted: {task_id_civic}")
@@ -186,9 +184,7 @@ def run_integration_test():
         else:
             print(f"      {output}")
     else:
-        logger.error(
-            f"❌ TASK FAILED or missing result: {result}"
-        )
+        logger.error(f"❌ TASK FAILED or missing result: {result}")
         sys.exit(1)
 
     # ========================================================================
@@ -197,10 +193,7 @@ def run_integration_test():
 
     print("\n[PHASE 8] ⚡ SUBMITTING TASK: HERALD status report...")
 
-    task_herald = Task(
-        agent_id="herald",
-        payload={"action": "report_status"}
-    )
+    task_herald = Task(agent_id="herald", payload={"action": "report_status"})
 
     task_id_herald = kernel.submit_task(task_herald)
     print(f"   📨 Task submitted: {task_id_herald}")
@@ -230,9 +223,7 @@ def run_integration_test():
         else:
             print(f"      {output}")
     else:
-        logger.error(
-            f"❌ HERALD TASK FAILED: {result}"
-        )
+        logger.error(f"❌ HERALD TASK FAILED: {result}")
         sys.exit(1)
 
     # ========================================================================

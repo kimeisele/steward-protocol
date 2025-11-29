@@ -12,7 +12,7 @@ import os
 def main():
     """Generate markdown dashboard from content.json."""
     try:
-        with open('dist/content.json', 'r') as f:
+        with open("dist/content.json", "r") as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print(f"Error reading content.json: {e}")
@@ -25,7 +25,7 @@ def main():
     lines.append("")
 
     # Check for image
-    image_file = data.get('image_filename', None)
+    image_file = data.get("image_filename", None)
     if image_file and os.path.exists(f"dist/{image_file}"):
         lines.append(f"**Visual Attachment:** `{image_file}` ✅")
     else:
@@ -39,7 +39,7 @@ def main():
     lines.append("- **Vibe Alignment:** ✅ Passed (Aligner verified)")
 
     # Output to stdout (will be appended to GITHUB_STEP_SUMMARY)
-    print('\n'.join(lines))
+    print("\n".join(lines))
 
 
 if __name__ == "__main__":

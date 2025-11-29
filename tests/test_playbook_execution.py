@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Any
 
-sys.path.insert(0, '/home/user/steward-protocol')
+sys.path.insert(0, "/home/user/steward-protocol")
 
 from vibe_core.scheduling.task import Task
 from vibe_core.agent_protocol import VibeAgent, AgentManifest
@@ -68,7 +68,7 @@ class MockKernel:
             print(f"      Available agents: {list(self.agents.keys())}")
             return {
                 "status": "error",
-                "reason": f"Agent {agent_id} not found. Available: {list(self.agents.keys())}"
+                "reason": f"Agent {agent_id} not found. Available: {list(self.agents.keys())}",
             }
 
         action = task.payload.get("action") or task.payload.get("method")
@@ -83,11 +83,12 @@ class MockKernel:
         except Exception as e:
             print(f"       ❌ CRASH: {e}")
             import traceback
+
             traceback.print_exc()
             return {
                 "status": "error",
                 "error": str(e),
-                "traceback": traceback.format_exc()
+                "traceback": traceback.format_exc(),
             }
 
 
@@ -100,7 +101,9 @@ def setup_env():
 
     # Initialize git repo
     os.system(f"git init {REPO_DIR} > /dev/null 2>&1")
-    os.system(f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'")
+    os.system(
+        f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'"
+    )
     print(f"✅ Test environment: {SANDBOX_DIR}, {REPO_DIR}")
 
 
@@ -157,8 +160,8 @@ async def test_agent_dispatch():
         payload={
             "action": "manifest_reality",
             "path": "test.py",
-            "content": "def hello():\n    print('Hello')\n"
-        }
+            "content": "def hello():\n    print('Hello')\n",
+        },
     )
     eng_result = await kernel.submit_task(engineer_task)
     if eng_result.get("status") == "manifested":
@@ -172,10 +175,7 @@ async def test_agent_dispatch():
     print("\n[B] Testing AUDITOR dispatch...")
     auditor_task = Task(
         agent_id="auditor",
-        payload={
-            "action": "verify_changes",
-            "path": eng_result.get("path")
-        }
+        payload={"action": "verify_changes", "path": eng_result.get("path")},
     )
     aud_result = await kernel.submit_task(auditor_task)
     if aud_result.get("passed"):
@@ -189,10 +189,13 @@ async def test_agent_dispatch():
     print("\n[C] Testing CHRONICLE dispatch (BLIND SPOT #2)...")
     chronicle_task = Task(
         agent_id="chronicle",
-        payload={"action": "manifest_reality", "files": ["test.py"]}
+        payload={"action": "manifest_reality", "files": ["test.py"]},
     )
     chron_result = await kernel.submit_task(chronicle_task)
-    if "error" in chron_result or chron_result.get("reason") == "Agent chronicle not found":
+    if (
+        "error" in chron_result
+        or chron_result.get("reason") == "Agent chronicle not found"
+    ):
         print(f"   🚨 BLIND SPOT #2 EXPOSED: Chronicle not available!")
         print(f"      The playbook expects 'chronicle' but we have 'archivist'")
         print(f"      Result: {chron_result}")
@@ -208,8 +211,8 @@ async def test_agent_dispatch():
             "source_path": eng_result.get("path"),
             "dest_path": "test.py",
             "audit_result": aud_result,
-            "message": "Test commit"
-        }
+            "message": "Test commit",
+        },
     )
     os.chdir(REPO_DIR)
     arch_result = await kernel.submit_task(arch_task)

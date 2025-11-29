@@ -67,7 +67,7 @@ class TestHeraldResilience:
             "Agents without keys",
             "Trust but verify",
             "Docker solved",
-            "Kubernetes solved"
+            "Kubernetes solved",
         ]
         matches = [f for f in valid_fallbacks if f in content]
         assert len(matches) > 0, f"Content doesn't match fallback patterns: {content}"
@@ -248,6 +248,7 @@ class TestHeraldResilience:
 
 
 # ========== PERFORMANCE & LIMITS TESTS ==========
+
 
 class TestHeraldLimits:
     """Test that HERALD respects constraints."""

@@ -51,7 +51,7 @@ class OfferingHandler:
         agent_id: str,
         raw_output: Any,
         context: Optional[Dict[str, Any]] = None,
-        require_user_acceptance: bool = True
+        require_user_acceptance: bool = True,
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """
         Transform raw work into sacred offering.
@@ -74,7 +74,7 @@ class OfferingHandler:
             "offering_id": f"offering_{agent_id}_{datetime.now(timezone.utc).isoformat()}",
             "agent_id": agent_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "stages": {}
+            "stages": {},
         }
 
         # STAGE 1: SANCTIFY (Regulative Principle Checks)
@@ -82,7 +82,7 @@ class OfferingHandler:
         is_pure, purity_reason = self._sanctify(raw_output, context)
         result["stages"]["sanctify"] = {
             "status": "PASS" if is_pure else "FAIL",
-            "reason": purity_reason
+            "reason": purity_reason,
         }
 
         if not is_pure:
@@ -96,21 +96,21 @@ class OfferingHandler:
         result["stages"]["arrange"] = {
             "status": "PASS",
             "formatted": True,
-            "lines": len(str(beautiful_output).split('\n'))
+            "lines": len(str(beautiful_output).split("\n")),
         }
-        logger.info(f"✅ Output beautifully formatted ({result['stages']['arrange']['lines']} lines)")
+        logger.info(
+            f"✅ Output beautifully formatted ({result['stages']['arrange']['lines']} lines)"
+        )
 
         # STAGE 3: OFFER (User Acceptance / Puja)
         if require_user_acceptance:
             logger.info("\n🙏 STAGE 3: OFFERING (Awaiting User Acceptance / Puja)...")
             is_accepted, acceptance_reason = self._request_acceptance(
-                agent_id=agent_id,
-                beautiful_output=beautiful_output,
-                context=context
+                agent_id=agent_id, beautiful_output=beautiful_output, context=context
             )
             result["stages"]["offer"] = {
                 "status": "ACCEPTED" if is_accepted else "REJECTED",
-                "reason": acceptance_reason
+                "reason": acceptance_reason,
             }
 
             if not is_accepted:
@@ -123,7 +123,7 @@ class OfferingHandler:
             logger.info("\n⏭️ STAGE 3: OFFER (Skipped - auto-acceptance mode)")
             result["stages"]["offer"] = {
                 "status": "AUTO_ACCEPTED",
-                "reason": "No user validation required"
+                "reason": "No user validation required",
             }
 
         # STAGE 4: DISTRIBUTE (Prasadam - Public Distribution)
@@ -132,11 +132,11 @@ class OfferingHandler:
             offering_id=result["offering_id"],
             beautiful_output=beautiful_output,
             agent_id=agent_id,
-            context=context
+            context=context,
         )
         result["stages"]["distribute"] = {
             "status": "DISTRIBUTED" if is_distributed else "PENDING",
-            "reason": distribution_reason
+            "reason": distribution_reason,
         }
 
         if is_distributed:
@@ -151,7 +151,9 @@ class OfferingHandler:
 
         return True, "Offering successfully presented", result
 
-    def _sanctify(self, raw_output: Any, context: Optional[Dict] = None) -> Tuple[bool, str]:
+    def _sanctify(
+        self, raw_output: Any, context: Optional[Dict] = None
+    ) -> Tuple[bool, str]:
         """
         STAGE 1: SANCTIFY
         Check if output passes all 4 Regulative Principles.
@@ -167,17 +169,26 @@ class OfferingHandler:
         if isinstance(raw_output, dict):
             confidence = raw_output.get("confidence", 1.0)
             if confidence < 0.8:
-                return False, f"❌ Principle 2 (Satyam): Low confidence ({confidence}) - hallucination risk"
+                return (
+                    False,
+                    f"❌ Principle 2 (Satyam): Low confidence ({confidence}) - hallucination risk",
+                )
 
         # Principle 3: NO RESOURCE LEAKS / BLOAT (Tapas/Austerity)
         # Check output size (simple heuristic)
-        output_size = len(str(raw_output).encode('utf-8'))
+        output_size = len(str(raw_output).encode("utf-8"))
         if output_size > 100 * 1024 * 1024:  # 100MB limit
-            return False, f"❌ Principle 3 (Tapas): Output too large ({output_size} bytes)"
+            return (
+                False,
+                f"❌ Principle 3 (Tapas): Output too large ({output_size} bytes)",
+            )
 
         # Principle 4: NO UNAUTHORIZED CONNECTIONS (Saucam/Cleanliness)
         if isinstance(raw_output, dict) and raw_output.get("unauthorized_network"):
-            return False, "❌ Principle 4 (Saucam): Output contains unauthorized network operations"
+            return (
+                False,
+                "❌ Principle 4 (Saucam): Output contains unauthorized network operations",
+            )
 
         logger.info("✅ All Regulative Principles Verified")
         return True, "All principles honored"
@@ -190,6 +201,7 @@ class OfferingHandler:
         if isinstance(raw_output, dict):
             # Pretty-print JSON-like output
             import json
+
             return json.dumps(raw_output, indent=2, ensure_ascii=False)
         elif isinstance(raw_output, str):
             return raw_output
@@ -198,10 +210,7 @@ class OfferingHandler:
             return str(raw_output)
 
     def _request_acceptance(
-        self,
-        agent_id: str,
-        beautiful_output: str,
-        context: Optional[Dict] = None
+        self, agent_id: str, beautiful_output: str, context: Optional[Dict] = None
     ) -> Tuple[bool, str]:
         """
         STAGE 3: OFFER (Puja)
@@ -218,7 +227,9 @@ class OfferingHandler:
         # In production, this would be an interactive prompt
         # For MVP, we auto-accept and log
         logger.info(f"📝 Waiting for user acceptance of output from {agent_id}...")
-        logger.info(f"   Preview: {beautiful_output[:100]}{'...' if len(beautiful_output) > 100 else ''}")
+        logger.info(
+            f"   Preview: {beautiful_output[:100]}{'...' if len(beautiful_output) > 100 else ''}"
+        )
 
         # AUTO-ACCEPT with note (should be user interaction in production)
         return True, "User Accepted (Auto-approval in MVP mode)"
@@ -228,7 +239,7 @@ class OfferingHandler:
         offering_id: str,
         beautiful_output: str,
         agent_id: str,
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
     ) -> Tuple[bool, str]:
         """
         STAGE 4: DISTRIBUTE (Prasadam)
@@ -263,7 +274,7 @@ class OfferingHandler:
                 self.offerings_accepted / self.offerings_processed * 100
                 if self.offerings_processed > 0
                 else 0
-            )
+            ),
         }
 
 
@@ -283,7 +294,7 @@ def present_offering(
     agent_id: str,
     raw_output: Any,
     context: Optional[Dict[str, Any]] = None,
-    require_user_acceptance: bool = True
+    require_user_acceptance: bool = True,
 ) -> Tuple[bool, str, Dict[str, Any]]:
     """
     Convenience function to present an offering using the global handler.
@@ -293,5 +304,5 @@ def present_offering(
         agent_id=agent_id,
         raw_output=raw_output,
         context=context,
-        require_user_acceptance=require_user_acceptance
+        require_user_acceptance=require_user_acceptance,
     )

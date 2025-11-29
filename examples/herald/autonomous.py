@@ -12,8 +12,10 @@ if os.getenv("OPENROUTER_API_KEY"):
 try:
     # 1. The Engine
     from vibe_core.kernel import VibeKernel
+
     # 2. The Protocol (New SDK)
     from steward.client import StewardClient
+
     print("✅ SYSTEM: Engine & Protocol loaded.")
 except ImportError as e:
     print(f"❌ ERROR: Dependencies missing. {e}")

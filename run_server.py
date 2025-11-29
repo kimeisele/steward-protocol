@@ -44,8 +44,8 @@ sys.path.insert(0, str(project_root))
 # Setup comprehensive logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("STEWARD_BOOTLOADER")
 
@@ -70,8 +70,13 @@ class StewardBootLoader:
     6. Start the FastAPI Gateway
     """
 
-    def __init__(self, ledger_path: str = None, port: int = 8000, host: str = "0.0.0.0",
-                 config_path: str = "config/matrix.yaml"):
+    def __init__(
+        self,
+        ledger_path: str = None,
+        port: int = 8000,
+        host: str = "0.0.0.0",
+        config_path: str = "config/matrix.yaml",
+    ):
         """
         Initialize the bootloader.
 
@@ -112,8 +117,12 @@ class StewardBootLoader:
 
             logger.info(f"✅ Configuration loaded: {self.config.city_name}")
             logger.info(f"   Version: {self.config.federation_version}")
-            logger.info(f"   Economy: {self.config.economy.initial_credits} initial credits")
-            logger.info(f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold")
+            logger.info(
+                f"   Economy: {self.config.economy.initial_credits} initial credits"
+            )
+            logger.info(
+                f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold"
+            )
 
             # Validate configuration
             validation_report = loader.validate()
@@ -163,9 +172,7 @@ class StewardBootLoader:
         # Use BootOrchestrator for unified agent discovery
         # BLOCKER #0: Pass Phoenix Config to orchestrator
         orchestrator = BootOrchestrator(
-            ledger_path=self.ledger_path,
-            project_root=project_root,
-            config=self.config
+            ledger_path=self.ledger_path, project_root=project_root, config=self.config
         )
 
         try:
@@ -200,7 +207,7 @@ class StewardBootLoader:
             return False
 
         # Check that ENVOY has the HIL Assistant
-        if not hasattr(envoy, 'hil_assistant'):
+        if not hasattr(envoy, "hil_assistant"):
             logger.error("❌ ENVOY missing HIL Assistant Tool")
             return False
 
@@ -236,7 +243,9 @@ class StewardBootLoader:
         logger.info(f"   Docs: http://{self.host}:{self.port}/docs")
         logger.info(f"   Health: http://{self.host}:{self.port}/health")
 
-        logger.info("\n🔌 API Gateway is live and ready to receive commands from the Frontend")
+        logger.info(
+            "\n🔌 API Gateway is live and ready to receive commands from the Frontend"
+        )
         logger.info("📡 ENVOY is listening via POST /v1/chat")
         logger.info("🛡️  GAD-000: HIL Assistant filters complexity")
         logger.info("✅ SYSTEM READY FOR FIRST CONTACT")
@@ -261,7 +270,7 @@ class StewardBootLoader:
                 port=self.port,
                 log_level="info",
                 access_log=True,
-                reload=False  # Disable reload in production
+                reload=False,  # Disable reload in production
             )
         except KeyboardInterrupt:
             logger.info("\n\n👋 Server shutdown requested")
@@ -313,35 +322,30 @@ Examples:
   python3 run_server.py                    # Start on localhost:8000
   python3 run_server.py --port 9000        # Start on localhost:9000
   python3 run_server.py --host 0.0.0.0     # Listen on all interfaces
-        """
+        """,
     )
 
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="API Gateway port (default: 8000)"
+        "--port", type=int, default=8000, help="API Gateway port (default: 8000)"
     )
     parser.add_argument(
         "--host",
         type=str,
         default="0.0.0.0",
-        help="API Gateway host (default: 0.0.0.0)"
+        help="API Gateway host (default: 0.0.0.0)",
     )
     parser.add_argument(
         "--ledger",
         type=str,
         default="data/vibe_ledger.db",
-        help="Path to SQLite ledger (default: data/vibe_ledger.db)"
+        help="Path to SQLite ledger (default: data/vibe_ledger.db)",
     )
 
     args = parser.parse_args()
 
     # Create and run bootloader
     bootloader = StewardBootLoader(
-        ledger_path=args.ledger,
-        port=args.port,
-        host=args.host
+        ledger_path=args.ledger, port=args.port, host=args.host
     )
 
     bootloader.run()

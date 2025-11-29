@@ -169,9 +169,13 @@ class WebSearchTool:
                 try:
                     # Ask the chain (local LLM) for general knowledge
                     prompt = f"Research query: {query}\nProvide a factual summary based on your internal knowledge."
-                    response = self.chain.respond(user_input=prompt, semantic_confidence=0.5, detected_intent="research")
+                    response = self.chain.respond(
+                        user_input=prompt,
+                        semantic_confidence=0.5,
+                        detected_intent="research",
+                    )
                     answer = response.content
-                    
+
                     return [
                         SearchResult(
                             title="Local Knowledge (Offline)",

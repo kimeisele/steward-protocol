@@ -52,23 +52,25 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
 
     # Check agent_id
     if cartridge.agent_id != expected_agent_id:
-        print(f"   ❌ Expected agent_id='{expected_agent_id}', got '{cartridge.agent_id}'")
+        print(
+            f"   ❌ Expected agent_id='{expected_agent_id}', got '{cartridge.agent_id}'"
+        )
         return False
     print(f"   ✅ agent_id = '{expected_agent_id}'")
 
     # Check required methods exist
-    if not hasattr(cartridge, 'process'):
+    if not hasattr(cartridge, "process"):
         print(f"   ❌ Missing process() method")
         return False
     print(f"   ✅ process() method exists")
 
-    if not hasattr(cartridge, 'report_status'):
+    if not hasattr(cartridge, "report_status"):
         print(f"   ❌ Missing report_status() method")
         return False
     print(f"   ✅ report_status() method exists")
 
     # Check capabilities
-    if not hasattr(cartridge, 'capabilities') or not cartridge.capabilities:
+    if not hasattr(cartridge, "capabilities") or not cartridge.capabilities:
         print(f"   ❌ No capabilities defined")
         return False
     print(f"   ✅ Capabilities: {cartridge.capabilities}")
@@ -90,7 +92,7 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
         if not isinstance(status, dict):
             print(f"   ❌ report_status() did not return dict")
             return False
-        if 'agent_id' not in status:
+        if "agent_id" not in status:
             print(f"   ❌ report_status() missing agent_id")
             return False
         print(f"   ✅ report_status() returns valid dict")
@@ -100,17 +102,14 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
 
     # Test process() with mock task
     try:
-        task = Task(
-            agent_id=expected_agent_id,
-            payload={"action": "status_check"}
-        )
+        task = Task(agent_id=expected_agent_id, payload={"action": "status_check"})
 
         # This will likely fail (action not recognized)
         # but we just want to make sure process() is callable
         try:
             result = cartridge.process(task)
             # Should get either success or "unknown action" error
-            if isinstance(result, dict) and 'status' in result:
+            if isinstance(result, dict) and "status" in result:
                 print(f"   ✅ process() is callable and returns dict")
             else:
                 print(f"   ⚠️  process() returned unexpected format")
@@ -122,6 +121,7 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
     except Exception as e:
         print(f"   ❌ process() failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

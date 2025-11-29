@@ -81,7 +81,10 @@ class DegradationChain:
         }
 
     def respond(
-        self, user_input: str, semantic_confidence: float, detected_intent: Optional[str] = None
+        self,
+        user_input: str,
+        semantic_confidence: float,
+        detected_intent: Optional[str] = None,
     ) -> DegradationResponse:
         """Generate response with graceful degradation."""
 
@@ -98,7 +101,10 @@ class DegradationChain:
         if semantic_confidence >= 0.60:
             clarification = self._generate_clarification(user_input, detected_intent)
             return DegradationResponse(
-                content=clarification, level=self._level, confidence=semantic_confidence, fallback_used="clarification"
+                content=clarification,
+                level=self._level,
+                confidence=semantic_confidence,
+                fallback_used="clarification",
             )
 
         # NETI NETI (<0.60): Low confidence
@@ -118,7 +124,10 @@ class DegradationChain:
             try:
                 response = self._local_llm.chat([{"role": "user", "content": user_input}])
                 return DegradationResponse(
-                    content=response, level=DegradationLevel.FULL, confidence=confidence, fallback_used="local_llm"
+                    content=response,
+                    level=DegradationLevel.FULL,
+                    confidence=confidence,
+                    fallback_used="local_llm",
                 )
             except Exception as e:
                 logger.warning(f"LocalLLM failed: {e}")

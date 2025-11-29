@@ -31,6 +31,7 @@ from examples.herald.aligner import VibeAligner
 
 logger = logging.getLogger("HERALD_BRAIN")
 
+
 # --- MODULE 1: THE EYES (Research) ---
 class ResearchEngine:
     """
@@ -58,12 +59,11 @@ class ResearchEngine:
             # Target: Real-world agent failures and security issues
             query = "ai agent security breaches identity spoofing autonomous systems failures 2024 2025"
             response = self.client.search(
-                query=query,
-                search_depth="basic",
-                max_results=2,
-                include_answer=True
+                query=query, search_depth="basic", max_results=2, include_answer=True
             )
-            result = response.get('answer') or response.get('results', [{}])[0].get('content')
+            result = response.get("answer") or response.get("results", [{}])[0].get(
+                "content"
+            )
             if result:
                 logger.info("📡 MARKET SIGNAL DETECTED")
             return result
@@ -107,14 +107,14 @@ class SeniorEditor:
                 "Is it generic AI slop? (ChatGPT-sounding clichés)",
                 "Is it overly promotional? (Selling instead of teaching)",
                 "Is it boring or obvious?",
-                "Does it lack technical substance?"
+                "Does it lack technical substance?",
             ],
             "reddit": [
                 "Does it read like a sales pitch?",
                 "Is it missing code examples or technical depth?",
                 "Does it use buzzwords without explanations?",
-                "Is the tone inappropriate for the subreddit culture?"
-            ]
+                "Is the tone inappropriate for the subreddit culture?",
+            ],
         }
 
         rules = criteria.get(platform, criteria["twitter"])
@@ -139,7 +139,7 @@ class SeniorEditor:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-sonnet",  # Editor needs high IQ
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=300
+                max_tokens=300,
             )
             verdict = response.choices[0].message.content.strip()
 
@@ -148,8 +148,10 @@ class SeniorEditor:
                 return draft
             else:
                 # Clean the rewrite
-                refined = verdict.replace('"', '').replace("'", "'")
-                logger.info(f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}...")
+                refined = verdict.replace('"', "").replace("'", "'")
+                logger.info(
+                    f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}..."
+                )
                 return refined
 
         except Exception as e:
@@ -196,7 +198,7 @@ class HeraldBrain:
             Path(__file__).parent.parent.parent / "steward" / "SPECIFICATION.md",
             Path("steward/SPECIFICATION.md"),
             Path("../../steward/SPECIFICATION.md"),
-            Path("README.md")
+            Path("README.md"),
         ]
         for p in paths:
             if p.exists():
@@ -264,33 +266,43 @@ class HeraldBrain:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-haiku:free",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=150
+                max_tokens=150,
             )
-            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             # Validate length
             if len(raw_draft) > 250:
-                logger.warning(f"⚠️ Content too long ({len(raw_draft)} chars), truncating")
+                logger.warning(
+                    f"⚠️ Content too long ({len(raw_draft)} chars), truncating"
+                )
                 raw_draft = raw_draft[:247] + "..."
 
             logger.info(f"✅ TWITTER DRAFT GENERATED: {len(raw_draft)} chars")
 
             # QUALITY GATE 1: Editor reviews and refines the draft
             if self.editor:
-                edited_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
+                edited_content = self.editor.critique_and_refine(
+                    raw_draft, platform="twitter"
+                )
             else:
                 logger.debug("⚠️ EDITOR: Not available, using raw draft")
                 edited_content = raw_draft
 
             # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
-            final_content = self.aligner.align(edited_content, platform="twitter", client=self.client)
+            final_content = self.aligner.align(
+                edited_content, platform="twitter", client=self.client
+            )
 
             if not final_content:
                 # Governance rejected the content. Fallback to safe spec reading.
-                logger.warning("⚠️ ALIGNER REJECTED: Content violates governance. Switching to fallback.")
+                logger.warning(
+                    "⚠️ ALIGNER REJECTED: Content violates governance. Switching to fallback."
+                )
                 return self._fallback_content()
 
-            logger.info(f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars (passed editor + aligner)")
+            logger.info(
+                f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars (passed editor + aligner)"
+            )
             return final_content
 
         except Exception as e:
@@ -326,7 +338,7 @@ class HeraldBrain:
             "r/singularity": "Audience: Futurists. Wants architectural implications and safety/alignment.",
             "r/programming": "Audience: Skeptics. Zero tolerance for hype. Show the 'Why' and 'How'.",
             "r/Python": "Audience: Python developers. Wants implementation details and libraries.",
-            "r/rust": "Audience: Rust evangelists. Wants type safety and zero-cost abstractions."
+            "r/rust": "Audience: Rust evangelists. Wants type safety and zero-cost abstractions.",
         }
         culture_prompt = cultures.get(subreddit, "Audience: Technical Developers.")
 
@@ -350,33 +362,38 @@ class HeraldBrain:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-sonnet",  # Smarter model for deep dives
                 messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
             content = response.choices[0].message.content
             draft_result = json.loads(content)
 
-            logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
+            logger.info(
+                f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars"
+            )
 
             # QUALITY GATE 1: Editor reviews the body (title is usually fine)
-            edited_body = draft_result.get('body', '')
+            edited_body = draft_result.get("body", "")
             if self.editor and edited_body:
                 refined_body = self.editor.critique_and_refine(
-                    edited_body,
-                    platform="reddit"
+                    edited_body, platform="reddit"
                 )
-                draft_result['body'] = refined_body
+                draft_result["body"] = refined_body
                 logger.info(f"✅ EDITOR REFINED REDDIT POST: {len(refined_body)} chars")
 
             # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
-            aligned_body = self.aligner.align(draft_result['body'], platform="reddit", client=self.client)
+            aligned_body = self.aligner.align(
+                draft_result["body"], platform="reddit", client=self.client
+            )
 
             if not aligned_body:
                 # Governance rejected the content. Return None to indicate failure.
                 logger.warning("⚠️ ALIGNER REJECTED: Reddit post violates governance.")
                 return None
 
-            draft_result['body'] = aligned_body
-            logger.info(f"✅ FINAL REDDIT POST: {len(aligned_body)} chars (passed editor + aligner)")
+            draft_result["body"] = aligned_body
+            logger.info(
+                f"✅ FINAL REDDIT POST: {len(aligned_body)} chars (passed editor + aligner)"
+            )
             return draft_result
 
         except Exception as e:
