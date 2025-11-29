@@ -297,7 +297,7 @@ class RealVibeKernel(VibeKernel):
         """Get kernel status"""
         return self._status
 
-    def register_agent(self, agent: VibeAgent) -> None:
+    def register_agent(self, agent: VibeAgent, spawn_process: bool = True) -> None:
         """
         Register an agent and inject kernel reference.
 
@@ -308,6 +308,13 @@ class RealVibeKernel(VibeKernel):
         This is a hard architectural constraint.
 
         ARCHITECTURE: Church (Steward) + State (Vibe) = Fused Governance
+
+        Args:
+            agent: The VibeAgent to register
+            spawn_process: If False, defer process spawning (used during discovery
+                          to avoid spawning 13+ processes in tight loop which causes
+                          import lock deadlocks). Processes are spawned later via
+                          spawn_registered_agents().
         """
 
         # STEP 1: THE INSPECTION (Does the agent possess the Oath badge?)
@@ -398,8 +405,9 @@ class RealVibeKernel(VibeKernel):
         agent.system = AgentSystemInterface(self, agent.agent_id)
         logger.info(f"🔌 {agent.agent_id} received system interface (sandbox: {agent.system.get_sandbox_path()})")
 
-        # Phase 2: Spawn Process
-        self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
+        # Phase 2: Spawn Process (deferred if spawn_process=False)
+        if spawn_process:
+            self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
@@ -442,9 +450,41 @@ class RealVibeKernel(VibeKernel):
             )
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
+        spawn_status = "spawned in isolated process" if spawn_process else "registered (process deferred)"
         logger.info(
-            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' registered and spawned in isolated process."
+            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}."
         )
+
+    def spawn_deferred_agents(self) -> int:
+        """
+        Spawn processes for all registered agents that don't have running processes.
+
+        Called after discovery to batch-spawn all agents at once, avoiding the
+        import lock deadlock that occurs when spawning 13+ processes in a tight loop.
+
+        Returns:
+            Number of agents spawned
+        """
+        spawned = 0
+        for agent_id, agent in self._agent_registry.items():
+            # Skip if already has a running process
+            if agent_id in self.process_manager.processes:
+                proc_info = self.process_manager.processes[agent_id]
+                if proc_info.process.is_alive():
+                    continue
+
+            # Spawn the process
+            try:
+                self.process_manager.spawn_agent(
+                    agent_id, type(agent), config=getattr(agent, "config", None)
+                )
+                spawned += 1
+                logger.info(f"🌱 Spawned deferred process for {agent_id}")
+            except Exception as e:
+                logger.error(f"❌ Failed to spawn {agent_id}: {e}")
+
+        logger.info(f"✅ Spawned {spawned} deferred agent processes")
+        return spawned
 
     def boot(self) -> None:
         """Boot the kernel - register all manifests and start scheduler"""

@@ -231,14 +231,19 @@ class BootOrchestrator:
                 f"      → Knowledge loaded: {len(graph.nodes)} nodes, {sum(len(e) for e in graph.edges.values())} edges"
             )
 
-            # Register Discoverer (Genesis Agent)
+            # Register Discoverer (Genesis Agent) - no separate process needed
             self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
-            self.kernel.register_agent(self.discoverer)
+            self.kernel.register_agent(self.discoverer, spawn_process=False)
             logger.info("      → Discoverer (Genesis Agent) registered")
 
-            # Discover all agents
+            # Discover all agents (processes are deferred to avoid deadlock)
             discovered_count = self.discoverer.discover_agents()
             logger.info(f"      → Discovered {discovered_count} agents")
+
+            # Spawn deferred processes now that discovery is complete
+            if discovered_count > 0:
+                spawned = self.kernel.spawn_deferred_agents()
+                logger.info(f"      → Spawned {spawned} agent processes")
 
             return True
         except Exception as e:
