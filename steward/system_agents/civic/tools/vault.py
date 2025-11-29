@@ -17,14 +17,56 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
 
 # Lazy import for cryptography to prevent import-time crashes
 Fernet = None
 InvalidToken = None
-import_error = None
+_cryptography_checked = False
+_cryptography_works = False
 
 logger = logging.getLogger("CIVIC_VAULT")
+
+
+def _check_cryptography_available() -> bool:
+    """
+    Pre-check if cryptography library ACTUALLY works.
+
+    This catches Rust panics BEFORE they crash the system.
+    A well-designed program doesn't crash - it degrades gracefully.
+
+    Returns:
+        True if cryptography works, False otherwise
+    """
+    global Fernet, InvalidToken, _cryptography_checked, _cryptography_works
+
+    if _cryptography_checked:
+        return _cryptography_works
+
+    _cryptography_checked = True
+
+    try:
+        from cryptography.fernet import Fernet as F
+        from cryptography.fernet import InvalidToken as IT
+
+        # Actually TEST it - import alone isn't enough!
+        key = F.generate_key()
+        cipher = F(key)
+        encrypted = cipher.encrypt(b"test")
+        decrypted = cipher.decrypt(encrypted)
+        assert decrypted == b"test"
+
+        # It works! Set globals
+        Fernet = F
+        InvalidToken = IT
+        _cryptography_works = True
+        logger.debug("✅ cryptography library verified working")
+        return True
+
+    except BaseException as e:
+        # Catches: ImportError, Exception, AND pyo3_runtime.PanicException
+        logger.warning(f"⚠️  cryptography unavailable ({type(e).__name__})")
+        _cryptography_works = False
+        return False
 
 
 class VaultError(Exception):
@@ -77,15 +119,17 @@ class CivicVault:
 
         Args:
             db_connection: SQLite connection from CivicBank
+
+        Raises:
+            VaultError: If cryptography is unavailable (clean error, no crash)
         """
-        # Lazy load cryptography
-        global Fernet, InvalidToken, import_error
-        if Fernet is None:
-            try:
-                from cryptography.fernet import Fernet, InvalidToken
-            except (ImportError, Exception) as e:
-                import_error = str(e)
-                raise ImportError(f"❌ cryptography library failed to initialize. Error: {import_error}")
+        # Pre-check cryptography BEFORE using it
+        # This catches Rust panics gracefully instead of crashing
+        if not _check_cryptography_available():
+            raise VaultError(
+                "🔐 Vault unavailable: cryptography library not functional. "
+                "Bank will continue without encryption features."
+            )
 
         self.conn = db_connection
         self._ensure_master_key()
