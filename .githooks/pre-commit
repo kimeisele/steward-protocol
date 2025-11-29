@@ -136,7 +136,7 @@ ALL_PYTHON_FILES=$(echo "$STAGED_FILES" | grep "\.py$" || true)
 
 if [ -n "$ALL_PYTHON_FILES" ]; then
     # Auto-format staged Python files
-    echo "$ALL_PYTHON_FILES" | xargs black --quiet 2>/dev/null || true
+    echo "$ALL_PYTHON_FILES" | xargs black --quiet --line-length=120 2>/dev/null || true
 
     # Restage formatted files
     echo "$ALL_PYTHON_FILES" | xargs git add 2>/dev/null || true
