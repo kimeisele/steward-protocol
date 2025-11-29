@@ -90,7 +90,7 @@ testpaths = ["tests"]
 packages = ["steward"]
 
 [tool.black]
-line-length = 88
+line-length = 120
 include = '\.pyi?$'
 exclude = '''
 /(
