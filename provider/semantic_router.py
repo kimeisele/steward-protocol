@@ -17,14 +17,15 @@ Architecture:
 5. Route based on confidence thresholds
 """
 
+import asyncio
 import logging
-import yaml
-import numpy as np
-from pathlib import Path
-from typing import Dict, Any, List, Set, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
-import asyncio
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+
+import numpy as np
+import yaml
 
 logger = logging.getLogger("SEMANTIC_ROUTER")
 
@@ -48,24 +49,20 @@ async def get_embedding_model():
             return _model
 
         try:
-            from sentence_transformers import SentenceTransformer
-
             # Specify cache directory to avoid re-downloads
             import os
+
+            from sentence_transformers import SentenceTransformer
 
             os.makedirs("data/models", exist_ok=True)
             os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
 
             logger.info("🧠 Loading sentence-transformers model (all-MiniLM-L6-v2)...")
-            _model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models"
-            )
+            _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models")
             logger.info("✓ Semantic model loaded and cached")
             return _model
         except ImportError:
-            logger.error(
-                "❌ sentence-transformers not installed. Install with: pip install sentence-transformers"
-            )
+            logger.error("❌ sentence-transformers not installed. Install with: pip install sentence-transformers")
             raise
         except Exception as e:
             logger.error(f"❌ Failed to load semantic model: {e}")
@@ -189,10 +186,7 @@ class SemanticRouter:
             # Cosine similarity
             similarity = float(
                 np.dot(input_embedding, concept_embedding)
-                / (
-                    np.linalg.norm(input_embedding) * np.linalg.norm(concept_embedding)
-                    + 1e-8
-                )
+                / (np.linalg.norm(input_embedding) * np.linalg.norm(concept_embedding) + 1e-8)
             )
 
             # Clamp to [0, 1]
@@ -200,10 +194,7 @@ class SemanticRouter:
 
             # Track concepts above threshold (even low confidence is useful for context)
             if similarity > 0.30:  # Lower threshold to capture more nuance
-                if (
-                    concept_name not in found_concepts
-                    or similarity > found_concepts[concept_name]
-                ):
+                if concept_name not in found_concepts or similarity > found_concepts[concept_name]:
                     found_concepts[concept_name] = similarity
 
         # Convert to SemanticConcept objects
@@ -211,11 +202,7 @@ class SemanticRouter:
         for concept_name, confidence in found_concepts.items():
             # Find category for this concept
             category = self._find_category(concept_name)
-            result.add(
-                SemanticConcept(
-                    name=concept_name, category=category, confidence=confidence
-                )
-            )
+            result.add(SemanticConcept(name=concept_name, category=category, confidence=confidence))
 
         return result
 
@@ -226,13 +213,13 @@ class SemanticRouter:
                 return category
         return "unknown"
 
-    async def route(
-        self, text: str, fallback_rules: Optional[List[Dict]] = None
-    ) -> Dict[str, Any]:
+    async def route(self, text: str, fallback_rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """
         KARMA (Routing): Deterministic path selection based on semantic concepts.
         Rules are evaluated top-to-bottom by priority.
         First matching rule wins (based on confidence thresholds).
+
+        Now enhanced with Unified Knowledge Graph for concept->agent mapping.
         """
         concepts_with_conf = await self.analyze(text)
 
@@ -240,9 +227,34 @@ class SemanticRouter:
         concept_names = {c.name for c in concepts_with_conf}
         max_confidence = max((c.confidence for c in concepts_with_conf), default=0.0)
 
-        logger.info(
-            f"🔍 Detected Concepts: {concept_names} (max confidence: {max_confidence:.2f})"
-        )
+        logger.info(f"🔍 Detected Concepts: {concept_names} (max confidence: {max_confidence:.2f})")
+
+        # NEW: Check knowledge graph for concept->agent mapping
+        try:
+            from vibe_core.knowledge.resolver import get_resolver
+
+            resolver = get_resolver()
+
+            # Check if any detected concept maps to a specific agent
+            for concept in concepts_with_conf:
+                agent_from_knowledge = resolver.get_agent_for_concept(concept.name)
+                if agent_from_knowledge:
+                    logger.info(
+                        f"📚 Knowledge Graph: '{concept.name}' → {agent_from_knowledge} "
+                        f"(confidence: {concept.confidence:.2f})"
+                    )
+                    return {
+                        "agent": agent_from_knowledge,
+                        "rule_name": f"Knowledge: {concept.name}",
+                        "response_type": "FAST",
+                        "intent_type": "CHAT",
+                        "concepts": concept_names,
+                        "concepts_with_confidence": concepts_with_conf,
+                        "matched_triggers": {concept.name},
+                        "confidence": concept.confidence,
+                    }
+        except Exception as e:
+            logger.debug(f"Knowledge graph routing skipped: {e}")
 
         rules_to_check = self.rules if self.rules else (fallback_rules or [])
 

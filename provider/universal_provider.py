@@ -18,13 +18,13 @@ Architecture:
 """
 
 import logging
-from typing import Dict, Any, List, Optional, Set
-from dataclasses import dataclass, field
-from enum import Enum
 import time
-import yaml
-import asyncio
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+
+import yaml
 
 # Import Core Definitions
 try:
@@ -121,9 +121,7 @@ class DeterministicRouter:
 
         return found_concepts
 
-    def route(
-        self, text: str, fallback_rules: Optional[List[Dict]] = None
-    ) -> Dict[str, Any]:
+    def route(self, text: str, fallback_rules: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """
         KARMA: Finds the deterministic route (agent, path, intent_type).
         Rules are evaluated top-to-bottom by priority.
@@ -148,9 +146,7 @@ class DeterministicRouter:
                     "response_type": rule.get("response_type", "FAST"),
                     "intent_type": rule.get("intent_type", "CHAT"),
                     "concepts": active_concepts,
-                    "matched_triggers": (
-                        triggers & active_concepts if triggers else set()
-                    ),
+                    "matched_triggers": (triggers & active_concepts if triggers else set()),
                 }
 
         # Ultimate fallback (should not reach here if YAML has fallback rule)
@@ -204,13 +200,9 @@ class UniversalProvider:
         if use_semantic and SemanticRouter:
             try:
                 self.semantic_router = SemanticRouter(knowledge_dir=knowledge_dir)
-                logger.info(
-                    "🧠 Semantic Router (PROJECT JNANA) initialized - Neural semantic understanding active"
-                )
+                logger.info("🧠 Semantic Router (PROJECT JNANA) initialized - Neural semantic understanding active")
             except Exception as e:
-                logger.warning(
-                    f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter"
-                )
+                logger.warning(f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter")
                 self.use_semantic = False
 
         # Fallback to deterministic router if semantic unavailable
@@ -226,9 +218,7 @@ class UniversalProvider:
         if ReflexEngine:
             try:
                 self.reflex_engine = ReflexEngine()
-                logger.info(
-                    "⚡ Reflex Engine initialized - Instant response layer active"
-                )
+                logger.info("⚡ Reflex Engine initialized - Instant response layer active")
             except Exception as e:
                 logger.warning(f"⚠️  Reflex Engine initialization failed: {e}")
 
@@ -236,12 +226,8 @@ class UniversalProvider:
         self.playbook_engine = None
         if DeterministicExecutor:
             try:
-                self.playbook_engine = DeterministicExecutor(
-                    knowledge_dir=knowledge_dir
-                )
-                logger.info(
-                    "🎯 Deterministic Executor initialized - Deterministic Intelligence active"
-                )
+                self.playbook_engine = DeterministicExecutor(knowledge_dir=knowledge_dir)
+                logger.info("🎯 Deterministic Executor initialized - Deterministic Intelligence active")
             except Exception as e:
                 logger.warning(f"⚠️  Playbook Engine initialization failed: {e}")
 
@@ -250,9 +236,7 @@ class UniversalProvider:
         if LLMEngineAdapter:
             try:
                 self.llm_engine = LLMEngineAdapter()
-                logger.info(
-                    "🧠 LLM Engine Adapter initialized - Intelligent fallback active"
-                )
+                logger.info("🧠 LLM Engine Adapter initialized - Intelligent fallback active")
             except Exception as e:
                 logger.warning(f"⚠️  LLM Engine Adapter initialization failed: {e}")
 
@@ -262,15 +246,11 @@ class UniversalProvider:
             from vibe_core.llm.degradation_chain import DegradationChain
 
             self.degradation_chain = DegradationChain()
-            logger.info(
-                f"🔄 Degradation Chain initialized (level: {self.degradation_chain.current_level.value})"
-            )
+            logger.info(f"🔄 Degradation Chain initialized (level: {self.degradation_chain.current_level.value})")
         except Exception as e:
             logger.warning(f"⚠️  Degradation Chain unavailable: {e}")
 
-        logger.info(
-            "🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)"
-        )
+        logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)")
 
     async def resolve_intent(self, user_input: str) -> IntentVector:
         """
@@ -284,9 +264,7 @@ class UniversalProvider:
             try:
                 route_result = await self.semantic_router.route(user_input)
             except Exception as e:
-                logger.warning(
-                    f"⚠️  Semantic routing failed: {e}, falling back to deterministic router"
-                )
+                logger.warning(f"⚠️  Semantic routing failed: {e}, falling back to deterministic router")
                 route_result = self.router.route(user_input)
         else:
             route_result = self.router.route(user_input)
@@ -308,7 +286,8 @@ class UniversalProvider:
         intent_type = intent_map.get(intent_type_str, IntentType.CHAT)
 
         logger.info(
-            f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} ({rule_name}) [confidence: {confidence:.2f}]"
+            f"⚖️  Dharmic Ruling: '{user_input}' -> {target_agent} "
+            f"({rule_name}) [confidence: {confidence:.2f}]"
         )
 
         return IntentVector(
@@ -371,14 +350,12 @@ class UniversalProvider:
         # MANTHAN (0.60-0.84): Request clarification
         # NETI NETI (< 0.60): Fall back to LLM
         if self.use_semantic and vector.confidence < 0.60:
-            logger.info(
-                f"⚠️  Low confidence ({vector.confidence:.2f}). Falling back to LLM Engine (NETI NETI)"
-            )
+            logger.info(f"⚠️  Low confidence ({vector.confidence:.2f}). Falling back to LLM Engine (NETI NETI)")
             if emit_event:
                 try:
                     await emit_event(
                         "ACTION",
-                        f"Low confidence routing - using LLM fallback",
+                        "Low confidence routing - using LLM fallback",
                         "provider",
                         {"confidence": vector.confidence, "path": "llm_fallback"},
                     )
@@ -388,16 +365,14 @@ class UniversalProvider:
             return self._fast_path_chat_response(vector)
 
         if self.use_semantic and 0.60 <= vector.confidence < 0.85:
-            logger.info(
-                f"◆ Medium confidence ({vector.confidence:.2f}). Would request clarification (MANTHAN)"
-            )
+            logger.info(f"◆ Medium confidence ({vector.confidence:.2f}). Would request clarification (MANTHAN)")
             # For now, we still execute but log the uncertainty
             # In a future update, this could trigger interactive clarification
             if emit_event:
                 try:
                     await emit_event(
                         "ACTION",
-                        f"Medium confidence - proceeding with caution",
+                        "Medium confidence - proceeding with caution",
                         "provider",
                         {"confidence": vector.confidence, "path": "medium_confidence"},
                     )
@@ -413,9 +388,7 @@ class UniversalProvider:
                     semantic_concepts = await self.semantic_router.analyze(user_input)
                     concepts = {c.name for c in semantic_concepts}
                 except Exception as e:
-                    logger.warning(
-                        f"⚠️  Semantic concept extraction failed: {e}, using deterministic fallback"
-                    )
+                    logger.warning(f"⚠️  Semantic concept extraction failed: {e}, using deterministic fallback")
                     concepts = self.router.analyze(user_input)
             else:
                 concepts = self.router.analyze(user_input)
@@ -423,9 +396,7 @@ class UniversalProvider:
             playbook = self.playbook_engine.find_playbook(concepts)
 
             if playbook:
-                logger.info(
-                    f"🎯 Found matching playbook: {playbook.id} ({playbook.name})"
-                )
+                logger.info(f"🎯 Found matching playbook: {playbook.id} ({playbook.name})")
 
                 if emit_event:
                     try:
@@ -483,9 +454,7 @@ class UniversalProvider:
                         logger.debug(f"Event emission failed: {e}")
 
                 # Generate playbook proposal
-                proposal = self.playbook_engine.generate_playbook_proposal(
-                    user_input, concepts
-                )
+                proposal = self.playbook_engine.generate_playbook_proposal(user_input, concepts)
 
                 if emit_event:
                     try:
@@ -605,9 +574,7 @@ class UniversalProvider:
             logger.error(f"Task submission failed: {e}")
             if emit_event:
                 try:
-                    await emit_event(
-                        "ERROR", f"Task submission failed: {str(e)}", "provider", {}
-                    )
+                    await emit_event("ERROR", f"Task submission failed: {str(e)}", "provider", {})
                 except Exception as ex:
                     logger.debug(f"Event emission failed: {ex}")
             return {"status": "FAILED", "path": "slow", "error": str(e)}
@@ -665,9 +632,7 @@ class UniversalProvider:
                     "intent": "chat",
                 }
             except Exception as e:
-                logger.warning(
-                    f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine"
-                )
+                logger.warning(f"⚠️  LLM Adapter failed: {e}, falling back to legacy engine")
 
         # Fallback: Use legacy llm engine if available (GAD-6000)
         if llm:
@@ -685,12 +650,16 @@ class UniversalProvider:
         # Use DegradationChain for graceful offline fallback
         if self.degradation_chain:
             try:
+                # Extract concepts from vector parameters for knowledge-enhanced responses
+                concepts = None
+                if vector.parameters and "concepts" in vector.parameters:
+                    concepts = set(vector.parameters["concepts"])
+
                 deg_response = self.degradation_chain.respond(
                     user_input=user_msg,
-                    semantic_confidence=(
-                        vector.confidence if hasattr(vector, "confidence") else 0.5
-                    ),
+                    semantic_confidence=(vector.confidence if hasattr(vector, "confidence") else 0.5),
                     detected_intent="chat",
+                    concepts=concepts,
                 )
                 return {
                     "status": "success",
@@ -749,9 +718,15 @@ class UniversalProvider:
 
         # Build context based on intent type
         if vector.intent_type == IntentType.CREATION:
-            context = f"User initiated CREATION task. {agent_display} agent is handling content generation. Confirm receipt and mention background processing."
+            context = (
+                f"User initiated CREATION task. {agent_display} agent is handling "
+                "content generation. Confirm receipt and mention background processing."
+            )
         elif vector.intent_type == IntentType.ACTION:
-            context = f"User initiated ACTION/GOVERNANCE task. {agent_display} agent is handling state-changing operation. Confirm and mention ledger immutability."
+            context = (
+                f"User initiated ACTION/GOVERNANCE task. {agent_display} agent is handling "
+                "state-changing operation. Confirm and mention ledger immutability."
+            )
         else:
             context = f"User initiated task. {agent_display} agent is processing. Confirm receipt."
 
@@ -761,9 +736,7 @@ class UniversalProvider:
                 result = self.llm_engine.respond(agent_display, context, user_input)
                 return result.get("data", {}).get("summary", "")
             except Exception as e:
-                logger.debug(
-                    f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine"
-                )
+                logger.debug(f"⚠️  LLM Adapter failed for ack: {e}, trying legacy engine")
 
         # Fallback: Use legacy llm engine (GAD-6000)
         if llm:
@@ -790,9 +763,7 @@ class UniversalProvider:
             return "herald"  # Content Creator
 
         if vector.intent_type == IntentType.ACTION:
-            return (
-                "civic" if self._check_agent("civic") else "envoy"
-            )  # Governance Handler
+            return "civic" if self._check_agent("civic") else "envoy"  # Governance Handler
 
         if vector.intent_type == IntentType.QUERY:
             return "envoy"  # General Purpose
