@@ -57,18 +57,17 @@ class PingCartridge(ContextAwareAgent, OathMixin):
                 "status": "success",
                 "agent": self.agent_id,
                 "degradation_level": deg_status.get("level", "unknown"),
-                "response": "PING agent operational"
+                "response": "PING agent operational",
             }
 
         # Use LLM for anything else (with offline fallback)
         response = self.chat_with_fallback(
-            prompt=f"User asked: {task.payload.get('message', action)}",
-            context={"task_id": str(task.id)}
+            prompt=f"User asked: {task.payload.get('message', action)}", context={"task_id": str(task.id)}
         )
         return {
             "status": "success",
             "response": response.content,
-            "level": response.level.value if hasattr(response.level, 'value') else str(response.level)
+            "level": response.level.value if hasattr(response.level, "value") else str(response.level),
         }
 
 
