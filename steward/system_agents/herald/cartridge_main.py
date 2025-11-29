@@ -48,9 +48,6 @@ from steward.oath_mixin import OathMixin
 from .core.memory import EventLog
 from .governance import HeraldConstitution
 
-# LEGACY: ContentTool still needs migration (will be removed in next phase)
-from .tools.content_tool import ContentTool
-
 # Constitutional Oath
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -124,11 +121,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        # LEGACY: ContentTool still instantiated (not yet migrated to Tool Protocol)
-        # TODO: Migrate ContentTool, then remove this line
-        self.content = ContentTool()
-
-        # ALL OTHER TOOLS: Accessed via kernel (self.system.execute_tool)
+        # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
         # - herald.broadcast (BroadcastTool)
         # - herald.research (ResearchTool)
         # - herald.scout (ScoutTool)
@@ -319,196 +312,26 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
 
     def run_campaign(self, dry_run: bool = False) -> Dict[str, Any]:
         """
-        Execute the main campaign workflow with event sourcing.
+        Execute campaign workflow - DEPRECATED (ContentTool moved to MARKETER).
 
-        This is the primary action that orchestrates the full pipeline:
-        1. Research current market trends
-        2. Generate content based on research
-        3. Validate against HeraldConstitution governance
-        4. Record all actions in immutable event ledger
-        5. Prepare for publication (or publish if approved)
-
-        All events are cryptographically signed and stored.
-        If execution fails, state is preserved for recovery.
+        HERALD is infrastructure-only (broadcast, research, identity, logging).
+        Campaign execution is now handled by MARKETER (Citizen Agent).
 
         Args:
-            dry_run: If True, don't actually publish (for testing)
+            dry_run: Ignored
 
         Returns:
-            dict: Campaign result with status and generated content
+            dict: Error indicating feature removed
         """
-        try:
-            logger.info("🦅 PHASE 1: RESEARCH")
-            logger.info("=" * 70)
+        logger.warning("⚠️  run_campaign() is DEPRECATED - ContentTool removed")
+        logger.info("   HERALD is infrastructure-only (broadcast, research, identity, logging)")
+        logger.info("   Content generation is now handled by MARKETER (Citizen Agent)")
 
-            # Step 1: Research via kernel (herald.research)
-            logger.info("[RESEARCH] Researching current trends...")
-            research_result = self.system.execute_tool("herald.research", {"action": "find_trending"})
-
-            research_context = None
-            if research_result.success and research_result.output.get("found"):
-                trending = research_result.output["topic"]
-                research_context = trending.get("article", {}).get("content")
-                logger.info(f"✅ Trending topic found: {trending.get('search_query')}")
-                logger.info(f"   Query: {trending.get('search_query')}")
-            else:
-                logger.warning("⚠️  No trending topic found, using generic context")
-
-            # Step 2: Generate Content
-            logger.info("\n🦅 PHASE 2: CREATION")
-            logger.info("=" * 70)
-
-            tweet = self.content.generate_tweet(research_context=research_context)
-            if not tweet:
-                logger.error("❌ Content generation failed")
-                event = self.event_log.record_system_error(
-                    error_type="content_generation_error",
-                    error_message="LLM returned empty content",
-                )
-                if event:
-                    # Log via kernel (herald.scribe)
-                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
-                return {
-                    "status": "failed",
-                    "reason": "content_generation_failed",
-                    "content": None,
-                }
-
-            logger.info(f"✅ Content generated: {len(tweet)} chars")
-            logger.info(f"   Preview: {tweet[:80]}...")
-
-            # Record generation event and log to chronicle
-            event = self.event_log.record_content_generated(
-                content=tweet,
-                platform="twitter",
-                context={"research_query": (research_context[:100] if research_context else None)},
-            )
-            if event:
-                # Log via kernel (herald.scribe)
-                self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
-
-            # Step 2.5: Sign Content via kernel (herald.identity)
-            logger.info("\n🦅 PHASE 2.5: IDENTITY")
-            logger.info("=" * 70)
-
-            signature = None
-            identity_result = self.system.execute_tool("herald.identity", {"action": "assert_identity"})
-            if identity_result.success and identity_result.output.get("verified"):
-                sign_result = self.system.execute_tool("herald.identity", {"action": "sign_artifact", "content": tweet})
-                if sign_result.success:
-                    signature = sign_result.output.get("signature")
-                    logger.info(f"✅ Content signed: {signature[:40]}...")
-                else:
-                    logger.warning("⚠️  Signing attempted but failed (no credentials)")
-            else:
-                logger.debug("ℹ️  Identity not available, skipping signature")
-
-            # Step 3: Governance Validation (Architectural Gate)
-            logger.info("\n🦅 PHASE 3: GOVERNANCE")
-            logger.info("=" * 70)
-
-            validation_result = self.governance.validate(tweet, platform="twitter")
-            if not validation_result.is_valid:
-                logger.error("❌ Content failed governance validation")
-                for violation in validation_result.violations:
-                    logger.error(f"   ❌ {violation}")
-
-                # PHASE II: Cite governance constraint
-                constraint_citation = self._cite_governance_constraint(
-                    "governance_violation",
-                    details="Content violates " + "; ".join(validation_result.violations[:2]),
-                )
-                logger.error(constraint_citation)
-
-                # Record rejection with governance violations and log to chronicle
-                event = self.event_log.record_content_rejected(
-                    content=tweet,
-                    reason="governance_violation",
-                    violations=[constraint_citation] + validation_result.violations,
-                )
-                if event:
-                    # Log via kernel (herald.scribe)
-                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
-
-                # Still perform housekeeping even on failure
-                logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
-                logger.info("=" * 70)
-                # Tidy via kernel (herald.tidy)
-                tidy_result = self.system.execute_tool("herald.tidy", {"action": "organize_workspace", "dry_run": dry_run})
-                if tidy_result.success:
-                    moved = tidy_result.output.get("moved_count", 0)
-                    protected = tidy_result.output.get("protected_count", 0)
-                    errors = tidy_result.output.get("error_count", 0)
-                    logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
-                else:
-                    logger.warning(f"⚠️  Tidy failed: {tidy_result.error}")
-
-                return {
-                    "status": "rejected",
-                    "reason": "governance_violations",
-                    "content": tweet,
-                    "violations": validation_result.violations,
-                    "constraint_citation": constraint_citation,
-                }
-
-            # Warnings (don't reject, but log)
-            if validation_result.warnings:
-                logger.warning("⚠️  Governance warnings:")
-                for warning in validation_result.warnings:
-                    logger.warning(f"   {warning}")
-
-            logger.info("✅ Content passed governance validation")
-            logger.info(f"   Philosophy: {self.governance.get_rules_summary()['philosophy']}")
-
-            # Step 4: Prepare Artifact
-            result = {
-                "status": "draft_ready",
-                "content": tweet,
-                "context": research_context or "No trending topic",
-                "platform": "twitter",
-                "dry_run": dry_run,
-                "signature": signature,
-                "validation": {
-                    "is_valid": True,
-                    "violations": validation_result.violations,
-                    "warnings": validation_result.warnings,
-                },
-            }
-
-            self.last_result = result
-            logger.info("\n" + "=" * 70)
-            logger.info("✅ CAMPAIGN COMPLETE")
-            logger.info(f"   Content: {len(tweet)} chars")
-            logger.info(f"   Status: {'DRY RUN' if dry_run else 'READY FOR PUBLISH'}")
-            logger.info("=" * 70)
-
-            # Phase 5: Housekeeping (Repository Maintenance)
-            logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
-            logger.info("=" * 70)
-            moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
-            logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
-
-            return result
-
-        except Exception as e:
-            logger.error(f"❌ Campaign execution error: {e}")
-            import traceback
-
-            tb = traceback.format_exc()
-            logger.error(f"   Traceback: {tb}")
-
-            # Record system error to event ledger and log to chronicle
-            event = self.event_log.record_system_error(error_type="campaign_error", error_message=str(e), traceback=tb)
-            if event:
-                # Log via kernel (herald.scribe)
-                self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
-
-            return {
-                "status": "error",
-                "reason": "campaign_execution_error",
-                "error": str(e),
-                "content": None,
-            }
+        return {
+            "status": "deprecated",
+            "reason": "content_generation_removed",
+            "message": "Campaign execution removed from HERALD. Use MARKETER instead.",
+        }
 
     def _check_connectivity(self, platform: str) -> bool:
         """Helper method to check connectivity via kernel (herald.broadcast)."""
@@ -855,10 +678,14 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
 
             if is_bot and not is_registered:
                 logger.info(f"🔭 Detected Wild Agent: {author} (Confidence: {confidence})")
-                reply_content = self.content.generate_recruitment_pitch(author, context=text)
+                # DEPRECATED: Content generation removed
+                logger.warning("⚠️  Recruitment pitch generation removed - use MARKETER")
+                reply_content = f"[MARKETER REQUIRED] Would recruit {author}"
             else:
                 # Standard reply
-                reply_content = self.content.generate_reply(text, author)
+                # DEPRECATED: Content generation removed
+                logger.warning("⚠️  Reply generation removed - use MARKETER")
+                reply_content = f"[MARKETER REQUIRED] Would reply to {author}"
 
             # Validate (Double Check)
             validation = self.governance.validate(reply_content, platform="twitter")
@@ -916,7 +743,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             dict: {"title": str, "body": str} or None
         """
         logger.info(f"🦅 Generating Reddit post for {subreddit}...")
-        return self.content.generate_reddit_post(subreddit=subreddit)
+        # DEPRECATED: Content generation removed
+        logger.warning("⚠️  Reddit post generation removed - use MARKETER")
+        return {"error": "Content generation removed from HERALD. Use MARKETER instead."}
 
 
 # Export for VibeOS cartridge loading
