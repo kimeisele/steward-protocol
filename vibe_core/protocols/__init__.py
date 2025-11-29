@@ -24,17 +24,49 @@ from .ledger import (
     VibeLedger,
     VibeScheduler,
 )
-from .registry import ManifestRegistry as _ManifestRegistry  # Avoid duplicate
-from .scheduler import VibeScheduler as _VibeScheduler  # Avoid duplicate
+from .operator_protocol import (
+    GitState,
+    Intent,
+    IntentType,
+    KernelStatusType,
+    OperatorResponse,
+    OperatorSocket,
+    OperatorType,
+    PriorityLevel,
+    SystemContext,
+    TaskState,
+    create_intent,
+    create_response,
+    create_system_context,
+)
+
+# Note: ManifestRegistry and VibeScheduler are re-exported from .ledger module
+# The .registry and .scheduler modules exist for backwards compatibility
 
 __all__ = [
+    # Agent Protocol
     "VibeAgent",
     "AgentManifest",
     "AgentResponse",
     "Capability",
+    # Kernel Protocol
     "VibeLedger",
     "VibeScheduler",
     "VibeKernel",
     "ManifestRegistry",
     "KernelStatus",
+    # Operator Protocol (Phoenix Vimana - Strict Typing)
+    "OperatorSocket",
+    "SystemContext",
+    "Intent",
+    "OperatorResponse",
+    "IntentType",
+    "OperatorType",
+    "KernelStatusType",
+    "PriorityLevel",
+    "GitState",
+    "TaskState",
+    "create_system_context",
+    "create_intent",
+    "create_response",
 ]
