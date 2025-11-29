@@ -149,7 +149,8 @@ if [ -n "$ALL_PYTHON_FILES" ]; then
     echo "$ALL_PYTHON_FILES" | xargs git add 2>/dev/null || true
 
     # Check for CRITICAL errors that cannot be auto-fixed
-    RUFF_ERRORS=$(echo "$ALL_PYTHON_FILES" | xargs ruff check --select=E9,F63,F7,F82 2>/dev/null || true)
+    # Note: --quiet suppresses "All checks passed!" message, only shows errors
+    RUFF_ERRORS=$(echo "$ALL_PYTHON_FILES" | xargs ruff check --select=E9,F63,F7,F82 --quiet 2>/dev/null || true)
 
     if [ -n "$RUFF_ERRORS" ]; then
         echo -e "${RED}BLOCKED${NC}"
