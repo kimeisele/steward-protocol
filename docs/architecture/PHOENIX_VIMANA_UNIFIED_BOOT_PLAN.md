@@ -1,10 +1,13 @@
 # PHOENIX VIMANA UNIFIED BOOT PLAN
 
-**Version:** 1.0
+**Version:** 1.1
 **Date:** 2025-11-29
-**Status:** PLANNING (Not yet implemented)
+**Status:** APPROVED - IMPLEMENTATION IN PROGRESS
 **Author:** Senior Engineer Session
+**Approved By:** Founder (with Gemini review)
 **Precedence:** This plan connects GAD-000, Sarga, Knowledge Graph, and the Universal Operator concept.
+
+**CRITICAL REQUIREMENT:** Strict typing with Pydantic models. No `dict[str, Any]`.
 
 ---
 
@@ -23,11 +26,12 @@ This document describes the **PHOENIX VIMANA UNIFIED BOOT** - a plan to connect 
 1. [The Problem](#1-the-problem)
 2. [The Vision](#2-the-vision)
 3. [Architecture Overview](#3-architecture-overview)
-4. [The Universal Operator Adapter](#4-the-universal-operator-adapter)
-5. [Sarga Boot Sequence](#5-sarga-boot-sequence)
-6. [Component Wiring](#6-component-wiring)
-7. [Implementation Phases](#7-implementation-phases)
-8. [Success Criteria](#8-success-criteria)
+4. [Strict Typing Protocol](#4-strict-typing-protocol) **(NEW - CRITICAL)**
+5. [The Universal Operator Adapter](#5-the-universal-operator-adapter)
+6. [Sarga Boot Sequence](#6-sarga-boot-sequence)
+7. [Component Wiring](#7-component-wiring)
+8. [Implementation Phases](#8-implementation-phases)
+9. [Success Criteria](#9-success-criteria)
 
 ---
 
@@ -155,7 +159,154 @@ AI-NATIVE (GAD-000):
 
 ---
 
-## 4. THE UNIVERSAL OPERATOR ADAPTER
+## 4. STRICT TYPING PROTOCOL
+
+> **CRITICAL CONDITION FOR IMPLEMENTATION** (Gemini Review, Founder Approved)
+
+### The Rule: No Loose JSON Blobs
+
+The Universal Operator Adapter MUST use strictly typed models. No `dict[str, Any]`.
+This is **TCP/IP for Agents** - the protocol must be hard-defined.
+
+### Pydantic Models
+
+```python
+# vibe_core/protocols/operator_protocol.py
+
+from pydantic import BaseModel, Field
+from typing import Literal, Optional
+from enum import Enum
+from datetime import datetime
+
+
+class IntentType(str, Enum):
+    """Types of operator intents"""
+    COMMAND = "command"       # Direct command execution
+    QUERY = "query"           # Information retrieval
+    DELEGATION = "delegation" # Delegate to agent
+    CONTROL = "control"       # System control (shutdown, status, etc.)
+    REFLEX = "reflex"         # Automatic response (no operator needed)
+
+
+class OperatorType(str, Enum):
+    """Types of operators in the system"""
+    HUMAN = "human"
+    CLAUDE_CODE = "claude_code"
+    LLM_API = "llm_api"
+    LOCAL_LLM = "local_llm"
+    DEGRADED = "degraded"
+
+
+class SystemContext(BaseModel):
+    """
+    The complete system state passed to operators.
+
+    This is what the operator SEES before making a decision.
+    Strictly typed - no loose dictionaries.
+    """
+
+    # Core Identity
+    boot_id: str = Field(..., description="Unique boot session identifier")
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    # System State
+    kernel_status: Literal["booting", "ready", "degraded", "shutdown"] = "booting"
+    agents_registered: int = 0
+    agents_healthy: int = 0
+
+    # Git State (for code-aware operators)
+    git_branch: Optional[str] = None
+    git_uncommitted: int = 0
+    git_behind: int = 0
+
+    # Current Task State
+    current_task: Optional[str] = None
+    task_progress: Optional[float] = None  # 0.0 - 1.0
+
+    # Operator Awareness
+    operator_type: OperatorType = OperatorType.HUMAN
+    degradation_level: int = 0  # 0 = full, higher = more degraded
+
+    # Message History (last N for context)
+    recent_messages: list[str] = Field(default_factory=list, max_length=10)
+
+    # Capabilities (from KernelOracle)
+    available_tools: list[str] = Field(default_factory=list)
+    available_agents: list[str] = Field(default_factory=list)
+
+    class Config:
+        frozen = False  # Allow updates during boot
+
+
+class Intent(BaseModel):
+    """
+    The decision from an operator.
+
+    This is what the operator WANTS to happen.
+    Strictly typed - parseable, verifiable, composable.
+    """
+
+    # Core Intent
+    intent_type: IntentType
+    raw_input: str = Field(..., description="Original input from operator")
+
+    # Parsed Intent
+    target_agent: Optional[str] = Field(None, description="Agent to handle this")
+    target_tool: Optional[str] = Field(None, description="Tool to invoke")
+    parameters: dict[str, str] = Field(default_factory=dict)  # String params only
+
+    # Metadata
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+    source_operator: OperatorType = OperatorType.HUMAN
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+    # Control Flags
+    requires_confirmation: bool = False
+    is_destructive: bool = False
+    priority: Literal["low", "normal", "high", "critical"] = "normal"
+
+    class Config:
+        frozen = True  # Intents are immutable once created
+
+
+class OperatorResponse(BaseModel):
+    """
+    Response back to the operator after processing intent.
+    """
+
+    success: bool
+    message: str
+    data: Optional[dict[str, str]] = None  # Typed string values only
+    next_context: Optional[SystemContext] = None
+    suggested_actions: list[str] = Field(default_factory=list)
+```
+
+### Why Strict Typing Matters
+
+```
+WITHOUT STRICT TYPING:
+  context = {"status": "ok", "agents": 23, ...}  # What fields exist? Unknown.
+  intent = {"action": "do something", ...}        # Is this valid? Who knows.
+
+WITH STRICT TYPING (Pydantic):
+  context = SystemContext(...)  # IDE knows every field
+  intent = Intent(...)          # Validation at creation time
+
+  context.kernel_status  # ✅ Autocomplete works
+  context.nonexistent    # ❌ Type error at compile time
+```
+
+### Integration Points
+
+1. **OperatorSocket.receive_context()** → Takes `SystemContext` (not dict)
+2. **OperatorSocket.provide_intent()** → Returns `Intent` (not dict)
+3. **UniversalProvider routing** → Uses `Intent.intent_type` for deterministic routing
+4. **KernelOracle** → Populates `SystemContext.available_tools/agents`
+5. **All logging** → Uses `.model_dump()` for JSON serialization
+
+---
+
+## 5. THE UNIVERSAL OPERATOR ADAPTER
 
 ### The Socket Interface
 
@@ -274,7 +425,7 @@ Priority 4: DegradedOperator (safe defaults, log everything)
 
 ---
 
-## 5. SARGA BOOT SEQUENCE
+## 6. SARGA BOOT SEQUENCE
 
 ### The Cosmic Boot (Connected to Reality)
 
@@ -381,7 +532,7 @@ def boot(self) -> RealVibeKernel:
 
 ---
 
-## 6. COMPONENT WIRING
+## 7. COMPONENT WIRING
 
 ### What Gets Connected
 
@@ -418,7 +569,7 @@ def boot(self) -> RealVibeKernel:
 
 ---
 
-## 7. IMPLEMENTATION PHASES
+## 8. IMPLEMENTATION PHASES
 
 ### Phase A: WIRING (No new architecture)
 
@@ -480,7 +631,7 @@ def boot(self) -> RealVibeKernel:
 
 ---
 
-## 8. SUCCESS CRITERIA
+## 9. SUCCESS CRITERIA
 
 ### The System Is Complete When:
 
@@ -550,11 +701,13 @@ DOCUMENTATION:
 
 ## APPROVAL
 
-**This plan must be reviewed and approved before implementation begins.**
+**STATUS: ✅ APPROVED FOR IMPLEMENTATION**
 
-- [ ] Technical Review
-- [ ] Architecture Alignment
-- [ ] Founder Approval
+- [x] Technical Review (Gemini)
+- [x] Architecture Alignment (Strict Typing Protocol added)
+- [x] Founder Approval (2025-11-29)
+
+**Condition:** Strict typing with Pydantic models. No loose `dict[str, Any]`.
 
 ---
 

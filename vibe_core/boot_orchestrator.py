@@ -4,23 +4,24 @@
 
 The unified boot sequence for Agent City OS.
 
-PROBLEM SOLVED:
-- Before: 3 different entry points booting empty/partial kernels
-- After: ONE orchestrator ensuring consistent 23-agent boot
+PHOENIX VIMANA UNIFIED BOOT - Sarga Integration
+-----------------------------------------------
+This orchestrator now follows the Sarga (cosmic creation) sequence:
+1. SHABDA (Sound) → Boot command received
+2. AKASHA (Space) → Kernel memory allocated
+3. VAYU (Air) → Communication channels established
+4. AGNI (Fire) → Form/visibility (UI, capabilities)
+5. JALA (Water) → Data streams flow (Knowledge Graph, context)
+6. PRITHVI (Earth) → Persistence (Ledger, agents registered)
 
-ARCHITECTURE:
-1. Create RealVibeKernel
-2. Register Discoverer (first citizen)
-3. Discoverer scans for steward.json manifests (23 agents)
-4. Auto-register all discovered agents
-5. Boot kernel (manifests, ledger, scheduler ready)
+The system creates itself from nothing. Sound becomes form.
 
 USAGE:
     from vibe_core.boot_orchestrator import BootOrchestrator
 
     orchestrator = BootOrchestrator()
     kernel = orchestrator.boot()
-    # kernel now has 23 agents registered
+    # kernel now has all agents registered, Sarga complete
 """
 
 import logging
@@ -30,6 +31,7 @@ from typing import Optional
 from steward.system_agents.discoverer.agent import Discoverer
 from vibe_core.config import CityConfig
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.sarga import Element, get_sarga
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 
@@ -61,16 +63,21 @@ class BootOrchestrator:
         self.kernel: Optional[RealVibeKernel] = None
         self.discoverer: Optional[Discoverer] = None
 
+        # Sarga phase components (initialized during boot)
+        self.prompt_context = None  # VAYU phase
+        self.oracle = None  # AGNI phase
+
     def boot(self) -> RealVibeKernel:
         """
-        Execute the unified boot sequence.
+        Execute the unified boot sequence via Sarga (cosmic creation).
 
-        Steps:
-        1. Create kernel instance
-        1.5. Load Unified Knowledge Graph
-        2. Register Discoverer (Genesis Agent)
-        3. Discover all agents via steward.json scan
-        4. Boot kernel (initialize manifests, ledger, scheduler)
+        Sarga Phases:
+        1. SHABDA (Sound) → Boot initiated
+        2. AKASHA (Space) → Kernel created
+        3. VAYU (Air) → Communication established
+        4. AGNI (Fire) → Form rendered (capabilities)
+        5. JALA (Water) → Data flows (Knowledge Graph, discovery)
+        6. PRITHVI (Earth) → Persistence (agents registered, ledger ready)
 
         Returns:
             RealVibeKernel: Fully initialized kernel with all agents
@@ -78,78 +85,163 @@ class BootOrchestrator:
         Raises:
             RuntimeError: If boot sequence fails
         """
-        logger.info("=" * 70)
-        logger.info("⚡ BOOT ORCHESTRATOR - UNIFIED BOOT SEQUENCE")
-        logger.info("=" * 70)
+        # Get global Sarga instance
+        sarga = get_sarga()
 
-        # Step 1: Create Kernel
-        logger.info("\n[1/5] Creating RealVibeKernel...")
-        self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
-        logger.info(f"      ✅ Kernel created (ledger: {self.ledger_path})")
+        # Begin the cosmic creation
+        sarga.begin_boot()
 
-        # Step 1.5: Load Knowledge Graph
-        logger.info("\n[1.5/5] Loading Unified Knowledge Graph...")
+        # =================================================================
+        # PHASE 1: SHABDA (Sound/Command) - Boot initiated
+        # =================================================================
+        sarga.register_phase_handler(Element.SHABDA, self._phase_shabda)
+        if not sarga.execute_phase(Element.SHABDA):
+            raise RuntimeError("Sarga SHABDA phase failed: Boot initiation error")
+
+        # =================================================================
+        # PHASE 2: AKASHA (Space/Memory) - Kernel created
+        # =================================================================
+        sarga.register_phase_handler(Element.AKASHA, self._phase_akasha)
+        if not sarga.execute_phase(Element.AKASHA):
+            raise RuntimeError("Sarga AKASHA phase failed: Kernel creation error")
+
+        # =================================================================
+        # PHASE 3: VAYU (Air/Communication) - Message bus + PromptContext
+        # =================================================================
+        sarga.register_phase_handler(Element.VAYU, self._phase_vayu)
+        if not sarga.execute_phase(Element.VAYU):
+            raise RuntimeError("Sarga VAYU phase failed: Communication setup error")
+
+        # =================================================================
+        # PHASE 4: AGNI (Fire/Form) - Capabilities visible
+        # =================================================================
+        sarga.register_phase_handler(Element.AGNI, self._phase_agni)
+        if not sarga.execute_phase(Element.AGNI):
+            raise RuntimeError("Sarga AGNI phase failed: Form rendering error")
+
+        # =================================================================
+        # PHASE 5: JALA (Water/Data) - Knowledge Graph + Discovery
+        # =================================================================
+        sarga.register_phase_handler(Element.JALA, self._phase_jala)
+        if not sarga.execute_phase(Element.JALA):
+            raise RuntimeError("Sarga JALA phase failed: Data stream error")
+
+        # =================================================================
+        # PHASE 6: PRITHVI (Earth/Persistence) - Agents + Ledger
+        # =================================================================
+        sarga.register_phase_handler(Element.PRITHVI, self._phase_prithvi)
+        if not sarga.execute_phase(Element.PRITHVI):
+            raise RuntimeError("Sarga PRITHVI phase failed: Persistence error")
+
+        # Complete the cosmic creation
+        sarga.complete_boot()
+
+        # Print boot report
+        logger.info(sarga.generate_boot_report())
+
+        return self.kernel
+
+    # =========================================================================
+    # SARGA PHASE HANDLERS
+    # =========================================================================
+
+    def _phase_shabda(self) -> bool:
+        """SHABDA: Sound - Boot command received, initiation logged."""
+        logger.info("      → Boot command received")
+        logger.info(f"      → Project root: {self.project_root}")
+        logger.info(f"      → Ledger path: {self.ledger_path}")
+        return True
+
+    def _phase_akasha(self) -> bool:
+        """AKASHA: Space - Create kernel, allocate memory."""
         try:
+            self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
+            logger.info(f"      → Kernel space allocated (ledger: {self.ledger_path})")
+            return True
+        except Exception as e:
+            logger.error(f"      → Kernel creation failed: {e}")
+            return False
+
+    def _phase_vayu(self) -> bool:
+        """VAYU: Air - Establish communication channels."""
+        try:
+            # Initialize PromptContext (dynamic prompt generation)
+            from vibe_core.runtime.prompt_context import PromptContext
+
+            self.prompt_context = PromptContext()
+
+            # Wire kernel to prompt context (late binding)
+            if self.kernel:
+                self.prompt_context.set_kernel(self.kernel)
+                logger.info("      → PromptContext initialized and kernel bound")
+
+            return True
+        except Exception as e:
+            logger.warning(f"      → PromptContext setup warning: {e}")
+            # Non-fatal - communication still works via kernel
+            return True
+
+    def _phase_agni(self) -> bool:
+        """AGNI: Fire - Make system visible (capabilities, UI)."""
+        try:
+            # Initialize KernelOracle (capability discovery)
+            from vibe_core.runtime.oracle import KernelOracle
+
+            if self.kernel:
+                self.oracle = KernelOracle(self.kernel, self.project_root)
+                capabilities = self.oracle.get_system_capabilities()
+                logger.info(
+                    f"      → Oracle active: {len(capabilities.get('tools', []))} tools, "
+                    f"{len(capabilities.get('cartridges', []))} cartridges"
+                )
+            return True
+        except Exception as e:
+            logger.warning(f"      → Oracle setup warning: {e}")
+            # Non-fatal - capabilities still work via kernel
+            return True
+
+    def _phase_jala(self) -> bool:
+        """JALA: Water - Data streams flow (Knowledge Graph, discovery)."""
+        try:
+            # Load Knowledge Graph
             from vibe_core.knowledge.graph import get_knowledge_graph
 
             graph = get_knowledge_graph()
             logger.info(
-                f"      ✅ Knowledge loaded: {len(graph.nodes)} nodes, "
-                f"{sum(len(e) for e in graph.edges.values())} edges, "
-                f"{len(graph.constraints)} constraints"
+                f"      → Knowledge loaded: {len(graph.nodes)} nodes, "
+                f"{sum(len(e) for e in graph.edges.values())} edges"
             )
-        except Exception as e:
-            logger.warning(f"      ⚠️  Knowledge loading failed: {e}")
-            logger.warning("      → Continuing boot without knowledge graph")
 
-        # Step 2: Register Discoverer (Genesis Agent)
-        logger.info("\n[2/5] Registering Discoverer (Genesis Agent)...")
-        self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
-
-        try:
+            # Register Discoverer (Genesis Agent)
+            self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
             self.kernel.register_agent(self.discoverer)
-            logger.info("      ✅ Discoverer registered successfully")
-        except Exception as e:
-            logger.error(f"      ❌ Failed to register Discoverer: {e}")
-            raise RuntimeError(f"Boot failed: Could not register Discoverer - {e}")
+            logger.info("      → Discoverer (Genesis Agent) registered")
 
-        # Step 3: Discover all agents
-        logger.info("\n[3/5] Discovering agents via steward.json scan...")
-        logger.info("      Scanning: steward/system_agents/ + agent_city/registry/")
-
-        try:
+            # Discover all agents
             discovered_count = self.discoverer.discover_agents()
-            logger.info(f"      ✅ Discovered and registered {discovered_count} agents")
+            logger.info(f"      → Discovered {discovered_count} agents")
 
-            # Show total agent count (discoverer + discovered)
-            total_agents = len(self.kernel.agent_registry)
-            logger.info(f"      📊 Total agents registered: {total_agents}")
-
+            return True
         except Exception as e:
-            logger.error(f"      ❌ Discovery failed: {e}")
-            raise RuntimeError(f"Boot failed: Agent discovery error - {e}")
+            logger.error(f"      → Data stream error: {e}")
+            return False
 
-        # Step 4: Boot kernel
-        logger.info("\n[4/5] Booting kernel (manifests, ledger, scheduler)...")
-
+    def _phase_prithvi(self) -> bool:
+        """PRITHVI: Earth - Persistence (boot kernel, ledger ready)."""
         try:
+            # Boot the kernel (finalizes manifests, ledger, scheduler)
             self.kernel.boot()
-            logger.info("      ✅ Kernel boot complete")
+            logger.info("      → Kernel booted, ledger active")
+
+            # Final status
+            status = self.kernel.get_status()
+            total_agents = status.get("agents_registered", 0)
+            logger.info(f"      → Total agents registered: {total_agents}")
+
+            return True
         except Exception as e:
-            logger.error(f"      ❌ Kernel boot failed: {e}")
-            raise RuntimeError(f"Boot failed: Kernel initialization error - {e}")
-
-        # Final status
-        status = self.kernel.get_status()
-        logger.info("\n" + "=" * 70)
-        logger.info("✅ BOOT COMPLETE - AGENT CITY OS READY")
-        logger.info("=" * 70)
-        logger.info(f"📊 Agents Registered: {status.get('agents_registered', 0)}")
-        logger.info(f"📜 Manifests: {status.get('manifests', 0)}")
-        logger.info(f"📖 Ledger Events: {status.get('ledger_events', 0)}")
-        logger.info("=" * 70 + "\n")
-
-        return self.kernel
+            logger.error(f"      → Persistence error: {e}")
+            return False
 
     def get_kernel(self) -> Optional[RealVibeKernel]:
         """
