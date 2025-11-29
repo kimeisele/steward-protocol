@@ -685,12 +685,18 @@ class UniversalProvider:
         # Use DegradationChain for graceful offline fallback
         if self.degradation_chain:
             try:
+                # Extract concepts from vector parameters for knowledge-enhanced responses
+                concepts = None
+                if vector.parameters and "concepts" in vector.parameters:
+                    concepts = set(vector.parameters["concepts"])
+
                 deg_response = self.degradation_chain.respond(
                     user_input=user_msg,
                     semantic_confidence=(
                         vector.confidence if hasattr(vector, "confidence") else 0.5
                     ),
                     detected_intent="chat",
+                    concepts=concepts,
                 )
                 return {
                     "status": "success",

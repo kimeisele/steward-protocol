@@ -233,6 +233,8 @@ class SemanticRouter:
         KARMA (Routing): Deterministic path selection based on semantic concepts.
         Rules are evaluated top-to-bottom by priority.
         First matching rule wins (based on confidence thresholds).
+
+        Now enhanced with Unified Knowledge Graph for concept->agent mapping.
         """
         concepts_with_conf = await self.analyze(text)
 
@@ -243,6 +245,33 @@ class SemanticRouter:
         logger.info(
             f"🔍 Detected Concepts: {concept_names} (max confidence: {max_confidence:.2f})"
         )
+
+        # NEW: Check knowledge graph for concept->agent mapping
+        try:
+            from vibe_core.knowledge.resolver import get_resolver
+
+            resolver = get_resolver()
+
+            # Check if any detected concept maps to a specific agent
+            for concept in concepts_with_conf:
+                agent_from_knowledge = resolver.get_agent_for_concept(concept.name)
+                if agent_from_knowledge:
+                    logger.info(
+                        f"📚 Knowledge Graph: '{concept.name}' → {agent_from_knowledge} "
+                        f"(confidence: {concept.confidence:.2f})"
+                    )
+                    return {
+                        "agent": agent_from_knowledge,
+                        "rule_name": f"Knowledge: {concept.name}",
+                        "response_type": "FAST",
+                        "intent_type": "CHAT",
+                        "concepts": concept_names,
+                        "concepts_with_confidence": concepts_with_conf,
+                        "matched_triggers": {concept.name},
+                        "confidence": concept.confidence,
+                    }
+        except Exception as e:
+            logger.debug(f"Knowledge graph routing skipped: {e}")
 
         rules_to_check = self.rules if self.rules else (fallback_rules or [])
 
