@@ -172,28 +172,28 @@ class Discoverer(VibeAgent):
             with open(manifest_path, "r") as f:
                 data = json.load(f)
 
-            # Basic Validation - support both manifest schemas:
-            # Schema A: {"agent": {"id": "foo"}}
-            # Schema B: {"identity": {"agent_id": "foo"}}
-            agent_data = data.get("agent", {})
-            agent_id = agent_data.get("id")
+            # Basic Validation
+            # PRIMARY: identity.agent_id (standard schema - 15/18 agents use this)
+            # FALLBACK: agent.id (legacy, for backwards compatibility)
+            identity = data.get("identity", {})
+            agent_id = identity.get("agent_id")
 
-            # Fallback to identity.agent_id (Schema B)
-            if not agent_id:
-                identity = data.get("identity", {})
-                agent_id = identity.get("agent_id")
-                if agent_id:
-                    # Populate agent_data from other fields for GenericAgent fallback
-                    agent_data = {
-                        "id": agent_id,
-                        "name": identity.get("name", agent_id.upper()),
-                        "version": data.get("specs", {}).get("version", "1.0.0"),
-                        "description": data.get("specs", {}).get("description", ""),
-                        "specialization": data.get("specs", {}).get("domain", "GENERAL"),
-                    }
+            if agent_id:
+                # Standard schema - build agent_data from structured fields
+                agent_data = {
+                    "id": agent_id,
+                    "name": identity.get("name", agent_id.upper()),
+                    "version": data.get("specs", {}).get("version", "1.0.0"),
+                    "description": data.get("specs", {}).get("description", ""),
+                    "specialization": data.get("specs", {}).get("domain", "GENERAL"),
+                }
+            else:
+                # Legacy fallback: agent.id (backwards compatibility)
+                agent_data = data.get("agent", {})
+                agent_id = agent_data.get("id")
 
             if not agent_id:
-                logger.warning(f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID (checked agent.id and identity.agent_id)")
+                logger.warning(f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID")
                 return None
 
             # Extract config for this agent (if available in Phoenix Config)
