@@ -19,6 +19,7 @@ from pathlib import Path
 
 project_root = Path(__file__).parent.parent
 
+
 def check_file_exists(filepath, description):
     """Check if a file exists"""
     full_path = project_root / filepath
@@ -64,81 +65,100 @@ def main():
 
     # Test 1: run_server.py structure
     print("🔍 TEST 1: run_server.py - Bootloader Structure")
-    results.append(check_file_contains(
-        "run_server.py",
-        [
-            ("Class StewardBootLoader", r"class StewardBootLoader"),
-            ("boot_kernel() method", r"def boot_kernel\("),
-            ("All 11 cartridges imported", r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan"),
-            ("verify_envoy() method", r"def verify_envoy\("),
-            ("start_gateway() method", r"def start_gateway\("),
-            ("Kernel boot sequence", r"RealVibeKernel"),
-            ("Constitutional Oath ceremony", r"Constitutional Oath"),
-        ],
-        "run_server.py has correct structure"
-    ))
+    results.append(
+        check_file_contains(
+            "run_server.py",
+            [
+                ("Class StewardBootLoader", r"class StewardBootLoader"),
+                ("boot_kernel() method", r"def boot_kernel\("),
+                (
+                    "All 11 cartridges imported",
+                    r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan",
+                ),
+                ("verify_envoy() method", r"def verify_envoy\("),
+                ("start_gateway() method", r"def start_gateway\("),
+                ("Kernel boot sequence", r"RealVibeKernel"),
+                ("Constitutional Oath ceremony", r"Constitutional Oath"),
+            ],
+            "run_server.py has correct structure",
+        )
+    )
 
     # Test 2: gateway/api.py structure
     print("\n🔍 TEST 2: gateway/api.py - API Gateway Structure")
-    results.append(check_file_contains(
-        "gateway/api.py",
-        [
-            ("FastAPI app", r"app = FastAPI"),
-            ("/v1/chat endpoint", r"@app.post\(\"/v1/chat\""),
-            ("/health endpoint", r"@app.get\(\"/health\""),
-            ("/help endpoint", r"@app.get\(\"/help\""),
-            ("All 11 agents imported", r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan"),
-            ("Kernel initialization", r"get_kernel\("),
-            ("HIL Assistant logic", r"summary"),
-            ("CORS middleware", r"CORSMiddleware"),
-        ],
-        "gateway/api.py has correct structure"
-    ))
+    results.append(
+        check_file_contains(
+            "gateway/api.py",
+            [
+                ("FastAPI app", r"app = FastAPI"),
+                ("/v1/chat endpoint", r"@app.post\(\"/v1/chat\""),
+                ("/health endpoint", r"@app.get\(\"/health\""),
+                ("/help endpoint", r"@app.get\(\"/help\""),
+                (
+                    "All 11 agents imported",
+                    r"from herald|from civic|from forum|from science|from envoy|from steward\.system_agents\.archivist|from steward\.system_agents\.auditor|from steward\.system_agents\.engineer|from oracle|from watchman|from artisan",
+                ),
+                ("Kernel initialization", r"get_kernel\("),
+                ("HIL Assistant logic", r"summary"),
+                ("CORS middleware", r"CORSMiddleware"),
+            ],
+            "gateway/api.py has correct structure",
+        )
+    )
 
     # Test 3: Envoy cartridge with HIL Assistant
     print("\n🔍 TEST 3: envoy/cartridge_main.py - ENVOY Agent Structure")
-    results.append(check_file_contains(
-        "envoy/cartridge_main.py",
-        [
-            ("EnvoyCartridge class", r"class EnvoyCartridge"),
-            ("HILAssistantTool", r"HILAssistantTool"),
-            ("process() method", r"def process\("),
-            ("_route_command() method", r"def _route_command\("),
-            ("next_action command", r"next_action|hil_assistant\.get_next_action_summary"),
-            ("City control tool", r"CityControlTool"),
-            ("Campaign tool", r"RunCampaignTool"),
-        ],
-        "envoy/cartridge_main.py has correct structure"
-    ))
+    results.append(
+        check_file_contains(
+            "envoy/cartridge_main.py",
+            [
+                ("EnvoyCartridge class", r"class EnvoyCartridge"),
+                ("HILAssistantTool", r"HILAssistantTool"),
+                ("process() method", r"def process\("),
+                ("_route_command() method", r"def _route_command\("),
+                (
+                    "next_action command",
+                    r"next_action|hil_assistant\.get_next_action_summary",
+                ),
+                ("City control tool", r"CityControlTool"),
+                ("Campaign tool", r"RunCampaignTool"),
+            ],
+            "envoy/cartridge_main.py has correct structure",
+        )
+    )
 
     # Test 4: Frontend integration
     print("\n🔍 TEST 4: Frontend Integration")
-    results.append(check_file_contains(
-        "docs/public/index.html",
-        [
-            ("API URL configuration", r"steward_api_url|apiUrl"),
-            ("API Key input", r"steward_api_key|apiKey"),
-            ("/health endpoint check", r"/health"),
-            ("/v1/chat POST request", r"v1/chat|/v1/chat"),
-            ("Chat interface", r"chat-window|message"),
-            ("Command input", r"user-input|sendMessage"),
-        ],
-        "docs/public/index.html is configured for API"
-    ))
+    results.append(
+        check_file_contains(
+            "docs/public/index.html",
+            [
+                ("API URL configuration", r"steward_api_url|apiUrl"),
+                ("API Key input", r"steward_api_key|apiKey"),
+                ("/health endpoint check", r"/health"),
+                ("/v1/chat POST request", r"v1/chat|/v1/chat"),
+                ("Chat interface", r"chat-window|message"),
+                ("Command input", r"user-input|sendMessage"),
+            ],
+            "docs/public/index.html is configured for API",
+        )
+    )
 
     # Test 5: Key features
     print("\n🔍 TEST 5: Critical Features")
     features_ok = True
 
     # Check HIL Assistant exists
-    if check_file_exists("envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"):
+    if check_file_exists(
+        "envoy/tools/hil_assistant_tool.py", "HIL Assistant Tool exists"
+    ):
         pass
     else:
         features_ok = False
 
     # Check Envoy can route commands
     env_content = (project_root / "envoy/cartridge_main.py").read_text()
-    if "command == \"status\"" in env_content and "command == \"campaign\"" in env_content:
+    if 'command == "status"' in env_content and 'command == "campaign"' in env_content:
         print(f"      ✅ Command routing implemented")
     else:
         print(f"      ❌ Command routing missing")

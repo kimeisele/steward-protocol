@@ -37,9 +37,19 @@ CRITICAL_DIRS = [
 
 # Directories to exclude from checks
 EXCLUDED_DIRS = {
-    "tests", "test", "examples", "venv", "env",
-    ".venv", "__pycache__", ".git", "node_modules",
-    ".pytest_cache", "build", "dist", "*.egg-info"
+    "tests",
+    "test",
+    "examples",
+    "venv",
+    "env",
+    ".venv",
+    "__pycache__",
+    ".git",
+    "node_modules",
+    ".pytest_cache",
+    "build",
+    "dist",
+    "*.egg-info",
 }
 
 # Allowed comments - exceptions to the rules
@@ -82,10 +92,15 @@ class WatertightnessVerifier:
                     if "{{" in line and "}}" in line:
                         continue
                     # Allow "Permeable Prompts" module (prompt_context.py, context_loader.py)
-                    if "prompt" in str(file_path).lower() or "context_loader" in str(file_path):
+                    if "prompt" in str(file_path).lower() or "context_loader" in str(
+                        file_path
+                    ):
                         continue
                     # Allow "replace_placeholder" function names
-                    if "def replace_placeholder" in line or "replace_placeholder(" in line:
+                    if (
+                        "def replace_placeholder" in line
+                        or "replace_placeholder(" in line
+                    ):
                         continue
 
                 # "mock" appears in many legitimate contexts
@@ -115,9 +130,7 @@ class WatertightnessVerifier:
                 }
 
                 # Check if this is in a critical directory
-                is_critical = any(
-                    crit in str(file_path) for crit in CRITICAL_DIRS
-                )
+                is_critical = any(crit in str(file_path) for crit in CRITICAL_DIRS)
 
                 if is_critical:
                     self.violations.append(violation)
@@ -135,17 +148,19 @@ class WatertightnessVerifier:
             return
 
         try:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 for line_num, line in enumerate(f, 1):
                     self.stats["lines_scanned"] += 1
                     self.check_line(file_path, line_num, line)
 
             self.stats["files_scanned"] += 1
         except Exception as e:
-            self.warnings.append({
-                "file": str(file_path.relative_to(self.root)),
-                "error": f"Could not scan: {e}"
-            })
+            self.warnings.append(
+                {
+                    "file": str(file_path.relative_to(self.root)),
+                    "error": f"Could not scan: {e}",
+                }
+            )
 
     def run_scan(self) -> bool:
         """Scan all Python files in the project."""

@@ -88,7 +88,9 @@ class ExportEngine:
             # Write sections
             for status in sorted(by_status.keys()):
                 lines.append(f"\n## {status}\n")
-                for task in sorted(by_status[status], key=lambda t: t.priority, reverse=True):
+                for task in sorted(
+                    by_status[status], key=lambda t: t.priority, reverse=True
+                ):
                     lines.append(f"- **{task.title}** (P{task.priority})")
                     if task.description:
                         lines.append(f"  - {task.description}")

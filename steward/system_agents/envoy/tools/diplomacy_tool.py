@@ -14,21 +14,22 @@ import os
 from pathlib import Path
 from datetime import datetime
 
+
 class DiplomacyTool:
     """
     Tool for diplomatic outreach to AI agent projects.
-    
+
     The Envoy's approach:
     - Quality over quantity
     - Context-aware analysis
     - Respectful, personalized invitations
     - Human approval required
     """
-    
+
     def __init__(self):
         self.diplomatic_bag = Path("diplomatic_bag")
         self.diplomatic_bag.mkdir(exist_ok=True)
-    
+
     def search_github(self, topic="ai-agent", min_stars=100, max_results=10):
         """
         Search GitHub for high-quality AI agent repositories.
@@ -60,7 +61,9 @@ class DiplomacyTool:
             # Try to get token from environment
             token = os.getenv("GITHUB_TOKEN")
             if not token:
-                print("⚠️  No GITHUB_TOKEN found. Using unauthenticated access (limited).")
+                print(
+                    "⚠️  No GITHUB_TOKEN found. Using unauthenticated access (limited)."
+                )
                 g = Github()
             else:
                 g = Github(token)
@@ -71,13 +74,15 @@ class DiplomacyTool:
 
             candidates = []
             for repo in repos[:max_results]:
-                candidates.append({
-                    "name": repo.full_name,
-                    "description": repo.description or "No description",
-                    "stars": repo.stargazers_count,
-                    "url": repo.html_url,
-                    "topics": repo.get_topics()
-                })
+                candidates.append(
+                    {
+                        "name": repo.full_name,
+                        "description": repo.description or "No description",
+                        "stars": repo.stargazers_count,
+                        "url": repo.html_url,
+                        "topics": repo.get_topics(),
+                    }
+                )
 
             print(f"✅ Found {len(candidates)} candidates")
             return candidates
@@ -87,56 +92,58 @@ class DiplomacyTool:
                 f"❌ CRITICAL: GitHub search failed: {e}. "
                 f"No mocks. Real search required. Check API limits and network."
             )
-    
+
     def analyze_project(self, repo_info):
         """
         Analyze a project to understand its architecture.
-        
+
         Args:
             repo_info: Repository information dict
-        
+
         Returns:
             Analysis summary
         """
         print(f"\n📊 Analyzing: {repo_info['name']}")
-        
+
         # In a full implementation, this would:
         # - Fetch and read README.md
         # - Identify tech stack
         # - Find key features
         # - Detect architecture patterns
-        
+
         analysis = {
             "project": repo_info["name"],
             "description": repo_info["description"],
             "stars": repo_info["stars"],
             "topics": repo_info.get("topics", []),
-            "tech_stack": "LLM-based" if "llm" in str(repo_info.get("topics", [])) else "Unknown",
-            "notable_features": ["Autonomous operation", "Agent framework"]
+            "tech_stack": (
+                "LLM-based" if "llm" in str(repo_info.get("topics", [])) else "Unknown"
+            ),
+            "notable_features": ["Autonomous operation", "Agent framework"],
         }
-        
+
         print(f"  Stars: {analysis['stars']}")
         print(f"  Topics: {', '.join(analysis['topics'])}")
-        
+
         return analysis
-    
+
     def draft_invitation(self, analysis):
         """
         Generate a personalized, respectful invitation.
-        
+
         Args:
             analysis: Project analysis dict
-        
+
         Returns:
             Invitation text
         """
         print(f"\n✍️  Drafting invitation for: {analysis['project']}")
-        
+
         # Extract context
         project_name = analysis["project"]
         description = analysis["description"]
         tech_stack = analysis.get("tech_stack", "your architecture")
-        
+
         # Generate personalized invitation
         invitation = f"""Greetings, Architect.
 
@@ -168,63 +175,63 @@ Respectfully,
 The Envoy | Agent City
 🦅 "Don't Trust. Verify."
 """
-        
+
         return invitation
-    
+
     def save_draft(self, repo_info, analysis, invitation):
         """
         Save invitation draft for human approval.
-        
+
         Args:
             repo_info: Repository information
             analysis: Project analysis
             invitation: Invitation text
-        
+
         Returns:
             Path to saved draft
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         project_slug = repo_info["name"].replace("/", "_")
         filename = f"invitation_{project_slug}_{timestamp}.json"
-        
+
         draft_path = self.diplomatic_bag / filename
-        
+
         draft = {
             "repository": repo_info,
             "analysis": analysis,
             "invitation": invitation,
             "created_at": datetime.now().isoformat(),
             "status": "pending_approval",
-            "approved_by": None
+            "approved_by": None,
         }
-        
+
         with open(draft_path, "w") as f:
             json.dump(draft, f, indent=2)
-        
+
         print(f"\n💼 Draft saved: {draft_path}")
         print("\n⚠️  HUMAN APPROVAL REQUIRED")
         print("   Review the draft and manually post if approved.")
-        
+
         return draft_path
-    
+
     def run_diplomatic_cycle(self, max_candidates=3):
         """
         Run a complete diplomatic outreach cycle.
-        
+
         Args:
             max_candidates: Maximum number of invitations to draft
         """
         print("\n" + "=" * 70)
         print("🏛️  THE ENVOY - DIPLOMATIC OUTREACH CYCLE")
         print("=" * 70)
-        
+
         # Step 1: Search GitHub
         candidates = self.search_github(max_results=max_candidates)
-        
+
         if not candidates:
             print("\n❌ No candidates found")
             return
-        
+
         # Step 2: Analyze and draft invitations
         drafts = []
         for candidate in candidates[:max_candidates]:
@@ -232,7 +239,7 @@ The Envoy | Agent City
             invitation = self.draft_invitation(analysis)
             draft_path = self.save_draft(candidate, analysis, invitation)
             drafts.append(draft_path)
-        
+
         # Summary
         print("\n" + "=" * 70)
         print("📋 DIPLOMATIC CYCLE COMPLETE")
@@ -240,9 +247,10 @@ The Envoy | Agent City
         print(f"\nDrafted {len(drafts)} invitations:")
         for draft in drafts:
             print(f"  - {draft.name}")
-        
+
         print("\n⚠️  Next step: Human operator reviews and approves")
         print("   Drafts saved in: diplomatic_bag/")
+
 
 if __name__ == "__main__":
     # Test the diplomacy tool

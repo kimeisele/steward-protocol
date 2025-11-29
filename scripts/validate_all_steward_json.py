@@ -8,44 +8,53 @@ import json
 import sys
 from pathlib import Path
 
+
 def validate_manifest(path):
     """Validate a single steward.json file."""
     try:
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             data = json.load(f)
 
         agent_name = path.parent.name
 
         # Check for required fields
-        if 'agent' not in data:
+        if "agent" not in data:
             return (agent_name, "❌ INVALID", "Missing 'agent' section")
 
-        agent = data['agent']
+        agent = data["agent"]
 
-        if 'id' not in agent:
+        if "id" not in agent:
             return (agent_name, "❌ INVALID", "Missing agent.id")
 
-        if 'name' not in agent:
+        if "name" not in agent:
             return (agent_name, "⚠️ PARTIAL", "Missing agent.name")
 
-        if 'capabilities' not in data:
+        if "capabilities" not in data:
             return (agent_name, "⚠️ PARTIAL", "Missing capabilities section")
 
-        capabilities = data['capabilities']
+        capabilities = data["capabilities"]
 
-        if 'operations' not in capabilities:
+        if "operations" not in capabilities:
             return (agent_name, "⚠️ PARTIAL", f"Missing operations (id={agent['id']})")
 
-        ops = capabilities['operations']
+        ops = capabilities["operations"]
         if not isinstance(ops, list) or len(ops) == 0:
             return (agent_name, "⚠️ PARTIAL", f"Empty operations (id={agent['id']})")
 
         # Check operations structure
         for op in ops:
             if not isinstance(op, dict):
-                return (agent_name, "⚠️ PARTIAL", f"Invalid operation structure (id={agent['id']})")
-            if 'name' not in op:
-                return (agent_name, "⚠️ PARTIAL", f"Operation missing 'name' (id={agent['id']})")
+                return (
+                    agent_name,
+                    "⚠️ PARTIAL",
+                    f"Invalid operation structure (id={agent['id']})",
+                )
+            if "name" not in op:
+                return (
+                    agent_name,
+                    "⚠️ PARTIAL",
+                    f"Operation missing 'name' (id={agent['id']})",
+                )
 
         return (agent_name, "✅ VALID", f"id={agent['id']}, ops={len(ops)}")
 
@@ -53,6 +62,7 @@ def validate_manifest(path):
         return (agent_name, "❌ INVALID", "JSON parse error")
     except Exception as e:
         return (agent_name, "❌ INVALID", f"Error: {e}")
+
 
 def main():
     # Find all steward.json files
@@ -93,6 +103,7 @@ def main():
     print("=" * 70)
 
     return 0 if invalid_count == 0 and partial_count == 0 else 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

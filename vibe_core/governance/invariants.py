@@ -117,7 +117,9 @@ class InvariantChecker:
         # All rules passed
         return SoulResult(allowed=True)
 
-    def _check_rule(self, rule: dict, tool_name: str, params: dict[str, Any]) -> SoulResult:
+    def _check_rule(
+        self, rule: dict, tool_name: str, params: dict[str, Any]
+    ) -> SoulResult:
         """
         Check a single rule against a tool call.
 

@@ -76,7 +76,9 @@ class AnthropicProvider(LLMProvider):
                 "anthropic package not installed. Install with: pip install anthropic>=0.18.0"
             ) from e
         except Exception as e:
-            raise ProviderNotAvailableError(f"Failed to initialize Anthropic client: {e}") from e
+            raise ProviderNotAvailableError(
+                f"Failed to initialize Anthropic client: {e}"
+            ) from e
 
     def invoke(
         self,
@@ -153,7 +155,11 @@ class AnthropicProvider(LLMProvider):
                 error_name = type(e).__name__
 
                 # Check if retryable error
-                retryable_errors = ["RateLimitError", "APIConnectionError", "APITimeoutError"]
+                retryable_errors = [
+                    "RateLimitError",
+                    "APIConnectionError",
+                    "APITimeoutError",
+                ]
                 is_retryable = any(err in error_name for err in retryable_errors)
 
                 if is_retryable and attempt < max_retries - 1:
@@ -175,7 +181,9 @@ class AnthropicProvider(LLMProvider):
             f"Last error: {type(last_error).__name__} - {last_error!s}"
         )
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int, model: str) -> float:
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, model: str
+    ) -> float:
         """
         Calculate cost based on Anthropic pricing.
 
@@ -188,7 +196,9 @@ class AnthropicProvider(LLMProvider):
             Cost in USD
         """
         if model not in self.PRICING:
-            logger.warning(f"Unknown Anthropic model pricing: {model}, using Sonnet defaults")
+            logger.warning(
+                f"Unknown Anthropic model pricing: {model}, using Sonnet defaults"
+            )
             pricing = self.PRICING["claude-3-5-sonnet-20241022"]
         else:
             pricing = self.PRICING[model]

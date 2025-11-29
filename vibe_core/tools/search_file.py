@@ -127,7 +127,10 @@ class SearchFileTool(Tool):
             return ToolResult(
                 success=True,
                 output=output,
-                metadata={"count": len(matches), "truncated": len(matches) >= MAX_RESULTS},
+                metadata={
+                    "count": len(matches),
+                    "truncated": len(matches) >= MAX_RESULTS,
+                },
             )
 
         except Exception as e:

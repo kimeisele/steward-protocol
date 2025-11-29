@@ -166,7 +166,9 @@ class SimpleLLMAgent(VibeAgent):
         # Extract user message from payload
         payload = task.payload
         if not isinstance(payload, dict):
-            raise ValueError(f"Task payload must be a dict, got {type(payload).__name__}")
+            raise ValueError(
+                f"Task payload must be a dict, got {type(payload).__name__}"
+            )
 
         user_message = payload.get("user_message")
         if not user_message:
@@ -192,7 +194,9 @@ class SimpleLLMAgent(VibeAgent):
             # Call LLM provider
             response = self.provider.chat(messages, model=model_to_use)
 
-            logger.info(f"AGENT: {self.agent_id} received LLM response (length={len(response)})")
+            logger.info(
+                f"AGENT: {self.agent_id} received LLM response (length={len(response)})"
+            )
             logger.debug(f"AGENT: LLM response: {response}")
 
             # Check if response contains tool call
@@ -200,7 +204,9 @@ class SimpleLLMAgent(VibeAgent):
             if self.tool_registry:
                 tool_call_data = self._extract_tool_call(response)
                 if tool_call_data:
-                    logger.info(f"AGENT: {self.agent_id} detected tool call in response")
+                    logger.info(
+                        f"AGENT: {self.agent_id} detected tool call in response"
+                    )
                     tool_result = self._execute_tool_call(tool_call_data)
 
             return AgentResponse(
@@ -216,7 +222,9 @@ class SimpleLLMAgent(VibeAgent):
             )
 
         except Exception as e:
-            logger.error(f"AGENT: {self.agent_id} LLM call failed for task {task.id}: {e}")
+            logger.error(
+                f"AGENT: {self.agent_id} LLM call failed for task {task.id}: {e}"
+            )
 
             # Return AgentResponse with failure status instead of raising
             error_msg = f"LLM call failed: {e!s}"
@@ -313,7 +321,11 @@ class SimpleLLMAgent(VibeAgent):
                     json_str = response[json_start : i + 1]
                     try:
                         data = json.loads(json_str)
-                        if isinstance(data, dict) and "tool" in data and "parameters" in data:
+                        if (
+                            isinstance(data, dict)
+                            and "tool" in data
+                            and "parameters" in data
+                        ):
                             return data
                     except json.JSONDecodeError:
                         pass

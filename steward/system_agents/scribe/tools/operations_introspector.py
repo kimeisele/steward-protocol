@@ -62,11 +62,11 @@ class WorkflowIntrospector:
                 return None
 
             # Extract name
-            name = data.get('name', workflow_file.stem)
+            name = data.get("name", workflow_file.stem)
 
             # Extract triggers
             triggers = []
-            on_config = data.get('on', {})
+            on_config = data.get("on", {})
 
             if isinstance(on_config, dict):
                 triggers = list(on_config.keys())
@@ -78,24 +78,24 @@ class WorkflowIntrospector:
             # Extract branches (if any)
             branches = []
             if isinstance(on_config, dict):
-                for trigger in ['push', 'pull_request']:
+                for trigger in ["push", "pull_request"]:
                     if trigger in on_config and isinstance(on_config[trigger], dict):
-                        branches.extend(on_config[trigger].get('branches', []))
+                        branches.extend(on_config[trigger].get("branches", []))
 
             return {
-                'name': name,
-                'file': workflow_file.name,
-                'triggers': triggers,
-                'branches': list(set(branches)) if branches else ['any'],
+                "name": name,
+                "file": workflow_file.name,
+                "triggers": triggers,
+                "branches": list(set(branches)) if branches else ["any"],
             }
 
         except Exception as e:
             return {
-                'name': workflow_file.stem,
-                'file': workflow_file.name,
-                'triggers': ['unknown'],
-                'branches': [],
-                'error': str(e)[:50]
+                "name": workflow_file.stem,
+                "file": workflow_file.name,
+                "triggers": ["unknown"],
+                "branches": [],
+                "error": str(e)[:50],
             }
 
 
@@ -124,55 +124,69 @@ class GitActivityIntrospector:
         try:
             # Get current branch
             branch_result = subprocess.run(
-                ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
-            current_branch = branch_result.stdout.strip() if branch_result.returncode == 0 else 'unknown'
+            current_branch = (
+                branch_result.stdout.strip()
+                if branch_result.returncode == 0
+                else "unknown"
+            )
 
             # Get last commit
             log_result = subprocess.run(
-                ['git', 'log', '-1', '--format=%H|%s|%an|%ar'],
+                ["git", "log", "-1", "--format=%H|%s|%an|%ar"],
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
 
-            last_commit = {'hash': 'unknown', 'message': 'unknown', 'author': 'unknown', 'time': 'unknown'}
+            last_commit = {
+                "hash": "unknown",
+                "message": "unknown",
+                "author": "unknown",
+                "time": "unknown",
+            }
             if log_result.returncode == 0 and log_result.stdout.strip():
-                parts = log_result.stdout.strip().split('|')
+                parts = log_result.stdout.strip().split("|")
                 if len(parts) == 4:
                     last_commit = {
-                        'hash': parts[0][:7],
-                        'message': parts[1][:60],
-                        'author': parts[2],
-                        'time': parts[3],
+                        "hash": parts[0][:7],
+                        "message": parts[1][:60],
+                        "author": parts[2],
+                        "time": parts[3],
                     }
 
             # Get status
             status_result = subprocess.run(
-                ['git', 'status', '--porcelain'],
+                ["git", "status", "--porcelain"],
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
-            status = 'clean' if not status_result.stdout.strip() else 'modified'
+            status = "clean" if not status_result.stdout.strip() else "modified"
 
             return {
-                'last_commit': last_commit,
-                'current_branch': current_branch,
-                'status': status,
+                "last_commit": last_commit,
+                "current_branch": current_branch,
+                "status": status,
             }
 
         except Exception as e:
             return {
-                'last_commit': {'hash': 'error', 'message': str(e)[:50], 'author': 'unknown', 'time': 'unknown'},
-                'current_branch': 'unknown',
-                'status': 'error',
+                "last_commit": {
+                    "hash": "error",
+                    "message": str(e)[:50],
+                    "author": "unknown",
+                    "time": "unknown",
+                },
+                "current_branch": "unknown",
+                "status": "error",
             }
 
 
@@ -184,7 +198,14 @@ class ParameterIntrospector:
 
     def scan_economy_params(self) -> Dict[str, Any]:
         """Scan economy.py for tunable parameters."""
-        economy_file = self.root_dir / "steward" / "system_agents" / "civic" / "tools" / "economy.py"
+        economy_file = (
+            self.root_dir
+            / "steward"
+            / "system_agents"
+            / "civic"
+            / "tools"
+            / "economy.py"
+        )
 
         if not economy_file.exists():
             return {}
@@ -196,8 +217,8 @@ class ParameterIntrospector:
 
             # Look for STARTING_BALANCE or similar
             patterns = {
-                'starting_credits': r'STARTING.*?=\s*(\d+)',
-                'api_cost': r'API.*?COST.*?=\s*(\d+)',
+                "starting_credits": r"STARTING.*?=\s*(\d+)",
+                "api_cost": r"API.*?COST.*?=\s*(\d+)",
             }
 
             for key, pattern in patterns.items():
@@ -206,13 +227,13 @@ class ParameterIntrospector:
                     params[key] = int(match.group(1))
 
             # Default values if not found
-            if 'starting_credits' not in params:
-                params['starting_credits'] = 100  # Known default
+            if "starting_credits" not in params:
+                params["starting_credits"] = 100  # Known default
 
             return params
 
         except Exception:
-            return {'starting_credits': 100}
+            return {"starting_credits": 100}
 
     def scan_security_params(self) -> Dict[str, Any]:
         """Scan narasimha.py for security parameters."""
@@ -226,9 +247,7 @@ class ParameterIntrospector:
 
             # Extract UNFORGIVABLE_CRIMES list
             crimes_match = re.search(
-                r'UNFORGIVABLE_CRIMES\s*=\s*\[(.*?)\]',
-                content,
-                re.DOTALL
+                r"UNFORGIVABLE_CRIMES\s*=\s*\[(.*?)\]", content, re.DOTALL
             )
 
             crimes = []
@@ -236,21 +255,21 @@ class ParameterIntrospector:
                 crimes_text = crimes_match.group(1)
                 crimes = [
                     c.strip().strip('"').strip("'")
-                    for c in crimes_text.split(',')
+                    for c in crimes_text.split(",")
                     if c.strip()
                 ]
 
             return {
-                'unforgivable_crimes': crimes,
-                'location': 'vibe_core/narasimha.py',
+                "unforgivable_crimes": crimes,
+                "location": "vibe_core/narasimha.py",
             }
 
         except Exception:
-            return {'unforgivable_crimes': []}
+            return {"unforgivable_crimes": []}
 
     def scan_all_params(self) -> Dict[str, Any]:
         """Scan all tunable parameters."""
         return {
-            'economy': self.scan_economy_params(),
-            'security': self.scan_security_params(),
+            "economy": self.scan_economy_params(),
+            "security": self.scan_security_params(),
         }

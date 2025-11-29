@@ -39,6 +39,7 @@ logger = logging.getLogger("WATCHMAN.STANDARDS_INSPECTION")
 
 class ViolationType(Enum):
     """Types of architectural violations."""
+
     REQUIREMENTS_TXT = "requirements_txt"
     DIRECT_PATH_DATA = "direct_path_data"
     MISSING_LAZY_LOADING = "missing_lazy_loading"
@@ -49,15 +50,17 @@ class ViolationType(Enum):
 
 class ViolationSeverity(Enum):
     """Severity levels for violations."""
+
     CRITICAL = "CRITICAL"  # Build must fail
-    HIGH = "HIGH"          # Should fail, but can be overridden
-    MEDIUM = "MEDIUM"      # Warning, should be fixed
-    LOW = "LOW"            # Suggestion
+    HIGH = "HIGH"  # Should fail, but can be overridden
+    MEDIUM = "MEDIUM"  # Warning, should be fixed
+    LOW = "LOW"  # Suggestion
 
 
 @dataclass
 class Violation:
     """Represents a single architectural violation."""
+
     agent_id: str
     file_path: str
     line_number: int
@@ -96,16 +99,18 @@ class PathCallVisitor(ast.NodeVisitor):
             if node.args and isinstance(node.args[0], ast.Constant):
                 arg_value = node.args[0].value
                 if isinstance(arg_value, str) and arg_value.startswith("data/"):
-                    self.violations.append(Violation(
-                        agent_id=self._extract_agent_id(),
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                        violation_type=ViolationType.DIRECT_PATH_DATA,
-                        severity=ViolationSeverity.CRITICAL,
-                        message=f"Direct Path('data/...') call detected: Path('{arg_value}')",
-                        code_snippet=f"Path('{arg_value}')",
-                        fix_suggestion="Use agent.system.get_sandbox_path() / 'subdir' instead"
-                    ))
+                    self.violations.append(
+                        Violation(
+                            agent_id=self._extract_agent_id(),
+                            file_path=self.file_path,
+                            line_number=node.lineno,
+                            violation_type=ViolationType.DIRECT_PATH_DATA,
+                            severity=ViolationSeverity.CRITICAL,
+                            message=f"Direct Path('data/...') call detected: Path('{arg_value}')",
+                            code_snippet=f"Path('{arg_value}')",
+                            fix_suggestion="Use agent.system.get_sandbox_path() / 'subdir' instead",
+                        )
+                    )
 
         self.generic_visit(node)
 
@@ -141,22 +146,27 @@ class InitMethodVisitor(ast.NodeVisitor):
         if self.in_init:
             # Check for self.path = Path(...) patterns
             if isinstance(node.value, ast.Call):
-                if isinstance(node.value.func, ast.Name) and node.value.func.id == "Path":
+                if (
+                    isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "Path"
+                ):
                     # Check if it's a hardcoded path (not lazy-loaded)
                     if node.value.args and isinstance(node.value.args[0], ast.Constant):
                         arg_value = node.value.args[0].value
                         if isinstance(arg_value, str) and not arg_value.startswith("_"):
                             # This is a hardcoded path in __init__ (not a temp variable)
-                            self.violations.append(Violation(
-                                agent_id=self._extract_agent_id(),
-                                file_path=self.file_path,
-                                line_number=node.lineno,
-                                violation_type=ViolationType.HARDCODED_PATH_IN_INIT,
-                                severity=ViolationSeverity.MEDIUM,
-                                message=f"Hardcoded path in __init__: {arg_value}",
-                                code_snippet=f"Path('{arg_value}')",
-                                fix_suggestion="Use lazy-loading @property pattern instead"
-                            ))
+                            self.violations.append(
+                                Violation(
+                                    agent_id=self._extract_agent_id(),
+                                    file_path=self.file_path,
+                                    line_number=node.lineno,
+                                    violation_type=ViolationType.HARDCODED_PATH_IN_INIT,
+                                    severity=ViolationSeverity.MEDIUM,
+                                    message=f"Hardcoded path in __init__: {arg_value}",
+                                    code_snippet=f"Path('{arg_value}')",
+                                    fix_suggestion="Use lazy-loading @property pattern instead",
+                                )
+                            )
 
         self.generic_visit(node)
 
@@ -195,15 +205,17 @@ class StandardsInspectionTool:
         # Check 1: requirements.txt should not exist
         requirements_file = agent_path / "requirements.txt"
         if requirements_file.exists():
-            violations.append(Violation(
-                agent_id=agent_path.name,
-                file_path=str(requirements_file),
-                line_number=1,
-                violation_type=ViolationType.REQUIREMENTS_TXT,
-                severity=ViolationSeverity.CRITICAL,
-                message="requirements.txt found in agent directory",
-                fix_suggestion="Remove requirements.txt and use pyproject.toml"
-            ))
+            violations.append(
+                Violation(
+                    agent_id=agent_path.name,
+                    file_path=str(requirements_file),
+                    line_number=1,
+                    violation_type=ViolationType.REQUIREMENTS_TXT,
+                    severity=ViolationSeverity.CRITICAL,
+                    message="requirements.txt found in agent directory",
+                    fix_suggestion="Remove requirements.txt and use pyproject.toml",
+                )
+            )
 
         # Check 2: Inspect cartridge_main.py with AST
         cartridge_file = agent_path / "cartridge_main.py"
@@ -214,15 +226,17 @@ class StandardsInspectionTool:
         if cartridge_file.exists():
             line_count = len(cartridge_file.read_text().splitlines())
             if line_count > 500:
-                violations.append(Violation(
-                    agent_id=agent_path.name,
-                    file_path=str(cartridge_file),
-                    line_number=1,
-                    violation_type=ViolationType.LINE_COUNT_EXCEEDED,
-                    severity=ViolationSeverity.MEDIUM,
-                    message=f"Agent has {line_count} lines (GAD-000 recommends <500)",
-                    fix_suggestion="Consider splitting into multiple tools"
-                ))
+                violations.append(
+                    Violation(
+                        agent_id=agent_path.name,
+                        file_path=str(cartridge_file),
+                        line_number=1,
+                        violation_type=ViolationType.LINE_COUNT_EXCEEDED,
+                        severity=ViolationSeverity.MEDIUM,
+                        message=f"Agent has {line_count} lines (GAD-000 recommends <500)",
+                        fix_suggestion="Consider splitting into multiple tools",
+                    )
+                )
 
         return violations
 
@@ -254,14 +268,16 @@ class StandardsInspectionTool:
 
         except SyntaxError as e:
             logger.error(f"Syntax error in {file_path}: {e}")
-            violations.append(Violation(
-                agent_id=file_path.parent.name,
-                file_path=str(file_path),
-                line_number=e.lineno or 1,
-                violation_type=ViolationType.MISSING_SYSTEM_INTERFACE,
-                severity=ViolationSeverity.HIGH,
-                message=f"Syntax error: {e.msg}",
-            ))
+            violations.append(
+                Violation(
+                    agent_id=file_path.parent.name,
+                    file_path=str(file_path),
+                    line_number=e.lineno or 1,
+                    violation_type=ViolationType.MISSING_SYSTEM_INTERFACE,
+                    severity=ViolationSeverity.HIGH,
+                    message=f"Syntax error: {e.msg}",
+                )
+            )
 
         return violations
 
@@ -285,7 +301,9 @@ class StandardsInspectionTool:
                 all_violations.extend(violations)
 
                 if violations:
-                    logger.warning(f"   ⚠️  Found {len(violations)} violation(s) in {agent_dir.name}")
+                    logger.warning(
+                        f"   ⚠️  Found {len(violations)} violation(s) in {agent_dir.name}"
+                    )
                 else:
                     logger.info(f"   ✅ {agent_dir.name} is compliant")
 
@@ -303,7 +321,9 @@ class StandardsInspectionTool:
         """
         # Group by severity
         by_severity = {
-            "CRITICAL": [v for v in violations if v.severity == ViolationSeverity.CRITICAL],
+            "CRITICAL": [
+                v for v in violations if v.severity == ViolationSeverity.CRITICAL
+            ],
             "HIGH": [v for v in violations if v.severity == ViolationSeverity.HIGH],
             "MEDIUM": [v for v in violations if v.severity == ViolationSeverity.MEDIUM],
             "LOW": [v for v in violations if v.severity == ViolationSeverity.LOW],
@@ -321,9 +341,7 @@ class StandardsInspectionTool:
             "by_severity": {
                 severity: len(viols) for severity, viols in by_severity.items()
             },
-            "by_agent": {
-                agent_id: len(viols) for agent_id, viols in by_agent.items()
-            },
+            "by_agent": {agent_id: len(viols) for agent_id, viols in by_agent.items()},
             "critical_count": len(by_severity["CRITICAL"]),
             "should_fail_build": len(by_severity["CRITICAL"]) > 0,
             "violations": [v.to_dict() for v in violations],

@@ -36,6 +36,7 @@ logger = logging.getLogger("DETERMINISTIC_EXECUTOR")
 
 class PhaseStatus(Enum):
     """State machine for playbook phases"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -46,6 +47,7 @@ class PhaseStatus(Enum):
 
 class ActionType(Enum):
     """Types of actions a phase can execute"""
+
     CALL_AGENT = "CALL_AGENT"  # Delegate to another agent
     CHECK_STATE = "CHECK_STATE"  # Validate preconditions
     EXECUTE_SCRIPT = "EXECUTE_SCRIPT"  # Run deterministic script
@@ -55,6 +57,7 @@ class ActionType(Enum):
 @dataclass
 class PlaybookPhase:
     """A single phase within a playbook"""
+
     phase_id: str
     name: str
     description: str
@@ -71,6 +74,7 @@ class PlaybookPhase:
 @dataclass
 class PlaybookDefinition:
     """A complete playbook"""
+
     id: str
     name: str
     description: str
@@ -82,6 +86,7 @@ class PlaybookDefinition:
 @dataclass
 class PlaybookExecution:
     """Tracks a playbook execution in progress"""
+
     execution_id: str
     playbook_id: str
     user_input: str
@@ -114,13 +119,16 @@ class DeterministicExecutor:
         self.llm = None
         try:
             from services.llm_engine import llm
+
             self.llm = llm
         except ImportError:
             logger.warning("⚠️  LLM Engine not available (optional)")
 
         self._load_playbooks()
         self._load_persisted_executions()
-        logger.info(f"🎯 Playbook Engine initialized with {len(self.playbooks)} playbooks")
+        logger.info(
+            f"🎯 Playbook Engine initialized with {len(self.playbooks)} playbooks"
+        )
 
     def _load_playbooks(self):
         """Load all playbooks from knowledge/playbooks/"""
@@ -133,11 +141,13 @@ class DeterministicExecutor:
                 continue  # Skip the schema definition file
 
             try:
-                with open(playbook_file, 'r') as f:
+                with open(playbook_file, "r") as f:
                     data = yaml.safe_load(f)
 
                 if not data or "playbook" not in data:
-                    logger.warning(f"⚠️  Invalid playbook format in {playbook_file.name}")
+                    logger.warning(
+                        f"⚠️  Invalid playbook format in {playbook_file.name}"
+                    )
                     continue
 
                 playbook_data = data["playbook"]
@@ -148,7 +158,7 @@ class DeterministicExecutor:
                     description=playbook_data.get("description", ""),
                     intent_match=playbook_data.get("intent_match", {}),
                     phases=phases,
-                    variables=playbook_data.get("variables", {})
+                    variables=playbook_data.get("variables", {}),
                 )
 
                 self.playbooks[playbook.id] = playbook
@@ -170,7 +180,7 @@ class DeterministicExecutor:
                 on_failure=phase_data.get("on_failure", "ABORT"),
                 state_var=phase_data.get("state_var"),
                 timeout_seconds=phase_data.get("timeout_seconds", 60),
-                requires_approval=phase_data.get("requires_approval", False)
+                requires_approval=phase_data.get("requires_approval", False),
             )
             phases.append(phase)
         return phases
@@ -208,12 +218,14 @@ class DeterministicExecutor:
 
         return best_match
 
-    async def execute(self,
-                      playbook_id: str,
-                      user_input: str,
-                      intent_vector: Any,
-                      kernel: Any = None,
-                      emit_event=None) -> Dict[str, Any]:
+    async def execute(
+        self,
+        playbook_id: str,
+        user_input: str,
+        intent_vector: Any,
+        kernel: Any = None,
+        emit_event=None,
+    ) -> Dict[str, Any]:
         """
         Execute a playbook step-by-step.
 
@@ -229,17 +241,12 @@ class DeterministicExecutor:
         """
         if playbook_id not in self.playbooks:
             logger.error(f"❌ Playbook not found: {playbook_id}")
-            return {
-                "status": "FAILED",
-                "error": f"Playbook not found: {playbook_id}"
-            }
+            return {"status": "FAILED", "error": f"Playbook not found: {playbook_id}"}
 
         playbook = self.playbooks[playbook_id]
         execution_id = f"exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         execution = PlaybookExecution(
-            execution_id=execution_id,
-            playbook_id=playbook_id,
-            user_input=user_input
+            execution_id=execution_id, playbook_id=playbook_id, user_input=user_input
         )
 
         # Start execution
@@ -247,10 +254,12 @@ class DeterministicExecutor:
 
         if emit_event:
             try:
-                await emit_event("ACTION", f"Started playbook: {playbook.name}", "playbook_engine", {
-                    "playbook_id": playbook_id,
-                    "execution_id": execution_id
-                })
+                await emit_event(
+                    "ACTION",
+                    f"Started playbook: {playbook.name}",
+                    "playbook_engine",
+                    {"playbook_id": playbook_id, "execution_id": execution_id},
+                )
             except Exception as e:
                 logger.debug(f"Event emission failed: {e}")
 
@@ -286,10 +295,12 @@ class DeterministicExecutor:
 
             if emit_event:
                 try:
-                    await emit_event("THOUGHT", f"Running: {phase.name}", "playbook_engine", {
-                        "phase_id": current_phase_id,
-                        "phase_name": phase.name
-                    })
+                    await emit_event(
+                        "THOUGHT",
+                        f"Running: {phase.name}",
+                        "playbook_engine",
+                        {"phase_id": current_phase_id, "phase_name": phase.name},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
 
@@ -298,19 +309,29 @@ class DeterministicExecutor:
                 phase.status = PhaseStatus.BLOCKED
                 if emit_event:
                     try:
-                        await emit_event("ACTION", f"Awaiting approval: {phase.name}", "playbook_engine", {
-                            "phase_id": current_phase_id,
-                            "requires_approval": True
-                        })
+                        await emit_event(
+                            "ACTION",
+                            f"Awaiting approval: {phase.name}",
+                            "playbook_engine",
+                            {"phase_id": current_phase_id, "requires_approval": True},
+                        )
                     except Exception as e:
                         logger.debug(f"Event emission failed: {e}")
                 # For now, auto-approve. In production, this would wait for user input
-                logger.info(f"⏭️  Auto-approving phase (would wait for user in production): {phase.name}")
+                logger.info(
+                    f"⏭️  Auto-approving phase (would wait for user in production): {phase.name}"
+                )
 
             # Execute phase actions
             phase.status = PhaseStatus.RUNNING
             phase_success = await self._execute_phase_actions(
-                phase, playbook, execution, intent_vector, kernel, emit_event, execution.execution_id
+                phase,
+                playbook,
+                execution,
+                intent_vector,
+                kernel,
+                emit_event,
+                execution.execution_id,
             )
 
             if phase_success:
@@ -327,12 +348,12 @@ class DeterministicExecutor:
 
             if emit_event:
                 try:
-                    await emit_event("ACTION",
+                    await emit_event(
+                        "ACTION",
                         f"{'Completed' if phase_success else 'Failed'}: {phase.name}",
-                        "playbook_engine", {
-                            "phase_id": current_phase_id,
-                            "success": phase_success
-                        })
+                        "playbook_engine",
+                        {"phase_id": current_phase_id, "success": phase_success},
+                    )
                 except Exception as e:
                     logger.debug(f"Event emission failed: {e}")
 
@@ -340,18 +361,22 @@ class DeterministicExecutor:
         execution.status = "COMPLETED" if current_phase_id == "COMPLETE" else "FAILED"
         execution.completed_at = datetime.now().timestamp()
 
-        logger.info(f"✅ Playbook execution complete: {execution.execution_id} ({execution.status})")
+        logger.info(
+            f"✅ Playbook execution complete: {execution.execution_id} ({execution.status})"
+        )
 
         return self._format_execution_result(execution, playbook)
 
-    async def _execute_phase_actions(self,
-                                     phase: PlaybookPhase,
-                                     playbook: PlaybookDefinition,
-                                     execution: PlaybookExecution,
-                                     intent_vector: Any,
-                                     kernel: Any = None,
-                                     emit_event=None,
-                                     parent_execution_id: Optional[str] = None) -> bool:
+    async def _execute_phase_actions(
+        self,
+        phase: PlaybookPhase,
+        playbook: PlaybookDefinition,
+        execution: PlaybookExecution,
+        intent_vector: Any,
+        kernel: Any = None,
+        emit_event=None,
+        parent_execution_id: Optional[str] = None,
+    ) -> bool:
         """
         Execute all actions within a phase.
         Returns True if successful, False if any action fails.
@@ -372,7 +397,9 @@ class DeterministicExecutor:
                     # Emit visualization event
                     if emit_event:
                         try:
-                            await emit_event("ACTION", f"{target}", "playbook_engine", params)
+                            await emit_event(
+                                "ACTION", f"{target}", "playbook_engine", params
+                            )
                         except Exception as e:
                             logger.debug(f"Event emission failed: {e}")
 
@@ -397,18 +424,23 @@ class DeterministicExecutor:
                     # Execute nested playbook (FRACTAL/NESTED SUPPORT)
                     nested_playbook_id = target
                     if nested_playbook_id in self.playbooks:
-                        logger.info(f"  🔗 Calling nested playbook: {nested_playbook_id}")
+                        logger.info(
+                            f"  🔗 Calling nested playbook: {nested_playbook_id}"
+                        )
                         nested_result = await self.execute_nested_playbook(
                             playbook_id=nested_playbook_id,
                             user_input=execution.user_input,
                             intent_vector=intent_vector,
                             kernel=kernel,
                             emit_event=emit_event,
-                            parent_execution_id=parent_execution_id or execution.execution_id
+                            parent_execution_id=parent_execution_id
+                            or execution.execution_id,
                         )
                         phase.result = nested_result
                     else:
-                        logger.warning(f"  ⚠️  Nested playbook not found: {nested_playbook_id}")
+                        logger.warning(
+                            f"  ⚠️  Nested playbook not found: {nested_playbook_id}"
+                        )
                         return False
 
             except Exception as e:
@@ -417,7 +449,9 @@ class DeterministicExecutor:
 
         return True
 
-    def _format_execution_result(self, execution: PlaybookExecution, playbook: PlaybookDefinition) -> Dict[str, Any]:
+    def _format_execution_result(
+        self, execution: PlaybookExecution, playbook: PlaybookDefinition
+    ) -> Dict[str, Any]:
         """Format execution results for response"""
         return {
             "status": execution.status,
@@ -430,12 +464,14 @@ class DeterministicExecutor:
                     "phase_id": p.phase_id,
                     "name": p.name,
                     "status": p.status.value,
-                    "result": p.result
+                    "result": p.result,
                 }
-                for p in playbook.phases if p.status != PhaseStatus.PENDING
+                for p in playbook.phases
+                if p.status != PhaseStatus.PENDING
             ],
-            "duration_seconds": (execution.completed_at or datetime.now().timestamp()) - execution.started_at,
-            "details": execution.phase_results
+            "duration_seconds": (execution.completed_at or datetime.now().timestamp())
+            - execution.started_at,
+            "details": execution.phase_results,
         }
 
     # ===== STATE PERSISTENCE (KARMA LEDGER) =====
@@ -452,9 +488,9 @@ class DeterministicExecutor:
                 "status": execution.status,
                 "started_at": execution.started_at,
                 "completed_at": execution.completed_at,
-                "error_message": execution.error_message
+                "error_message": execution.error_message,
             }
-            with open(state_file, 'w') as f:
+            with open(state_file, "w") as f:
                 json.dump(state_data, f, indent=2)
             logger.info(f"💾 Saved execution state: {execution.execution_id}")
         except Exception as e:
@@ -464,7 +500,7 @@ class DeterministicExecutor:
         """Load previously persisted execution states"""
         try:
             for state_file in self.state_dir.glob("*.json"):
-                with open(state_file, 'r') as f:
+                with open(state_file, "r") as f:
                     data = json.load(f)
                     execution_id = data.get("execution_id")
                     if execution_id:
@@ -475,13 +511,17 @@ class DeterministicExecutor:
                             current_phase_id=data.get("current_phase_id"),
                             phase_results=data.get("phase_results", {}),
                             status=data.get("status", "RUNNING"),
-                            started_at=data.get("started_at", datetime.now().timestamp()),
+                            started_at=data.get(
+                                "started_at", datetime.now().timestamp()
+                            ),
                             completed_at=data.get("completed_at"),
-                            error_message=data.get("error_message")
+                            error_message=data.get("error_message"),
                         )
                         self.executions[execution_id] = execution
             if self.executions:
-                logger.info(f"📂 Loaded {len(self.executions)} persisted execution states")
+                logger.info(
+                    f"📂 Loaded {len(self.executions)} persisted execution states"
+                )
         except Exception as e:
             logger.warning(f"⚠️  Failed to load persisted executions: {e}")
 
@@ -516,7 +556,9 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
         return options[0] if options else None
 
     # ===== EVOLUTIONARY LOOP (EAD) =====
-    def generate_playbook_proposal(self, user_input: str, concepts: Set[str]) -> Dict[str, Any]:
+    def generate_playbook_proposal(
+        self, user_input: str, concepts: Set[str]
+    ) -> Dict[str, Any]:
         """
         Generate a PROPOSAL for a new playbook when no matching playbook found.
         This is the safe self-improvement mechanism (EAD - Evolutionary Architecture Dimension).
@@ -538,10 +580,7 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
                 "id": f"{primary}_V1",
                 "name": f"Auto-generated for {primary}",
                 "description": f"Playbook to handle: {user_input[:100]}",
-                "intent_match": {
-                    "primary": primary,
-                    "secondary": secondary
-                },
+                "intent_match": {"primary": primary, "secondary": secondary},
                 "phases": [
                     {
                         "phase_id": "phase_1_validation",
@@ -551,12 +590,12 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
                             {
                                 "action_type": "CHECK_STATE",
                                 "target": "input_validation",
-                                "params": {}
+                                "params": {},
                             }
                         ],
                         "on_success": "phase_2_execution",
                         "on_failure": "ABORT",
-                        "timeout_seconds": 5
+                        "timeout_seconds": 5,
                     },
                     {
                         "phase_id": "phase_2_execution",
@@ -566,18 +605,18 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
                             {
                                 "action_type": "EMIT_EVENT",
                                 "target": "execution_started",
-                                "params": {"operation": "automatic"}
+                                "params": {"operation": "automatic"},
                             }
                         ],
                         "on_success": "COMPLETE",
                         "on_failure": "ABORT",
-                        "timeout_seconds": 60
-                    }
-                ]
+                        "timeout_seconds": 60,
+                    },
+                ],
             },
             "status": "PENDING_APPROVAL",
             "approval_required": True,
-            "message": "⚠️  NEW PLAYBOOK PROPOSAL - Requires Human Approval (HIL Check) before activation"
+            "message": "⚠️  NEW PLAYBOOK PROPOSAL - Requires Human Approval (HIL Check) before activation",
         }
 
         logger.info(f"📝 Generated playbook proposal: {proposal_id}")
@@ -586,32 +625,41 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
         return proposal
 
     # ===== FRACTAL/NESTED PLAYBOOKS =====
-    async def execute_nested_playbook(self,
-                                     playbook_id: str,
-                                     user_input: str,
-                                     intent_vector: Any,
-                                     kernel: Any = None,
-                                     emit_event=None,
-                                     parent_execution_id: Optional[str] = None) -> Dict[str, Any]:
+    async def execute_nested_playbook(
+        self,
+        playbook_id: str,
+        user_input: str,
+        intent_vector: Any,
+        kernel: Any = None,
+        emit_event=None,
+        parent_execution_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """
         Execute a playbook that can be called from another playbook.
         Supports fractal/recursive playbook structures.
         """
-        logger.info(f"🔗 Executing nested playbook: {playbook_id} (parent: {parent_execution_id})")
+        logger.info(
+            f"🔗 Executing nested playbook: {playbook_id} (parent: {parent_execution_id})"
+        )
         result = await self.execute(
             playbook_id=playbook_id,
             user_input=user_input,
             intent_vector=intent_vector,
             kernel=kernel,
-            emit_event=emit_event
+            emit_event=emit_event,
         )
 
         if emit_event and parent_execution_id:
             try:
-                await emit_event("ACTION",
+                await emit_event(
+                    "ACTION",
                     f"Nested playbook {playbook_id} completed",
                     "playbook_engine",
-                    {"nested_playbook_id": playbook_id, "parent_id": parent_execution_id})
+                    {
+                        "nested_playbook_id": playbook_id,
+                        "parent_id": parent_execution_id,
+                    },
+                )
             except Exception as e:
                 logger.debug(f"Event emission failed: {e}")
 

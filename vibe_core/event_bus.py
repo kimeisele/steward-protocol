@@ -30,35 +30,37 @@ logger = logging.getLogger("EVENT_BUS")
 
 class EventType(str, Enum):
     """Standard event types emitted by agents"""
+
     # Core lifecycle events
-    THOUGHT = "THOUGHT"        # Planning/reasoning
-    ACTION = "ACTION"          # Executing task
-    ERROR = "ERROR"            # Failure
-    COMPLETED = "COMPLETED"    # Task completion
+    THOUGHT = "THOUGHT"  # Planning/reasoning
+    ACTION = "ACTION"  # Executing task
+    ERROR = "ERROR"  # Failure
+    COMPLETED = "COMPLETED"  # Task completion
 
     # System events
-    VIOLATION = "VIOLATION"        # Constitution breach
-    MERCY = "MERCY"                # Supreme Court intervention
+    VIOLATION = "VIOLATION"  # Constitution breach
+    MERCY = "MERCY"  # Supreme Court intervention
     PRAYER_RECEIVED = "PRAYER_RECEIVED"  # Request received
     CRITICAL_INTERRUPT = "CRITICAL_INTERRUPT"  # Emergency bypass (Gajendra)
 
     # Agent-specific events
-    BROADCAST = "BROADCAST"        # Content published
+    BROADCAST = "BROADCAST"  # Content published
     PROPOSAL_CREATED = "PROPOSAL_CREATED"  # New proposal
-    VOTE_CAST = "VOTE_CAST"        # Vote recorded
-    AUDIT_CHECK = "AUDIT_CHECK"    # Invariant verified
+    VOTE_CAST = "VOTE_CAST"  # Vote recorded
+    AUDIT_CHECK = "AUDIT_CHECK"  # Invariant verified
 
 
 class EventColor(str, Enum):
     """ANSI color codes for terminal visualization"""
-    BLUE = "34"        # THOUGHT
-    GREEN = "32"       # ACTION
-    RED = "31"         # ERROR / CRITICAL_INTERRUPT
-    PURPLE = "35"      # VIOLATION
-    GOLD = "33"        # MERCY
-    CYAN = "36"        # PRAYER_RECEIVED
-    YELLOW = "33"      # AUDIT_CHECK
-    WHITE = "37"       # COMPLETED
+
+    BLUE = "34"  # THOUGHT
+    GREEN = "32"  # ACTION
+    RED = "31"  # ERROR / CRITICAL_INTERRUPT
+    PURPLE = "35"  # VIOLATION
+    GOLD = "33"  # MERCY
+    CYAN = "36"  # PRAYER_RECEIVED
+    YELLOW = "33"  # AUDIT_CHECK
+    WHITE = "37"  # COMPLETED
 
 
 EVENT_COLOR_MAP = {
@@ -78,6 +80,7 @@ EVENT_COLOR_MAP = {
 @dataclass
 class Event:
     """Immutable event record - the building block of the event stream"""
+
     event_id: str = field(default_factory=lambda: str(uuid4()))
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
     event_type: str = ""  # EventType enum value
@@ -88,7 +91,7 @@ class Event:
 
     def to_json(self) -> str:
         """Serialize event to JSON"""
-        return json.dumps(asdict(self), default=str, separators=(',', ':'))
+        return json.dumps(asdict(self), default=str, separators=(",", ":"))
 
     def get_color(self) -> str:
         """Get ANSI color code for this event"""
@@ -184,7 +187,9 @@ class EventBus:
         else:
             self._global_subscribers.discard(callback)
 
-    def get_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Event]:
+    def get_history(
+        self, limit: int = 100, event_type: Optional[str] = None
+    ) -> List[Event]:
         """Get event history (most recent first)"""
         if event_type:
             history = [e for e in self._event_history if e.event_type == event_type]
@@ -200,8 +205,8 @@ class EventBus:
             "history_size": len(self._event_history),
             "subscribers": {
                 "global": len(self._global_subscribers),
-                "by_type": {k: len(v) for k, v in self._subscribers.items() if v}
-            }
+                "by_type": {k: len(v) for k, v in self._subscribers.items() if v},
+            },
         }
 
     def clear_history(self):
@@ -227,7 +232,7 @@ async def emit_event(
     agent_id: str,
     message: str = "",
     task_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[Dict[str, Any]] = None,
 ):
     """
     Convenience function to emit an event from anywhere in the codebase
@@ -241,6 +246,6 @@ async def emit_event(
         agent_id=agent_id,
         task_id=task_id,
         message=message,
-        details=details or {}
+        details=details or {},
     )
     await bus.emit(event)

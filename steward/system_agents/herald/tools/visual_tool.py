@@ -26,9 +26,10 @@ logger = logging.getLogger("HERALD_VISUAL")
 @dataclass
 class VisualAsset:
     """Represents a generated visual asset."""
+
     asset_type: str  # "ascii" or "svg"
-    content: str     # The actual SVG/ASCII content
-    alt_text: str    # Accessibility text
+    content: str  # The actual SVG/ASCII content
+    alt_text: str  # Accessibility text
     keywords: List[str]  # Metadata: what this asset represents
     width: Optional[int] = None
     height: Optional[int] = None
@@ -50,28 +51,28 @@ class VisualTool:
         "agent_city": {
             "name": "Agent City Cyberpunk",
             "color_scheme": ["#00FF00", "#00FFFF", "#FF00FF"],
-            "style": "neon"
+            "style": "neon",
         },
         "protocol": {
             "name": "Protocol Blueprint",
             "color_scheme": ["#0066FF", "#00CCFF", "#FFFFFF"],
-            "style": "technical"
+            "style": "technical",
         },
         "cryptography": {
             "name": "Cryptographic Lock",
             "color_scheme": ["#FFD700", "#FF8C00", "#FF4500"],
-            "style": "technical"
+            "style": "technical",
         },
         "governance": {
             "name": "Governance Matrix",
             "color_scheme": ["#4CAF50", "#8BC34A", "#FFFFFF"],
-            "style": "matrix"
+            "style": "matrix",
         },
         "minimal": {
             "name": "Minimal Zen",
             "color_scheme": ["#000000", "#FFFFFF"],
-            "style": "minimal"
-        }
+            "style": "minimal",
+        },
     }
 
     # Keyword-to-visual mappings
@@ -112,7 +113,9 @@ class VisualTool:
 
         return detected if detected else ["default"]
 
-    def _select_theme(self, keywords: List[str], style_preset: str = "agent_city") -> Dict[str, Any]:
+    def _select_theme(
+        self, keywords: List[str], style_preset: str = "agent_city"
+    ) -> Dict[str, Any]:
         """
         Select appropriate theme based on keywords and preset.
 
@@ -297,7 +300,7 @@ class VisualTool:
         self,
         text_draft: str,
         style_preset: str = "agent_city",
-        format_type: str = "ascii"
+        format_type: str = "ascii",
     ) -> VisualAsset:
         """
         Generate a visual asset to accompany text.
@@ -312,7 +315,9 @@ class VisualTool:
         """
         # Extract keywords from text
         keywords = self._extract_keywords(text_draft)
-        logger.info(f"🎨 Generating visual: keywords={keywords}, style={style_preset}, format={format_type}")
+        logger.info(
+            f"🎨 Generating visual: keywords={keywords}, style={style_preset}, format={format_type}"
+        )
 
         # Select theme based on keywords
         theme = self._select_theme(keywords, style_preset)
@@ -321,7 +326,9 @@ class VisualTool:
         if format_type == "svg":
             content = self.generate_svg(keywords, theme)
             asset_type = "svg"
-            alt_text = f"Visual representation of {', '.join(keywords[:3])} - {theme['name']}"
+            alt_text = (
+                f"Visual representation of {', '.join(keywords[:3])} - {theme['name']}"
+            )
         else:
             content = self.generate_ascii(keywords, theme)
             asset_type = "ascii"
@@ -340,10 +347,7 @@ class VisualTool:
         return asset
 
     def generate_from_context(
-        self,
-        context: Dict[str, Any],
-        text_draft: str,
-        style_preset: str = "agent_city"
+        self, context: Dict[str, Any], text_draft: str, style_preset: str = "agent_city"
     ) -> VisualAsset:
         """
         Generate visual asset using full context (advanced).

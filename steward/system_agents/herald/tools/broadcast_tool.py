@@ -58,13 +58,15 @@ class BroadcastTool:
                     consumer_secret=api_secret,
                     access_token=access_token,
                     access_token_secret=access_secret,
-                    wait_on_rate_limit=True
+                    wait_on_rate_limit=True,
                 )
                 logger.info("✅ Broadcast: Twitter authenticated")
             except Exception as e:
                 logger.warning(f"⚠️  Broadcast: Twitter auth failed: {e}")
         else:
-            logger.warning("⚠️  Broadcast: Twitter credentials incomplete (simulation mode)")
+            logger.warning(
+                "⚠️  Broadcast: Twitter credentials incomplete (simulation mode)"
+            )
 
     def _init_reddit(self) -> None:
         """Initialize Reddit client."""
@@ -84,13 +86,15 @@ class BroadcastTool:
                     client_secret=client_secret,
                     username=username,
                     password=password,
-                    user_agent="HERALD_AGENT/3.0"
+                    user_agent="HERALD_AGENT/3.0",
                 )
                 logger.info("✅ Broadcast: Reddit authenticated")
             except Exception as e:
                 logger.warning(f"⚠️  Broadcast: Reddit auth failed: {e}")
         else:
-            logger.warning("⚠️  Broadcast: Reddit credentials incomplete (simulation mode)")
+            logger.warning(
+                "⚠️  Broadcast: Reddit credentials incomplete (simulation mode)"
+            )
 
     def verify_credentials(self, platform: str = "twitter") -> bool:
         """
@@ -104,11 +108,17 @@ class BroadcastTool:
         """
         if platform == "twitter":
             available = self.twitter_client is not None
-            logger.info(f"✅ Twitter credentials verified" if available else "❌ Twitter offline")
+            logger.info(
+                f"✅ Twitter credentials verified"
+                if available
+                else "❌ Twitter offline"
+            )
             return available
         elif platform == "reddit":
             available = self.reddit_client is not None
-            logger.info(f"✅ Reddit credentials verified" if available else "❌ Reddit offline")
+            logger.info(
+                f"✅ Reddit credentials verified" if available else "❌ Reddit offline"
+            )
             return available
         return False
 
@@ -149,14 +159,16 @@ class BroadcastTool:
         logger.info(f"   Would post to r/LocalLLaMA: {content[:80]}...")
         return True  # Success simulation
 
-    def scan_mentions(self, since_id: Optional[str] = None, platform: str = "twitter") -> list:
+    def scan_mentions(
+        self, since_id: Optional[str] = None, platform: str = "twitter"
+    ) -> list:
         """
         Scan for mentions on platform.
-        
+
         Args:
             since_id: ID of last processed mention
             platform: "twitter"
-            
+
         Returns:
             list: List of mention objects (dict)
         """
@@ -167,11 +179,11 @@ class BroadcastTool:
     def reply_to_tweet(self, tweet_id: str, content: str) -> bool:
         """
         Reply to a specific tweet.
-        
+
         Args:
             tweet_id: ID of tweet to reply to
             content: Reply text
-            
+
         Returns:
             bool: True if successful
         """
@@ -188,32 +200,34 @@ class BroadcastTool:
             me = self.twitter_client.get_me()
             if not me or not me.data:
                 return []
-            
+
             my_id = me.data.id
-            
+
             # Fetch mentions
             mentions = self.twitter_client.get_users_mentions(
                 id=my_id,
                 since_id=since_id,
                 max_results=10,
-                tweet_fields=["created_at", "author_id", "text"]
+                tweet_fields=["created_at", "author_id", "text"],
             )
-            
+
             if not mentions.data:
                 return []
-                
+
             results = []
             for tweet in mentions.data:
-                results.append({
-                    "id": str(tweet.id),
-                    "text": tweet.text,
-                    "author_id": str(tweet.author_id),
-                    "created_at": str(tweet.created_at)
-                })
-            
+                results.append(
+                    {
+                        "id": str(tweet.id),
+                        "text": tweet.text,
+                        "author_id": str(tweet.author_id),
+                        "created_at": str(tweet.created_at),
+                    }
+                )
+
             logger.info(f"✅ Found {len(results)} new mentions")
             return results
-            
+
         except Exception as e:
             logger.error(f"❌ Twitter scan failed: {e}")
             return []
@@ -221,11 +235,15 @@ class BroadcastTool:
     def _reply_twitter(self, tweet_id: str, content: str) -> bool:
         """Post reply on Twitter."""
         if not self.twitter_client:
-            logger.warning(f"🛑 Twitter offline (would reply to {tweet_id}: {content[:50]}...)")
+            logger.warning(
+                f"🛑 Twitter offline (would reply to {tweet_id}: {content[:50]}...)"
+            )
             return True
 
         try:
-            self.twitter_client.create_tweet(text=content, in_reply_to_tweet_id=tweet_id)
+            self.twitter_client.create_tweet(
+                text=content, in_reply_to_tweet_id=tweet_id
+            )
             logger.info(f"🚀 Replied to {tweet_id}")
             return True
         except Exception as e:

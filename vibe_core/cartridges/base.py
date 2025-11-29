@@ -161,7 +161,9 @@ class CartridgeBase:
             Dictionary mapping playbook names to their definitions
         """
         playbooks = {}
-        playbook_dir = self.vibe_root / "vibe_core" / "cartridges" / self.name / "playbooks"
+        playbook_dir = (
+            self.vibe_root / "vibe_core" / "cartridges" / self.name / "playbooks"
+        )
 
         if playbook_dir.exists():
             for playbook_file in playbook_dir.glob("*.yaml"):
@@ -229,7 +231,9 @@ class CartridgeBase:
         }
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
+        )
 
     def __str__(self) -> str:
         return f"{self.name} v{self.version} - {self.description}"

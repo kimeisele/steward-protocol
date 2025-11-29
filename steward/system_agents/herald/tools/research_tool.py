@@ -45,7 +45,9 @@ class ResearchTool:
             except Exception as e:
                 logger.warning(f"⚠️  Research: Tavily init failed: {e}")
         else:
-            logger.warning("⚠️  Research: Tavily unavailable (running in simulation mode)")
+            logger.warning(
+                "⚠️  Research: Tavily unavailable (running in simulation mode)"
+            )
 
     def scan(self, query: str) -> Optional[str]:
         """
@@ -63,12 +65,11 @@ class ResearchTool:
 
         try:
             response = self.client.search(
-                query=query,
-                search_depth="basic",
-                max_results=3,
-                include_answer=True
+                query=query, search_depth="basic", max_results=3, include_answer=True
             )
-            result = response.get("answer") or response.get("results", [{}])[0].get("content")
+            result = response.get("answer") or response.get("results", [{}])[0].get(
+                "content"
+            )
             if result:
                 logger.info("📡 Market signal detected")
             return result

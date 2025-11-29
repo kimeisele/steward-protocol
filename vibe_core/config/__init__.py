@@ -11,7 +11,7 @@ from .schema import (
     ScienceConfig,
     ForumConfig,
     CivicConfig,
-    load_config
+    load_config,
 )
 from .loader import ConfigLoader
 
@@ -31,5 +31,5 @@ __all__ = [
     "CivicConfig",
     "load_config",
     "ConfigLoader",
-    "get_config"
+    "get_config",
 ]

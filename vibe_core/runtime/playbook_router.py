@@ -34,7 +34,8 @@ class PlaybookRouter:
 
     def __init__(self, registry_path: Path | None = None, milk_ocean_router=None):
         self.registry_path = (
-            registry_path or Path(__file__).parent.parent / "playbook" / "_registry.yaml"
+            registry_path
+            or Path(__file__).parent.parent / "playbook" / "_registry.yaml"
         )
         self.registry = self._load_registry()
 
@@ -166,7 +167,9 @@ class PlaybookRouter:
             source="no explicit intent or strong context signal",
         )
 
-    def _check_with_milk_ocean(self, route: PlaybookRoute, user_input: str) -> PlaybookRoute:
+    def _check_with_milk_ocean(
+        self, route: PlaybookRoute, user_input: str
+    ) -> PlaybookRoute:
         """
         PHASE 3 INTEGRATION: Check route with MilkOceanRouter (Brahma Protocol gatekeeping)
 
@@ -181,20 +184,22 @@ class PlaybookRouter:
             # Send route description through MilkOcean gates
             prayer = f"Route to {route.task}: {route.description}"
             gate_result = self.milk_ocean_router.process_prayer(
-                user_input=prayer,
-                agent_id="PLAYBOOK_ROUTER",
-                critical=False
+                user_input=prayer, agent_id="PLAYBOOK_ROUTER", critical=False
             )
 
             # Check if request was blocked
             if gate_result.get("status") == "blocked":
-                logger.warning(f"🚫 Route blocked by MilkOcean: {gate_result.get('reason')}")
+                logger.warning(
+                    f"🚫 Route blocked by MilkOcean: {gate_result.get('reason')}"
+                )
                 # Return route but annotate with warning
                 route.source += " [GATED BY BRAHMA: LOW PRIORITY QUEUE]"
                 return route
 
             # Log successful gate passage
-            logger.info(f"✅ Route '{route.task}' passed MilkOcean gates: {gate_result.get('status')}")
+            logger.info(
+                f"✅ Route '{route.task}' passed MilkOcean gates: {gate_result.get('status')}"
+            )
 
             return route
 

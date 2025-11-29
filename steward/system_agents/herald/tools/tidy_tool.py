@@ -27,17 +27,17 @@ class TidyTool:
 
     # Patterns that should NEVER be moved (protected)
     PROTECTED_PATTERNS = [
-        r"^herald/",           # HERALD's core logic
-        r"^\.github/",         # GitHub workflows
-        r"^STEWARD\.md$",      # Protocol document
-        r"^requirements\.txt$", # Dependencies
-        r"^\.gitignore$",      # Git rules
-        r"\.md$",              # Documentation files
-        r"^[^/]+\.py$",        # Root-level Python files
-        r"^\.git",             # Git internals
-        r"^dist/",             # Build outputs
-        r"^__pycache__",       # Python cache
-        r"^\.pytest_cache",    # Test cache
+        r"^herald/",  # HERALD's core logic
+        r"^\.github/",  # GitHub workflows
+        r"^STEWARD\.md$",  # Protocol document
+        r"^requirements\.txt$",  # Dependencies
+        r"^\.gitignore$",  # Git rules
+        r"\.md$",  # Documentation files
+        r"^[^/]+\.py$",  # Root-level Python files
+        r"^\.git",  # Git internals
+        r"^dist/",  # Build outputs
+        r"^__pycache__",  # Python cache
+        r"^\.pytest_cache",  # Test cache
     ]
 
     # Default organization rules (if STEWARD.md not readable)
@@ -51,7 +51,9 @@ class TidyTool:
         r"^debug_": "_archive/quarantine/",
     }
 
-    def __init__(self, root_path: Optional[Path] = None, steward_path: Optional[Path] = None):
+    def __init__(
+        self, root_path: Optional[Path] = None, steward_path: Optional[Path] = None
+    ):
         """
         Initialize TidyTool.
 
@@ -84,7 +86,9 @@ class TidyTool:
 
             # Find the Tidy Protocols section
             if "## 🧹 Tidy Protocols" not in content:
-                logger.warning("⚠️  Tidy Protocols section not found, using default rules")
+                logger.warning(
+                    "⚠️  Tidy Protocols section not found, using default rules"
+                )
                 return self.DEFAULT_RULES
 
             # Extract organization rules block

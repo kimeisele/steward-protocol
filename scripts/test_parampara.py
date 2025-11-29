@@ -59,7 +59,9 @@ def test_parampara():
     # Check anchors
     anchors = genesis.data.get("anchors", {})
     print(f"   GAD-000 Hash: {anchors.get('philosophy_hash', 'MISSING')[:16]}...")
-    print(f"   CONSTITUTION Hash: {anchors.get('constitution_hash', 'MISSING')[:16]}...")
+    print(
+        f"   CONSTITUTION Hash: {anchors.get('constitution_hash', 'MISSING')[:16]}..."
+    )
 
     # Test 2: Simulate Kernel Boot
     print("\n[TEST 2] Simulating Kernel Boot...")
@@ -71,7 +73,7 @@ def test_parampara():
                 "version": "2.0.0",
                 "timestamp": datetime.utcnow().isoformat(),
                 "agents_registered": 0,
-            }
+            },
         )
         print("✅ KERNEL_BOOT block added")
     except Exception as e:
@@ -116,7 +118,7 @@ def test_parampara():
                     "author": agent_data["author"],
                     "capabilities": agent_data["capabilities"],
                     "timestamp": datetime.utcnow().isoformat(),
-                }
+                },
             )
 
             # Add OATH_SWORN block
@@ -126,8 +128,8 @@ def test_parampara():
                 data={
                     "constitution_hash": "test_hash_123",
                     "timestamp": datetime.utcnow().isoformat(),
-                    "verified": True
-                }
+                    "verified": True,
+                },
             )
 
             print(f"✅ Registered: {agent_data['agent_id']}")
@@ -169,7 +171,9 @@ def test_parampara():
     blocks = chain.get_all_blocks()
     for block in blocks:
         agent_str = f"({block.agent_id})" if block.agent_id else "(SYSTEM)"
-        print(f"  Block {block.index:2d}: {block.event_type:20s} {agent_str:15s} {block.hash[:16]}...")
+        print(
+            f"  Block {block.index:2d}: {block.event_type:20s} {agent_str:15s} {block.hash[:16]}..."
+        )
     print("-" * 70)
     print(f"Total blocks: {len(blocks)}")
 
@@ -183,7 +187,7 @@ def test_parampara():
                 "reason": "Test complete",
                 "timestamp": datetime.utcnow().isoformat(),
                 "agents_active": len(test_agents),
-            }
+            },
         )
         print("✅ KERNEL_SHUTDOWN block added")
     except Exception as e:

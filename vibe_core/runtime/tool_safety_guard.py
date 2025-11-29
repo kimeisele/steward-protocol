@@ -53,7 +53,9 @@ class SessionContext:
     files_read: set[str] = field(default_factory=set)
     files_written: set[str] = field(default_factory=set)
     violations: list[SafetyViolation] = field(default_factory=list)
-    session_start: str = field(default_factory=lambda: datetime.utcnow().isoformat() + "Z")
+    session_start: str = field(
+        default_factory=lambda: datetime.utcnow().isoformat() + "Z"
+    )
 
 
 class ToolSafetyGuardError(Exception):
@@ -251,10 +253,14 @@ class ToolSafetyGuard:
             "violations": {
                 "total": len(self.context.violations),
                 "blocking": sum(
-                    1 for v in self.context.violations if v.severity == ViolationSeverity.BLOCKING
+                    1
+                    for v in self.context.violations
+                    if v.severity == ViolationSeverity.BLOCKING
                 ),
                 "warning": sum(
-                    1 for v in self.context.violations if v.severity == ViolationSeverity.WARNING
+                    1
+                    for v in self.context.violations
+                    if v.severity == ViolationSeverity.WARNING
                 ),
             },
             "recent_violations": [

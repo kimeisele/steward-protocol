@@ -67,6 +67,7 @@ class AgentSystemInterface:
 
         # VFS: Sandboxed filesystem for this agent
         from vibe_core.vfs import VirtualFileSystem
+
         self.vfs = VirtualFileSystem(agent_id)
 
         # Config: Agent-specific configuration
@@ -75,6 +76,7 @@ class AgentSystemInterface:
 
         # Dependency Manager: Shared across all agents (singleton)
         from vibe_core.dependency_manager import DependencyManager
+
         try:
             self._dep_manager = DependencyManager()
         except Exception as e:
@@ -98,9 +100,15 @@ class AgentSystemInterface:
                     if hasattr(agent_configs, self.agent_id):
                         agent_config = getattr(agent_configs, self.agent_id)
                         # Convert Pydantic model to dict
-                        return agent_config.model_dump() if hasattr(agent_config, "model_dump") else {}
+                        return (
+                            agent_config.model_dump()
+                            if hasattr(agent_config, "model_dump")
+                            else {}
+                        )
 
-            logger.debug(f"ℹ️  No specific config found for {self.agent_id}, using defaults")
+            logger.debug(
+                f"ℹ️  No specific config found for {self.agent_id}, using defaults"
+            )
             return {}
 
         except Exception as e:
@@ -131,7 +139,9 @@ class AgentSystemInterface:
                 f"Agent {self.agent_id} cannot add dependencies."
             )
 
-        logger.info(f"📦 {self.agent_id} requesting dependency: {package} {version or ''}")
+        logger.info(
+            f"📦 {self.agent_id} requesting dependency: {package} {version or ''}"
+        )
         self._dep_manager.add_dependency(package, version)
 
     def get_dependencies(self) -> List[str]:
@@ -371,9 +381,12 @@ class AgentSystemInterface:
 
         # Atomic copy (copy2 preserves metadata)
         import shutil
+
         shutil.copy2(source, target)
 
-        logger.info(f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}")
+        logger.info(
+            f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}"
+        )
         return True
 
     # ============================================================================
@@ -416,11 +429,13 @@ class AgentSystemInterface:
             {
                 "key": key,
                 "value_type": type(value).__name__,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
-        logger.info(f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})")
+        logger.info(
+            f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})"
+        )
         return event_id
 
     def request_data(self, agent_id: str, key: str, default: Any = None) -> Any:
@@ -486,8 +501,8 @@ class AgentSystemInterface:
                 "source_agent": agent_id,
                 "key": key,
                 "value_type": type(value).__name__,
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
         logger.info(
@@ -496,7 +511,9 @@ class AgentSystemInterface:
         )
         return value
 
-    def list_published_data(self, agent_id: Optional[str] = None) -> Dict[str, List[str]]:
+    def list_published_data(
+        self, agent_id: Optional[str] = None
+    ) -> Dict[str, List[str]]:
         """
         List all published data keys (for discovery).
 
@@ -520,10 +537,7 @@ class AgentSystemInterface:
             return {agent_id: []}
 
         # Return all agents and their keys
-        return {
-            aid: list(data.keys())
-            for aid, data in self.kernel._data_store.items()
-        }
+        return {aid: list(data.keys()) for aid, data in self.kernel._data_store.items()}
 
     def call_agent(self, agent_id: str, payload: Dict[str, Any]) -> Any:
         """
@@ -570,6 +584,7 @@ class AgentSystemInterface:
 
         # Create task
         from vibe_core.scheduling import Task
+
         task = Task(agent_id=agent_id, payload=payload)
 
         # Audit trail BEFORE call
@@ -578,8 +593,8 @@ class AgentSystemInterface:
             {
                 "target_agent": agent_id,
                 "action": payload.get("action", "unknown"),
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
         # Call the agent
@@ -593,8 +608,8 @@ class AgentSystemInterface:
                     "target_agent": agent_id,
                     "action": payload.get("action", "unknown"),
                     "status": "success",
-                    "timestamp": datetime.now().isoformat()
-                }
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
             logger.info(
@@ -611,13 +626,11 @@ class AgentSystemInterface:
                     "target_agent": agent_id,
                     "action": payload.get("action", "unknown"),
                     "error": str(e),
-                    "timestamp": datetime.now().isoformat()
-                }
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
-            logger.error(
-                f"❌ {self.agent_id} failed to call {agent_id}: {e}"
-            )
+            logger.error(f"❌ {self.agent_id} failed to call {agent_id}: {e}")
             raise RuntimeError(
                 f"Agent call failed: {agent_id}.{payload.get('action', 'unknown')} - {e}"
             ) from e

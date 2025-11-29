@@ -30,6 +30,7 @@ logger = logging.getLogger("PULSE")
 
 class SystemState(str, Enum):
     """System health states"""
+
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     EMERGENCY = "EMERGENCY"
@@ -37,6 +38,7 @@ class SystemState(str, Enum):
 
 class PulseFrequency(float, Enum):
     """Heartbeat frequencies in Hz"""
+
     IDLE = 0.5  # Deep sleep (2 seconds)
     ACTIVE = 1.0  # Normal (1 second)
     STRESS = 5.0  # Emergency (200ms)
@@ -45,6 +47,7 @@ class PulseFrequency(float, Enum):
 @dataclass
 class PulsePacket:
     """The heartbeat payload - minimal and efficient (<1KB)"""
+
     timestamp: str  # ISO 8601
     cycle_id: int  # Monotonic counter
     system_state: str  # HEALTHY, DEGRADED, EMERGENCY
@@ -54,7 +57,7 @@ class PulsePacket:
 
     def to_json(self) -> str:
         """Serialize to JSON (<1KB requirement)"""
-        return json.dumps(asdict(self), separators=(',', ':'))
+        return json.dumps(asdict(self), separators=(",", ":"))
 
 
 class PulseManager:
@@ -66,7 +69,7 @@ class PulseManager:
     Efficient: Small payloads, minimal overhead
     """
 
-    _instance: Optional['PulseManager'] = None
+    _instance: Optional["PulseManager"] = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -74,7 +77,7 @@ class PulseManager:
         return cls._instance
 
     def __init__(self):
-        if hasattr(self, '_initialized'):
+        if hasattr(self, "_initialized"):
             return
 
         self._initialized = True
@@ -143,7 +146,11 @@ class PulseManager:
         self._cycle_id += 1
 
         # Show registered agents even if idle (for better system visibility)
-        active_agents = self._active_agents.copy() if self._active_agents else ["HERALD", "WATCHMAN", "ENVOY"]
+        active_agents = (
+            self._active_agents.copy()
+            if self._active_agents
+            else ["HERALD", "WATCHMAN", "ENVOY"]
+        )
 
         return PulsePacket(
             timestamp=datetime.utcnow().isoformat() + "Z",
@@ -151,7 +158,7 @@ class PulseManager:
             system_state=self._system_state.value,
             active_agents=active_agents,
             queue_depth=self._queue_depth,
-            frequency=self._frequency.value
+            frequency=self._frequency.value,
         )
 
     async def _emit_packet(self, packet: PulsePacket):
@@ -183,7 +190,9 @@ class PulseManager:
         """
         if callback not in self._subscribers:
             self._subscribers.append(callback)
-            logger.debug(f"📡 New subscriber registered (total: {len(self._subscribers)})")
+            logger.debug(
+                f"📡 New subscriber registered (total: {len(self._subscribers)})"
+            )
 
         return str(uuid4())
 
@@ -196,7 +205,9 @@ class PulseManager:
     def set_frequency(self, frequency: PulseFrequency):
         """Change heartbeat frequency (IDLE/ACTIVE/STRESS)"""
         self._frequency = frequency
-        logger.info(f"⚡ Pulse frequency changed to {frequency.value}Hz ({frequency.name})")
+        logger.info(
+            f"⚡ Pulse frequency changed to {frequency.value}Hz ({frequency.name})"
+        )
 
     def set_system_state(self, state: SystemState):
         """Update system health state"""
@@ -221,7 +232,7 @@ class PulseManager:
             "active_agents": len(self._active_agents),
             "queue_depth": self._queue_depth,
             "subscribers": len(self._subscribers),
-            "last_packet": asdict(self._last_packet) if self._last_packet else None
+            "last_packet": asdict(self._last_packet) if self._last_packet else None,
         }
 
     def get_last_packet(self) -> Optional[PulsePacket]:

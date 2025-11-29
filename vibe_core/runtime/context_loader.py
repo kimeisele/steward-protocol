@@ -42,7 +42,9 @@ class ContextLoader:
                     "last_task": data.get("last_task", "none"),
                     "blockers": data.get("blockers", []),
                     "backlog": data.get("backlog", []),
-                    "backlog_item": data.get("backlog", [""])[0] if data.get("backlog") else "",
+                    "backlog_item": (
+                        data.get("backlog", [""])[0] if data.get("backlog") else ""
+                    ),
                 }
             else:
                 return {
@@ -91,14 +93,18 @@ class ContextLoader:
                 timeout=5,
             )
 
-            uncommitted_files = [line for line in status.stdout.strip().split("\n") if line]
+            uncommitted_files = [
+                line for line in status.stdout.strip().split("\n") if line
+            ]
 
             return {
                 "branch": branch.stdout.strip() or "unknown",
                 "uncommitted": len(uncommitted_files),
                 "uncommitted_files": uncommitted_files[:5],  # First 5
                 "recent_commits": log.stdout.strip().split("\n"),
-                "last_commit": log.stdout.strip().split("\n")[0] if log.stdout.strip() else "none",
+                "last_commit": (
+                    log.stdout.strip().split("\n")[0] if log.stdout.strip() else "none"
+                ),
                 "status": "available",
             }
         except Exception as e:
@@ -115,7 +121,9 @@ class ContextLoader:
         """Check test status - safe defaults if pytest unavailable"""
         try:
             # Check for last failed tests
-            cache_file = self.project_root / ".pytest_cache" / "v" / "cache" / "lastfailed"
+            cache_file = (
+                self.project_root / ".pytest_cache" / "v" / "cache" / "lastfailed"
+            )
             if cache_file.exists():
                 with open(cache_file) as f:
                     failed_data = json.load(f)

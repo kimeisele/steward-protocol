@@ -30,6 +30,7 @@ logger = logging.getLogger("HERALD_GOVERNANCE")
 @dataclass
 class ValidationResult:
     """Result of a governance validation check."""
+
     is_valid: bool
     violations: List[str]
     warnings: List[str]
@@ -42,7 +43,9 @@ class GovernanceContract(ABC):
     """Abstract base class for all governance contracts."""
 
     @abstractmethod
-    def validate(self, content: str, platform: Optional[str] = None) -> ValidationResult:
+    def validate(
+        self, content: str, platform: Optional[str] = None
+    ) -> ValidationResult:
         """
         Validate content against governance rules.
 
@@ -196,7 +199,9 @@ class HeraldConstitution(GovernanceContract):
         # Load the constitutional text dynamically
         self._load_constitution_file()
 
-        logger.info("🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)")
+        logger.info(
+            "🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)"
+        )
         logger.info(f"📜 Constitutional Authority: {self._CONSTITUTION_PATH}")
 
     @staticmethod
@@ -232,10 +237,16 @@ class HeraldConstitution(GovernanceContract):
                     logger.info(f"✅ CONSTITUTION.md loaded from ENV VAR: {path}")
                     return constitution_text
                 except IOError as e:
-                    logger.error(f"❌ Could not read CONSTITUTION.md at ENV path {path}: {e}")
-                    raise FileNotFoundError(f"Failed to read CONSTITUTION.md from HERALD_CONSTITUTION_PATH: {env_path}") from e
+                    logger.error(
+                        f"❌ Could not read CONSTITUTION.md at ENV path {path}: {e}"
+                    )
+                    raise FileNotFoundError(
+                        f"Failed to read CONSTITUTION.md from HERALD_CONSTITUTION_PATH: {env_path}"
+                    ) from e
             else:
-                raise FileNotFoundError(f"HERALD_CONSTITUTION_PATH points to non-existent file: {env_path}")
+                raise FileNotFoundError(
+                    f"HERALD_CONSTITUTION_PATH points to non-existent file: {env_path}"
+                )
 
         # Priority 2-4: Fallback paths (for local dev and standard deployments)
         possible_paths = [
@@ -271,7 +282,8 @@ class HeraldConstitution(GovernanceContract):
             error_msg = (
                 "❌ CRITICAL: CONSTITUTION.md not found!\n"
                 f"Searched paths:\n"
-                + "\n".join([f"  - {p}" for p in possible_paths]) + "\n"
+                + "\n".join([f"  - {p}" for p in possible_paths])
+                + "\n"
                 "\nSet HERALD_CONSTITUTION_PATH environment variable to override.\n"
                 "Example: export HERALD_CONSTITUTION_PATH=/path/to/CONSTITUTION.md\n"
                 "The system cannot initialize without its constitutional foundation.\n"
@@ -398,12 +410,18 @@ class HeraldConstitution(GovernanceContract):
 
         # Check for superlatives (max 2 points)
         superlatives = [
-            "best", "greatest", "only", "unique", "revolutionary", "unprecedented",
-            "groundbreaking", "never", "first", "last"
+            "best",
+            "greatest",
+            "only",
+            "unique",
+            "revolutionary",
+            "unprecedented",
+            "groundbreaking",
+            "never",
+            "first",
+            "last",
         ]
-        superlative_count = sum(
-            1 for s in superlatives if s in content.lower()
-        )
+        superlative_count = sum(1 for s in superlatives if s in content.lower())
         if superlative_count > 0:
             score += min(superlative_count, 2)
 
@@ -416,9 +434,20 @@ class HeraldConstitution(GovernanceContract):
 
         # Check for technical context
         technical_keywords = [
-            "code", "algorithm", "system", "architecture", "design",
-            "implementation", "protocol", "data", "structure", "API",
-            "framework", "library", "module", "function"
+            "code",
+            "algorithm",
+            "system",
+            "architecture",
+            "design",
+            "implementation",
+            "protocol",
+            "data",
+            "structure",
+            "API",
+            "framework",
+            "library",
+            "module",
+            "function",
         ]
         has_technical = any(kw in content_lower for kw in technical_keywords)
         if not has_technical:
@@ -428,9 +457,20 @@ class HeraldConstitution(GovernanceContract):
 
         # Check for honest assessment
         honest_indicators = [
-            "limitation", "challenge", "fail", "problem", "issue",
-            "difficult", "trade-off", "downside", "risk", "caveat",
-            "doesn't", "won't", "can't", "avoid"
+            "limitation",
+            "challenge",
+            "fail",
+            "problem",
+            "issue",
+            "difficult",
+            "trade-off",
+            "downside",
+            "risk",
+            "caveat",
+            "doesn't",
+            "won't",
+            "can't",
+            "avoid",
         ]
         has_honesty = any(ind in content_lower for ind in honest_indicators)
         if not has_honesty:
@@ -508,7 +548,9 @@ class HeraldConstitution(GovernanceContract):
         # Check if media dict is present
         if not media:
             warnings.append("No media asset provided (optional)")
-            return ValidationResult(is_valid=True, violations=violations, warnings=warnings)
+            return ValidationResult(
+                is_valid=True, violations=violations, warnings=warnings
+            )
 
         # 1. Check alt_text for banned phrases (accessibility + compliance)
         if "alt_text" in media:

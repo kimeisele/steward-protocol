@@ -71,7 +71,9 @@ class StudioCartridge(CartridgeBase):
 
         logger.info("🎬 Vibe Studio initialized - One-Click Dev Environment ready")
 
-    def create_project(self, project_name: str, description: str = "") -> dict[str, Any]:
+    def create_project(
+        self, project_name: str, description: str = ""
+    ) -> dict[str, Any]:
         """
         Create an isolated development workspace.
 
@@ -84,7 +86,10 @@ class StudioCartridge(CartridgeBase):
         """
         try:
             # Validate project name
-            if not project_name or not project_name.replace("-", "").replace("_", "").isalnum():
+            if (
+                not project_name
+                or not project_name.replace("-", "").replace("_", "").isalnum()
+            ):
                 return {
                     "status": "error",
                     "message": "Project name must be alphanumeric (hyphens and underscores allowed)",
@@ -319,7 +324,8 @@ class StudioCartridge(CartridgeBase):
             max_ticks = 1000
             ticks = 0
             while (
-                self.kernel.scheduler.get_queue_status()["pending_tasks"] > 0 and ticks < max_ticks
+                self.kernel.scheduler.get_queue_status()["pending_tasks"] > 0
+                and ticks < max_ticks
             ):
                 self.kernel.tick()
                 ticks += 1
@@ -372,7 +378,9 @@ class StudioCartridge(CartridgeBase):
                 # Re-delegate to coder with failure report
                 context["repair_mode"] = True
                 context["repair_attempt"] = repair_attempts
-                context["failure_report"] = test_failure.get("output", {}).get("error_details", "")
+                context["failure_report"] = test_failure.get("output", {}).get(
+                    "error_details", ""
+                )
 
                 repair_result = self._delegate_to_specialist(
                     agent_id="specialist-coding",

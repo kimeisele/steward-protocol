@@ -42,8 +42,7 @@ from vibe_core.lineage import LineageChain, LineageEventType
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("PASSPORT_OFFICE")
 
@@ -64,9 +63,13 @@ class PassportOffice:
         # Get constitution hash from Genesis Block (The Anchor)
         genesis = self.lineage.get_genesis_block()
         if genesis:
-            self.constitution_hash = genesis.data.get("anchors", {}).get("constitution_hash", "unknown")
+            self.constitution_hash = genesis.data.get("anchors", {}).get(
+                "constitution_hash", "unknown"
+            )
         else:
-            logger.warning("⚠️  Genesis Block not found - using placeholder constitution hash")
+            logger.warning(
+                "⚠️  Genesis Block not found - using placeholder constitution hash"
+            )
             self.constitution_hash = "unknown"
 
         logger.info("📜 Passport Office initialized")
@@ -80,8 +83,8 @@ class PassportOffice:
         Any change to the manifest invalidates the seal.
         """
         # Serialize to canonical JSON (sorted keys, no whitespace)
-        canonical_json = json.dumps(manifest, sort_keys=True, separators=(',', ':'))
-        return hashlib.sha256(canonical_json.encode('utf-8')).hexdigest()
+        canonical_json = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
     def _parse_old_manifest(self, manifest_path: Path) -> Optional[Dict[str, Any]]:
         """
@@ -98,7 +101,7 @@ class PassportOffice:
             Metadata dict, or None if parsing fails
         """
         try:
-            with open(manifest_path, 'r') as f:
+            with open(manifest_path, "r") as f:
                 old_manifest = json.load(f)
 
             # Detect schema type
@@ -113,9 +116,11 @@ class PassportOffice:
                     "agent_id": agent_data.get("id", "unknown"),
                     "name": agent_data.get("name", "Unknown"),
                     "version": agent_data.get("version", "1.0.0"),
-                    "description": old_manifest.get("credentials", {}).get("mandate", ""),
+                    "description": old_manifest.get("credentials", {}).get(
+                        "mandate", ""
+                    ),
                     "domain": agent_data.get("specialization", "SYSTEM"),
-                    "capabilities": capability_names
+                    "capabilities": capability_names,
                 }
             else:
                 # Flat schema (scribe, etc.)
@@ -126,7 +131,9 @@ class PassportOffice:
                 else:
                     # Fallback to operations format
                     operations = capabilities.get("operations", [])
-                    capability_names = [op.get("name") for op in operations if "name" in op]
+                    capability_names = [
+                        op.get("name") for op in operations if "name" in op
+                    ]
 
                 metadata = {
                     "agent_id": old_manifest.get("agent_id", "unknown"),
@@ -134,12 +141,14 @@ class PassportOffice:
                     "version": old_manifest.get("version", "1.0.0"),
                     "description": old_manifest.get("description", ""),
                     "domain": old_manifest.get("domain", "SYSTEM"),
-                    "capabilities": capability_names
+                    "capabilities": capability_names,
                 }
 
             # GUARDRAIL #3: No Blank Cheques
-            if not metadata['capabilities'] or len(metadata['capabilities']) == 0:
-                logger.warning(f"⚠️  Agent '{metadata['agent_id']}' has no capabilities defined. Passport DENIED.")
+            if not metadata["capabilities"] or len(metadata["capabilities"]) == 0:
+                logger.warning(
+                    f"⚠️  Agent '{metadata['agent_id']}' has no capabilities defined. Passport DENIED."
+                )
                 return None
 
             return metadata
@@ -147,6 +156,7 @@ class PassportOffice:
         except Exception as e:
             logger.error(f"❌ Failed to parse manifest {manifest_path}: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 
@@ -163,30 +173,24 @@ class PassportOffice:
         }
         """
         manifest = {
-            "identity": {
-                "agent_id": metadata['agent_id'],
-                "name": metadata['name']
-            },
+            "identity": {"agent_id": metadata["agent_id"], "name": metadata["name"]},
             "specs": {
-                "version": metadata['version'],
-                "domain": metadata['domain'],
-                "description": metadata['description']
+                "version": metadata["version"],
+                "domain": metadata["domain"],
+                "description": metadata["description"],
             },
             "capabilities": {
                 "operations": [
-                    {
-                        "name": cap,
-                        "description": f"{cap} operation"
-                    }
-                    for cap in metadata['capabilities']
+                    {"name": cap, "description": f"{cap} operation"}
+                    for cap in metadata["capabilities"]
                 ]
             },
             "governance": {
                 "constitution_hash": self.constitution_hash,
                 "issued_at": datetime.utcnow().isoformat() + "Z",
                 "compliance_level": 2,  # Level 2: Full manifest
-                "issuer": "passport_office"
-            }
+                "issuer": "passport_office",
+            },
         }
 
         return manifest
@@ -231,14 +235,14 @@ class PassportOffice:
         try:
             self.lineage.add_block(
                 event_type=LineageEventType.PASSPORT_ISSUED,
-                agent_id=metadata['agent_id'],
+                agent_id=metadata["agent_id"],
                 data={
                     "manifest_hash": manifest_hash,
-                    "capabilities": metadata['capabilities'],
-                    "version": metadata['version'],
-                    "issued_at": manifest['governance']['issued_at'],
-                    "constitution_hash": self.constitution_hash
-                }
+                    "capabilities": metadata["capabilities"],
+                    "version": metadata["version"],
+                    "issued_at": manifest["governance"]["issued_at"],
+                    "constitution_hash": self.constitution_hash,
+                },
             )
             logger.info(f"   ⛓️  Recorded in Parampara")
         except Exception as e:
@@ -247,7 +251,7 @@ class PassportOffice:
 
         # Step 5: Save steward.json (overwrite with new schema)
         try:
-            with open(manifest_path, 'w') as f:
+            with open(manifest_path, "w") as f:
                 json.dump(manifest, f, indent=2, sort_keys=True)
             logger.info(f"   ✅ Passport issued: {manifest_path}")
             self.issued_count += 1
@@ -348,6 +352,7 @@ def main():
     except Exception as e:
         print(f"\n❌ PASSPORT OFFICE ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

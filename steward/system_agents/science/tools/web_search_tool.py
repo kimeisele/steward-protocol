@@ -94,6 +94,7 @@ class WebSearchTool:
             # Lazy import CivicBank to avoid circular imports
             try:
                 from steward.system_agents.civic.tools.economy import CivicBank
+
                 _bank = bank or CivicBank()
                 _vault = vault or _bank.vault
             except Exception as e:
@@ -109,11 +110,11 @@ class WebSearchTool:
             try:
                 # Lease the Tavily API key from the Vault
                 self.api_key = self.vault.lease_secret(
-                    agent_id="science",
-                    key_name="tavily_api",
-                    bank=self.bank
+                    agent_id="science", key_name="tavily_api", bank=self.bank
                 )
-                logger.info("✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)")
+                logger.info(
+                    "✅ Search: TAVILY_API_KEY leased from Civic Vault (VAULT MODE)"
+                )
             except Exception as vault_error:
                 logger.warning(f"⚠️  Vault lease failed: {vault_error}")
                 # Fallback to environment variable
@@ -123,7 +124,9 @@ class WebSearchTool:
         if not self.api_key:
             self.api_key = os.getenv("TAVILY_API_KEY")
             if self.api_key:
-                logger.info("✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)")
+                logger.info(
+                    "✅ Search: TAVILY_API_KEY loaded from environment (ENV MODE)"
+                )
 
         # Initialize Tavily client if we have the key
         if self.api_key:
@@ -217,7 +220,9 @@ class WebSearchTool:
                 f"System requires real search results. No mocks. No fallbacks."
             )
 
-    def synthesize_fact_sheet(self, query: str, results: List[SearchResult]) -> Dict[str, Any]:
+    def synthesize_fact_sheet(
+        self, query: str, results: List[SearchResult]
+    ) -> Dict[str, Any]:
         """
         Synthesize search results into a structured fact sheet.
 

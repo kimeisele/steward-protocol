@@ -41,12 +41,13 @@ logger = logging.getLogger("SARGA")
 
 class Element(Enum):
     """The Six Primordial Elements (Sarga progression)"""
-    SHABDA = "shabda"      # Sound (Input, User command)
-    AKASHA = "akasha"      # Ether (Memory allocation)
-    VAYU = "vayu"          # Air (Communication/Message Bus)
-    AGNI = "agni"          # Fire (Form/UI rendering)
-    JALA = "jala"          # Water (Data flow/Streams)
-    PRITHVI = "prithvi"    # Earth (Persistence/Database)
+
+    SHABDA = "shabda"  # Sound (Input, User command)
+    AKASHA = "akasha"  # Ether (Memory allocation)
+    VAYU = "vayu"  # Air (Communication/Message Bus)
+    AGNI = "agni"  # Fire (Form/UI rendering)
+    JALA = "jala"  # Water (Data flow/Streams)
+    PRITHVI = "prithvi"  # Earth (Persistence/Database)
 
 
 class Cycle(Enum):
@@ -58,13 +59,15 @@ class Cycle(Enum):
 
     Used to restrict task types based on cosmic timing.
     """
-    DAY_OF_BRAHMA = "day"      # Creation cycle - allow all task types
+
+    DAY_OF_BRAHMA = "day"  # Creation cycle - allow all task types
     NIGHT_OF_BRAHMA = "night"  # Maintenance cycle - only allow maintenance tasks
 
 
 @dataclass
 class SargaPhase:
     """A single phase of creation"""
+
     element: Element
     agent_id: str
     description: str
@@ -90,10 +93,10 @@ class SargaPhase:
         emojis = {
             Element.SHABDA: "🔊",  # Sound
             Element.AKASHA: "🌌",  # Space
-            Element.VAYU: "🌬️",   # Air
-            Element.AGNI: "🔥",    # Fire
-            Element.JALA: "💧",    # Water
-            Element.PRITHVI: "🌍", # Earth
+            Element.VAYU: "🌬️",  # Air
+            Element.AGNI: "🔥",  # Fire
+            Element.JALA: "💧",  # Water
+            Element.PRITHVI: "🌍",  # Earth
         }
         return emojis.get(self.element, "❓")
 
@@ -170,7 +173,9 @@ class SargaBootSequence:
         Handler signature: handler() -> bool (success/failure)
         """
         self.phase_handlers[element] = handler
-        logger.debug(f"Phase handler registered for {element.value}: {handler.__name__}")
+        logger.debug(
+            f"Phase handler registered for {element.value}: {handler.__name__}"
+        )
 
     def begin_boot(self) -> None:
         """Start the boot sequence."""
@@ -200,7 +205,9 @@ class SargaBootSequence:
             return False
 
         logger.info("")
-        logger.info(f"{phase.emoji}  PHASE {element.value.upper()}: {phase.description}")
+        logger.info(
+            f"{phase.emoji}  PHASE {element.value.upper()}: {phase.description}"
+        )
         logger.info("-" * 70)
 
         phase.status = "active"
@@ -221,7 +228,9 @@ class SargaBootSequence:
 
             if success:
                 phase.status = "complete"
-                logger.info(f"✅ {element.value.upper()} complete ({phase.duration:.3f}s)")
+                logger.info(
+                    f"✅ {element.value.upper()} complete ({phase.duration:.3f}s)"
+                )
                 return True
             else:
                 phase.status = "failed"
@@ -278,7 +287,9 @@ class SargaBootSequence:
         return {
             "boot_complete": self.boot_complete,
             "boot_start_time": self.boot_start_time,
-            "total_duration": time.time() - self.boot_start_time if self.boot_start_time else None,
+            "total_duration": (
+                time.time() - self.boot_start_time if self.boot_start_time else None
+            ),
             "phases": {
                 element.value: {
                     "status": phase.status,
@@ -299,18 +310,33 @@ class SargaBootSequence:
             "",
         ]
 
-        for element in [Element.SHABDA, Element.AKASHA, Element.VAYU, Element.AGNI, Element.JALA, Element.PRITHVI]:
+        for element in [
+            Element.SHABDA,
+            Element.AKASHA,
+            Element.VAYU,
+            Element.AGNI,
+            Element.JALA,
+            Element.PRITHVI,
+        ]:
             phase = self.phases[element]
             emoji = phase.emoji
-            status_char = "✅" if phase.status == "complete" else "❌" if phase.status == "failed" else "⏳"
+            status_char = (
+                "✅"
+                if phase.status == "complete"
+                else "❌" if phase.status == "failed" else "⏳"
+            )
             duration_str = f"{phase.duration:.3f}s" if phase.duration else "—"
 
-            lines.append(f"{emoji} {element.value.upper():10} | {status_char} {phase.status:8} | {duration_str:8} | {phase.agent_id}")
+            lines.append(
+                f"{emoji} {element.value.upper():10} | {status_char} {phase.status:8} | {duration_str:8} | {phase.agent_id}"
+            )
 
         lines.append("")
 
         if self.boot_complete:
-            total_time = time.time() - self.boot_start_time if self.boot_start_time else 0
+            total_time = (
+                time.time() - self.boot_start_time if self.boot_start_time else 0
+            )
             lines.append(f"⏱️  Total Boot Time: {total_time:.3f}s")
             lines.append("")
             lines.append("🌍 STATUS: ALIVE AND CONSCIOUS")
@@ -344,7 +370,14 @@ if __name__ == "__main__":
     sarga.begin_boot()
 
     # Execute phases
-    for element in [Element.SHABDA, Element.AKASHA, Element.VAYU, Element.AGNI, Element.JALA, Element.PRITHVI]:
+    for element in [
+        Element.SHABDA,
+        Element.AKASHA,
+        Element.VAYU,
+        Element.AGNI,
+        Element.JALA,
+        Element.PRITHVI,
+    ]:
         success = sarga.execute_phase(element)
         if not success:
             print(f"⚠️ Phase {element.value} failed, continuing anyway...")

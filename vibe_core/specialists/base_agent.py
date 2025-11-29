@@ -250,7 +250,9 @@ class BaseAgent:
     # CONNECTION TO ARMS (GAD-6: Knowledge)
     # ========================================================================
 
-    def consult_knowledge(self, query: str, domain: str = "all", limit: int = 5) -> KnowledgeResult:
+    def consult_knowledge(
+        self, query: str, domain: str = "all", limit: int = 5
+    ) -> KnowledgeResult:
         """
         Consult the knowledge base via the Knowledge system (GAD-6).
 
@@ -398,7 +400,9 @@ class BaseAgent:
             })
         """
         if not self.db:
-            logger.debug(f"Agent '{self.name}': Event '{event_type}' not logged (DB unavailable)")
+            logger.debug(
+                f"Agent '{self.name}': Event '{event_type}' not logged (DB unavailable)"
+            )
             return False
 
         try:
@@ -407,7 +411,9 @@ class BaseAgent:
             # and write the payload directly.
             # Using the context manager ensures proper connection cleanup.
             with self.db:
-                logger.debug(f"💾 Agent '{self.name}' logged event: {event_type} → {payload}")
+                logger.debug(
+                    f"💾 Agent '{self.name}' logged event: {event_type} → {payload}"
+                )
             return True
         except Exception as e:
             logger.warning(f"⚠️ Failed to log event '{event_type}': {e}")
@@ -451,7 +457,9 @@ class BaseAgent:
                         parent_id=parent_id,
                         status="pending",
                     )
-                self.log_event("subtask_created", {"task_id": task_id, "parent_id": parent_id})
+                self.log_event(
+                    "subtask_created", {"task_id": task_id, "parent_id": parent_id}
+                )
             except Exception as e:
                 logger.warning(f"⚠️ Failed to persist subtask {task_id}: {e}")
 
@@ -481,7 +489,10 @@ class BaseAgent:
     # ========================================================================
 
     def verify_work(
-        self, check_code: bool = True, run_tests: bool = True, test_domain: str | None = None
+        self,
+        check_code: bool = True,
+        run_tests: bool = True,
+        test_domain: str | None = None,
     ) -> dict[str, Any]:
         """
         Verify work before committing/reporting success.
@@ -635,9 +646,7 @@ class BaseAgent:
         return all(skill in self.capabilities for skill in required)
 
     def __repr__(self) -> str:
-        return (
-            f"BaseAgent(name={self.name!r}, role={self.role!r}, capabilities={self.capabilities})"
-        )
+        return f"BaseAgent(name={self.name!r}, role={self.role!r}, capabilities={self.capabilities})"
 
     def __str__(self) -> str:
         return f"{self.name} ({self.role})"

@@ -55,7 +55,9 @@ class WorkflowNode:
     timeout_seconds: int = 300
     retries: int = 3
     prompt_key: str | None = None  # Optional key to lookup prompt in registry
-    knowledge_context: bool = False  # If True, inject relevant knowledge artifacts before execution
+    knowledge_context: bool = (
+        False  # If True, inject relevant knowledge artifacts before execution
+    )
 
 
 @dataclass
@@ -117,7 +119,9 @@ class AgentInterface:
         """Check if this agent has required skills"""
         raise NotImplementedError
 
-    def execute_action(self, action: str, prompt: str, timeout_seconds: int) -> ExecutionResult:
+    def execute_action(
+        self, action: str, prompt: str, timeout_seconds: int
+    ) -> ExecutionResult:
         """Execute an action (mocked for testing)"""
         raise NotImplementedError
 
@@ -157,7 +161,9 @@ class GraphExecutor:
 
     def __init__(self):
         """Initialize executor"""
-        self.agent: AgentInterface = MockAgent()  # Default to mock (backward compatible)
+        self.agent: AgentInterface = (
+            MockAgent()
+        )  # Default to mock (backward compatible)
         self.router = None  # AgentRouter (GAD-904) when connected
         self.quota = None  # OperationalQuota instance when safety layer active
         self.lens_prompt = None  # GAD-906/907: Semantic lens injection
@@ -362,11 +368,13 @@ class GraphExecutor:
 
         try:
             from vibe_core.config import get_config
+
             config = get_config()
             live_fire_enabled = config.safety.live_fire_enabled
         except (ImportError, AttributeError):
             # Fallback: Use environment variable if Phoenix config unavailable
             import os
+
             live_fire_enabled = os.getenv("VIBE_LIVE_FIRE", "false").lower() == "true"
 
         node = graph.nodes[node_id]
@@ -393,7 +401,9 @@ class GraphExecutor:
                     )
                     # Merge system context into prompt context
                     prompt_context.update(system_context)
-                    logger.debug(f"🔌 CONTEXT: Resolved {len(system_context)} system contexts")
+                    logger.debug(
+                        f"🔌 CONTEXT: Resolved {len(system_context)} system contexts"
+                    )
                 except Exception as e:
                     logger.warning(f"⚠️  Failed to resolve system context: {e}")
 
@@ -420,10 +430,14 @@ class GraphExecutor:
                 import importlib.util
 
                 retriever_path = (
-                    Path(__file__).parent.parent.parent / "02_knowledge" / "retriever.py"
+                    Path(__file__).parent.parent.parent
+                    / "02_knowledge"
+                    / "retriever.py"
                 )
 
-                spec = importlib.util.spec_from_file_location("retriever", retriever_path)
+                spec = importlib.util.spec_from_file_location(
+                    "retriever", retriever_path
+                )
                 retriever_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(retriever_module)
 
@@ -435,13 +449,17 @@ class GraphExecutor:
 
                 # Extract query from context (use first 100 chars as search query)
                 query = context[:100] if context else node.action
-                logger.info(f"👁️ INSIGHT: Retrieving knowledge for query: '{query[:50]}...'")
+                logger.info(
+                    f"👁️ INSIGHT: Retrieving knowledge for query: '{query[:50]}...'"
+                )
 
                 # Search for relevant knowledge
                 hits = retriever.search(query, limit=5)
 
                 if hits:
-                    logger.info(f"👁️ INSIGHT: Found {len(hits)} relevant knowledge artifacts")
+                    logger.info(
+                        f"👁️ INSIGHT: Found {len(hits)} relevant knowledge artifacts"
+                    )
 
                     # Format knowledge context
                     knowledge_section = "\n\n" + "=" * 80 + "\n"
@@ -452,18 +470,20 @@ class GraphExecutor:
                     for i, hit in enumerate(hits, 1):
                         rel_path = hit.path.relative_to(retriever.knowledge_base)
                         knowledge_section += f"## Artifact {i}: {hit.title}\n"
-                        knowledge_section += (
-                            f"**Domain:** {hit.domain} | **Relevance:** {hit.relevance_score:.1%}\n"
-                        )
+                        knowledge_section += f"**Domain:** {hit.domain} | **Relevance:** {hit.relevance_score:.1%}\n"
                         knowledge_section += f"**Path:** {rel_path}\n\n"
 
                         # Read full content for high-relevance matches
                         if hit.relevance_score >= 0.5:
                             try:
                                 content = retriever.read_file(rel_path)
-                                knowledge_section += f"**Content:**\n```\n{content}\n```\n\n"
+                                knowledge_section += (
+                                    f"**Content:**\n```\n{content}\n```\n\n"
+                                )
                             except Exception as e:
-                                logger.warning(f"Failed to read knowledge file {rel_path}: {e}")
+                                logger.warning(
+                                    f"Failed to read knowledge file {rel_path}: {e}"
+                                )
                                 knowledge_section += f"**Preview:** {hit.preview}\n\n"
                         else:
                             knowledge_section += f"**Preview:** {hit.preview}\n\n"
@@ -474,7 +494,9 @@ class GraphExecutor:
 
                     # Inject knowledge into prompt
                     base_prompt = base_prompt + knowledge_section
-                    logger.info(f"👁️ INSIGHT: Injected {len(hits)} knowledge artifacts into prompt")
+                    logger.info(
+                        f"👁️ INSIGHT: Injected {len(hits)} knowledge artifacts into prompt"
+                    )
                 else:
                     logger.info("👁️ INSIGHT: No relevant knowledge found")
 
@@ -487,15 +509,21 @@ class GraphExecutor:
         # GAD-906/907: Semantic lens injection for mindset transformation
         if self.lens_prompt:
             # Format: [MINDSET: <lens>]\n\n[TASK]\n<actual task>
-            prompt = f"{self.lens_prompt}\n\n{'=' * 80}\n[TASK]\n{'=' * 80}\n\n{base_prompt}"
-            logger.debug(f"🔬 Lens injected into prompt ({len(self.lens_prompt)} chars)")
+            prompt = (
+                f"{self.lens_prompt}\n\n{'=' * 80}\n[TASK]\n{'=' * 80}\n\n{base_prompt}"
+            )
+            logger.debug(
+                f"🔬 Lens injected into prompt ({len(self.lens_prompt)} chars)"
+            )
         else:
             prompt = base_prompt
 
         # Quota pre-flight check
         if self.quota:
             try:
-                self.quota.check_before_request(estimated_tokens=50, operation=node.action)
+                self.quota.check_before_request(
+                    estimated_tokens=50, operation=node.action
+                )
             except Exception as e:  # QuotaExceededError
                 return ExecutionResult(
                     workflow_id=graph.id,
@@ -508,7 +536,9 @@ class GraphExecutor:
         # Select agent
         selected_agent = None
         if self.router:
-            selected_agent = self.router.find_best_agent_for_skills(node.required_skills)
+            selected_agent = self.router.find_best_agent_for_skills(
+                node.required_skills
+            )
         if selected_agent is None and hasattr(self, "agent"):
             selected_agent = self.agent  # Fallback
 
@@ -574,7 +604,9 @@ class GraphExecutor:
 
         # Record quota usage
         if self.quota:
-            self.quota.record_request(tokens_used=50, cost_usd=cost_usd, operation=node.action)
+            self.quota.record_request(
+                tokens_used=50, cost_usd=cost_usd, operation=node.action
+            )
 
         return result
 

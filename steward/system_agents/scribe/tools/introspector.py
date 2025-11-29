@@ -33,7 +33,9 @@ class CartridgeIntrospector:
 
         return self.agents
 
-    def _extract_metadata(self, cartridge_file: Path, agent_name: str, agent_path: Path) -> Optional[Dict[str, Any]]:
+    def _extract_metadata(
+        self, cartridge_file: Path, agent_name: str, agent_path: Path
+    ) -> Optional[Dict[str, Any]]:
         """Extract metadata from a cartridge file."""
         try:
             content = cartridge_file.read_text()
@@ -45,7 +47,7 @@ class CartridgeIntrospector:
         module_doc = self._extract_module_docstring(content)
 
         # Extract class name
-        class_match = re.search(r'class\s+(\w+Cartridge)\s*\(', content)
+        class_match = re.search(r"class\s+(\w+Cartridge)\s*\(", content)
         if not class_match:
             return None
         class_name = class_match.group(1)
@@ -55,16 +57,16 @@ class CartridgeIntrospector:
 
         # Extract metadata fields
         metadata = {
-            'agent_name': agent_name,
-            'agent_name_pretty': agent_name.upper(),
-            'class_name': class_name,
-            'module_doc': module_doc,
-            'class_doc': class_doc,
-            'version': self._extract_field(content, 'version'),
-            'description': self._extract_field(content, 'description'),
-            'author': self._extract_field(content, 'author'),
-            'domain': self._extract_field(content, 'domain'),
-            'tools': self._discover_tools(agent_path),  # Pass full path!
+            "agent_name": agent_name,
+            "agent_name_pretty": agent_name.upper(),
+            "class_name": class_name,
+            "module_doc": module_doc,
+            "class_doc": class_doc,
+            "version": self._extract_field(content, "version"),
+            "description": self._extract_field(content, "description"),
+            "author": self._extract_field(content, "author"),
+            "domain": self._extract_field(content, "domain"),
+            "tools": self._discover_tools(agent_path),  # Pass full path!
         }
 
         return metadata
@@ -74,7 +76,7 @@ class CartridgeIntrospector:
         match = re.match(r'^\s*"""(.*?)"""', content, re.DOTALL)
         if match:
             text = match.group(1).strip()
-            first_line = text.split('\n')[0].strip()
+            first_line = text.split("\n")[0].strip()
             return first_line
         return ""
 
@@ -84,7 +86,7 @@ class CartridgeIntrospector:
         match = re.search(pattern, content, re.DOTALL)
         if match:
             text = match.group(1).strip()
-            lines = text.split('\n')
+            lines = text.split("\n")
             return lines[0].strip() if lines else ""
         return ""
 
@@ -109,11 +111,13 @@ class CartridgeIntrospector:
                 tool_name = self._tool_filename_to_name(tool_file.stem)
                 tool_doc = self._extract_tool_docstring(tool_file)
 
-                tools.append({
-                    'name': tool_name,
-                    'file': tool_file.stem + ".py",
-                    'description': tool_doc
-                })
+                tools.append(
+                    {
+                        "name": tool_name,
+                        "file": tool_file.stem + ".py",
+                        "description": tool_doc,
+                    }
+                )
 
         return tools
 
@@ -129,7 +133,7 @@ class CartridgeIntrospector:
             match = re.search(r'"""(.*?)"""', content, re.DOTALL)
             if match:
                 text = match.group(1).strip()
-                first_line = text.split('\n')[0].strip()
+                first_line = text.split("\n")[0].strip()
                 return first_line
             return ""
         except:
@@ -157,11 +161,13 @@ class ScriptIntrospector:
             name = script_file.stem
             description = self._extract_script_doc(script_file)
 
-            entry_points.append({
-                "name": name,
-                "path": str(script_file.relative_to(self.root_dir)),
-                "description": description
-            })
+            entry_points.append(
+                {
+                    "name": name,
+                    "path": str(script_file.relative_to(self.root_dir)),
+                    "description": description,
+                }
+            )
 
         return entry_points
 
@@ -172,7 +178,7 @@ class ScriptIntrospector:
             match = re.search(r'"""(.*?)"""', content, re.DOTALL)
             if match:
                 text = match.group(1).strip()
-                first_line = text.split('\n')[0].strip()
+                first_line = text.split("\n")[0].strip()
                 return first_line
             return ""
         except:
@@ -218,7 +224,7 @@ class ConfigIntrospector:
         if agents_file.exists():
             try:
                 content = agents_file.read_text()
-                pattern = r'### 🤖 (\w+)'
+                pattern = r"### 🤖 (\w+)"
                 matches = re.findall(pattern, content)
                 agents = list(dict.fromkeys(matches))
             except:

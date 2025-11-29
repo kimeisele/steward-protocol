@@ -37,11 +37,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
-        logging.FileHandler('data/logs/lazy_queue_worker.log'),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler("data/logs/lazy_queue_worker.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger("LAZY_QUEUE_WORKER")
 
@@ -57,7 +57,7 @@ class LazyQueueWorker:
             "batches_processed": 0,
             "requests_processed": 0,
             "requests_failed": 0,
-            "start_time": datetime.now(timezone.utc).isoformat()
+            "start_time": datetime.now(timezone.utc).isoformat(),
         }
 
     def signal_handler(self, sig, frame):
@@ -93,9 +93,9 @@ class LazyQueueWorker:
             self.stats["batches_processed"] += 1
 
             for request in batch:
-                request_id = request['request_id']
-                user_input = request['user_input']
-                agent_id = request['agent_id']
+                request_id = request["request_id"]
+                user_input = request["user_input"]
+                agent_id = request["agent_id"]
 
                 try:
                     queue.mark_processing(request_id)
@@ -116,9 +116,11 @@ class LazyQueueWorker:
                     queue.mark_failed(request_id, error_msg)
                     self.stats["requests_failed"] += 1
 
-            logger.info(f"🏁 Batch complete. "
-                       f"Processed: {len(batch)}, "
-                       f"Failed: {sum(1 for r in batch if queue._get_status(r['request_id']) == 'failed')}")
+            logger.info(
+                f"🏁 Batch complete. "
+                f"Processed: {len(batch)}, "
+                f"Failed: {sum(1 for r in batch if queue._get_status(r['request_id']) == 'failed')}"
+            )
 
             return len(batch)
 
@@ -181,20 +183,18 @@ def main():
         description="Lazy Queue Worker - Process queued requests from Milk Ocean"
     )
     parser.add_argument(
-        "--daemon",
-        action="store_true",
-        help="Run as daemon (continuous processing)"
+        "--daemon", action="store_true", help="Run as daemon (continuous processing)"
     )
     parser.add_argument(
         "--interval",
         type=int,
         default=300,
-        help="Interval between batches in daemon mode (seconds, default 300)"
+        help="Interval between batches in daemon mode (seconds, default 300)",
     )
     parser.add_argument(
         "--once",
         action="store_true",
-        help="Process single batch and exit (default for cron)"
+        help="Process single batch and exit (default for cron)",
     )
 
     args = parser.parse_args()

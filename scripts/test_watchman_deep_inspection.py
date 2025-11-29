@@ -24,6 +24,7 @@ from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
 from vibe_core.scheduling.task import Task
 
+
 def test_watchman_deep_inspection():
     """Test Watchman deep inspection mechanism (Phase 3.2)."""
 
@@ -48,12 +49,13 @@ def test_watchman_deep_inspection():
     except Exception as e:
         print(f"   ❌ Watchman registration failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     # Step 3: Verify StandardsInspectionTool is initialized
     print("\n3️⃣  Verifying StandardsInspectionTool...")
-    if hasattr(watchman, 'standards_tool'):
+    if hasattr(watchman, "standards_tool"):
         print(f"   ✅ StandardsInspectionTool initialized")
     else:
         print(f"   ❌ StandardsInspectionTool NOT found")
@@ -66,12 +68,16 @@ def test_watchman_deep_inspection():
             task_id="test_deep_inspection",
             agent_id="watchman",
             priority=1,
-            payload={"action": "deep_inspection"}
+            payload={"action": "deep_inspection"},
         )
 
         result = watchman.process(task)
 
-        if result.get("status") in ["COMPLIANT", "WARNINGS_DETECTED", "VIOLATIONS_DETECTED"]:
+        if result.get("status") in [
+            "COMPLIANT",
+            "WARNINGS_DETECTED",
+            "VIOLATIONS_DETECTED",
+        ]:
             print(f"   ✅ Deep inspection completed")
             print(f"   Status: {result.get('status')}")
             print(f"   Total violations: {result.get('total_violations', 0)}")
@@ -83,14 +89,20 @@ def test_watchman_deep_inspection():
     except Exception as e:
         print(f"   ❌ Deep inspection crashed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     # Step 5: Verify report structure
     print("\n5️⃣  Verifying report structure...")
-    if 'report' in result:
-        report = result['report']
-        required_keys = ['total_violations', 'by_severity', 'by_agent', 'should_fail_build']
+    if "report" in result:
+        report = result["report"]
+        required_keys = [
+            "total_violations",
+            "by_severity",
+            "by_agent",
+            "should_fail_build",
+        ]
 
         missing_keys = [k for k in required_keys if k not in report]
         if missing_keys:
@@ -105,14 +117,14 @@ def test_watchman_deep_inspection():
         return False
 
     # Step 6: Display violations (if any)
-    if result.get('total_violations', 0) > 0:
+    if result.get("total_violations", 0) > 0:
         print("\n6️⃣  Violations found:")
-        violations = result.get('violations', [])
+        violations = result.get("violations", [])
 
         # Group by agent
         by_agent = {}
         for v in violations:
-            agent_id = v['agent_id']
+            agent_id = v["agent_id"]
             if agent_id not in by_agent:
                 by_agent[agent_id] = []
             by_agent[agent_id].append(v)
@@ -136,6 +148,7 @@ def test_watchman_deep_inspection():
     print(f"   • Status: {result.get('status')}")
 
     return True
+
 
 if __name__ == "__main__":
     success = test_watchman_deep_inspection()

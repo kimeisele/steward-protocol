@@ -183,11 +183,15 @@ Capabilities: {', '.join(caps) if caps else 'None'}"""
             errors.append("Missing required field: agent.version")
 
         # Check capabilities is a list
-        if "capabilities" in manifest and not isinstance(manifest["capabilities"], list):
+        if "capabilities" in manifest and not isinstance(
+            manifest["capabilities"], list
+        ):
             errors.append("Field 'capabilities' must be a list")
 
         # Check dependencies is a list
-        if "dependencies" in manifest and not isinstance(manifest["dependencies"], list):
+        if "dependencies" in manifest and not isinstance(
+            manifest["dependencies"], list
+        ):
             errors.append("Field 'dependencies' must be a list")
 
         return errors

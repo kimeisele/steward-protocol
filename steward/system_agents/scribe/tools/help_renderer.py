@@ -15,7 +15,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Any
 from .introspector import CartridgeIntrospector, ScriptIntrospector, ConfigIntrospector
-from .operations_introspector import WorkflowIntrospector, GitActivityIntrospector, ParameterIntrospector
+from .operations_introspector import (
+    WorkflowIntrospector,
+    GitActivityIntrospector,
+    ParameterIntrospector,
+)
 
 
 class HelpRenderer:
@@ -257,7 +261,7 @@ For detailed information:
         for workflow in workflows:
             output += f"**{workflow['name']}** (`{workflow['file']}`)\n"
             output += f"- **Triggers:** {', '.join(workflow['triggers'])}\n"
-            if workflow.get('branches'):
+            if workflow.get("branches"):
                 output += f"- **Branches:** {', '.join(workflow['branches'])}\n"
             output += "\n"
 
@@ -267,9 +271,9 @@ For detailed information:
 
     def _render_git_activity(self, git_activity: Dict[str, Any]) -> str:
         """Render Git activity."""
-        last_commit = git_activity.get('last_commit', {})
-        branch = git_activity.get('current_branch', 'unknown')
-        status = git_activity.get('status', 'unknown')
+        last_commit = git_activity.get("last_commit", {})
+        branch = git_activity.get("current_branch", "unknown")
+        status = git_activity.get("status", "unknown")
 
         output = "**Current State:**\n\n"
         output += f"- **Branch:** `{branch}`\n"
@@ -287,21 +291,29 @@ For detailed information:
 
         output = "**Tunable Parameters:**\n\n"
 
-        if 'starting_credits' in economy:
-            output += f"- **Starting Credits:** {economy['starting_credits']} CR per agent\n"
-            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+        if "starting_credits" in economy:
+            output += (
+                f"- **Starting Credits:** {economy['starting_credits']} CR per agent\n"
+            )
+            output += (
+                "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+            )
 
-        if 'api_cost' in economy:
+        if "api_cost" in economy:
             output += f"- **API Cost:** {economy['api_cost']} CR per call\n"
-            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+            output += (
+                "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+            )
 
-        output += "**Transparency:** See exactly what credits cost and where to change it.\n"
+        output += (
+            "**Transparency:** See exactly what credits cost and where to change it.\n"
+        )
 
         return output
 
     def _render_security_params(self, security: Dict[str, Any]) -> str:
         """Render security parameters."""
-        crimes = security.get('unforgivable_crimes', [])
+        crimes = security.get("unforgivable_crimes", [])
 
         if not crimes:
             return "⚠️  Security parameters not discovered\n"
@@ -316,7 +328,9 @@ For detailed information:
 
         return output
 
-    def _render_diagnostics(self, ledger_status: Dict[str, Any], agents: List[str]) -> str:
+    def _render_diagnostics(
+        self, ledger_status: Dict[str, Any], agents: List[str]
+    ) -> str:
         """Render diagnostics."""
         output = ""
 
@@ -326,7 +340,7 @@ For detailed information:
             output += "   → **Action:** Run `python scripts/summon.py`\n\n"
         else:
             output += "🟢 **Ledger:** Operational\n"
-            if ledger_status.get('total_entries'):
+            if ledger_status.get("total_entries"):
                 output += f"   → {ledger_status['total_entries']} entries recorded\n\n"
 
         # Agents check
@@ -359,7 +373,7 @@ For detailed information:
         output = ""
 
         for script in entry_points:
-            desc = f" — {script['description']}" if script['description'] else ""
+            desc = f" — {script['description']}" if script["description"] else ""
             output += f"### `{script['name']}`\n"
             output += f"**Location:** `{script['path']}`{desc}\n\n"
             output += f"**Usage:**\n```bash\npython {script['path']}\n```\n\n"
@@ -377,7 +391,7 @@ For detailed information:
         if not ledger_file.exists():
             return {
                 "exists": False,
-                "message": "Ledger not yet initialized. Run `python scripts/summon.py` to start."
+                "message": "Ledger not yet initialized. Run `python scripts/summon.py` to start.",
             }
 
         try:
@@ -388,7 +402,9 @@ For detailed information:
                 "exists": True,
                 "total_entries": len(entries),
                 "initialized": True,
-                "last_update": entries[-1].get("timestamp", "unknown") if entries else "never"
+                "last_update": (
+                    entries[-1].get("timestamp", "unknown") if entries else "never"
+                ),
             }
         except:
             return {"exists": True, "readable": False}
