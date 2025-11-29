@@ -42,6 +42,7 @@ import hashlib
 import time
 import signal
 import subprocess
+import uuid
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -847,21 +848,50 @@ class StewardCLI:
         """
         Submit a task to an agent via the kernel.
 
-        TODO: Implement kernel task submission interface.
+        Creates a task file in /tmp/vibe_os/tasks/ that the kernel can discover
+        and execute. Task is assigned a unique ID for tracking.
         """
-        print(f"📤 TASK DELEGATION")
+        print("📤 TASK DELEGATION")
         print("=" * 70)
         print()
-        print(f"Agent:       {agent_id}")
-        print(f"Task:        {task_description}")
-        print()
-        print("⚠️  Task delegation not yet implemented")
-        print()
-        print("TODO (Phase 7.2): Implement task submission")
-        print("  - Kernel task queue interface")
-        print("  - Task ID generation and tracking")
-        print("  - Result polling mechanism")
-        return 1
+
+        # Ensure task queue directory exists
+        task_dir = Path("/tmp/vibe_os/tasks")
+        task_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate unique task ID
+        task_id = str(uuid.uuid4())
+
+        # Create task manifest
+        task_manifest = {
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "description": task_description,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "status": "PENDING",
+        }
+
+        # Write task file
+        task_file = task_dir / f"{task_id}.json"
+
+        try:
+            with open(task_file, "w") as f:
+                json.dump(task_manifest, f, indent=2)
+
+            print(f"Agent:       {agent_id}")
+            print(f"Task:        {task_description}")
+            print()
+            print(f"✅ Task submitted successfully")
+            print(f"   Task ID: {task_id}")
+            print(f"   Queue:   {task_file}")
+            print()
+            print("Kernel will discover and execute this task when running.")
+            print(f"To check status: steward status | grep {task_id}")
+            return 0
+
+        except Exception as e:
+            print(f"❌ Failed to submit task: {e}")
+            return 1
 
 
 def main():
