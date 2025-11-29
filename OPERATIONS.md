@@ -1,11 +1,11 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-29T19:43:15.427730
+**Last Updated:** 2025-11-29T20:06:16.343869
 **Status:** RUNNING
 
 ## 📊 Kernel Status
 - Kernel: RUNNING
-- Agents Registered: 3
+- Agents Registered: 4
 - Queue Length: 0
 - Completed Tasks: 0
 - Total Events: 0
@@ -25,6 +25,12 @@
 - domain: ORCHESTRATION
 - capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
 - orchestration_metrics: {'city_control_initialized': False, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
+
+### ping
+- agent_id: ping
+- name: PING
+- status: RUNNING
+- capabilities: ['ping', 'status']
 
 ### science
 - agent_id: science
