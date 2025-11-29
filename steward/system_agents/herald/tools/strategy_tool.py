@@ -1,19 +1,31 @@
 """
 HERALD Strategy Tool - Campaign Planning & Roadmap Generation.
 
+⚠️  DEPRECATION NOTICE (2025-11-29):
+=======================================
+THIS ENTIRE MODULE IS MARKETING LOGIC.
+HERALD is a SYSTEM AGENT, not a marketing bot.
+
+All methods in this module are deprecated:
+- plan_launch_campaign() → DEPRECATED
+- get_todays_campaign_theme() → DEPRECATED
+- get_content_focus_areas() → DEPRECATED
+- write_roadmap_to_file() → DEPRECATED
+- analyze_campaign_alignment() → DEPRECATED
+
+If marketing functionality is needed, create a dedicated MarketingAgent.
+This module should NOT be used in production system agents.
+
+Original description:
 Macro-level strategic planning for multi-phase campaigns.
 Reads foundational documents (Manifesto, Positioning) and generates
 governance-aligned campaign roadmaps.
-
-Capabilities:
-- plan_launch_campaign: Multi-phase marketing strategy
-- analyze_positioning: AGI narrative positioning
-- generate_roadmap: 2-week+ campaign timeline
 """
 
 import logging
 import os
-from datetime import datetime, timedelta
+import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -31,6 +43,8 @@ logger = logging.getLogger("HERALD_STRATEGY")
 
 class StrategyTool:
     """
+    ⚠️  DEPRECATED: This entire class is MARKETING LOGIC.
+
     Strategic Campaign Planning Engine.
 
     This tool operates at the macro level (weeks/months), whereas ContentTool
@@ -43,7 +57,15 @@ class StrategyTool:
     """
 
     def __init__(self):
-        """Initialize strategy tool."""
+        """Initialize strategy tool. ⚠️ DEPRECATED."""
+        warnings.warn(
+            "⚠️  StrategyTool is MARKETING LOGIC in a System Agent. "
+            "This entire class is deprecated. Move to MarketingAgent if needed.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        logger.warning("⚠️  DEPRECATED: StrategyTool instantiated - marketing logic in system agent")
+
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         self.client = None
 
