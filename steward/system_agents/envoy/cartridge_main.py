@@ -26,6 +26,7 @@ from steward.oath_mixin import OathMixin
 
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
+from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import CityConfig
 
 from .tools.city_control_tool import CityControlTool
@@ -44,7 +45,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENVOY_CARTRIDGE")
 
 
-class EnvoyCartridge(VibeAgent, OathMixin):
+class EnvoyCartridge(ContextAwareAgent, OathMixin):
     """
     The ENVOY Agent Cartridge - Brain of Agent City
 
@@ -94,8 +95,11 @@ class EnvoyCartridge(VibeAgent, OathMixin):
         # Initialize the Golden Straw (CityControlTool)
         # NOTE: The kernel will be injected later via set_kernel()
         self.city_control = None  # Will be initialized after kernel injection
-        self.diplomacy = DiplomacyTool()
-        self.curator = CuratorTool()
+        
+        # Inject DegradationChain for offline capability
+        chain = self.get_degradation_chain()
+        self.diplomacy = DiplomacyTool(degradation_chain=chain)
+        self.curator = CuratorTool(degradation_chain=chain)
         self.campaign_tool = RunCampaignTool()  # Initialize campaign orchestration
         self.gap_report = GAPReportTool()  # Initialize governance audit proof reporting
         self.hil_assistant = HILAssistantTool()  # Initialize HIL Assistant (VAD Layer)
