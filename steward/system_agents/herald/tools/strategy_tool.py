@@ -25,7 +25,7 @@ governance-aligned campaign roadmaps.
 import logging
 import os
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -62,7 +62,7 @@ class StrategyTool:
             "⚠️  StrategyTool is MARKETING LOGIC in a System Agent. "
             "This entire class is deprecated. Move to MarketingAgent if needed.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         logger.warning("⚠️  DEPRECATED: StrategyTool instantiated - marketing logic in system agent")
 
