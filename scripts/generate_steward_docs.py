@@ -265,7 +265,8 @@ def main():
                 continue
 
             steward_md_path = agent_dir / "STEWARD.md"
-            if steward_md_path.exists():
+            # Regenerate if file exists but is empty or too small (stub)
+            if steward_md_path.exists() and steward_md_path.stat().st_size >= 500:
                 print(f"⏭️  Skip (exists): {agent_dir.name}/STEWARD.md")
                 skipped += 1
                 continue
@@ -297,7 +298,8 @@ def main():
                 continue
 
             steward_md_path = agent_dir / "STEWARD.md"
-            if steward_md_path.exists():
+            # Regenerate if file exists but is empty or too small (stub)
+            if steward_md_path.exists() and steward_md_path.stat().st_size >= 500:
                 print(f"⏭️  Skip (exists): {agent_dir.name}/STEWARD.md")
                 skipped += 1
                 continue
