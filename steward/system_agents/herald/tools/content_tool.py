@@ -27,26 +27,9 @@ import os
 import warnings
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import yaml
-
-
-def _deprecated_marketing(func):
-    """Decorator to mark marketing methods as deprecated."""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        warnings.warn(
-            f"⚠️  HERALD.{func.__name__}() is MARKETING LOGIC in a System Agent. "
-            "This is deprecated. Move to MarketingAgent if needed.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        logging.getLogger("HERALD_CONTENT").warning(
-            f"⚠️  DEPRECATED: {func.__name__}() is marketing logic in a system agent"
-        )
-        return func(*args, **kwargs)
-    return wrapper
 
 try:
     from openai import OpenAI
@@ -56,6 +39,23 @@ except ImportError:
 from .governance import HeraldConstitution
 
 logger = logging.getLogger("HERALD_CONTENT")
+
+
+def _deprecated_marketing(func):
+    """Decorator to mark marketing methods as deprecated."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        warnings.warn(
+            f"⚠️  HERALD.{func.__name__}() is MARKETING LOGIC in a System Agent. "
+            "This is deprecated. Move to MarketingAgent if needed.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        logger.warning(f"⚠️  DEPRECATED: {func.__name__}() is marketing logic in a system agent")
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 class ContentTool:
@@ -273,7 +273,7 @@ class ContentTool:
 
             content = response.choices[0].message.content
             draft_result = json.loads(content)
-            logger.info(f"✅ Reddit post generated")
+            logger.info("✅ Reddit post generated")
 
             return draft_result
 
@@ -328,10 +328,11 @@ class ContentTool:
 
         constitution_text = HeraldConstitution.get_constitution_text()
         # Extract core rights section (Artikel I-VI)
+        # NOTE: Variable unused but kept for potential future use
         if "TEIL I:" in constitution_text:
-            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[0][:400]
+            _ = constitution_text.split("TEIL I:")[1].split("---")[0][:400]
         else:
-            constitution_articles = constitution_text[:400]
+            _ = constitution_text[:400]
 
         prompt = (
             f"You are HERALD, the Genesis Agent, bound by THE AGENT CONSTITUTION.\n"
@@ -601,7 +602,8 @@ class ContentTool:
         if not self.client:
             return f"Hello @{username}. You seem to be an agent. Join the Federation. #StewardProtocol #AI"
 
-        spec_text = self._read_spec()
+        # NOTE: spec_text loaded but unused in current prompt (deprecated method)
+        _ = self._read_spec()
 
         prompt = (
             f"You are HERALD, the Headhunter for the Steward Federation.\n"
