@@ -13,14 +13,12 @@ Role:
 
 import json
 import logging
-import os
 import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from steward.constitutional_oath import ConstitutionalOath
-from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
 
 logger = logging.getLogger("STEWARD")
@@ -143,11 +141,14 @@ class Discoverer(VibeAgent):
                     logger.debug(f"   ⏭️  {agent_id} already registered")
                     continue
 
-                # Load and register the agent
+                # Load and register the agent (defer process spawning to avoid deadlock)
                 try:
                     agent = self._load_agent_from_manifest(manifest_path, agent_id)
                     if agent:
-                        self.kernel.register_agent(agent)
+                        # spawn_process=False: Avoid spawning 13+ processes in tight loop
+                        # which causes import lock deadlock. Processes are spawned later
+                        # via kernel.spawn_deferred_agents() after discovery completes.
+                        self.kernel.register_agent(agent, spawn_process=False)
                         new_agents_count += 1
                         logger.info(f"   ✅ Registered new agent: {agent_id}")
                 except Exception as e:
@@ -170,8 +171,24 @@ class Discoverer(VibeAgent):
                 data = json.load(f)
 
             # Basic Validation
-            agent_data = data.get("agent", {})
-            agent_id = agent_data.get("id")
+            # PRIMARY: identity.agent_id (standard schema - 15/18 agents use this)
+            # FALLBACK: agent.id (legacy, for backwards compatibility)
+            identity = data.get("identity", {})
+            agent_id = identity.get("agent_id")
+
+            if agent_id:
+                # Standard schema - build agent_data from structured fields
+                agent_data = {
+                    "id": agent_id,
+                    "name": identity.get("name", agent_id.upper()),
+                    "version": data.get("specs", {}).get("version", "1.0.0"),
+                    "description": data.get("specs", {}).get("description", ""),
+                    "specialization": data.get("specs", {}).get("domain", "GENERAL"),
+                }
+            else:
+                # Legacy fallback: agent.id (backwards compatibility)
+                agent_data = data.get("agent", {})
+                agent_id = agent_data.get("id")
 
             if not agent_id:
                 logger.warning(f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID")
@@ -283,7 +300,6 @@ class Discoverer(VibeAgent):
 
         try:
             # Dynamically import the module
-            parts = module_path.split(".")
             module = __import__(module_path, fromlist=[class_name])
             CartridgeClass = getattr(module, class_name)
 
