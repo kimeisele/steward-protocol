@@ -1,10 +1,12 @@
 """
-HERALD Identity Tool - Cryptographic signing via Steward Protocol.
+HERALD Identity Tool - Cryptographic signing via Steward Protocol (Tool Protocol).
 
 Provides agent identity verification and content signing capabilities.
 Integrates HERALD with the Steward Protocol for cryptographic integrity.
 
 Fallback: If Steward Protocol is unavailable, uses native HMAC-SHA256 signing.
+
+This tool implements the Tool Protocol for kernel-managed execution.
 """
 
 import hashlib
@@ -14,6 +16,8 @@ import os
 import secrets
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 try:
     from steward import crypto
@@ -25,7 +29,7 @@ except ImportError:
 logger = logging.getLogger("HERALD_IDENTITY")
 
 
-class IdentityTool:
+class IdentityTool(Tool):
     """
     Cryptographic identity and signing tool for HERALD.
 
@@ -102,9 +106,156 @@ class IdentityTool:
             except Exception as e:
                 logger.error(f"❌ Identity: Failed to save native keys: {e}")
 
-    def assert_identity(self) -> bool:
+    @property
+    def name(self) -> str:
+        return "herald.identity"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Cryptographic identity verification and content signing (Steward Protocol or HMAC-SHA256)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action to perform: 'assert_identity', 'sign_artifact', 'get_public_key', 'create_signed_record'",
+            },
+            "content": {
+                "type": "string",
+                "required": False,
+                "description": "Content to sign (required for 'sign_artifact' and 'create_signed_record')",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
         """
-        Verify that HERALD has cryptographic credentials available.
+        Validate identity parameters.
+
+        Args:
+            parameters: Tool parameters
+
+        Raises:
+            ValueError: If required parameter missing or invalid
+            TypeError: If parameter has wrong type
+        """
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["assert_identity", "sign_artifact", "get_public_key", "create_signed_record"]:
+            raise ValueError(
+                f"Invalid action: {action}. Must be 'assert_identity', 'sign_artifact', 'get_public_key', or 'create_signed_record'"
+            )
+
+        # Validate action-specific parameters
+        if action in ["sign_artifact", "create_signed_record"]:
+            if "content" not in parameters:
+                raise ValueError(f"{action} action requires 'content' parameter")
+            if not isinstance(parameters["content"], str):
+                raise TypeError("content must be a string")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """
+        Execute identity operation.
+
+        Args:
+            parameters: Validated tool parameters
+
+        Returns:
+            ToolResult with operation results
+        """
+        try:
+            action = parameters["action"]
+
+            if action == "assert_identity":
+                verified = self._assert_identity()
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "verified": verified,
+                        "agent_id": self.agent_id,
+                        "method": "native_hmac" if self._use_native else "steward_protocol",
+                    },
+                    metadata={
+                        "action": "assert_identity",
+                        "verified": verified,
+                    },
+                )
+
+            elif action == "sign_artifact":
+                content = parameters["content"]
+                signature = self._sign_artifact(content)
+
+                if signature:
+                    return ToolResult(
+                        success=True,
+                        output={
+                            "content": content,
+                            "signature": signature,
+                            "method": "native_hmac" if self._use_native else "steward_protocol",
+                        },
+                        metadata={
+                            "action": "sign_artifact",
+                            "signature_length": len(signature),
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error="Failed to sign content - no signing method available",
+                    )
+
+            elif action == "get_public_key":
+                public_key = self._get_public_key()
+
+                if public_key:
+                    return ToolResult(
+                        success=True,
+                        output={
+                            "public_key": public_key,
+                            "agent_id": self.agent_id,
+                        },
+                        metadata={
+                            "action": "get_public_key",
+                            "key_length": len(public_key),
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error="Public key not available",
+                    )
+
+            elif action == "create_signed_record":
+                content = parameters["content"]
+                record = self._create_signed_record(content)
+
+                if record:
+                    return ToolResult(
+                        success=True,
+                        output=record,
+                        metadata={
+                            "action": "create_signed_record",
+                            "has_public_key": "public_key" in record,
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error="Failed to create signed record",
+                    )
+
+        except Exception as e:
+            error_msg = f"Identity operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"IdentityTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
+
+    def _assert_identity(self) -> bool:
+        """
+        Internal method: Verify that HERALD has cryptographic credentials available.
 
         This checks that:
         1. The private key exists and is readable
@@ -137,9 +288,9 @@ class IdentityTool:
             logger.warning(f"⚠️  Identity: Assertion failed: {e}")
             return False
 
-    def sign_artifact(self, content: str) -> Optional[str]:
+    def _sign_artifact(self, content: str) -> Optional[str]:
         """
-        Cryptographically sign a text artifact (tweet, post, etc.).
+        Internal method: Cryptographically sign a text artifact (tweet, post, etc.).
 
         Uses HERALD's private key to create a digital signature.
         The signature can be used to verify that HERALD created this content.
@@ -181,9 +332,9 @@ class IdentityTool:
         logger.warning("⚠️  Identity: No signing method available")
         return None
 
-    def get_public_key(self) -> Optional[str]:
+    def _get_public_key(self) -> Optional[str]:
         """
-        Get HERALD's public key for verification.
+        Internal method: Get HERALD's public key for verification.
 
         The public key is embedded in the identity file and can be used
         to verify any signature created by sign_artifact().
@@ -220,9 +371,9 @@ class IdentityTool:
             logger.warning(f"⚠️  Identity: Could not retrieve public key: {e}")
             return None
 
-    def create_signed_record(self, content: str) -> Optional[Dict[str, Any]]:
+    def _create_signed_record(self, content: str) -> Optional[Dict[str, Any]]:
         """
-        Create a complete signed record of the content.
+        Internal method: Create a complete signed record of the content.
 
         This is a convenience method that signs content and returns
         both the content and signature in a structured format.
@@ -238,7 +389,7 @@ class IdentityTool:
             }
             or None if signing failed
         """
-        signature = self.sign_artifact(content)
+        signature = self._sign_artifact(content)
         if not signature:
             return None
 
@@ -247,7 +398,7 @@ class IdentityTool:
             "signature": signature,
         }
 
-        public_key = self.get_public_key()
+        public_key = self._get_public_key()
         if public_key:
             record["public_key"] = public_key
 
