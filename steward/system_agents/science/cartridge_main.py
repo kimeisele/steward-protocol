@@ -33,6 +33,7 @@ from steward.oath_mixin import OathMixin
 
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
+from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import CityConfig, ScienceConfig
 
 from .tools.web_search_tool import SearchResult, WebSearchTool
@@ -43,7 +44,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SCIENTIST_MAIN")
 
 
-class ScientistCartridge(VibeAgent, OathMixin):
+class ScientistCartridge(ContextAwareAgent, OathMixin):
     """
     THE SCIENTIST Agent - External Intelligence Module.
 
@@ -97,7 +98,9 @@ class ScientistCartridge(VibeAgent, OathMixin):
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
         # Initialize search tool
-        self.search = WebSearchTool()
+        # Initialize search tool with offline fallback
+        chain = self.get_degradation_chain()
+        self.search = WebSearchTool(degradation_chain=chain)
         logger.info(f"   Search mode: {self.search.mode.upper()}")
 
         # PHASE 2.2: Lazy-load data paths after system interface injection

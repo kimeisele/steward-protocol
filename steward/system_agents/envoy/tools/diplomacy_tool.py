@@ -26,9 +26,10 @@ class DiplomacyTool:
     - Human approval required
     """
 
-    def __init__(self):
+    def __init__(self, degradation_chain=None):
         self.diplomatic_bag = Path("diplomatic_bag")
         self.diplomatic_bag.mkdir(exist_ok=True)
+        self.chain = degradation_chain
 
     def search_github(self, topic="ai-agent", min_stars=100, max_results=10):
         """
