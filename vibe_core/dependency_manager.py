@@ -46,8 +46,7 @@ class DependencyManager:
 
         if not self.pyproject_path.exists():
             raise FileNotFoundError(
-                f"pyproject.toml not found at {self.pyproject_path}. "
-                f"DependencyManager requires a valid pyproject.toml."
+                f"pyproject.toml not found at {self.pyproject_path}. DependencyManager requires a valid pyproject.toml."
             )
 
         self.document: Optional[TOMLDocument] = None

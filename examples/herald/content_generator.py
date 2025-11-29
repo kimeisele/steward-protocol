@@ -151,7 +151,7 @@ Welcome to the future of trustworthy AI systems.
         # Generate simple hot take (in production, use LLM)
         twitter = f"""Just read: {title[:100]}...\n\nHere's the thing: This is exactly why agents need STEWARD Protocol.\n\n✅ Verifiable identity\n✅ Budget constraints  \n✅ Audit trails\n\nRead the full story:\n{url}\n\n#StewardProtocol #AIAgents"""
 
-        linkedin = f"""Reacting to Today's AI News: {title}\n\n{article.get('content', 'Interesting development')[:500]}...\n\nWhy this matters for agent governance:\nSTEWARD Protocol provides the missing piece - verifiable, budget-constrained autonomous agents that enterprises can trust.\n\nRead more:\n{url}\n\n#StewardProtocol #AIGovernance"""
+        linkedin = f"""Reacting to Today's AI News: {title}\n\n{article.get("content", "Interesting development")[:500]}...\n\nWhy this matters for agent governance:\nSTEWARD Protocol provides the missing piece - verifiable, budget-constrained autonomous agents that enterprises can trust.\n\nRead more:\n{url}\n\n#StewardProtocol #AIGovernance"""
 
         return {
             "twitter": twitter,

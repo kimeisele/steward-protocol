@@ -45,21 +45,11 @@ def check_connection():
 
 def print_header():
     os.system("cls" if os.name == "nt" else "clear")
-    print(
-        f"{BLUE}╔══════════════════════════════════════════════════════════════╗{RESET}"
-    )
-    print(
-        f"{BLUE}║               VIBE OS - IRON SHELL v1.0                      ║{RESET}"
-    )
-    print(
-        f"{BLUE}║          Connected to Node: {BASE_URL}                     ║{RESET}"
-    )
-    print(
-        f"{BLUE}╚══════════════════════════════════════════════════════════════╝{RESET}"
-    )
-    print(
-        f"\nType '{BOLD}exit{RESET}' to quit. Type '{BOLD}status{RESET}' for system health.\n"
-    )
+    print(f"{BLUE}╔══════════════════════════════════════════════════════════════╗{RESET}")
+    print(f"{BLUE}║               VIBE OS - IRON SHELL v1.0                      ║{RESET}")
+    print(f"{BLUE}║          Connected to Node: {BASE_URL}                     ║{RESET}")
+    print(f"{BLUE}╚══════════════════════════════════════════════════════════════╝{RESET}")
+    print(f"\nType '{BOLD}exit{RESET}' to quit. Type '{BOLD}status{RESET}' for system health.\n")
 
 
 def send_prayer(message, agent_id="guest"):
@@ -136,9 +126,7 @@ def main():
         sys.stdout.flush()
         retries += 1
         if retries > 10:
-            print(
-                f"\n{RED}❌ KERNEL NOT FOUND. Did you run './vibe' in another tab?{RESET}"
-            )
+            print(f"\n{RED}❌ KERNEL NOT FOUND. Did you run './vibe' in another tab?{RESET}")
             sys.exit(1)
 
     print_header()

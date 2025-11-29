@@ -17,9 +17,7 @@ from .tools.media_tool import MediaTool
 
 # Constitutional Oath
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ARTISAN_AGENT")
 
 

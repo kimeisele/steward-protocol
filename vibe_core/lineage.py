@@ -199,7 +199,7 @@ class LineageChain:
         # Store in DB
         self._store_block(block)
 
-        logger.info(f"⛓️  Block {block.index}: {event_type} " f"({agent_id or 'SYSTEM'}) → {block.hash[:16]}...")
+        logger.info(f"⛓️  Block {block.index}: {event_type} ({agent_id or 'SYSTEM'}) → {block.hash[:16]}...")
 
         return block
 
@@ -290,7 +290,7 @@ class LineageChain:
             if i > 0:
                 if block.previous_hash != blocks[i - 1].hash:
                     logger.critical(f"💥 CHAIN BROKEN AT INDEX {i}: Link broken!")
-                    logger.critical(f"   Previous block hash: {blocks[i-1].hash[:16]}...")
+                    logger.critical(f"   Previous block hash: {blocks[i - 1].hash[:16]}...")
                     logger.critical(f"   This block's prev_hash: {block.previous_hash[:16]}...")
                     return False
 

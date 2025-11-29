@@ -19,9 +19,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("LISTENER_TEST")
 
 # Add project root to path
@@ -215,9 +213,7 @@ def test_listener_logic():
         logger.info(f"✅ Check 3: System triggered recruitment ({recruitment_count}x)")
         checks.append(True)
     else:
-        logger.warning(
-            "⚠️  Check 3: No recruitment detected (expected if no wild agents found)"
-        )
+        logger.warning("⚠️  Check 3: No recruitment detected (expected if no wild agents found)")
         checks.append(True)  # Not critical
 
     # Check 4: Governance validation ran

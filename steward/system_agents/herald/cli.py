@@ -197,7 +197,7 @@ class HeraldCLI:
 
         results = []
         for i in range(cycles):
-            logger.info(f"\n[SIM {i+1}/{cycles}]")
+            logger.info(f"\n[SIM {i + 1}/{cycles}]")
             result = self.director.run_cycle(campaign_theme=args.theme or "auto")
             results.append(
                 {

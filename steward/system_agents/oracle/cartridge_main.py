@@ -202,9 +202,7 @@ class OracleCartridge(VibeAgent, OathMixin):
         if status["recent_leases"]:
             lines.append(f"\nVault Leases ({len(status['recent_leases'])} recent):")
             for lease in status["recent_leases"][:3]:
-                lines.append(
-                    f"  • {lease['key_name']}: {lease['credits_charged']} Credits " f"at {lease['lease_time']}"
-                )
+                lines.append(f"  • {lease['key_name']}: {lease['credits_charged']} Credits at {lease['lease_time']}")
 
         return "\n".join(lines)
 

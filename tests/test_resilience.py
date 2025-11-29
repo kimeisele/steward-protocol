@@ -49,9 +49,7 @@ class TestHeraldResilience:
 
         # Kill the LLM client
         brain.client = MagicMock()
-        brain.client.chat.completions.create.side_effect = Exception(
-            "API Overload - 500 Internal Server Error"
-        )
+        brain.client.chat.completions.create.side_effect = Exception("API Overload - 500 Internal Server Error")
 
         # Generate content with broken LLM
         content = brain.generate_insight()
@@ -165,9 +163,7 @@ class TestHeraldResilience:
             try:
                 image_path = artist.generate_visual("Test prompt")
                 # If it doesn't crash, that's good
-                assert image_path is None or isinstance(
-                    image_path, str
-                ), "Should return path or None"
+                assert image_path is None or isinstance(image_path, str), "Should return path or None"
             except Exception as e:
                 pytest.fail(f"Artist crashed on invalid response: {e}")
 

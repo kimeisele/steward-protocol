@@ -70,11 +70,7 @@ def test_kernel_boots():
     kernel = RealVibeKernel()
     assert kernel is not None
     # Status is an Enum, check its value
-    status_value = (
-        kernel._status.value
-        if hasattr(kernel._status, "value")
-        else str(kernel._status)
-    )
+    status_value = kernel._status.value if hasattr(kernel._status, "value") else str(kernel._status)
     assert status_value in ["INIT", "RUNNING", "BOOTED", "STOPPED"]
 
 

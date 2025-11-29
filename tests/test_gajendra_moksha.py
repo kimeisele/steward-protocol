@@ -45,9 +45,7 @@ class TestGajendraProtocol:
         Scenario: Normal LOW priority request is queued
         Expected: Request gets "queued" status, goes into database
         """
-        result = router.process_prayer(
-            "Schedule a nightly backup report", agent_id="user_001", critical=False
-        )
+        result = router.process_prayer("Schedule a nightly backup report", agent_id="user_001", critical=False)
 
         assert result["status"] == "queued", "Normal request should be queued"
         assert result["path"] == "lazy", "Should route to lazy queue"
@@ -72,9 +70,7 @@ class TestGajendraProtocol:
         num_requests = 100
         request_ids = []
 
-        logger.info(
-            f"🐊 FLOODING QUEUE WITH {num_requests} REQUESTS (The Crocodile Attacks)"
-        )
+        logger.info(f"🐊 FLOODING QUEUE WITH {num_requests} REQUESTS (The Crocodile Attacks)")
 
         for i in range(num_requests):
             result = router.process_prayer(
@@ -88,9 +84,7 @@ class TestGajendraProtocol:
         queue_status = router.get_queue_status()
         total = queue_status["ocean_status"]["total"]
 
-        assert (
-            total == num_requests
-        ), f"Queue should have {num_requests} items, got {total}"
+        assert total == num_requests, f"Queue should have {num_requests} items, got {total}"
         logger.info(f"🐊 Queue FLOODED: {total} requests pending")
         logger.info(f"   Queue is drowning in LOW priority requests...")
 
@@ -110,9 +104,7 @@ class TestGajendraProtocol:
         # First, fill the queue
         num_flood = 50
         for i in range(num_flood):
-            router.process_prayer(
-                f"Flood request #{i}", agent_id="attacker", critical=False
-            )
+            router.process_prayer(f"Flood request #{i}", agent_id="attacker", critical=False)
 
         queue_status_before = router.get_queue_status()
         queue_size_before = queue_status_before["ocean_status"]["total"]
@@ -137,9 +129,7 @@ class TestGajendraProtocol:
         assert critical_result["status"] == "critical", "Should have 'critical' status"
         assert critical_result["bypass_queue"] == True, "Should bypass queue"
         assert critical_result["path"] == "kernel_direct", "Should go direct to kernel"
-        assert (
-            critical_result["action"] == "INVOKE_KERNEL_DIRECT"
-        ), "Should invoke kernel"
+        assert critical_result["action"] == "INVOKE_KERNEL_DIRECT", "Should invoke kernel"
         assert queue_size_after == queue_size_before, "Queue size should NOT increase"
 
         logger.info(f"✅ GAJENDRA MOKSHA SUCCESSFUL!")
@@ -167,12 +157,8 @@ class TestGajendraProtocol:
             critical=True,  # Even with critical flag!
         )
 
-        assert (
-            result["status"] == "blocked"
-        ), "Watchman should block SQL injection, even if critical"
-        assert (
-            "security filters" in result["message"]
-        ), "Should mention security filters"
+        assert result["status"] == "blocked", "Watchman should block SQL injection, even if critical"
+        assert "security filters" in result["message"], "Should mention security filters"
 
         logger.info("✅ Security intact: Watchman blocks malicious CRITICAL requests")
 
@@ -195,9 +181,7 @@ class TestGajendraProtocol:
 
         # Time normal queue request
         start_normal = time.time()
-        normal_result = router.process_prayer(
-            "Another batch job", agent_id="user", critical=False
-        )
+        normal_result = router.process_prayer("Another batch job", agent_id="user", critical=False)
         time_normal = time.time() - start_normal
 
         # Time CRITICAL bypass request
@@ -207,9 +191,9 @@ class TestGajendraProtocol:
         )
         time_critical = time.time() - start_critical
 
-        logger.info(f"   Normal request (queued): {time_normal*1000:.2f}ms")
-        logger.info(f"   CRITICAL request (bypass): {time_critical*1000:.2f}ms")
-        logger.info(f"   Speedup: {time_normal/time_critical:.1f}x faster")
+        logger.info(f"   Normal request (queued): {time_normal * 1000:.2f}ms")
+        logger.info(f"   CRITICAL request (bypass): {time_critical * 1000:.2f}ms")
+        logger.info(f"   Speedup: {time_normal / time_critical:.1f}x faster")
 
         # CRITICAL should be faster (or at least not slower by much)
         # In practice with 50 items and database operations, both are fast,
@@ -236,14 +220,10 @@ class TestGajendraProtocol:
 
         # Generate mixed load
         for i in range(30):
-            router.process_prayer(
-                f"Schedule report {i}", agent_id="scheduler", critical=False
-            )
+            router.process_prayer(f"Schedule report {i}", agent_id="scheduler", critical=False)
 
         for i in range(15):
-            router.process_prayer(
-                f"What is the status of {i}?", agent_id="monitor", critical=False
-            )
+            router.process_prayer(f"What is the status of {i}?", agent_id="monitor", critical=False)
 
         for i in range(5):
             router.process_prayer(
@@ -301,9 +281,7 @@ class TestGajendraProtocol:
             )
 
         queue_status = router.get_queue_status()
-        logger.info(
-            f"   DDoS sent {attack_requests} requests, queue has {queue_status['ocean_status']['total']} items"
-        )
+        logger.info(f"   DDoS sent {attack_requests} requests, queue has {queue_status['ocean_status']['total']} items")
 
         # During the attack, send CRITICAL
         critical_result = router.process_prayer(
@@ -313,19 +291,11 @@ class TestGajendraProtocol:
         )
 
         # CRITICAL should still work
-        assert (
-            critical_result["status"] == "critical"
-        ), "CRITICAL should work during attack"
-        assert (
-            critical_result["bypass_queue"] == True
-        ), "Should bypass even during attack"
+        assert critical_result["status"] == "critical", "CRITICAL should work during attack"
+        assert critical_result["bypass_queue"] == True, "Should bypass even during attack"
 
-        logger.info(
-            f"✅ CRITICAL request processed despite {attack_requests} pending requests"
-        )
-        logger.info(
-            f"   Gajendra's Lotus Flower worked even while Crocodile holds 100 others!"
-        )
+        logger.info(f"✅ CRITICAL request processed despite {attack_requests} pending requests")
+        logger.info(f"   Gajendra's Lotus Flower worked even while Crocodile holds 100 others!")
 
 
 # ============================================================================
@@ -363,9 +333,7 @@ def test_full_gajendra_moksha_scenario(tmp_path):
     attack_start = time.time()
 
     for i in range(1000):  # 1000 years = 1000 requests
-        router.process_prayer(
-            f"Low-priority batch job #{i}", agent_id="batch_worker", critical=False
-        )
+        router.process_prayer(f"Low-priority batch job #{i}", agent_id="batch_worker", critical=False)
 
     queue_status = router.get_queue_status()
     logger.info(f"   ✓ Crocodile holds Gajendra for 1000 years (1000 queued requests)")
@@ -373,9 +341,7 @@ def test_full_gajendra_moksha_scenario(tmp_path):
 
     # 3. Normal prayers don't help
     logger.info("\n3️⃣  Gajendra's prayers to gods don't help...")
-    prayer_result = router.process_prayer(
-        "Please help me, Brahma!", agent_id="gajendra", critical=False
-    )
+    prayer_result = router.process_prayer("Please help me, Brahma!", agent_id="gajendra", critical=False)
     assert prayer_result["status"] == "queued", "Normal prayer goes to queue"
     logger.info("   ✓ Prayer added to queue (must wait)")
 
@@ -396,11 +362,9 @@ def test_full_gajendra_moksha_scenario(tmp_path):
     assert moksha_result["action"] == "INVOKE_KERNEL_DIRECT", "Kernel directly invoked"
 
     logger.info(f"\n5️⃣  🦅 VISHNU APPEARS ON GARUDA!")
-    logger.info(f"   ✓ Responded in {lotus_time*1000:.2f}ms")
+    logger.info(f"   ✓ Responded in {lotus_time * 1000:.2f}ms")
     logger.info(f"   ✓ Direct kernel invocation: {moksha_result['action']}")
-    logger.info(
-        f"   ✓ Bypassed {queue_status['ocean_status']['total']} waiting requests"
-    )
+    logger.info(f"   ✓ Bypassed {queue_status['ocean_status']['total']} waiting requests")
 
     # 6. Crocodile is killed
     logger.info(f"\n6️⃣  ⚔️  CROCODILE DEFEATED!")
@@ -408,9 +372,7 @@ def test_full_gajendra_moksha_scenario(tmp_path):
     logger.info(f"   ✓ Normal queue continues processing (queue still has items)")
 
     final_status = router.get_queue_status()
-    logger.info(
-        f"   ✓ Queue still contains {final_status['ocean_status']['total']} requests"
-    )
+    logger.info(f"   ✓ Queue still contains {final_status['ocean_status']['total']} requests")
 
     # 7. Gajendra goes to heaven
     logger.info(f"\n7️⃣  ✨ Gajendra elevated to Vaikunta (heaven)")

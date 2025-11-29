@@ -88,8 +88,7 @@ class CuratorTool:
 
         except Exception as e:
             raise RuntimeError(
-                f"❌ CRITICAL: GitHub search failed: {e}. "
-                f"No mocks. Real search required. Check API limits and network."
+                f"❌ CRITICAL: GitHub search failed: {e}. No mocks. Real search required. Check API limits and network."
             )
 
     def analyze_governance(self, repo_info: Dict) -> Dict:
@@ -174,21 +173,21 @@ class CuratorTool:
         Returns markdown formatted report.
         """
         report = f"""# Governance Analysis Report
-## {analysis['repository']}
+## {analysis["repository"]}
 
-**Repository**: [{analysis['url']}]({analysis['url']})
+**Repository**: [{analysis["url"]}]({analysis["url"]})
 
 ### Executive Summary
-{analysis['description']}
+{analysis["description"]}
 
 ### Governance Score
 ```
-{analysis['governance_score']}/{analysis['max_score']} ({analysis['percentile']})
-{self._score_bar(analysis['governance_score'])}
+{analysis["governance_score"]}/{analysis["max_score"]} ({analysis["percentile"]})
+{self._score_bar(analysis["governance_score"])}
 ```
 
 ### Recommendation
-**{analysis['recommendation']}**
+**{analysis["recommendation"]}**
 
 ### Key Findings
 """
@@ -200,11 +199,11 @@ class CuratorTool:
 ### Metrics
 | Metric | Value |
 |--------|-------|
-| Stars | {analysis['metrics']['stars']} |
-| Forks | {analysis['metrics']['forks']} |
-| Language | {analysis['metrics']['language']} |
-| Open Issues | {analysis['metrics']['open_issues']} |
-| Topics | {', '.join(analysis['metrics']['topics'])} |
+| Stars | {analysis["metrics"]["stars"]} |
+| Forks | {analysis["metrics"]["forks"]} |
+| Language | {analysis["metrics"]["language"]} |
+| Open Issues | {analysis["metrics"]["open_issues"]} |
+| Topics | {", ".join(analysis["metrics"]["topics"])} |
 
 ### How Steward Protocol Adds Value
 If this project integrated Steward Protocol:

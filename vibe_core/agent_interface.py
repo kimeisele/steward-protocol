@@ -136,7 +136,7 @@ class AgentSystemInterface:
         Note: This replaces creating requirements.txt files.
         """
         if not self._dep_manager:
-            raise RuntimeError(f"DependencyManager not available. " f"Agent {self.agent_id} cannot add dependencies.")
+            raise RuntimeError(f"DependencyManager not available. Agent {self.agent_id} cannot add dependencies.")
 
         logger.info(f"📦 {self.agent_id} requesting dependency: {package} {version or ''}")
         self._dep_manager.add_dependency(package, version)
@@ -356,7 +356,7 @@ class AgentSystemInterface:
         source = self.vfs.get_sandbox_path() / sandbox_path
 
         if not source.exists():
-            raise FileNotFoundError(f"Source file not found in sandbox: {sandbox_path} " f"(resolved to: {source})")
+            raise FileNotFoundError(f"Source file not found in sandbox: {sandbox_path} (resolved to: {source})")
 
         # Resolve target path (in project root)
         target = (Path(".") / target_path).resolve()
@@ -472,7 +472,7 @@ class AgentSystemInterface:
         if key not in self.kernel._data_store[agent_id]:
             if default is not None:
                 logger.debug(
-                    f"📥 {self.agent_id} requested data from {agent_id} " f"(key: {key}) - key not found, using default"
+                    f"📥 {self.agent_id} requested data from {agent_id} (key: {key}) - key not found, using default"
                 )
                 return default
             raise ValueError(
@@ -494,7 +494,7 @@ class AgentSystemInterface:
             },
         )
 
-        logger.info(f"📥 {self.agent_id} requested data from {agent_id}: " f"{key} (type: {type(value).__name__})")
+        logger.info(f"📥 {self.agent_id} requested data from {agent_id}: {key} (type: {type(value).__name__})")
         return value
 
     def list_published_data(self, agent_id: Optional[str] = None) -> Dict[str, List[str]]:
@@ -559,8 +559,7 @@ class AgentSystemInterface:
         # Check if agent exists
         if agent_id not in self.kernel.agent_registry:
             raise ValueError(
-                f"Agent '{agent_id}' not found in registry. "
-                f"Available agents: {list(self.kernel.agent_registry.keys())}"
+                f"Agent '{agent_id}' not found in registry. Available agents: {list(self.kernel.agent_registry.keys())}"
             )
 
         # Get the agent
@@ -596,7 +595,7 @@ class AgentSystemInterface:
                 },
             )
 
-            logger.info(f"📞 {self.agent_id} called {agent_id} " f"(action: {payload.get('action', 'unknown')})")
+            logger.info(f"📞 {self.agent_id} called {agent_id} (action: {payload.get('action', 'unknown')})")
             return result
 
         except Exception as e:

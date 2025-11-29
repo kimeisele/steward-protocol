@@ -509,7 +509,7 @@ class PromptContext:
             Formatted capability text for prompt injection
         """
         if self._kernel is None:
-            return "[Kernel capabilities unavailable - kernel not initialized. " "Use set_kernel() after boot.]"
+            return "[Kernel capabilities unavailable - kernel not initialized. Use set_kernel() after boot.]"
 
         try:
             from vibe_core.runtime.oracle import KernelOracle

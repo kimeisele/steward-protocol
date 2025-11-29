@@ -2,6 +2,7 @@
 """
 Fix all steward.json manifests with correct values from code.
 """
+
 import json
 import re
 from pathlib import Path

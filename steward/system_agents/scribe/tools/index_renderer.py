@@ -75,7 +75,7 @@ class IndexRenderer:
 ## 🏗️ ARCHITECTURE
 
 ### Current Architecture
-{self._render_docs_section(self.architecture_docs, 'docs/architecture')}
+{self._render_docs_section(self.architecture_docs, "docs/architecture")}
 - **[CITYMAP.md](CITYMAP.md)** - Agent City 3-layer architecture (auto-generated)
 
 ---
@@ -125,8 +125,8 @@ Agents:
   - `steward-cli stop` - Stop kernel (TODO daemon mode)
 
 ### Deployment & Operations
-{self._render_docs_section(self.deployment_docs, 'docs/deployment')}
-{self._render_docs_section(self.guides_docs, 'docs/guides', prefix='Demo: ')}
+{self._render_docs_section(self.deployment_docs, "docs/deployment")}
+{self._render_docs_section(self.guides_docs, "docs/guides", prefix="Demo: ")}
 
 ---
 
@@ -149,15 +149,15 @@ Agents:
 ## 📝 GUIDES & STORIES
 
 ### Project Context
-{self._render_docs_section(self.philosophy_docs, 'docs/philosophy')}
-{self._render_docs_section([d for d in self.guides_docs if 'CONTRIBUTING' in d], 'docs/guides')}
+{self._render_docs_section(self.philosophy_docs, "docs/philosophy")}
+{self._render_docs_section([d for d in self.guides_docs if "CONTRIBUTING" in d], "docs/guides")}
 
 ---
 
 ## 📦 REPORTS & ARCHIVE
 
 ### Current Reports
-{self._render_docs_section(self.reports_docs, 'docs/reports')}
+{self._render_docs_section(self.reports_docs, "docs/reports")}
 
 ### Migration Status
 {self._render_migration_docs()}

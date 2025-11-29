@@ -66,7 +66,7 @@ class GoogleProvider(LLMProvider):
 
         if not self.api_key:
             raise ProviderNotAvailableError(
-                "Google API key required. Set GOOGLE_API_KEY environment variable " "or pass api_key parameter."
+                "Google API key required. Set GOOGLE_API_KEY environment variable or pass api_key parameter."
             )
 
         # Initialize the runtime provider

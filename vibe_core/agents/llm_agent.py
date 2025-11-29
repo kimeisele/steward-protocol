@@ -171,7 +171,7 @@ class SimpleLLMAgent(VibeAgent):
         user_message = payload.get("user_message")
         if not user_message:
             raise ValueError(
-                "Task payload must contain 'user_message' field. " f"Got payload keys: {list(payload.keys())}"
+                f"Task payload must contain 'user_message' field. Got payload keys: {list(payload.keys())}"
             )
 
         # Determine model to use
@@ -347,7 +347,7 @@ class SimpleLLMAgent(VibeAgent):
         # Execute via registry
         result = self.tool_registry.execute(tool_call)
 
-        logger.info(f"AGENT: {self.agent_id} tool call completed " f"(tool={tool_name}, success={result.success})")
+        logger.info(f"AGENT: {self.agent_id} tool call completed (tool={tool_name}, success={result.success})")
 
         # Convert ToolResult to dict
         return {

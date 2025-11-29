@@ -39,7 +39,7 @@ class ConfigLoader:
         """
         if not self.config_path.exists():
             raise FileNotFoundError(
-                f"Configuration file not found: {self.config_path}\n" f"Expected at: {self.config_path.absolute()}"
+                f"Configuration file not found: {self.config_path}\nExpected at: {self.config_path.absolute()}"
             )
 
         try:

@@ -44,9 +44,7 @@ class LLMEngineAdapter:
         try:
             if BaseLLMEngine:
                 self.llm_engine = BaseLLMEngine()
-                logger.info(
-                    "🧠 LLM Engine Adapter initialized - Intelligent fallback active"
-                )
+                logger.info("🧠 LLM Engine Adapter initialized - Intelligent fallback active")
             else:
                 logger.warning("⚠️  Base LLM Engine unavailable")
         except Exception as e:

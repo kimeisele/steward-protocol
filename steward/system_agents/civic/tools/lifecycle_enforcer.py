@@ -154,11 +154,9 @@ class LifecycleEnforcer:
                     f"Must perform service tasks to rehabilitate."
                 )
             elif status == LifecycleStatus.VANAPRASTHA:
-                reason = (
-                    f"Agent {agent_id} is VANAPRASTHA (Retired). " f"Deprecated code - read-only archive access only."
-                )
+                reason = f"Agent {agent_id} is VANAPRASTHA (Retired). Deprecated code - read-only archive access only."
             elif status == LifecycleStatus.SANNYASA:
-                reason = f"Agent {agent_id} is SANNYASA (Renounced). " f"Agent merged into core - no longer executable."
+                reason = f"Agent {agent_id} is SANNYASA (Renounced). Agent merged into core - no longer executable."
             else:
                 reason = f"Agent {agent_id} does not have permission for {action_type}"
 

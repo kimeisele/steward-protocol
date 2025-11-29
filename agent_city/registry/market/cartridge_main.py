@@ -226,9 +226,7 @@ class MarketCartridge(VibeAgent):
 
         self.services[service_name] = new_service
 
-        logger.info(
-            f"📢 Service posted: {service_name} by {provider} ({price} Credits)"
-        )
+        logger.info(f"📢 Service posted: {service_name} by {provider} ({price} Credits)")
 
         return {
             "status": "service_posted",
@@ -399,9 +397,7 @@ class MarketCartridge(VibeAgent):
             "agent_id": self.agent_id,
             "status": "online",
             "services_available": len(self.services),
-            "active_orders": len(
-                [o for o in self.orders.values() if o["status"] != "completed"]
-            ),
+            "active_orders": len([o for o in self.orders.values() if o["status"] != "completed"]),
             "total_trades": self.total_trades,
             "total_volume": self.total_volume,
             "completed_orders": self.completed_orders,

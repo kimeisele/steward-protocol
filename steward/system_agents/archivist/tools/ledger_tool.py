@@ -56,7 +56,7 @@ class LedgerTool:
         Returns:
             Success status
         """
-        self.logger.info(f'📝 Writing entry for broadcast: {broadcast.get("id")}')
+        self.logger.info(f"📝 Writing entry for broadcast: {broadcast.get('id')}")
 
         try:
             ledger = self._read_ledger()

@@ -102,9 +102,7 @@ def test_signed_chat(sk, vk, public_key_hex):
     payload_str = json.dumps(payload_dict, separators=(",", ":"))
 
     # Sign
-    sig = sk.sign(
-        payload_str.encode("utf-8"), hashfunc=hashlib.sha256, sigencode=sigencode_string
-    )
+    sig = sk.sign(payload_str.encode("utf-8"), hashfunc=hashlib.sha256, sigencode=sigencode_string)
     # Frontend sends signature as HEX?
     # `identity_wallet.js`: `signature: this._arrayBufferToHex(signature)`
     # So signature is HEX.

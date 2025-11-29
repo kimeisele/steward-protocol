@@ -199,13 +199,9 @@ class AgoraCartridge(VibeAgent):
             }
 
         # Filter messages after since_sequence
-        messages = [
-            msg for msg in self.channels[source] if msg["sequence"] >= since_sequence
-        ]
+        messages = [msg for msg in self.channels[source] if msg["sequence"] >= since_sequence]
 
-        logger.info(
-            f"🎧 {agent_id} listening to {source} stream ({len(messages)} new messages)"
-        )
+        logger.info(f"🎧 {agent_id} listening to {source} stream ({len(messages)} new messages)")
 
         return {
             "status": "listening",

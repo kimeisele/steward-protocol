@@ -97,13 +97,9 @@ class KernelWithSemanticAuditor:
                 # ========== NEW: Watchdog check every N tasks ==========
                 # This is the integration point - very simple!
                 if self.task_count % 10 == 0:
-                    logger.info(
-                        f"👁️  [Tick {self.task_count}] Running Watchdog check..."
-                    )
+                    logger.info(f"👁️  [Tick {self.task_count}] Running Watchdog check...")
 
-                    halt_result = self.auditor.watchdog_integration.kernel_tick(
-                        self.task_count
-                    )
+                    halt_result = self.auditor.watchdog_integration.kernel_tick(self.task_count)
 
                     if halt_result["should_halt"]:
                         logger.error("🚨 CRITICAL VIOLATION - HALTING KERNEL")
@@ -160,9 +156,7 @@ class KernelWithSemanticAuditor:
             logger.error("   Fix violations before starting kernel")
             raise RuntimeError("Semantic verification failed")
 
-        logger.info(
-            f"✅ Pre-boot verification passed ({result['events_checked']} events)"
-        )
+        logger.info(f"✅ Pre-boot verification passed ({result['events_checked']} events)")
 
     def shutdown(self):
         """Graceful shutdown"""

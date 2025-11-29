@@ -138,7 +138,7 @@ class StatusBar:
             inbox_count = "0"
             agenda_total = 0
 
-        return f"🤖 VIBE OS | {user_name} | 🎭 {operator_tone} " f"| 📨 {inbox_count} | 📋 {agenda_total}"
+        return f"🤖 VIBE OS | {user_name} | 🎭 {operator_tone} | 📨 {inbox_count} | 📋 {agenda_total}"
 
 
 class CapabilitiesMenu:
@@ -180,7 +180,7 @@ class CapabilitiesMenu:
         for cartridge_id, info in self.CARTRIDGES.items():
             menu += f"**{info['name']}**\n"
             menu += f"  {info['description']}\n"
-            menu += f"  Example: \"{info['example']}\"\n\n"
+            menu += f'  Example: "{info["example"]}"\n\n'
 
         return menu.strip()
 

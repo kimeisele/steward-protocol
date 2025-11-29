@@ -343,7 +343,7 @@ class RealVibeKernel(VibeKernel):
 
                 if not is_valid:
                     logger.critical(
-                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' " f"oath verification FAILED: {reason}"
+                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' oath verification FAILED: {reason}"
                     )
                     raise PermissionError(
                         f"GOVERNANCE_GATE_DENIED: Agent '{agent.agent_id}' "
@@ -351,7 +351,7 @@ class RealVibeKernel(VibeKernel):
                         f"Kernel refuses entry."
                     )
 
-                logger.info(f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' " f"oath verified ({reason})")
+                logger.info(f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' oath verified ({reason})")
 
             except PermissionError:
                 # Re-raise governance violations
@@ -359,7 +359,7 @@ class RealVibeKernel(VibeKernel):
             except Exception as e:
                 logger.error(f"❌ Governance gate verification error for '{agent.agent_id}': {e}")
                 raise PermissionError(
-                    f"GOVERNANCE_GATE_ERROR: Agent '{agent.agent_id}' " f"oath verification failed: {str(e)}"
+                    f"GOVERNANCE_GATE_ERROR: Agent '{agent.agent_id}' oath verification failed: {str(e)}"
                 )
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
@@ -373,7 +373,7 @@ class RealVibeKernel(VibeKernel):
         from vibe_core.agent_interface import AgentSystemInterface
 
         agent.system = AgentSystemInterface(self, agent.agent_id)
-        logger.info(f"🔌 {agent.agent_id} received system interface " f"(sandbox: {agent.system.get_sandbox_path()})")
+        logger.info(f"🔌 {agent.agent_id} received system interface (sandbox: {agent.system.get_sandbox_path()})")
 
         # Phase 2: Spawn Process
         self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
@@ -420,7 +420,7 @@ class RealVibeKernel(VibeKernel):
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
         logger.info(
-            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' " f"registered and spawned in isolated process."
+            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' registered and spawned in isolated process."
         )
 
     def boot(self) -> None:
@@ -618,7 +618,7 @@ class RealVibeKernel(VibeKernel):
             # Create symlink: sandbox/repo -> actual repo
             vfs.create_symlink(repo_path, "repo")
 
-            logger.info(f"🔗 {agent_id} granted repo access: " f"{vfs.get_sandbox_path()}/repo -> {repo_path}")
+            logger.info(f"🔗 {agent_id} granted repo access: {vfs.get_sandbox_path()}/repo -> {repo_path}")
 
         except Exception as e:
             logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")

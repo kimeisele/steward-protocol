@@ -101,9 +101,7 @@ def demo_valid_broadcast_sequence():
 
     print("\n📍 Event Ledger:")
     for i, event in enumerate(events):
-        print(
-            f"   [{i}] {event['event_type']:20} - agent:{event['agent_id']:6} @ {event['timestamp']}"
-        )
+        print(f"   [{i}] {event['event_type']:20} - agent:{event['agent_id']:6} @ {event['timestamp']}")
 
     report = judge.verify_ledger(events)
 
@@ -380,24 +378,12 @@ This is how you build software with an IMMUNE SYSTEM. 🏰
 def main():
     """Run all demos"""
     print("\n")
-    print(
-        "╔════════════════════════════════════════════════════════════════════════════╗"
-    )
-    print(
-        "║                    SEMANTIC AUDITOR DEMO                                   ║"
-    )
-    print(
-        "║              The Judge ⚖️ and The Watchdog 👁️                              ║"
-    )
-    print(
-        "║                                                                            ║"
-    )
-    print(
-        "║  Demonstration of semantic verification in STEWARD Protocol               ║"
-    )
-    print(
-        "╚════════════════════════════════════════════════════════════════════════════╝"
-    )
+    print("╔════════════════════════════════════════════════════════════════════════════╗")
+    print("║                    SEMANTIC AUDITOR DEMO                                   ║")
+    print("║              The Judge ⚖️ and The Watchdog 👁️                              ║")
+    print("║                                                                            ║")
+    print("║  Demonstration of semantic verification in STEWARD Protocol               ║")
+    print("╚════════════════════════════════════════════════════════════════════════════╝")
 
     try:
         demo_violation_broadcast_without_license()

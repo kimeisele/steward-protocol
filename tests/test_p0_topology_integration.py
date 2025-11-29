@@ -37,9 +37,7 @@ def test_topology_annotation():
     assert task.topology_layer == placement.layer
     assert task.varna == placement.varna
 
-    print(
-        f"✅ Task annotated: layer={task.topology_layer}, varna={task.varna}, routing={task.routing_priority}"
-    )
+    print(f"✅ Task annotated: layer={task.topology_layer}, varna={task.varna}, routing={task.routing_priority}")
 
 
 def test_milk_ocean_routing():
@@ -48,24 +46,16 @@ def test_milk_ocean_routing():
 
     # Test 1: Normal task → Should route (not blocked)
     result = router.process_prayer(user_input="Fix minor UI bug", agent_id="TEST")
-    assert (
-        result["status"] != "blocked"
-    ), f"Normal task should not be blocked, got {result['status']}"
-    print(
-        f"✅ MilkOcean routed 'minor bug': status={result['status']}, path={result.get('path', 'N/A')}"
-    )
+    assert result["status"] != "blocked", f"Normal task should not be blocked, got {result['status']}"
+    print(f"✅ MilkOcean routed 'minor bug': status={result['status']}, path={result.get('path', 'N/A')}")
 
     # Test 2: Complex task → Should route to Science/HIGH
     result = router.process_prayer(
         user_input="Implement complex algorithm with performance optimization",
         agent_id="TEST",
     )
-    assert (
-        result["status"] != "blocked"
-    ), f"Complex task should not be blocked, got {result['status']}"
-    print(
-        f"✅ MilkOcean routed 'complex algorithm': status={result['status']}, path={result.get('path', 'N/A')}"
-    )
+    assert result["status"] != "blocked", f"Complex task should not be blocked, got {result['status']}"
+    print(f"✅ MilkOcean routed 'complex algorithm': status={result['status']}, path={result.get('path', 'N/A')}")
 
     # Test 3: Very large input → Should be rejected
     result = router.process_prayer(
@@ -122,9 +112,7 @@ def test_topology_aware_sorting():
         "herald",
     ], f"Topology sort should prioritize CIVIC or HERALD, got {next_task.assignee} (title={next_task.title})"
 
-    print(
-        f"✅ Topology-aware sort prioritized: {next_task.assignee} (layer={next_task.topology_layer})"
-    )
+    print(f"✅ Topology-aware sort prioritized: {next_task.assignee} (layer={next_task.topology_layer})")
 
     # Cleanup
     for task in tasks:
@@ -149,9 +137,7 @@ def test_milk_ocean_integration_in_task_manager():
     assert task.routing_priority is not None
     assert 0 <= task.routing_priority <= 3
 
-    print(
-        f"✅ MilkOcean set routing_priority={task.routing_priority} for critical task"
-    )
+    print(f"✅ MilkOcean set routing_priority={task.routing_priority} for critical task")
 
     # Cleanup
     tm.update_task(task.id, status=TaskStatus.COMPLETED)
@@ -199,25 +185,21 @@ def test_fractal_architecture_end_to_end():
     watchman_placement = get_agent_placement("watchman")
 
     print(f"CIVIC placement: {civic_placement.layer if civic_placement else 'None'}")
-    print(
-        f"WATCHMAN placement: {watchman_placement.layer if watchman_placement else 'None'}"
-    )
+    print(f"WATCHMAN placement: {watchman_placement.layer if watchman_placement else 'None'}")
     print(f"Next task chosen: {next_task.assignee} (layer={next_task.topology_layer})")
 
     # Civic should have higher authority than Watchman
     if civic_placement and watchman_placement:
-        assert (
-            civic_placement.authority_level > watchman_placement.authority_level
-        ), "CIVIC should have higher authority than WATCHMAN"
+        assert civic_placement.authority_level > watchman_placement.authority_level, (
+            "CIVIC should have higher authority than WATCHMAN"
+        )
 
     # Cleanup
     tm.update_task(civic_task.id, status=TaskStatus.COMPLETED)
     tm.update_task(watchman_task.id, status=TaskStatus.COMPLETED)
 
     print("✅ Fractal architecture works end-to-end!")
-    print(
-        "   Tasks route through: Narasimha → MilkOcean → Topology → NextTaskGenerator"
-    )
+    print("   Tasks route through: Narasimha → MilkOcean → Topology → NextTaskGenerator")
     print("   Cosmological hierarchy is REAL, not decorative")
 
 

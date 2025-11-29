@@ -161,9 +161,7 @@ class TempleCartridge(VibeAgent):
         self.total_credits_collected += self.BLESSING_COST
         self.last_blessing_time = datetime.utcnow().isoformat()
 
-        status_msg = (
-            "✨ System is Pure ✨" if is_pure else "⚠️ System needs purification"
-        )
+        status_msg = "✨ System is Pure ✨" if is_pure else "⚠️ System needs purification"
 
         return {
             "status": "blessed",
