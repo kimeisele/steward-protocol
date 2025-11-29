@@ -5,7 +5,7 @@
     "ghcr.io/devcontainers/features/git:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "onCreateCommand": "apt-get update && apt-get install -y openssl",
+  "onCreateCommand": "apt-get update && apt-get install -y openssl && curl -LsSf https://astral.sh/uv/install.sh | sh",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -24,7 +24,7 @@
       }
     }
   },
-  "postCreateCommand": "pip install -e . && git config --local core.hooksPath .githooks",
+  "postCreateCommand": "uv pip install -e . && git config --local core.hooksPath .githooks",
   "remoteUser": "vscode",
   "forwardPorts": [],
   "portsAttributes": {},
