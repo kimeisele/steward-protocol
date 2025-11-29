@@ -40,6 +40,8 @@ import sqlite3
 import json
 import hashlib
 import time
+import signal
+import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -498,8 +500,7 @@ class StewardCLI:
         """
         Start the kernel daemon.
 
-        TODO: Implement daemon mode for kernel.
-        Currently just provides instructions.
+        Spawns kernel in background process, writes PID file, redirects logs.
         """
         print("🚀 KERNEL BOOT")
         print("=" * 70)
@@ -511,16 +512,51 @@ class StewardCLI:
             print(f"   Pulse age: {self._get_pulse_age():.1f}s")
             return 1
 
-        print("⚠️  Daemon mode not yet implemented")
-        print()
-        print("To start the kernel manually, run:")
-        print("  python scripts/stress_test_city.py")
-        print()
-        print("TODO (Phase 7.1): Implement proper daemon mode")
-        print("  - Background process with PID file")
-        print("  - Log redirection to /tmp/vibe_os/logs/kernel.log")
-        print("  - Signal handling for graceful shutdown")
-        return 1
+        # Ensure log directory exists
+        log_dir = Path("/tmp/vibe_os/logs")
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        kernel_log = log_dir / "kernel.log"
+        kernel_pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        kernel_pidfile.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Start kernel in background
+            with open(kernel_log, "w") as log_file:
+                kernel_process = subprocess.Popen(
+                    [
+                        sys.executable,
+                        str(PROJECT_ROOT / "scripts" / "stress_test_city.py"),
+                    ],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,  # Daemonize
+                )
+
+            # Write PID file
+            with open(kernel_pidfile, "w") as f:
+                f.write(str(kernel_process.pid))
+
+            # Give kernel time to boot
+            time.sleep(1)
+
+            # Verify kernel is running
+            try:
+                os.kill(kernel_process.pid, 0)  # Signal 0 = check if process exists
+                print(f"✅ Kernel started (PID: {kernel_process.pid})")
+                print(f"   Logs: {kernel_log}")
+                print()
+                print("To monitor logs:")
+                print(f"  tail -f {kernel_log}")
+                return 0
+            except ProcessLookupError:
+                print(f"❌ Kernel process exited unexpectedly")
+                print(f"   Check logs: {kernel_log}")
+                return 1
+
+        except Exception as e:
+            print(f"❌ Failed to start kernel: {e}")
+            return 1
 
     # =========================================================================
     # COMMAND: steward stop
@@ -530,8 +566,8 @@ class StewardCLI:
         """
         Graceful kernel shutdown.
 
-        TODO: Implement signal-based shutdown.
-        Currently just provides instructions.
+        Sends SIGTERM to kernel process, waits for graceful shutdown.
+        Falls back to SIGKILL if timeout.
         """
         print("🛑 KERNEL SHUTDOWN")
         print("=" * 70)
@@ -542,17 +578,57 @@ class StewardCLI:
             print("⚠️  Kernel is not running (pulse lost)")
             return 1
 
-        print("⚠️  Signal-based shutdown not yet implemented")
-        print()
-        print("To stop the kernel manually:")
-        print("  1. Find kernel process: ps aux | grep stress_test_city")
-        print("  2. Send SIGTERM: kill -TERM <PID>")
-        print()
-        print("TODO (Phase 7.1): Implement signal-based shutdown")
-        print("  - Send SIGTERM to kernel PID")
-        print("  - Wait for graceful shutdown (max 30s)")
-        print("  - Send SIGKILL if timeout")
-        return 1
+        # Get PID from file
+        pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        if not pidfile.exists():
+            print("⚠️  PID file not found")
+            print("   Try: kill -TERM <pid> manually")
+            return 1
+
+        try:
+            with open(pidfile, "r") as f:
+                pid = int(f.read().strip())
+
+            print(f"Shutting down kernel (PID: {pid})...")
+            print()
+
+            # Send SIGTERM (graceful shutdown)
+            os.kill(pid, signal.SIGTERM)
+
+            # Wait for graceful shutdown (max 30s)
+            for i in range(30):
+                time.sleep(1)
+                try:
+                    os.kill(pid, 0)  # Check if still alive
+                except ProcessLookupError:
+                    print("✅ Kernel shut down gracefully")
+                    pidfile.unlink()
+                    return 0
+
+            # Timeout - force kill
+            print("⚠️  Graceful shutdown timeout, sending SIGKILL...")
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(1)
+
+            try:
+                os.kill(pid, 0)
+                print("❌ SIGKILL failed")
+                return 1
+            except ProcessLookupError:
+                print("✅ Kernel force-killed")
+                pidfile.unlink()
+                return 0
+
+        except (ValueError, FileNotFoundError) as e:
+            print(f"❌ Error reading PID file: {e}")
+            return 1
+        except ProcessLookupError:
+            print("✅ Kernel already dead")
+            pidfile.unlink()
+            return 0
+        except Exception as e:
+            print(f"❌ Error stopping kernel: {e}")
+            return 1
 
     # =========================================================================
     # COMMAND: steward init
@@ -724,6 +800,49 @@ class StewardCLI:
     # COMMAND: steward delegate
     # =========================================================================
 
+    def cmd_logs(self, tail: int = 50) -> int:
+        """
+        View kernel logs (last N lines by default).
+
+        Args:
+            tail: Number of lines to show from end of log file (default: 50)
+        """
+        print("📋 KERNEL LOGS")
+        print("=" * 70)
+        print()
+
+        kernel_log = Path("/tmp/vibe_os/logs/kernel.log")
+        if not kernel_log.exists():
+            print("❌ Kernel log not found")
+            print(f"   Expected: {kernel_log}")
+            print()
+            print("Kernel may not be running. Try: steward boot")
+            return 1
+
+        try:
+            with open(kernel_log, "r") as f:
+                lines = f.readlines()
+
+            # Show last N lines
+            start_idx = max(0, len(lines) - tail)
+            shown_lines = lines[start_idx:]
+
+            if start_idx > 0:
+                print(f"(showing last {tail} of {len(lines)} lines)\n")
+
+            for line in shown_lines:
+                print(line, end="")
+
+            return 0
+
+        except Exception as e:
+            print(f"❌ Error reading logs: {e}")
+            return 1
+
+    # =========================================================================
+    # COMMAND: steward delegate
+    # =========================================================================
+
     def cmd_delegate(self, agent_id: str, task_description: str) -> int:
         """
         Submit a task to an agent via the kernel.
@@ -775,6 +894,12 @@ def main():
     # steward stop
     subparsers.add_parser("stop", help="Graceful kernel shutdown")
 
+    # steward logs [--tail N]
+    logs_parser = subparsers.add_parser("logs", help="View kernel logs")
+    logs_parser.add_argument(
+        "--tail", type=int, default=50, help="Show last N lines (default: 50)"
+    )
+
     # steward init <agent_id>
     init_parser = subparsers.add_parser("init", help="Initialize new agent manifest")
     init_parser.add_argument("agent_id", help="Agent ID to initialize")
@@ -808,6 +933,8 @@ def main():
         return cli.cmd_boot()
     elif args.command == "stop":
         return cli.cmd_stop()
+    elif args.command == "logs":
+        return cli.cmd_logs(tail=args.tail)
     elif args.command == "init":
         return cli.cmd_init(args.agent_id)
     elif args.command == "discover":
