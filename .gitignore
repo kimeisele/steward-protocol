@@ -46,6 +46,10 @@ data/economy.db*
 # Never commit vault backups
 data/backups/vault*
 
+# LOCAL LLM MODELS - CRITICAL: 400MB+ files, never commit!
+data/models/
+*.gguf
+
 # User-generated agent directories
 my_agent/
 **/my_agent/
