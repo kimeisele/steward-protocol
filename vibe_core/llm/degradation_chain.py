@@ -12,7 +12,7 @@ Fallback order:
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 logger = logging.getLogger("DEGRADATION_CHAIN")
 
@@ -85,6 +85,7 @@ class DegradationChain:
         user_input: str,
         semantic_confidence: float,
         detected_intent: Optional[str] = None,
+        concepts: Optional[Set[str]] = None,
     ) -> DegradationResponse:
         """Generate response with graceful degradation."""
 
@@ -108,7 +109,7 @@ class DegradationChain:
             )
 
         # NETI NETI (<0.60): Low confidence
-        return self._neti_neti_fallback(user_input, semantic_confidence)
+        return self._neti_neti_fallback(user_input, semantic_confidence, concepts)
 
     def _generate_clarification(self, user_input: str, intent: Optional[str]) -> str:
         """Generate clarification request."""
@@ -116,18 +117,33 @@ class DegradationChain:
             return f"Ich glaube du meinst '{intent}'. Kannst du das bestaetigen?"
         return f"Ich verstehe: '{user_input[:50]}...'. Was genau soll ich tun?"
 
-    def _neti_neti_fallback(self, user_input: str, confidence: float) -> DegradationResponse:
+    def _neti_neti_fallback(
+        self, user_input: str, confidence: float, concepts: Optional[Set[str]] = None
+    ) -> DegradationResponse:
         """NETI NETI fallback chain."""
 
-        # Try LocalLLM
+        # Get knowledge context
+        knowledge_context = ""
+        if concepts:
+            try:
+                from vibe_core.knowledge.resolver import get_resolver
+
+                resolver = get_resolver()
+                for concept in concepts:
+                    knowledge_context += resolver.compile_context(concept) + "\n\n"
+            except Exception as e:
+                logger.debug(f"Knowledge compilation failed: {e}")
+
+        # Try LocalLLM with knowledge
         if self._local_llm is not None:
             try:
-                response = self._local_llm.chat([{"role": "user", "content": user_input}])
+                compiled_prompt = self._compile_prompt(user_input, knowledge_context)
+                response = self._local_llm.chat([{"role": "system", "content": compiled_prompt}])
                 return DegradationResponse(
                     content=response,
                     level=DegradationLevel.FULL,
                     confidence=confidence,
-                    fallback_used="local_llm",
+                    fallback_used="local_llm_with_knowledge" if knowledge_context else "local_llm",
                 )
             except Exception as e:
                 logger.warning(f"LocalLLM failed: {e}")
@@ -155,6 +171,22 @@ class DegradationChain:
             fallback_used="template:unknown",
             user_guidance="Fuer intelligentere Antworten: steward install-llm",
         )
+
+    def _compile_prompt(self, user_input: str, knowledge: str) -> str:
+        """Compile prompt with knowledge context for local LLM."""
+        if knowledge:
+            return f"""Du bist ein Agent in Agent City.
+
+{knowledge}
+
+AUFGABE: Beantworte die folgende Anfrage basierend auf dem obigen Wissen.
+Wenn das Wissen nicht ausreicht, sage es ehrlich.
+
+USER: {user_input}
+
+ANTWORT:"""
+        else:
+            return user_input
 
     def _match_template(self, user_input: str) -> Optional[str]:
         """Simple keyword matching."""

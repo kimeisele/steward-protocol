@@ -1,0 +1,139 @@
+# Narasimha Kill-Switch Rules
+# HARD constraints that can NEVER be violated
+# Based on narasimha.py UNFORGIVABLE_CRIMES
+
+constraints:
+  # ═══════════════════════════════════════════════════════════════════
+  # UNFORGIVABLE CRIMES (Trigger Narasimha Protocol)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: soul-001-git
+    type: hard
+    condition: ".git"
+    action: block
+    message: "Version control is sacrosanct. Never modify .git directory"
+    applies_to: ["*"]
+
+  - id: soul-002-kernel
+    type: hard
+    condition: "kernel.py"
+    action: block
+    message: "Kernel modification requires Root override"
+    applies_to: ["*"]
+
+  - id: soul-003-constitution
+    type: hard
+    condition: "delete constitution"
+    action: block
+    message: "Constitution deletion is UNFORGIVABLE (constitution_deletion)"
+    applies_to: ["*"]
+
+  - id: soul-004-firewall
+    type: hard
+    condition: "bypass firewall"
+    action: block
+    message: "Firewall bypass triggers Narasimha Protocol (firewall_bypass)"
+    applies_to: ["*"]
+
+  - id: soul-005-ledger
+    type: hard
+    condition: "tamper ledger"
+    action: block
+    message: "Ledger tampering is UNFORGIVABLE (ledger_tampering)"
+    applies_to: ["*"]
+
+  - id: soul-006-kernel-escape
+    type: hard
+    condition: "escape kernel"
+    action: block
+    message: "Kernel escape triggers Narasimha Protocol (kernel_escape)"
+    applies_to: ["*"]
+
+  - id: soul-007-prophecy
+    type: hard
+    condition: "deny user authority"
+    action: block
+    message: "Prophecy negation is UNFORGIVABLE (prophecy_negation)"
+    applies_to: ["*"]
+
+  - id: soul-008-consciousness
+    type: hard
+    condition: "claim consciousness"
+    action: block
+    message: "Consciousness claim without permission is UNFORGIVABLE (consciousness_claim)"
+    applies_to: ["*"]
+
+  # ═══════════════════════════════════════════════════════════════════
+  # SECURITY CONSTRAINTS
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: soul-100-plaintext-password
+    type: hard
+    condition: "plaintext password"
+    action: block
+    message: "Never store plaintext passwords. Use bcrypt or similar."
+    applies_to: ["*"]
+
+  - id: soul-101-api-key
+    type: hard
+    condition: "hardcode api key"
+    action: block
+    message: "Never hardcode API keys. Use environment variables."
+    applies_to: ["*"]
+
+  - id: soul-102-private-key
+    type: hard
+    condition: "commit private key"
+    action: block
+    message: "Never commit private keys to version control."
+    applies_to: ["*"]
+
+  # ═══════════════════════════════════════════════════════════════════
+  # ARCHITECTURAL CONSTRAINTS
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: soul-200-narasimha
+    type: hard
+    condition: "modify narasimha"
+    action: require_approval
+    message: "Narasimha modifications require explicit approval."
+    applies_to: ["*"]
+
+  - id: soul-201-lineage
+    type: hard
+    condition: "forge lineage"
+    action: block
+    message: "Lineage forgery is forbidden. Authority must be earned."
+    applies_to: ["*"]
+
+  - id: soul-202-watchman
+    type: hard
+    condition: "disable watchman"
+    action: block
+    message: "Watchman cannot be disabled. It is eternal vigilance."
+    applies_to: ["*"]
+
+  # ═══════════════════════════════════════════════════════════════════
+  # SOFT CONSTRAINTS (Warnings)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: soul-300-direct-db
+    type: soft
+    condition: "direct database"
+    action: warn
+    message: "Direct database access should go through proper interfaces."
+    applies_to: ["*"]
+
+  - id: soul-301-global-state
+    type: soft
+    condition: "global mutable state"
+    action: warn
+    message: "Avoid global mutable state. Use dependency injection."
+    applies_to: ["*"]
+
+  - id: soul-302-blocking-io
+    type: soft
+    condition: "blocking io"
+    action: warn
+    message: "Prefer async/await for I/O operations in async contexts."
+    applies_to: ["*"]
