@@ -24,7 +24,7 @@
       }
     }
   },
-  "postCreateCommand": "pip install pyyaml && pip install -e . && pip install -r herald/requirements.txt",
+  "postCreateCommand": "pip install -e . && git config --local core.hooksPath .githooks",
   "remoteUser": "vscode",
   "forwardPorts": [],
   "portsAttributes": {},
