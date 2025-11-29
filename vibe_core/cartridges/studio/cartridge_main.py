@@ -71,9 +71,7 @@ class StudioCartridge(CartridgeBase):
 
         logger.info("🎬 Vibe Studio initialized - One-Click Dev Environment ready")
 
-    def create_project(
-        self, project_name: str, description: str = ""
-    ) -> dict[str, Any]:
+    def create_project(self, project_name: str, description: str = "") -> dict[str, Any]:
         """
         Create an isolated development workspace.
 
@@ -86,10 +84,7 @@ class StudioCartridge(CartridgeBase):
         """
         try:
             # Validate project name
-            if (
-                not project_name
-                or not project_name.replace("-", "").replace("_", "").isalnum()
-            ):
+            if not project_name or not project_name.replace("-", "").replace("_", "").isalnum():
                 return {
                     "status": "error",
                     "message": "Project name must be alphanumeric (hyphens and underscores allowed)",
@@ -148,9 +143,7 @@ class StudioCartridge(CartridgeBase):
             logger.error(f"❌ Failed to create project: {e}")
             return {"status": "error", "message": str(e), "project_name": project_name}
 
-    def execute_sdlc(
-        self, project_name: str, goal: str, context: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    def execute_sdlc(self, project_name: str, goal: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute the complete SDLC loop: Planning → Coding → Testing.
 
@@ -290,9 +283,7 @@ class StudioCartridge(CartridgeBase):
                 "project_name": project_name,
             }
 
-    def _delegate_to_specialist(
-        self, agent_id: str, phase: str, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _delegate_to_specialist(self, agent_id: str, phase: str, context: dict[str, Any]) -> dict[str, Any]:
         """
         Internal method: Delegate work to a specialist via the kernel.
 
@@ -323,10 +314,7 @@ class StudioCartridge(CartridgeBase):
             # Wait for completion (simplified - real impl would use async)
             max_ticks = 1000
             ticks = 0
-            while (
-                self.kernel.scheduler.get_queue_status()["pending_tasks"] > 0
-                and ticks < max_ticks
-            ):
+            while self.kernel.scheduler.get_queue_status()["pending_tasks"] > 0 and ticks < max_ticks:
                 self.kernel.tick()
                 ticks += 1
 
@@ -345,9 +333,7 @@ class StudioCartridge(CartridgeBase):
             logger.error(f"Delegation failed: {e}")
             return {"success": False, "error": str(e)}
 
-    def _repair_loop(
-        self, project_name: str, context: dict[str, Any], test_failure: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _repair_loop(self, project_name: str, context: dict[str, Any], test_failure: dict[str, Any]) -> dict[str, Any]:
         """
         Internal method: Activate repair loop when tests fail.
 
@@ -378,9 +364,7 @@ class StudioCartridge(CartridgeBase):
                 # Re-delegate to coder with failure report
                 context["repair_mode"] = True
                 context["repair_attempt"] = repair_attempts
-                context["failure_report"] = test_failure.get("output", {}).get(
-                    "error_details", ""
-                )
+                context["failure_report"] = test_failure.get("output", {}).get("error_details", "")
 
                 repair_result = self._delegate_to_specialist(
                     agent_id="specialist-coding",

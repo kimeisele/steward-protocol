@@ -6,10 +6,11 @@ Biological taxonomy of all 18 agents in Agent City.
 Maps each agent to its Varna (species) and current Ashrama (lifecycle stage).
 """
 
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, asdict
-from steward.varna import Varna, categorize_agent_by_function
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, Optional
+
 from steward.ashrama import Ashrama, AshramaTransition
+from steward.varna import Varna, categorize_agent_by_function
 
 
 @dataclass
@@ -210,19 +211,11 @@ class AgentMetadataRegistry:
 
     def get_agents_by_varna(self, varna: Varna) -> list:
         """Get all agents of a specific species"""
-        return [
-            agent_id
-            for agent_id, biology in self.biology.items()
-            if biology.varna == varna
-        ]
+        return [agent_id for agent_id, biology in self.biology.items() if biology.varna == varna]
 
     def get_agents_by_ashrama(self, ashrama: Ashrama) -> list:
         """Get all agents in a specific lifecycle stage"""
-        return [
-            agent_id
-            for agent_id, biology in self.biology.items()
-            if biology.ashrama == ashrama
-        ]
+        return [agent_id for agent_id, biology in self.biology.items() if biology.ashrama == ashrama]
 
     def transition_agent(self, agent_id: str, new_ashrama: Ashrama) -> bool:
         """Move agent to new lifecycle stage"""

@@ -7,12 +7,13 @@ This module provides the runtime system for connecting implementations
 """
 
 import importlib
-from typing import Any, Dict, Type, Optional, List
-from pathlib import Path
-import yaml
 import logging
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
 
-from vibe_core.protocols import VibeAgent, VibeLedger, VibeScheduler, ManifestRegistry
+import yaml
+
+from vibe_core.protocols import ManifestRegistry, VibeAgent, VibeLedger, VibeScheduler
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +57,7 @@ class PhoenixConfigEngine:
         """
         try:
             if ":" not in class_path:
-                raise ValueError(
-                    f"Invalid class path: {class_path}. Use 'module:ClassName'"
-                )
+                raise ValueError(f"Invalid class path: {class_path}. Use 'module:ClassName'")
 
             module_name, class_name = class_path.split(":", 1)
             module = importlib.import_module(module_name)

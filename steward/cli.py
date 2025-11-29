@@ -19,12 +19,12 @@ Usage:
   steward --help                  - Show this help
 """
 
-import sys
-import re
-import json
 import argparse
-from pathlib import Path
+import json
+import re
+import sys
 from datetime import datetime
+from pathlib import Path
 
 try:
     from rich.console import Console
@@ -50,9 +50,7 @@ REQUIRED_SECTIONS = [
 ]
 
 # Regex for signature block: <!-- STEWARD_SIGNATURE: [signature_content] -->
-SIGNATURE_PATTERN = re.compile(
-    r"<!--\s*STEWARD_SIGNATURE:\s*([A-Za-z0-9+/=\n]+?)\s*-->", re.DOTALL
-)
+SIGNATURE_PATTERN = re.compile(r"<!--\s*STEWARD_SIGNATURE:\s*([A-Za-z0-9+/=\n]+?)\s*-->", re.DOTALL)
 
 # Regex for extracting public key from STEWARD.md
 # Looks for "key:" or "public_key:" followed by base64 content
@@ -76,9 +74,7 @@ def cmd_keygen(args):
     created = crypto.ensure_keys_exist()
     if created:
         console.print("[green]✅ New Identity Keys generated in .steward/keys/[/green]")
-        console.print(
-            "[yellow]⚠️  WARNING: private.pem added to .gitignore. NEVER commit it![/yellow]"
-        )
+        console.print("[yellow]⚠️  WARNING: private.pem added to .gitignore. NEVER commit it![/yellow]")
     else:
         console.print("[yellow]ℹ️  Keys already exist. Skipping generation.[/yellow]")
 
@@ -111,9 +107,7 @@ def cmd_sign(args):
     try:
         # Sign the clean content
         signature = crypto.sign_content(clean_content)
-        console.print(
-            f"[bold green]✅ Generated Signature for {filepath.name}[/bold green]"
-        )
+        console.print(f"[bold green]✅ Generated Signature for {filepath.name}[/bold green]")
 
         if args.append:
             # Append signature to file
@@ -151,9 +145,7 @@ def cmd_verify(args):
             missing_sections.append(section)
 
     if missing_sections:
-        console.print(
-            f"[red]❌ Structure Invalid. Missing sections: {', '.join(missing_sections)}[/red]"
-        )
+        console.print(f"[red]❌ Structure Invalid. Missing sections: {', '.join(missing_sections)}[/red]")
         if args.strict:
             sys.exit(1)
     else:
@@ -170,9 +162,7 @@ def cmd_verify(args):
         # Find Public Key in content
         key_match = KEY_PATTERN.search(clean_content)
         if not key_match:
-            console.print(
-                "[yellow]⚠️  Signature found, but no 'key:' field detected in file.[/yellow]"
-            )
+            console.print("[yellow]⚠️  Signature found, but no 'key:' field detected in file.[/yellow]")
             if args.strict:
                 console.print("[red]❌ Strict mode: Public key is required.[/red]")
                 sys.exit(1)
@@ -184,22 +174,14 @@ def cmd_verify(args):
         valid = crypto.verify_signature(clean_content, signature_b64, public_key_b64)
 
         if valid:
-            console.print(
-                "[bold green]✅ INTEGRITY CONFIRMED: Signature is valid.[/bold green]"
-            )
+            console.print("[bold green]✅ INTEGRITY CONFIRMED: Signature is valid.[/bold green]")
         else:
-            console.print(
-                "[bold red]❌ SECURITY ALERT: Signature is INVALID! File may be tampered.[/bold red]"
-            )
+            console.print("[bold red]❌ SECURITY ALERT: Signature is INVALID! File may be tampered.[/bold red]")
             sys.exit(1)
     else:
-        console.print(
-            "[yellow]⚠️  No digital signature found (Unsecured mode).[/yellow]"
-        )
+        console.print("[yellow]⚠️  No digital signature found (Unsecured mode).[/yellow]")
         if args.strict:
-            console.print(
-                "[red]❌ Strict mode enabled: Digital signature is required.[/red]"
-            )
+            console.print("[red]❌ Strict mode enabled: Digital signature is required.[/red]")
             sys.exit(1)
 
 
@@ -217,9 +199,7 @@ def verify_all_command(args):
 
     all_valid = True
     for filepath in steward_files:
-        rel_path = filepath.relative_to(
-            directory.parent if directory != Path.cwd() else Path.cwd()
-        )
+        rel_path = filepath.relative_to(directory.parent if directory != Path.cwd() else Path.cwd())
         console.print(f"\n[bold]Verifying {rel_path}...[/bold]")
 
         # Create a simple args object for cmd_verify
@@ -265,9 +245,7 @@ def cmd_whoami(args):
 def cmd_status(args):
     """Display federation agent health and status."""
     if not args.federation:
-        console.print(
-            "[yellow]Use --federation flag to show federation status[/yellow]"
-        )
+        console.print("[yellow]Use --federation flag to show federation status[/yellow]")
         return
 
     # Define federation agents
@@ -300,9 +278,7 @@ def cmd_status(args):
 
     # Create federation status table
     if Table is not None:
-        table = Table(
-            title="[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]"
-        )
+        table = Table(title="[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]")
         table.add_column("Agent ID", style="cyan")
         table.add_column("Role", style="magenta")
         table.add_column("Function", style="green")
@@ -321,9 +297,7 @@ def cmd_status(args):
         console.print(table)
     else:
         # Fallback: simple text display
-        console.print(
-            "\n[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]\n"
-        )
+        console.print("\n[bold magenta]⭐ QUADRINITY FEDERATION STATUS[/bold magenta]\n")
         console.print(f"{'Agent ID':<25} {'Role':<12} {'Function':<35} {'Status':<8}")
         console.print("-" * 80)
 
@@ -352,9 +326,7 @@ def cmd_inspect(args):
 
     if event_log_path is None:
         console.print(f"[red]❌ Unknown agent: {agent_name}[/red]")
-        console.print(
-            f"[yellow]Available agents: {', '.join(agent_paths.keys())}[/yellow]"
-        )
+        console.print(f"[yellow]Available agents: {', '.join(agent_paths.keys())}[/yellow]")
         sys.exit(1)
 
     if not event_log_path.exists():
@@ -372,9 +344,7 @@ def cmd_inspect(args):
                         event = json.loads(line.strip())
                         events.append(event)
                     except json.JSONDecodeError as e:
-                        console.print(
-                            f"[yellow]⚠️  Skipped malformed event: {e}[/yellow]"
-                        )
+                        console.print(f"[yellow]⚠️  Skipped malformed event: {e}[/yellow]")
 
         if not events:
             console.print(f"[yellow]⚠️  Event log is empty[/yellow]")
@@ -449,9 +419,7 @@ def cmd_inspect(args):
         else:
             # Fallback: simple text table if rich Table not available
             console.print("\n[bold]Recent Events (last 15):[/bold]\n")
-            console.print(
-                f"{'Seq':<4} {'Timestamp':<10} {'Type':<18} {'Sig':<4} {'Preview':<40}"
-            )
+            console.print(f"{'Seq':<4} {'Timestamp':<10} {'Type':<18} {'Sig':<4} {'Preview':<40}")
             console.print("-" * 76)
 
             for event in events[-15:]:
@@ -474,9 +442,7 @@ def cmd_inspect(args):
                 else:
                     preview = str(payload)[:40]
 
-                console.print(
-                    f"{seq:<4} {timestamp:<10} {event_type:<18} {sig_status:<4} {preview:<40}"
-                )
+                console.print(f"{seq:<4} {timestamp:<10} {event_type:<18} {sig_status:<4} {preview:<40}")
 
         # Event type summary
         event_types = {}
@@ -484,9 +450,7 @@ def cmd_inspect(args):
             etype = event.get("event_type", "unknown")
             event_types[etype] = event_types.get(etype, 0) + 1
 
-        summary = ", ".join(
-            [f"{count} {etype}" for etype, count in sorted(event_types.items())]
-        )
+        summary = ", ".join([f"{count} {etype}" for etype, count in sorted(event_types.items())])
         console.print(f"\n[dim]Event Summary: {summary}[/dim]")
 
     except Exception as e:
@@ -494,8 +458,72 @@ def cmd_inspect(args):
         sys.exit(1)
 
 
+def _ensure_dev_environment():
+    """
+    Self-healing development environment setup.
+
+    Agent City Philosophy: Zero manual steps.
+    When you run `steward`, everything configures itself.
+
+    This runs ONCE per session and:
+    1. Configures git to use .githooks directory
+    2. Ensures pre-commit hooks are active
+
+    Silent on success, warns on failure.
+    """
+    import os
+    import subprocess
+
+    # Only run in development (when .githooks exists)
+    repo_root = Path(__file__).parent.parent
+    githooks_dir = repo_root / ".githooks"
+    pre_commit_hook = githooks_dir / "pre-commit"
+
+    if not pre_commit_hook.exists():
+        return  # Not in development environment
+
+    # Check if we're in a git repo
+    git_dir = repo_root / ".git"
+    if not git_dir.exists():
+        return  # Not a git repo
+
+    try:
+        # Check current hooks path
+        result = subprocess.run(
+            ["git", "config", "--get", "core.hooksPath"],
+            capture_output=True,
+            text=True,
+            cwd=str(repo_root),
+        )
+
+        current_path = result.stdout.strip()
+
+        # If already configured correctly, done
+        if current_path == ".githooks":
+            return
+
+        # Configure git to use .githooks
+        subprocess.run(
+            ["git", "config", "core.hooksPath", ".githooks"],
+            capture_output=True,
+            cwd=str(repo_root),
+        )
+
+        # Silent success - Agent City way
+        # Only print if STEWARD_DEBUG is set
+        if os.environ.get("STEWARD_DEBUG"):
+            print("🔧 Git hooks auto-configured (.githooks)")
+
+    except Exception:
+        # Silent failure - don't block CLI usage
+        pass
+
+
 def main():
     """Main CLI entry point."""
+    # Self-healing: Configure dev environment on first run
+    _ensure_dev_environment()
+
     parser = argparse.ArgumentParser(
         description="STEWARD Protocol CLI - Cryptographic Identity & Attestation",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -512,37 +540,25 @@ Examples:
 """,
     )
 
-    parser.add_argument(
-        "--version", action="version", version="steward 0.2.0 (Real Cryptography)"
-    )
+    parser.add_argument("--version", action="version", version="steward 0.2.0 (Real Cryptography)")
 
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Whoami subcommand
-    whoami_parser = subparsers.add_parser(
-        "whoami", help="Identify STEWARD as an Agent in the A.O.S. Federation"
-    )
+    whoami_parser = subparsers.add_parser("whoami", help="Identify STEWARD as an Agent in the A.O.S. Federation")
     whoami_parser.set_defaults(func=cmd_whoami)
 
     # Status subcommand
-    status_parser = subparsers.add_parser(
-        "status", help="Display federation agent health and status"
-    )
-    status_parser.add_argument(
-        "--federation", action="store_true", help="Show federation agent status"
-    )
+    status_parser = subparsers.add_parser("status", help="Display federation agent health and status")
+    status_parser.add_argument("--federation", action="store_true", help="Show federation agent status")
     status_parser.set_defaults(func=cmd_status)
 
     # Keygen subcommand
-    keygen_parser = subparsers.add_parser(
-        "keygen", help="Generate cryptographic identity keypair"
-    )
+    keygen_parser = subparsers.add_parser("keygen", help="Generate cryptographic identity keypair")
     keygen_parser.set_defaults(func=cmd_keygen)
 
     # Sign subcommand
-    sign_parser = subparsers.add_parser(
-        "sign", help="Cryptographically sign a STEWARD.md file"
-    )
+    sign_parser = subparsers.add_parser("sign", help="Cryptographically sign a STEWARD.md file")
     sign_parser.add_argument("file", help="Path to STEWARD.md file")
     sign_parser.add_argument(
         "--append",
@@ -552,9 +568,7 @@ Examples:
     sign_parser.set_defaults(func=cmd_sign)
 
     # Verify subcommand
-    verify_parser = subparsers.add_parser(
-        "verify", help="Verify STEWARD.md structure and cryptographic signature"
-    )
+    verify_parser = subparsers.add_parser("verify", help="Verify STEWARD.md structure and cryptographic signature")
     verify_parser.add_argument(
         "file",
         default="STEWARD.md",
@@ -574,12 +588,8 @@ Examples:
     verify_parser.set_defaults(func=verify_command)
 
     # Inspect subcommand
-    inspect_parser = subparsers.add_parser(
-        "inspect", help="Inspect agent event log and display heartbeat"
-    )
-    inspect_parser.add_argument(
-        "agent", help="Agent name to inspect (e.g., 'herald' or 'agent.steward.herald')"
-    )
+    inspect_parser = subparsers.add_parser("inspect", help="Inspect agent event log and display heartbeat")
+    inspect_parser.add_argument("agent", help="Agent name to inspect (e.g., 'herald' or 'agent.steward.herald')")
     inspect_parser.set_defaults(func=cmd_inspect)
 
     args = parser.parse_args()

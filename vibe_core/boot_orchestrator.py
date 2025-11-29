@@ -27,9 +27,9 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.config import CityConfig
 from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.config import CityConfig
+from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
 

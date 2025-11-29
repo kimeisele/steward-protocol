@@ -18,14 +18,14 @@ Usage:
     python scripts/verify_docs.py --verbose           # Show detailed output
 """
 
-import os
-import sys
-import re
 import logging
-from pathlib import Path
-from typing import List, Tuple, Dict, Any, Optional
-from dataclasses import dataclass
+import os
+import re
+import sys
 import traceback
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Configure logging
 logging.basicConfig(

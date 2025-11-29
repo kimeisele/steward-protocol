@@ -4,23 +4,24 @@ Final Launch Script - GAD-900: The HIL-Operator Contract
 Demonstrates the flow: HIL Assistant Briefing -> HIL Authorization -> Envoy Execution.
 """
 
-import sys
-import logging
 import json
+import logging
+import sys
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from vibe_core import VibeAgent, Task
-from envoy.cartridge_main import EnvoyCartridge
-from herald.cartridge_main import HeraldCartridge
 from civic.cartridge_main import CivicCartridge
+from envoy.cartridge_main import EnvoyCartridge
 from forum.cartridge_main import ForumCartridge
+from herald.cartridge_main import HeraldCartridge
 from science.cartridge_main import ScienceCartridge
+
+from vibe_core import Task, VibeAgent
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -47,9 +48,7 @@ def main():
     print("-" * 50)
 
     # Auto-load latest report for context
-    task_briefing = Task(
-        agent_id="envoy", payload={"command": "next_action", "args": {}}
-    )
+    task_briefing = Task(agent_id="envoy", payload={"command": "next_action", "args": {}})
     result_briefing = envoy.process(task_briefing)
 
     if result_briefing.get("status") == "success":
@@ -61,9 +60,7 @@ def main():
     print("-" * 50)
     print("👤 STEP 2: HIL AUTHORIZATION")
     print("-" * 50)
-    print(
-        '\n> HIL: "ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports..."'
-    )
+    print('\n> HIL: "ENVOY, starte die Kampagne zur Veröffentlichung des G.A.P. Reports..."')
     print("\n✅ AUTHORIZATION GRANTED. EXECUTING.\n")
 
     # 4. Step 3: The Execution (Hard Interface)

@@ -94,10 +94,7 @@ class SpecialistFactoryAgent(VibeAgent):
             ... )
         """
         if not issubclass(specialist_class, BaseSpecialist):
-            raise TypeError(
-                f"specialist_class must be a BaseSpecialist subclass, "
-                f"got {specialist_class.__name__}"
-            )
+            raise TypeError(f"specialist_class must be a BaseSpecialist subclass, " f"got {specialist_class.__name__}")
 
         self.specialist_class = specialist_class
         self.role = role.lower()
@@ -186,9 +183,7 @@ class SpecialistFactoryAgent(VibeAgent):
         # Step 1: Extract mission_id from payload
         payload = task.payload
         if not isinstance(payload, dict):
-            raise TypeError(
-                f"Task payload must be a dict, got {type(payload).__name__}"
-            )
+            raise TypeError(f"Task payload must be a dict, got {type(payload).__name__}")
 
         mission_id = payload.get("mission_id")
         if not mission_id:
@@ -236,6 +231,5 @@ class SpecialistFactoryAgent(VibeAgent):
     def __repr__(self) -> str:
         """String representation for debugging"""
         return (
-            f"SpecialistFactoryAgent(agent_id={self.agent_id!r}, "
-            f"specialist_class={self.specialist_class.__name__})"
+            f"SpecialistFactoryAgent(agent_id={self.agent_id!r}, " f"specialist_class={self.specialist_class.__name__})"
         )

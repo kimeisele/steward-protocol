@@ -8,19 +8,20 @@ within vibe-agency, it will use the actual vibe_core.kernel implementation.
 This stub allows standalone development and type checking.
 """
 
+from .event_bus import Event, EventBus, EventType, emit_event, get_event_bus
+
 # BLOCKER #2: Import from canonical Layer 1 protocols location
 from .protocols import (
-    VibeAgent,
     AgentManifest,
     Capability,
+    ManifestRegistry,
+    VibeAgent,
+    VibeKernel,
     VibeLedger,
     VibeScheduler,
-    VibeKernel,
-    ManifestRegistry,
 )
+from .pulse import PulseFrequency, PulseManager, SystemState, get_pulse_manager
 from .scheduling import Task, TaskStatus
-from .pulse import get_pulse_manager, PulseManager, PulseFrequency, SystemState
-from .event_bus import get_event_bus, EventBus, Event, EventType, emit_event
 
 __all__ = [
     "VibeAgent",

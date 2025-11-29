@@ -12,12 +12,12 @@ Architecture:
 - Communicates with Envoy for emergency notifications
 """
 
-import logging
 import json
-from typing import Dict, List, Any, Optional, Callable
-from pathlib import Path
+import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("WATCHDOG")
 
@@ -160,9 +160,7 @@ class Watchdog:
         Returns:
             dict with check results
         """
-        logger.info(
-            f"👁️  WATCHDOG: Running invariant check (start={self.last_checked_index})"
-        )
+        logger.info(f"👁️  WATCHDOG: Running invariant check (start={self.last_checked_index})")
 
         # Import Judge here to avoid circular imports
         from steward.system_agents.auditor.tools.invariant_tool import get_judge

@@ -19,10 +19,10 @@ Security Model:
 - Logging: All file access is logged for audit
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Optional, List, IO
+from typing import IO, List, Optional
 
 logger = logging.getLogger("VFS")
 

@@ -1,6 +1,7 @@
 """Validation framework for tasks."""
 
-from typing import Callable, List, Dict, Any
+from typing import Any, Callable, Dict, List
+
 from .models import Task, TaskStatus
 
 

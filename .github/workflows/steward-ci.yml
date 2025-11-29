@@ -347,7 +347,7 @@ jobs:
           # Create task for constitutional verdict
           from vibe_core.scheduling.task import Task
           task = Task(
-              id="constitutional_verdict",
+              agent_id="auditor",
               payload={"action": "constitutional_verdict"}
           )
 

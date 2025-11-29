@@ -8,7 +8,7 @@ No mocks. No fake profiles. XP = Reputation = Ledger-derived truth.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 logger = logging.getLogger("REFEREE")
 
@@ -114,9 +114,7 @@ class Referee:
             return 0
 
         if verified_events > 0:
-            logger.debug(
-                f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP"
-            )
+            logger.debug(f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP")
 
         return max(0, xp)  # XP never goes below 0
 

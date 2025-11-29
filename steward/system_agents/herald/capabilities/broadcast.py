@@ -4,11 +4,11 @@ Multi-channel publishing to Twitter, LinkedIn, etc.
 Kernel-compatible module (configured via system.yaml).
 """
 
-import os
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any
+import os
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 try:
     import tweepy
@@ -180,9 +180,7 @@ class BroadcastCapability:
             logger.error(f"❌ BROADCAST: Unknown platform: {platform}")
             return False
 
-    def publish_with_media(
-        self, content: str, media_path: str, platform: str = "twitter"
-    ) -> bool:
+    def publish_with_media(self, content: str, media_path: str, platform: str = "twitter") -> bool:
         """
         Publish content with media attachment.
 

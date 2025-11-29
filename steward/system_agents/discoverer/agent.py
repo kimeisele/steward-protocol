@@ -11,17 +11,17 @@ Role:
 4. Governance: Enforces the Constitution.
 """
 
-import logging
 import json
-import time
-import threading
+import logging
 import os
+import threading
+import time
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.scheduling import Task
 from steward.constitutional_oath import ConstitutionalOath
+from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.scheduling import Task
 
 logger = logging.getLogger("STEWARD")
 
@@ -115,9 +115,7 @@ class Discoverer(VibeAgent):
             Number of new agents discovered and registered
         """
         if not self.kernel:
-            logger.warning(
-                "⚠️  Steward has no kernel reference - cannot register agents"
-            )
+            logger.warning("⚠️  Steward has no kernel reference - cannot register agents")
             return 0
 
         new_agents_count = 0
@@ -158,9 +156,7 @@ class Discoverer(VibeAgent):
         logger.info(f"🎯 Discovery complete: {new_agents_count} new agents registered")
         return new_agents_count
 
-    def _load_agent_from_manifest(
-        self, manifest_path: Path, agent_dir: Path
-    ) -> Optional[VibeAgent]:
+    def _load_agent_from_manifest(self, manifest_path: Path, agent_dir: Path) -> Optional[VibeAgent]:
         """
         Reads steward.json and creates a VibeAgent instance.
 
@@ -178,9 +174,7 @@ class Discoverer(VibeAgent):
             agent_id = agent_data.get("id")
 
             if not agent_id:
-                logger.warning(
-                    f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID"
-                )
+                logger.warning(f"⚠️  Invalid manifest at {manifest_path}: Missing agent ID")
                 return None
 
             # Extract config for this agent (if available in Phoenix Config)
@@ -196,19 +190,14 @@ class Discoverer(VibeAgent):
                 return agent
 
             # Fallback: Create a Generic Agent instance
-            logger.debug(
-                f"   ℹ️  No real cartridge for {agent_id}, using GenericAgent placeholder"
-            )
+            logger.debug(f"   ℹ️  No real cartridge for {agent_id}, using GenericAgent placeholder")
             agent = GenericAgent(
                 agent_id=agent_id,
                 name=agent_data.get("name", agent_id),
                 version=agent_data.get("version", "0.0.1"),
                 description=agent_data.get("description", ""),
                 domain=agent_data.get("specialization", "GENERAL"),
-                capabilities=[
-                    op["name"]
-                    for op in data.get("capabilities", {}).get("operations", [])
-                ],
+                capabilities=[op["name"] for op in data.get("capabilities", {}).get("operations", [])],
                 config=agent_config,  # ✅ BLOCKER #0: NOW PASSES CONFIG
             )
 
@@ -230,9 +219,7 @@ class Discoverer(VibeAgent):
             logger.error(f"❌ Error parsing {manifest_path}: {e}")
             return None
 
-    def _try_load_real_cartridge(
-        self, agent_id: str, config: Optional[Any] = None
-    ) -> Optional[VibeAgent]:
+    def _try_load_real_cartridge(self, agent_id: str, config: Optional[Any] = None) -> Optional[VibeAgent]:
         """
         BLOCKER #2: Try to dynamically load REAL cartridge implementation.
 
@@ -313,9 +300,7 @@ class Discoverer(VibeAgent):
                     agent = CartridgeClass()
             except Exception as init_err:
                 # Cartridge initialization failed - log and fallback
-                logger.debug(
-                    f"   ℹ️  Cartridge init error for {class_name}: {type(init_err).__name__}"
-                )
+                logger.debug(f"   ℹ️  Cartridge init error for {class_name}: {type(init_err).__name__}")
                 return None
 
             if agent is None:
@@ -333,9 +318,7 @@ class Discoverer(VibeAgent):
             logger.debug(f"   ℹ️  Cannot import {module_path}: {str(e)[:80]}")
             return None
         except Exception as e:
-            logger.debug(
-                f"   ℹ️  Error loading {agent_id} cartridge: {type(e).__name__}: {str(e)[:100]}"
-            )
+            logger.debug(f"   ℹ️  Error loading {agent_id} cartridge: {type(e).__name__}: {str(e)[:100]}")
             return None
 
 
@@ -372,9 +355,7 @@ class GenericAgent(VibeAgent):
         # Hydrate from config if args are missing
         if config:
             # Config can be a dict (from manifest) or Phoenix Config object
-            config_dict = (
-                config if isinstance(config, dict) else getattr(config, "__dict__", {})
-            )
+            config_dict = config if isinstance(config, dict) else getattr(config, "__dict__", {})
 
             agent_id = agent_id or config_dict.get("agent_id")
             name = name or config_dict.get("name")

@@ -6,7 +6,7 @@ Project Introspector - Extract metadata from project files
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 class ProjectIntrospector:

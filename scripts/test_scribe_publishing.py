@@ -23,8 +23,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.scribe.cartridge_main import ScribeCartridge
+from vibe_core.kernel_impl import RealVibeKernel
 
 
 def test_scribe_publishing():

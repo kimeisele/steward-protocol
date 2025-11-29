@@ -5,12 +5,18 @@ All agents running in VibeOS must implement this protocol.
 This is the contract between the kernel and cartridges.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from enum import Enum
+from __future__ import annotations
+
 import asyncio
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core import Task
+    from vibe_core.kernel import VibeKernel
 
 
 @dataclass
@@ -128,7 +134,7 @@ class VibeAgent(ABC):
         else:
             logging.warning(f"Agent {self.agent_id} has no kernel connection")
 
-    def set_kernel(self, kernel: "VibeKernel") -> None:
+    def set_kernel(self, kernel: VibeKernel) -> None:
         """
         Kernel Injection Pattern
 
@@ -141,7 +147,7 @@ class VibeAgent(ABC):
         self.kernel = kernel
 
     @abstractmethod
-    def process(self, task: "Task") -> Dict[str, Any]:
+    def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a Task from the kernel scheduler
 
@@ -248,9 +254,7 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(
-                    self.emit_event(event_type, message, task_id, details)
-                )
+                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))

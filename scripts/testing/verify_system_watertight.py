@@ -6,10 +6,10 @@ This is the foundation verification tool - no system is solid without it.
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 from typing import List, Tuple
-import re
 
 # Terms of shame - indicators of non-production code
 FORBIDDEN_TERMS = [
@@ -92,15 +92,10 @@ class WatertightnessVerifier:
                     if "{{" in line and "}}" in line:
                         continue
                     # Allow "Permeable Prompts" module (prompt_context.py, context_loader.py)
-                    if "prompt" in str(file_path).lower() or "context_loader" in str(
-                        file_path
-                    ):
+                    if "prompt" in str(file_path).lower() or "context_loader" in str(file_path):
                         continue
                     # Allow "replace_placeholder" function names
-                    if (
-                        "def replace_placeholder" in line
-                        or "replace_placeholder(" in line
-                    ):
+                    if "def replace_placeholder" in line or "replace_placeholder(" in line:
                         continue
 
                 # "mock" appears in many legitimate contexts

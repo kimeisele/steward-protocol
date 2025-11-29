@@ -1,22 +1,5 @@
 {
-  "steward_version": "1.0.0",
-  "agent": {
-    "id": "engineer",
-    "name": "ENGINEER",
-    "version": "1.0.0",
-    "class": "system_service",
-    "specialization": "INFRASTRUCTURE",
-    "status": "active"
-  },
-  "credentials": {
-    "mandate": "Meta-agent for building new agents and code",
-    "constraints": [],
-    "prime_directive": "Serve the system"
-  },
   "capabilities": {
-    "interfaces": [
-      "kernel"
-    ],
     "operations": [
       {
         "description": "code_generation operation",
@@ -35,7 +18,16 @@
   "governance": {
     "compliance_level": 2,
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
-    "issued_at": "2025-11-28T12:07:50.295405Z",
+    "issued_at": "2025-11-29T08:57:39.452796Z",
     "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "engineer",
+    "name": "ENGINEER"
+  },
+  "specs": {
+    "description": "Meta-agent for building new agents and code",
+    "domain": "INFRASTRUCTURE",
+    "version": "1.0.0"
   }
 }

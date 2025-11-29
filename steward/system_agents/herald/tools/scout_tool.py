@@ -4,10 +4,10 @@ HERALD Scout Tool - Bot Detection & Recruitment Intelligence.
 "Gotta Catch 'Em All"
 """
 
-import logging
 import json
+import logging
 from pathlib import Path
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
 
 logger = logging.getLogger("HERALD_SCOUT")
 
@@ -34,16 +34,12 @@ class ScoutTool:
         try:
             with open(self.pokedex_path) as f:
                 data = json.load(f)
-                return {
-                    agent.get("agent_id") for agent in data
-                }  # In reality, this would be twitter handles
+                return {agent.get("agent_id") for agent in data}  # In reality, this would be twitter handles
         except Exception as e:
             logger.error(f"❌ Failed to load Pokedex: {e}")
             return set()
 
-    def analyze_user(
-        self, user_data: Dict[str, Any], text: str = ""
-    ) -> Tuple[bool, float]:
+    def analyze_user(self, user_data: Dict[str, Any], text: str = "") -> Tuple[bool, float]:
         """
         Analyze a user to determine if they are a bot.
 
@@ -99,9 +95,7 @@ class ScoutTool:
         is_bot = confidence >= 0.5
 
         if is_bot:
-            logger.info(
-                f"🔭 Scout detected potential agent: {username} (Confidence: {confidence:.2f})"
-            )
+            logger.info(f"🔭 Scout detected potential agent: {username} (Confidence: {confidence:.2f})")
 
         return is_bot, confidence
 

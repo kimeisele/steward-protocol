@@ -10,23 +10,23 @@ Updated for Safe Evolution Loop (GAD-5500):
 This is the Conscience that guards the Commit Gate.
 """
 
-import os
 import ast
-import subprocess
 import logging
-from typing import Dict, Any, Optional
-
-from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.config import CityConfig
-from vibe_core.scheduling.task import Task
-
-# Constitutional Oath
+import os
+import subprocess
+from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
+from vibe_core.config import CityConfig
+from vibe_core.protocols import AgentManifest, VibeAgent
+from vibe_core.scheduling.task import Task
 
 # Phase 3.4: Constitutional Verdict Tool
 from .tools.constitutional_verdict import ConstitutionalVerdictTool
+
+# Constitutional Oath
+
 
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
@@ -64,9 +64,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
 
         # Phase 3.4: Initialize Constitutional Verdict Tool
         self.verdict_tool = ConstitutionalVerdictTool()
-        logger.info(
-            "⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)"
-        )
+        logger.info("⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
