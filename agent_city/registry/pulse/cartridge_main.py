@@ -64,9 +64,7 @@ class PulseCartridge(VibeAgent):
             ],
         )
 
-        logger.info(
-            "📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready"
-        )
+        logger.info("📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready")
 
         # Initialize Constitutional Oath mixin
         if OathMixin:

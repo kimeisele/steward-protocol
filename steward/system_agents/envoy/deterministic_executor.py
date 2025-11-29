@@ -514,7 +514,7 @@ class DeterministicExecutor:
         prompt = f"""Given the context: {context}
 
 Choose the most appropriate option:
-{chr(10).join([f'{i+1}. {opt}' for i, opt in enumerate(options)])}
+{chr(10).join([f"{i + 1}. {opt}" for i, opt in enumerate(options)])}
 
 Reply with ONLY the number of your choice (1-{len(options)})."""
 

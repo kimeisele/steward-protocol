@@ -57,9 +57,7 @@ class ReflexEngine:
         # Check if any simple intent keyword is in the input
         for intent in self.SIMPLE_INTENTS:
             if intent in user_lower:
-                logger.info(
-                    f"⚡ Reflex matched: '{user_input}' -> simple intent '{intent}'"
-                )
+                logger.info(f"⚡ Reflex matched: '{user_input}' -> simple intent '{intent}'")
                 return True
 
         return False

@@ -26,9 +26,7 @@ from steward.system_agents.auditor.tools.invariant_tool import (
     InvariantSeverity,
 )
 
-logging.basicConfig(
-    level=logging.DEBUG, format="%(levelname)s | %(name)s | %(message)s"
-)
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("TEST_IMMUNE_SYSTEM")
 
 
@@ -90,9 +88,7 @@ def test_normal_task_execution(kernel):
     logger.info("TEST 2: Execute normal task (should pass)")
     logger.info("=" * 60)
 
-    task = Task(
-        task_id="task-001", agent_id="test-agent-001", payload={"action": "test"}
-    )
+    task = Task(task_id="task-001", agent_id="test-agent-001", payload={"action": "test"})
 
     kernel.submit_task(task)
     kernel.tick()
@@ -120,9 +116,7 @@ def test_void_detection():
     kernel.boot()
 
     # Execute one task so we have events
-    task = Task(
-        task_id="task-void-001", agent_id="test-agent-001", payload={"action": "setup"}
-    )
+    task = Task(task_id="task-void-001", agent_id="test-agent-001", payload={"action": "setup"})
     kernel.submit_task(task)
     kernel.tick()
 
@@ -175,9 +169,7 @@ def test_critical_violation_halts_kernel():
     kernel.boot()
 
     # Execute setup task
-    task = Task(
-        task_id="task-halt-001", agent_id="test-agent-001", payload={"action": "setup"}
-    )
+    task = Task(task_id="task-halt-001", agent_id="test-agent-001", payload={"action": "setup"})
     kernel.submit_task(task)
     kernel.tick()
 

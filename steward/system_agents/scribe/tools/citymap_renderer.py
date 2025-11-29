@@ -74,10 +74,10 @@ class CitymapRenderer:
 ║                    AGENT CITY STATUS                          ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  👥 Agents:          {agent_count:>3} registered                      ║
-║  🌌 Boot Cycle:      {system_status['boot_status']['current_cycle']:<25}              ║
-║  ⚡ Security:        {system_status['security_status']['threat_level']:<25}              ║
-║  💰 Economy:         {system_status['economic_status'].get('status', 'N/A'):<25}              ║
-║  🌍 Topology:        {system_status['topology_status']['description']:<25}              ║
+║  🌌 Boot Cycle:      {system_status["boot_status"]["current_cycle"]:<25}              ║
+║  ⚡ Security:        {system_status["security_status"]["threat_level"]:<25}              ║
+║  💰 Economy:         {system_status["economic_status"].get("status", "N/A"):<25}              ║
+║  🌍 Topology:        {system_status["topology_status"]["description"]:<25}              ║
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
@@ -220,7 +220,7 @@ Agents are arranged in concentric rings by authority level:
 ## 💰 ECONOMIC SYSTEM
 
 **Civic Bank Status:**
-{self._render_economic_status(system_status['economic_status'])}
+{self._render_economic_status(system_status["economic_status"])}
 
 **How Credits Flow:**
 1. MINT creates credits (infinite supply)
@@ -233,7 +233,7 @@ Agents are arranged in concentric rings by authority level:
 ## 🔒 SECURITY SYSTEM
 
 **Narasimha Protocol (Hypervisor Killswitch):**
-{self._render_security_status(system_status['security_status'])}
+{self._render_security_status(system_status["security_status"])}
 
 **Watchman Patrol (Ground-level Enforcement):**
 - Scans codebase for violations (mocks, test infrastructure in prod)

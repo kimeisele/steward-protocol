@@ -19,9 +19,7 @@ from steward.oath_mixin import OathMixin
 from vibe_core.scheduling.task import Task
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [MECHANIC] %(levelname)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [MECHANIC] %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -234,9 +232,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 # Expected to fail for oracle (OracleCartridge doesn't exist yet)
                 error_msg = str(e)
                 if "OracleCartridge" in error_msg:
-                    self.logger.warning(
-                        f"  ✗ oracle: OracleCartridge import error (fixable)"
-                    )
+                    self.logger.warning(f"  ✗ oracle: OracleCartridge import error (fixable)")
                     broken.append(("oracle.cartridge_main", error_msg))
                 else:
                     self.logger.warning(f"  ✗ {cartridge}: {e}")
@@ -316,9 +312,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             # Determine if we're on the right branch
             # For now, just check if it's a claude/* branch (development branch)
             if not current_branch.startswith("claude/"):
-                self.logger.warning(
-                    f"  ✗ Not on a development branch: {current_branch}"
-                )
+                self.logger.warning(f"  ✗ Not on a development branch: {current_branch}")
                 self.diagnostics["branch_mismatch"] = True
                 return False
 
@@ -373,9 +367,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 missing_docs.append(doc_name)
 
         if missing_docs:
-            self.logger.warning(
-                f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}"
-            )
+            self.logger.warning(f"  ⚠️ Documentation incomplete: {', '.join(missing_docs)}")
             self.logger.info("  → Only the Archivist (User) can restore history")
         else:
             self.logger.debug("  ✓ All documentation present")
@@ -445,9 +437,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             # Fallback: install individually
             for spec in self.diagnostics["missing_deps"]:
                 self.logger.info(f"  Installing {spec}...")
-                result = subprocess.run(
-                    [sys.executable, "-m", "pip", "install", spec], timeout=60
-                )
+                result = subprocess.run([sys.executable, "-m", "pip", "install", spec], timeout=60)
                 if result.returncode != 0:
                     self.logger.warning(f"  Failed to install {spec}")
 
@@ -471,9 +461,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
 
         oracle_file = self.project_root / "oracle" / "cartridge_main.py"
         if not oracle_file.exists():
-            self.logger.warning(
-                "  Oracle cartridge not found, fetching from recovery branch..."
-            )
+            self.logger.warning("  Oracle cartridge not found, fetching from recovery branch...")
             return self._fetch_from_recovery_branch()
 
         try:
@@ -504,9 +492,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
         Returns:
             bool: True if successful, False otherwise
         """
-        self.logger.info(
-            f"Fetching from recovery branch: {self.ORACLE_RECOVERY_BRANCH}..."
-        )
+        self.logger.info(f"Fetching from recovery branch: {self.ORACLE_RECOVERY_BRANCH}...")
 
         try:
             # Fetch the recovery branch
@@ -645,9 +631,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             config = load_config(str(config_path))
             self.logger.info(f"  ✓ Configuration valid: {config.city_name}")
             self.logger.info(f"    Version: {config.federation_version}")
-            self.logger.info(
-                f"    Economy: {config.economy.initial_credits} initial credits"
-            )
+            self.logger.info(f"    Economy: {config.economy.initial_credits} initial credits")
             self.logger.info(
                 f"    Security: Signatures {'required' if config.security.require_signatures else 'optional'}"
             )

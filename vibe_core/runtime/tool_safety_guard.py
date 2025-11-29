@@ -97,9 +97,7 @@ class ToolSafetyGuard:
         self.strict_mode = enable_strict_mode
         self.context = SessionContext()
 
-        logger.info(
-            f"Tool Safety Guard initialized (strict_mode={enable_strict_mode}). " f"Iron Dome protection active."
-        )
+        logger.info(f"Tool Safety Guard initialized (strict_mode={enable_strict_mode}). Iron Dome protection active.")
 
     def check_action(self, tool_name: str, args: dict[str, Any]) -> tuple[bool, SafetyViolation | None]:
         """

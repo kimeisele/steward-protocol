@@ -35,9 +35,7 @@ class MediaTool:
             self.enabled = True
             logger.info("✅ Artisan Media Tool initialized")
 
-    def process_image(
-        self, image_path: str, output_path: Optional[str] = None
-    ) -> Optional[str]:
+    def process_image(self, image_path: str, output_path: Optional[str] = None) -> Optional[str]:
         """
         Process an image for publication:
         1. Crop to 16:9 aspect ratio (removing top/bottom bars/watermarks)
@@ -97,9 +95,7 @@ class MediaTool:
                     if bottom > height:
                         bottom = height
 
-                    logger.info(
-                        f"✂️ Cropping to 16:9 ({width}x{new_height}) - Top aligned"
-                    )
+                    logger.info(f"✂️ Cropping to 16:9 ({width}x{new_height}) - Top aligned")
                     img = img.crop((left, top, right, bottom))
 
                 elif current_ratio > target_ratio:
@@ -110,9 +106,7 @@ class MediaTool:
                     right = left + new_width
                     bottom = height
 
-                    logger.info(
-                        f"✂️ Cropping to 16:9 ({new_width}x{height}) - Center aligned"
-                    )
+                    logger.info(f"✂️ Cropping to 16:9 ({new_width}x{height}) - Center aligned")
                     img = img.crop((left, top, right, bottom))
 
                 # 2. Add Branding
@@ -162,9 +156,7 @@ class MediaTool:
                 bg_right = x + text_width + 10
                 bg_bottom = y + text_height + 5
 
-                draw.rectangle(
-                    (bg_left, bg_top, bg_right, bg_bottom), fill="#0a0e27"
-                )  # Steward Dark Blue
+                draw.rectangle((bg_left, bg_top, bg_right, bg_bottom), fill="#0a0e27")  # Steward Dark Blue
 
                 # Draw text
                 draw.text((x, y), text, font=font, fill="#64ffda")  # Steward Green

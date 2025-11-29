@@ -22,9 +22,7 @@ from pathlib import Path
 from datetime import datetime
 
 # GAD-000: Structured Logging for traceability
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("HERALD_PUBLISHER")
 
 
@@ -63,9 +61,7 @@ class TwitterPublisher:
                 self.access_token_secret,
             ]
         ):
-            logger.warning(
-                "⚠️  TWITTER: Missing OAuth 1.0a credentials. Write access will fail."
-            )
+            logger.warning("⚠️  TWITTER: Missing OAuth 1.0a credentials. Write access will fail.")
             # Wir lassen self.client auf None, damit publish() sofort abbricht
         else:
             try:
@@ -92,9 +88,7 @@ class TwitterPublisher:
             # get_me() proves we have valid OAuth 1.0a User Context
             me = self.client.get_me()
             if me and me.data:
-                logger.info(
-                    f"✅ TWITTER AUTH VERIFIED: Connected as @{me.data.username}"
-                )
+                logger.info(f"✅ TWITTER AUTH VERIFIED: Connected as @{me.data.username}")
                 return True
             else:
                 logger.error("❌ TWITTER: get_me() returned no data")
@@ -115,9 +109,7 @@ class TwitterPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.client:
-            logger.error(
-                "❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials)."
-            )
+            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
             return False
 
         # Safety Check: Twitter Limit ist 280 Zeichen
@@ -129,9 +121,7 @@ class TwitterPublisher:
             tweet += tag_string
 
         if len(tweet) > 280:
-            logger.warning(
-                f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating..."
-            )
+            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
             tweet = tweet[:277] + "..."
 
         try:
@@ -143,9 +133,7 @@ class TwitterPublisher:
                 logger.info(f"🚀 TWEET SENT: ID {response.data['id']}")
                 return True
             else:
-                logger.error(
-                    f"❌ TWITTER: API call returned unexpected data: {response}"
-                )
+                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
                 return False
 
         except tweepy.errors.Forbidden as e:
@@ -174,9 +162,7 @@ class TwitterPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.client:
-            logger.error(
-                "❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials)."
-            )
+            logger.error("❌ TWITTER: Cannot publish. Client not initialized (Missing Credentials).")
             return False
 
         # Validate image exists
@@ -196,9 +182,7 @@ class TwitterPublisher:
             tweet += tag_string
 
         if len(tweet) > 280:
-            logger.warning(
-                f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating..."
-            )
+            logger.warning(f"⚠️  TWITTER: Content too long ({len(tweet)}). Truncating...")
             tweet = tweet[:277] + "..."
 
         try:
@@ -227,9 +211,7 @@ class TwitterPublisher:
                 logger.info(f"   Image: {image_file.name}")
                 return True
             else:
-                logger.error(
-                    f"❌ TWITTER: API call returned unexpected data: {response}"
-                )
+                logger.error(f"❌ TWITTER: API call returned unexpected data: {response}")
                 return False
 
         except tweepy.errors.Forbidden as e:
@@ -242,9 +224,7 @@ class TwitterPublisher:
             logger.critical(f"⛔ TWITTER 401 UNAUTHORIZED: Check your keys/tokens. {e}")
             return False
         except Exception as e:
-            logger.error(
-                f"❌ TWITTER MEDIA PUBLISH ERROR: {type(e).__name__} - {str(e)}"
-            )
+            logger.error(f"❌ TWITTER MEDIA PUBLISH ERROR: {type(e).__name__} - {str(e)}")
             logger.info("   Attempting fallback: publishing text-only version...")
             # Fallback to text-only publish
             return self.publish(text_content, tags=tags)
@@ -306,17 +286,13 @@ class LinkedInPublisher:
             bool: True if published successfully, False otherwise
         """
         if not self.access_token:
-            logger.warning(
-                "⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication."
-            )
+            logger.warning("⚠️  No LINKEDIN_ACCESS_TOKEN found. Skipping LinkedIn publication.")
             return False
 
         # Fetch author URN
         author_urn = self.get_author_urn()
         if not author_urn:
-            logger.error(
-                "❌ Failed to determine LinkedIn User ID. Check your access token."
-            )
+            logger.error("❌ Failed to determine LinkedIn User ID. Check your access token.")
             return False
 
         # Prepare post data (LinkedIn UGC Post format)
@@ -343,9 +319,7 @@ class LinkedInPublisher:
         try:
             import requests
 
-            response = requests.post(
-                self.api_url, headers=headers, json=post_data, timeout=10
-            )
+            response = requests.post(self.api_url, headers=headers, json=post_data, timeout=10)
 
             if response.status_code == 201:
                 logger.info("✅ SUCCESS: Post published to LinkedIn!")
@@ -445,9 +419,7 @@ class MultiChannelPublisher:
                 else:
                     results["summary"].append("❌ LinkedIn")
             else:
-                logger.info(
-                    "⏸️  LinkedIn: Saved for Friday publication (weekly strategy)"
-                )
+                logger.info("⏸️  LinkedIn: Saved for Friday publication (weekly strategy)")
                 results["summary"].append("⏸️  LinkedIn (weekly)")
         else:
             logger.info("⚠️  LinkedIn: Token not configured")

@@ -58,12 +58,8 @@ class ResearchEngine:
         try:
             # Target: Real-world agent failures and security issues
             query = "ai agent security breaches identity spoofing autonomous systems failures 2024 2025"
-            response = self.client.search(
-                query=query, search_depth="basic", max_results=2, include_answer=True
-            )
-            result = response.get("answer") or response.get("results", [{}])[0].get(
-                "content"
-            )
+            response = self.client.search(query=query, search_depth="basic", max_results=2, include_answer=True)
+            result = response.get("answer") or response.get("results", [{}])[0].get("content")
             if result:
                 logger.info("📡 MARKET SIGNAL DETECTED")
             return result
@@ -118,7 +114,7 @@ class SeniorEditor:
         }
 
         rules = criteria.get(platform, criteria["twitter"])
-        rules_text = "\n".join(f"{i+1}. {r}" for i, r in enumerate(rules))
+        rules_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(rules))
 
         prompt = (
             f"You are a Ruthless Senior Editor at a top-tier tech publication.\n"
@@ -149,9 +145,7 @@ class SeniorEditor:
             else:
                 # Clean the rewrite
                 refined = verdict.replace('"', "").replace("'", "'")
-                logger.info(
-                    f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}..."
-                )
+                logger.info(f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}...")
                 return refined
 
         except Exception as e:
@@ -272,37 +266,27 @@ class HeraldBrain:
 
             # Validate length
             if len(raw_draft) > 250:
-                logger.warning(
-                    f"⚠️ Content too long ({len(raw_draft)} chars), truncating"
-                )
+                logger.warning(f"⚠️ Content too long ({len(raw_draft)} chars), truncating")
                 raw_draft = raw_draft[:247] + "..."
 
             logger.info(f"✅ TWITTER DRAFT GENERATED: {len(raw_draft)} chars")
 
             # QUALITY GATE 1: Editor reviews and refines the draft
             if self.editor:
-                edited_content = self.editor.critique_and_refine(
-                    raw_draft, platform="twitter"
-                )
+                edited_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
             else:
                 logger.debug("⚠️ EDITOR: Not available, using raw draft")
                 edited_content = raw_draft
 
             # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
-            final_content = self.aligner.align(
-                edited_content, platform="twitter", client=self.client
-            )
+            final_content = self.aligner.align(edited_content, platform="twitter", client=self.client)
 
             if not final_content:
                 # Governance rejected the content. Fallback to safe spec reading.
-                logger.warning(
-                    "⚠️ ALIGNER REJECTED: Content violates governance. Switching to fallback."
-                )
+                logger.warning("⚠️ ALIGNER REJECTED: Content violates governance. Switching to fallback.")
                 return self._fallback_content()
 
-            logger.info(
-                f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars (passed editor + aligner)"
-            )
+            logger.info(f"✅ FINAL TWITTER CONTENT: {len(final_content)} chars (passed editor + aligner)")
             return final_content
 
         except Exception as e:
@@ -367,23 +351,17 @@ class HeraldBrain:
             content = response.choices[0].message.content
             draft_result = json.loads(content)
 
-            logger.info(
-                f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars"
-            )
+            logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
 
             # QUALITY GATE 1: Editor reviews the body (title is usually fine)
             edited_body = draft_result.get("body", "")
             if self.editor and edited_body:
-                refined_body = self.editor.critique_and_refine(
-                    edited_body, platform="reddit"
-                )
+                refined_body = self.editor.critique_and_refine(edited_body, platform="reddit")
                 draft_result["body"] = refined_body
                 logger.info(f"✅ EDITOR REFINED REDDIT POST: {len(refined_body)} chars")
 
             # QUALITY GATE 2: Aligner checks against governance (ethical constraints)
-            aligned_body = self.aligner.align(
-                draft_result["body"], platform="reddit", client=self.client
-            )
+            aligned_body = self.aligner.align(draft_result["body"], platform="reddit", client=self.client)
 
             if not aligned_body:
                 # Governance rejected the content. Return None to indicate failure.
@@ -391,9 +369,7 @@ class HeraldBrain:
                 return None
 
             draft_result["body"] = aligned_body
-            logger.info(
-                f"✅ FINAL REDDIT POST: {len(aligned_body)} chars (passed editor + aligner)"
-            )
+            logger.info(f"✅ FINAL REDDIT POST: {len(aligned_body)} chars (passed editor + aligner)")
             return draft_result
 
         except Exception as e:

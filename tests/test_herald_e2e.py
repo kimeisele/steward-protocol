@@ -65,9 +65,7 @@ def test_generate_content():
         print("⚠️  Skipping generate_only.py - no .env file (needs API keys)")
         return True
 
-    return run_command(
-        "python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist"
-    )
+    return run_command("python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist")
 
 
 def test_dashboard_generation():

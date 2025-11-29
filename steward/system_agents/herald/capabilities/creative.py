@@ -59,7 +59,7 @@ class QualityEditor:
         }
 
         rules = criteria.get(platform, criteria["twitter"])
-        rules_text = "\n".join(f"{i+1}. {r}" for i, r in enumerate(rules))
+        rules_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(rules))
 
         prompt = (
             f"You are a Ruthless Senior Editor at a top-tier tech publication.\n"

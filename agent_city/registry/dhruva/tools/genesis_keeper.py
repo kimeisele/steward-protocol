@@ -161,9 +161,7 @@ class GenesisKeeper:
         with open(self.genesis_file, "w") as f:
             json.dump(genesis_block, f, indent=2)
 
-        logger.info(
-            f"✅ Genesis block created with constitution hash: {constitution_hash[:16]}..."
-        )
+        logger.info(f"✅ Genesis block created with constitution hash: {constitution_hash[:16]}...")
 
     def _compute_constitution_hash(self) -> str:
         """Compute SHA-256 hash of the Constitution."""

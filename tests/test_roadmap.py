@@ -27,9 +27,7 @@ def test_roadmap_persistence():
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
-        roadmap = tm.create_roadmap(
-            name="Persistent Roadmap", description="Should persist"
-        )
+        roadmap = tm.create_roadmap(name="Persistent Roadmap", description="Should persist")
         roadmap_id = roadmap.id
 
         # Create a new TaskManager instance
@@ -47,9 +45,7 @@ def test_update_roadmap():
         tm = TaskManager(temp_project)
         tm.create_roadmap(name="Original Name", description="Original description")
 
-        updated = tm.update_roadmap(
-            name="Updated Name", description="Updated description"
-        )
+        updated = tm.update_roadmap(name="Updated Name", description="Updated description")
 
         assert updated.name == "Updated Name"
         assert updated.description == "Updated description"
@@ -72,9 +68,7 @@ def test_roadmap_with_missions():
         temp_project = Path(tmpdir)
         tm = TaskManager(temp_project)
         missions = ["mission1", "mission2", "mission3"]
-        roadmap = tm.create_roadmap(
-            name="Multi-mission Roadmap", description="Has missions", missions=missions
-        )
+        roadmap = tm.create_roadmap(name="Multi-mission Roadmap", description="Has missions", missions=missions)
 
         assert roadmap.missions == missions
         print("✅ test_roadmap_with_missions passed")

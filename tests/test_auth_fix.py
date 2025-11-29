@@ -93,9 +93,7 @@ class TestTwitterPublisher:
 
         with patch("examples.herald.publisher.tweepy.Client") as MockClient:
             mock_instance = MockClient.return_value
-            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
-                response=MagicMock()
-            )
+            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(response=MagicMock())
 
             publisher = TwitterPublisher()
             result = publisher.publish("Forbidden Tweet")
@@ -108,9 +106,7 @@ class TestTwitterPublisher:
 
         with patch("examples.herald.publisher.tweepy.Client") as MockClient:
             mock_instance = MockClient.return_value
-            mock_instance.create_tweet.side_effect = tweepy.errors.Unauthorized(
-                response=MagicMock()
-            )
+            mock_instance.create_tweet.side_effect = tweepy.errors.Unauthorized(response=MagicMock())
 
             publisher = TwitterPublisher()
             result = publisher.publish("Unauthorized Tweet")
@@ -132,9 +128,7 @@ class TestTwitterPublisher:
         """verify_credentials() returns True when auth succeeds."""
         with patch("examples.herald.publisher.tweepy.Client") as MockClient:
             mock_instance = MockClient.return_value
-            mock_instance.get_me.return_value = MagicMock(
-                data=MagicMock(username="steward_bot")
-            )
+            mock_instance.get_me.return_value = MagicMock(data=MagicMock(username="steward_bot"))
 
             publisher = TwitterPublisher()
             result = publisher.verify_credentials()
@@ -209,9 +203,7 @@ class TestLinkedInPublisher:
         publisher = LinkedInPublisher()
 
         # Mock get_author_urn to return a valid URN
-        with patch.object(
-            publisher, "get_author_urn", return_value="urn:li:person:123"
-        ):
+        with patch.object(publisher, "get_author_urn", return_value="urn:li:person:123"):
             with patch("examples.herald.publisher.requests.post") as mock_post:
                 mock_response = MagicMock()
                 mock_response.status_code = 201
@@ -279,9 +271,7 @@ class TestMultiChannelPublisher:
 
         with patch("examples.herald.publisher.tweepy.Client") as MockClient:
             mock_instance = MockClient.return_value
-            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(
-                response=MagicMock()
-            )
+            mock_instance.create_tweet.side_effect = tweepy.errors.Forbidden(response=MagicMock())
 
             publisher = MultiChannelPublisher()
             result = publisher.publish_to_all_available("Test content")

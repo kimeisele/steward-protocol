@@ -147,7 +147,7 @@ class CircuitBreaker:
                 )
             else:  # HALF_OPEN
                 raise CircuitBreakerHalfOpenError(
-                    f"Circuit breaker HALF_OPEN: {reason}. " f"Testing recovery with probe request only."
+                    f"Circuit breaker HALF_OPEN: {reason}. Testing recovery with probe request only."
                 )
 
         # Execute the function

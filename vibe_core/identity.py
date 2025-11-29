@@ -154,10 +154,10 @@ class ManifestGenerator:
         agent = manifest.get("agent", {})
         caps = manifest.get("capabilities", [])
 
-        return f"""{agent.get('name', 'Unknown')} v{agent.get('version', '?')}
-Description: {agent.get('description', 'No description')}
-Domain: {agent.get('domain', 'Unknown')}
-Capabilities: {', '.join(caps) if caps else 'None'}"""
+        return f"""{agent.get("name", "Unknown")} v{agent.get("version", "?")}
+Description: {agent.get("description", "No description")}
+Domain: {agent.get("domain", "Unknown")}
+Capabilities: {", ".join(caps) if caps else "None"}"""
 
     @staticmethod
     def validate_manifest(manifest: Dict[str, Any]) -> List[str]:

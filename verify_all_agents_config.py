@@ -28,9 +28,7 @@ AGENTS = [
 
 def verify_agent(agent_name: str) -> dict:
     """Verify a single agent has proper config integration."""
-    agent_path = Path(
-        f"/home/user/steward-protocol/steward/system_agents/{agent_name}/cartridge_main.py"
-    )
+    agent_path = Path(f"/home/user/steward-protocol/steward/system_agents/{agent_name}/cartridge_main.py")
 
     result = {
         "agent": agent_name,
@@ -65,9 +63,7 @@ def verify_agent(agent_name: str) -> dict:
             result["errors"].append("Missing: from vibe_core.config import ...")
 
         # Check for config parameter in __init__
-        result["has_config_param"] = (
-            "config: Optional[" in content or "config=" in content
-        )
+        result["has_config_param"] = "config: Optional[" in content or "config=" in content
         if not result["has_config_param"]:
             result["errors"].append("Missing: config parameter in __init__")
 
@@ -117,12 +113,7 @@ def main():
     passed = sum(
         1
         for r in results
-        if (
-            r["syntax_valid"]
-            and r["has_config_param"]
-            and r["has_self_config"]
-            and r["has_config_import"]
-        )
+        if (r["syntax_valid"] and r["has_config_param"] and r["has_self_config"] and r["has_config_import"])
     )
     total = len(results)
 
@@ -131,18 +122,10 @@ def main():
     print("=" * 80)
 
     # Details
-    print(
-        f"✅ Syntax Valid:      {sum(1 for r in results if r['syntax_valid'])}/{total}"
-    )
-    print(
-        f"✅ Config Import:     {sum(1 for r in results if r['has_config_import'])}/{total}"
-    )
-    print(
-        f"✅ Config Parameter:  {sum(1 for r in results if r['has_config_param'])}/{total}"
-    )
-    print(
-        f"✅ Self Config Assign: {sum(1 for r in results if r['has_self_config'])}/{total}"
-    )
+    print(f"✅ Syntax Valid:      {sum(1 for r in results if r['syntax_valid'])}/{total}")
+    print(f"✅ Config Import:     {sum(1 for r in results if r['has_config_import'])}/{total}")
+    print(f"✅ Config Parameter:  {sum(1 for r in results if r['has_config_param'])}/{total}")
+    print(f"✅ Self Config Assign: {sum(1 for r in results if r['has_self_config'])}/{total}")
     print()
 
     if passed == total:

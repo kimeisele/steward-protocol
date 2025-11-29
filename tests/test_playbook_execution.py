@@ -101,9 +101,7 @@ def setup_env():
 
     # Initialize git repo
     os.system(f"git init {REPO_DIR} > /dev/null 2>&1")
-    os.system(
-        f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'"
-    )
+    os.system(f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'")
     print(f"✅ Test environment: {SANDBOX_DIR}, {REPO_DIR}")
 
 
@@ -192,10 +190,7 @@ async def test_agent_dispatch():
         payload={"action": "manifest_reality", "files": ["test.py"]},
     )
     chron_result = await kernel.submit_task(chronicle_task)
-    if (
-        "error" in chron_result
-        or chron_result.get("reason") == "Agent chronicle not found"
-    ):
+    if "error" in chron_result or chron_result.get("reason") == "Agent chronicle not found":
         print(f"   🚨 BLIND SPOT #2 EXPOSED: Chronicle not available!")
         print(f"      The playbook expects 'chronicle' but we have 'archivist'")
         print(f"      Result: {chron_result}")

@@ -62,9 +62,7 @@ def operator_session():
 
     print(f"🏙️  City: {status.get('city_name')}")
     print(f"🤖 Agents: {status['agents']['total']}")
-    print(
-        f"💰 Economy: {status['economy']['total_credits_allocated']} credits allocated"
-    )
+    print(f"💰 Economy: {status['economy']['total_credits_allocated']} credits allocated")
     print(f"🗳️  Governance: {status['governance']['open_proposals']} open proposals")
     print(f"🟢 Health: {status.get('health')}")
 
@@ -95,17 +93,13 @@ def operator_session():
         bailout_proposal = None
 
         for prop in proposals:
-            if "herald" in prop.get("title", "").lower() or "herald" in str(
-                prop.get("action", {})
-            ):
+            if "herald" in prop.get("title", "").lower() or "herald" in str(prop.get("action", {})):
                 bailout_proposal = prop
                 break
 
         if not bailout_proposal:
             print("\n🔧 No bailout proposal found. The system should auto-create one.")
-            print(
-                "   (In the full scenario_demo.py, Herald creates this automatically)"
-            )
+            print("   (In the full scenario_demo.py, Herald creates this automatically)")
         else:
             # ========== OPERATOR PROMPT 3: "Approve the bailout" ==========
 
@@ -116,9 +110,7 @@ def operator_session():
             print(f"   Action: {bailout_proposal['action']}")
 
             # Vote YES
-            vote_result = controller.vote_proposal(
-                bailout_proposal["id"], choice="YES", voter="operator"
-            )
+            vote_result = controller.vote_proposal(bailout_proposal["id"], choice="YES", voter="operator")
 
             print(f"\n🗳️  Vote recorded: {vote_result.get('status')}")
 
@@ -137,12 +129,8 @@ def operator_session():
 
                     # Verify Herald's new balance
                     herald_credits_after = controller.check_credits("herald")
-                    print(
-                        f"\n💰 Herald's new balance: {herald_credits_after.get('credits', 0)} credits"
-                    )
-                    print(
-                        f"✅ License restored: {herald_credits_after.get('licensed')}"
-                    )
+                    print(f"\n💰 Herald's new balance: {herald_credits_after.get('credits', 0)} credits")
+                    print(f"✅ License restored: {herald_credits_after.get('licensed')}")
                 else:
                     print(f"❌ Execution failed: {exec_result}")
 
@@ -151,9 +139,7 @@ def operator_session():
     if herald_credits.get("credits", 0) > 0 or herald_credits.get("licensed"):
         print_section('📱 OPERATOR: "Herald, run a campaign (dry run)"')
 
-        campaign_result = controller.trigger_agent(
-            "herald", action="run_campaign", dry_run=True
-        )
+        campaign_result = controller.trigger_agent("herald", action="run_campaign", dry_run=True)
 
         if campaign_result.get("status") == "draft_ready":
             print(f"✅ Campaign complete!")

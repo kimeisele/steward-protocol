@@ -4,6 +4,7 @@
 ======================
 Boots the VibeOS Kernel in persistent daemon mode.
 """
+
 import logging
 import sys
 import time

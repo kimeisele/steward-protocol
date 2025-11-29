@@ -176,9 +176,9 @@ class WatertightnessVerifier:
 
     def print_results(self) -> None:
         """Print detailed results."""
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"SCAN RESULTS")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
         print(f"📊 STATISTICS:")
         print(f"   Files scanned:       {self.stats['files_scanned']}")
@@ -206,7 +206,7 @@ class WatertightnessVerifier:
                     print(f"   CODE: {w['code']}")
                     print()
 
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         if not self.violations:
             print("✅ SYSTEM IS WATERTIGHT. NO CRITICAL MOCKS FOUND.")
@@ -219,7 +219,7 @@ class WatertightnessVerifier:
             for v in self.violations:
                 print(f"   - {v['file']}:{v['line']}")
 
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
 
 def main():

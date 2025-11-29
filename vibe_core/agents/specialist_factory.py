@@ -94,7 +94,7 @@ class SpecialistFactoryAgent(VibeAgent):
             ... )
         """
         if not issubclass(specialist_class, BaseSpecialist):
-            raise TypeError(f"specialist_class must be a BaseSpecialist subclass, " f"got {specialist_class.__name__}")
+            raise TypeError(f"specialist_class must be a BaseSpecialist subclass, got {specialist_class.__name__}")
 
         self.specialist_class = specialist_class
         self.role = role.lower()
@@ -104,8 +104,7 @@ class SpecialistFactoryAgent(VibeAgent):
         self.orchestrator = orchestrator
 
         logger.info(
-            f"SpecialistFactoryAgent: Initialized factory for "
-            f"{specialist_class.__name__} (agent_id={self.agent_id})"
+            f"SpecialistFactoryAgent: Initialized factory for {specialist_class.__name__} (agent_id={self.agent_id})"
         )
 
     @property
@@ -230,6 +229,4 @@ class SpecialistFactoryAgent(VibeAgent):
 
     def __repr__(self) -> str:
         """String representation for debugging"""
-        return (
-            f"SpecialistFactoryAgent(agent_id={self.agent_id!r}, " f"specialist_class={self.specialist_class.__name__})"
-        )
+        return f"SpecialistFactoryAgent(agent_id={self.agent_id!r}, specialist_class={self.specialist_class.__name__})"

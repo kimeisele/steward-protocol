@@ -61,7 +61,7 @@ class AuditLedger(VibeLedger):
 
             self.entries_written += 1
             logger.info(
-                f"✅ Attestation written to ledger: {attestation.get('status')} " f"(entry #{self.entries_written})"
+                f"✅ Attestation written to ledger: {attestation.get('status')} (entry #{self.entries_written})"
             )
             return True
 

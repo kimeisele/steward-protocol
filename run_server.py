@@ -117,12 +117,8 @@ class StewardBootLoader:
 
             logger.info(f"✅ Configuration loaded: {self.config.city_name}")
             logger.info(f"   Version: {self.config.federation_version}")
-            logger.info(
-                f"   Economy: {self.config.economy.initial_credits} initial credits"
-            )
-            logger.info(
-                f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold"
-            )
+            logger.info(f"   Economy: {self.config.economy.initial_credits} initial credits")
+            logger.info(f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold")
 
             # Validate configuration
             validation_report = loader.validate()
@@ -171,9 +167,7 @@ class StewardBootLoader:
 
         # Use BootOrchestrator for unified agent discovery
         # BLOCKER #0: Pass Phoenix Config to orchestrator
-        orchestrator = BootOrchestrator(
-            ledger_path=self.ledger_path, project_root=project_root, config=self.config
-        )
+        orchestrator = BootOrchestrator(ledger_path=self.ledger_path, project_root=project_root, config=self.config)
 
         try:
             self.kernel = orchestrator.boot()
@@ -243,9 +237,7 @@ class StewardBootLoader:
         logger.info(f"   Docs: http://{self.host}:{self.port}/docs")
         logger.info(f"   Health: http://{self.host}:{self.port}/health")
 
-        logger.info(
-            "\n🔌 API Gateway is live and ready to receive commands from the Frontend"
-        )
+        logger.info("\n🔌 API Gateway is live and ready to receive commands from the Frontend")
         logger.info("📡 ENVOY is listening via POST /v1/chat")
         logger.info("🛡️  GAD-000: HIL Assistant filters complexity")
         logger.info("✅ SYSTEM READY FOR FIRST CONTACT")
@@ -325,9 +317,7 @@ Examples:
         """,
     )
 
-    parser.add_argument(
-        "--port", type=int, default=8000, help="API Gateway port (default: 8000)"
-    )
+    parser.add_argument("--port", type=int, default=8000, help="API Gateway port (default: 8000)")
     parser.add_argument(
         "--host",
         type=str,
@@ -344,9 +334,7 @@ Examples:
     args = parser.parse_args()
 
     # Create and run bootloader
-    bootloader = StewardBootLoader(
-        ledger_path=args.ledger, port=args.port, host=args.host
-    )
+    bootloader = StewardBootLoader(ledger_path=args.ledger, port=args.port, host=args.host)
 
     bootloader.run()
 

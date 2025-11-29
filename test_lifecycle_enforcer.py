@@ -87,9 +87,7 @@ def test_lifecycle_enforcer():
         "score": 95,
     }
 
-    success = enforcer.authorize_brahmachari_to_grihastha(
-        test_agent, test_results, initiator="TEMPLE"
-    )
+    success = enforcer.authorize_brahmachari_to_grihastha(test_agent, test_results, initiator="TEMPLE")
 
     if not success:
         logger.error("❌ TEST 3 FAILED: Initiation failed")
@@ -98,9 +96,7 @@ def test_lifecycle_enforcer():
     # Verify state changed
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
     if state.status != LifecycleStatus.GRIHASTHA:
-        logger.error(
-            f"❌ TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA"
-        )
+        logger.error(f"❌ TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA")
         return False
 
     logger.info("✅ TEST 3 PASSED: Agent promoted to GRIHASTHA")
@@ -142,9 +138,7 @@ def test_lifecycle_enforcer():
 
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
     if state.status != LifecycleStatus.SHUDRA:
-        logger.error(
-            f"❌ TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA"
-        )
+        logger.error(f"❌ TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA")
         return False
 
     logger.info("✅ TEST 5 PASSED: Agent demoted to SHUDRA")
@@ -172,9 +166,7 @@ def test_lifecycle_enforcer():
     logger.info("-" * 80)
 
     # Create new instance (simulating restart)
-    logger.info(
-        "   Creating new LifecycleManager instance (simulating server restart)..."
-    )
+    logger.info("   Creating new LifecycleManager instance (simulating server restart)...")
     from civic.tools.lifecycle_manager import LifecycleManager
 
     manager2 = LifecycleManager()
@@ -186,9 +178,7 @@ def test_lifecycle_enforcer():
         return False
 
     if state_after.status != LifecycleStatus.SHUDRA:
-        logger.error(
-            f"❌ TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA"
-        )
+        logger.error(f"❌ TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA")
         return False
 
     logger.info("✅ TEST 7 PASSED: KARMA confirmed - state persisted across restart")
