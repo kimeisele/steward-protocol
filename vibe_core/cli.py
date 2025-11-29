@@ -33,19 +33,19 @@ Usage:
     steward stop
 """
 
-import sys
-import os
 import argparse
-import sqlite3
-import json
 import hashlib
-import time
+import json
+import os
 import signal
+import sqlite3
 import subprocess
+import sys
+import time
 import uuid
-from pathlib import Path
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -98,11 +98,9 @@ class StewardCLI:
             pulse_age = self._get_pulse_age()
             print(f"   Pulse:      ✅ ACTIVE (last update {pulse_age:.1f}s ago)")
         else:
-            print(f"   Pulse:      ❌ LOST (dashboard stale)")
+            print("   Pulse:      ❌ LOST (dashboard stale)")
 
-        print(
-            f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)"
-        )
+        print(f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)")
         print(f"   Agents:     {certified_agents} certified")
         print()
 
@@ -297,14 +295,10 @@ class StewardCLI:
             if manifest_hash == recorded_hash:
                 print()
                 print("✅ PASSPORT VERIFIED")
-                print(f"   Manifest signature valid")
+                print("   Manifest signature valid")
                 print(f"   Anchored in Block #{block_idx}")
-                print(
-                    f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}..."
-                )
-                print(
-                    f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}"
-                )
+                print(f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}...")
+                print(f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}")
                 return 0
             else:
                 print()
@@ -382,17 +376,11 @@ class StewardCLI:
                 if event_type == "GENESIS":
                     data_json = json.loads(data)
                     anchors = data_json.get("anchors", {})
-                    print(
-                        f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}..."
-                    )
-                    print(
-                        f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}...")
+                    print(f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}...")
                 elif event_type == "PASSPORT_ISSUED":
                     data_json = json.loads(data)
-                    print(
-                        f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}...")
                     print(f"          Version:  {data_json.get('version', 'N/A')}")
 
                 print()
@@ -468,9 +456,7 @@ class StewardCLI:
                             elif "CRASHED" in status_part:
                                 status = "CRASHED"
 
-                            agents.append(
-                                {"name": agent_name, "status": status, "pid": pid}
-                            )
+                            agents.append({"name": agent_name, "status": status, "pid": pid})
 
             if len(agents) == 0:
                 print("⚠️  No agents found in OPERATIONS.md")
@@ -481,9 +467,7 @@ class StewardCLI:
             print("-" * 70)
             for agent in agents:
                 status_icon = "✅" if agent["status"] == "RUNNING" else "❌"
-                print(
-                    f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}"
-                )
+                print(f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}")
 
             print()
             print(f"Total agents: {len(agents)}")
@@ -551,7 +535,7 @@ class StewardCLI:
                 print(f"  tail -f {kernel_log}")
                 return 0
             except ProcessLookupError:
-                print(f"❌ Kernel process exited unexpectedly")
+                print("❌ Kernel process exited unexpectedly")
                 print(f"   Check logs: {kernel_log}")
                 return 1
 
@@ -644,7 +628,7 @@ class StewardCLI:
         print(f"📝 Initializing agent: {agent_id}")
         print()
 
-        manifest_path = Path(f"steward.json")
+        manifest_path = Path("steward.json")
         if manifest_path.exists():
             print(f"❌ Manifest already exists: {manifest_path}")
             return 1
@@ -881,7 +865,7 @@ class StewardCLI:
             print(f"Agent:       {agent_id}")
             print(f"Task:        {task_description}")
             print()
-            print(f"✅ Task submitted successfully")
+            print("✅ Task submitted successfully")
             print(f"   Task ID: {task_id}")
             print(f"   Queue:   {task_file}")
             print()
@@ -926,9 +910,7 @@ def main():
 
     # steward logs [--tail N]
     logs_parser = subparsers.add_parser("logs", help="View kernel logs")
-    logs_parser.add_argument(
-        "--tail", type=int, default=50, help="Show last N lines (default: 50)"
-    )
+    logs_parser.add_argument("--tail", type=int, default=50, help="Show last N lines (default: 50)")
 
     # steward init <agent_id>
     init_parser = subparsers.add_parser("init", help="Initialize new agent manifest")
