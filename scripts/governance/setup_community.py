@@ -138,9 +138,7 @@ def check_github_token():
         print("2. Generate new token (classic)")
         print("3. Select scopes: 'repo', 'write:discussion'")
         print("4. Set environment variable: export GITHUB_TOKEN=your_token")
-        print(
-            "\nAlternatively, you can manually create these discussions in GitHub UI."
-        )
+        print("\nAlternatively, you can manually create these discussions in GitHub UI.")
         return None
     return token
 

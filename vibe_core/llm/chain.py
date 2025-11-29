@@ -88,13 +88,9 @@ class ChainProvider(LLMProvider):
         self._current_provider_index = 0
 
         provider_names = [p.__class__.__name__ for p in providers]
-        logger.info(
-            f"ChainProvider initialized with {len(providers)} provider(s): {provider_names}"
-        )
+        logger.info(f"ChainProvider initialized with {len(providers)} provider(s): {provider_names}")
 
-    def chat(
-        self, messages: list[dict[str, str]], model: str | None = None, **kwargs
-    ) -> str:
+    def chat(self, messages: list[dict[str, str]], model: str | None = None, **kwargs) -> str:
         """
         Send messages through the provider chain.
 
@@ -125,9 +121,7 @@ class ChainProvider(LLMProvider):
         # Try each provider in the chain
         for i, provider in enumerate(self.providers):
             try:
-                logger.debug(
-                    f"ChainProvider: Trying provider {i} ({provider.__class__.__name__})"
-                )
+                logger.debug(f"ChainProvider: Trying provider {i} ({provider.__class__.__name__})")
 
                 response = provider.chat(messages, model=model, **kwargs)
 
@@ -144,9 +138,7 @@ class ChainProvider(LLMProvider):
             except Exception as e:
                 error_msg = f"{provider.__class__.__name__} (index {i}): {e}"
                 errors.append(error_msg)
-                logger.warning(
-                    f"ChainProvider: Provider failed, trying next: {error_msg}"
-                )
+                logger.warning(f"ChainProvider: Provider failed, trying next: {error_msg}")
 
                 # Continue to next provider
                 continue

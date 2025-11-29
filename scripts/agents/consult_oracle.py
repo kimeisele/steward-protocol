@@ -69,23 +69,13 @@ Examples:
         type=str,
         help="Ask a free-form question (e.g., 'Why is Herald frozen?')",
     )
-    parser.add_argument(
-        "--status", type=str, metavar="AGENT_ID", help="Get status of specific agent"
-    )
-    parser.add_argument(
-        "--timeline", action="store_true", help="Show transaction timeline"
-    )
-    parser.add_argument(
-        "--health", action="store_true", help="Show system health status"
-    )
-    parser.add_argument(
-        "--tx", type=str, metavar="TX_ID", help="Trace specific transaction"
-    )
+    parser.add_argument("--status", type=str, metavar="AGENT_ID", help="Get status of specific agent")
+    parser.add_argument("--timeline", action="store_true", help="Show transaction timeline")
+    parser.add_argument("--health", action="store_true", help="Show system health status")
+    parser.add_argument("--tx", type=str, metavar="TX_ID", help="Trace specific transaction")
 
     # Options
-    parser.add_argument(
-        "--limit", type=int, default=20, help="Limit results (default: 20)"
-    )
+    parser.add_argument("--limit", type=int, default=20, help="Limit results (default: 20)")
     parser.add_argument(
         "--format",
         choices=["narrative", "json"],

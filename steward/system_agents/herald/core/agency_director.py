@@ -173,9 +173,7 @@ class AgencyDirector:
                 trends_data = self.research.scan("AI agents governance")
 
             # Scout Tool: check agent registry status
-            agents_count = (
-                len(self.scout._load_pokedex()) if self.scout._load_pokedex() else 0
-            )
+            agents_count = len(self.scout._load_pokedex()) if self.scout._load_pokedex() else 0
 
             context = {
                 "trends": trends_data,
@@ -189,9 +187,7 @@ class AgencyDirector:
                 context={"agents": agents_count},
             )
 
-            self._update_state_dashboard(
-                "INPUT", "SUCCESS", cycle_id, {"context_sources": 2}
-            )
+            self._update_state_dashboard("INPUT", "SUCCESS", cycle_id, {"context_sources": 2})
             logger.info("✅ INPUT Phase Complete: Context aggregated")
 
         except Exception as e:
@@ -241,9 +237,7 @@ class AgencyDirector:
                 raise ValueError("ContentTool returned empty draft")
 
             # Generate visual asset to accompany text
-            visual_asset = self.visual.generate(
-                text_draft=draft, style_preset="agent_city", format_type="ascii"
-            )
+            visual_asset = self.visual.generate(text_draft=draft, style_preset="agent_city", format_type="ascii")
 
             media_data = {
                 "asset_type": visual_asset.asset_type,
@@ -268,15 +262,11 @@ class AgencyDirector:
                     "media_type": visual_asset.asset_type,
                 },
             )
-            logger.info(
-                f"✅ PROCESS Phase Complete: Draft ({len(draft)} chars) + {visual_asset.asset_type} visual"
-            )
+            logger.info(f"✅ PROCESS Phase Complete: Draft ({len(draft)} chars) + {visual_asset.asset_type} visual")
 
         except Exception as e:
             logger.error(f"❌ PROCESS Phase Failed: {e}")
-            self._update_state_dashboard(
-                "PROCESS", "FAILED", cycle_id, {"error": str(e)}
-            )
+            self._update_state_dashboard("PROCESS", "FAILED", cycle_id, {"error": str(e)})
             self.event_log.record_system_error(
                 error_type="process_failure",
                 error_message=str(e),
@@ -299,9 +289,7 @@ class AgencyDirector:
 
             if not validation_result.is_valid:
                 # Governance violation detected
-                logger.warning(
-                    f"⚠️  Governance violations detected: {validation_result.violations}"
-                )
+                logger.warning(f"⚠️  Governance violations detected: {validation_result.violations}")
 
                 # Store feedback for next retry
                 self.event_log.store_validation_feedback(
@@ -338,9 +326,7 @@ class AgencyDirector:
             if media_data:
                 media_validation = self.constitution.validate_media(media_data)
                 if not media_validation.is_valid:
-                    logger.warning(
-                        f"⚠️  Media validation failed: {media_validation.violations}"
-                    )
+                    logger.warning(f"⚠️  Media validation failed: {media_validation.violations}")
                     self.event_log.store_validation_feedback(
                         violations=media_validation.violations,
                         draft=draft,
@@ -392,9 +378,7 @@ class AgencyDirector:
                     self.event_log.record_content_rejected(
                         content=draft,
                         reason="article_i_violation_no_signature",
-                        violations=[
-                            f"Content must be cryptographically signed (Article I): {e}"
-                        ],
+                        violations=[f"Content must be cryptographically signed (Article I): {e}"],
                     )
                     return CycleResult(
                         status="VALIDATION_FAILED",
@@ -402,9 +386,7 @@ class AgencyDirector:
                         cycle_id=cycle_id,
                         draft=draft,
                         media=media_data,
-                        violations=[
-                            f"Article I violation: Cryptographic signing required - {e}"
-                        ],
+                        violations=[f"Article I violation: Cryptographic signing required - {e}"],
                     )
             else:
                 logger.error("❌ Identity tool unavailable (Article I violation)")
@@ -417,9 +399,7 @@ class AgencyDirector:
                 self.event_log.record_content_rejected(
                     content=draft,
                     reason="article_i_violation_no_identity",
-                    violations=[
-                        "Content cannot be signed without identity tool (Article I)"
-                    ],
+                    violations=["Content cannot be signed without identity tool (Article I)"],
                 )
                 return CycleResult(
                     status="VALIDATION_FAILED",
@@ -427,9 +407,7 @@ class AgencyDirector:
                     cycle_id=cycle_id,
                     draft=draft,
                     media=media_data,
-                    violations=[
-                        "Article I violation: Identity tool required for cryptographic signing"
-                    ],
+                    violations=["Article I violation: Identity tool required for cryptographic signing"],
                 )
 
             # Step 3: Audit verification (if auditor available)
@@ -455,9 +433,7 @@ class AgencyDirector:
 
         except Exception as e:
             logger.error(f"❌ VALIDATE Phase Failed: {e}")
-            self._update_state_dashboard(
-                "VALIDATE", "FAILED", cycle_id, {"error": str(e)}
-            )
+            self._update_state_dashboard("VALIDATE", "FAILED", cycle_id, {"error": str(e)})
             self.event_log.record_system_error(
                 error_type="validate_failure",
                 error_message=str(e),
@@ -509,9 +485,7 @@ class AgencyDirector:
                 },
             )
 
-            logger.info(
-                "✅ OUTPUT Phase Complete: Multimodal content published and logged"
-            )
+            logger.info("✅ OUTPUT Phase Complete: Multimodal content published and logged")
 
             return CycleResult(
                 status="SUCCESS",
@@ -524,9 +498,7 @@ class AgencyDirector:
 
         except Exception as e:
             logger.error(f"❌ OUTPUT Phase Failed: {e}")
-            self._update_state_dashboard(
-                "OUTPUT", "FAILED", cycle_id, {"error": str(e)}
-            )
+            self._update_state_dashboard("OUTPUT", "FAILED", cycle_id, {"error": str(e)})
             self.event_log.record_system_error(
                 error_type="output_failure",
                 error_message=str(e),
@@ -572,17 +544,13 @@ class AgencyDirector:
                 return result
 
             elif result.status == "VALIDATION_FAILED":
-                logger.info(
-                    f"⚠️  Validation failed on attempt {attempt + 1}: {result.violations}"
-                )
+                logger.info(f"⚠️  Validation failed on attempt {attempt + 1}: {result.violations}")
 
                 # Feedback automatically stored in event_log
                 # Next cycle will retrieve it and use it to generate better content
 
                 if attempt + 1 < max_retries:
-                    logger.info(
-                        f"🔄 Retrying with feedback (attempt {attempt + 2}/{max_retries})"
-                    )
+                    logger.info(f"🔄 Retrying with feedback (attempt {attempt + 2}/{max_retries})")
                     continue
                 else:
                     logger.error(f"❌ Max retries ({max_retries}) exceeded")
@@ -591,9 +559,7 @@ class AgencyDirector:
 
             else:
                 # System error (not validation error)
-                logger.error(
-                    f"❌ System error on attempt {attempt + 1}: {result.error}"
-                )
+                logger.error(f"❌ System error on attempt {attempt + 1}: {result.error}")
                 result.retries_used = attempt
                 return result
 

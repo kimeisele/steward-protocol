@@ -35,9 +35,7 @@ class AuditTool:
 
         logger.info(f"🔍 AuditTool initialized: {agent_name}")
 
-    def verify_event_signature(
-        self, event: Dict[str, Any], public_key: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def verify_event_signature(self, event: Dict[str, Any], public_key: Optional[str] = None) -> Dict[str, Any]:
         """
         Verify the cryptographic signature of an event.
 
@@ -111,16 +109,12 @@ class AuditTool:
             return False
 
         if not signature.startswith(("MEQCI", "MEUCI", "MEQ", "MEU")):
-            logger.debug(
-                f"Signature doesn't start with expected prefix: {signature[:10]}"
-            )
+            logger.debug(f"Signature doesn't start with expected prefix: {signature[:10]}")
             # For now, accept it anyway (some test signatures might differ)
 
         return True
 
-    def create_attestation(
-        self, event: Dict[str, Any], verification_result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def create_attestation(self, event: Dict[str, Any], verification_result: Dict[str, Any]) -> Dict[str, Any]:
         """
         Create an attestation record for a verified event.
 
@@ -145,9 +139,7 @@ class AuditTool:
             "status": "VERIFIED" if verification_result["verified"] else "FAILED",
         }
 
-        logger.info(
-            f"📋 Attestation created: {attestation['status']} for event {event.get('sequence_number')}"
-        )
+        logger.info(f"📋 Attestation created: {attestation['status']} for event {event.get('sequence_number')}")
 
         return attestation
 

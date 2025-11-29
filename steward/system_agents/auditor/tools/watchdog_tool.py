@@ -160,9 +160,7 @@ class Watchdog:
         Returns:
             dict with check results
         """
-        logger.info(
-            f"👁️  WATCHDOG: Running invariant check (start={self.last_checked_index})"
-        )
+        logger.info(f"👁️  WATCHDOG: Running invariant check (start={self.last_checked_index})")
 
         # Import Judge here to avoid circular imports
         from steward.system_agents.auditor.tools.invariant_tool import get_judge

@@ -61,8 +61,7 @@ class AuditLedger(VibeLedger):
 
             self.entries_written += 1
             logger.info(
-                f"✅ Attestation written to ledger: {attestation.get('status')} "
-                f"(entry #{self.entries_written})"
+                f"✅ Attestation written to ledger: {attestation.get('status')} " f"(entry #{self.entries_written})"
             )
             return True
 
@@ -120,11 +119,7 @@ class AuditLedger(VibeLedger):
             list: Attestations for that agent
         """
         all_attestations = self.read_all()
-        return [
-            a
-            for a in all_attestations
-            if a.get("target_event", {}).get("agent_id") == agent_id
-        ]
+        return [a for a in all_attestations if a.get("target_event", {}).get("agent_id") == agent_id]
 
     def get_statistics(self) -> Dict[str, Any]:
         """
@@ -148,9 +143,7 @@ class AuditLedger(VibeLedger):
     # ==================== VibeLedger Interface Implementation ====================
     # BLOCKER #1: Implement VibeLedger ABC interface to satisfy inheritance contract
 
-    def record_event(
-        self, event_type: str, agent_id: str, details: Dict[str, Any]
-    ) -> str:
+    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
         """Record a generic event (VibeLedger ABC interface)"""
         attestation = {
             "event_type": event_type,

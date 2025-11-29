@@ -23,9 +23,7 @@ class StewardClient:
         """
         self.identity_path = Path(identity_file)
         if not self.identity_path.exists():
-            print(
-                f"⚠️  [Steward] Identity file {identity_file} not found. Running in anonymous mode."
-            )
+            print(f"⚠️  [Steward] Identity file {identity_file} not found. Running in anonymous mode.")
             self.authenticated = False
         else:
             self.authenticated = True
@@ -36,9 +34,7 @@ class StewardClient:
         try:
             content = self.identity_path.read_text()
             # Simple check: does it contain public key reference?
-            self.has_key_reference = (
-                "public_key" in content.lower() or "publickey" in content.lower()
-            )
+            self.has_key_reference = "public_key" in content.lower() or "publickey" in content.lower()
         except Exception as e:
             self.has_key_reference = False
 

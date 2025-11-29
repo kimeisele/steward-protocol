@@ -72,9 +72,7 @@ def display_dashboard(kernel: RealVibeKernel):
         print(f"  PID:     {stats['pid']}")
         print(f"  Credits: {credits}")
         print(f"  Quota:   {stats['quota_cpu']}% CPU, {stats['quota_memory']} MB RAM")
-        print(
-            f"  Usage:   {stats['cpu_percent']}% CPU, {stats['memory_mb']:.1f} MB RAM"
-        )
+        print(f"  Usage:   {stats['cpu_percent']}% CPU, {stats['memory_mb']:.1f} MB RAM")
 
         cpu_status = format_status(stats.get("cpu_within_quota", True))
         mem_status = format_status(stats.get("memory_within_quota", True))
@@ -87,9 +85,7 @@ def display_dashboard(kernel: RealVibeKernel):
     if violations:
         print("⚠️  VIOLATIONS DETECTED:")
         for v in violations:
-            print(
-                f"  - {v['agent_id']}: {v['type']} usage {v['usage']:.1f} exceeds quota {v['quota']}"
-            )
+            print(f"  - {v['agent_id']}: {v['type']} usage {v['usage']:.1f} exceeds quota {v['quota']}")
         print()
 
     print("=" * 70)

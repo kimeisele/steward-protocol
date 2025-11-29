@@ -18,18 +18,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from steward.system_agents.engineer.cartridge_main import EngineerCartridge
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("SUMMONER")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Summon a new Agent via The Engineer.")
     parser.add_argument("--name", required=True, help="Name of the agent (snake_case)")
-    parser.add_argument(
-        "--mission", required=True, help="Mission description for the agent"
-    )
+    parser.add_argument("--mission", required=True, help="Mission description for the agent")
 
     args = parser.parse_args()
 
@@ -47,9 +43,7 @@ def main():
 
         logger.info("✨ RITUAL COMPLETE.")
         logger.info(f"   Agent manifest: {result}")
-        logger.info(
-            f"   To activate: python {args.name}/cartridge_main.py (or load via VibeOS)"
-        )
+        logger.info(f"   To activate: python {args.name}/cartridge_main.py (or load via VibeOS)")
 
     except Exception as e:
         logger.error(f"❌ Critical failure: {e}")

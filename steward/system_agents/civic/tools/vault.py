@@ -85,10 +85,7 @@ class CivicVault:
                 from cryptography.fernet import Fernet, InvalidToken
             except (ImportError, Exception) as e:
                 import_error = str(e)
-                raise ImportError(
-                    "❌ cryptography library failed to initialize. "
-                    f"Error: {import_error}"
-                )
+                raise ImportError("❌ cryptography library failed to initialize. " f"Error: {import_error}")
 
         self.conn = db_connection
         self._ensure_master_key()
@@ -227,9 +224,7 @@ class CivicVault:
             return decrypted
 
         except InvalidToken:
-            raise VaultError(
-                f"❌ Decryption failed for '{key_name}' (corrupted or wrong key)"
-            )
+            raise VaultError(f"❌ Decryption failed for '{key_name}' (corrupted or wrong key)")
         except Exception as e:
             raise VaultError(f"❌ Failed to retrieve secret '{key_name}': {e}")
 
@@ -277,8 +272,7 @@ class CivicVault:
                     # Check if it's an insufficient funds error
                     if "insufficient" in str(bank_error).lower():
                         raise InsufficientFundsError(
-                            f"❌ Agent '{agent_id}' lacks {self.LEASE_COST} Credits "
-                            f"to lease secret '{key_name}'"
+                            f"❌ Agent '{agent_id}' lacks {self.LEASE_COST} Credits " f"to lease secret '{key_name}'"
                         )
                     raise VaultError(f"❌ Bank transaction failed: {bank_error}")
             else:
@@ -297,10 +291,7 @@ class CivicVault:
             )
             self.conn.commit()
 
-            logger.info(
-                f"🔓 Secret leased: {agent_id} <- {key_name} "
-                f"({self.LEASE_COST} Credits via {tx_id})"
-            )
+            logger.info(f"🔓 Secret leased: {agent_id} <- {key_name} " f"({self.LEASE_COST} Credits via {tx_id})")
 
             return secret
 
@@ -397,7 +388,4 @@ class CivicVault:
         cur.execute("SELECT key_name, created_at, rotated_at FROM vault_assets")
         rows = cur.fetchall()
 
-        return [
-            {"key_name": row[0], "created_at": row[1], "rotated_at": row[2]}
-            for row in rows
-        ]
+        return [{"key_name": row[0], "created_at": row[1], "rotated_at": row[2]} for row in rows]

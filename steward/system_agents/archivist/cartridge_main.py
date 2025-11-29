@@ -131,9 +131,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
         # Security: Prevent path traversal
         try:
             cwd = os.getcwd()
-            real_dest_path_normalized = os.path.normpath(
-                os.path.abspath(real_dest_path)
-            )
+            real_dest_path_normalized = os.path.normpath(os.path.abspath(real_dest_path))
             cwd_normalized = os.path.normpath(cwd)
 
             if not real_dest_path_normalized.startswith(cwd_normalized):
@@ -166,9 +164,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             commit_msg = f"feat: {message}"
             try:
                 # Try to sign (may fail if no signing key configured)
-                subprocess.run(
-                    ["git", "commit", "-S", "-m", commit_msg], check=True, cwd=cwd
-                )
+                subprocess.run(["git", "commit", "-S", "-m", commit_msg], check=True, cwd=cwd)
                 signed = True
             except subprocess.CalledProcessError:
                 # Fall back to unsigned commit
@@ -179,11 +175,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             logger.info(f"✅ Commit created")
 
             # Get commit hash
-            rev = (
-                subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd)
-                .decode()
-                .strip()
-            )
+            rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd).decode().strip()
 
             logger.info(f"✅ SEALED: Commit {rev[:7]}")
 

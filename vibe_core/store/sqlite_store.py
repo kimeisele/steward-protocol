@@ -95,9 +95,7 @@ class SQLiteStore:
             self.conn.execute("PRAGMA journal_mode = WAL")
 
         # Check if database is empty (needs schema)
-        cursor = self.conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='missions'"
-        )
+        cursor = self.conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='missions'")
         tables_exist = cursor.fetchone() is not None
 
         if not tables_exist:
@@ -121,9 +119,7 @@ class SQLiteStore:
                 break
             project_root = project_root.parent
         else:
-            raise FileNotFoundError(
-                "Could not find docs/tasks/ARCH-001_schema.sql in project tree"
-            )
+            raise FileNotFoundError("Could not find docs/tasks/ARCH-001_schema.sql in project tree")
 
         # Load and execute schema
         with open(schema_path) as f:
@@ -353,18 +349,14 @@ class SQLiteStore:
         Returns:
             Mission dict or None if not found
         """
-        cursor = self.conn.execute(
-            "SELECT * FROM missions WHERE mission_uuid = ?", (mission_uuid,)
-        )
+        cursor = self.conn.execute("SELECT * FROM missions WHERE mission_uuid = ?", (mission_uuid,))
         row = cursor.fetchone()
         if row is None:
             return None
 
         return self._parse_mission_row(row)
 
-    def update_mission_status(
-        self, mission_id: int, status: str, completed_at: str | None = None
-    ):
+    def update_mission_status(self, mission_id: int, status: str, completed_at: str | None = None):
         """
         Update mission status
 
@@ -539,9 +531,7 @@ class SQLiteStore:
 
     def get_tool_call(self, tool_call_id: int) -> dict[str, Any] | None:
         """Get tool call by ID"""
-        cursor = self.conn.execute(
-            "SELECT * FROM tool_calls WHERE id = ?", (tool_call_id,)
-        )
+        cursor = self.conn.execute("SELECT * FROM tool_calls WHERE id = ?", (tool_call_id,))
         row = cursor.fetchone()
         if row is None:
             return None
@@ -788,9 +778,7 @@ class SQLiteStore:
 
     def get_playbook_run(self, run_id: int) -> dict[str, Any] | None:
         """Get playbook run by ID"""
-        cursor = self.conn.execute(
-            "SELECT * FROM playbook_runs WHERE id = ?", (run_id,)
-        )
+        cursor = self.conn.execute("SELECT * FROM playbook_runs WHERE id = ?", (run_id,))
         row = cursor.fetchone()
         if row is None:
             return None
@@ -1179,9 +1167,7 @@ class SQLiteStore:
 
         return mission_id
 
-    def import_project_manifest(
-        self, manifest: dict[str, Any], project_memory: dict[str, Any] | None = None
-    ) -> int:
+    def import_project_manifest(self, manifest: dict[str, Any], project_memory: dict[str, Any] | None = None) -> int:
         """
         Import project manifest and optional project memory to SQLite (ARCH-003)
 
@@ -1339,9 +1325,7 @@ class SQLiteStore:
         self._commit()
         return cursor.lastrowid
 
-    def get_artifacts(
-        self, mission_id: int, artifact_type: str | None = None
-    ) -> list[dict[str, Any]]:
+    def get_artifacts(self, mission_id: int, artifact_type: str | None = None) -> list[dict[str, Any]]:
         """
         Get artifacts for a mission (v2)
 
@@ -1589,9 +1573,7 @@ class SQLiteStore:
     # v2: PROJECT MEMORY ADAPTER (Flattening Logic)
     # ========================================================================
 
-    def _map_project_memory_to_sql(
-        self, memory: dict[str, Any], mission_id: int, timestamp: str
-    ):
+    def _map_project_memory_to_sql(self, memory: dict[str, Any], mission_id: int, timestamp: str):
         """
         Adapter: Flatten project_memory.json into SQL tables (v2)
 

@@ -100,9 +100,7 @@ class StewardCLI:
         else:
             print("   Pulse:      ❌ LOST (dashboard stale)")
 
-        print(
-            f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)"
-        )
+        print(f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)")
         print(f"   Agents:     {certified_agents} certified")
         print()
 
@@ -299,12 +297,8 @@ class StewardCLI:
                 print("✅ PASSPORT VERIFIED")
                 print("   Manifest signature valid")
                 print(f"   Anchored in Block #{block_idx}")
-                print(
-                    f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}..."
-                )
-                print(
-                    f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}"
-                )
+                print(f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}...")
+                print(f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}")
                 return 0
             else:
                 print()
@@ -382,17 +376,11 @@ class StewardCLI:
                 if event_type == "GENESIS":
                     data_json = json.loads(data)
                     anchors = data_json.get("anchors", {})
-                    print(
-                        f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}..."
-                    )
-                    print(
-                        f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}...")
+                    print(f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}...")
                 elif event_type == "PASSPORT_ISSUED":
                     data_json = json.loads(data)
-                    print(
-                        f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}...")
                     print(f"          Version:  {data_json.get('version', 'N/A')}")
 
                 print()
@@ -468,9 +456,7 @@ class StewardCLI:
                             elif "CRASHED" in status_part:
                                 status = "CRASHED"
 
-                            agents.append(
-                                {"name": agent_name, "status": status, "pid": pid}
-                            )
+                            agents.append({"name": agent_name, "status": status, "pid": pid})
 
             if len(agents) == 0:
                 print("⚠️  No agents found in OPERATIONS.md")
@@ -481,9 +467,7 @@ class StewardCLI:
             print("-" * 70)
             for agent in agents:
                 status_icon = "✅" if agent["status"] == "RUNNING" else "❌"
-                print(
-                    f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}"
-                )
+                print(f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}")
 
             print()
             print(f"Total agents: {len(agents)}")
@@ -958,9 +942,7 @@ def main():
 
     # steward logs [--tail N]
     logs_parser = subparsers.add_parser("logs", help="View kernel logs")
-    logs_parser.add_argument(
-        "--tail", type=int, default=50, help="Show last N lines (default: 50)"
-    )
+    logs_parser.add_argument("--tail", type=int, default=50, help="Show last N lines (default: 50)")
 
     # steward init <agent_id>
     init_parser = subparsers.add_parser("init", help="Initialize new agent manifest")

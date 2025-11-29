@@ -101,14 +101,7 @@ class DependencyManager:
 
         for i, dep in enumerate(deps):
             # Extract package name from dep string (handle >=, ==, ~=, etc.)
-            dep_name = (
-                dep.split(">=")[0]
-                .split("==")[0]
-                .split("~=")[0]
-                .split("<")[0]
-                .split(">")[0]
-                .strip()
-            )
+            dep_name = dep.split(">=")[0].split("==")[0].split("~=")[0].split("<")[0].split(">")[0].strip()
             if dep_name.lower() == package_lower:
                 existing_index = i
                 break
@@ -139,14 +132,7 @@ class DependencyManager:
         package_lower = package.lower()
 
         for i, dep in enumerate(deps):
-            dep_name = (
-                dep.split(">=")[0]
-                .split("==")[0]
-                .split("~=")[0]
-                .split("<")[0]
-                .split(">")[0]
-                .strip()
-            )
+            dep_name = dep.split(">=")[0].split("==")[0].split("~=")[0].split("<")[0].split(">")[0].strip()
             if dep_name.lower() == package_lower:
                 removed_dep = deps.pop(i)
                 logger.info(f"📦 Removed dependency: {removed_dep}")
@@ -212,14 +198,7 @@ class DependencyManager:
         deps = self.get_dependencies()
 
         for dep in deps:
-            dep_name = (
-                dep.split(">=")[0]
-                .split("==")[0]
-                .split("~=")[0]
-                .split("<")[0]
-                .split(">")[0]
-                .strip()
-            )
+            dep_name = dep.split(">=")[0].split("==")[0].split("~=")[0].split("<")[0].split(">")[0].strip()
             if dep_name.lower() == package_lower:
                 return True
 

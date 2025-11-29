@@ -165,9 +165,7 @@ class PranaInitializer:
             # All agents should be in GRIHASTHA (active) for Day 1
             for agent_id in registry.get_all_agents():
                 ashrama = registry.get_agent_ashrama(agent_id)
-                logger.info(
-                    f"      {agent_id.upper()}: {ashrama.value if ashrama else 'UNKNOWN'}"
-                )
+                logger.info(f"      {agent_id.upper()}: {ashrama.value if ashrama else 'UNKNOWN'}")
 
             logger.info("   ✅ Vedic system initialized")
             return True
@@ -187,9 +185,7 @@ class PranaInitializer:
                 self.kernel.daily_ritual = DailyRitual(self.kernel)
                 logger.info("   ✅ Daily Ritual attached to kernel")
             else:
-                logger.warning(
-                    "   ⚠️  Kernel not available, Daily Ritual in dry-run mode"
-                )
+                logger.warning("   ⚠️  Kernel not available, Daily Ritual in dry-run mode")
 
             logger.info("   ✅ Daily Ritual activated")
             return True

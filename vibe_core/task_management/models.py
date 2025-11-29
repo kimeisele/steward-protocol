@@ -34,9 +34,7 @@ class Task:
     subtasks: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     # Topology-aware routing fields
-    topology_layer: Optional[str] = (
-        None  # Bhu Mandala layer (BRAHMALOKA|JANALOKA|...|BHURLOKA)
-    )
+    topology_layer: Optional[str] = None  # Bhu Mandala layer (BRAHMALOKA|JANALOKA|...|BHURLOKA)
     varna: Optional[str] = None  # Vedic class (BRAHMANA|KSHATRIYA|VAISHYA|SHUDRA)
     routing_priority: Optional[int] = None  # MilkOcean priority (0-3)
     roadmap_id: Optional[str] = None  # Which roadmap this belongs to
@@ -51,9 +49,7 @@ class Task:
             "priority": self.priority,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "assignee": self.assignee,
             "tags": self.tags,
             "subtasks": self.subtasks,

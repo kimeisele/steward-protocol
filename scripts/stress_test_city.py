@@ -47,9 +47,7 @@ from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.lineage import LineageChain, LineageEventType
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("STRESS_TEST")
 
 
@@ -246,9 +244,7 @@ def stress_test_city():
 
             # Check for process crashes
             if alive_now < alive_processes:
-                print(
-                    f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died"
-                )
+                print(f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died")
 
         print("         ✅ Stress duration complete")
 

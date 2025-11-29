@@ -51,9 +51,7 @@ class TidyTool:
         r"^debug_": "_archive/quarantine/",
     }
 
-    def __init__(
-        self, root_path: Optional[Path] = None, steward_path: Optional[Path] = None
-    ):
+    def __init__(self, root_path: Optional[Path] = None, steward_path: Optional[Path] = None):
         """
         Initialize TidyTool.
 
@@ -86,9 +84,7 @@ class TidyTool:
 
             # Find the Tidy Protocols section
             if "## 🧹 Tidy Protocols" not in content:
-                logger.warning(
-                    "⚠️  Tidy Protocols section not found, using default rules"
-                )
+                logger.warning("⚠️  Tidy Protocols section not found, using default rules")
                 return self.DEFAULT_RULES
 
             # Extract organization rules block
@@ -194,9 +190,7 @@ class TidyTool:
                 return True
             else:
                 # Fallback to regular move if git mv fails
-                logger.warning(
-                    f"⚠️  git mv failed ({result.stderr.decode()}), falling back to regular move"
-                )
+                logger.warning(f"⚠️  git mv failed ({result.stderr.decode()}), falling back to regular move")
                 if source.exists():
                     source.rename(dest)
                 return True

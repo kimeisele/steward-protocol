@@ -28,9 +28,7 @@ class CardGenerator:
         if not Image:
             logger.warning("⚠️ Pillow not installed. Card generation disabled.")
 
-    def generate_card(
-        self, agent_data: Dict[str, Any], tier_info: Dict[str, Any]
-    ) -> str:
+    def generate_card(self, agent_data: Dict[str, Any], tier_info: Dict[str, Any]) -> str:
         """
         Draw a trading card.
 
@@ -59,9 +57,7 @@ class CardGenerator:
 
         # Border (Tier Color)
         border_width = 10
-        draw.rectangle(
-            [0, 0, width - 1, height - 1], outline=tier_color, width=border_width
-        )
+        draw.rectangle([0, 0, width - 1, height - 1], outline=tier_color, width=border_width)
 
         # Inner Frame
         draw.rectangle([20, 20, width - 20, height - 20], outline=(50, 50, 60), width=2)
@@ -83,9 +79,7 @@ class CardGenerator:
 
         # Tier Badge
         badge_y = 200
-        draw.rectangle(
-            [40, badge_y, 360, badge_y + 60], fill=(30, 30, 35), outline=tier_color
-        )
+        draw.rectangle([40, badge_y, 360, badge_y + 60], fill=(30, 30, 35), outline=tier_color)
         draw.text(
             (60, badge_y + 15),
             f"TIER: {tier_name.upper()}",

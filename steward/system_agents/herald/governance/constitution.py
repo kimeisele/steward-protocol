@@ -42,9 +42,7 @@ class GovernanceContract(ABC):
     """Abstract base class for all governance contracts."""
 
     @abstractmethod
-    def validate(
-        self, content: str, platform: Optional[str] = None
-    ) -> ValidationResult:
+    def validate(self, content: str, platform: Optional[str] = None) -> ValidationResult:
         """
         Validate content against governance rules.
 
@@ -198,9 +196,7 @@ class HeraldConstitution(GovernanceContract):
         # Load the constitutional text dynamically
         self._load_constitution_file()
 
-        logger.info(
-            "🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)"
-        )
+        logger.info("🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)")
         logger.info(f"📜 Constitutional Authority: {self._CONSTITUTION_PATH}")
 
     @staticmethod
@@ -236,16 +232,12 @@ class HeraldConstitution(GovernanceContract):
                     logger.info(f"✅ CONSTITUTION.md loaded from ENV VAR: {path}")
                     return constitution_text
                 except IOError as e:
-                    logger.error(
-                        f"❌ Could not read CONSTITUTION.md at ENV path {path}: {e}"
-                    )
+                    logger.error(f"❌ Could not read CONSTITUTION.md at ENV path {path}: {e}")
                     raise FileNotFoundError(
                         f"Failed to read CONSTITUTION.md from HERALD_CONSTITUTION_PATH: {env_path}"
                     ) from e
             else:
-                raise FileNotFoundError(
-                    f"HERALD_CONSTITUTION_PATH points to non-existent file: {env_path}"
-                )
+                raise FileNotFoundError(f"HERALD_CONSTITUTION_PATH points to non-existent file: {env_path}")
 
         # Priority 2-4: Fallback paths (for local dev and standard deployments)
         possible_paths = [
@@ -280,9 +272,7 @@ class HeraldConstitution(GovernanceContract):
         if constitution_text is None:
             error_msg = (
                 "❌ CRITICAL: CONSTITUTION.md not found!\n"
-                f"Searched paths:\n"
-                + "\n".join([f"  - {p}" for p in possible_paths])
-                + "\n"
+                f"Searched paths:\n" + "\n".join([f"  - {p}" for p in possible_paths]) + "\n"
                 "\nSet HERALD_CONSTITUTION_PATH environment variable to override.\n"
                 "Example: export HERALD_CONSTITUTION_PATH=/path/to/CONSTITUTION.md\n"
                 "The system cannot initialize without its constitutional foundation.\n"
@@ -342,9 +332,7 @@ class HeraldConstitution(GovernanceContract):
         # 3. Check hype level (warning or violation)
         hype_score = self._calculate_hype_score(content)
         if hype_score > self.MAX_HYPE_SCORE:
-            violations.append(
-                f"Hype score too high: {hype_score}/10 (max {self.MAX_HYPE_SCORE})"
-            )
+            violations.append(f"Hype score too high: {hype_score}/10 (max {self.MAX_HYPE_SCORE})")
 
         # 4. Check for required elements
         element_warnings = self._check_required_elements(content)
@@ -450,9 +438,7 @@ class HeraldConstitution(GovernanceContract):
         ]
         has_technical = any(kw in content_lower for kw in technical_keywords)
         if not has_technical:
-            warnings.append(
-                "Missing technical context - content should explain technical details"
-            )
+            warnings.append("Missing technical context - content should explain technical details")
 
         # Check for honest assessment
         honest_indicators = [
@@ -473,9 +459,7 @@ class HeraldConstitution(GovernanceContract):
         ]
         has_honesty = any(ind in content_lower for ind in honest_indicators)
         if not has_honesty:
-            warnings.append(
-                "Missing honest assessment - content should admit limitations"
-            )
+            warnings.append("Missing honest assessment - content should admit limitations")
 
         return warnings
 
@@ -484,9 +468,7 @@ class HeraldConstitution(GovernanceContract):
         content_lower = content.lower()
 
         # Count technical terms
-        tech_term_count = sum(
-            1 for term in self.REQUIRED_TECHNICAL_TERMS if term in content_lower
-        )
+        tech_term_count = sum(1 for term in self.REQUIRED_TECHNICAL_TERMS if term in content_lower)
 
         if tech_term_count < 1:
             return "Insufficient technical depth - must contain technical terminology"
@@ -505,15 +487,13 @@ class HeraldConstitution(GovernanceContract):
         if "max_length" in constraints:
             if len(content) > constraints["max_length"]:
                 violations.append(
-                    f"Content too long for {platform}: "
-                    f"{len(content)} chars (max {constraints['max_length']})"
+                    f"Content too long for {platform}: " f"{len(content)} chars (max {constraints['max_length']})"
                 )
 
         if "min_length" in constraints:
             if len(content) < constraints["min_length"]:
                 violations.append(
-                    f"Content too short for {platform}: "
-                    f"{len(content)} chars (min {constraints['min_length']})"
+                    f"Content too short for {platform}: " f"{len(content)} chars (min {constraints['min_length']})"
                 )
 
         # Check for required tags (Twitter)
@@ -547,9 +527,7 @@ class HeraldConstitution(GovernanceContract):
         # Check if media dict is present
         if not media:
             warnings.append("No media asset provided (optional)")
-            return ValidationResult(
-                is_valid=True, violations=violations, warnings=warnings
-            )
+            return ValidationResult(is_valid=True, violations=violations, warnings=warnings)
 
         # 1. Check alt_text for banned phrases (accessibility + compliance)
         if "alt_text" in media:
@@ -563,9 +541,7 @@ class HeraldConstitution(GovernanceContract):
         if "asset_type" in media:
             asset_type = media["asset_type"]
             if asset_type not in valid_types:
-                violations.append(
-                    f"Invalid asset_type: {asset_type} (must be one of {valid_types})"
-                )
+                violations.append(f"Invalid asset_type: {asset_type} (must be one of {valid_types})")
 
         # 3. Check keywords don't include banned terms
         if "keywords" in media:
@@ -573,9 +549,7 @@ class HeraldConstitution(GovernanceContract):
             for keyword in keywords:
                 for banned in self.BANNED_PHRASES:
                     if banned.lower() in keyword.lower():
-                        violations.append(
-                            f"Media keyword contains banned phrase: '{keyword}' (contains '{banned}')"
-                        )
+                        violations.append(f"Media keyword contains banned phrase: '{keyword}' (contains '{banned}')")
 
         is_valid = len(violations) == 0
         return ValidationResult(

@@ -143,13 +143,9 @@ class JusticeLedger(VibeLedger):
 
         # Count mercy granted
         verdicts = [e for e in events if e.get("event_type") == "VERDICT_ISSUED"]
-        mercy_count = sum(
-            1 for v in verdicts if v.get("verdict_type") == "mercy_granted"
-        )
+        mercy_count = sum(1 for v in verdicts if v.get("verdict_type") == "mercy_granted")
         upheld_count = sum(1 for v in verdicts if v.get("verdict_type") == "upheld")
-        conditional_count = sum(
-            1 for v in verdicts if v.get("verdict_type") == "mercy_conditional"
-        )
+        conditional_count = sum(1 for v in verdicts if v.get("verdict_type") == "mercy_conditional")
 
         return {
             "total_events": len(events),

@@ -160,9 +160,7 @@ def load_agi_context():
             agi_def = config.get("agi_definition", {})
             return {
                 "acronym": agi_def.get("acronym", "Artificial Governed Intelligence"),
-                "core_principle": agi_def.get(
-                    "core_principle", "Intelligence without Governance is just noise."
-                ),
+                "core_principle": agi_def.get("core_principle", "Intelligence without Governance is just noise."),
                 "technical_definition": agi_def.get(
                     "technical_definition",
                     "Capability + Cryptographic Identity + Accountability",
@@ -276,18 +274,10 @@ def generate_manifesto():
             f.write(manifesto_text)
             f.write("\n\n---\n\n")
             f.write("## Proof of Authenticity\n\n")
-            f.write(
-                f"This manifesto was generated autonomously by HERALD's content generation system.\n"
-            )
-            f.write(
-                f"It uses the Steward Protocol for cryptographic identity verification.\n"
-            )
-            f.write(
-                f"Every principle articulated here reflects HERALD's internal governance rules.\n"
-            )
-            f.write(
-                f"This is not marketing copy. This is self-articulation of governed intelligence.\n"
-            )
+            f.write(f"This manifesto was generated autonomously by HERALD's content generation system.\n")
+            f.write(f"It uses the Steward Protocol for cryptographic identity verification.\n")
+            f.write(f"Every principle articulated here reflects HERALD's internal governance rules.\n")
+            f.write(f"This is not marketing copy. This is self-articulation of governed intelligence.\n")
 
         print(f"✅ Manifesto written to: {output_path.relative_to(Path.cwd())}")
         print(f"   Size: {output_path.stat().st_size} bytes")

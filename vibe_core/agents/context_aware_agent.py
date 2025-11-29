@@ -157,9 +157,7 @@ class ContextAwareAgent(VibeAgent):
             )
 
         # Merge context if provided
-        full_context = (
-            self.get_context() if context is None else {**self.get_context(), **context}
-        )
+        full_context = self.get_context() if context is None else {**self.get_context(), **context}
 
         # Add agent context
         full_context["agent_id"] = self.agent_id
@@ -304,9 +302,7 @@ class OfflineCapableMixin:
 
     _degradation_chain: Optional[DegradationChain] = None
 
-    def init_offline_capability(
-        self, degradation_chain: Optional[DegradationChain] = None
-    ):
+    def init_offline_capability(self, degradation_chain: Optional[DegradationChain] = None):
         """
         Initialize offline capability with optional DegradationChain.
 

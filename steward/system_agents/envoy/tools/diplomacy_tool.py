@@ -62,9 +62,7 @@ class DiplomacyTool:
             # Try to get token from environment
             token = os.getenv("GITHUB_TOKEN")
             if not token:
-                print(
-                    "⚠️  No GITHUB_TOKEN found. Using unauthenticated access (limited)."
-                )
+                print("⚠️  No GITHUB_TOKEN found. Using unauthenticated access (limited).")
                 g = Github()
             else:
                 g = Github(token)
@@ -117,9 +115,7 @@ class DiplomacyTool:
             "description": repo_info["description"],
             "stars": repo_info["stars"],
             "topics": repo_info.get("topics", []),
-            "tech_stack": (
-                "LLM-based" if "llm" in str(repo_info.get("topics", [])) else "Unknown"
-            ),
+            "tech_stack": ("LLM-based" if "llm" in str(repo_info.get("topics", [])) else "Unknown"),
             "notable_features": ["Autonomous operation", "Agent framework"],
         }
 
