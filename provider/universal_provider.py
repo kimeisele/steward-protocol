@@ -229,6 +229,15 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  LLM Engine Adapter initialization failed: {e}")
 
+        # === DEGRADATION CHAIN (OFFLINE-FIRST) ===
+        self.degradation_chain = None
+        try:
+            from vibe_core.llm.degradation_chain import DegradationChain
+            self.degradation_chain = DegradationChain()
+            logger.info(f"🔄 Degradation Chain initialized (level: {self.degradation_chain.current_level.value})")
+        except Exception as e:
+            logger.warning(f"⚠️  Degradation Chain unavailable: {e}")
+
         logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initialized with Strategy Pattern routing (GAD-7000)")
 
     async def resolve_intent(self, user_input: str) -> IntentVector:
@@ -582,7 +591,26 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  Legacy LLM engine failed: {e}")
 
-        # Ultimate fallback: Static response
+        # Use DegradationChain for graceful offline fallback
+        if self.degradation_chain:
+            try:
+                deg_response = self.degradation_chain.respond(
+                    user_input=user_msg,
+                    semantic_confidence=vector.confidence if hasattr(vector, 'confidence') else 0.5,
+                    detected_intent="chat"
+                )
+                return {
+                    "status": "success",
+                    "summary": deg_response.content,
+                    "path": f"degradation:{deg_response.fallback_used}",
+                    "intent": "chat",
+                    "degradation_level": deg_response.level.value,
+                    "user_guidance": deg_response.user_guidance
+                }
+            except Exception as e:
+                logger.warning(f"DegradationChain failed: {e}")
+
+        # Ultimate fallback: Static response (only if DegradationChain unavailable)
         response = (
             f"**🤖 ENVOY:** I hear you. You said: *'{user_msg}'*\n\n"
             f"I'm ready to assist with **Governance**, **Creation**, or **System Ops**.\n"

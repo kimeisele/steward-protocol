@@ -825,6 +825,38 @@ class StewardCLI:
             return 1
 
     # =========================================================================
+    # COMMAND: steward install-llm
+    # =========================================================================
+
+    def cmd_install_llm(self) -> int:
+        """Download and install local LLM (~400MB)."""
+        print("LOCAL LLM INSTALLATION")
+        print("=" * 70)
+        print()
+
+        try:
+            from vibe_core.llm.local_llama_provider import download_default_model
+
+            print("Model: qwen2.5-0.5b-instruct-q4_k_m.gguf")
+            print("Size:  ~400MB")
+            print()
+            print("Downloading from HuggingFace...")
+
+            model_path = download_default_model()
+
+            print()
+            print(f"✅ Model installed: {model_path}")
+            return 0
+
+        except ImportError as e:
+            print(f"❌ Missing dependency: {e}")
+            print("Install: pip install 'steward-protocol[local-llm]'")
+            return 1
+        except Exception as e:
+            print(f"❌ Installation failed: {e}")
+            return 1
+
+    # =========================================================================
     # COMMAND: steward delegate
     # =========================================================================
 
@@ -922,6 +954,9 @@ def main():
     # steward introspect
     subparsers.add_parser("introspect", help="Show detailed kernel state")
 
+    # steward install-llm
+    subparsers.add_parser("install-llm", help="Download local LLM (~400MB)")
+
     # steward delegate <agent_id> <task>
     delegate_parser = subparsers.add_parser("delegate", help="Submit task to agent")
     delegate_parser.add_argument("agent_id", help="Agent ID to delegate to")
@@ -953,6 +988,8 @@ def main():
         return cli.cmd_discover()
     elif args.command == "introspect":
         return cli.cmd_introspect()
+    elif args.command == "install-llm":
+        return cli.cmd_install_llm()
     elif args.command == "delegate":
         return cli.cmd_delegate(args.agent_id, args.task)
     else:
