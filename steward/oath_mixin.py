@@ -7,7 +7,7 @@ Usage:
         def __init__(self):
             super().__init__()
             self.oath_mixin_init(self.agent_id)
-            
+
     agent = MyAgent()
     await agent.swear_constitutional_oath()
 """
@@ -24,7 +24,7 @@ logger = logging.getLogger("OATH_MIXIN")
 class OathMixin:
     """
     Adds Constitutional Oath capabilities to VibeAgent subclasses.
-    
+
     Provides:
     - swear_constitutional_oath(): Execute the Genesis Ceremony
     - verify_agent_oath(): Confirm agent is still bound to current Constitution
@@ -40,20 +40,22 @@ class OathMixin:
     async def swear_constitutional_oath(self) -> Dict[str, Any]:
         """
         Execute the Genesis Ceremony: Agent binds itself to Constitution.
-        
+
         Steps:
         1. Compute hash of Constitution
         2. Sign hash with agent's identity (if available)
         3. Create oath event
         4. Record in ledger
-        
+
         Returns:
             Oath event dictionary
-            
+
         Raises:
             RuntimeError: If oath cannot be sworn
         """
-        logger.info(f"🕉️  GENESIS CEREMONY: {self.agent_id} swearing Constitutional Oath...")
+        logger.info(
+            f"🕉️  GENESIS CEREMONY: {self.agent_id} swearing Constitutional Oath..."
+        )
 
         try:
             # Step 1: Compute Constitution hash
@@ -66,7 +68,7 @@ class OathMixin:
             self.oath_event = ConstitutionalOath.create_oath_event(
                 agent_id=self.agent_id,
                 constitution_hash=constitution_hash,
-                signature=signature
+                signature=signature,
             )
 
             # Step 4: Record in ledger (if kernel available)
@@ -84,17 +86,15 @@ class OathMixin:
     async def _sign_oath(self, constitution_hash: str) -> str:
         """
         Sign the constitution hash with agent's identity.
-        
+
         Tries multiple methods:
         1. If agent has identity_tool attribute -> use it
         2. Otherwise -> use generic signature
         """
         try:
             # Check if agent has identity_tool
-            if hasattr(self, 'identity_tool') and self.identity_tool:
-                signature = self.identity_tool.sign_artifact(
-                    constitution_hash.encode()
-                )
+            if hasattr(self, "identity_tool") and self.identity_tool:
+                signature = self.identity_tool.sign_artifact(constitution_hash.encode())
                 logger.info(f"✅ Oath signed with {self.agent_id}'s private key")
                 return signature
         except Exception as e:
@@ -108,12 +108,12 @@ class OathMixin:
     async def _record_oath_in_ledger(self):
         """
         Record the oath in the immutable ledger.
-        
+
         Tries to send event to kernel ledger if available.
         """
         try:
             # Check if agent has access to kernel
-            if hasattr(self, 'kernel') and self.kernel:
+            if hasattr(self, "kernel") and self.kernel:
                 # This would be implemented in the kernel's ledger system
                 logger.info(f"📖 Recording oath in kernel ledger...")
                 # kernel.ledger.append(self.oath_event)
@@ -123,10 +123,10 @@ class OathMixin:
     def verify_agent_oath(self) -> tuple[bool, str]:
         """
         Verify that agent is still bound to current Constitution.
-        
+
         Returns:
             Tuple of (is_valid, reason_message)
-            
+
         Raises:
             RuntimeError: If oath not sworn
         """
@@ -134,8 +134,7 @@ class OathMixin:
             return False, f"{self.agent_id} has not sworn Constitutional Oath"
 
         is_valid, reason = ConstitutionalOath.verify_oath(
-            self.oath_event,
-            getattr(self, 'identity_tool', None)
+            self.oath_event, getattr(self, "identity_tool", None)
         )
 
         return is_valid, reason
@@ -143,7 +142,7 @@ class OathMixin:
     async def assert_constitutional_compliance(self) -> bool:
         """
         Fail-fast check: Agent must be oath-bound to proceed.
-        
+
         Raises:
             RuntimeError: If agent not properly oath-sworn
         """
@@ -156,8 +155,6 @@ class OathMixin:
 
         is_valid, reason = self.verify_agent_oath()
         if not is_valid:
-            raise RuntimeError(
-                f"CONSTITUTIONAL_COMPLIANCE_FAILED: {reason}"
-            )
+            raise RuntimeError(f"CONSTITUTIONAL_COMPLIANCE_FAILED: {reason}")
 
         return True

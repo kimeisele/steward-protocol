@@ -76,13 +76,17 @@ class StatusBar:
             if self.steward_json.exists():
                 with open(self.steward_json) as f:
                     config = json.load(f)
-                    if "preferences" in config and "operator_tone" in config["preferences"]:
+                    if (
+                        "preferences" in config
+                        and "operator_tone" in config["preferences"]
+                    ):
                         return config["preferences"]["operator_tone"]
         except Exception:
             pass
 
         # ARCH-063: Check environment variable (VIBE_OPERATOR_TONE)
         import os
+
         env_tone = os.environ.get("VIBE_OPERATOR_TONE")
         if env_tone:
             return env_tone

@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from watchman.cartridge_main import WatchmanCartridge
 from civic.tools.economy import CivicBank
 
+
 def main():
     print("\n" + "=" * 80)
     print("🔐 SYSTEM INTEGRITY AUDIT - WATCHMAN PATROL")
@@ -39,25 +40,25 @@ def main():
     print(f"Agents Frozen: {len(report['agents_frozen'])}")
     print(f"Agents Thawed (Redeemed): {len(report['agents_thawed'])}")
 
-    if report['violations_found'] > 0:
+    if report["violations_found"] > 0:
         print("\n🚨 VIOLATIONS DETAIL:")
-        for v in report['details']:
+        for v in report["details"]:
             print(f"\n   Agent: {v['agent_id'].upper()}")
             print(f"   File: {v['file']}:{v['line']}")
             print(f"   Type: {v['pattern']}")
             print(f"   Code: {v['code']}")
             print(f"   Reason: {v['reason']}")
 
-    if report['agents_frozen']:
+    if report["agents_frozen"]:
         print(f"\n❄️ FROZEN AGENTS:")
-        for agent in report['agents_frozen']:
+        for agent in report["agents_frozen"]:
             print(f"   - {agent.upper()}")
             balance = bank.get_balance(agent)
             print(f"     Balance: {balance} credits (LOCKED)")
 
-    if report['agents_thawed']:
+    if report["agents_thawed"]:
         print(f"\n🔥 THAWED AGENTS (Redeemed):")
-        for agent in report['agents_thawed']:
+        for agent in report["agents_thawed"]:
             print(f"   - {agent.upper()}")
             balance = bank.get_balance(agent)
             print(f"     Balance: {balance} credits (UNLOCKED)")
@@ -74,21 +75,24 @@ def main():
     print("\n📜 RECENT LEDGER ENTRIES:")
     audit = bank.audit_trail(limit=5)
     for tx in audit:
-        sender = tx['sender_id']
-        receiver = tx['receiver_id']
-        amount = tx['amount']
-        reason = tx['reason']
+        sender = tx["sender_id"]
+        receiver = tx["receiver_id"]
+        amount = tx["amount"]
+        reason = tx["reason"]
         print(f"   {sender:>12s} → {receiver:<12s} | {amount:>5d} | {reason}")
 
     print("\n" + "=" * 80)
-    if report['agents_frozen']:
-        print(f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations")
+    if report["agents_frozen"]:
+        print(
+            f"⚠️ CRITICAL: {len(report['agents_frozen'])} agents FROZEN for violations"
+        )
         print("These agents cannot execute until violations are resolved.")
     else:
         print("✅ GREEN LIGHT: System is clean. All agents operational.")
     print("=" * 80 + "\n")
 
-    return 0 if report['status'] == 'clean' else 1
+    return 0 if report["status"] == "clean" else 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

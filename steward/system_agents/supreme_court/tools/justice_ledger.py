@@ -62,7 +62,12 @@ class JusticeLedger(VibeLedger):
 
         logger.debug(f"⚖️  LEDGER: {event.get('event_type')}")
 
-    def record_event(self, event_type_or_dict, agent_id: Optional[str] = None, details: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    def record_event(
+        self,
+        event_type_or_dict,
+        agent_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
         """
         Record an event in the justice ledger.
 
@@ -80,7 +85,7 @@ class JusticeLedger(VibeLedger):
                 "event_type": event_type_or_dict,
                 "agent_id": agent_id,
                 "details": details,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
             self._append_event(full_event)
             return f"EVT-{len(self.get_events())}"  # Return event_id
@@ -138,9 +143,13 @@ class JusticeLedger(VibeLedger):
 
         # Count mercy granted
         verdicts = [e for e in events if e.get("event_type") == "VERDICT_ISSUED"]
-        mercy_count = sum(1 for v in verdicts if v.get("verdict_type") == "mercy_granted")
+        mercy_count = sum(
+            1 for v in verdicts if v.get("verdict_type") == "mercy_granted"
+        )
         upheld_count = sum(1 for v in verdicts if v.get("verdict_type") == "upheld")
-        conditional_count = sum(1 for v in verdicts if v.get("verdict_type") == "mercy_conditional")
+        conditional_count = sum(
+            1 for v in verdicts if v.get("verdict_type") == "mercy_conditional"
+        )
 
         return {
             "total_events": len(events),
@@ -149,11 +158,11 @@ class JusticeLedger(VibeLedger):
                 "mercy_granted": mercy_count,
                 "upheld": upheld_count,
                 "conditional": conditional_count,
-                "total": len(verdicts)
+                "total": len(verdicts),
             },
             "mercy_rate": mercy_count / len(verdicts) if verdicts else 0.0,
             "first_event": events[0]["timestamp"] if events else None,
-            "last_event": events[-1]["timestamp"] if events else None
+            "last_event": events[-1]["timestamp"] if events else None,
         }
 
     def verify_ledger_integrity(self) -> bool:
@@ -175,30 +184,36 @@ class JusticeLedger(VibeLedger):
 
     def record_start(self, task) -> None:
         """Record task start (VibeLedger interface)"""
-        self.record_event({
-            "event_type": "TASK_START",
-            "task_id": getattr(task, "task_id", None),
-            "agent_id": getattr(task, "agent_id", "unknown"),
-            "payload": getattr(task, "payload", None)
-        })
+        self.record_event(
+            {
+                "event_type": "TASK_START",
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+                "payload": getattr(task, "payload", None),
+            }
+        )
 
     def record_completion(self, task, result: Any) -> None:
         """Record task completion (VibeLedger interface)"""
-        self.record_event({
-            "event_type": "TASK_COMPLETED",
-            "task_id": getattr(task, "task_id", None),
-            "agent_id": getattr(task, "agent_id", "unknown"),
-            "result": result
-        })
+        self.record_event(
+            {
+                "event_type": "TASK_COMPLETED",
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+                "result": result,
+            }
+        )
 
     def record_failure(self, task, error: str) -> None:
         """Record task failure (VibeLedger interface)"""
-        self.record_event({
-            "event_type": "TASK_FAILED",
-            "task_id": getattr(task, "task_id", None),
-            "agent_id": getattr(task, "agent_id", "unknown"),
-            "error": error
-        })
+        self.record_event(
+            {
+                "event_type": "TASK_FAILED",
+                "task_id": getattr(task, "task_id", None),
+                "agent_id": getattr(task, "agent_id", "unknown"),
+                "error": error,
+            }
+        )
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Query task result (VibeLedger interface)"""

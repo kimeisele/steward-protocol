@@ -17,7 +17,13 @@ BLOCKER #2: 3-Layer Architecture - Canonical Protocol Layer
 """
 
 from .agent import VibeAgent, AgentManifest, AgentResponse, Capability
-from .ledger import VibeLedger, VibeScheduler, VibeKernel, ManifestRegistry, KernelStatus
+from .ledger import (
+    VibeLedger,
+    VibeScheduler,
+    VibeKernel,
+    ManifestRegistry,
+    KernelStatus,
+)
 from .registry import ManifestRegistry as _ManifestRegistry  # Avoid duplicate
 from .scheduler import VibeScheduler as _VibeScheduler  # Avoid duplicate
 

@@ -17,6 +17,7 @@ sys.path.insert(0, str(project_root))
 
 from vibe_core.dependency_manager import DependencyManager
 
+
 def migrate_herald_dependencies():
     """Migrate Herald dependencies from requirements.txt to pyproject.toml."""
 
@@ -60,6 +61,7 @@ def migrate_herald_dependencies():
     print(f"\n✅ Migration complete!")
     print(f"📦 pyproject.toml now contains all Herald dependencies")
     print(f"\n💡 Next step: Delete steward/system_agents/herald/requirements.txt")
+
 
 if __name__ == "__main__":
     migrate_herald_dependencies()

@@ -22,14 +22,16 @@ logger = logging.getLogger("VERDICT_TOOL")
 
 class VerdictType(str, Enum):
     """Types of verdicts the court can issue"""
-    MERCY_GRANTED = "mercy_granted"         # Override violation, restore agent
-    MERCY_CONDITIONAL = "mercy_conditional" # Override with conditions (probation)
-    UPHELD = "upheld"                       # Violation stands, agent terminated
+
+    MERCY_GRANTED = "mercy_granted"  # Override violation, restore agent
+    MERCY_CONDITIONAL = "mercy_conditional"  # Override with conditions (probation)
+    UPHELD = "upheld"  # Violation stands, agent terminated
 
 
 @dataclass
 class Verdict:
     """Record of a court verdict"""
+
     verdict_id: str
     appeal_id: str
     agent_id: str
@@ -69,7 +71,7 @@ class VerdictTool:
         verdict_type: VerdictType,
         justification: str = "",
         override_auditor: bool = False,
-        conditions: Optional[List[str]] = None
+        conditions: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Issue a verdict on an appeal.
@@ -92,7 +94,9 @@ class VerdictTool:
         if verdict_type == VerdictType.MERCY_GRANTED:
             logger.info(f"🛡️  MERCY GRANTED: Verdict {verdict_id} for agent {agent_id}")
         elif verdict_type == VerdictType.MERCY_CONDITIONAL:
-            logger.info(f"⚠️  CONDITIONAL MERCY: Verdict {verdict_id} for agent {agent_id}")
+            logger.info(
+                f"⚠️  CONDITIONAL MERCY: Verdict {verdict_id} for agent {agent_id}"
+            )
         else:
             logger.info(f"💀 UPHELD: Verdict {verdict_id} for agent {agent_id}")
 
@@ -100,12 +104,16 @@ class VerdictTool:
             verdict_id=verdict_id,
             appeal_id=appeal_id,
             agent_id=agent_id,
-            verdict_type=verdict_type.value if isinstance(verdict_type, VerdictType) else verdict_type,
+            verdict_type=(
+                verdict_type.value
+                if isinstance(verdict_type, VerdictType)
+                else verdict_type
+            ),
             justification=justification,
             override_auditor=override_auditor,
             conditions=conditions or [],
             issued_at=now,
-            issued_by="supreme_court"
+            issued_by="supreme_court",
         )
 
         # Persist verdict
@@ -134,7 +142,11 @@ class VerdictTool:
     def get_mercy_count(self) -> int:
         """Count how many times mercy has been granted."""
         verdicts = self._load_verdicts()
-        return sum(1 for v in verdicts if v.get("verdict_type") == VerdictType.MERCY_GRANTED.value)
+        return sum(
+            1
+            for v in verdicts
+            if v.get("verdict_type") == VerdictType.MERCY_GRANTED.value
+        )
 
     def get_verdicts_that_override(self) -> List[Dict[str, Any]]:
         """Get all verdicts that override AUDITOR decisions."""

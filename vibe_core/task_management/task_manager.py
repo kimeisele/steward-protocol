@@ -49,13 +49,17 @@ class TaskManager:
         # VIMANA DUAL-CORE PERSISTENCE (GAD-3000)
         # Initialize SQLiteStore for immortal persistence
         from vibe_core.store.sqlite_store import SQLiteStore
+
         db_path = self.project_root / "data" / "vibe_agency.db"
         self.sqlite_store = SQLiteStore(str(db_path))
 
         # MilkOcean Router for task request routing (Gap 4.1 closure)
         self.milk_ocean_router = milk_ocean_router
         if not self.milk_ocean_router:
-                            self.milk_ocean_router = MilkOceanRouter()
+            try:
+                from vibe_core.routing.milk_ocean import MilkOceanRouter
+
+                self.milk_ocean_router = MilkOceanRouter()
             except ImportError:
                 # MilkOceanRouter not available, fall back to None
                 self.milk_ocean_router = None
@@ -115,8 +119,16 @@ class TaskManager:
                 # Reconstruct Task object from SQLite data
                 task = Task(
                     id=sqlite_task["id"],
-                    title=sqlite_task["description"].split(":")[0] if ":" in sqlite_task["description"] else sqlite_task["description"],
-                    description=sqlite_task["description"].split(":", 1)[1].strip() if ":" in sqlite_task["description"] else "",
+                    title=(
+                        sqlite_task["description"].split(":")[0]
+                        if ":" in sqlite_task["description"]
+                        else sqlite_task["description"]
+                    ),
+                    description=(
+                        sqlite_task["description"].split(":", 1)[1].strip()
+                        if ":" in sqlite_task["description"]
+                        else ""
+                    ),
                     status=TaskStatus(sqlite_task["status"].upper()),
                     priority=0,  # SQLite doesn't store priority, default to 0
                     assignee=None,
@@ -157,8 +169,7 @@ class TaskManager:
         try:
             with self.lock:
                 tasks_data = {
-                    task_id: task.to_dict()
-                    for task_id, task in self.tasks.items()
+                    task_id: task.to_dict() for task_id, task in self.tasks.items()
                 }
                 tasks_file.write_text(json.dumps(tasks_data, indent=2))
         except Exception as e:
@@ -172,9 +183,7 @@ class TaskManager:
         mission_file = self.config_dir / "active_mission.json"
 
         try:
-            mission_file.write_text(
-                json.dumps(self.active_mission.to_dict(), indent=2)
-            )
+            mission_file.write_text(json.dumps(self.active_mission.to_dict(), indent=2))
         except Exception as e:
             print(f"Error saving mission: {e}")
 
@@ -185,17 +194,17 @@ class TaskManager:
         # Try loading from YAML (cache layer)
         if roadmap_path.exists():
             try:
-                with open(roadmap_path, 'r') as f:
+                with open(roadmap_path, "r") as f:
                     data = yaml.safe_load(f)
 
                 self.roadmap = Roadmap(
-                    id=data['id'],
-                    name=data['name'],
-                    description=data['description'],
-                    missions=data.get('missions', []),
-                    created_at=datetime.fromisoformat(data['created_at']),
-                    updated_at=datetime.fromisoformat(data['updated_at']),
-                    metadata=data.get('metadata', {})
+                    id=data["id"],
+                    name=data["name"],
+                    description=data["description"],
+                    missions=data.get("missions", []),
+                    created_at=datetime.fromisoformat(data["created_at"]),
+                    updated_at=datetime.fromisoformat(data["updated_at"]),
+                    metadata=data.get("metadata", {}),
                 )
             except Exception as e:
                 print(f"Error loading roadmap from YAML: {e}")
@@ -216,13 +225,17 @@ class TaskManager:
                 # Load the most recent roadmap
                 latest = roadmaps[0]
                 self.roadmap = Roadmap(
-                    id=latest['id'],
-                    name=latest['name'],
-                    description=latest['description'],
-                    missions=latest.get('missions', []),
-                    created_at=datetime.fromisoformat(latest['created_at'].replace('Z', '+00:00')),
-                    updated_at=datetime.fromisoformat(latest['updated_at'].replace('Z', '+00:00')),
-                    metadata=latest.get('metadata', {})
+                    id=latest["id"],
+                    name=latest["name"],
+                    description=latest["description"],
+                    missions=latest.get("missions", []),
+                    created_at=datetime.fromisoformat(
+                        latest["created_at"].replace("Z", "+00:00")
+                    ),
+                    updated_at=datetime.fromisoformat(
+                        latest["updated_at"].replace("Z", "+00:00")
+                    ),
+                    metadata=latest.get("metadata", {}),
                 )
                 print(f"🔄 VIMANA: Hydrated roadmap '{self.roadmap.name}' from SQLite")
                 # Regenerate YAML cache
@@ -238,7 +251,7 @@ class TaskManager:
         roadmap_path = self.config_dir / "roadmap.yaml"
 
         try:
-            with open(roadmap_path, 'w') as f:
+            with open(roadmap_path, "w") as f:
                 yaml.dump(self.roadmap.to_dict(), f)
         except Exception as e:
             print(f"Error saving roadmap: {e}")
@@ -249,7 +262,7 @@ class TaskManager:
         description: str = "",
         priority: int = 0,
         assigned_agent: Optional[str] = None,
-        roadmap_id: Optional[str] = None
+        roadmap_id: Optional[str] = None,
     ) -> Task:
         """
         Add a new task with topology-aware routing and optional roadmap linking.
@@ -272,9 +285,7 @@ class TaskManager:
         task_content = f"{title}\n{description}"
 
         threat = narasimha.audit_agent(
-            agent_id="TASK_MANAGER",
-            agent_code=task_content,
-            agent_state={}
+            agent_id="TASK_MANAGER", agent_code=task_content, agent_state={}
         )
 
         if threat and threat.severity.value in ["red", "apocalypse"]:
@@ -283,7 +294,9 @@ class TaskManager:
             )
 
         # Auto-link to active roadmap if no roadmap_id provided
-        final_roadmap_id = roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+        final_roadmap_id = (
+            roadmap_id if roadmap_id else (self.roadmap.id if self.roadmap else None)
+        )
 
         task = Task(
             id=str(uuid.uuid4()),
@@ -303,21 +316,20 @@ class TaskManager:
                 routing_result = self.milk_ocean_router.process_prayer(
                     user_input=f"{title}\n{description}",
                     agent_id=assigned_agent or "TASK_MANAGER",
-                    critical=False
+                    critical=False,
                 )
 
                 # Map MilkOcean priority to routing_priority (0-3)
                 priority_map = {
-                    "BLOCKED": -1,   # Will be caught by Narasimha above
-                    "CRITICAL": 3,   # Emergency tasks
-                    "HIGH": 2,       # Pro model needed
-                    "MEDIUM": 1,     # Flash model
-                    "LOW": 0,        # Lazy queue
+                    "BLOCKED": -1,  # Will be caught by Narasimha above
+                    "CRITICAL": 3,  # Emergency tasks
+                    "HIGH": 2,  # Pro model needed
+                    "MEDIUM": 1,  # Flash model
+                    "LOW": 0,  # Lazy queue
                 }
 
                 milk_ocean_priority = priority_map.get(
-                    routing_result.get("priority", "MEDIUM"),
-                    1
+                    routing_result.get("priority", "MEDIUM"), 1
                 )
 
                 # Auto-elevate priority for CRITICAL tasks
@@ -509,7 +521,9 @@ class TaskManager:
         """Export tasks to Markdown."""
         return ExportEngine.export_to_markdown(self.tasks, output_path)
 
-    def create_roadmap(self, name: str, description: str, missions: List[str] = None) -> Roadmap:
+    def create_roadmap(
+        self, name: str, description: str, missions: List[str] = None
+    ) -> Roadmap:
         """
         Create a new roadmap.
 
@@ -527,7 +541,7 @@ class TaskManager:
             description=description,
             missions=missions or [],
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         self.roadmap = roadmap

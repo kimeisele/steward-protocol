@@ -1,5 +1,22 @@
 {
+  "steward_version": "1.0.0",
+  "agent": {
+    "id": "science",
+    "name": "SCIENCE",
+    "version": "1.0.0",
+    "class": "system_service",
+    "specialization": "INTELLIGENCE",
+    "status": "active"
+  },
+  "credentials": {
+    "mandate": "External intelligence module via web research",
+    "constraints": [],
+    "prime_directive": "Serve the system"
+  },
   "capabilities": {
+    "interfaces": [
+      "kernel"
+    ],
     "operations": [
       {
         "description": "research operation",
@@ -20,14 +37,5 @@
     "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
     "issued_at": "2025-11-28T12:07:50.342805Z",
     "issuer": "passport_office"
-  },
-  "identity": {
-    "agent_id": "science",
-    "name": "SCIENCE"
-  },
-  "specs": {
-    "description": "External intelligence module via web research",
-    "domain": "INTELLIGENCE",
-    "version": "1.0.0"
   }
 }

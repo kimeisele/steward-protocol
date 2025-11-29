@@ -53,7 +53,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Builder agent: manifests code and scaffolds new agents",
             domain="ENGINEERING",
-            capabilities=["manifest_reality", "agent_scaffolding", "code_generation"]
+            capabilities=["manifest_reality", "agent_scaffolding", "code_generation"],
         )
 
         logger.info("📐 THE ENGINEER is online.")
@@ -76,7 +76,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -133,7 +133,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
                 logger.info(f"🧠 Asking builder to generate code for: {feature_spec}")
                 code_content = self.builder.generate_agent_code(
                     name=os.path.splitext(os.path.basename(relative_path))[0],
-                    mission=feature_spec
+                    mission=feature_spec,
                 )
                 logger.info(f"✅ Builder generated code ({len(code_content)} chars)")
             except Exception as e:
@@ -164,7 +164,7 @@ def run():
                 "path": full_path,  # Absolute path for Auditor
                 "sandbox": True,
                 "feature": feature_spec,
-                "generator": "Brain" if use_brain else "Payload"
+                "generator": "Brain" if use_brain else "Payload",
             }
         except Exception as e:
             logger.error(f"❌ manifest_reality failed: {e}")
@@ -192,7 +192,10 @@ def run():
             # 2. Generate Code
             code = self.builder.generate_agent_code(name, mission)
             if not code:
-                return {"status": "error", "reason": f"Code generation failed for {name}"}
+                return {
+                    "status": "error",
+                    "reason": f"Code generation failed for {name}",
+                }
 
             # 3. Write Code
             file_path = Path(name) / "cartridge_main.py"
@@ -214,5 +217,5 @@ def run():
             "status": "RUNNING",
             "domain": self.domain,
             "capabilities": self.capabilities,
-            "description": self.description
+            "description": self.description,
         }

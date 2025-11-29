@@ -33,7 +33,9 @@ class InMemoryLedger(VibeLedger):
         self.events: List[Dict[str, Any]] = []
         self._event_counter = 0
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (governance action)"""
         self._event_counter += 1
         event_id = f"EVT-{self._event_counter:06d}"
@@ -119,7 +121,8 @@ class SQLiteLedger(VibeLedger):
 
         # Create table if not exists
         cursor = self.connection.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS ledger_events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 event_id TEXT,
@@ -135,27 +138,33 @@ class SQLiteLedger(VibeLedger):
                 previous_hash TEXT NOT NULL,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
         self.connection.commit()
         logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
         logger.info(f"⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (governance action)"""
         # Get previous hash for the chain
         previous_hash = self._get_previous_hash()
 
         # Create deterministic event string for hashing (matches verify_chain_integrity)
         timestamp = datetime.utcnow().isoformat()
-        event_string = json.dumps({
-            "timestamp": timestamp,
-            "event_type": event_type,
-            "task_id": None,
-            "agent_id": agent_id,
-            "payload": json.dumps(details) if details else None,
-            "result": None,
-            "error": None,
-        }, sort_keys=True)
+        event_string = json.dumps(
+            {
+                "timestamp": timestamp,
+                "event_type": event_type,
+                "task_id": None,
+                "agent_id": agent_id,
+                "payload": json.dumps(details) if details else None,
+                "result": None,
+                "error": None,
+            },
+            sort_keys=True,
+        )
 
         # Compute current hash
         current_hash = self._compute_hash(event_string, previous_hash)
@@ -165,19 +174,22 @@ class SQLiteLedger(VibeLedger):
         next_id = (row[0] or 0) + 1
         event_id = f"EVT-{next_id:06d}"
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ledger_events
             (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            event_id,
-            timestamp,
-            event_type,
-            agent_id,
-            json.dumps(details) if details else None,
-            current_hash,
-            previous_hash,
-        ))
+        """,
+            (
+                event_id,
+                timestamp,
+                event_type,
+                agent_id,
+                json.dumps(details) if details else None,
+                current_hash,
+                previous_hash,
+            ),
+        )
         self.connection.commit()
         logger.debug(f"📝 Ledger: Event recorded {event_id} ({event_type})")
         return event_id
@@ -241,35 +253,41 @@ class SQLiteLedger(VibeLedger):
         previous_hash = self._get_previous_hash()
 
         # Create deterministic event string for hashing
-        event_string = json.dumps({
-            "timestamp": event.get("timestamp"),
-            "event_type": event.get("event_type"),
-            "task_id": event.get("task_id"),
-            "agent_id": event.get("agent_id"),
-            "payload": event.get("payload"),
-            "result": event.get("result"),
-            "error": event.get("error"),
-        }, sort_keys=True)
+        event_string = json.dumps(
+            {
+                "timestamp": event.get("timestamp"),
+                "event_type": event.get("event_type"),
+                "task_id": event.get("task_id"),
+                "agent_id": event.get("agent_id"),
+                "payload": event.get("payload"),
+                "result": event.get("result"),
+                "error": event.get("error"),
+            },
+            sort_keys=True,
+        )
 
         # Compute current hash
         current_hash = self._compute_hash(event_string, previous_hash)
 
         cursor = self.connection.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ledger_events
             (timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            event.get("timestamp"),
-            event.get("event_type"),
-            event.get("task_id"),
-            event.get("agent_id"),
-            event.get("payload"),
-            event.get("result"),
-            event.get("error"),
-            current_hash,
-            previous_hash,
-        ))
+        """,
+            (
+                event.get("timestamp"),
+                event.get("event_type"),
+                event.get("task_id"),
+                event.get("agent_id"),
+                event.get("payload"),
+                event.get("result"),
+                event.get("error"),
+                current_hash,
+                previous_hash,
+            ),
+        )
         self.connection.commit()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
@@ -278,12 +296,15 @@ class SQLiteLedger(VibeLedger):
             return None
 
         cursor = self.connection.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT * FROM ledger_events
             WHERE task_id = ?
             ORDER BY id DESC
             LIMIT 1
-        """, (task_id,))
+        """,
+            (task_id,),
+        )
 
         row = cursor.fetchone()
         if row:
@@ -309,7 +330,7 @@ class SQLiteLedger(VibeLedger):
                 "status": "CLEAN",
                 "message": "Ledger is empty (genesis state)",
                 "total_events": 0,
-                "corrupted": False
+                "corrupted": False,
             }
 
         corruptions = []
@@ -320,54 +341,65 @@ class SQLiteLedger(VibeLedger):
             stored_current = event.get("current_hash")
 
             if stored_previous != previous_hash:
-                corruptions.append({
-                    "event_id": event.get("event_id"),
-                    "index": idx,
-                    "type": "PREVIOUS_HASH_MISMATCH",
-                    "error": f"Previous hash mismatch at position {idx}"
-                })
+                corruptions.append(
+                    {
+                        "event_id": event.get("event_id"),
+                        "index": idx,
+                        "type": "PREVIOUS_HASH_MISMATCH",
+                        "error": f"Previous hash mismatch at position {idx}",
+                    }
+                )
 
             # Recompute current hash
-            event_string = json.dumps({
-                "timestamp": event.get("timestamp"),
-                "event_type": event.get("event_type"),
-                "task_id": event.get("task_id"),
-                "agent_id": event.get("agent_id"),
-                "payload": event.get("payload"),
-                "result": event.get("result"),
-                "error": event.get("error"),
-            }, sort_keys=True)
+            event_string = json.dumps(
+                {
+                    "timestamp": event.get("timestamp"),
+                    "event_type": event.get("event_type"),
+                    "task_id": event.get("task_id"),
+                    "agent_id": event.get("agent_id"),
+                    "payload": event.get("payload"),
+                    "result": event.get("result"),
+                    "error": event.get("error"),
+                },
+                sort_keys=True,
+            )
 
             computed_hash = self._compute_hash(event_string, previous_hash)
 
             if computed_hash != stored_current:
-                corruptions.append({
-                    "event_id": event.get("event_id"),
-                    "index": idx,
-                    "type": "CURRENT_HASH_MISMATCH",
-                    "error": f"Current hash mismatch - computed {computed_hash} != stored {stored_current}"
-                })
+                corruptions.append(
+                    {
+                        "event_id": event.get("event_id"),
+                        "index": idx,
+                        "type": "CURRENT_HASH_MISMATCH",
+                        "error": f"Current hash mismatch - computed {computed_hash} != stored {stored_current}",
+                    }
+                )
 
             previous_hash = stored_current
 
         if corruptions:
-            logger.error(f"🚨 CORRUPTION DETECTED in ledger! {len(corruptions)} events tampered")
+            logger.error(
+                f"🚨 CORRUPTION DETECTED in ledger! {len(corruptions)} events tampered"
+            )
             return {
                 "status": "CORRUPTED",
                 "message": "DATA TAMPERING DETECTED - Ledger chain broken",
                 "total_events": len(events),
                 "corrupted": True,
                 "corruptions": corruptions,
-                "top_hash": previous_hash
+                "top_hash": previous_hash,
             }
 
-        logger.info(f"✅ Ledger chain integrity verified ({len(events)} events, chain unbroken)")
+        logger.info(
+            f"✅ Ledger chain integrity verified ({len(events)} events, chain unbroken)"
+        )
         return {
             "status": "CLEAN",
             "message": "All events verified - chain integrity intact",
             "total_events": len(events),
             "corrupted": False,
-            "top_hash": previous_hash
+            "top_hash": previous_hash,
         }
 
     def get_top_hash(self) -> str:

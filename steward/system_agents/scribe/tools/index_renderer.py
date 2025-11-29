@@ -279,39 +279,31 @@ steward-protocol/
         # Architecture
         arch_dir = docs_dir / "architecture"
         if arch_dir.exists():
-            self.architecture_docs = sorted([
-                f.name for f in arch_dir.glob("*.md")
-            ])
+            self.architecture_docs = sorted([f.name for f in arch_dir.glob("*.md")])
 
         # Deployment
         deploy_dir = docs_dir / "deployment"
         if deploy_dir.exists():
-            self.deployment_docs = sorted([
-                f.name for f in deploy_dir.glob("*.md")
-            ])
+            self.deployment_docs = sorted([f.name for f in deploy_dir.glob("*.md")])
 
         # Philosophy
         phil_dir = docs_dir / "philosophy"
         if phil_dir.exists():
-            self.philosophy_docs = sorted([
-                f.name for f in phil_dir.glob("*.md")
-            ])
+            self.philosophy_docs = sorted([f.name for f in phil_dir.glob("*.md")])
 
         # Guides
         guides_dir = docs_dir / "guides"
         if guides_dir.exists():
-            self.guides_docs = sorted([
-                f.name for f in guides_dir.glob("*.md")
-            ])
+            self.guides_docs = sorted([f.name for f in guides_dir.glob("*.md")])
 
         # Reports
         reports_dir = docs_dir / "reports"
         if reports_dir.exists():
-            self.reports_docs = sorted([
-                f.name for f in reports_dir.glob("*.md")
-            ])
+            self.reports_docs = sorted([f.name for f in reports_dir.glob("*.md")])
 
-    def _render_docs_section(self, docs: List[str], base_path: str, prefix: str = "") -> str:
+    def _render_docs_section(
+        self, docs: List[str], base_path: str, prefix: str = ""
+    ) -> str:
         """Render a list of docs as markdown links."""
         if not docs:
             return ""
@@ -319,33 +311,33 @@ steward-protocol/
         lines = []
         for doc in docs:
             # Create readable name from filename
-            name = doc.replace('.md', '').replace('_', ' ').title()
+            name = doc.replace(".md", "").replace("_", " ").title()
             if prefix:
                 name = prefix + name
             # Determine description based on filename
             desc = self._get_description(doc)
             lines.append(f"- **[{base_path}/{doc}]({base_path}/{doc})** - {desc}")
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _get_description(self, filename: str) -> str:
         """Get description for a file."""
         descriptions = {
-            'ARCHITECTURE.md': 'Main architecture document',
-            'SYSTEM_OVERVIEW.md': 'Complete system overview',
-            'UNIVERSE_MIGRATION_PLAN.md': 'The master plan (Phases 0-9)',
-            'SEMANTIC_AUDITOR.md': 'Semantic Auditor overview',
-            'DEPLOYMENT.md': 'Deployment guide',
-            'AUTOMATION.md': 'Automation workflows',
-            'DEMO.md': 'Demo scenarios',
-            'STORY.md': 'Project narrative and history',
-            'PROOF_OF_LIVE.md': 'Evidence of system capabilities',
-            'CONTRIBUTING.md': 'Contribution guidelines',
-            'PROGRESS_REPORT.md': 'Current progress status',
-            'VERIFICATION_REPORT.md': 'System verification',
-            'GAP_ANALYSIS_REPORT.md': 'Gap analysis',
+            "ARCHITECTURE.md": "Main architecture document",
+            "SYSTEM_OVERVIEW.md": "Complete system overview",
+            "UNIVERSE_MIGRATION_PLAN.md": "The master plan (Phases 0-9)",
+            "SEMANTIC_AUDITOR.md": "Semantic Auditor overview",
+            "DEPLOYMENT.md": "Deployment guide",
+            "AUTOMATION.md": "Automation workflows",
+            "DEMO.md": "Demo scenarios",
+            "STORY.md": "Project narrative and history",
+            "PROOF_OF_LIVE.md": "Evidence of system capabilities",
+            "CONTRIBUTING.md": "Contribution guidelines",
+            "PROGRESS_REPORT.md": "Current progress status",
+            "VERIFICATION_REPORT.md": "System verification",
+            "GAP_ANALYSIS_REPORT.md": "Gap analysis",
         }
-        return descriptions.get(filename, filename.replace('.md', '').replace('_', ' '))
+        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
 
     def _render_migration_docs(self) -> str:
         """Render migration status docs."""
@@ -359,17 +351,19 @@ steward-protocol/
 
         lines = []
         for doc in migration_docs:
-            name = doc.stem.replace('_', ' ').title()
+            name = doc.stem.replace("_", " ").title()
             desc = self._get_migration_description(doc.name)
-            lines.append(f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}")
+            lines.append(
+                f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}"
+            )
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def _get_migration_description(self, filename: str) -> str:
         """Get description for migration files."""
         descriptions = {
-            'UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md': 'Implementation status',
-            'BLOCKER2_HONEST_COMPLETION_STATUS.md': 'Blocker 2 status',
-            'GOLDEN_THREAD_STATUS.md': 'Golden thread tracking',
+            "UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md": "Implementation status",
+            "BLOCKER2_HONEST_COMPLETION_STATUS.md": "Blocker 2 status",
+            "GOLDEN_THREAD_STATUS.md": "Golden thread tracking",
         }
-        return descriptions.get(filename, 'Migration tracking')
+        return descriptions.get(filename, "Migration tracking")

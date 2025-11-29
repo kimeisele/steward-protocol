@@ -23,13 +23,16 @@ logger = logging.getLogger("PRECEDENT_TOOL")
 @dataclass
 class PrecedentCase:
     """Record of a precedent-setting case"""
+
     case_id: str
     verdict_id: str
     appeal_id: str
     agent_id: str
     verdict_type: str  # mercy_granted, upheld, conditional
     justification: str
-    category: str = "general"  # For classification (e.g., "first_offense", "repeated_violations")
+    category: str = (
+        "general"  # For classification (e.g., "first_offense", "repeated_violations")
+    )
     recorded_at: str = ""
     citations: int = 0  # How many times cited in future appeals
 
@@ -62,7 +65,7 @@ class PrecedentTool:
         agent_id: str,
         verdict_type: str,
         justification: str,
-        category: str = "general"
+        category: str = "general",
     ) -> Dict[str, Any]:
         """
         Record a verdict as legal precedent.
@@ -93,7 +96,7 @@ class PrecedentTool:
             justification=justification,
             category=category,
             recorded_at=now,
-            citations=0
+            citations=0,
         )
 
         # Persist case
@@ -107,7 +110,7 @@ class PrecedentTool:
         self,
         violation_type: Optional[str] = None,
         agent_type: Optional[str] = None,
-        category: Optional[str] = None
+        category: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         Find similar precedent cases for comparison.
@@ -134,7 +137,9 @@ class PrecedentTool:
 
         return similar
 
-    def get_precedent_cases(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_precedent_cases(
+        self, category: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Get precedent cases, optionally filtered by category."""
         cases = self._load_cases()
 
@@ -169,7 +174,9 @@ class PrecedentTool:
             if case.get("case_id") == case_id:
                 case["citations"] = case.get("citations", 0) + 1
                 self._rewrite_cases(cases)
-                logger.info(f"Case {case_id} cited (total citations: {case['citations']})")
+                logger.info(
+                    f"Case {case_id} cited (total citations: {case['citations']})"
+                )
                 return True
 
         return False

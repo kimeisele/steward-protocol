@@ -35,6 +35,7 @@ class Event:
         signature: Cryptographic signature of event (NIST P-256)
         sequence_number: Monotonic counter for ordering
     """
+
     event_type: str
     timestamp: str
     agent_id: str
@@ -153,7 +154,9 @@ class EventLog:
             signature = sign_content(event_json)
             event.signature = signature
 
-            logger.debug(f"✅ Event signed: {event.event_type} (#{event.sequence_number})")
+            logger.debug(
+                f"✅ Event signed: {event.event_type} (#{event.sequence_number})"
+            )
             return event
 
         except Exception as e:
@@ -438,7 +441,9 @@ class EventLog:
             return event
         return None
 
-    def store_validation_feedback(self, violations: List[str], draft: Optional[str] = None) -> None:
+    def store_validation_feedback(
+        self, violations: List[str], draft: Optional[str] = None
+    ) -> None:
         """
         Store validation feedback from a failed governance check.
 
@@ -454,7 +459,9 @@ class EventLog:
             "draft": draft,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        logger.info(f"📋 Validation feedback stored: {len(violations)} violations to fix in next cycle")
+        logger.info(
+            f"📋 Validation feedback stored: {len(violations)} violations to fix in next cycle"
+        )
 
     def get_last_validation_feedback(self) -> Optional[Dict[str, Any]]:
         """
@@ -472,7 +479,9 @@ class EventLog:
         feedback = self.pending_validation_feedback
         self.pending_validation_feedback = None  # Consume the feedback
 
-        logger.info(f"⚠️  Retrieved validation feedback: {len(feedback['violations'])} violations to address")
+        logger.info(
+            f"⚠️  Retrieved validation feedback: {len(feedback['violations'])} violations to address"
+        )
         return feedback
 
 

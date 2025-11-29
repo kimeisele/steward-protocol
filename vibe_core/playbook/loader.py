@@ -182,7 +182,9 @@ class WorkflowLoader:
         )
         return graph
 
-    def load_workflows_from_directory(self, directory: str | Path) -> dict[str, WorkflowGraph]:
+    def load_workflows_from_directory(
+        self, directory: str | Path
+    ) -> dict[str, WorkflowGraph]:
         """
         Load all YAML workflows from a directory.
 

@@ -195,7 +195,9 @@ class WriteFileTool(Tool):
         if "create_dirs" in parameters:
             create_dirs = parameters["create_dirs"]
             if not isinstance(create_dirs, bool):
-                raise TypeError(f"create_dirs must be a boolean, got {type(create_dirs).__name__}")
+                raise TypeError(
+                    f"create_dirs must be a boolean, got {type(create_dirs).__name__}"
+                )
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """

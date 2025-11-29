@@ -128,7 +128,10 @@ class PlaybookValidator:
             if "name" not in phase:
                 return False, f"Phase {i} missing required field: name"
             if "agents" not in phase:
-                return False, f"Phase {i} ({phase.get('name')}) missing required field: agents"
+                return (
+                    False,
+                    f"Phase {i} ({phase.get('name')}) missing required field: agents",
+                )
             if not isinstance(phase["agents"], list):
                 return False, f"Phase {i} agents must be a list"
 
@@ -443,7 +446,9 @@ class PlaybookRunner:
         self.execution_history.append(result)
         return result
 
-    def _execute_phase(self, phase: PlaybookPhase, playbook: PlaybookDefinition) -> dict[str, Any]:
+    def _execute_phase(
+        self, phase: PlaybookPhase, playbook: PlaybookDefinition
+    ) -> dict[str, Any]:
         """
         Execute a single phase.
 
@@ -513,7 +518,8 @@ if __name__ == "__main__":
     import sys
 
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     if len(sys.argv) < 2:

@@ -37,7 +37,9 @@ class LedgerVisualizer:
 
         if ledger_path.exists():
             self._load_ledger()
-            logger.info(f"✅ Ledger Visualizer initialized: {len(self.attestations)} attestations loaded")
+            logger.info(
+                f"✅ Ledger Visualizer initialized: {len(self.attestations)} attestations loaded"
+            )
         else:
             logger.warning(f"⚠️  Ledger not found: {ledger_path}")
 
@@ -46,7 +48,7 @@ class LedgerVisualizer:
         self.attestations = []
 
         try:
-            with open(self.ledger_path, 'r', encoding='utf-8') as f:
+            with open(self.ledger_path, "r", encoding="utf-8") as f:
                 for line_num, line in enumerate(f, 1):
                     line = line.strip()
                     if not line:
@@ -89,10 +91,14 @@ class LedgerVisualizer:
 
         # Event type breakdown
         event_types = defaultdict(int)
-        verification_by_type = defaultdict(lambda: {"verified": 0, "failed": 0, "total": 0})
+        verification_by_type = defaultdict(
+            lambda: {"verified": 0, "failed": 0, "total": 0}
+        )
 
         for attestation in self.attestations:
-            event_type = attestation.get("target_event", {}).get("event_type", "unknown")
+            event_type = attestation.get("target_event", {}).get(
+                "event_type", "unknown"
+            )
             event_types[event_type] += 1
 
             status = attestation.get("status", "unknown")
@@ -117,7 +123,9 @@ class LedgerVisualizer:
             "failed_count": failed,
             "verification_rate": round((verified / total * 100) if total > 0 else 0, 1),
             "event_types": dict(event_types),
-            "verification_by_type": {k: dict(v) for k, v in verification_by_type.items()},
+            "verification_by_type": {
+                k: dict(v) for k, v in verification_by_type.items()
+            },
             "agent_stats": {k: dict(v) for k, v in agent_stats.items()},
             "last_loaded": self.last_loaded.isoformat() if self.last_loaded else None,
         }
@@ -155,14 +163,22 @@ class LedgerVisualizer:
                 continue
 
             try:
-                timestamp = datetime.fromisoformat(timestamp_str.replace('+00:00', '+00:00'))
+                timestamp = datetime.fromisoformat(
+                    timestamp_str.replace("+00:00", "+00:00")
+                )
                 if timestamp >= cutoff:
-                    timeline.append({
-                        "timestamp": timestamp_str,
-                        "event_type": attestation.get("target_event", {}).get("event_type"),
-                        "status": attestation.get("status"),
-                        "agent_id": attestation.get("target_event", {}).get("agent_id"),
-                    })
+                    timeline.append(
+                        {
+                            "timestamp": timestamp_str,
+                            "event_type": attestation.get("target_event", {}).get(
+                                "event_type"
+                            ),
+                            "status": attestation.get("status"),
+                            "agent_id": attestation.get("target_event", {}).get(
+                                "agent_id"
+                            ),
+                        }
+                    )
             except ValueError:
                 logger.warning(f"⚠️  Invalid timestamp: {timestamp_str}")
 
@@ -196,7 +212,7 @@ class LedgerVisualizer:
             "color": color,
             "verified_events": stats.get("verified_count", 0),
             "total_events": stats.get("total_events", 0),
-            "message": f"Ledger integrity: {verification_rate}% verified"
+            "message": f"Ledger integrity: {verification_rate}% verified",
         }
 
     def generate_html_snippet(self) -> str:
@@ -239,7 +255,9 @@ class LedgerVisualizer:
 """
         return html
 
-    def generate_json_report(self, output_path: Optional[Path] = None) -> Dict[str, Any]:
+    def generate_json_report(
+        self, output_path: Optional[Path] = None
+    ) -> Dict[str, Any]:
         """
         Generate a complete JSON report of ledger statistics.
 
@@ -262,7 +280,7 @@ class LedgerVisualizer:
         if output_path:
             try:
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(output_path, 'w', encoding='utf-8') as f:
+                with open(output_path, "w", encoding="utf-8") as f:
                     json.dump(report, f, indent=2)
                 logger.info(f"✅ JSON report written to {output_path}")
             except Exception as e:
@@ -290,7 +308,7 @@ class LedgerVisualizer:
             return {
                 "is_valid": True,
                 "reason": "Ledger is empty (may be expected)",
-                "issues": []
+                "issues": [],
             }
 
         # Check for required fields
@@ -315,7 +333,7 @@ class LedgerVisualizer:
             "is_valid": is_valid,
             "total_attestations": len(self.attestations),
             "issues": issues,
-            "message": f"Ledger integrity: {'✅ PASS' if is_valid else f'❌ FAIL ({len(issues)} issues)'}"
+            "message": f"Ledger integrity: {'✅ PASS' if is_valid else f'❌ FAIL ({len(issues)} issues)'}",
         }
 
     def refresh(self):

@@ -6,6 +6,7 @@ from .models import Task, TaskStatus
 
 class ValidationError(Exception):
     """Raised when task validation fails."""
+
     pass
 
 

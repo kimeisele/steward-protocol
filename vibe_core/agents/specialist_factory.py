@@ -186,7 +186,9 @@ class SpecialistFactoryAgent(VibeAgent):
         # Step 1: Extract mission_id from payload
         payload = task.payload
         if not isinstance(payload, dict):
-            raise TypeError(f"Task payload must be a dict, got {type(payload).__name__}")
+            raise TypeError(
+                f"Task payload must be a dict, got {type(payload).__name__}"
+            )
 
         mission_id = payload.get("mission_id")
         if not mission_id:

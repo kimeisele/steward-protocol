@@ -121,7 +121,9 @@ class SQLiteStore:
                 break
             project_root = project_root.parent
         else:
-            raise FileNotFoundError("Could not find docs/tasks/ARCH-001_schema.sql in project tree")
+            raise FileNotFoundError(
+                "Could not find docs/tasks/ARCH-001_schema.sql in project tree"
+            )
 
         # Load and execute schema
         with open(schema_path) as f:
@@ -351,14 +353,18 @@ class SQLiteStore:
         Returns:
             Mission dict or None if not found
         """
-        cursor = self.conn.execute("SELECT * FROM missions WHERE mission_uuid = ?", (mission_uuid,))
+        cursor = self.conn.execute(
+            "SELECT * FROM missions WHERE mission_uuid = ?", (mission_uuid,)
+        )
         row = cursor.fetchone()
         if row is None:
             return None
 
         return self._parse_mission_row(row)
 
-    def update_mission_status(self, mission_id: int, status: str, completed_at: str | None = None):
+    def update_mission_status(
+        self, mission_id: int, status: str, completed_at: str | None = None
+    ):
         """
         Update mission status
 
@@ -533,7 +539,9 @@ class SQLiteStore:
 
     def get_tool_call(self, tool_call_id: int) -> dict[str, Any] | None:
         """Get tool call by ID"""
-        cursor = self.conn.execute("SELECT * FROM tool_calls WHERE id = ?", (tool_call_id,))
+        cursor = self.conn.execute(
+            "SELECT * FROM tool_calls WHERE id = ?", (tool_call_id,)
+        )
         row = cursor.fetchone()
         if row is None:
             return None
@@ -769,13 +777,20 @@ class SQLiteStore:
             SET completed_at = ?, success = ?, metrics = ?
             WHERE id = ?
         """,
-            (completed_at, 1 if success else 0, json.dumps(metrics) if metrics else None, run_id),
+            (
+                completed_at,
+                1 if success else 0,
+                json.dumps(metrics) if metrics else None,
+                run_id,
+            ),
         )
         self._commit()
 
     def get_playbook_run(self, run_id: int) -> dict[str, Any] | None:
         """Get playbook run by ID"""
-        cursor = self.conn.execute("SELECT * FROM playbook_runs WHERE id = ?", (run_id,))
+        cursor = self.conn.execute(
+            "SELECT * FROM playbook_runs WHERE id = ?", (run_id,)
+        )
         row = cursor.fetchone()
         if row is None:
             return None
@@ -796,7 +811,8 @@ class SQLiteStore:
         This provides hierarchical task tracking for agents to break down work.
         """
         with self._lock:
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS tasks (
                     id TEXT PRIMARY KEY,
                     description TEXT NOT NULL,
@@ -808,15 +824,20 @@ class SQLiteStore:
                     CHECK (status IN ('pending', 'in_progress', 'completed', 'failed')),
                     FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE
                 )
-            """)
-            self.conn.execute("""
+            """
+            )
+            self.conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_tasks_parent
                 ON tasks(parent_id)
-            """)
-            self.conn.execute("""
+            """
+            )
+            self.conn.execute(
+                """
                 CREATE INDEX IF NOT EXISTS idx_tasks_status
                 ON tasks(status)
-            """)
+            """
+            )
             self._commit()
 
     def add_task(
@@ -1092,9 +1113,7 @@ class SQLiteStore:
         Returns:
             List of roadmap dicts
         """
-        cursor = self.conn.execute(
-            "SELECT * FROM roadmaps ORDER BY created_at DESC"
-        )
+        cursor = self.conn.execute("SELECT * FROM roadmaps ORDER BY created_at DESC")
         roadmaps = []
         for row in cursor.fetchall():
             roadmap = dict(row)
@@ -1382,7 +1401,13 @@ class SQLiteStore:
             INSERT INTO quality_gates (mission_id, gate_name, status, details, timestamp)
             VALUES (?, ?, ?, ?, ?)
         """,
-            (mission_id, gate_name, status, json.dumps(details) if details else None, timestamp),
+            (
+                mission_id,
+                gate_name,
+                status,
+                json.dumps(details) if details else None,
+                timestamp,
+            ),
         )
         self._commit()
         return cursor.lastrowid
@@ -1564,7 +1589,9 @@ class SQLiteStore:
     # v2: PROJECT MEMORY ADAPTER (Flattening Logic)
     # ========================================================================
 
-    def _map_project_memory_to_sql(self, memory: dict[str, Any], mission_id: int, timestamp: str):
+    def _map_project_memory_to_sql(
+        self, memory: dict[str, Any], mission_id: int, timestamp: str
+    ):
         """
         Adapter: Flatten project_memory.json into SQL tables (v2)
 

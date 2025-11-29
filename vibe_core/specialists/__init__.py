@@ -27,17 +27,21 @@ from .registry import AgentRegistry
 
 class PlanningSpecialist(BaseSpecialist):
     """Planning phase specialist agent (Phase 2 placeholder)"""
+
     pass
 
 
 class CodingSpecialist(BaseSpecialist):
     """Coding phase specialist agent (Phase 2 placeholder)"""
+
     pass
 
 
 class TestingSpecialist(BaseSpecialist):
     """Testing phase specialist agent (Phase 2 placeholder)"""
+
     pass
+
 
 __all__ = [
     "AgentRegistry",

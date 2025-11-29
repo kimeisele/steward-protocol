@@ -115,7 +115,9 @@ class CartridgeRegistry:
             cartridge_name: Name of the cartridge
         """
         try:
-            spec = importlib.util.spec_from_file_location(f"cartridge_{cartridge_name}", file_path)
+            spec = importlib.util.spec_from_file_location(
+                f"cartridge_{cartridge_name}", file_path
+            )
 
             if spec and spec.loader:
                 module = importlib.util.module_from_spec(spec)
@@ -130,7 +132,9 @@ class CartridgeRegistry:
                         and attr is not CartridgeBase
                     ):
                         self._registry[cartridge_name] = attr
-                        logger.info(f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})")
+                        logger.info(
+                            f"✅ Registered cartridge: {cartridge_name} ({attr.__name__})"
+                        )
                         return
 
                 logger.warning(
@@ -232,7 +236,9 @@ class CartridgeRegistry:
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        cartridges = ", ".join(f"{name}({cls.__name__})" for name, cls in self._registry.items())
+        cartridges = ", ".join(
+            f"{name}({cls.__name__})" for name, cls in self._registry.items()
+        )
         return f"CartridgeRegistry({len(self._registry)} cartridges: {cartridges})"
 
 

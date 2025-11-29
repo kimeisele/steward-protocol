@@ -35,8 +35,8 @@ from pathlib import Path
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("MAGIC_LAUNCH")
 
@@ -46,12 +46,14 @@ def kill_existing_servers():
     logger.info("🧹 Checking for existing server instances...")
 
     killed_count = 0
-    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
         try:
-            cmdline = ' '.join(proc.info['cmdline'] or [])
+            cmdline = " ".join(proc.info["cmdline"] or [])
 
             # Kill if it's a run_server.py or uvicorn process (but not this script)
-            if ('run_server.py' in cmdline or 'uvicorn' in cmdline) and 'magic_launch' not in cmdline:
+            if (
+                "run_server.py" in cmdline or "uvicorn" in cmdline
+            ) and "magic_launch" not in cmdline:
                 logger.info(f"   Killing PID {proc.info['pid']}: {proc.info['name']}")
                 proc.kill()
                 killed_count += 1
@@ -75,12 +77,12 @@ def start_server():
     try:
         # Start the server
         process = subprocess.Popen(
-            [sys.executable, 'run_server.py'],
+            [sys.executable, "run_server.py"],
             cwd=str(project_root),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            bufsize=1  # Line buffering
+            bufsize=1,  # Line buffering
         )
 
         logger.info(f"   Process started (PID: {process.pid})")

@@ -39,17 +39,24 @@ logger = logging.getLogger("MILK_OCEAN_ROUTER")
 
 class RequestPriority(str, Enum):
     """Request priority levels"""
-    BLOCKED = "BLOCKED"        # Level -1: Malicious/spam
-    CRITICAL = "CRITICAL"      # Level 0: Emergency interrupt (Gajendra Protocol)
-    LOW = "LOW"               # Level 3: Lazy queue
-    MEDIUM = "MEDIUM"         # Level 1: Flash classification
-    HIGH = "HIGH"             # Level 2: Pro model
+
+    BLOCKED = "BLOCKED"  # Level -1: Malicious/spam
+    CRITICAL = "CRITICAL"  # Level 0: Emergency interrupt (Gajendra Protocol)
+    LOW = "LOW"  # Level 3: Lazy queue
+    MEDIUM = "MEDIUM"  # Level 1: Flash classification
+    HIGH = "HIGH"  # Level 2: Pro model
 
 
 class GateResult:
     """Result of a gate decision"""
-    def __init__(self, priority: RequestPriority, reason: str, action: str,
-                 metadata: Optional[Dict] = None):
+
+    def __init__(
+        self,
+        priority: RequestPriority,
+        reason: str,
+        action: str,
+        metadata: Optional[Dict] = None,
+    ):
         self.priority = priority
         self.reason = reason
         self.action = action
@@ -76,7 +83,8 @@ class LazyQueue:
     def _init_db(self):
         """Initialize database schema"""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS milk_ocean_queue (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     request_id TEXT UNIQUE NOT NULL,
@@ -90,14 +98,26 @@ class LazyQueue:
                     result_json TEXT,
                     error TEXT
                 )
-            """)
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_status ON milk_ocean_queue (status)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_priority ON milk_ocean_queue (priority)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_created ON milk_ocean_queue (created_at)")
+            """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_status ON milk_ocean_queue (status)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_priority ON milk_ocean_queue (priority)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_created ON milk_ocean_queue (created_at)"
+            )
             conn.commit()
 
-    def push(self, request_id: str, user_input: str, gate_result: GateResult,
-             agent_id: str = "system") -> bool:
+    def push(
+        self,
+        request_id: str,
+        user_input: str,
+        gate_result: GateResult,
+        agent_id: str = "system",
+    ) -> bool:
         """
         Push a request into the Milk Ocean for later processing
 
@@ -112,26 +132,33 @@ class LazyQueue:
         """
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     INSERT INTO milk_ocean_queue
                     (request_id, user_input, gate_result_json, agent_id,
                      priority, created_at)
                     VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    request_id,
-                    user_input,
-                    json.dumps({
-                        "reason": gate_result.reason,
-                        "action": gate_result.action,
-                        "metadata": gate_result.metadata,
-                        "timestamp": gate_result.timestamp
-                    }),
-                    agent_id,
-                    gate_result.priority.value,
-                    datetime.now(timezone.utc).isoformat()
-                ))
+                """,
+                    (
+                        request_id,
+                        user_input,
+                        json.dumps(
+                            {
+                                "reason": gate_result.reason,
+                                "action": gate_result.action,
+                                "metadata": gate_result.metadata,
+                                "timestamp": gate_result.timestamp,
+                            }
+                        ),
+                        agent_id,
+                        gate_result.priority.value,
+                        datetime.now(timezone.utc).isoformat(),
+                    ),
+                )
                 conn.commit()
-            logger.info(f"🌊 Request {request_id} pushed to Milk Ocean (priority: {gate_result.priority})")
+            logger.info(
+                f"🌊 Request {request_id} pushed to Milk Ocean (priority: {gate_result.priority})"
+            )
             return True
         except Exception as e:
             logger.error(f"❌ Failed to push to Milk Ocean: {e}")
@@ -174,11 +201,14 @@ class LazyQueue:
         """Mark a request as being processed"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE milk_ocean_queue
                     SET status = 'processing'
                     WHERE request_id = ?
-                """, (request_id,))
+                """,
+                    (request_id,),
+                )
                 conn.commit()
             return True
         except Exception as e:
@@ -189,17 +219,20 @@ class LazyQueue:
         """Mark request as completed with result"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE milk_ocean_queue
                     SET status = 'completed',
                         result_json = ?,
                         processed_at = ?
                     WHERE request_id = ?
-                """, (
-                    json.dumps(result),
-                    datetime.now(timezone.utc).isoformat(),
-                    request_id
-                ))
+                """,
+                    (
+                        json.dumps(result),
+                        datetime.now(timezone.utc).isoformat(),
+                        request_id,
+                    ),
+                )
                 conn.commit()
             logger.info(f"✅ Request {request_id} completed (from Milk Ocean)")
             return True
@@ -211,17 +244,16 @@ class LazyQueue:
         """Mark request as failed with error"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute("""
+                conn.execute(
+                    """
                     UPDATE milk_ocean_queue
                     SET status = 'failed',
                         error = ?,
                         processed_at = ?
                     WHERE request_id = ?
-                """, (
-                    error,
-                    datetime.now(timezone.utc).isoformat(),
-                    request_id
-                ))
+                """,
+                    (error, datetime.now(timezone.utc).isoformat(), request_id),
+                )
                 conn.commit()
             logger.warning(f"❌ Request {request_id} failed: {error}")
             return True
@@ -233,14 +265,16 @@ class LazyQueue:
         """Get queue statistics"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("""
+                cursor = conn.execute(
+                    """
                     SELECT
                         status,
                         COUNT(*) as count,
                         priority
                     FROM milk_ocean_queue
                     GROUP BY status, priority
-                """)
+                """
+                )
                 rows = cursor.fetchall()
 
                 stats = {
@@ -249,7 +283,7 @@ class LazyQueue:
                     "processing": 0,
                     "completed": 0,
                     "failed": 0,
-                    "by_priority": {}
+                    "by_priority": {},
                 }
 
                 for row in rows:
@@ -282,11 +316,9 @@ class MilkOceanRouter:
         # Compile security regex patterns once (performance)
         self._sql_injection_pattern = re.compile(
             r"(\b(SELECT|INSERT|DELETE|UPDATE|DROP|UNION|OR|AND)\b|--|;|'|\"|\*|%|\||&|\^)",
-            re.IGNORECASE
+            re.IGNORECASE,
         )
-        self._command_injection_pattern = re.compile(
-            r"[;&|`$(){}[\]<>\\]"
-        )
+        self._command_injection_pattern = re.compile(r"[;&|`$(){}[\]<>\\]")
 
         logger.info("🌊 Milk Ocean Router initialized (Brahma Protocol Active)")
 
@@ -314,13 +346,17 @@ class MilkOceanRouter:
         # 1. Check for SQL injection
         if self._sql_injection_pattern.search(user_input):
             # Count SQL-like keywords (allow some in legitimate queries)
-            sql_keywords = len(re.findall(r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE))
+            sql_keywords = len(
+                re.findall(
+                    r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE
+                )
+            )
             if sql_keywords > 2:  # More than 2 suspicious keywords = blocked
                 return GateResult(
                     RequestPriority.BLOCKED,
                     "SQL injection pattern detected",
                     "REJECT",
-                    {"pattern": "sql_injection", "keywords_found": sql_keywords}
+                    {"pattern": "sql_injection", "keywords_found": sql_keywords},
                 )
 
         # 2. Check for command injection
@@ -332,7 +368,10 @@ class MilkOceanRouter:
                     RequestPriority.BLOCKED,
                     "Command injection pattern detected",
                     "REJECT",
-                    {"pattern": "command_injection", "dangerous_chars": dangerous_chars}
+                    {
+                        "pattern": "command_injection",
+                        "dangerous_chars": dangerous_chars,
+                    },
                 )
 
         # 3. Check for obvious spam/abuse
@@ -341,7 +380,7 @@ class MilkOceanRouter:
                 RequestPriority.BLOCKED,
                 "Input too large (DoS protection)",
                 "REJECT",
-                {"size": len(user_input), "limit": 10000}
+                {"size": len(user_input), "limit": 10000},
             )
 
         # 4. Empty input
@@ -350,7 +389,7 @@ class MilkOceanRouter:
                 RequestPriority.BLOCKED,
                 "Empty input",
                 "REJECT",
-                {"reason": "empty_request"}
+                {"reason": "empty_request"},
             )
 
         # ✅ Passed Watchman
@@ -359,7 +398,7 @@ class MilkOceanRouter:
             RequestPriority.MEDIUM,  # Default: promote to next gate
             "Security check passed",
             "FORWARD_TO_ENVOY",
-            {"watchman_clean": True}
+            {"watchman_clean": True},
         )
 
     # ==================== GATE 1: ENVOY (BRAHMA'S MEDITATION) ====================
@@ -389,7 +428,7 @@ class MilkOceanRouter:
             r"^hello",
             r"^hi\s*$",
             r"^bye",
-            r"^thanks"
+            r"^thanks",
         ]
 
         for pattern in simple_patterns:
@@ -398,7 +437,7 @@ class MilkOceanRouter:
                     RequestPriority.MEDIUM,
                     "Simple query - can be handled by Flash model",
                     "FLASH_RESPONSE",
-                    {"intent": "simple_query"}
+                    {"intent": "simple_query"},
                 )
 
         # Repetitive/low-priority work (reports, batch, etc)
@@ -408,7 +447,7 @@ class MilkOceanRouter:
             r"report\s+",
             r"export\s+",
             r"log\s+",
-            r"archive\s+"
+            r"archive\s+",
         ]
 
         for pattern in low_priority_patterns:
@@ -417,7 +456,7 @@ class MilkOceanRouter:
                     RequestPriority.LOW,
                     "Low-priority batch job - queue for lazy processing",
                     "LAZY_QUEUE",
-                    {"intent": "batch_processing"}
+                    {"intent": "batch_processing"},
                 )
 
         # Complex reasoning (default)
@@ -425,12 +464,14 @@ class MilkOceanRouter:
             RequestPriority.HIGH,
             "Complex query requiring reasoning - needs Pro model",
             "INVOKE_SCIENCE",
-            {"intent": "complex_reasoning"}
+            {"intent": "complex_reasoning"},
         )
 
     # ==================== MAIN ROUTER ====================
 
-    def _emit_event_safe(self, event_type: str, message: str, details: Optional[Dict] = None):
+    def _emit_event_safe(
+        self, event_type: str, message: str, details: Optional[Dict] = None
+    ):
         """
         Safely emit an event without blocking request routing
         (Canto 10: Pulse System Integration)
@@ -451,17 +492,23 @@ class MilkOceanRouter:
 
             # Schedule event emission (non-blocking)
             if loop.is_running():
-                asyncio.create_task(emit_event(event_type, "envoy", message, details=details or {}))
+                asyncio.create_task(
+                    emit_event(event_type, "envoy", message, details=details or {})
+                )
             else:
                 # Queue it for next iteration
                 try:
-                    loop.run_until_complete(emit_event(event_type, "envoy", message, details=details or {}))
+                    loop.run_until_complete(
+                        emit_event(event_type, "envoy", message, details=details or {})
+                    )
                 except:
                     pass  # Silently fail - don't disrupt routing
         except Exception as e:
             logger.debug(f"⚠️  Event emission failed (non-blocking): {e}")
 
-    def process_prayer(self, user_input: str, agent_id: str = "unknown", critical: bool = False) -> Dict[str, Any]:
+    def process_prayer(
+        self, user_input: str, agent_id: str = "unknown", critical: bool = False
+    ) -> Dict[str, Any]:
         """
         Main entry point: Route the user's "prayer" (request) through the gates
 
@@ -479,16 +526,22 @@ class MilkOceanRouter:
             f"{user_input}{datetime.now().isoformat()}".encode()
         ).hexdigest()[:16]
 
-        logger.info(f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]" +
-                   (" 🐘🚨 [CRITICAL PRIORITY - GAJENDRA PROTOCOL]" if critical else ""))
+        logger.info(
+            f"🙏 Received prayer from {agent_id}: {user_input[:50]}... [ID: {request_id}]"
+            + (" 🐘🚨 [CRITICAL PRIORITY - GAJENDRA PROTOCOL]" if critical else "")
+        )
 
         # Emit PRAYER_RECEIVED event
-        self._emit_event_safe("PRAYER_RECEIVED", f"Prayer received from {agent_id}", {
-            "request_id": request_id,
-            "agent_id": agent_id,
-            "critical": critical,
-            "preview": user_input[:100]
-        })
+        self._emit_event_safe(
+            "PRAYER_RECEIVED",
+            f"Prayer received from {agent_id}",
+            {
+                "request_id": request_id,
+                "agent_id": agent_id,
+                "critical": critical,
+                "preview": user_input[:100],
+            },
+        )
 
         # ========== GATE 0: WATCHMAN ==========
         gate0_result = self._gate_0_watchman(user_input, agent_id)
@@ -497,17 +550,21 @@ class MilkOceanRouter:
             logger.warning(f"⛔ Watchman blocked {request_id}: {gate0_result.reason}")
 
             # Emit ERROR event for blocked requests
-            self._emit_event_safe("ERROR", f"Prayer blocked by WATCHMAN: {gate0_result.reason}", {
-                "request_id": request_id,
-                "agent_id": agent_id,
-                "reason": gate0_result.reason
-            })
+            self._emit_event_safe(
+                "ERROR",
+                f"Prayer blocked by WATCHMAN: {gate0_result.reason}",
+                {
+                    "request_id": request_id,
+                    "agent_id": agent_id,
+                    "reason": gate0_result.reason,
+                },
+            )
 
             return {
                 "status": "blocked",
                 "request_id": request_id,
                 "reason": gate0_result.reason,
-                "message": "🚫 Your request was blocked by security filters"
+                "message": "🚫 Your request was blocked by security filters",
             }
 
         # ========== GATE 0.5: CRITICAL PRIORITY BYPASS (GAJENDRA INTERRUPT) ==========
@@ -515,15 +572,21 @@ class MilkOceanRouter:
         # This is the "Lotosblume" (sacred offering) that summons Vishnu immediately
         # Even under 1000 years of timeout (DDoS), this prayer is answered
         if critical:
-            logger.warning(f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)")
+            logger.warning(
+                f"🐘 GAJENDRA CALLS! {request_id} bypasses queue (CRITICAL priority)"
+            )
 
             # Emit CRITICAL_INTERRUPT event - full screen RED flash
-            self._emit_event_safe("CRITICAL_INTERRUPT", "🐘 GAJENDRA PROTOCOL ACTIVATED - Emergency Interrupt!", {
-                "request_id": request_id,
-                "agent_id": agent_id,
-                "protocol": "Gajendra Moksha",
-                "action": "kernel_direct_bypass"
-            })
+            self._emit_event_safe(
+                "CRITICAL_INTERRUPT",
+                "🐘 GAJENDRA PROTOCOL ACTIVATED - Emergency Interrupt!",
+                {
+                    "request_id": request_id,
+                    "agent_id": agent_id,
+                    "protocol": "Gajendra Moksha",
+                    "action": "kernel_direct_bypass",
+                },
+            )
 
             return {
                 "status": "critical",
@@ -537,8 +600,8 @@ class MilkOceanRouter:
                     "reason": "Critical priority request - queue bypass activated",
                     "protocol": "Gajendra Moksha (Emergency Interrupt)",
                     "target": "Kernel (Vishnu)",
-                    "bypass_type": "Lotosblume Signal"
-                }
+                    "bypass_type": "Lotosblume Signal",
+                },
             }
 
         # ========== GATE 1: ENVOY CLASSIFICATION ==========
@@ -551,12 +614,16 @@ class MilkOceanRouter:
             logger.info(f"🌊 Routing {request_id} to Milk Ocean (lazy queue)")
 
             # Emit ACTION event for queue routing
-            self._emit_event_safe("ACTION", f"Prayer routed to Milk Ocean (lazy queue)", {
-                "request_id": request_id,
-                "agent_id": agent_id,
-                "path": "lazy",
-                "priority": "LOW"
-            })
+            self._emit_event_safe(
+                "ACTION",
+                f"Prayer routed to Milk Ocean (lazy queue)",
+                {
+                    "request_id": request_id,
+                    "agent_id": agent_id,
+                    "path": "lazy",
+                    "priority": "LOW",
+                },
+            )
 
             self.lazy_queue.push(request_id, user_input, gate1_result, agent_id)
 
@@ -565,7 +632,7 @@ class MilkOceanRouter:
                 "request_id": request_id,
                 "path": "lazy",
                 "message": "🌊 Your prayer is heard. Processing in background during off-peak hours.",
-                "next_check": "/api/queue/status"
+                "next_check": "/api/queue/status",
             }
 
         elif gate1_result.priority == RequestPriority.MEDIUM:
@@ -573,12 +640,16 @@ class MilkOceanRouter:
             logger.info(f"⚡ Routing {request_id} to Flash model (Envoy)")
 
             # Emit ACTION event for flash routing
-            self._emit_event_safe("ACTION", f"Prayer routed to Flash (Envoy)", {
-                "request_id": request_id,
-                "agent_id": agent_id,
-                "path": "flash",
-                "priority": "MEDIUM"
-            })
+            self._emit_event_safe(
+                "ACTION",
+                f"Prayer routed to Flash (Envoy)",
+                {
+                    "request_id": request_id,
+                    "agent_id": agent_id,
+                    "path": "flash",
+                    "priority": "MEDIUM",
+                },
+            )
 
             return {
                 "status": "routing",
@@ -586,7 +657,7 @@ class MilkOceanRouter:
                 "path": "flash",
                 "message": "⚡ Envoy (Brahma) is meditating on your request...",
                 "action": gate1_result.action,
-                "details": gate1_result.metadata
+                "details": gate1_result.metadata,
             }
 
         elif gate1_result.priority == RequestPriority.HIGH:
@@ -594,12 +665,16 @@ class MilkOceanRouter:
             logger.info(f"🔥 Routing {request_id} to Science (Pro model)")
 
             # Emit ACTION event for science routing
-            self._emit_event_safe("ACTION", f"Prayer routed to Science (Pro model)", {
-                "request_id": request_id,
-                "agent_id": agent_id,
-                "path": "science",
-                "priority": "HIGH"
-            })
+            self._emit_event_safe(
+                "ACTION",
+                f"Prayer routed to Science (Pro model)",
+                {
+                    "request_id": request_id,
+                    "agent_id": agent_id,
+                    "path": "science",
+                    "priority": "HIGH",
+                },
+            )
 
             return {
                 "status": "routing",
@@ -607,19 +682,20 @@ class MilkOceanRouter:
                 "path": "science",
                 "message": "🔥 Invoking SCIENCE agent for deep reasoning...",
                 "action": gate1_result.action,
-                "details": gate1_result.metadata
+                "details": gate1_result.metadata,
             }
 
         # Fallback
-        self._emit_event_safe("ERROR", f"Unknown routing decision for prayer {request_id}", {
-            "request_id": request_id,
-            "agent_id": agent_id
-        })
+        self._emit_event_safe(
+            "ERROR",
+            f"Unknown routing decision for prayer {request_id}",
+            {"request_id": request_id, "agent_id": agent_id},
+        )
 
         return {
             "status": "error",
             "request_id": request_id,
-            "error": "Unknown routing decision"
+            "error": "Unknown routing decision",
         }
 
     def get_queue_status(self) -> Dict[str, Any]:
@@ -627,12 +703,13 @@ class MilkOceanRouter:
         return {
             "status": "success",
             "ocean_status": self.lazy_queue.get_status(),
-            "message": "🌊 Milk Ocean Queue Status"
+            "message": "🌊 Milk Ocean Queue Status",
         }
 
 
 # ==================== CLI WORKER FOR LAZY QUEUE ====================
 # This runs as a background daemon (cronjob or systemd)
+
 
 def lazy_queue_worker(max_iterations: Optional[int] = None):
     """
@@ -668,15 +745,16 @@ def lazy_queue_worker(max_iterations: Optional[int] = None):
             if max_iterations:
                 break
             import time
+
             time.sleep(60)  # Sleep 1 minute before checking again
             continue
 
         logger.info(f"🎯 Processing batch of {len(batch)} requests from Milk Ocean")
 
         for request in batch:
-            request_id = request['request_id']
-            user_input = request['user_input']
-            agent_id = request['agent_id']
+            request_id = request["request_id"]
+            user_input = request["user_input"]
+            agent_id = request["agent_id"]
 
             try:
                 queue.mark_processing(request_id)
@@ -688,7 +766,7 @@ def lazy_queue_worker(max_iterations: Optional[int] = None):
                 result = {
                     "status": "completed",
                     "message": f"Processed queue request: {user_input[:50]}",
-                    "processed_by": "lazy_queue_worker"
+                    "processed_by": "lazy_queue_worker",
                 }
 
                 queue.mark_completed(request_id, result)
@@ -733,8 +811,10 @@ if __name__ == "__main__":
         critical_result = router.process_prayer(
             "URGENT: System is under DDoS attack - invoke emergency protocol!",
             agent_id="security_guardian",
-            critical=True
+            critical=True,
         )
         print(f"\n🚨 CRITICAL Response:\n{json.dumps(critical_result, indent=2)}")
 
-        print(f"\n\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}")
+        print(
+            f"\n\n🌊 Queue Status:\n{json.dumps(router.get_queue_status(), indent=2)}"
+        )

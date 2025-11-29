@@ -25,8 +25,7 @@ from .core.agency_director import AgencyDirector
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("HERALD_CLI")
 
@@ -140,7 +139,9 @@ class HeraldCLI:
         interval = args.interval or 3600  # Default 1 hour
         max_cycles = args.cycles or None
 
-        logger.info(f"🔄 Starting loop mode (interval: {interval}s, max_cycles: {max_cycles})")
+        logger.info(
+            f"🔄 Starting loop mode (interval: {interval}s, max_cycles: {max_cycles})"
+        )
 
         cycle_count = 0
         try:
@@ -158,16 +159,21 @@ class HeraldCLI:
                 )
 
                 if args.json:
-                    print(json.dumps({
-                        "cycle": cycle_count,
-                        "status": result.status,
-                        "phase": result.phase,
-                    }, default=str))
+                    print(
+                        json.dumps(
+                            {
+                                "cycle": cycle_count,
+                                "status": result.status,
+                                "phase": result.phase,
+                            },
+                            default=str,
+                        )
+                    )
 
                 if result.status != "SUCCESS":
                     logger.warning(f"⚠️  Cycle {cycle_count} failed: {result.error}")
 
-                if cycle_count < (max_cycles or float('inf')):
+                if cycle_count < (max_cycles or float("inf")):
                     logger.info(f"💤 Sleeping for {interval}s...")
                     time.sleep(interval)
 
@@ -197,12 +203,14 @@ class HeraldCLI:
         for i in range(cycles):
             logger.info(f"\n[SIM {i+1}/{cycles}]")
             result = self.director.run_cycle(campaign_theme=args.theme or "auto")
-            results.append({
-                "cycle": i + 1,
-                "status": result.status,
-                "phase": result.phase,
-                "draft": result.draft[:50] + "..." if result.draft else None,
-            })
+            results.append(
+                {
+                    "cycle": i + 1,
+                    "status": result.status,
+                    "phase": result.phase,
+                    "draft": result.draft[:50] + "..." if result.draft else None,
+                }
+            )
 
             # In simulation, continue even on validation failure
             if result.status == "SUCCESS":
@@ -213,12 +221,18 @@ class HeraldCLI:
                 logger.info(f"  ❌ Error: {result.error}")
 
         if args.json:
-            print(json.dumps({
-                "simulation": True,
-                "total_cycles": cycles,
-                "results": results,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }, indent=2, default=str))
+            print(
+                json.dumps(
+                    {
+                        "simulation": True,
+                        "total_cycles": cycles,
+                        "results": results,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    },
+                    indent=2,
+                    default=str,
+                )
+            )
         else:
             successful = sum(1 for r in results if r["status"] == "SUCCESS")
             print(f"\n📊 Simulation Results:")
@@ -244,7 +258,7 @@ GAD-000 Compliance:
   - All commands support --json for machine readability
   - Exit codes: 0=success, 1=error, 2=validation_failed
   - Safe for CI/CD, cron, and other AI agent orchestration
-            """
+            """,
         )
 
         subparsers = parser.add_subparsers(dest="command", help="Command to execute")
@@ -252,9 +266,7 @@ GAD-000 Compliance:
         # Status command
         status_parser = subparsers.add_parser("status", help="Show agency status")
         status_parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Output as JSON (for AI operators)"
+            "--json", action="store_true", help="Output as JSON (for AI operators)"
         )
 
         # Run command
@@ -263,63 +275,57 @@ GAD-000 Compliance:
             "--theme",
             choices=["auto", "tech_deep_dive", "campaign", "agent_city"],
             default="auto",
-            help="Content generation theme"
+            help="Content generation theme",
         )
         run_parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Output as JSON (for AI operators)"
+            "--json", action="store_true", help="Output as JSON (for AI operators)"
         )
 
         # Loop command
         loop_parser = subparsers.add_parser(
-            "loop",
-            help="Run continuous cycles (daemon mode)"
+            "loop", help="Run continuous cycles (daemon mode)"
         )
         loop_parser.add_argument(
             "--interval",
             type=int,
             default=3600,
-            help="Seconds between cycles (default: 3600 = 1 hour)"
+            help="Seconds between cycles (default: 3600 = 1 hour)",
         )
         loop_parser.add_argument(
             "--cycles",
             type=int,
-            help="Max number of cycles (optional, infinite by default)"
+            help="Max number of cycles (optional, infinite by default)",
         )
         loop_parser.add_argument(
             "--theme",
             choices=["auto", "tech_deep_dive", "campaign", "agent_city"],
             default="auto",
-            help="Content generation theme"
+            help="Content generation theme",
         )
         loop_parser.add_argument(
             "--json",
             action="store_true",
-            help="Output as JSON (for monitoring systems)"
+            help="Output as JSON (for monitoring systems)",
         )
 
         # Simulate command
         simulate_parser = subparsers.add_parser(
-            "simulate",
-            help="Run simulation without real posts"
+            "simulate", help="Run simulation without real posts"
         )
         simulate_parser.add_argument(
             "--cycles",
             type=int,
             default=5,
-            help="Number of simulation cycles (default: 5)"
+            help="Number of simulation cycles (default: 5)",
         )
         simulate_parser.add_argument(
             "--theme",
             choices=["auto", "tech_deep_dive", "campaign", "agent_city"],
             default="auto",
-            help="Content generation theme"
+            help="Content generation theme",
         )
         simulate_parser.add_argument(
-            "--json",
-            action="store_true",
-            help="Output as JSON"
+            "--json", action="store_true", help="Output as JSON"
         )
 
         args = parser.parse_args(argv)

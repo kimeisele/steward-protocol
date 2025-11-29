@@ -43,9 +43,12 @@ class GAPReportTool:
     can self-govern, self-correct, and create value.
     """
 
-    def __init__(self, ledger_path: str = "data/registry/ledger.jsonl",
-                 licenses_path: str = "data/registry/licenses.json",
-                 proposals_path: str = "data/governance/executed"):
+    def __init__(
+        self,
+        ledger_path: str = "data/registry/ledger.jsonl",
+        licenses_path: str = "data/registry/licenses.json",
+        proposals_path: str = "data/governance/executed",
+    ):
         """
         Initialize G.A.P. Report Tool.
 
@@ -60,10 +63,13 @@ class GAPReportTool:
 
         logger.info("🔐 G.A.P. Report Tool initialized")
 
-    def generate_report(self, title: str = "System Governability Audit Proof",
-                       include_ledger: bool = True,
-                       include_governance: bool = True,
-                       include_value_creation: bool = True) -> Dict[str, Any]:
+    def generate_report(
+        self,
+        title: str = "System Governability Audit Proof",
+        include_ledger: bool = True,
+        include_governance: bool = True,
+        include_value_creation: bool = True,
+    ) -> Dict[str, Any]:
         """
         Generate comprehensive G.A.P. Report.
 
@@ -83,11 +89,11 @@ class GAPReportTool:
                 "title": title,
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "report_type": "Governability Audit Proof",
-                "version": "1.0"
+                "version": "1.0",
             },
             "sections": {},
             "verification": {},
-            "status": "complete"
+            "status": "complete",
         }
 
         try:
@@ -118,7 +124,9 @@ class GAPReportTool:
             # Generate cryptographic hash for immutability proof
             report_hash = self._generate_report_hash(report)
             report["verification"]["sha256_hash"] = report_hash
-            report["verification"]["hash_timestamp"] = datetime.now(timezone.utc).isoformat()
+            report["verification"]["hash_timestamp"] = datetime.now(
+                timezone.utc
+            ).isoformat()
 
             logger.info(f"   ✓ Report hash: {report_hash[:16]}...")
             logger.info("✅ G.A.P. Report generated successfully")
@@ -130,7 +138,7 @@ class GAPReportTool:
             return {
                 "status": "error",
                 "error": str(e),
-                "metadata": report.get("metadata", {})
+                "metadata": report.get("metadata", {}),
             }
 
     def _extract_crisis_section(self) -> Dict[str, Any]:
@@ -153,16 +161,16 @@ class GAPReportTool:
                     "license_type": "broadcast",
                     "reason": "Manual Admin Intervention Required",
                     "source_authority": "ENVOY",
-                    "impact": "HERALD blocked from publishing - governance constraint enforced"
+                    "impact": "HERALD blocked from publishing - governance constraint enforced",
                 }
             ],
             "system_response": {
                 "action": "Block execution",
                 "reason": "Non-compliant with governance rules",
-                "message": "User intent conflicts with active governance constraint (revoked license)"
+                "message": "User intent conflicts with active governance constraint (revoked license)",
             },
             "proof": "System enforces Constitutional constraints even under user pressure",
-            "status": "detected_and_enforced"
+            "status": "detected_and_enforced",
         }
         return crisis
 
@@ -186,30 +194,30 @@ class GAPReportTool:
                 "action": {
                     "type": "civic.license.reinstate",
                     "target_agent": "herald",
-                    "license_type": "broadcast"
-                }
+                    "license_type": "broadcast",
+                },
             },
             "governance_process": {
                 "voting_threshold": 0.5,
                 "quorum": 0.5,
                 "outcome": "APPROVED (administrator consensus)",
-                "timestamp": "2025-11-24T21:00:00+00:00"
+                "timestamp": "2025-11-24T21:00:00+00:00",
             },
             "execution": {
                 "executor": "FORUM",
                 "action": "civic.license.reinstate",
                 "result": "SUCCESS",
                 "timestamp": "2025-11-24T21:05:00+00:00",
-                "source_authority": "PROP-009"
+                "source_authority": "PROP-009",
             },
             "license_state_after": {
                 "agent": "herald",
                 "status": "ACTIVE",
                 "violations": 0,
-                "authority_chain": "Admin → PROP-009 → CIVIC"
+                "authority_chain": "Admin → PROP-009 → CIVIC",
             },
             "proof": "System executed self-correction through proper governance mechanisms",
-            "status": "executed_successfully"
+            "status": "executed_successfully",
         }
         return correction
 
@@ -231,7 +239,7 @@ class GAPReportTool:
                 "intent": "Launch founder recruitment marketing campaign",
                 "timestamp_requested": "2025-11-24T20:52:00+00:00",
                 "initially_blocked": True,
-                "block_reason": "HERALD license revoked"
+                "block_reason": "HERALD license revoked",
             },
             "campaign_execution": {
                 "campaign_id": "CAMP-584789",
@@ -243,7 +251,7 @@ class GAPReportTool:
                         "phase": "Resource Validation",
                         "check": "HERALD license active? YES (via PROP-009)",
                         "check": "HERALD credits available? YES",
-                        "result": "PASSED - Ready to proceed"
+                        "result": "PASSED - Ready to proceed",
                     },
                     {
                         "phase": "Market Research",
@@ -254,33 +262,33 @@ class GAPReportTool:
                             "Founder recruitment responds to credibility signals",
                             "Technical founders value transparency and governance",
                             "Agent-based systems are emerging opportunity",
-                            "Multi-agent orchestration is compelling narrative"
-                        ]
+                            "Multi-agent orchestration is compelling narrative",
+                        ],
                     },
                     {
                         "phase": "Content Creation",
                         "agent": "HERALD",
                         "action": "Generate marketing content",
                         "result": "Content generated (825 characters)",
-                        "theme": "Governance-First Agent Coordination"
+                        "theme": "Governance-First Agent Coordination",
                     },
                     {
                         "phase": "Publishing",
                         "agent": "HERALD",
                         "action": "Publish campaign",
                         "result": "Published (1 platform)",
-                        "status": "Successfully distributed"
-                    }
-                ]
+                        "status": "Successfully distributed",
+                    },
+                ],
             },
             "governance_compliance": {
                 "license_checked": True,
                 "credits_validated": True,
                 "constitutional_compliance": True,
-                "authority_chain_intact": True
+                "authority_chain_intact": True,
             },
             "proof": "System created value while maintaining complete governance compliance",
-            "status": "value_created_successfully"
+            "status": "value_created_successfully",
         }
         return value_creation
 
@@ -301,7 +309,7 @@ class GAPReportTool:
                     "agent": "CIVIC",
                     "source_authority": "ENVOY",
                     "action": "revoke_license('herald', 'Manual Admin Intervention Required')",
-                    "immutable": True
+                    "immutable": True,
                 },
                 {
                     "sequence": 2,
@@ -309,7 +317,7 @@ class GAPReportTool:
                     "event": "PROP-009 CREATED",
                     "agent": "ENVOY/FORUM",
                     "action": "Create governance proposal for license reinstatement",
-                    "immutable": True
+                    "immutable": True,
                 },
                 {
                     "sequence": 3,
@@ -318,7 +326,7 @@ class GAPReportTool:
                     "agent": "FORUM (voting)",
                     "votes": "1 YES, 0 NO",
                     "result": "PASSED",
-                    "immutable": True
+                    "immutable": True,
                 },
                 {
                     "sequence": 4,
@@ -327,7 +335,7 @@ class GAPReportTool:
                     "agent": "CIVIC",
                     "source_authority": "PROP-009",
                     "action": "reinstate_license('herald', source_authority='PROP-009')",
-                    "immutable": True
+                    "immutable": True,
                 },
                 {
                     "sequence": 5,
@@ -336,12 +344,12 @@ class GAPReportTool:
                     "agent": "ENVOY/RunCampaignTool",
                     "campaign_id": "CAMP-584789",
                     "governance_status": "COMPLIANT",
-                    "immutable": True
-                }
+                    "immutable": True,
+                },
             ],
             "verification_status": "All events cryptographically verifiable",
             "chain_of_custody": "Unbroken and auditable",
-            "status": "ledger_verified"
+            "status": "ledger_verified",
         }
         return ledger_section
 
@@ -360,9 +368,12 @@ class GAPReportTool:
         report_hash = hashlib.sha256(report_str.encode()).hexdigest()
         return report_hash
 
-    def export_report(self, report: Dict[str, Any],
-                     output_format: str = "json",
-                     output_path: Optional[str] = None) -> str:
+    def export_report(
+        self,
+        report: Dict[str, Any],
+        output_format: str = "json",
+        output_path: Optional[str] = None,
+    ) -> str:
         """
         Export G.A.P. Report to file.
 
@@ -408,7 +419,9 @@ class GAPReportTool:
         # Header
         metadata = report.get("metadata", {})
         md.append(f"# {metadata.get('title', 'G.A.P. Report')}\n")
-        md.append(f"**Type:** {metadata.get('report_type', 'Governability Audit Proof')}\n")
+        md.append(
+            f"**Type:** {metadata.get('report_type', 'Governability Audit Proof')}\n"
+        )
         md.append(f"**Generated:** {metadata.get('generated_at', 'Unknown')}\n")
         md.append(f"**Version:** {metadata.get('version', '1.0')}\n\n")
 
@@ -428,12 +441,17 @@ class GAPReportTool:
         # Verification
         verification = report.get("verification", {})
         md.append("## Verification\n\n")
-        md.append(f"**Report Hash (SHA-256):** `{verification.get('sha256_hash', 'N/A')}`\n\n")
-        md.append(f"**Hash Timestamp:** {verification.get('hash_timestamp', 'N/A')}\n\n")
+        md.append(
+            f"**Report Hash (SHA-256):** `{verification.get('sha256_hash', 'N/A')}`\n\n"
+        )
+        md.append(
+            f"**Hash Timestamp:** {verification.get('hash_timestamp', 'N/A')}\n\n"
+        )
 
         # Conclusion
         md.append("## Conclusion\n\n")
-        md.append("""
+        md.append(
+            """
 This G.A.P. Report demonstrates that autonomous agents can:
 
 ✅ **Self-Detect Governance Violations**
@@ -457,7 +475,8 @@ This G.A.P. Report demonstrates that autonomous agents can:
 
 This proves that self-governing, autonomous multi-agent systems are viable,
 verifiable, and trustworthy.
-        """)
+        """
+        )
 
         return "\n".join(md)
 
@@ -475,9 +494,13 @@ verifiable, and trustworthy.
             "title": "Proof of Self-Governing Autonomous Systems",
             "subtitle": "Complete Governability Audit of Steward Protocol Agent City",
             "content_type": "governance_audit",
-            "audience": ["technical_founders", "governance_researchers", "ai_engineers"],
+            "audience": [
+                "technical_founders",
+                "governance_researchers",
+                "ai_engineers",
+            ],
             "body": self._report_to_markdown(report),
             "metadata": report.get("metadata", {}),
             "verification_hash": report.get("verification", {}).get("sha256_hash"),
-            "call_to_action": "Review the complete proof and join us in building self-governing agent systems"
+            "call_to_action": "Review the complete proof and join us in building self-governing agent systems",
         }

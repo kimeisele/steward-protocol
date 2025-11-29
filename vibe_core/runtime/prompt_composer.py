@@ -11,7 +11,9 @@ class PromptComposer:
     """Composes task playbook + context → enriched prompt"""
 
     def __init__(self, playbook_tasks_dir: Path = None):
-        self.tasks_dir = playbook_tasks_dir or Path(__file__).parent.parent / "playbook" / "tasks"
+        self.tasks_dir = (
+            playbook_tasks_dir or Path(__file__).parent.parent / "playbook" / "tasks"
+        )
 
     def compose(self, task: str, context: dict[str, Any]) -> str:
         """Compose final enriched prompt"""
@@ -76,22 +78,32 @@ Execute {task} task.
         replacements["${git.branch}"] = git.get("branch", "unknown")
         replacements["${git.uncommitted}"] = str(git.get("uncommitted", 0))
         replacements["${git.last_commit}"] = git.get("last_commit", "none")
-        replacements["${git.recent_commits}"] = "\n".join(git.get("recent_commits", [])[:3])
+        replacements["${git.recent_commits}"] = "\n".join(
+            git.get("recent_commits", [])[:3]
+        )
 
         # Test context
         tests = context.get("tests", {})
         failing_tests = tests.get("failing", [])
-        replacements["${tests.failing}"] = ", ".join(failing_tests[:5]) if failing_tests else "none"
+        replacements["${tests.failing}"] = (
+            ", ".join(failing_tests[:5]) if failing_tests else "none"
+        )
         replacements["${tests.failing_count}"] = str(len(failing_tests))
         replacements["${tests.status}"] = (
             "passing" if not failing_tests else f"{len(failing_tests)} failing"
         )
-        replacements["${tests.errors}"] = ", ".join(tests.get("errors", [])[:3]) or "none"
+        replacements["${tests.errors}"] = (
+            ", ".join(tests.get("errors", [])[:3]) or "none"
+        )
 
         # Manifest context
         manifest = context.get("manifest", {})
-        replacements["${manifest.project_type}"] = manifest.get("project_type", "unknown")
-        replacements["${manifest.test_framework}"] = manifest.get("test_framework", "pytest")
+        replacements["${manifest.project_type}"] = manifest.get(
+            "project_type", "unknown"
+        )
+        replacements["${manifest.test_framework}"] = manifest.get(
+            "test_framework", "pytest"
+        )
         replacements["${manifest.docs_path}"] = manifest.get("docs_path", "docs/")
         replacements["${manifest.structure}"] = str(manifest.get("structure", {}))
 
@@ -115,7 +127,9 @@ Execute {task} task.
         memory = context.get("memory", {})
 
         failing_count = tests.get("failing_count", 0)
-        test_status = "✅ Passing" if failing_count == 0 else f"❌ {failing_count} Failing"
+        test_status = (
+            "✅ Passing" if failing_count == 0 else f"❌ {failing_count} Failing"
+        )
 
         git_status = (
             "✅ Clean"
@@ -123,7 +137,9 @@ Execute {task} task.
             else f"⚠️ {git.get('uncommitted')} uncommitted"
         )
 
-        env_status = "✅ Ready" if env.get("status") == "ready" else f"⚠️ {env.get('status')}"
+        env_status = (
+            "✅ Ready" if env.get("status") == "ready" else f"⚠️ {env.get('status')}"
+        )
 
         # Build semantic context from memory
         semantic_context = self._format_semantic_context(memory)
@@ -180,9 +196,7 @@ Execute {task} task.
         if recent_sessions:
             context += "- Recent sessions:\n"
             for s in recent_sessions:
-                context += (
-                    f"  • Session {s['session']}: {s['summary']} ({s.get('phase', 'UNKNOWN')})\n"
-                )
+                context += f"  • Session {s['session']}: {s['summary']} ({s.get('phase', 'UNKNOWN')})\n"
 
         # User intents
         if recent_intents:

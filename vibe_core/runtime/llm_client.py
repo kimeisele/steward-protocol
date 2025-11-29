@@ -23,7 +23,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from .circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerOpenError
+from .circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+    CircuitBreakerOpenError,
+)
 from .providers import LLMProvider, LLMProviderError, NoOpProvider, get_default_provider
 from .quota_manager import OperationalQuota, QuotaExceededError, QuotaLimits
 
@@ -101,7 +105,9 @@ class CostTracker:
             "total_output_tokens": self.total_output_tokens,
             "total_invocations": len(self.invocations),
             "average_cost_per_invocation": (
-                round(self.total_cost / len(self.invocations), 4) if self.invocations else 0
+                round(self.total_cost / len(self.invocations), 4)
+                if self.invocations
+                else 0
             ),
         }
 
@@ -202,7 +208,9 @@ class LLMClient:
         print(f"Cost: ${response.usage.cost_usd:.4f}")
     """
 
-    def __init__(self, budget_limit: float | None = None, provider: LLMProvider | None = None):
+    def __init__(
+        self, budget_limit: float | None = None, provider: LLMProvider | None = None
+    ):
         """
         Initialize LLM client.
 
@@ -245,7 +253,9 @@ class LLMClient:
         else:
             self.mode = self.provider.get_provider_name().lower()
             self.client = None  # Not used in provider mode
-            logger.info(f"LLM Client initialized with {self.provider.get_provider_name()} provider")
+            logger.info(
+                f"LLM Client initialized with {self.provider.get_provider_name()} provider"
+            )
 
     def invoke(
         self,
@@ -318,10 +328,13 @@ class LLMClient:
 
             # Record quota usage (GAD-510)
             total_tokens = (
-                provider_response.usage.input_tokens + provider_response.usage.output_tokens
+                provider_response.usage.input_tokens
+                + provider_response.usage.output_tokens
             )
             self.quota_manager.record_request(
-                tokens_used=total_tokens, cost_usd=usage.cost_usd, operation=f"invoke({model})"
+                tokens_used=total_tokens,
+                cost_usd=usage.cost_usd,
+                operation=f"invoke({model})",
             )
 
             # Log success
@@ -341,7 +354,9 @@ class LLMClient:
 
         except CircuitBreakerOpenError as e:
             logger.error(f"Circuit breaker OPEN: {e}")
-            raise LLMInvocationError(f"LLM invocation failed: Circuit breaker OPEN - {e!s}")
+            raise LLMInvocationError(
+                f"LLM invocation failed: Circuit breaker OPEN - {e!s}"
+            )
 
         except QuotaExceededError:
             raise  # Re-raise quota errors
@@ -352,7 +367,9 @@ class LLMClient:
 
         except Exception as e:
             logger.error(f"Unexpected error during invocation: {e}")
-            raise LLMInvocationError(f"LLM invocation failed: {type(e).__name__} - {e!s}")
+            raise LLMInvocationError(
+                f"LLM invocation failed: {type(e).__name__} - {e!s}"
+            )
 
     def get_cost_summary(self) -> dict[str, Any]:
         """Get cost tracking summary"""
@@ -411,4 +428,6 @@ if __name__ == "__main__":
             print(f"Error: {e}")
     else:
         print("NoOp mode - skipping test invocation")
-        print("Set GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to test real invocations")
+        print(
+            "Set GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to test real invocations"
+        )

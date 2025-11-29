@@ -35,13 +35,14 @@ class LineageBlock:
     This is not just a database row. This is a covenant.
     Once written, it cannot be changed without breaking the entire chain.
     """
-    index: int                    # Block number (0 = Genesis)
-    timestamp: str                # ISO 8601 timestamp
-    event_type: str               # GENESIS, AGENT_REGISTERED, OATH_SWORN, etc.
-    agent_id: Optional[str]       # Agent involved (None for system events)
-    data: Dict[str, Any]          # Event-specific data
-    previous_hash: str            # Hash of previous block
-    hash: str                     # Hash of this block (SHA-256)
+
+    index: int  # Block number (0 = Genesis)
+    timestamp: str  # ISO 8601 timestamp
+    event_type: str  # GENESIS, AGENT_REGISTERED, OATH_SWORN, etc.
+    agent_id: Optional[str]  # Agent involved (None for system events)
+    data: Dict[str, Any]  # Event-specific data
+    previous_hash: str  # Hash of previous block
+    hash: str  # Hash of this block (SHA-256)
 
 
 class LineageChain:
@@ -85,7 +86,8 @@ class LineageChain:
 
     def _init_db(self) -> None:
         """Initialize the database schema"""
-        self.conn.execute("""
+        self.conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS blocks (
                 idx INTEGER PRIMARY KEY,
                 timestamp TEXT NOT NULL,
@@ -95,12 +97,17 @@ class LineageChain:
                 previous_hash TEXT NOT NULL,
                 hash TEXT NOT NULL UNIQUE
             )
-        """)
+        """
+        )
 
         # Indexes for fast queries
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_id ON blocks(agent_id)")
-        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_event_type ON blocks(event_type)")
-        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON blocks(timestamp)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_event_type ON blocks(event_type)"
+        )
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_timestamp ON blocks(timestamp)"
+        )
 
         self.conn.commit()
 
@@ -119,7 +126,9 @@ class LineageChain:
         """
         # Calculate foundation hashes
         gad_000_hash = self._hash_file("/home/user/steward-protocol/GAD-000.md")
-        constitution_hash = self._hash_file("/home/user/steward-protocol/CONSTITUTION.md")
+        constitution_hash = self._hash_file(
+            "/home/user/steward-protocol/CONSTITUTION.md"
+        )
 
         genesis = LineageBlock(
             index=0,
@@ -129,15 +138,15 @@ class LineageChain:
             data={
                 "message": "Om Tat Sat - In the beginning, there was the Kernel",
                 "anchors": {
-                    "philosophy_hash": gad_000_hash,      # The Spirit (GAD-000)
-                    "constitution_hash": constitution_hash, # The Law (CONSTITUTION)
+                    "philosophy_hash": gad_000_hash,  # The Spirit (GAD-000)
+                    "constitution_hash": constitution_hash,  # The Law (CONSTITUTION)
                     "kernel_version": "2.0.0",
-                    "migration_phase": "5"
+                    "migration_phase": "5",
                 },
                 "timestamp_utc": datetime.utcnow().isoformat(),
             },
             previous_hash="0" * 64,  # No previous block
-            hash=""  # Will be calculated
+            hash="",  # Will be calculated
         )
 
         # Calculate hash
@@ -157,10 +166,7 @@ class LineageChain:
         return genesis
 
     def add_block(
-        self,
-        event_type: str,
-        agent_id: Optional[str],
-        data: Dict[str, Any]
+        self, event_type: str, agent_id: Optional[str], data: Dict[str, Any]
     ) -> LineageBlock:
         """
         ⛓️  ADD A NEW BLOCK TO THE CHAIN ⛓️
@@ -192,7 +198,7 @@ class LineageChain:
             agent_id=agent_id,
             data=data,
             previous_hash=previous_block.hash,
-            hash=""
+            hash="",
         )
 
         # Calculate hash
@@ -215,14 +221,17 @@ class LineageChain:
         The hash includes ALL block data to ensure immutability.
         Change even a single byte, and the hash changes.
         """
-        block_string = json.dumps({
-            "index": block.index,
-            "timestamp": block.timestamp,
-            "event_type": block.event_type,
-            "agent_id": block.agent_id,
-            "data": block.data,
-            "previous_hash": block.previous_hash,
-        }, sort_keys=True)
+        block_string = json.dumps(
+            {
+                "index": block.index,
+                "timestamp": block.timestamp,
+                "event_type": block.event_type,
+                "agent_id": block.agent_id,
+                "data": block.data,
+                "previous_hash": block.previous_hash,
+            },
+            sort_keys=True,
+        )
 
         return hashlib.sha256(block_string.encode()).hexdigest()
 
@@ -242,18 +251,21 @@ class LineageChain:
 
     def _store_block(self, block: LineageBlock) -> None:
         """Store block in database"""
-        self.conn.execute("""
+        self.conn.execute(
+            """
             INSERT INTO blocks (idx, timestamp, event_type, agent_id, data, previous_hash, hash)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            block.index,
-            block.timestamp,
-            block.event_type,
-            block.agent_id,
-            json.dumps(block.data),
-            block.previous_hash,
-            block.hash
-        ))
+        """,
+            (
+                block.index,
+                block.timestamp,
+                block.event_type,
+                block.agent_id,
+                json.dumps(block.data),
+                block.previous_hash,
+                block.hash,
+            ),
+        )
         self.conn.commit()
 
     def verify_chain(self) -> bool:
@@ -287,10 +299,14 @@ class LineageChain:
 
             # Verify chain linkage (except Genesis)
             if i > 0:
-                if block.previous_hash != blocks[i-1].hash:
+                if block.previous_hash != blocks[i - 1].hash:
                     logger.critical(f"💥 CHAIN BROKEN AT INDEX {i}: Link broken!")
-                    logger.critical(f"   Previous block hash: {blocks[i-1].hash[:16]}...")
-                    logger.critical(f"   This block's prev_hash: {block.previous_hash[:16]}...")
+                    logger.critical(
+                        f"   Previous block hash: {blocks[i-1].hash[:16]}..."
+                    )
+                    logger.critical(
+                        f"   This block's prev_hash: {block.previous_hash[:16]}..."
+                    )
                     return False
 
         logger.info(f"✅ Parampara chain verified ({len(blocks)} blocks)")
@@ -322,10 +338,7 @@ class LineageChain:
         This is the agent's history - their birth, their oaths, their deeds.
         """
         cur = self.conn.cursor()
-        cur.execute(
-            "SELECT * FROM blocks WHERE agent_id = ? ORDER BY idx",
-            (agent_id,)
-        )
+        cur.execute("SELECT * FROM blocks WHERE agent_id = ? ORDER BY idx", (agent_id,))
         return [self._row_to_block(row) for row in cur.fetchall()]
 
     def get_genesis_block(self) -> Optional[LineageBlock]:
@@ -342,7 +355,7 @@ class LineageChain:
             "chain_length": len(blocks),
             "genesis_hash": blocks[0].hash if blocks else None,
             "latest_hash": blocks[-1].hash if blocks else None,
-            "blocks": [asdict(block) for block in blocks]
+            "blocks": [asdict(block) for block in blocks],
         }
 
         Path(output_path).write_text(json.dumps(chain_data, indent=2))
@@ -357,7 +370,7 @@ class LineageChain:
             agent_id=row[3],
             data=json.loads(row[4]),
             previous_hash=row[5],
-            hash=row[6]
+            hash=row[6],
         )
 
     def close(self) -> None:
@@ -369,6 +382,7 @@ class LineageChain:
 # Event types (constants for consistency)
 class LineageEventType:
     """Standard event types for the Parampara chain"""
+
     GENESIS = "GENESIS"
     KERNEL_BOOT = "KERNEL_BOOT"
     KERNEL_SHUTDOWN = "KERNEL_SHUTDOWN"

@@ -41,9 +41,9 @@ dependencies = [
     "cryptography>=41.0.0",
     "cffi>=1.15.0",
 
-    # Semantic AI (PROJECT JNANA)
-    "sentence-transformers>=2.2.0",
-    "numpy>=1.24.0",
+    # Semantic AI (PROJECT JNANA) - Not yet implemented, commented out for now
+    # "sentence-transformers>=2.2.0",
+    # "numpy>=1.24.0",
 
     # API & Web
     "fastapi>=0.104.0",

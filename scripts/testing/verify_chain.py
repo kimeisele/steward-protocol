@@ -20,8 +20,7 @@ from typing import Dict, Any, List, Tuple
 from datetime import datetime
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(message)s'
+    level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
 )
 logger = logging.getLogger("CHAIN_VERIFIER")
 
@@ -33,11 +32,11 @@ class ChainVerifier:
         self.db_path = db_path
         self.connection = None
         self.events = []
-        
+
         if not Path(db_path).exists():
             logger.error(f"❌ Database not found: {db_path}")
             sys.exit(1)
-        
+
         self.connection = sqlite3.connect(db_path)
         self.connection.row_factory = sqlite3.Row
         logger.info(f"📖 Connected to ledger: {db_path}")
@@ -75,35 +74,42 @@ class ChainVerifier:
 
             # Check previous hash link
             if stored_previous != previous_hash:
-                corruptions.append({
-                    "index": idx,
-                    "event_id": event.get("event_id"),
-                    "type": "PREVIOUS_HASH_MISMATCH",
-                    "expected": previous_hash,
-                    "stored": stored_previous,
-                })
+                corruptions.append(
+                    {
+                        "index": idx,
+                        "event_id": event.get("event_id"),
+                        "type": "PREVIOUS_HASH_MISMATCH",
+                        "expected": previous_hash,
+                        "stored": stored_previous,
+                    }
+                )
 
             # Recompute current hash
-            event_string = json.dumps({
-                "timestamp": event.get("timestamp"),
-                "event_type": event.get("event_type"),
-                "task_id": event.get("task_id"),
-                "agent_id": event.get("agent_id"),
-                "payload": event.get("payload"),
-                "result": event.get("result"),
-                "error": event.get("error"),
-            }, sort_keys=True)
+            event_string = json.dumps(
+                {
+                    "timestamp": event.get("timestamp"),
+                    "event_type": event.get("event_type"),
+                    "task_id": event.get("task_id"),
+                    "agent_id": event.get("agent_id"),
+                    "payload": event.get("payload"),
+                    "result": event.get("result"),
+                    "error": event.get("error"),
+                },
+                sort_keys=True,
+            )
 
             computed_hash = self._compute_hash(event_string, previous_hash)
 
             if computed_hash != stored_current:
-                corruptions.append({
-                    "index": idx,
-                    "event_id": event.get("event_id"),
-                    "type": "CURRENT_HASH_MISMATCH",
-                    "computed": computed_hash,
-                    "stored": stored_current,
-                })
+                corruptions.append(
+                    {
+                        "index": idx,
+                        "event_id": event.get("event_id"),
+                        "type": "CURRENT_HASH_MISMATCH",
+                        "computed": computed_hash,
+                        "stored": stored_current,
+                    }
+                )
 
             previous_hash = stored_current
 
@@ -164,9 +170,11 @@ class ChainVerifier:
 
 def main():
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Verify ledger chain integrity")
-    parser.add_argument("--db-path", default="data/vibe_ledger.db", help="Path to ledger database")
+    parser.add_argument(
+        "--db-path", default="data/vibe_ledger.db", help="Path to ledger database"
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON format")
     args = parser.parse_args()
 

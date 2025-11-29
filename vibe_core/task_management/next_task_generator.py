@@ -28,20 +28,20 @@ class NextTaskGenerator:
         # Layer priority (Bhu Mandala hierarchy)
         layer_priority = {
             "BRAHMALOKA": 7,  # Highest - Creators
-            "JANALOKA": 6,    # Wisdom
-            "TAPOLOKA": 5,    # Austerity
-            "MAHARLOKA": 4,   # Great
-            "SVARLOKA": 3,    # Heaven
+            "JANALOKA": 6,  # Wisdom
+            "TAPOLOKA": 5,  # Austerity
+            "MAHARLOKA": 4,  # Great
+            "SVARLOKA": 3,  # Heaven
             "BHUVARLOKA": 2,  # Intermediate
-            "BHURLOKA": 1,    # Earth/Boundary
+            "BHURLOKA": 1,  # Earth/Boundary
         }.get(task.topology_layer or "BHURLOKA", 1)
 
         # Varna priority (Vedic hierarchy)
         varna_priority = {
             "BRAHMANA": 4,  # Priests/Knowledge
-            "KSHATRIYA": 3, # Warriors/Protection
-            "VAISHYA": 2,   # Merchants/Commerce
-            "SHUDRA": 1,    # Service/Labor
+            "KSHATRIYA": 3,  # Warriors/Protection
+            "VAISHYA": 2,  # Merchants/Commerce
+            "SHUDRA": 1,  # Service/Labor
         }.get(task.varna or "SHUDRA", 1)
 
         # Routing priority (MilkOcean 4-tier system)
@@ -109,8 +109,7 @@ class NextTaskGenerator:
         """
         # Get all non-archived tasks
         candidates = [
-            task for task in tasks.values()
-            if task.status != TaskStatus.ARCHIVED
+            task for task in tasks.values() if task.status != TaskStatus.ARCHIVED
         ]
 
         # Sort by status priority, then by topology-aware key
@@ -124,9 +123,9 @@ class NextTaskGenerator:
         candidates.sort(
             key=lambda t: (
                 status_priority.get(t.status, 0),
-                NextTaskGenerator._topology_aware_sort_key(t)
+                NextTaskGenerator._topology_aware_sort_key(t),
             ),
-            reverse=True
+            reverse=True,
         )
 
         return candidates[:count]
@@ -143,9 +142,7 @@ class NextTaskGenerator:
             List of critical tasks (priority >= 80)
         """
         return BatchOperations.filter_by_priority(
-            tasks,
-            min_priority=80,
-            max_priority=100
+            tasks, min_priority=80, max_priority=100
         )
 
     @staticmethod
@@ -160,7 +157,9 @@ class NextTaskGenerator:
             Suggestion message
         """
         pending = len(BatchOperations.filter_by_status(tasks, TaskStatus.PENDING))
-        in_progress = len(BatchOperations.filter_by_status(tasks, TaskStatus.IN_PROGRESS))
+        in_progress = len(
+            BatchOperations.filter_by_status(tasks, TaskStatus.IN_PROGRESS)
+        )
         blocked = len(BatchOperations.filter_by_status(tasks, TaskStatus.BLOCKED))
 
         if blocked > 0:

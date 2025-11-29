@@ -20,7 +20,9 @@ class AgentsRenderer:
     def scan_and_render(self) -> str:
         """Scan cartridges and render AGENTS.md."""
         # Discover all agents
-        self.agents = self.introspector.scan_all(self.root_dir / "steward" / "system_agents")
+        self.agents = self.introspector.scan_all(
+            self.root_dir / "steward" / "system_agents"
+        )
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -48,11 +50,11 @@ class AgentsRenderer:
 """
 
         # Add agent sections
-        for agent in sorted(self.agents.values(), key=lambda a: a['agent_name_pretty']):
+        for agent in sorted(self.agents.values(), key=lambda a: a["agent_name_pretty"]):
             content += self._format_agent_section(agent)
 
         # System summary
-        total_tools = sum(len(a['tools']) for a in self.agents.values())
+        total_tools = sum(len(a["tools"]) for a in self.agents.values())
         content += f"""---
 
 ## 📊 SYSTEM SUMMARY
@@ -104,10 +106,10 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
 """
 
         # Tools section
-        if agent['tools']:
+        if agent["tools"]:
             section += "**Tools:**\n\n"
-            for tool in agent['tools']:
-                desc = f" — {tool['description']}" if tool['description'] else ""
+            for tool in agent["tools"]:
+                desc = f" — {tool['description']}" if tool["description"] else ""
                 section += f"- **{tool['name']}** (`{tool['file']}`) {desc}\n"
         else:
             section += "**Tools:** None discovered\n"
@@ -124,7 +126,9 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
             output_path.write_text(content)
             print(f"✅ AGENTS.md generated: {output_path}")
             print(f"📊 Discovered {len(self.agents)} agents")
-            print(f"🔧 Total tools: {sum(len(a['tools']) for a in self.agents.values())}")
+            print(
+                f"🔧 Total tools: {sum(len(a['tools']) for a in self.agents.values())}"
+            )
 
             return True
         except Exception as e:

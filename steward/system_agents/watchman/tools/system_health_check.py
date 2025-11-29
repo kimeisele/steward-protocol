@@ -35,7 +35,12 @@ class SystemHealthCheck:
 
     def check_all(self) -> Dict[str, Any]:
         """Run all health checks and return comprehensive report."""
-        report = {"status": "healthy", "checks": {}, "violations": [], "recommendations": []}
+        report = {
+            "status": "healthy",
+            "checks": {},
+            "violations": [],
+            "recommendations": [],
+        }
 
         # Check git hooks
         hooks_status = self._check_git_hooks()
@@ -112,7 +117,9 @@ class SystemHealthCheck:
         else:
             # Verify content matches
             try:
-                hook_status["valid"] = installed_hook.read_text() == source_hook.read_text()
+                hook_status["valid"] = (
+                    installed_hook.read_text() == source_hook.read_text()
+                )
             except Exception as e:
                 hook_status["ok"] = False
                 hook_status["issue"] = f"Cannot read hook: {e}"
@@ -141,13 +148,17 @@ class SystemHealthCheck:
             lines.append("\n📌 Git Hooks:")
             for hook_name, hook_info in report["checks"]["git_hooks"]["hooks"].items():
                 ok_emoji = "✅" if hook_info["ok"] else "❌"
-                lines.append(f"  {ok_emoji} {hook_name}: {'OK' if hook_info['ok'] else hook_info['issue']}")
+                lines.append(
+                    f"  {ok_emoji} {hook_name}: {'OK' if hook_info['ok'] else hook_info['issue']}"
+                )
 
         # Violations
         if report["violations"]:
             lines.append(f"\n🚨 Violations Found: {len(report['violations'])}")
             for v in report["violations"]:
-                lines.append(f"  • [{v['severity'].upper()}] {v['component']}: {v['issue']}")
+                lines.append(
+                    f"  • [{v['severity'].upper()}] {v['component']}: {v['issue']}"
+                )
                 lines.append(f"    → {v['remediation']}")
 
         # Recommendations
@@ -165,7 +176,12 @@ def main():
     """Main entry point for standalone execution."""
     try:
         # Find repo root
-        result = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
         repo_root = Path(result.stdout.strip())
     except subprocess.CalledProcessError:
         print("❌ Not in a git repository")

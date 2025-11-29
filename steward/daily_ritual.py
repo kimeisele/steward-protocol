@@ -306,9 +306,7 @@ class DailyRitual:
 
         # Step 5: AGENTS PRODUCE WORK
         # Science researches, Engineer builds, Artisan creates
-        logger.info(
-            "   🔨 AGENTS work (Science/Engineer/Artisan productive phase)"
-        )
+        logger.info("   🔨 AGENTS work (Science/Engineer/Artisan productive phase)")
         agents_event = {
             "timestamp": datetime.now().isoformat(),
             "phase": CyclePhase.MIDDAY.value,
@@ -456,9 +454,7 @@ class DailyRitual:
 
         # Step 2: MECHANIC MAINTENANCE
         # The mechanic does overnight maintenance
-        logger.info(
-            "   🔧 MECHANIC performs maintenance (housekeeping & repairs)"
-        )
+        logger.info("   🔧 MECHANIC performs maintenance (housekeeping & repairs)")
         mechanic_event = {
             "timestamp": datetime.now().isoformat(),
             "phase": CyclePhase.ARCHIVE.value,

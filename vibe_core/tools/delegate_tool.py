@@ -88,7 +88,9 @@ class DelegateTool(Tool):
         after kernel boot via set_kernel(kernel).
         """
         self.kernel: VibeKernel | None = None
-        logger.info("DelegateTool: Initialized (kernel will be injected via set_kernel)")
+        logger.info(
+            "DelegateTool: Initialized (kernel will be injected via set_kernel)"
+        )
 
     def set_kernel(self, kernel: "VibeKernel") -> None:
         """

@@ -78,11 +78,7 @@ class ForumCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Democratic decision-making and proposal voting system",
             domain="GOVERNANCE",
-            capabilities=[
-                "governance",
-                "voting",
-                "proposal_management"
-            ]
+            capabilities=["governance", "voting", "proposal_management"],
         )
 
         logger.info("🗳️  FORUM (VibeAgent) initializing...")
@@ -104,19 +100,25 @@ class ForumCartridge(VibeAgent, OathMixin):
         self.proposals = {}
         self.next_proposal_id = 1
 
-        logger.info(f"🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)")
+        logger.info(
+            f"🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)"
+        )
 
     @property
     def proposals_path(self):
         """Lazy-load proposals path (sandboxed)."""
         if self._proposals_path is None:
-            self._proposals_path = self.system.get_sandbox_path() / "governance" / "proposals"
+            self._proposals_path = (
+                self.system.get_sandbox_path() / "governance" / "proposals"
+            )
             self._proposals_path.mkdir(parents=True, exist_ok=True)
             # Load proposals after path is initialized
             if not self.proposals:
                 self.proposals = self._load_all_proposals()
                 self.next_proposal_id = self._get_next_proposal_id()
-                logger.info(f"📋 Proposals loaded: {len(self.proposals)} total (sandboxed)")
+                logger.info(
+                    f"📋 Proposals loaded: {len(self.proposals)} total (sandboxed)"
+                )
         return self._proposals_path
 
     @property
@@ -131,7 +133,9 @@ class ForumCartridge(VibeAgent, OathMixin):
     def executed_path(self):
         """Lazy-load executed path (sandboxed)."""
         if self._executed_path is None:
-            self._executed_path = self.system.get_sandbox_path() / "governance" / "executed"
+            self._executed_path = (
+                self.system.get_sandbox_path() / "governance" / "executed"
+            )
             self._executed_path.mkdir(parents=True, exist_ok=True)
         return self._executed_path
 
@@ -139,7 +143,9 @@ class ForumCartridge(VibeAgent, OathMixin):
     def votes_ledger_path(self):
         """Lazy-load votes ledger path (sandboxed)."""
         if self._votes_ledger_path is None:
-            self._votes_ledger_path = self.system.get_sandbox_path() / "governance" / "votes" / "votes.jsonl"
+            self._votes_ledger_path = (
+                self.system.get_sandbox_path() / "governance" / "votes" / "votes.jsonl"
+            )
         return self._votes_ledger_path
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -177,44 +183,47 @@ class ForumCartridge(VibeAgent, OathMixin):
                 return {
                     "status": "success",
                     "proposals": self.proposals,
-                    "total": len(self.proposals)
+                    "total": len(self.proposals),
                 }
 
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}"
-                }
+                return {"status": "error", "error": f"Unknown action: {action}"}
 
         except Exception as e:
             logger.error(f"❌ FORUM processing error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
-            return {
-                "status": "error",
-                "error": str(e)
-            }
+            return {"status": "error", "error": str(e)}
+
     def get_manifest(self):
         """Return agent manifest for kernel registry."""
         from vibe_core.protocols import AgentManifest
+
         return AgentManifest(
             agent_id="forum",
             name="FORUM",
-            version=self.version if hasattr(self, 'version') else "1.0.0",
+            version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="Democratic voting and proposal management",
             domain="GOVERNANCE",
-            capabilities=['proposal_management', 'voting', 'consensus_building']
+            capabilities=["proposal_management", "voting", "consensus_building"],
         )
-
-
 
     def report_status(self) -> Dict[str, Any]:
         """Report FORUM status (VibeAgent interface) - Deep Introspection."""
-        open_proposals = [p for p in self.proposals.values() if p.get("status") == "OPEN"]
-        approved_proposals = [p for p in self.proposals.values() if p.get("status") == "APPROVED"]
-        executed_proposals = [p for p in self.proposals.values() if p.get("status") == "EXECUTED"]
-        rejected_proposals = [p for p in self.proposals.values() if p.get("status") == "REJECTED"]
+        open_proposals = [
+            p for p in self.proposals.values() if p.get("status") == "OPEN"
+        ]
+        approved_proposals = [
+            p for p in self.proposals.values() if p.get("status") == "APPROVED"
+        ]
+        executed_proposals = [
+            p for p in self.proposals.values() if p.get("status") == "EXECUTED"
+        ]
+        rejected_proposals = [
+            p for p in self.proposals.values() if p.get("status") == "REJECTED"
+        ]
 
         # Load and count votes from ledger
         votes_count = 0
@@ -242,7 +251,7 @@ class ForumCartridge(VibeAgent, OathMixin):
                 "proposals_path": str(self.proposals_path),
                 "votes_ledger_path": str(self.votes_ledger_path),
                 "executed_archive_path": str(self.executed_path),
-            }
+            },
         }
 
     def create_proposal(
@@ -251,7 +260,7 @@ class ForumCartridge(VibeAgent, OathMixin):
         description: str,
         proposer: str,
         action: Dict[str, Any],
-        threshold: float = 0.5
+        threshold: float = 0.5,
     ) -> Dict[str, Any]:
         """
         Create a new proposal.
@@ -302,12 +311,12 @@ class ForumCartridge(VibeAgent, OathMixin):
 
         # MANDATORY: Record in kernel ledger (source of truth)
         # If kernel not set, this MUST fail - agents cannot work offline
-        if not hasattr(self, 'kernel') or not self.kernel:
+        if not hasattr(self, "kernel") or not self.kernel:
             raise RuntimeError(
                 f"FATAL: {self.agent_id} cannot create proposal - not connected to kernel. "
                 "All agent actions MUST be recorded in kernel ledger (no offline mode)."
             )
-        
+
         self.kernel.ledger.record_event(
             event_type="proposal_created",
             agent_id=self.agent_id,
@@ -316,18 +325,14 @@ class ForumCartridge(VibeAgent, OathMixin):
                 "title": title,
                 "proposer": proposer,
                 "action_type": action.get("type"),
-            }
+            },
         )
 
         logger.info(f"✅ Proposal created: {proposal_id}")
         return proposal
 
     def submit_vote(
-        self,
-        proposal_id: str,
-        voter: str,
-        vote: str,
-        signature: str = None
+        self, proposal_id: str, voter: str, vote: str, signature: str = None
     ) -> Dict[str, Any]:
         """
         Submit a vote on a proposal.
@@ -388,12 +393,12 @@ class ForumCartridge(VibeAgent, OathMixin):
         proposal_file.write_text(json.dumps(proposal, indent=2))
 
         # MANDATORY: Record in kernel ledger (source of truth)
-        if not hasattr(self, 'kernel') or not self.kernel:
+        if not hasattr(self, "kernel") or not self.kernel:
             raise RuntimeError(
                 f"FATAL: {self.agent_id} cannot cast vote - not connected to kernel. "
                 "All agent actions MUST be recorded in kernel ledger (no offline mode)."
             )
-        
+
         self.kernel.ledger.record_event(
             event_type="vote_cast",
             agent_id=self.agent_id,
@@ -403,10 +408,12 @@ class ForumCartridge(VibeAgent, OathMixin):
                 "vote": vote,
                 "votes_yes": proposal["voting"]["votes_yes"],
                 "votes_no": proposal["voting"]["votes_no"],
-            }
+            },
         )
 
-        logger.info(f"   Updated: YES={proposal['voting']['votes_yes']}, NO={proposal['voting']['votes_no']}")
+        logger.info(
+            f"   Updated: YES={proposal['voting']['votes_yes']}, NO={proposal['voting']['votes_no']}"
+        )
 
         return {
             "status": "vote_recorded",
@@ -490,7 +497,9 @@ class ForumCartridge(VibeAgent, OathMixin):
             "action": proposal["action"],
         }
 
-    def execute_proposal(self, proposal_id: str, civic_cartridge: Any) -> Dict[str, Any]:
+    def execute_proposal(
+        self, proposal_id: str, civic_cartridge: Any
+    ) -> Dict[str, Any]:
         """
         Execute an approved proposal.
 
@@ -571,13 +580,15 @@ class ForumCartridge(VibeAgent, OathMixin):
                 license_type = action_params.get("license_type", "broadcast")
                 source_authority = action_params.get("source_authority")
 
-                logger.info(f"   Executing: Reinstate {license_type} license for {agent_name}")
+                logger.info(
+                    f"   Executing: Reinstate {license_type} license for {agent_name}"
+                )
 
                 # Call CIVIC license tool
                 result = civic_cartridge.license_tool.reinstate_license(
                     agent_name=agent_name,
                     license_type=LicenseType[license_type.upper()],
-                    source_authority=source_authority
+                    source_authority=source_authority,
                 )
 
                 if result:
@@ -602,7 +613,7 @@ class ForumCartridge(VibeAgent, OathMixin):
                         "result": {
                             "status": "success",
                             "agent": agent_name,
-                            "license_reinstated": True
+                            "license_reinstated": True,
                         },
                     }
                 else:
@@ -620,6 +631,7 @@ class ForumCartridge(VibeAgent, OathMixin):
         except Exception as e:
             logger.error(f"❌ Execution error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
             return {
                 "status": "error",

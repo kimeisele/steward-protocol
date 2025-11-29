@@ -56,7 +56,9 @@ class PhoenixConfigEngine:
         """
         try:
             if ":" not in class_path:
-                raise ValueError(f"Invalid class path: {class_path}. Use 'module:ClassName'")
+                raise ValueError(
+                    f"Invalid class path: {class_path}. Use 'module:ClassName'"
+                )
 
             module_name, class_name = class_path.split(":", 1)
             module = importlib.import_module(module_name)
