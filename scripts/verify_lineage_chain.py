@@ -119,7 +119,7 @@ def test_tampering(chain: LineageChain) -> None:
     try:
         chain.conn.execute(
             "UPDATE blocks SET data = ? WHERE idx = ?",
-            ('{"tampered": true}', latest.index)
+            ('{"tampered": true}', latest.index),
         )
         chain.conn.commit()
 
@@ -140,16 +140,13 @@ def main():
     parser.add_argument(
         "--db-path",
         default="/tmp/vibe_os/kernel/lineage.db",
-        help="Path to lineage database"
+        help="Path to lineage database",
     )
-    parser.add_argument(
-        "--export-json",
-        help="Export chain to JSON file"
-    )
+    parser.add_argument("--export-json", help="Export chain to JSON file")
     parser.add_argument(
         "--test-tamper",
         action="store_true",
-        help="Test tampering detection (destructive!)"
+        help="Test tampering detection (destructive!)",
     )
 
     args = parser.parse_args()

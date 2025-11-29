@@ -51,10 +51,7 @@ class GitTools:
             self.logger.info(f"✅ Git repository detected: {self.repo_path}")
 
     def _run_git_command(
-        self,
-        args: List[str],
-        check: bool = True,
-        capture_output: bool = False
+        self, args: List[str], check: bool = True, capture_output: bool = False
     ) -> Tuple[int, str, str]:
         """
         Execute a git command safely.
@@ -75,11 +72,7 @@ class GitTools:
 
         try:
             result = subprocess.run(
-                cmd,
-                cwd=str(self.repo_path),
-                capture_output=True,
-                text=True,
-                timeout=30
+                cmd, cwd=str(self.repo_path), capture_output=True, text=True, timeout=30
             )
 
             if check and result.returncode != 0:
@@ -100,10 +93,7 @@ class GitTools:
             return (1, "", msg)
 
     def seal_history(
-        self,
-        message: str,
-        files: Optional[List[str]] = None,
-        sign: bool = True
+        self, message: str, files: Optional[List[str]] = None, sign: bool = True
     ) -> Dict[str, any]:
         """
         Seal the timeline: Create a signed commit.
@@ -146,8 +136,7 @@ class GitTools:
 
             # 2. Check if there's anything to commit
             code, out, err = self._run_git_command(
-                ["diff", "--cached", "--quiet"],
-                check=False
+                ["diff", "--cached", "--quiet"], check=False
             )
             if code == 0:
                 # No changes
@@ -167,10 +156,7 @@ class GitTools:
                 return result
 
             # 4. Get commit hash
-            code, hash_out, _ = self._run_git_command(
-                ["rev-parse", "HEAD"],
-                check=True
-            )
+            code, hash_out, _ = self._run_git_command(["rev-parse", "HEAD"], check=True)
             commit_hash = hash_out[:7]  # Short hash
 
             result["success"] = True
@@ -186,9 +172,7 @@ class GitTools:
         return result
 
     def read_history(
-        self,
-        pattern: Optional[str] = None,
-        limit: int = 10
+        self, pattern: Optional[str] = None, limit: int = 10
     ) -> Dict[str, any]:
         """
         Read the timeline: Query git log.
@@ -205,21 +189,13 @@ class GitTools:
         """
         self.logger.info(f"📖 Reading history (limit: {limit})...")
 
-        result = {
-            "success": False,
-            "commits": [],
-            "message": ""
-        }
+        result = {"success": False, "commits": [], "message": ""}
 
         try:
             # Build log format: one JSON object per line
             format_str = "%H%n%h%n%an%n%ae%n%aI%n%s%n"
 
-            cmd = [
-                "log",
-                f"--max-count={limit}",
-                f"--format={format_str}"
-            ]
+            cmd = ["log", f"--max-count={limit}", f"--format={format_str}"]
 
             if pattern:
                 cmd.extend(["--", pattern])
@@ -249,7 +225,7 @@ class GitTools:
                     "author": lines[i + 2],
                     "email": lines[i + 3],
                     "timestamp": lines[i + 4],
-                    "subject": lines[i + 5] if i + 5 < len(lines) else ""
+                    "subject": lines[i + 5] if i + 5 < len(lines) else "",
                 }
                 result["commits"].append(commit)
 
@@ -279,11 +255,7 @@ class GitTools:
         """
         self.logger.info(f"🔀 Forking reality: {branch_name}...")
 
-        result = {
-            "success": False,
-            "branch": branch_name,
-            "message": ""
-        }
+        result = {"success": False, "branch": branch_name, "message": ""}
 
         try:
             # Validate branch name
@@ -293,8 +265,7 @@ class GitTools:
 
             # Create and checkout branch
             code, out, err = self._run_git_command(
-                ["checkout", "-b", branch_name],
-                check=False
+                ["checkout", "-b", branch_name], check=False
             )
 
             if code != 0:
@@ -328,17 +299,10 @@ class GitTools:
         """
         self.logger.info(f"📋 Manifesting {len(files)} files...")
 
-        result = {
-            "success": True,
-            "staged_files": [],
-            "message": ""
-        }
+        result = {"success": True, "staged_files": [], "message": ""}
 
         for file in files:
-            code, out, err = self._run_git_command(
-                ["add", file],
-                check=False
-            )
+            code, out, err = self._run_git_command(["add", file], check=False)
 
             if code == 0:
                 result["staged_files"].append(file)
@@ -362,27 +326,18 @@ class GitTools:
             - dirty: bool (has uncommitted changes)
             - files_changed: List of changed files
         """
-        result = {
-            "success": False,
-            "branch": None,
-            "dirty": False,
-            "files_changed": []
-        }
+        result = {"success": False, "branch": None, "dirty": False, "files_changed": []}
 
         try:
             # Get current branch
             code, branch, _ = self._run_git_command(
-                ["rev-parse", "--abbrev-ref", "HEAD"],
-                check=False
+                ["rev-parse", "--abbrev-ref", "HEAD"], check=False
             )
             if code == 0:
                 result["branch"] = branch
 
             # Get changed files
-            code, output, _ = self._run_git_command(
-                ["status", "-s"],
-                check=False
-            )
+            code, output, _ = self._run_git_command(["status", "-s"], check=False)
             if code == 0 and output:
                 result["files_changed"] = output.split("\n")
                 result["dirty"] = True
@@ -395,9 +350,7 @@ class GitTools:
         return result
 
     def push_to_remote(
-        self,
-        remote: str = "origin",
-        branch: Optional[str] = None
+        self, remote: str = "origin", branch: Optional[str] = None
     ) -> Dict[str, any]:
         """
         Push commits to remote (manifest timeline across network).
@@ -415,19 +368,13 @@ class GitTools:
         """
         self.logger.info(f"☁️  Pushing to {remote}...")
 
-        result = {
-            "success": False,
-            "remote": remote,
-            "branch": branch,
-            "message": ""
-        }
+        result = {"success": False, "remote": remote, "branch": branch, "message": ""}
 
         try:
             # Get current branch if not specified
             if not branch:
                 code, branch_out, _ = self._run_git_command(
-                    ["rev-parse", "--abbrev-ref", "HEAD"],
-                    check=False
+                    ["rev-parse", "--abbrev-ref", "HEAD"], check=False
                 )
                 if code == 0:
                     branch = branch_out
@@ -437,8 +384,7 @@ class GitTools:
 
             # Push with -u flag (track remote)
             code, out, err = self._run_git_command(
-                ["push", "-u", remote, branch],
-                check=False
+                ["push", "-u", remote, branch], check=False
             )
 
             if code != 0:

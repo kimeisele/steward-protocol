@@ -65,7 +65,9 @@ class AddTaskTool(Tool):
 
         description = parameters["description"]
         if not isinstance(description, str):
-            raise TypeError(f"description must be a string, got {type(description).__name__}")
+            raise TypeError(
+                f"description must be a string, got {type(description).__name__}"
+            )
 
         if not description.strip():
             raise ValueError("description cannot be empty")
@@ -73,11 +75,15 @@ class AddTaskTool(Tool):
         if "priority" in parameters:
             priority = parameters["priority"]
             if not isinstance(priority, str):
-                raise TypeError(f"priority must be a string, got {type(priority).__name__}")
+                raise TypeError(
+                    f"priority must be a string, got {type(priority).__name__}"
+                )
 
             valid_priorities = ["HIGH", "MEDIUM", "LOW"]
             if priority.upper() not in valid_priorities:
-                raise ValueError(f"priority must be one of {valid_priorities}, got {priority}")
+                raise ValueError(
+                    f"priority must be one of {valid_priorities}, got {priority}"
+                )
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """
@@ -137,17 +143,24 @@ class AddTaskTool(Tool):
                 new_outstanding = "\n" + new_task_line + "\n"
             else:
                 # Add before the Completed Tasks section
-                new_outstanding = outstanding_section.rstrip() + "\n" + new_task_line + "\n"
+                new_outstanding = (
+                    outstanding_section.rstrip() + "\n" + new_task_line + "\n"
+                )
 
             # Reconstruct the file
             new_content = (
-                before_outstanding + "## Outstanding Tasks" + new_outstanding + after_completed
+                before_outstanding
+                + "## Outstanding Tasks"
+                + new_outstanding
+                + after_completed
             )
 
             # Write back
             BACKLOG_PATH.write_text(new_content)
 
-            logger.info(f"AddTaskTool: Added task '[{priority}] {description}' to backlog")
+            logger.info(
+                f"AddTaskTool: Added task '[{priority}] {description}' to backlog"
+            )
             return ToolResult(
                 success=True,
                 output=f"Task added: [{priority}] {description}",
@@ -197,7 +210,9 @@ class ListTasksTool(Tool):
 
             valid_statuses = ["pending", "completed"]
             if status.lower() not in valid_statuses:
-                raise ValueError(f"status must be one of {valid_statuses}, got {status}")
+                raise ValueError(
+                    f"status must be one of {valid_statuses}, got {status}"
+                )
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """
@@ -314,7 +329,9 @@ class CompleteTaskTool(Tool):
 
         desc = parameters["task_description"]
         if not isinstance(desc, str):
-            raise TypeError(f"task_description must be a string, got {type(desc).__name__}")
+            raise TypeError(
+                f"task_description must be a string, got {type(desc).__name__}"
+            )
 
         if not desc.strip():
             raise ValueError("task_description cannot be empty")
@@ -367,7 +384,10 @@ class CompleteTaskTool(Tool):
             found_index = -1
 
             for i, line in enumerate(lines):
-                if line.strip().startswith("- [ ]") and search_term.lower() in line.lower():
+                if (
+                    line.strip().startswith("- [ ]")
+                    and search_term.lower() in line.lower()
+                ):
                     found_task = line
                     found_index = i
                     break
@@ -400,13 +420,19 @@ class CompleteTaskTool(Tool):
 
             # Reconstruct the file
             new_content = (
-                before_outstanding + "## Outstanding Tasks" + new_outstanding + "\n" + new_completed
+                before_outstanding
+                + "## Outstanding Tasks"
+                + new_outstanding
+                + "\n"
+                + new_completed
             )
 
             # Write back
             BACKLOG_PATH.write_text(new_content)
 
-            logger.info(f"CompleteTaskTool: Marked task as completed: {found_task.strip()}")
+            logger.info(
+                f"CompleteTaskTool: Marked task as completed: {found_task.strip()}"
+            )
             return ToolResult(
                 success=True,
                 output=f"Task completed: {found_task.strip()}",

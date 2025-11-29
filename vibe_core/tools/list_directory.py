@@ -82,7 +82,9 @@ class ListDirectoryTool(Tool):
                 return ToolResult(success=False, error=f"Path not found: {path}")
 
             if not path.is_dir():
-                return ToolResult(success=False, error=f"Path is not a directory: {path}")
+                return ToolResult(
+                    success=False, error=f"Path is not a directory: {path}"
+                )
 
             # List contents
             items = []
@@ -105,7 +107,9 @@ class ListDirectoryTool(Tool):
             logger.info(f"ListDirectoryTool: Listed {path} ({len(items)} items)")
 
             return ToolResult(
-                success=True, output=output, metadata={"path": str(path), "count": len(items)}
+                success=True,
+                output=output,
+                metadata={"path": str(path), "count": len(items)},
             )
 
         except PermissionError:

@@ -100,15 +100,21 @@ class SmartLocalProvider(LLMProvider):
 
     def _is_planning_request(self, message: str) -> bool:
         """Check if message is asking for planning."""
-        return any(kw in message for kw in ["plan", "architecture", "design", "analysis"])
+        return any(
+            kw in message for kw in ["plan", "architecture", "design", "analysis"]
+        )
 
     def _is_coding_request(self, message: str) -> bool:
         """Check if message is asking for coding."""
-        return any(kw in message for kw in ["code", "implement", "write", "create", "develop"])
+        return any(
+            kw in message for kw in ["code", "implement", "write", "create", "develop"]
+        )
 
     def _is_testing_request(self, message: str) -> bool:
         """Check if message is asking for testing."""
-        return any(kw in message for kw in ["test", "verify", "check", "validate", "quality"])
+        return any(
+            kw in message for kw in ["test", "verify", "check", "validate", "quality"]
+        )
 
     def _handle_delegation(self, messages: list[dict[str, str]]) -> str:
         """Handle full SDLC delegation (Plan → Code → Test)."""
@@ -144,7 +150,10 @@ class SmartLocalProvider(LLMProvider):
                     "agent": "specialist-testing",
                     "task": "Test Snake game implementation",
                     "depends_on": "Step 2 (CODING)",
-                    "payload": {"test_dir": "workspace/snake_game/", "coverage_target": 0.80},
+                    "payload": {
+                        "test_dir": "workspace/snake_game/",
+                        "coverage_target": 0.80,
+                    },
                 },
             ],
             "status": "WORKFLOW_PLAN_GENERATED",
@@ -191,7 +200,11 @@ class SmartLocalProvider(LLMProvider):
                         ],
                     },
                 ],
-                "tech_stack": ["Python 3.8+", "tkinter (built-in)", "unittest (built-in)"],
+                "tech_stack": [
+                    "Python 3.8+",
+                    "tkinter (built-in)",
+                    "unittest (built-in)",
+                ],
             },
             "implementation_plan": [
                 "Step 1: Create SnakeGame class with state management",
@@ -399,7 +412,9 @@ if __name__ == "__main__":
 
     def _respond_generic(self, message: str) -> str:
         """Respond to generic queries."""
-        return self._respond(f"Understood: {message[:50]}. Ready to orchestrate Specialist team.")
+        return self._respond(
+            f"Understood: {message[:50]}. Ready to orchestrate Specialist team."
+        )
 
     def _respond(self, text: str) -> str:
         """Format response."""

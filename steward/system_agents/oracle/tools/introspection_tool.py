@@ -25,6 +25,7 @@ logger = logging.getLogger("ORACLE_INTROSPECTION")
 
 class IntrospectionError(Exception):
     """Raised when introspection fails."""
+
     pass
 
 
@@ -80,7 +81,7 @@ class IntrospectionTool:
                 "balance": balance,
                 "account": statement,
                 "recent_leases": vault_leases,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -103,10 +104,7 @@ class IntrospectionTool:
 
         try:
             cur = self.bank.conn.cursor()
-            cur.execute(
-                "SELECT * FROM transactions WHERE tx_id = ?",
-                (tx_id,)
-            )
+            cur.execute("SELECT * FROM transactions WHERE tx_id = ?", (tx_id,))
             row = cur.fetchone()
 
             if not row:
@@ -116,10 +114,7 @@ class IntrospectionTool:
             tx_dict = dict(row)
 
             # Get the double-entry detail
-            cur.execute(
-                "SELECT * FROM entries WHERE tx_id = ?",
-                (tx_id,)
-            )
+            cur.execute("SELECT * FROM entries WHERE tx_id = ?", (tx_id,))
             entries = [dict(e) for e in cur.fetchall()]
 
             return {
@@ -132,7 +127,7 @@ class IntrospectionTool:
                 "service_type": tx_dict["service_type"],
                 "previous_hash": tx_dict["previous_hash"],
                 "tx_hash": tx_dict["tx_hash"],
-                "entries": entries
+                "entries": entries,
             }
 
         except Exception as e:
@@ -159,7 +154,7 @@ class IntrospectionTool:
                 return {
                     "agent_id": agent_id,
                     "is_frozen": False,
-                    "message": f"{agent_id} is not frozen"
+                    "message": f"{agent_id} is not frozen",
                 }
 
             # Find FREEZE transaction
@@ -172,7 +167,7 @@ class IntrospectionTool:
                 ORDER BY timestamp DESC
                 LIMIT 1
                 """,
-                (agent_id, agent_id)
+                (agent_id, agent_id),
             )
 
             freeze_tx = cur.fetchone()
@@ -181,7 +176,7 @@ class IntrospectionTool:
                 return {
                     "agent_id": agent_id,
                     "is_frozen": True,
-                    "message": f"{agent_id} is frozen but no FREEZE transaction found (manual freeze?)"
+                    "message": f"{agent_id} is frozen but no FREEZE transaction found (manual freeze?)",
                 }
 
             freeze_dict = dict(freeze_tx)
@@ -198,7 +193,7 @@ class IntrospectionTool:
                 "violation": violation_details,
                 "freeze_tx_id": freeze_dict["tx_id"],
                 "message": f"{agent_id} was frozen on {freeze_dict['timestamp']} "
-                           f"due to: {violation_details.get('type', 'unknown')}"
+                f"due to: {violation_details.get('type', 'unknown')}",
             }
 
         except Exception as e:
@@ -213,30 +208,28 @@ class IntrospectionTool:
             return {
                 "type": "Mock Implementation",
                 "severity": "CRITICAL",
-                "description": "Function returns hardcoded value without real implementation"
+                "description": "Function returns hardcoded value without real implementation",
             }
         elif "Placeholder" in reason:
             return {
                 "type": "Placeholder Code",
                 "severity": "CRITICAL",
-                "description": "Placeholder or TODO implementation detected"
+                "description": "Placeholder or TODO implementation detected",
             }
         elif "NotImplementedError" in reason:
             return {
                 "type": "Stub Implementation",
                 "severity": "CRITICAL",
-                "description": "Function raises NotImplementedError instead of implementing logic"
+                "description": "Function raises NotImplementedError instead of implementing logic",
             }
         else:
-            return {
-                "type": "Violation",
-                "severity": "HIGH",
-                "description": reason
-            }
+            return {"type": "Violation", "severity": "HIGH", "description": reason}
 
     # ==================== AUDIT TRAIL ====================
 
-    def audit_trail(self, limit: int = 20, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def audit_trail(
+        self, limit: int = 20, agent_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Get audit trail of recent transactions.
 
@@ -261,12 +254,12 @@ class IntrospectionTool:
                     ORDER BY timestamp DESC
                     LIMIT ?
                     """,
-                    (agent_id, agent_id, limit)
+                    (agent_id, agent_id, limit),
                 )
             else:
                 cur.execute(
                     "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT ?",
-                    (limit,)
+                    (limit,),
                 )
 
             rows = cur.fetchall()
@@ -313,7 +306,7 @@ class IntrospectionTool:
                 "total_credits": stats.get("total_credits", 0),
                 "circulating_credits": stats.get("circulating_credits", 0),
                 "integrity_verified": integrity_ok,
-                "system_status": "healthy" if integrity_ok else "compromised"
+                "system_status": "healthy" if integrity_ok else "compromised",
             }
 
         except Exception as e:

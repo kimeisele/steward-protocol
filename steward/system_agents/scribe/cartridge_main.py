@@ -80,11 +80,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md",
             domain="INFRASTRUCTURE",
-            capabilities=[
-                "documentation",
-                "introspection",
-                "publishing"
-            ]
+            capabilities=["documentation", "introspection", "publishing"],
         )
 
         logger.info("📚 SCRIBE Cartridge initializing (VibeAgent v1.0)...")
@@ -118,7 +114,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             description=self.description,
             domain=self.domain,
             capabilities=self.capabilities,
-            dependencies=[]
+            dependencies=[],
         )
 
     # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
@@ -203,7 +199,11 @@ class ScribeCartridge(VibeAgent, OathMixin):
             "action": "generate_all" | "generate_agents" | "generate_citymap" | "generate_help" | "generate_readme",
         }
         """
-        action = task.input.get("action") if hasattr(task, 'input') else task.payload.get("action")
+        action = (
+            task.input.get("action")
+            if hasattr(task, "input")
+            else task.payload.get("action")
+        )
         logger.info(f"📚 SCRIBE processing: {action}")
 
         try:
@@ -218,19 +218,13 @@ class ScribeCartridge(VibeAgent, OathMixin):
             elif action == "generate_readme":
                 result = self._generate_readme()
             else:
-                result = {
-                    "success": False,
-                    "error": f"Unknown action: {action}"
-                }
+                result = {"success": False, "error": f"Unknown action: {action}"}
 
             return result
 
         except Exception as e:
             logger.error(f"❌ Task processing failed: {e}")
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def _generate_all(self) -> Dict[str, Any]:
         """Generate all documentation files.
@@ -257,18 +251,22 @@ class ScribeCartridge(VibeAgent, OathMixin):
             try:
                 # Generate content via introspection
                 # Try scan_and_render() first, fall back to render()
-                if hasattr(renderer, 'scan_and_render'):
+                if hasattr(renderer, "scan_and_render"):
                     content = renderer.scan_and_render()
-                elif hasattr(renderer, 'render'):
+                elif hasattr(renderer, "render"):
                     content = renderer.render()
                 else:
-                    raise AttributeError(f"Renderer for {doc_name} has no render method")
+                    raise AttributeError(
+                        f"Renderer for {doc_name} has no render method"
+                    )
 
                 # Write to sandbox
                 sandbox_file = self.sandbox_dir / doc_name
                 sandbox_file.write_text(content)
                 rendered[doc_name] = True
-                logger.info(f"   ✅ Rendered {doc_name} to sandbox ({len(content)} bytes)")
+                logger.info(
+                    f"   ✅ Rendered {doc_name} to sandbox ({len(content)} bytes)"
+                )
 
             except Exception as e:
                 logger.error(f"   ❌ Failed to render {doc_name}: {e}")
@@ -290,9 +288,13 @@ class ScribeCartridge(VibeAgent, OathMixin):
 
         return {
             "success": all_success,
-            "message": "All documentation generated and published" if all_success else "Some steps failed",
+            "message": (
+                "All documentation generated and published"
+                if all_success
+                else "Some steps failed"
+            ),
             "rendered": rendered,
-            "published": published
+            "published": published,
         }
 
     def _generate_agents(self) -> Dict[str, Any]:
@@ -326,12 +328,14 @@ class ScribeCartridge(VibeAgent, OathMixin):
         try:
             # Step 1: Render to sandbox
             # Try scan_and_render() first, fall back to render()
-            if hasattr(renderer, 'scan_and_render'):
+            if hasattr(renderer, "scan_and_render"):
                 content = renderer.scan_and_render()
-            elif hasattr(renderer, 'render'):
+            elif hasattr(renderer, "render"):
                 content = renderer.render()
             else:
-                raise AttributeError(f"Renderer has no scan_and_render() or render() method")
+                raise AttributeError(
+                    f"Renderer has no scan_and_render() or render() method"
+                )
 
             sandbox_file = self.sandbox_dir / doc_name
             sandbox_file.write_text(content)
@@ -344,7 +348,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             return {
                 "success": True,
                 "message": f"{doc_name} generated and published",
-                "bytes": len(content)
+                "bytes": len(content),
             }
 
         except Exception as e:
@@ -352,7 +356,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             return {
                 "success": False,
                 "message": f"Failed to generate {doc_name}",
-                "error": str(e)
+                "error": str(e),
             }
 
     # Utility method for direct invocation (outside kernel)
@@ -362,7 +366,9 @@ class ScribeCartridge(VibeAgent, OathMixin):
         DEPRECATED after Phase 2.3: Requires kernel registration for system interface.
         This method is kept for backwards compatibility but will fail without kernel.
         """
-        logger.warning("⚠️  generate_all() is deprecated. Use kernel.dispatch_task() instead.")
+        logger.warning(
+            "⚠️  generate_all() is deprecated. Use kernel.dispatch_task() instead."
+        )
 
         try:
             result = self._generate_all()
@@ -384,9 +390,12 @@ def main():
         kernel.dispatch_task("scribe", {"action": "generate_all"})
     """
     logger.error("❌ SCRIBE standalone mode is deprecated after Phase 2.3 migration")
-    logger.error("   SCRIBE requires kernel registration for sandboxed filesystem access")
+    logger.error(
+        "   SCRIBE requires kernel registration for sandboxed filesystem access"
+    )
     logger.error("   Use: kernel.register_agent(ScribeCartridge())")
     import sys
+
     sys.exit(1)
 
 

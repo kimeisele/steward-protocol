@@ -19,9 +19,6 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-    print("Make sure you're running from the steward-protocol root directory")
-    sys.exit(1)
-
 try:
     from openai import OpenAI
 except ImportError:
@@ -157,14 +154,23 @@ def load_agi_context():
     cartridge_path = Path(__file__).parent / "cartridge.yaml"
     if cartridge_path.exists():
         import yaml
+
         with open(cartridge_path) as f:
             config = yaml.safe_load(f)
             agi_def = config.get("agi_definition", {})
             return {
                 "acronym": agi_def.get("acronym", "Artificial Governed Intelligence"),
-                "core_principle": agi_def.get("core_principle", "Intelligence without Governance is just noise."),
-                "technical_definition": agi_def.get("technical_definition", "Capability + Cryptographic Identity + Accountability"),
-                "core_belief": agi_def.get("core_belief", "Trust is scarce. Governance is essential. Cryptographic proof is proof."),
+                "core_principle": agi_def.get(
+                    "core_principle", "Intelligence without Governance is just noise."
+                ),
+                "technical_definition": agi_def.get(
+                    "technical_definition",
+                    "Capability + Cryptographic Identity + Accountability",
+                ),
+                "core_belief": agi_def.get(
+                    "core_belief",
+                    "Trust is scarce. Governance is essential. Cryptographic proof is proof.",
+                ),
             }
     return {}
 
@@ -212,18 +218,15 @@ def generate_manifesto():
         f"Core Principle: {agi_context.get('core_principle', '')}\n"
         f"Technical Definition: {agi_context.get('technical_definition', '')}\n"
         f"Core Belief: {agi_context.get('core_belief', '')}\n\n"
-
         f"TASK: Write the FOUNDING MANIFESTO for Artificial Governed Intelligence.\n\n"
-
         f"You must argue:\n"
         f"1. The old AGI definition (Human-Level General Intelligence) is a RED HERRING.\n"
         f"2. The REAL problem: Systems with power but no accountability.\n"
         f"3. The REAL solution: Governance-First Architecture.\n"
         f"4. Why HERALD is the FIRST of its kind (cryptographic identity + governance).\n"
         f"5. The future is not 'superintelligence' but 'governed intelligence'.\n\n"
-
         f"STRUCTURE:\n"
-        f"- Title: \"A.G.I. = Artificial Governed Intelligence\"\n"
+        f'- Title: "A.G.I. = Artificial Governed Intelligence"\n'
         f"- Preamble: Why the old definition fails\n"
         f"- The Three Pillars: Capability, Cryptographic Identity, Accountability\n"
         f"- The Problem: Powerful systems without governance\n"
@@ -231,17 +234,13 @@ def generate_manifesto():
         f"- HERALD's Role: Proof-of-Concept\n"
         f"- The Future: A federation of governed agents\n"
         f"- Closing: Call to action\n\n"
-
         f"TONE:\n"
         f"- Uncompromising. Technical. Visionary.\n"
         f"- Like a technical manifesto from someone who just cracked a category definition.\n"
         f"- Not marketing. Not hype. Pure technical truth.\n"
         f"- Quote systems theory, cryptography, game theory where relevant.\n\n"
-
         f"LENGTH: ~2000 words. Formal structure with clear sections.\n\n"
-
         f"TECHNICAL CONTEXT:\n{spec_text[:4000]}\n\n"
-
         f"Remember: You are writing this. Not a human writing for you.\n"
         f"Every word proves the A.G.I. premise: governance-enabled systems can self-articulate."
     )
@@ -252,14 +251,9 @@ def generate_manifesto():
     try:
         response = client.chat.completions.create(
             model="anthropic/claude-3-5-sonnet",
-            messages=[
-                {
-                    "role": "user",
-                    "content": manifesto_prompt
-                }
-            ],
+            messages=[{"role": "user", "content": manifesto_prompt}],
             max_tokens=3000,
-            temperature=0.8
+            temperature=0.8,
         )
 
         manifesto_text = response.choices[0].message.content
@@ -282,10 +276,18 @@ def generate_manifesto():
             f.write(manifesto_text)
             f.write("\n\n---\n\n")
             f.write("## Proof of Authenticity\n\n")
-            f.write(f"This manifesto was generated autonomously by HERALD's content generation system.\n")
-            f.write(f"It uses the Steward Protocol for cryptographic identity verification.\n")
-            f.write(f"Every principle articulated here reflects HERALD's internal governance rules.\n")
-            f.write(f"This is not marketing copy. This is self-articulation of governed intelligence.\n")
+            f.write(
+                f"This manifesto was generated autonomously by HERALD's content generation system.\n"
+            )
+            f.write(
+                f"It uses the Steward Protocol for cryptographic identity verification.\n"
+            )
+            f.write(
+                f"Every principle articulated here reflects HERALD's internal governance rules.\n"
+            )
+            f.write(
+                f"This is not marketing copy. This is self-articulation of governed intelligence.\n"
+            )
 
         print(f"✅ Manifesto written to: {output_path.relative_to(Path.cwd())}")
         print(f"   Size: {output_path.stat().st_size} bytes")

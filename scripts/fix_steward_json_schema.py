@@ -15,6 +15,7 @@ import json
 import sys
 from pathlib import Path
 
+
 def convert_manifest(manifest_path: Path) -> bool:
     """
     Convert steward.json from new schema to old (working) schema.
@@ -22,7 +23,7 @@ def convert_manifest(manifest_path: Path) -> bool:
     Returns True if converted, False if already correct or error.
     """
     try:
-        with open(manifest_path, 'r') as f:
+        with open(manifest_path, "r") as f:
             data = json.load(f)
 
         # Check if already in old schema
@@ -50,17 +51,17 @@ def convert_manifest(manifest_path: Path) -> bool:
                 "version": specs.get("version", "1.0.0"),
                 "class": "system_service",  # or extract from domain
                 "specialization": specs.get("domain", "GENERAL"),
-                "status": "active"
+                "status": "active",
             },
             "credentials": {
                 "mandate": specs.get("description", "System agent"),
                 "constraints": [],
-                "prime_directive": "Serve the system"
+                "prime_directive": "Serve the system",
             },
             "capabilities": {
                 "interfaces": ["kernel"],
-                "operations": capabilities.get("operations", [])
-            }
+                "operations": capabilities.get("operations", []),
+            },
         }
 
         # Add governance if present
@@ -68,7 +69,7 @@ def convert_manifest(manifest_path: Path) -> bool:
             old_schema["governance"] = governance
 
         # Write back
-        with open(manifest_path, 'w') as f:
+        with open(manifest_path, "w") as f:
             json.dump(old_schema, f, indent=2)
 
         print(f"   ✅ Converted: {manifest_path.parent.name}")

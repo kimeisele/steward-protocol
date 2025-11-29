@@ -128,9 +128,7 @@ class PranaInitializer:
                 logger.info(f"      ✅ {agent_id.upper()}")
 
             if len(agents) != 18:
-                logger.warning(
-                    f"   ⚠️  Expected 18 agents, found {len(agents)}"
-                )
+                logger.warning(f"   ⚠️  Expected 18 agents, found {len(agents)}")
 
             logger.info(f"   ✅ All agents verified")
             return True
@@ -189,7 +187,9 @@ class PranaInitializer:
                 self.kernel.daily_ritual = DailyRitual(self.kernel)
                 logger.info("   ✅ Daily Ritual attached to kernel")
             else:
-                logger.warning("   ⚠️  Kernel not available, Daily Ritual in dry-run mode")
+                logger.warning(
+                    "   ⚠️  Kernel not available, Daily Ritual in dry-run mode"
+                )
 
             logger.info("   ✅ Daily Ritual activated")
             return True

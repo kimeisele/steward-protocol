@@ -35,6 +35,7 @@ except ImportError:
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("DARSHAN")
 
+
 # ANSI Color codes
 class ANSI:
     RESET = "\033[0m"
@@ -65,6 +66,7 @@ class ANSI:
 @dataclass
 class PulseData:
     """Current heartbeat state"""
+
     cycle_id: int = 0
     system_state: str = "HEALTHY"
     active_agents: List[str] = None
@@ -88,23 +90,18 @@ class BhuMandala:
     AGENT_POSITIONS = {
         # Ring 1 (Center)
         "civic": (0, 0, "N"),
-
         # Ring 2
         "herald": (2, 0, "E"),
         "temple": (0, 2, "N"),
-
         # Ring 3
         "artisan": (3, 1, "SE"),
         "engineer": (1, 3, "SW"),
-
         # Ring 4
         "science": (4, 0, "S"),
         "lens": (0, 4, "W"),
-
         # Ring 5
         "forum": (3, 3, "SW"),
         "pulse": (3, -3, "NW"),
-
         # Boundary
         "watchman": (5, 0, "E"),
         "auditor": (4, 2, "SE"),
@@ -147,7 +144,10 @@ class BhuMandala:
 
             if 0 <= px < width and 0 <= py < width:
                 # Determine symbol based on flashing
-                is_flashing = agent_name in self.flashing_agents and self.flashing_agents[agent_name] > 0
+                is_flashing = (
+                    agent_name in self.flashing_agents
+                    and self.flashing_agents[agent_name] > 0
+                )
                 symbol = "◉" if is_flashing else "●"
 
                 # Get color
@@ -254,7 +254,7 @@ class LiveDarshan:
             active_agents=data.get("active_agents", []),
             queue_depth=data.get("queue_depth", 0),
             frequency=data.get("frequency", 1.0),
-            timestamp=data.get("timestamp", "")
+            timestamp=data.get("timestamp", ""),
         )
 
     def process_event(self, data: Dict):
@@ -268,13 +268,15 @@ class LiveDarshan:
         self.mandala.update_flash(agent_id, color)
 
         # Add to history
-        self.event_history.append({
-            "timestamp": data.get("timestamp", ""),
-            "agent": agent_id,
-            "type": event_type,
-            "message": message,
-            "color": color
-        })
+        self.event_history.append(
+            {
+                "timestamp": data.get("timestamp", ""),
+                "agent": agent_id,
+                "type": event_type,
+                "message": message,
+                "color": color,
+            }
+        )
 
         # Keep history size limited
         if len(self.event_history) > self.max_events:
@@ -286,7 +288,12 @@ class LiveDarshan:
 
         # Header
         lines.append(ANSI.BOLD + "=" * 80 + ANSI.RESET)
-        lines.append(ANSI.BOLD + ANSI.CYAN + "✨ LIVE DARSHAN - VibeOS Real-Time Dashboard ✨" + ANSI.RESET)
+        lines.append(
+            ANSI.BOLD
+            + ANSI.CYAN
+            + "✨ LIVE DARSHAN - VibeOS Real-Time Dashboard ✨"
+            + ANSI.RESET
+        )
         lines.append(ANSI.BOLD + "=" * 80 + ANSI.RESET)
         lines.append("")
 
@@ -298,12 +305,14 @@ class LiveDarshan:
         state_color = {
             "HEALTHY": ANSI.GREEN,
             "DEGRADED": ANSI.YELLOW,
-            "EMERGENCY": ANSI.RED
+            "EMERGENCY": ANSI.RED,
         }.get(self.pulse.system_state, ANSI.WHITE)
 
         lines.append(ANSI.BOLD + "📊 System Status" + ANSI.RESET)
         lines.append(f"  State: {state_color}{self.pulse.system_state}{ANSI.RESET}")
-        lines.append(f"  Heartbeat: {self.pulse.frequency}Hz (Cycle #{self.pulse.cycle_id})")
+        lines.append(
+            f"  Heartbeat: {self.pulse.frequency}Hz (Cycle #{self.pulse.cycle_id})"
+        )
         lines.append(f"  Active Agents: {len(self.pulse.active_agents)}")
         lines.append(f"  Queue Depth: {self.pulse.queue_depth}")
         lines.append("")
@@ -320,10 +329,16 @@ class LiveDarshan:
                 message = event.get("message", "")
 
                 # Format: [HH:MM:SS] AGENT_ID EVENT_TYPE: message
-                timestamp = event.get("timestamp", "").split("T")[1][:8] if event.get("timestamp") else "??:??:??"
+                timestamp = (
+                    event.get("timestamp", "").split("T")[1][:8]
+                    if event.get("timestamp")
+                    else "??:??:??"
+                )
 
                 color_str = f"\033[{color_code}m"
-                lines.append(f"  {timestamp} {ANSI.BOLD}{agent}{ANSI.RESET} {color_str}{event_type}{ANSI.RESET}: {message}")
+                lines.append(
+                    f"  {timestamp} {ANSI.BOLD}{agent}{ANSI.RESET} {color_str}{event_type}{ANSI.RESET}: {message}"
+                )
 
         lines.append("")
         lines.append(ANSI.DIM + "Press Ctrl+C to exit" + ANSI.RESET)
@@ -366,7 +381,7 @@ async def main():
     parser.add_argument(
         "--url",
         default="ws://localhost:8000/v1/pulse",
-        help="WebSocket URL (default: ws://localhost:8000/v1/pulse)"
+        help="WebSocket URL (default: ws://localhost:8000/v1/pulse)",
     )
     args = parser.parse_args()
 

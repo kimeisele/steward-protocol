@@ -25,6 +25,7 @@ logger = logging.getLogger("STEWARD_BUS")
 
 class SignalType(Enum):
     """Standard signal types for agent communication."""
+
     # Content signals
     CONTENT_GENERATED = "content_generated"
     CONTENT_PUBLISHED = "content_published"
@@ -66,6 +67,7 @@ class Signal:
         requires_ack: Whether signal requires acknowledgment
         correlation_id: Optional ID linking related signals
     """
+
     signal_type: SignalType
     source_agent: str
     payload: Dict[str, Any]
@@ -192,9 +194,7 @@ class SignalBus:
 
         self.listeners[signal_type].append(listener)
 
-        logger.info(
-            f"📡 Listener registered: {listener_id} -> {signal_type.value}"
-        )
+        logger.info(f"📡 Listener registered: {listener_id} -> {signal_type.value}")
 
         return listener
 
@@ -217,7 +217,8 @@ class SignalBus:
             if signal_type in self.listeners:
                 before = len(self.listeners[signal_type])
                 self.listeners[signal_type] = [
-                    l for l in self.listeners[signal_type]
+                    l
+                    for l in self.listeners[signal_type]
                     if l.listener_id != listener_id
                 ]
                 after = len(self.listeners[signal_type])
@@ -232,8 +233,7 @@ class SignalBus:
             for st in list(self.listeners.keys()):
                 before = len(self.listeners[st])
                 self.listeners[st] = [
-                    l for l in self.listeners[st]
-                    if l.listener_id != listener_id
+                    l for l in self.listeners[st] if l.listener_id != listener_id
                 ]
                 after = len(self.listeners[st])
                 if before > after:
@@ -257,7 +257,7 @@ class SignalBus:
         # Record in history
         self.signal_history.append(signal)
         if len(self.signal_history) > self.max_history:
-            self.signal_history = self.signal_history[-self.max_history:]
+            self.signal_history = self.signal_history[-self.max_history :]
 
         self.total_signals_emitted += 1
 
@@ -308,7 +308,11 @@ class SignalBus:
         Returns:
             List of signals (most recent first)
         """
-        signals = self.signal_history[-limit:] if len(self.signal_history) > limit else self.signal_history
+        signals = (
+            self.signal_history[-limit:]
+            if len(self.signal_history) > limit
+            else self.signal_history
+        )
 
         if signal_type:
             signals = [s for s in signals if s.signal_type == signal_type]
@@ -329,8 +333,7 @@ class SignalBus:
             "total_signals_emitted": self.total_signals_emitted,
             "total_listeners": total_listeners,
             "listeners_by_type": {
-                st.value: len(listeners)
-                for st, listeners in self.listeners.items()
+                st.value: len(listeners) for st, listeners in self.listeners.items()
             },
             "history_size": len(self.signal_history),
         }

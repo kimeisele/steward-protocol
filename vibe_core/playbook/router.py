@@ -74,7 +74,9 @@ class AgentRouter:
     def get_capability_matrix(self) -> dict:
         matrix = {}
         for agent in self._agents:
-            matrix[getattr(agent, "name", repr(agent))] = getattr(agent, "capabilities", [])
+            matrix[getattr(agent, "name", repr(agent))] = getattr(
+                agent, "capabilities", []
+            )
         return matrix
 
 

@@ -46,8 +46,7 @@ from steward.system_agents.discoverer.agent import Discoverer
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("STRESS_TEST")
 
@@ -132,6 +131,7 @@ def stress_test_city():
         except Exception as e:
             print(f"         ❌ FAIL: Discovery error: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -146,6 +146,7 @@ def stress_test_city():
         except Exception as e:
             print(f"         ❌ FAIL: Kernel boot failed: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -227,7 +228,8 @@ def stress_test_city():
 
             # Check processes still alive
             alive_now = sum(
-                1 for agent_id in kernel.agent_registry.keys()
+                1
+                for agent_id in kernel.agent_registry.keys()
                 if kernel.process_manager.processes.get(agent_id)
                 and kernel.process_manager.processes[agent_id].process.is_alive()
             )
@@ -235,12 +237,16 @@ def stress_test_city():
             memory_now = get_memory_usage_mb()
             chain_now = kernel.lineage.get_chain_length()
 
-            print(f"         T+{i+check_interval:2d}s: {alive_now}/{total_agents} alive, "
-                  f"{memory_now:.1f} MB, {chain_now} blocks")
+            print(
+                f"         T+{i+check_interval:2d}s: {alive_now}/{total_agents} alive, "
+                f"{memory_now:.1f} MB, {chain_now} blocks"
+            )
 
             # Check for process crashes
             if alive_now < alive_processes:
-                print(f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died")
+                print(
+                    f"         ⚠️  PROCESS CRASH DETECTED! {alive_processes - alive_now} died"
+                )
 
         print("         ✅ Stress duration complete")
 
@@ -251,7 +257,8 @@ def stress_test_city():
 
         # Final process check
         final_alive = sum(
-            1 for agent_id in kernel.agent_registry.keys()
+            1
+            for agent_id in kernel.agent_registry.keys()
             if kernel.process_manager.processes.get(agent_id)
             and kernel.process_manager.processes[agent_id].process.is_alive()
         )
@@ -267,7 +274,6 @@ def stress_test_city():
         # Final memory check
         final_memory = get_memory_usage_mb()
         print(f"         Final memory: {final_memory:.1f} MB")
-
 
         # =====================================================================
         # STEP 10: FINAL CHAIN VERIFICATION (BEFORE SHUTDOWN)
@@ -325,10 +331,10 @@ def stress_test_city():
         print("\n" + "=" * 70)
 
         # Calculate success criteria (chain_intact set in Step 10)
-        all_processes_survived = (final_alive == total_agents)
+        all_processes_survived = final_alive == total_agents
         # chain_intact already calculated before shutdown
-        memory_reasonable = (final_memory < 2000)
-        no_crashes = (final_alive >= alive_processes)
+        memory_reasonable = final_memory < 2000
+        no_crashes = final_alive >= alive_processes
 
         if all_processes_survived and chain_intact and memory_reasonable and no_crashes:
             print("✅ STRESS TEST PASSED - AGENT CITY IS PRODUCTION-READY!")
@@ -365,6 +371,7 @@ def stress_test_city():
     except Exception as e:
         print(f"\n❌ STRESS TEST EXCEPTION: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -372,7 +379,7 @@ def stress_test_city():
         # Cleanup
         if kernel:
             try:
-                if hasattr(kernel, 'lineage'):
+                if hasattr(kernel, "lineage"):
                     kernel.lineage.close()
             except:
                 pass

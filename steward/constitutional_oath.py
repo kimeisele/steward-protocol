@@ -24,7 +24,7 @@ logger = logging.getLogger("CONSTITUTIONAL_OATH")
 class ConstitutionalOath:
     """
     Implements cryptographic binding of agents to the Constitution.
-    
+
     This is NOT policy enforcement. This is metaphysical commitment.
     The agent says: "I bind myself to this Truth, and I sign this binding."
     """
@@ -36,10 +36,10 @@ class ConstitutionalOath:
     def compute_constitution_hash() -> str:
         """
         Compute SHA-256 hash of current Constitution.
-        
+
         Returns:
             Hex string of the constitution hash
-            
+
         Raises:
             FileNotFoundError: If CONSTITUTION.md not found
         """
@@ -60,17 +60,17 @@ class ConstitutionalOath:
         agent_id: str,
         constitution_hash: str,
         signature: str,
-        block_number: Optional[int] = None
+        block_number: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Create a Constitutional Oath attestation event.
-        
+
         Args:
             agent_id: The agent swearing the oath
             constitution_hash: SHA-256 of the Constitution
             signature: Cryptographic signature from agent's private key
             block_number: Ledger block number (optional)
-            
+
         Returns:
             Oath event dictionary ready for ledger
         """
@@ -83,7 +83,7 @@ class ConstitutionalOath:
             "signature": signature[:32] + "..." if len(signature) > 32 else signature,
             "signature_full": signature,
             "status": "SWORN",
-            "event_id": f"oath_{agent_id}_{constitution_hash[:8]}"
+            "event_id": f"oath_{agent_id}_{constitution_hash[:8]}",
         }
 
         if block_number is not None:
@@ -92,18 +92,15 @@ class ConstitutionalOath:
         return event
 
     @staticmethod
-    def verify_oath(
-        oath_event: Dict[str, Any],
-        identity_tool: Any
-    ) -> Tuple[bool, str]:
+    def verify_oath(oath_event: Dict[str, Any], identity_tool: Any) -> Tuple[bool, str]:
         """
-        Verify that an oath is valid. 
+        Verify that an oath is valid.
         INCLUDES NULL-POINTER PROTECTION & LEGACY MAPPING (GAD-1100).
-        
+
         Args:
             oath_event: The oath attestation from ledger
             identity_tool: IdentityTool instance for signature verification
-            
+
         Returns:
             Tuple of (is_valid, reason_message)
         """
@@ -130,15 +127,19 @@ class ConstitutionalOath:
 
             if current_hash != stored_hash:
                 # Allow Genesis bypass if hashes match known development constants
-                if stored_hash == "genesis_hash": 
+                if stored_hash == "genesis_hash":
                     logger.warning("⚠️ Allowing GENESIS_HASH bypass for bootstrapping")
                     return True, "Genesis Bootstrap Authorized"
 
-                reason = f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
+                reason = (
+                    f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
+                )
                 logger.warning(f"⚠️  {reason}")
                 return False, reason
 
-            logger.info(f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}")
+            logger.info(
+                f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}"
+            )
             return True, "Oath is valid"
 
         except Exception as e:

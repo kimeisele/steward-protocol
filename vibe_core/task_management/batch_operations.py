@@ -9,8 +9,7 @@ class BatchOperations:
 
     @staticmethod
     def filter_tasks(
-        tasks: Dict[str, Task],
-        predicate: Callable[[Task], bool]
+        tasks: Dict[str, Task], predicate: Callable[[Task], bool]
     ) -> List[Task]:
         """
         Filter tasks based on predicate.
@@ -25,10 +24,7 @@ class BatchOperations:
         return [task for task in tasks.values() if predicate(task)]
 
     @staticmethod
-    def filter_by_status(
-        tasks: Dict[str, Task],
-        status: TaskStatus
-    ) -> List[Task]:
+    def filter_by_status(tasks: Dict[str, Task], status: TaskStatus) -> List[Task]:
         """
         Get all tasks with a specific status.
 
@@ -43,9 +39,7 @@ class BatchOperations:
 
     @staticmethod
     def filter_by_priority(
-        tasks: Dict[str, Task],
-        min_priority: int = 0,
-        max_priority: int = 100
+        tasks: Dict[str, Task], min_priority: int = 0, max_priority: int = 100
     ) -> List[Task]:
         """
         Get tasks within a priority range.
@@ -59,15 +53,13 @@ class BatchOperations:
             List of tasks within priority range
         """
         return [
-            task for task in tasks.values()
+            task
+            for task in tasks.values()
             if min_priority <= task.priority <= max_priority
         ]
 
     @staticmethod
-    def filter_by_tag(
-        tasks: Dict[str, Task],
-        tag: str
-    ) -> List[Task]:
+    def filter_by_tag(tasks: Dict[str, Task], tag: str) -> List[Task]:
         """
         Get all tasks with a specific tag.
 
@@ -82,9 +74,7 @@ class BatchOperations:
 
     @staticmethod
     def bulk_update_status(
-        tasks: Dict[str, Task],
-        task_ids: List[str],
-        new_status: TaskStatus
+        tasks: Dict[str, Task], task_ids: List[str], new_status: TaskStatus
     ) -> int:
         """
         Update status for multiple tasks.
@@ -105,11 +95,7 @@ class BatchOperations:
         return updated
 
     @staticmethod
-    def bulk_add_tag(
-        tasks: Dict[str, Task],
-        task_ids: List[str],
-        tag: str
-    ) -> int:
+    def bulk_add_tag(tasks: Dict[str, Task], task_ids: List[str], tag: str) -> int:
         """
         Add a tag to multiple tasks.
 
@@ -129,11 +115,7 @@ class BatchOperations:
         return updated
 
     @staticmethod
-    def bulk_remove_tag(
-        tasks: Dict[str, Task],
-        task_ids: List[str],
-        tag: str
-    ) -> int:
+    def bulk_remove_tag(tasks: Dict[str, Task], task_ids: List[str], tag: str) -> int:
         """
         Remove a tag from multiple tasks.
 
@@ -154,9 +136,7 @@ class BatchOperations:
 
     @staticmethod
     def sort_tasks(
-        tasks: List[Task],
-        key: str = "priority",
-        reverse: bool = True
+        tasks: List[Task], key: str = "priority", reverse: bool = True
     ) -> List[Task]:
         """
         Sort tasks by a field.

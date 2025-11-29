@@ -23,7 +23,11 @@ from pathlib import Path
 
 from vibe_core.protocols import AgentResponse, VibeAgent
 from vibe_core.scheduling import Task
-from vibe_core.specialists.base_specialist import BaseSpecialist, MissionContext, SpecialistResult
+from vibe_core.specialists.base_specialist import (
+    BaseSpecialist,
+    MissionContext,
+    SpecialistResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -281,7 +285,9 @@ class SpecialistAgent(VibeAgent):
         payload = task.payload
 
         if not isinstance(payload, dict):
-            raise TypeError(f"Task payload must be a dict, got {type(payload).__name__}")
+            raise TypeError(
+                f"Task payload must be a dict, got {type(payload).__name__}"
+            )
 
         # Extract required fields (will raise KeyError if missing)
         mission_id = payload["mission_id"]
@@ -301,7 +307,9 @@ class SpecialistAgent(VibeAgent):
             metadata=metadata,
         )
 
-    def _result_to_response(self, task: Task, result: SpecialistResult) -> AgentResponse:
+    def _result_to_response(
+        self, task: Task, result: SpecialistResult
+    ) -> AgentResponse:
         """
         Convert SpecialistResult to AgentResponse for kernel recording.
 

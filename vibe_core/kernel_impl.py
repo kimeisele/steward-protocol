@@ -41,7 +41,11 @@ from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockc
 
 # Import Auditor for immune system (optional)
 try:
-    from steward.system_agents.auditor.tools.invariant_tool import get_judge, InvariantSeverity
+    from steward.system_agents.auditor.tools.invariant_tool import (
+        get_judge,
+        InvariantSeverity,
+    )
+
     AUDITOR_AVAILABLE = True
 except ImportError:
     AUDITOR_AVAILABLE = False
@@ -51,12 +55,14 @@ except ImportError:
 # Import Constitutional Oath verification (Governance Gate - optional)
 try:
     from vibe_core.bridge import ConstitutionalOath
+
     OATH_ENFORCEMENT_AVAILABLE = True
 except ImportError:
     OATH_ENFORCEMENT_AVAILABLE = False
     logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
-
+    logger_setup.warning(
+        "⚠️  Constitutional Oath not available - governance gate disabled"
+    )
 
 
 logger = logging.getLogger("VIBE_KERNEL")
@@ -113,10 +119,14 @@ class InMemoryScheduler(VibeScheduler):
                     f"Only maintenance tasks are permitted: {', '.join(self.MAINTENANCE_TASK_TYPES)}"
                 )
 
-            logger.info(f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)")
+            logger.info(
+                f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)"
+            )
 
         elif current_cycle == Cycle.DAY_OF_BRAHMA:
-            logger.info(f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)")
+            logger.info(
+                f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)"
+            )
 
         self.queue.append(task)
         logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
@@ -137,8 +147,6 @@ class InMemoryScheduler(VibeScheduler):
             "executing": self.executing.task_id if self.executing else None,
             "completed": len(self.completed),
         }
-
-
 
 
 class InMemoryManifestRegistry(ManifestRegistry):
@@ -189,11 +197,13 @@ class RealVibeKernel(VibeKernel):
             logger.info("🚀 Vibe Kernel initialized (in-memory ledger)")
         else:
             self._ledger = SQLiteLedger(ledger_path)
-            logger.info(f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})")
+            logger.info(
+                f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})"
+            )
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
-        
+
         # Load immune system (Auditor)
         self._auditor = None
         if AUDITOR_AVAILABLE:
@@ -297,7 +307,9 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 1: THE INSPECTION (Does the agent possess the Oath badge?)
         # Check for oath attributes that OathMixin provides
-        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(agent, "oath_event")
+        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(
+            agent, "oath_event"
+        )
 
         if not has_oath_attribute:
             logger.critical(
@@ -332,8 +344,7 @@ class RealVibeKernel(VibeKernel):
         if oath_event and OATH_ENFORCEMENT_AVAILABLE:
             try:
                 is_valid, reason = ConstitutionalOath.verify_oath(
-                    oath_event,
-                    getattr(agent, "identity_tool", None)
+                    oath_event, getattr(agent, "identity_tool", None)
                 )
 
                 if not is_valid:
@@ -373,6 +384,7 @@ class RealVibeKernel(VibeKernel):
         # - VFS (replaces direct Path() access)
         # - Config (replaces hardcoded values)
         from vibe_core.agent_interface import AgentSystemInterface
+
         agent.system = AgentSystemInterface(self, agent.agent_id)
         logger.info(
             f"🔌 {agent.agent_id} received system interface "
@@ -380,13 +392,16 @@ class RealVibeKernel(VibeKernel):
         )
 
         # Phase 2: Spawn Process
-        self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, 'config', None))
+        self.process_manager.spawn_agent(
+            agent.agent_id, type(agent), config=getattr(agent, "config", None)
+        )
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
         proc_info = self.process_manager.processes.get(agent.agent_id)
         if proc_info and proc_info.process.is_alive():
             import time
+
             time.sleep(0.1)  # Give process time to start
             self.resource_manager.enforce_quota(agent.agent_id, proc_info.process)
 
@@ -405,7 +420,7 @@ class RealVibeKernel(VibeKernel):
                 "author": manifest.author,
                 "capabilities": manifest.capabilities,
                 "timestamp": datetime.utcnow().isoformat(),
-            }
+            },
         )
 
         # Phase 5: Record Oath Sworn (The Sacred Moment)
@@ -417,8 +432,8 @@ class RealVibeKernel(VibeKernel):
                     "oath_event": oath_event,
                     "constitution_hash": oath_event.get("constitution_hash", "unknown"),
                     "timestamp": datetime.utcnow().isoformat(),
-                    "verified": True
-                }
+                    "verified": True,
+                },
             )
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
@@ -440,7 +455,7 @@ class RealVibeKernel(VibeKernel):
                 "version": "2.0.0",
                 "timestamp": datetime.utcnow().isoformat(),
                 "agents_registered": len(self._agent_registry),
-            }
+            },
         )
 
         # Register all agent manifests
@@ -480,14 +495,14 @@ class RealVibeKernel(VibeKernel):
 
             # Execute task via Process Manager (IPC)
             logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
-            
+
             try:
                 self.process_manager.send_task(task.agent_id, task)
                 # Note: Result is now async via pipe. We don't get it immediately here.
                 # The ProcessManager loop handles results.
                 # For this synchronous tick, we might need to wait or change architecture.
                 # For Phase 2 MVP, we'll assume fire-and-forget or polling.
-                
+
             except ValueError as e:
                 logger.error(f"❌ Dispatch failed: {e}")
                 self._ledger.record_failure(task, str(e))
@@ -495,19 +510,19 @@ class RealVibeKernel(VibeKernel):
 
             # Record completion (Optimistic for now, or move to callback)
             # In a real async kernel, we'd wait for the result event.
-            # self._ledger.record_completion(task, result) 
+            # self._ledger.record_completion(task, result)
             # logger.info(f"✅ Task {task.task_id} completed")
-            
+
             # PULSE: Update snapshot after task completion
             self._pulse()
-            
+
             # 🛡️ IMMUNE SYSTEM CHECK: Run Auditor after task
             self._check_system_health()
-            
+
             # Phase 2: Monitor Health & Process Events
             self.process_manager.check_health()
             self._process_ipc_events()
-            
+
             # Phase 3: Sync resource quotas periodically
             self._sync_resource_quotas()
 
@@ -541,22 +556,22 @@ class RealVibeKernel(VibeKernel):
         messages = self.process_manager.get_pending_messages()
         for agent_id, msg in messages:
             msg_type = msg.get("type")
-            
+
             if msg_type == "TASK_RESULT":
                 task_id = msg.get("task_id")
                 status = msg.get("status")
-                
+
                 if status == "success":
                     result = msg.get("result")
                     logger.info(f"✅ Task {task_id} completed (Async IPC)")
                     # We need to reconstruct the Task object or look it up if we want to record properly
                     # For now, we'll just log. In a real system, we'd have a pending_tasks map.
-                    # self._ledger.record_completion(task_id, result) 
-                    
+                    # self._ledger.record_completion(task_id, result)
+
                 else:
                     error = msg.get("error")
                     logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
-                    
+
             elif msg_type == "CRASH":
                 error = msg.get("error")
                 logger.critical(f"💥 Agent {agent_id} CRASHED: {error}")
@@ -565,87 +580,87 @@ class RealVibeKernel(VibeKernel):
     def _sync_resource_quotas(self) -> None:
         """
         Phase 3: Sync resource quotas with CivicBank credits.
-        
+
         This makes credits REAL by updating CPU/RAM limits based on balance.
         Runs every 60 seconds to avoid excessive bank queries.
         """
         import time
-        
+
         current_time = time.time()
         if current_time - self._last_quota_sync < 60:  # Sync every 60 seconds
             return
-            
+
         try:
             # Get CivicBank (lazy loaded)
             bank = self.get_bank()
-            
+
             # Update quotas for all agents
             for agent_id in self._agent_registry.keys():
                 try:
                     # Query credit balance
                     balance = bank.get_balance(agent_id)
-                    
+
                     # Update quota
                     self.resource_manager.set_quota(agent_id, credits=balance)
-                    
+
                     # Enforce on running process
                     proc_info = self.process_manager.processes.get(agent_id)
                     if proc_info and proc_info.process.is_alive():
                         self.resource_manager.enforce_quota(agent_id, proc_info.process)
-                        
+
                 except Exception as e:
                     logger.debug(f"⚠️  Failed to sync quota for {agent_id}: {e}")
-            
+
             self._last_quota_sync = current_time
             logger.debug("💰 Resource quotas synced with CivicBank")
-            
+
         except Exception as e:
             logger.debug(f"⚠️  Quota sync failed: {e}")
 
     def _grant_repo_access(self, agent_id: str) -> None:
         """
         Phase 4b: Grant controlled repo access via symlink.
-        
+
         Scribe and Archivist need to read the main repo.
         We create a symlink in their sandbox pointing to the repo.
-        
+
         Security: This is a controlled escape. Only specific agents get it.
         """
         try:
             from vibe_core.vfs import VirtualFileSystem
             import os
-            
+
             vfs = VirtualFileSystem(agent_id)
             repo_path = os.getcwd()  # /Users/ss/Downloads/steward-protocol
-            
+
             # Create symlink: sandbox/repo -> actual repo
             vfs.create_symlink(repo_path, "repo")
-            
+
             logger.info(
                 f"🔗 {agent_id} granted repo access: "
                 f"{vfs.get_sandbox_path()}/repo -> {repo_path}"
             )
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
 
     def _check_system_health(self) -> None:
         """
         🛡️ IMMUNE SYSTEM WATCHDOG
-        
+
         Called after every task execution.
         If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
         """
         if not AUDITOR_AVAILABLE or not self._auditor:
             return
-        
+
         try:
             # Get current ledger events
             events = self._ledger.get_all_events()
-            
+
             # Run verification (events-only for now, VOID checks need external context)
             report = self._auditor.verify_ledger(events)
-            
+
             # If there's a CRITICAL violation, halt the kernel
             if not report.passed:
                 for violation in report.violations:
@@ -656,11 +671,15 @@ class RealVibeKernel(VibeKernel):
                             logger.critical(
                                 f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}"
                             )
-                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
+                            self.shutdown(
+                                reason=f"Immune system reaction: {violation.invariant_name}"
+                            )
                             return
                         else:
-                            logger.debug(f"⚠️  VOID check skipped (requires external context)")
-            
+                            logger.debug(
+                                f"⚠️  VOID check skipped (requires external context)"
+                            )
+
             # Log health check (non-critical)
             if report.violations:
                 logger.debug(
@@ -668,7 +687,7 @@ class RealVibeKernel(VibeKernel):
                 )
             else:
                 logger.debug("✅ System health check passed")
-                
+
         except Exception as e:
             logger.error(f"❌ Health check failed: {e}")
 
@@ -679,7 +698,7 @@ class RealVibeKernel(VibeKernel):
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
         # Phase 5: Record Kernel Shutdown in Parampara (before changing status)
-        if hasattr(self, 'lineage'):
+        if hasattr(self, "lineage"):
             self.lineage.add_block(
                 event_type=LineageEventType.KERNEL_SHUTDOWN,
                 agent_id=None,
@@ -687,7 +706,7 @@ class RealVibeKernel(VibeKernel):
                     "reason": reason,
                     "timestamp": datetime.utcnow().isoformat(),
                     "agents_active": len(self._agent_registry),
-                }
+                },
             )
             # Close lineage chain
             self.lineage.close()
@@ -696,7 +715,7 @@ class RealVibeKernel(VibeKernel):
         logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
 
         # Phase 2: Shutdown processes
-        if hasattr(self, 'process_manager'):
+        if hasattr(self, "process_manager"):
             self.process_manager.shutdown()
 
         if isinstance(self._ledger, SQLiteLedger):
@@ -735,7 +754,7 @@ class RealVibeKernel(VibeKernel):
     def _pulse(self) -> None:
         """
         💓 HEARTBEAT: Generate real-time snapshot of kernel state.
-        
+
         Event Sourcing → State Projection:
         - Collects current state from all agents
         - Writes vibe_snapshot.json (immutable state view)
@@ -751,24 +770,26 @@ class RealVibeKernel(VibeKernel):
                     "total_events": len(self._ledger.get_all_events()),
                 },
             }
-            
+
             # Collect agent status
             for agent_id, agent in self._agent_registry.items():
                 try:
-                    agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
+                    agent_status = (
+                        agent.report_status() if hasattr(agent, "report_status") else {}
+                    )
                     snapshot["agents"][agent_id] = agent_status
                 except Exception as e:
                     logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
                     snapshot["agents"][agent_id] = {"error": str(e)}
-            
+
             # Write snapshot
             snapshot_path = Path("vibe_snapshot.json")
             snapshot_path.write_text(json.dumps(snapshot, indent=2))
             logger.info(f"💓 Pulse written: vibe_snapshot.json")
-            
+
             # Render OPERATIONS.md
             self._render_operations_dashboard(snapshot)
-            
+
         except Exception as e:
             logger.error(f"❌ Pulse failed: {e}")
 
@@ -790,7 +811,7 @@ class RealVibeKernel(VibeKernel):
                 "",
                 "## 🤖 Agent Status",
             ]
-            
+
             for agent_id, status in snapshot["agents"].items():
                 lines.append(f"\n### {agent_id}")
                 if "error" in status:
@@ -798,16 +819,18 @@ class RealVibeKernel(VibeKernel):
                 else:
                     for key, value in status.items():
                         lines.append(f"- {key}: {value}")
-            
-            lines.extend([
-                "",
-                "---",
-                "*This dashboard is auto-generated by the kernel heartbeat.*",
-            ])
-            
+
+            lines.extend(
+                [
+                    "",
+                    "---",
+                    "*This dashboard is auto-generated by the kernel heartbeat.*",
+                ]
+            )
+
             ops_path = Path("OPERATIONS.md")
             ops_path.write_text("\n".join(lines))
             logger.info(f"📋 Operations dashboard rendered")
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to render dashboard: {e}")

@@ -24,6 +24,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+
 def test_runserver_exists():
     """Test: run_server.py exists and is executable"""
     print("🔍 TEST 1: Check run_server.py exists and is executable")
@@ -47,6 +48,7 @@ def test_gateway_api_exists():
 
     try:
         from gateway.api import app
+
         print("   ✅ PASSED: FastAPI app imports successfully")
         return True
     except Exception as e:
@@ -78,7 +80,9 @@ def test_all_agents_importable():
             module = __import__(f"{module_name}.cartridge_main", fromlist=[class_name])
             agent_class = getattr(module, class_name)
             instance = agent_class()
-            print(f"   ✅ {module_name:12} | {instance.name:20} | {instance.description[:40]}")
+            print(
+                f"   ✅ {module_name:12} | {instance.name:20} | {instance.description[:40]}"
+            )
         except Exception as e:
             print(f"   ❌ {module_name:12} | FAILED: {e}")
             all_passed = False
@@ -101,7 +105,7 @@ def test_envoy_wiring():
         envoy = EnvoyCartridge()
 
         # Check HIL Assistant exists
-        if not hasattr(envoy, 'hil_assistant'):
+        if not hasattr(envoy, "hil_assistant"):
             print("   ❌ FAILED: ENVOY missing hil_assistant attribute")
             return False
 
@@ -111,12 +115,12 @@ def test_envoy_wiring():
 
         # Check tools exist
         required_tools = [
-            'city_control',  # Will be None until kernel injection
-            'diplomacy',
-            'curator',
-            'campaign_tool',
-            'gap_report',
-            'hil_assistant'
+            "city_control",  # Will be None until kernel injection
+            "diplomacy",
+            "curator",
+            "campaign_tool",
+            "gap_report",
+            "hil_assistant",
         ]
 
         for tool_name in required_tools:
@@ -125,12 +129,12 @@ def test_envoy_wiring():
                 return False
 
         # Check that ENVOY has process() method
-        if not hasattr(envoy, 'process') or not callable(envoy.process):
+        if not hasattr(envoy, "process") or not callable(envoy.process):
             print("   ❌ FAILED: ENVOY missing process() method")
             return False
 
         # Check command router
-        if not hasattr(envoy, '_route_command') or not callable(envoy._route_command):
+        if not hasattr(envoy, "_route_command") or not callable(envoy._route_command):
             print("   ❌ FAILED: ENVOY missing _route_command() method")
             return False
 
@@ -148,6 +152,7 @@ def test_envoy_wiring():
     except Exception as e:
         print(f"   ❌ FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -207,11 +212,11 @@ def test_kernel_bootstrap():
         # Create an in-memory kernel (not booting to save time)
         kernel = RealVibeKernel(ledger_path=":memory:")
 
-        if not hasattr(kernel, 'register_agent'):
+        if not hasattr(kernel, "register_agent"):
             print("   ❌ FAILED: Kernel missing register_agent method")
             return False
 
-        if not hasattr(kernel, 'boot'):
+        if not hasattr(kernel, "boot"):
             print("   ❌ FAILED: Kernel missing boot method")
             return False
 

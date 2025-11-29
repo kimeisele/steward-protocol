@@ -78,19 +78,21 @@ class LifecycleState:
         """Convert to dict for JSON serialization."""
         # Manually convert to avoid Enum serialization issues
         return {
-            'agent_id': self.agent_id,
-            'status': self.status.value if self.status else None,  # Convert enum to string
-            'varna': self.varna,
-            'entered_at': self.entered_at,
-            'initiator_agent': self.initiator_agent,
-            'reason': self.reason,
-            'diksha_passed': self.diksha_passed,
-            'diksha_tests': self.diksha_tests or [],
-            'diksha_date': self.diksha_date,
-            'violations': self.violations or [],
-            'rehabilitation_required': self.rehabilitation_required,
-            'deprecated_reason': self.deprecated_reason,
-            'archive_path': self.archive_path,
+            "agent_id": self.agent_id,
+            "status": (
+                self.status.value if self.status else None
+            ),  # Convert enum to string
+            "varna": self.varna,
+            "entered_at": self.entered_at,
+            "initiator_agent": self.initiator_agent,
+            "reason": self.reason,
+            "diksha_passed": self.diksha_passed,
+            "diksha_tests": self.diksha_tests or [],
+            "diksha_date": self.diksha_date,
+            "violations": self.violations or [],
+            "rehabilitation_required": self.rehabilitation_required,
+            "deprecated_reason": self.deprecated_reason,
+            "archive_path": self.archive_path,
         }
 
 
@@ -126,12 +128,14 @@ class LifecycleManager:
         try:
             path = Path(self.registry_path)
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     data = json.load(f)
                     for agent_name, agent_data in data.get("agents", {}).items():
                         lifecycle = agent_data.get("lifecycle_status")
                         if lifecycle:
-                            self._lifecycle_states[agent_name] = self._dict_to_state(lifecycle, agent_name)
+                            self._lifecycle_states[agent_name] = self._dict_to_state(
+                                lifecycle, agent_name
+                            )
                         else:
                             # For backward compatibility: agents without lifecycle_status
                             # are assumed to be GRIHASTHA (legacy full-access agents)
@@ -140,7 +144,7 @@ class LifecycleManager:
                                 status=LifecycleStatus.GRIHASTHA,
                                 varna="Grihastha (Householder)",
                                 entered_at=datetime.now(timezone.utc).isoformat(),
-                                reason="Legacy agent (pre-lifecycle system)"
+                                reason="Legacy agent (pre-lifecycle system)",
                             )
         except Exception as e:
             logger.warning(f"⚠️  Could not load lifecycle states: {e}")
@@ -192,7 +196,7 @@ class LifecycleManager:
             status=LifecycleStatus.BRAHMACHARI,
             varna="Brahmachari (Student)",
             entered_at=datetime.now(timezone.utc).isoformat(),
-            reason="New agent registration - must learn before acting"
+            reason="New agent registration - must learn before acting",
         )
 
         self._lifecycle_states[agent_id] = state
@@ -200,7 +204,9 @@ class LifecycleManager:
 
         logger.info(f"🎓 New agent {agent_id} registered as BRAHMACHARI")
         logger.info(f"   Status: Read-only access only")
-        logger.info(f"   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA")
+        logger.info(
+            f"   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA"
+        )
 
         return state
 
@@ -208,7 +214,7 @@ class LifecycleManager:
         self,
         agent_id: str,
         initiator_agent: str = "TEMPLE",
-        reason: str = "Passed initiation test"
+        reason: str = "Passed initiation test",
     ) -> LifecycleState:
         """
         Promote BRAHMACHARI to GRIHASTHA (grant full permissions).
@@ -230,7 +236,9 @@ class LifecycleManager:
             return None
 
         if current.status != LifecycleStatus.BRAHMACHARI:
-            logger.error(f"❌ Agent {agent_id} is {current.status.value}, not BRAHMACHARI")
+            logger.error(
+                f"❌ Agent {agent_id} is {current.status.value}, not BRAHMACHARI"
+            )
             return None
 
         state = LifecycleState(
@@ -257,7 +265,7 @@ class LifecycleManager:
         self,
         agent_id: str,
         violation: Dict[str, Any],
-        reason: str = "Constitutional violation"
+        reason: str = "Constitutional violation",
     ) -> LifecycleState:
         """
         Demote an agent to SHUDRA (fallen state) due to rule violation.
@@ -279,10 +287,9 @@ class LifecycleManager:
             return None
 
         violations = current.violations or []
-        violations.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            **violation
-        })
+        violations.append(
+            {"timestamp": datetime.now(timezone.utc).isoformat(), **violation}
+        )
 
         state = LifecycleState(
             agent_id=agent_id,
@@ -308,7 +315,7 @@ class LifecycleManager:
         self,
         agent_id: str,
         reason: str = "Code deprecated",
-        archive_path: Optional[str] = None
+        archive_path: Optional[str] = None,
     ) -> LifecycleState:
         """
         Deprecate an agent to VANAPRASTHA (retired state).
@@ -351,10 +358,7 @@ class LifecycleManager:
         return state
 
     def merge_to_sannyasa(
-        self,
-        agent_id: str,
-        merge_location: str,
-        reason: str = "Merged into core"
+        self, agent_id: str, merge_location: str, reason: str = "Merged into core"
     ) -> LifecycleState:
         """
         Final state: SANNYASA (renounced/merged).
@@ -444,7 +448,13 @@ class LifecycleManager:
         # Permission matrix
         permissions = {
             LifecycleStatus.BRAHMACHARI: ["read"],
-            LifecycleStatus.GRIHASTHA: ["read", "write", "broadcast", "trade", "execute"],
+            LifecycleStatus.GRIHASTHA: [
+                "read",
+                "write",
+                "broadcast",
+                "trade",
+                "execute",
+            ],
             LifecycleStatus.SHUDRA: ["read"],
             LifecycleStatus.VANAPRASTHA: ["read"],
             LifecycleStatus.SANNYASA: [],
@@ -465,7 +475,7 @@ class LifecycleManager:
         try:
             path = Path(self.registry_path)
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path, "r") as f:
                     data = json.load(f)
 
                 # Ensure agent exists in agents dict
@@ -479,7 +489,7 @@ class LifecycleManager:
                 data["agents"][agent_id]["lifecycle_status"] = state.to_dict()
 
                 # Write back
-                with open(path, 'w') as f:
+                with open(path, "w") as f:
                     json.dump(data, f, indent=2)
 
                 logger.debug(f"💾 Persisted lifecycle state for {agent_id}")
@@ -489,7 +499,8 @@ class LifecycleManager:
     def get_all_agents_by_status(self, status: LifecycleStatus) -> List[str]:
         """Get all agents in a specific lifecycle status."""
         return [
-            agent_id for agent_id, state in self._lifecycle_states.items()
+            agent_id
+            for agent_id, state in self._lifecycle_states.items()
             if state.status == status
         ]
 

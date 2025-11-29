@@ -90,7 +90,9 @@ class PromptContext:
         # ARCH-064: Oracle resolver (system capabilities for Steward)
         self.register("kernel_capabilities", self._resolve_kernel_capabilities)
 
-        logger.debug("✅ Registered 10 core context resolvers (5 legacy + 4 kernel state + 1 oracle)")
+        logger.debug(
+            "✅ Registered 10 core context resolvers (5 legacy + 4 kernel state + 1 oracle)"
+        )
 
     def register(self, key: str, resolver: Callable[[], str]) -> None:
         """
@@ -179,7 +181,12 @@ class PromptContext:
             lines = [f"📂 {self.vibe_root.name}/"]
 
             # Important config files at root level
-            important_files = ["pyproject.toml", "steward.json", "STEWARD.md", ".env.template"]
+            important_files = [
+                "pyproject.toml",
+                "steward.json",
+                "STEWARD.md",
+                ".env.template",
+            ]
             for fname in important_files:
                 fpath = self.vibe_root / fname
                 if fpath.exists():
@@ -190,12 +197,15 @@ class PromptContext:
             try:
                 entries = sorted(
                     [e for e in self.vibe_root.iterdir() if e.is_dir()],
-                    key=lambda x: x.name
+                    key=lambda x: x.name,
                 )
 
                 for entry in entries:
                     # Skip hidden and common ignore dirs
-                    if entry.name.startswith(".") or entry.name in ["__pycache__", "node_modules"]:
+                    if entry.name.startswith(".") or entry.name in [
+                        "__pycache__",
+                        "node_modules",
+                    ]:
                         continue
                     lines.append(f"    • {entry.name}/")
 
@@ -227,13 +237,18 @@ class PromptContext:
                 return
 
             try:
-                entries = sorted([e for e in path.iterdir() if e.is_dir()], key=lambda x: x.name)
+                entries = sorted(
+                    [e for e in path.iterdir() if e.is_dir()], key=lambda x: x.name
+                )
 
                 for i, entry in enumerate(entries):
                     is_last = i == len(entries) - 1
 
                     # Skip hidden and common ignore dirs
-                    if entry.name.startswith(".") or entry.name in ["__pycache__", "node_modules"]:
+                    if entry.name.startswith(".") or entry.name in [
+                        "__pycache__",
+                        "node_modules",
+                    ]:
                         continue
 
                     connector = "└── " if is_last else "├── "
@@ -438,7 +453,7 @@ class PromptContext:
             # If we have room, add MEDIUM tasks
             remaining_high = len(high_tasks) - min(max_display, len(high_tasks))
             if display_count < max_display and medium_tasks:
-                for task in medium_tasks[:max_display - display_count]:
+                for task in medium_tasks[: max_display - display_count]:
                     output_lines.append(task)
                     display_count += 1
                 remaining_medium = len(medium_tasks) - min(

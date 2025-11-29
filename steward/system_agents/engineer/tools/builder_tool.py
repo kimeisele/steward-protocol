@@ -33,31 +33,31 @@ class BuilderTool:
     def scaffold_agent(self, name: str) -> bool:
         """
         Create directory structure for a new agent.
-        
+
         Args:
             name: Agent name (e.g., 'weather')
-            
+
         Returns:
             bool: True if successful
         """
         try:
             base_path = Path(name)
             tools_path = base_path / "tools"
-            
+
             if base_path.exists():
                 logger.warning(f"⚠️  Agent directory '{name}' already exists.")
                 return False
-                
+
             base_path.mkdir(parents=True)
             tools_path.mkdir(parents=True)
-            
+
             # Create __init__.py files
             (base_path / "__init__.py").touch()
             (tools_path / "__init__.py").touch()
-            
+
             logger.info(f"🏗️  Scaffolded agent structure for '{name}'")
             return True
-            
+
         except Exception as e:
             logger.error(f"❌ Scaffold failed: {e}")
             return False

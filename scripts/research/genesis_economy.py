@@ -25,10 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from civic.tools.economy import CivicBank
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("GENESIS")
 
 
@@ -43,11 +40,11 @@ def main():
 
     # Define Initial Grants (The "Stimulus Package")
     GRANTS = {
-        "herald": 50,        # Needs budget for tweets/broadcasts
-        "science": 50,       # Needs budget for research (Tavily, research)
-        "forum": 100,        # Needs budget for bounties & job postings
-        "civic": 100,        # Treasury/governance operations
-        "referee": 25,       # Needs budget for proof-of-work verification
+        "herald": 50,  # Needs budget for tweets/broadcasts
+        "science": 50,  # Needs budget for research (Tavily, research)
+        "forum": 100,  # Needs budget for bounties & job postings
+        "civic": 100,  # Treasury/governance operations
+        "referee": 25,  # Needs budget for proof-of-work verification
     }
 
     print(f"\n🔗 Genesis Hash: {bank.get_last_hash()}")
@@ -62,14 +59,19 @@ def main():
 
         if current_bal == 0:
             try:
-                print(f"💸 Minting {amount:>3d} Credits for {agent.upper():>10s}...", end=" ")
+                print(
+                    f"💸 Minting {amount:>3d} Credits for {agent.upper():>10s}...",
+                    end=" ",
+                )
                 tx = bank.transfer("MINT", agent, amount, "GENESIS_GRANT", "minting")
                 print(f"✅ {tx}")
                 total_distributed += amount
             except Exception as e:
                 print(f"❌ ERROR: {e}")
         else:
-            print(f"ℹ️  {agent.upper():>10s} already has {current_bal} credits (skipping)")
+            print(
+                f"ℹ️  {agent.upper():>10s} already has {current_bal} credits (skipping)"
+            )
 
     print("-" * 70)
     print(f"✅ Total distributed: {total_distributed} credits")
@@ -94,7 +96,9 @@ def main():
     print(f"   Total Transactions:    {stats['transactions']}")
     print(f"   Total Credits Issued:  {stats['total_credits_issued']}")
     print(f"   Total Balances:        {stats['total_balance']}")
-    print(f"   System Integrity:      {'✅ VERIFIED' if stats['integrity'] else '❌ FAILED'}")
+    print(
+        f"   System Integrity:      {'✅ VERIFIED' if stats['integrity'] else '❌ FAILED'}"
+    )
 
     # Print Audit Trail (Recent Transactions)
     print("\n📜 Recent Transactions:")
@@ -102,10 +106,10 @@ def main():
     audit = bank.audit_trail(limit=10)
 
     for tx in audit:
-        sender = tx['sender_id']
-        receiver = tx['receiver_id']
-        amount = tx['amount']
-        reason = tx['reason']
+        sender = tx["sender_id"]
+        receiver = tx["receiver_id"]
+        amount = tx["amount"]
+        reason = tx["reason"]
         print(f"   {sender:>12s} → {receiver:<12s} | {amount:>5d} credits | {reason}")
 
     # Final Status

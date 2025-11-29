@@ -45,7 +45,7 @@ class BootOrchestrator:
         self,
         ledger_path: Optional[str] = None,
         project_root: Optional[Path] = None,
-        config: Optional[CityConfig] = None
+        config: Optional[CityConfig] = None,
     ):
         """
         Initialize the boot orchestrator.

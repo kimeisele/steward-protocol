@@ -20,57 +20,59 @@ logger = logging.getLogger("LEADERBOARD")
 from steward.game.referee import Referee
 from steward.game.card_generator import CardGenerator
 
+
 def main():
     logger.info("🎮 Starting Agent City Game Loop...")
-    
+
     # Paths
     pokedex_path = Path("data/federation/pokedex.json")
     docs_dir = Path("docs")
-    
+
     # Initialize components
     referee = Referee()
     artisan = CardGenerator(output_dir=docs_dir / "cards")
-    
+
     # Load Agents
     if not pokedex_path.exists():
         logger.error("❌ Pokedex not found!")
         return
-        
+
     with open(pokedex_path) as f:
         agents = json.load(f)
-        
+
     logger.info(f"👥 Found {len(agents)} agents in Pokedex.")
-    
+
     # Calculate Stats & Mint Cards
     leaderboard = []
-    
+
     for agent in agents:
         agent_id = agent.get("agent_id")
-        
+
         # 1. Calculate XP
         xp = referee.calculate_xp(agent_id)
         tier_info = referee.get_tier(xp)
-        
+
         agent["xp"] = xp
         agent["tier"] = tier_info["name"]
         agent["tier_color"] = tier_info["color"]
-        
+
         # 2. Mint Card
         card_path = artisan.generate_card(agent, tier_info)
         agent["card_path"] = f"cards/{Path(card_path).name}"
-        
+
         leaderboard.append(agent)
-        
+
     # Sort by XP (Desc)
     leaderboard.sort(key=lambda x: x["xp"], reverse=True)
-    
+
     # Generate HTML
     _generate_html(leaderboard, docs_dir / "leaderboard.html")
     logger.info("✅ Leaderboard published to docs/leaderboard.html")
 
+
 def _generate_html(agents: list, output_path: Path):
     """Generate the HTML leaderboard."""
-    
+
     cards_html = ""
     for i, agent in enumerate(agents):
         rank = i + 1
@@ -85,7 +87,7 @@ def _generate_html(agents: list, output_path: Path):
             </div>
         </div>
         """
-        
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -168,9 +170,10 @@ def _generate_html(agents: list, output_path: Path):
     </body>
     </html>
     """
-    
+
     with open(output_path, "w") as f:
         f.write(html)
+
 
 if __name__ == "__main__":
     main()

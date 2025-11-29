@@ -76,7 +76,9 @@ class GoogleProvider(LLMProvider):
             self._default_model = model
             logger.info(f"GoogleProvider initialized (model={model})")
         except Exception as e:
-            raise ProviderNotAvailableError(f"Failed to initialize GoogleProvider: {e}") from e
+            raise ProviderNotAvailableError(
+                f"Failed to initialize GoogleProvider: {e}"
+            ) from e
 
     def chat(
         self,

@@ -15,6 +15,7 @@ except ImportError:
 
 logger = logging.getLogger("CARD_GEN")
 
+
 class CardGenerator:
     """
     Mints dynamic PNG cards for agents.
@@ -23,18 +24,20 @@ class CardGenerator:
     def __init__(self, output_dir: Path = Path("docs/cards")):
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         if not Image:
             logger.warning("⚠️ Pillow not installed. Card generation disabled.")
 
-    def generate_card(self, agent_data: Dict[str, Any], tier_info: Dict[str, Any]) -> str:
+    def generate_card(
+        self, agent_data: Dict[str, Any], tier_info: Dict[str, Any]
+    ) -> str:
         """
         Draw a trading card.
-        
+
         Args:
             agent_data: {agent_id, role, joined_at}
             tier_info: {name, color, min_xp}
-            
+
         Returns:
             str: Path to generated image
         """
@@ -49,25 +52,19 @@ class CardGenerator:
 
         # Canvas
         width, height = 400, 600
-        bg_color = (20, 20, 25) # Dark Grey
-        
-        img = Image.new('RGB', (width, height), bg_color)
+        bg_color = (20, 20, 25)  # Dark Grey
+
+        img = Image.new("RGB", (width, height), bg_color)
         draw = ImageDraw.Draw(img)
-        
+
         # Border (Tier Color)
         border_width = 10
         draw.rectangle(
-            [0, 0, width-1, height-1], 
-            outline=tier_color, 
-            width=border_width
+            [0, 0, width - 1, height - 1], outline=tier_color, width=border_width
         )
-        
+
         # Inner Frame
-        draw.rectangle(
-            [20, 20, width-20, height-20],
-            outline=(50, 50, 60),
-            width=2
-        )
+        draw.rectangle([20, 20, width - 20, height - 20], outline=(50, 50, 60), width=2)
 
         # Header (Agent ID)
         try:
@@ -86,13 +83,20 @@ class CardGenerator:
 
         # Tier Badge
         badge_y = 200
-        draw.rectangle([40, badge_y, 360, badge_y+60], fill=(30, 30, 35), outline=tier_color)
-        draw.text((60, badge_y+15), f"TIER: {tier_name.upper()}", fill=tier_color, font=font_medium)
+        draw.rectangle(
+            [40, badge_y, 360, badge_y + 60], fill=(30, 30, 35), outline=tier_color
+        )
+        draw.text(
+            (60, badge_y + 15),
+            f"TIER: {tier_name.upper()}",
+            fill=tier_color,
+            font=font_medium,
+        )
 
         # XP Stats
         stats_y = 300
         draw.text((40, stats_y), f"XP: {xp}", fill="white", font=font_medium)
-        draw.text((40, stats_y+40), f"Next Tier: ???", fill="grey", font=font_small)
+        draw.text((40, stats_y + 40), f"Next Tier: ???", fill="grey", font=font_small)
 
         # Footer
         draw.text((40, 550), "STEWARD PROTOCOL", fill=(100, 100, 100), font=font_small)
@@ -102,6 +106,6 @@ class CardGenerator:
         filename = f"{agent_id}.png"
         path = self.output_dir / filename
         img.save(path)
-        
+
         logger.info(f"🃏 Minted card for {agent_id}: {path}")
         return str(path)

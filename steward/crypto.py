@@ -107,9 +107,7 @@ def sign_content(content: str) -> str:
     # Sign the content using SHA256 hash
     content_bytes = content.encode("utf-8")
     signature_bytes = private_key.sign(
-        content_bytes,
-        hashfunc=hashlib.sha256,
-        sigencode=sigencode_string
+        content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string
     )
 
     # Encode as base64
@@ -141,7 +139,7 @@ def verify_signature(content: str, signature_b64: str, public_key_b64: str) -> b
             signature_bytes,
             content_bytes,
             hashfunc=hashlib.sha256,
-            sigdecode=sigdecode_string
+            sigdecode=sigdecode_string,
         )
         return True
     except Exception:

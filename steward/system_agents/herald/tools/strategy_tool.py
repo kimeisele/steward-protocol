@@ -51,7 +51,9 @@ class StrategyTool:
 
         # A.G.I. framing for strategies
         self.agi_definition = "A.G.I. = Artificial Governed Intelligence"
-        self.strategy_ethos = "Strategy must prove what it claims. Proof first, narrative second."
+        self.strategy_ethos = (
+            "Strategy must prove what it claims. Proof first, narrative second."
+        )
 
         if self.api_key and OpenAI:
             try:
@@ -63,7 +65,9 @@ class StrategyTool:
             except Exception as e:
                 logger.warning(f"⚠️  Strategy Tool: LLM init failed: {e}")
         else:
-            logger.warning("⚠️  Strategy Tool: LLM unavailable (planning in offline mode)")
+            logger.warning(
+                "⚠️  Strategy Tool: LLM unavailable (planning in offline mode)"
+            )
 
         # Load campaign themes for content rotation
         self.campaign_themes = self._load_campaign_themes()
@@ -83,7 +87,7 @@ class StrategyTool:
                 logger.warning("⚠️  Campaign themes not found (cartridge.yaml missing)")
                 return None
 
-            with open(cartridge_path, 'r', encoding='utf-8') as f:
+            with open(cartridge_path, "r", encoding="utf-8") as f:
                 cartridge = yaml.safe_load(f)
 
             campaign_themes = cartridge.get("config", {}).get("campaign_themes", {})
@@ -118,18 +122,22 @@ class StrategyTool:
         day_to_theme = {
             "monday": "monday",
             "wednesday": "wednesday",
-            "friday": "friday"
+            "friday": "friday",
         }
 
         theme_key = day_to_theme.get(day_name)
 
         if theme_key and theme_key in self.campaign_themes:
             theme = self.campaign_themes[theme_key]
-            logger.info(f"📅 Today's campaign theme ({day_name}): {theme.get('name', 'Unknown')}")
+            logger.info(
+                f"📅 Today's campaign theme ({day_name}): {theme.get('name', 'Unknown')}"
+            )
             return theme
         else:
             # Off-days: fall back to the nearest upcoming theme
-            logger.debug(f"📅 Today ({day_name}) is not a campaign day. Using default theme.")
+            logger.debug(
+                f"📅 Today ({day_name}) is not a campaign day. Using default theme."
+            )
             return None
 
     def get_content_focus_areas(self) -> List[str]:
@@ -156,10 +164,12 @@ class StrategyTool:
             return theme.get("example_topics", [])
         return []
 
-    def plan_launch_campaign(self,
-                            manifesto_path: Optional[Path] = None,
-                            context_path: Optional[Path] = None,
-                            duration_weeks: int = 2) -> Optional[str]:
+    def plan_launch_campaign(
+        self,
+        manifesto_path: Optional[Path] = None,
+        context_path: Optional[Path] = None,
+        duration_weeks: int = 2,
+    ) -> Optional[str]:
         """
         Generate a multi-phase launch campaign plan.
 
@@ -175,8 +185,12 @@ class StrategyTool:
         """
 
         # Load foundational documents
-        manifesto_content = self._read_document(manifesto_path or Path("AGI_MANIFESTO.md"))
-        context_content = self._read_document(context_path or Path("docs/herald/WHY_DOWNVOTED.md"))
+        manifesto_content = self._read_document(
+            manifesto_path or Path("AGI_MANIFESTO.md")
+        )
+        context_content = self._read_document(
+            context_path or Path("docs/herald/WHY_DOWNVOTED.md")
+        )
 
         if not manifesto_content or not context_content:
             logger.warning("⚠️  Strategy: Missing foundational documents for planning")
@@ -185,15 +199,15 @@ class StrategyTool:
         # Generate strategic narrative
         if self.client:
             return self._llm_plan_campaign(
-                manifesto_content,
-                context_content,
-                duration_weeks
+                manifesto_content, context_content, duration_weeks
             )
         else:
             logger.debug("⚠️  Strategy: LLM unavailable, using template-based planning")
             return self._template_based_plan(duration_weeks)
 
-    def _llm_plan_campaign(self, manifesto: str, context: str, weeks: int) -> Optional[str]:
+    def _llm_plan_campaign(
+        self, manifesto: str, context: str, weeks: int
+    ) -> Optional[str]:
         """Generate campaign plan via LLM."""
 
         prompt = f"""
@@ -244,22 +258,21 @@ Generate the roadmap now:
             response = self.client.messages.create(
                 model="openai/gpt-4-turbo",
                 max_tokens=2000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             roadmap = response.content[0].text
 
             # Governance check
             if self._governance_check_strategy(roadmap):
-                logger.info("✅ Strategy: Campaign plan generated and governance-checked")
+                logger.info(
+                    "✅ Strategy: Campaign plan generated and governance-checked"
+                )
                 return roadmap
             else:
-                logger.warning("⚠️  Strategy: Plan failed governance check, using template")
+                logger.warning(
+                    "⚠️  Strategy: Plan failed governance check, using template"
+                )
                 return self._template_based_plan(weeks)
 
         except Exception as e:
@@ -288,7 +301,9 @@ Generate the roadmap now:
         found = sum(1 for req in required if req.lower() in strategy_text.lower())
 
         if found < 2:  # At least 2 required concepts
-            logger.warning("❌ Strategy failed governance: Missing proof/accountability language")
+            logger.warning(
+                "❌ Strategy failed governance: Missing proof/accountability language"
+            )
             return False
 
         logger.info("✅ Strategy passed governance check")
@@ -301,52 +316,60 @@ Generate the roadmap now:
         phases = []
 
         if weeks >= 1:
-            phases.append({
-                "days": "1-2",
-                "theme": "The Reveal",
-                "proof": "AGI_MANIFESTO.md + STEWARD.md",
-                "content": [
-                    "A.G.I. is NOT about human-level intelligence",
-                    "A.G.I. is about Cryptographic Governance + Accountability",
-                    "Reference: Embedded proof (see linked documents)"
-                ]
-            })
+            phases.append(
+                {
+                    "days": "1-2",
+                    "theme": "The Reveal",
+                    "proof": "AGI_MANIFESTO.md + STEWARD.md",
+                    "content": [
+                        "A.G.I. is NOT about human-level intelligence",
+                        "A.G.I. is about Cryptographic Governance + Accountability",
+                        "Reference: Embedded proof (see linked documents)",
+                    ],
+                }
+            )
 
         if weeks >= 1:
-            phases.append({
-                "days": "3-4",
-                "theme": "The Proof",
-                "proof": "data/ledger/audit_trail.jsonl + docs/",
-                "content": [
-                    "Live audit trail: Every action is logged and signed",
-                    "Trust signal: Verified Events counter",
-                    "Reference: Public ledger visualization"
-                ]
-            })
+            phases.append(
+                {
+                    "days": "3-4",
+                    "theme": "The Proof",
+                    "proof": "data/ledger/audit_trail.jsonl + docs/",
+                    "content": [
+                        "Live audit trail: Every action is logged and signed",
+                        "Trust signal: Verified Events counter",
+                        "Reference: Public ledger visualization",
+                    ],
+                }
+            )
 
         if weeks >= 1:
-            phases.append({
-                "days": "5-7",
-                "theme": "The Architecture",
-                "proof": "docs/architecture.md + Quadrinity federation",
-                "content": [
-                    "HERALD creates | ARCHIVIST verifies | AUDITOR enforces | STEWARD coordinates",
-                    "Self-governing system: Governance applies to itself",
-                    "Reference: Technical deep-dive"
-                ]
-            })
+            phases.append(
+                {
+                    "days": "5-7",
+                    "theme": "The Architecture",
+                    "proof": "docs/architecture.md + Quadrinity federation",
+                    "content": [
+                        "HERALD creates | ARCHIVIST verifies | AUDITOR enforces | STEWARD coordinates",
+                        "Self-governing system: Governance applies to itself",
+                        "Reference: Technical deep-dive",
+                    ],
+                }
+            )
 
         if weeks >= 2:
-            phases.append({
-                "days": "8-14",
-                "theme": "The Invitation",
-                "proof": "README.md + contribution guidelines",
-                "content": [
-                    "Your agents. Your governance. Your proof.",
-                    "Join the federation",
-                    "Reference: Getting started guide"
-                ]
-            })
+            phases.append(
+                {
+                    "days": "8-14",
+                    "theme": "The Invitation",
+                    "proof": "README.md + contribution guidelines",
+                    "content": [
+                        "Your agents. Your governance. Your proof.",
+                        "Join the federation",
+                        "Reference: Getting started guide",
+                    ],
+                }
+            )
 
         # Build markdown
         markdown = f"""# Campaign Roadmap: A.G.I. Launch ({weeks} weeks)
@@ -396,7 +419,7 @@ Generate the roadmap now:
             return None
 
         try:
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
             logger.error(f"❌ Error reading {path}: {e}")
@@ -421,7 +444,9 @@ A {weeks}-week campaign to establish A.G.I. positioning.
 **Status**: This is a template. Run strategy tool with proper context documents.
 """
 
-    def write_roadmap_to_file(self, roadmap_text: str, output_path: Optional[Path] = None) -> bool:
+    def write_roadmap_to_file(
+        self, roadmap_text: str, output_path: Optional[Path] = None
+    ) -> bool:
         """
         Write roadmap to file.
 
@@ -439,7 +464,7 @@ A {weeks}-week campaign to establish A.G.I. positioning.
             # Ensure directory exists
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(output_path, 'w', encoding='utf-8') as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(roadmap_text)
 
             logger.info(f"✅ Roadmap written to {output_path}")
@@ -462,6 +487,8 @@ A {weeks}-week campaign to establish A.G.I. positioning.
             "has_phases": roadmap_text.count("##") >= 3,
             "includes_proof": "proof" in roadmap_text.lower(),
             "proof_heavy": roadmap_text.count("proof") + roadmap_text.count("verify"),
-            "hype_free": not any(p.lower() in roadmap_text.lower()
-                               for p in self.governance.BANNED_PHRASES[:3])
+            "hype_free": not any(
+                p.lower() in roadmap_text.lower()
+                for p in self.governance.BANNED_PHRASES[:3]
+            ),
         }

@@ -162,11 +162,11 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
 
         template = Template(template_str)
         content = template.render(
-            project=metadata['project'],
-            git=metadata['git'],
-            agent_count=metadata['agent_count'],
-            governance=metadata['governance'],
-            agents=metadata['agents']
+            project=metadata["project"],
+            git=metadata["git"],
+            agent_count=metadata["agent_count"],
+            governance=metadata["governance"],
+            agents=metadata["agents"],
         )
 
         return content

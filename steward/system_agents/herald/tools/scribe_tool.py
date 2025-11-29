@@ -113,7 +113,11 @@ class Scribe:
         if event.event_type == "content_generated":
             content = payload.get("content", "")[:60]
             platform = payload.get("platform", "unknown").upper()
-            return f"content regarding '{content}...'" if len(content) > 0 else f"content on {platform}"
+            return (
+                f"content regarding '{content}...'"
+                if len(content) > 0
+                else f"content on {platform}"
+            )
 
         elif event.event_type == "content_published":
             content = payload.get("content", "")[:60]
@@ -164,7 +168,6 @@ class Scribe:
             # Initialize the file first
             self.initialize_logbook_section()
 
-
         # Read current content
         content = self.chronicle_path.read_text(encoding="utf-8")
 
@@ -179,7 +182,7 @@ class Scribe:
                 # Insert before "## Future Entries"
                 updated_content = content.replace(
                     f"\n{future_marker}",
-                    f"\n{logbook_marker}\n\n{entry}\n\n{future_marker}"
+                    f"\n{logbook_marker}\n\n{entry}\n\n{future_marker}",
                 )
             else:
                 # Append before final section
@@ -187,7 +190,7 @@ class Scribe:
                 if closing_marker in content:
                     updated_content = content.replace(
                         closing_marker,
-                        f"\n{logbook_marker}\n\n{entry}\n{closing_marker}"
+                        f"\n{logbook_marker}\n\n{entry}\n{closing_marker}",
                     )
                 else:
                     # Just append before the last line
@@ -220,7 +223,10 @@ class Scribe:
                     # Insert before next marker with blank line separator
                     lines.insert(next_marker_idx, entry)
                     # Add blank line after entry if next marker doesn't have one
-                    if next_marker_idx + 1 < len(lines) and lines[next_marker_idx + 1].strip():
+                    if (
+                        next_marker_idx + 1 < len(lines)
+                        and lines[next_marker_idx + 1].strip()
+                    ):
                         lines.insert(next_marker_idx + 1, "")
 
                 updated_content = "\n".join(lines)
@@ -265,14 +271,12 @@ Autonomous activity log:
 
             if future_marker in content:
                 updated_content = content.replace(
-                    f"\n{future_marker}",
-                    f"\n{logbook_section}\n{future_marker}"
+                    f"\n{future_marker}", f"\n{logbook_section}\n{future_marker}"
                 )
             else:
                 closing_marker = "\n---\n\n*The Chronicles are"
                 updated_content = content.replace(
-                    closing_marker,
-                    f"\n{logbook_section}{closing_marker}"
+                    closing_marker, f"\n{logbook_section}{closing_marker}"
                 )
 
             self.chronicle_path.write_text(updated_content, encoding="utf-8")

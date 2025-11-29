@@ -183,7 +183,9 @@ class PromptRuntime:
             # 1. Load composition spec
             comp_spec = self._load_composition_spec(agent_id)
             print(f"✓ Loaded composition spec (v{comp_spec.composition_version})")
-            logger.debug(f"Composition spec loaded: version {comp_spec.composition_version}")
+            logger.debug(
+                f"Composition spec loaded: version {comp_spec.composition_version}"
+            )
 
             # 2. Load task metadata
             task_meta = self._load_task_metadata(agent_id, task_id)
@@ -193,7 +195,9 @@ class PromptRuntime:
             # 3. Resolve knowledge dependencies
             knowledge_files = self._resolve_knowledge_deps(agent_id, task_meta)
             print(f"✓ Resolved {len(knowledge_files)} knowledge dependencies")
-            logger.debug(f"Knowledge dependencies resolved: {len(knowledge_files)} files")
+            logger.debug(
+                f"Knowledge dependencies resolved: {len(knowledge_files)} files"
+            )
 
             # 4. Compose final prompt
             final_prompt = self._compose_prompt(
@@ -217,14 +221,18 @@ class PromptRuntime:
 
             # 5. Validation gates (dry-run)
             if task_meta.validation_gates:
-                print(f"✓ Validation gates loaded: {', '.join(task_meta.validation_gates)}")
+                print(
+                    f"✓ Validation gates loaded: {', '.join(task_meta.validation_gates)}"
+                )
                 logger.debug(f"Validation gates: {task_meta.validation_gates}")
 
             print(f"\n{'=' * 60}")
             print("COMPOSITION COMPLETE")
             print(f"{'=' * 60}\n")
 
-            logger.info(f"Composition successful: {agent_id}.{task_id} ({prompt_size:,} chars)")
+            logger.info(
+                f"Composition successful: {agent_id}.{task_id} ({prompt_size:,} chars)"
+            )
             return final_prompt
 
         except (AgentNotFoundError, TaskNotFoundError, MalformedYAMLError) as e:
@@ -232,7 +240,9 @@ class PromptRuntime:
             raise
         except Exception as e:
             logger.error(f"Unexpected error during composition: {e}", exc_info=True)
-            raise CompositionError(f"Failed to compose prompt for {agent_id}.{task_id}: {e}") from e
+            raise CompositionError(
+                f"Failed to compose prompt for {agent_id}.{task_id}: {e}"
+            ) from e
 
     def _load_composition_spec(self, agent_id: str) -> CompositionSpec:
         """
@@ -270,7 +280,12 @@ class PromptRuntime:
             ) from e
 
         # Validate required fields
-        required_fields = ["composition_version", "agent_id", "agent_version", "composition_order"]
+        required_fields = [
+            "composition_version",
+            "agent_id",
+            "agent_version",
+            "composition_order",
+        ]
         missing = [field for field in required_fields if field not in data]
         if missing:
             raise MalformedYAMLError(
@@ -362,7 +377,9 @@ class PromptRuntime:
             estimated_tokens=data.get("estimated_tokens", 0),
         )
 
-    def _resolve_knowledge_deps(self, agent_id: str, task_meta: TaskMetadata) -> list[str]:
+    def _resolve_knowledge_deps(
+        self, agent_id: str, task_meta: TaskMetadata
+    ) -> list[str]:
         """
         Resolve which knowledge YAML files to load for this task.
 
@@ -435,15 +452,21 @@ class PromptRuntime:
             elif step_type == "tools":
                 if composition_spec.tools:
                     tools_section = self._compose_tools_section(
-                        source=source, available_tools=composition_spec.tools, agent_path=agent_path
+                        source=source,
+                        available_tools=composition_spec.tools,
+                        agent_path=agent_path,
                     )
-                    composed_parts.append(f"# === AVAILABLE TOOLS ===\n\n{tools_section}")
+                    composed_parts.append(
+                        f"# === AVAILABLE TOOLS ===\n\n{tools_section}"
+                    )
 
             # === KNOWLEDGE FILES ===
             elif source == "${knowledge_files}" and step_type == "knowledge":
                 if knowledge_files:
                     knowledge_section = "\n\n---\n\n".join(knowledge_files)
-                    composed_parts.append(f"# === KNOWLEDGE BASE ===\n\n{knowledge_section}")
+                    composed_parts.append(
+                        f"# === KNOWLEDGE BASE ===\n\n{knowledge_section}"
+                    )
 
             # === TASK PROMPT ===
             elif source == "${task_prompt}" and step_type == "task":
@@ -459,12 +482,16 @@ class PromptRuntime:
                 if task_meta.validation_gates:
                     gate_sections = []
                     for gate_id in task_meta.validation_gates:
-                        gate_file = gate_id if gate_id.endswith(".md") else f"{gate_id}.md"
+                        gate_file = (
+                            gate_id if gate_id.endswith(".md") else f"{gate_id}.md"
+                        )
                         gate_prompt = self._load_file(agent_path / "gates" / gate_file)
                         gate_sections.append(gate_prompt)
 
                     gates_combined = "\n\n---\n\n".join(gate_sections)
-                    composed_parts.append(f"# === VALIDATION GATES ===\n\n{gates_combined}")
+                    composed_parts.append(
+                        f"# === VALIDATION GATES ===\n\n{gates_combined}"
+                    )
 
             # === RUNTIME CONTEXT ===
             elif source == "${runtime_context}" and step_type == "context":
@@ -598,18 +625,26 @@ class PromptRuntime:
 
         for tool_name, tool_def in filtered_tools.items():
             lines.append(f"## Tool: `{tool_name}`\n")
-            lines.append(f"**Description:** {tool_def.get('description', 'No description')}\n")
+            lines.append(
+                f"**Description:** {tool_def.get('description', 'No description')}\n"
+            )
 
             # Parameters
             params = tool_def.get("parameters", {})
             if params:
                 lines.append("\n**Parameters:**")
                 for param_name, param_spec in params.items():
-                    required = " (required)" if param_spec.get("required", False) else " (optional)"
+                    required = (
+                        " (required)"
+                        if param_spec.get("required", False)
+                        else " (optional)"
+                    )
                     param_type = param_spec.get("type", "any")
                     param_desc = param_spec.get("description", "")
                     default = (
-                        f", default: `{param_spec['default']}`" if "default" in param_spec else ""
+                        f", default: `{param_spec['default']}`"
+                        if "default" in param_spec
+                        else ""
                     )
                     lines.append(
                         f"- `{param_name}` ({param_type}){required}: {param_desc}{default}"
@@ -618,7 +653,9 @@ class PromptRuntime:
             # Returns
             returns = tool_def.get("returns", {})
             if returns:
-                lines.append(f"\n**Returns:** {returns.get('description', 'No description')}")
+                lines.append(
+                    f"\n**Returns:** {returns.get('description', 'No description')}"
+                )
 
             lines.append("\n---\n")
 
@@ -632,7 +669,9 @@ class PromptRuntime:
         lines.append("  </parameters>")
         lines.append("</tool_use>")
         lines.append("```\n")
-        lines.append("You will receive the tool result, then you can continue your analysis.\n")
+        lines.append(
+            "You will receive the tool result, then you can continue your analysis.\n"
+        )
 
         return "\n".join(lines)
 
@@ -648,7 +687,9 @@ if __name__ == "__main__":
     context = {
         "project_id": "test_project_001",
         "current_phase": "PLANNING",
-        "artifacts": {"feature_spec": "workspaces/test/artifacts/planning/feature_spec.json"},
+        "artifacts": {
+            "feature_spec": "workspaces/test/artifacts/planning/feature_spec.json"
+        },
         "workspace_path": "workspaces/test/",
     }
 

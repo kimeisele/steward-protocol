@@ -12,6 +12,7 @@ from typing import Dict, List, Any
 
 logger = logging.getLogger("REFEREE")
 
+
 class Referee:
     """
     The Game Master - Proof-of-Work Edition.
@@ -47,11 +48,11 @@ class Referee:
     }
 
     TIERS = [
-        (0, "Drifter", "#808080"),      # Grey - No reputation yet
-        (100, "Novice", "#87CEEB"),     # Sky Blue - Learning
-        (500, "Scout", "#00BFFF"),      # Bright Blue - Active
+        (0, "Drifter", "#808080"),  # Grey - No reputation yet
+        (100, "Novice", "#87CEEB"),  # Sky Blue - Learning
+        (500, "Scout", "#00BFFF"),  # Bright Blue - Active
         (1000, "Guardian", "#9932CC"),  # Purple - Trusted
-        (2500, "Legend", "#FFD700")     # Gold - Highly trusted
+        (2500, "Legend", "#FFD700"),  # Gold - Highly trusted
     ]
 
     def __init__(self, ledger_path: Path = Path("data/ledger")):
@@ -73,7 +74,7 @@ class Referee:
             return 0
 
         try:
-            with open(self.audit_trail, 'r') as f:
+            with open(self.audit_trail, "r") as f:
                 for line in f:
                     if not line.strip():
                         continue
@@ -113,7 +114,9 @@ class Referee:
             return 0
 
         if verified_events > 0:
-            logger.debug(f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP")
+            logger.debug(
+                f"✅ {agent_id}: {verified_events} verified events, {failed_events} failed, {xp} total XP"
+            )
 
         return max(0, xp)  # XP never goes below 0
 
@@ -131,5 +134,5 @@ class Referee:
             "name": current_tier[1],
             "color": current_tier[2],
             "min_xp": current_tier[0],
-            "xp": xp
+            "xp": xp,
         }

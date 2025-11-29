@@ -32,14 +32,16 @@ class RegistryAgent(VibeAgent):
             author="Steward Protocol",
             description="Agent registration and registry management",
             domain="GOVERNANCE",
-            capabilities=["registry", "scanning", "validation"]
+            capabilities=["registry", "scanning", "validation"],
         )
 
         self.registry_path = Path("data/registry/citizens.json")
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.registry = self._load_registry()
-        logger.info(f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents")
+        logger.info(
+            f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents"
+        )
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process registry-related tasks (governance only, no documentation)."""
@@ -55,7 +57,7 @@ class RegistryAgent(VibeAgent):
             return self.register_agent(
                 agent_name=task.payload.get("agent_name"),
                 config=task.payload.get("config"),
-                initial_credits=task.payload.get("initial_credits", 100)
+                initial_credits=task.payload.get("initial_credits", 100),
             )
         else:
             return {"status": "error", "error": f"Unknown action: {action}"}
@@ -111,8 +113,8 @@ class RegistryAgent(VibeAgent):
                             "status": "brahmachari",
                             "varna": "Brahmachari (Student)",
                             "entered_at": datetime.now(timezone.utc).isoformat(),
-                            "reason": "New agent registration"
-                        }
+                            "reason": "New agent registration",
+                        },
                     }
 
                     if "agents" not in self.registry:
@@ -150,6 +152,7 @@ class RegistryAgent(VibeAgent):
         except Exception as e:
             logger.error(f"❌ Registration scan error: {e}")
             import traceback
+
             logger.error(traceback.format_exc())
             return {"status": "error", "error": str(e)}
 
@@ -162,7 +165,9 @@ class RegistryAgent(VibeAgent):
             "agents": agents,
         }
 
-    def register_agent(self, agent_name: str, config: Dict[str, Any], initial_credits: int) -> Dict[str, Any]:
+    def register_agent(
+        self, agent_name: str, config: Dict[str, Any], initial_credits: int
+    ) -> Dict[str, Any]:
         """Register a single agent."""
         if "agents" not in self.registry:
             self.registry["agents"] = {}
@@ -179,19 +184,15 @@ class RegistryAgent(VibeAgent):
                 "status": "brahmachari",
                 "varna": "Brahmachari (Student)",
                 "entered_at": datetime.now(timezone.utc).isoformat(),
-                "reason": "Agent registration"
-            }
+                "reason": "Agent registration",
+            },
         }
 
         self.registry["agents"][agent_name] = agent_record
         self._save_registry()
 
         logger.info(f"✅ Registered {agent_name} with {initial_credits} credits")
-        return {
-            "status": "success",
-            "agent": agent_name,
-            "credits": initial_credits
-        }
+        return {"status": "success", "agent": agent_name, "credits": initial_credits}
 
     # Private helpers
     def _find_agent_cartridges(self) -> List[Path]:

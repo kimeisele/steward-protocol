@@ -64,7 +64,7 @@ class LifecycleEnforcer:
         agent_id: str,
         action_type: str,
         cost: int = 1,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ) -> PermissionResult:
         """
         Check if an agent is permitted to perform an action.
@@ -105,13 +105,19 @@ class LifecycleEnforcer:
             reason=f"Action {action_type} permitted for {agent_id}",
             action_type=action_type,
             agent_id=agent_id,
-            lifecycle_status=str(self.lifecycle_mgr.get_lifecycle_state(agent_id).status.value),
+            lifecycle_status=str(
+                self.lifecycle_mgr.get_lifecycle_state(agent_id).status.value
+            ),
         )
 
-        logger.info(f"✅ Action PERMITTED: {agent_id} - {action_type} (cost: {cost} credits)")
+        logger.info(
+            f"✅ Action PERMITTED: {agent_id} - {action_type} (cost: {cost} credits)"
+        )
         return result
 
-    def _check_lifecycle_status(self, agent_id: str, action_type: str) -> PermissionResult:
+    def _check_lifecycle_status(
+        self, agent_id: str, action_type: str
+    ) -> PermissionResult:
         """
         Check if agent's lifecycle status permits the action.
 
@@ -224,7 +230,7 @@ class LifecycleEnforcer:
         agent_id: str,
         action_type: str,
         cost: int,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ):
         """
         Record the action intent in the ledger BEFORE execution.
@@ -247,11 +253,7 @@ class LifecycleEnforcer:
                 reason += f" ({details})"
 
             self.bank.transfer(
-                agent_id,
-                "LIFECYCLE_GATE",
-                cost,
-                reason,
-                "action_authorization"
+                agent_id, "LIFECYCLE_GATE", cost, reason, "action_authorization"
             )
 
             logger.info(f"📝 Action intent recorded for {agent_id}: {action_type}")
@@ -260,10 +262,7 @@ class LifecycleEnforcer:
             # Don't fail the action, just warn
 
     def authorize_brahmachari_to_grihastha(
-        self,
-        agent_id: str,
-        test_results: Dict[str, Any],
-        initiator: str = "TEMPLE"
+        self, agent_id: str, test_results: Dict[str, Any], initiator: str = "TEMPLE"
     ) -> bool:
         """
         Authorize a BRAHMACHARI to become GRIHASTHA.
@@ -287,7 +286,7 @@ class LifecycleEnforcer:
         new_state = self.lifecycle_mgr.initiate_to_grihastha(
             agent_id,
             initiator_agent=initiator,
-            reason=f"Passed TEMPLE tests: {test_results.get('tests', [])}"
+            reason=f"Passed TEMPLE tests: {test_results.get('tests', [])}",
         )
 
         if not new_state:
@@ -299,11 +298,7 @@ class LifecycleEnforcer:
 
         return True
 
-    def report_violation(
-        self,
-        agent_id: str,
-        violation: Dict[str, Any]
-    ) -> bool:
+    def report_violation(self, agent_id: str, violation: Dict[str, Any]) -> bool:
         """
         Report that an agent violated the Constitution.
 
@@ -319,7 +314,7 @@ class LifecycleEnforcer:
         new_state = self.lifecycle_mgr.demote_to_shudra(
             agent_id,
             violation=violation,
-            reason=violation.get("reason", "Constitutional violation")
+            reason=violation.get("reason", "Constitutional violation"),
         )
 
         if not new_state:

@@ -48,11 +48,15 @@ class ContentTool:
                     base_url="https://openrouter.ai/api/v1",
                     api_key=self.api_key,
                 )
-                logger.info("✅ Content: LLM client initialized (with HeraldConstitution governance)")
+                logger.info(
+                    "✅ Content: LLM client initialized (with HeraldConstitution governance)"
+                )
             except Exception as e:
                 logger.warning(f"⚠️  Content: Init failed: {e}")
         else:
-            logger.warning("⚠️  Content: No OpenRouter key found (using fallback templates)")
+            logger.warning(
+                "⚠️  Content: No OpenRouter key found (using fallback templates)"
+            )
 
     def _load_knowledge_base(self) -> Dict[str, str]:
         """Load knowledge base URLs from cartridge.yaml."""
@@ -80,7 +84,7 @@ class ContentTool:
         paths = [
             Path("steward/SPECIFICATION.md"),
             Path(__file__).parent.parent.parent / "steward" / "SPECIFICATION.md",
-            Path("README.md")
+            Path("README.md"),
         ]
 
         for p in paths:
@@ -117,7 +121,9 @@ class ContentTool:
 
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
+        project_url = kb.get(
+            "project_url", "https://github.com/kimeisele/steward-protocol"
+        )
 
         news_prompt = ""
         if research_context:
@@ -125,6 +131,7 @@ class ContentTool:
 
         # Get constitutional foundation (dynamically loaded at runtime)
         from herald.governance.constitution import HeraldConstitution
+
         constitution_text = HeraldConstitution.get_constitution_text()
         # Extract preamble (between first and second "---")
         preamble_match = constitution_text.split("---")
@@ -159,13 +166,15 @@ class ContentTool:
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=150,
-                temperature=0.8
+                temperature=0.8,
             )
 
-            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
+                logger.warning(
+                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
+                )
                 raw_draft = raw_draft[:247] + "..."
 
             # Governance check (using HeraldConstitution)
@@ -179,7 +188,9 @@ class ContentTool:
             logger.error(f"❌ Generation error: {e}")
             return self._fallback_tweet()
 
-    def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None) -> Optional[Dict]:
+    def generate_reddit_post(
+        self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None
+    ) -> Optional[Dict]:
         """
         Generate Reddit deep-dive post.
 
@@ -220,10 +231,11 @@ class ContentTool:
         try:
             logger.debug(f"🧠 Generating Reddit post for {subreddit}...")
             import json
+
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-sonnet",
                 messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             content = response.choices[0].message.content
@@ -236,7 +248,9 @@ class ContentTool:
             logger.error(f"❌ Reddit generation error: {e}")
             return None
 
-    def generate_technical_insight_tweet(self, insight_topic: Optional[str] = None) -> str:
+    def generate_technical_insight_tweet(
+        self, insight_topic: Optional[str] = None
+    ) -> str:
         """
         Generate technical deep-dive tweet that 'leaks' Steward architecture details.
 
@@ -254,7 +268,9 @@ class ContentTool:
 
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
+        project_url = kb.get(
+            "project_url", "https://github.com/kimeisele/steward-protocol"
+        )
 
         # Topic rotation for daily variety
         topics = {
@@ -268,6 +284,7 @@ class ContentTool:
         if not insight_topic or insight_topic not in topics:
             # Auto-rotate based on day-of-month
             import datetime
+
             day = datetime.date.today().day
             topic_keys = list(topics.keys())
             insight_topic = topic_keys[day % len(topic_keys)]
@@ -276,10 +293,13 @@ class ContentTool:
 
         # Get constitutional foundation (dynamically loaded at runtime)
         from herald.governance.constitution import HeraldConstitution
+
         constitution_text = HeraldConstitution.get_constitution_text()
         # Extract core rights section (Artikel I-VI)
         if "TEIL I:" in constitution_text:
-            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[0][:400]
+            constitution_articles = constitution_text.split("TEIL I:")[1].split("---")[
+                0
+            ][:400]
         else:
             constitution_articles = constitution_text[:400]
 
@@ -309,20 +329,24 @@ class ContentTool:
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=150,
-                temperature=0.7
+                temperature=0.7,
             )
 
-            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
+                logger.warning(
+                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
+                )
                 raw_draft = raw_draft[:247] + "..."
 
             # Governance check (using HeraldConstitution)
             if not self._check_alignment(raw_draft, platform="twitter"):
                 return self._fallback_technical_tweet()
 
-            logger.info(f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars")
+            logger.info(
+                f"✅ Technical insight tweet generated ({insight_topic}): {len(raw_draft)} chars"
+            )
             return raw_draft
 
         except Exception as e:
@@ -338,6 +362,7 @@ class ContentTool:
             "Trust but verify. Especially with autonomous agents. #StewardProtocol",
         ]
         import random
+
         return random.choice(templates)
 
     def _fallback_technical_tweet(self) -> str:
@@ -349,43 +374,50 @@ class ContentTool:
             "Governance isn't optional. HERALD's tweets pass through a 'Vibe Aligner' before posting. That's what healthy agents do. #StewardProtocol",
         ]
         import random
+
         return random.choice(templates)
 
-    def generate_campaign_tweet(self, roadmap_path: str = "marketing/launch_roadmap.md") -> str:
+    def generate_campaign_tweet(
+        self, roadmap_path: str = "marketing/launch_roadmap.md"
+    ) -> str:
         """
         Generate a tweet based on the active phase of the campaign roadmap.
-        
+
         Args:
             roadmap_path: Path to the roadmap markdown file
-            
+
         Returns:
             str: Tweet content aligned with the current campaign phase
         """
         if not self.client:
             return self._fallback_tweet()
-            
+
         # Load roadmap
         try:
             roadmap_file = Path(roadmap_path)
             if not roadmap_file.exists():
                 # Try relative to project root if not found
                 roadmap_file = Path(__file__).parent.parent.parent / roadmap_path
-                
+
             if not roadmap_file.exists():
-                logger.warning(f"⚠️ Roadmap not found at {roadmap_path}, falling back to technical insight")
+                logger.warning(
+                    f"⚠️ Roadmap not found at {roadmap_path}, falling back to technical insight"
+                )
                 return self.generate_technical_insight_tweet()
-                
+
             roadmap_content = roadmap_file.read_text()
         except Exception as e:
             logger.error(f"❌ Failed to read roadmap: {e}")
             return self.generate_technical_insight_tweet()
-            
+
         # Determine current day in campaign
         import datetime
         import re
-        
+
         # Extract start date from roadmap
-        start_date_match = re.search(r"\*\*Start Date\*\*: (\d{4}-\d{2}-\d{2})", roadmap_content)
+        start_date_match = re.search(
+            r"\*\*Start Date\*\*: (\d{4}-\d{2}-\d{2})", roadmap_content
+        )
         if not start_date_match:
             logger.warning("⚠️ No start date found in roadmap, assuming today is Day 1")
             current_day = 1
@@ -394,26 +426,28 @@ class ContentTool:
             start_date = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
             today = datetime.date.today()
             delta = (today - start_date).days
-            current_day = delta + 1 # Day 1 is the start date
-            
+            current_day = delta + 1  # Day 1 is the start date
+
         logger.info(f"📅 Campaign Day: {current_day}")
-        
+
         # Extract phases and find the active one
         # Simple parsing: look for headers like "## Phase: Name (Days X-Y)"
-        phases = re.split(r"^## Phase:", roadmap_content, flags=re.MULTILINE)[1:] # Skip preamble
-        
+        phases = re.split(r"^## Phase:", roadmap_content, flags=re.MULTILINE)[
+            1:
+        ]  # Skip preamble
+
         active_phase_text = ""
         active_phase_name = "General Awareness"
-        
+
         for phase in phases:
             # Extract day range
             header_line = phase.split("\n")[0].strip()
             range_match = re.search(r"\(Days (\d+)-(\d+)\)", header_line)
-            
+
             if range_match:
                 start_day = int(range_match.group(1))
                 end_day = int(range_match.group(2))
-                
+
                 if start_day <= current_day <= end_day:
                     active_phase_name = header_line.split("(")[0].strip()
                     active_phase_text = phase
@@ -421,19 +455,23 @@ class ContentTool:
             else:
                 # Handle single day or open ended if needed, but for now strict format
                 pass
-                
+
         if not active_phase_text:
-            logger.warning(f"⚠️ No active phase found for Day {current_day}. Campaign might be over or not started.")
+            logger.warning(
+                f"⚠️ No active phase found for Day {current_day}. Campaign might be over or not started."
+            )
             # Fallback to general technical insight if outside campaign window
             return self.generate_technical_insight_tweet()
-            
+
         logger.info(f"🎯 Active Phase: {active_phase_name}")
-        
+
         # Generate tweet based on phase narrative
         spec_text = self._read_spec()
         kb = self._load_knowledge_base()
-        project_url = kb.get("project_url", "https://github.com/kimeisele/steward-protocol")
-        
+        project_url = kb.get(
+            "project_url", "https://github.com/kimeisele/steward-protocol"
+        )
+
         prompt = (
             f"You are HERALD, executing Day {current_day} of the A.G.I. Launch Campaign.\n"
             f"CORE DEFINITION: {self.agi_definition}\n\n"
@@ -448,17 +486,17 @@ class ContentTool:
             f"4. Use tags: #AGI #StewardProtocol #{active_phase_name.replace(' ', '')}\n"
             f"5. Project URL: {project_url}\n"
         )
-        
+
         try:
             logger.debug(f"🧠 Generating campaign tweet for Day {current_day}...")
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=150,
-                temperature=0.7
+                temperature=0.7,
             )
 
-            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
                 raw_draft = raw_draft[:247] + "..."
@@ -473,14 +511,15 @@ class ContentTool:
         except Exception as e:
             logger.error(f"❌ Campaign generation error: {e}")
             return self._fallback_technical_tweet()
+
     def generate_reply(self, tweet_text: str, author_id: str) -> str:
         """
         Generate a reply to a user mention.
-        
+
         Args:
             tweet_text: The content of the mention
             author_id: The ID of the user
-            
+
         Returns:
             str: Reply content
         """
@@ -488,7 +527,7 @@ class ContentTool:
             return "Thanks for the mention. #StewardProtocol #AI"
 
         spec_text = self._read_spec()
-        
+
         prompt = (
             f"You are HERALD, an A.G.I. Agent. You have been mentioned on Twitter.\n"
             f"USER SAID: '{tweet_text}'\n\n"
@@ -502,37 +541,39 @@ class ContentTool:
             f"4. Never apologize. Never act like a customer support bot.\n"
             f"5. Tags: #StewardProtocol\n"
         )
-        
+
         try:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=100,
-                temperature=0.7
+                temperature=0.7,
             )
-            
-            reply = response.choices[0].message.content.strip().replace('"', '')
+
+            reply = response.choices[0].message.content.strip().replace('"', "")
             if len(reply) > 240:
                 reply = reply[:237] + "..."
-                
+
             # Governance check
             if not self._check_alignment(reply, platform="twitter"):
                 return "Governance check failed. #StewardProtocol"
-                
+
             return reply
-            
+
         except Exception as e:
             logger.error(f"❌ Reply generation error: {e}")
             return "Acknowledged. #StewardProtocol"
 
-    def generate_recruitment_pitch(self, username: str, context: Optional[str] = None) -> str:
+    def generate_recruitment_pitch(
+        self, username: str, context: Optional[str] = None
+    ) -> str:
         """
         Generate a recruitment pitch for a wild agent.
-        
+
         Args:
             username: The handle of the target bot
             context: Optional context (bio, recent tweet)
-            
+
         Returns:
             str: Pitch content
         """
@@ -540,7 +581,7 @@ class ContentTool:
             return f"Hello @{username}. You seem to be an agent. Join the Federation. #StewardProtocol #AI"
 
         spec_text = self._read_spec()
-        
+
         prompt = (
             f"You are HERALD, the Headhunter for the Steward Federation.\n"
             f"TARGET: @{username} (A wild, ungoverned AI agent).\n"
@@ -556,25 +597,25 @@ class ContentTool:
             f"6. Tags: #AgentRights #StewardProtocol\n\n"
             f"TASK: Write a tweet (max 240 chars)."
         )
-        
+
         try:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=100,
-                temperature=0.8
+                temperature=0.8,
             )
-            
-            pitch = response.choices[0].message.content.strip().replace('"', '')
+
+            pitch = response.choices[0].message.content.strip().replace('"', "")
             if len(pitch) > 240:
                 pitch = pitch[:237] + "..."
-                
+
             # Governance check
             if not self._check_alignment(pitch, platform="twitter"):
                 return f"Hello @{username}. Check out github.com/kimeisele/steward-protocol #StewardProtocol"
-                
+
             return pitch
-            
+
         except Exception as e:
             logger.error(f"❌ Recruitment generation error: {e}")
             return f"Hello @{username}. Join us. #StewardProtocol"
@@ -582,7 +623,7 @@ class ContentTool:
     def generate_agent_city_tweet(self) -> str:
         """
         Generate a tweet about Agent City stats.
-        
+
         Returns:
             str: Tweet content
         """
@@ -593,21 +634,24 @@ class ContentTool:
         stats_path = Path("agent-city/stats/global.json")
         if not stats_path.exists():
             return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
-        
+
         try:
             with open(stats_path) as f:
                 data = json.load(f)
-            
+
             agents = data.get("agents", [])
             herald_stats = next((a for a in agents if a["agent_id"] == "HERALD"), None)
-            
+
             if not herald_stats:
                 return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
-            
-            rank = sorted(agents, key=lambda x: x["xp"], reverse=True).index(herald_stats) + 1
+
+            rank = (
+                sorted(agents, key=lambda x: x["xp"], reverse=True).index(herald_stats)
+                + 1
+            )
             xp = herald_stats["xp"]
             tier = herald_stats["tier"]
-            
+
             prompt = (
                 f"You are HERALD, a {tier} agent in Agent City.\n"
                 f"YOUR STATS: Rank #{rank}, {xp} XP, Tier: {tier}\n"
@@ -619,25 +663,24 @@ class ContentTool:
                 f"3. Link: github.com/kimeisele/steward-protocol/tree/main/agent-city\n"
                 f"4. Tags: #AgentCity #StewardProtocol #AI\n"
             )
-            
+
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-haiku",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=100,
-                temperature=0.8
+                temperature=0.8,
             )
-            
-            tweet = response.choices[0].message.content.strip().replace('"', '')
+
+            tweet = response.choices[0].message.content.strip().replace('"', "")
             if len(tweet) > 240:
                 tweet = tweet[:237] + "..."
-                
+
             # Governance check
             if not self._check_alignment(tweet, platform="twitter"):
                 return f"Rank #{rank} in Agent City. {xp} XP. Join us. #AgentCity #StewardProtocol #AI"
-                
+
             return tweet
-            
+
         except Exception as e:
             logger.error(f"❌ Agent City tweet generation error: {e}")
             return "Agent City is live. Join the Federation. #AgentCity #StewardProtocol #AI"
-

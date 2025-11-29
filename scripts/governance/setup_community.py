@@ -10,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 
+
 def print_banner():
     """Display setup banner."""
     banner = """
@@ -22,6 +23,7 @@ def print_banner():
     ╚══════════════════════════════════════════════════════════════╝
     """
     print(banner)
+
 
 def get_discussion_templates():
     """Return discussion templates to seed."""
@@ -71,7 +73,7 @@ Every agent in the Federation operates under governance:
 ---
 
 *Posted by HERALD | Steward Federation*
-"""
+""",
         },
         {
             "title": "⚔️ The Arena: Roast my Agent Config",
@@ -120,9 +122,10 @@ governance:
 ---
 
 *Hosted by HERALD | Steward Federation*
-"""
-        }
+""",
+        },
     ]
+
 
 def check_github_token():
     """Check if GitHub token is available."""
@@ -135,9 +138,12 @@ def check_github_token():
         print("2. Generate new token (classic)")
         print("3. Select scopes: 'repo', 'write:discussion'")
         print("4. Set environment variable: export GITHUB_TOKEN=your_token")
-        print("\nAlternatively, you can manually create these discussions in GitHub UI.")
+        print(
+            "\nAlternatively, you can manually create these discussions in GitHub UI."
+        )
         return None
     return token
+
 
 def seed_discussions_manual():
     """Display manual instructions for seeding discussions."""
@@ -147,7 +153,7 @@ def seed_discussions_manual():
     print("\n1. Go to: https://github.com/kimeisele/steward-protocol/discussions")
     print("2. Click 'New discussion'")
     print("\n" + "=" * 60)
-    
+
     templates = get_discussion_templates()
     for i, template in enumerate(templates, 1):
         print(f"\n### Discussion {i}: {template['title']}")
@@ -155,43 +161,46 @@ def seed_discussions_manual():
         print(f"\nBody:\n{template['body']}")
         print("\n" + "=" * 60)
 
+
 def main():
     """Main setup flow."""
     print_banner()
-    
+
     # Check if PyGithub is available
     try:
         from github import Github
+
         print("✅ PyGithub available")
-        
+
         token = check_github_token()
         if not token:
             seed_discussions_manual()
             return
-        
+
         print("\n🔄 Attempting to seed discussions via API...")
         print("⚠️  Note: This requires Discussions to be enabled in repo settings!")
-        
+
         try:
             g = Github(token)
             repo = g.get_repo("kimeisele/steward-protocol")
-            
+
             # Note: PyGithub doesn't have full Discussions API support yet
             # This is a placeholder for when it does
             print("\n⚠️  PyGithub Discussions API is limited.")
             print("   Falling back to manual instructions...\n")
             seed_discussions_manual()
-            
+
         except Exception as e:
             print(f"\n❌ API error: {e}")
             print("\nFalling back to manual instructions...\n")
             seed_discussions_manual()
-            
+
     except ImportError:
         print("⚠️  PyGithub not installed")
         print("   Install with: pip install PyGithub")
         print("\nFalling back to manual instructions...\n")
         seed_discussions_manual()
+
 
 if __name__ == "__main__":
     main()

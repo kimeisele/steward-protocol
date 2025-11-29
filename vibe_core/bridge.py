@@ -21,8 +21,8 @@ from steward.crypto import sign_content, verify_signature
 
 # Export as canonical vibe_core identities
 __all__ = [
-    'ConstitutionalOath',
-    'OathMixin',
-    'sign_content',
-    'verify_signature',
+    "ConstitutionalOath",
+    "OathMixin",
+    "sign_content",
+    "verify_signature",
 ]

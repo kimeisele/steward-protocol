@@ -160,7 +160,10 @@ class StewardCartridge(CartridgeBase):
             if re.search(f"^{env_var}=", env_content, re.MULTILINE):
                 # Replace existing
                 env_content = re.sub(
-                    f"^{env_var}=.*$", f"{env_var}={api_key}", env_content, flags=re.MULTILINE
+                    f"^{env_var}=.*$",
+                    f"{env_var}={api_key}",
+                    env_content,
+                    flags=re.MULTILINE,
                 )
             else:
                 # Append new
@@ -293,7 +296,10 @@ class StewardCartridge(CartridgeBase):
             if self.steward_json_path.exists():
                 with open(self.steward_json_path) as f:
                     config = json.load(f)
-                    if "preferences" in config and "operator_tone" in config["preferences"]:
+                    if (
+                        "preferences" in config
+                        and "operator_tone" in config["preferences"]
+                    ):
                         return config["preferences"]["operator_tone"]
         except Exception:
             pass
@@ -308,10 +314,14 @@ class StewardCartridge(CartridgeBase):
                 "user_name": self.get_user_name(),
                 "operator_tone": self.get_operator_tone(),
                 "config_files": {
-                    "steward_json": str(self.steward_json_path)
-                    if self.steward_json_path.exists()
-                    else "not_found",
-                    "env_file": str(self.env_path) if self.env_path.exists() else "not_found",
+                    "steward_json": (
+                        str(self.steward_json_path)
+                        if self.steward_json_path.exists()
+                        else "not_found"
+                    ),
+                    "env_file": (
+                        str(self.env_path) if self.env_path.exists() else "not_found"
+                    ),
                 },
             }
         )

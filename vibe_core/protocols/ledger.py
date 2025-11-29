@@ -17,6 +17,7 @@ from .agent import VibeAgent, AgentManifest
 
 class KernelStatus(str, Enum):
     """Kernel execution state"""
+
     STOPPED = "STOPPED"
     BOOTING = "BOOTING"
     RUNNING = "RUNNING"
@@ -46,14 +47,16 @@ class VibeLedger(ABC):
     """Immutable event ledger interface"""
 
     @abstractmethod
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self, event_type: str, agent_id: str, details: Dict[str, Any]
+    ) -> str:
         """Record a generic event (used by agents for governance actions)
-        
+
         Args:
             event_type: Type of event (e.g., "proposal_created", "vote_cast", "credit_transfer")
             agent_id: ID of agent recording the event
             details: Event-specific details
-            
+
         Returns:
             event_id: Unique identifier for this event
         """

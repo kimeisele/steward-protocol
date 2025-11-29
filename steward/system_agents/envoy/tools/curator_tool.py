@@ -32,7 +32,9 @@ class CuratorTool:
         self.intelligence_dir.mkdir(parents=True, exist_ok=True)
         self.hall_of_fame = Path("data/hall_of_fame.json")
 
-    def search_repositories(self, topic="ai-agent", min_stars=50, max_results=10) -> List[Dict]:
+    def search_repositories(
+        self, topic="ai-agent", min_stars=50, max_results=10
+    ) -> List[Dict]:
         """
         Search GitHub for AI agent repositories.
         Returns list of candidate repositories with metadata.
@@ -41,7 +43,9 @@ class CuratorTool:
             ImportError: If PyGithub is not installed
             RuntimeError: If GitHub search fails
         """
-        print(f"\n🔍 CURATOR: Scanning GitHub for '{topic}' projects (min {min_stars}⭐)...")
+        print(
+            f"\n🔍 CURATOR: Scanning GitHub for '{topic}' projects (min {min_stars}⭐)..."
+        )
 
         try:
             from github import Github
@@ -67,17 +71,21 @@ class CuratorTool:
 
             candidates = []
             for repo in repos[:max_results]:
-                candidates.append({
-                    "name": repo.full_name,
-                    "description": repo.description or "No description",
-                    "stars": repo.stargazers_count,
-                    "forks": repo.forks_count,
-                    "language": repo.language,
-                    "url": repo.html_url,
-                    "topics": repo.get_topics(),
-                    "updated_at": repo.updated_at.isoformat() if repo.updated_at else None,
-                    "open_issues": repo.open_issues_count,
-                })
+                candidates.append(
+                    {
+                        "name": repo.full_name,
+                        "description": repo.description or "No description",
+                        "stars": repo.stargazers_count,
+                        "forks": repo.forks_count,
+                        "language": repo.language,
+                        "url": repo.html_url,
+                        "topics": repo.get_topics(),
+                        "updated_at": (
+                            repo.updated_at.isoformat() if repo.updated_at else None
+                        ),
+                        "open_issues": repo.open_issues_count,
+                    }
+                )
 
             print(f"  ✓ Found {len(candidates)} candidates")
             return candidates
@@ -105,13 +113,13 @@ class CuratorTool:
         findings = []
 
         # 1. Community Activity (0-3 points)
-        if repo_info['stars'] > 500:
+        if repo_info["stars"] > 500:
             governance_score += 1.5
             findings.append("✓ Strong community adoption (500+ ⭐)")
-        if repo_info['forks'] > repo_info['stars'] * 0.1:
+        if repo_info["forks"] > repo_info["stars"] * 0.1:
             governance_score += 0.75
             findings.append("✓ Active forking (healthy derivatives)")
-        if repo_info['open_issues'] > 10:
+        if repo_info["open_issues"] > 10:
             governance_score += 0.75
             findings.append("✓ Active issue tracking (community engagement)")
 
@@ -120,14 +128,14 @@ class CuratorTool:
         governance_score += 1.0
 
         # 3. Code Language & Maturity (0-2 points)
-        language = repo_info.get('language', 'Unknown')
-        if language in ['Python', 'Rust', 'Go', 'TypeScript']:
+        language = repo_info.get("language", "Unknown")
+        if language in ["Python", "Rust", "Go", "TypeScript"]:
             governance_score += 1.0
             findings.append(f"✓ Production language: {language}")
 
         # 4. Topic Analysis (0-2 points)
-        topics = repo_info.get('topics', [])
-        if 'autonomous' in topics or 'agent' in topics:
+        topics = repo_info.get("topics", [])
+        if "autonomous" in topics or "agent" in topics:
             governance_score += 1.0
             findings.append("✓ Agent-focused architecture")
 
@@ -136,17 +144,17 @@ class CuratorTool:
         governance_score = max(0, governance_score - 1)
 
         return {
-            "repository": repo_info['name'],
-            "url": repo_info['url'],
-            "description": repo_info['description'],
+            "repository": repo_info["name"],
+            "url": repo_info["url"],
+            "description": repo_info["description"],
             "governance_score": round(governance_score, 1),
             "max_score": 10,
             "percentile": f"{int((governance_score / 10) * 100)}%",
             "metrics": {
-                "stars": repo_info['stars'],
-                "forks": repo_info['forks'],
+                "stars": repo_info["stars"],
+                "forks": repo_info["forks"],
                 "language": language,
-                "open_issues": repo_info['open_issues'],
+                "open_issues": repo_info["open_issues"],
                 "topics": topics,
             },
             "findings": findings,
@@ -188,7 +196,7 @@ class CuratorTool:
 
 ### Key Findings
 """
-        for finding in analysis['findings']:
+        for finding in analysis["findings"]:
             report += f"\n- {finding}"
 
         report += f"""
@@ -236,7 +244,7 @@ If this project integrated Steward Protocol:
             "timestamp": datetime.now().isoformat(),
             "analysis": analysis,
             "markdown_report": report,
-            "curator_notes": "Analysis completed. Ready for HERALD to share."
+            "curator_notes": "Analysis completed. Ready for HERALD to share.",
         }
 
         with open(report_path, "w") as f:
@@ -247,7 +255,7 @@ If this project integrated Steward Protocol:
 
     def add_to_hall_of_fame(self, analysis: Dict) -> None:
         """Add project to Hall of Fame if score is high enough."""
-        if analysis['governance_score'] >= 7:
+        if analysis["governance_score"] >= 7:
             print(f"  ⭐ Adding to Hall of Fame: {analysis['repository']}")
 
             # Load existing hall of fame
@@ -259,15 +267,15 @@ If this project integrated Steward Protocol:
 
             # Add project
             entry = {
-                "name": analysis['repository'],
-                "url": analysis['url'],
-                "score": analysis['governance_score'],
+                "name": analysis["repository"],
+                "url": analysis["url"],
+                "score": analysis["governance_score"],
                 "added": datetime.now().isoformat(),
             }
 
-            if analysis['governance_score'] >= 9:
+            if analysis["governance_score"] >= 9:
                 hall["tier_1"].append(entry)
-            elif analysis['governance_score'] >= 8:
+            elif analysis["governance_score"] >= 8:
                 hall["tier_2"].append(entry)
             else:
                 hall["tier_3"].append(entry)
@@ -303,20 +311,22 @@ If this project integrated Steward Protocol:
         for candidate in candidates[:max_projects]:
             analysis = self.analyze_governance(candidate)
             report = self.generate_report(analysis)
-            report_path = self.save_report(candidate['name'], analysis, report)
+            report_path = self.save_report(candidate["name"], analysis, report)
 
-            results['reports'].append({
-                "project": candidate['name'],
-                "score": analysis['governance_score'],
-                "recommendation": analysis['recommendation'],
-                "report_path": str(report_path),
-            })
-            results['projects_analyzed'] += 1
+            results["reports"].append(
+                {
+                    "project": candidate["name"],
+                    "score": analysis["governance_score"],
+                    "recommendation": analysis["recommendation"],
+                    "report_path": str(report_path),
+                }
+            )
+            results["projects_analyzed"] += 1
 
             # Add to Hall of Fame if worthy
             self.add_to_hall_of_fame(analysis)
-            if analysis['governance_score'] >= 7:
-                results['hall_of_fame_additions'] += 1
+            if analysis["governance_score"] >= 7:
+                results["hall_of_fame_additions"] += 1
 
         # Summary
         print("\n" + "=" * 70)

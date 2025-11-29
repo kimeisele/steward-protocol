@@ -38,6 +38,7 @@ logger = logging.getLogger("VERIFY_DOCS")
 @dataclass
 class CodeBlock:
     """A Python code block extracted from documentation."""
+
     file_path: Path
     line_number: int
     code: str
@@ -50,6 +51,7 @@ class CodeBlock:
 @dataclass
 class ExecutionResult:
     """Result of executing a code block."""
+
     code_block: CodeBlock
     success: bool
     error: Optional[str] = None
@@ -88,7 +90,7 @@ class DocsParser:
             line_number = 1
             for match in DocsParser.CODE_BLOCK_PATTERN.finditer(content):
                 # Count newlines before this match to get line number
-                line_number += content[:match.start()].count("\n")
+                line_number += content[: match.start()].count("\n")
 
                 blocks.append(
                     CodeBlock(

@@ -35,7 +35,9 @@ class LLMProvider(ABC):
     """
 
     @abstractmethod
-    def chat(self, messages: list[dict[str, str]], model: str | None = None, **kwargs) -> str:
+    def chat(
+        self, messages: list[dict[str, str]], model: str | None = None, **kwargs
+    ) -> str:
         """
         Send messages to the LLM and get a response.
 
@@ -116,7 +118,10 @@ class LLMError(Exception):
     """
 
     def __init__(
-        self, message: str, provider: str = "Unknown", original_error: Exception | None = None
+        self,
+        message: str,
+        provider: str = "Unknown",
+        original_error: Exception | None = None,
     ):
         self.provider = provider
         self.original_error = original_error

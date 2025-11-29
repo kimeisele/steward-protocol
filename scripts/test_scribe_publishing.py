@@ -26,6 +26,7 @@ sys.path.insert(0, str(project_root))
 from vibe_core.kernel_impl import RealVibeKernel
 from steward.system_agents.scribe.cartridge_main import ScribeCartridge
 
+
 def test_scribe_publishing():
     """Test Scribe publishing mechanism (Phase 2.5)."""
 
@@ -50,12 +51,13 @@ def test_scribe_publishing():
     except Exception as e:
         print(f"   ❌ Scribe registration failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     # Step 3: Verify system interface injection
     print("\n3️⃣  Verifying system interface...")
-    if hasattr(scribe, 'system'):
+    if hasattr(scribe, "system"):
         print(f"   ✅ scribe.system injected")
         print(f"   📁 Sandbox: {scribe.system.get_sandbox_path()}")
     else:
@@ -71,7 +73,7 @@ def test_scribe_publishing():
             task_id="test_generate_all",
             agent_id="scribe",
             priority=1,
-            payload={"action": "generate_all"}
+            payload={"action": "generate_all"},
         )
 
         result = scribe.process(task)
@@ -88,6 +90,7 @@ def test_scribe_publishing():
     except Exception as e:
         print(f"   ❌ Documentation generation crashed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -112,13 +115,7 @@ def test_scribe_publishing():
         content = citymap_path.read_text()
 
         # Check for expected content markers (3-layer architecture)
-        markers = [
-            "LAYER 1",
-            "LAYER 2",
-            "LAYER 3",
-            "system_agents",
-            "vibe_core"
-        ]
+        markers = ["LAYER 1", "LAYER 2", "LAYER 3", "system_agents", "vibe_core"]
 
         found_markers = [m for m in markers if m in content]
 
@@ -147,6 +144,7 @@ def test_scribe_publishing():
     print("   • NO LOBOTOMY detected")
 
     return True
+
 
 if __name__ == "__main__":
     success = test_scribe_publishing()

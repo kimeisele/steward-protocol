@@ -47,14 +47,14 @@ class QualityEditor:
                 "Is it generic AI slop? (ChatGPT-sounding clichés)",
                 "Is it overly promotional? (Selling instead of teaching)",
                 "Is it boring or obvious?",
-                "Does it lack technical substance?"
+                "Does it lack technical substance?",
             ],
             "reddit": [
                 "Does it read like a sales pitch?",
                 "Is it missing code examples or technical depth?",
                 "Does it use buzzwords without explanations?",
-                "Is the tone inappropriate for the subreddit culture?"
-            ]
+                "Is the tone inappropriate for the subreddit culture?",
+            ],
         }
 
         rules = criteria.get(platform, criteria["twitter"])
@@ -79,7 +79,7 @@ class QualityEditor:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-sonnet",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=300
+                max_tokens=300,
             )
             verdict = response.choices[0].message.content.strip()
 
@@ -87,8 +87,10 @@ class QualityEditor:
                 logger.info("✅ EDITOR: Draft approved (no changes needed)")
                 return draft
             else:
-                refined = verdict.replace('"', '').replace("'", "'")
-                logger.info(f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}...")
+                refined = verdict.replace('"', "").replace("'", "'")
+                logger.info(
+                    f"🎨 EDITOR: Draft rewritten\n  WAS: {draft[:60]}...\n  NOW: {refined[:60]}..."
+                )
                 return refined
 
         except Exception as e:
@@ -149,7 +151,9 @@ class CreativeCapability:
                             logger.debug(f"📚 Loaded knowledge_base from {config_path}")
                             return kb
                 except Exception as e:
-                    logger.debug(f"⚠️  Could not load knowledge_base from {config_path}: {e}")
+                    logger.debug(
+                        f"⚠️  Could not load knowledge_base from {config_path}: {e}"
+                    )
 
         logger.warning("⚠️  KNOWLEDGE_BASE CONFIG NOT FOUND: Using fallback URLs")
         return {
@@ -162,7 +166,7 @@ class CreativeCapability:
         paths = [
             Path("steward/SPECIFICATION.md"),
             Path(__file__).parent.parent.parent / "steward" / "SPECIFICATION.md",
-            Path("README.md")
+            Path("README.md"),
         ]
 
         for p in paths:
@@ -199,7 +203,9 @@ class CreativeCapability:
 
         spec_text = self._read_spec()
         knowledge_base = self._load_knowledge_base_config()
-        project_url = knowledge_base.get("project_url", "https://github.com/kimeisele/steward-protocol")
+        project_url = knowledge_base.get(
+            "project_url", "https://github.com/kimeisele/steward-protocol"
+        )
         news_prompt = ""
 
         if research_context:
@@ -225,20 +231,24 @@ class CreativeCapability:
                 model=self.config.get("model", "anthropic/claude-3-haiku"),
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=self.config.get("max_tokens", 150),
-                temperature=self.config.get("temperature", 0.8)
+                temperature=self.config.get("temperature", 0.8),
             )
 
-            raw_draft = response.choices[0].message.content.strip().replace('"', '')
+            raw_draft = response.choices[0].message.content.strip().replace('"', "")
 
             if len(raw_draft) > 250:
-                logger.warning(f"⚠️  Content too long ({len(raw_draft)} chars), truncating")
+                logger.warning(
+                    f"⚠️  Content too long ({len(raw_draft)} chars), truncating"
+                )
                 raw_draft = raw_draft[:247] + "..."
 
             logger.info(f"✅ CONTENT DRAFT GENERATED: {len(raw_draft)} chars")
 
             # Quality gate
             if self.editor:
-                final_content = self.editor.critique_and_refine(raw_draft, platform="twitter")
+                final_content = self.editor.critique_and_refine(
+                    raw_draft, platform="twitter"
+                )
             else:
                 final_content = raw_draft
 
@@ -249,7 +259,9 @@ class CreativeCapability:
             logger.error(f"❌ CREATIVE ERROR: {e}")
             return self._fallback_content()
 
-    def generate_reddit_post(self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None) -> Optional[Dict]:
+    def generate_reddit_post(
+        self, subreddit: str = "r/LocalLLaMA", context: Optional[str] = None
+    ) -> Optional[Dict]:
         """
         Generate Reddit deep-dive post.
 
@@ -271,7 +283,7 @@ class CreativeCapability:
             "r/singularity": "Audience: Futurists. Wants architectural implications and safety/alignment.",
             "r/programming": "Audience: Skeptics. Zero tolerance for hype. Show the 'Why' and 'How'.",
             "r/Python": "Audience: Python developers. Wants implementation details and libraries.",
-            "r/rust": "Audience: Rust evangelists. Wants type safety and zero-cost abstractions."
+            "r/rust": "Audience: Rust evangelists. Wants type safety and zero-cost abstractions.",
         }
 
         culture_prompt = cultures.get(subreddit, "Audience: Technical Developers.")
@@ -296,20 +308,21 @@ class CreativeCapability:
             response = self.client.chat.completions.create(
                 model="anthropic/claude-3-5-sonnet",
                 messages=[{"role": "user", "content": prompt}],
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
             )
 
             content = response.choices[0].message.content
             draft_result = json.loads(content)
-            logger.info(f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars")
+            logger.info(
+                f"✅ REDDIT DRAFT GENERATED: {len(draft_result.get('body', ''))} chars"
+            )
 
             # Quality gate
-            if self.editor and draft_result.get('body'):
+            if self.editor and draft_result.get("body"):
                 refined_body = self.editor.critique_and_refine(
-                    draft_result['body'],
-                    platform="reddit"
+                    draft_result["body"], platform="reddit"
                 )
-                draft_result['body'] = refined_body
+                draft_result["body"] = refined_body
 
             return draft_result
 
