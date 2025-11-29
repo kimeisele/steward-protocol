@@ -37,8 +37,8 @@ def test_genesis_block_creation():
 
         # Genesis should have constitutional anchors
         assert "anchors" in genesis.data
-        assert "gad000_hash" in genesis.data["anchors"]
-        assert "constitution_hash" in genesis.data["anchors"]
+        assert "philosophy_hash" in genesis.data["anchors"]  # GAD-000 spirit
+        assert "constitution_hash" in genesis.data["anchors"]  # The law
 
         chain.close()
 

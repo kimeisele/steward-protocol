@@ -70,11 +70,14 @@ class CivicBank:
         self._init_db()
 
         # Initialize the Civic Vault (lazy import to avoid circular imports)
+        # NOTE: We catch BaseException because pyo3_runtime.PanicException (Rust panic)
+        # does NOT inherit from Exception, only from BaseException
         try:
             from .vault import CivicVault
 
             self.vault = CivicVault(self.conn)
-        except (ImportError, Exception) as e:
+        except BaseException as e:
+            # Catches: ImportError, Exception, AND pyo3_runtime.PanicException
             logger.warning(f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)")
             self.vault = None
 
