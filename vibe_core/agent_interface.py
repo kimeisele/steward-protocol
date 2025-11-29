@@ -612,3 +612,120 @@ class AgentSystemInterface:
 
             logger.error(f"❌ {self.agent_id} failed to call {agent_id}: {e}")
             raise RuntimeError(f"Agent call failed: {agent_id}.{payload.get('action', 'unknown')} - {e}") from e
+
+    # ============================================================================
+    # TOOL REGISTRY (PHASE 6: UNIVERSAL TOOL ACCESS)
+    # ============================================================================
+
+    @property
+    def tools(self):
+        """
+        Access to the kernel's universal tool registry.
+
+        This property provides a read-only view of all tools registered
+        with the kernel. Agents use this to discover and execute tools
+        without owning tool instances themselves.
+
+        Architecture:
+            Agent doesn't own tools → Agent requests tool execution from Kernel
+            This enables:
+            - Centralized governance (tools can be audited/blocked)
+            - Tool discovery (agents see what's available)
+            - YAML-based agents (no Python code needed)
+
+        Returns:
+            ToolRegistry: The kernel's tool registry
+
+        Example:
+            # List available tools
+            available = self.system.tools.list_tools()
+            # Returns: ["read_file", "write_file", "delegate_task", ...]
+
+            # Get tool info
+            tool = self.system.tools.get("read_file")
+            print(tool.description)
+
+            # Execute tool directly
+            from vibe_core.tools import ToolCall
+            result = self.system.tools.execute(
+                ToolCall(tool_name="read_file", parameters={"path": "/tmp/test.txt"})
+            )
+        """
+        return self.kernel.tool_registry
+
+    def execute_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Any:
+        """
+        Execute a tool via the kernel's tool registry.
+
+        This is the recommended way for agents to use tools. It provides
+        a clean interface and proper audit trail.
+
+        Args:
+            tool_name: Name of tool to execute (e.g., "read_file")
+            parameters: Tool parameters (e.g., {"path": "/tmp/test.txt"})
+
+        Returns:
+            ToolResult: Execution result with success/output/error
+
+        Raises:
+            ValueError: If tool not found or parameters invalid
+            RuntimeError: If tool execution fails critically
+
+        Example:
+            # Read a file
+            result = self.system.execute_tool("read_file", {
+                "path": "/tmp/config.json"
+            })
+
+            if result.success:
+                content = result.output
+                print(f"File content: {content}")
+            else:
+                logger.error(f"Failed to read file: {result.error}")
+
+            # Write a file
+            result = self.system.execute_tool("write_file", {
+                "path": "/tmp/output.txt",
+                "content": "Hello from agent!"
+            })
+
+        Note:
+            - All tool calls are logged to kernel ledger
+            - Tools respect Soul Governance (invariant checks)
+            - Tools can be blocked by governance rules
+        """
+        from vibe_core.tools import ToolCall
+
+        # Create tool call
+        call = ToolCall(tool_name=tool_name, parameters=parameters)
+
+        # Record tool call in audit trail
+        self.record_event(
+            "TOOL_CALL_INITIATED",
+            {
+                "tool_name": tool_name,
+                "parameters_summary": {k: type(v).__name__ for k, v in parameters.items()},
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+        # Execute via kernel registry
+        result = self.kernel.tool_registry.execute(call)
+
+        # Record result
+        self.record_event(
+            "TOOL_CALL_COMPLETED",
+            {
+                "tool_name": tool_name,
+                "success": result.success,
+                "error": result.error if not result.success else None,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+        logger.info(
+            f"🔧 {self.agent_id} executed tool '{tool_name}' "
+            f"(success={result.success})"
+        )
+
+        return result

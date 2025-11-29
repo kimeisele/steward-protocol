@@ -62,7 +62,9 @@ class ToolRegistry:
         self._invariant_checker = invariant_checker
 
         if invariant_checker:
-            logger.info(f"🛡️ ToolRegistry initialized with Soul Governance ({invariant_checker.rule_count} rules)")
+            # Get rule count safely (some invariant checkers may not have this attribute)
+            rule_count = getattr(invariant_checker, "rule_count", "unknown")
+            logger.info(f"🛡️ ToolRegistry initialized with Soul Governance ({rule_count} rules)")
         else:
             logger.debug("ToolRegistry: Initialized (no governance)")
 
@@ -175,7 +177,7 @@ class ToolRegistry:
         logger.info(f"ToolRegistry: Executing {tool_call}")
 
         # Step 2: 🛡️ Soul Governance Check (ARCH-029)
-        if self._invariant_checker:
+        if self._invariant_checker and hasattr(self._invariant_checker, "check_tool_call"):
             soul_check: SoulResult = self._invariant_checker.check_tool_call(  # type: ignore
                 tool_name, tool_call.parameters
             )

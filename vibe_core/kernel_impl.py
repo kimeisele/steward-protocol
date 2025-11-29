@@ -43,6 +43,7 @@ from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
+from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
 try:
@@ -238,6 +239,13 @@ class RealVibeKernel(VibeKernel):
         self._ashrama_registry: Dict[str, AshramaTransition] = {}
         logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
 
+        # Phase 6: Universal Tool Registry
+        # Single source of truth for all agent tools
+        # Tools are registered here and accessed via AgentSystemInterface
+        self.tool_registry = ToolRegistry(invariant_checker=self._auditor if AUDITOR_AVAILABLE else None)
+        self._register_core_tools()
+        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} core tools)")
+
     def get_bank(self) -> "CivicBank":
         """
         Lazy-load the CivicBank.
@@ -271,6 +279,45 @@ class RealVibeKernel(VibeKernel):
             self._vault = CivicVault(bank.conn)
             logger.info("🔐 Kernel loaded CivicVault (Lazy)")
         return self._vault
+
+    def _register_core_tools(self) -> None:
+        """
+        Register core tools that are available to all agents.
+
+        Core tools are system-provided capabilities that don't belong to
+        any specific agent. They're registered without namespace prefix
+        (e.g., "read_file" not "core.read_file").
+
+        Phase 6: These tools implement the Tool protocol and are registered
+        at kernel boot time, before any agents are loaded.
+        """
+        from vibe_core.tools import (
+            AddTaskTool,
+            CompleteTaskTool,
+            DelegateTool,
+            ListTasksTool,
+            ReadFileTool,
+            WriteFileTool,
+        )
+
+        # File operations (VFS-aware tools will be added later)
+        self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(WriteFileTool())
+
+        # Task management
+        self.tool_registry.register(AddTaskTool())
+        self.tool_registry.register(ListTasksTool())
+        self.tool_registry.register(CompleteTaskTool())
+
+        # Inter-agent delegation
+        delegate_tool = DelegateTool()
+        delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
+        self.tool_registry.register(delegate_tool)
+
+        logger.info(
+            f"🔧 Registered {len(self.tool_registry)} core tools: "
+            f"{', '.join(self.tool_registry.list_tools())}"
+        )
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
