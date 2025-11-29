@@ -78,8 +78,17 @@ def create_provider(
             return NoOpProvider()
 
         elif provider_name == "local":
-            logger.warning("Local provider not yet implemented (GAD-511 Phase 2)")
-            return NoOpProvider()
+            logger.info("Creating Local LLM provider")
+            try:
+                from vibe_core.llm.local_llama_provider import LocalLlamaProvider
+                if LocalLlamaProvider.model_exists():
+                    return LocalLlamaProvider(**kwargs)
+                else:
+                    logger.warning("Local model not found. Run: steward install-llm")
+                    return NoOpProvider()
+            except ImportError:
+                logger.warning("llama-cpp-python not installed")
+                return NoOpProvider()
 
         else:
             logger.warning(f"Unknown provider: {provider_name}, falling back to NoOp")
