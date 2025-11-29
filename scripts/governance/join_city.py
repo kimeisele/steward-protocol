@@ -255,7 +255,7 @@ def generate_keys(agent_dir: Path):
         error_msg = f"""
 ❌ Key generation failed!
 
-Error: {e.stderr if e.stderr else 'Unknown error'}
+Error: {e.stderr if e.stderr else "Unknown error"}
 
 This usually means OpenSSL is not installed or not in PATH.
 

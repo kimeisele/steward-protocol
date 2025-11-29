@@ -58,9 +58,7 @@ class CivicAgent:
     def check_license(self, agent_id):
         credits = self.kernel.state.get(f"{agent_id}_credits", 0)
         if credits <= 0:
-            self.kernel.log(
-                "CIVIC", f"❌ BLOCK: {agent_id} has 0 credits. License suspended."
-            )
+            self.kernel.log("CIVIC", f"❌ BLOCK: {agent_id} has 0 credits. License suspended.")
             return False
         return True
 
@@ -70,7 +68,7 @@ class ForumAgent:
         self.kernel = kernel
 
     def create_proposal(self, title, proposer):
-        prop_id = f"PROP-{len(self.kernel.state['proposals'])+1:03d}"
+        prop_id = f"PROP-{len(self.kernel.state['proposals']) + 1:03d}"
         proposal = {
             "id": prop_id,
             "title": title,

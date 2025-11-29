@@ -135,7 +135,7 @@ class KernelNetworkProxy:
         """
         # Check whitelist
         if not self._is_allowed(url):
-            logger.warning(f"🚫 {agent_id} blocked from accessing {url} " f"(domain not whitelisted)")
+            logger.warning(f"🚫 {agent_id} blocked from accessing {url} (domain not whitelisted)")
             raise PermissionError(
                 f"Network access denied: {urlparse(url).netloc} not whitelisted. "
                 f"Contact kernel administrator to whitelist this domain."
@@ -155,7 +155,7 @@ class KernelNetworkProxy:
         # Make request
         try:
             response = requests.request(method, url, **kwargs)
-            logger.debug(f"   ← {response.status_code} " f"({len(response.content)} bytes)")
+            logger.debug(f"   ← {response.status_code} ({len(response.content)} bytes)")
             return response
         except Exception as e:
             logger.error(f"❌ Request failed: {e}")

@@ -4,6 +4,7 @@ Verify Operation Whole Brain
 Checks if ENVOY and SCIENCE are correctly migrated to ContextAwareAgent
 and if tools have DegradationChain injected.
 """
+
 import logging
 import sys
 from pathlib import Path

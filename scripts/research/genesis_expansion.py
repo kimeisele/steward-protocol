@@ -450,7 +450,7 @@ def step4_birth(
             print_error(f"Failed to seal Python: {result_py.get('reason', 'unknown')}")
             return False
 
-        print_success(f"Sealed: {result_py.get('commit_short')} - " f"cartridge_main.py")
+        print_success(f"Sealed: {result_py.get('commit_short')} - cartridge_main.py")
 
     except Exception as e:
         print_error(f"Exception sealing Python: {e}")
@@ -477,7 +477,7 @@ def step4_birth(
             print_error(f"Failed to seal YAML: {result_yaml.get('reason', 'unknown')}")
             return False
 
-        print_success(f"Sealed: {result_yaml.get('commit_short')} - " f"cartridge.yaml")
+        print_success(f"Sealed: {result_yaml.get('commit_short')} - cartridge.yaml")
         return True
 
     except Exception as e:
@@ -535,7 +535,7 @@ def step5_validate() -> bool:
 
         # Try to instantiate
         echo = EchoCartridge()
-        print_success(f"✓ EchoCartridge instantiated: {echo.name} v" f"{echo.version}")
+        print_success(f"✓ EchoCartridge instantiated: {echo.name} v{echo.version}")
 
         # Check required methods
         if not hasattr(echo, "process"):

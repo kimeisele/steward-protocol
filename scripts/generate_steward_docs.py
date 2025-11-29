@@ -102,7 +102,7 @@ def generate_steward_md(agent_data: dict, agent_path: Path) -> str:
 - **Agent ID:** {agent_id}
 - **Name:** {agent_name}
 - **Version:** {version}
-- **Class:** {agent.get('class', 'service')}
+- **Class:** {agent.get("class", "service")}
 - **Specialization:** {specialization}
 - **Status:** {status_icon} {status.upper()}
 

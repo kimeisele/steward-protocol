@@ -72,9 +72,7 @@ class TestDeterministicExecutor:
         """Test that DeterministicExecutor initializes correctly"""
         assert self.engine is not None
         assert len(self.engine.playbooks) > 0
-        logger.info(
-            f"✅ DeterministicExecutor initialized with {len(self.engine.playbooks)} playbooks"
-        )
+        logger.info(f"✅ DeterministicExecutor initialized with {len(self.engine.playbooks)} playbooks")
 
     def test_playbook_loading(self):
         """Test that playbooks are loaded from YAML"""
@@ -88,9 +86,7 @@ class TestDeterministicExecutor:
             "GOVERNANCE_VOTE_V1",
         ]
         for pb_id in expected_playbooks:
-            assert (
-                pb_id in self.engine.playbooks
-            ), f"Expected playbook {pb_id} not found"
+            assert pb_id in self.engine.playbooks, f"Expected playbook {pb_id} not found"
 
         logger.info(f"✅ All expected playbooks loaded: {expected_playbooks}")
 
@@ -185,9 +181,9 @@ class TestDeterministicRouter:
         for text, expected_concepts in test_cases:
             concepts = self.router.analyze(text)
             # At least one expected concept should be found
-            assert any(
-                c in concepts for c in expected_concepts
-            ), f"Expected {expected_concepts} in {concepts} for input: {text}"
+            assert any(c in concepts for c in expected_concepts), (
+                f"Expected {expected_concepts} in {concepts} for input: {text}"
+            )
             logger.info(f"✅ Detected concepts for '{text}': {concepts}")
 
     def test_intent_routing(self):
@@ -300,9 +296,7 @@ class TestUniversalProviderIntegration:
             assert "proposal_id" in result
         else:
             # Playbook was found and executed
-            logger.info(
-                f"✅ Playbook found and executed: {result.get('playbook_name', 'unknown')}"
-            )
+            logger.info(f"✅ Playbook found and executed: {result.get('playbook_name', 'unknown')}")
 
 
 # === HELPER FUNCTIONS FOR MANUAL TESTING ===

@@ -290,8 +290,7 @@ class InvariantEngine:
                 if key in seen:
                     return (
                         False,
-                        f"Duplicate event detected: event {i} matches event {seen[key]} "
-                        f"(task={key[0]}, type={key[1]})",
+                        f"Duplicate event detected: event {i} matches event {seen[key]} (task={key[0]}, type={key[1]})",
                     )
 
                 seen[key] = i

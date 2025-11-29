@@ -101,9 +101,7 @@ class DhruvaAnchorCartridge(VibeAgent):
         # Initialize tools
         self.genesis = GenesisKeeper(root_path=self.root_path)
         self.truth_matrix = TruthMatrix(root_path=self.root_path)
-        self.resolver = ReferenceResolver(
-            root_path=self.root_path, truth_matrix=self.truth_matrix
-        )
+        self.resolver = ReferenceResolver(root_path=self.root_path, truth_matrix=self.truth_matrix)
         self.ethics = DataEthicsEnforcer(root_path=self.root_path)
 
         logger.info("✅ DHRUVA ANCHOR v1.0: Ready - The North Star is set")
@@ -210,9 +208,7 @@ class DhruvaAnchorCartridge(VibeAgent):
         logger.info(f"📝 RECORDING TRUTH: {statement} (source: {authority})")
 
         # Check for contradictions
-        conflict = self.resolver.find_conflicting_facts(
-            statement=statement, fact_type=fact_type
-        )
+        conflict = self.resolver.find_conflicting_facts(statement=statement, fact_type=fact_type)
 
         if conflict:
             return {
@@ -266,9 +262,7 @@ class DhruvaAnchorCartridge(VibeAgent):
         authoritative_claim = resolution.get("authoritative_claim")
         reason = resolution.get("reason")
 
-        logger.info(
-            f"✅ CONFLICT RESOLVED: Truth is '{authoritative_claim}' ({reason})"
-        )
+        logger.info(f"✅ CONFLICT RESOLVED: Truth is '{authoritative_claim}' ({reason})")
 
         return {
             "status": "conflict_resolved",
@@ -328,9 +322,7 @@ class DhruvaAnchorCartridge(VibeAgent):
         data_amount = payload.get("amount", 0)
         data_source = payload.get("source")
 
-        logger.info(
-            f"📊 CHECKING DATA ETHICS: Agent {agent_id} extracting from {data_source}"
-        )
+        logger.info(f"📊 CHECKING DATA ETHICS: Agent {agent_id} extracting from {data_source}")
 
         # Evaluate against Prithu principle
         evaluation = self.ethics.evaluate_extraction(
@@ -379,9 +371,7 @@ class DhruvaAnchorCartridge(VibeAgent):
 
     # ========== HELPER METHODS ==========
 
-    def _compare_states(
-        self, current: Dict[str, Any], canonical: Dict[str, Any]
-    ) -> List[str]:
+    def _compare_states(self, current: Dict[str, Any], canonical: Dict[str, Any]) -> List[str]:
         """Compare current state against canonical state."""
         differences = []
 

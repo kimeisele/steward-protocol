@@ -126,9 +126,7 @@ class WebSearchTool:
         # Initialize Tavily client if we have the key
         if self.api_key:
             if not TavilyClient:
-                raise ImportError(
-                    "❌ CRITICAL: tavily package not installed. " "Install via: pip install tavily-python"
-                )
+                raise ImportError("❌ CRITICAL: tavily package not installed. Install via: pip install tavily-python")
 
             try:
                 self.client = TavilyClient(api_key=self.api_key)
@@ -136,14 +134,11 @@ class WebSearchTool:
                 logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
             except Exception as e:
                 raise RuntimeError(
-                    f"❌ CRITICAL: Failed to initialize Tavily API: {e}. "
-                    f"Check your API key and network connectivity."
+                    f"❌ CRITICAL: Failed to initialize Tavily API: {e}. Check your API key and network connectivity."
                 )
         else:
             # No API key available - we'll operate in offline mode
-            logger.warning(
-                "⚠️  TAVILY_API_KEY not found in Vault or environment. " "Search will operate in offline mode."
-            )
+            logger.warning("⚠️  TAVILY_API_KEY not found in Vault or environment. Search will operate in offline mode.")
             self.mode = "offline"
 
     def search(self, query: str, max_results: int = 5) -> List[SearchResult]:

@@ -83,7 +83,7 @@ def find_available_port(start_port):
     for port in range(start_port, start_port + MAX_PORT_RETRIES):
         if check_port(port):
             return port
-        print(f"   ⚠️  Port {port} occupied. Tactical shift to {port+1}...")
+        print(f"   ⚠️  Port {port} occupied. Tactical shift to {port + 1}...")
 
     print("❌ CRITICAL FAILURE: No ports available in range. System overloaded.")
     sys.exit(1)
@@ -98,29 +98,21 @@ def preload_semantic_model():
 
     def _download():
         try:
-            print(
-                "   • Pre-caching semantic model (sentence-transformers/all-MiniLM-L6-v2)..."
-            )
+            print("   • Pre-caching semantic model (sentence-transformers/all-MiniLM-L6-v2)...")
             os.makedirs("data/models", exist_ok=True)
             os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
 
             # Import and download in background
             from sentence_transformers import SentenceTransformer
 
-            model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models"
-            )
+            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", cache_folder="data/models")
             print("   ✓ Semantic model cached successfully")
             return True
         except ImportError:
-            print(
-                "   ⚠️  sentence-transformers not installed. Install with: pip install sentence-transformers"
-            )
+            print("   ⚠️  sentence-transformers not installed. Install with: pip install sentence-transformers")
             return False
         except Exception as e:
-            print(
-                f"   ⚠️  Semantic model pre-cache failed: {e} (will lazy-load on first use)"
-            )
+            print(f"   ⚠️  Semantic model pre-cache failed: {e} (will lazy-load on first use)")
             return False
 
     # Run in background thread (non-blocking)
@@ -198,9 +190,7 @@ def start_gateway(port):
 
 def main():
     parser = argparse.ArgumentParser(description="VibeOS Vimana Launcher")
-    parser.add_argument(
-        "--port", type=int, help="Force specific port (Disables Rolling)"
-    )
+    parser.add_argument("--port", type=int, help="Force specific port (Disables Rolling)")
     parser.add_argument("--no-browser", action="store_true", help="Headless mode")
     parser.add_argument("--debug", action="store_true", help="Verbose output")
     args = parser.parse_args()
@@ -208,18 +198,10 @@ def main():
     if args.debug:
         os.environ["VIBE_DEBUG"] = "1"
 
-    print(
-        "\n╔════════════════════════════════════════════════════════════════════════════╗"
-    )
-    print(
-        "║                        🛸 PROJECT VIMANA: THE LAUNCHER 🛸                  ║"
-    )
-    print(
-        "║                     System Status: ONLINE | Protocol: GAD-000              ║"
-    )
-    print(
-        "╚════════════════════════════════════════════════════════════════════════════╝\n"
-    )
+    print("\n╔════════════════════════════════════════════════════════════════════════════╗")
+    print("║                        🛸 PROJECT VIMANA: THE LAUNCHER 🛸                  ║")
+    print("║                     System Status: ONLINE | Protocol: GAD-000              ║")
+    print("╚════════════════════════════════════════════════════════════════════════════╝\n")
 
     # 0. PRE-LOAD SEMANTIC MODEL (PROJECT JNANA)
     print("➜ INITIALIZING PROJECT JNANA (Semantic Cortex)...")
@@ -291,9 +273,7 @@ def main():
                 # Check if child processes are still alive
                 for p in active_processes:
                     if p.poll() is not None:
-                        print(
-                            f"\n❌ ALERT: Critical process (PID {p.pid}) died unexpectedly."
-                        )
+                        print(f"\n❌ ALERT: Critical process (PID {p.pid}) died unexpectedly.")
                         sys.exit(1)  # Triggers cleanup
                 time.sleep(HEALTH_CHECK_INTERVAL)
 

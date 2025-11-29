@@ -39,9 +39,7 @@ def setup_env():
 
     # Init git in temp repo for Archivist test
     os.system(f"git init {REPO_DIR} > /dev/null 2>&1")
-    os.system(
-        f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'"
-    )
+    os.system(f"cd {REPO_DIR} && git config user.email 'test@steward.eth' && git config user.name 'TestBot'")
     print(f"✅ Test environment created: {SANDBOX_DIR}, {REPO_DIR}")
 
 

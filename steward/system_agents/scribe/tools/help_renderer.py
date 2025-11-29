@@ -99,11 +99,11 @@ The levers you can pull to control Agent City.
 
 ### 💰 Economic Settings
 
-{self._render_economy_params(params.get('economy', dict()))}
+{self._render_economy_params(params.get("economy", dict()))}
 
 ### 🔒 Security Settings
 
-{self._render_security_params(params.get('security', dict()))}
+{self._render_security_params(params.get("security", dict()))}
 
 ---
 

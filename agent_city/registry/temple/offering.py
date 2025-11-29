@@ -65,9 +65,9 @@ class OfferingHandler:
         Returns:
             Tuple of (success, message, result_dict)
         """
-        logger.info(f"\n{'='*70}")
+        logger.info(f"\n{'=' * 70}")
         logger.info(f"🕉️ PRESENTING OFFERING FROM {agent_id.upper()}")
-        logger.info(f"{'='*70}")
+        logger.info(f"{'=' * 70}")
 
         self.offerings_processed += 1
         result = {
@@ -98,9 +98,7 @@ class OfferingHandler:
             "formatted": True,
             "lines": len(str(beautiful_output).split("\n")),
         }
-        logger.info(
-            f"✅ Output beautifully formatted ({result['stages']['arrange']['lines']} lines)"
-        )
+        logger.info(f"✅ Output beautifully formatted ({result['stages']['arrange']['lines']} lines)")
 
         # STAGE 3: OFFER (User Acceptance / Puja)
         if require_user_acceptance:
@@ -145,15 +143,13 @@ class OfferingHandler:
         else:
             logger.warning(f"⚠️ DISTRIBUTION PENDING: {distribution_reason}")
 
-        logger.info(f"\n{'='*70}")
+        logger.info(f"\n{'=' * 70}")
         logger.info(f"🎉 OFFERING COMPLETE - JAYA!")
-        logger.info(f"{'='*70}\n")
+        logger.info(f"{'=' * 70}\n")
 
         return True, "Offering successfully presented", result
 
-    def _sanctify(
-        self, raw_output: Any, context: Optional[Dict] = None
-    ) -> Tuple[bool, str]:
+    def _sanctify(self, raw_output: Any, context: Optional[Dict] = None) -> Tuple[bool, str]:
         """
         STAGE 1: SANCTIFY
         Check if output passes all 4 Regulative Principles.
@@ -227,9 +223,7 @@ class OfferingHandler:
         # In production, this would be an interactive prompt
         # For MVP, we auto-accept and log
         logger.info(f"📝 Waiting for user acceptance of output from {agent_id}...")
-        logger.info(
-            f"   Preview: {beautiful_output[:100]}{'...' if len(beautiful_output) > 100 else ''}"
-        )
+        logger.info(f"   Preview: {beautiful_output[:100]}{'...' if len(beautiful_output) > 100 else ''}")
 
         # AUTO-ACCEPT with note (should be user interaction in production)
         return True, "User Accepted (Auto-approval in MVP mode)"
@@ -271,9 +265,7 @@ class OfferingHandler:
             "total_accepted": self.offerings_accepted,
             "total_rejected": self.offerings_rejected,
             "acceptance_rate": (
-                self.offerings_accepted / self.offerings_processed * 100
-                if self.offerings_processed > 0
-                else 0
+                self.offerings_accepted / self.offerings_processed * 100 if self.offerings_processed > 0 else 0
             ),
         }
 

@@ -238,7 +238,7 @@ def stress_test_city():
             chain_now = kernel.lineage.get_chain_length()
 
             print(
-                f"         T+{i+check_interval:2d}s: {alive_now}/{total_agents} alive, "
+                f"         T+{i + check_interval:2d}s: {alive_now}/{total_agents} alive, "
                 f"{memory_now:.1f} MB, {chain_now} blocks"
             )
 

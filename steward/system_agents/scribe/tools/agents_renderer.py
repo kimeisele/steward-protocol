@@ -93,14 +93,14 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
 
     def _format_agent_section(self, agent: Dict[str, Any]) -> str:
         """Format a single agent section."""
-        section = f"""### 🤖 {agent['agent_name_pretty']}
+        section = f"""### 🤖 {agent["agent_name_pretty"]}
 
-**Class:** `{agent['class_name']}`
-**Version:** `{agent['version']}`
+**Class:** `{agent["class_name"]}`
+**Version:** `{agent["version"]}`
 **Status:** 🟢 OPERATIONAL
 
 **Description:**
-{agent['class_doc'] or "Autonomous agent in the Steward Protocol ecosystem."}
+{agent["class_doc"] or "Autonomous agent in the Steward Protocol ecosystem."}
 
 """
 

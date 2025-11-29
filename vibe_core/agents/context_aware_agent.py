@@ -83,8 +83,7 @@ class ContextAwareAgent(VibeAgent):
 
             self._degradation_chain = DegradationChain()
             logger.info(
-                f"{self.agent_id}: DegradationChain initialized "
-                f"(level: {self._degradation_chain.current_level.value})"
+                f"{self.agent_id}: DegradationChain initialized (level: {self._degradation_chain.current_level.value})"
             )
         except Exception as e:
             logger.warning(f"{self.agent_id}: DegradationChain unavailable: {e}")

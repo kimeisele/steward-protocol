@@ -59,10 +59,7 @@ class TestInvariantEngine:
         report = judge.verify_ledger(events)
         assert not report.passed
         assert len(report.violations) > 0
-        assert any(
-            v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT"
-            for v in report.violations
-        )
+        assert any(v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT" for v in report.violations)
 
     def test_broadcast_with_license_valid(self):
         """Test BROADCAST passes with LICENSE_VALID"""
@@ -86,11 +83,7 @@ class TestInvariantEngine:
 
         report = judge.verify_ledger(events)
         # Should pass this rule
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT"]
         assert len(violations) == 0
 
     def test_credit_transfer_proposal_requirement(self):
@@ -110,10 +103,7 @@ class TestInvariantEngine:
         report = judge.verify_ledger(events)
         assert not report.passed
         assert len(report.violations) > 0
-        assert any(
-            v.invariant_name == "CREDIT_TRANSFER_PROPOSAL_REQUIREMENT"
-            for v in report.violations
-        )
+        assert any(v.invariant_name == "CREDIT_TRANSFER_PROPOSAL_REQUIREMENT" for v in report.violations)
 
     def test_no_orphaned_events(self):
         """Test that orphaned events are detected"""
@@ -131,9 +121,7 @@ class TestInvariantEngine:
 
         report = judge.verify_ledger(events)
         assert not report.passed
-        violations = [
-            v for v in report.violations if v.invariant_name == "NO_ORPHANED_EVENTS"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "NO_ORPHANED_EVENTS"]
         assert len(violations) > 0
 
     def test_event_sequence_integrity(self):
@@ -158,11 +146,7 @@ class TestInvariantEngine:
 
         report = judge.verify_ledger(events)
         assert not report.passed
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "EVENT_SEQUENCE_INTEGRITY"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "EVENT_SEQUENCE_INTEGRITY"]
         assert len(violations) > 0
 
     def test_no_duplicate_events(self):
@@ -187,9 +171,7 @@ class TestInvariantEngine:
 
         report = judge.verify_ledger(events)
         assert not report.passed
-        violations = [
-            v for v in report.violations if v.invariant_name == "NO_DUPLICATE_EVENTS"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "NO_DUPLICATE_EVENTS"]
         assert len(violations) > 0
 
     def test_proposal_workflow_integrity(self):
@@ -209,11 +191,7 @@ class TestInvariantEngine:
 
         report = judge.verify_ledger(events)
         assert not report.passed
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "PROPOSAL_WORKFLOW_INTEGRITY"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "PROPOSAL_WORKFLOW_INTEGRITY"]
         assert len(violations) > 0
 
 
@@ -289,9 +267,7 @@ class TestWatchdog:
             config = WatchdogConfig(violations_path=violations_path)
             watchdog = Watchdog(config)
 
-            violation = ViolationEvent(
-                violation_type="TEST_VIOLATION", severity="HIGH", message="Test"
-            )
+            violation = ViolationEvent(violation_type="TEST_VIOLATION", severity="HIGH", message="Test")
 
             result = watchdog.record_violation(violation)
             assert result is True
@@ -398,11 +374,7 @@ class TestRealWorldScenarios:
 
         report = judge.verify_ledger(events)
         # Should not violate BROADCAST_LICENSE_REQUIREMENT
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "BROADCAST_LICENSE_REQUIREMENT"]
         assert len(violations) == 0
 
     def test_scenario_proposal_to_transfer(self):
@@ -442,11 +414,7 @@ class TestRealWorldScenarios:
 
         report = judge.verify_ledger(events)
         # Should not violate CREDIT_TRANSFER_PROPOSAL_REQUIREMENT
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "CREDIT_TRANSFER_PROPOSAL_REQUIREMENT"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "CREDIT_TRANSFER_PROPOSAL_REQUIREMENT"]
         assert len(violations) == 0
 
 
@@ -469,11 +437,7 @@ class TestSemanticCompliance:
 
         report = judge.verify_ledger(events)
         # Should not fail (config doesn't exist, check is skipped)
-        violations = [
-            v
-            for v in report.violations
-            if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"
-        ]
+        violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
         assert len(violations) == 0
 
     def test_semantic_compliance_rule_registered(self):
@@ -528,18 +492,10 @@ class TestSemanticCompliance:
             ]
             report = judge.verify_ledger(events)
 
-            violations = [
-                v
-                for v in report.violations
-                if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"
-            ]
+            violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
             # Should detect red-flag words
             assert len(violations) > 0
-            assert any(
-                "revolutionary" in v.message.lower()
-                or "game-changer" in v.message.lower()
-                for v in violations
-            )
+            assert any("revolutionary" in v.message.lower() or "game-changer" in v.message.lower() for v in violations)
         finally:
             os.chdir(old_cwd)
 
@@ -566,9 +522,7 @@ class TestSemanticCompliance:
 
         # Create document with only green flags (no red flags)
         good_doc = docs_dir / "good_policy.md"
-        good_doc.write_text(
-            "# Auditable Governance\nThis policy is provable and verifiable."
-        )
+        good_doc.write_text("# Auditable Governance\nThis policy is provable and verifiable.")
 
         old_cwd = os.getcwd()
         try:
@@ -585,11 +539,7 @@ class TestSemanticCompliance:
             ]
             report = judge.verify_ledger(events)
 
-            violations = [
-                v
-                for v in report.violations
-                if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"
-            ]
+            violations = [v for v in report.violations if v.invariant_name == "SEMANTIC_COMPLIANCE_REQUIREMENT"]
             # Should have NO violations when only green flags are present
             assert len(violations) == 0
         finally:

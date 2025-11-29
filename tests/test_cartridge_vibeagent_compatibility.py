@@ -52,9 +52,7 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
 
     # Check agent_id
     if cartridge.agent_id != expected_agent_id:
-        print(
-            f"   ❌ Expected agent_id='{expected_agent_id}', got '{cartridge.agent_id}'"
-        )
+        print(f"   ❌ Expected agent_id='{expected_agent_id}', got '{cartridge.agent_id}'")
         return False
     print(f"   ✅ agent_id = '{expected_agent_id}'")
 

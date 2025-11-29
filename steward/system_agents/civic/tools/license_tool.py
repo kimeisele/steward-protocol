@@ -445,9 +445,7 @@ class LicenseTool:
                 is_valid, validation_msg = ConstitutionalOath.verify_oath(oath_event, identity_tool=None)
 
                 if not is_valid:
-                    reason = (
-                        f"DENIED: {agent_name}'s Constitutional Oath is no longer valid. " f"Reason: {validation_msg}"
-                    )
+                    reason = f"DENIED: {agent_name}'s Constitutional Oath is no longer valid. Reason: {validation_msg}"
                     logger.warning(f"🔴 {reason}")
                     return False, reason
 

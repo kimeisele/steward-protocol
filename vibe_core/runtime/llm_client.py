@@ -281,7 +281,7 @@ class LLMClient:
         # Check budget before invocation
         if self.budget_limit and self.cost_tracker.total_cost >= self.budget_limit:
             raise BudgetExceededError(
-                f"Budget limit reached: ${self.budget_limit:.2f} " f"(current: ${self.cost_tracker.total_cost:.4f})"
+                f"Budget limit reached: ${self.budget_limit:.2f} (current: ${self.cost_tracker.total_cost:.4f})"
             )
 
         # Check operational quotas (GAD-510 pre-flight check)

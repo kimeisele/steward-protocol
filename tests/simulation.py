@@ -68,16 +68,16 @@ class SimulationHarness:
             Dict with simulation results and statistics
         """
         logger.info(f"🚀 Starting simulation: {num_cycles} cycles, theme={theme}")
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"HERALD Simulation: {num_cycles} I-P-V-O Cycles")
         print(f"Theme: {theme}")
         print(f"Start: {datetime.now(timezone.utc).isoformat()}")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
         start_time = datetime.now(timezone.utc)
 
         for i in range(num_cycles):
-            print(f"[Cycle {i+1}/{num_cycles}] ", end="", flush=True)
+            print(f"[Cycle {i + 1}/{num_cycles}] ", end="", flush=True)
 
             result = self.director.run_cycle(campaign_theme=theme)
 
@@ -97,9 +97,7 @@ class SimulationHarness:
             if result.status == "SUCCESS":
                 print(f"✅ SUCCESS ({result.draft[:50]}...)")
             elif result.status == "VALIDATION_FAILED":
-                violations_str = (
-                    ", ".join(result.violations[:2]) if result.violations else "unknown"
-                )
+                violations_str = ", ".join(result.violations[:2]) if result.violations else "unknown"
                 print(f"⚠️  VALIDATION_FAILED ({violations_str})")
             else:
                 print(f"❌ ERROR ({result.error})")
@@ -136,16 +134,12 @@ class SimulationHarness:
             return {}
 
         successful = sum(1 for r in self.results if r["status"] == "SUCCESS")
-        failed_validation = sum(
-            1 for r in self.results if r["status"] == "VALIDATION_FAILED"
-        )
+        failed_validation = sum(1 for r in self.results if r["status"] == "VALIDATION_FAILED")
         errors = sum(1 for r in self.results if r["status"] == "ERROR")
 
         total_violations = sum(r.get("violations_count", 0) for r in self.results)
         avg_draft_length = (
-            sum(r.get("draft_length", 0) for r in self.results) / len(self.results)
-            if self.results
-            else 0
+            sum(r.get("draft_length", 0) for r in self.results) / len(self.results) if self.results else 0
         )
 
         return {
@@ -153,9 +147,7 @@ class SimulationHarness:
             "successful": successful,
             "validation_failed": failed_validation,
             "errors": errors,
-            "success_rate": (
-                (successful / len(self.results) * 100) if self.results else 0
-            ),
+            "success_rate": ((successful / len(self.results) * 100) if self.results else 0),
             "total_violations_caught": total_violations,
             "avg_draft_length": avg_draft_length,
         }
@@ -165,37 +157,27 @@ class SimulationHarness:
         stats = result["statistics"]
         duration = result["execution"]["duration_seconds"]
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("Simulation Summary:")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print(f"Total Cycles:        {stats['total_cycles']}")
-        print(
-            f"Successful:          {stats['successful']}/{stats['total_cycles']} ({stats['success_rate']:.1f}%)"
-        )
+        print(f"Successful:          {stats['successful']}/{stats['total_cycles']} ({stats['success_rate']:.1f}%)")
         print(f"Validation Failed:   {stats['validation_failed']}")
         print(f"Errors:              {stats['errors']}")
         print(f"Violations Caught:   {stats['total_violations_caught']}")
         print(f"Avg Draft Length:    {stats['avg_draft_length']:.0f} chars")
         print(f"Duration:            {duration:.2f} seconds")
-        print(f"Cycles/Second:       {stats['total_cycles']/duration:.2f}")
-        print(f"{'='*70}\n")
+        print(f"Cycles/Second:       {stats['total_cycles'] / duration:.2f}")
+        print(f"{'=' * 70}\n")
 
         # Check EventLog
         events = self.director.event_log.get_all_events()
         print(f"📖 Event Log Status:")
         print(f"   Total events: {len(events)}")
-        print(
-            f"   Content generated: {len(self.director.event_log.get_events_by_type('content_generated'))}"
-        )
-        print(
-            f"   Content published: {len(self.director.event_log.get_events_by_type('content_published'))}"
-        )
-        print(
-            f"   Content rejected: {len(self.director.event_log.get_events_by_type('content_rejected'))}"
-        )
-        print(
-            f"   System errors: {len(self.director.event_log.get_events_by_type('system_error'))}"
-        )
+        print(f"   Content generated: {len(self.director.event_log.get_events_by_type('content_generated'))}")
+        print(f"   Content published: {len(self.director.event_log.get_events_by_type('content_published'))}")
+        print(f"   Content rejected: {len(self.director.event_log.get_events_by_type('content_rejected'))}")
+        print(f"   System errors: {len(self.director.event_log.get_events_by_type('system_error'))}")
 
     def export_json(self, filepath: Path) -> None:
         """Export simulation results to JSON."""
@@ -227,9 +209,7 @@ Example:
         """,
     )
 
-    parser.add_argument(
-        "--cycles", type=int, default=5, help="Number of cycles to run (default: 5)"
-    )
+    parser.add_argument("--cycles", type=int, default=5, help="Number of cycles to run (default: 5)")
     parser.add_argument(
         "--theme",
         choices=["auto", "tech_deep_dive", "campaign", "agent_city"],

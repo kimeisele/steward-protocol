@@ -146,9 +146,7 @@ class TestAgentDiscovery:
         discovered_count = steward.discover_agents()
 
         # Should find at least 10 agents
-        assert (
-            discovered_count >= 10
-        ), f"Expected at least 10 agents, found {discovered_count}"
+        assert discovered_count >= 10, f"Expected at least 10 agents, found {discovered_count}"
         logger.info(f"✅ Steward discovered {discovered_count} agents")
 
     def test_discovery_populates_registry(self):
@@ -167,9 +165,7 @@ class TestAgentDiscovery:
 
         # Should have more agents than before
         assert final_count > initial_count, "Discovery should add agents to registry"
-        logger.info(
-            f"✅ Agent registry grew from {initial_count} to {final_count} agents"
-        )
+        logger.info(f"✅ Agent registry grew from {initial_count} to {final_count} agents")
 
     def test_discovered_agents_are_in_registry(self):
         """Test that specific discovered agents can be found in registry"""
@@ -190,9 +186,7 @@ class TestAgentDiscovery:
                 found_agents.append(agent_id)
 
         # Should find at least some expected agents
-        assert (
-            len(found_agents) > 0
-        ), f"Expected to find at least some agents from {expected_agents}"
+        assert len(found_agents) > 0, f"Expected to find at least some agents from {expected_agents}"
         logger.info(f"✅ Found expected agents in registry: {found_agents}")
 
     def test_discovered_agents_are_vibeagents(self):
@@ -209,9 +203,7 @@ class TestAgentDiscovery:
         for agent_id, agent in kernel.agent_registry.items():
             assert isinstance(agent, VibeAgent), f"{agent_id} is not a VibeAgent"
 
-        logger.info(
-            f"✅ All {len(kernel.agent_registry)} agents are VibeAgent instances"
-        )
+        logger.info(f"✅ All {len(kernel.agent_registry)} agents are VibeAgent instances")
 
     def test_discovered_agents_have_manifests(self):
         """Test that discovered agents have valid manifests"""
@@ -260,9 +252,7 @@ class TestGovernanceGate:
         # Create agent without oath
         class BadAgent(VibeAgent):
             def __init__(self):
-                super().__init__(
-                    agent_id="bad-agent", name="Bad Agent", version="1.0.0"
-                )
+                super().__init__(agent_id="bad-agent", name="Bad Agent", version="1.0.0")
                 # Deliberately not setting oath_sworn
 
             def process(self, task: Task) -> Dict[str, Any]:
@@ -274,9 +264,7 @@ class TestGovernanceGate:
         with pytest.raises(Exception) as exc_info:
             kernel.register_agent(bad_agent)
 
-        logger.info(
-            f"✅ Governance gate correctly rejected agent without oath: {exc_info.value}"
-        )
+        logger.info(f"✅ Governance gate correctly rejected agent without oath: {exc_info.value}")
 
     def test_governance_gate_rejects_false_oath(self):
         """Test that kernel rejects agents with oath_sworn=False"""
@@ -301,9 +289,7 @@ class TestGovernanceGate:
         with pytest.raises(Exception) as exc_info:
             kernel.register_agent(false_oath_agent)
 
-        logger.info(
-            f"✅ Governance gate correctly rejected agent with false oath: {exc_info.value}"
-        )
+        logger.info(f"✅ Governance gate correctly rejected agent with false oath: {exc_info.value}")
 
 
 class TestSystemIntegration:
@@ -331,9 +317,7 @@ class TestSystemIntegration:
         for agent_id, agent in kernel.agent_registry.items():
             assert agent.oath_sworn is True
 
-        logger.info(
-            f"✅ Complete boot sequence succeeded with {len(kernel.agent_registry)} agents"
-        )
+        logger.info(f"✅ Complete boot sequence succeeded with {len(kernel.agent_registry)} agents")
 
     def test_agent_city_boots_without_errors(self):
         """Smoke test: Agent City boots without raising exceptions"""

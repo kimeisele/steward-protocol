@@ -96,19 +96,13 @@ def verify_ledger_integrity():
         logger.warning("=" * 70)
 
         if delta == 0:
-            logger.error(
-                f"❌ FAIL: Ledger unchanged! (Events: {events_before} → {events_after})"
-            )
+            logger.error(f"❌ FAIL: Ledger unchanged! (Events: {events_before} → {events_after})")
             logger.error(f"   Action was performed but NOT recorded in kernel ledger.")
-            logger.error(
-                f"   DIAGNOSIS: Agent is writing to local files, bypassing kernel."
-            )
+            logger.error(f"   DIAGNOSIS: Agent is writing to local files, bypassing kernel.")
             return False
 
         elif delta > 0:
-            logger.warning(
-                f"✅ PASS: Ledger recorded action! (Events: {events_before} → {events_after})"
-            )
+            logger.warning(f"✅ PASS: Ledger recorded action! (Events: {events_before} → {events_after})")
             logger.warning(f"   {delta} new event(s) in ledger")
 
             # Show new events
@@ -118,16 +112,12 @@ def verify_ledger_integrity():
                 details = event.get("details", {})
                 if isinstance(details, str):
                     details = json.loads(details) if details else {}
-                logger.warning(
-                    f"      - {event_type}: {details.get('proposal_id', details.get('title', '...'))}"
-                )
+                logger.warning(f"      - {event_type}: {details.get('proposal_id', details.get('title', '...'))}")
 
             return True
 
         else:
-            logger.error(
-                f"❌ CRITICAL: Ledger decreased! (Events: {events_before} → {events_after})"
-            )
+            logger.error(f"❌ CRITICAL: Ledger decreased! (Events: {events_before} → {events_after})")
             return False
 
     except Exception as e:

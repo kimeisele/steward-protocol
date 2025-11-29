@@ -98,7 +98,7 @@ class AgentRegistry:
         """
         if phase not in self._registry:
             raise ValueError(
-                f"No specialist registered for phase: {phase}. " f"Available phases: {list(self._registry.keys())}"
+                f"No specialist registered for phase: {phase}. Available phases: {list(self._registry.keys())}"
             )
 
         specialist_class = self._registry[phase]
@@ -127,14 +127,14 @@ class AgentRegistry:
             )
         """
         if not issubclass(specialist_class, BaseSpecialist):
-            raise TypeError(f"Specialist class must inherit from BaseSpecialist, " f"got: {specialist_class.__name__}")
+            raise TypeError(f"Specialist class must inherit from BaseSpecialist, got: {specialist_class.__name__}")
 
         old_specialist = self._registry.get(phase)
         self._registry[phase] = specialist_class
 
         if old_specialist:
             logger.info(
-                f"🔄 Specialist override: {phase.value} " f"({old_specialist.__name__} → {specialist_class.__name__})"
+                f"🔄 Specialist override: {phase.value} ({old_specialist.__name__} → {specialist_class.__name__})"
             )
         else:
             logger.info(f"➕ Specialist registered: {phase.value} → {specialist_class.__name__}")
