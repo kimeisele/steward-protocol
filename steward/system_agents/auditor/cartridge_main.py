@@ -64,9 +64,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
 
         # Phase 3.4: Initialize Constitutional Verdict Tool
         self.verdict_tool = ConstitutionalVerdictTool()
-        logger.info(
-            "⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)"
-        )
+        logger.info("⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""

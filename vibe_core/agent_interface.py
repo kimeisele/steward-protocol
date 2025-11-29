@@ -108,15 +108,9 @@ class AgentSystemInterface:
                     if hasattr(agent_configs, self.agent_id):
                         agent_config = getattr(agent_configs, self.agent_id)
                         # Convert Pydantic model to dict
-                        return (
-                            agent_config.model_dump()
-                            if hasattr(agent_config, "model_dump")
-                            else {}
-                        )
+                        return agent_config.model_dump() if hasattr(agent_config, "model_dump") else {}
 
-            logger.debug(
-                f"ℹ️  No specific config found for {self.agent_id}, using defaults"
-            )
+            logger.debug(f"ℹ️  No specific config found for {self.agent_id}, using defaults")
             return {}
 
         except Exception as e:
@@ -142,14 +136,9 @@ class AgentSystemInterface:
         Note: This replaces creating requirements.txt files.
         """
         if not self._dep_manager:
-            raise RuntimeError(
-                f"DependencyManager not available. "
-                f"Agent {self.agent_id} cannot add dependencies."
-            )
+            raise RuntimeError(f"DependencyManager not available. " f"Agent {self.agent_id} cannot add dependencies.")
 
-        logger.info(
-            f"📦 {self.agent_id} requesting dependency: {package} {version or ''}"
-        )
+        logger.info(f"📦 {self.agent_id} requesting dependency: {package} {version or ''}")
         self._dep_manager.add_dependency(package, version)
 
     def get_dependencies(self) -> List[str]:
@@ -367,10 +356,7 @@ class AgentSystemInterface:
         source = self.vfs.get_sandbox_path() / sandbox_path
 
         if not source.exists():
-            raise FileNotFoundError(
-                f"Source file not found in sandbox: {sandbox_path} "
-                f"(resolved to: {source})"
-            )
+            raise FileNotFoundError(f"Source file not found in sandbox: {sandbox_path} " f"(resolved to: {source})")
 
         # Resolve target path (in project root)
         target = (Path(".") / target_path).resolve()
@@ -392,9 +378,7 @@ class AgentSystemInterface:
 
         shutil.copy2(source, target)
 
-        logger.info(
-            f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}"
-        )
+        logger.info(f"📤 {self.agent_id} published artifact: {sandbox_path} → {target_path}")
         return True
 
     # ============================================================================
@@ -441,9 +425,7 @@ class AgentSystemInterface:
             },
         )
 
-        logger.info(
-            f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})"
-        )
+        logger.info(f"📤 {self.agent_id} published data: {key} (type: {type(value).__name__})")
         return event_id
 
     def request_data(self, agent_id: str, key: str, default: Any = None) -> Any:
@@ -490,8 +472,7 @@ class AgentSystemInterface:
         if key not in self.kernel._data_store[agent_id]:
             if default is not None:
                 logger.debug(
-                    f"📥 {self.agent_id} requested data from {agent_id} "
-                    f"(key: {key}) - key not found, using default"
+                    f"📥 {self.agent_id} requested data from {agent_id} " f"(key: {key}) - key not found, using default"
                 )
                 return default
             raise ValueError(
@@ -513,15 +494,10 @@ class AgentSystemInterface:
             },
         )
 
-        logger.info(
-            f"📥 {self.agent_id} requested data from {agent_id}: "
-            f"{key} (type: {type(value).__name__})"
-        )
+        logger.info(f"📥 {self.agent_id} requested data from {agent_id}: " f"{key} (type: {type(value).__name__})")
         return value
 
-    def list_published_data(
-        self, agent_id: Optional[str] = None
-    ) -> Dict[str, List[str]]:
+    def list_published_data(self, agent_id: Optional[str] = None) -> Dict[str, List[str]]:
         """
         List all published data keys (for discovery).
 
@@ -620,10 +596,7 @@ class AgentSystemInterface:
                 },
             )
 
-            logger.info(
-                f"📞 {self.agent_id} called {agent_id} "
-                f"(action: {payload.get('action', 'unknown')})"
-            )
+            logger.info(f"📞 {self.agent_id} called {agent_id} " f"(action: {payload.get('action', 'unknown')})")
             return result
 
         except Exception as e:
@@ -639,6 +612,4 @@ class AgentSystemInterface:
             )
 
             logger.error(f"❌ {self.agent_id} failed to call {agent_id}: {e}")
-            raise RuntimeError(
-                f"Agent call failed: {agent_id}.{payload.get('action', 'unknown')} - {e}"
-            ) from e
+            raise RuntimeError(f"Agent call failed: {agent_id}.{payload.get('action', 'unknown')} - {e}") from e

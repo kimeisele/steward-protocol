@@ -65,9 +65,7 @@ try:
 except ImportError:
     OATH_ENFORCEMENT_AVAILABLE = False
     logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning(
-        "⚠️  Constitutional Oath not available - governance gate disabled"
-    )
+    logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
 
 
 logger = logging.getLogger("VIBE_KERNEL")
@@ -124,14 +122,10 @@ class InMemoryScheduler(VibeScheduler):
                     f"Only maintenance tasks are permitted: {', '.join(self.MAINTENANCE_TASK_TYPES)}"
                 )
 
-            logger.info(
-                f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)"
-            )
+            logger.info(f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)")
 
         elif current_cycle == Cycle.DAY_OF_BRAHMA:
-            logger.info(
-                f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)"
-            )
+            logger.info(f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)")
 
         self.queue.append(task)
         logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
@@ -202,9 +196,7 @@ class RealVibeKernel(VibeKernel):
             logger.info("🚀 Vibe Kernel initialized (in-memory ledger)")
         else:
             self._ledger = SQLiteLedger(ledger_path)
-            logger.info(
-                f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})"
-            )
+            logger.info(f"🚀 Vibe Kernel initialized (persistent ledger at {ledger_path})")
         self._manifest_registry = InMemoryManifestRegistry()
         self._status = KernelStatus.STOPPED
         self.ledger_path = ledger_path
@@ -313,9 +305,7 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 1: THE INSPECTION (Does the agent possess the Oath badge?)
         # Check for oath attributes that OathMixin provides
-        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(
-            agent, "oath_event"
-        )
+        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(agent, "oath_event")
 
         if not has_oath_attribute:
             logger.critical(
@@ -349,14 +339,11 @@ class RealVibeKernel(VibeKernel):
         # Verify the oath signature against current Constitution
         if oath_event and OATH_ENFORCEMENT_AVAILABLE:
             try:
-                is_valid, reason = ConstitutionalOath.verify_oath(
-                    oath_event, getattr(agent, "identity_tool", None)
-                )
+                is_valid, reason = ConstitutionalOath.verify_oath(oath_event, getattr(agent, "identity_tool", None))
 
                 if not is_valid:
                     logger.critical(
-                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' "
-                        f"oath verification FAILED: {reason}"
+                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' " f"oath verification FAILED: {reason}"
                     )
                     raise PermissionError(
                         f"GOVERNANCE_GATE_DENIED: Agent '{agent.agent_id}' "
@@ -364,21 +351,15 @@ class RealVibeKernel(VibeKernel):
                         f"Kernel refuses entry."
                     )
 
-                logger.info(
-                    f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' "
-                    f"oath verified ({reason})"
-                )
+                logger.info(f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' " f"oath verified ({reason})")
 
             except PermissionError:
                 # Re-raise governance violations
                 raise
             except Exception as e:
-                logger.error(
-                    f"❌ Governance gate verification error for '{agent.agent_id}': {e}"
-                )
+                logger.error(f"❌ Governance gate verification error for '{agent.agent_id}': {e}")
                 raise PermissionError(
-                    f"GOVERNANCE_GATE_ERROR: Agent '{agent.agent_id}' "
-                    f"oath verification failed: {str(e)}"
+                    f"GOVERNANCE_GATE_ERROR: Agent '{agent.agent_id}' " f"oath verification failed: {str(e)}"
                 )
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
@@ -392,15 +373,10 @@ class RealVibeKernel(VibeKernel):
         from vibe_core.agent_interface import AgentSystemInterface
 
         agent.system = AgentSystemInterface(self, agent.agent_id)
-        logger.info(
-            f"🔌 {agent.agent_id} received system interface "
-            f"(sandbox: {agent.system.get_sandbox_path()})"
-        )
+        logger.info(f"🔌 {agent.agent_id} received system interface " f"(sandbox: {agent.system.get_sandbox_path()})")
 
         # Phase 2: Spawn Process
-        self.process_manager.spawn_agent(
-            agent.agent_id, type(agent), config=getattr(agent, "config", None)
-        )
+        self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
@@ -444,8 +420,7 @@ class RealVibeKernel(VibeKernel):
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
         logger.info(
-            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' "
-            f"registered and spawned in isolated process."
+            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' " f"registered and spawned in isolated process."
         )
 
     def boot(self) -> None:
@@ -643,10 +618,7 @@ class RealVibeKernel(VibeKernel):
             # Create symlink: sandbox/repo -> actual repo
             vfs.create_symlink(repo_path, "repo")
 
-            logger.info(
-                f"🔗 {agent_id} granted repo access: "
-                f"{vfs.get_sandbox_path()}/repo -> {repo_path}"
-            )
+            logger.info(f"🔗 {agent_id} granted repo access: " f"{vfs.get_sandbox_path()}/repo -> {repo_path}")
 
         except Exception as e:
             logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
@@ -675,23 +647,15 @@ class RealVibeKernel(VibeKernel):
                         # Don't halt on VOID violations in normal operation (they need context)
                         # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
                         if "VOID" not in violation.invariant_name:
-                            logger.critical(
-                                f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}"
-                            )
-                            self.shutdown(
-                                reason=f"Immune system reaction: {violation.invariant_name}"
-                            )
+                            logger.critical(f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}")
+                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
                             return
                         else:
-                            logger.debug(
-                                f"⚠️  VOID check skipped (requires external context)"
-                            )
+                            logger.debug(f"⚠️  VOID check skipped (requires external context)")
 
             # Log health check (non-critical)
             if report.violations:
-                logger.debug(
-                    f"⚠️  Auditor info: {len(report.violations)} issue(s) detected"
-                )
+                logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected")
             else:
                 logger.debug("✅ System health check passed")
 
@@ -781,9 +745,7 @@ class RealVibeKernel(VibeKernel):
             # Collect agent status
             for agent_id, agent in self._agent_registry.items():
                 try:
-                    agent_status = (
-                        agent.report_status() if hasattr(agent, "report_status") else {}
-                    )
+                    agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
                     snapshot["agents"][agent_id] = agent_status
                 except Exception as e:
                     logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")

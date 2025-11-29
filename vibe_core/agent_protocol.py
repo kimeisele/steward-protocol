@@ -254,9 +254,7 @@ class VibeAgent(ABC):
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the coroutine
-                asyncio.create_task(
-                    self.emit_event(event_type, message, task_id, details)
-                )
+                asyncio.create_task(self.emit_event(event_type, message, task_id, details))
             else:
                 # No running loop, try to run in new task
                 asyncio.run(self.emit_event(event_type, message, task_id, details))
