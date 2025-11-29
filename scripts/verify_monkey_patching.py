@@ -13,19 +13,19 @@ Tests:
 5. Scribe agent has repo symlink
 """
 
-import sys
-import os
-import time
 import logging
-from typing import Dict, Any
+import os
+import sys
+import time
+from typing import Any, Dict
 
 # Ensure we can import vibe_core
 sys.path.append(os.getcwd())
 
+from steward.oath_mixin import OathMixin
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
-from steward.oath_mixin import OathMixin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -105,9 +105,7 @@ def test_monkey_patching():
 
     # Test 1: File write (should go to sandbox)
     logger.info("\n2. Testing file write redirection...")
-    task1 = Task(
-        task_id="t1", agent_id="monkey_test", payload={"action": "test_file_write"}
-    )
+    task1 = Task(task_id="t1", agent_id="monkey_test", payload={"action": "test_file_write"})
     kernel.submit_task(task1)
     kernel.tick()
     time.sleep(0.5)
@@ -140,9 +138,7 @@ def test_monkey_patching():
 
     # Test 3: Network - whitelisted domain
     logger.info("\n4. Testing network access (whitelisted)...")
-    task3 = Task(
-        task_id="t3", agent_id="monkey_test", payload={"action": "test_network_allowed"}
-    )
+    task3 = Task(task_id="t3", agent_id="monkey_test", payload={"action": "test_network_allowed"})
     kernel.submit_task(task3)
     kernel.tick()
     time.sleep(0.5)
@@ -150,9 +146,7 @@ def test_monkey_patching():
 
     # Test 4: Network - blocked domain
     logger.info("\n5. Testing network access (blocked)...")
-    task4 = Task(
-        task_id="t4", agent_id="monkey_test", payload={"action": "test_network_blocked"}
-    )
+    task4 = Task(task_id="t4", agent_id="monkey_test", payload={"action": "test_network_blocked"})
     kernel.submit_task(task4)
     kernel.tick()
     time.sleep(0.5)
@@ -245,13 +239,9 @@ def main():
     try:
         if not vfs_scribe.exists("repo"):
             vfs_scribe.create_symlink(repo_path, "repo")
-            logger.info(
-                f"   ✅ Symlink created: {vfs_scribe.get_sandbox_path()}/repo -> {repo_path}"
-            )
+            logger.info(f"   ✅ Symlink created: {vfs_scribe.get_sandbox_path()}/repo -> {repo_path}")
         else:
-            logger.info(
-                f"   ✅ Symlink already exists: {vfs_scribe.get_sandbox_path()}/repo"
-            )
+            logger.info(f"   ✅ Symlink already exists: {vfs_scribe.get_sandbox_path()}/repo")
 
         # Verify symlink works
         if vfs_scribe.exists("repo"):
@@ -273,8 +263,9 @@ def main():
 
     # Test 3: Verify monkey-patch code is in place
     logger.info("\n3. Checking monkey-patch implementation...")
-    from vibe_core.protocols import VibeAgent
     import inspect
+
+    from vibe_core.protocols import VibeAgent
 
     source = inspect.getsource(VibeAgent.set_kernel_pipe)
     if "builtins.open" in source and "VFSRequests" in source:
@@ -289,9 +280,7 @@ def main():
     logger.info("   - VFS sandboxing works")
     logger.info("   - Symlinks for Scribe/Archivist work")
     logger.info("   - Monkey-patching code in place")
-    logger.info(
-        "\nNote: Full integration test with running agents will be done separately."
-    )
+    logger.info("\nNote: Full integration test with running agents will be done separately.")
     sys.exit(0)
 
 

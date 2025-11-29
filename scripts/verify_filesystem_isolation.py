@@ -13,10 +13,10 @@ Tests:
 5. Agent tries to write outside sandbox → PERMISSION_ERROR
 """
 
-import sys
-import os
 import logging
-from typing import Dict, Any
+import os
+import sys
+from typing import Any, Dict
 
 # Ensure we can import vibe_core
 sys.path.append(os.getcwd())

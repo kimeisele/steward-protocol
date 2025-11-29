@@ -4,9 +4,9 @@ Verification Script - Public Access Layer
 Tests the FastAPI Gateway using TestClient.
 """
 
-import sys
-import logging
 import json
+import logging
+import sys
 from pathlib import Path
 
 # Add project root to Python path
@@ -24,6 +24,7 @@ try:
     os.environ["API_KEY"] = "steward-secret-key"
 
     from fastapi.testclient import TestClient
+
     from gateway.api import app
 except ImportError:
     print("⚠️  FastAPI/TestClient not installed. Skipping full API test.")

@@ -6,6 +6,7 @@ BLOCKER #2: Layer 1 Protocol (no implementations)
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
+
 from .agent import AgentManifest
 
 

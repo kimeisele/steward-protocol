@@ -6,8 +6,8 @@ def __getattr__(name):
     if name in ("CartridgeIntrospector", "ScriptIntrospector", "ConfigIntrospector"):
         from .introspector import (
             CartridgeIntrospector,
-            ScriptIntrospector,
             ConfigIntrospector,
+            ScriptIntrospector,
         )
 
         return {

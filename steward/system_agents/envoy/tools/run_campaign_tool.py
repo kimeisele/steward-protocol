@@ -21,8 +21,8 @@ Intent → Resource Check → Research → Content → Publishing → Ledger Rec
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RUN_CAMPAIGN_TOOL")
@@ -66,9 +66,7 @@ class RunCampaignTool:
         self.kernel = kernel
         logger.info("🧠 RunCampaignTool connected to VibeOS kernel")
 
-    def run_campaign(
-        self, goal: str, campaign_type: str = "recruitment", **kwargs
-    ) -> Dict[str, Any]:
+    def run_campaign(self, goal: str, campaign_type: str = "recruitment", **kwargs) -> Dict[str, Any]:
         """
         Run a multi-agent marketing campaign.
 
@@ -108,9 +106,7 @@ class RunCampaignTool:
             resource_check = self._check_resources()
             if not resource_check["ready"]:
                 campaign["status"] = "failed"
-                campaign["errors"].append(
-                    f"Resource check failed: {resource_check['reason']}"
-                )
+                campaign["errors"].append(f"Resource check failed: {resource_check['reason']}")
                 logger.error(f"   ❌ {resource_check['reason']}")
                 return self._campaign_result(campaign)
 
@@ -124,9 +120,7 @@ class RunCampaignTool:
             research_result = self._execute_research(goal, campaign_type, **kwargs)
             if research_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(
-                    f"Research phase failed: {research_result.get('error')}"
-                )
+                campaign["errors"].append(f"Research phase failed: {research_result.get('error')}")
                 logger.error(f"   ❌ Research phase failed")
                 return self._campaign_result(campaign)
 
@@ -142,9 +136,7 @@ class RunCampaignTool:
             )
             if content_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(
-                    f"Content creation failed: {content_result.get('error')}"
-                )
+                campaign["errors"].append(f"Content creation failed: {content_result.get('error')}")
                 logger.error(f"   ❌ Content creation failed")
                 return self._campaign_result(campaign)
 
@@ -155,14 +147,10 @@ class RunCampaignTool:
             logger.info(f"\n📢 Phase III: Campaign Execution")
             campaign["phase"] = CampaignPhase.EXECUTION.value
 
-            execution_result = self._execute_publishing(
-                goal=goal, content=content_result.get("content"), **kwargs
-            )
+            execution_result = self._execute_publishing(goal=goal, content=content_result.get("content"), **kwargs)
             if execution_result.get("status") != "success":
                 campaign["status"] = "failed"
-                campaign["errors"].append(
-                    f"Publishing failed: {execution_result.get('error')}"
-                )
+                campaign["errors"].append(f"Publishing failed: {execution_result.get('error')}")
                 logger.error(f"   ❌ Publishing failed")
                 return self._campaign_result(campaign)
 
@@ -174,12 +162,8 @@ class RunCampaignTool:
             campaign["phase"] = CampaignPhase.COMPLETE.value
 
             logger.info(f"\n✅ Campaign {campaign_id} completed successfully")
-            logger.info(
-                f"   Research Insights: {len(research_result.get('data', {}).get('insights', []))} items"
-            )
-            logger.info(
-                f"   Content Generated: {execution_result.get('publications', 0)} publications"
-            )
+            logger.info(f"   Research Insights: {len(research_result.get('data', {}).get('insights', []))} items")
+            logger.info(f"   Content Generated: {execution_result.get('publications', 0)} publications")
 
             return self._campaign_result(campaign)
 
@@ -251,9 +235,7 @@ class RunCampaignTool:
         except Exception as e:
             return {"ready": False, "reason": f"Resource check error: {str(e)}"}
 
-    def _execute_research(
-        self, goal: str, campaign_type: str, **kwargs
-    ) -> Dict[str, Any]:
+    def _execute_research(self, goal: str, campaign_type: str, **kwargs) -> Dict[str, Any]:
         """
         Phase I: Trigger SCIENCE agent for market research.
         """
@@ -320,9 +302,7 @@ class RunCampaignTool:
             },
         }
 
-    def _execute_content_creation(
-        self, goal: str, research_data: Dict[str, Any] = None, **kwargs
-    ) -> Dict[str, Any]:
+    def _execute_content_creation(self, goal: str, research_data: Dict[str, Any] = None, **kwargs) -> Dict[str, Any]:
         """
         Phase II: Trigger HERALD for content generation.
         """
@@ -366,9 +346,7 @@ class RunCampaignTool:
             logger.warning(f"⚠️  HERALD content generation failed, using template: {e}")
             return self._simulate_content_creation(goal, research_data)
 
-    def _simulate_content_creation(
-        self, goal: str, research_data: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    def _simulate_content_creation(self, goal: str, research_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Generate template content when HERALD is not available."""
         content = f"""
 # {goal.title()} - Multi-Agent Protocol Initiative

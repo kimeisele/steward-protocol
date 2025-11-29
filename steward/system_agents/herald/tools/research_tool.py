@@ -10,9 +10,9 @@ Fallback order:
 3. Static templates (always available)
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any, Dict, Optional
 
 try:
     from tavily import TavilyClient
@@ -27,6 +27,7 @@ except ImportError:
     class OfflineCapableMixin:
         def init_offline_capability(self, chain=None):
             self._degradation_chain = chain
+
 
 logger = logging.getLogger("HERALD_RESEARCH")
 
@@ -73,13 +74,10 @@ class ResearchTool(OfflineCapableMixin):
         else:
             if degradation_chain:
                 logger.info(
-                    f"📴 Research: Tavily unavailable, using DegradationChain "
-                    f"(level: {self.degradation_level})"
+                    f"📴 Research: Tavily unavailable, using DegradationChain " f"(level: {self.degradation_level})"
                 )
             else:
-                logger.warning(
-                    "⚠️  Research: Tavily unavailable (running in simulation mode)"
-                )
+                logger.warning("⚠️  Research: Tavily unavailable (running in simulation mode)")
 
     def scan(self, query: str) -> Optional[str]:
         """
@@ -96,12 +94,8 @@ class ResearchTool(OfflineCapableMixin):
             return self._fallback_context(query)
 
         try:
-            response = self.client.search(
-                query=query, search_depth="basic", max_results=3, include_answer=True
-            )
-            result = response.get("answer") or response.get("results", [{}])[0].get(
-                "content"
-            )
+            response = self.client.search(query=query, search_depth="basic", max_results=3, include_answer=True)
+            result = response.get("answer") or response.get("results", [{}])[0].get("content")
             if result:
                 logger.info("📡 Market signal detected")
             return result
@@ -147,7 +141,7 @@ class ResearchTool(OfflineCapableMixin):
                 response = self._degradation_chain.respond(
                     user_input=f"Research context for: {query}",
                     semantic_confidence=0.4,  # Low confidence triggers template/LLM fallback
-                    detected_intent="research"
+                    detected_intent="research",
                 )
 
                 # If we got a useful response from LocalLLM
@@ -164,20 +158,20 @@ class ResearchTool(OfflineCapableMixin):
         # Static template fallback (always works)
         templates = {
             "agent": "Latest on autonomous agent systems and their identity challenges. "
-                     "Key trends include cryptographic identity, governance frameworks, "
-                     "and federated agent networks.",
+            "Key trends include cryptographic identity, governance frameworks, "
+            "and federated agent networks.",
             "protocol": "Emerging standards for agent verification and governance. "
-                        "The STEWARD Protocol provides a unified approach to agent "
-                        "identity, capability declaration, and accountability.",
+            "The STEWARD Protocol provides a unified approach to agent "
+            "identity, capability declaration, and accountability.",
             "verification": "Cryptographic verification is becoming essential for "
-                           "autonomous agents. Hash-based attestation and lineage chains "
-                           "provide immutable audit trails.",
+            "autonomous agents. Hash-based attestation and lineage chains "
+            "provide immutable audit trails.",
             "governance": "Agent governance frameworks are evolving rapidly. "
-                         "Constitutional constraints, credit-based resource allocation, "
-                         "and kill-switches are key components.",
+            "Constitutional constraints, credit-based resource allocation, "
+            "and kill-switches are key components.",
             "default": "Emerging trends in AI autonomy and verification systems. "
-                       "The industry is moving toward governed intelligence - "
-                       "capability with accountability.",
+            "The industry is moving toward governed intelligence - "
+            "capability with accountability.",
         }
 
         query_lower = query.lower()

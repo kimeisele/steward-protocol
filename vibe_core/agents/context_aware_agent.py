@@ -28,7 +28,7 @@ Usage:
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 from vibe_core.protocols import VibeAgent
 
@@ -75,6 +75,7 @@ class ContextAwareAgent(VibeAgent):
 
         try:
             from vibe_core.llm.degradation_chain import DegradationChain
+
             self._degradation_chain = DegradationChain()
             logger.info(
                 f"{self.agent_id}: DegradationChain initialized "
@@ -102,10 +103,7 @@ class ContextAwareAgent(VibeAgent):
         return self._degradation_chain
 
     def chat_with_fallback(
-        self,
-        prompt: str,
-        context: Optional[Dict[str, Any]] = None,
-        semantic_confidence: float = 0.5
+        self, prompt: str, context: Optional[Dict[str, Any]] = None, semantic_confidence: float = 0.5
     ) -> "DegradationResponse":
         """
         Generate a response with automatic offline fallback.
@@ -137,13 +135,17 @@ class ContextAwareAgent(VibeAgent):
 
         if self._degradation_chain is None:
             # Absolute fallback - no DegradationChain available
-            from vibe_core.llm.degradation_chain import DegradationResponse, DegradationLevel
+            from vibe_core.llm.degradation_chain import (
+                DegradationLevel,
+                DegradationResponse,
+            )
+
             return DegradationResponse(
                 content=f"[Agent {self.agent_id} offline - DegradationChain unavailable]",
                 level=DegradationLevel.MINIMAL,
                 confidence=0.0,
                 fallback_used="error",
-                user_guidance="System offline. Run: steward install-llm"
+                user_guidance="System offline. Run: steward install-llm",
             )
 
         # Merge context if provided
@@ -155,9 +157,7 @@ class ContextAwareAgent(VibeAgent):
 
         # Use DegradationChain for response
         return self._degradation_chain.respond(
-            user_input=prompt,
-            semantic_confidence=semantic_confidence,
-            detected_intent=full_context.get("intent")
+            user_input=prompt, semantic_confidence=semantic_confidence, detected_intent=full_context.get("intent")
         )
 
     def get_degradation_status(self) -> Dict[str, Any]:
@@ -174,7 +174,7 @@ class ContextAwareAgent(VibeAgent):
                 "level": "unavailable",
                 "local_llm_available": False,
                 "templates_loaded": 0,
-                "error": "DegradationChain not initialized"
+                "error": "DegradationChain not initialized",
             }
 
         return self._degradation_chain.get_status()
@@ -190,12 +190,14 @@ class ContextAwareAgent(VibeAgent):
 
         try:
             from vibe_core.runtime.prompt_context import get_prompt_context
+
             self._prompt_context = get_prompt_context()
         except Exception as e:
             logger.warning(f"{self.agent_id}: PromptContext unavailable: {e}")
 
         try:
             from vibe_core.runtime.prompt_registry import PromptRegistry
+
             self._prompt_registry = PromptRegistry
         except Exception as e:
             logger.warning(f"{self.agent_id}: PromptRegistry unavailable: {e}")
@@ -222,10 +224,7 @@ class ContextAwareAgent(VibeAgent):
         return self._prompt_context.resolve(keys or default_keys)
 
     def get_governed_prompt(
-        self,
-        task_name: str,
-        extra_context: Optional[Dict[str, Any]] = None,
-        inject_governance: bool = True
+        self, task_name: str, extra_context: Optional[Dict[str, Any]] = None, inject_governance: bool = True
     ) -> str:
         """
         Get governed prompt with context injection.
@@ -256,10 +255,7 @@ class ContextAwareAgent(VibeAgent):
 
         try:
             return self._prompt_registry.compose(
-                agent=self.agent_id.upper(),
-                task=task_name,
-                context=context,
-                inject_governance=inject_governance
+                agent=self.agent_id.upper(), task=task_name, context=context, inject_governance=inject_governance
             )
         except Exception as e:
             logger.warning(f"Prompt composition failed: {e}")
@@ -269,6 +265,7 @@ class ContextAwareAgent(VibeAgent):
 # =============================================================================
 # TOOL MIXIN (For tools that need offline capability)
 # =============================================================================
+
 
 class OfflineCapableMixin:
     """
@@ -311,6 +308,7 @@ class OfflineCapableMixin:
             return True  # Assume offline if no chain
 
         from vibe_core.llm.degradation_chain import DegradationLevel
+
         return self._degradation_chain.current_level != DegradationLevel.FULL
 
     @property
@@ -336,13 +334,13 @@ class OfflineCapableMixin:
                 "status": "offline",
                 "content": f"[{tool_name} offline - no degradation chain]",
                 "fallback_used": "error",
-                "user_guidance": "Install local LLM: steward install-llm"
+                "user_guidance": "Install local LLM: steward install-llm",
             }
 
         response = self._degradation_chain.respond(
             user_input=query,
             semantic_confidence=0.3,  # Low confidence triggers template fallback
-            detected_intent=tool_name.lower()
+            detected_intent=tool_name.lower(),
         )
 
         return {
@@ -350,5 +348,5 @@ class OfflineCapableMixin:
             "content": response.content,
             "level": response.level.value,
             "fallback_used": response.fallback_used,
-            "user_guidance": response.user_guidance
+            "user_guidance": response.user_guidance,
         }

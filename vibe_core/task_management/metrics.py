@@ -1,9 +1,9 @@
 """Task management performance metrics."""
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any
-import json
+from typing import Any, Dict
 
 
 @dataclass
@@ -56,11 +56,7 @@ class MetricsCollector:
             statuses[status] = statuses.get(status, 0) + 1
 
             # Calculate completion time if available
-            if (
-                status == "COMPLETED"
-                and task.get("completed_at")
-                and task.get("created_at")
-            ):
+            if status == "COMPLETED" and task.get("completed_at") and task.get("created_at"):
                 try:
                     created = datetime.fromisoformat(task["created_at"])
                     completed = datetime.fromisoformat(task["completed_at"])
@@ -78,14 +74,10 @@ class MetricsCollector:
 
         # Calculate averages
         if completion_times:
-            self.metrics.avg_completion_time = sum(completion_times) / len(
-                completion_times
-            )
+            self.metrics.avg_completion_time = sum(completion_times) / len(completion_times)
 
         if self.metrics.total_tasks > 0:
-            self.metrics.completion_rate = (
-                self.metrics.completed_tasks / self.metrics.total_tasks * 100
-            )
+            self.metrics.completion_rate = self.metrics.completed_tasks / self.metrics.total_tasks * 100
 
     def get_metrics(self) -> TaskMetrics:
         """Get current metrics."""

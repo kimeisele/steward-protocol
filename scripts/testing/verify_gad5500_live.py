@@ -7,10 +7,10 @@ Tests the REAL VibeKernel with actual agent cartridges and playbook execution.
 This is NOT a mock. This is the production code path.
 """
 
-import sys
-import os
-import logging
 import asyncio
+import logging
+import os
+import sys
 from pathlib import Path
 
 # Setup logging
@@ -33,10 +33,10 @@ async def run_live_fire():
     print("-" * 80)
 
     try:
-        from vibe_core.kernel_impl import RealVibeKernel
-        from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
         from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+        from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+        from vibe_core.kernel_impl import RealVibeKernel
 
         # Create kernel instance
         kernel = RealVibeKernel(ledger_path=":memory:")
@@ -89,9 +89,7 @@ async def run_live_fire():
         from envoy.deterministic_executor import DeterministicExecutor
 
         engine = DeterministicExecutor(knowledge_dir="knowledge")
-        logger.info(
-            f"✅ DeterministicExecutor initialized with {len(engine.playbooks)} playbooks"
-        )
+        logger.info(f"✅ DeterministicExecutor initialized with {len(engine.playbooks)} playbooks")
 
         # Check for the GAD-5500 playbook
         if "FEATURE_IMPLEMENT_SAFE_V1" not in engine.playbooks:
@@ -99,9 +97,7 @@ async def run_live_fire():
             return False
 
         playbook = engine.playbooks["FEATURE_IMPLEMENT_SAFE_V1"]
-        logger.info(
-            f"✅ Playbook loaded: {playbook.name} ({len(playbook.phases)} phases)"
-        )
+        logger.info(f"✅ Playbook loaded: {playbook.name} ({len(playbook.phases)} phases)")
 
     except Exception as e:
         logger.error(f"❌ PLAYBOOK INIT FAILED: {e}")
@@ -128,7 +124,7 @@ async def run_live_fire():
         logger.info(f"   Path: {context['path']}")
 
         # Create intent vector (simplified)
-        from provider.universal_provider import IntentVector, IntentType
+        from provider.universal_provider import IntentType, IntentVector
 
         intent_vector = IntentVector(
             raw_input=context["feature_description"],

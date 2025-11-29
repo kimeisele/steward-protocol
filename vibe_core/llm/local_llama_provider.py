@@ -12,7 +12,7 @@ Models (preference order):
 import logging
 import os
 from pathlib import Path
-from typing import Any, Optional, List, Dict
+from typing import Any, Dict, List, Optional
 
 from vibe_core.llm.provider import LLMProvider
 
@@ -37,7 +37,7 @@ class LocalLlamaProvider(LLMProvider):
         model_path: Optional[str] = None,
         n_ctx: int = 2048,
         n_threads: Optional[int] = None,
-        verbose: bool = False
+        verbose: bool = False,
     ):
         self._llm = None
         self._model_path = None
@@ -55,9 +55,7 @@ class LocalLlamaProvider(LLMProvider):
         if self._model_path and self._model_path.exists():
             self._load_model()
         else:
-            logger.warning(
-                f"No local model found. Install with: steward install-llm"
-            )
+            logger.warning(f"No local model found. Install with: steward install-llm")
 
     @staticmethod
     def model_exists() -> bool:

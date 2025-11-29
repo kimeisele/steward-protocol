@@ -17,12 +17,12 @@ are gone, broadcast license is revoked. This forces agents to be
 economically rational and earn through productive work."
 """
 
-import sqlite3
 import hashlib
 import logging
+import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger("CIVIC_BANK")
 
@@ -75,9 +75,7 @@ class CivicBank:
 
             self.vault = CivicVault(self.conn)
         except (ImportError, Exception) as e:
-            logger.warning(
-                f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)"
-            )
+            logger.warning(f"⚠️  Vault unavailable ({type(e).__name__}: cryptography issue)")
             self.vault = None
 
         logger.info(f"🏦 CivicBank initialized at {self.DB_PATH}")
@@ -212,9 +210,7 @@ class CivicBank:
             if sender != "MINT":
                 sender_balance = self.get_balance(sender)
                 if sender_balance < amount:
-                    raise InsufficientFundsError(
-                        f"{sender} has {sender_balance}, needs {amount}"
-                    )
+                    raise InsufficientFundsError(f"{sender} has {sender_balance}, needs {amount}")
 
             # 2. PREPARE DATA
             timestamp = datetime.utcnow().isoformat()
@@ -294,9 +290,7 @@ class CivicBank:
         """
         with self.conn:
             cur = self.conn.cursor()
-            cur.execute(
-                "UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_id,)
-            )
+            cur.execute("UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_id,))
             logger.warning(f"🔒 Account frozen: {agent_id} ({reason})")
 
     def unfreeze_account(self, agent_id: str, reason: str = "manual_override") -> None:
@@ -358,9 +352,7 @@ class CivicBank:
             List of transaction records (most recent first)
         """
         cur = self.conn.cursor()
-        cur.execute(
-            "SELECT * FROM transactions ORDER BY timestamp DESC LIMIT ?", (limit,)
-        )
+        cur.execute("SELECT * FROM transactions ORDER BY timestamp DESC LIMIT ?", (limit,))
         return [dict(row) for row in cur.fetchall()]
 
     def get_account_statement(self, agent_id: str) -> Dict:
@@ -413,9 +405,7 @@ class CivicBank:
         credits = cur.fetchone()["total"] or 0
 
         if debits != credits:
-            logger.error(
-                f"❌ ACCOUNTING ERROR: Debits ({debits}) != Credits ({credits})"
-            )
+            logger.error(f"❌ ACCOUNTING ERROR: Debits ({debits}) != Credits ({credits})")
             return False
 
         logger.info(f"✅ Accounting Equation Verified: {debits} == {credits}")
@@ -424,9 +414,7 @@ class CivicBank:
         cur.execute("SELECT agent_id, balance FROM accounts WHERE balance < 0")
         negative = cur.fetchall()
         if negative:
-            logger.error(
-                f"❌ NEGATIVE BALANCE ALERT: {len(negative)} accounts with negative balance"
-            )
+            logger.error(f"❌ NEGATIVE BALANCE ALERT: {len(negative)} accounts with negative balance")
             for row in negative:
                 logger.error(f"   {row['agent_id']}: {row['balance']}")
             return False

@@ -5,10 +5,10 @@ The Scribe projects HERALD's activity into human-readable logbook entries,
 ensuring that GitHub visitors see the agent's heartbeat in real-time.
 """
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any
-import json
+from typing import Any, Dict, Optional
 
 from ..core.memory import Event
 
@@ -113,11 +113,7 @@ class Scribe:
         if event.event_type == "content_generated":
             content = payload.get("content", "")[:60]
             platform = payload.get("platform", "unknown").upper()
-            return (
-                f"content regarding '{content}...'"
-                if len(content) > 0
-                else f"content on {platform}"
-            )
+            return f"content regarding '{content}...'" if len(content) > 0 else f"content on {platform}"
 
         elif event.event_type == "content_published":
             content = payload.get("content", "")[:60]
@@ -223,10 +219,7 @@ class Scribe:
                     # Insert before next marker with blank line separator
                     lines.insert(next_marker_idx, entry)
                     # Add blank line after entry if next marker doesn't have one
-                    if (
-                        next_marker_idx + 1 < len(lines)
-                        and lines[next_marker_idx + 1].strip()
-                    ):
+                    if next_marker_idx + 1 < len(lines) and lines[next_marker_idx + 1].strip():
                         lines.insert(next_marker_idx + 1, "")
 
                 updated_content = "\n".join(lines)
@@ -270,13 +263,9 @@ Autonomous activity log:
             logbook_section = "\n## Logbook\n\nAutonomous activity log:\n"
 
             if future_marker in content:
-                updated_content = content.replace(
-                    f"\n{future_marker}", f"\n{logbook_section}\n{future_marker}"
-                )
+                updated_content = content.replace(f"\n{future_marker}", f"\n{logbook_section}\n{future_marker}")
             else:
                 closing_marker = "\n---\n\n*The Chronicles are"
-                updated_content = content.replace(
-                    closing_marker, f"\n{logbook_section}{closing_marker}"
-                )
+                updated_content = content.replace(closing_marker, f"\n{logbook_section}{closing_marker}")
 
             self.chronicle_path.write_text(updated_content, encoding="utf-8")

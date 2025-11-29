@@ -12,9 +12,9 @@ Tests:
 3. Verify DB is functional (can create accounts, transfer credits)
 """
 
-import sys
-import os
 import logging
+import os
+import sys
 from pathlib import Path
 
 # Ensure we can import vibe_core
@@ -98,8 +98,8 @@ def test_agent_bank_isolation():
     logger.info("TEST: Agent Sandbox Path Helper")
     logger.info("=" * 70)
 
-    from vibe_core.protocols import VibeAgent
     from steward.oath_mixin import OathMixin
+    from vibe_core.protocols import VibeAgent
 
     class TestAgent(VibeAgent, OathMixin):
         def __init__(self, config=None):

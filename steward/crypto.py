@@ -4,12 +4,13 @@ Real ECDSA (Elliptic Curve Digital Signature Algorithm) implementation for ident
 Using pure Python ECDSA library for maximum compatibility
 """
 
-import os
 import base64
 import hashlib
+import os
 from pathlib import Path
-from ecdsa import SigningKey, VerifyingKey, NIST256p
-from ecdsa.util import sigencode_string, sigdecode_string
+
+from ecdsa import NIST256p, SigningKey, VerifyingKey
+from ecdsa.util import sigdecode_string, sigencode_string
 
 # Key storage location
 KEYS_DIR = Path(".steward/keys")
@@ -106,9 +107,7 @@ def sign_content(content: str) -> str:
 
     # Sign the content using SHA256 hash
     content_bytes = content.encode("utf-8")
-    signature_bytes = private_key.sign(
-        content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string
-    )
+    signature_bytes = private_key.sign(content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string)
 
     # Encode as base64
     signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")

@@ -7,9 +7,9 @@ Runs automatically in CI/CD and can be triggered manually.
 """
 
 import os
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 
 
 def check_hooks_installed(repo_root: Path) -> dict:
@@ -44,9 +44,7 @@ def check_hooks_installed(repo_root: Path) -> dict:
         else:
             # Compare content
             if source_hook.exists():
-                status["pre-commit"]["valid"] = (
-                    installed_hook.read_text() == source_hook.read_text()
-                )
+                status["pre-commit"]["valid"] = installed_hook.read_text() == source_hook.read_text()
 
     return status
 

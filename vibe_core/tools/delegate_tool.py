@@ -88,9 +88,7 @@ class DelegateTool(Tool):
         after kernel boot via set_kernel(kernel).
         """
         self.kernel: VibeKernel | None = None
-        logger.info(
-            "DelegateTool: Initialized (kernel will be injected via set_kernel)"
-        )
+        logger.info("DelegateTool: Initialized (kernel will be injected via set_kernel)")
 
     def set_kernel(self, kernel: "VibeKernel") -> None:
         """
@@ -208,16 +206,12 @@ class DelegateTool(Tool):
         # Validate mission_id type
         mission_id = payload["mission_id"]
         if not isinstance(mission_id, int):
-            raise TypeError(
-                f"payload.mission_id must be an integer, got {type(mission_id).__name__}"
-            )
+            raise TypeError(f"payload.mission_id must be an integer, got {type(mission_id).__name__}")
 
         # Security: Verify agent exists in kernel registry
         if agent_id not in self.kernel.agent_registry:
             available_agents = list(self.kernel.agent_registry.keys())
-            raise ValueError(
-                f"Unknown agent_id: {agent_id}. Available agents: {', '.join(available_agents)}"
-            )
+            raise ValueError(f"Unknown agent_id: {agent_id}. Available agents: {', '.join(available_agents)}")
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """

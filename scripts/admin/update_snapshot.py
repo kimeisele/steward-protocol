@@ -8,8 +8,8 @@ Updates vibe_snapshot.json with current ledger top hash and chain integrity stat
 
 import json
 import sqlite3
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 def get_ledger_stats(db_path: str = "data/vibe_ledger.db") -> dict:
@@ -33,9 +33,7 @@ def get_ledger_stats(db_path: str = "data/vibe_ledger.db") -> dict:
         count = cursor.fetchone()["cnt"]
 
         # Get top hash
-        cursor.execute(
-            "SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1"
-        )
+        cursor.execute("SELECT current_hash FROM ledger_events ORDER BY id DESC LIMIT 1")
         row = cursor.fetchone()
         top_hash = row["current_hash"] if row else "0" * 64
 

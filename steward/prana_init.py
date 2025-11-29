@@ -16,8 +16,8 @@ The Vedic becomes the algorithmic. The sacred becomes the system.
 
 import logging
 import sys
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 logger = logging.getLogger("PRANA_INIT")
 
@@ -142,9 +142,9 @@ class PranaInitializer:
         logger.info("   🌿 Initializing Varna taxonomy...")
 
         try:
-            from steward.varna import Varna
-            from steward.ashrama import Ashrama
             from steward.agent_metadata import get_metadata_registry
+            from steward.ashrama import Ashrama
+            from steward.varna import Varna
 
             registry = get_metadata_registry()
 
@@ -165,9 +165,7 @@ class PranaInitializer:
             # All agents should be in GRIHASTHA (active) for Day 1
             for agent_id in registry.get_all_agents():
                 ashrama = registry.get_agent_ashrama(agent_id)
-                logger.info(
-                    f"      {agent_id.upper()}: {ashrama.value if ashrama else 'UNKNOWN'}"
-                )
+                logger.info(f"      {agent_id.upper()}: {ashrama.value if ashrama else 'UNKNOWN'}")
 
             logger.info("   ✅ Vedic system initialized")
             return True
@@ -187,9 +185,7 @@ class PranaInitializer:
                 self.kernel.daily_ritual = DailyRitual(self.kernel)
                 logger.info("   ✅ Daily Ritual attached to kernel")
             else:
-                logger.warning(
-                    "   ⚠️  Kernel not available, Daily Ritual in dry-run mode"
-                )
+                logger.warning("   ⚠️  Kernel not available, Daily Ritual in dry-run mode")
 
             logger.info("   ✅ Daily Ritual activated")
             return True

@@ -18,7 +18,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("ORACLE_INTROSPECTION")
 
@@ -227,9 +227,7 @@ class IntrospectionTool:
 
     # ==================== AUDIT TRAIL ====================
 
-    def audit_trail(
-        self, limit: int = 20, agent_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def audit_trail(self, limit: int = 20, agent_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get audit trail of recent transactions.
 
