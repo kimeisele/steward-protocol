@@ -143,11 +143,14 @@ class Discoverer(VibeAgent):
                     logger.debug(f"   ⏭️  {agent_id} already registered")
                     continue
 
-                # Load and register the agent
+                # Load and register the agent (defer process spawning to avoid deadlock)
                 try:
                     agent = self._load_agent_from_manifest(manifest_path, agent_id)
                     if agent:
-                        self.kernel.register_agent(agent)
+                        # spawn_process=False: Avoid spawning 13+ processes in tight loop
+                        # which causes import lock deadlock. Processes are spawned later
+                        # via kernel.spawn_deferred_agents() after discovery completes.
+                        self.kernel.register_agent(agent, spawn_process=False)
                         new_agents_count += 1
                         logger.info(f"   ✅ Registered new agent: {agent_id}")
                 except Exception as e:
