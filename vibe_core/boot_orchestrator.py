@@ -67,6 +67,7 @@ class BootOrchestrator:
 
         Steps:
         1. Create kernel instance
+        1.5. Load Unified Knowledge Graph
         2. Register Discoverer (Genesis Agent)
         3. Discover all agents via steward.json scan
         4. Boot kernel (initialize manifests, ledger, scheduler)
@@ -82,12 +83,25 @@ class BootOrchestrator:
         logger.info("=" * 70)
 
         # Step 1: Create Kernel
-        logger.info("\n[1/4] Creating RealVibeKernel...")
+        logger.info("\n[1/5] Creating RealVibeKernel...")
         self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
         logger.info(f"      ✅ Kernel created (ledger: {self.ledger_path})")
 
+        # Step 1.5: Load Knowledge Graph
+        logger.info("\n[1.5/5] Loading Unified Knowledge Graph...")
+        try:
+            from vibe_core.knowledge.graph import get_knowledge_graph
+
+            graph = get_knowledge_graph()
+            logger.info(f"      ✅ Knowledge loaded: {len(graph.nodes)} nodes, "
+                       f"{sum(len(e) for e in graph.edges.values())} edges, "
+                       f"{len(graph.constraints)} constraints")
+        except Exception as e:
+            logger.warning(f"      ⚠️  Knowledge loading failed: {e}")
+            logger.warning("      → Continuing boot without knowledge graph")
+
         # Step 2: Register Discoverer (Genesis Agent)
-        logger.info("\n[2/4] Registering Discoverer (Genesis Agent)...")
+        logger.info("\n[2/5] Registering Discoverer (Genesis Agent)...")
         self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
 
         try:
@@ -98,7 +112,7 @@ class BootOrchestrator:
             raise RuntimeError(f"Boot failed: Could not register Discoverer - {e}")
 
         # Step 3: Discover all agents
-        logger.info("\n[3/4] Discovering agents via steward.json scan...")
+        logger.info("\n[3/5] Discovering agents via steward.json scan...")
         logger.info("      Scanning: steward/system_agents/ + agent_city/registry/")
 
         try:
@@ -114,7 +128,7 @@ class BootOrchestrator:
             raise RuntimeError(f"Boot failed: Agent discovery error - {e}")
 
         # Step 4: Boot kernel
-        logger.info("\n[4/4] Booting kernel (manifests, ledger, scheduler)...")
+        logger.info("\n[4/5] Booting kernel (manifests, ledger, scheduler)...")
 
         try:
             self.kernel.boot()
