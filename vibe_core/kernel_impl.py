@@ -43,6 +43,7 @@ from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
+from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
@@ -244,7 +245,8 @@ class RealVibeKernel(VibeKernel):
         # Tools are registered here and accessed via AgentSystemInterface
         self.tool_registry = ToolRegistry(invariant_checker=self._auditor if AUDITOR_AVAILABLE else None)
         self._register_core_tools()
-        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} core tools)")
+        self._discover_agent_tools()
+        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} tools total)")
 
     def get_bank(self) -> "CivicBank":
         """
@@ -318,6 +320,71 @@ class RealVibeKernel(VibeKernel):
             f"🔧 Registered {len(self.tool_registry)} core tools: "
             f"{', '.join(self.tool_registry.list_tools())}"
         )
+
+    def _discover_agent_tools(self) -> None:
+        """
+        Auto-discover and register agent tools.
+
+        Phase 6: Automatic tool discovery from agent directories.
+
+        Scans:
+        - steward/system_agents/{agent_id}/tools/*.py
+        - agent_city/registry/{agent_id}/tools/*.py
+
+        For each .py file:
+        1. Dynamically import module
+        2. Find classes implementing Tool protocol
+        3. Register tools with namespace (agent_id.tool_name)
+
+        Error Handling:
+        - Import errors are logged but don't crash kernel
+        - Invalid tools are skipped
+        - Discovery continues even if some tools fail
+
+        This allows developers to simply drop a .py file in {agent}/tools/
+        and have it automatically available system-wide.
+        """
+        logger.info("🔍 Starting auto-discovery of agent tools...")
+
+        # Initialize discovery scanner
+        discovery = ToolDiscovery(root_path=Path("."))
+
+        # Discover all tools
+        discovered_tools = discovery.discover_all_tools()
+
+        # Register discovered tools
+        registered_count = 0
+        failed_count = 0
+
+        for tool in discovered_tools:
+            try:
+                self.tool_registry.register(tool)
+                registered_count += 1
+                logger.info(f"   ✅ Registered: {tool.name}")
+
+            except ValueError as e:
+                # Tool already registered (e.g., name collision)
+                logger.warning(f"   ⚠️  Skipped {tool.name}: {e}")
+                failed_count += 1
+
+            except Exception as e:
+                # Unexpected error during registration
+                logger.error(f"   ❌ Failed to register {tool.name}: {e}")
+                failed_count += 1
+
+        # Get discovery stats
+        stats = discovery.get_discovery_stats()
+
+        logger.info(
+            f"🔧 Auto-discovery complete: "
+            f"{registered_count} tools registered, "
+            f"{failed_count} failed"
+        )
+
+        if stats["discovered_by_agent"]:
+            logger.info("📊 Tools by agent:")
+            for agent_id, tool_names in stats["discovered_by_agent"].items():
+                logger.info(f"   {agent_id}: {', '.join(tool_names)}")
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
