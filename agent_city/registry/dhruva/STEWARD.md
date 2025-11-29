@@ -1,12 +1,12 @@
-# 🤖 HERALD Agent Identity
+# 🤖 DHRUVA Agent Identity
 
 ## Agent Identity
 
-- **Agent ID:** herald
-- **Name:** HERALD
+- **Agent ID:** dhruva
+- **Name:** DHRUVA
 - **Version:** 1.0.0
-- **Class:** system_service
-- **Specialization:** MEDIA
+- **Class:** citizen_service
+- **Specialization:** DATA_ETHICS
 - **Status:** ✅ ACTIVE
 
 **Protocol Compliance:** Level 2
@@ -15,16 +15,14 @@
 
 ## 🎯 What I Do
 
-Content generation and broadcasting agent
+Data ethics and truth verification
 
 ---
 
 ## ✅ Core Capabilities
 
-- `content_generation` - content_generation operation
-- `broadcasting` - broadcasting operation
-- `research` - research operation
-- `strategy` - strategy operation
+- `data_ethics` - Ethical review
+- `truth_verification` - Fact checking
 
 ---
 
@@ -36,26 +34,26 @@ This agent is part of the STEWARD Protocol Agent OS. To interact with it:
 
 ```bash
 # Verify agent identity
-steward verify herald
+steward verify dhruva
 
 # Discover this agent
 steward discover
 
 # Delegate task to this agent
-steward delegate herald "your task description"
+steward delegate dhruva "your task description"
 ```
 
 ### Protocol-based Usage
 
 ```bash
 # Verify identity
-steward verify herald
+steward verify dhruva
 
 # Check agent status
-steward ps | grep herald
+steward ps | grep dhruva
 
 # View agent in Parampara blockchain
-steward lineage | grep HERALD
+steward lineage | grep DHRUVA
 ```
 
 ---
@@ -66,7 +64,7 @@ steward lineage | grep HERALD
 
 ```bash
 # Verify agent signature
-steward verify herald
+steward verify dhruva
 
 # Expected output:
 # ✅ Identity verified

@@ -33,16 +33,19 @@ Usage:
     steward stop
 """
 
-import sys
-import os
 import argparse
-import sqlite3
-import json
 import hashlib
+import json
+import os
+import signal
+import sqlite3
+import subprocess
+import sys
 import time
-from pathlib import Path
-from typing import Optional, List, Dict, Any
+import uuid
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -95,11 +98,9 @@ class StewardCLI:
             pulse_age = self._get_pulse_age()
             print(f"   Pulse:      ✅ ACTIVE (last update {pulse_age:.1f}s ago)")
         else:
-            print(f"   Pulse:      ❌ LOST (dashboard stale)")
+            print("   Pulse:      ❌ LOST (dashboard stale)")
 
-        print(
-            f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)"
-        )
+        print(f"   Parampara:  {'✅ VERIFIED' if chain_verified else '⚠️  NOT VERIFIED'} ({chain_blocks} blocks)")
         print(f"   Agents:     {certified_agents} certified")
         print()
 
@@ -294,14 +295,10 @@ class StewardCLI:
             if manifest_hash == recorded_hash:
                 print()
                 print("✅ PASSPORT VERIFIED")
-                print(f"   Manifest signature valid")
+                print("   Manifest signature valid")
                 print(f"   Anchored in Block #{block_idx}")
-                print(
-                    f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}..."
-                )
-                print(
-                    f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}"
-                )
+                print(f"   Constitution hash: {manifest.get('governance', {}).get('constitution_hash', 'N/A')[:16]}...")
+                print(f"   Compliance level: {manifest.get('governance', {}).get('compliance_level', 'N/A')}")
                 return 0
             else:
                 print()
@@ -379,17 +376,11 @@ class StewardCLI:
                 if event_type == "GENESIS":
                     data_json = json.loads(data)
                     anchors = data_json.get("anchors", {})
-                    print(
-                        f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}..."
-                    )
-                    print(
-                        f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          GAD-000:  {anchors.get('philosophy_hash', 'N/A')[:16]}...")
+                    print(f"          Constitution: {anchors.get('constitution_hash', 'N/A')[:16]}...")
                 elif event_type == "PASSPORT_ISSUED":
                     data_json = json.loads(data)
-                    print(
-                        f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}..."
-                    )
+                    print(f"          Manifest: {data_json.get('manifest_hash', 'N/A')[:16]}...")
                     print(f"          Version:  {data_json.get('version', 'N/A')}")
 
                 print()
@@ -465,9 +456,7 @@ class StewardCLI:
                             elif "CRASHED" in status_part:
                                 status = "CRASHED"
 
-                            agents.append(
-                                {"name": agent_name, "status": status, "pid": pid}
-                            )
+                            agents.append({"name": agent_name, "status": status, "pid": pid})
 
             if len(agents) == 0:
                 print("⚠️  No agents found in OPERATIONS.md")
@@ -478,9 +467,7 @@ class StewardCLI:
             print("-" * 70)
             for agent in agents:
                 status_icon = "✅" if agent["status"] == "RUNNING" else "❌"
-                print(
-                    f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}"
-                )
+                print(f"{agent['name']:<20} {status_icon} {agent['status']:<10} {agent['pid']:<10}")
 
             print()
             print(f"Total agents: {len(agents)}")
@@ -498,8 +485,7 @@ class StewardCLI:
         """
         Start the kernel daemon.
 
-        TODO: Implement daemon mode for kernel.
-        Currently just provides instructions.
+        Spawns kernel in background process, writes PID file, redirects logs.
         """
         print("🚀 KERNEL BOOT")
         print("=" * 70)
@@ -511,16 +497,51 @@ class StewardCLI:
             print(f"   Pulse age: {self._get_pulse_age():.1f}s")
             return 1
 
-        print("⚠️  Daemon mode not yet implemented")
-        print()
-        print("To start the kernel manually, run:")
-        print("  python scripts/stress_test_city.py")
-        print()
-        print("TODO (Phase 7.1): Implement proper daemon mode")
-        print("  - Background process with PID file")
-        print("  - Log redirection to /tmp/vibe_os/logs/kernel.log")
-        print("  - Signal handling for graceful shutdown")
-        return 1
+        # Ensure log directory exists
+        log_dir = Path("/tmp/vibe_os/logs")
+        log_dir.mkdir(parents=True, exist_ok=True)
+
+        kernel_log = log_dir / "kernel.log"
+        kernel_pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        kernel_pidfile.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            # Start kernel in background
+            with open(kernel_log, "w") as log_file:
+                kernel_process = subprocess.Popen(
+                    [
+                        sys.executable,
+                        str(PROJECT_ROOT / "scripts" / "stress_test_city.py"),
+                    ],
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,  # Daemonize
+                )
+
+            # Write PID file
+            with open(kernel_pidfile, "w") as f:
+                f.write(str(kernel_process.pid))
+
+            # Give kernel time to boot
+            time.sleep(1)
+
+            # Verify kernel is running
+            try:
+                os.kill(kernel_process.pid, 0)  # Signal 0 = check if process exists
+                print(f"✅ Kernel started (PID: {kernel_process.pid})")
+                print(f"   Logs: {kernel_log}")
+                print()
+                print("To monitor logs:")
+                print(f"  tail -f {kernel_log}")
+                return 0
+            except ProcessLookupError:
+                print("❌ Kernel process exited unexpectedly")
+                print(f"   Check logs: {kernel_log}")
+                return 1
+
+        except Exception as e:
+            print(f"❌ Failed to start kernel: {e}")
+            return 1
 
     # =========================================================================
     # COMMAND: steward stop
@@ -530,8 +551,8 @@ class StewardCLI:
         """
         Graceful kernel shutdown.
 
-        TODO: Implement signal-based shutdown.
-        Currently just provides instructions.
+        Sends SIGTERM to kernel process, waits for graceful shutdown.
+        Falls back to SIGKILL if timeout.
         """
         print("🛑 KERNEL SHUTDOWN")
         print("=" * 70)
@@ -542,17 +563,57 @@ class StewardCLI:
             print("⚠️  Kernel is not running (pulse lost)")
             return 1
 
-        print("⚠️  Signal-based shutdown not yet implemented")
-        print()
-        print("To stop the kernel manually:")
-        print("  1. Find kernel process: ps aux | grep stress_test_city")
-        print("  2. Send SIGTERM: kill -TERM <PID>")
-        print()
-        print("TODO (Phase 7.1): Implement signal-based shutdown")
-        print("  - Send SIGTERM to kernel PID")
-        print("  - Wait for graceful shutdown (max 30s)")
-        print("  - Send SIGKILL if timeout")
-        return 1
+        # Get PID from file
+        pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        if not pidfile.exists():
+            print("⚠️  PID file not found")
+            print("   Try: kill -TERM <pid> manually")
+            return 1
+
+        try:
+            with open(pidfile, "r") as f:
+                pid = int(f.read().strip())
+
+            print(f"Shutting down kernel (PID: {pid})...")
+            print()
+
+            # Send SIGTERM (graceful shutdown)
+            os.kill(pid, signal.SIGTERM)
+
+            # Wait for graceful shutdown (max 30s)
+            for i in range(30):
+                time.sleep(1)
+                try:
+                    os.kill(pid, 0)  # Check if still alive
+                except ProcessLookupError:
+                    print("✅ Kernel shut down gracefully")
+                    pidfile.unlink()
+                    return 0
+
+            # Timeout - force kill
+            print("⚠️  Graceful shutdown timeout, sending SIGKILL...")
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(1)
+
+            try:
+                os.kill(pid, 0)
+                print("❌ SIGKILL failed")
+                return 1
+            except ProcessLookupError:
+                print("✅ Kernel force-killed")
+                pidfile.unlink()
+                return 0
+
+        except (ValueError, FileNotFoundError) as e:
+            print(f"❌ Error reading PID file: {e}")
+            return 1
+        except ProcessLookupError:
+            print("✅ Kernel already dead")
+            pidfile.unlink()
+            return 0
+        except Exception as e:
+            print(f"❌ Error stopping kernel: {e}")
+            return 1
 
     # =========================================================================
     # COMMAND: steward init
@@ -567,7 +628,7 @@ class StewardCLI:
         print(f"📝 Initializing agent: {agent_id}")
         print()
 
-        manifest_path = Path(f"steward.json")
+        manifest_path = Path("steward.json")
         if manifest_path.exists():
             print(f"❌ Manifest already exists: {manifest_path}")
             return 1
@@ -724,25 +785,97 @@ class StewardCLI:
     # COMMAND: steward delegate
     # =========================================================================
 
+    def cmd_logs(self, tail: int = 50) -> int:
+        """
+        View kernel logs (last N lines by default).
+
+        Args:
+            tail: Number of lines to show from end of log file (default: 50)
+        """
+        print("📋 KERNEL LOGS")
+        print("=" * 70)
+        print()
+
+        kernel_log = Path("/tmp/vibe_os/logs/kernel.log")
+        if not kernel_log.exists():
+            print("❌ Kernel log not found")
+            print(f"   Expected: {kernel_log}")
+            print()
+            print("Kernel may not be running. Try: steward boot")
+            return 1
+
+        try:
+            with open(kernel_log, "r") as f:
+                lines = f.readlines()
+
+            # Show last N lines
+            start_idx = max(0, len(lines) - tail)
+            shown_lines = lines[start_idx:]
+
+            if start_idx > 0:
+                print(f"(showing last {tail} of {len(lines)} lines)\n")
+
+            for line in shown_lines:
+                print(line, end="")
+
+            return 0
+
+        except Exception as e:
+            print(f"❌ Error reading logs: {e}")
+            return 1
+
+    # =========================================================================
+    # COMMAND: steward delegate
+    # =========================================================================
+
     def cmd_delegate(self, agent_id: str, task_description: str) -> int:
         """
         Submit a task to an agent via the kernel.
 
-        TODO: Implement kernel task submission interface.
+        Creates a task file in /tmp/vibe_os/tasks/ that the kernel can discover
+        and execute. Task is assigned a unique ID for tracking.
         """
-        print(f"📤 TASK DELEGATION")
+        print("📤 TASK DELEGATION")
         print("=" * 70)
         print()
-        print(f"Agent:       {agent_id}")
-        print(f"Task:        {task_description}")
-        print()
-        print("⚠️  Task delegation not yet implemented")
-        print()
-        print("TODO (Phase 7.2): Implement task submission")
-        print("  - Kernel task queue interface")
-        print("  - Task ID generation and tracking")
-        print("  - Result polling mechanism")
-        return 1
+
+        # Ensure task queue directory exists
+        task_dir = Path("/tmp/vibe_os/tasks")
+        task_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate unique task ID
+        task_id = str(uuid.uuid4())
+
+        # Create task manifest
+        task_manifest = {
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "description": task_description,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "status": "PENDING",
+        }
+
+        # Write task file
+        task_file = task_dir / f"{task_id}.json"
+
+        try:
+            with open(task_file, "w") as f:
+                json.dump(task_manifest, f, indent=2)
+
+            print(f"Agent:       {agent_id}")
+            print(f"Task:        {task_description}")
+            print()
+            print("✅ Task submitted successfully")
+            print(f"   Task ID: {task_id}")
+            print(f"   Queue:   {task_file}")
+            print()
+            print("Kernel will discover and execute this task when running.")
+            print(f"To check status: steward status | grep {task_id}")
+            return 0
+
+        except Exception as e:
+            print(f"❌ Failed to submit task: {e}")
+            return 1
 
 
 def main():
@@ -774,6 +907,10 @@ def main():
 
     # steward stop
     subparsers.add_parser("stop", help="Graceful kernel shutdown")
+
+    # steward logs [--tail N]
+    logs_parser = subparsers.add_parser("logs", help="View kernel logs")
+    logs_parser.add_argument("--tail", type=int, default=50, help="Show last N lines (default: 50)")
 
     # steward init <agent_id>
     init_parser = subparsers.add_parser("init", help="Initialize new agent manifest")
@@ -808,6 +945,8 @@ def main():
         return cli.cmd_boot()
     elif args.command == "stop":
         return cli.cmd_stop()
+    elif args.command == "logs":
+        return cli.cmd_logs(tail=args.tail)
     elif args.command == "init":
         return cli.cmd_init(args.agent_id)
     elif args.command == "discover":
