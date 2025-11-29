@@ -85,21 +85,9 @@ def generate_steward_md(agent_data: dict, agent_path: Path) -> str:
     status = agent.get("status", "active")
     mandate = credentials.get("mandate", "Custom agent operations")
 
-    # Get specialization-based info
-    spec_info = SPECIALIZATION_MAP.get(
-        specialization,
-        {
-            "description": mandate,
-            "capabilities": [op.get("name") for op in capabilities.get("operations", [])],
-        },
-    )
-
     # Extract operations from manifest
     operations = capabilities.get("operations", [])
-    op_descriptions = [
-        f"- `{op.get('name')}` - {op.get('description', 'Operation')}"
-        for op in operations
-    ]
+    op_descriptions = [f"- `{op.get('name')}` - {op.get('description', 'Operation')}" for op in operations]
 
     # Status icon
     status_icon = "✅" if status == "active" else "🟡"
@@ -283,9 +271,7 @@ def main():
                 print(f"✅ Generated: steward/system_agents/{agent_dir.name}/STEWARD.md")
                 generated += 1
             except Exception as e:
-                print(
-                    f"❌ Error generating {agent_dir.name}: {e}"
-                )
+                print(f"❌ Error generating {agent_dir.name}: {e}")
 
     # Citizen agents
     if CITIZEN_AGENTS_DIR.exists():
@@ -316,9 +302,7 @@ def main():
                 print(f"✅ Generated: agent_city/registry/{agent_dir.name}/STEWARD.md")
                 generated += 1
             except Exception as e:
-                print(
-                    f"❌ Error generating {agent_dir.name}: {e}"
-                )
+                print(f"❌ Error generating {agent_dir.name}: {e}")
 
     print()
     print(f"📊 Summary: Generated {generated}, Skipped {skipped}")
