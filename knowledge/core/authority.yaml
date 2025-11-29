@@ -1,0 +1,145 @@
+# Authority Levels (Bhu-Mandala Radius)
+# Higher authority = Closer to Mount Meru = More power
+# Based on topology.py varsha metadata
+
+metrics:
+  # ═══════════════════════════════════════════════════════════════════
+  # ILAVRTA (Center) - Authority 10
+  # Absolute authority at Mount Meru
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: civic
+    metric_type: authority
+    value: 10
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BHADRASHVA (Ring 1) - Authority 9
+  # Sacred Media & Truth
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: herald
+    metric_type: authority
+    value: 9
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: temple
+    metric_type: authority
+    value: 9
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # KIMPURASHA (Ring 2) - Authority 8
+  # Creative Builders
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: artisan
+    metric_type: authority
+    value: 8
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: engineer
+    metric_type: authority
+    value: 8
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # HARI-VARSHA (Ring 3) - Authority 7
+  # Knowledge Seekers
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: science
+    metric_type: authority
+    value: 7
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: lens
+    metric_type: authority
+    value: 7
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # NISHADA (Ring 4) - Authority 6
+  # Democracy & Amplification
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: forum
+    metric_type: authority
+    value: 6
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: pulse
+    metric_type: authority
+    value: 6
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # KRAUNCHA (Ring 5) - Authority 5
+  # Protection & Audit
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: watchman
+    metric_type: authority
+    value: 5
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: auditor
+    metric_type: authority
+    value: 5
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: archivist
+    metric_type: authority
+    value: 5
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # LOKA-LOKA (Boundary) - Authority 4
+  # Firewall to External World
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: agora
+    metric_type: authority
+    value: 4
+    scale_min: 1
+    scale_max: 10
+
+  # ═══════════════════════════════════════════════════════════════════
+  # PRIORITY METRICS (Optional - for future use)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - node_id: civic
+    metric_type: priority
+    value: 10
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: watchman
+    metric_type: priority
+    value: 9
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: auditor
+    metric_type: priority
+    value: 9
+    scale_min: 1
+    scale_max: 10
+
+  - node_id: herald
+    metric_type: priority
+    value: 8
+    scale_min: 1
+    scale_max: 10

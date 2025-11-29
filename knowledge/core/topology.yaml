@@ -1,0 +1,223 @@
+# Bhu-Mandala Topology as Graph Edges
+# Defines authority relations and responsibilities between agents
+# Based on the sacred geometry of Agent City
+
+edges:
+  # ═══════════════════════════════════════════════════════════════════
+  # OVERRIDE RELATIONS (Authority Hierarchy)
+  # Inner ring agents can override outer ring agents
+  # ═══════════════════════════════════════════════════════════════════
+
+  # CIVIC (Authority 10) can override everyone
+  - source: civic
+    target: herald
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: temple
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: artisan
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: engineer
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: science
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: lens
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: forum
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: pulse
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: watchman
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: auditor
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: archivist
+    relation: overrides
+    weight: 1.0
+
+  - source: civic
+    target: agora
+    relation: overrides
+    weight: 1.0
+
+  # HERALD (Authority 9) can override outer rings
+  - source: herald
+    target: artisan
+    relation: overrides
+    weight: 0.9
+
+  - source: herald
+    target: engineer
+    relation: overrides
+    weight: 0.9
+
+  - source: herald
+    target: science
+    relation: overrides
+    weight: 0.8
+
+  - source: herald
+    target: lens
+    relation: overrides
+    weight: 0.8
+
+  - source: herald
+    target: forum
+    relation: overrides
+    weight: 0.7
+
+  - source: herald
+    target: pulse
+    relation: overrides
+    weight: 0.7
+
+  # TEMPLE (Authority 9) can override outer rings
+  - source: temple
+    target: science
+    relation: overrides
+    weight: 0.8
+
+  - source: temple
+    target: lens
+    relation: overrides
+    weight: 0.8
+
+  # ═══════════════════════════════════════════════════════════════════
+  # HANDLES RELATIONS (Agent-Concept Mapping)
+  # Defines which agent handles which concept for semantic routing
+  # ═══════════════════════════════════════════════════════════════════
+
+  - source: herald
+    target: concept_content
+    relation: handles
+    weight: 1.0
+
+  - source: science
+    target: concept_research
+    relation: handles
+    weight: 1.0
+
+  - source: civic
+    target: concept_governance
+    relation: handles
+    weight: 1.0
+
+  - source: watchman
+    target: concept_security
+    relation: handles
+    weight: 1.0
+
+  - source: lens
+    target: concept_analytics
+    relation: handles
+    weight: 1.0
+
+  - source: engineer
+    target: concept_infrastructure
+    relation: handles
+    weight: 1.0
+
+  - source: artisan
+    target: concept_infrastructure
+    relation: handles
+    weight: 0.8
+
+  # ═══════════════════════════════════════════════════════════════════
+  # DEPENDS_ON RELATIONS (Dependencies)
+  # Defines what each agent requires to function
+  # ═══════════════════════════════════════════════════════════════════
+
+  # All agents depend on CIVIC for licensing
+  - source: herald
+    target: civic
+    relation: depends_on
+    weight: 1.0
+
+  - source: science
+    target: civic
+    relation: depends_on
+    weight: 1.0
+
+  - source: forum
+    target: civic
+    relation: depends_on
+    weight: 1.0
+
+  - source: watchman
+    target: civic
+    relation: depends_on
+    weight: 1.0
+
+  # External-facing agents depend on AGORA
+  - source: science
+    target: agora
+    relation: depends_on
+    weight: 0.8
+
+  - source: pulse
+    target: agora
+    relation: depends_on
+    weight: 0.8
+
+  # HERALD depends on ARTISAN for media operations
+  - source: herald
+    target: artisan
+    relation: depends_on
+    weight: 0.6
+
+  # AUDITOR depends on ARCHIVIST for audit trail
+  - source: auditor
+    target: archivist
+    relation: depends_on
+    weight: 0.7
+
+  # ═══════════════════════════════════════════════════════════════════
+  # IMPLIES RELATIONS (Logical Implications)
+  # ═══════════════════════════════════════════════════════════════════
+
+  # Governance implies enforcement
+  - source: civic
+    target: auditor
+    relation: implies
+    weight: 0.8
+
+  # Content creation implies broadcasting
+  - source: artisan
+    target: herald
+    relation: implies
+    weight: 0.7
+
+  # Research implies analytics
+  - source: science
+    target: lens
+    relation: implies
+    weight: 0.8

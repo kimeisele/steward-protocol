@@ -1,0 +1,215 @@
+# Steward Protocol Agent Ontology
+# Maps all agents as nodes in the knowledge graph
+# Based on Bhu-Mandala topology from topology.py
+
+nodes:
+  # ═══════════════════════════════════════════════════════════════════
+  # ILAVRTA (Mount Meru - Center) - Authority 10
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: civic
+    type: agent
+    name: CIVIC
+    domain: governance
+    description: "Central authority, licensing, registry. Mount Meru."
+    properties:
+      varsha: ilavrta
+      radius: 0
+      angle: 0
+      critical: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # BHADRASHVA (Eastern Ring - Sacred Media) - Authority 9
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: herald
+    type: agent
+    name: HERALD
+    domain: media
+    description: "Content generation, broadcasting. Sacred voice."
+    properties:
+      varsha: bhadrashva
+      radius: 1
+      angle: 0
+      critical: true
+
+  - id: temple
+    type: agent
+    name: TEMPLE
+    domain: infrastructure
+    description: "Spiritual authority, purification."
+    properties:
+      varsha: bhadrashva
+      radius: 1
+      angle: 90
+      critical: false
+
+  # ═══════════════════════════════════════════════════════════════════
+  # KIMPURASHA (Southeast Ring - Creative Builders) - Authority 8
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: artisan
+    type: agent
+    name: ARTISAN
+    domain: infrastructure
+    description: "Media operations, creation."
+    properties:
+      varsha: kimpurasha
+      radius: 2
+      angle: 45
+      critical: false
+
+  - id: engineer
+    type: agent
+    name: ENGINEER
+    domain: infrastructure
+    description: "Meta-building, system improvement."
+    properties:
+      varsha: kimpurasha
+      radius: 2
+      angle: 135
+      critical: false
+
+  # ═══════════════════════════════════════════════════════════════════
+  # HARI-VARSHA (South Ring - Knowledge) - Authority 7
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: science
+    type: agent
+    name: SCIENCE
+    domain: science
+    description: "Research, external knowledge. Fact verification."
+    properties:
+      varsha: hari_varsha
+      radius: 3
+      angle: 180
+      critical: false
+
+  - id: lens
+    type: agent
+    name: LENS
+    domain: science
+    description: "Analytics, data visualization, observation."
+    properties:
+      varsha: hari_varsha
+      radius: 3
+      angle: 270
+      critical: false
+
+  # ═══════════════════════════════════════════════════════════════════
+  # NISHADA (Southwest Ring - Democracy & Voice) - Authority 6
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: forum
+    type: agent
+    name: FORUM
+    domain: governance
+    description: "Proposals, voting, execution."
+    properties:
+      varsha: nishada
+      radius: 4
+      angle: 225
+      critical: false
+
+  - id: pulse
+    type: agent
+    name: PULSE
+    domain: media
+    description: "Social amplification, trends."
+    properties:
+      varsha: nishada
+      radius: 4
+      angle: 315
+      critical: false
+
+  # ═══════════════════════════════════════════════════════════════════
+  # KRAUNCHA (Outer Ring - Protection & Judgment) - Authority 5
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: watchman
+    type: agent
+    name: WATCHMAN
+    domain: enforcement
+    description: "Firewall, violation detection."
+    properties:
+      varsha: krauncha
+      radius: 5
+      angle: 0
+      critical: true
+
+  - id: auditor
+    type: agent
+    name: AUDITOR
+    domain: enforcement
+    description: "GAD-000 compliance, invariant checking."
+    properties:
+      varsha: krauncha
+      radius: 5
+      angle: 120
+      critical: true
+
+  - id: archivist
+    type: agent
+    name: ARCHIVIST
+    domain: infrastructure
+    description: "Audit trail, event verification."
+    properties:
+      varsha: krauncha
+      radius: 5
+      angle: 240
+      critical: false
+
+  # ═══════════════════════════════════════════════════════════════════
+  # LOKA-LOKA (Boundary - Firewall/AGORA) - Authority 4
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: agora
+    type: agent
+    name: AGORA
+    domain: infrastructure
+    description: "Broadcast channel, API gateway. Firewall to external world."
+    properties:
+      varsha: loka_loka
+      radius: 6
+      angle: 0
+      critical: true
+
+  # ═══════════════════════════════════════════════════════════════════
+  # CONCEPT NODES (for semantic routing)
+  # ═══════════════════════════════════════════════════════════════════
+
+  - id: concept_content
+    type: concept
+    name: Content
+    domain: media
+    description: "Content creation, publishing, broadcasting"
+
+  - id: concept_research
+    type: concept
+    name: Research
+    domain: science
+    description: "Research, investigation, fact-finding"
+
+  - id: concept_governance
+    type: concept
+    name: Governance
+    domain: governance
+    description: "Governance, voting, proposals, rules"
+
+  - id: concept_security
+    type: concept
+    name: Security
+    domain: enforcement
+    description: "Security, monitoring, protection, violations"
+
+  - id: concept_analytics
+    type: concept
+    name: Analytics
+    domain: science
+    description: "Data analysis, visualization, metrics"
+
+  - id: concept_infrastructure
+    type: concept
+    name: Infrastructure
+    domain: infrastructure
+    description: "System building, maintenance, operations"
