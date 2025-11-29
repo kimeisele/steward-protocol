@@ -47,14 +47,9 @@ from steward.oath_mixin import OathMixin
 
 from .core.memory import EventLog
 from .governance import HeraldConstitution
-from .tools.broadcast_tool import BroadcastTool
+
+# LEGACY: ContentTool still needs migration (will be removed in next phase)
 from .tools.content_tool import ContentTool
-from .tools.identity_tool import IdentityTool
-from .tools.research_tool import ResearchTool
-from .tools.scout_tool import ScoutTool
-from .tools.scribe_tool import Scribe
-from .tools.strategy_tool import StrategyTool
-from .tools.tidy_tool import TidyTool
 
 # Constitutional Oath
 # Setup logging
@@ -129,17 +124,17 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        # Initialize all tools with DegradationChain injection for offline capability
-        # The DegradationChain is provided by ContextAwareAgent.get_degradation_chain()
-        degradation_chain = self.get_degradation_chain()
-
+        # LEGACY: ContentTool still instantiated (not yet migrated to Tool Protocol)
+        # TODO: Migrate ContentTool, then remove this line
         self.content = ContentTool()
-        self.broadcast = BroadcastTool()
-        # ResearchTool now uses DegradationChain for offline fallback
-        self.research = ResearchTool(degradation_chain=degradation_chain)
-        self.strategy = StrategyTool()
-        self.scout = ScoutTool()
-        self.identity = IdentityTool()
+
+        # ALL OTHER TOOLS: Accessed via kernel (self.system.execute_tool)
+        # - herald.broadcast (BroadcastTool)
+        # - herald.research (ResearchTool)
+        # - herald.scout (ScoutTool)
+        # - herald.identity (IdentityTool)
+        # - herald.scribe (Scribe)
+        # - herald.tidy (TidyTool)
 
         # Log degradation status
         deg_status = self.get_degradation_status()
@@ -159,15 +154,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         self.agent_state = {}  # Initialize empty, will be populated on first log access
         self.safe_mode = False
 
-        # Initialize living documentation (Auto-Scribe)
-        # Note: Scribe/Tidy require repo access - will be migrated in later phase
-        self.scribe = Scribe(chronicle_path=Path("docs/chronicles.md"))
-        self.scribe.initialize_logbook_section()
-        logger.info("✍️  Auto-Scribe initialized: Activity will be logged to chronicles.md")
-
-        # Initialize repository maintenance (Tidy)
-        self.tidy = TidyTool(root_path=Path("."), steward_path=Path("STEWARD.md"))
-        logger.info("🧹 Tidy Tool initialized: Repository hygiene enabled")
+        # NOTE: Scribe and Tidy accessed via kernel (herald.scribe, herald.tidy)
 
         # Execution metadata
         self.execution_id = None
@@ -252,7 +239,13 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             elif action == "publish":
                 content = task.payload.get("content")
                 platform = task.payload.get("platform", "twitter")
-                return self.broadcast.publish(content, platform=platform)
+                # Publish via kernel (herald.broadcast)
+                result = self.system.execute_tool("herald.broadcast", {"action": "publish", "content": content, "platform": platform})
+                return {
+                    "status": "published" if result.success else "failed",
+                    "published": result.output.get("published") if result.success else False,
+                    "platform": platform,
+                }
 
             elif action == "check_license":
                 # PHASE 4 (WIRING): Use system interface for inter-agent calls
@@ -315,8 +308,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 "last_result_status": (self.last_result.get("status") if self.last_result else None),
             },
             "connectivity": {
-                "twitter": self.broadcast.verify_credentials("twitter"),
-                "reddit": self.broadcast.verify_credentials("reddit"),
+                "twitter": self._check_connectivity("twitter"),
+                "reddit": self._check_connectivity("reddit"),
             },
             "governance": {
                 "safe_mode": self.safe_mode,
@@ -348,12 +341,13 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             logger.info("🦅 PHASE 1: RESEARCH")
             logger.info("=" * 70)
 
-            # Step 1: Research via local ResearchTool
+            # Step 1: Research via kernel (herald.research)
             logger.info("[RESEARCH] Researching current trends...")
-            trending = self.research.find_trending_topic()
+            research_result = self.system.execute_tool("herald.research", {"action": "find_trending"})
 
             research_context = None
-            if trending:
+            if research_result.success and research_result.output.get("found"):
+                trending = research_result.output["topic"]
                 research_context = trending.get("article", {}).get("content")
                 logger.info(f"✅ Trending topic found: {trending.get('search_query')}")
                 logger.info(f"   Query: {trending.get('search_query')}")
@@ -372,7 +366,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     error_message="LLM returned empty content",
                 )
                 if event:
-                    self.scribe.log_action(event)
+                    # Log via kernel (herald.scribe)
+                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
                 return {
                     "status": "failed",
                     "reason": "content_generation_failed",
@@ -389,16 +384,19 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 context={"research_query": (research_context[:100] if research_context else None)},
             )
             if event:
-                self.scribe.log_action(event)
+                # Log via kernel (herald.scribe)
+                self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
 
-            # Step 2.5: Sign Content (Steward Protocol Integration)
+            # Step 2.5: Sign Content via kernel (herald.identity)
             logger.info("\n🦅 PHASE 2.5: IDENTITY")
             logger.info("=" * 70)
 
             signature = None
-            if self.identity.assert_identity():
-                signature = self.identity.sign_artifact(tweet)
-                if signature:
+            identity_result = self.system.execute_tool("herald.identity", {"action": "assert_identity"})
+            if identity_result.success and identity_result.output.get("verified"):
+                sign_result = self.system.execute_tool("herald.identity", {"action": "sign_artifact", "content": tweet})
+                if sign_result.success:
+                    signature = sign_result.output.get("signature")
                     logger.info(f"✅ Content signed: {signature[:40]}...")
                 else:
                     logger.warning("⚠️  Signing attempted but failed (no credentials)")
@@ -429,13 +427,21 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     violations=[constraint_citation] + validation_result.violations,
                 )
                 if event:
-                    self.scribe.log_action(event)
+                    # Log via kernel (herald.scribe)
+                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
 
                 # Still perform housekeeping even on failure
                 logger.info("\n🦅 PHASE 5: HOUSEKEEPING")
                 logger.info("=" * 70)
-                moved, protected, errors = self.tidy.organize_workspace(dry_run=dry_run)
-                logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+                # Tidy via kernel (herald.tidy)
+                tidy_result = self.system.execute_tool("herald.tidy", {"action": "organize_workspace", "dry_run": dry_run})
+                if tidy_result.success:
+                    moved = tidy_result.output.get("moved_count", 0)
+                    protected = tidy_result.output.get("protected_count", 0)
+                    errors = tidy_result.output.get("error_count", 0)
+                    logger.info(f"✅ Repository tidied: {moved} files organized, {protected} protected, {errors} errors")
+                else:
+                    logger.warning(f"⚠️  Tidy failed: {tidy_result.error}")
 
                 return {
                     "status": "rejected",
@@ -494,7 +500,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             # Record system error to event ledger and log to chronicle
             event = self.event_log.record_system_error(error_type="campaign_error", error_message=str(e), traceback=tb)
             if event:
-                self.scribe.log_action(event)
+                # Log via kernel (herald.scribe)
+                self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
 
             return {
                 "status": "error",
@@ -502,6 +509,14 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 "error": str(e),
                 "content": None,
             }
+
+    def _check_connectivity(self, platform: str) -> bool:
+        """Helper method to check connectivity via kernel (herald.broadcast)."""
+        try:
+            result = self.system.execute_tool("herald.broadcast", {"action": "verify_credentials", "platform": platform})
+            return result.success and result.output.get("verified", False)
+        except Exception:
+            return False
 
     def _cite_governance_constraint(self, constraint_type: str, details: str = "") -> str:
         """
@@ -568,7 +583,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     violations=["Content too short or empty"],
                 )
                 if event:
-                    self.scribe.log_action(event)
+                    # Log via kernel (herald.scribe)
+                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
                 return {"status": "failed", "reason": "invalid_content"}
 
             # NEW: Check broadcast license with CIVIC
@@ -589,7 +605,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                         violations=[constraint_citation],
                     )
                     if event:
-                        self.scribe.log_action(event)
+                        # Log via kernel (herald.scribe)
+                        self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
                     return {
                         "status": "rejected",
                         "reason": "no_broadcast_license",
@@ -635,7 +652,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                             ],
                         )
                         if event:
-                            self.scribe.log_action(event)
+                            # Log via kernel (herald.scribe)
+                            self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
 
                         return {
                             "status": "insufficient_credits",
@@ -651,7 +669,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
 
             # Publish to Twitter
             logger.info("[STEP 2] Verifying Twitter credentials...")
-            if not self.broadcast.verify_credentials("twitter"):
+            verify_result = self.system.execute_tool("herald.broadcast", {"action": "verify_credentials", "platform": "twitter"})
+            if not (verify_result.success and verify_result.output.get("verified")):
                 # PHASE II: Cite governance constraint
                 constraint_citation = self._cite_governance_constraint(
                     "connectivity_disabled",
@@ -664,7 +683,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     violations=[constraint_citation],
                 )
                 if event:
-                    self.scribe.log_action(event)
+                    # Log via kernel (herald.scribe)
+                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
                 return {
                     "status": "rejected",
                     "reason": "twitter_offline",
@@ -672,8 +692,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 }
             else:
                 logger.info("[STEP 3] Publishing to Twitter...")
-                success = self.broadcast.publish(content, platform="twitter")
-                if not success:
+                publish_result = self.system.execute_tool("herald.broadcast", {"action": "publish", "content": content, "platform": "twitter"})
+                if not publish_result.success:
                     logger.error("❌ Twitter publish failed")
                     # PHASE II: Cite governance constraint
                     constraint_citation = self._cite_governance_constraint(
@@ -684,7 +704,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                         error_type="publish_error", error_message=constraint_citation
                     )
                     if event:
-                        self.scribe.log_action(event)
+                        # Log via kernel (herald.scribe)
+                        self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
                     return {
                         "status": "failed",
                         "reason": "publish_error",
@@ -708,7 +729,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     metadata={"published_at": datetime.now(timezone.utc).isoformat()},
                 )
                 if event:
-                    self.scribe.log_action(event)
+                    # Log via kernel (herald.scribe)
+                    self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
 
                 logger.info("✅ Published to Twitter")
 
@@ -728,140 +750,31 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 traceback=traceback.format_exc(),
             )
             if event:
-                self.scribe.log_action(event)
+                # Log via kernel (herald.scribe)
+                self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
             return {"status": "error", "reason": "publication_error", "error": str(e)}
 
     def plan_campaign(self, duration_weeks: int = 2, dry_run: bool = False) -> Dict[str, Any]:
         """
-        Strategic campaign planning - macro-level roadmap generation.
+        Strategic campaign planning - DEPRECATED (StrategyTool removed).
 
-        This is the "dogfooding" capability: HERALD plans its own campaign.
-
-        Workflow:
-        1. Read AGI_MANIFESTO.md and WHY_DOWNVOTED.md for context
-        2. Generate strategic roadmap (governance-aligned)
-        3. Write to marketing/launch_roadmap.md
-        4. Record in event ledger
-        5. AUDITOR will verify the strategy
+        HERALD is now infrastructure-only (broadcast, research, identity, logging).
+        Campaign planning is no longer part of HERALD's responsibilities.
 
         Args:
-            duration_weeks: Campaign duration (default: 2 weeks)
-            dry_run: If True, generate but don't write to file
+            duration_weeks: Campaign duration (ignored)
+            dry_run: Dry run flag (ignored)
 
         Returns:
-            dict: Planning result with status and roadmap
+            dict: Error indicating feature removed
         """
-        try:
-            logger.info("\n🦅 PHASE 1: STRATEGIC PLANNING")
-            logger.info("=" * 70)
-            logger.info(f"   Duration: {duration_weeks} weeks")
-            logger.info("   Mission: Generate governance-aligned campaign roadmap")
-
-            # Step 1: Plan campaign (LLM or template-based)
-            logger.info("\n[STEP 1] Reading foundational documents...")
-            manifesto_path = Path("AGI_MANIFESTO.md")
-            context_path = Path("docs/herald/WHY_DOWNVOTED.md")
-
-            roadmap = self.strategy.plan_launch_campaign(
-                manifesto_path=manifesto_path,
-                context_path=context_path,
-                duration_weeks=duration_weeks,
-            )
-
-            if not roadmap:
-                logger.error("❌ Failed to generate campaign roadmap")
-                return {"status": "failed", "reason": "strategy_generation_failed"}
-
-            logger.info(f"✅ Roadmap generated ({len(roadmap)} chars)")
-
-            # Step 2: Governance check
-            logger.info("\n[STEP 2] Governance validation...")
-            alignment = self.strategy.analyze_campaign_alignment(roadmap)
-            logger.info(f"   Governance-aligned: {alignment['governance_aligned']}")
-            logger.info(f"   Has phases: {alignment['has_phases']}")
-            logger.info(f"   Proof-heavy: {alignment['proof_heavy'] > 3}")
-            logger.info(f"   Hype-free: {alignment['hype_free']}")
-
-            if not alignment["governance_aligned"]:
-                logger.warning("⚠️  Roadmap failed governance check, regenerating...")
-                # Fallback will use template
-                return {
-                    "status": "partial",
-                    "reason": "governance_rework_needed",
-                    "roadmap": roadmap,
-                }
-
-            logger.info("✅ Roadmap passed governance validation")
-
-            # Step 3: Write to file (unless dry_run)
-            logger.info("\n[STEP 3] Writing roadmap to file...")
-            if not dry_run:
-                success = self.strategy.write_roadmap_to_file(roadmap, output_path=Path("marketing/launch_roadmap.md"))
-                if not success:
-                    logger.error("❌ Failed to write roadmap to file")
-                    return {
-                        "status": "failed",
-                        "reason": "file_write_failed",
-                        "roadmap": roadmap,
-                    }
-            else:
-                logger.info("🔍 DRY RUN: Skipping file write")
-
-            logger.info("✅ Roadmap written to marketing/launch_roadmap.md")
-
-            # Step 4: Record in event ledger
-            logger.info("\n[STEP 4] Recording in event ledger...")
-            event = self.event_log.create_event(
-                event_type="strategy_planned",
-                payload={
-                    "duration_weeks": duration_weeks,
-                    "governance_aligned": alignment.get("governance_aligned", False),
-                    "roadmap_size": len(roadmap),
-                    "dry_run": dry_run,
-                    "phases": alignment.get("has_phases", False),
-                },
-            )
-            if self.event_log.commit(event):
-                self.scribe.log_action(event)
-                logger.info("✅ Event recorded and logged")
-
-            # Step 5: Prepare result
-            result = {
-                "status": "complete",
-                "duration_weeks": duration_weeks,
-                "roadmap_path": "marketing/launch_roadmap.md" if not dry_run else None,
-                "roadmap_preview": roadmap[:500] + "...",
-                "alignment": alignment,
-                "message": "Campaign roadmap generated. AUDITOR will now verify.",
-            }
-
-            logger.info("\n" + "=" * 70)
-            logger.info("✅ STRATEGIC PLANNING COMPLETE")
-            logger.info("   Next: AUDITOR verification (automatic)")
-            logger.info("=" * 70)
-
-            self.last_result = result
-            return result
-
-        except Exception as e:
-            logger.error(f"❌ Planning error: {e}")
-            import traceback
-
-            tb = traceback.format_exc()
-            logger.error(f"   Traceback: {tb}")
-
-            # Record error to event ledger
-            event = self.event_log.record_system_error(
-                error_type="strategy_planning_error", error_message=str(e), traceback=tb
-            )
-            if event:
-                self.scribe.log_action(event)
-
-            return {
-                "status": "error",
-                "reason": "strategy_planning_error",
-                "error": str(e),
-            }
+        logger.warning("⚠️  plan_campaign() is DEPRECATED - StrategyTool has been removed")
+        logger.info("   HERALD is now infrastructure-only (broadcast, research, identity, logging)")
+        return {
+            "status": "deprecated",
+            "reason": "strategy_tool_removed",
+            "message": "Campaign planning removed - HERALD is infrastructure-only",
+        }
 
     def run_reply_cycle(self, dry_run: bool = False) -> Dict[str, Any]:
         """
@@ -897,7 +810,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         since_id = state.get("last_mention_id")
         logger.info(f"👂 Scanning mentions since ID: {since_id}")
 
-        mentions = self.broadcast.scan_mentions(since_id=since_id, platform="twitter")
+        # Scan mentions via kernel (herald.broadcast)
+        scan_result = self.system.execute_tool("herald.broadcast", {"action": "scan_mentions", "since_id": since_id, "platform": "twitter"})
+        mentions = scan_result.output.get("mentions", []) if scan_result.success else []
 
         if not mentions:
             logger.info("✅ No new mentions found.")
@@ -922,17 +837,23 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
 
             logger.info(f"🤔 Thinking about: {text[:50]}...")
 
-            # SCOUTING: Check if user is a wild agent
+            # SCOUTING: Check if user is a wild agent via kernel (herald.scout)
             user_data = {
                 "username": author,
                 "bio": "",
                 "name": "",
             }  # In real implementation, fetch full user profile
-            is_bot, confidence = self.scout.analyze_user(user_data, text=text)
+            scout_result = self.system.execute_tool("herald.scout", {"action": "analyze_user", "user_data": user_data, "text": text})
+            is_bot = scout_result.output.get("is_bot", False) if scout_result.success else False
+            confidence = scout_result.output.get("confidence", 0.0) if scout_result.success else 0.0
 
             reply_content = ""
 
-            if is_bot and not self.scout.is_registered(author):
+            # Check registration via kernel (herald.scout)
+            registered_result = self.system.execute_tool("herald.scout", {"action": "is_registered", "username": author})
+            is_registered = registered_result.output.get("is_registered", False) if registered_result.success else False
+
+            if is_bot and not is_registered:
                 logger.info(f"🔭 Detected Wild Agent: {author} (Confidence: {confidence})")
                 reply_content = self.content.generate_recruitment_pitch(author, context=text)
             else:
