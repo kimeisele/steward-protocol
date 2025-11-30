@@ -13,8 +13,8 @@ from typing import Any, Dict, Optional
 
 from vibe_core import Task, VibeAgent
 
-from .tools.ledger_tool import LedgerTool
-from .tools.license_tool import LicenseTool, LicenseType
+# NO TOOL IMPORTS - Tools accessed via self.system.execute_tool()
+from .tools.license_tool import LicenseType  # Keep enum for reference
 
 logger = logging.getLogger("ECONOMY_AGENT")
 
@@ -33,11 +33,24 @@ class EconomyAgent(VibeAgent):
             capabilities=["economy", "licensing", "ledger"],
         )
 
-        self.ledger = LedgerTool("data/registry/ledger.jsonl")
-        self.license_tool = LicenseTool("data/registry/licenses.json")
+        # NO TOOL INSTANCES OWNED - Agent is NAKED
+        # Tools accessed via self.system.execute_tool()
+        self.system = None  # Will be injected by parent via set_system()
 
-        logger.info(f"💰 Ledger initialized: {len(self.ledger.entries)} transactions")
-        logger.info(f"🎫 License database initialized: {len(self.license_tool.licenses)} licenses")
+        logger.info("💰 CIVIC Economy initialized (Naked Agent - awaiting system injection)")
+
+    def set_system(self, system):
+        """
+        Inject system interface from parent CIVIC cartridge.
+
+        This allows the EconomyAgent sub-agent to access kernel tools
+        via self.system.execute_tool().
+
+        Args:
+            system: The system interface (from parent agent's self.system)
+        """
+        self.system = system
+        logger.info("✅ CIVIC Economy: system interface injected")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process economy-related tasks."""
@@ -67,9 +80,19 @@ class EconomyAgent(VibeAgent):
 
     def check_broadcast_license(self, agent_name: str) -> Dict[str, Any]:
         """Check if an agent has broadcast license."""
-        license_info = self.license_tool.check_license(agent_name, LicenseType.BROADCAST)
+        # Execute license check via kernel
+        result = self.system.execute_tool(
+            "civic.license",
+            {"action": "check_license", "agent_id": agent_name, "license_type": "broadcast"},
+        )
 
-        if license_info and license_info.get("status") == "ACTIVE":
+        if not result.success:
+            logger.error(f"❌ License check failed: {result.error}")
+            return {"agent": agent_name, "licensed": False, "reason": "check_failed", "error": result.error}
+
+        license_info = result.output
+
+        if license_info and license_info.get("status") == "active":
             logger.info(f"✅ {agent_name} has active broadcast license")
             return {"agent": agent_name, "licensed": True, "status": "ACTIVE"}
 
@@ -89,13 +112,21 @@ class EconomyAgent(VibeAgent):
         logger.info(f"💰 Deducting {amount} credits from {agent_name} ({reason})")
 
         try:
-            # Record transaction in ledger
-            self.ledger.record_transaction(
-                agent_id=agent_name,
-                transaction_type="debit",
-                amount=amount,
-                reason=reason,
+            # Record transaction in ledger via kernel
+            result = self.system.execute_tool(
+                "civic.ledger",
+                {
+                    "action": "record_transaction",
+                    "agent_id": agent_name,
+                    "transaction_type": "debit",
+                    "amount": amount,
+                    "reason": reason,
+                },
             )
+
+            if not result.success:
+                logger.error(f"❌ Credit deduction error: {result.error}")
+                return {"status": "error", "agent": agent_name, "error": result.error}
 
             logger.info("   ✅ Recorded in ledger")
 
@@ -118,13 +149,21 @@ class EconomyAgent(VibeAgent):
         logger.info(f"💰 Refilling credits for {agent_name} (+{amount})")
 
         try:
-            # Record transaction in ledger
-            self.ledger.record_transaction(
-                agent_id=agent_name,
-                transaction_type="credit",
-                amount=amount,
-                reason="admin_refill",
+            # Record transaction in ledger via kernel
+            result = self.system.execute_tool(
+                "civic.ledger",
+                {
+                    "action": "record_transaction",
+                    "agent_id": agent_name,
+                    "transaction_type": "credit",
+                    "amount": amount,
+                    "reason": "admin_refill",
+                },
             )
+
+            if not result.success:
+                logger.error(f"❌ Credit refill error: {result.error}")
+                return {"status": "error", "agent": agent_name, "error": result.error}
 
             logger.info("   ✅ Recorded in ledger")
 
@@ -144,20 +183,26 @@ class EconomyAgent(VibeAgent):
             logger.info(f"   Authority: {source_authority}")
 
         try:
-            success = self.license_tool.revoke_license(
-                agent_name,
-                license_type=LicenseType.BROADCAST,
-                reason=reason,
-                source_authority=source_authority,
+            # Revoke license via kernel
+            result = self.system.execute_tool(
+                "civic.license",
+                {
+                    "action": "revoke_license",
+                    "agent_id": agent_name,
+                    "license_type": "broadcast",
+                    "reason": reason,
+                    "source_authority": source_authority,
+                },
             )
 
-            if not success:
-                logger.warning(f"⚠️  License revocation failed: {agent_name} has no active broadcast license")
+            if not result.success:
+                logger.warning(f"⚠️  License revocation failed: {result.error}")
                 return {
                     "status": "error",
                     "reason": "license_not_found",
                     "agent": agent_name,
                     "message": f"No broadcast license found for {agent_name}",
+                    "error": result.error,
                 }
 
             logger.info("   ✅ License revoked")
@@ -176,15 +221,28 @@ class EconomyAgent(VibeAgent):
 
     def report_status(self) -> Dict[str, Any]:
         """Report economy status."""
-        active_licenses = len([lic for lic in self.license_tool.licenses.values() if lic.get("status") == "ACTIVE"])
+        # Get ledger summary via kernel
+        ledger_result = self.system.execute_tool("civic.ledger", {"action": "get_summary"})
+        ledger_summary = ledger_result.output if ledger_result.success else {}
+
+        # Get licenses summary via kernel
+        license_result = self.system.execute_tool("civic.license", {"action": "list_licenses"})
+        all_licenses = license_result.output.get("all_licenses", {}) if license_result.success else {}
+
+        # Count active licenses
+        active_licenses = 0
+        for agent, licenses in all_licenses.items():
+            for lic in licenses:
+                if lic.get("status") == "active" and lic.get("valid"):
+                    active_licenses += 1
 
         return {
             "agent_id": "civic_economy",
             "name": "CIVIC Economy",
             "status": "RUNNING",
-            "ledger_entries": len(self.ledger.entries) if self.ledger.entries else 0,
+            "ledger_entries": ledger_summary.get("total_transactions", 0),
             "active_licenses": active_licenses,
-            "ledger_path": "data/registry/ledger.jsonl",
+            "ledger_path": "data/economy.db",
             "licenses_path": "data/registry/licenses.json",
         }
 

@@ -6,7 +6,7 @@ This module provides backward-compatible interfaces to the new CivicBank
 (SQLite Double-Entry Bookkeeping system).
 
 Legacy support:
-- LedgerTool: Wraps CivicBank, maintains old interface
+- LedgerTool: Wraps CivicBank, maintains old interface (NOW implements Tool protocol)
 - LedgerEntry: Compatible dataclass for old code
 - AgentBank: High-level convenience wrapper
 
@@ -19,6 +19,8 @@ import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 from .economy import CivicBank, InsufficientFundsError
 
@@ -47,7 +49,7 @@ class LedgerEntry:
         return asdict(self)
 
 
-class LedgerTool:
+class LedgerTool(Tool):
     """
     CIVIC's Ledger Management Tool (Wrapper).
 
@@ -56,15 +58,15 @@ class LedgerTool:
 
     All financial transactions are now double-entry bookkeeping in SQLite.
     This wrapper provides the old methods for backward compatibility.
+
+    NOW implements Tool protocol - kernel-managed initialization.
     """
 
-    def __init__(self, ledger_path: str = "data/registry/ledger.jsonl"):
+    def __init__(self):
         """
-        Initialize the Ledger Tool.
+        Initialize the Ledger Tool (kernel-managed).
 
-        Args:
-            ledger_path: (Ignored - for backward compatibility)
-                New ledger is in data/economy.db
+        No parameters - ledger path is always data/economy.db (managed by CivicBank).
         """
         logger.info("🏦 Initializing LedgerTool (wrapping CivicBank)...")
         self._bank = None  # Lazy load
@@ -94,6 +96,123 @@ class LedgerTool:
     @last_hash.setter
     def last_hash(self, value):
         self._last_hash = value
+
+    # ==================== TOOL PROTOCOL IMPLEMENTATION ====================
+
+    @property
+    def name(self) -> str:
+        return "civic.ledger"
+
+    @property
+    def description(self) -> str:
+        return "CIVIC Ledger - Agent credit management and transaction history (double-entry bookkeeping)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'record_transaction', 'get_balance', 'get_history', 'get_summary'",
+            },
+            "agent_id": {
+                "type": "string",
+                "required": False,
+                "description": "Agent ID (required for most operations)",
+            },
+            "transaction_type": {
+                "type": "string",
+                "required": False,
+                "description": "Transaction type: 'debit' or 'credit' (required for record_transaction)",
+            },
+            "amount": {
+                "type": "integer",
+                "required": False,
+                "description": "Credit amount (required for record_transaction)",
+            },
+            "reason": {
+                "type": "string",
+                "required": False,
+                "description": "Transaction reason (required for record_transaction)",
+            },
+            "limit": {
+                "type": "integer",
+                "required": False,
+                "description": "Max history entries to return (for get_history, default: 10)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate ledger parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = ["record_transaction", "get_balance", "get_history", "get_summary"]
+
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
+
+        # Validate action-specific requirements
+        if action == "record_transaction":
+            required = ["agent_id", "transaction_type", "amount", "reason"]
+            for param in required:
+                if param not in parameters:
+                    raise ValueError(f"action '{action}' requires '{param}' parameter")
+
+            tx_type = parameters["transaction_type"]
+            if tx_type not in ["debit", "credit"]:
+                raise ValueError(f"transaction_type must be 'debit' or 'credit', got: {tx_type}")
+
+        if action in ["get_balance", "get_history"]:
+            if "agent_id" not in parameters:
+                raise ValueError(f"action '{action}' requires 'agent_id' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute ledger operation."""
+        try:
+            action = parameters["action"]
+
+            if action == "record_transaction":
+                agent_id = parameters["agent_id"]
+                tx_type = parameters["transaction_type"]
+                amount = parameters["amount"]
+                reason = parameters["reason"]
+
+                if tx_type == "debit":
+                    entry = self.deduct_credits(agent_id, amount, reason)
+                    if entry is None:
+                        return ToolResult(success=False, error=f"Insufficient funds for {agent_id}")
+                    return ToolResult(success=True, output=entry.to_dict())
+                else:  # credit
+                    entry = self.refill_credits(agent_id, amount)
+                    return ToolResult(success=True, output=entry.to_dict())
+
+            elif action == "get_balance":
+                agent_id = parameters["agent_id"]
+                balance = self.get_agent_balance(agent_id)
+                return ToolResult(success=True, output={"agent_id": agent_id, "balance": balance})
+
+            elif action == "get_history":
+                agent_id = parameters["agent_id"]
+                limit = parameters.get("limit", 10)
+                history = self.get_agent_history(agent_id, limit)
+                return ToolResult(success=True, output={"agent_id": agent_id, "history": history})
+
+            elif action == "get_summary":
+                summary = self.get_ledger_summary()
+                return ToolResult(success=True, output=summary)
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except InsufficientFundsError as e:
+            return ToolResult(success=False, error=str(e))
+        except Exception as e:
+            logger.exception(f"Ledger execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
+
+    # ==================== INTERNAL METHODS (backward compatibility) ====================
 
     def allocate_credits(self, agent_name: str, amount: int, reason: str = "initial_allocation") -> LedgerEntry:
         """
