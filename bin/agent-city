@@ -30,7 +30,8 @@ def cmd_task_add(args):
     task = tm.add_task(
         title=args.description,
         priority=args.priority,
-        roadmap_id=roadmap_id
+        roadmap_id=roadmap_id,
+        assigned_agent=getattr(args, 'agent', None)  # COMPLETENESS FIX: P2.1 - Support fractal routing
     )
     print(f"✅ Task added: {args.description}")
     print(f"   ID: {task.id}")
@@ -61,7 +62,10 @@ def cmd_task_list(args):
                 "COMPLETED": "✅",
                 "BLOCKED": "🚫",
             }.get(task.status.value, "❓")
-            print(f"  {status_icon} P{task.priority}: {task.title}")
+            # COMPLETENESS FIX: P2.3 - Show assigned agent and routing priority
+            agent_str = f" → {task.assigned_agent}" if getattr(task, 'assigned_agent', None) else ""
+            routing_str = f" [{task.routing_priority}]" if getattr(task, 'routing_priority', None) else ""
+            print(f"  {status_icon} P{task.priority}: {task.title}{agent_str}{routing_str}")
     else:
         print("📭 No tasks yet. Add one with: agent-city task add \"your task\"")
 
@@ -123,6 +127,25 @@ def cmd_roadmap_show(args):
     return 0
 
 
+def cmd_agent_list(args):
+    """List available agents from topology (COMPLETENESS FIX: P2.2)."""
+    try:
+        from vibe_core.topology import get_topology
+
+        topology = get_topology()
+        print("🤖 Available Agents:\n")
+
+        for varsha in topology.varshas:
+            for agent in varsha.agents:
+                authority = 10 - varsha.ring_number  # Higher ring = lower authority
+                print(f"  {agent.id:12} | Authority {authority} | {agent.domain}")
+
+        return 0
+    except Exception as e:
+        print(f"❌ Error listing agents: {e}")
+        return 1
+
+
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -148,6 +171,7 @@ def main():
     task_add.add_argument("description")
     task_add.add_argument("-p", "--priority", type=int, default=0, help="Task priority (0-100)")
     task_add.add_argument("-r", "--roadmap", help="Roadmap name or ID to link task to")
+    task_add.add_argument("-a", "--agent", help="Assign to specific agent (e.g., herald, civic, science)")  # COMPLETENESS FIX: P2.1
     task_add.set_defaults(func=cmd_task_add)
 
     # task list
@@ -171,6 +195,14 @@ def main():
     # roadmap show
     roadmap_show = roadmap_subparsers.add_parser("show")
     roadmap_show.set_defaults(func=cmd_roadmap_show)
+
+    # agent subcommand (COMPLETENESS FIX: P2.2)
+    agent_parser = subparsers.add_parser("agent")
+    agent_subparsers = agent_parser.add_subparsers(dest="agent_command")
+
+    # agent list
+    agent_list = agent_subparsers.add_parser("list")
+    agent_list.set_defaults(func=cmd_agent_list)
 
     # Parse arguments
     args = parser.parse_args()

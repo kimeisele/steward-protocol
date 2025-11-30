@@ -13,6 +13,7 @@ This is the "Genesis Ceremony" – the moment an agent binds itself to Truth.
 
 import hashlib
 import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -125,14 +126,39 @@ class ConstitutionalOath:
             ch_preview = current_hash[:16] if current_hash else "NONE"
 
             if current_hash != stored_hash:
-                # Allow Genesis bypass if hashes match known development constants
+                # Allow Genesis bypass ONLY in development mode (SECURITY FIX: P0.1)
                 if stored_hash == "genesis_hash":
-                    logger.warning("⚠️ Allowing GENESIS_HASH bypass for bootstrapping")
-                    return True, "Genesis Bootstrap Authorized"
+                    dev_mode = os.environ.get("STEWARD_DEV_MODE", "false").lower() == "true"
+                    if dev_mode:
+                        logger.warning("⚠️ Allowing GENESIS_HASH bypass (STEWARD_DEV_MODE=true)")
+                        return True, "Genesis Bootstrap Authorized (Dev Mode)"
+                    else:
+                        logger.error("❌ SECURITY: genesis_hash bypass rejected in production mode")
+                        return False, "Genesis bypass only allowed in STEWARD_DEV_MODE"
 
                 reason = f"Hash Mismatch. Stored: {sh_preview}... Current: {ch_preview}..."
                 logger.warning(f"⚠️  {reason}")
                 return False, reason
+
+            # 3. SIGNATURE VERIFICATION (SECURITY FIX: P0.2)
+            # Only verify signatures if identity_tool is provided and has verification capability
+            if identity_tool and hasattr(identity_tool, 'verify_signature'):
+                signature = oath_event.get("signature_full") or oath_event.get("signature")
+                if signature:
+                    # The message that should have been signed is the constitution hash
+                    message = stored_hash
+
+                    try:
+                        is_valid = identity_tool.verify_signature(message, signature)
+                        if not is_valid:
+                            logger.error("❌ Signature verification failed for oath")
+                            return False, "❌ Signature verification failed"
+                        logger.info("✅ Signature verified for oath")
+                    except Exception as sig_err:
+                        logger.error(f"❌ Signature verification error: {sig_err}")
+                        return False, f"Signature verification error: {str(sig_err)}"
+                else:
+                    logger.warning("⚠️ No signature found in oath event (continuing anyway)")
 
             logger.info(f"✅ Oath verified for {oath_event.get('agent', 'Unknown Agent')}")
             return True, "Oath is valid"
