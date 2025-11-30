@@ -160,6 +160,51 @@ class InitMethodVisitor(ast.NodeVisitor):
         return "unknown"
 
 
+class DirectToolCallVisitor(ast.NodeVisitor):
+    """AST visitor to detect self.*_tool.method() calls (NAKED agent pattern violation)."""
+
+    def __init__(self, file_path: str):
+        self.file_path = file_path
+        self.violations: List[Violation] = []
+
+    def visit_Attribute(self, node: ast.Attribute) -> None:
+        """Visit attribute access - detect self.*_tool patterns."""
+        # Pattern: self.something_tool.method() or self.city_control.method()
+        if isinstance(node.value, ast.Attribute):
+            if isinstance(node.value.value, ast.Name) and node.value.value.id == "self":
+                attr_name = node.value.attr
+                # Match: *_tool suffix OR known legacy tool names
+                if attr_name.endswith("_tool") or attr_name in [
+                    "city_control", "campaign_tool", "gap_report",
+                    "hil_assistant", "curator", "diplomacy"
+                ]:
+                    self.violations.append(
+                        Violation(
+                            agent_id=self._extract_agent_id(),
+                            file_path=self.file_path,
+                            line_number=node.lineno,
+                            violation_type=ViolationType.DIRECT_TOOL_CALL,
+                            severity=ViolationSeverity.CRITICAL,
+                            message=f"Direct tool access: self.{attr_name}.{node.attr}()",
+                            code_snippet=f"self.{attr_name}.{node.attr}",
+                            fix_suggestion="Use self.system.execute_tool('namespace.tool', params)",
+                        )
+                    )
+        self.generic_visit(node)
+
+    def _extract_agent_id(self) -> str:
+        """Extract agent ID from file path."""
+        parts = Path(self.file_path).parts
+        if "system_agents" in parts:
+            idx = parts.index("system_agents")
+            if idx + 1 < len(parts):
+                return parts[idx + 1]
+        elif "registry" in parts:
+            idx = parts.index("registry")
+            if idx + 1 < len(parts):
+                return parts[idx + 1]
+        return "unknown"
+
 
 class StandardsInspectionTool(Tool):
     """
@@ -346,6 +391,11 @@ class StandardsInspectionTool(Tool):
             init_visitor = InitMethodVisitor(str(file_path))
             init_visitor.visit(tree)
             violations.extend(init_visitor.violations)
+
+            # Check 5: Direct tool calls (NAKED agent pattern)
+            tool_visitor = DirectToolCallVisitor(str(file_path))
+            tool_visitor.visit(tree)
+            violations.extend(tool_visitor.violations)
 
         except SyntaxError as e:
             logger.error(f"Syntax error in {file_path}: {e}")
