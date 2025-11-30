@@ -20,7 +20,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from .tools.truth_matrix import FactAuthority, TruthMatrix
+from .truth_matrix import FactAuthority, TruthMatrix
 
 logger = logging.getLogger("REFERENCE_RESOLVER")
 

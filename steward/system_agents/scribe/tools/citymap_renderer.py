@@ -19,9 +19,9 @@ from typing import Any, Dict, List
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .introspector import CartridgeIntrospector
-from .runtime_inspector import RuntimeInspector
-from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
+from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
+from steward.system_agents.scribe.tools.runtime_inspector import RuntimeInspector
+from steward.system_agents.scribe.tools.vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
 
 
 class CitymapRenderer(Tool):

@@ -17,7 +17,7 @@ from typing import Any
 from jinja2 import Template
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .project_introspector import ProjectIntrospector
+from steward.system_agents.scribe.tools.project_introspector import ProjectIntrospector
 
 
 class ReadmeRenderer(Tool):

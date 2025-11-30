@@ -11,7 +11,7 @@ from typing import Any, Dict
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .introspector import CartridgeIntrospector
+from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
 
 
 class AgentsRenderer(Tool):

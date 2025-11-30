@@ -29,7 +29,7 @@ from typing import Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .lifecycle_manager import LifecycleManager, LifecycleStatus
+from steward.system_agents.civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
 
 logger = logging.getLogger("LIFECYCLE_ENFORCER")
 
