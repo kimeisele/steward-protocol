@@ -125,7 +125,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             return {"status": "error", "reason": "Source file vanished."}
 
         # ===== MOVE TO PRODUCTION =====
-        logger.info(f"📜 Moving from sandbox to production...")
+        logger.info("📜 Moving from sandbox to production...")
         real_dest_path = os.path.abspath(dest_rel_path)
 
         # Security: Prevent path traversal
@@ -153,7 +153,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
             return {"status": "error", "reason": f"File copy failed: {str(e)}"}
 
         # ===== GIT COMMIT =====
-        logger.info(f"📜 Creating git commit...")
+        logger.info("📜 Creating git commit...")
         try:
             # Stage the file
             subprocess.run(["git", "add", dest_rel_path], check=True, cwd=cwd)
@@ -172,7 +172,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
                 subprocess.run(["git", "commit", "-m", commit_msg], check=True, cwd=cwd)
                 signed = False
 
-            logger.info(f"✅ Commit created")
+            logger.info("✅ Commit created")
 
             # Get commit hash
             rev = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=cwd).decode().strip()

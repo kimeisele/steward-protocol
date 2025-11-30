@@ -14,8 +14,9 @@ Run before every twitter publish attempt to ensure:
 
 import os
 import sys
-import requests
 from datetime import datetime
+
+import requests
 
 
 def check_key_presence():
@@ -52,19 +53,19 @@ def check_read_access(token):
             user_data = response.json()
             username = user_data.get("data", {}).get("username", "unknown")
             name = user_data.get("data", {}).get("name", "unknown")
-            print(f"    ✅ READ Access Confirmed")
+            print("    ✅ READ Access Confirmed")
             print(f"    ℹ️  Authenticated as: {name} (@{username})")
             return True
 
         elif response.status_code == 401:
-            print(f"    ❌ AUTHENTICATION FAILED: 401 Unauthorized")
-            print(f"    💡 Your API Key is invalid or expired")
-            print(f"    💡 Regenerate it in Twitter Developer Portal")
+            print("    ❌ AUTHENTICATION FAILED: 401 Unauthorized")
+            print("    💡 Your API Key is invalid or expired")
+            print("    💡 Regenerate it in Twitter Developer Portal")
             return False
 
         elif response.status_code == 403:
-            print(f"    ❌ ACCESS DENIED: 403 Forbidden")
-            print(f"    💡 Your token has READ access but something is blocked")
+            print("    ❌ ACCESS DENIED: 403 Forbidden")
+            print("    💡 Your token has READ access but something is blocked")
             print(f"    ℹ️  Response: {response.text[:200]}")
             return False
 
@@ -103,36 +104,36 @@ def check_write_access(token):
         if response.status_code == 201:
             tweet_data = response.json()
             tweet_id = tweet_data.get("data", {}).get("id", "unknown")
-            print(f"    ✅ WRITE Access Confirmed - Test tweet posted!")
+            print("    ✅ WRITE Access Confirmed - Test tweet posted!")
             print(f"    📍 Tweet ID: {tweet_id}")
             print(f"    🔗 https://twitter.com/i/web/status/{tweet_id}")
             return True
 
         elif response.status_code == 403:
-            print(f"    ❌ WRITE ACCESS DENIED: 403 Forbidden")
-            print(f"    🚨 THIS IS THE CLASSIC ISSUE:")
-            print(f"    💡 Your app is set to 'READ ONLY'")
-            print(f"    ")
-            print(f"    📋 HOW TO FIX (Twitter Developer Portal):")
-            print(f"       1. Go to: https://developer.twitter.com/en/portal/dashboard")
-            print(f"       2. Select your Project & App")
-            print(f"       3. Go to: Settings → User authentication settings")
-            print(f"       4. Find: 'App permissions'")
-            print(f"       5. Change: 'Read' → 'Read and Write'")
-            print(f"       6. REGENERATE your Bearer Token")
-            print(f"       7. Update GitHub Secrets with new token")
-            print(f"    ")
+            print("    ❌ WRITE ACCESS DENIED: 403 Forbidden")
+            print("    🚨 THIS IS THE CLASSIC ISSUE:")
+            print("    💡 Your app is set to 'READ ONLY'")
+            print("    ")
+            print("    📋 HOW TO FIX (Twitter Developer Portal):")
+            print("       1. Go to: https://developer.twitter.com/en/portal/dashboard")
+            print("       2. Select your Project & App")
+            print("       3. Go to: Settings → User authentication settings")
+            print("       4. Find: 'App permissions'")
+            print("       5. Change: 'Read' → 'Read and Write'")
+            print("       6. REGENERATE your Bearer Token")
+            print("       7. Update GitHub Secrets with new token")
+            print("    ")
             print(f"    Response: {response.text[:200]}")
             return False
 
         elif response.status_code == 401:
-            print(f"    ❌ AUTHENTICATION FAILED: 401 Unauthorized")
-            print(f"    💡 Token is expired or invalid")
+            print("    ❌ AUTHENTICATION FAILED: 401 Unauthorized")
+            print("    💡 Token is expired or invalid")
             return False
 
         elif response.status_code == 429:
-            print(f"    ⚠️  RATE LIMITED: 429 Too Many Requests")
-            print(f"    💡 You're posting too fast. Slow down.")
+            print("    ⚠️  RATE LIMITED: 429 Too Many Requests")
+            print("    💡 You're posting too fast. Slow down.")
             return False
 
         else:

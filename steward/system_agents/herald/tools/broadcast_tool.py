@@ -277,11 +277,11 @@ class BroadcastTool(Tool):
         """
         if platform == "twitter":
             available = self.twitter_client is not None
-            logger.info(f"✅ Twitter credentials verified" if available else "❌ Twitter offline")
+            logger.info("✅ Twitter credentials verified" if available else "❌ Twitter offline")
             return available
         elif platform == "reddit":
             available = self.reddit_client is not None
-            logger.info(f"✅ Reddit credentials verified" if available else "❌ Reddit offline")
+            logger.info("✅ Reddit credentials verified" if available else "❌ Reddit offline")
             return available
         return False
 

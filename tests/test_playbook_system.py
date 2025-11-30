@@ -3,11 +3,11 @@
 Tests the complete flow: Concept Detection → Playbook Matching → Deterministic Execution
 """
 
-import pytest
 import asyncio
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict
+
+import pytest
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +16,8 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 # Import the systems under test
 try:
     from envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
-    from provider.universal_provider import UniversalProvider, DeterministicRouter
+
+    from provider.universal_provider import DeterministicRouter, UniversalProvider
 
     IMPORTS_OK = True
 except ImportError as e:
@@ -218,7 +219,7 @@ class TestPlaybookExecution:
         assert playbook is not None
 
         # Create mock intent vector
-        from provider.universal_provider import IntentVector, IntentType
+        from provider.universal_provider import IntentType, IntentVector
 
         intent_vector = IntentVector(
             raw_input="Create a test project",
@@ -259,7 +260,7 @@ class TestUniversalProviderIntegration:
         assert self.provider is not None
         assert self.provider.playbook_engine is not None
         assert self.provider.router is not None
-        logger.info(f"✅ UniversalProvider initialized with DeterministicExecutor")
+        logger.info("✅ UniversalProvider initialized with DeterministicExecutor")
 
     @pytest.mark.asyncio
     async def test_intent_resolution_to_playbook(self):
@@ -278,7 +279,7 @@ class TestUniversalProviderIntegration:
         if playbook:
             logger.info(f"✅ Found playbook: {playbook.id}")
         else:
-            logger.info(f"⚠️  No playbook found (would trigger EAD proposal)")
+            logger.info("⚠️  No playbook found (would trigger EAD proposal)")
 
     @pytest.mark.asyncio
     async def test_evolutionary_loop_activation(self):

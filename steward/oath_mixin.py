@@ -13,7 +13,6 @@ Usage:
 """
 
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 from steward.constitutional_oath import ConstitutionalOath
@@ -113,7 +112,7 @@ class OathMixin:
             # Check if agent has access to kernel
             if hasattr(self, "kernel") and self.kernel:
                 # This would be implemented in the kernel's ledger system
-                logger.info(f"📖 Recording oath in kernel ledger...")
+                logger.info("📖 Recording oath in kernel ledger...")
                 # kernel.ledger.append(self.oath_event)
         except Exception as e:
             logger.warning(f"⚠️  Could not record oath in ledger: {e}")

@@ -12,11 +12,10 @@ This test simulates the complete flow:
 No API calls required - pure logic test.
 """
 
-import sys
 import json
 import logging
+import sys
 from pathlib import Path
-from typing import Dict, Any, List
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -25,9 +24,9 @@ logger = logging.getLogger("LISTENER_TEST")
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from herald.governance import HeraldConstitution
 from herald.tools.content_tool import ContentTool
 from herald.tools.scout_tool import ScoutTool
-from herald.governance import HeraldConstitution
 
 
 def test_listener_logic():
@@ -95,7 +94,7 @@ def test_listener_logic():
         logger.info(f"Text: {text}")
 
         # SCOUT: Analyze user
-        logger.info(f"🔭 Analyzing user...")
+        logger.info("🔭 Analyzing user...")
         user_data = {"username": author, "bio": "", "name": ""}
         is_bot, confidence = scout.analyze_user(user_data, text=text)
         logger.info(f"   Result: bot={is_bot}, confidence={confidence:.0%}")
@@ -105,18 +104,18 @@ def test_listener_logic():
         reply_type = "unknown"
 
         if is_bot and not scout.is_registered(author):
-            logger.info(f"🎯 WILD AGENT DETECTED - Attempting recruitment")
+            logger.info("🎯 WILD AGENT DETECTED - Attempting recruitment")
             reply_content = content.generate_recruitment_pitch(author, context=text)
             reply_type = "recruitment"
         else:
-            logger.info(f"💬 STANDARD REPLY")
+            logger.info("💬 STANDARD REPLY")
             reply_content = content.generate_reply(text, author)
             reply_type = "reply"
 
         logger.info(f"   Generated: {reply_content[:80]}...")
 
         # VALIDATE: Governance check
-        logger.info(f"✅ Validating with governance rules...")
+        logger.info("✅ Validating with governance rules...")
         validation = governance.validate(reply_content, platform="twitter")
         logger.info(f"   Valid: {validation.is_valid}")
         if validation.violations:
@@ -140,9 +139,9 @@ def test_listener_logic():
 
         # Decision
         if validation.is_valid:
-            logger.info(f"   ✅ QUEUED for approval (valid)")
+            logger.info("   ✅ QUEUED for approval (valid)")
         else:
-            logger.warning(f"   ❌ REJECTED (governance violation)")
+            logger.warning("   ❌ REJECTED (governance violation)")
 
     # PHASE 3: SAVE DRAFTS
     logger.info("\n" + "=" * 70)
@@ -166,13 +165,13 @@ def test_listener_logic():
     rejected_count = len(drafts) - valid_count
     recruitment_count = sum(1 for d in drafts if d["reply_type"] == "recruitment")
 
-    logger.info(f"\n📈 STATISTICS:")
+    logger.info("\n📈 STATISTICS:")
     logger.info(f"   Total Mentions Processed: {len(drafts)}")
     logger.info(f"   Valid Drafts: {valid_count}")
     logger.info(f"   Rejected (Governance): {rejected_count}")
     logger.info(f"   Recruitment Pitches: {recruitment_count}")
 
-    logger.info(f"\n🔍 DETAILED RESULTS:")
+    logger.info("\n🔍 DETAILED RESULTS:")
     for i, draft in enumerate(drafts, 1):
         author = draft["original_author"]
         reply_type = draft["reply_type"]

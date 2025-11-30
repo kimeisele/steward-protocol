@@ -82,19 +82,19 @@ class RegistryAgent(VibeAgent):
 
                 config = self._validate_agent_config(agent_dir)
                 if not config:
-                    logger.warning(f"   ❌ Invalid configuration")
+                    logger.warning("   ❌ Invalid configuration")
                     rejected.append(agent_name)
                     continue
 
                 existing = self.registry.get("agents", {}).get(agent_name)
 
                 if existing:
-                    logger.info(f"   📝 Already registered (updating metadata)")
+                    logger.info("   📝 Already registered (updating metadata)")
                     existing["last_scanned"] = datetime.now(timezone.utc).isoformat()
                     existing["config"] = config
                     updated.append(agent_name)
                 else:
-                    logger.info(f"   ✅ New agent! Registering...")
+                    logger.info("   ✅ New agent! Registering...")
                     initial_credits = 100
                     agent_record = {
                         "name": agent_name,
@@ -122,9 +122,9 @@ class RegistryAgent(VibeAgent):
 
             if not dry_run:
                 self._save_registry()
-                logger.info(f"\n✅ Registry saved")
+                logger.info("\n✅ Registry saved")
             else:
-                logger.info(f"\n🔍 DRY RUN: Registry not saved")
+                logger.info("\n🔍 DRY RUN: Registry not saved")
 
             result = {
                 "status": "complete",
@@ -137,7 +137,7 @@ class RegistryAgent(VibeAgent):
             }
 
             logger.info("\n" + "=" * 70)
-            logger.info(f"✅ REGISTRATION SCAN COMPLETE")
+            logger.info("✅ REGISTRATION SCAN COMPLETE")
             logger.info(f"   New registrations: {len(registered)}")
             logger.info(f"   Updated: {len(updated)}")
             logger.info(f"   Rejected: {len(rejected)}")

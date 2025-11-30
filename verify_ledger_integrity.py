@@ -30,12 +30,13 @@ def verify_ledger_integrity():
 
     try:
         # Boot kernel with agents
-        from vibe_core.kernel_impl import RealVibeKernel
-        from herald.cartridge_main import HeraldCartridge
         from civic.cartridge_main import CivicCartridge
-        from forum.cartridge_main import ForumCartridge
-        from science.cartridge_main import ScientistCartridge
         from envoy.cartridge_main import EnvoyCartridge
+        from forum.cartridge_main import ForumCartridge
+        from herald.cartridge_main import HeraldCartridge
+        from science.cartridge_main import ScientistCartridge
+
+        from vibe_core.kernel_impl import RealVibeKernel
 
         kernel = RealVibeKernel()
 
@@ -67,7 +68,7 @@ def verify_ledger_integrity():
         logger.warning(f"📊 Ledger events BEFORE action: {events_before}")
 
         # Execute an action: Create a proposal
-        logger.warning(f"\n🔄 Creating a proposal through FORUM...")
+        logger.warning("\n🔄 Creating a proposal through FORUM...")
         forum = kernel.agent_registry.get("forum")
 
         if not forum:
@@ -91,14 +92,14 @@ def verify_ledger_integrity():
         # Check if ledger was updated
         delta = events_after - events_before
 
-        logger.warning(f"\n" + "=" * 70)
+        logger.warning("\n" + "=" * 70)
         logger.warning("RESULTS")
         logger.warning("=" * 70)
 
         if delta == 0:
             logger.error(f"❌ FAIL: Ledger unchanged! (Events: {events_before} → {events_after})")
-            logger.error(f"   Action was performed but NOT recorded in kernel ledger.")
-            logger.error(f"   DIAGNOSIS: Agent is writing to local files, bypassing kernel.")
+            logger.error("   Action was performed but NOT recorded in kernel ledger.")
+            logger.error("   DIAGNOSIS: Agent is writing to local files, bypassing kernel.")
             return False
 
         elif delta > 0:
@@ -106,7 +107,7 @@ def verify_ledger_integrity():
             logger.warning(f"   {delta} new event(s) in ledger")
 
             # Show new events
-            logger.warning(f"\n   New ledger entries:")
+            logger.warning("\n   New ledger entries:")
             for event in ledger_after[-delta:]:
                 event_type = event.get("event_type", "UNKNOWN")
                 details = event.get("details", {})

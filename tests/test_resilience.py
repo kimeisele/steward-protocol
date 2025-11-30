@@ -12,20 +12,20 @@ Philosophy: A system that crashes is a bug.
 A system that falls back gracefully is enterprise-grade.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
-import os
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Setup path
 project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from examples.herald.brain import HeraldBrain, ResearchEngine, SeniorEditor
-from examples.herald.artist import HeraldArtist
 from examples.herald.aligner import VibeAligner
+from examples.herald.artist import HeraldArtist
+from examples.herald.brain import HeraldBrain, ResearchEngine
 
 
 class TestHeraldResilience:

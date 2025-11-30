@@ -13,7 +13,6 @@ Moved from HERALD (system agent) to MARKETER (citizen agent) on 2025-11-29.
 
 import logging
 import os
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
@@ -253,6 +252,7 @@ Focus on: AI governance, agent verification, blockchain identity, technical fail
             "Your agent doesn't have an identity. It's a shell script with delusions of grandeur.",
         ]
         import random
+
         return random.choice(templates)
 
     def _generate_reddit_post(self, subreddit: str) -> Optional[Dict[str, str]]:
@@ -316,7 +316,7 @@ They authenticate with API keys, but the agent itself has no verifiable identity
 
 Cryptographic identity + governance rules = verifiable agents.
 
-Thoughts?"""
+Thoughts?""",
         }
 
     def _generate_reply(self, original_text: str, author: str) -> str:

@@ -13,9 +13,8 @@ The Output becomes Sacred through the Ritual Process:
 """
 
 import logging
-from typing import Dict, Any, Optional, Tuple
 from datetime import datetime, timezone
-from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 logger = logging.getLogger("TEMPLE_OFFERING")
 
@@ -144,7 +143,7 @@ class OfferingHandler:
             logger.warning(f"⚠️ DISTRIBUTION PENDING: {distribution_reason}")
 
         logger.info(f"\n{'=' * 70}")
-        logger.info(f"🎉 OFFERING COMPLETE - JAYA!")
+        logger.info("🎉 OFFERING COMPLETE - JAYA!")
         logger.info(f"{'=' * 70}\n")
 
         return True, "Offering successfully presented", result

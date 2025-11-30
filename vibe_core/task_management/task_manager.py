@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from vibe_core.narasimha import ThreatLevel, get_narasimha
+from vibe_core.narasimha import get_narasimha
 from vibe_core.topology import get_agent_placement
 
 from .archive import TaskArchive

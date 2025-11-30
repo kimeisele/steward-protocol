@@ -58,7 +58,7 @@ def test_kernel_bank_isolation():
         old_size = old_db.stat().st_size
         vfs_size = vfs_db.stat().st_size
         if vfs_size > old_size:
-            logger.info(f"   ✅ Old DB exists but VFS DB is newer/larger")
+            logger.info("   ✅ Old DB exists but VFS DB is newer/larger")
         else:
             logger.warning(f"   ⚠️  Old DB exists at {old_db} - may be using wrong path")
     else:

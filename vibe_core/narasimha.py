@@ -37,7 +37,6 @@ TRIGGERS:
 - Direct user command (Emergency Protocol)
 """
 
-import hashlib
 import logging
 import time
 from dataclasses import dataclass

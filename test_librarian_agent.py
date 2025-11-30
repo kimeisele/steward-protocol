@@ -17,14 +17,14 @@ from pathlib import Path
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.scheduling import Task
+from agent_city.registry.librarian.cartridge_main import LibrarianCartridge
 from agent_city.registry.librarian.tools import (
     CatalogBookTool,
-    SearchBooksTool,
     RecommendBooksTool,
+    SearchBooksTool,
 )
-from agent_city.registry.librarian.cartridge_main import LibrarianCartridge
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.scheduling import Task
 
 
 def test_1_register_tools_in_kernel():
@@ -153,9 +153,7 @@ def test_4_search_books(agent):
 
     assert result["success"], f"❌ Search failed: {result.get('error')}"
     assert result["total"] >= 1, "❌ Should find at least 1 book"
-    assert any(
-        "Phoenix" in book["title"] for book in result["books"]
-    ), "❌ Should find Phoenix Project"
+    assert any("Phoenix" in book["title"] for book in result["books"]), "❌ Should find Phoenix Project"
 
     print("✅ Search works via kernel tools")
 

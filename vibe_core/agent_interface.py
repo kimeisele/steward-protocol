@@ -723,9 +723,6 @@ class AgentSystemInterface:
             },
         )
 
-        logger.info(
-            f"🔧 {self.agent_id} executed tool '{tool_name}' "
-            f"(success={result.success})"
-        )
+        logger.info(f"🔧 {self.agent_id} executed tool '{tool_name}' (success={result.success})")
 
         return result

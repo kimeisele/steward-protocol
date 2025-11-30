@@ -15,13 +15,13 @@ Philosophy:
 - Transparency: Every rejection is logged with reasoning
 """
 
-import os
-import yaml
 import json
 import logging
 import re
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+import yaml
 
 logger = logging.getLogger("HERALD_ALIGNER")
 

@@ -4,9 +4,8 @@ SCRIBE Introspection Module - Extract metadata from codebase
 """
 
 import re
-from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 
 class CartridgeIntrospector:

@@ -17,11 +17,10 @@ This respects AGENT CITY architecture:
 - Operator (Human/Script): Executes infrastructure changes via scripts/
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 class SystemHealthCheck:
@@ -70,7 +69,7 @@ class SystemHealthCheck:
                         "severity": "warning",
                         "component": f"git_hook_{hook_name}",
                         "issue": hook_status["issue"],
-                        "remediation": f"Run scripts/setup_hooks.py --fix",
+                        "remediation": "Run scripts/setup_hooks.py --fix",
                     }
                 )
 

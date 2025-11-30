@@ -13,12 +13,10 @@ Inherits from VibeAgent + OathMixin for kernel integration.
 """
 
 import logging
-import json
-from typing import Dict, Any, Optional
-from pathlib import Path
 from datetime import datetime
+from typing import Any, Dict
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 # Constitutional Oath
 # Setup logging

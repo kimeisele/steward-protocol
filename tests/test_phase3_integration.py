@@ -7,22 +7,22 @@ Tests for the wiring of key components:
 3. Scheduler <-> Sarga (respect creation/maintenance cycles)
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import sys
+import tempfile
+from pathlib import Path
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+from vibe_core.kernel_impl import InMemoryScheduler
+from vibe_core.runtime.playbook_router import PlaybookRouter
+from vibe_core.sarga import Cycle, get_sarga
+from vibe_core.scheduling import Task
 from vibe_core.task_management.task_manager import TaskManager
 from vibe_core.task_management.validator_registry import ValidationError
-from vibe_core.runtime.playbook_router import PlaybookRouter
-from vibe_core.kernel_impl import InMemoryScheduler
-from vibe_core.scheduling import Task
-from vibe_core.sarga import get_sarga, Cycle
-from vibe_core.narasimha import get_narasimha, ThreatLevel
 
 
 class TestPhase3TaskManagerNarasimhaWiring:

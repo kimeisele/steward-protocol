@@ -316,10 +316,7 @@ class RealVibeKernel(VibeKernel):
         delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
         self.tool_registry.register(delegate_tool)
 
-        logger.info(
-            f"🔧 Registered {len(self.tool_registry)} core tools: "
-            f"{', '.join(self.tool_registry.list_tools())}"
-        )
+        logger.info(f"🔧 Registered {len(self.tool_registry)} core tools: {', '.join(self.tool_registry.list_tools())}")
 
     def _discover_agent_tools(self) -> None:
         """
@@ -375,11 +372,7 @@ class RealVibeKernel(VibeKernel):
         # Get discovery stats
         stats = discovery.get_discovery_stats()
 
-        logger.info(
-            f"🔧 Auto-discovery complete: "
-            f"{registered_count} tools registered, "
-            f"{failed_count} failed"
-        )
+        logger.info(f"🔧 Auto-discovery complete: {registered_count} tools registered, {failed_count} failed")
 
         if stats["discovered_by_agent"]:
             logger.info("📊 Tools by agent:")
@@ -565,9 +558,7 @@ class RealVibeKernel(VibeKernel):
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
         spawn_status = "spawned in isolated process" if spawn_process else "registered (process deferred)"
-        logger.info(
-            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}."
-        )
+        logger.info(f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}.")
 
     def spawn_deferred_agents(self) -> int:
         """
@@ -589,9 +580,7 @@ class RealVibeKernel(VibeKernel):
 
             # Spawn the process
             try:
-                self.process_manager.spawn_agent(
-                    agent_id, type(agent), config=getattr(agent, "config", None)
-                )
+                self.process_manager.spawn_agent(agent_id, type(agent), config=getattr(agent, "config", None))
                 spawned += 1
                 logger.info(f"🌱 Spawned deferred process for {agent_id}")
             except Exception as e:

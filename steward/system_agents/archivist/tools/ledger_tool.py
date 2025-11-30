@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 logger = logging.getLogger("ARCHIVIST_LEDGER")
 
@@ -77,7 +77,7 @@ class LedgerTool:
             ledger["statistics"]["total_verified"] += 1
 
             self._write_ledger(ledger)
-            self.logger.info(f"✅ Entry written to ledger")
+            self.logger.info("✅ Entry written to ledger")
             return True
 
         except Exception as e:

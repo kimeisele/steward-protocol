@@ -6,8 +6,8 @@ These tools are registered with the kernel, not owned by the agent.
 """
 
 from .catalog_tool import CatalogBookTool
-from .search_tool import SearchBooksTool
 from .recommend_tool import RecommendBooksTool
+from .search_tool import SearchBooksTool
 
 __all__ = [
     "CatalogBookTool",

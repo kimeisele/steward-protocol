@@ -20,8 +20,8 @@ import time
 import traceback
 from dataclasses import dataclass
 from enum import Enum
-from multiprocessing import Pipe, Process, Queue
-from typing import Any, Dict, List, Optional, Tuple, Type
+from multiprocessing import Pipe, Process
+from typing import Any, Dict, List, Tuple, Type
 
 from vibe_core.protocols import VibeAgent
 
@@ -86,7 +86,7 @@ class AgentProcess:
             # Inject Pipe (this replaces direct kernel reference)
             agent.set_kernel_pipe(self.pipe)
 
-            child_logger.info(f"✅ Agent instantiated. Entering event loop.")
+            child_logger.info("✅ Agent instantiated. Entering event loop.")
 
             # Event Loop
             while True:

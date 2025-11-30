@@ -6,9 +6,8 @@ Kernel-compatible module (configured via system.yaml).
 
 import logging
 import os
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 try:
     import tweepy

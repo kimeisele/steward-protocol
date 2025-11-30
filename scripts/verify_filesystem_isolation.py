@@ -16,7 +16,6 @@ Tests:
 import logging
 import os
 import sys
-from typing import Any, Dict
 
 # Ensure we can import vibe_core
 sys.path.append(os.getcwd())
@@ -99,7 +98,7 @@ def test_vfs_security():
     logger.info("2. Attempting path traversal (../../../etc/passwd)...")
     try:
         content = vfs.read_text("../../../etc/passwd")
-        logger.error(f"   ❌ SECURITY BREACH: Path traversal succeeded!")
+        logger.error("   ❌ SECURITY BREACH: Path traversal succeeded!")
         return False
     except PermissionError as e:
         logger.info(f"   ✅ Blocked: {e}")
@@ -111,7 +110,7 @@ def test_vfs_security():
     logger.info("3. Attempting to write to /tmp/escape.txt...")
     try:
         vfs.write_text("/tmp/escape.txt", "Escaped!")
-        logger.error(f"   ❌ SECURITY BREACH: Write outside sandbox succeeded!")
+        logger.error("   ❌ SECURITY BREACH: Write outside sandbox succeeded!")
         return False
     except PermissionError as e:
         logger.info(f"   ✅ Blocked: {e}")

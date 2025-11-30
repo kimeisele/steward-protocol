@@ -10,9 +10,9 @@ Output: JSON status report with missing modules (if any)
 Exit Code: 0 (healthy) or 1 (critical)
 """
 
-import sys
-import json
 import importlib.util
+import json
+import sys
 
 
 def check_module(import_name):

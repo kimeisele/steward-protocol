@@ -27,7 +27,7 @@ def test_herald_naked_boot():
 
     kernel = RealVibeKernel(ledger_path=":memory:")
 
-    print(f"\n📋 Kernel booted successfully")
+    print("\n📋 Kernel booted successfully")
 
     # HERALD agent inspection is not easily accessible via kernel API
     # Instead, we verify by checking if Herald tools are discovered
@@ -41,11 +41,18 @@ def test_herald_naked_boot():
     tools = kernel.tool_registry.list_tools()
     herald_tools = [t for t in tools if t.startswith("herald.")]
 
-    print(f"\n🔧 Herald tools in kernel:")
+    print("\n🔧 Herald tools in kernel:")
     for tool in sorted(herald_tools):
         print(f"   ✅ {tool}")
 
-    expected_tools = ["herald.scout", "herald.broadcast", "herald.research", "herald.identity", "herald.scribe", "herald.tidy"]
+    expected_tools = [
+        "herald.scout",
+        "herald.broadcast",
+        "herald.research",
+        "herald.identity",
+        "herald.scribe",
+        "herald.tidy",
+    ]
     missing_tools = [t for t in expected_tools if t not in herald_tools]
 
     if missing_tools:

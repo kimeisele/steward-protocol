@@ -36,7 +36,7 @@ def test_herald_tidy():
 
     # Check if herald.tidy is discovered
     if "herald.tidy" not in tools:
-        print(f"\n❌ herald.tidy NOT FOUND")
+        print("\n❌ herald.tidy NOT FOUND")
         print(f"Available tools: {tools}")
         return False
 
@@ -56,7 +56,7 @@ def test_herald_tidy():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -84,7 +84,7 @@ def test_herald_tidy():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -112,7 +112,7 @@ def test_herald_tidy():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output

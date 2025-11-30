@@ -34,7 +34,6 @@ Usage:
     python scripts/smoke_test_kernel.py
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -100,7 +99,7 @@ def smoke_test_kernel():
             print("         ❌ FAIL: No Genesis Block found!")
             return False
 
-        print(f"         ✅ Genesis Block found")
+        print("         ✅ Genesis Block found")
         print(f"            Index: {genesis.index}")
         print(f"            Hash: {genesis.hash[:32]}...")
         print(f"            Event Type: {genesis.event_type}")
@@ -113,12 +112,12 @@ def smoke_test_kernel():
         if philosophy_hash and philosophy_hash != "0" * 64:
             print(f"            📜 GAD-000: {philosophy_hash[:16]}... ✅")
         else:
-            print(f"            ⚠️  GAD-000 hash missing or invalid")
+            print("            ⚠️  GAD-000 hash missing or invalid")
 
         if constitution_hash and constitution_hash != "0" * 64:
             print(f"            📜 CONSTITUTION: {constitution_hash[:16]}... ✅")
         else:
-            print(f"            ⚠️  CONSTITUTION hash missing or invalid")
+            print("            ⚠️  CONSTITUTION hash missing or invalid")
 
         # =====================================================================
         # STEP 3: REGISTER DISCOVERER AGENT
@@ -246,7 +245,7 @@ def smoke_test_kernel():
         final_block = final_blocks[-1] if final_blocks else None
 
         if final_block and final_block.event_type == LineageEventType.KERNEL_SHUTDOWN:
-            print(f"         ✅ KERNEL_SHUTDOWN event recorded")
+            print("         ✅ KERNEL_SHUTDOWN event recorded")
             shutdown_reason = final_block.data.get("reason", "unknown")
             print(f"            Reason: {shutdown_reason}")
         else:

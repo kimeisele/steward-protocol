@@ -23,8 +23,6 @@ NO IPs. NO Keys. NO Config. Just magic.
 """
 
 import logging
-import os
-import signal
 import subprocess
 import sys
 import time

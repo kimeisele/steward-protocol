@@ -1,13 +1,15 @@
+import asyncio
+import json
 import logging
 import os
 import sys
-import json
-import subprocess
-import asyncio
+from pathlib import Path
+from typing import Optional, Set
+
 from fastapi import (
     FastAPI,
-    HTTPException,
     Header,
+    HTTPException,
     Query,
     WebSocket,
     WebSocketDisconnect,
@@ -15,8 +17,6 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any, Set
-from pathlib import Path
 
 # --- AGENT MIGRATION PATH FIX (ABSOLUTE PATHS FOR DOCKER) ---
 # Use absolute paths to ensure imports work in Docker containers
@@ -26,18 +26,18 @@ sys.path.insert(0, str(PROJECT_ROOT / "steward" / "system_agents"))
 sys.path.insert(0, str(PROJECT_ROOT / "agent_city" / "registry"))
 
 # KERNEL IMPORTS
-from vibe_core.kernel_impl import RealVibeKernel
-from provider.universal_provider import UniversalProvider
-
 # MILK OCEAN ROUTER IMPORTS
 from envoy.tools.milk_ocean import MilkOceanRouter
 
-# PULSE SYSTEM IMPORTS
-from vibe_core.pulse import get_pulse_manager, PulseFrequency
-from vibe_core.event_bus import get_event_bus, Event
+from provider.universal_provider import UniversalProvider
 
 # STEWARD AGENT IMPORT
 from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.event_bus import Event, get_event_bus
+from vibe_core.kernel_impl import RealVibeKernel
+
+# PULSE SYSTEM IMPORTS
+from vibe_core.pulse import get_pulse_manager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
@@ -597,7 +597,6 @@ def initiate_yagya(request: YagyaRequest):
                 logger.error(f"Yagya failed: {e}")
 
         # Start yagya in background thread
-        import subprocess
         import threading
 
         # Start yagya in background thread

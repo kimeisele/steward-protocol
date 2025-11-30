@@ -1,9 +1,9 @@
-import requests
-import time
-import json
-import base64
 import hashlib
-from ecdsa import SigningKey, NIST256p
+import json
+import time
+
+import requests
+from ecdsa import NIST256p, SigningKey
 from ecdsa.util import sigencode_string
 
 API_URL = "http://127.0.0.1:8000"

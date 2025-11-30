@@ -25,18 +25,17 @@ Architecture:
 
 import json
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 
 # VibeOS Integration
-from vibe_core import Task, VibeAgent
+from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
-from vibe_core.config import CityConfig, ScienceConfig
+from vibe_core.config import ScienceConfig
 
-from .tools.web_search_tool import SearchResult, WebSearchTool
+from .tools.web_search_tool import WebSearchTool
 
 # Constitutional Oath
 # Setup logging

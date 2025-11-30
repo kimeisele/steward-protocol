@@ -108,7 +108,7 @@ def main():
 
     # Note: CPU throttling via nice() is not a hard limit, so we allow generous tolerance
     if usage["cpu_percent"] > usage["quota_cpu"] * 3:  # 3x tolerance
-        logger.warning(f"⚠️  CPU usage significantly exceeds quota (but this is expected with nice())")
+        logger.warning("⚠️  CPU usage significantly exceeds quota (but this is expected with nice())")
     else:
         logger.info("✅ CPU usage within reasonable bounds")
 

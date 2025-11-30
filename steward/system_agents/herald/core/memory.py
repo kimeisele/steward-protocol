@@ -12,8 +12,7 @@ This makes HERALD's behavior auditable and deterministic.
 
 import json
 import logging
-import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional

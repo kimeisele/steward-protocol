@@ -65,7 +65,7 @@ def test_web_search():
 
         # Test fact sheet synthesis
         fact_sheet = search.synthesize_fact_sheet("AI governance 2025", results)
-        logger.info(f"✅ Fact sheet created")
+        logger.info("✅ Fact sheet created")
         logger.info(f"   Key insights: {len(fact_sheet['key_insights'])}")
         logger.info(f"   Summary length: {len(fact_sheet['summary'])} chars")
 

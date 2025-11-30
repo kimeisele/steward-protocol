@@ -30,7 +30,6 @@ Usage:
     python scripts/stress_test_city.py
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -186,9 +185,9 @@ def stress_test_city():
         print(f"         Delta: +{memory_delta:.1f} MB")
 
         if current_memory > 2000:  # 2GB threshold
-            print(f"         ⚠️  WARNING: Memory usage high!")
+            print("         ⚠️  WARNING: Memory usage high!")
         else:
-            print(f"         ✅ Memory usage reasonable")
+            print("         ✅ Memory usage reasonable")
 
         # =====================================================================
         # STEP 7: PARAMPARA CHAIN CHECK
@@ -203,9 +202,9 @@ def stress_test_city():
         print(f"         Expected min: {expected_min} blocks")
 
         if chain_length < expected_min:
-            print(f"         ⚠️  Chain shorter than expected!")
+            print("         ⚠️  Chain shorter than expected!")
         else:
-            print(f"         ✅ Chain length looks good")
+            print("         ✅ Chain length looks good")
 
         # Verify chain integrity
         if kernel.lineage.verify_chain():
@@ -267,7 +266,7 @@ def stress_test_city():
             crashed = total_agents - final_alive
             print(f"         ❌ {crashed} processes crashed during stress test")
         else:
-            print(f"         ✅ All processes survived")
+            print("         ✅ All processes survived")
 
         # Final memory check
         final_memory = get_memory_usage_mb()
@@ -341,9 +340,9 @@ def stress_test_city():
             print("All systems operational:")
             print(f"  ✅ {total_agents} agents booted and survived")
             print(f"  ✅ {final_chain_length} blocks in Parampara chain")
-            print(f"  ✅ Chain integrity verified (no race conditions)")
+            print("  ✅ Chain integrity verified (no race conditions)")
             print(f"  ✅ Memory usage reasonable ({final_memory:.1f} MB)")
-            print(f"  ✅ No process crashes")
+            print("  ✅ No process crashes")
             print()
             print("🚀 READY FOR PHASE 6 (STEWARD Protocol Compliance)")
             print("=" * 70)
@@ -356,7 +355,7 @@ def stress_test_city():
             if not all_processes_survived:
                 print(f"  ❌ {total_agents - final_alive} processes died")
             if not chain_intact:
-                print(f"  ❌ Chain corrupted (race condition in Parampara?)")
+                print("  ❌ Chain corrupted (race condition in Parampara?)")
             if not memory_reasonable:
                 print(f"  ❌ Memory usage too high ({final_memory:.1f} MB)")
             if not no_crashes:

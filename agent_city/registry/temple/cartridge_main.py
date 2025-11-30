@@ -13,12 +13,10 @@ This is the Brahmin function: Discernment, verification, spiritual authority.
 """
 
 import logging
-import json
-from typing import Dict, Any, Optional
-from pathlib import Path
 from datetime import datetime
+from typing import Any, Dict
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TEMPLE_MAIN")
@@ -214,7 +212,7 @@ class TempleCartridge(VibeAgent):
                     reason="PURIFICATION_RITUAL",
                     service_type="purification",
                 )
-            except Exception as e:
+            except Exception:
                 return {
                     "status": "insufficient_credits",
                     "required": self.PURIFICATION_COST,
@@ -255,7 +253,7 @@ class TempleCartridge(VibeAgent):
                     reason="DARSHAN_REQUEST",
                     service_type="darshan",
                 )
-            except Exception as e:
+            except Exception:
                 return {"status": "insufficient_credits", "required": self.DARSHAN_COST}
 
         # Darshan response

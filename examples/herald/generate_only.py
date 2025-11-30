@@ -12,11 +12,11 @@ Used in: GitHub Actions Job 1 (Draft Stage)
 Output: dist/content.json + optional image
 """
 
-import os
-import sys
 import json
 import logging
+import os
 import shutil
+import sys
 from pathlib import Path
 
 # Setup Logging
@@ -28,8 +28,8 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from examples.herald.brain import HeraldBrain
 from examples.herald.artist import HeraldArtist
+from examples.herald.brain import HeraldBrain
 
 
 def main():
@@ -117,7 +117,7 @@ def main():
             clean_text = content.replace("\n", " ").replace('"', '\\"')
             gh_out.write(f"preview_text={clean_text}\n")
             gh_out.write(f"has_image={'true' if image_filename else 'false'}\n")
-        logger.info(f"✅ GitHub Output written")
+        logger.info("✅ GitHub Output written")
     else:
         logger.debug("⚠️  GITHUB_OUTPUT not set (local mode)")
 
@@ -126,7 +126,7 @@ def main():
     logger.info("✅ GENERATION COMPLETE")
     logger.info(f"   Content: {len(content)} chars")
     logger.info(f"   Visual: {'Yes' if image_filename else 'No'}")
-    logger.info(f"   Artifact: dist/content.json")
+    logger.info("   Artifact: dist/content.json")
     logger.info("=" * 70)
 
     sys.exit(0)

@@ -58,10 +58,10 @@ def test_scribe_publishing():
     # Step 3: Verify system interface injection
     print("\n3️⃣  Verifying system interface...")
     if hasattr(scribe, "system"):
-        print(f"   ✅ scribe.system injected")
+        print("   ✅ scribe.system injected")
         print(f"   📁 Sandbox: {scribe.system.get_sandbox_path()}")
     else:
-        print(f"   ❌ scribe.system NOT injected")
+        print("   ❌ scribe.system NOT injected")
         return False
 
     # Step 4: Generate all documentation
@@ -79,11 +79,11 @@ def test_scribe_publishing():
         result = scribe.process(task)
 
         if result.get("success"):
-            print(f"   ✅ Documentation generation succeeded")
+            print("   ✅ Documentation generation succeeded")
             print(f"   📊 Rendered: {result.get('rendered', {})}")
             print(f"   📤 Published: {result.get('published', {})}")
         else:
-            print(f"   ❌ Documentation generation failed")
+            print("   ❌ Documentation generation failed")
             print(f"   Error: {result.get('message')}")
             return False
 
@@ -122,9 +122,9 @@ def test_scribe_publishing():
         if len(found_markers) >= 4:
             print(f"   ✅ CITYMAP.md has complex content ({len(content)} bytes)")
             print(f"   ✅ Found markers: {found_markers}")
-            print(f"   ✅ NOT LOBOTOMIZED - Introspection working!")
+            print("   ✅ NOT LOBOTOMIZED - Introspection working!")
         else:
-            print(f"   ❌ CITYMAP.md appears lobotomized")
+            print("   ❌ CITYMAP.md appears lobotomized")
             print(f"   Found only: {found_markers}")
             print(f"   Content preview: {content[:500]}")
             return False

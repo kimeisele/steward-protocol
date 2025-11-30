@@ -15,19 +15,20 @@ PASS CONDITIONS:
 This is the "smoke test" that proves the system is alive.
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Setup paths
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pytest
-from vibe_core.kernel_impl import RealVibeKernel, KernelStatus
+
+from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.agent_protocol import VibeAgent
+from vibe_core.kernel_impl import KernelStatus, RealVibeKernel
 from vibe_core.scheduling import Task
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
-from steward.system_agents.discoverer.agent import Discoverer, GenericAgent
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("TEST_SYSTEM_BOOT")
@@ -222,7 +223,7 @@ class TestAgentDiscovery:
             assert manifest.agent_id == agent_id
             assert manifest.name is not None
 
-        logger.info(f"✅ All agents have valid manifests")
+        logger.info("✅ All agents have valid manifests")
 
 
 class TestGovernanceGate:
@@ -360,7 +361,7 @@ class TestSystemIntegration:
         manifest_registry = kernel._manifest_registry
 
         assert manifest_registry is not None
-        logger.info(f"✅ Manifest registry is populated after boot and discovery")
+        logger.info("✅ Manifest registry is populated after boot and discovery")
 
 
 # Quick CLI runner for debugging

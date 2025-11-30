@@ -30,12 +30,12 @@ System Shell.
 ================================================================================
 """
 
-import sys
-import os
-import logging
-from pathlib import Path
 import argparse
+import logging
+import os
+import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add project root to Python path
 project_root = Path(__file__).parent
@@ -50,11 +50,11 @@ logging.basicConfig(
 logger = logging.getLogger("STEWARD_BOOTLOADER")
 
 # Import VibeOS Kernel and Boot Orchestrator
-from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.boot_orchestrator import BootOrchestrator
 
 # Import Configuration (GAD-100: Phoenix Configuration)
-from vibe_core.config import ConfigLoader, CityConfig
+from vibe_core.config import CityConfig, ConfigLoader
+from vibe_core.kernel_impl import RealVibeKernel
 
 
 class StewardBootLoader:
@@ -138,7 +138,7 @@ class StewardBootLoader:
 
     def _print_banner(self):
         """Print the system startup banner."""
-        banner = f"""
+        banner = """
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║                                                                            ║
 ║              🌍 STEWARD PROTOCOL - PHASE 6: FIRST CONTACT 🌍              ║

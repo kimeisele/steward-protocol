@@ -97,7 +97,7 @@ class EconomyAgent(VibeAgent):
                 reason=reason,
             )
 
-            logger.info(f"   ✅ Recorded in ledger")
+            logger.info("   ✅ Recorded in ledger")
 
             return {
                 "status": "success",
@@ -126,7 +126,7 @@ class EconomyAgent(VibeAgent):
                 reason="admin_refill",
             )
 
-            logger.info(f"   ✅ Recorded in ledger")
+            logger.info("   ✅ Recorded in ledger")
 
             return {"status": "success", "agent": agent_name, "credits_added": amount}
 
@@ -160,7 +160,7 @@ class EconomyAgent(VibeAgent):
                     "message": f"No broadcast license found for {agent_name}",
                 }
 
-            logger.info(f"   ✅ License revoked")
+            logger.info("   ✅ License revoked")
 
             return {
                 "status": "success",

@@ -3,9 +3,8 @@ Test script for The Engineer Agent.
 Asks the Engineer to build a 'Greeter' agent.
 """
 
-import sys
-import os
 import shutil
+import sys
 from pathlib import Path
 
 # Add project root to path

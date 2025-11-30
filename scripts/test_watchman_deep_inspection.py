@@ -56,9 +56,9 @@ def test_watchman_deep_inspection():
     # Step 3: Verify StandardsInspectionTool is initialized
     print("\n3️⃣  Verifying StandardsInspectionTool...")
     if hasattr(watchman, "standards_tool"):
-        print(f"   ✅ StandardsInspectionTool initialized")
+        print("   ✅ StandardsInspectionTool initialized")
     else:
-        print(f"   ❌ StandardsInspectionTool NOT found")
+        print("   ❌ StandardsInspectionTool NOT found")
         return False
 
     # Step 4: Run deep inspection
@@ -78,7 +78,7 @@ def test_watchman_deep_inspection():
             "WARNINGS_DETECTED",
             "VIOLATIONS_DETECTED",
         ]:
-            print(f"   ✅ Deep inspection completed")
+            print("   ✅ Deep inspection completed")
             print(f"   Status: {result.get('status')}")
             print(f"   Total violations: {result.get('total_violations', 0)}")
             print(f"   Critical count: {result.get('critical_count', 0)}")
@@ -109,11 +109,11 @@ def test_watchman_deep_inspection():
             print(f"   ❌ Report missing keys: {missing_keys}")
             return False
 
-        print(f"   ✅ Report structure valid")
+        print("   ✅ Report structure valid")
         print(f"   📊 By severity: {report['by_severity']}")
         print(f"   📊 By agent: {report['by_agent']}")
     else:
-        print(f"   ❌ No report in result")
+        print("   ❌ No report in result")
         return False
 
     # Step 6: Display violations (if any)

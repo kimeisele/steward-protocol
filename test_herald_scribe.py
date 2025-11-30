@@ -37,7 +37,7 @@ def test_herald_scribe():
 
     # Check if herald.scribe is discovered
     if "herald.scribe" not in tools:
-        print(f"\n❌ herald.scribe NOT FOUND")
+        print("\n❌ herald.scribe NOT FOUND")
         print(f"Available tools: {sorted(tools)}")
         return False
 
@@ -57,7 +57,7 @@ def test_herald_scribe():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -97,7 +97,7 @@ def test_herald_scribe():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output

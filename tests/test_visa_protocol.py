@@ -11,11 +11,11 @@ FAIL CONDITION: System requires human at any step
 This is the GAD-000 test: Can the system run while you sleep?
 """
 
+import hashlib
 import json
 import uuid
-import hashlib
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def print_test_header():

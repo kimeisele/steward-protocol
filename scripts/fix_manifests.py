@@ -4,7 +4,6 @@ Fix all steward.json manifests with correct values from code.
 """
 
 import json
-import re
 from pathlib import Path
 
 # Map agent_id -> correct values from code

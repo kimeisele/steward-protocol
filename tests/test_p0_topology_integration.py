@@ -9,9 +9,10 @@ Tests that the complete topology-aware routing system works end-to-end:
 """
 
 from pathlib import Path
+
+from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core.task_management import TaskManager, TaskStatus
 from vibe_core.topology import get_agent_placement
-from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 
 
 def test_topology_annotation():

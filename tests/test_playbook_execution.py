@@ -16,17 +16,16 @@ import asyncio
 import os
 import shutil
 import sys
-from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 sys.path.insert(0, "/home/user/steward-protocol")
 
-from vibe_core.scheduling.task import Task
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from envoy.deterministic_executor import DeterministicExecutor
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+
 from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from vibe_core.scheduling.task import Task
 
 # Test environment
 SANDBOX_DIR = "./workspaces/sandbox_orchestration"
@@ -127,7 +126,7 @@ async def test_playbook_loads():
         print(f"   Phases: {len(playbook.phases)}")
 
         # Check phase agent_ids
-        print(f"\n   Phase breakdown:")
+        print("\n   Phase breakdown:")
         for phase in playbook.phases:
             print(f"      - {phase.phase_id}: {phase.name}")
             for action in phase.actions:
@@ -137,7 +136,7 @@ async def test_playbook_loads():
                     print(f"         → agent_id: {agent_id}, method: {method}")
         return True
     else:
-        print(f"❌ Playbook not found!")
+        print("❌ Playbook not found!")
         print(f"   Available: {list(engine.playbooks.keys())}")
         return False
 
@@ -163,7 +162,7 @@ async def test_agent_dispatch():
     )
     eng_result = await kernel.submit_task(engineer_task)
     if eng_result.get("status") == "manifested":
-        print(f"   ✅ ENGINEER dispatch successful")
+        print("   ✅ ENGINEER dispatch successful")
     else:
         print(f"   ❌ ENGINEER dispatch failed: {eng_result}")
         cleanup()
@@ -177,7 +176,7 @@ async def test_agent_dispatch():
     )
     aud_result = await kernel.submit_task(auditor_task)
     if aud_result.get("passed"):
-        print(f"   ✅ AUDITOR dispatch successful")
+        print("   ✅ AUDITOR dispatch successful")
     else:
         print(f"   ❌ AUDITOR dispatch failed: {aud_result}")
         cleanup()
@@ -191,8 +190,8 @@ async def test_agent_dispatch():
     )
     chron_result = await kernel.submit_task(chronicle_task)
     if "error" in chron_result or chron_result.get("reason") == "Agent chronicle not found":
-        print(f"   🚨 BLIND SPOT #2 EXPOSED: Chronicle not available!")
-        print(f"      The playbook expects 'chronicle' but we have 'archivist'")
+        print("   🚨 BLIND SPOT #2 EXPOSED: Chronicle not available!")
+        print("      The playbook expects 'chronicle' but we have 'archivist'")
         print(f"      Result: {chron_result}")
     else:
         print(f"   ✅ CHRONICLE dispatch successful: {chron_result}")

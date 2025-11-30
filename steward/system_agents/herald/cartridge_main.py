@@ -199,7 +199,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         if OathMixin and self.oath_sworn is False:
             try:
                 oath_event = await self.swear_constitutional_oath()
-                logger.info(f"✅ Herald has been bound to Constitution")
+                logger.info("✅ Herald has been bound to Constitution")
                 logger.info(f"   Hash: {oath_event['constitution_hash_short']}...")
                 logger.info(f"   Event ID: {oath_event['event_id']}")
             except Exception as e:
@@ -233,7 +233,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 content = task.payload.get("content")
                 platform = task.payload.get("platform", "twitter")
                 # Publish via kernel (herald.broadcast)
-                result = self.system.execute_tool("herald.broadcast", {"action": "publish", "content": content, "platform": platform})
+                result = self.system.execute_tool(
+                    "herald.broadcast", {"action": "publish", "content": content, "platform": platform}
+                )
                 return {
                     "status": "published" if result.success else "failed",
                     "published": result.output.get("published") if result.success else False,
@@ -336,7 +338,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
     def _check_connectivity(self, platform: str) -> bool:
         """Helper method to check connectivity via kernel (herald.broadcast)."""
         try:
-            result = self.system.execute_tool("herald.broadcast", {"action": "verify_credentials", "platform": platform})
+            result = self.system.execute_tool(
+                "herald.broadcast", {"action": "verify_credentials", "platform": platform}
+            )
             return result.success and result.output.get("verified", False)
         except Exception:
             return False
@@ -356,11 +360,11 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             Formatted constraint citation string
         """
         citations = {
-            "license_revoked": f"❌ Failure. Action was blocked because **broadcast license is revoked**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
-            "license_inactive": f"❌ Failure. Action was blocked because **broadcast license is inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
-            "connectivity_disabled": f"❌ Failure. Action was blocked because **connectivity is unauthorized/inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
-            "insufficient_credits": f"❌ Failure. Action was blocked because **insufficient credits remain**. Budget allocation requires **FORUM proposal approval** per Article V (Economic Governance).",
-            "governance_violation": f"❌ Failure. Action was blocked by governance validation. The content violates one or more rules in the **HeraldConstitution** governance framework.",
+            "license_revoked": "❌ Failure. Action was blocked because **broadcast license is revoked**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "license_inactive": "❌ Failure. Action was blocked because **broadcast license is inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "connectivity_disabled": "❌ Failure. Action was blocked because **connectivity is unauthorized/inactive**. I cannot violate **Article IV (Secure Broadcast)** of my STEWARD.md governance rules.",
+            "insufficient_credits": "❌ Failure. Action was blocked because **insufficient credits remain**. Budget allocation requires **FORUM proposal approval** per Article V (Economic Governance).",
+            "governance_violation": "❌ Failure. Action was blocked by governance validation. The content violates one or more rules in the **HeraldConstitution** governance framework.",
         }
 
         citation = citations.get(
@@ -429,7 +433,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     )
                     if event:
                         # Log via kernel (herald.scribe)
-                        self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
+                        self.system.execute_tool(
+                            "herald.scribe", {"action": "log_action", "event_data": event.to_dict()}
+                        )
                     return {
                         "status": "rejected",
                         "reason": "no_broadcast_license",
@@ -476,7 +482,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                         )
                         if event:
                             # Log via kernel (herald.scribe)
-                            self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
+                            self.system.execute_tool(
+                                "herald.scribe", {"action": "log_action", "event_data": event.to_dict()}
+                            )
 
                         return {
                             "status": "insufficient_credits",
@@ -492,7 +500,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
 
             # Publish to Twitter
             logger.info("[STEP 2] Verifying Twitter credentials...")
-            verify_result = self.system.execute_tool("herald.broadcast", {"action": "verify_credentials", "platform": "twitter"})
+            verify_result = self.system.execute_tool(
+                "herald.broadcast", {"action": "verify_credentials", "platform": "twitter"}
+            )
             if not (verify_result.success and verify_result.output.get("verified")):
                 # PHASE II: Cite governance constraint
                 constraint_citation = self._cite_governance_constraint(
@@ -515,7 +525,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 }
             else:
                 logger.info("[STEP 3] Publishing to Twitter...")
-                publish_result = self.system.execute_tool("herald.broadcast", {"action": "publish", "content": content, "platform": "twitter"})
+                publish_result = self.system.execute_tool(
+                    "herald.broadcast", {"action": "publish", "content": content, "platform": "twitter"}
+                )
                 if not publish_result.success:
                     logger.error("❌ Twitter publish failed")
                     # PHASE II: Cite governance constraint
@@ -528,7 +540,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                     )
                     if event:
                         # Log via kernel (herald.scribe)
-                        self.system.execute_tool("herald.scribe", {"action": "log_action", "event_data": event.to_dict()})
+                        self.system.execute_tool(
+                            "herald.scribe", {"action": "log_action", "event_data": event.to_dict()}
+                        )
                     return {
                         "status": "failed",
                         "reason": "publish_error",
@@ -634,7 +648,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         logger.info(f"👂 Scanning mentions since ID: {since_id}")
 
         # Scan mentions via kernel (herald.broadcast)
-        scan_result = self.system.execute_tool("herald.broadcast", {"action": "scan_mentions", "since_id": since_id, "platform": "twitter"})
+        scan_result = self.system.execute_tool(
+            "herald.broadcast", {"action": "scan_mentions", "since_id": since_id, "platform": "twitter"}
+        )
         mentions = scan_result.output.get("mentions", []) if scan_result.success else []
 
         if not mentions:
@@ -666,14 +682,18 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                 "bio": "",
                 "name": "",
             }  # In real implementation, fetch full user profile
-            scout_result = self.system.execute_tool("herald.scout", {"action": "analyze_user", "user_data": user_data, "text": text})
+            scout_result = self.system.execute_tool(
+                "herald.scout", {"action": "analyze_user", "user_data": user_data, "text": text}
+            )
             is_bot = scout_result.output.get("is_bot", False) if scout_result.success else False
             confidence = scout_result.output.get("confidence", 0.0) if scout_result.success else 0.0
 
             reply_content = ""
 
             # Check registration via kernel (herald.scout)
-            registered_result = self.system.execute_tool("herald.scout", {"action": "is_registered", "username": author})
+            registered_result = self.system.execute_tool(
+                "herald.scout", {"action": "is_registered", "username": author}
+            )
             is_registered = registered_result.output.get("is_registered", False) if registered_result.success else False
 
             if is_bot and not is_registered:

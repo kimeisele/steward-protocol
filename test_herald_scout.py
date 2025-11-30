@@ -35,7 +35,7 @@ def test_herald_scout():
 
     # Check if herald.scout is discovered
     if "herald.scout" not in tools:
-        print(f"\n❌ herald.scout NOT FOUND")
+        print("\n❌ herald.scout NOT FOUND")
         print(f"Available tools: {tools}")
         return False
 
@@ -61,7 +61,7 @@ def test_herald_scout():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -94,7 +94,7 @@ def test_herald_scout():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
