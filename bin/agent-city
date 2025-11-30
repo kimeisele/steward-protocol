@@ -2,6 +2,7 @@
 """Agent City CLI - Unified interface for Agent City OS (Phase 1)"""
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 
@@ -11,6 +12,83 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from vibe_core.task_management import TaskManager
 from vibe_core.boot_orchestrator import quick_boot
+
+# Import UniversalProvider for semantic routing (CLI -> Brain Bridge)
+from provider.universal_provider import UniversalProvider
+
+
+def cmd_do(args):
+    """
+    Execute a natural language goal through the semantic routing pipeline.
+
+    This is the primary CLI -> Brain bridge that connects:
+    CLI Input -> SemanticRouter -> DeterministicExecutor -> Playbook Execution
+
+    Usage:
+        agent-city do "deploy the herald agent"
+        agent-city do "run security audit on all agents"
+        agent-city do "create a new research report on AI governance"
+    """
+    goal = args.goal
+
+    print(f"🧠 Processing goal: \"{goal}\"")
+    print("─" * 50)
+
+    try:
+        # 1. Boot the kernel (loads all agents)
+        kernel = quick_boot()
+
+        # 2. Initialize UniversalProvider (the brain)
+        #    This sets up: SemanticRouter, DeterministicExecutor, LLM fallbacks
+        provider = UniversalProvider(kernel, use_semantic=True)
+
+        # 3. Route and execute through the full pipeline
+        #    SemanticRouter -> Playbook matching -> DeterministicExecutor
+        async def execute():
+            return await provider.route_and_execute(goal)
+
+        result = asyncio.run(execute())
+
+        # 4. Display results
+        status = result.get("status", "UNKNOWN")
+        path = result.get("path", "unknown")
+
+        if status == "success":
+            print(f"✅ Status: {status} (path: {path})")
+        elif status == "PROPOSAL_PENDING":
+            print(f"📝 Status: {status}")
+            print(f"   A new playbook proposal was generated.")
+            print(f"   Proposal ID: {result.get('proposal_id', 'N/A')}")
+            print(f"   Review required via HIL (Human-in-the-Loop)")
+        elif status == "SUBMITTED":
+            print(f"⏳ Status: {status} (path: {path})")
+            task_id = result.get("details", {}).get("task_id", "N/A")
+            agent = result.get("details", {}).get("agent", "N/A")
+            print(f"   Task ID: {task_id}")
+            print(f"   Assigned to: {agent}")
+        else:
+            print(f"📊 Status: {status} (path: {path})")
+
+        # Show summary if available
+        summary = result.get("summary", "")
+        if summary:
+            print(f"\n{summary}")
+
+        # Show playbook execution details if available
+        if result.get("playbook_id"):
+            print(f"\n🎯 Playbook executed: {result.get('playbook_id')}")
+            phases = result.get("phases_completed", [])
+            if phases:
+                print(f"   Phases completed: {', '.join(phases)}")
+
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        if args.verbose:
+            traceback.print_exc()
+        return 1
 
 
 def cmd_task_add(args):
@@ -203,6 +281,23 @@ def main():
     # agent list
     agent_list = agent_subparsers.add_parser("list")
     agent_list.set_defaults(func=cmd_agent_list)
+
+    # do subcommand (THE CLI -> BRAIN BRIDGE)
+    do_parser = subparsers.add_parser(
+        "do",
+        help="Execute a natural language goal through semantic routing",
+        description="Routes your goal through SemanticRouter -> DeterministicExecutor -> Playbooks"
+    )
+    do_parser.add_argument(
+        "goal",
+        help="Natural language goal (e.g., 'deploy herald agent', 'run security audit')"
+    )
+    do_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed error traces"
+    )
+    do_parser.set_defaults(func=cmd_do)
 
     # Parse arguments
     args = parser.parse_args()
