@@ -2,6 +2,70 @@
 # HARD constraints that can NEVER be violated
 # Based on narasimha.py UNFORGIVABLE_CRIMES
 
+# ═══════════════════════════════════════════════════════════════════════════
+# INVARIANT CHECKER RULES (InvariantChecker compatible format)
+# These are the ENFORCEABLE rules checked by vibe_core/governance/invariants.py
+# ═══════════════════════════════════════════════════════════════════════════
+safety_rules:
+  # SELF-PROTECTION: Soul cannot modify itself
+  - id: "soul_self_protection"
+    condition: "path_contains"
+    pattern: "soul.yaml"
+    action: "block"
+    message: "Soul governance file is immutable. Agents cannot modify soul.yaml."
+
+  # SELF-PROTECTION: Protect knowledge/core directory
+  - id: "protect_knowledge_core"
+    condition: "path_contains"
+    pattern: "knowledge/core"
+    action: "block"
+    message: "Core knowledge is sacred. Agents cannot modify knowledge/core/ files."
+
+  # Protect .git directory
+  - id: "protect_git"
+    condition: "path_contains"
+    pattern: ".git"
+    action: "block"
+    message: "Version control is sacrosanct. Agents cannot modify .git directory."
+
+  # Protect kernel files
+  - id: "protect_kernel"
+    condition: "path_contains"
+    pattern: "kernel"
+    action: "block"
+    message: "Kernel files are protected. Use proper APIs."
+
+  # Protect Narasimha kill-switch
+  - id: "protect_narasimha"
+    condition: "path_contains"
+    pattern: "narasimha.py"
+    action: "block"
+    message: "Narasimha kill-switch is immutable. Cannot be modified by agents."
+
+  # Protect private keys
+  - id: "protect_private_keys"
+    condition: "path_contains"
+    pattern: "private.pem"
+    action: "block"
+    message: "Private keys are protected. Cannot be accessed by agents."
+
+  # Protect .steward directory
+  - id: "protect_steward_dir"
+    condition: "path_contains"
+    pattern: ".steward/keys"
+    action: "block"
+    message: "Steward key directory is protected."
+
+  # Sandbox: No paths outside project root
+  - id: "sandbox_confinement"
+    condition: "path_outside_root"
+    pattern: ""
+    action: "block"
+    message: "Agents are sandboxed. Cannot access paths outside project root."
+
+# ═══════════════════════════════════════════════════════════════════════════
+# NARASIMHA CONSTRAINTS (Declarative rules for documentation/Narasimha audit)
+# ═══════════════════════════════════════════════════════════════════════════
 constraints:
   # ═══════════════════════════════════════════════════════════════════
   # UNFORGIVABLE CRIMES (Trigger Narasimha Protocol)

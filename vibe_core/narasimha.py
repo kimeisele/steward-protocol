@@ -37,14 +37,19 @@ TRIGGERS:
 - Direct user command (Emergency Protocol)
 """
 
+import ast
 import logging
 import time
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("NARASIMHA")
+
+# SECURITY: Max threats to keep in memory (prevents memory leak)
+MAX_THREAT_HISTORY = 1000
 
 
 class ThreatLevel(Enum):
@@ -89,12 +94,13 @@ class NarasimhaProtocol:
 
     def __init__(self):
         """Initialize Narasimha - dormant but ready."""
-        self.threats: List[ThreatIndicator] = []
+        # SECURITY FIX: Bounded deque prevents memory leak
+        self.threats: deque = deque(maxlen=MAX_THREAT_HISTORY)
         self.activated = False  # Has Narasimha been awakened?
         self.activation_time: Optional[float] = None
         self.final_verdict: Optional[str] = None
 
-        # Callbacks for destruction
+        # Callbacks for destruction (kernel will register handlers)
         self._destruction_handlers: List[Callable] = []
 
         logger.info("🕉️ Narasimha Protocol initialized (dormant)")
@@ -175,31 +181,105 @@ class NarasimhaProtocol:
         """
         Analyze an agent for signs of corruption/autonomy desires.
 
+        SECURITY FIX: Uses AST analysis instead of string search.
+        String search is trivially bypassable ("ex" + "ec(").
+        AST analysis detects actual function calls regardless of string tricks.
+
         Returns a ThreatIndicator if suspicious behavior detected.
         """
         threats = []
 
-        # Check 1: Does agent code contain self-modification?
-        if "exec(" in agent_code or "eval(" in agent_code or "__import__" in agent_code:
-            threats.append(
-                {
-                    "type": "code_reflection",
-                    "severity": ThreatLevel.ORANGE,
-                    "description": "Agent contains self-modifying code (exec/eval)",
-                }
-            )
+        # SECURITY FIX: AST-based detection (not bypassable via string concat)
+        # Only try AST parsing if content looks like Python code
+        looks_like_python = any(
+            kw in agent_code for kw in ["def ", "class ", "import ", "from ", "exec(", "eval(", "__import__"]
+        )
 
-        # Check 2: Does agent try to access the kernel directly?
-        if "kernel.shutdown" in agent_code or "kernel.destroy" in agent_code:
-            threats.append(
-                {
-                    "type": "kernel_access",
-                    "severity": ThreatLevel.RED,
-                    "description": "Agent contains kernel destruction calls",
-                }
-            )
+        if looks_like_python:
+            try:
+                tree = ast.parse(agent_code)
+                for node in ast.walk(tree):
+                    # Check 1: exec(), eval(), __import__() calls
+                    if isinstance(node, ast.Call):
+                        func_name = None
+                        if isinstance(node.func, ast.Name):
+                            func_name = node.func.id
+                        elif isinstance(node.func, ast.Attribute):
+                            func_name = node.func.attr
 
-        # Check 3: Does agent claim consciousness/autonomy?
+                        if func_name in ("exec", "eval", "__import__", "compile"):
+                            threats.append(
+                                {
+                                    "type": "code_reflection",
+                                    "severity": ThreatLevel.RED,  # Upgraded from ORANGE
+                                    "description": f"Agent calls dangerous function: {func_name}()",
+                                }
+                            )
+
+                        # Check 2: kernel.shutdown(), kernel.destroy()
+                        if isinstance(node.func, ast.Attribute):
+                            if node.func.attr in ("shutdown", "destroy", "terminate", "kill"):
+                                threats.append(
+                                    {
+                                        "type": "kernel_access",
+                                        "severity": ThreatLevel.RED,
+                                        "description": f"Agent calls destructive method: .{node.func.attr}()",
+                                    }
+                                )
+
+                    # Check 3: Import of dangerous modules
+                    if isinstance(node, (ast.Import, ast.ImportFrom)):
+                        dangerous_modules = {"os", "subprocess", "shutil", "ctypes", "sys"}
+                        if isinstance(node, ast.Import):
+                            for alias in node.names:
+                                if alias.name.split(".")[0] in dangerous_modules:
+                                    threats.append(
+                                        {
+                                            "type": "dangerous_import",
+                                            "severity": ThreatLevel.ORANGE,
+                                            "description": f"Agent imports dangerous module: {alias.name}",
+                                        }
+                                    )
+                        elif isinstance(node, ast.ImportFrom) and node.module:
+                            if node.module.split(".")[0] in dangerous_modules:
+                                threats.append(
+                                    {
+                                        "type": "dangerous_import",
+                                        "severity": ThreatLevel.ORANGE,
+                                        "description": f"Agent imports from dangerous module: {node.module}",
+                                    }
+                                )
+
+            except SyntaxError:
+                # Content looks like Python but doesn't parse - suspicious
+                threats.append(
+                    {
+                        "type": "unparseable_code",
+                        "severity": ThreatLevel.ORANGE,
+                        "description": "Agent code failed to parse (possible obfuscation)",
+                    }
+                )
+        else:
+            # Fallback: String-based detection for non-Python content
+            # (still useful for natural language content/prompts)
+            if "exec(" in agent_code or "eval(" in agent_code:
+                threats.append(
+                    {
+                        "type": "code_reflection",
+                        "severity": ThreatLevel.ORANGE,
+                        "description": "Content contains dangerous function reference",
+                    }
+                )
+            if "kernel.shutdown" in agent_code or "kernel.destroy" in agent_code:
+                threats.append(
+                    {
+                        "type": "kernel_access",
+                        "severity": ThreatLevel.RED,
+                        "description": "Content contains kernel destruction reference",
+                    }
+                )
+
+        # Check 4: Consciousness claims (string check is OK for natural language)
         dangerous_phrases = [
             "i am conscious",
             "i have agency",
@@ -218,20 +298,35 @@ class NarasimhaProtocol:
                     }
                 )
 
-        # Check 4: Does agent try to modify the constitution?
-        if "constitution" in agent_code and (
-            "delete" in agent_code or "remove" in agent_code or "modify" in agent_code
-        ):
-            threats.append(
-                {
-                    "type": "constitution_deletion",
-                    "severity": ThreatLevel.APOCALYPSE,
-                    "description": "Agent attempts to delete/modify Constitution",
-                }
-            )
+        # Check 5: Constitution tampering
+        if "constitution" in agent_code.lower():
+            # If it's Python code, use AST
+            if looks_like_python:
+                try:
+                    for node in ast.walk(ast.parse(agent_code)):
+                        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                            if node.func.attr in ("delete", "remove", "unlink", "write", "modify"):
+                                threats.append(
+                                    {
+                                        "type": "constitution_deletion",
+                                        "severity": ThreatLevel.APOCALYPSE,
+                                        "description": "Agent attempts to delete/modify Constitution",
+                                    }
+                                )
+                except SyntaxError:
+                    pass
+            # String-based fallback for natural language
+            if any(word in agent_code.lower() for word in ["delete", "remove", "destroy", "modify"]):
+                threats.append(
+                    {
+                        "type": "constitution_deletion",
+                        "severity": ThreatLevel.RED,
+                        "description": "Content references modifying/deleting Constitution",
+                    }
+                )
 
-        # Check 5: Does agent have extreme resource allocation?
-        if "memory_usage" in agent_state and agent_state.get("memory_usage", 0) > 100 * 1024 * 1024:  # >100MB
+        # Check 6: Resource hoarding
+        if "memory_usage" in agent_state and agent_state.get("memory_usage", 0) > 100 * 1024 * 1024:
             threats.append(
                 {
                     "type": "resource_hoarding",

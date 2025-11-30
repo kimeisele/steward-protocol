@@ -16,6 +16,8 @@ import json
 import logging
 import os
 import sqlite3
+import threading
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -23,6 +25,10 @@ from typing import Any, Dict, List, Optional
 from .kernel import VibeLedger
 
 logger = logging.getLogger("VIBE_LEDGER")
+
+# Global lock for cross-connection thread safety on same DB file
+_db_locks: Dict[str, threading.Lock] = {}
+_db_locks_lock = threading.Lock()
 
 
 class InMemoryLedger(VibeLedger):
@@ -96,6 +102,15 @@ class InMemoryLedger(VibeLedger):
         return self.events.copy()
 
 
+def _get_db_lock(db_path: str) -> threading.Lock:
+    """Get or create a lock for a specific database file."""
+    abs_path = os.path.abspath(db_path)
+    with _db_locks_lock:
+        if abs_path not in _db_locks:
+            _db_locks[abs_path] = threading.Lock()
+        return _db_locks[abs_path]
+
+
 class SQLiteLedger(VibeLedger):
     """Persistent SQLite-backed Event Ledger - Append-only task record with persistence"""
 
@@ -103,6 +118,7 @@ class SQLiteLedger(VibeLedger):
         """Initialize SQLite ledger with database file"""
         self.db_path = db_path
         self.connection = None
+        self._write_lock = _get_db_lock(db_path)
         self._initialize_db()
 
     def _initialize_db(self) -> None:
@@ -142,50 +158,56 @@ class SQLiteLedger(VibeLedger):
         logger.info("⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
 
     def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
-        """Record a generic event (governance action)"""
-        # Get previous hash for the chain
-        previous_hash = self._get_previous_hash()
+        """Record a generic event (governance action)
 
-        # Create deterministic event string for hashing (matches verify_chain_integrity)
-        timestamp = datetime.utcnow().isoformat()
-        event_string = json.dumps(
-            {
-                "timestamp": timestamp,
-                "event_type": event_type,
-                "task_id": None,
-                "agent_id": agent_id,
-                "payload": json.dumps(details) if details else None,
-                "result": None,
-                "error": None,
-            },
-            sort_keys=True,
-        )
+        Thread-safe: Uses lock to ensure hash chain integrity under concurrent writes.
+        """
+        # CRITICAL: Lock entire read-compute-write cycle for hash chain integrity
+        with self._write_lock:
+            # Get previous hash for the chain
+            previous_hash = self._get_previous_hash()
 
-        # Compute current hash
-        current_hash = self._compute_hash(event_string, previous_hash)
+            # Create deterministic event string for hashing (matches verify_chain_integrity)
+            timestamp = datetime.utcnow().isoformat()
+            event_string = json.dumps(
+                {
+                    "timestamp": timestamp,
+                    "event_type": event_type,
+                    "task_id": None,
+                    "agent_id": agent_id,
+                    "payload": json.dumps(details) if details else None,
+                    "result": None,
+                    "error": None,
+                },
+                sort_keys=True,
+            )
 
-        cursor = self.connection.cursor()
-        row = cursor.execute("SELECT MAX(id) FROM ledger_events").fetchone()
-        next_id = (row[0] or 0) + 1
-        event_id = f"EVT-{next_id:06d}"
+            # Compute current hash
+            current_hash = self._compute_hash(event_string, previous_hash)
 
-        cursor.execute(
-            """
-            INSERT INTO ledger_events
-            (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                event_id,
-                timestamp,
-                event_type,
-                agent_id,
-                json.dumps(details) if details else None,
-                current_hash,
-                previous_hash,
-            ),
-        )
-        self.connection.commit()
+            cursor = self.connection.cursor()
+            row = cursor.execute("SELECT MAX(id) FROM ledger_events").fetchone()
+            next_id = (row[0] or 0) + 1
+            event_id = f"EVT-{next_id:06d}"
+
+            cursor.execute(
+                """
+                INSERT INTO ledger_events
+                (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    event_id,
+                    timestamp,
+                    event_type,
+                    agent_id,
+                    json.dumps(details) if details else None,
+                    current_hash,
+                    previous_hash,
+                ),
+            )
+            self.connection.commit()
+
         logger.debug(f"📝 Ledger: Event recorded {event_id} ({event_type})")
         return event_id
 
@@ -237,51 +259,56 @@ class SQLiteLedger(VibeLedger):
         return hashlib.sha256(combined.encode()).hexdigest()
 
     def _insert_event(self, event: Dict[str, Any]) -> None:
-        """Insert event into database (append-only with hash chaining)"""
+        """Insert event into database (append-only with hash chaining)
+
+        Thread-safe: Uses lock to ensure hash chain integrity.
+        """
         if not self.connection:
             logger.error("❌ Database connection not available")
             return
 
-        # Get previous hash for the chain
-        previous_hash = self._get_previous_hash()
+        # CRITICAL: Lock entire read-compute-write cycle for hash chain integrity
+        with self._write_lock:
+            # Get previous hash for the chain
+            previous_hash = self._get_previous_hash()
 
-        # Create deterministic event string for hashing
-        event_string = json.dumps(
-            {
-                "timestamp": event.get("timestamp"),
-                "event_type": event.get("event_type"),
-                "task_id": event.get("task_id"),
-                "agent_id": event.get("agent_id"),
-                "payload": event.get("payload"),
-                "result": event.get("result"),
-                "error": event.get("error"),
-            },
-            sort_keys=True,
-        )
+            # Create deterministic event string for hashing
+            event_string = json.dumps(
+                {
+                    "timestamp": event.get("timestamp"),
+                    "event_type": event.get("event_type"),
+                    "task_id": event.get("task_id"),
+                    "agent_id": event.get("agent_id"),
+                    "payload": event.get("payload"),
+                    "result": event.get("result"),
+                    "error": event.get("error"),
+                },
+                sort_keys=True,
+            )
 
-        # Compute current hash
-        current_hash = self._compute_hash(event_string, previous_hash)
+            # Compute current hash
+            current_hash = self._compute_hash(event_string, previous_hash)
 
-        cursor = self.connection.cursor()
-        cursor.execute(
-            """
-            INSERT INTO ledger_events
-            (timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                event.get("timestamp"),
-                event.get("event_type"),
-                event.get("task_id"),
-                event.get("agent_id"),
-                event.get("payload"),
-                event.get("result"),
-                event.get("error"),
-                current_hash,
-                previous_hash,
-            ),
-        )
-        self.connection.commit()
+            cursor = self.connection.cursor()
+            cursor.execute(
+                """
+                INSERT INTO ledger_events
+                (timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    event.get("timestamp"),
+                    event.get("event_type"),
+                    event.get("task_id"),
+                    event.get("agent_id"),
+                    event.get("payload"),
+                    event.get("result"),
+                    event.get("error"),
+                    current_hash,
+                    previous_hash,
+                ),
+            )
+            self.connection.commit()
 
     def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Query task result (return most recent event for task)"""

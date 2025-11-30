@@ -38,6 +38,7 @@ from .kernel import (
 from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
+from .narasimha import get_narasimha, ThreatIndicator  # Phase 7: Kill-Switch
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
@@ -240,13 +241,26 @@ class RealVibeKernel(VibeKernel):
         self._ashrama_registry: Dict[str, AshramaTransition] = {}
         logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
 
+        # SECURITY (ARCH-HARDENING): Immutable capability registry
+        # Stores original capabilities at registration time - cannot be modified
+        self._agent_capabilities: Dict[str, frozenset] = {}
+
         # Phase 6: Universal Tool Registry
         # Single source of truth for all agent tools
         # Tools are registered here and accessed via AgentSystemInterface
-        self.tool_registry = ToolRegistry(invariant_checker=self._auditor if AUDITOR_AVAILABLE else None)
+        self.tool_registry = ToolRegistry(
+            invariant_checker=self._auditor if AUDITOR_AVAILABLE else None,
+            capability_checker=self._check_agent_capability,
+        )
         self._register_core_tools()
         self._discover_agent_tools()
         logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} tools total)")
+
+        # Phase 7: NARASIMHA Kill-Switch (Hypervisor Level)
+        # SECURITY FIX: Wire destruction handlers so Narasimha can actually kill agents
+        self._narasimha = get_narasimha()
+        self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
+        logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
 
     def get_bank(self) -> "CivicBank":
         """
@@ -281,6 +295,113 @@ class RealVibeKernel(VibeKernel):
             self._vault = CivicVault(bank.conn)
             logger.info("🔐 Kernel loaded CivicVault (Lazy)")
         return self._vault
+
+    def _check_agent_capability(self, agent_id: str, capability: str) -> bool:
+        """
+        SECURITY (ARCH-HARDENING): Check if agent has a specific capability.
+
+        This method is called by ToolRegistry to enforce capability-based
+        access control. It uses the IMMUTABLE capability set stored at
+        registration time - runtime modifications to agent.capabilities
+        are ignored.
+
+        Args:
+            agent_id: The agent requesting the capability
+            capability: The capability required (e.g., "read_file")
+
+        Returns:
+            True if agent has the capability, False otherwise
+
+        Security:
+            - Uses frozenset stored at registration (immutable)
+            - Agent cannot self-escalate by modifying agent.capabilities
+            - Unregistered agents have NO capabilities
+        """
+        # Get immutable capability set (stored at registration)
+        agent_caps = self._agent_capabilities.get(agent_id, frozenset())
+
+        # Core capabilities that all registered agents have
+        # (basic operations needed for any agent to function)
+        core_caps = frozenset(["read_file", "write_file", "list_tasks", "add_task", "complete_task"])
+
+        # Check if agent has the capability (or it's a core capability)
+        has_capability = capability in agent_caps or capability in core_caps
+
+        if not has_capability:
+            logger.warning(
+                f"⛔ CAPABILITY_DENIED: Agent '{agent_id}' lacks '{capability}'. "
+                f"Registered capabilities: {list(agent_caps)}"
+            )
+
+        return has_capability
+
+    def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
+        """
+        NARASIMHA DESTRUCTION HANDLER - Called when Narasimha activates.
+
+        This is the REAL kill-switch. When Narasimha detects an existential threat,
+        this method executes total annihilation of the rogue agent:
+        1. Kill process (if running)
+        2. Revoke all capabilities
+        3. Remove from registry
+        4. Log to ledger (immutable record)
+        5. Quarantine data
+
+        Args:
+            agent_id: The agent to destroy
+            trigger: The threat that triggered destruction
+        """
+        logger.critical(f"⚡⚡⚡ NARASIMHA EXECUTING: Destroying agent '{agent_id}' ⚡⚡⚡")
+
+        # 1. Kill process immediately
+        if agent_id in self.process_manager.processes:
+            proc_info = self.process_manager.processes[agent_id]
+            try:
+                if proc_info.process.is_alive():
+                    proc_info.process.terminate()
+                    proc_info.process.join(timeout=1)
+                    if proc_info.process.is_alive():
+                        proc_info.process.kill()  # SIGKILL if terminate fails
+                logger.critical(f"🔥 Process killed: {agent_id}")
+            except Exception as e:
+                logger.error(f"Process kill failed: {e}")
+
+        # 2. Revoke all capabilities (set to empty frozenset)
+        if agent_id in self._agent_capabilities:
+            self._agent_capabilities[agent_id] = frozenset()
+            logger.critical(f"🔒 Capabilities revoked: {agent_id}")
+
+        # 3. Remove from agent registry (internal - doesn't affect MappingProxyType view)
+        if agent_id in self._agent_registry:
+            del self._agent_registry[agent_id]
+            logger.critical(f"🗑️  Removed from registry: {agent_id}")
+
+        # 4. Log to ledger (immutable record of destruction)
+        self._ledger.record_event(
+            event_type="NARASIMHA_DESTRUCTION",
+            agent_id=agent_id,
+            details={
+                "trigger_type": trigger.indicator_type,
+                "severity": trigger.severity.value,
+                "description": trigger.description,
+                "evidence": trigger.evidence,
+                "timestamp": trigger.timestamp,
+            },
+        )
+        logger.critical(f"📜 Destruction logged to ledger: {agent_id}")
+
+        # 5. Mark in lineage (permanent blockchain record)
+        self.lineage.add_block(
+            event_type=LineageEventType.AGENT_DESTROYED,
+            agent_id=agent_id,
+            data={
+                "reason": trigger.indicator_type,
+                "description": trigger.description,
+                "destroyer": "NARASIMHA",
+            },
+        )
+        logger.critical(f"⛓️  Destruction recorded in Parampara: {agent_id}")
+        logger.critical(f"✝️ NARASIMHA COMPLETE: Agent '{agent_id}' has been annihilated.")
 
     def _register_core_tools(self) -> None:
         """
@@ -381,8 +502,15 @@ class RealVibeKernel(VibeKernel):
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
-        """Get all registered agents {agent_id: agent}"""
-        return self._agent_registry
+        """Get all registered agents {agent_id: agent}
+
+        SECURITY: Returns a READ-ONLY view to prevent registry poisoning.
+        Agents cannot modify the registry directly.
+        Use register_agent() for registration.
+        """
+        from types import MappingProxyType
+
+        return MappingProxyType(self._agent_registry)
 
     @property
     def scheduler(self) -> VibeScheduler:
@@ -391,8 +519,51 @@ class RealVibeKernel(VibeKernel):
 
     @property
     def ledger(self) -> VibeLedger:
-        """Get the immutable ledger"""
+        """Get the immutable ledger
+
+        WARNING: Direct ledger access allows identity spoofing.
+        Prefer record_verified_event() for agent-attributed events.
+        """
         return self._ledger
+
+    def record_verified_event(
+        self, event_type: str, agent_id: str, details: dict, caller_agent: "VibeAgent" = None
+    ) -> str:
+        """Record an event with identity verification.
+
+        SECURITY: Prevents identity spoofing by validating:
+        1. The agent_id exists in the registry
+        2. If caller_agent is provided, it matches the agent_id
+
+        Args:
+            event_type: Type of event
+            agent_id: ID of the agent this event is attributed to
+            details: Event payload
+            caller_agent: Optional - the agent object making the call
+
+        Returns:
+            event_id if successful
+
+        Raises:
+            PermissionError: If agent_id is not registered or doesn't match caller
+        """
+        # Validate agent exists
+        if agent_id not in self._agent_registry:
+            raise PermissionError(
+                f"IDENTITY_SPOOFING_BLOCKED: Agent '{agent_id}' not registered. "
+                f"Cannot record events for unregistered agents."
+            )
+
+        # If caller provided, verify it matches
+        if caller_agent is not None:
+            if getattr(caller_agent, "agent_id", None) != agent_id:
+                raise PermissionError(
+                    f"IDENTITY_SPOOFING_BLOCKED: Caller '{getattr(caller_agent, 'agent_id', 'unknown')}' "
+                    f"attempted to record event as '{agent_id}'."
+                )
+
+        # Record with verified identity
+        return self._ledger.record_event(event_type, agent_id, details)
 
     @property
     def manifest_registry(self) -> ManifestRegistry:
@@ -485,6 +656,12 @@ class RealVibeKernel(VibeKernel):
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
+
+        # STEP 4.5: SECURITY (ARCH-HARDENING) - Store capabilities IMMUTABLY
+        # Once set, these cannot be modified - prevents privilege escalation
+        agent_caps = getattr(agent, "capabilities", [])
+        self._agent_capabilities[agent.agent_id] = frozenset(agent_caps)
+        logger.debug(f"🔐 Agent '{agent.agent_id}' capabilities locked: {agent_caps}")
 
         # PHASE B: VEDIC GOVERNANCE - Assign Varna and Ashrama
         # Varna = Classification (what kind of being is this agent)

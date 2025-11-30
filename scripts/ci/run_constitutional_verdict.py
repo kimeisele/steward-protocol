@@ -20,6 +20,10 @@ def run_verdict():
     try:
         kernel = RealVibeKernel()
         auditor = AuditorCartridge()
+
+        # Register auditor with kernel so capabilities are tracked
+        kernel.register_agent(auditor)
+
         auditor.system = AgentSystemInterface(kernel, "auditor")
 
         task = Task(agent_id="auditor", payload={"action": "constitutional_verdict"})
