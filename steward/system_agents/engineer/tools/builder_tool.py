@@ -1,15 +1,19 @@
 """
-ENGINEER Builder Tool - Scaffolding and Code Generation.
+ENGINEER Builder Tool - Scaffolding and Code Generation (Tool Protocol).
 
 Capabilities:
 - Scaffold new agent directory structure
 - Generate cartridge code via abstracted LLM service
 - NO vendor lock-in: Uses services.llm_engine for all LLM interactions
+
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 # Import the abstracted LLM service (not vendor-specific)
 from services.llm_engine import llm
@@ -17,9 +21,9 @@ from services.llm_engine import llm
 logger = logging.getLogger("ENGINEER_BUILDER")
 
 
-class BuilderTool:
+class BuilderTool(Tool):
     """
-    The Engineer's toolbox for creating new agents.
+    The Engineer's toolbox for creating new agents (Tool Protocol).
     Delegates all LLM interactions to the abstracted LLMEngine service.
     This tool is agnostic to which LLM provider is being used.
     """
@@ -28,6 +32,96 @@ class BuilderTool:
         """Initialize builder tool with LLM service."""
         self.llm = llm  # Use singleton instance from services
         logger.info("🔨 Builder Tool initialized (using LLMEngine service)")
+
+    @property
+    def name(self) -> str:
+        return "engineer.builder"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Agent scaffolding and code generation - scaffold structure, generate cartridge code"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'scaffold' | 'generate_code'",
+            },
+            "name": {
+                "type": "string",
+                "required": True,
+                "description": "Agent name (e.g., 'weather')",
+            },
+            "mission": {
+                "type": "string",
+                "required": False,
+                "description": "Agent mission/description (required for generate_code)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["scaffold", "generate_code"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'scaffold' or 'generate_code'")
+
+        if "name" not in parameters:
+            raise ValueError("Missing required parameter: name")
+
+        if action == "generate_code" and "mission" not in parameters:
+            raise ValueError("generate_code requires 'mission' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute builder operation."""
+        try:
+            action = parameters["action"]
+            name = parameters["name"]
+
+            if action == "scaffold":
+                success = self.scaffold_agent(name)
+                if success:
+                    return ToolResult(
+                        success=True,
+                        output={"scaffolded": True, "agent_name": name},
+                        metadata={
+                            "action": "scaffold",
+                            "path": str(Path(name)),
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error=f"Scaffold failed for agent '{name}' (directory might already exist)",
+                    )
+
+            elif action == "generate_code":
+                mission = parameters["mission"]
+                code = self.generate_agent_code(name, mission)
+
+                if code:
+                    return ToolResult(
+                        success=True,
+                        output={"code": code, "agent_name": name},
+                        metadata={
+                            "action": "generate_code",
+                            "code_length": len(code),
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error="Code generation failed",
+                    )
+
+        except Exception as e:
+            error_msg = f"Builder tool execution failed: {type(e).__name__}: {e!s}"
+            logger.error(f"BuilderTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def scaffold_agent(self, name: str) -> bool:
         """
@@ -184,3 +278,6 @@ class {class_name}(VibeAgent):
             "capabilities": self.capabilities
         }}
 """
+
+
+__all__ = ["BuilderTool"]

@@ -1,15 +1,19 @@
 """
-ARTISAN Media Tool - Image processing and branding.
+ARTISAN Media Tool - Image processing and branding (Tool Protocol).
 
 Capabilities:
 - Crop to 16:9 (Twitter format)
 - Apply 'Verified by Steward' watermark
+
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import logging
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 try:
     from PIL import Image, ImageDraw, ImageFont
@@ -21,9 +25,9 @@ except ImportError:
 logger = logging.getLogger("ARTISAN_MEDIA")
 
 
-class MediaTool:
+class MediaTool(Tool):
     """
-    The Artisan's toolbox for media manipulation.
+    The Artisan's toolbox for media manipulation (Tool Protocol).
     """
 
     def __init__(self):
@@ -34,6 +38,77 @@ class MediaTool:
         else:
             self.enabled = True
             logger.info("✅ Artisan Media Tool initialized")
+
+    @property
+    def name(self) -> str:
+        return "artisan.media"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Image processing and branding - crop to 16:9, add Steward watermark"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'process_image'",
+            },
+            "image_path": {
+                "type": "string",
+                "required": True,
+                "description": "Path to source image",
+            },
+            "output_path": {
+                "type": "string",
+                "required": False,
+                "description": "Path to save processed image (default: source_artisan.png)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["process_image"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'process_image'")
+
+        if "image_path" not in parameters:
+            raise ValueError("Missing required parameter: image_path")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute media processing."""
+        try:
+            action = parameters["action"]
+            image_path = parameters["image_path"]
+            output_path = parameters.get("output_path")
+
+            if action == "process_image":
+                result_path = self.process_image(image_path, output_path)
+
+                if result_path:
+                    return ToolResult(
+                        success=True,
+                        output={"processed_path": result_path},
+                        metadata={
+                            "action": "process_image",
+                            "source": image_path,
+                            "destination": result_path,
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error="Image processing failed",
+                    )
+
+        except Exception as e:
+            error_msg = f"Media tool execution failed: {type(e).__name__}: {e!s}"
+            logger.error(f"MediaTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def process_image(self, image_path: str, output_path: Optional[str] = None) -> Optional[str]:
         """
@@ -173,3 +248,6 @@ class MediaTool:
         except Exception as e:
             logger.error(f"❌ Image processing failed: {e}")
             return None
+
+
+__all__ = ["MediaTool"]
