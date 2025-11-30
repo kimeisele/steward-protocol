@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-30T19:46:40.782319
+**Last Updated:** 2025-11-30T20:05:38.407580
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 26
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 8
+- Total Events: 12
 
 ## 🤖 Agent Status
 
@@ -18,13 +18,17 @@
 - status: RUNNING
 - capabilities: ['discovery', 'registration', 'governance']
 
-### envoy
-- agent_id: envoy
-- name: ENVOY
+### civic
+- agent_id: civic
+- name: CIVIC
 - status: RUNNING
-- domain: ORCHESTRATION
-- capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
-- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
+- capabilities: ['registry', 'licensing', 'ledger', 'governance']
+
+### science
+- agent_id: science
+- name: SCIENCE
+- status: RUNNING
+- capabilities: ['research', 'web_search', 'fact_synthesis']
 
 ### supreme_court
 - agent_id: supreme_court
@@ -33,6 +37,36 @@
 - domain: GOVERNANCE
 - capabilities: ['appeals', 'precedent']
 
+### archivist
+- agent_id: archivist
+- name: ARCHIVIST
+- status: RUNNING
+- domain: INFRASTRUCTURE
+- capabilities: ['seal_history', 'ledger']
+- description: History keeper: seals verified code into git history
+
+### envoy
+- agent_id: envoy
+- name: ENVOY
+- status: RUNNING
+- domain: ORCHESTRATION
+- capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
+- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
+
+### watchman
+- agent_id: watchman
+- name: WATCHMAN
+- status: RUNNING
+- domain: ENFORCEMENT
+- capabilities: ['integrity_scanning', 'account_freezing', 'violation_detection']
+- description: System integrity enforcer and governance enforcer
+
+### ping
+- agent_id: ping
+- name: PING
+- status: RUNNING
+- capabilities: ['ping', 'status']
+
 ### engineer
 - agent_id: engineer
 - name: ENGINEER
@@ -40,38 +74,6 @@
 - domain: ENGINEERING
 - capabilities: ['manifest_reality', 'agent_scaffolding', 'code_generation']
 - description: Builder agent (Tool Protocol v3.0)
-
-### scribe
-- agent_id: scribe
-- name: SCRIBE
-- status: RUNNING
-- capabilities: ['documentation', 'introspection', 'publishing']
-
-### science
-- agent_id: science
-- name: SCIENCE
-- status: RUNNING
-- capabilities: ['research', 'web_search', 'fact_synthesis']
-
-### oracle
-- agent_id: oracle
-- name: ORACLE
-- status: RUNNING
-- domain: INTROSPECTION
-- capabilities: ['introspection', 'audit_trail', 'system_health']
-- description: System introspection and explanation agent
-
-### discoverer
-- agent_id: discoverer
-- name: DISCOVERER
-- status: RUNNING
-- capabilities: ['discovery', 'registration', 'governance']
-
-### ping
-- agent_id: ping
-- name: PING
-- status: RUNNING
-- capabilities: ['ping', 'status']
 
 ### herald
 - agent_id: herald
@@ -91,6 +93,26 @@
 - capabilities: ['governance', 'voting', 'proposal_management']
 - governance_metrics: {'total_proposals': 0, 'open_proposals': 0, 'approved_proposals': 0, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 0, 'next_proposal_id': 1, 'proposals_path': '/tmp/vibe_os/agents/forum/governance/proposals', 'votes_ledger_path': '/tmp/vibe_os/agents/forum/governance/votes/votes.jsonl', 'executed_archive_path': '/tmp/vibe_os/agents/forum/governance/executed'}
 
+### scribe
+- agent_id: scribe
+- name: SCRIBE
+- status: RUNNING
+- capabilities: ['documentation', 'introspection', 'publishing']
+
+### discoverer
+- agent_id: discoverer
+- name: DISCOVERER
+- status: RUNNING
+- capabilities: ['discovery', 'registration', 'governance']
+
+### oracle
+- agent_id: oracle
+- name: ORACLE
+- status: RUNNING
+- domain: INTROSPECTION
+- capabilities: ['introspection', 'audit_trail', 'system_health']
+- description: System introspection and explanation agent
+
 ### auditor
 - agent_id: auditor
 - name: AUDITOR
@@ -99,39 +121,11 @@
 - capabilities: ['verify_changes', 'auditing', 'constitutional_verdict', 'auditor.verdict']
 - description: Quality gate agent (Tool Protocol v3.0)
 
-### civic
-- agent_id: civic
-- name: CIVIC
+### mechanic
+- agent_id: mechanic
+- name: MECHANIC
 - status: RUNNING
-- capabilities: ['registry', 'licensing', 'ledger', 'governance']
-
-### archivist
-- agent_id: archivist
-- name: ARCHIVIST
-- status: RUNNING
-- domain: INFRASTRUCTURE
-- capabilities: ['seal_history', 'ledger']
-- description: History keeper: seals verified code into git history
-
-### watchman
-- agent_id: watchman
-- name: WATCHMAN
-- status: RUNNING
-- domain: ENFORCEMENT
-- capabilities: ['integrity_scanning', 'account_freezing', 'violation_detection']
-- description: System integrity enforcer and governance enforcer
-
-### lens
-- agent_id: lens
-- name: LENS
-- status: RUNNING
-- capabilities: ['observation']
-
-### marketer
-- agent_id: marketer
-- name: MARKETER
-- status: RUNNING
-- capabilities: []
+- capabilities: ['maintenance']
 
 ### librarian
 - agent_id: librarian
@@ -139,17 +133,11 @@
 - status: RUNNING
 - capabilities: []
 
-### mechanic
-- agent_id: mechanic
-- name: MECHANIC
+### temple
+- agent_id: temple
+- name: TEMPLE
 - status: RUNNING
-- capabilities: ['maintenance']
-
-### market
-- agent_id: market
-- name: MARKET
-- status: RUNNING
-- capabilities: ['trading']
+- capabilities: ['offerings']
 
 ### pulse
 - agent_id: pulse
@@ -157,17 +145,23 @@
 - status: RUNNING
 - capabilities: ['twitter_api', 'engagement_tracking']
 
-### agora
-- agent_id: agora
-- name: AGORA
-- status: RUNNING
-- capabilities: ['community_management']
-
 ### artisan
 - agent_id: artisan
 - name: ARTISAN
 - status: RUNNING
 - capabilities: ['media_production']
+
+### marketer
+- agent_id: marketer
+- name: MARKETER
+- status: RUNNING
+- capabilities: []
+
+### lens
+- agent_id: lens
+- name: LENS
+- status: RUNNING
+- capabilities: ['observation']
 
 ### ambassador
 - agent_id: ambassador
@@ -181,11 +175,17 @@
 - status: RUNNING
 - capabilities: ['data_ethics', 'truth_verification']
 
-### temple
-- agent_id: temple
-- name: TEMPLE
+### agora
+- agent_id: agora
+- name: AGORA
 - status: RUNNING
-- capabilities: ['offerings']
+- capabilities: ['community_management']
+
+### market
+- agent_id: market
+- name: MARKET
+- status: RUNNING
+- capabilities: ['trading']
 
 ---
 *This dashboard is auto-generated by the kernel heartbeat.*
