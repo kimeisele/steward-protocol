@@ -35,8 +35,8 @@ except ImportError:
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 
-# Import Git Tools
-from .tools.git_tools import GitTools
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - chronicle.git - Git operations (commits, branches, history)
 
 # Constitutional Oath
 # Setup logging
@@ -97,9 +97,9 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             except Exception as e:
                 logger.warning(f"⚠️  Oath swearing failed (non-critical): {e}")
 
-        # Initialize Git Tools
-        self.git_tools = GitTools(repo_path=".")
-        logger.info("✅ Git Tools initialized (arsenal ready)")
+        # NO tool instances owned - agent is NAKED
+        # Tools accessed via self.system.execute_tool()
+        logger.info("✅ CHRONICLE ready (NO tool instances owned)")
 
         # Task count for tracking
         self.tasks_processed = 0
@@ -120,13 +120,17 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
     def report_status(self) -> Dict[str, Any]:
         """Report agent status for kernel heartbeat."""
+        # Get git status via kernel
+        git_result = self.system.execute_tool("chronicle.git", {"action": "get_status"})
+        git_status = git_result.output if git_result.success else {"success": False}
+
         return {
             "agent_id": self.agent_id,
             "name": self.name,
             "status": "operational",
             "tasks_processed": self.tasks_processed,
             "tasks_successful": self.tasks_successful,
-            "git_status": self.git_tools.get_status(),
+            "git_status": git_status,
         }
 
     def process(self, task: Task) -> Dict[str, Any]:
@@ -192,8 +196,12 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"🔐 Sealing history with message: {message[:50]}...")
 
-        result = self.git_tools.seal_history(message=message, files=files, sign=sign)
+        tool_result = self.system.execute_tool("chronicle.git", {"action": "seal_history", "message": message, "files": files, "sign": sign})
 
+        if not tool_result.success:
+            return {"success": False, "error": tool_result.error}
+
+        result = tool_result.output
         return {
             "success": result["success"],
             "action": "seal_history",
@@ -215,8 +223,16 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"📖 Reading history (limit: {limit})...")
 
-        result = self.git_tools.read_history(pattern=pattern, limit=limit)
+        tool_params = {"action": "read_history", "limit": limit}
+        if pattern:
+            tool_params["pattern"] = pattern
 
+        tool_result = self.system.execute_tool("chronicle.git", tool_params)
+
+        if not tool_result.success:
+            return {"success": False, "error": tool_result.error}
+
+        result = tool_result.output
         return {
             "success": result["success"],
             "action": "read_history",
@@ -238,8 +254,12 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"🔀 Forking reality: {branch_name}...")
 
-        result = self.git_tools.fork_reality(branch_name)
+        tool_result = self.system.execute_tool("chronicle.git", {"action": "fork_reality", "branch_name": branch_name})
 
+        if not tool_result.success:
+            return {"success": False, "error": tool_result.error}
+
+        result = tool_result.output
         return {
             "success": result["success"],
             "action": "fork_reality",
@@ -261,8 +281,12 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"📋 Manifesting {len(files)} files...")
 
-        result = self.git_tools.manifest_reality(files)
+        tool_result = self.system.execute_tool("chronicle.git", {"action": "manifest_reality", "files": files})
 
+        if not tool_result.success:
+            return {"success": False, "error": tool_result.error}
+
+        result = tool_result.output
         return {
             "success": result["success"],
             "action": "manifest_reality",
