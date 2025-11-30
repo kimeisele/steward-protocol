@@ -127,7 +127,9 @@ class OracleCartridge(VibeAgent, OathMixin):
         This is the core introspection: "Why did Watchman freeze this agent?"
         """
         try:
-            result = self.system.execute_tool("oracle.introspection", {"action": "explain_freeze", "agent_id": agent_id})
+            result = self.system.execute_tool(
+                "oracle.introspection", {"action": "explain_freeze", "agent_id": agent_id}
+            )
             if not result.success:
                 return {"query": f"Why is {agent_id} frozen?", "error": result.error}
 

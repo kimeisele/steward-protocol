@@ -217,7 +217,9 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
 
         # Perform search via kernel
         logger.info("   🌐 Searching external sources...")
-        result = self.system.execute_tool("science.web_search", {"action": "briefing", "query": query, "max_results": max_results})
+        result = self.system.execute_tool(
+            "science.web_search", {"action": "briefing", "query": query, "max_results": max_results}
+        )
 
         if not result.success:
             logger.error(f"   ❌ Search failed: {result.error}")

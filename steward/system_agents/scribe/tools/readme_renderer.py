@@ -213,4 +213,3 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
         )
 
         return content
-

@@ -96,7 +96,14 @@ class IntrospectionTool(Tool):
             raise ValueError("Missing required parameter: action")
 
         action = parameters["action"]
-        valid_actions = ["agent_status", "explain_freeze", "audit_trail", "system_status", "trace_transaction", "vault_access_log"]
+        valid_actions = [
+            "agent_status",
+            "explain_freeze",
+            "audit_trail",
+            "system_status",
+            "trace_transaction",
+            "vault_access_log",
+        ]
 
         if action not in valid_actions:
             raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")

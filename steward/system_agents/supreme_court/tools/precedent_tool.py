@@ -150,7 +150,15 @@ class PrecedentTool(Tool):
             raise ValueError("Missing required parameter: action")
 
         action = parameters["action"]
-        valid_actions = ["record_case", "find_similar", "get_cases", "get_mercy_precedents", "get_by_verdict", "cite_case", "get_most_cited"]
+        valid_actions = [
+            "record_case",
+            "find_similar",
+            "get_cases",
+            "get_mercy_precedents",
+            "get_by_verdict",
+            "cite_case",
+            "get_most_cited",
+        ]
 
         if action not in valid_actions:
             raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")

@@ -112,7 +112,14 @@ class GitTools(Tool):
             raise ValueError("Missing required parameter: action")
 
         action = parameters["action"]
-        valid_actions = ["seal_history", "read_history", "fork_reality", "manifest_reality", "get_status", "push_to_remote"]
+        valid_actions = [
+            "seal_history",
+            "read_history",
+            "fork_reality",
+            "manifest_reality",
+            "get_status",
+            "push_to_remote",
+        ]
 
         if action not in valid_actions:
             raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
@@ -138,22 +145,38 @@ class GitTools(Tool):
                     files=parameters.get("files"),
                     sign=parameters.get("sign", True),
                 )
-                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+                return ToolResult(
+                    success=result["success"],
+                    output=result,
+                    error=result.get("message") if not result["success"] else None,
+                )
 
             elif action == "read_history":
                 result = self.read_history(
                     pattern=parameters.get("pattern"),
                     limit=parameters.get("limit", 10),
                 )
-                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+                return ToolResult(
+                    success=result["success"],
+                    output=result,
+                    error=result.get("message") if not result["success"] else None,
+                )
 
             elif action == "fork_reality":
                 result = self.fork_reality(branch_name=parameters["branch_name"])
-                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+                return ToolResult(
+                    success=result["success"],
+                    output=result,
+                    error=result.get("message") if not result["success"] else None,
+                )
 
             elif action == "manifest_reality":
                 result = self.manifest_reality(files=parameters["files"])
-                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+                return ToolResult(
+                    success=result["success"],
+                    output=result,
+                    error=result.get("message") if not result["success"] else None,
+                )
 
             elif action == "get_status":
                 result = self.get_status()
@@ -164,7 +187,11 @@ class GitTools(Tool):
                     remote=parameters.get("remote", "origin"),
                     branch=parameters.get("branch"),
                 )
-                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+                return ToolResult(
+                    success=result["success"],
+                    output=result,
+                    error=result.get("message") if not result["success"] else None,
+                )
 
             else:
                 return ToolResult(success=False, error=f"Unknown action: {action}")

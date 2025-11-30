@@ -196,7 +196,9 @@ class ChronicleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"🔐 Sealing history with message: {message[:50]}...")
 
-        tool_result = self.system.execute_tool("chronicle.git", {"action": "seal_history", "message": message, "files": files, "sign": sign})
+        tool_result = self.system.execute_tool(
+            "chronicle.git", {"action": "seal_history", "message": message, "files": files, "sign": sign}
+        )
 
         if not tool_result.success:
             return {"success": False, "error": tool_result.error}

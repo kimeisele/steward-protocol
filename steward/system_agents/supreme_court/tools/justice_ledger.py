@@ -114,7 +114,14 @@ class JusticeLedger(VibeLedger, Tool):
             raise ValueError("Missing required parameter: action")
 
         action = parameters["action"]
-        valid_actions = ["record_event", "get_events", "get_events_for_agent", "get_events_for_appeal", "get_summary", "verify_integrity"]
+        valid_actions = [
+            "record_event",
+            "get_events",
+            "get_events_for_agent",
+            "get_events_for_appeal",
+            "get_summary",
+            "verify_integrity",
+        ]
 
         if action not in valid_actions:
             raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
