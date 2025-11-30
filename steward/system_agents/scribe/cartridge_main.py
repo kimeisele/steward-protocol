@@ -30,13 +30,12 @@ from vibe_core.config import CityConfig
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
-from .tools.agents_renderer import AgentsRenderer
-from .tools.citymap_renderer import CitymapRenderer
-from .tools.help_renderer import HelpRenderer
-from .tools.index_renderer import IndexRenderer
-from .tools.readme_renderer import ReadmeRenderer
-
-# Import documentation tools
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - scribe.agents_renderer - Generate AGENTS.md
+# - scribe.citymap_renderer - Generate CITYMAP.md
+# - scribe.help_renderer - Generate HELP.md
+# - scribe.index_renderer - Generate INDEX.md
+# - scribe.readme_renderer - Generate README.md
 
 
 # Constitutional Oath (optional)
@@ -96,13 +95,10 @@ class ScribeCartridge(VibeAgent, OathMixin):
         # CRITICAL: Scribe writes to SANDBOX, not project root
         # Future: Kernel will provide publish() mechanism to copy sandbox → root
         self._root_dir = None
-        self._agents_renderer = None
-        self._citymap_renderer = None
-        self._help_renderer = None
-        self._readme_renderer = None
-        self._index_renderer = None
 
-        logger.info("✅ SCRIBE renderers pending initialization")
+        # NO tool instances owned - agent is NAKED
+        # Tools accessed via self.system.execute_tool()
+        logger.info("✅ SCRIBE ready (NO tool instances owned)")
         logger.info("📚 SCRIBE: Ready for operation (awaiting system injection)")
 
     def get_manifest(self) -> AgentManifest:
@@ -118,7 +114,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             dependencies=[],
         )
 
-    # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
+    # PHASE 2.3: Lazy-loading property for sandboxed filesystem access
     @property
     def sandbox_dir(self):
         """Lazy-load sandbox directory for output files.
@@ -133,63 +129,6 @@ class ScribeCartridge(VibeAgent, OathMixin):
             self._root_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"📁 SCRIBE sandbox initialized: {self._root_dir}")
         return self._root_dir
-
-    @property
-    def agents_renderer(self):
-        """Lazy-load AgentsRenderer.
-
-        CRITICAL: Pass PROJECT ROOT (not sandbox) for source code introspection.
-        Scribe needs to READ real source, but WRITE to sandbox.
-        """
-        if self._agents_renderer is None:
-            # Use "." (project root) for introspection, NOT sandbox
-            self._agents_renderer = AgentsRenderer(root_dir=".")
-            logger.debug("📋 AgentsRenderer initialized (source: project root)")
-        return self._agents_renderer
-
-    @property
-    def citymap_renderer(self):
-        """Lazy-load CitymapRenderer.
-
-        CRITICAL: Pass PROJECT ROOT for architecture introspection.
-        """
-        if self._citymap_renderer is None:
-            self._citymap_renderer = CitymapRenderer(root_dir=".")
-            logger.debug("🗺️  CitymapRenderer initialized (source: project root)")
-        return self._citymap_renderer
-
-    @property
-    def help_renderer(self):
-        """Lazy-load HelpRenderer.
-
-        CRITICAL: Pass PROJECT ROOT for codebase introspection.
-        """
-        if self._help_renderer is None:
-            self._help_renderer = HelpRenderer(root_dir=".")
-            logger.debug("❓ HelpRenderer initialized (source: project root)")
-        return self._help_renderer
-
-    @property
-    def readme_renderer(self):
-        """Lazy-load ReadmeRenderer.
-
-        CRITICAL: Pass PROJECT ROOT for project introspection.
-        """
-        if self._readme_renderer is None:
-            self._readme_renderer = ReadmeRenderer(root_dir=".")
-            logger.debug("📖 ReadmeRenderer initialized (source: project root)")
-        return self._readme_renderer
-
-    @property
-    def index_renderer(self):
-        """Lazy-load IndexRenderer.
-
-        CRITICAL: Pass PROJECT ROOT for filesystem introspection.
-        """
-        if self._index_renderer is None:
-            self._index_renderer = IndexRenderer(root_dir=".")
-            logger.debug("📑 IndexRenderer initialized (source: project root)")
-        return self._index_renderer
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
@@ -237,23 +176,24 @@ class ScribeCartridge(VibeAgent, OathMixin):
         published = {}
 
         docs = {
-            "AGENTS.md": self.agents_renderer,
-            "CITYMAP.md": self.citymap_renderer,
-            "HELP.md": self.help_renderer,
-            "README.md": self.readme_renderer,
-            "INDEX.md": self.index_renderer,
+            "AGENTS.md": "scribe.agents_renderer",
+            "CITYMAP.md": "scribe.citymap_renderer",
+            "HELP.md": "scribe.help_renderer",
+            "README.md": "scribe.readme_renderer",
+            "INDEX.md": "scribe.index_renderer",
         }
 
-        for doc_name, renderer in docs.items():
+        for doc_name, tool_name in docs.items():
             try:
-                # Generate content via introspection
-                # Try scan_and_render() first, fall back to render()
-                if hasattr(renderer, "scan_and_render"):
-                    content = renderer.scan_and_render()
-                elif hasattr(renderer, "render"):
-                    content = renderer.render()
-                else:
-                    raise AttributeError(f"Renderer for {doc_name} has no render method")
+                # Generate content via kernel routing
+                result = self.system.execute_tool(tool_name, {"action": "generate"})
+                if not result.success:
+                    logger.error(f"   ❌ Failed to render {doc_name}: {result.error}")
+                    rendered[doc_name] = False
+                    published[doc_name] = False
+                    continue
+
+                content = result.output
 
                 # Write to sandbox
                 sandbox_file = self.sandbox_dir / doc_name
@@ -288,26 +228,26 @@ class ScribeCartridge(VibeAgent, OathMixin):
 
     def _generate_agents(self) -> Dict[str, Any]:
         """Generate AGENTS.md only (with sandbox+publish)."""
-        return self._generate_single_doc("AGENTS.md", self.agents_renderer)
+        return self._generate_single_doc("AGENTS.md", "scribe.agents_renderer")
 
     def _generate_citymap(self) -> Dict[str, Any]:
         """Generate CITYMAP.md only (with sandbox+publish)."""
-        return self._generate_single_doc("CITYMAP.md", self.citymap_renderer)
+        return self._generate_single_doc("CITYMAP.md", "scribe.citymap_renderer")
 
     def _generate_help(self) -> Dict[str, Any]:
         """Generate HELP.md only (with sandbox+publish)."""
-        return self._generate_single_doc("HELP.md", self.help_renderer)
+        return self._generate_single_doc("HELP.md", "scribe.help_renderer")
 
     def _generate_readme(self) -> Dict[str, Any]:
         """Generate README.md only (with sandbox+publish)."""
-        return self._generate_single_doc("README.md", self.readme_renderer)
+        return self._generate_single_doc("README.md", "scribe.readme_renderer")
 
-    def _generate_single_doc(self, doc_name: str, renderer) -> Dict[str, Any]:
+    def _generate_single_doc(self, doc_name: str, tool_name: str) -> Dict[str, Any]:
         """Helper: Generate single doc with 2-step render+publish.
 
         Args:
             doc_name: Filename (e.g., "README.md")
-            renderer: Renderer instance with scan_and_render() or render() method
+            tool_name: Tool name to execute via kernel (e.g., "scribe.readme_renderer")
 
         Returns:
             Result dict with success status
@@ -315,14 +255,12 @@ class ScribeCartridge(VibeAgent, OathMixin):
         logger.info(f"🔄 Generating {doc_name}...")
 
         try:
-            # Step 1: Render to sandbox
-            # Try scan_and_render() first, fall back to render()
-            if hasattr(renderer, "scan_and_render"):
-                content = renderer.scan_and_render()
-            elif hasattr(renderer, "render"):
-                content = renderer.render()
-            else:
-                raise AttributeError("Renderer has no scan_and_render() or render() method")
+            # Step 1: Render to sandbox via kernel routing
+            result = self.system.execute_tool(tool_name, {"action": "generate"})
+            if not result.success:
+                raise RuntimeError(result.error)
+
+            content = result.output
 
             sandbox_file = self.sandbox_dir / doc_name
             sandbox_file.write_text(content)

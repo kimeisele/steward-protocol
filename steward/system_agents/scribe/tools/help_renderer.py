@@ -8,12 +8,16 @@ SCRIBE Help Renderer - Generate HELP.md
 3. DIAGNOSTICS - System health
 
 Dynamic discovery, zero hardcoding.
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 from .introspector import CartridgeIntrospector, ConfigIntrospector, ScriptIntrospector
 from .operations_introspector import (
@@ -23,23 +27,61 @@ from .operations_introspector import (
 )
 
 
-class HelpRenderer:
+class HelpRenderer(Tool):
     """Render HELP.md as 3-layer control center."""
 
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir)
+    def __init__(self):
+        """Initialize renderer (kernel-managed)."""
+        self.root_dir = Path(".")
 
         # Introspectors
-        self.cart_introspector = CartridgeIntrospector(root_dir)
-        self.script_introspector = ScriptIntrospector(root_dir)
-        self.config_introspector = ConfigIntrospector(root_dir)
+        self.cart_introspector = CartridgeIntrospector(str(self.root_dir))
+        self.script_introspector = ScriptIntrospector(str(self.root_dir))
+        self.config_introspector = ConfigIntrospector(str(self.root_dir))
 
         # Operations introspectors
-        self.workflow_introspector = WorkflowIntrospector(root_dir)
-        self.git_introspector = GitActivityIntrospector(root_dir)
-        self.param_introspector = ParameterIntrospector(root_dir)
+        self.workflow_introspector = WorkflowIntrospector(str(self.root_dir))
+        self.git_introspector = GitActivityIntrospector(str(self.root_dir))
+        self.param_introspector = ParameterIntrospector(str(self.root_dir))
 
-    def scan_and_render(self) -> str:
+    @property
+    def name(self) -> str:
+        return "scribe.help_renderer"
+
+    @property
+    def description(self) -> str:
+        return "Generate HELP.md as 3-layer control center (pulse, control room, diagnostics)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate' to scan and render HELP.md content",
+            }
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate renderer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+        if parameters["action"] not in ["generate"]:
+            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute renderer operation."""
+        try:
+            action = parameters["action"]
+            if action == "generate":
+                content = self._scan_and_render()
+                return ToolResult(success=True, output=content)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+        except Exception as e:
+            return ToolResult(success=False, error=str(e))
+
+    def _scan_and_render(self) -> str:
         """Scan system and render HELP.md."""
         # Discover everything
         workflows = self.workflow_introspector.scan_all()
@@ -400,16 +442,3 @@ For detailed information:
         except:
             return {"exists": True, "readable": False}
 
-    def render_to_file(self, output_file: str = "HELP.md") -> bool:
-        """Render and write to file."""
-        try:
-            content = self.scan_and_render()
-            output_path = self.root_dir / output_file
-
-            output_path.write_text(content)
-            print(f"✅ HELP.md generated: {output_path}")
-
-            return True
-        except Exception as e:
-            print(f"❌ Error writing HELP.md: {e}")
-            return False

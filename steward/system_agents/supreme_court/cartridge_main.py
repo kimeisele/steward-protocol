@@ -35,10 +35,9 @@ from steward.oath_mixin import OathMixin
 from vibe_core.config import CivicConfig
 from vibe_core.protocols import AgentManifest, Capability, VibeAgent
 
-from .tools.appeals_tool import AppealStatus, AppealsTool
-from .tools.justice_ledger import JusticeLedger
-from .tools.precedent_tool import PrecedentTool
-from .tools.verdict_tool import VerdictTool, VerdictType
+# Import enums for external use (not tool instances)
+from .tools.appeals_tool import AppealStatus
+from .tools.verdict_tool import VerdictType
 
 # Constitutional Oath binding
 
@@ -90,14 +89,10 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         logger.info("⚖️  SUPREME COURT v1.0: Initializing Appellate System")
 
-        # PHASE 2.3: Lazy-load root_path after system interface injection
-        self._root_path = None
-        self._appeals = None
-        self._verdict = None
-        self._precedent = None
-        self._ledger = None
+        # NO tool instances owned - agent is NAKED
+        # Tools accessed via self.system.execute_tool()
 
-        logger.info("✅ SUPREME COURT v1.0: Ready for appellate review (awaiting system injection)")
+        logger.info("✅ SUPREME COURT v1.0: Ready for appellate review (NO tool instances owned)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest."""
@@ -111,48 +106,6 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             capabilities=self.capabilities,
             dependencies=["auditor"],
         )
-
-    # PHASE 2.3: Lazy-loading properties for sandboxed filesystem access
-    @property
-    def root_path(self):
-        """Lazy-load root_path after system interface injection."""
-        if self._root_path is None:
-            self._root_path = self.system.get_sandbox_path() / "justice"
-            self._root_path.mkdir(parents=True, exist_ok=True)
-            logger.info(f"📁 SUPREME COURT root_path initialized (sandboxed): {self._root_path}")
-        return self._root_path
-
-    @property
-    def appeals(self):
-        """Lazy-load AppealsTool."""
-        if self._appeals is None:
-            self._appeals = AppealsTool(root_path=self.root_path)
-            logger.debug("📋 AppealsTool initialized")
-        return self._appeals
-
-    @property
-    def verdict(self):
-        """Lazy-load VerdictTool."""
-        if self._verdict is None:
-            self._verdict = VerdictTool(root_path=self.root_path)
-            logger.debug("⚖️  VerdictTool initialized")
-        return self._verdict
-
-    @property
-    def precedent(self):
-        """Lazy-load PrecedentTool."""
-        if self._precedent is None:
-            self._precedent = PrecedentTool(root_path=self.root_path)
-            logger.debug("📚 PrecedentTool initialized")
-        return self._precedent
-
-    @property
-    def ledger(self):
-        """Lazy-load JusticeLedger."""
-        if self._ledger is None:
-            self._ledger = JusticeLedger(root_path=self.root_path)
-            logger.debug("📖 JusticeLedger initialized")
-        return self._ledger
 
     def report_status(self):
         """Report agent status for kernel health monitoring."""
@@ -220,24 +173,37 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         # Check if agent has signed constitution
         has_oath = self._verify_constitutional_oath(agent_id, evidence)
 
-        # Create appeal
-        appeal = self.appeals.create_appeal(
-            agent_id=agent_id,
-            violation_id=violation_id,
-            justification=justification,
-            has_oath=has_oath,
-        )
-
-        # Record in justice ledger
-        self.ledger.record_event(
+        # Create appeal via kernel routing
+        appeal_result = self.system.execute_tool(
+            "supreme_court.appeals",
             {
-                "event_type": "APPEAL_FILED",
-                "appeal_id": appeal["appeal_id"],
+                "action": "create",
                 "agent_id": agent_id,
                 "violation_id": violation_id,
+                "justification": justification,
                 "has_oath": has_oath,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
+            },
+        )
+
+        if not appeal_result.success:
+            return {"status": "error", "error": appeal_result.error}
+
+        appeal = appeal_result.output
+
+        # Record in justice ledger via kernel routing
+        self.system.execute_tool(
+            "supreme_court.justice_ledger",
+            {
+                "action": "record_event",
+                "event": {
+                    "event_type": "APPEAL_FILED",
+                    "appeal_id": appeal["appeal_id"],
+                    "agent_id": agent_id,
+                    "violation_id": violation_id,
+                    "has_oath": has_oath,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            },
         )
 
         return {
@@ -261,47 +227,64 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         logger.info(f"🔍 REVIEWING APPEAL: {appeal_id}")
 
-        # Get appeal
-        appeal = self.appeals.get_appeal(appeal_id)
-        if not appeal:
+        # Get appeal via kernel routing
+        appeal_result = self.system.execute_tool("supreme_court.appeals", {"action": "get", "appeal_id": appeal_id})
+        if not appeal_result.success:
             return {"status": "error", "error": f"Appeal {appeal_id} not found"}
+
+        appeal = appeal_result.output
 
         agent_id = appeal["agent_id"]
 
         # Mercy investigation checklist
+        # Find similar precedents via kernel routing
+        precedent_result = self.system.execute_tool(
+            "supreme_court.precedent",
+            {
+                "action": "find_similar",
+                "violation_type": appeal.get("violation_type"),
+                "agent_type": self._get_agent_type(agent_id),
+            },
+        )
+
         findings = {
             "has_valid_oath": self._verify_constitutional_oath(agent_id, {}),
             "credit_balance": self._check_credit_balance(agent_id),
             "offense_count": self._count_previous_violations(agent_id),
-            "similar_precedents": self.precedent.find_similar_cases(
-                violation_type=appeal.get("violation_type"),
-                agent_type=self._get_agent_type(agent_id),
-            ),
+            "similar_precedents": precedent_result.output if precedent_result.success else [],
         }
 
         # Determine mercy eligibility
         is_eligible_for_mercy = self._determine_mercy_eligibility(findings)
 
-        # Update appeal status
-        self.appeals.update_appeal(
-            appeal_id,
+        # Update appeal status via kernel routing
+        self.system.execute_tool(
+            "supreme_court.appeals",
             {
-                "status": AppealStatus.UNDER_REVIEW.value,
-                "findings": findings,
-                "mercy_eligible": is_eligible_for_mercy,
+                "action": "update",
+                "appeal_id": appeal_id,
+                "updates": {
+                    "status": AppealStatus.UNDER_REVIEW.value,
+                    "findings": findings,
+                    "mercy_eligible": is_eligible_for_mercy,
+                },
             },
         )
 
-        # Record in ledger
-        self.ledger.record_event(
+        # Record in ledger via kernel routing
+        self.system.execute_tool(
+            "supreme_court.justice_ledger",
             {
-                "event_type": "APPEAL_REVIEWED",
-                "appeal_id": appeal_id,
-                "agent_id": agent_id,
-                "findings": findings,
-                "mercy_eligible": is_eligible_for_mercy,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
+                "action": "record_event",
+                "event": {
+                    "event_type": "APPEAL_REVIEWED",
+                    "appeal_id": appeal_id,
+                    "agent_id": agent_id,
+                    "findings": findings,
+                    "mercy_eligible": is_eligible_for_mercy,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            },
         )
 
         logger.info(f"📋 APPEAL REVIEW: Agent {agent_id} - Mercy eligible: {is_eligible_for_mercy}")
@@ -329,24 +312,35 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         logger.info(f"⚖️  VERDICT: Appeal {appeal_id} - {verdict_type}")
 
-        # Get appeal and its findings
-        appeal = self.appeals.get_appeal(appeal_id)
-        if not appeal:
+        # Get appeal and its findings via kernel routing
+        appeal_result = self.system.execute_tool("supreme_court.appeals", {"action": "get", "appeal_id": appeal_id})
+        if not appeal_result.success:
             return {"status": "error", "error": f"Appeal {appeal_id} not found"}
+
+        appeal = appeal_result.output
 
         agent_id = appeal["agent_id"]
         violation_id = appeal["violation_id"]
 
-        # Determine verdict
+        # Determine verdict and issue via kernel routing
         if verdict_type == "mercy_granted" and appeal.get("mercy_eligible"):
             # VISHNUDUTA INTERVENTION: Save the condemned agent
-            verdict = self.verdict.issue_verdict(
-                appeal_id=appeal_id,
-                agent_id=agent_id,
-                verdict_type=VerdictType.MERCY_GRANTED,
-                justification=justification,
-                override_auditor=True,
+            verdict_result = self.system.execute_tool(
+                "supreme_court.verdict",
+                {
+                    "action": "issue",
+                    "appeal_id": appeal_id,
+                    "agent_id": agent_id,
+                    "verdict_type": VerdictType.MERCY_GRANTED.value,
+                    "justification": justification,
+                    "override_auditor": True,
+                },
             )
+
+            if not verdict_result.success:
+                return {"status": "error", "error": verdict_result.error}
+
+            verdict = verdict_result.output
 
             # Restore agent state
             self._restore_agent(agent_id, appeal)
@@ -355,48 +349,74 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         elif verdict_type == "mercy_conditional":
             # Mercy with conditions (probation)
-            verdict = self.verdict.issue_verdict(
-                appeal_id=appeal_id,
-                agent_id=agent_id,
-                verdict_type=VerdictType.MERCY_CONDITIONAL,
-                justification=justification,
-                conditions=payload.get("conditions", []),
-                override_auditor=True,
+            verdict_result = self.system.execute_tool(
+                "supreme_court.verdict",
+                {
+                    "action": "issue",
+                    "appeal_id": appeal_id,
+                    "agent_id": agent_id,
+                    "verdict_type": VerdictType.MERCY_CONDITIONAL.value,
+                    "justification": justification,
+                    "conditions": payload.get("conditions", []),
+                    "override_auditor": True,
+                },
             )
+
+            if not verdict_result.success:
+                return {"status": "error", "error": verdict_result.error}
+
+            verdict = verdict_result.output
 
             logger.info(f"⚠️  CONDITIONAL MERCY: Agent {agent_id} on probation")
 
         else:
             # Uphold the violation - agent is terminated
-            verdict = self.verdict.issue_verdict(
-                appeal_id=appeal_id,
-                agent_id=agent_id,
-                verdict_type=VerdictType.UPHELD,
-                justification=justification or "Appeal denied - violation upheld",
-                override_auditor=False,
+            verdict_result = self.system.execute_tool(
+                "supreme_court.verdict",
+                {
+                    "action": "issue",
+                    "appeal_id": appeal_id,
+                    "agent_id": agent_id,
+                    "verdict_type": VerdictType.UPHELD.value,
+                    "justification": justification or "Appeal denied - violation upheld",
+                    "override_auditor": False,
+                },
             )
+
+            if not verdict_result.success:
+                return {"status": "error", "error": verdict_result.error}
+
+            verdict = verdict_result.output
 
             logger.info(f"💀 VERDICT UPHELD: Agent {agent_id} terminated")
 
-        # Update appeal to closed
-        self.appeals.update_appeal(
-            appeal_id,
+        # Update appeal to closed via kernel routing
+        self.system.execute_tool(
+            "supreme_court.appeals",
             {
-                "status": AppealStatus.CLOSED.value,
-                "verdict_id": verdict.get("verdict_id"),
+                "action": "update",
+                "appeal_id": appeal_id,
+                "updates": {
+                    "status": AppealStatus.CLOSED.value,
+                    "verdict_id": verdict.get("verdict_id"),
+                },
             },
         )
 
-        # Record in ledger
-        self.ledger.record_event(
+        # Record in ledger via kernel routing
+        self.system.execute_tool(
+            "supreme_court.justice_ledger",
             {
-                "event_type": "VERDICT_ISSUED",
-                "verdict_id": verdict.get("verdict_id"),
-                "appeal_id": appeal_id,
-                "agent_id": agent_id,
-                "verdict_type": verdict_type,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
+                "action": "record_event",
+                "event": {
+                    "event_type": "VERDICT_ISSUED",
+                    "verdict_id": verdict.get("verdict_id"),
+                    "appeal_id": appeal_id,
+                    "agent_id": agent_id,
+                    "verdict_type": verdict_type,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            },
         )
 
         return {
@@ -422,29 +442,44 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
 
         logger.info(f"📚 RECORDING PRECEDENT: Verdict {verdict_id}")
 
-        # Get the verdict
-        verdict = self.verdict.get_verdict(verdict_id)
-        if not verdict:
+        # Get the verdict via kernel routing
+        verdict_result = self.system.execute_tool("supreme_court.verdict", {"action": "get", "verdict_id": verdict_id})
+        if not verdict_result.success:
             return {"status": "error", "error": f"Verdict {verdict_id} not found"}
 
-        # Record as precedent
-        precedent_case = self.precedent.record_case(
-            verdict_id=verdict_id,
-            appeal_id=verdict.get("appeal_id"),
-            agent_id=verdict.get("agent_id"),
-            verdict_type=verdict.get("verdict_type"),
-            justification=verdict.get("justification"),
-            category=case_category or "general",
+        verdict = verdict_result.output
+
+        # Record as precedent via kernel routing
+        precedent_result = self.system.execute_tool(
+            "supreme_court.precedent",
+            {
+                "action": "record_case",
+                "verdict_id": verdict_id,
+                "appeal_id": verdict.get("appeal_id"),
+                "agent_id": verdict.get("agent_id"),
+                "verdict_type": verdict.get("verdict_type"),
+                "justification": verdict.get("justification"),
+                "category": case_category or "general",
+            },
         )
 
-        # Record in ledger
-        self.ledger.record_event(
+        if not precedent_result.success:
+            return {"status": "error", "error": precedent_result.error}
+
+        precedent_case = precedent_result.output
+
+        # Record in ledger via kernel routing
+        self.system.execute_tool(
+            "supreme_court.justice_ledger",
             {
-                "event_type": "PRECEDENT_RECORDED",
-                "precedent_case_id": precedent_case.get("case_id"),
-                "verdict_id": verdict_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
+                "action": "record_event",
+                "event": {
+                    "event_type": "PRECEDENT_RECORDED",
+                    "precedent_case_id": precedent_case.get("case_id"),
+                    "verdict_id": verdict_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
+            },
         )
 
         logger.info(f"✅ PRECEDENT ESTABLISHED: Case {precedent_case.get('case_id')}")
@@ -460,7 +495,15 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         """Get status of appeals (for monitoring)."""
         agent_id = payload.get("agent_id")
 
-        appeals_list = self.appeals.get_agent_appeals(agent_id) if agent_id else self.appeals.get_all_appeals()
+        # Get appeals via kernel routing
+        if agent_id:
+            appeals_result = self.system.execute_tool(
+                "supreme_court.appeals", {"action": "get_agent_appeals", "agent_id": agent_id}
+            )
+        else:
+            appeals_result = self.system.execute_tool("supreme_court.appeals", {"action": "get_all"})
+
+        appeals_list = appeals_result.output if appeals_result.success else []
 
         return {
             "status": "ok",
@@ -472,7 +515,13 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
         """Get summary of precedent cases."""
         category = payload.get("category")
 
-        cases = self.precedent.get_precedent_cases(category=category)
+        # Get precedent cases via kernel routing
+        params = {"action": "get_cases"}
+        if category:
+            params["category"] = category
+
+        cases_result = self.system.execute_tool("supreme_court.precedent", params)
+        cases = cases_result.output if cases_result.success else []
 
         return {
             "status": "ok",

@@ -1,24 +1,66 @@
 #!/usr/bin/env python3
 """
 SCRIBE Agents Renderer - Generate AGENTS.md
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 from .introspector import CartridgeIntrospector
 
 
-class AgentsRenderer:
+class AgentsRenderer(Tool):
     """Render AGENTS.md from cartridge metadata."""
 
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir)
-        self.introspector = CartridgeIntrospector(root_dir)
+    def __init__(self):
+        """Initialize renderer (kernel-managed)."""
+        self.root_dir = Path(".")
+        self.introspector = CartridgeIntrospector(str(self.root_dir))
         self.agents = {}
 
-    def scan_and_render(self) -> str:
+    @property
+    def name(self) -> str:
+        return "scribe.agents_renderer"
+
+    @property
+    def description(self) -> str:
+        return "Generate AGENTS.md from cartridge metadata introspection"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate' to scan and render AGENTS.md content",
+            }
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate renderer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+        if parameters["action"] not in ["generate"]:
+            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute renderer operation."""
+        try:
+            action = parameters["action"]
+            if action == "generate":
+                content = self._scan_and_render()
+                return ToolResult(success=True, output=content)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+        except Exception as e:
+            return ToolResult(success=False, error=str(e))
+
+    def _scan_and_render(self) -> str:
         """Scan cartridges and render AGENTS.md."""
         # Discover all agents
         self.agents = self.introspector.scan_all(self.root_dir / "steward" / "system_agents")
@@ -116,18 +158,3 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
         section += "\n"
         return section
 
-    def render_to_file(self, output_file: str = "AGENTS.md") -> bool:
-        """Render and write to file."""
-        try:
-            content = self.scan_and_render()
-            output_path = self.root_dir / output_file
-
-            output_path.write_text(content)
-            print(f"✅ AGENTS.md generated: {output_path}")
-            print(f"📊 Discovered {len(self.agents)} agents")
-            print(f"🔧 Total tools: {sum(len(a['tools']) for a in self.agents.values())}")
-
-            return True
-        except Exception as e:
-            print(f"❌ Error writing AGENTS.md: {e}")
-            return False
