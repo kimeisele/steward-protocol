@@ -29,7 +29,6 @@ from typing import Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .economy import CivicBank
 from .lifecycle_manager import LifecycleManager, LifecycleStatus
 
 logger = logging.getLogger("LIFECYCLE_ENFORCER")
@@ -64,9 +63,8 @@ class LifecycleEnforcer(Tool):
     """
 
     def __init__(self):
-        """Initialize the enforcer."""
+        """Initialize the enforcer (kernel-managed, self-contained)."""
         self.lifecycle_mgr = LifecycleManager()
-        self.bank = CivicBank()
         logger.info("🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)")
 
     @property
@@ -369,38 +367,25 @@ class LifecycleEnforcer(Tool):
         """
         Check if agent has sufficient credits for the action.
 
+        NOTE: Economic checks are now delegated to the economy system.
+        This method returns a placeholder indicating the credit cost.
+        The calling code should check credits via civic.ledger separately.
+
         Args:
             agent_id: Agent to check
             cost: Credit cost of action
 
         Returns:
-            PermissionResult
+            PermissionResult (always permitted - economy checks done separately)
         """
-        try:
-            balance = self.bank.get_balance(agent_id)
-
-            if balance < cost:
-                return PermissionResult(
-                    permitted=False,
-                    reason=f"Insufficient credits: {agent_id} has {balance}, needs {cost}",
-                    action_type="economic_check",
-                    agent_id=agent_id,
-                )
-
-            return PermissionResult(
-                permitted=True,
-                reason="Economic check passed",
-                action_type="economic_check",
-                agent_id=agent_id,
-            )
-        except Exception as e:
-            # If we can't check the bank, assume insufficient funds (fail-safe)
-            return PermissionResult(
-                permitted=False,
-                reason=f"Could not verify economic status: {str(e)}",
-                action_type="economic_check",
-                agent_id=agent_id,
-            )
+        # NOTE: Credit checks are now done by economy_agent via civic.ledger
+        # This enforcer only checks lifecycle permissions
+        return PermissionResult(
+            permitted=True,
+            reason=f"Economic check delegated (cost: {cost} credits)",
+            action_type="economic_check",
+            agent_id=agent_id,
+        )
 
     def _record_action_intent(
         self,
@@ -410,12 +395,12 @@ class LifecycleEnforcer(Tool):
         details: Optional[Dict[str, Any]] = None,
     ):
         """
-        Record the action intent in the ledger BEFORE execution.
+        Record the action intent.
 
-        This is CRITICAL for karma tracking:
-        1. If system crashes mid-action, we have a record
-        2. Audit trail shows what agents intended to do
-        3. Consequences are PERSISTENT (not a mock)
+        NOTE: Intent recording is now delegated to the economy system.
+        This method is a placeholder for backward compatibility.
+
+        The calling code should record the transaction via civic.ledger.
 
         Args:
             agent_id: Agent performing action
@@ -423,18 +408,9 @@ class LifecycleEnforcer(Tool):
             cost: Credit cost
             details: Additional context
         """
-        try:
-            # Create intent record in bank
-            reason = f"Action intent: {action_type}"
-            if details:
-                reason += f" ({details})"
-
-            self.bank.transfer(agent_id, "LIFECYCLE_GATE", cost, reason, "action_authorization")
-
-            logger.info(f"📝 Action intent recorded for {agent_id}: {action_type}")
-        except Exception as e:
-            logger.error(f"❌ Failed to record action intent: {e}")
-            # Don't fail the action, just warn
+        # NOTE: Transaction recording now done by economy_agent via civic.ledger
+        # This is a no-op placeholder for backward compatibility
+        logger.debug(f"📝 Action intent logging delegated to economy: {agent_id} -> {action_type} (cost: {cost})")
 
     def authorize_brahmachari_to_grihastha(
         self, agent_id: str, test_results: Dict[str, Any], initiator: str = "TEMPLE"

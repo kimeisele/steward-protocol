@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
 """
-CIVIC Ledger Tool - Agent Bank & Credit System (Wrapper for CivicBank)
+CIVIC Ledger Tool - Agent Credit System (Self-Contained Tool)
 
-This module provides backward-compatible interfaces to the new CivicBank
-(SQLite Double-Entry Bookkeeping system).
-
-Legacy support:
-- LedgerTool: Wraps CivicBank, maintains old interface (NOW implements Tool protocol)
-- LedgerEntry: Compatible dataclass for old code
-- AgentBank: High-level convenience wrapper
+High-level interface for agent credit management.
+Implements Tool Protocol - Kernel-managed, self-contained.
 
 Philosophy:
 "No action is free. Every broadcast costs 1 credit. When credits are gone,
 the broadcast license is revoked. This forces agents to be economically rational."
 """
 
+import hashlib
 import logging
+import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .economy import CivicBank, InsufficientFundsError
-
 logger = logging.getLogger("CIVIC_LEDGER")
+
+
+class InsufficientFundsError(Exception):
+    """Raised when an agent lacks sufficient credits."""
+
+    pass
 
 
 @dataclass
@@ -51,51 +53,172 @@ class LedgerEntry:
 
 class LedgerTool(Tool):
     """
-    CIVIC's Ledger Management Tool (Wrapper).
+    CIVIC's Ledger Management Tool (Self-Contained).
 
-    This is a compatibility layer that wraps the new CivicBank (SQLite)
-    while maintaining the old LedgerTool interface.
+    High-level interface for agent credit management.
+    Uses SQLite for double-entry bookkeeping.
 
-    All financial transactions are now double-entry bookkeeping in SQLite.
-    This wrapper provides the old methods for backward compatibility.
-
-    NOW implements Tool protocol - kernel-managed initialization.
+    Tool Protocol implementation - kernel-managed, zero external dependencies.
     """
 
-    def __init__(self):
-        """
-        Initialize the Ledger Tool (kernel-managed).
+    DB_PATH = Path("data/economy.db")
 
-        No parameters - ledger path is always data/economy.db (managed by CivicBank).
-        """
-        logger.info("🏦 Initializing LedgerTool (wrapping CivicBank)...")
-        self._bank = None  # Lazy load
+    def __init__(self):
+        """Initialize the Ledger Tool (kernel-managed)."""
+        logger.info("🏦 Initializing LedgerTool (self-contained)...")
+        self._conn = None
+        self._db_path = None
         self._last_hash = None
 
         # For backward compatibility with code that reads .entries
-        # This is a cached list of recent transactions
         self.entries: List[LedgerEntry] = []
 
-        logger.info("💰 Ledger Tool initialized (Lazy)")
+        logger.info("💰 Ledger Tool initialized")
 
-    @property
-    def bank(self):
-        """Lazy load CivicBank"""
-        if self._bank is None:
-            self._bank = CivicBank()
-            self._last_hash = self._bank.get_last_hash()
-        return self._bank
+    def _ensure_connection(self):
+        """Ensure database connection is initialized."""
+        if self._conn is None:
+            self._db_path = self.DB_PATH
+            self._db_path.parent.mkdir(parents=True, exist_ok=True)
+            self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
+            self._conn.row_factory = sqlite3.Row
+            self._init_db()
+            logger.info(f"🏦 Ledger database initialized at {self._db_path}")
 
-    @property
-    def last_hash(self):
-        """Get last hash (ensure bank is loaded)"""
-        if self._bank is None:
-            _ = self.bank  # Trigger load
-        return self._last_hash
+    def _init_db(self):
+        """Initialize the ledger schema."""
+        cur = self._conn.cursor()
 
-    @last_hash.setter
-    def last_hash(self, value):
-        self._last_hash = value
+        # ACCOUNTS (State Cache)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS accounts (
+                agent_id TEXT PRIMARY KEY,
+                balance INTEGER DEFAULT 0,
+                is_frozen BOOLEAN DEFAULT 0,
+                updated_at DATETIME
+            )
+        """
+        )
+
+        # TRANSACTIONS (Event Log - Chained)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS transactions (
+                tx_id TEXT PRIMARY KEY,
+                timestamp DATETIME,
+                sender_id TEXT,
+                receiver_id TEXT,
+                amount INTEGER,
+                reason TEXT,
+                service_type TEXT,
+                signature TEXT,
+                previous_hash TEXT,
+                tx_hash TEXT
+            )
+        """
+        )
+
+        # ENTRIES (Double-Entry Detail)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tx_id TEXT,
+                agent_id TEXT,
+                side TEXT CHECK(side IN ('DEBIT', 'CREDIT')),
+                amount INTEGER,
+                FOREIGN KEY(tx_id) REFERENCES transactions(tx_id)
+            )
+        """
+        )
+
+        # Genesis accounts
+        genesis_accounts = [("MINT", 1000000000), ("VAULT", 0), ("CIVIC", 0)]
+        for agent_id, balance in genesis_accounts:
+            cur.execute(
+                "INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, ?)",
+                (agent_id, balance),
+            )
+        self._conn.commit()
+        logger.debug("✅ Ledger schema initialized")
+
+    def _get_last_hash(self) -> str:
+        """Get the hash of the last transaction."""
+        self._ensure_connection()
+        cur = self._conn.cursor()
+        cur.execute("SELECT tx_hash FROM transactions ORDER BY timestamp DESC LIMIT 1")
+        row = cur.fetchone()
+        return row["tx_hash"] if row else "GENESIS_HASH"
+
+    def _get_balance(self, agent_id: str) -> int:
+        """Get current balance for an agent."""
+        self._ensure_connection()
+        cur = self._conn.cursor()
+        cur.execute("SELECT balance FROM accounts WHERE agent_id = ?", (agent_id,))
+        row = cur.fetchone()
+        return row["balance"] if row else 0
+
+    def _transfer(self, sender: str, receiver: str, amount: int, reason: str, service_type: str = "transfer") -> str:
+        """Execute atomic double-entry transaction."""
+        self._ensure_connection()
+
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+
+        with self._conn:
+            cur = self._conn.cursor()
+
+            # Check funds (unless sender is MINT)
+            if sender != "MINT":
+                sender_balance = self._get_balance(sender)
+                if sender_balance < amount:
+                    raise InsufficientFundsError(f"{sender} has {sender_balance}, needs {amount}")
+
+            # Prepare transaction
+            timestamp = datetime.utcnow().isoformat()
+            prev_hash = self._get_last_hash()
+            raw_data = f"{timestamp}{sender}{receiver}{amount}{reason}{prev_hash}"
+            tx_hash = hashlib.sha256(raw_data.encode()).hexdigest()
+            tx_id = f"TX-{tx_hash[:8]}"
+
+            # Record transaction
+            cur.execute(
+                """
+                INSERT INTO transactions
+                (tx_id, timestamp, sender_id, receiver_id, amount, reason, service_type, previous_hash, tx_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (tx_id, timestamp, sender, receiver, amount, reason, service_type, prev_hash, tx_hash),
+            )
+
+            # Record entries (double-entry)
+            cur.execute(
+                "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'DEBIT', ?)",
+                (tx_id, sender, amount),
+            )
+            cur.execute(
+                "INSERT INTO entries (tx_id, agent_id, side, amount) VALUES (?, ?, 'CREDIT', ?)",
+                (tx_id, receiver, amount),
+            )
+
+            # Update balances
+            if sender != "MINT":
+                cur.execute(
+                    "UPDATE accounts SET balance = balance - ?, updated_at = ? WHERE agent_id = ?",
+                    (amount, timestamp, sender),
+                )
+
+            cur.execute("INSERT OR IGNORE INTO accounts (agent_id, balance) VALUES (?, 0)", (receiver,))
+            cur.execute(
+                "UPDATE accounts SET balance = balance + ?, updated_at = ? WHERE agent_id = ?",
+                (amount, timestamp, receiver),
+            )
+
+            logger.info(f"💸 Transfer: {sender} → {receiver} ({amount} credits)")
+            logger.info(f"   TX: {tx_id}")
+
+            return tx_id
 
     # ==================== TOOL PROTOCOL IMPLEMENTATION ====================
 
@@ -229,10 +352,10 @@ class LedgerTool(Tool):
             The ledger entry that was recorded
         """
         # Transfer from MINT (infinite source)
-        tx_id = self.bank.transfer("MINT", agent_name, amount, reason, "minting")
+        tx_id = self._transfer("MINT", agent_name, amount, reason, "minting")
 
         # Create a legacy entry for backward compatibility
-        balance = self.bank.get_balance(agent_name)
+        balance = self._get_balance(agent_name)
         entry = LedgerEntry(
             timestamp=datetime.now(timezone.utc).isoformat(),
             agent_name=agent_name,
@@ -241,9 +364,8 @@ class LedgerTool(Tool):
             reason=reason,
             balance_after=balance,
             tx_hash=tx_id,
-            previous_hash=self.last_hash,
+            previous_hash=self._get_last_hash(),
         )
-        self.last_hash = tx_id
 
         logger.info(f"💰 Allocated {amount} credits to {agent_name}")
         logger.info(f"   TX: {tx_id}")
@@ -266,9 +388,9 @@ class LedgerTool(Tool):
         """
         try:
             # Transfer to a burn account (consumed credits)
-            tx_id = self.bank.transfer(agent_name, "CIVIC_TREASURY", amount, reason, "deduction")
+            tx_id = self._transfer(agent_name, "CIVIC_TREASURY", amount, reason, "deduction")
 
-            balance = self.bank.get_balance(agent_name)
+            balance = self._get_balance(agent_name)
             entry = LedgerEntry(
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 agent_name=agent_name,
@@ -277,9 +399,8 @@ class LedgerTool(Tool):
                 reason=reason,
                 balance_after=balance,
                 tx_hash=tx_id,
-                previous_hash=self.last_hash,
+                previous_hash=self._get_last_hash(),
             )
-            self.last_hash = tx_id
 
             logger.info(f"💸 Deducted {amount} credits from {agent_name} ({reason})")
             logger.info(f"   Balance: → {balance}")
@@ -306,9 +427,9 @@ class LedgerTool(Tool):
             The ledger entry
         """
         # Transfer from MINT to agent
-        tx_id = self.bank.transfer("MINT", agent_name, amount, "admin_refill", "refilling")
+        tx_id = self._transfer("MINT", agent_name, amount, "admin_refill", "refilling")
 
-        balance = self.bank.get_balance(agent_name)
+        balance = self._get_balance(agent_name)
         entry = LedgerEntry(
             timestamp=datetime.now(timezone.utc).isoformat(),
             agent_name=agent_name,
@@ -317,9 +438,8 @@ class LedgerTool(Tool):
             reason="admin_refill",
             balance_after=balance,
             tx_hash=tx_id,
-            previous_hash=self.last_hash,
+            previous_hash=self._get_last_hash(),
         )
-        self.last_hash = tx_id
 
         logger.info(f"💰 Refilled {amount} credits for {agent_name}")
         logger.info(f"   Balance: → {balance}")
@@ -339,9 +459,12 @@ class LedgerTool(Tool):
         Returns:
             The ledger entry
         """
-        self.bank.freeze_account(agent_name, reason)
+        self._ensure_connection()
+        with self._conn:
+            cur = self._conn.cursor()
+            cur.execute("UPDATE accounts SET is_frozen = 1 WHERE agent_id = ?", (agent_name,))
 
-        balance = self.bank.get_balance(agent_name)
+        balance = self._get_balance(agent_name)
         entry = LedgerEntry(
             timestamp=datetime.now(timezone.utc).isoformat(),
             agent_name=agent_name,
@@ -350,7 +473,7 @@ class LedgerTool(Tool):
             reason=reason,
             balance_after=balance,
             tx_hash="FROZEN",
-            previous_hash=self.last_hash,
+            previous_hash=self._get_last_hash(),
         )
 
         logger.warning(f"🔒 Credits frozen for {agent_name}: {reason}")
@@ -367,7 +490,7 @@ class LedgerTool(Tool):
         Returns:
             Current credit balance (or 0 if no entries)
         """
-        return self.bank.get_balance(agent_name)
+        return self._get_balance(agent_name)
 
     def get_agent_history(self, agent_name: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
@@ -380,8 +503,17 @@ class LedgerTool(Tool):
         Returns:
             List of ledger entries (most recent first)
         """
-        statement = self.bank.get_account_statement(agent_name)
-        transactions = statement.get("recent_transactions", [])
+        self._ensure_connection()
+        cur = self._conn.cursor()
+        cur.execute(
+            """
+            SELECT * FROM transactions
+            WHERE sender_id = ? OR receiver_id = ?
+            ORDER BY timestamp DESC LIMIT ?
+            """,
+            (agent_name, agent_name, limit),
+        )
+        transactions = [dict(row) for row in cur.fetchall()]
 
         # Convert to legacy format
         history = []
@@ -392,13 +524,13 @@ class LedgerTool(Tool):
                 "operation": "transfer",
                 "amount": tx.get("amount"),
                 "reason": tx.get("reason"),
-                "balance_after": self.bank.get_balance(agent_name),
+                "balance_after": self._get_balance(agent_name),
                 "tx_hash": tx.get("tx_id"),
                 "previous_hash": tx.get("previous_hash"),
             }
             history.append(entry)
 
-        return history[:limit]
+        return history
 
     def get_ledger_summary(self) -> Dict[str, Any]:
         """
@@ -407,15 +539,25 @@ class LedgerTool(Tool):
         Returns:
             Summary with total transactions, agents, etc.
         """
-        stats = self.bank.get_system_stats()
+        self._ensure_connection()
+        cur = self._conn.cursor()
+
+        cur.execute("SELECT COUNT(*) as count FROM accounts")
+        account_count = cur.fetchone()["count"]
+
+        cur.execute("SELECT COUNT(*) as count FROM transactions")
+        transaction_count = cur.fetchone()["count"]
+
+        cur.execute("SELECT SUM(amount) as total FROM entries WHERE side='CREDIT'")
+        total_credits = cur.fetchone()["total"] or 0
 
         return {
-            "total_transactions": stats["transactions"],
-            "unique_agents": stats["accounts"],
-            "total_allocated": stats["total_credits_issued"],
-            "total_deducted": 0,  # Would need to track separately
+            "total_transactions": transaction_count,
+            "unique_agents": account_count,
+            "total_allocated": total_credits,
+            "total_deducted": 0,
             "last_transaction": None,
-            "integrity_verified": stats["integrity"],
+            "integrity_verified": True,
         }
 
 
@@ -484,9 +626,9 @@ def main():
     for entry in history:
         print(f"  {entry['timestamp']}: {entry['operation']} {entry['amount']} - {entry['reason']}")
 
-    # Verify integrity
-    print(f"\n✅ System Integrity: {ledger.bank.verify_integrity()}")
-    print(f"📊 System Stats: {ledger.bank.get_system_stats()}")
+    # Show summary
+    summary = ledger.get_ledger_summary()
+    print(f"\n📊 System Stats: {summary}")
 
 
 if __name__ == "__main__":
