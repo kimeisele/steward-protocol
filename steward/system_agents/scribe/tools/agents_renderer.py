@@ -9,7 +9,19 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
-from vibe_core.tools.tool_protocol import Tool, ToolResult
+# Tool Protocol import - optional for standalone mode
+try:
+    from vibe_core.tools.tool_protocol import Tool, ToolResult
+    TOOL_PROTOCOL_AVAILABLE = True
+except ImportError:
+    TOOL_PROTOCOL_AVAILABLE = False
+    class Tool:
+        pass
+    class ToolResult:
+        def __init__(self, success, output=None, error=None):
+            self.success = success
+            self.output = output
+            self.error = error
 
 from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
 
@@ -17,9 +29,9 @@ from steward.system_agents.scribe.tools.introspector import CartridgeIntrospecto
 class AgentsRenderer(Tool):
     """Render AGENTS.md from cartridge metadata."""
 
-    def __init__(self):
-        """Initialize renderer (kernel-managed)."""
-        self.root_dir = Path(".")
+    def __init__(self, root_dir: str = "."):
+        """Initialize renderer."""
+        self.root_dir = Path(root_dir)
         self.introspector = CartridgeIntrospector(str(self.root_dir))
         self.agents = {}
 
@@ -157,3 +169,8 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
 
         section += "\n"
         return section
+
+    # Standalone mode method (for generate_docs.py)
+    def scan_and_render(self) -> str:
+        """Standalone method to scan and generate AGENTS.md."""
+        return self._scan_and_render()
