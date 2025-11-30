@@ -25,6 +25,7 @@ try:
     TOOL_PROTOCOL_AVAILABLE = True
 except ImportError:
     TOOL_PROTOCOL_AVAILABLE = False
+
     # Dummy base class for standalone mode
     class Tool:
         pass
@@ -124,14 +125,14 @@ class ReadmeRenderer(Tool):
                         return f"vibe_core/kernel_impl.py#L{start_line}-L{end_line}"
 
             # Fallback: search for specific patterns in source
-            lines = source.split('\n')
+            lines = source.split("\n")
             for i, line in enumerate(lines, 1):
-                if 'def _enforce_governance_gate' in line or 'class GovernanceGate' in line:
+                if "def _enforce_governance_gate" in line or "class GovernanceGate" in line:
                     # Find end of function/class
                     end = i
                     indent = len(line) - len(line.lstrip())
                     for j in range(i + 1, len(lines)):
-                        if lines[j].strip() and not lines[j].startswith(' ' * (indent + 1)):
+                        if lines[j].strip() and not lines[j].startswith(" " * (indent + 1)):
                             end = j - 1
                             break
                     return f"vibe_core/kernel_impl.py#L{i}-L{end}"
