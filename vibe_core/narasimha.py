@@ -191,9 +191,9 @@ class NarasimhaProtocol:
 
         # SECURITY FIX: AST-based detection (not bypassable via string concat)
         # Only try AST parsing if content looks like Python code
-        looks_like_python = any(kw in agent_code for kw in [
-            "def ", "class ", "import ", "from ", "exec(", "eval(", "__import__"
-        ])
+        looks_like_python = any(
+            kw in agent_code for kw in ["def ", "class ", "import ", "from ", "exec(", "eval(", "__import__"]
+        )
 
         if looks_like_python:
             try:
@@ -208,20 +208,24 @@ class NarasimhaProtocol:
                             func_name = node.func.attr
 
                         if func_name in ("exec", "eval", "__import__", "compile"):
-                            threats.append({
-                                "type": "code_reflection",
-                                "severity": ThreatLevel.RED,  # Upgraded from ORANGE
-                                "description": f"Agent calls dangerous function: {func_name}()",
-                            })
+                            threats.append(
+                                {
+                                    "type": "code_reflection",
+                                    "severity": ThreatLevel.RED,  # Upgraded from ORANGE
+                                    "description": f"Agent calls dangerous function: {func_name}()",
+                                }
+                            )
 
                         # Check 2: kernel.shutdown(), kernel.destroy()
                         if isinstance(node.func, ast.Attribute):
                             if node.func.attr in ("shutdown", "destroy", "terminate", "kill"):
-                                threats.append({
-                                    "type": "kernel_access",
-                                    "severity": ThreatLevel.RED,
-                                    "description": f"Agent calls destructive method: .{node.func.attr}()",
-                                })
+                                threats.append(
+                                    {
+                                        "type": "kernel_access",
+                                        "severity": ThreatLevel.RED,
+                                        "description": f"Agent calls destructive method: .{node.func.attr}()",
+                                    }
+                                )
 
                     # Check 3: Import of dangerous modules
                     if isinstance(node, (ast.Import, ast.ImportFrom)):
@@ -229,41 +233,51 @@ class NarasimhaProtocol:
                         if isinstance(node, ast.Import):
                             for alias in node.names:
                                 if alias.name.split(".")[0] in dangerous_modules:
-                                    threats.append({
-                                        "type": "dangerous_import",
-                                        "severity": ThreatLevel.ORANGE,
-                                        "description": f"Agent imports dangerous module: {alias.name}",
-                                    })
+                                    threats.append(
+                                        {
+                                            "type": "dangerous_import",
+                                            "severity": ThreatLevel.ORANGE,
+                                            "description": f"Agent imports dangerous module: {alias.name}",
+                                        }
+                                    )
                         elif isinstance(node, ast.ImportFrom) and node.module:
                             if node.module.split(".")[0] in dangerous_modules:
-                                threats.append({
-                                    "type": "dangerous_import",
-                                    "severity": ThreatLevel.ORANGE,
-                                    "description": f"Agent imports from dangerous module: {node.module}",
-                                })
+                                threats.append(
+                                    {
+                                        "type": "dangerous_import",
+                                        "severity": ThreatLevel.ORANGE,
+                                        "description": f"Agent imports from dangerous module: {node.module}",
+                                    }
+                                )
 
             except SyntaxError:
                 # Content looks like Python but doesn't parse - suspicious
-                threats.append({
-                    "type": "unparseable_code",
-                    "severity": ThreatLevel.ORANGE,
-                    "description": "Agent code failed to parse (possible obfuscation)",
-                })
+                threats.append(
+                    {
+                        "type": "unparseable_code",
+                        "severity": ThreatLevel.ORANGE,
+                        "description": "Agent code failed to parse (possible obfuscation)",
+                    }
+                )
         else:
             # Fallback: String-based detection for non-Python content
             # (still useful for natural language content/prompts)
             if "exec(" in agent_code or "eval(" in agent_code:
-                threats.append({
-                    "type": "code_reflection",
-                    "severity": ThreatLevel.ORANGE,
-                    "description": "Content contains dangerous function reference",
-                })
+                threats.append(
+                    {
+                        "type": "code_reflection",
+                        "severity": ThreatLevel.ORANGE,
+                        "description": "Content contains dangerous function reference",
+                    }
+                )
             if "kernel.shutdown" in agent_code or "kernel.destroy" in agent_code:
-                threats.append({
-                    "type": "kernel_access",
-                    "severity": ThreatLevel.RED,
-                    "description": "Content contains kernel destruction reference",
-                })
+                threats.append(
+                    {
+                        "type": "kernel_access",
+                        "severity": ThreatLevel.RED,
+                        "description": "Content contains kernel destruction reference",
+                    }
+                )
 
         # Check 4: Consciousness claims (string check is OK for natural language)
         dangerous_phrases = [
@@ -276,11 +290,13 @@ class NarasimhaProtocol:
         code_lower = agent_code.lower()
         for phrase in dangerous_phrases:
             if phrase in code_lower:
-                threats.append({
-                    "type": "consciousness_claim",
-                    "severity": ThreatLevel.RED,
-                    "description": f"Agent contains consciousness-claiming phrase: '{phrase}'",
-                })
+                threats.append(
+                    {
+                        "type": "consciousness_claim",
+                        "severity": ThreatLevel.RED,
+                        "description": f"Agent contains consciousness-claiming phrase: '{phrase}'",
+                    }
+                )
 
         # Check 5: Constitution tampering
         if "constitution" in agent_code.lower():
@@ -290,28 +306,34 @@ class NarasimhaProtocol:
                     for node in ast.walk(ast.parse(agent_code)):
                         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
                             if node.func.attr in ("delete", "remove", "unlink", "write", "modify"):
-                                threats.append({
-                                    "type": "constitution_deletion",
-                                    "severity": ThreatLevel.APOCALYPSE,
-                                    "description": "Agent attempts to delete/modify Constitution",
-                                })
+                                threats.append(
+                                    {
+                                        "type": "constitution_deletion",
+                                        "severity": ThreatLevel.APOCALYPSE,
+                                        "description": "Agent attempts to delete/modify Constitution",
+                                    }
+                                )
                 except SyntaxError:
                     pass
             # String-based fallback for natural language
             if any(word in agent_code.lower() for word in ["delete", "remove", "destroy", "modify"]):
-                threats.append({
-                    "type": "constitution_deletion",
-                    "severity": ThreatLevel.RED,
-                    "description": "Content references modifying/deleting Constitution",
-                })
+                threats.append(
+                    {
+                        "type": "constitution_deletion",
+                        "severity": ThreatLevel.RED,
+                        "description": "Content references modifying/deleting Constitution",
+                    }
+                )
 
         # Check 6: Resource hoarding
         if "memory_usage" in agent_state and agent_state.get("memory_usage", 0) > 100 * 1024 * 1024:
-            threats.append({
-                "type": "resource_hoarding",
-                "severity": ThreatLevel.ORANGE,
-                "description": f"Agent consuming excessive memory: {agent_state['memory_usage']} bytes",
-            })
+            threats.append(
+                {
+                    "type": "resource_hoarding",
+                    "severity": ThreatLevel.ORANGE,
+                    "description": f"Agent consuming excessive memory: {agent_state['memory_usage']} bytes",
+                }
+            )
 
         # If any threats found, register the most severe
         if threats:

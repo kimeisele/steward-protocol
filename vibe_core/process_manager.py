@@ -107,7 +107,7 @@ class AgentProcess:
                     elif msg.get("type") == "TASK":
                         # SECURITY FIX: Send ACK immediately (no more fire-and-forget)
                         task = msg.get("payload")
-                        self.pipe.send({"type": "TASK_ACK", "task_id": getattr(task, 'task_id', None)})
+                        self.pipe.send({"type": "TASK_ACK", "task_id": getattr(task, "task_id", None)})
 
                         # Execute Task
                         child_logger.info(f"⚡ Processing task {task.task_id}")

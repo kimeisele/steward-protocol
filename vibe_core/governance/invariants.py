@@ -83,9 +83,7 @@ class InvariantChecker:
             data = yaml.safe_load(f)
             return data.get("safety_rules", [])
 
-    def check_tool_call(
-        self, tool_name: str, params: dict[str, Any], agent_id: str | None = None
-    ) -> SoulResult:
+    def check_tool_call(self, tool_name: str, params: dict[str, Any], agent_id: str | None = None) -> SoulResult:
         """
         Validate a tool call against all safety rules.
 
