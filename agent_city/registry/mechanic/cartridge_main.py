@@ -116,6 +116,17 @@ class MechanicCartridge(VibeAgent, OathMixin):
         elif task.payload.get("action") == "validate":
             success = self.validate_integrity()
             return {"status": "success" if success else "error", "valid": success}
+        elif task.payload.get("action") == "maintenance":
+            # Maintenance = diagnose + heal + validate (full cycle)
+            broken = self.diagnose()
+            healed = self.heal() if broken else True
+            valid = self.validate_integrity()
+            return {
+                "status": "success" if valid else "error",
+                "maintenance_complete": valid,
+                "issues_found": broken,
+                "healed": healed,
+            }
         else:
             # Default: run full bootstrap sequence
             success = self.execute_bootstrap()

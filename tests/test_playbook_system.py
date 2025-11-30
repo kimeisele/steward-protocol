@@ -15,7 +15,7 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 
 # Import the systems under test
 try:
-    from envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
+    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
 
     from provider.universal_provider import DeterministicRouter, UniversalProvider
 
@@ -93,18 +93,22 @@ class TestDeterministicExecutor:
 
     def test_find_playbook_by_concepts(self):
         """Test playbook matching by concepts"""
-        # Test matching PROJECT_SCAFFOLD
+        # Test matching CMD_CREATE - should find any playbook with CMD_CREATE as primary
         concepts = {"CMD_CREATE"}
         playbook = self.engine.find_playbook(concepts)
         assert playbook is not None
-        assert "CREATE" in playbook.id or "SCAFFOLD" in playbook.id
+        # Verify the playbook matches the concept (not hardcoded name)
+        assert playbook.intent_match.get("primary") == "CMD_CREATE"
         logger.info(f"✅ Found playbook for CMD_CREATE: {playbook.id}")
 
         # Test matching GOVERNANCE_VOTE
         concepts = {"CMD_VOTE", "DOM_GOVERNANCE"}
         playbook = self.engine.find_playbook(concepts)
         assert playbook is not None
-        assert "VOTE" in playbook.id or "GOVERNANCE" in playbook.id
+        # Verify primary or secondary concepts match
+        assert playbook.intent_match.get("primary") in concepts or any(
+            c in concepts for c in playbook.intent_match.get("secondary", [])
+        )
         logger.info(f"✅ Found playbook for CMD_VOTE + DOM_GOVERNANCE: {playbook.id}")
 
     def test_state_persistence(self):
@@ -259,7 +263,8 @@ class TestUniversalProviderIntegration:
         """Test UniversalProvider initialization"""
         assert self.provider is not None
         assert self.provider.playbook_engine is not None
-        assert self.provider.router is not None
+        # Provider uses either semantic_router OR deterministic router (not both)
+        assert self.provider.router is not None or self.provider.semantic_router is not None
         logger.info("✅ UniversalProvider initialized with DeterministicExecutor")
 
     @pytest.mark.asyncio
@@ -267,13 +272,17 @@ class TestUniversalProviderIntegration:
         """Test complete flow: intent → concepts → playbook"""
         user_input = "Create a new governance campaign"
 
-        # Resolve intent
-        vector = self.provider.resolve_intent(user_input)
+        # Resolve intent (async call)
+        vector = await self.provider.resolve_intent(user_input)
         assert vector is not None
         logger.info(f"✅ Resolved intent: {vector.intent_type.value}")
 
-        # Find playbook
-        concepts = self.provider.router.analyze(user_input)
+        # Find playbook - use appropriate router based on provider configuration
+        if self.provider.router:
+            concepts = self.provider.router.analyze(user_input)
+        else:
+            # For semantic router, use concepts from the vector parameters
+            concepts = set(vector.parameters.get("concepts", []))
         playbook = self.provider.playbook_engine.find_playbook(concepts)
 
         if playbook:

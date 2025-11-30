@@ -3,9 +3,10 @@ HERALD - Autonomous Intelligence Agent for Steward Protocol
 
 A reference implementation demonstrating:
 - Cryptographic identity verification (Steward Protocol)
-- Autonomous content generation with governance
 - Multi-platform distribution (Twitter, Reddit)
 - Full audit trail and observability (GAD-000 compliance)
+
+Note: Content generation moved to Marketer agent.
 
 Vibe-OS Compatible (ARCH-050 Cartridge):
     from herald.cartridge_main import HeraldCartridge
@@ -18,13 +19,15 @@ Standalone Execution:
 """
 
 from .cartridge_main import HeraldCartridge
-from .tools import BroadcastTool, ContentTool, ResearchTool
+from .tools import BroadcastTool, IdentityTool, ResearchTool, Scribe, ScoutTool
 
 __version__ = "3.0.0"
 __author__ = "Steward Protocol"
 __all__ = [
     "HeraldCartridge",
     "ResearchTool",
-    "ContentTool",
     "BroadcastTool",
+    "IdentityTool",
+    "ScoutTool",
+    "Scribe",
 ]

@@ -336,6 +336,16 @@ class MilkOceanRouter:
 
         # 1. Check for SQL injection
         if self._sql_injection_pattern.search(user_input):
+            # Immediately block destructive SQL commands (always malicious in user input)
+            destructive_keywords = re.findall(r"\b(DROP|TRUNCATE|ALTER|GRANT|REVOKE)\b", user_input, re.IGNORECASE)
+            if destructive_keywords:
+                return GateResult(
+                    RequestPriority.BLOCKED,
+                    "SQL injection pattern detected (destructive command)",
+                    "REJECT",
+                    {"pattern": "sql_injection", "destructive_keywords": destructive_keywords},
+                )
+
             # Count SQL-like keywords (allow some in legitimate queries)
             sql_keywords = len(re.findall(r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE))
             if sql_keywords > 2:  # More than 2 suspicious keywords = blocked
