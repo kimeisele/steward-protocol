@@ -76,7 +76,11 @@ class BankTool(Tool):
             "receiver": {"type": "string", "required": False, "description": "Receiver agent (for transfer)"},
             "amount": {"type": "number", "required": False, "description": "Amount of credits"},
             "reason": {"type": "string", "required": False, "description": "Transaction reason"},
-            "service_type": {"type": "string", "required": False, "description": "Service type (transfer, minting, etc)"},
+            "service_type": {
+                "type": "string",
+                "required": False,
+                "description": "Service type (transfer, minting, etc)",
+            },
             "limit": {"type": "number", "required": False, "description": "Limit for audit_trail"},
             "db_path": {"type": "string", "required": False, "description": "Database path (for VFS isolation)"},
         }
@@ -162,9 +166,7 @@ class BankTool(Tool):
 
             elif action == "is_frozen":
                 frozen = self._is_frozen(parameters["agent_id"])
-                return ToolResult(
-                    success=True, output={"agent_id": parameters["agent_id"], "is_frozen": frozen}
-                )
+                return ToolResult(success=True, output={"agent_id": parameters["agent_id"], "is_frozen": frozen})
 
             elif action == "audit_trail":
                 trail = self._audit_trail(parameters.get("limit", 10))
