@@ -32,8 +32,8 @@ except ImportError as e:
     sys.exit(1)
 
 
-def test_cartridge_inheritance(cartridge_class, expected_agent_id):
-    """Test that cartridge inherits from VibeAgent"""
+def _validate_cartridge_inheritance(cartridge_class, expected_agent_id):
+    """Validate that cartridge inherits from VibeAgent (helper function, not a pytest test)"""
     print(f"\n🧪 Testing {expected_agent_id.upper()}...")
 
     # Check inheritance
@@ -159,7 +159,7 @@ def main():
 
     results = []
     for cartridge_class, expected_agent_id in cartridges:
-        success = test_cartridge_inheritance(cartridge_class, expected_agent_id)
+        success = _validate_cartridge_inheritance(cartridge_class, expected_agent_id)
         results.append((expected_agent_id, success))
 
     print("\n" + "=" * 70)
