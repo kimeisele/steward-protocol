@@ -95,7 +95,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         super().__init__(
             agent_id="watchman",
             name="WATCHMAN",
-            version="3.0.0"  # Bumped for Tool Protocol refactor,
+            version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="System integrity enforcer and governance enforcer",
             domain="ENFORCEMENT",
