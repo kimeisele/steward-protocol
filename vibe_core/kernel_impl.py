@@ -1495,7 +1495,7 @@ class RealVibeKernel(VibeKernel):
                         commands.append({
                             "action": "SET",
                             "key": key.strip(),
-                            "value": value.strip()
+                            "value": value.strip(),
                         })
 
                 # Parse PAUSE commands
@@ -1503,7 +1503,7 @@ class RealVibeKernel(VibeKernel):
                     agent_id = command_text[6:].strip()
                     commands.append({
                         "action": "PAUSE",
-                        "agent_id": agent_id
+                        "agent_id": agent_id,
                     })
 
                 # Parse RESUME commands
@@ -1511,7 +1511,7 @@ class RealVibeKernel(VibeKernel):
                     agent_id = command_text[7:].strip()
                     commands.append({
                         "action": "RESUME",
-                        "agent_id": agent_id
+                        "agent_id": agent_id,
                     })
 
                 else:
@@ -1550,7 +1550,7 @@ class RealVibeKernel(VibeKernel):
                 "command": cmd,
                 "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
                 "status": "SUCCESS",
-                "reason": ""
+                "reason": "",
             }
 
             try:
