@@ -124,7 +124,8 @@ class TestTaskTopologyIntegration:
         assert task.status == TaskStatus.PENDING
         assert task.topology_layer is None  # No agent assigned
         assert task.varna is None
-        assert task.routing_priority is None
+        # MilkOcean always provides a routing priority (default MEDIUM=1)
+        assert task.routing_priority is not None
 
     def test_add_task_with_herald_agent(self):
         """Test adding task assigned to HERALD agent"""
