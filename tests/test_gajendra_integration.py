@@ -9,7 +9,6 @@ When the API Gateway receives a response with status="critical",
 it should invoke the kernel directly, bypassing all queue layers.
 """
 
-import json
 from envoy.tools.milk_ocean import MilkOceanRouter
 
 

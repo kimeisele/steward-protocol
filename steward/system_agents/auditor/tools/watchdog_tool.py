@@ -213,7 +213,7 @@ class Watchdog:
 
                 # Check if we should halt
                 if self.config.halt_on_critical and violation.severity == "CRITICAL":
-                    logger.error(f"👁️  🚨 CRITICAL VIOLATION - INITIATING SYSTEM HALT")
+                    logger.error("👁️  🚨 CRITICAL VIOLATION - INITIATING SYSTEM HALT")
                     self.halt_requested = True
 
                     if self.on_halt:

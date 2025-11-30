@@ -300,3 +300,4 @@ workspaces/
 temp_repo_test/
 .vibe/
 .backup/
+data/library/

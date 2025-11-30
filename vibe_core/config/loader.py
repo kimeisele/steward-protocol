@@ -7,8 +7,6 @@ Provides high-level interface for configuration management.
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import yaml
-
 from .schema import CityConfig
 from .schema import load_config as schema_load_config
 

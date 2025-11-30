@@ -74,7 +74,7 @@ def test_gad4000():
 
         print(f"   🚀 PATH: {path.upper()}")
         print(f"   ✅ STATUS: {status}")
-        print(f"   📝 RESPONSE:\n")
+        print("   📝 RESPONSE:\n")
 
         # Pretty print the summary
         for line in summary.split("\n"):
@@ -85,7 +85,7 @@ def test_gad4000():
             details = result.get("details", {})
             task_id = details.get("task_id", "N/A")
             agent = details.get("agent", "N/A")
-            print(f"\n   🎯 SLOW-PATH METADATA:")
+            print("\n   🎯 SLOW-PATH METADATA:")
             print(f"      Task ID: {task_id}")
             print(f"      Agent: {agent}")
 

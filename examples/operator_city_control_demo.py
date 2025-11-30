@@ -21,8 +21,8 @@ NO TERMINAL. NO BASH. JUST PROMPTS.
 This is the Missing Link for shell-less environments (Web, Mobile).
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -78,10 +78,10 @@ def operator_session():
     herald_credits = controller.check_credits("herald")
 
     if herald_credits.get("licensed"):
-        print(f"✅ Herald is licensed")
+        print("✅ Herald is licensed")
         print(f"💰 Credits: {herald_credits.get('credits', 0)}")
     else:
-        print(f"❌ Herald is NOT licensed")
+        print("❌ Herald is NOT licensed")
         print(f"   Reason: {herald_credits.get('reason')}")
 
     # ========== SCENARIO: Herald is broke, needs bailout ==========
@@ -124,7 +124,7 @@ def operator_session():
                 exec_result = controller.execute_proposal(bailout_proposal["id"])
 
                 if exec_result.get("status") == "executed":
-                    print(f"⚡ Proposal executed successfully!")
+                    print("⚡ Proposal executed successfully!")
                     print(f"   Action: {exec_result.get('action')}")
 
                     # Verify Herald's new balance
@@ -142,7 +142,7 @@ def operator_session():
         campaign_result = controller.trigger_agent("herald", action="run_campaign", dry_run=True)
 
         if campaign_result.get("status") == "draft_ready":
-            print(f"✅ Campaign complete!")
+            print("✅ Campaign complete!")
             print(f"   Content: {campaign_result.get('content', '')[:100]}...")
             print(f"   Status: {campaign_result.get('status')}")
         else:

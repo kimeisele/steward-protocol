@@ -17,13 +17,11 @@ This is NOT unit testing. This is SYSTEM SIMULATION testing.
 The Dome is a sandbox where the entire city runs headlessly.
 """
 
-import sys
-import os
-from pathlib import Path
-import logging
-import json
 import asyncio
-from typing import Dict, List, Any, Optional
+import logging
+import sys
+from pathlib import Path
+from typing import Any, Dict
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -88,19 +86,11 @@ class CitySimulation:
 
             # Load all cartridges
             logger.info("🤖 Loading agents...")
-            from herald.cartridge_main import HeraldCartridge
             from civic.cartridge_main import CivicCartridge
-            from forum.cartridge_main import ForumCartridge
-            from science.cartridge_main import ScientistCartridge
             from envoy.cartridge_main import EnvoyCartridge
-            from steward.system_agents.archivist.cartridge_main import (
-                ArchivistCartridge,
-            )
-            from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-            from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-            from oracle.cartridge_main import Oracle as OracleCartridge
-            from watchman.cartridge_main import WatchmanCartridge
-            from artisan.cartridge_main import ArtisanCartridge
+            from forum.cartridge_main import ForumCartridge
+            from herald.cartridge_main import HeraldCartridge
+            from science.cartridge_main import ScientistCartridge
 
             # VIBE OS CORE AGENTS (5 VibeOS-native agents with Constitutional Oath support)
             # Note: The following 6 legacy agents are in migration to VibeOS:

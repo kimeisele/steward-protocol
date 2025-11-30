@@ -20,7 +20,6 @@ SCRIBE ensures your codebase documents itself."
 """
 
 import logging
-from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
@@ -323,7 +322,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             elif hasattr(renderer, "render"):
                 content = renderer.render()
             else:
-                raise AttributeError(f"Renderer has no scan_and_render() or render() method")
+                raise AttributeError("Renderer has no scan_and_render() or render() method")
 
             sandbox_file = self.sandbox_dir / doc_name
             sandbox_file.write_text(content)

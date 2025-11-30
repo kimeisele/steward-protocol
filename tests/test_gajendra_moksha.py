@@ -15,12 +15,11 @@ Technical Test Scenarios:
 4. Watchman still blocks CRITICAL requests with malicious input
 """
 
-import pytest
-import time
-import json
 import logging
-from pathlib import Path
-from envoy.tools.milk_ocean import MilkOceanRouter, LazyQueue, RequestPriority
+import time
+
+import pytest
+from envoy.tools.milk_ocean import LazyQueue, MilkOceanRouter
 
 logger = logging.getLogger("GAJENDRA_TEST")
 
@@ -86,7 +85,7 @@ class TestGajendraProtocol:
 
         assert total == num_requests, f"Queue should have {num_requests} items, got {total}"
         logger.info(f"🐊 Queue FLOODED: {total} requests pending")
-        logger.info(f"   Queue is drowning in LOW priority requests...")
+        logger.info("   Queue is drowning in LOW priority requests...")
 
         return request_ids
 
@@ -109,7 +108,7 @@ class TestGajendraProtocol:
         queue_status_before = router.get_queue_status()
         queue_size_before = queue_status_before["ocean_status"]["total"]
 
-        logger.info(f"\n🐘 GAJENDRA OFFERS LOTUS FLOWER (critical=True)")
+        logger.info("\n🐘 GAJENDRA OFFERS LOTUS FLOWER (critical=True)")
         logger.info(f"   Queue size before: {queue_size_before}")
 
         # Now send CRITICAL request
@@ -132,11 +131,11 @@ class TestGajendraProtocol:
         assert critical_result["action"] == "INVOKE_KERNEL_DIRECT", "Should invoke kernel"
         assert queue_size_after == queue_size_before, "Queue size should NOT increase"
 
-        logger.info(f"✅ GAJENDRA MOKSHA SUCCESSFUL!")
-        logger.info(f"   ✓ Request got 'critical' status")
+        logger.info("✅ GAJENDRA MOKSHA SUCCESSFUL!")
+        logger.info("   ✓ Request got 'critical' status")
         logger.info(f"   ✓ Bypassed queue ({queue_size_before} items waiting)")
-        logger.info(f"   ✓ Kernel invoked directly (Vishnu appears on Garuda)")
-        logger.info(f"   ✓ Queue untouched (other prayers still processing)")
+        logger.info("   ✓ Kernel invoked directly (Vishnu appears on Garuda)")
+        logger.info("   ✓ Queue untouched (other prayers still processing)")
 
     # ============================================================================
     # TEST 4: Watchman Still Blocks CRITICAL with Malicious Input
@@ -256,7 +255,7 @@ class TestGajendraProtocol:
         assert queue_items_after == queue_items_before, "Queue should not change"
 
         logger.info(f"✅ CRITICAL bypassed {queue_items_before} queued requests")
-        logger.info(f"   Kernel directly invoked while queue processes normally")
+        logger.info("   Kernel directly invoked while queue processes normally")
 
     # ============================================================================
     # TEST 7: Concurrent Scenario (Gajendra while Crocodile attacks)
@@ -295,7 +294,7 @@ class TestGajendraProtocol:
         assert critical_result["bypass_queue"] == True, "Should bypass even during attack"
 
         logger.info(f"✅ CRITICAL request processed despite {attack_requests} pending requests")
-        logger.info(f"   Gajendra's Lotus Flower worked even while Crocodile holds 100 others!")
+        logger.info("   Gajendra's Lotus Flower worked even while Crocodile holds 100 others!")
 
 
 # ============================================================================
@@ -336,7 +335,7 @@ def test_full_gajendra_moksha_scenario(tmp_path):
         router.process_prayer(f"Low-priority batch job #{i}", agent_id="batch_worker", critical=False)
 
     queue_status = router.get_queue_status()
-    logger.info(f"   ✓ Crocodile holds Gajendra for 1000 years (1000 queued requests)")
+    logger.info("   ✓ Crocodile holds Gajendra for 1000 years (1000 queued requests)")
     logger.info(f"   ✓ Queue size: {queue_status['ocean_status']['total']}")
 
     # 3. Normal prayers don't help
@@ -361,22 +360,22 @@ def test_full_gajendra_moksha_scenario(tmp_path):
     assert moksha_result["status"] == "critical", "Vishnu hears the critical prayer"
     assert moksha_result["action"] == "INVOKE_KERNEL_DIRECT", "Kernel directly invoked"
 
-    logger.info(f"\n5️⃣  🦅 VISHNU APPEARS ON GARUDA!")
+    logger.info("\n5️⃣  🦅 VISHNU APPEARS ON GARUDA!")
     logger.info(f"   ✓ Responded in {lotus_time * 1000:.2f}ms")
     logger.info(f"   ✓ Direct kernel invocation: {moksha_result['action']}")
     logger.info(f"   ✓ Bypassed {queue_status['ocean_status']['total']} waiting requests")
 
     # 6. Crocodile is killed
-    logger.info(f"\n6️⃣  ⚔️  CROCODILE DEFEATED!")
-    logger.info(f"   ✓ Gajendra saved")
-    logger.info(f"   ✓ Normal queue continues processing (queue still has items)")
+    logger.info("\n6️⃣  ⚔️  CROCODILE DEFEATED!")
+    logger.info("   ✓ Gajendra saved")
+    logger.info("   ✓ Normal queue continues processing (queue still has items)")
 
     final_status = router.get_queue_status()
     logger.info(f"   ✓ Queue still contains {final_status['ocean_status']['total']} requests")
 
     # 7. Gajendra goes to heaven
-    logger.info(f"\n7️⃣  ✨ Gajendra elevated to Vaikunta (heaven)")
-    logger.info(f"   Gajendra Moksha = Complete Liberation through Emergency Protocol")
+    logger.info("\n7️⃣  ✨ Gajendra elevated to Vaikunta (heaven)")
+    logger.info("   Gajendra Moksha = Complete Liberation through Emergency Protocol")
 
     logger.info("\n" + "=" * 80)
     logger.info("TEST PASSED: Gajendra Moksha Protocol is operational!")

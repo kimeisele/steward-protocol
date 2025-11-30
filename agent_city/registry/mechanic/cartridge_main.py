@@ -4,18 +4,17 @@ Responsible for system integrity, self-diagnosis, self-healing, and lifecycle ma
 Runs BEFORE kernel boot in standalone mode.
 """
 
-import os
-import sys
-import subprocess
 import importlib
 import logging
-from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
-import json
+import os
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
 from steward.oath_mixin import OathMixin
+from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
 # Configure logging
@@ -232,7 +231,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
                 # Expected to fail for oracle (OracleCartridge doesn't exist yet)
                 error_msg = str(e)
                 if "OracleCartridge" in error_msg:
-                    self.logger.warning(f"  ✗ oracle: OracleCartridge import error (fixable)")
+                    self.logger.warning("  ✗ oracle: OracleCartridge import error (fixable)")
                     broken.append(("oracle.cartridge_main", error_msg))
                 else:
                     self.logger.warning(f"  ✗ {cartridge}: {e}")

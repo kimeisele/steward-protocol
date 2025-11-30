@@ -17,13 +17,13 @@ from pathlib import Path
 # Add repo root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 # Import cartridges
 try:
     from civic.cartridge_main import CivicCartridge
-    from herald.cartridge_main import HeraldCartridge
     from forum.cartridge_main import ForumCartridge
+    from herald.cartridge_main import HeraldCartridge
     from science.cartridge_main import ScientistCartridge
 
     print("✅ All cartridges imported successfully")
@@ -40,12 +40,12 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
     if not issubclass(cartridge_class, VibeAgent):
         print(f"   ❌ {cartridge_class.__name__} does not inherit from VibeAgent")
         return False
-    print(f"   ✅ Inherits from VibeAgent")
+    print("   ✅ Inherits from VibeAgent")
 
     # Instantiate
     try:
         cartridge = cartridge_class()
-        print(f"   ✅ Instantiated successfully")
+        print("   ✅ Instantiated successfully")
     except Exception as e:
         print(f"   ❌ Failed to instantiate: {e}")
         return False
@@ -58,18 +58,18 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
 
     # Check required methods exist
     if not hasattr(cartridge, "process"):
-        print(f"   ❌ Missing process() method")
+        print("   ❌ Missing process() method")
         return False
-    print(f"   ✅ process() method exists")
+    print("   ✅ process() method exists")
 
     if not hasattr(cartridge, "report_status"):
-        print(f"   ❌ Missing report_status() method")
+        print("   ❌ Missing report_status() method")
         return False
-    print(f"   ✅ report_status() method exists")
+    print("   ✅ report_status() method exists")
 
     # Check capabilities
     if not hasattr(cartridge, "capabilities") or not cartridge.capabilities:
-        print(f"   ❌ No capabilities defined")
+        print("   ❌ No capabilities defined")
         return False
     print(f"   ✅ Capabilities: {cartridge.capabilities}")
 
@@ -77,9 +77,9 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
     try:
         manifest = cartridge.get_manifest()
         if manifest.agent_id != expected_agent_id:
-            print(f"   ❌ Manifest agent_id mismatch")
+            print("   ❌ Manifest agent_id mismatch")
             return False
-        print(f"   ✅ get_manifest() returns valid AgentManifest")
+        print("   ✅ get_manifest() returns valid AgentManifest")
     except Exception as e:
         print(f"   ❌ get_manifest() failed: {e}")
         return False
@@ -88,12 +88,12 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
     try:
         status = cartridge.report_status()
         if not isinstance(status, dict):
-            print(f"   ❌ report_status() did not return dict")
+            print("   ❌ report_status() did not return dict")
             return False
         if "agent_id" not in status:
-            print(f"   ❌ report_status() missing agent_id")
+            print("   ❌ report_status() missing agent_id")
             return False
-        print(f"   ✅ report_status() returns valid dict")
+        print("   ✅ report_status() returns valid dict")
     except Exception as e:
         print(f"   ❌ report_status() failed: {e}")
         return False
@@ -108,12 +108,12 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
             result = cartridge.process(task)
             # Should get either success or "unknown action" error
             if isinstance(result, dict) and "status" in result:
-                print(f"   ✅ process() is callable and returns dict")
+                print("   ✅ process() is callable and returns dict")
             else:
-                print(f"   ⚠️  process() returned unexpected format")
+                print("   ⚠️  process() returned unexpected format")
         except TypeError as e:
             if "missing 1 required positional argument: 'task'" in str(e):
-                print(f"   ❌ process() signature incorrect (missing self?)")
+                print("   ❌ process() signature incorrect (missing self?)")
                 return False
             raise
     except Exception as e:
@@ -134,9 +134,9 @@ def test_cartridge_inheritance(cartridge_class, expected_agent_id):
         cartridge.set_kernel(mock_kernel)
 
         if cartridge.kernel != mock_kernel:
-            print(f"   ❌ Kernel injection failed")
+            print("   ❌ Kernel injection failed")
             return False
-        print(f"   ✅ Kernel injection works (set_kernel())")
+        print("   ✅ Kernel injection works (set_kernel())")
     except Exception as e:
         print(f"   ❌ Kernel injection failed: {e}")
         return False

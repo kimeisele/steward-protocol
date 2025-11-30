@@ -53,14 +53,14 @@ def migrate_herald_dependencies():
                 print(f"   ⚠️  {package} exists with different version:")
                 print(f"      Current: {current_version}")
                 print(f"      Herald:  {version}")
-                print(f"      → Keeping current version")
+                print("      → Keeping current version")
         else:
             dm.add_dependency(package, version)
             print(f"   ✅ Added: {package}{version}")
 
-    print(f"\n✅ Migration complete!")
-    print(f"📦 pyproject.toml now contains all Herald dependencies")
-    print(f"\n💡 Next step: Delete steward/system_agents/herald/requirements.txt")
+    print("\n✅ Migration complete!")
+    print("📦 pyproject.toml now contains all Herald dependencies")
+    print("\n💡 Next step: Delete steward/system_agents/herald/requirements.txt")
 
 
 if __name__ == "__main__":

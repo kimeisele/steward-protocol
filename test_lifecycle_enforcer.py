@@ -17,9 +17,7 @@ This is the ESSENCE of what makes it REAL:
 """
 
 import logging
-import json
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
 
 # Setup logging
@@ -65,7 +63,7 @@ def test_lifecycle_enforcer():
     logger.info("-" * 80)
 
     permission = enforcer.check_action_permission(test_agent, "write", cost=1)
-    logger.info(f"Permission check result:")
+    logger.info("Permission check result:")
     logger.info(f"   Permitted: {permission.permitted}")
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")
@@ -107,7 +105,7 @@ def test_lifecycle_enforcer():
     logger.info("-" * 80)
 
     permission = enforcer.check_action_permission(test_agent, "write", cost=1)
-    logger.info(f"Permission check result:")
+    logger.info("Permission check result:")
     logger.info(f"   Permitted: {permission.permitted}")
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")
@@ -149,7 +147,7 @@ def test_lifecycle_enforcer():
     logger.info("-" * 80)
 
     permission = enforcer.check_action_permission(test_agent, "write", cost=1)
-    logger.info(f"Permission check result:")
+    logger.info("Permission check result:")
     logger.info(f"   Permitted: {permission.permitted}")
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")

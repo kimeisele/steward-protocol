@@ -6,10 +6,8 @@ This is the foundation verification tool - no system is solid without it.
 """
 
 import os
-import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Terms of shame - indicators of non-production code
 FORBIDDEN_TERMS = [
@@ -177,10 +175,10 @@ class WatertightnessVerifier:
     def print_results(self) -> None:
         """Print detailed results."""
         print(f"\n{'=' * 70}")
-        print(f"SCAN RESULTS")
+        print("SCAN RESULTS")
         print(f"{'=' * 70}\n")
 
-        print(f"📊 STATISTICS:")
+        print("📊 STATISTICS:")
         print(f"   Files scanned:       {self.stats['files_scanned']}")
         print(f"   Lines scanned:       {self.stats['lines_scanned']}")
         print(f"   Critical violations: {self.stats['violations_found']}")

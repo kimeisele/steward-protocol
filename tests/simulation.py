@@ -21,9 +21,9 @@ Or via CLI:
 import json
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -172,7 +172,7 @@ class SimulationHarness:
 
         # Check EventLog
         events = self.director.event_log.get_all_events()
-        print(f"📖 Event Log Status:")
+        print("📖 Event Log Status:")
         print(f"   Total events: {len(events)}")
         print(f"   Content generated: {len(self.director.event_log.get_events_by_type('content_generated'))}")
         print(f"   Content published: {len(self.director.event_log.get_events_by_type('content_published'))}")

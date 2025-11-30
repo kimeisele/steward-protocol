@@ -14,7 +14,6 @@ Components:
 import json
 import logging
 from pathlib import Path
-from typing import Any
 
 from vibe_core.runtime.prompt_context import get_prompt_context
 

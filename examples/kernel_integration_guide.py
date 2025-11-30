@@ -6,8 +6,8 @@ This guide shows how to integrate the semantic auditor into the main kernel loop
 """
 
 import logging
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any, Dict
 
 logger = logging.getLogger("KERNEL_INTEGRATION")
 
@@ -110,7 +110,7 @@ class KernelWithSemanticAuditor:
                         self.halt_critical_violation(halt_result)
                         break
                     else:
-                        logger.debug(f"👁️  Watchdog OK")
+                        logger.debug("👁️  Watchdog OK")
 
         finally:
             logger.info("🫀 Kernel loop ended")

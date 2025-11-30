@@ -15,7 +15,7 @@ This is CONSTRUCTIVE:
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger("LLM_ENGINE_ADAPTER")
 
@@ -83,7 +83,7 @@ class LLMEngineAdapter:
         if self.llm_engine:
             try:
                 response_text = self.llm_engine.speak(agent_name, context, user_input)
-                logger.debug(f"✅ LLM response generated")
+                logger.debug("✅ LLM response generated")
 
                 return {
                     "status": "success",

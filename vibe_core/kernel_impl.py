@@ -43,6 +43,8 @@ from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
+from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
+from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
 try:
@@ -238,6 +240,14 @@ class RealVibeKernel(VibeKernel):
         self._ashrama_registry: Dict[str, AshramaTransition] = {}
         logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
 
+        # Phase 6: Universal Tool Registry
+        # Single source of truth for all agent tools
+        # Tools are registered here and accessed via AgentSystemInterface
+        self.tool_registry = ToolRegistry(invariant_checker=self._auditor if AUDITOR_AVAILABLE else None)
+        self._register_core_tools()
+        self._discover_agent_tools()
+        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} tools total)")
+
     def get_bank(self) -> "CivicBank":
         """
         Lazy-load the CivicBank.
@@ -271,6 +281,103 @@ class RealVibeKernel(VibeKernel):
             self._vault = CivicVault(bank.conn)
             logger.info("🔐 Kernel loaded CivicVault (Lazy)")
         return self._vault
+
+    def _register_core_tools(self) -> None:
+        """
+        Register core tools that are available to all agents.
+
+        Core tools are system-provided capabilities that don't belong to
+        any specific agent. They're registered without namespace prefix
+        (e.g., "read_file" not "core.read_file").
+
+        Phase 6: These tools implement the Tool protocol and are registered
+        at kernel boot time, before any agents are loaded.
+        """
+        from vibe_core.tools import (
+            AddTaskTool,
+            CompleteTaskTool,
+            DelegateTool,
+            ListTasksTool,
+            ReadFileTool,
+            WriteFileTool,
+        )
+
+        # File operations (VFS-aware tools will be added later)
+        self.tool_registry.register(ReadFileTool())
+        self.tool_registry.register(WriteFileTool())
+
+        # Task management
+        self.tool_registry.register(AddTaskTool())
+        self.tool_registry.register(ListTasksTool())
+        self.tool_registry.register(CompleteTaskTool())
+
+        # Inter-agent delegation
+        delegate_tool = DelegateTool()
+        delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
+        self.tool_registry.register(delegate_tool)
+
+        logger.info(f"🔧 Registered {len(self.tool_registry)} core tools: {', '.join(self.tool_registry.list_tools())}")
+
+    def _discover_agent_tools(self) -> None:
+        """
+        Auto-discover and register agent tools.
+
+        Phase 6: Automatic tool discovery from agent directories.
+
+        Scans:
+        - steward/system_agents/{agent_id}/tools/*.py
+        - agent_city/registry/{agent_id}/tools/*.py
+
+        For each .py file:
+        1. Dynamically import module
+        2. Find classes implementing Tool protocol
+        3. Register tools with namespace (agent_id.tool_name)
+
+        Error Handling:
+        - Import errors are logged but don't crash kernel
+        - Invalid tools are skipped
+        - Discovery continues even if some tools fail
+
+        This allows developers to simply drop a .py file in {agent}/tools/
+        and have it automatically available system-wide.
+        """
+        logger.info("🔍 Starting auto-discovery of agent tools...")
+
+        # Initialize discovery scanner
+        discovery = ToolDiscovery(root_path=Path("."))
+
+        # Discover all tools
+        discovered_tools = discovery.discover_all_tools()
+
+        # Register discovered tools
+        registered_count = 0
+        failed_count = 0
+
+        for tool in discovered_tools:
+            try:
+                self.tool_registry.register(tool)
+                registered_count += 1
+                logger.info(f"   ✅ Registered: {tool.name}")
+
+            except ValueError as e:
+                # Tool already registered (e.g., name collision)
+                logger.warning(f"   ⚠️  Skipped {tool.name}: {e}")
+                failed_count += 1
+
+            except Exception as e:
+                # Unexpected error during registration
+                logger.error(f"   ❌ Failed to register {tool.name}: {e}")
+                failed_count += 1
+
+        # Get discovery stats
+        stats = discovery.get_discovery_stats()
+
+        logger.info(f"🔧 Auto-discovery complete: {registered_count} tools registered, {failed_count} failed")
+
+        if stats["discovered_by_agent"]:
+            logger.info("📊 Tools by agent:")
+            for agent_id, tool_names in stats["discovered_by_agent"].items():
+                logger.info(f"   {agent_id}: {', '.join(tool_names)}")
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
@@ -451,9 +558,7 @@ class RealVibeKernel(VibeKernel):
             logger.info(f"⛓️  Agent '{agent.agent_id}' oath recorded in Parampara")
 
         spawn_status = "spawned in isolated process" if spawn_process else "registered (process deferred)"
-        logger.info(
-            f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}."
-        )
+        logger.info(f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}.")
 
     def spawn_deferred_agents(self) -> int:
         """
@@ -475,9 +580,7 @@ class RealVibeKernel(VibeKernel):
 
             # Spawn the process
             try:
-                self.process_manager.spawn_agent(
-                    agent_id, type(agent), config=getattr(agent, "config", None)
-                )
+                self.process_manager.spawn_agent(agent_id, type(agent), config=getattr(agent, "config", None))
                 spawned += 1
                 logger.info(f"🌱 Spawned deferred process for {agent_id}")
             except Exception as e:

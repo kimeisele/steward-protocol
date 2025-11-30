@@ -26,24 +26,19 @@ LAYERS:
 This is Agent #4 in the STEWARD Protocol - The Appellate Guardian.
 """
 
-import json
 import logging
-import uuid
-from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from enum import Enum
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
-from vibe_core.config import CityConfig, CivicConfig
+from vibe_core.config import CivicConfig
 from vibe_core.protocols import AgentManifest, Capability, VibeAgent
 
-from .tools.appeals_tool import Appeal, AppealStatus, AppealsTool
+from .tools.appeals_tool import AppealStatus, AppealsTool
 from .tools.justice_ledger import JusticeLedger
 from .tools.precedent_tool import PrecedentTool
-from .tools.verdict_tool import Verdict, VerdictTool, VerdictType
+from .tools.verdict_tool import VerdictTool, VerdictType
 
 # Constitutional Oath binding
 

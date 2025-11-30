@@ -1,0 +1,85 @@
+# 📚 LIBRARIAN CARTRIDGE MANIFEST
+# Knowledge Management Agent - Proof of Concept for Tool Registry Integration
+
+cartridge:
+  id: librarian
+  name: LIBRARIAN
+  version: "1.0.0"
+  author: "Universal Tool Registry Initiative"
+  description: "Knowledge management agent - catalog, search, and recommend books"
+
+  type: AGENT
+  domain: KNOWLEDGE
+
+  capabilities:
+    - catalog_books
+    - search_books
+    - recommend_books
+
+  # CRITICAL: This agent does NOT own tools
+  # Tools are registered in kernel and accessed via self.system.tools
+  tools:
+    - catalog_book      # Registered as librarian.catalog_book
+    - search_books      # Registered as librarian.search_books
+    - recommend_books   # Registered as librarian.recommend_books
+
+  dependencies:
+    - vibe_core
+
+  config:
+    enabled: true
+    catalog_path: "data/library/catalog.json"
+
+  responsibilities:
+    - "Maintain library catalog of books"
+    - "Search books by title, author, genre"
+    - "Recommend books based on preferences"
+
+  # Actions map to tool calls (future: YAML-driven workflow)
+  actions:
+    - action: catalog
+      description: "Add a book to the catalog"
+      tool: librarian.catalog_book
+      params:
+        - name: title
+          type: string
+          required: true
+        - name: author
+          type: string
+          required: true
+        - name: genre
+          type: string
+          required: false
+        - name: year
+          type: integer
+          required: false
+
+    - action: search
+      description: "Search books in catalog"
+      tool: librarian.search_books
+      params:
+        - name: query
+          type: string
+          required: true
+        - name: genre
+          type: string
+          required: false
+        - name: limit
+          type: integer
+          required: false
+
+    - action: recommend
+      description: "Get book recommendations"
+      tool: librarian.recommend_books
+      params:
+        - name: genre
+          type: string
+          required: false
+        - name: count
+          type: integer
+          required: false
+
+steward:
+  constitutional_oath: optional
+  governance_domain: KNOWLEDGE
+  risk_level: LOW

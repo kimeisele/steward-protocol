@@ -7,18 +7,17 @@ This implementation follows the STEWARD Protocol for cryptographically
 verifiable agent identity and content signing.
 """
 
-import os
 import json
-import time
-from datetime import datetime
-from typing import Dict, List, Optional
+import os
 from dataclasses import dataclass
-
-# Twitter API (using tweepy)
-import tweepy
+from datetime import datetime
+from typing import Dict, Optional
 
 # Reddit API (using praw)
 import praw
+
+# Twitter API (using tweepy)
+import tweepy
 
 # For content generation (using Anthropic)
 from anthropic import Anthropic

@@ -14,12 +14,12 @@ This tool enforces:
 The system learns over time what constitutes "legitimate purpose" and "reasonable amount".
 """
 
-import logging
 import json
-from typing import Dict, Any, Optional, List
-from pathlib import Path
-from dataclasses import dataclass, asdict
+import logging
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("DATA_ETHICS")
 

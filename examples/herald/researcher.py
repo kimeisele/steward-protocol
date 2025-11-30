@@ -13,12 +13,13 @@ Architecture:
 - Fallback Strategy: Graceful degradation if API unavailable
 """
 
-import os
-import requests
 import json
-from pathlib import Path
+import os
 from datetime import datetime
-from typing import Optional, List, Dict
+from pathlib import Path
+from typing import Dict, Optional
+
+import requests
 
 
 class TavilyResearcher:
@@ -317,7 +318,7 @@ if __name__ == "__main__":
 
             # Create research report
             report = ResearchReport(topic)
-            print(f"\n📋 Research Report Generated")
+            print("\n📋 Research Report Generated")
             print(f"   Prompt Preview: {report.to_prompt()[:100]}...")
         else:
             print("⚠️  No highly relevant articles found in current searches")

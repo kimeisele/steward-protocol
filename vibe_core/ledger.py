@@ -17,7 +17,6 @@ import logging
 import os
 import sqlite3
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # BLOCKER #1: Import canonical VibeLedger ABC from kernel.py
@@ -140,7 +139,7 @@ class SQLiteLedger(VibeLedger):
         )
         self.connection.commit()
         logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
-        logger.info(f"⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
+        logger.info("⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
 
     def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
         """Record a generic event (governance action)"""

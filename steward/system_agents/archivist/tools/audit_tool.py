@@ -4,7 +4,6 @@ ARCHIVIST Audit Tool - Event verification and signature validation.
 Verifies events from other agents (like HERALD) and creates attestations.
 """
 
-import json
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional

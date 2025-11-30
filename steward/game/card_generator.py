@@ -90,7 +90,7 @@ class CardGenerator:
         # XP Stats
         stats_y = 300
         draw.text((40, stats_y), f"XP: {xp}", fill="white", font=font_medium)
-        draw.text((40, stats_y + 40), f"Next Tier: ???", fill="grey", font=font_small)
+        draw.text((40, stats_y + 40), "Next Tier: ???", fill="grey", font=font_small)
 
         # Footer
         draw.text((40, 550), "STEWARD PROTOCOL", fill=(100, 100, 100), font=font_small)

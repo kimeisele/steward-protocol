@@ -8,15 +8,16 @@ This test verifies that:
 4. PRANA_INIT activation succeeds
 """
 
-import pytest
 import logging
 from pathlib import Path
-from steward.varna import Varna, categorize_agent_by_function
-from steward.ashrama import Ashrama, AshramaTransition
-from steward.agent_metadata import AgentMetadataRegistry, get_metadata_registry
-from steward.daily_ritual import DailyRitual, CyclePhase
-from steward.prana_init import PranaInitializer
 
+import pytest
+
+from steward.agent_metadata import get_metadata_registry
+from steward.ashrama import Ashrama, AshramaTransition
+from steward.daily_ritual import CyclePhase, DailyRitual
+from steward.prana_init import PranaInitializer
+from steward.varna import Varna, categorize_agent_by_function
 
 logger = logging.getLogger(__name__)
 

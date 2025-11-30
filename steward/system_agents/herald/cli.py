@@ -18,8 +18,6 @@ import logging
 import sys
 import time
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, Optional
 
 from .core.agency_director import AgencyDirector
 
@@ -210,9 +208,9 @@ class HeraldCLI:
 
             # In simulation, continue even on validation failure
             if result.status == "SUCCESS":
-                logger.info(f"  ✅ Success")
+                logger.info("  ✅ Success")
             elif result.status == "VALIDATION_FAILED":
-                logger.info(f"  ⚠️  Validation failed (expected in simulation)")
+                logger.info("  ⚠️  Validation failed (expected in simulation)")
             else:
                 logger.info(f"  ❌ Error: {result.error}")
 
@@ -231,7 +229,7 @@ class HeraldCLI:
             )
         else:
             successful = sum(1 for r in results if r["status"] == "SUCCESS")
-            print(f"\n📊 Simulation Results:")
+            print("\n📊 Simulation Results:")
             print(f"  Total cycles: {cycles}")
             print(f"  Successful: {successful}/{cycles}")
             print(f"  Timestamp: {datetime.now(timezone.utc).isoformat()}")

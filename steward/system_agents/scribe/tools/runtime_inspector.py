@@ -7,9 +7,8 @@ Shows what's HAPPENING, not just what exists.
 """
 
 import json
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class RuntimeInspector:

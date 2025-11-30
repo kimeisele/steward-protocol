@@ -79,19 +79,19 @@ def ingest_secrets():
             missing.append(secret_name)
 
     # Summary
-    print(f"\n📊 INGESTION SUMMARY")
+    print("\n📊 INGESTION SUMMARY")
     print(f"   ✅ Ingested: {len(ingested)} secret(s)")
     print(f"   ⏭️  Missing: {len(missing)} secret(s)")
 
     if ingested:
-        print(f"\n🔒 SECURE STORAGE CONFIRMED")
-        print(f"   Secrets are now encrypted in data/economy.db")
-        print(f"   Master Key: data/security/master.key (chmod 600)")
-        print(f"   Agents will LEASE these secrets using Credits")
-        print(f"\n✅ INGESTION COMPLETE. Environment variables no longer needed.")
+        print("\n🔒 SECURE STORAGE CONFIRMED")
+        print("   Secrets are now encrypted in data/economy.db")
+        print("   Master Key: data/security/master.key (chmod 600)")
+        print("   Agents will LEASE these secrets using Credits")
+        print("\n✅ INGESTION COMPLETE. Environment variables no longer needed.")
         return True
     else:
-        print(f"\n⚠️  No secrets were ingested.")
+        print("\n⚠️  No secrets were ingested.")
         print(f"   Set at least one of: {', '.join(secrets_to_ingest.values())}")
         return False
 
@@ -111,14 +111,14 @@ def list_vaulted_assets():
     assets = vault.list_assets()
 
     if assets:
-        print(f"\n📦 VAULTED ASSETS")
+        print("\n📦 VAULTED ASSETS")
         for asset in assets:
             print(f"   • {asset['key_name']}")
             print(f"     Created: {asset['created_at']}")
             if asset["rotated_at"] != asset["created_at"]:
                 print(f"     Rotated: {asset['rotated_at']}")
     else:
-        print(f"\n📦 VAULT IS EMPTY")
+        print("\n📦 VAULT IS EMPTY")
 
 
 def show_vault_audit_trail(limit: int = 5):
@@ -140,7 +140,7 @@ def show_vault_audit_trail(limit: int = 5):
         for lease in leases:
             print(f"   {lease['agent_id']} <- {lease['key_name']} ({lease['credits_charged']} Credits)")
     else:
-        print(f"\n🔍 VAULT AUDIT TRAIL (no leases yet)")
+        print("\n🔍 VAULT AUDIT TRAIL (no leases yet)")
 
 
 if __name__ == "__main__":

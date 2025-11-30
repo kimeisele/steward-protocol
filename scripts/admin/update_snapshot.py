@@ -74,7 +74,7 @@ def update_snapshot():
     with open(snapshot_path, "w") as f:
         json.dump(snapshot, f, indent=2)
 
-    print(f"✅ Snapshot updated")
+    print("✅ Snapshot updated")
     print(f"   Top Hash: {snapshot['ledger_stats']['top_hash'][:16]}...")
     print(f"   Events: {snapshot['ledger_stats']['total_events']}")
     print(f"   Chain: {snapshot['ledger_stats']['chain_integrity']}")

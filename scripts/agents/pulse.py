@@ -62,7 +62,7 @@ def pulse():
                 snapshot = json.load(f)
             logger.info(f"   ✅ Snapshot loaded: {snapshot_path}")
         else:
-            logger.warning(f"   ⚠️  Snapshot file not generated")
+            logger.warning("   ⚠️  Snapshot file not generated")
             snapshot = {}
 
         logger.info("📝 Snapshot already includes OPERATIONS.md update")
@@ -128,7 +128,7 @@ All previous pulse records are maintained in git history.
     with open(ops_path, "w") as f:
         f.write(content)
 
-    logger.info(f"   ✅ OPERATIONS.md updated")
+    logger.info("   ✅ OPERATIONS.md updated")
 
 
 def main():

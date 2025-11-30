@@ -6,9 +6,7 @@ Verifies connection to the Steward Federation.
 """
 
 import sys
-import json
 from pathlib import Path
-from datetime import datetime
 
 
 def check_federation_connectivity():

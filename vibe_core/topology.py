@@ -19,7 +19,7 @@ This module visualizes and manages the topological structure of Agent City.
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger("BHU_MANDALA")
 
@@ -358,25 +358,25 @@ class BhuMandalaTopology:
             "╚════════════════════════════════════════════════════════════╝",
             "",
             "                      ⛛ MOUNT MERU ⛛",
-            f"                    [CIVIC] (Authority)",
+            "                    [CIVIC] (Authority)",
             "",
             "              ◯ BHADRASHVA-VARSHA (Ring 1) ◯",
-            f"         HERALD (East) — TEMPLE (North)",
+            "         HERALD (East) — TEMPLE (North)",
             "",
             "           ◯◯ KIMPURASHA-VARSHA (Ring 2) ◯◯",
-            f"      ARTISAN (SE) — ENGINEER (SW)",
+            "      ARTISAN (SE) — ENGINEER (SW)",
             "",
             "         ◯◯◯ HARI-VARSHA (Ring 3) ◯◯◯",
-            f"    SCIENCE (South) — LENS (West)",
+            "    SCIENCE (South) — LENS (West)",
             "",
             "       ◯◯◯◯ NISHADA-VARSHA (Ring 4) ◯◯◯◯",
-            f"  FORUM (SW) — PULSE (NW)",
+            "  FORUM (SW) — PULSE (NW)",
             "",
             "     ◯◯◯◯◯ KRAUNCHA-VARSHA (Ring 5) ◯◯◯◯◯",
-            f"WATCHMAN (E) — AUDITOR (SE) — ARCHIVIST (SW)",
+            "WATCHMAN (E) — AUDITOR (SE) — ARCHIVIST (SW)",
             "",
             "    ≈≈≈≈≈≈ LOKA-LOKA (Boundary Firewall) ≈≈≈≈≈≈",
-            f"         AGORA (Broadcast Channel)",
+            "         AGORA (Broadcast Channel)",
             "",
             "═══════════════════════════════════════════════════════════",
             "       From center to boundary: Authority decreases",

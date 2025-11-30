@@ -10,9 +10,8 @@ This script:
 5. Reports results
 """
 
-import os
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Setup Logging
@@ -24,9 +23,9 @@ project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from examples.herald.publisher import TwitterPublisher
-from examples.herald.brain import HeraldBrain
 from examples.herald.artist import HeraldArtist
+from examples.herald.brain import HeraldBrain
+from examples.herald.publisher import TwitterPublisher
 
 
 def run_campaign():
@@ -79,7 +78,7 @@ def run_campaign():
     image_path = artist.generate_visual(content, style="cyberpunk")
 
     if image_path:
-        logger.info(f"🎨 Visual generated successfully")
+        logger.info("🎨 Visual generated successfully")
     else:
         logger.warning("⚠️  PHASE 3B: Artist failed (will fall back to text-only)")
         image_path = None

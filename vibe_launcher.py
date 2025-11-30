@@ -8,18 +8,19 @@
 ╚════════════════════════════════════════════════════════════════════════════╝
 """
 
-import os
-import sys
-import time
-import socket
-import signal
-import subprocess
-import webbrowser
 import argparse
 import atexit
-import requests
-from contextlib import closing
+import os
+import signal
+import socket
+import subprocess
+import sys
 import threading
+import time
+import webbrowser
+from contextlib import closing
+
+import requests
 
 # --- AGENT MIGRATION PATH FIX ---
 # Add migrated agent directories to sys.path so imports continue to work
@@ -223,7 +224,7 @@ def main():
     key_path = os.path.join(key_dir, "private.pem")
 
     if not os.path.exists(key_path):
-        print(f"➜ GENERATING NEW IDENTITY (Auto-Citizen)...")
+        print("➜ GENERATING NEW IDENTITY (Auto-Citizen)...")
         os.makedirs(key_dir, exist_ok=True)
         # Simple ECDSA Key Gen (using openssl command for speed/robustness if avail, or python)
         try:
@@ -245,16 +246,16 @@ def main():
             )
             print(f"   ✓ Key forged at {key_path}")
         except:
-            print(f"   ⚠️  OpenSSL not found. Please install or place key manually.")
+            print("   ⚠️  OpenSSL not found. Please install or place key manually.")
             # Fallback logic later if needed, but for Mac/Linux usually openssl is there
 
     if os.path.exists(key_path):
         os.environ["VIBE_MODE"] = "CITIZEN"
         os.environ["VIBE_PRIVATE_KEY_PATH"] = key_path
-        print(f"➜ IDENTITY VERIFIED: Citizen Mode 🔐 (Silent Key Active)")
+        print("➜ IDENTITY VERIFIED: Citizen Mode 🔐 (Silent Key Active)")
     else:
         os.environ["VIBE_MODE"] = "GUEST"
-        print(f"➜ IDENTITY UNVERIFIED: Guest Mode 👁️")
+        print("➜ IDENTITY UNVERIFIED: Guest Mode 👁️")
 
     # 3. LAUNCH
     if start_gateway(target_port):

@@ -1,5 +1,5 @@
 """
-HERALD Research Tool - Market intelligence via Tavily API.
+HERALD Research Tool - Market intelligence via Tavily API (Tool Protocol).
 
 Provides trend analysis for content generation context.
 Now with offline-first capability via DegradationChain.
@@ -8,11 +8,15 @@ Fallback order:
 1. Tavily API (if available)
 2. LocalLLM via DegradationChain (if installed)
 3. Static templates (always available)
+
+This tool implements the Tool Protocol for kernel-managed execution.
 """
 
 import logging
 import os
 from typing import Any, Dict, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 try:
     from tavily import TavilyClient
@@ -32,7 +36,7 @@ except ImportError:
 logger = logging.getLogger("HERALD_RESEARCH")
 
 
-class ResearchTool(OfflineCapableMixin):
+class ResearchTool(Tool, OfflineCapableMixin):
     """
     Market Intelligence Engine powered by Tavily.
     Scans for AI trends, security incidents, agent failures.
@@ -79,9 +83,132 @@ class ResearchTool(OfflineCapableMixin):
             else:
                 logger.warning("⚠️  Research: Tavily unavailable (running in simulation mode)")
 
-    def scan(self, query: str) -> Optional[str]:
+    @property
+    def name(self) -> str:
+        return "herald.research"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "Market intelligence via Tavily API - scan trends, find topics, check status (offline-capable)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action to perform: 'scan', 'find_trending', 'get_status'",
+            },
+            "query": {
+                "type": "string",
+                "required": False,
+                "description": "Search query (required for 'scan' action)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
         """
-        Search Tavily for trending content.
+        Validate research parameters.
+
+        Args:
+            parameters: Tool parameters
+
+        Raises:
+            ValueError: If required parameter missing or invalid
+            TypeError: If parameter has wrong type
+        """
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["scan", "find_trending", "get_status"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'scan', 'find_trending', or 'get_status'")
+
+        # Validate action-specific parameters
+        if action == "scan":
+            if "query" not in parameters:
+                raise ValueError("scan action requires 'query' parameter")
+            if not isinstance(parameters["query"], str):
+                raise TypeError("query must be a string")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """
+        Execute research operation.
+
+        Args:
+            parameters: Validated tool parameters
+
+        Returns:
+            ToolResult with research results
+        """
+        try:
+            action = parameters["action"]
+
+            if action == "scan":
+                query = parameters["query"]
+                result = self._scan(query)
+
+                return ToolResult(
+                    success=True,
+                    output={
+                        "query": query,
+                        "result": result,
+                        "source": "tavily" if self.client else "fallback",
+                    },
+                    metadata={
+                        "action": "scan",
+                        "query": query,
+                        "tavily_available": self.client is not None,
+                    },
+                )
+
+            elif action == "find_trending":
+                topic = self._find_trending_topic()
+
+                if topic:
+                    return ToolResult(
+                        success=True,
+                        output={
+                            "topic": topic,
+                            "found": True,
+                        },
+                        metadata={
+                            "action": "find_trending",
+                            "search_query": topic.get("search_query"),
+                        },
+                    )
+                else:
+                    return ToolResult(
+                        success=True,
+                        output={
+                            "topic": None,
+                            "found": False,
+                            "message": "No trending topics found",
+                        },
+                        metadata={
+                            "action": "find_trending",
+                        },
+                    )
+
+            elif action == "get_status":
+                status = self._get_research_status()
+
+                return ToolResult(
+                    success=True,
+                    output=status,
+                    metadata={
+                        "action": "get_status",
+                    },
+                )
+
+        except Exception as e:
+            error_msg = f"Research operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"ResearchTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
+
+    def _scan(self, query: str) -> Optional[str]:
+        """
+        Internal method: Search Tavily for trending content.
 
         Args:
             query: Search query
@@ -104,16 +231,16 @@ class ResearchTool(OfflineCapableMixin):
             logger.error(f"❌ Research error: {e}")
             return self._fallback_context(query)
 
-    def find_trending_topic(self) -> Optional[Dict]:
+    def _find_trending_topic(self) -> Optional[Dict]:
         """
-        Find trending topic from configured keywords.
+        Internal method: Find trending topic from configured keywords.
 
         Returns:
             dict: Best matching article with metadata or None
         """
         for keyword in self.keywords:
             logger.info(f"🔍 Researching: {keyword}...")
-            result = self.scan(keyword)
+            result = self._scan(keyword)
 
             if result:
                 return {
@@ -180,9 +307,9 @@ class ResearchTool(OfflineCapableMixin):
                 return template
         return templates["default"]
 
-    def get_research_status(self) -> Dict[str, Any]:
+    def _get_research_status(self) -> Dict[str, Any]:
         """
-        Get the current research capability status.
+        Internal method: Get the current research capability status.
 
         Returns:
             Dict with tavily_available, degradation_level, offline_capable

@@ -19,13 +19,12 @@ Usage:
 """
 
 import logging
-import os
 import re
 import sys
 import traceback
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Configure logging
 logging.basicConfig(
@@ -212,7 +211,7 @@ class DocsVerifier:
 
         blocks = DocsParser.extract_code_blocks(file_path)
         if not blocks:
-            logger.info(f"   ℹ️  No Python code blocks found")
+            logger.info("   ℹ️  No Python code blocks found")
             return 0
 
         logger.info(f"   Found {len(blocks)} code block(s)")

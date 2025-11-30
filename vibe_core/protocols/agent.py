@@ -249,7 +249,7 @@ class VibeAgent(ABC):
                 logger.info(f"🔧 {self.agent_id}: Monkey-patched requests → Network Proxy")
 
             except ImportError:
-                logger.debug(f"⚠️  requests module not available, skipping network patch")
+                logger.debug("⚠️  requests module not available, skipping network patch")
 
         except Exception as e:
             logger.error(f"❌ Failed to initialize VFS/Network for {self.agent_id}: {e}")

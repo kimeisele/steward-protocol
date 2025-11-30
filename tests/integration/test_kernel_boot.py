@@ -10,15 +10,15 @@ Tests that:
 4. No crashes during boot
 """
 
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.protocols import AgentManifest
 
 
 def test_kernel_boots():

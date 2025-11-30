@@ -1,0 +1,50 @@
+{
+  "identity": {
+    "agent_id": "librarian",
+    "name": "LIBRARIAN",
+    "version": "1.0.0",
+    "author": "Universal Tool Registry Initiative"
+  },
+  "specs": {
+    "domain": "KNOWLEDGE",
+    "description": "Knowledge management: catalog, search, recommend books",
+    "capabilities": [
+      "catalog_books",
+      "search_books",
+      "recommend_books"
+    ]
+  },
+  "operations": [
+    {
+      "name": "catalog",
+      "description": "Add a book to the catalog",
+      "parameters": {
+        "title": "string",
+        "author": "string",
+        "genre": "string (optional)",
+        "year": "integer (optional)"
+      }
+    },
+    {
+      "name": "search",
+      "description": "Search books in catalog",
+      "parameters": {
+        "query": "string",
+        "genre": "string (optional)",
+        "limit": "integer (optional)"
+      }
+    },
+    {
+      "name": "recommend",
+      "description": "Get book recommendations",
+      "parameters": {
+        "genre": "string (optional)",
+        "count": "integer (optional)"
+      }
+    }
+  ],
+  "governance": {
+    "constitutional_oath": "optional",
+    "risk_level": "LOW"
+  }
+}

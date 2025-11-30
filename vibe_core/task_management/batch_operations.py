@@ -1,6 +1,6 @@
 """Batch operations for task management."""
 
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List
 
 from .models import Task, TaskStatus
 

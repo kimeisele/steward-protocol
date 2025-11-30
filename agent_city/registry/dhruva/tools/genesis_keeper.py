@@ -12,12 +12,12 @@ This block is read-only once created.
 Any attempt to modify it is a CRITICAL violation.
 """
 
-import json
 import hashlib
+import json
 import logging
-from typing import Dict, Any, Optional
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict
 
 logger = logging.getLogger("GENESIS_KEEPER")
 

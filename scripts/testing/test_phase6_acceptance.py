@@ -47,8 +47,6 @@ def test_gateway_api_exists():
     print("\n🔍 TEST 2: Check gateway/api.py imports correctly")
 
     try:
-        from gateway.api import app
-
         print("   ✅ PASSED: FastAPI app imports successfully")
         return True
     except Exception as e:
@@ -86,9 +84,9 @@ def test_all_agents_importable():
             all_passed = False
 
     if all_passed:
-        print(f"\n   ✅ PASSED: All 11 agents are importable")
+        print("\n   ✅ PASSED: All 11 agents are importable")
     else:
-        print(f"\n   ❌ FAILED: Some agents could not be imported")
+        print("\n   ❌ FAILED: Some agents could not be imported")
 
     return all_passed
 
@@ -136,15 +134,15 @@ def test_envoy_wiring():
             print("   ❌ FAILED: ENVOY missing _route_command() method")
             return False
 
-        print(f"   ✅ ENVOY Agent Configuration:")
+        print("   ✅ ENVOY Agent Configuration:")
         print(f"      • Agent ID: {envoy.agent_id}")
         print(f"      • Name: {envoy.name}")
         print(f"      • Version: {envoy.version}")
         print(f"      • Domain: {envoy.domain}")
         print(f"      • Capabilities: {', '.join(envoy.capabilities)}")
-        print(f"      • HIL Assistant Tool: ACTIVE")
-        print(f"      • Command Router: READY")
-        print(f"   ✅ PASSED: ENVOY is properly wired")
+        print("      • HIL Assistant Tool: ACTIVE")
+        print("      • Command Router: READY")
+        print("   ✅ PASSED: ENVOY is properly wired")
         return True
 
     except Exception as e:
@@ -189,10 +187,10 @@ The system is operating normally with no critical issues detected.
             print(f"      Summary: {summary}")
             # This is a warning, not a hard failure
         else:
-            print(f"   ✅ HIL Assistant generated summary:")
+            print("   ✅ HIL Assistant generated summary:")
             print(f"      {summary[:100]}...")
 
-        print(f"   ✅ PASSED: HIL Assistant functionality works")
+        print("   ✅ PASSED: HIL Assistant functionality works")
         return True
 
     except Exception as e:
@@ -218,7 +216,7 @@ def test_kernel_bootstrap():
             print("   ❌ FAILED: Kernel missing boot method")
             return False
 
-        print(f"   ✅ PASSED: RealVibeKernel is initialized and ready")
+        print("   ✅ PASSED: RealVibeKernel is initialized and ready")
         return True
 
     except Exception as e:
@@ -249,7 +247,7 @@ def test_api_endpoints():
                 print(f"   ❌ {method} {path} not found")
                 return False
 
-        print(f"   ✅ PASSED: All required endpoints configured")
+        print("   ✅ PASSED: All required endpoints configured")
         return True
 
     except Exception as e:

@@ -9,9 +9,7 @@ This is NOT a mock. This is the production code path.
 
 import asyncio
 import logging
-import os
 import sys
-from pathlib import Path
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
@@ -119,7 +117,7 @@ async def run_live_fire():
             "content": "def live_fire():\n    return 'System Functional!'\n",
         }
 
-        logger.info(f"\n📋 Context:")
+        logger.info("\n📋 Context:")
         logger.info(f"   Feature: {context['feature_name']}")
         logger.info(f"   Path: {context['path']}")
 
@@ -134,7 +132,7 @@ async def run_live_fire():
         )
 
         # Execute playbook
-        logger.info(f"\n▶️  PLAYBOOK EXECUTION STARTING...")
+        logger.info("\n▶️  PLAYBOOK EXECUTION STARTING...")
 
         result = await engine.execute(
             playbook_id="FEATURE_IMPLEMENT_SAFE_V1",
@@ -144,7 +142,7 @@ async def run_live_fire():
             emit_event=None,  # Optional event emitter
         )
 
-        logger.info(f"\n🏁 PLAYBOOK EXECUTION COMPLETE")
+        logger.info("\n🏁 PLAYBOOK EXECUTION COMPLETE")
         logger.info(f"   Status: {result.get('status')}")
         logger.info(f"   Playbook: {result.get('playbook_name')}")
 

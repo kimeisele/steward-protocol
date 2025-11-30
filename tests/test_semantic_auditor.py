@@ -8,25 +8,21 @@ Test suite for the semantic verification layer:
 - Watchdog monitoring
 """
 
-import pytest
 import json
 import tempfile
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
+
+import pytest
 
 from steward.system_agents.auditor.tools.invariant_tool import (
     InvariantEngine,
-    InvariantRule,
     InvariantSeverity,
-    InvariantViolation,
-    VerificationReport,
     get_judge,
 )
-
 from steward.system_agents.auditor.tools.watchdog_tool import (
+    ViolationEvent,
     Watchdog,
     WatchdogConfig,
-    ViolationEvent,
     WatchdogIntegration,
 )
 
@@ -452,7 +448,6 @@ class TestSemanticCompliance:
     def test_semantic_compliance_detects_hype_words(self, tmp_path):
         """Test that Curator detects red-flag hype words in documents"""
         # Create a temporary test setup
-        from pathlib import Path
         import yaml
 
         # Create temp directories
@@ -501,8 +496,9 @@ class TestSemanticCompliance:
 
     def test_semantic_compliance_allows_green_flags(self, tmp_path):
         """Test that Curator allows green-flag approved words"""
-        import yaml
         import os
+
+        import yaml
 
         # Create temp setup
         config_dir = tmp_path / "config"

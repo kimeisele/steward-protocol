@@ -21,7 +21,6 @@ Usage:
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add project root to path
@@ -59,10 +58,10 @@ print("=" * 70 + "\n")
 
 try:
     # NOW it's safe to import from the kernel and cartridges
-    from run_server import StewardBootLoader
-
     # Parse command-line arguments
     import argparse
+
+    from run_server import StewardBootLoader
 
     parser = argparse.ArgumentParser(description="Steward Protocol - Autonomous Agent Orchestration")
     parser.add_argument("--port", type=int, default=8000, help="API gateway port (default: 8000)")

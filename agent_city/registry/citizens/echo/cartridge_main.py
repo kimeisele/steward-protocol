@@ -13,9 +13,9 @@ This demonstrates:
 
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Any, Dict
 
-from vibe_core.agent_protocol import VibeAgent, AgentManifest
+from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
 # Constitutional Oath

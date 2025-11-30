@@ -13,7 +13,7 @@ Dynamic discovery + Runtime state = Complete city map
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List
 
 from .introspector import CartridgeIntrospector
 from .runtime_inspector import RuntimeInspector

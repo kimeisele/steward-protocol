@@ -74,7 +74,7 @@ class LedgerTool:
         # This is a cached list of recent transactions
         self.entries: List[LedgerEntry] = []
 
-        logger.info(f"💰 Ledger Tool initialized (Lazy)")
+        logger.info("💰 Ledger Tool initialized (Lazy)")
 
     @property
     def bank(self):
@@ -361,7 +361,7 @@ def main():
 
     # Show history
     history = ledger.get_agent_history("herald")
-    print(f"\nTransaction history:")
+    print("\nTransaction history:")
     for entry in history:
         print(f"  {entry['timestamp']}: {entry['operation']} {entry['amount']} - {entry['reason']}")
 

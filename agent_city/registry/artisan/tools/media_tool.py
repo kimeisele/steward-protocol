@@ -6,10 +6,10 @@ Capabilities:
 - Apply 'Verified by Steward' watermark
 """
 
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 try:
     from PIL import Image, ImageDraw, ImageFont
