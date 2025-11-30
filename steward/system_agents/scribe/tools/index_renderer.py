@@ -6,18 +6,23 @@ Scans:
 - Root .md files (categorize by type)
 - docs/ subdirectories
 - Generates navigation hub automatically
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import Any, List
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 
-class IndexRenderer:
+class IndexRenderer(Tool):
     """Generate INDEX.md from filesystem introspection."""
 
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir)
+    def __init__(self):
+        """Initialize renderer (kernel-managed)."""
+        self.root_dir = Path(".")
 
         # Categories
         self.governance_docs = []
@@ -29,7 +34,44 @@ class IndexRenderer:
         self.reports_docs = []
         self.archive_docs = []
 
-    def scan_and_render(self) -> str:
+    @property
+    def name(self) -> str:
+        return "scribe.index_renderer"
+
+    @property
+    def description(self) -> str:
+        return "Generate INDEX.md from filesystem introspection"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate' to scan and render INDEX.md content",
+            }
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate renderer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+        if parameters["action"] not in ["generate"]:
+            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute renderer operation."""
+        try:
+            action = parameters["action"]
+            if action == "generate":
+                content = self._scan_and_render()
+                return ToolResult(success=True, output=content)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+        except Exception as e:
+            return ToolResult(success=False, error=str(e))
+
+    def _scan_and_render(self) -> str:
         """Scan filesystem and generate INDEX.md."""
         self._scan_root()
         self._scan_docs()

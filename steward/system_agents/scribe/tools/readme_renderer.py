@@ -7,23 +7,65 @@ NO HARDCODED CONTENT! All data from:
 - git stats
 - agent count
 - CONSTITUTION.md
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 from pathlib import Path
+from typing import Any
 
 from jinja2 import Template
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 from .project_introspector import ProjectIntrospector
 
 
-class ReadmeRenderer:
+class ReadmeRenderer(Tool):
     """Render README.md from project introspection."""
 
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir)
-        self.introspector = ProjectIntrospector(root_dir)
+    def __init__(self):
+        """Initialize renderer (kernel-managed)."""
+        self.root_dir = Path(".")
+        self.introspector = ProjectIntrospector(str(self.root_dir))
 
-    def render(self) -> str:
+    @property
+    def name(self) -> str:
+        return "scribe.readme_renderer"
+
+    @property
+    def description(self) -> str:
+        return "Generate README.md from project introspection (pyproject.toml, git stats, agent count)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate' to scan and render README.md content",
+            }
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate renderer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+        if parameters["action"] not in ["generate"]:
+            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute renderer operation."""
+        try:
+            action = parameters["action"]
+            if action == "generate":
+                content = self._render()
+                return ToolResult(success=True, output=content)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+        except Exception as e:
+            return ToolResult(success=False, error=str(e))
+
+    def _render(self) -> str:
         """Generate README.md content from introspection."""
         # Get all metadata
         metadata = self.introspector.get_all_metadata()
@@ -172,16 +214,3 @@ print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} dis
 
         return content
 
-    def render_to_file(self, output_file: str = "README.md") -> bool:
-        """Render and write to file."""
-        try:
-            content = self.render()
-            output_path = self.root_dir / output_file
-
-            output_path.write_text(content)
-            print(f"✅ README.md generated: {output_path}")
-
-            return True
-        except Exception as e:
-            print(f"❌ Error writing README.md: {e}")
-            return False
