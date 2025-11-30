@@ -2,16 +2,24 @@
   "capabilities": {
     "operations": [
       {
-        "description": "content_generation operation",
-        "name": "content_generation"
+        "description": "Publish content to social media (Twitter, Reddit)",
+        "name": "herald.broadcast"
       },
       {
-        "description": "broadcasting operation",
-        "name": "broadcasting"
+        "description": "Research topics via external search APIs",
+        "name": "herald.research"
       },
       {
-        "description": "research operation",
-        "name": "research"
+        "description": "Generate and refine written content",
+        "name": "herald.scribe"
+      },
+      {
+        "description": "Detect bots and analyze users for recruitment",
+        "name": "herald.scout"
+      },
+      {
+        "description": "Cryptographic identity and signature operations",
+        "name": "herald.identity"
       }
     ]
   },
