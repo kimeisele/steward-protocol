@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-THE WATCHDOG - Runtime Verification Daemon
+THE WATCHDOG - Runtime Verification Daemon (Tool Protocol)
 
 This component integrates the Judge (Invariant Engine) into the kernel loop.
 It monitors the ledger stream continuously and triggers alarms on violations.
@@ -10,6 +10,8 @@ Architecture:
 - Periodically audits the ledger for invariant violations
 - Records VIOLATION events when problems are detected
 - Communicates with Envoy for emergency notifications
+
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import json
@@ -18,6 +20,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("WATCHDOG")
 
@@ -64,7 +68,7 @@ class ViolationEvent:
         return {k: v for k, v in asdict(self).items() if v is not None}
 
 
-class Watchdog:
+class Watchdog(Tool):
     """
     Runtime Verification Daemon - THE WATCHDOG
 
@@ -91,6 +95,83 @@ class Watchdog:
         logger.info(f"   Ledger: {self.config.ledger_path}")
         logger.info(f"   Check interval: {self.config.check_interval}")
         logger.info(f"   Halt on critical: {self.config.halt_on_critical}")
+
+    @property
+    def name(self) -> str:
+        return "auditor.watchdog"
+
+    @property
+    def description(self) -> str:
+        return "THE WATCHDOG - Runtime verification daemon for continuous monitoring"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'check_invariants' | 'run_once' | 'get_status'",
+            },
+            "start_index": {
+                "type": "int",
+                "required": False,
+                "description": "Start index for ledger reading (for check_invariants)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["check_invariants", "run_once", "get_status"]:
+            raise ValueError(f"Invalid action: {action}")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute watchdog operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "check_invariants":
+                result = self.check_invariants()
+
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={
+                        "action": "check_invariants",
+                        "violations": len(result.get("violations", [])),
+                    },
+                )
+
+            elif action == "run_once":
+                result = self.run_once()
+
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={"action": "run_once", "status": result.get("status")},
+                )
+
+            elif action == "get_status":
+                status = {
+                    "watchdog": "active",
+                    "violations_recorded": self.violation_count,
+                    "last_checked_index": self.last_checked_index,
+                    "halt_requested": self.halt_requested,
+                }
+
+                return ToolResult(
+                    success=True,
+                    output=status,
+                    metadata={"action": "get_status"},
+                )
+
+        except Exception as e:
+            error_msg = f"Watchdog operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"Watchdog: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def read_ledger_events(self, start_index: int = 0) -> List[Dict[str, Any]]:
         """

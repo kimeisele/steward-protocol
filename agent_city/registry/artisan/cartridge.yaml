@@ -1,23 +1,34 @@
-meta:
-  id: "agent.steward.artisan"
-  name: "ARTISAN Agent (Media & Content)"
-  version: "1.0.0"
-  author: "Steward Protocol"
-  description: "The Artisan of Agent City - Creates media and content"
+agent_id: artisan
+name: ARTISAN
+version: 2.0.0
+author: Steward Protocol
+description: Media and technical operations agent (Tool Protocol v2.0)
 
-agent:
-  domain: "MEDIA"
-  capabilities:
-    - "media_operations"
-    - "content_creation"
-    - "design"
+# Agent metadata
+domain: MEDIA
+capabilities:
+  - media_processing
+  - image_optimization
+  - asset_branding
 
-dependencies:
-  - "pyyaml"
-  - "python-dotenv"
+# Tools (auto-discovered from tools/ directory)
+tools:
+  - artisan.media  # Image processing and branding
 
+# ARTISAN is a CRAFTSMAN (processes media assets)
+philosophy: |
+  ARTISAN handles media processing (crop, brand, optimize).
+  Tools are kernel-managed, not agent-owned.
+  Tool Protocol compliant.
+
+# Configuration
 config:
   governance:
-    level: "standard"
+    level: standard
   monitoring:
     enabled: true
+
+dependencies:
+  - pyyaml
+  - python-dotenv
+  - pillow  # For image processing
