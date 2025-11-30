@@ -56,9 +56,7 @@ def test_phase_1_kernel_has_registry():
     # Check that it's the right type
     from vibe_core.tools import ToolRegistry
 
-    assert isinstance(
-        kernel.tool_registry, ToolRegistry
-    ), "❌ tool_registry is not a ToolRegistry instance"
+    assert isinstance(kernel.tool_registry, ToolRegistry), "❌ tool_registry is not a ToolRegistry instance"
     print("✅ tool_registry is a ToolRegistry instance")
 
     return kernel
@@ -81,15 +79,13 @@ def test_phase_2_core_tools_registered(kernel):
     print(f"📋 Registered tools: {', '.join(registered_tools)}")
 
     for tool_name in expected_tools:
-        assert kernel.tool_registry.has(
-            tool_name
-        ), f"❌ Expected tool '{tool_name}' not registered"
+        assert kernel.tool_registry.has(tool_name), f"❌ Expected tool '{tool_name}' not registered"
         print(f"✅ Tool '{tool_name}' is registered")
 
     # Check tool count
-    assert (
-        len(registered_tools) == len(expected_tools)
-    ), f"❌ Expected {len(expected_tools)} tools, got {len(registered_tools)}"
+    assert len(registered_tools) == len(expected_tools), (
+        f"❌ Expected {len(expected_tools)} tools, got {len(registered_tools)}"
+    )
     print(f"✅ All {len(expected_tools)} core tools registered")
 
 
@@ -114,9 +110,7 @@ def test_phase_3_agent_has_tools_access(kernel):
     print("✅ Agent.system.tools is kernel.tool_registry (same instance)")
 
     # Check that agent.system.execute_tool exists
-    assert hasattr(
-        agent.system, "execute_tool"
-    ), "❌ AgentSystemInterface missing 'execute_tool' method"
+    assert hasattr(agent.system, "execute_tool"), "❌ AgentSystemInterface missing 'execute_tool' method"
     print("✅ AgentSystemInterface has 'execute_tool' method")
 
     return agent
@@ -132,9 +126,7 @@ def test_phase_4_tool_execution(agent):
         test_content = "Hello from Universal Tool Registry!"
 
         print(f"📝 Writing file via write_file tool: {test_file}")
-        result = agent.system.execute_tool(
-            "write_file", {"path": str(test_file), "content": test_content}
-        )
+        result = agent.system.execute_tool("write_file", {"path": str(test_file), "content": test_content})
 
         assert result.success, f"❌ write_file failed: {result.error}"
         print(f"✅ write_file succeeded: {result.output}")

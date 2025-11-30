@@ -14,12 +14,12 @@ Strategy:
 - No watermark removal (we embrace "Free & Open Source" branding)
 """
 
-import os
-import time
 import logging
-import requests
+import time
 from pathlib import Path
 from urllib.parse import quote
+
+import requests
 
 logger = logging.getLogger("HERALD_ARTIST")
 

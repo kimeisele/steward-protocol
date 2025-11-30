@@ -21,7 +21,6 @@ Enhancements (GOLDEN SHOT):
 - State Persistence: Save/restore execution state across restarts
 """
 
-import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
@@ -595,7 +594,7 @@ Reply with ONLY the number of your choice (1-{len(options)})."""
         }
 
         logger.info(f"📝 Generated playbook proposal: {proposal_id}")
-        logger.info(f"   Status: PENDING_APPROVAL (awaiting HIL human review)")
+        logger.info("   Status: PENDING_APPROVAL (awaiting HIL human review)")
 
         return proposal
 

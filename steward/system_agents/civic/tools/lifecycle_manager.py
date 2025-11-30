@@ -19,7 +19,7 @@ Key Concept: This is KARMA as Code
 """
 
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -199,8 +199,8 @@ class LifecycleManager:
         self._persist_state(agent_id, state)
 
         logger.info(f"🎓 New agent {agent_id} registered as BRAHMACHARI")
-        logger.info(f"   Status: Read-only access only")
-        logger.info(f"   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA")
+        logger.info("   Status: Read-only access only")
+        logger.info("   Required: Pass TEMPLE (Science) initiation to become GRIHASTHA")
 
         return state
 
@@ -248,8 +248,8 @@ class LifecycleManager:
         self._persist_state(agent_id, state)
 
         logger.info(f"✅ Agent {agent_id} INITIATED as GRIHASTHA by {initiator_agent}")
-        logger.info(f"   Granted: Full read/write/trade permissions")
-        logger.info(f"   Responsibility: Must maintain Constitutional Oath")
+        logger.info("   Granted: Full read/write/trade permissions")
+        logger.info("   Responsibility: Must maintain Constitutional Oath")
 
         return state
 
@@ -297,7 +297,7 @@ class LifecycleManager:
         logger.error(f"⚠️  Agent {agent_id} DEMOTED to SHUDRA")
         logger.error(f"   Reason: {reason}")
         logger.error(f"   Violation: {violation}")
-        logger.error(f"   Remedy: Assign service tasks via AUDITOR to rehabilitate")
+        logger.error("   Remedy: Assign service tasks via AUDITOR to rehabilitate")
 
         return state
 
@@ -342,7 +342,7 @@ class LifecycleManager:
         self._persist_state(agent_id, state)
 
         logger.info(f"🌳 Agent {agent_id} RETIRED to VANAPRASTHA")
-        logger.info(f"   Status: Read-only archive access")
+        logger.info("   Status: Read-only archive access")
         logger.info(f"   Legacy data preserved at: {archive_path or 'n/a'}")
 
         return state
@@ -381,7 +381,7 @@ class LifecycleManager:
 
         logger.info(f"🔄 Agent {agent_id} MERGED to SANNYASA")
         logger.info(f"   Location: {merge_location}")
-        logger.info(f"   Status: Individual agent ceased, merged into core")
+        logger.info("   Status: Individual agent ceased, merged into core")
 
         return state
 

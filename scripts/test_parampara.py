@@ -13,7 +13,6 @@ Usage:
     python scripts/test_parampara.py
 """
 
-import os
 import sys
 from pathlib import Path
 

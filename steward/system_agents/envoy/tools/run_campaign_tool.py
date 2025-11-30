@@ -102,7 +102,7 @@ class RunCampaignTool:
 
         try:
             # ========== PHASE 0: RESOURCE VALIDATION ==========
-            logger.info(f"\n📋 Phase 0: Resource Validation")
+            logger.info("\n📋 Phase 0: Resource Validation")
             resource_check = self._check_resources()
             if not resource_check["ready"]:
                 campaign["status"] = "failed"
@@ -110,25 +110,25 @@ class RunCampaignTool:
                 logger.error(f"   ❌ {resource_check['reason']}")
                 return self._campaign_result(campaign)
 
-            logger.info(f"   ✅ All resources available")
+            logger.info("   ✅ All resources available")
             campaign["results"]["resource_check"] = resource_check
 
             # ========== PHASE I: RESEARCH ==========
-            logger.info(f"\n🔬 Phase I: Market Research")
+            logger.info("\n🔬 Phase I: Market Research")
             campaign["phase"] = CampaignPhase.RESEARCH.value
 
             research_result = self._execute_research(goal, campaign_type, **kwargs)
             if research_result.get("status") != "success":
                 campaign["status"] = "failed"
                 campaign["errors"].append(f"Research phase failed: {research_result.get('error')}")
-                logger.error(f"   ❌ Research phase failed")
+                logger.error("   ❌ Research phase failed")
                 return self._campaign_result(campaign)
 
             campaign["results"]["research"] = research_result
-            logger.info(f"   ✅ Research complete")
+            logger.info("   ✅ Research complete")
 
             # ========== PHASE II: CONTENT CREATION ==========
-            logger.info(f"\n✍️  Phase II: Content Creation")
+            logger.info("\n✍️  Phase II: Content Creation")
             campaign["phase"] = CampaignPhase.CREATION.value
 
             content_result = self._execute_content_creation(
@@ -137,25 +137,25 @@ class RunCampaignTool:
             if content_result.get("status") != "success":
                 campaign["status"] = "failed"
                 campaign["errors"].append(f"Content creation failed: {content_result.get('error')}")
-                logger.error(f"   ❌ Content creation failed")
+                logger.error("   ❌ Content creation failed")
                 return self._campaign_result(campaign)
 
             campaign["results"]["content"] = content_result
-            logger.info(f"   ✅ Content created")
+            logger.info("   ✅ Content created")
 
             # ========== PHASE III: EXECUTION (PUBLISHING) ==========
-            logger.info(f"\n📢 Phase III: Campaign Execution")
+            logger.info("\n📢 Phase III: Campaign Execution")
             campaign["phase"] = CampaignPhase.EXECUTION.value
 
             execution_result = self._execute_publishing(goal=goal, content=content_result.get("content"), **kwargs)
             if execution_result.get("status") != "success":
                 campaign["status"] = "failed"
                 campaign["errors"].append(f"Publishing failed: {execution_result.get('error')}")
-                logger.error(f"   ❌ Publishing failed")
+                logger.error("   ❌ Publishing failed")
                 return self._campaign_result(campaign)
 
             campaign["results"]["execution"] = execution_result
-            logger.info(f"   ✅ Campaign published")
+            logger.info("   ✅ Campaign published")
 
             # ========== SUCCESS ==========
             campaign["status"] = "complete"

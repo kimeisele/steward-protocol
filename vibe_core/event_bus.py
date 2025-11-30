@@ -176,7 +176,7 @@ class EventBus:
             logger.debug(f"📡 Subscriber registered for {event_type}")
         else:
             self._global_subscribers.add(callback)
-            logger.debug(f"📡 Global subscriber registered")
+            logger.debug("📡 Global subscriber registered")
 
         return str(uuid4())
 

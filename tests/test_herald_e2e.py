@@ -11,8 +11,8 @@ Simulates the exact workflow that GitHub Actions runs:
 This catches silent failures BEFORE pushing to GitHub Actions.
 """
 
-import subprocess
 import json
+import subprocess
 import sys
 from pathlib import Path
 

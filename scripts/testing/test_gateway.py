@@ -4,8 +4,6 @@ Verification Script - Public Access Layer
 Tests the FastAPI Gateway using TestClient.
 """
 
-import json
-import logging
 import sys
 from pathlib import Path
 
@@ -69,7 +67,7 @@ def main():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Passed: 200 OK")
+        print("✅ Passed: 200 OK")
         print(f"   Summary: {data['summary'][:100]}...")
         print(f"   Ledger Hash: {data['ledger_hash']}")
     else:
@@ -88,7 +86,7 @@ def main():
 
     if response.status_code == 200:
         data = response.json()
-        print(f"✅ Passed: 200 OK")
+        print("✅ Passed: 200 OK")
         print(f"   Summary: {data['summary'][:100]}...")
     else:
         print(f"❌ Failed: Got {response.status_code} - {response.text}")

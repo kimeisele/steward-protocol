@@ -36,7 +36,7 @@ def test_marketer_herald_synergy():
 
     # Check MARKETER tool
     if "marketer.content" not in tools:
-        print(f"\n❌ marketer.content NOT FOUND")
+        print("\n❌ marketer.content NOT FOUND")
         print(f"Available tools: {sorted([t for t in tools if 'marketer' in t or 'herald' in t])}")
         return False
 
@@ -61,7 +61,7 @@ def test_marketer_herald_synergy():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -92,7 +92,7 @@ def test_marketer_herald_synergy():
     if verify_result.success:
         print(f"✅ HERALD credentials: {verify_result.output.get('status')}")
     else:
-        print(f"⚠️  HERALD offline (simulation mode)")
+        print("⚠️  HERALD offline (simulation mode)")
 
     print("\n=== STEP 4: HERALD Would Broadcast (Simulation) ===")
 
@@ -113,7 +113,7 @@ def test_marketer_herald_synergy():
     if broadcast_result.success:
         print(f"✅ HERALD broadcasted: {broadcast_result.output.get('published')}")
     else:
-        print(f"⚠️  Broadcast simulation complete")
+        print("⚠️  Broadcast simulation complete")
 
     print("\n" + "=" * 60)
     print("🎉 MARKETER ↔ HERALD SYNERGY COMPLETE")

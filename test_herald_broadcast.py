@@ -36,7 +36,7 @@ def test_herald_broadcast():
 
     # Check if herald.broadcast is discovered
     if "herald.broadcast" not in tools:
-        print(f"\n❌ herald.broadcast NOT FOUND")
+        print("\n❌ herald.broadcast NOT FOUND")
         print(f"Available tools: {tools}")
         return False
 
@@ -57,7 +57,7 @@ def test_herald_broadcast():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -85,7 +85,7 @@ def test_herald_broadcast():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -118,7 +118,7 @@ def test_herald_broadcast():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -146,7 +146,7 @@ def test_herald_broadcast():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output

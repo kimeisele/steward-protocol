@@ -4,8 +4,8 @@ Comprehensive verification script for BLOCKER #0: Phoenix Config Integration
 Checks all 13 system agents for proper config parameter and assignment.
 """
 
-import sys
 import ast
+import sys
 from pathlib import Path
 
 # List of all 13 system agents

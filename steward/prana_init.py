@@ -16,7 +16,6 @@ The Vedic becomes the algorithmic. The sacred becomes the system.
 
 import logging
 import sys
-from datetime import datetime
 from typing import Optional
 
 logger = logging.getLogger("PRANA_INIT")
@@ -130,7 +129,7 @@ class PranaInitializer:
             if len(agents) != 18:
                 logger.warning(f"   ⚠️  Expected 18 agents, found {len(agents)}")
 
-            logger.info(f"   ✅ All agents verified")
+            logger.info("   ✅ All agents verified")
             return True
 
         except Exception as e:
@@ -143,7 +142,6 @@ class PranaInitializer:
 
         try:
             from steward.agent_metadata import get_metadata_registry
-            from steward.ashrama import Ashrama
             from steward.varna import Varna
 
             registry = get_metadata_registry()

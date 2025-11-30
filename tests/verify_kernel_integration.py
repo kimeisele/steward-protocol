@@ -18,9 +18,8 @@ Prerequisites:
 - LLM provider keys (if Herald runs content generation)
 """
 
-import sys
 import logging
-from pathlib import Path
+import sys
 
 # Setup logging to see everything
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
@@ -130,7 +129,7 @@ def run_integration_test():
 
     civic_manifest = kernel.get_agent_manifest("civic")
     if civic_manifest:
-        print(f"   ✅ CIVIC Manifest Found:")
+        print("   ✅ CIVIC Manifest Found:")
         print(f"      - Name: {civic_manifest.name}")
         print(f"      - Domain: {civic_manifest.domain}")
         print(f"      - Capabilities: {civic_manifest.capabilities}")
@@ -140,7 +139,7 @@ def run_integration_test():
 
     herald_manifest = kernel.get_agent_manifest("herald")
     if herald_manifest:
-        print(f"   ✅ HERALD Manifest Found:")
+        print("   ✅ HERALD Manifest Found:")
         print(f"      - Name: {herald_manifest.name}")
         print(f"      - Domain: {herald_manifest.domain}")
         print(f"      - Capabilities: {herald_manifest.capabilities}")
@@ -175,8 +174,8 @@ def run_integration_test():
     result = kernel.get_task_result(task_id_civic)
 
     if result and result["status"] == "COMPLETED":
-        print(f"   ✅ TASK COMPLETED in real kernel")
-        print(f"   📄 Output:")
+        print("   ✅ TASK COMPLETED in real kernel")
+        print("   📄 Output:")
         output = result.get("output_result", {})
         if isinstance(output, dict):
             for key, value in output.items():
@@ -214,8 +213,8 @@ def run_integration_test():
     result = kernel.get_task_result(task_id_herald)
 
     if result and result["status"] == "COMPLETED":
-        print(f"   ✅ HERALD TASK COMPLETED in real kernel")
-        print(f"   📄 Output:")
+        print("   ✅ HERALD TASK COMPLETED in real kernel")
+        print("   📄 Output:")
         output = result.get("output_result", {})
         if isinstance(output, dict):
             for key, value in output.items():

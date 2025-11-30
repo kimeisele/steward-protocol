@@ -8,7 +8,7 @@ import importlib.util
 import inspect
 import logging
 from pathlib import Path
-from typing import List, Optional, Type
+from typing import List, Type
 
 from vibe_core.tools.tool_protocol import Tool
 
@@ -96,17 +96,13 @@ class ToolDiscovery:
                 self._discover_agent_tools(agent_id, tools_dir)
 
         logger.info(
-            f"✅ Tool discovery complete: "
-            f"{len(self.discovered_tools)} tools found, "
-            f"{len(self.failed_tools)} failed"
+            f"✅ Tool discovery complete: {len(self.discovered_tools)} tools found, {len(self.failed_tools)} failed"
         )
 
         if self.failed_tools:
             logger.warning(f"⚠️  Failed to load {len(self.failed_tools)} tools:")
             for failure in self.failed_tools:
-                logger.warning(
-                    f"   - {failure['agent_id']}.{failure['file']}: {failure['error']}"
-                )
+                logger.warning(f"   - {failure['agent_id']}.{failure['file']}: {failure['error']}")
 
         return self.discovered_tools
 
@@ -132,9 +128,7 @@ class ToolDiscovery:
                 self._load_tool_from_file(agent_id, tool_file)
             except Exception as e:
                 # Log error but continue discovery
-                logger.error(
-                    f"   ❌ Failed to load {tool_file.name}: {type(e).__name__}: {e}"
-                )
+                logger.error(f"   ❌ Failed to load {tool_file.name}: {type(e).__name__}: {e}")
                 self.failed_tools.append(
                     {
                         "agent_id": agent_id,
@@ -183,9 +177,7 @@ class ToolDiscovery:
                 logger.info(f"   ✅ Discovered: {tool.name} ({tool_class.__name__})")
 
             except Exception as e:
-                logger.error(
-                    f"   ❌ Failed to instantiate {tool_class.__name__}: {e}"
-                )
+                logger.error(f"   ❌ Failed to instantiate {tool_class.__name__}: {e}")
                 self.failed_tools.append(
                     {
                         "agent_id": agent_id,

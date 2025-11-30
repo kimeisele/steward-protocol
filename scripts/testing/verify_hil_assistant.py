@@ -4,11 +4,9 @@ Verification Script - HIL Assistant (VAD Layer)
 Tests the 'next_action' command on the EnvoyCartridge.
 """
 
-import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -17,7 +15,7 @@ if str(project_root) not in sys.path:
 
 from envoy.cartridge_main import EnvoyCartridge
 
-from vibe_core import Task, VibeAgent
+from vibe_core import Task
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -49,7 +47,7 @@ def main():
 
     result = envoy.process(task)
 
-    print(f"\n📝 Result:\n")
+    print("\n📝 Result:\n")
     if result.get("status") == "success":
         print(result.get("summary"))
         print("\n✅ VERIFICATION PASSED: Strategic summary generated.")

@@ -30,8 +30,6 @@ from civic.tools.economy import CivicBank
 from science.cartridge_main import ScientistCartridge
 from watchman.cartridge_main import WatchmanCartridge
 
-from vibe_core import Task
-
 # Logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("YAGYA")
@@ -113,7 +111,7 @@ def perform_yagya(topic: str = None, depth: str = "advanced"):
         return False
 
     # ==================== STEP 3: IGNITE THE FIRE ====================
-    print_ritual(f"\n🔥 IGNITING FIRE: Researching...")
+    print_ritual("\n🔥 IGNITING FIRE: Researching...")
     print_ritual(f"   Topic: {topic}")
 
     try:

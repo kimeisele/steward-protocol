@@ -8,9 +8,9 @@ Scans:
 - Generates navigation hub automatically
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import List
 
 
 class IndexRenderer:

@@ -36,7 +36,7 @@ def test_herald_identity():
 
     # Check if herald.identity is discovered
     if "herald.identity" not in tools:
-        print(f"\n❌ herald.identity NOT FOUND")
+        print("\n❌ herald.identity NOT FOUND")
         print(f"Available tools: {tools}")
         return False
 
@@ -56,7 +56,7 @@ def test_herald_identity():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -82,7 +82,7 @@ def test_herald_identity():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -112,7 +112,7 @@ def test_herald_identity():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -140,7 +140,7 @@ def test_herald_identity():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output

@@ -10,13 +10,11 @@ unit tests would miss.
 import json
 import sys
 from pathlib import Path
-from datetime import datetime, timezone
 
 # Add repo to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from steward.system_agents.auditor.tools.invariant_tool import (
-    get_judge,
     InvariantEngine,
 )
 from steward.system_agents.auditor.tools.watchdog_tool import Watchdog, WatchdogConfig
@@ -148,7 +146,7 @@ def demo_credit_transfer_without_proposal():
         for v in report.violations:
             print(f"\n   🚨 VIOLATION: {v.invariant_name}")
             print(f"      Message: {v.message}")
-            print(f"      Why: Credit transfers MUST follow community proposals")
+            print("      Why: Credit transfers MUST follow community proposals")
 
 
 def demo_orphaned_event():
@@ -181,7 +179,7 @@ def demo_orphaned_event():
         for v in report.violations:
             print(f"\n   🚨 VIOLATION: {v.invariant_name}")
             print(f"      Message: {v.message}")
-            print(f"      Why: Every event must have complete metadata")
+            print("      Why: Every event must have complete metadata")
 
 
 def demo_out_of_order_events():
@@ -262,7 +260,7 @@ def demo_duplicate_events():
         for v in report.violations:
             print(f"\n   🚨 VIOLATION: {v.invariant_name}")
             print(f"      Message: {v.message}")
-            print(f"      Why: Replay attacks are a critical security issue")
+            print("      Why: Replay attacks are a critical security issue")
 
 
 def demo_watchdog():

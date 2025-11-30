@@ -15,7 +15,6 @@ Tests:
 import logging
 import os
 import sys
-from typing import Any, Dict
 
 # Ensure we can import vibe_core
 sys.path.append(os.getcwd())
@@ -60,7 +59,7 @@ def test_non_whitelisted_domain():
     logger.info("1. Requesting https://evil.com (NOT whitelisted)...")
     try:
         response = proxy.get("test_agent", "https://evil.com")
-        logger.error(f"   ❌ SECURITY BREACH: Request succeeded!")
+        logger.error("   ❌ SECURITY BREACH: Request succeeded!")
         return False
     except PermissionError as e:
         logger.info(f"   ✅ Blocked: {e}")
@@ -121,7 +120,7 @@ def test_whitelist_management():
     logger.info("2. Requesting https://example.com...")
     try:
         response = proxy.get("test_agent", "https://example.com")
-        logger.info(f"   ✅ Request succeeded (domain whitelisted)")
+        logger.info("   ✅ Request succeeded (domain whitelisted)")
     except PermissionError:
         logger.error("   ❌ Blocked (should be allowed)")
         return False

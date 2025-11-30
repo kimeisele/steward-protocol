@@ -21,7 +21,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from vibe_core.boot_orchestrator import quick_boot
-from vibe_core.scheduling import Task
 
 
 def test_end_to_end():
@@ -35,13 +34,13 @@ def test_end_to_end():
     # Boot kernel (runs auto-discovery)
     kernel = quick_boot(ledger_path=":memory:")
 
-    print(f"✅ Kernel booted")
+    print("✅ Kernel booted")
     print(f"   Registered agents: {len(kernel.agent_registry)}")
     print(f"   Registered tools: {len(kernel.tool_registry)}")
 
     # Check tools
     tools = kernel.tool_registry.list_tools()
-    print(f"\n📋 Available tools:")
+    print("\n📋 Available tools:")
     for tool in sorted(tools):
         print(f"   - {tool}")
 
@@ -69,10 +68,11 @@ def test_end_to_end():
     print("\n=== STEP 3: Execute Tool via Kernel ===")
 
     # Direct tool execution test (this is what matters for auto-discovery)
-    from vibe_core.tools import ToolCall
-
     # Use unique book title each time (with timestamp)
     import time
+
+    from vibe_core.tools import ToolCall
+
     timestamp = int(time.time())
     book_title = f"Test Book {timestamp}"
 
@@ -91,7 +91,7 @@ def test_end_to_end():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Tool Execution Result:")
+    print("\n📊 Tool Execution Result:")
     print(f"   Success: {result.success}")
     if result.success:
         print(f"   Output: {result.output}")

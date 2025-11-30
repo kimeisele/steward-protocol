@@ -7,9 +7,8 @@ ensuring that GitHub visitors see the agent's heartbeat in real-time.
 This tool implements the Tool Protocol for kernel-managed execution.
 """
 
-import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -30,6 +29,7 @@ except ImportError:
         payload: Dict[str, Any]
         signature: Optional[str] = None
         sequence_number: Optional[int] = None
+
 
 logger = logging.getLogger("HERALD_SCRIBE")
 
@@ -312,7 +312,6 @@ class Scribe(Tool):
 
         # Check if logbook section exists
         logbook_marker = "## Logbook"
-        future_marker = "## Future Entries"
 
         if logbook_marker not in content:
             # Logbook section doesn't exist, create it via initialize
@@ -400,8 +399,7 @@ Autonomous activity log:
 
             self.chronicle_path.write_text(updated_content, encoding="utf-8")
 
-
-# Fix the _append_to_logbook method that was left incomplete
+    # Fix the _append_to_logbook method that was left incomplete
     def _append_to_logbook_OLD_DELETED(self, entry: str) -> None:
         """
         DEPRECATED: This method was refactored above.

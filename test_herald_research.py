@@ -36,7 +36,7 @@ def test_herald_research():
 
     # Check if herald.research is discovered
     if "herald.research" not in tools:
-        print(f"\n❌ herald.research NOT FOUND")
+        print("\n❌ herald.research NOT FOUND")
         print(f"Available tools: {tools}")
         return False
 
@@ -56,7 +56,7 @@ def test_herald_research():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -84,7 +84,7 @@ def test_herald_research():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
@@ -116,13 +116,13 @@ def test_herald_research():
 
     result = kernel.tool_registry.execute(tool_call)
 
-    print(f"\n📊 Result:")
+    print("\n📊 Result:")
     print(f"   Success: {result.success}")
     if result.success:
         output = result.output
         print(f"   Found: {output['found']}")
-        if output['found']:
-            topic = output['topic']
+        if output["found"]:
+            topic = output["topic"]
             print(f"   Search Query: {topic['search_query']}")
             print(f"   Article Preview: {topic['article']['content'][:100]}...")
         else:

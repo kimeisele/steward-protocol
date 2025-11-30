@@ -8,14 +8,14 @@ This ensures env vars are set BEFORE TwitterPublisher.__init__() is called.
 This file replaces test_herald_publisher.py to force CI to pick up new code.
 """
 
-import os
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from examples.herald.publisher import (
-    TwitterPublisher,
     LinkedInPublisher,
     MultiChannelPublisher,
+    TwitterPublisher,
 )
 
 

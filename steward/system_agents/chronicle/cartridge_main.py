@@ -20,14 +20,11 @@ Every commit is a verse. Every branch is a possible universe."
 """
 
 import asyncio
-import json
 import logging
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 # VibeOS Integration
-from vibe_core import AgentManifest, Task, VibeAgent, VibeKernel
+from vibe_core import AgentManifest, Task, VibeAgent
 
 # Config import with fallback
 try:

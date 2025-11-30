@@ -8,8 +8,8 @@ Generates agent-city/LEADERBOARD.md
 
 import json
 import logging
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("LEADERBOARD_GEN")

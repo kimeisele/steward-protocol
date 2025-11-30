@@ -14,7 +14,7 @@ import logging
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 

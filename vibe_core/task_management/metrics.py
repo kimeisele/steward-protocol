@@ -1,6 +1,5 @@
 """Task management performance metrics."""
 
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict

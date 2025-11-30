@@ -12,11 +12,12 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.process_manager import ProcessManager
-from vibe_core.lineage import LineageChain, LineageEventType
-import tempfile
 import os
+import tempfile
+
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.lineage import LineageChain, LineageEventType
+from vibe_core.process_manager import ProcessManager
 
 
 class TestRunner:

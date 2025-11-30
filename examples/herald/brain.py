@@ -20,13 +20,15 @@ Anti-Slop Philosophy: Every output must provide genuine technical value.
 No marketing fluff. No buzzwords. Pure engineering truth.
 """
 
-import os
 import json
-import random
 import logging
+import os
+import random
 from pathlib import Path
+
 from openai import OpenAI
 from tavily import TavilyClient
+
 from examples.herald.aligner import VibeAligner
 
 logger = logging.getLogger("HERALD_BRAIN")

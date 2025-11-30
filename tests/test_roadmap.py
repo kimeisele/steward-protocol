@@ -1,11 +1,9 @@
 """Tests for Roadmap functionality."""
 
 import tempfile
-import shutil
 from pathlib import Path
 
 from vibe_core.task_management import TaskManager
-from vibe_core.task_management.models import Roadmap
 
 
 def test_create_roadmap():

@@ -62,7 +62,7 @@ class HILAssistantTool:
             if is_success:
                 summary.append("✅ **SYSTEM STATUS: OPTIMAL**")
                 summary.append(
-                    f"The mission was executed successfully. Governance constraints were enforced and self-corrected."
+                    "The mission was executed successfully. Governance constraints were enforced and self-corrected."
                 )
 
                 if crisis_detected and correction_executed:

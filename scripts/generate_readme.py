@@ -174,7 +174,7 @@ def main():
     governance = get_governance_summary()
     agents = get_agent_list()
 
-    print(f"\n📊 Introspection results:")
+    print("\n📊 Introspection results:")
     print(f"   Project: {project['name']} v{project['version']}")
     print(f"   Agent count: {agent_count}")
     print(f"   Agents discovered: {len(agents)}")

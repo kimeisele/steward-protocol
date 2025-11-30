@@ -6,8 +6,8 @@ Tests the DegradationChain, ContextAwareAgent, and Tool Injection Pattern.
 Run with: pytest tests/test_offline_features.py -v
 """
 
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 class TestDegradationChain:
@@ -28,7 +28,7 @@ class TestDegradationChain:
 
     def test_degradation_chain_template_fallback(self):
         """Test DegradationChain falls back to templates when offline."""
-        from vibe_core.llm.degradation_chain import DegradationChain, DegradationLevel
+        from vibe_core.llm.degradation_chain import DegradationChain
 
         chain = DegradationChain()
 

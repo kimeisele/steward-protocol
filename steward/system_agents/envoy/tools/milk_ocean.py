@@ -28,11 +28,10 @@ import json
 import logging
 import re
 import sqlite3
-from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("MILK_OCEAN_ROUTER")
 
@@ -592,7 +591,7 @@ class MilkOceanRouter:
             # Emit ACTION event for queue routing
             self._emit_event_safe(
                 "ACTION",
-                f"Prayer routed to Milk Ocean (lazy queue)",
+                "Prayer routed to Milk Ocean (lazy queue)",
                 {
                     "request_id": request_id,
                     "agent_id": agent_id,
@@ -618,7 +617,7 @@ class MilkOceanRouter:
             # Emit ACTION event for flash routing
             self._emit_event_safe(
                 "ACTION",
-                f"Prayer routed to Flash (Envoy)",
+                "Prayer routed to Flash (Envoy)",
                 {
                     "request_id": request_id,
                     "agent_id": agent_id,
@@ -643,7 +642,7 @@ class MilkOceanRouter:
             # Emit ACTION event for science routing
             self._emit_event_safe(
                 "ACTION",
-                f"Prayer routed to Science (Pro model)",
+                "Prayer routed to Science (Pro model)",
                 {
                     "request_id": request_id,
                     "agent_id": agent_id,

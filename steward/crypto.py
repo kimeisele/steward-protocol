@@ -6,7 +6,6 @@ Using pure Python ECDSA library for maximum compatibility
 
 import base64
 import hashlib
-import os
 from pathlib import Path
 
 from ecdsa import NIST256p, SigningKey, VerifyingKey

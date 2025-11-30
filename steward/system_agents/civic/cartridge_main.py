@@ -22,9 +22,8 @@ The kernel is the source of truth. CIVIC is the bureaucracy layer.
 
 import json
 import logging
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import yaml
 
@@ -32,8 +31,8 @@ import yaml
 from steward.oath_mixin import OathMixin
 
 # VibeOS Integration
-from vibe_core import AgentManifest, Task, VibeAgent, VibeKernel
-from vibe_core.config import CityConfig, CivicConfig
+from vibe_core import Task, VibeAgent
+from vibe_core.config import CivicConfig
 
 from .economy_agent import EconomyAgent
 from .lifecycle_agent import LifecycleAgent
@@ -86,7 +85,7 @@ class CivicCartridge(VibeAgent, OathMixin):
             capabilities=["registry", "licensing", "ledger", "governance"],
         )
 
-        logger.info(f"🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
+        logger.info("🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config")
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
@@ -122,7 +121,7 @@ class CivicCartridge(VibeAgent, OathMixin):
         # Load state for parent coordination
         self.state = self._load_state()
 
-        logger.info(f"🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
+        logger.info("🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
 
     @property
     def registry_path(self):

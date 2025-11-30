@@ -13,13 +13,11 @@ This is the Vaishya function: Exchange, commerce, resource distribution.
 """
 
 import logging
-import json
-from typing import Dict, Any, Optional, List
-from pathlib import Path
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MARKET_MAIN")

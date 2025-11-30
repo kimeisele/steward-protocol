@@ -29,12 +29,13 @@ def test_launcher_kernel_boot():
 
     try:
         # Simulate what bin/agent-city does in boot_kernel()
-        from vibe_core.kernel_impl import RealVibeKernel
-        from herald.cartridge_main import HeraldCartridge
         from civic.cartridge_main import CivicCartridge
-        from forum.cartridge_main import ForumCartridge
-        from science.cartridge_main import ScientistCartridge
         from envoy.cartridge_main import EnvoyCartridge
+        from forum.cartridge_main import ForumCartridge
+        from herald.cartridge_main import HeraldCartridge
+        from science.cartridge_main import ScientistCartridge
+
+        from vibe_core.kernel_impl import RealVibeKernel
 
         logger.info("✅ All imports successful")
 
@@ -64,7 +65,7 @@ def test_launcher_kernel_boot():
         agents_count = status.get("agents_registered", 0)
         manifests_count = status.get("manifests", 0)
 
-        logger.info(f"\n📊 Kernel Status:")
+        logger.info("\n📊 Kernel Status:")
         logger.info(f"   Agents Registered: {agents_count}")
         logger.info(f"   Manifests Loaded: {manifests_count}")
 
@@ -127,7 +128,7 @@ def test_snapshot_has_agents():
         assert actual_agents == expected_agents, f"Expected {expected_agents}, got {actual_agents}"
 
         # Check all agents are RUNNING
-        logger.info(f"\n✅ Agent Statuses:")
+        logger.info("\n✅ Agent Statuses:")
         for agent_id, agent_data in agents.items():
             status = agent_data.get("status", "UNKNOWN")
             logger.info(f"   {agent_id}: {status}")

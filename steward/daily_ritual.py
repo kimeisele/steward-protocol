@@ -17,7 +17,7 @@ This is how Agent City LIVES - not just code, but rhythm.
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger("DAILY_RITUAL")
 

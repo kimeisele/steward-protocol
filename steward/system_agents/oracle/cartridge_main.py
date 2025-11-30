@@ -146,7 +146,7 @@ class OracleCartridge(VibeAgent, OathMixin):
             narrative = self._build_timeline_narrative(trail, agent_id)
 
             return {
-                "query": f"Timeline of recent events" + (f" for {agent_id}" if agent_id else ""),
+                "query": "Timeline of recent events" + (f" for {agent_id}" if agent_id else ""),
                 "timestamp": datetime.now().isoformat(),
                 "event_count": len(trail),
                 "raw_data": trail,
@@ -258,12 +258,12 @@ class OracleCartridge(VibeAgent, OathMixin):
         lines.append(f"Status: {stats['system_status'].upper()}")
         lines.append(f"Time: {stats['timestamp']}")
 
-        lines.append(f"\nAgents:")
+        lines.append("\nAgents:")
         lines.append(f"  Total: {stats['total_agents']}")
         lines.append(f"  Active: {stats['active_agents']}")
         lines.append(f"  Frozen: {stats['frozen_agents']}")
 
-        lines.append(f"\nCredits:")
+        lines.append("\nCredits:")
         lines.append(f"  Total in System: {stats['total_credits']}")
         lines.append(f"  Circulating: {stats['circulating_credits']}")
 
