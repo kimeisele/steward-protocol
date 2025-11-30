@@ -466,9 +466,7 @@ class MilkOceanRouter:
             asyncio.set_event_loop(loop)
 
         # Get routing decision with confidence
-        route_result = loop.run_until_complete(
-            self._semantic_router.resolve_intent_with_confidence(user_input)
-        )
+        route_result = loop.run_until_complete(self._semantic_router.resolve_intent_with_confidence(user_input))
 
         confidence = route_result.get("confidence", 0.0)
         confidence_level = route_result.get("confidence_level", "low")
@@ -476,8 +474,7 @@ class MilkOceanRouter:
         intent_type = route_result.get("intent_type", "CHAT")
 
         logger.info(
-            f"🧠 JNANA: confidence={confidence:.2f} ({confidence_level}), "
-            f"concepts={concepts}, intent={intent_type}"
+            f"🧠 JNANA: confidence={confidence:.2f} ({confidence_level}), concepts={concepts}, intent={intent_type}"
         )
 
         # Check for batch/repetitive patterns in concepts
