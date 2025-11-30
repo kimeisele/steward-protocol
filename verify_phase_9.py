@@ -31,7 +31,14 @@ def run_phase_9():
 
     # 1. Boot Real Kernel
     print("\n[Setup] Booting RealVibeKernel...")
-    kernel = RealVibeKernel(ledger_path=":memory:")
+    # Use a temporary file for SQLiteLedger to support _insert_event (InMemoryLedger doesn't have it)
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
+        ledger_path = tmp.name
+
+    print(f"   Using temporary ledger: {ledger_path}")
+    kernel = RealVibeKernel(ledger_path=ledger_path)
     kernel.boot()
 
     # 2. Register Real Agents
