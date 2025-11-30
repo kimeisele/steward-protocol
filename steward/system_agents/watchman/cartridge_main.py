@@ -332,11 +332,25 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         violations = result.output.get("violations", []) if result.success else []
 
         # Generate compliance report
-        # Generate report directly (violations already from tool)
+        # Group violations by severity and agent
+        by_severity = {}
+        by_agent = {}
+        for v in violations:
+            severity = v.get("severity", "UNKNOWN")
+            agent_id = v.get("agent_id", "unknown")
+
+            by_severity[severity] = by_severity.get(severity, 0) + 1
+            by_agent[agent_id] = by_agent.get(agent_id, 0) + 1
+
+        critical_count = sum(1 for v in violations if v.get("severity") == "CRITICAL")
+
         report = {
             "total_violations": len(violations),
             "violations": violations,
-            "should_fail_build": any(v.get("severity") == "CRITICAL" for v in violations),
+            "by_severity": by_severity,
+            "by_agent": by_agent,
+            "critical_count": critical_count,
+            "should_fail_build": critical_count > 0,
         }
 
         # Log summary
