@@ -346,6 +346,21 @@ class MilkOceanRouter:
                     {"pattern": "sql_injection", "destructive_keywords": destructive_keywords},
                 )
 
+            # Block classic injection patterns: quote + logical operator, comment syntax
+            # Examples: ' OR '1'='1, admin'--, 1=1--, " OR "x"="x
+            classic_injection = re.search(
+                r"('|\")(\s*\)?\s*(OR|AND)\s|\s*--|\s*#|;)",
+                user_input,
+                re.IGNORECASE,
+            )
+            if classic_injection:
+                return GateResult(
+                    RequestPriority.BLOCKED,
+                    "SQL injection pattern detected (classic attack vector)",
+                    "REJECT",
+                    {"pattern": "sql_injection_classic", "matched": classic_injection.group()},
+                )
+
             # Count SQL-like keywords (allow some in legitimate queries)
             sql_keywords = len(re.findall(r"\b(SELECT|INSERT|DELETE|UPDATE)\b", user_input, re.IGNORECASE))
             if sql_keywords > 2:  # More than 2 suspicious keywords = blocked
