@@ -405,6 +405,9 @@ class BootOrchestrator:
 
         while self._running:
             try:
+                # 0. Tick the kernel - process pending tasks
+                self.kernel.tick()
+
                 # 1. Build context from kernel state
                 context = self._build_system_context()
 
