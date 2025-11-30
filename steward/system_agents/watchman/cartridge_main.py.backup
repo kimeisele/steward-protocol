@@ -23,6 +23,10 @@ from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
 
 # Phase 3.2: Deep inspection tool
+from .tools.standards_inspection import StandardsInspectionTool
+
+# Phase 3.3: System health monitoring (read-only)
+from .tools.system_health_check import SystemHealthCheck
 
 # CivicBank import with fallback (cryptography may not be available)
 try:
@@ -95,7 +99,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         super().__init__(
             agent_id="watchman",
             name="WATCHMAN",
-            version="3.0.0"  # Bumped for Tool Protocol refactor,
+            version="1.0.0",
             author="Steward Protocol",
             description="System integrity enforcer and governance enforcer",
             domain="ENFORCEMENT",
@@ -126,11 +130,13 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         else:
             logger.warning("⚠️  CivicBank not available (running in audit-only mode)")
 
-        # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
-        # - watchman.standards (StandardsInspectionTool)
-        # - watchman.health (SystemHealthCheck)
+        # Phase 3.2: Initialize deep inspection tool
+        self.standards_tool = StandardsInspectionTool()
+        logger.info("🔬 Standards Inspection Tool initialized (AST-based analysis)")
 
-        logger.info("✅ WATCHMAN: Ready for operation (NO tool instances owned)")
+        # Phase 3.3: Initialize system health monitor (read-only)
+        self.health_checker = SystemHealthCheck()
+        logger.info("🏥 System Health Monitor initialized (read-only infrastructure check)")
 
     def run_patrol(self) -> dict:
         """Execute full system integrity check, punish violators, and grant amnesty to redeemed."""
@@ -326,12 +332,10 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             return {"status": "error", "error": f"Path not found: {system_agents_path}"}
 
         # Run deep inspection
-        result = self.system.execute_tool("watchman.standards", {"action": "inspect_all", "system_agents_path": str(system_agents_path)})
-        violations = result.output.get("violations", []) if result.success else []
+        violations = self.standards_tool.inspect_all_agents(system_agents_path)
 
         # Generate compliance report
-        # Generate report directly (violations already from tool)
-        report = {"total_violations": len(violations), "violations": violations, "should_fail_build": any(v.get("severity") == "CRITICAL" for v in violations)}
+        report = self.standards_tool.generate_report(violations)
 
         # Log summary
         logger.info("\n" + "=" * 70)
@@ -389,12 +393,10 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         logger.info("=" * 70)
 
         # Run health check
-        result = self.system.execute_tool("watchman.health", {"action": "check_all"})
-        report = result.output if result.success else {"status": "error", "error": result.error}
+        report = self.health_checker.check_all()
 
         # Log formatted report
-        # Report already formatted by tool
-        formatted = str(report)
+        formatted = self.health_checker.format_report(report)
         for line in formatted.split("\n"):
             if line.strip():
                 logger.info(line)
