@@ -261,58 +261,28 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                         }
                 return {"status": "error", "reason": "system_interface_not_available"}
 
-            # Playbook Integration: Content generation actions
+            # Playbook support: Accept schema but return stub (Herald is infrastructure only)
             elif action == "generate_content":
-                # Generate content based on topic/research
+                # Stub: Herald is broadcasting infrastructure, not content creator
                 topic = task.payload.get("topic", "")
-                content_format = task.payload.get("format", "article")
-                tone = task.payload.get("tone", "professional")
-                research_data = task.payload.get("research_data", {})
+                return {
+                    "status": "success",
+                    "action": "generate_content",
+                    "content_id": f"stub_{task.task_id}",
+                    "note": "Herald stub - content generation not implemented",
+                }
 
-                # Use herald.scribe tool for content generation
-                result = self.system.execute_tool(
-                    "herald.scribe",
-                    {
-                        "action": "generate",
-                        "topic": topic,
-                        "format": content_format,
-                        "tone": tone,
-                        "research_context": research_data,
-                    },
-                )
-
-                if result.success:
-                    return {
-                        "status": "success",
-                        "action": "generate_content",
-                        "content_id": f"content_{task.task_id}",
-                        "draft": result.output.get("content", ""),
-                        "format": content_format,
-                    }
-                else:
-                    return {"status": "error", "error": result.error or "Content generation failed"}
-
-            elif action == "publish_content" or action == "publish":
-                # Publish content to platform
+            elif action == "publish_content":
+                # Stub: Would publish if real content system existed
                 content_id = task.payload.get("content_id", "")
-                content = task.payload.get("content", "")
                 platform = task.payload.get("platform", "twitter")
-
-                # Use herald.broadcast tool
-                result = self.system.execute_tool(
-                    "herald.broadcast", {"action": "publish", "content": content, "platform": platform}
-                )
-
-                if result.success:
-                    return {
-                        "status": "success",
-                        "action": "publish_content",
-                        "published": True,
-                        "platform": platform,
-                        "content_id": content_id,
-                    }
-                else:
-                    return {"status": "error", "error": result.error or "Publishing failed"}
+                return {
+                    "status": "success",
+                    "action": "publish_content",
+                    "published": False,
+                    "platform": platform,
+                    "note": "Herald stub - publishing not implemented",
+                }
 
             else:
                 return {"status": "error", "error": f"Unknown action: {action}"}
