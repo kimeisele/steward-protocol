@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
+from steward.constitutional_oath import ConstitutionalOath
 
 logger = logging.getLogger("STEWARD")
 
@@ -44,12 +45,13 @@ class Discoverer(VibeAgent):
         self.agent_city_path = Path("agent_city")
         self.config = config  # BLOCKER #0: Phoenix Config integration
 
-        # GOVERNANCE GATE: Swear the Oath (Genesis Agent bootstrap)
+        # GOVERNANCE GATE: Swear the Oath with REAL constitution hash
+        self._constitution_hash = ConstitutionalOath.compute_constitution_hash()
         self.oath_sworn = True
         self.oath_event = {
             "agent_id": self.agent_id,
-            "constitution_hash": "genesis_hash",  # Special bootstrap value
-            "signature": "steward_genesis_signature_001",
+            "constitution_hash": self._constitution_hash,
+            "signature": f"steward_{self._constitution_hash[:16]}_signature",
             "status": "SWORN",
         }
 
@@ -218,12 +220,12 @@ class Discoverer(VibeAgent):
                 config=agent_config,  # ✅ BLOCKER #0: NOW PASSES CONFIG
             )
 
-            # Inject the Oath (Genesis bootstrap for discovered agents)
+            # Inject the Oath with REAL constitution hash
             agent.oath_sworn = True
             agent.oath_event = {
                 "agent_id": agent_id,
-                "constitution_hash": "genesis_hash",  # Bootstrap value
-                "signature": f"{agent_id}_genesis_signature",
+                "constitution_hash": self._constitution_hash,
+                "signature": f"{agent_id}_{self._constitution_hash[:16]}_signature",
                 "status": "SWORN",
             }
 
