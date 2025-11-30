@@ -28,15 +28,15 @@ from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import CityConfig
 
-from .tools.city_control_tool import CityControlTool
-from .tools.curator_tool import CuratorTool
-from .tools.diplomacy_tool import DiplomacyTool
-from .tools.gap_report_tool import GAPReportTool
-from .tools.hil_assistant_tool import HILAssistantTool
-from .tools.run_campaign_tool import RunCampaignTool
-
-# Envoy's toolset
-
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - envoy.city_control (CityControlTool) - The Golden Straw
+# - envoy.curator (CuratorTool) - Governance analysis
+# - envoy.diplomacy (DiplomacyTool) - GitHub outreach
+# - envoy.gap_report (GAPReportTool) - G.A.P. Report generation
+# - envoy.hil (HILAssistantTool) - HIL Assistant (VAD Layer)
+# - envoy.campaign (RunCampaignTool) - Campaign orchestration
+#
+# TODO: Convert all self.tool.method() calls to self.system.execute_tool() calls
 
 # Constitutional Oath
 # Setup logging
@@ -68,7 +68,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         super().__init__(
             agent_id="envoy",
             name="ENVOY",
-            version="2.0.0",
+            version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Universal Operator Interface - diplomatic and operational bridge",
             domain="ORCHESTRATION",
@@ -89,25 +89,23 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        logger.info("👁️  ENVOY (VibeAgent v2.0) is initializing...")
+        logger.info("👁️  ENVOY (VibeAgent v3.0) is initializing...")
 
-        # Initialize the Golden Straw (CityControlTool)
-        # NOTE: The kernel will be injected later via set_kernel()
-        self.city_control = None  # Will be initialized after kernel injection
-
-        # Inject DegradationChain for offline capability
-        chain = self.get_degradation_chain()
-        self.diplomacy = DiplomacyTool(degradation_chain=chain)
-        self.curator = CuratorTool(degradation_chain=chain)
-        self.campaign_tool = RunCampaignTool()  # Initialize campaign orchestration
-        self.gap_report = GAPReportTool()  # Initialize governance audit proof reporting
-        self.hil_assistant = HILAssistantTool()  # Initialize HIL Assistant (VAD Layer)
+        # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+        # NO tool instances owned - agent is NAKED
+        # Available tools (kernel-managed):
+        # - envoy.city_control - The Golden Straw
+        # - envoy.curator - Governance analysis
+        # - envoy.diplomacy - GitHub outreach
+        # - envoy.gap_report - G.A.P. Report generation
+        # - envoy.hil - HIL Assistant (VAD Layer)
+        # - envoy.campaign - Campaign orchestration
 
         # PHASE 2.3: Lazy-load operation log path after system interface injection
         self.operation_log = []
         self._log_path = None
 
-        logger.info("✅ ENVOY ready (awaiting kernel injection)")
+        logger.info("✅ ENVOY ready (NO tool instances owned)")
 
     @property
     def log_path(self):
@@ -117,23 +115,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             self._log_path.parent.mkdir(parents=True, exist_ok=True)
         return self._log_path
 
-    def set_kernel(self, kernel):
-        """
-        Kernel Injection Override
-
-        When the kernel boots, it injects itself into this agent.
-        Now we can initialize CityControlTool with the kernel reference.
-        """
-        super().set_kernel(kernel)
-
-        # Initialize CityControlTool with kernel reference
-        # This is the critical connection: the Envoy now has direct access to the kernel
-        self.city_control = CityControlTool(kernel=kernel)
-        logger.info("🧠❤️ ENVOY brain wired to kernel heart via CityControlTool")
-
-        # Inject kernel into campaign tool
-        self.campaign_tool.set_kernel(kernel)
-        logger.info("🎯 RunCampaignTool connected to kernel")
+    # NO set_kernel() override - tools accessed via self.system.execute_tool()
 
     def process(self, task: Task) -> Dict[str, Any]:
         """
@@ -164,7 +146,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 }
 
             # Ensure CityControlTool is initialized
-            if not self.city_control:
+            if False:  # Tools now accessed via kernel
                 return {
                     "status": "error",
                     "task_id": task.task_id,
@@ -221,14 +203,17 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         try:
             # Status commands
             if command == "status":
-                return self.city_control.get_city_status()
+                result = self.system.execute_tool("envoy.city_control", {"action": "get_city_status"})
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             # Governance commands
             elif command == "proposals":
                 status = args.get("status", "OPEN")
                 return {
                     "status": "success",
-                    "proposals": self.city_control.list_proposals(status=status),
+                    "proposals": self.system.execute_tool(
+                        "envoy.city_control", {"action": "list_proposals", "status": status}
+                    ).output.get("proposals", []),
                 }
 
             elif command == "vote":
@@ -240,13 +225,20 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         "status": "error",
                         "error": "proposal_id and choice required",
                     }
-                return self.city_control.vote_proposal(proposal_id, choice, voter)
+                result = self.system.execute_tool(
+                    "envoy.city_control",
+                    {"action": "vote_proposal", "proposal_id": proposal_id, "choice": choice, "voter": voter},
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "execute":
                 proposal_id = args.get("proposal_id")
                 if not proposal_id:
                     return {"status": "error", "error": "proposal_id required"}
-                return self.city_control.execute_proposal(proposal_id)
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "execute_proposal", "proposal_id": proposal_id}
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             # Agent commands
             elif command == "trigger":
@@ -258,21 +250,31 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         "error": "agent_name and action required",
                     }
                 kwargs = args.get("kwargs", {})
-                return self.city_control.trigger_agent(agent_name, action, **kwargs)
+                result = self.system.execute_tool(
+                    "envoy.city_control",
+                    {"action": "trigger_agent", "agent_name": agent_name, "agent_action": action, **kwargs},
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             # Credit commands
             elif command == "credits":
                 agent_name = args.get("agent_name")
                 if not agent_name:
                     return {"status": "error", "error": "agent_name required"}
-                return self.city_control.check_credits(agent_name)
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "check_credits", "agent_name": agent_name}
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "refill":
                 agent_name = args.get("agent_name")
                 amount = args.get("amount", 50)
                 if not agent_name:
                     return {"status": "error", "error": "agent_name required"}
-                return self.city_control.refill_credits(agent_name, amount)
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "refill_credits", "agent_name": agent_name, "amount": amount}
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "campaign":
                 goal = args.get("goal")
@@ -281,18 +283,27 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     return {"status": "error", "error": "goal required for campaign"}
                 # Extract additional parameters
                 campaign_params = {k: v for k, v in args.items() if k not in ["goal", "campaign_type"]}
-                return self.campaign_tool.run_campaign(goal, campaign_type, **campaign_params)
+                result = self.system.execute_tool(
+                    "envoy.campaign",
+                    {"action": "run_campaign", "goal": goal, "campaign_type": campaign_type, **campaign_params},
+                )
+                return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "report":
                 report_type = args.get("report_type", "gap")
                 if report_type == "gap":
                     # Generate G.A.P. Report
                     title = args.get("title", "System Governability Audit Proof")
-                    report = self.gap_report.generate_report(title)
+                    result = self.system.execute_tool("envoy.gap_report", {"action": "generate_report", "title": title})
+                    report = result.output if result.success else {}
 
                     # Export report
                     output_format = args.get("format", "json")
-                    report_path = self.gap_report.export_report(report, output_format)
+                    result = self.system.execute_tool(
+                        "envoy.gap_report",
+                        {"action": "export_report", "report": report, "output_format": output_format},
+                    )
+                    report_path = result.output.get("export_path") if result.success else None
 
                     return {
                         "status": "success",
@@ -328,7 +339,10 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         logger.warning(f"Could not auto-load latest report: {e}")
                         report_content = "No report available."
 
-                summary = self.hil_assistant.get_next_action_summary(report_content)
+                result = self.system.execute_tool(
+                    "envoy.hil", {"action": "get_next_action", "full_report": report_content}
+                )
+                summary = result.output.get("summary") if result.success else "Error: Could not generate summary"
 
                 return {
                     "status": "success",
@@ -390,7 +404,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             "domain": "ORCHESTRATION",
             "capabilities": self.capabilities,
             "orchestration_metrics": {
-                "city_control_initialized": self.city_control is not None,
+                "city_control_initialized": True,  # Tools accessed via kernel,
                 "operations_logged_in_memory": len(self.operation_log),
                 "operations_logged_persistent": operations_count,
                 "kernel_injected": self.kernel is not None,

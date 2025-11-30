@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Constitutional Verdict Tool - Layer 3 Defense in Depth (Phase 3.4) (Tool Protocol)
-====================================================================================
+Constitutional Verdict Tool - Layer 3 Defense in Depth (Phase 3.4)
+====================================================================
 
 This is the AUDITOR's supreme authority - constitutional judgment on code quality.
 
@@ -10,7 +10,14 @@ Part of Defense in Depth:
 - Layer 2: Watchman (AST analysis) - catches architectural violations
 - Layer 3: THIS TOOL - constitutional judgment and final verdict
 
-Tool Protocol compliant for kernel-managed execution.
+The Auditor provides the final authority on whether code:
+1. Adheres to THE AGENT CONSTITUTION (CONSTITUTION.md)
+2. Respects the 6 Articles (Identity, Accountability, Governance, Transparency, Consent, Interoperability)
+3. Follows the 4 Regulating Principles (Purity, Truth, Austerity, Authorized Connections)
+4. Upholds GAD-000 governance standards
+
+This is not technical analysis (that's Watchman's job).
+This is CONSTITUTIONAL JUDGMENT - the final word on code quality.
 
 "The Constitution is not optional. It is the supreme law."
 """
@@ -22,8 +29,6 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("AUDITOR.CONSTITUTIONAL_VERDICT")
 
@@ -81,9 +86,9 @@ class ConstitutionalViolation:
         }
 
 
-class ConstitutionalVerdictTool(Tool):
+class ConstitutionalVerdictTool:
     """
-    Constitutional Verdict Tool - The Final Authority (Layer 3) (Tool Protocol).
+    Constitutional Verdict Tool - The Final Authority (Layer 3).
 
     This tool performs constitutional judgment on the codebase,
     verifying adherence to THE AGENT CONSTITUTION.
@@ -94,65 +99,6 @@ class ConstitutionalVerdictTool(Tool):
 
     def __init__(self):
         self.violations: List[ConstitutionalViolation] = []
-
-    @property
-    def name(self) -> str:
-        return "auditor.verdict"  # Namespaced: agent_id.tool_name
-
-    @property
-    def description(self) -> str:
-        return "Constitutional judgment - verify agents uphold THE AGENT CONSTITUTION"
-
-    @property
-    def parameters_schema(self) -> dict[str, Any]:
-        return {
-            "action": {
-                "type": "string",
-                "required": True,
-                "description": "Action: 'render_verdict'",
-            },
-            "system_agents_path": {
-                "type": "string",
-                "required": True,
-                "description": "Path to steward/system_agents directory",
-            },
-        }
-
-    def validate(self, parameters: dict[str, Any]) -> None:
-        """Validate parameters."""
-        if "action" not in parameters:
-            raise ValueError("Missing required parameter: action")
-
-        action = parameters["action"]
-        if action not in ["render_verdict"]:
-            raise ValueError(f"Invalid action: {action}. Must be 'render_verdict'")
-
-        if "system_agents_path" not in parameters:
-            raise ValueError("Missing required parameter: system_agents_path")
-
-    def execute(self, parameters: dict[str, Any]) -> ToolResult:
-        """Execute constitutional verdict."""
-        try:
-            action = parameters["action"]
-            system_agents_path = Path(parameters["system_agents_path"])
-
-            if action == "render_verdict":
-                verdict = self.render_verdict(system_agents_path)
-
-                return ToolResult(
-                    success=True,
-                    output=verdict,
-                    metadata={
-                        "action": "render_verdict",
-                        "total_violations": verdict["total_violations"],
-                        "verdict_status": verdict["verdict"],
-                    },
-                )
-
-        except Exception as e:
-            error_msg = f"Constitutional verdict failed: {type(e).__name__}: {e!s}"
-            logger.error(f"ConstitutionalVerdictTool: {error_msg}", exc_info=True)
-            return ToolResult(success=False, error=error_msg)
 
     def render_verdict(self, system_agents_path: Path) -> Dict[str, Any]:
         """
@@ -519,6 +465,3 @@ class ConstitutionalVerdictTool(Tool):
             logger.info("\n✅ VERDICT: CONSTITUTIONAL - All agents uphold the supreme law")
 
         logger.info("=" * 70 + "\n")
-
-
-__all__ = ["ConstitutionalVerdictTool"]

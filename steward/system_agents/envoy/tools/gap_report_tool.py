@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-G.A.P. Report Tool - Governability Audit Proof
+G.A.P. Report Tool - Governability Audit Proof (Tool Protocol)
 
 Creates an immutable, auditable proof of self-governing system operations.
 This tool generates a comprehensive report documenting:
@@ -9,19 +9,7 @@ This tool generates a comprehensive report documenting:
 - Value creation while maintaining governance compliance
 - Complete ledger trail with cryptographic verification
 
-Purpose:
-The G.A.P. Report demonstrates that autonomous agents can:
-1. Self-detect governance violations
-2. Propose and execute corrections
-3. Create value while maintaining compliance
-4. Provide complete audit trail for verification
-
-Architecture:
-- Queries ledger for all governance events
-- Extracts proposal decisions and executions
-- Compiles campaign outcomes
-- Generates timestamped, signed report
-- Ready for publication via HERALD
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import hashlib
@@ -31,11 +19,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GAP_REPORT_TOOL")
 
 
-class GAPReportTool:
+class GAPReportTool(Tool):
     """
     Generate Governability Audit Proof Reports.
 
@@ -49,19 +39,105 @@ class GAPReportTool:
         licenses_path: str = "data/registry/licenses.json",
         proposals_path: str = "data/governance/executed",
     ):
-        """
-        Initialize G.A.P. Report Tool.
-
-        Args:
-            ledger_path: Path to transaction ledger
-            licenses_path: Path to license database
-            proposals_path: Path to executed proposals
-        """
+        """Initialize G.A.P. Report Tool."""
         self.ledger_path = Path(ledger_path)
         self.licenses_path = Path(licenses_path)
         self.proposals_path = Path(proposals_path)
-
         logger.info("🔐 G.A.P. Report Tool initialized")
+
+    @property
+    def name(self) -> str:
+        return "envoy.gap_report"
+
+    @property
+    def description(self) -> str:
+        return "Generate Governability Audit Proof (G.A.P.) reports"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate_report' | 'export_report' | 'get_publication_content'",
+            },
+            "title": {
+                "type": "string",
+                "required": False,
+                "description": "Report title (for generate_report)",
+            },
+            "report": {
+                "type": "dict",
+                "required": False,
+                "description": "Report dict (for export_report, get_publication_content)",
+            },
+            "output_format": {
+                "type": "string",
+                "required": False,
+                "description": "Output format: 'markdown' | 'json' (for export_report)",
+            },
+            "output_path": {
+                "type": "string",
+                "required": False,
+                "description": "Output file path (for export_report)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = ["generate_report", "export_report", "get_publication_content"]
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute G.A.P. Report operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "generate_report":
+                title = parameters.get("title", "System Governability Audit Proof")
+                report = self.generate_report(title=title)
+                return ToolResult(
+                    success=True,
+                    output=report,
+                    metadata={"action": "generate_report"},
+                )
+
+            elif action == "export_report":
+                report = parameters.get("report")
+                if not report:
+                    return ToolResult(success=False, error="Missing 'report' parameter")
+
+                output_format = parameters.get("output_format", "markdown")
+                output_path = parameters.get("output_path")
+
+                path = self.export_report(report, output_format, output_path)
+                return ToolResult(
+                    success=True,
+                    output={"export_path": str(path)},
+                    metadata={"action": "export_report", "format": output_format},
+                )
+
+            elif action == "get_publication_content":
+                report = parameters.get("report")
+                if not report:
+                    return ToolResult(success=False, error="Missing 'report' parameter")
+
+                content = self.get_publication_content(report)
+                return ToolResult(
+                    success=True,
+                    output=content,
+                    metadata={"action": "get_publication_content"},
+                )
+
+        except Exception as e:
+            error_msg = f"G.A.P. Report operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"GAPReportTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def generate_report(
         self,
@@ -496,3 +572,6 @@ verifiable, and trustworthy.
             "verification_hash": report.get("verification", {}).get("sha256_hash"),
             "call_to_action": "Review the complete proof and join us in building self-governing agent systems",
         }
+
+
+__all__ = ["GAPReportTool"]

@@ -6,6 +6,10 @@ Part of the Steward Protocol Federation.
 Role: The Generalist / Builder
 Mission: Manifest reality into code. Build new agents on demand.
 
+REFACTORED: Tool Protocol Compliant
+- NO tool instances owned by agent
+- ALL tools accessed via kernel (self.system.execute_tool)
+
 Updated for Safe Evolution Loop (GAD-5500):
 - manifest_reality: Write code to sandbox (input for Auditor)
 - Legacy create_agent: Still supported for agent scaffolding
@@ -18,14 +22,12 @@ from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
-from steward.system_agents.engineer.tools.builder_tool import BuilderTool
 from vibe_core.config import CityConfig
 
 # VibeOS Integration
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
-# Constitutional Oath
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ENGINEER_AGENT")
@@ -38,6 +40,10 @@ class EngineerCartridge(VibeAgent, OathMixin):
     Capabilities:
     - manifest_reality: Write code to sandbox (Safe Evolution Loop)
     - create_agent: Scaffold new agents (Legacy)
+
+    Tool Protocol Compliant:
+    - NO tool instances in __init__
+    - Tools accessed via self.system.execute_tool()
     """
 
     def __init__(self, config: Optional[CityConfig] = None):
@@ -48,14 +54,14 @@ class EngineerCartridge(VibeAgent, OathMixin):
         super().__init__(
             agent_id="engineer",
             name="ENGINEER",
-            version="2.0.0",
+            version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Builder agent: manifests code and scaffolds new agents",
             domain="ENGINEERING",
             capabilities=["manifest_reality", "agent_scaffolding", "code_generation"],
         )
 
-        logger.info("📐 THE ENGINEER is online.")
+        logger.info("📐 THE ENGINEER is online (Tool Protocol v3.0).")
 
         # Initialize Constitutional Oath
         if OathMixin:
@@ -63,7 +69,10 @@ class EngineerCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ ENGINEER has sworn the Constitutional Oath")
 
-        self.builder = BuilderTool()
+        # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+        # - engineer.builder (BuilderTool)
+
+        logger.info("✅ ENGINEER: Ready for operation (NO tool instances owned)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
@@ -101,14 +110,15 @@ class EngineerCartridge(VibeAgent, OathMixin):
         Writes code to the sandbox (Safe Evolution Loop input).
         Optionally generates code using the LLM service if use_brain=True.
 
+        NEW: Uses kernel-managed tools via self.system.execute_tool()
+
         Payload:
         - feature_spec: Description of feature to implement
         - path: Relative path (e.g., "src/auth.py")
         - content: Code content (or generated from feature_spec if use_brain=True)
         - use_brain: Boolean. If True, generate code from feature_spec via LLM.
 
-        Architecture: The engineer asks the builder for code via abstracted service.
-        The builder has NO idea which LLM provider is being used.
+        Architecture: The engineer asks the builder for code via kernel.
         """
         feature_spec = task.payload.get("feature_spec", "Unknown feature")
         relative_path = task.payload.get("path")
@@ -126,17 +136,30 @@ class EngineerCartridge(VibeAgent, OathMixin):
         # STEP 1: Get code content
         code_content = task.payload.get("content")
 
-        # STEP 2: If no content and use_brain=True, ask the builder to generate it
+        # STEP 2: If no content and use_brain=True, ask builder via kernel
         if not code_content and use_brain and feature_spec:
             try:
-                logger.info(f"🧠 Asking builder to generate code for: {feature_spec}")
-                code_content = self.builder.generate_agent_code(
-                    name=os.path.splitext(os.path.basename(relative_path))[0],
-                    mission=feature_spec,
+                logger.info(f"🧠 Asking builder (via kernel) to generate code for: {feature_spec}")
+
+                # CRITICAL: Tool call goes through kernel
+                result = self.system.execute_tool(
+                    "engineer.builder",
+                    {
+                        "action": "generate_code",
+                        "name": os.path.splitext(os.path.basename(relative_path))[0],
+                        "mission": feature_spec,
+                    },
                 )
-                logger.info(f"✅ Builder generated code ({len(code_content)} chars)")
+
+                if result.success:
+                    code_content = result.output.get("code")
+                    logger.info(f"✅ Builder generated code ({len(code_content)} chars)")
+                else:
+                    logger.error(f"❌ Code generation failed: {result.error}")
+                    code_content = None
+
             except Exception as e:
-                logger.error(f"❌ Code generation failed: {e}")
+                logger.error(f"❌ Builder call failed: {e}")
                 logger.info("⚠️  Falling back to stub")
                 code_content = None
 
@@ -173,6 +196,8 @@ def run():
         """
         Legacy method: Create a new agent from scratch.
         Still supported for backward compatibility.
+
+        NEW: Uses kernel-managed tools via self.system.execute_tool()
         """
         name = task.payload.get("name")
         mission = task.payload.get("mission")
@@ -184,17 +209,24 @@ def run():
         logger.info(f"   Mission: {mission}")
 
         try:
-            # 1. Scaffold
-            if not self.builder.scaffold_agent(name):
-                return {"status": "error", "reason": f"Could not scaffold {name}"}
+            # 1. Scaffold via kernel
+            scaffold_result = self.system.execute_tool("engineer.builder", {"action": "scaffold", "name": name})
 
-            # 2. Generate Code
-            code = self.builder.generate_agent_code(name, mission)
-            if not code:
+            if not scaffold_result.success:
+                return {"status": "error", "reason": f"Could not scaffold {name}: {scaffold_result.error}"}
+
+            # 2. Generate Code via kernel
+            code_result = self.system.execute_tool(
+                "engineer.builder", {"action": "generate_code", "name": name, "mission": mission}
+            )
+
+            if not code_result.success:
                 return {
                     "status": "error",
-                    "reason": f"Code generation failed for {name}",
+                    "reason": f"Code generation failed for {name}: {code_result.error}",
                 }
+
+            code = code_result.output.get("code")
 
             # 3. Write Code
             file_path = Path(name) / "cartridge_main.py"
@@ -216,5 +248,5 @@ def run():
             "status": "RUNNING",
             "domain": self.domain,
             "capabilities": self.capabilities,
-            "description": self.description,
+            "description": "Builder agent (Tool Protocol v3.0)",
         }
