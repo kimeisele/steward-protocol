@@ -92,7 +92,6 @@ class CitySimulation:
             from herald.cartridge_main import HeraldCartridge
             from science.cartridge_main import ScientistCartridge
 
-
             # VIBE OS CORE AGENTS (5 VibeOS-native agents with Constitutional Oath support)
             # Note: The following 6 legacy agents are in migration to VibeOS:
             # - archivist, auditor, engineer, oracle, watchman, artisan
