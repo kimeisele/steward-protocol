@@ -5,6 +5,7 @@ Security Scan - CI/CD Script
 Simple grep-based secret detection scan.
 Extracted from inline YAML for maintainability.
 """
+
 import sys
 import subprocess
 
@@ -16,7 +17,7 @@ def run_scan():
     patterns = [
         "api_key\\s*=\\s*['\"][^'\"]*['\"]",
         "password\\s*=\\s*['\"][^'\"]*['\"]",
-        "private_key\\s*=\\s*['\"][^'\"]*['\"]"
+        "private_key\\s*=\\s*['\"][^'\"]*['\"]",
     ]
 
     found_secrets = False

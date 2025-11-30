@@ -5,6 +5,7 @@ Kernel Boot Test - CI/CD Script
 Minimal kernel boot test - verify kernel can initialize.
 Extracted from inline YAML script for maintainability.
 """
+
 import sys
 import os
 
@@ -21,6 +22,7 @@ def test_kernel_import():
         from vibe_core import vfs
         from vibe_core import network_proxy
         from vibe_core import lineage
+
         print("✅ All kernel modules imported successfully")
         return True
     except Exception as e:
@@ -32,6 +34,7 @@ def test_kernel_init():
     """Test that kernel can be instantiated"""
     try:
         from vibe_core.kernel_impl import RealVibeKernel
+
         kernel = RealVibeKernel()
         print("✅ Kernel instantiated successfully")
         return True

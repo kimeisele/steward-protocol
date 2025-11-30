@@ -5,6 +5,7 @@ Agent Manifest Verification - CI/CD Script
 Verifies that all system agents have STEWARD.md and steward.json.
 Extracted from inline YAML for maintainability.
 """
+
 import sys
 import json
 from pathlib import Path
@@ -35,7 +36,7 @@ def verify_manifests():
         else:
             # Validate JSON syntax
             try:
-                with open(json_path, 'r') as f:
+                with open(json_path, "r") as f:
                     json.load(f)
             except json.JSONDecodeError as e:
                 print(f"❌ {agent_name}: Invalid JSON in steward.json - {e}")
