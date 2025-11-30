@@ -17,9 +17,10 @@ This system ensures consistent truth resolution across the entire OS.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from pathlib import Path
-from .tools.truth_matrix import TruthMatrix, FactAuthority
+from typing import Any, Dict, Optional
+
+from .tools.truth_matrix import FactAuthority, TruthMatrix
 
 logger = logging.getLogger("REFERENCE_RESOLVER")
 

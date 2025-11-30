@@ -13,13 +13,11 @@ This is NOT a chatroom. This is Parampara (chain of transmission).
 """
 
 import logging
-import json
-from typing import Dict, Any, Optional, List
-from pathlib import Path
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List
 
-from vibe_core import VibeAgent, Task
+from vibe_core import Task, VibeAgent
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AGORA_MAIN")
@@ -288,7 +286,7 @@ class AgoraCartridge(VibeAgent):
             logger.warning(f"⚠️  Transmission corruption detected: {corrupted}")
             return {"status": "corrupted", "corrupted_indices": corrupted}
 
-        logger.info(f"✅ Transmission verified: No corruption detected")
+        logger.info("✅ Transmission verified: No corruption detected")
         return {
             "status": "verified",
             "source": source,

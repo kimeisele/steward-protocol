@@ -29,7 +29,7 @@ Performance: ~500ms for 14 agents (acceptable for CI/CD, NOT for pre-commit)
 
 import ast
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional

@@ -11,7 +11,6 @@ Architecture:
 - Failures are explicit and non-destructive
 """
 
-import json
 import logging
 import subprocess
 from datetime import datetime, timezone

@@ -4,8 +4,8 @@ Generates a dummy image and processes it.
 """
 
 import sys
-import os
 from pathlib import Path
+
 from PIL import Image, ImageDraw
 
 # Add project root to path

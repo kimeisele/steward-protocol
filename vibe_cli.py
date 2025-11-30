@@ -11,11 +11,9 @@
 
 import os
 import sys
-import json
 import time
+
 import requests
-import threading
-from datetime import datetime
 
 # CONFIGURATION
 # Liest den Port aus der Umgebung oder nutzt Default

@@ -17,11 +17,10 @@ The agent is DEPENDENT on the constitutional file, not the other way around.
 
 import logging
 import os
-import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 logger = logging.getLogger("HERALD_GOVERNANCE")
 
@@ -272,7 +271,7 @@ class HeraldConstitution(GovernanceContract):
         if constitution_text is None:
             error_msg = (
                 "❌ CRITICAL: CONSTITUTION.md not found!\n"
-                f"Searched paths:\n" + "\n".join([f"  - {p}" for p in possible_paths]) + "\n"
+                "Searched paths:\n" + "\n".join([f"  - {p}" for p in possible_paths]) + "\n"
                 "\nSet HERALD_CONSTITUTION_PATH environment variable to override.\n"
                 "Example: export HERALD_CONSTITUTION_PATH=/path/to/CONSTITUTION.md\n"
                 "The system cannot initialize without its constitutional foundation.\n"

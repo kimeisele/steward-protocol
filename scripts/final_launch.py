@@ -8,7 +8,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -21,7 +20,7 @@ from forum.cartridge_main import ForumCartridge
 from herald.cartridge_main import HeraldCartridge
 from science.cartridge_main import ScienceCartridge
 
-from vibe_core import Task, VibeAgent
+from vibe_core import Task
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -84,7 +83,7 @@ def main():
 
     result_launch = envoy.process(task_launch)
 
-    print(f"\n📝 Execution Result:\n")
+    print("\n📝 Execution Result:\n")
     print(json.dumps(result_launch, indent=2))
 
     if result_launch.get("status") == "complete":

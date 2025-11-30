@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
 from steward.ashrama import Ashrama, AshramaTransition
-from steward.varna import Varna, categorize_agent_by_function
+from steward.varna import Varna
 
 
 @dataclass

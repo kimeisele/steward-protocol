@@ -48,23 +48,23 @@ def test_herald_migration():
     # Step 3: Verify system interface injection
     print("\n3️⃣  Verifying system interface injection...")
     if hasattr(herald, "system"):
-        print(f"   ✅ herald.system injected")
+        print("   ✅ herald.system injected")
         print(f"   📁 Sandbox: {herald.system.get_sandbox_path()}")
     else:
-        print(f"   ❌ herald.system NOT injected")
+        print("   ❌ herald.system NOT injected")
         return False
 
     # Step 4: Test EventLog lazy-loading (triggers sandboxed path)
     print("\n4️⃣  Testing EventLog lazy-loading...")
     try:
         event_log = herald.event_log  # Triggers property
-        print(f"   ✅ EventLog initialized")
+        print("   ✅ EventLog initialized")
         print(f"   📖 Ledger path: {event_log.ledger_path}")
 
         # Verify it's in sandbox
         sandbox = herald.system.get_sandbox_path()
         if str(sandbox) in str(event_log.ledger_path):
-            print(f"   ✅ EventLog is sandboxed (correct)")
+            print("   ✅ EventLog is sandboxed (correct)")
         else:
             print(f"   ❌ EventLog NOT sandboxed: {event_log.ledger_path}")
             return False
@@ -83,7 +83,7 @@ def test_herald_migration():
         print(f"   ❌ requirements.txt still exists: {req_path}")
         return False
     else:
-        print(f"   ✅ requirements.txt deleted")
+        print("   ✅ requirements.txt deleted")
 
     print("\n" + "=" * 60)
     print("✅ Phase 2.1 Herald Migration: ALL TESTS PASSED")

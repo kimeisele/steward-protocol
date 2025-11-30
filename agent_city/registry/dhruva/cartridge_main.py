@@ -36,21 +36,17 @@ The system's North Star.
 """
 
 import logging
-import json
-import uuid
-from typing import Dict, Any, Optional, List
 from pathlib import Path
-from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
-from enum import Enum
+from typing import Any, Dict, List
 
-from vibe_core.agent_protocol import VibeAgent, Capability, AgentManifest
+from vibe_core.agent_protocol import AgentManifest, Capability, VibeAgent
 
-# Constitutional Oath binding
-from .tools.truth_matrix import TruthMatrix, Fact, FactAuthority
+from .tools.data_ethics import DataEthicsEnforcer
 from .tools.genesis_keeper import GenesisKeeper
 from .tools.reference_resolver import ReferenceResolver
-from .tools.data_ethics import DataEthicsEnforcer, ResourceMiningPolicy
+
+# Constitutional Oath binding
+from .tools.truth_matrix import TruthMatrix
 
 logger = logging.getLogger("DHRUVA_ANCHOR")
 

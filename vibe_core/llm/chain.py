@@ -30,7 +30,6 @@ Example:
 """
 
 import logging
-from typing import Optional
 
 from vibe_core.llm.provider import LLMError, LLMProvider
 

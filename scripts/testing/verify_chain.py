@@ -15,7 +15,6 @@ import json
 import logging
 import sqlite3
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 

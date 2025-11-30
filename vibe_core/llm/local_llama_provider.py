@@ -55,7 +55,7 @@ class LocalLlamaProvider(LLMProvider):
         # Lazy load: Do not load model in __init__
         # self._load_model() will be called on first use
         if not self._model_path or not self._model_path.exists():
-            logger.warning(f"No local model found. Install with: steward install-llm")
+            logger.warning("No local model found. Install with: steward install-llm")
 
     def _ensure_loaded(self):
         """Lazy load the model if not already loaded."""

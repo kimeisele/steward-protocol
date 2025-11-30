@@ -4,10 +4,7 @@ SIMPLE LIFECYCLE TEST - Tests the core lifecycle logic without dependencies
 """
 
 import logging
-import json
 import sys
-from pathlib import Path
-from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("TEST_LIFECYCLE_SIMPLE")
@@ -68,7 +65,7 @@ def test_lifecycle_manager():
     logger.info("-" * 80)
 
     state = mgr.initiate_to_grihastha(agent, initiator_agent="TEMPLE", reason="Passed tests")
-    logger.info(f"✅ Promoted to GRIHASTHA")
+    logger.info("✅ Promoted to GRIHASTHA")
     logger.info(f"   Status: {state.status.value}")
     logger.info(f"   Diksha passed: {state.diksha_passed}")
     logger.info(f"   Initiator: {state.initiator_agent}")
@@ -105,7 +102,7 @@ def test_lifecycle_manager():
 
     violation = {"type": "test_violation", "reason": "Test demotion"}
     state = mgr.demote_to_shudra(agent, violation, reason="Test")
-    logger.info(f"✅ Demoted to SHUDRA")
+    logger.info("✅ Demoted to SHUDRA")
     logger.info(f"   Status: {state.status.value}")
     logger.info(f"   Violations: {len(state.violations)}")
 
@@ -137,7 +134,7 @@ def test_lifecycle_manager():
     logger.info("-" * 80)
 
     state = mgr.deprecate_to_vanaprastha(agent, reason="Deprecated code", archive_path="/archive/test_v1")
-    logger.info(f"✅ Retired to VANAPRASTHA")
+    logger.info("✅ Retired to VANAPRASTHA")
     logger.info(f"   Status: {state.status.value}")
 
     assert state.status == LifecycleStatus.VANAPRASTHA, "Should be VANAPRASTHA"
@@ -148,7 +145,7 @@ def test_lifecycle_manager():
     logger.info("-" * 80)
 
     state = mgr.merge_to_sannyasa(agent, "/core/vibe_core.py", reason="Merged into core")
-    logger.info(f"✅ Merged to SANNYASA")
+    logger.info("✅ Merged to SANNYASA")
     logger.info(f"   Status: {state.status.value}")
 
     assert state.status == LifecycleStatus.SANNYASA, "Should be SANNYASA"

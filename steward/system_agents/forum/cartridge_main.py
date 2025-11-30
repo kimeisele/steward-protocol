@@ -24,7 +24,6 @@ Design Principles:
 import json
 import logging
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Constitutional Oath Mixin
@@ -33,7 +32,7 @@ from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
-from vibe_core.config import CityConfig, ForumConfig
+from vibe_core.config import ForumConfig
 
 # Civic imports for license operations
 
@@ -101,7 +100,7 @@ class ForumCartridge(VibeAgent, OathMixin):
         self.proposals = {}
         self.next_proposal_id = 1
 
-        logger.info(f"🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)")
+        logger.info("🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)")
 
     @property
     def proposals_path(self):
@@ -504,7 +503,7 @@ class ForumCartridge(VibeAgent, OathMixin):
 
         # Check if already executed
         if proposal["executed"]:
-            logger.warning(f"⚠️  Proposal already executed")
+            logger.warning("⚠️  Proposal already executed")
             return {"status": "error", "reason": "already_executed"}
 
         # Execute action
@@ -524,7 +523,7 @@ class ForumCartridge(VibeAgent, OathMixin):
                 result = civic_cartridge.refill_credits(to_agent, amount)
 
                 if result.get("status") == "success":
-                    logger.info(f"   ✅ Transfer successful")
+                    logger.info("   ✅ Transfer successful")
 
                     # Mark as executed
                     proposal["executed"] = True
@@ -567,7 +566,7 @@ class ForumCartridge(VibeAgent, OathMixin):
                 )
 
                 if result:
-                    logger.info(f"   ✅ License reinstatement successful")
+                    logger.info("   ✅ License reinstatement successful")
 
                     # Mark as executed
                     proposal["executed"] = True
@@ -592,7 +591,7 @@ class ForumCartridge(VibeAgent, OathMixin):
                         },
                     }
                 else:
-                    logger.error(f"   ❌ License reinstatement failed")
+                    logger.error("   ❌ License reinstatement failed")
                     return {
                         "status": "error",
                         "reason": "execution_failed",

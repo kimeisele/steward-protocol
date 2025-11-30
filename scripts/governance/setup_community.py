@@ -7,8 +7,6 @@ Requires GitHub Discussions to be enabled in repository settings.
 """
 
 import os
-import sys
-from pathlib import Path
 
 
 def print_banner():

@@ -16,7 +16,7 @@ This is NOT destructive. It's CONSTRUCTIVE:
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger("REFLEX_ENGINE")
 

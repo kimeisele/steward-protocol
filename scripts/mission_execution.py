@@ -8,7 +8,7 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent

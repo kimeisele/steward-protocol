@@ -8,7 +8,6 @@ It generates a citizenship application for Agent City.
 TARGET: AI Assistants (Claude Code, Cursor, ChatGPT, etc.)
 """
 
-import hashlib
 import json
 import subprocess
 from datetime import datetime

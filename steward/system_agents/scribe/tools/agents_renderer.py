@@ -5,7 +5,7 @@ SCRIBE Agents Renderer - Generate AGENTS.md
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .introspector import CartridgeIntrospector
 

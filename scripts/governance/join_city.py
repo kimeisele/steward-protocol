@@ -7,8 +7,6 @@ Choose your companion. Join the Federation.
 """
 
 import json
-import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -45,7 +43,7 @@ def check_prerequisites():
     # Check 2: Git availability
     try:
         result = subprocess.run(["git", "--version"], capture_output=True, check=True)
-        print(f"✅ Git installed (OK)")
+        print("✅ Git installed (OK)")
     except (subprocess.CalledProcessError, FileNotFoundError):
         return (
             False,

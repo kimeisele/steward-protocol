@@ -9,7 +9,6 @@ Report violations to ledger.
 "The guardian stands watch. Justice is swift."
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -50,14 +49,14 @@ def main():
             print(f"   Reason: {v['reason']}")
 
     if report["agents_frozen"]:
-        print(f"\n❄️ FROZEN AGENTS:")
+        print("\n❄️ FROZEN AGENTS:")
         for agent in report["agents_frozen"]:
             print(f"   - {agent.upper()}")
             balance = bank.get_balance(agent)
             print(f"     Balance: {balance} credits (LOCKED)")
 
     if report["agents_thawed"]:
-        print(f"\n🔥 THAWED AGENTS (Redeemed):")
+        print("\n🔥 THAWED AGENTS (Redeemed):")
         for agent in report["agents_thawed"]:
             print(f"   - {agent.upper()}")
             balance = bank.get_balance(agent)

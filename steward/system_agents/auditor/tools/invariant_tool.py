@@ -16,7 +16,6 @@ Example Invariants:
   3. "No orphaned events without proper context"
 """
 
-import json
 import logging
 import re
 from dataclasses import asdict, dataclass
@@ -567,7 +566,7 @@ class InvariantEngine:
                 logger.debug(f"  ✅ PASS: {rule_name}")
 
         # Summary
-        logger.info(f"⚖️  JUDGE: Verification complete")
+        logger.info("⚖️  JUDGE: Verification complete")
         logger.info(f"   Events checked: {report.checked_events}")
         logger.info(f"   Violations found: {len(report.violations)}")
         logger.info(f"   Status: {'✅ PASS' if report.passed else '❌ FAIL'}")

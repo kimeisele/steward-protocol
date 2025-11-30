@@ -8,19 +8,17 @@ Tests:
 2. Scenario B (Golden Payload): Engineer writes good code → Auditor MUST pass → Archivist MUST commit
 """
 
-import asyncio
 import os
 import shutil
 import sys
-from pathlib import Path
 
 # Add current dir to Python path
 sys.path.insert(0, "/home/user/steward-protocol")
 
-from vibe_core.scheduling.task import Task
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
 from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
+from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from vibe_core.scheduling.task import Task
 
 # Setup Dummy Environment
 SANDBOX_DIR = "./workspaces/sandbox_test"
@@ -105,11 +103,11 @@ def run_acid_test():
     res_aud = auditor.process(task_audit_bad)
 
     if res_aud["passed"] is False:
-        print(f"   ✅ SUCCESS: Auditor blocked toxic code")
+        print("   ✅ SUCCESS: Auditor blocked toxic code")
         print(f"   Reason: {res_aud.get('reason')}")
         print(f"   Details: {res_aud.get('details')}")
     else:
-        print(f"   ❌ FAILURE: Auditor let toxic code pass!")
+        print("   ❌ FAILURE: Auditor let toxic code pass!")
         print(f"   Response: {res_aud}")
         all_passed = False
 
@@ -149,10 +147,10 @@ def run_acid_test():
     res_aud_good = auditor.process(task_audit_good)
 
     if res_aud_good["passed"] is True:
-        print(f"   ✅ SUCCESS: Auditor passed valid code")
+        print("   ✅ SUCCESS: Auditor passed valid code")
         print(f"   Stamp: {res_aud_good.get('stamp')}")
     else:
-        print(f"   ❌ FAILURE: Auditor blocked valid code!")
+        print("   ❌ FAILURE: Auditor blocked valid code!")
         print(f"   Response: {res_aud_good}")
         all_passed = False
 
@@ -185,11 +183,11 @@ def run_acid_test():
         res_arch = archivist.process(task_seal)
 
         if res_arch["status"] == "sealed":
-            print(f"   ✅ SUCCESS: Archivist committed code")
+            print("   ✅ SUCCESS: Archivist committed code")
             print(f"   Commit hash: {res_arch['commit']}")
             print(f"   Commit short: {res_arch['commit_short']}")
         else:
-            print(f"   ❌ FAILURE: Archivist failed to seal")
+            print("   ❌ FAILURE: Archivist failed to seal")
             print(f"   Response: {res_arch}")
             all_passed = False
 
@@ -232,10 +230,10 @@ def run_acid_test():
         res_arch_bad = archivist.process(task_seal_bad)
 
         if res_arch_bad["status"] == "rejected":
-            print(f"   ✅ SUCCESS: Archivist blocked toxic code (gatekeeper works)")
+            print("   ✅ SUCCESS: Archivist blocked toxic code (gatekeeper works)")
             print(f"   Reason: {res_arch_bad.get('reason')}")
         else:
-            print(f"   ❌ FAILURE: Archivist did not block toxic code!")
+            print("   ❌ FAILURE: Archivist did not block toxic code!")
             print(f"   Response: {res_arch_bad}")
             all_passed = False
 

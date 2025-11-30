@@ -18,7 +18,7 @@ import logging
 import time
 from dataclasses import dataclass
 from multiprocessing import Process
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import psutil
 
@@ -129,7 +129,6 @@ class ResourceManager:
             # For now, we'll log a warning on macOS
             try:
                 import platform
-                import resource
 
                 if platform.system() == "Linux":
                     memory_bytes = quota.memory_mb * 1024 * 1024

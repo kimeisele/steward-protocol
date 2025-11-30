@@ -19,11 +19,9 @@ import argparse
 import asyncio
 import json
 import logging
-import signal
 import sys
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 try:
     import websockets

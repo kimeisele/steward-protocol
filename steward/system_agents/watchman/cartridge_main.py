@@ -11,9 +11,7 @@ the Watchman's sword falls swift and merciless. No exceptions."
 """
 
 import logging
-import os
 import re
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -25,7 +23,7 @@ from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
 
 # Phase 3.2: Deep inspection tool
-from .tools.standards_inspection import StandardsInspectionTool, Violation
+from .tools.standards_inspection import StandardsInspectionTool
 
 # Phase 3.3: System health monitoring (read-only)
 from .tools.system_health_check import SystemHealthCheck
@@ -283,7 +281,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                                     "line": i,
                                     "pattern": "unauthorized_network",
                                     "code": line.strip(),
-                                    "reason": f"Unauthorized network operation detected - violates Principle 4 (Saucam/Cleanliness). Must use GAD-1000 verification.",
+                                    "reason": "Unauthorized network operation detected - violates Principle 4 (Saucam/Cleanliness). Must use GAD-1000 verification.",
                                 }
                             )
                             break  # Only report once per line
@@ -303,7 +301,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                                     "line": i,
                                     "pattern": "unverified_connections",
                                     "code": line.strip(),
-                                    "reason": f"Unverified network connection detected - violates Principle 4. Must verify GAD-1000 identity before data exchange.",
+                                    "reason": "Unverified network connection detected - violates Principle 4. Must verify GAD-1000 identity before data exchange.",
                                 }
                             )
                             break
@@ -344,12 +342,12 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         logger.info("📊 DEEP INSPECTION SUMMARY")
         logger.info("=" * 70)
         logger.info(f"Total violations: {report['total_violations']}")
-        logger.info(f"By severity:")
+        logger.info("By severity:")
         for severity, count in report["by_severity"].items():
             if count > 0:
                 logger.info(f"  • {severity}: {count}")
 
-        logger.info(f"\nBy agent:")
+        logger.info("\nBy agent:")
         for agent_id, count in report["by_agent"].items():
             logger.info(f"  • {agent_id}: {count} violation(s)")
 

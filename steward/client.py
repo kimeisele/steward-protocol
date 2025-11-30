@@ -35,7 +35,7 @@ class StewardClient:
             content = self.identity_path.read_text()
             # Simple check: does it contain public key reference?
             self.has_key_reference = "public_key" in content.lower() or "publickey" in content.lower()
-        except Exception as e:
+        except Exception:
             self.has_key_reference = False
 
     def sign_artifact(self, content: str) -> str:

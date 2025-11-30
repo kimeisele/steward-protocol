@@ -15,7 +15,7 @@ No mocks. No fake data. No building on lies."
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 try:
     from tavily import TavilyClient

@@ -9,24 +9,24 @@ This test verifies that:
 4. Cryptographic keys survive restart
 """
 
-import sys
-import json
 import sqlite3
-from pathlib import Path
+import sys
 from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from vibe_core.kernel_impl import RealVibeKernel, SQLiteLedger
-from vibe_core.scheduling import Task
+from civic.cartridge_main import CivicCartridge
+from envoy.cartridge_main import EnvoyCartridge
+from forum.cartridge_main import ForumCartridge
 
 # Import all agent cartridges
 from herald.cartridge_main import HeraldCartridge
-from civic.cartridge_main import CivicCartridge
-from forum.cartridge_main import ForumCartridge
 from science.cartridge_main import ScientistCartridge
-from envoy.cartridge_main import EnvoyCartridge
+
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.scheduling import Task
 
 
 def print_section(title: str):
@@ -91,7 +91,7 @@ def test_initial_state():
     # Check keys
     identity_path = Path("data/identities/herald_private.key")
     if identity_path.exists():
-        print(f"✅ HERALD private key exists and secured (600)")
+        print("✅ HERALD private key exists and secured (600)")
         with open(identity_path, "rb") as f:
             key_content = f.read()
         print(f"   Key size: {len(key_content)} bytes")
@@ -134,7 +134,7 @@ def test_restart_persistence(db_path: str):
     # Verify keys still exist
     identity_path = Path("data/identities/herald_private.key")
     if identity_path.exists():
-        print(f"\n✅ HERALD keys survived restart")
+        print("\n✅ HERALD keys survived restart")
         with open(identity_path, "rb") as f:
             key_content = f.read()
         print(f"   Key size: {len(key_content)} bytes (unchanged)")
@@ -174,8 +174,8 @@ def main():
     """Run all persistence tests"""
     print_section("🧪 AGENT CITY - PERSISTENCE ACID TEST")
     print(f"Timestamp: {datetime.utcnow().isoformat()}")
-    print(f"Test Database: data/vibe_ledger.db")
-    print(f"Test Keys: data/identities/")
+    print("Test Database: data/vibe_ledger.db")
+    print("Test Keys: data/identities/")
 
     try:
         # Test 1: Initial state

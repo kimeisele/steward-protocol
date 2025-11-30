@@ -25,7 +25,6 @@ Usage:
     python scripts/issue_passports.py
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -229,7 +228,7 @@ class PassportOffice:
                     "constitution_hash": self.constitution_hash,
                 },
             )
-            logger.info(f"   ⛓️  Recorded in Parampara")
+            logger.info("   ⛓️  Recorded in Parampara")
         except Exception as e:
             logger.error(f"   ❌ Failed to record in Parampara: {e}")
             return False

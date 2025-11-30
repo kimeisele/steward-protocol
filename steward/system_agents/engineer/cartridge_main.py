@@ -137,7 +137,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
                 logger.info(f"✅ Builder generated code ({len(code_content)} chars)")
             except Exception as e:
                 logger.error(f"❌ Code generation failed: {e}")
-                logger.info(f"⚠️  Falling back to stub")
+                logger.info("⚠️  Falling back to stub")
                 code_content = None
 
         # STEP 3: Fallback to stub if still no content

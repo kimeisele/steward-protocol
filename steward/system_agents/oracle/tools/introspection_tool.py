@@ -14,10 +14,8 @@ This tool aggregates raw data into meaningful context.
 Every method is READ-ONLY. No side effects.
 """
 
-import json
 import logging
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("ORACLE_INTROSPECTION")

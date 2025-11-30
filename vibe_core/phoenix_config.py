@@ -9,11 +9,11 @@ This module provides the runtime system for connecting implementations
 import importlib
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, Optional, Type
 
 import yaml
 
-from vibe_core.protocols import ManifestRegistry, VibeAgent, VibeLedger, VibeScheduler
+from vibe_core.protocols import VibeAgent
 
 logger = logging.getLogger(__name__)
 

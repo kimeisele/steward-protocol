@@ -5,20 +5,18 @@ Verifies that TaskManager uses Bhu-Mandala placement and MilkOcean routing
 to annotate tasks with topology information.
 """
 
-import pytest
-from pathlib import Path
 import tempfile
-from datetime import datetime
+from pathlib import Path
 
-from vibe_core.topology import (
-    get_topology,
-    get_agent_placement,
-    BhuMandalaTopology,
-    AgentPlacement,
-    Varsha,
-)
+import pytest
+
+from vibe_core.task_management.models import TaskStatus
 from vibe_core.task_management.task_manager import TaskManager
-from vibe_core.task_management.models import Task, TaskStatus
+from vibe_core.topology import (
+    AgentPlacement,
+    get_agent_placement,
+    get_topology,
+)
 
 
 class TestAgentPlacement:

@@ -20,7 +20,7 @@ trying to teach before learning. The KERNEL says NO."
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from .economy import CivicBank
 from .lifecycle_manager import LifecycleManager, LifecycleStatus
@@ -170,7 +170,7 @@ class LifecycleEnforcer:
 
         return PermissionResult(
             permitted=True,
-            reason=f"Lifecycle check passed",
+            reason="Lifecycle check passed",
             action_type=action_type,
             agent_id=agent_id,
             lifecycle_status=state.status.value,
@@ -200,7 +200,7 @@ class LifecycleEnforcer:
 
             return PermissionResult(
                 permitted=True,
-                reason=f"Economic check passed",
+                reason="Economic check passed",
                 action_type="economic_check",
                 agent_id=agent_id,
             )

@@ -331,7 +331,7 @@ def cmd_inspect(args):
 
     if not event_log_path.exists():
         console.print(f"[yellow]⚠️  No event log found at {event_log_path}[/yellow]")
-        console.print(f"[dim]Agent has not recorded any events yet.[/dim]")
+        console.print("[dim]Agent has not recorded any events yet.[/dim]")
         return
 
     # Read and parse events
@@ -347,7 +347,7 @@ def cmd_inspect(args):
                         console.print(f"[yellow]⚠️  Skipped malformed event: {e}[/yellow]")
 
         if not events:
-            console.print(f"[yellow]⚠️  Event log is empty[/yellow]")
+            console.print("[yellow]⚠️  Event log is empty[/yellow]")
             return
 
         # Display agent status panel

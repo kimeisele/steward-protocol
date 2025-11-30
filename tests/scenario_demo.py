@@ -12,11 +12,9 @@ This script demonstrates the core loop of Agent City:
 Run this to prove that Code is Law.
 """
 
-import sys
 import time
-import logging
-from dataclasses import dataclass, field
-from typing import Dict, List, Any
+from dataclasses import dataclass
+from typing import Any, Dict
 
 # --- MOCK VIBE OS KERNEL INFRASTRUCTURE ---
 # In production, this is imported from vibe_core

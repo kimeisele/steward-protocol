@@ -13,10 +13,9 @@ Input: dist/content.json + optional image
 Output: Twitter post + log
 """
 
-import os
-import sys
 import json
 import logging
+import sys
 from pathlib import Path
 
 # Setup Logging
@@ -62,7 +61,7 @@ def main():
         logger.error("❌ Bundle missing 'text' field")
         sys.exit(1)
 
-    logger.info(f"✅ Bundle read successfully")
+    logger.info("✅ Bundle read successfully")
     logger.info(f"   Text: {len(text)} chars")
     logger.info(f"   Image: {image_filename if image_filename else 'None'}")
 

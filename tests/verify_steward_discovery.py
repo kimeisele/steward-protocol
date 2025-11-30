@@ -5,14 +5,13 @@ Verifies that the Steward Agent can autonomously discover and register
 agents from the file system.
 """
 
-import os
 import json
-import shutil
-import time
 import logging
+import shutil
 from pathlib import Path
-from vibe_core.kernel_impl import RealVibeKernel
+
 from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.kernel_impl import RealVibeKernel
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

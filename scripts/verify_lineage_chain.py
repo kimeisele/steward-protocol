@@ -93,7 +93,7 @@ def verify_chain(chain: LineageChain) -> bool:
         print(f"  [{block.index}] {block.event_type} {agent_str} @ {block.timestamp}")
 
     print("-" * 70)
-    print(f"\n✅ ALL CHECKS PASSED - PARAMPARA CHAIN IS VALID")
+    print("\n✅ ALL CHECKS PASSED - PARAMPARA CHAIN IS VALID")
     print("=" * 70)
 
     return True

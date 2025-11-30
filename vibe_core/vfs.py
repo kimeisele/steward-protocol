@@ -22,7 +22,7 @@ Security Model:
 import logging
 import os
 from pathlib import Path
-from typing import IO, List, Optional
+from typing import IO, List
 
 logger = logging.getLogger("VFS")
 

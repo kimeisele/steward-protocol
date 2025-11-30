@@ -16,7 +16,7 @@ This is the 'pulse' of Agent City."
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -194,7 +194,7 @@ class DashboardGenerator:
         # City Status Section
         md_lines.append("## 🏙️ City Overview")
         md_lines.append("")
-        md_lines.append(f"| Metric | Value |")
+        md_lines.append("| Metric | Value |")
         md_lines.append("|--------|-------|")
         md_lines.append(f"| Total Transactions | {metrics.total_transactions} |")
         md_lines.append(f"| Unique Agents | {metrics.unique_agents} |")

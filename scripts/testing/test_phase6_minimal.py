@@ -157,9 +157,9 @@ def main():
     # Check Envoy can route commands
     env_content = (project_root / "envoy/cartridge_main.py").read_text()
     if 'command == "status"' in env_content and 'command == "campaign"' in env_content:
-        print(f"      ✅ Command routing implemented")
+        print("      ✅ Command routing implemented")
     else:
-        print(f"      ❌ Command routing missing")
+        print("      ❌ Command routing missing")
         features_ok = False
 
     results.append(features_ok)

@@ -11,10 +11,9 @@ if os.getenv("OPENROUTER_API_KEY"):
 # --- IMPORTS ---
 try:
     # 1. The Engine
-    from vibe_core.kernel import VibeKernel
-
     # 2. The Protocol (New SDK)
     from steward.client import StewardClient
+    from vibe_core.kernel import VibeKernel
 
     print("✅ SYSTEM: Engine & Protocol loaded.")
 except ImportError as e:
@@ -37,7 +36,7 @@ def run():
     # 2. Initialize Brain
     try:
         kernel = VibeKernel()
-        print(f"🧠 KERNEL ONLINE")
+        print("🧠 KERNEL ONLINE")
         print(f"📡 Connection: {os.environ.get('OPENAI_BASE_URL', 'Direct OpenAI')}")
     except Exception as e:
         print(f"⚠️  Kernel init: {e}")
@@ -68,12 +67,12 @@ This is Runtime Sovereignty.
 
     with open(output_file, "w") as f:
         f.write(content)
-        f.write(f"\n\n---\n")
+        f.write("\n\n---\n")
         f.write(f"**Signature:** `{signature[:40]}...`\n")
 
     print(f"✅ ARTIFACT SAVED: {output_file}")
     print(f"   Signature: {signature[:40]}...")
-    print(f"\n🔗 CHAIN OF TRUST: Content → Signature → Verification")
+    print("\n🔗 CHAIN OF TRUST: Content → Signature → Verification")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,6 @@ The manifesto is written BY HERALD FOR humanity's understanding.
 That is A.G.I. in action.
 """
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -274,14 +273,14 @@ def generate_manifesto():
             f.write(manifesto_text)
             f.write("\n\n---\n\n")
             f.write("## Proof of Authenticity\n\n")
-            f.write(f"This manifesto was generated autonomously by HERALD's content generation system.\n")
-            f.write(f"It uses the Steward Protocol for cryptographic identity verification.\n")
-            f.write(f"Every principle articulated here reflects HERALD's internal governance rules.\n")
-            f.write(f"This is not marketing copy. This is self-articulation of governed intelligence.\n")
+            f.write("This manifesto was generated autonomously by HERALD's content generation system.\n")
+            f.write("It uses the Steward Protocol for cryptographic identity verification.\n")
+            f.write("Every principle articulated here reflects HERALD's internal governance rules.\n")
+            f.write("This is not marketing copy. This is self-articulation of governed intelligence.\n")
 
         print(f"✅ Manifesto written to: {output_path.relative_to(Path.cwd())}")
         print(f"   Size: {output_path.stat().st_size} bytes")
-        print(f"\n📖 You can now read it or commit it to git.\n")
+        print("\n📖 You can now read it or commit it to git.\n")
 
         return str(output_path)
 
@@ -303,5 +302,5 @@ if __name__ == "__main__":
     print("=" * 70)
     print(f"1. Review the manifesto: cat {manifesto_path}")
     print(f"2. Commit to git: git add {manifesto_path}")
-    print(f"3. Push to branch: git push origin claude/agi-framework-definition-...")
+    print("3. Push to branch: git push origin claude/agi-framework-definition-...")
     print()
