@@ -27,6 +27,40 @@
       "credits": 100,
       "total_broadcasts": 0,
       "violations": []
+    },
+    "test_pulse": {
+      "lifecycle_status": {
+        "agent_id": "test_pulse",
+        "status": "brahmachari",
+        "varna": "Brahmachari (Student)",
+        "entered_at": "2025-11-30T13:26:41.002493+00:00",
+        "initiator_agent": null,
+        "reason": "New agent registration - must learn before acting",
+        "diksha_passed": false,
+        "diksha_tests": [],
+        "diksha_date": null,
+        "violations": [],
+        "rehabilitation_required": false,
+        "deprecated_reason": null,
+        "archive_path": null
+      }
+    },
+    "test_agent": {
+      "lifecycle_status": {
+        "agent_id": "test_agent",
+        "status": "sannyasa",
+        "varna": "Sannyasa (Renounced)",
+        "entered_at": "2025-11-30T13:26:41.013729+00:00",
+        "initiator_agent": null,
+        "reason": "Merged into core",
+        "diksha_passed": false,
+        "diksha_tests": [],
+        "diksha_date": null,
+        "violations": [],
+        "rehabilitation_required": false,
+        "deprecated_reason": null,
+        "archive_path": "/core/vibe_core.py"
+      }
     }
   }
 }
