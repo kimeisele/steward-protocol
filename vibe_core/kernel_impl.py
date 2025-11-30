@@ -443,7 +443,7 @@ class RealVibeKernel(VibeKernel):
         delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
         self.tool_registry.register(delegate_tool)
 
-        tool_names = ', '.join(self.tool_registry.list_tools())
+        tool_names = ", ".join(self.tool_registry.list_tools())
         logger.info(f"🔧 Registered {len(self.tool_registry)} core tools: {tool_names}")
 
     def _discover_agent_tools(self) -> None:
@@ -1003,13 +1003,8 @@ class RealVibeKernel(VibeKernel):
                         # Don't halt on VOID violations in normal operation (they need context)
                         # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
                         if "VOID" not in violation.invariant_name:
-                            logger.critical(
-                                f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - "
-                                f"{violation.message}"
-                            )
-                            self.shutdown(
-                                reason=f"Immune system reaction: {violation.invariant_name}"
-                            )
+                            logger.critical(f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}")
+                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
                             return
                         else:
                             logger.debug("⚠️  VOID check skipped (requires external context)")
@@ -1498,27 +1493,33 @@ class RealVibeKernel(VibeKernel):
                     rest = command_text[4:].strip()  # Remove "SET "
                     if "=" in rest:
                         key, value = rest.split("=", 1)
-                        commands.append({
-                            "action": "SET",
-                            "key": key.strip(),
-                            "value": value.strip(),
-                        })
+                        commands.append(
+                            {
+                                "action": "SET",
+                                "key": key.strip(),
+                                "value": value.strip(),
+                            }
+                        )
 
                 # Parse PAUSE commands
                 elif command_text.startswith("PAUSE "):
                     agent_id = command_text[6:].strip()
-                    commands.append({
-                        "action": "PAUSE",
-                        "agent_id": agent_id,
-                    })
+                    commands.append(
+                        {
+                            "action": "PAUSE",
+                            "agent_id": agent_id,
+                        }
+                    )
 
                 # Parse RESUME commands
                 elif command_text.startswith("RESUME "):
                     agent_id = command_text[7:].strip()
-                    commands.append({
-                        "action": "RESUME",
-                        "agent_id": agent_id,
-                    })
+                    commands.append(
+                        {
+                            "action": "RESUME",
+                            "agent_id": agent_id,
+                        }
+                    )
 
                 else:
                     logger.warning(f"⚠️  Unknown command format: {command_text}")
@@ -1544,7 +1545,7 @@ class RealVibeKernel(VibeKernel):
 
         # WHITELIST: Only these settings can be modified
         EDITABLE_SETTINGS = {
-            "kernel.log_level",     # Safe: logging verbosity
+            "kernel.log_level",  # Safe: logging verbosity
             # "kernel.status",      # FORBIDDEN: Security risk
             # "agent.*.capabilities" # FORBIDDEN: Capability escalation
         }
