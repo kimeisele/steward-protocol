@@ -422,6 +422,11 @@ class DeterministicExecutor:
                         result = None
 
                         while elapsed < timeout_sec:
+                            # 1. Drive the kernel (Herzschlag manuell auslösen)
+                            if hasattr(kernel, "tick"):
+                                kernel.tick()
+
+                            # 2. Check for result
                             result = kernel.get_task_result(task_id)
                             if result:
                                 break

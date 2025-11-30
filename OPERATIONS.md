@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-11-30T20:34:05.034082
+**Last Updated:** 2025-11-30T20:56:44.460965
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 26
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 32
+- Total Events: 65
 
 ## 🤖 Agent Status
 
@@ -18,32 +18,13 @@
 - status: RUNNING
 - capabilities: ['discovery', 'registration', 'governance']
 
-### civic
-- agent_id: civic
-- name: CIVIC
+### forum
+- agent_id: forum
+- name: FORUM
 - status: RUNNING
-- capabilities: ['registry', 'licensing', 'ledger', 'governance']
-
-### science
-- agent_id: science
-- name: SCIENCE
-- status: RUNNING
-- capabilities: ['research', 'web_search', 'fact_synthesis']
-
-### supreme_court
-- agent_id: supreme_court
-- name: SUPREME_COURT
-- status: healthy
 - domain: GOVERNANCE
-- capabilities: ['appeals', 'precedent']
-
-### archivist
-- agent_id: archivist
-- name: ARCHIVIST
-- status: RUNNING
-- domain: INFRASTRUCTURE
-- capabilities: ['seal_history', 'ledger']
-- description: History keeper: seals verified code into git history
+- capabilities: ['governance', 'voting', 'proposal_management']
+- governance_metrics: {'total_proposals': 0, 'open_proposals': 0, 'approved_proposals': 0, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 0, 'next_proposal_id': 1, 'proposals_path': '/tmp/vibe_os/agents/forum/governance/proposals', 'votes_ledger_path': '/tmp/vibe_os/agents/forum/governance/votes/votes.jsonl', 'executed_archive_path': '/tmp/vibe_os/agents/forum/governance/executed'}
 
 ### envoy
 - agent_id: envoy
@@ -52,6 +33,18 @@
 - domain: ORCHESTRATION
 - capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
 - orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
+
+### discoverer
+- agent_id: discoverer
+- name: DISCOVERER
+- status: RUNNING
+- capabilities: ['discovery', 'registration', 'governance']
+
+### civic
+- agent_id: civic
+- name: CIVIC
+- status: RUNNING
+- capabilities: ['registry', 'licensing', 'ledger', 'governance']
 
 ### watchman
 - agent_id: watchman
@@ -67,14 +60,6 @@
 - status: RUNNING
 - capabilities: ['ping', 'status']
 
-### engineer
-- agent_id: engineer
-- name: ENGINEER
-- status: RUNNING
-- domain: ENGINEERING
-- capabilities: ['manifest_reality', 'agent_scaffolding', 'code_generation']
-- description: Builder agent (Tool Protocol v3.0)
-
 ### herald
 - agent_id: herald
 - name: HERALD
@@ -85,25 +70,34 @@
 - connectivity: {'twitter': False, 'reddit': False}
 - governance: {'safe_mode': False, 'last_failure': None}
 
-### forum
-- agent_id: forum
-- name: FORUM
-- status: RUNNING
+### supreme_court
+- agent_id: supreme_court
+- name: SUPREME_COURT
+- status: healthy
 - domain: GOVERNANCE
-- capabilities: ['governance', 'voting', 'proposal_management']
-- governance_metrics: {'total_proposals': 0, 'open_proposals': 0, 'approved_proposals': 0, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 0, 'next_proposal_id': 1, 'proposals_path': '/tmp/vibe_os/agents/forum/governance/proposals', 'votes_ledger_path': '/tmp/vibe_os/agents/forum/governance/votes/votes.jsonl', 'executed_archive_path': '/tmp/vibe_os/agents/forum/governance/executed'}
+- capabilities: ['appeals', 'precedent']
 
-### scribe
-- agent_id: scribe
-- name: SCRIBE
+### engineer
+- agent_id: engineer
+- name: ENGINEER
 - status: RUNNING
-- capabilities: ['documentation', 'introspection', 'publishing']
+- domain: ENGINEERING
+- capabilities: ['manifest_reality', 'agent_scaffolding', 'code_generation']
+- description: Builder agent (Tool Protocol v3.0)
 
-### discoverer
-- agent_id: discoverer
-- name: DISCOVERER
+### archivist
+- agent_id: archivist
+- name: ARCHIVIST
 - status: RUNNING
-- capabilities: ['discovery', 'registration', 'governance']
+- domain: INFRASTRUCTURE
+- capabilities: ['seal_history', 'ledger']
+- description: History keeper: seals verified code into git history
+
+### science
+- agent_id: science
+- name: SCIENCE
+- status: RUNNING
+- capabilities: ['research', 'web_search', 'fact_synthesis']
 
 ### oracle
 - agent_id: oracle
@@ -121,15 +115,33 @@
 - capabilities: ['verify_changes', 'auditing', 'constitutional_verdict', 'auditor.verdict']
 - description: Quality gate agent (Tool Protocol v3.0)
 
-### mechanic
-- agent_id: mechanic
-- name: MECHANIC
+### scribe
+- agent_id: scribe
+- name: SCRIBE
 - status: RUNNING
-- capabilities: ['maintenance']
+- capabilities: ['documentation', 'introspection', 'publishing']
 
-### librarian
-- agent_id: librarian
-- name: LIBRARIAN
+### dhruva
+- agent_id: dhruva
+- name: DHRUVA
+- status: RUNNING
+- capabilities: ['data_ethics', 'truth_verification']
+
+### lens
+- agent_id: lens
+- name: LENS
+- status: RUNNING
+- capabilities: ['observation']
+
+### ambassador
+- agent_id: ambassador
+- name: AMBASSADOR
+- status: RUNNING
+- capabilities: ['outreach']
+
+### marketer
+- agent_id: marketer
+- name: MARKETER
 - status: RUNNING
 - capabilities: []
 
@@ -145,41 +157,29 @@
 - status: RUNNING
 - capabilities: ['twitter_api', 'engagement_tracking']
 
+### agora
+- agent_id: agora
+- name: AGORA
+- status: RUNNING
+- capabilities: ['community_management']
+
 ### artisan
 - agent_id: artisan
 - name: ARTISAN
 - status: RUNNING
 - capabilities: ['media_production']
 
-### marketer
-- agent_id: marketer
-- name: MARKETER
+### librarian
+- agent_id: librarian
+- name: LIBRARIAN
 - status: RUNNING
 - capabilities: []
 
-### lens
-- agent_id: lens
-- name: LENS
+### mechanic
+- agent_id: mechanic
+- name: MECHANIC
 - status: RUNNING
-- capabilities: ['observation']
-
-### ambassador
-- agent_id: ambassador
-- name: AMBASSADOR
-- status: RUNNING
-- capabilities: ['outreach']
-
-### dhruva
-- agent_id: dhruva
-- name: DHRUVA
-- status: RUNNING
-- capabilities: ['data_ethics', 'truth_verification']
-
-### agora
-- agent_id: agora
-- name: AGORA
-- status: RUNNING
-- capabilities: ['community_management']
+- capabilities: ['maintenance']
 
 ### market
 - agent_id: market
