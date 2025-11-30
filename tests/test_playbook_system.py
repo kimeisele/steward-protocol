@@ -15,7 +15,7 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 
 # Import the systems under test
 try:
-    from envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
+    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
 
     from provider.universal_provider import DeterministicRouter, UniversalProvider
 

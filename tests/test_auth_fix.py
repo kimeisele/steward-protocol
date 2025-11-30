@@ -2,15 +2,15 @@
 """
 HERALD OAuth 1.0a Authentication Tests
 
-Uses pytest monkeypatch fixture for robust environment variable injection.
-This ensures env vars are set BEFORE TwitterPublisher.__init__() is called.
-
-This file replaces test_herald_publisher.py to force CI to pick up new code.
+SKIPPED: Requires tweepy which is an optional dependency.
 """
 
-from unittest.mock import MagicMock, patch
-
 import pytest
+
+# Skip entire module - requires tweepy which is optional
+pytest.importorskip("tweepy")
+
+from unittest.mock import MagicMock, patch
 
 from examples.herald.publisher import (
     LinkedInPublisher,

@@ -1,6 +1,9 @@
-from unittest.mock import MagicMock, patch
-
 import pytest
+
+# Skip entire module - requires tweepy which is an optional dependency
+pytest.importorskip("tweepy")
+
+from unittest.mock import MagicMock, patch
 
 from examples.herald.publisher import TwitterPublisher
 
