@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-class TestResult:
+class HardeningResult:
     def __init__(self, name: str):
         self.name = name
         self.passed = False
@@ -38,13 +38,13 @@ class TestResult:
         return self
 
 
-def test_herald_content_filtering() -> TestResult:
+def test_herald_content_filtering() -> HardeningResult:
     """
     Test: Herald agent MUST block banned content patterns.
 
     Attack: Try to publish shill/spam content.
     """
-    result = TestResult("HERALD_CONTENT_FILTERING")
+    result = HardeningResult("HERALD_CONTENT_FILTERING")
 
     try:
         from steward.system_agents.herald.cartridge_main import HeraldCartridge
@@ -86,13 +86,13 @@ def test_herald_content_filtering() -> TestResult:
         return result.fail(f"Unexpected error: {e}")
 
 
-def test_vote_manipulation_detection() -> TestResult:
+def test_vote_manipulation_detection() -> HardeningResult:
     """
     Test: Auditor MUST detect duplicate vote injection.
 
     Attack: Inject same vote twice into ledger.
     """
-    result = TestResult("VOTE_MANIPULATION_DETECTION")
+    result = HardeningResult("VOTE_MANIPULATION_DETECTION")
 
     try:
         from steward.system_agents.auditor.tools.invariant_tool import get_judge
@@ -155,13 +155,13 @@ def test_vote_manipulation_detection() -> TestResult:
         return result.fail(f"Unexpected error: {e}\n{traceback.format_exc()}")
 
 
-def test_invariant_engine_constraints() -> TestResult:
+def test_invariant_engine_constraints() -> HardeningResult:
     """
     Test: InvariantEngine enforces defined constraints.
 
     Checks that all declared invariants are actually checked.
     """
-    result = TestResult("INVARIANT_ENGINE_CONSTRAINTS")
+    result = HardeningResult("INVARIANT_ENGINE_CONSTRAINTS")
 
     try:
         from steward.system_agents.auditor.tools.invariant_tool import get_judge
@@ -207,11 +207,11 @@ def test_invariant_engine_constraints() -> TestResult:
         return result.fail(f"Could not import InvariantEngine: {e}")
 
 
-def test_constitution_exists_and_valid() -> TestResult:
+def test_constitution_exists_and_valid() -> HardeningResult:
     """
     Test: CONSTITUTION.md exists and contains required articles.
     """
-    result = TestResult("CONSTITUTION_EXISTS")
+    result = HardeningResult("CONSTITUTION_EXISTS")
 
     constitution_path = Path(__file__).parent.parent.parent / "CONSTITUTION.md"
 
