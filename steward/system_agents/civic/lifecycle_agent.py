@@ -6,22 +6,17 @@ Handles:
 - Agent lifecycle transitions
 - Permission enforcement based on lifecycle status
 - Agent violations and demotion
+
+Architecture:
+- Naked Agent: no tool instances owned
+- Accesses lifecycle_enforcer tool via self.system.execute_tool("civic.lifecycle_enforcer", ...)
+- Kernel-managed tool pattern
 """
 
 import logging
 from typing import Any, Dict
 
 from vibe_core import Task, VibeAgent
-
-try:
-    from .tools.lifecycle_enforcer import LifecycleEnforcer
-    from .tools.lifecycle_manager import LifecycleStatus
-
-    LIFECYCLE_AVAILABLE = True
-except ImportError as e:
-    logger_setup = logging.getLogger("LIFECYCLE_AGENT")
-    logger_setup.warning(f"⚠️  Lifecycle Enforcer not available: {e}")
-    LIFECYCLE_AVAILABLE = False
 
 logger = logging.getLogger("LIFECYCLE_AGENT")
 
@@ -40,20 +35,28 @@ class LifecycleAgent(VibeAgent):
             capabilities=["lifecycle_management", "permission_enforcement"],
         )
 
-        if LIFECYCLE_AVAILABLE:
-            self.lifecycle_enforcer = LifecycleEnforcer()
-            logger.info("🔄 LIFECYCLE ENFORCER initialized (Vedic Varna System)")
-            logger.info("   Status: ACTIVE - Managing Brahmachari → Grihastha progression")
-        else:
-            self.lifecycle_enforcer = None
-            logger.warning("⚠️  Lifecycle Enforcer NOT available - system running in degraded mode")
+        # NO TOOL INSTANCES OWNED - Agent is NAKED
+        # Tools accessed via self.system.execute_tool()
+        self.system = None  # Will be injected by parent via set_system()
+
+        logger.info("🔄 LIFECYCLE AGENT initialized (Naked Agent - awaiting system injection)")
+
+    def set_system(self, system):
+        """
+        Inject system interface from parent CIVIC cartridge.
+
+        This allows the LifecycleAgent to access kernel tools
+        via self.system.execute_tool().
+
+        Args:
+            system: The system interface (from parent agent's self.system)
+        """
+        self.system = system
+        logger.info("✅ CIVIC Lifecycle: system interface injected")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process lifecycle-related tasks."""
         action = task.payload.get("action")
-
-        if not self.lifecycle_enforcer:
-            return {"status": "error", "error": "Lifecycle enforcer not available"}
 
         if action == "check_action_permission":
             return self.check_action_permission(
@@ -83,14 +86,33 @@ class LifecycleAgent(VibeAgent):
         """Check if an agent has permission to perform an action based on lifecycle status."""
         logger.info(f"🔐 Checking permission: {agent_id} for {action_type} action (cost: {cost})")
 
-        result = self.lifecycle_enforcer.check_action_permission(agent_id, action_type, cost)
+        # Execute via kernel
+        tool_result = self.system.execute_tool(
+            "civic.lifecycle_enforcer",
+            {
+                "action": "check_action_permission",
+                "agent_id": agent_id,
+                "action_type": action_type,
+                "cost": cost,
+            },
+        )
+
+        if not tool_result.success:
+            logger.error(f"❌ Permission check failed: {tool_result.error}")
+            return {
+                "status": "error",
+                "error": tool_result.error,
+                "agent": agent_id,
+            }
+
+        result = tool_result.output
 
         return {
             "status": "success",
-            "permitted": result.permitted,
-            "reason": result.reason,
+            "permitted": result.get("permitted", False),
+            "reason": result.get("reason"),
             "agent": agent_id,
-            "lifecycle_status": result.lifecycle_status,
+            "lifecycle_status": result.get("lifecycle_status"),
             "action_type": action_type,
         }
 
@@ -102,14 +124,34 @@ class LifecycleAgent(VibeAgent):
         logger.info(f"   Initiator: {initiator}")
         logger.info(f"   Test Results: {test_results}")
 
-        success = self.lifecycle_enforcer.authorize_brahmachari_to_grihastha(agent_id, test_results, initiator)
+        # Execute via kernel
+        tool_result = self.system.execute_tool(
+            "civic.lifecycle_enforcer",
+            {
+                "action": "authorize_brahmachari_to_grihastha",
+                "agent_id": agent_id,
+                "test_results": test_results,
+                "initiator": initiator,
+            },
+        )
+
+        if not tool_result.success:
+            logger.error(f"❌ Promotion failed: {tool_result.error}")
+            return {
+                "status": "error",
+                "error": tool_result.error,
+                "agent": agent_id,
+                "promoted": False,
+            }
+
+        result = tool_result.output
 
         return {
-            "status": "success" if success else "error",
+            "status": "success" if result.get("promoted") else "error",
             "agent": agent_id,
-            "promoted": success,
+            "promoted": result.get("promoted", False),
             "initiator": initiator,
-            "new_status": "grihastha" if success else "brahmachari",
+            "new_status": result.get("new_status", "brahmachari"),
         }
 
     def report_violation(self, agent_id: str, violation: Dict[str, Any]) -> Dict[str, Any]:
@@ -117,12 +159,31 @@ class LifecycleAgent(VibeAgent):
         logger.warning(f"⚠️  Violation reported for {agent_id}")
         logger.warning(f"   Details: {violation}")
 
-        success = self.lifecycle_enforcer.report_violation(agent_id, violation)
+        # Execute via kernel
+        tool_result = self.system.execute_tool(
+            "civic.lifecycle_enforcer",
+            {
+                "action": "report_violation",
+                "agent_id": agent_id,
+                "violation": violation,
+            },
+        )
+
+        if not tool_result.success:
+            logger.error(f"❌ Violation report failed: {tool_result.error}")
+            return {
+                "status": "error",
+                "error": tool_result.error,
+                "agent": agent_id,
+                "demoted": False,
+            }
+
+        result = tool_result.output
 
         return {
-            "status": "success" if success else "error",
+            "status": "success" if result.get("demoted") else "error",
             "agent": agent_id,
-            "demoted": success,
+            "demoted": result.get("demoted", False),
             "violation": violation,
         }
 
@@ -130,41 +191,82 @@ class LifecycleAgent(VibeAgent):
         """Get global lifecycle enforcement status."""
         logger.info("📊 Querying lifecycle enforcement status")
 
-        stats = self.lifecycle_enforcer.get_enforcement_status()
+        # Execute via kernel
+        tool_result = self.system.execute_tool(
+            "civic.lifecycle_enforcer",
+            {
+                "action": "get_enforcement_status",
+            },
+        )
 
-        return {"status": "success", "enforcement_stats": stats}
+        if not tool_result.success:
+            logger.error(f"❌ Failed to get lifecycle status: {tool_result.error}")
+            return {
+                "status": "error",
+                "error": tool_result.error,
+            }
+
+        result = tool_result.output
+
+        return {"status": "success", "enforcement_stats": result.get("enforcement_stats", {})}
 
     def get_agent_status(self, agent_id: str) -> Dict[str, Any]:
         """Get lifecycle status for a specific agent."""
         logger.info(f"📋 Querying lifecycle status for {agent_id}")
 
-        try:
-            lifecycle_mgr = self.lifecycle_enforcer.lifecycle_mgr
-            agent_status = lifecycle_mgr.get_agent_status(agent_id)
+        # Execute via kernel
+        tool_result = self.system.execute_tool(
+            "civic.lifecycle_enforcer",
+            {
+                "action": "get_agent_status",
+                "agent_id": agent_id,
+            },
+        )
 
-            return {"status": "success", "agent": agent_id, "lifecycle": agent_status}
+        if not tool_result.success:
+            logger.error(f"❌ Failed to get agent status: {tool_result.error}")
+            return {
+                "status": "error",
+                "agent": agent_id,
+                "error": tool_result.error,
+            }
 
-        except Exception as e:
-            logger.error(f"❌ Error querying agent status: {e}")
-            return {"status": "error", "agent": agent_id, "error": str(e)}
+        result = tool_result.output
+
+        return {
+            "status": "success" if result.get("success") else "error",
+            "agent": agent_id,
+            "lifecycle": result.get("lifecycle"),
+            "error": result.get("error"),
+        }
 
     def report_status(self) -> Dict[str, Any]:
         """Report lifecycle agent status."""
-        if not self.lifecycle_enforcer:
-            return {
-                "agent_id": "civic_lifecycle",
-                "name": "CIVIC Lifecycle",
-                "status": "DEGRADED",
-                "note": "Lifecycle enforcer not available",
-            }
+        try:
+            # Execute via kernel
+            tool_result = self.system.execute_tool(
+                "civic.lifecycle_enforcer",
+                {
+                    "action": "get_enforcement_status",
+                },
+            )
 
-        stats = self.lifecycle_enforcer.get_enforcement_status()
+            if tool_result.success:
+                stats = tool_result.output.get("enforcement_stats", {})
+                return {
+                    "agent_id": "civic_lifecycle",
+                    "name": "CIVIC Lifecycle",
+                    "status": "RUNNING",
+                    "enforcement_stats": stats,
+                }
+        except Exception as e:
+            logger.warning(f"⚠️  Could not get enforcement status: {e}")
 
         return {
             "agent_id": "civic_lifecycle",
             "name": "CIVIC Lifecycle",
             "status": "RUNNING",
-            "enforcement_stats": stats,
+            "enforcement_stats": {},
         }
 
 

@@ -39,7 +39,21 @@ class RegistryAgent(VibeAgent):
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.registry = self._load_registry()
+        self.system = None  # Will be injected by parent via set_system()
         logger.info(f"📋 Registry loaded: {len(self.registry.get('agents', {}))} agents")
+
+    def set_system(self, system):
+        """
+        Inject system interface from parent CIVIC cartridge.
+
+        Currently RegistryAgent doesn't use tools via kernel, but this
+        maintains consistency with other sub-agents.
+
+        Args:
+            system: The system interface (from parent agent's self.system)
+        """
+        self.system = system
+        logger.info("✅ CIVIC Registry: system interface injected")
 
     def process(self, task: Task) -> Dict[str, Any]:
         """Process registry-related tasks (governance only, no documentation)."""

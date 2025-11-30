@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LIFECYCLE ENFORCER - The Kernel-Level Permission Gate
+LIFECYCLE ENFORCER - The Kernel-Level Permission Gate (Tool Protocol)
 
 This is the crucial component that makes the simulation REAL (not a mock).
 
@@ -12,6 +12,11 @@ It sits at the kernel boundary and checks:
 Without this, agents could act freely (mock).
 With this, consequences are PERSISTENT and BINDING.
 
+Architecture:
+- Implements Tool protocol (kernel-managed)
+- Accessed via self.system.execute_tool("civic.lifecycle_enforcer", ...)
+- No direct instantiation - kernel owns the tool
+
 The philosophy:
 "An agent trying to act without being qualified is like a student
 trying to teach before learning. The KERNEL says NO."
@@ -21,6 +26,8 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 from .economy import CivicBank
 from .lifecycle_manager import LifecycleManager, LifecycleStatus
@@ -40,9 +47,9 @@ class PermissionResult:
     required_status: Optional[str] = None
 
 
-class LifecycleEnforcer:
+class LifecycleEnforcer(Tool):
     """
-    The kernel-level permission gate.
+    The kernel-level permission gate (Tool Protocol Implementation).
 
     Every agent action must pass through this enforcer:
     1. Lifecycle check (is the agent qualified for this action?)
@@ -51,6 +58,9 @@ class LifecycleEnforcer:
     4. Ledger check (is the action recorded for karma?)
 
     If ANY of these fail, the action is REJECTED at the kernel level.
+
+    This tool is kernel-managed and accessed via:
+    self.system.execute_tool("civic.lifecycle_enforcer", {...})
     """
 
     def __init__(self):
@@ -58,6 +68,185 @@ class LifecycleEnforcer:
         self.lifecycle_mgr = LifecycleManager()
         self.bank = CivicBank()
         logger.info("🚫 LIFECYCLE ENFORCER initialized (Kernel-Level Permission Gate)")
+
+    @property
+    def name(self) -> str:
+        """Return the tool name."""
+        return "civic.lifecycle_enforcer"
+
+    @property
+    def description(self) -> str:
+        """Return the tool description."""
+        return "Lifecycle enforcement: permission checks, agent promotion, violation reporting, Vedic Varna system"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        """Return the parameters schema for this tool."""
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'check_action_permission', 'authorize_brahmachari_to_grihastha', 'report_violation', 'get_enforcement_status', 'get_agent_status'",
+            },
+            "agent_id": {
+                "type": "string",
+                "required": False,
+                "description": "Agent ID (required for most actions)",
+            },
+            "action_type": {
+                "type": "string",
+                "required": False,
+                "description": "Type of action (write, broadcast, trade, etc.) - for check_action_permission",
+            },
+            "cost": {
+                "type": "integer",
+                "required": False,
+                "description": "Credit cost of the action - for check_action_permission (default: 1)",
+            },
+            "details": {
+                "type": "object",
+                "required": False,
+                "description": "Additional context details",
+            },
+            "test_results": {
+                "type": "object",
+                "required": False,
+                "description": "Test results from TEMPLE initiation - for authorize_brahmachari_to_grihastha",
+            },
+            "initiator": {
+                "type": "string",
+                "required": False,
+                "description": "Who authorized the promotion (typically 'TEMPLE') - for authorize_brahmachari_to_grihastha",
+            },
+            "violation": {
+                "type": "object",
+                "required": False,
+                "description": "Violation details - for report_violation",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate lifecycle enforcer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = [
+            "check_action_permission",
+            "authorize_brahmachari_to_grihastha",
+            "report_violation",
+            "get_enforcement_status",
+            "get_agent_status",
+        ]
+
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
+
+        # Validate action-specific requirements
+        if action == "check_action_permission" and "agent_id" not in parameters:
+            raise ValueError("action 'check_action_permission' requires 'agent_id' parameter")
+
+        if action == "authorize_brahmachari_to_grihastha" and "agent_id" not in parameters:
+            raise ValueError("action 'authorize_brahmachari_to_grihastha' requires 'agent_id' parameter")
+
+        if action == "report_violation" and "agent_id" not in parameters:
+            raise ValueError("action 'report_violation' requires 'agent_id' parameter")
+
+        if action == "get_agent_status" and "agent_id" not in parameters:
+            raise ValueError("action 'get_agent_status' requires 'agent_id' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute lifecycle enforcer operation."""
+        try:
+            action = parameters["action"]
+
+            if action == "check_action_permission":
+                result = self._handle_check_action_permission(
+                    agent_id=parameters["agent_id"],
+                    action_type=parameters.get("action_type", "write"),
+                    cost=parameters.get("cost", 1),
+                    details=parameters.get("details"),
+                )
+                return ToolResult(success=result["permitted"], output=result)
+
+            elif action == "authorize_brahmachari_to_grihastha":
+                result = self._handle_authorize_brahmachari_to_grihastha(
+                    agent_id=parameters["agent_id"],
+                    test_results=parameters.get("test_results", {}),
+                    initiator=parameters.get("initiator", "TEMPLE"),
+                )
+                return ToolResult(success=result["promoted"], output=result)
+
+            elif action == "report_violation":
+                result = self._handle_report_violation(
+                    agent_id=parameters["agent_id"],
+                    violation=parameters.get("violation", {}),
+                )
+                return ToolResult(success=result["demoted"], output=result)
+
+            elif action == "get_enforcement_status":
+                result = self._handle_get_enforcement_status()
+                return ToolResult(success=True, output=result)
+
+            elif action == "get_agent_status":
+                result = self._handle_get_agent_status(parameters["agent_id"])
+                return ToolResult(success=result.get("success", False), output=result)
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            logger.exception(f"Lifecycle enforcer execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
+
+    # Handler methods that wrap the core logic
+    def _handle_check_action_permission(
+        self, agent_id: str, action_type: str, cost: int, details: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Handle check_action_permission action."""
+        result = self.check_action_permission(agent_id, action_type, cost, details)
+        return {
+            "permitted": result.permitted,
+            "reason": result.reason,
+            "agent": agent_id,
+            "lifecycle_status": result.lifecycle_status,
+            "action_type": action_type,
+        }
+
+    def _handle_authorize_brahmachari_to_grihastha(
+        self, agent_id: str, test_results: Dict[str, Any], initiator: str
+    ) -> Dict[str, Any]:
+        """Handle authorize_brahmachari_to_grihastha action."""
+        success = self.authorize_brahmachari_to_grihastha(agent_id, test_results, initiator)
+        return {
+            "agent": agent_id,
+            "promoted": success,
+            "initiator": initiator,
+            "new_status": "grihastha" if success else "brahmachari",
+        }
+
+    def _handle_report_violation(self, agent_id: str, violation: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle report_violation action."""
+        success = self.report_violation(agent_id, violation)
+        return {
+            "agent": agent_id,
+            "demoted": success,
+            "violation": violation,
+        }
+
+    def _handle_get_enforcement_status(self) -> Dict[str, Any]:
+        """Handle get_enforcement_status action."""
+        stats = self.get_enforcement_status()
+        return {"enforcement_stats": stats}
+
+    def _handle_get_agent_status(self, agent_id: str) -> Dict[str, Any]:
+        """Handle get_agent_status action."""
+        try:
+            agent_status = self.lifecycle_mgr.get_agent_status(agent_id)
+            return {"success": True, "agent": agent_id, "lifecycle": agent_status}
+        except Exception as e:
+            logger.error(f"❌ Error querying agent status: {e}")
+            return {"success": False, "agent": agent_id, "error": str(e)}
 
     def check_action_permission(
         self,
