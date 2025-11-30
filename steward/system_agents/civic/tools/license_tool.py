@@ -12,6 +12,8 @@ Philosophy:
 "In Agent City, you don't just talk. You get permission first.
 Broadcast License = Permission to publish.
 No license = No broadcasting, period."
+
+NOW implements Tool protocol - kernel-managed initialization.
 """
 
 import json
@@ -20,6 +22,8 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("CIVIC_LICENSE")
 
@@ -122,28 +126,180 @@ class License:
         )
 
 
-class LicenseTool:
+class LicenseTool(Tool):
     """
     CIVIC's License Management Tool.
 
     Issues and revokes broadcast licenses. This is the gatekeeper
     for publishing in Agent City.
+
+    NOW implements Tool protocol - kernel-managed initialization.
     """
 
-    def __init__(self, license_db_path: str = "data/registry/licenses.json"):
+    def __init__(self):
         """
-        Initialize the License Tool.
+        Initialize the License Tool (kernel-managed).
 
-        Args:
-            license_db_path: Path to the license database
+        License database path is always data/registry/licenses.json.
         """
-        self.license_db_path = Path(license_db_path)
+        self.license_db_path = Path("data/registry/licenses.json")
         self.license_db_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Load existing licenses
         self.licenses: Dict[str, License] = self._load_licenses()
 
         logger.info(f"🎫 License database loaded: {len(self.licenses)} licenses")
+
+    # ==================== TOOL PROTOCOL IMPLEMENTATION ====================
+
+    @property
+    def name(self) -> str:
+        return "civic.license"
+
+    @property
+    def description(self) -> str:
+        return "CIVIC License Authority - Broadcast licensing, permission management, and access control"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'check_license', 'issue_license', 'revoke_license', 'suspend_license', 'reinstate_license', 'list_licenses'",
+            },
+            "agent_id": {
+                "type": "string",
+                "required": False,
+                "description": "Agent ID (required for most operations)",
+            },
+            "license_type": {
+                "type": "string",
+                "required": False,
+                "description": "License type: 'broadcast', 'api_access', 'admin', 'experimental' (default: broadcast)",
+            },
+            "reason": {
+                "type": "string",
+                "required": False,
+                "description": "Reason for action (for revoke, suspend)",
+            },
+            "source_authority": {
+                "type": "string",
+                "required": False,
+                "description": "Source of authority (proposal ID or action reference)",
+            },
+            "restrictions": {
+                "type": "array",
+                "required": False,
+                "description": "License restrictions (for issue_license)",
+            },
+            "duration_hours": {
+                "type": "integer",
+                "required": False,
+                "description": "Suspension duration in hours (for suspend_license, default: 24)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate license parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = [
+            "check_license",
+            "issue_license",
+            "revoke_license",
+            "suspend_license",
+            "reinstate_license",
+            "list_licenses",
+        ]
+
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
+
+        # Validate action-specific requirements
+        if action != "list_licenses" and "agent_id" not in parameters:
+            raise ValueError(f"action '{action}' requires 'agent_id' parameter")
+
+        if action == "revoke_license" and "reason" not in parameters:
+            raise ValueError("action 'revoke_license' requires 'reason' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute license operation."""
+        try:
+            action = parameters["action"]
+            agent_id = parameters.get("agent_id")
+            license_type_str = parameters.get("license_type", "broadcast")
+
+            # Convert string to enum
+            try:
+                license_type = LicenseType(license_type_str)
+            except ValueError:
+                return ToolResult(success=False, error=f"Invalid license_type: {license_type_str}")
+
+            if action == "check_license":
+                result = self.check_license(agent_id, license_type)
+                return ToolResult(success=True, output=result)
+
+            elif action == "issue_license":
+                restrictions = parameters.get("restrictions", [])
+                source_authority = parameters.get("source_authority")
+                license = self.issue_license(agent_id, license_type, restrictions, source_authority)
+                return ToolResult(success=True, output=license.to_dict())
+
+            elif action == "revoke_license":
+                reason = parameters["reason"]
+                source_authority = parameters.get("source_authority")
+                success = self.revoke_license(agent_id, license_type, reason, source_authority)
+                if success:
+                    return ToolResult(
+                        success=True,
+                        output={
+                            "revoked": True,
+                            "agent": agent_id,
+                            "license_type": license_type.value,
+                            "reason": reason,
+                        },
+                    )
+                else:
+                    return ToolResult(success=False, error=f"No {license_type.value} license found for {agent_id}")
+
+            elif action == "suspend_license":
+                duration_hours = parameters.get("duration_hours", 24)
+                success = self.suspend_license(agent_id, license_type, duration_hours)
+                if success:
+                    return ToolResult(
+                        success=True,
+                        output={"suspended": True, "agent": agent_id, "duration_hours": duration_hours},
+                    )
+                else:
+                    return ToolResult(success=False, error=f"No {license_type.value} license found for {agent_id}")
+
+            elif action == "reinstate_license":
+                source_authority = parameters.get("source_authority")
+                success = self.reinstate_license(agent_id, license_type, source_authority)
+                if success:
+                    return ToolResult(success=True, output={"reinstated": True, "agent": agent_id})
+                else:
+                    return ToolResult(success=False, error=f"No {license_type.value} license found for {agent_id}")
+
+            elif action == "list_licenses":
+                if agent_id:
+                    licenses = self.list_agent_licenses(agent_id)
+                    return ToolResult(success=True, output={"agent": agent_id, "licenses": licenses})
+                else:
+                    all_licenses = self.list_all_licenses()
+                    return ToolResult(success=True, output={"all_licenses": all_licenses})
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            logger.exception(f"License execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
+
+    # ==================== INTERNAL METHODS (backward compatibility) ====================
 
     def issue_license(
         self,

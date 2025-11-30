@@ -27,7 +27,8 @@ from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
 
-from .tools.introspection_tool import IntrospectionError, IntrospectionTool
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - oracle.introspection - System introspection engine
 
 # Constitutional Oath
 logger = logging.getLogger("ORACLE")
@@ -75,8 +76,9 @@ class OracleCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ ORACLE has sworn the Constitutional Oath")
 
-        self.introspection = IntrospectionTool(bank=bank)
-        self.bank = bank
+        # NO tool instances owned - agent is NAKED
+        # Tools accessed via self.system.execute_tool()
+        logger.info("✅ ORACLE ready (NO tool instances owned)")
 
     # ==================== AGENT QUERIES ====================
 
@@ -87,8 +89,15 @@ class OracleCartridge(VibeAgent, OathMixin):
         Returns both raw data AND narrative interpretation.
         """
         try:
-            status = self.introspection.get_agent_status(agent_id)
+            result = self.system.execute_tool("oracle.introspection", {"action": "agent_status", "agent_id": agent_id})
+            if not result.success:
+                return {
+                    "query": f"Status of {agent_id}",
+                    "error": result.error,
+                    "message": f"Could not retrieve status for {agent_id}",
+                }
 
+            status = result.output
             narrative = self._build_agent_narrative(agent_id, status)
 
             return {
@@ -104,7 +113,7 @@ class OracleCartridge(VibeAgent, OathMixin):
                 },
             }
 
-        except IntrospectionError as e:
+        except Exception as e:
             return {
                 "query": f"Status of {agent_id}",
                 "error": str(e),
@@ -118,8 +127,13 @@ class OracleCartridge(VibeAgent, OathMixin):
         This is the core introspection: "Why did Watchman freeze this agent?"
         """
         try:
-            freeze_info = self.introspection.explain_freeze(agent_id)
+            result = self.system.execute_tool(
+                "oracle.introspection", {"action": "explain_freeze", "agent_id": agent_id}
+            )
+            if not result.success:
+                return {"query": f"Why is {agent_id} frozen?", "error": result.error}
 
+            freeze_info = result.output
             narrative = self._build_freeze_narrative(agent_id, freeze_info)
 
             return {
@@ -131,7 +145,7 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "remediation": self._suggest_remediation(freeze_info),
             }
 
-        except IntrospectionError as e:
+        except Exception as e:
             return {"query": f"Why is {agent_id} frozen?", "error": str(e)}
 
     def audit_timeline(self, limit: int = 20, agent_id: Optional[str] = None) -> Dict[str, Any]:
@@ -141,8 +155,15 @@ class OracleCartridge(VibeAgent, OathMixin):
         Shows the "story" of what happened in the system.
         """
         try:
-            trail = self.introspection.audit_trail(limit=limit, agent_id=agent_id)
+            params = {"action": "audit_trail", "limit": limit}
+            if agent_id:
+                params["agent_id"] = agent_id
 
+            result = self.system.execute_tool("oracle.introspection", params)
+            if not result.success:
+                return {"query": "Timeline", "error": result.error}
+
+            trail = result.output
             narrative = self._build_timeline_narrative(trail, agent_id)
 
             return {
@@ -153,7 +174,7 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "narrative": narrative,
             }
 
-        except IntrospectionError as e:
+        except Exception as e:
             return {"query": "Timeline", "error": str(e)}
 
     def system_health(self) -> Dict[str, Any]:
@@ -161,8 +182,11 @@ class OracleCartridge(VibeAgent, OathMixin):
         Get system health status and narrative interpretation.
         """
         try:
-            stats = self.introspection.system_status()
+            result = self.system.execute_tool("oracle.introspection", {"action": "system_status"})
+            if not result.success:
+                return {"query": "System health", "error": result.error}
 
+            stats = result.output
             narrative = self._build_health_narrative(stats)
 
             return {
@@ -173,7 +197,7 @@ class OracleCartridge(VibeAgent, OathMixin):
                 "alerts": self._identify_alerts(stats),
             }
 
-        except IntrospectionError as e:
+        except Exception as e:
             return {"query": "System health", "error": str(e)}
 
     # ==================== NARRATIVE BUILDERS ====================
@@ -324,17 +348,28 @@ class OracleCartridge(VibeAgent, OathMixin):
     def get_raw_transaction(self, tx_id: str) -> Dict[str, Any]:
         """Get raw transaction data (for verification)."""
         try:
-            return self.introspection.trace_transaction(tx_id)
-        except IntrospectionError as e:
+            result = self.system.execute_tool("oracle.introspection", {"action": "trace_transaction", "tx_id": tx_id})
+            return result.output if result.success else {"error": result.error}
+        except Exception as e:
             return {"error": str(e)}
 
     def get_vault_access_log(self, limit: int = 10) -> Dict[str, Any]:
         """Get vault access audit trail."""
-        return {
-            "query": "Vault access log",
-            "timestamp": datetime.now().isoformat(),
-            "leases": self.introspection.vault_access_log(limit=limit),
-        }
+        try:
+            result = self.system.execute_tool("oracle.introspection", {"action": "vault_access_log", "limit": limit})
+            leases = result.output if result.success else []
+            return {
+                "query": "Vault access log",
+                "timestamp": datetime.now().isoformat(),
+                "leases": leases,
+            }
+        except Exception as e:
+            return {
+                "query": "Vault access log",
+                "timestamp": datetime.now().isoformat(),
+                "leases": [],
+                "error": str(e),
+            }
 
     # ==================== VIBEOS AGENT INTERFACE ====================
 

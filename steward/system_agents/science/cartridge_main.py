@@ -35,7 +35,8 @@ from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import ScienceConfig
 
-from .tools.web_search_tool import WebSearchTool
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - science.web_search - External intelligence via Tavily API
 
 # Constitutional Oath
 # Setup logging
@@ -96,17 +97,14 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
 
         logger.info("🔬 SCIENTIST (VibeAgent) initializing...")
 
-        # Initialize search tool
-        # Initialize search tool with offline fallback
-        chain = self.get_degradation_chain()
-        self.search = WebSearchTool(degradation_chain=chain)
-        logger.info(f"   Search mode: {self.search.mode.upper()}")
+        # NO tool instances owned - agent is NAKED
+        # Tools accessed via self.system.execute_tool()
 
         # PHASE 2.2: Lazy-load data paths after system interface injection
         self._cache_dir = None
         self._results_dir = None
 
-        logger.info("✅ SCIENTIST: Ready for operation (paths will be sandboxed after kernel injection)")
+        logger.info("✅ SCIENTIST ready (NO tool instances owned - paths will be sandboxed after kernel injection)")
 
     @property
     def cache_dir(self):
@@ -179,7 +177,6 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             "domain": "SCIENCE",
             "capabilities": self.capabilities,
             "research_metrics": {
-                "search_mode": self.search.mode,
                 "cache_entries": len(cache_files),
                 "results_generated": len(results_files),
                 "cache_dir": str(self.cache_dir),
@@ -218,9 +215,25 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
                 logger.info("   ✅ Using cached briefing")
                 return cached
 
-        # Perform search
+        # Perform search via kernel
         logger.info("   🌐 Searching external sources...")
-        briefing = self.search.get_briefing(query, max_results)
+        result = self.system.execute_tool(
+            "science.web_search", {"action": "briefing", "query": query, "max_results": max_results}
+        )
+
+        if not result.success:
+            logger.error(f"   ❌ Search failed: {result.error}")
+            return {
+                "status": "error",
+                "error": result.error,
+                "query": query,
+                "source_count": 0,
+                "sources": [],
+                "key_insights": [],
+                "summary": "Search failed",
+            }
+
+        briefing = result.output
 
         # Cache result
         self._cache_briefing(query, briefing)
