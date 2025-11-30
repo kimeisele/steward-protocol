@@ -13,9 +13,12 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 
-class DiplomacyTool:
+class DiplomacyTool(Tool):
     """
     Tool for diplomatic outreach to AI agent projects.
 
@@ -30,6 +33,82 @@ class DiplomacyTool:
         self.diplomatic_bag = Path("diplomatic_bag")
         self.diplomatic_bag.mkdir(exist_ok=True)
         self.chain = degradation_chain
+
+    @property
+    def name(self) -> str:
+        return "envoy.diplomacy"
+
+    @property
+    def description(self) -> str:
+        return "Diplomatic outreach to AI agent projects via GitHub"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'search_github' | 'run_diplomatic_cycle'",
+            },
+            "topic": {
+                "type": "string",
+                "required": False,
+                "description": "GitHub topic to search",
+            },
+            "min_stars": {
+                "type": "int",
+                "required": False,
+                "description": "Minimum star count",
+            },
+            "max_results": {
+                "type": "int",
+                "required": False,
+                "description": "Maximum results",
+            },
+            "max_candidates": {
+                "type": "int",
+                "required": False,
+                "description": "Max candidates for diplomatic cycle",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute diplomacy operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "search_github":
+                topic = parameters.get("topic", "ai-agent")
+                min_stars = parameters.get("min_stars", 100)
+                max_results = parameters.get("max_results", 10)
+
+                repos = self.search_github(topic, min_stars, max_results)
+                return ToolResult(
+                    success=True,
+                    output={"repositories": repos},
+                    metadata={"action": "search_github", "count": len(repos)},
+                )
+
+            elif action == "run_diplomatic_cycle":
+                max_candidates = parameters.get("max_candidates", 3)
+                result = self.run_diplomatic_cycle(max_candidates)
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={"action": "run_diplomatic_cycle"},
+                )
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            error_msg = f"Diplomacy operation failed: {type(e).__name__}: {e!s}"
+            return ToolResult(success=False, error=error_msg)
 
     def search_github(self, topic="ai-agent", min_stars=100, max_results=10):
         """
@@ -252,3 +331,6 @@ if __name__ == "__main__":
     # Test the diplomacy tool
     tool = DiplomacyTool()
     tool.run_diplomatic_cycle(max_candidates=1)
+
+
+__all__ = ["DiplomacyTool"]

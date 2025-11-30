@@ -28,15 +28,15 @@ from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import CityConfig
 
-from .tools.city_control_tool import CityControlTool
-from .tools.curator_tool import CuratorTool
-from .tools.diplomacy_tool import DiplomacyTool
-from .tools.gap_report_tool import GAPReportTool
-from .tools.hil_assistant_tool import HILAssistantTool
-from .tools.run_campaign_tool import RunCampaignTool
-
-# Envoy's toolset
-
+# ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+# - envoy.city_control (CityControlTool) - The Golden Straw
+# - envoy.curator (CuratorTool) - Governance analysis
+# - envoy.diplomacy (DiplomacyTool) - GitHub outreach
+# - envoy.gap_report (GAPReportTool) - G.A.P. Report generation
+# - envoy.hil (HILAssistantTool) - HIL Assistant (VAD Layer)
+# - envoy.campaign (RunCampaignTool) - Campaign orchestration
+#
+# TODO: Convert all self.tool.method() calls to self.system.execute_tool() calls
 
 # Constitutional Oath
 # Setup logging
@@ -68,7 +68,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         super().__init__(
             agent_id="envoy",
             name="ENVOY",
-            version="2.0.0",
+            version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Universal Operator Interface - diplomatic and operational bridge",
             domain="ORCHESTRATION",
@@ -89,7 +89,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        logger.info("👁️  ENVOY (VibeAgent v2.0) is initializing...")
+        logger.info("👁️  ENVOY (VibeAgent v3.0) is initializing... (Tool Protocol migration in progress)")
 
         # Initialize the Golden Straw (CityControlTool)
         # NOTE: The kernel will be injected later via set_kernel()
