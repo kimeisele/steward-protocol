@@ -2,8 +2,8 @@
   "capabilities": {
     "operations": [
       {
-        "description": "content_generation operation",
-        "name": "content_generation"
+        "description": "Git operations - commits, branches, history, repository management",
+        "name": "chronicle.git"
       }
     ]
   },

@@ -33,6 +33,15 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+# Import SemanticRouter for intelligent classification (PROJECT JNANA)
+try:
+    from provider.semantic_router import SemanticRouter
+
+    SEMANTIC_ROUTER_AVAILABLE = True
+except ImportError:
+    SemanticRouter = None
+    SEMANTIC_ROUTER_AVAILABLE = False
+
 logger = logging.getLogger("MILK_OCEAN_ROUTER")
 
 
@@ -311,6 +320,15 @@ class MilkOceanRouter:
         )
         self._command_injection_pattern = re.compile(r"[;&|`$(){}[\]<>\\]")
 
+        # Initialize SemanticRouter for intelligent classification (PROJECT JNANA)
+        self._semantic_router = None
+        if SEMANTIC_ROUTER_AVAILABLE:
+            try:
+                self._semantic_router = SemanticRouter()
+                logger.info("🧠 SemanticRouter loaded (JNANA Cortex Active)")
+            except Exception as e:
+                logger.warning(f"⚠️ SemanticRouter failed to load: {e} (falling back to heuristics)")
+
         logger.info("🌊 Milk Ocean Router initialized (Brahma Protocol Active)")
 
     def set_kernel(self, kernel):
@@ -414,21 +432,103 @@ class MilkOceanRouter:
         )
 
     # ==================== GATE 1: ENVOY (BRAHMA'S MEDITATION) ====================
-    # Fast classification using Flash AI (low cost)
+    # Semantic classification using PROJECT JNANA (SemanticRouter)
 
     def _gate_1_envoy_classification(self, user_input: str) -> GateResult:
         """
         Level 1: Envoy's Meditation (Brahma's Fast Thinking)
 
-        Classifies intent using minimal AI:
-        - Is this simple/repetitive? -> LOW (queue)
-        - Is this a straightforward query? -> MEDIUM (Flash can handle)
-        - Is this complex reasoning? -> HIGH (need Pro model)
+        Classifies intent using SemanticRouter (sentence-transformers):
+        - HIGH confidence + simple intent -> MEDIUM (Flash can handle)
+        - HIGH confidence + complex intent -> HIGH (needs Pro model)
+        - LOW confidence -> HIGH (needs Pro model to understand)
+        - Batch/repetitive intents -> LOW (lazy queue)
 
-        Note: In real implementation, this would use Gemini Flash or Claude Haiku
+        Falls back to heuristics if SemanticRouter unavailable.
         """
+        # Try SemanticRouter first (PROJECT JNANA)
+        if self._semantic_router is not None:
+            try:
+                return self._gate_1_semantic_classification(user_input)
+            except Exception as e:
+                logger.warning(f"⚠️ SemanticRouter error: {e} (falling back to heuristics)")
 
-        # MOCK IMPLEMENTATION: Simple heuristics
+        # Fallback: Simple heuristics
+        return self._gate_1_heuristic_fallback(user_input)
+
+    def _gate_1_semantic_classification(self, user_input: str) -> GateResult:
+        """Use SemanticRouter for intelligent intent classification."""
+        # Run async SemanticRouter in sync context
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        # Get routing decision with confidence
+        route_result = loop.run_until_complete(
+            self._semantic_router.resolve_intent_with_confidence(user_input)
+        )
+
+        confidence = route_result.get("confidence", 0.0)
+        confidence_level = route_result.get("confidence_level", "low")
+        concepts = route_result.get("concepts", set())
+        intent_type = route_result.get("intent_type", "CHAT")
+
+        logger.info(
+            f"🧠 JNANA: confidence={confidence:.2f} ({confidence_level}), "
+            f"concepts={concepts}, intent={intent_type}"
+        )
+
+        # Check for batch/repetitive patterns in concepts
+        batch_concepts = {"schedule", "batch", "report", "export", "archive", "backup"}
+        if concepts & batch_concepts:
+            return GateResult(
+                RequestPriority.LOW,
+                f"Batch operation detected (confidence: {confidence:.2f})",
+                "LAZY_QUEUE",
+                {"intent": "batch_processing", "concepts": list(concepts), "confidence": confidence},
+            )
+
+        # Route based on confidence level
+        if confidence_level == "low":
+            # Low confidence = ambiguous, needs Pro model to understand
+            return GateResult(
+                RequestPriority.HIGH,
+                f"Low confidence ({confidence:.2f}) - needs Pro model for disambiguation",
+                "INVOKE_SCIENCE",
+                {"intent": "ambiguous", "concepts": list(concepts), "confidence": confidence},
+            )
+
+        elif confidence_level == "high":
+            # High confidence = we understand the intent
+            # Check if it's a complex reasoning task
+            complex_concepts = {"analyze", "debug", "implement", "refactor", "design", "architect"}
+            if concepts & complex_concepts:
+                return GateResult(
+                    RequestPriority.HIGH,
+                    f"Complex reasoning task (confidence: {confidence:.2f})",
+                    "INVOKE_SCIENCE",
+                    {"intent": "complex_reasoning", "concepts": list(concepts), "confidence": confidence},
+                )
+            else:
+                return GateResult(
+                    RequestPriority.MEDIUM,
+                    f"Clear intent (confidence: {confidence:.2f}) - Flash can handle",
+                    "FLASH_RESPONSE",
+                    {"intent": intent_type, "concepts": list(concepts), "confidence": confidence},
+                )
+
+        else:  # medium confidence
+            return GateResult(
+                RequestPriority.MEDIUM,
+                f"Medium confidence ({confidence:.2f}) - Flash with context",
+                "FLASH_RESPONSE",
+                {"intent": intent_type, "concepts": list(concepts), "confidence": confidence},
+            )
+
+    def _gate_1_heuristic_fallback(self, user_input: str) -> GateResult:
+        """Fallback heuristics when SemanticRouter unavailable."""
         input_lower = user_input.lower()
 
         # Simple queries (status, "what is", "tell me")
@@ -449,7 +549,7 @@ class MilkOceanRouter:
                     RequestPriority.MEDIUM,
                     "Simple query - can be handled by Flash model",
                     "FLASH_RESPONSE",
-                    {"intent": "simple_query"},
+                    {"intent": "simple_query", "method": "heuristic_fallback"},
                 )
 
         # Repetitive/low-priority work (reports, batch, etc)
@@ -468,7 +568,7 @@ class MilkOceanRouter:
                     RequestPriority.LOW,
                     "Low-priority batch job - queue for lazy processing",
                     "LAZY_QUEUE",
-                    {"intent": "batch_processing"},
+                    {"intent": "batch_processing", "method": "heuristic_fallback"},
                 )
 
         # Complex reasoning (default)
@@ -476,7 +576,7 @@ class MilkOceanRouter:
             RequestPriority.HIGH,
             "Complex query requiring reasoning - needs Pro model",
             "INVOKE_SCIENCE",
-            {"intent": "complex_reasoning"},
+            {"intent": "complex_reasoning", "method": "heuristic_fallback"},
         )
 
     # ==================== MAIN ROUTER ====================
