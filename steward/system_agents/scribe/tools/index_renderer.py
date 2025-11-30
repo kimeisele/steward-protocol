@@ -22,6 +22,7 @@ try:
     TOOL_PROTOCOL_AVAILABLE = True
 except ImportError:
     TOOL_PROTOCOL_AVAILABLE = False
+
     # Dummy base class for standalone mode
     class Tool:
         pass
@@ -306,4 +307,3 @@ Only files that exist are listed. No speculation.
         Same as _scan_and_render() but public for standalone mode.
         """
         return self._scan_and_render()
-
