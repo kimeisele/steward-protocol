@@ -404,12 +404,38 @@ class DeterministicExecutor:
                     # Delegate to another agent (PLAYBOOK FIX: Actually call the agent!)
                     logger.info(f"  → Calling agent: {target}")
                     if kernel:
+                        import asyncio
+
                         from vibe_core.scheduling.task import Task
+
                         task = Task(agent_id=target, payload=params)
                         logger.debug(f"  📤 Submitting task to {target}: {params}")
-                        result = await kernel.submit_task(task)
-                        phase.result = {"agent": target, "result": result, "params": params}
-                        logger.info(f"  ✓ Agent {target} returned: {result.get('status', 'unknown') if isinstance(result, dict) else type(result).__name__}")
+
+                        # Submit task (synchronous - returns task_id)
+                        task_id = kernel.submit_task(task)
+                        logger.debug(f"  📋 Task submitted: {task_id}")
+
+                        # Wait for result (polling with timeout)
+                        timeout_sec = phase.timeout_seconds
+                        poll_interval = 0.5  # Check every 500ms
+                        elapsed = 0
+                        result = None
+
+                        while elapsed < timeout_sec:
+                            result = kernel.get_task_result(task_id)
+                            if result:
+                                break
+                            await asyncio.sleep(poll_interval)
+                            elapsed += poll_interval
+
+                        if result:
+                            phase.result = {"agent": target, "result": result, "params": params, "task_id": task_id}
+                            status = result.get("status", "unknown")
+                            logger.info(f"  ✓ Agent {target} returned: {status}")
+                        else:
+                            logger.warning(f"  ⏱️  Agent {target} timeout after {timeout_sec}s")
+                            phase.result = {"error": "timeout", "agent": target, "task_id": task_id}
+                            return False  # Fail phase on timeout
                     else:
                         logger.warning(f"  ⚠️ No kernel available, cannot execute agent call to {target}")
                         phase.result = {"error": "No kernel available", "agent": target}
