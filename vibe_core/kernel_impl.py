@@ -1606,8 +1606,8 @@ class RealVibeKernel(VibeKernel):
                         "command": cmd,
                         "status": execution_record["status"],
                         "reason": execution_record["reason"],
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
                 )
 
             except Exception as e:
