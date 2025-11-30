@@ -1,7 +1,7 @@
 """
 TidyTool: Repository Organization & Maintenance Capability (Tool Protocol)
 
-HERALD's housekeeping module. Ensures the repository stays organized
+MECHANIC's housekeeping module. Ensures the repository stays organized
 by moving files to their proper locations based on Tidy Protocols
 defined in STEWARD.md.
 
@@ -18,12 +18,12 @@ from typing import Any, Dict, Optional, Tuple
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-logger = logging.getLogger("HERALD_TIDY")
+logger = logging.getLogger("MECHANIC_TIDY")
 
 
 class TidyTool(Tool):
     """
-    Repository maintenance and file organization capability for HERALD.
+    Repository maintenance and file organization capability for MECHANIC.
 
     Reads organization rules from STEWARD.md and autonomously organizes
     files in the repository without deleting anything.
@@ -31,7 +31,6 @@ class TidyTool(Tool):
 
     # Patterns that should NEVER be moved (protected)
     PROTECTED_PATTERNS = [
-        r"^herald/",  # HERALD's core logic
         r"^\.github/",  # GitHub workflows
         r"^STEWARD\.md$",  # Protocol document
         r"^requirements\.txt$",  # Dependencies
@@ -72,7 +71,7 @@ class TidyTool(Tool):
 
     @property
     def name(self) -> str:
-        return "herald.tidy"  # Namespaced: agent_id.tool_name
+        return "mechanic.tidy"  # Namespaced: agent_id.tool_name
 
     @property
     def description(self) -> str:
