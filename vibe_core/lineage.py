@@ -378,3 +378,4 @@ class LineageEventType:
     PASSPORT_ISSUED = "PASSPORT_ISSUED"  # Phase 6: Steward Protocol Compliance
     ERROR_CRITICAL = "ERROR_CRITICAL"
     NARASIMHA_INTERVENTION = "NARASIMHA_INTERVENTION"
+    AGENT_DESTROYED = "AGENT_DESTROYED"  # Phase 7: Narasimha Kill-Switch

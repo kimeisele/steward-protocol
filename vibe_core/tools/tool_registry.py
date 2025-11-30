@@ -258,7 +258,7 @@ class ToolRegistry:
         # Step 2: 🛡️ Soul Governance Check (ARCH-029)
         if self._invariant_checker and hasattr(self._invariant_checker, "check_tool_call"):
             soul_check: SoulResult = self._invariant_checker.check_tool_call(  # type: ignore
-                tool_name, tool_call.parameters
+                tool_name, tool_call.parameters, caller_agent_id
             )
             if not soul_check.allowed:
                 logger.warning(f"⛔ SOUL BLOCKED {tool_name}: {soul_check.reason}")
