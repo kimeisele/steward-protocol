@@ -391,4 +391,3 @@ python -m steward.system_agents.scribe.cartridge_main
         output += f"- **Description:** {sec_status.get('description', 'No information')}\n"
 
         return output
-

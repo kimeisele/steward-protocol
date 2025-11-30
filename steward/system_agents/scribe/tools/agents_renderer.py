@@ -157,4 +157,3 @@ Unregistered agents cannot obtain broadcast licenses. No exceptions. 🏛️
 
         section += "\n"
         return section
-
