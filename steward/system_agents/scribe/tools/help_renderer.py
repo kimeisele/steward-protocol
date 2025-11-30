@@ -19,7 +19,11 @@ from typing import Any, Dict, List
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector, ConfigIntrospector, ScriptIntrospector
+from steward.system_agents.scribe.tools.introspector import (
+    CartridgeIntrospector,
+    ConfigIntrospector,
+    ScriptIntrospector,
+)
 from steward.system_agents.scribe.tools.operations_introspector import (
     GitActivityIntrospector,
     ParameterIntrospector,
