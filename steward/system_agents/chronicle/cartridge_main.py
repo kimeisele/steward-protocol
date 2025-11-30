@@ -79,10 +79,8 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             description="Temporal agent: manages git operations, commits, branches, and code history",
             domain="INFRASTRUCTURE",
             capabilities=[
-                "content_generation",  # Can create commits
-                "ledger",  # Records to immutable ledger
-                "orchestration",  # Coordinates with other agents
-            ],
+                "content_generation",  # Can create commits (git operations)
+            ],  # CREDIBILITY FIX: P1.4 - Removed false "ledger" and "orchestration" capabilities
         )
 
         logger.info("🗡️  CHRONICLE Cartridge initializing (VibeAgent v1.0)...")
