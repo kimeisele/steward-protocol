@@ -13,12 +13,18 @@
 ## Quick Start
 
 ```bash
-python scripts/summon.py
+# Boot Agent City
+python boot.py
+
+# Or verify boot works first
+python boot.py --check
 ```
 
-Then activate Agent City:
+The system runs interactively until you press Ctrl+C or type 'exit'.
+
+**Create a new agent:**
 ```bash
-vibe activate cartridges:steward-protocol
+python scripts/summon.py --name "agent_name" --mission "Agent mission"
 ```
 
 ---
