@@ -28,15 +28,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      - name: Run ruff linter (replaces flake8)
+      - name: Run ruff linter (critical errors)
         run: |
-          # Critical errors only (same as old flake8 E9,F63,F7,F82)
           ruff check vibe_core steward scripts --select=E9,F63,F7,F82 --output-format=github
 
-          # Full lint check with stats (non-blocking - shows warnings)
+      - name: Run ruff linter (full check with stats)
+        run: |
           ruff check vibe_core steward scripts --output-format=github --statistics || true
 
-      - name: Check formatting (replaces black + isort)
+      - name: Check formatting
         run: |
           ruff format --check --diff vibe_core steward scripts
 
@@ -61,77 +61,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Check STEWARD.md files
-        run: |
-          echo "Checking all system agents have STEWARD.md..."
-          missing=0
-          for agent_dir in steward/system_agents/*/; do
-            agent=$(basename "$agent_dir")
-            if [ ! -f "$agent_dir/STEWARD.md" ]; then
-              echo "❌ Missing: $agent/STEWARD.md"
-              missing=$((missing + 1))
-            else
-              echo "✅ Found: $agent/STEWARD.md"
-            fi
-          done
-
-          if [ $missing -gt 0 ]; then
-            echo ""
-            echo "❌ FAIL: $missing agents missing STEWARD.md"
-            exit 1
-          else
-            echo ""
-            echo "✅ PASS: All agents have STEWARD.md"
-          fi
-
-      - name: Check steward.json manifests
-        run: |
-          echo "Checking all system agents have steward.json..."
-          missing=0
-          for agent_dir in steward/system_agents/*/; do
-            agent=$(basename "$agent_dir")
-            if [ ! -f "$agent_dir/steward.json" ]; then
-              echo "❌ Missing: $agent/steward.json"
-              missing=$((missing + 1))
-            else
-              echo "✅ Found: $agent/steward.json"
-            fi
-          done
-
-          if [ $missing -gt 0 ]; then
-            echo ""
-            echo "❌ FAIL: $missing agents missing steward.json"
-            exit 1
-          else
-            echo ""
-            echo "✅ PASS: All agents have steward.json"
-          fi
-
-      - name: Validate manifest JSON
-        run: |
-          echo "Validating steward.json syntax..."
-          invalid=0
-          for manifest in steward/system_agents/*/steward.json; do
-            agent=$(basename $(dirname "$manifest"))
-            if ! python -m json.tool "$manifest" > /dev/null 2>&1; then
-              echo "❌ Invalid JSON: $agent/steward.json"
-              invalid=$((invalid + 1))
-            else
-              echo "✅ Valid JSON: $agent/steward.json"
-            fi
-          done
-
-          if [ $invalid -gt 0 ]; then
-            echo ""
-            echo "❌ FAIL: $invalid manifests have invalid JSON"
-            exit 1
-          else
-            echo ""
-            echo "✅ PASS: All manifests are valid JSON"
-          fi
+      - name: Verify agent manifests
+        run: python scripts/ci/verify_agents_manifest.py
 
   # =========================================================================
-  # JOB 3: Infrastructure Health Check (Layer 0)
+  # JOB 3: Infrastructure Health Check
   # =========================================================================
   infrastructure-check:
     name: Infrastructure Health Check
@@ -150,13 +84,10 @@ jobs:
         run: |
           echo "🔍 Checking git hooks installation..."
           python scripts/setup_hooks.py || true
-
-          # Note: In CI, hooks may not be installed (clean checkout)
-          # This is informational - we don't fail the build
           echo "✅ Infrastructure check complete"
 
   # =========================================================================
-  # JOB 4: Watchman Deep Inspection (Phase 3.3)
+  # JOB 4: Watchman Deep Inspection (Layer 2)
   # =========================================================================
   watchman-inspection:
     name: Watchman Deep Inspection
@@ -177,78 +108,7 @@ jobs:
           pip install -e .
 
       - name: Run Watchman Deep Inspection
-        id: watchman
-        run: |
-          cat > run_watchman_inspection.py << 'EOF'
-          """
-          Phase 3.3: Run Watchman Deep Inspection in CI/CD
-
-          This is Layer 2 of Defense in Depth:
-          - Layer 1: Pre-commit hook (fast grep) - blocks 95% of violations
-          - Layer 2: THIS - AST-based deep analysis (~500ms)
-          - Layer 3: Auditor verdict (constitutional judgment)
-          """
-          import sys
-          import json
-          from pathlib import Path
-
-          # Initialize kernel and load Watchman
-          from vibe_core.kernel_impl import RealVibeKernel
-          from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
-
-          print("⚔️  Initializing Watchman...")
-          kernel = RealVibeKernel()
-          watchman = WatchmanCartridge()
-
-          # Inject system interface (required for compliance checks)
-          from vibe_core.agent_interface import AgentSystemInterface
-          watchman.system = AgentSystemInterface(kernel, "watchman")
-
-          print("🔬 Running Deep Inspection (AST-based analysis)...")
-          result = watchman.run_deep_inspection()
-
-          # Save full report
-          report_path = Path("watchman_report.json")
-          report_path.write_text(json.dumps(result, indent=2))
-          print(f"📊 Full report saved: {report_path}")
-
-          # Print summary
-          print("\n" + "="*70)
-          print("WATCHMAN DEEP INSPECTION SUMMARY")
-          print("="*70)
-          print(f"Status: {result['status']}")
-          print(f"Total violations: {result['total_violations']}")
-          print(f"Critical violations: {result['critical_count']}")
-
-          if result['total_violations'] > 0:
-              print("\nViolations by agent:")
-              for agent_id, count in result['report']['by_agent'].items():
-                  print(f"  • {agent_id}: {count}")
-
-              print("\nViolations by severity:")
-              for severity, count in result['report']['by_severity'].items():
-                  if count > 0:
-                      print(f"  • {severity}: {count}")
-
-          # Determine exit code
-          if result['should_fail_build']:
-              print("\n❌ BUILD FAILED - Critical violations detected")
-              print("\nTo fix:")
-              print("  1. Review violations in the uploaded artifact")
-              print("  2. Use agent.system.get_sandbox_path() instead of Path('data/...')")
-              print("  3. Remove any requirements.txt files")
-              print("  4. See Phase 2 migration examples (Herald, Forum, Civic)")
-              sys.exit(1)
-          elif result['total_violations'] > 0:
-              print("\n⚠️  BUILD WARNING - Non-critical violations detected")
-              print("Consider addressing these in a future PR")
-              sys.exit(0)
-          else:
-              print("\n✅ BUILD PASSED - All agents compliant")
-              sys.exit(0)
-          EOF
-
-          python run_watchman_inspection.py
+        run: python scripts/ci/run_watchman_inspection.py
 
       - name: Upload Watchman Report
         if: always()
@@ -291,12 +151,12 @@ jobs:
             });
 
   # =========================================================================
-  # JOB 5: Auditor Constitutional Verdict (Phase 3.4)
+  # JOB 5: Auditor Constitutional Verdict (Layer 3)
   # =========================================================================
   auditor-verdict:
     name: Auditor Constitutional Verdict
     runs-on: ubuntu-latest
-    needs: [watchman-inspection]  # Run AFTER Watchman (Layer 3)
+    needs: [watchman-inspection]
 
     steps:
       - name: Checkout code
@@ -313,91 +173,7 @@ jobs:
           pip install -e .
 
       - name: Render Constitutional Verdict
-        id: verdict
-        run: |
-          cat > run_constitutional_verdict.py << 'EOF'
-          """
-          Phase 3.4: Auditor Constitutional Verdict (Layer 3)
-
-          This is the final authority on code quality - constitutional judgment.
-          Defense in Depth:
-          - Layer 1: Pre-commit hook (fast grep) - blocks 95% of violations
-          - Layer 2: Watchman (AST analysis) - catches architectural violations
-          - Layer 3: THIS - constitutional judgment (supreme authority)
-          """
-          import sys
-          import json
-          from pathlib import Path
-
-          # Initialize kernel and load Auditor
-          from vibe_core.kernel_impl import RealVibeKernel
-          from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-
-          print("⚖️  Initializing Auditor...")
-          kernel = RealVibeKernel()
-          auditor = AuditorCartridge()
-
-          # Inject system interface (required for compliance checks)
-          from vibe_core.agent_interface import AgentSystemInterface
-          auditor.system = AgentSystemInterface(kernel, "auditor")
-
-          print("⚖️  Rendering Constitutional Verdict (Layer 3)...")
-
-          # Create task for constitutional verdict
-          from vibe_core.scheduling.task import Task
-          task = Task(
-              agent_id="auditor",
-              payload={"action": "constitutional_verdict"}
-          )
-
-          verdict = auditor.render_constitutional_verdict(task)
-
-          # Save full verdict
-          verdict_path = Path("auditor_verdict.json")
-          verdict_path.write_text(json.dumps(verdict, indent=2))
-          print(f"⚖️  Full verdict saved: {verdict_path}")
-
-          # Print summary
-          print("\n" + "="*70)
-          print("AUDITOR CONSTITUTIONAL VERDICT")
-          print("="*70)
-          print(f"Verdict: {verdict['verdict']}")
-          print(f"Total violations: {verdict['total_violations']}")
-
-          if verdict['total_violations'] > 0:
-              print("\nViolations by severity:")
-              for severity, count in verdict['by_severity'].items():
-                  if count > 0:
-                      print(f"  • {severity}: {count}")
-
-              if verdict.get('by_article'):
-                  print("\nViolations by article:")
-                  for article, count in verdict['by_article'].items():
-                      print(f"  • {article}: {count}")
-
-          print(f"\nConstitution Hash: {verdict.get('constitutional_hash', 'N/A')}")
-
-          # Determine exit code
-          if verdict['should_fail_build']:
-              print("\n❌ BUILD FAILED - Constitutional violations detected")
-              print("\nThe Constitution is the supreme law. These violations cannot be ignored.")
-              print("\nTo fix:")
-              print("  1. Review violations in the uploaded artifact")
-              print("  2. Ensure agents have steward.json and STEWARD.md")
-              print("  3. Add logging/audit trails for accountability")
-              print("  4. Implement VibeAgent protocol for interoperability")
-              print("  5. See CONSTITUTION.md for full requirements")
-              sys.exit(1)
-          elif verdict['total_violations'] > 0:
-              print("\n⚠️  BUILD WARNING - Non-critical violations detected")
-              print("Consider addressing these to improve constitutional alignment")
-              sys.exit(0)
-          else:
-              print("\n✅ BUILD PASSED - All agents uphold the Constitution")
-              sys.exit(0)
-          EOF
-
-          python run_constitutional_verdict.py
+        run: python scripts/ci/run_constitutional_verdict.py
 
       - name: Upload Verdict Report
         if: always()
@@ -470,60 +246,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Create test script
-        run: |
-          cat > test_kernel_boot.py << 'EOF'
-          """
-          Minimal kernel boot test - verify kernel can initialize
-          """
-          import sys
-          import os
-
-          # Add project to path
-          sys.path.insert(0, os.getcwd())
-
-          def test_kernel_import():
-              """Test that kernel modules can be imported"""
-              try:
-                  from vibe_core import kernel_impl
-                  from vibe_core import process_manager
-                  from vibe_core import resource_manager
-                  from vibe_core import vfs
-                  from vibe_core import network_proxy
-                  from vibe_core import lineage
-                  print("✅ All kernel modules imported successfully")
-                  return True
-              except Exception as e:
-                  print(f"❌ Import failed: {e}")
-                  return False
-
-          def test_kernel_init():
-              """Test that kernel can be instantiated"""
-              try:
-                  from vibe_core.kernel_impl import RealVibeKernel
-                  kernel = RealVibeKernel()
-                  print("✅ Kernel instantiated successfully")
-                  return True
-              except Exception as e:
-                  print(f"❌ Kernel init failed: {e}")
-                  return False
-
-          if __name__ == "__main__":
-              results = []
-              results.append(test_kernel_import())
-              results.append(test_kernel_init())
-
-              if all(results):
-                  print("\n✅ All tests passed")
-                  sys.exit(0)
-              else:
-                  print("\n❌ Some tests failed")
-                  sys.exit(1)
-          EOF
-
       - name: Run kernel boot test
-        run: |
-          python test_kernel_boot.py
+        run: python scripts/ci/test_kernel_boot.py
 
   # =========================================================================
   # JOB 7: STEWARD CLI Test
@@ -592,7 +316,7 @@ jobs:
             fi
           done
 
-          # Architecture docs (moved to docs/architecture/)
+          # Architecture docs
           for doc in ARCHITECTURE.md UNIVERSE_MIGRATION_PLAN.md SYSTEM_OVERVIEW.md; do
             if [ ! -f "docs/architecture/$doc" ]; then
               echo "❌ Missing: docs/architecture/$doc"
@@ -631,20 +355,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check for secrets
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
         run: |
-          echo "Checking for potential secrets in code..."
+          python -m pip install --upgrade pip
+          pip install -e .
 
-          # Check for API keys, passwords, etc.
-          if grep -r -i "api_key\s*=\s*['\"][^'\"]*['\"]" --include="*.py" vibe_core steward scripts 2>/dev/null; then
-            echo "⚠️  Warning: Potential hardcoded API keys found"
-          fi
-
-          if grep -r -i "password\s*=\s*['\"][^'\"]*['\"]" --include="*.py" vibe_core steward scripts 2>/dev/null; then
-            echo "⚠️  Warning: Potential hardcoded passwords found"
-          fi
-
-          echo "Security scan complete"
+      - name: Run security scan
+        run: python scripts/ci/security_scan.py
 
   # =========================================================================
   # JOB 10: Build Summary
@@ -664,16 +386,8 @@ jobs:
           echo ""
           echo "✅ All quality gates passed!"
           echo ""
-          echo "Phase Status:"
-          echo "  Phase 1-2: ✅ Foundation & Migration Complete"
-          echo "  Phase 3.1: ✅ Pre-commit Hook (Layer 1 - Electric Fence)"
-          echo "  Phase 3.2: ✅ Watchman Deep Inspection (Layer 2 - AST)"
-          echo "  Phase 3.3: ✅ CI/CD Enforcement (Watchman in CI)"
-          echo "  Phase 3.4: ✅ Auditor Verdict (Layer 3 - Constitutional)"
-          echo "  Phase 3.5: ✅ Infrastructure Health Check (Layer 0 - Foundation)"
-          echo ""
           echo "Defense in Depth Architecture:"
-          echo "  Layer 0: Infrastructure health (git hooks, system setup) - foundation"
+          echo "  Layer 0: Infrastructure health - foundation"
           echo "  Layer 1: Pre-commit hook (fast grep) - 95% violation block"
           echo "  Layer 2: Watchman CI (AST analysis) - architectural violations"
           echo "  Layer 3: Auditor Verdict (constitutional judgment) - supreme law"
