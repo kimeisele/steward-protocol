@@ -1,0 +1,1 @@
+docs/governance/AGI_MANIFESTO.md
