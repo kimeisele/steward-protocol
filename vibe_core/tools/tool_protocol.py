@@ -33,11 +33,14 @@ class ToolCall:
             "content": "Hello, world!"
         }
     }
+
+    SECURITY: caller_agent_id enables capability checking.
     """
 
     tool_name: str
     parameters: dict[str, Any]
     call_id: str | None = None  # For tracking in logs
+    caller_agent_id: str | None = None  # SECURITY: For capability verification
 
     def __repr__(self) -> str:
         """String representation for debugging"""

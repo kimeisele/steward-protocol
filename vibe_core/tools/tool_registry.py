@@ -3,10 +3,15 @@ Tool Registry for vibe-agency OS (ARCH-027 + ARCH-029)
 
 Manages available tools and provides lookup/execution functionality.
 Integrates Soul Governance (ARCH-029) for security by design.
+
+SECURITY (ARCH-HARDENING):
+- Capability-based access control for tools
+- Caller identity verification via caller_agent_id
+- No tool execution without proper authorization
 """
 
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolCall, ToolResult
 
@@ -41,13 +46,20 @@ class ToolRegistry:
         >>> print(result.output)  # File content
     """
 
-    def __init__(self, invariant_checker: Optional["InvariantChecker"] = None):  # type: ignore
+    def __init__(
+        self,
+        invariant_checker: Optional["InvariantChecker"] = None,  # type: ignore
+        capability_checker: Optional[Callable[[str, str], bool]] = None,
+    ):
         """
-        Initialize tool registry with optional Soul Governance.
+        Initialize tool registry with optional Soul Governance and capability checking.
 
         Args:
             invariant_checker: Optional InvariantChecker for Soul Governance (ARCH-029).
                               If None, tools execute without governance checks.
+            capability_checker: Optional callback (agent_id, capability) -> bool
+                              Returns True if agent has the capability.
+                              SECURITY: If set, all tool calls MUST have caller_agent_id.
 
         Example:
             >>> # With governance (recommended for production)
@@ -55,11 +67,16 @@ class ToolRegistry:
             >>> checker = InvariantChecker("config/soul.yaml")
             >>> registry = ToolRegistry(invariant_checker=checker)
             >>>
-            >>> # Without governance (testing only)
-            >>> registry = ToolRegistry()
+            >>> # With capability checking (production)
+            >>> def check_cap(agent_id, cap):
+            ...     return cap in agent_capabilities.get(agent_id, [])
+            >>> registry = ToolRegistry(capability_checker=check_cap)
         """
         self.tools: dict[str, Tool] = {}
         self._invariant_checker = invariant_checker
+        self._capability_checker = capability_checker
+        # Map tool_name -> required capability (default: tool name itself)
+        self._tool_capabilities: dict[str, str] = {}
 
         if invariant_checker:
             # Get rule count safely (some invariant checkers may not have this attribute)
@@ -67,6 +84,9 @@ class ToolRegistry:
             logger.info(f"🛡️ ToolRegistry initialized with Soul Governance ({rule_count} rules)")
         else:
             logger.debug("ToolRegistry: Initialized (no governance)")
+
+        if capability_checker:
+            logger.info("🔐 ToolRegistry: Capability enforcement ENABLED")
 
     def register(self, tool: Tool) -> None:
         """
@@ -93,7 +113,29 @@ class ToolRegistry:
             raise ValueError(f"Tool '{tool_name}' is already registered. Cannot register duplicate tool names.")
 
         self.tools[tool_name] = tool
+        # Default: tool requires capability matching its name
+        self._tool_capabilities[tool_name] = tool_name
         logger.info(f"ToolRegistry: Registered tool '{tool_name}'")
+
+    def set_tool_capability(self, tool_name: str, required_capability: str) -> None:
+        """
+        Set the required capability for a tool.
+
+        SECURITY: Tools require capabilities to execute. By default,
+        a tool requires a capability matching its name.
+
+        Args:
+            tool_name: Name of the tool
+            required_capability: Capability required to use this tool
+
+        Example:
+            >>> registry.register(WriteFileTool())
+            >>> registry.set_tool_capability("write_file", "filesystem_write")
+        """
+        if tool_name not in self.tools:
+            raise ValueError(f"Tool '{tool_name}' not registered")
+        self._tool_capabilities[tool_name] = required_capability
+        logger.info(f"ToolRegistry: Tool '{tool_name}' requires capability '{required_capability}'")
 
     def get(self, tool_name: str) -> Tool | None:
         """
@@ -166,6 +208,7 @@ class ToolRegistry:
             >>> print(result.success)  # True
         """
         tool_name = tool_call.tool_name
+        caller_agent_id = tool_call.caller_agent_id
 
         # Step 1: Look up tool
         tool = self.get(tool_name)
@@ -176,10 +219,46 @@ class ToolRegistry:
 
         logger.info(f"ToolRegistry: Executing {tool_call}")
 
+        # Step 1.5: 🔐 CAPABILITY CHECK (ARCH-HARDENING)
+        if self._capability_checker is not None:
+            # If capability checking is enabled, caller_agent_id is REQUIRED
+            if not caller_agent_id:
+                error_msg = (
+                    f"CAPABILITY_BYPASS_BLOCKED: Tool '{tool_name}' requires caller_agent_id. "
+                    "Anonymous tool calls are not allowed."
+                )
+                logger.warning(f"⛔ {error_msg}")
+                return ToolResult(
+                    success=False,
+                    error=error_msg,
+                    metadata={"blocked_by": "capability_enforcement", "reason": "missing_caller_id"},
+                )
+
+            required_cap = self._tool_capabilities.get(tool_name, tool_name)
+            has_capability = self._capability_checker(caller_agent_id, required_cap)
+
+            if not has_capability:
+                error_msg = (
+                    f"CAPABILITY_DENIED: Agent '{caller_agent_id}' lacks capability '{required_cap}' "
+                    f"required for tool '{tool_name}'."
+                )
+                logger.warning(f"⛔ {error_msg}")
+                return ToolResult(
+                    success=False,
+                    error=error_msg,
+                    metadata={
+                        "blocked_by": "capability_enforcement",
+                        "agent_id": caller_agent_id,
+                        "required_capability": required_cap,
+                    },
+                )
+
+            logger.debug(f"✅ Capability check passed: {caller_agent_id} has '{required_cap}'")
+
         # Step 2: 🛡️ Soul Governance Check (ARCH-029)
         if self._invariant_checker and hasattr(self._invariant_checker, "check_tool_call"):
             soul_check: SoulResult = self._invariant_checker.check_tool_call(  # type: ignore
-                tool_name, tool_call.parameters
+                tool_name, tool_call.parameters, caller_agent_id
             )
             if not soul_check.allowed:
                 logger.warning(f"⛔ SOUL BLOCKED {tool_name}: {soul_check.reason}")

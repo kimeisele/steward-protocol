@@ -54,7 +54,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
             author="Steward Protocol",
             description="Quality gate: verifies code syntax and linting before commit",
             domain="SECURITY",
-            capabilities=["verify_changes", "auditing", "constitutional_verdict"],
+            capabilities=["verify_changes", "auditing", "constitutional_verdict", "auditor.verdict"],
         )
         logger.info("🔍 AUDITOR is online (Tool Protocol v3.0)")
 
