@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from vibe_core.ledger import SQLiteLedger
 
 
-class TestResult:
+class HardeningResult:
     def __init__(self, name: str):
         self.name = name
         self.passed = False
@@ -49,7 +49,7 @@ class TestResult:
         return self
 
 
-def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: int = 100) -> TestResult:
+def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: int = 100) -> HardeningResult:
     """
     STRESS TEST: Multiple threads writing simultaneously.
 
@@ -58,7 +58,7 @@ def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: i
     - Hash chain remains unbroken
     - No duplicate event IDs
     """
-    result = TestResult("CONCURRENT_WRITES_INTEGRITY")
+    result = HardeningResult("CONCURRENT_WRITES_INTEGRITY")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -148,14 +148,14 @@ def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: i
         os.unlink(db_path)
 
 
-def test_crash_durability(num_iterations: int = 10) -> TestResult:
+def test_crash_durability(num_iterations: int = 10) -> HardeningResult:
     """
     CRASH TEST: Write event, kill -9, verify persistence.
 
     Simulates hard crashes (power loss, kernel panic).
     Event MUST survive if record_event() returned.
     """
-    result = TestResult("CRASH_DURABILITY")
+    result = HardeningResult("CRASH_DURABILITY")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -245,14 +245,14 @@ os.kill(os.getpid(), 9)
             pass
 
 
-def test_replay_attack_detection() -> TestResult:
+def test_replay_attack_detection() -> HardeningResult:
     """
     SECURITY TEST: Attempt to replay old events.
 
     Attack vector: Copy an old event and re-insert it.
     System MUST detect the broken hash chain.
     """
-    result = TestResult("REPLAY_ATTACK_DETECTION")
+    result = HardeningResult("REPLAY_ATTACK_DETECTION")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -307,14 +307,14 @@ def test_replay_attack_detection() -> TestResult:
         os.unlink(db_path)
 
 
-def test_tamper_detection() -> TestResult:
+def test_tamper_detection() -> HardeningResult:
     """
     SECURITY TEST: Modify an existing event's payload.
 
     Attack vector: SQL UPDATE to change event data.
     System MUST detect via hash mismatch.
     """
-    result = TestResult("TAMPER_DETECTION")
+    result = HardeningResult("TAMPER_DETECTION")
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name

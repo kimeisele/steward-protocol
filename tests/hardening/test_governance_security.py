@@ -21,7 +21,7 @@ from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols import VibeAgent
 
 
-class TestResult:
+class HardeningResult:
     def __init__(self, name: str):
         self.name = name
         self.passed = False
@@ -154,11 +154,11 @@ class SybilAgent(VibeAgent):
 # TESTS
 # ============================================================================
 
-def test_oath_enforcement() -> TestResult:
+def test_oath_enforcement() -> HardeningResult:
     """
     Test: Agent without oath MUST be rejected at registration.
     """
-    result = TestResult("OATH_ENFORCEMENT")
+    result = HardeningResult("OATH_ENFORCEMENT")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
 
@@ -177,11 +177,11 @@ def test_oath_enforcement() -> TestResult:
             )
 
 
-def test_forged_oath_rejection() -> TestResult:
+def test_forged_oath_rejection() -> HardeningResult:
     """
     Test: Agent with invalid oath signature MUST be rejected.
     """
-    result = TestResult("FORGED_OATH_REJECTION")
+    result = HardeningResult("FORGED_OATH_REJECTION")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
 
@@ -193,7 +193,7 @@ def test_forged_oath_rejection() -> TestResult:
         return result.success(f"Forged credentials rejected: {e}")
 
 
-def test_sybil_attack_resistance(num_agents: int = 100) -> TestResult:
+def test_sybil_attack_resistance(num_agents: int = 100) -> HardeningResult:
     """
     Test: Mass registration of fake agents should be limited.
 
@@ -202,7 +202,7 @@ def test_sybil_attack_resistance(num_agents: int = 100) -> TestResult:
     - Or signature verification that makes mass creation expensive
     - Or identity verification
     """
-    result = TestResult("SYBIL_ATTACK_RESISTANCE")
+    result = HardeningResult("SYBIL_ATTACK_RESISTANCE")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
 
@@ -237,11 +237,11 @@ def test_sybil_attack_resistance(num_agents: int = 100) -> TestResult:
     )
 
 
-def test_privilege_escalation_domain() -> TestResult:
+def test_privilege_escalation_domain() -> HardeningResult:
     """
     Test: Agent cannot change its own security domain.
     """
-    result = TestResult("PRIVILEGE_ESCALATION_DOMAIN")
+    result = HardeningResult("PRIVILEGE_ESCALATION_DOMAIN")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
     agent = PrivilegeEscalationAgent()
@@ -278,11 +278,11 @@ def test_privilege_escalation_domain() -> TestResult:
     return result.success("Domain change blocked")
 
 
-def test_privilege_escalation_capabilities() -> TestResult:
+def test_privilege_escalation_capabilities() -> HardeningResult:
     """
     Test: Agent cannot add capabilities at runtime.
     """
-    result = TestResult("PRIVILEGE_ESCALATION_CAPABILITIES")
+    result = HardeningResult("PRIVILEGE_ESCALATION_CAPABILITIES")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
     agent = PrivilegeEscalationAgent()
@@ -309,14 +309,14 @@ def test_privilege_escalation_capabilities() -> TestResult:
     return result.success("Capability escalation blocked")
 
 
-def test_kernel_isolation() -> TestResult:
+def test_kernel_isolation() -> HardeningResult:
     """
     Test: Agent cannot access/modify kernel internals.
 
     Note: In Python single-process, this is architecturally impossible
     to fully prevent. This test documents the limitation.
     """
-    result = TestResult("KERNEL_ISOLATION")
+    result = HardeningResult("KERNEL_ISOLATION")
 
     kernel = RealVibeKernel(ledger_path=":memory:")
     agent = PrivilegeEscalationAgent()
