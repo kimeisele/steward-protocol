@@ -1698,7 +1698,6 @@ class RealVibeKernel(VibeKernel):
             # Rebuild file, removing commands from Pending Commands section
             new_lines = []
             in_pending_section = False
-            skip_until_next_section = False
 
             for line in lines:
                 # Detect Pending Commands section start
@@ -1710,7 +1709,6 @@ class RealVibeKernel(VibeKernel):
                 # Detect next section (end of Pending Commands)
                 if in_pending_section and line.strip().startswith("##"):
                     in_pending_section = False
-                    skip_until_next_section = False
 
                 # Skip command lines in Pending Commands section
                 if in_pending_section and line.strip().startswith("- ") and not line.strip().startswith("- `"):
