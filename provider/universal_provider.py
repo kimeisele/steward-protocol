@@ -29,6 +29,7 @@ import yaml
 # Import Core Definitions
 try:
     from vibe_core.scheduling import Task
+    from vibe_core.kernel_impl import RealVibeKernel as VibeKernel
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
     VibeKernel = Any

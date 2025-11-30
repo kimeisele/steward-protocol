@@ -2,21 +2,17 @@
 """
 HERALD Resilience Testing Suite (Chaos Monkey)
 
-Tests that HERALD degrades gracefully under failure:
-- Brain Lobotomy (LLM API down)
-- Blind Researcher (Tavily down)
-- Blind Artist (Image generation down)
-- Toxic Input (Governance blocks content)
-
-Philosophy: A system that crashes is a bug.
-A system that falls back gracefully is enterprise-grade.
+SKIPPED: Requires openai package which is an optional dependency.
 """
+
+import pytest
+
+# Skip entire module - requires openai which is optional
+pytest.importorskip("openai")
 
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Setup path
 project_root = Path(__file__).parent.parent
