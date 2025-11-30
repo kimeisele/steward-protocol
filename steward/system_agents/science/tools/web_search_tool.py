@@ -10,12 +10,16 @@ Used by THE SCIENTIST to give HERALD factual ammunition.
 Philosophy:
 "Agents that hallucinate are worthless. Agents with ground truth are powerful.
 No mocks. No fake data. No building on lies."
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 import logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 try:
     from tavily import TavilyClient
@@ -57,7 +61,7 @@ class SearchResult:
         }
 
 
-class WebSearchTool:
+class WebSearchTool(Tool):
     """
     Web search engine for THE SCIENTIST.
 
@@ -69,42 +73,72 @@ class WebSearchTool:
     Philosophy: No mocks. Real data or failure.
     """
 
-    def __init__(self, bank=None, vault=None, degradation_chain=None):
-        """
-        Initialize search tool with Tavily API via Vault (secure asset management).
-
-        Args:
-            bank: CivicBank instance (for credit charging)
-            vault: CivicVault instance (for secret leasing)
-
-        Philosophy:
-            - API keys are NOT owned by agents
-            - They are ASSETS managed by the Civic Vault
-            - Agents must LEASE them using Credits
-            - This enforces economic rationality and audit trails
-        """
+    def __init__(self):
+        """Initialize search tool (kernel-managed)."""
         global _bank, _vault
 
         self.api_key = None
         self.client = None
         self.mode = "offline"
+        self._bank = None
+        self._vault = None
+        self._initialized = False
 
-        # Try to get bank and vault from arguments or use global references
-        if bank is None or vault is None:
-            # Lazy import CivicBank to avoid circular imports
+    @property
+    def name(self) -> str:
+        return "science.web_search"
+
+    @property
+    def description(self) -> str:
+        return "External intelligence module - web search and fact synthesis via Tavily API"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'search', 'briefing'",
+            },
+            "query": {
+                "type": "string",
+                "required": True,
+                "description": "Research query (e.g., 'AI governance 2025')",
+            },
+            "max_results": {
+                "type": "integer",
+                "required": False,
+                "description": "Maximum results to return (default: 5)",
+            },
+        }
+
+    @property
+    def bank(self):
+        """Lazy-load CivicBank."""
+        if self._bank is None:
             try:
                 from steward.system_agents.civic.tools.economy import CivicBank
 
-                _bank = bank or CivicBank()
-                _vault = vault or _bank.vault
+                self._bank = CivicBank()
             except Exception as e:
-                logger.warning(f"⚠️  Could not initialize Vault: {e}")
-                _bank = bank
-                _vault = vault
+                logger.warning(f"⚠️  Could not initialize Bank: {e}")
+        return self._bank
 
-        self.bank = _bank
-        self.vault = _vault
-        self.chain = degradation_chain
+    @property
+    def vault(self):
+        """Get vault from bank."""
+        if self._vault is None and self.bank:
+            self._vault = self.bank.vault
+        return self._vault
+
+    def _ensure_initialized(self):
+        """Lazy initialization of API client."""
+        if self._initialized:
+            return
+
+        global _bank, _vault
+        _bank = self.bank
+        _vault = self.vault
 
         # Try to get API key from Vault (preferred)
         if self.vault is not None:
@@ -126,20 +160,58 @@ class WebSearchTool:
         # Initialize Tavily client if we have the key
         if self.api_key:
             if not TavilyClient:
-                raise ImportError("❌ CRITICAL: tavily package not installed. Install via: pip install tavily-python")
-
-            try:
-                self.client = TavilyClient(api_key=self.api_key)
-                self.mode = "tavily"
-                logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
-            except Exception as e:
-                raise RuntimeError(
-                    f"❌ CRITICAL: Failed to initialize Tavily API: {e}. Check your API key and network connectivity."
-                )
+                logger.warning("⚠️  tavily package not installed - operating in offline mode")
+                self.mode = "offline"
+            else:
+                try:
+                    self.client = TavilyClient(api_key=self.api_key)
+                    self.mode = "tavily"
+                    logger.info("✅ Search: Tavily API initialized (PRODUCTION MODE)")
+                except Exception as e:
+                    logger.warning(f"⚠️  Failed to initialize Tavily API: {e}. Operating in offline mode.")
+                    self.mode = "offline"
         else:
             # No API key available - we'll operate in offline mode
             logger.warning("⚠️  TAVILY_API_KEY not found in Vault or environment. Search will operate in offline mode.")
             self.mode = "offline"
+
+        self._initialized = True
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate search parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["search", "briefing"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'search' or 'briefing'")
+
+        if "query" not in parameters:
+            raise ValueError("Missing required parameter: query")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute web search operation."""
+        try:
+            self._ensure_initialized()
+
+            action = parameters["action"]
+            query = parameters["query"]
+            max_results = parameters.get("max_results", 5)
+
+            if action == "search":
+                results = self.search(query, max_results)
+                return ToolResult(success=True, output=[r.to_dict() for r in results])
+
+            elif action == "briefing":
+                briefing = self.get_briefing(query, max_results)
+                return ToolResult(success=True, output=briefing)
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            logger.exception(f"Web search execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
 
     def search(self, query: str, max_results: int = 5) -> List[SearchResult]:
         """
@@ -159,32 +231,8 @@ class WebSearchTool:
             RuntimeError: Only if Tavily API is configured but fails
         """
         if self.mode == "offline":
-            if self.chain:
-                logger.info(f"⚠️  Offline mode: Fallback to DegradationChain for '{query}'")
-                try:
-                    # Ask the chain (local LLM) for general knowledge
-                    prompt = f"Research query: {query}\nProvide a factual summary based on your internal knowledge."
-                    response = self.chain.respond(
-                        user_input=prompt,
-                        semantic_confidence=0.5,
-                        detected_intent="research",
-                    )
-                    answer = response.content
-
-                    return [
-                        SearchResult(
-                            title="Local Knowledge (Offline)",
-                            url="[local-llm]",
-                            content=answer,
-                            source="local_llm",
-                        )
-                    ]
-                except Exception as e:
-                    logger.error(f"❌ Fallback failed: {e}")
-                    return []
-            else:
-                logger.warning(f"⚠️  Offline mode: Cannot search '{query}' (No chain available)")
-                return []
+            logger.warning(f"⚠️  Offline mode: Cannot search '{query}' (API key not available)")
+            return []
 
         return self._search_tavily(query, max_results)
 

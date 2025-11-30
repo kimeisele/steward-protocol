@@ -9,18 +9,22 @@ Architecture:
 - Signing uses configured git user.signingKey (from vibe_core.bridge)
 - All operations logged for audit trail
 - Failures are explicit and non-destructive
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 import logging
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("CHRONICLE_GIT_TOOLS")
 
 
-class GitTools:
+class GitTools(Tool):
     """
     The Chronicle Agent's Git Arsenal.
 
@@ -31,14 +35,9 @@ class GitTools:
     - manifest_reality(files): Stage and prepare
     """
 
-    def __init__(self, repo_path: str = "."):
-        """
-        Initialize Git Tools.
-
-        Args:
-            repo_path: Path to git repository (default: current directory)
-        """
-        self.repo_path = Path(repo_path)
+    def __init__(self):
+        """Initialize Git Tools (kernel-managed)."""
+        self.repo_path = Path(".")
         self.logger = logger
 
         # Verify we're in a git repo
@@ -48,6 +47,131 @@ class GitTools:
         else:
             self.is_git_repo = True
             self.logger.info(f"✅ Git repository detected: {self.repo_path}")
+
+    @property
+    def name(self) -> str:
+        return "chronicle.git"
+
+    @property
+    def description(self) -> str:
+        return "Git operations for Chronicle - commits, branches, history, and repository management"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'seal_history', 'read_history', 'fork_reality', 'manifest_reality', 'get_status', 'push_to_remote'",
+            },
+            "message": {
+                "type": "string",
+                "required": False,
+                "description": "Commit message (required for seal_history)",
+            },
+            "files": {
+                "type": "array",
+                "required": False,
+                "description": "List of files (for seal_history, manifest_reality)",
+            },
+            "sign": {
+                "type": "boolean",
+                "required": False,
+                "description": "Whether to sign commit (default: True)",
+            },
+            "pattern": {
+                "type": "string",
+                "required": False,
+                "description": "File pattern for read_history",
+            },
+            "limit": {
+                "type": "integer",
+                "required": False,
+                "description": "Limit for read_history (default: 10)",
+            },
+            "branch_name": {
+                "type": "string",
+                "required": False,
+                "description": "Branch name (required for fork_reality)",
+            },
+            "remote": {
+                "type": "string",
+                "required": False,
+                "description": "Remote name (default: origin)",
+            },
+            "branch": {
+                "type": "string",
+                "required": False,
+                "description": "Branch to push (for push_to_remote)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate git operation parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = ["seal_history", "read_history", "fork_reality", "manifest_reality", "get_status", "push_to_remote"]
+
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
+
+        # Validate action-specific requirements
+        if action == "seal_history" and "message" not in parameters:
+            raise ValueError("action 'seal_history' requires 'message' parameter")
+
+        if action == "fork_reality" and "branch_name" not in parameters:
+            raise ValueError("action 'fork_reality' requires 'branch_name' parameter")
+
+        if action == "manifest_reality" and "files" not in parameters:
+            raise ValueError("action 'manifest_reality' requires 'files' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute git operation."""
+        try:
+            action = parameters["action"]
+
+            if action == "seal_history":
+                result = self.seal_history(
+                    message=parameters["message"],
+                    files=parameters.get("files"),
+                    sign=parameters.get("sign", True),
+                )
+                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+
+            elif action == "read_history":
+                result = self.read_history(
+                    pattern=parameters.get("pattern"),
+                    limit=parameters.get("limit", 10),
+                )
+                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+
+            elif action == "fork_reality":
+                result = self.fork_reality(branch_name=parameters["branch_name"])
+                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+
+            elif action == "manifest_reality":
+                result = self.manifest_reality(files=parameters["files"])
+                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+
+            elif action == "get_status":
+                result = self.get_status()
+                return ToolResult(success=result["success"], output=result)
+
+            elif action == "push_to_remote":
+                result = self.push_to_remote(
+                    remote=parameters.get("remote", "origin"),
+                    branch=parameters.get("branch"),
+                )
+                return ToolResult(success=result["success"], output=result, error=result.get("message") if not result["success"] else None)
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            logger.exception(f"Git operation execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
 
     def _run_git_command(
         self, args: List[str], check: bool = True, capture_output: bool = False

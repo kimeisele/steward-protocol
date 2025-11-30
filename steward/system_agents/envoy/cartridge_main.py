@@ -36,7 +36,7 @@ from vibe_core.config import CityConfig
 # - envoy.hil (HILAssistantTool) - HIL Assistant (VAD Layer)
 # - envoy.campaign (RunCampaignTool) - Campaign orchestration
 #
-# TODO: Convert all self.tool.method() calls to self.system.execute_tool() calls
+# ✅ MIGRATION COMPLETE: All tool calls converted to kernel routing
 
 # Constitutional Oath
 # Setup logging
