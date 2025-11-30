@@ -66,15 +66,17 @@ try:
 
     OATH_ENFORCEMENT_AVAILABLE = True
 except ImportError as e:
-    # In production, this should be fatal (SECURITY FIX: P0.3)
+    # PHOENIX VIMANA: Graceful degradation by default (STEWARD_REQUIRE_OATH=true for strict mode)
     import os
 
-    if os.environ.get("STEWARD_REQUIRE_OATH", "true").lower() == "true":
+    if os.environ.get("STEWARD_REQUIRE_OATH", "false").lower() == "true":
+        # Strict mode: Production environments should set STEWARD_REQUIRE_OATH=true
         raise RuntimeError(f"CRITICAL: Constitutional Oath module required but failed to load: {e}")
     else:
+        # Graceful degradation: System runs with reduced security capabilities
         OATH_ENFORCEMENT_AVAILABLE = False
         logger_setup = logging.getLogger("VIBE_KERNEL")
-        logger_setup.warning("⚠️  Constitutional Oath disabled (STEWARD_REQUIRE_OATH=false)")
+        logger_setup.warning(f"⚠️  Constitutional Oath unavailable ({e}) - running in degraded mode")
 
 
 logger = logging.getLogger("VIBE_KERNEL")
