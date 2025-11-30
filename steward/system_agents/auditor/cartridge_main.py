@@ -2,6 +2,10 @@
 """
 AUDITOR Cartridge - The Quality Gate
 
+REFACTORED: Tool Protocol Compliant
+- NO tool instances owned by agent
+- ALL tools accessed via kernel (self.system.execute_tool)
+
 Updated for Safe Evolution Loop (GAD-5500):
 - Implements VibeAgent protocol (sync process)
 - verify_changes: Auditor before Commit gate
@@ -22,12 +26,6 @@ from vibe_core.config import CityConfig
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
-# Phase 3.4: Constitutional Verdict Tool
-from .tools.constitutional_verdict import ConstitutionalVerdictTool
-
-# Constitutional Oath
-
-
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 
 
@@ -38,6 +36,10 @@ class AuditorCartridge(VibeAgent, OathMixin):
     Verifies code before it commits. Two-layer check:
     1. AST Syntax (hard failure - code must parse)
     2. Flake8 Linting (soft failure - style/quality)
+
+    Tool Protocol Compliant:
+    - NO tool instances in __init__
+    - Tools accessed via self.system.execute_tool()
     """
 
     def __init__(self, config: Optional[CityConfig] = None):
@@ -48,13 +50,13 @@ class AuditorCartridge(VibeAgent, OathMixin):
         super().__init__(
             agent_id="auditor",
             name="AUDITOR",
-            version="2.0.0",
+            version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Quality gate: verifies code syntax and linting before commit",
             domain="SECURITY",
             capabilities=["verify_changes", "auditing", "constitutional_verdict"],
         )
-        logger.info("🔍 AUDITOR is online (Quality Gate Ready)")
+        logger.info("🔍 AUDITOR is online (Tool Protocol v3.0)")
 
         # Initialize Constitutional Oath
         if OathMixin:
@@ -62,9 +64,10 @@ class AuditorCartridge(VibeAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ AUDITOR has sworn the Constitutional Oath")
 
-        # Phase 3.4: Initialize Constitutional Verdict Tool
-        self.verdict_tool = ConstitutionalVerdictTool()
-        logger.info("⚖️  Constitutional Verdict Tool initialized (Layer 3 - Supreme Authority)")
+        # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
+        # - auditor.verdict (ConstitutionalVerdictTool)
+
+        logger.info("✅ AUDITOR: Ready for operation (NO tool instances owned)")
 
     def get_manifest(self) -> AgentManifest:
         """Return agent manifest (VibeAgent interface)."""
@@ -184,6 +187,8 @@ class AuditorCartridge(VibeAgent, OathMixin):
         """
         Render constitutional verdict (Phase 3.4 - Layer 3).
 
+        NEW: Uses kernel-managed tools via self.system.execute_tool()
+
         This is the final authority on code quality - constitutional judgment
         that verifies adherence to THE AGENT CONSTITUTION.
 
@@ -212,10 +217,20 @@ class AuditorCartridge(VibeAgent, OathMixin):
                 "error": f"Path not found: {system_agents_path}",
             }
 
-        # Render constitutional verdict
-        verdict = self.verdict_tool.render_verdict(system_agents_path)
+        # CRITICAL: Tool call goes through kernel
+        result = self.system.execute_tool(
+            "auditor.verdict", {"action": "render_verdict", "system_agents_path": str(system_agents_path)}
+        )
 
-        return verdict
+        if result.success:
+            return result.output
+        else:
+            logger.error(f"❌ Constitutional verdict failed: {result.error}")
+            return {
+                "verdict": "ERROR",
+                "should_fail_build": True,
+                "error": result.error,
+            }
 
     def report_status(self) -> Dict[str, Any]:
         """Report AUDITOR status (VibeAgent interface)."""
@@ -225,5 +240,5 @@ class AuditorCartridge(VibeAgent, OathMixin):
             "status": "RUNNING",
             "domain": self.domain,
             "capabilities": self.capabilities,
-            "description": self.description,
+            "description": "Quality gate agent (Tool Protocol v3.0)",
         }
