@@ -123,6 +123,26 @@ class CivicCartridge(VibeAgent, OathMixin):
 
         logger.info("🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
 
+    def set_kernel(self, kernel):
+        """
+        Override set_kernel to inject system interface into sub-agents.
+
+        When the kernel boots and calls agent.set_kernel(kernel), we:
+        1. Call parent's set_kernel to set self.kernel
+        2. Inject self.system into all sub-agents (Registry, Economy, Lifecycle)
+
+        This allows sub-agents to use self.system.execute_tool().
+        """
+        # Call parent to set self.kernel (which also creates self.system)
+        super().set_kernel(kernel)
+
+        # Inject system into sub-agents
+        logger.info("🏛️  Injecting system interface into CIVIC sub-agents...")
+        self.registry_agent.set_system(self.system)
+        self.economy_agent.set_system(self.system)
+        self.lifecycle_agent.set_system(self.system)
+        logger.info("✅ CIVIC sub-agents now have access to system interface")
+
     @property
     def registry_path(self):
         """Lazy-load registry path (sandboxed)."""

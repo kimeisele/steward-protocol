@@ -8,6 +8,8 @@ SCRIBE Citymap Renderer - Generate CITYMAP.md
 3. AGENT LAYER (cartridges) - The 13 agents
 
 Dynamic discovery + Runtime state = Complete city map
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 from collections import defaultdict
@@ -15,22 +17,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 from .introspector import CartridgeIntrospector
 from .runtime_inspector import RuntimeInspector
 from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
 
 
-class CitymapRenderer:
+class CitymapRenderer(Tool):
     """Render comprehensive CITYMAP.md with 3-layer architecture."""
 
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir)
+    def __init__(self):
+        """Initialize renderer (kernel-managed)."""
+        self.root_dir = Path(".")
 
         # Dynamic introspectors
-        self.cart_introspector = CartridgeIntrospector(root_dir)
-        self.vibe_introspector = VibeCoreIntrospector(root_dir)
-        self.tools_introspector = ToolsIntrospector(root_dir)
-        self.runtime_inspector = RuntimeInspector(root_dir)
+        self.cart_introspector = CartridgeIntrospector(str(self.root_dir))
+        self.vibe_introspector = VibeCoreIntrospector(str(self.root_dir))
+        self.tools_introspector = ToolsIntrospector(str(self.root_dir))
+        self.runtime_inspector = RuntimeInspector(str(self.root_dir))
 
         # Data storage
         self.agents: Dict[str, Dict[str, Any]] = {}
@@ -38,7 +43,44 @@ class CitymapRenderer:
         self.tools: Dict[str, List[Dict[str, Any]]] = {}
         self.domains: Dict[str, List[str]] = defaultdict(list)
 
-    def scan_and_render(self) -> str:
+    @property
+    def name(self) -> str:
+        return "scribe.citymap_renderer"
+
+    @property
+    def description(self) -> str:
+        return "Generate CITYMAP.md with 3-layer architecture (kernel, routing, agents)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'generate' to scan and render CITYMAP.md content",
+            }
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate renderer parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+        if parameters["action"] not in ["generate"]:
+            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute renderer operation."""
+        try:
+            action = parameters["action"]
+            if action == "generate":
+                content = self._scan_and_render()
+                return ToolResult(success=True, output=content)
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+        except Exception as e:
+            return ToolResult(success=False, error=str(e))
+
+    def _scan_and_render(self) -> str:
         """Scan all layers and render complete CITYMAP.md."""
         # Layer 1: Kernel (vibe_core)
         self.vibe_modules = self.vibe_introspector.scan_all()
@@ -349,20 +391,3 @@ python -m steward.system_agents.scribe.cartridge_main
         output += f"- **Description:** {sec_status.get('description', 'No information')}\n"
 
         return output
-
-    def render_to_file(self, output_file: str = "CITYMAP.md") -> bool:
-        """Render and write to file."""
-        try:
-            content = self.scan_and_render()
-            output_path = self.root_dir / output_file
-
-            output_path.write_text(content)
-            print(f"✅ CITYMAP.md generated: {output_path}")
-            print(
-                f"📊 Layers: {len(self.vibe_modules)} kernel modules, {sum(len(t) for t in self.tools.values())} tools, {len(self.agents)} agents"
-            )
-
-            return True
-        except Exception as e:
-            print(f"❌ Error writing CITYMAP.md: {e}")
-            return False

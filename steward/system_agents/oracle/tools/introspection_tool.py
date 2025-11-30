@@ -12,11 +12,15 @@ Philosophy:
 
 This tool aggregates raw data into meaningful context.
 Every method is READ-ONLY. No side effects.
+
+Tool Protocol Compliant (Kernel-Managed).
 """
 
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("ORACLE_INTROSPECTION")
 
@@ -27,23 +31,130 @@ class IntrospectionError(Exception):
     pass
 
 
-class IntrospectionTool:
+class IntrospectionTool(Tool):
     """
     THE INTROSPECTION ENGINE.
 
     Read-only access to all ledgers. Aggregates data into meaningful context.
     """
 
-    def __init__(self, bank=None):
-        """
-        Initialize introspection engine.
-
-        Args:
-            bank: CivicBank instance (for reading ledger data)
-        """
-        self.bank = bank
-        self.vault = bank.vault if bank else None
+    def __init__(self):
+        """Initialize introspection engine (kernel-managed)."""
+        self._bank = None
         logger.info("🔮 ORACLE INTROSPECTION ENGINE initialized")
+
+    @property
+    def name(self) -> str:
+        return "oracle.introspection"
+
+    @property
+    def description(self) -> str:
+        return "System introspection and self-awareness - read-only access to all ledgers and state"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'agent_status', 'explain_freeze', 'audit_trail', 'system_status', 'trace_transaction', 'vault_access_log'",
+            },
+            "agent_id": {
+                "type": "string",
+                "required": False,
+                "description": "Agent ID (required for agent_status, explain_freeze)",
+            },
+            "tx_id": {
+                "type": "string",
+                "required": False,
+                "description": "Transaction ID (required for trace_transaction)",
+            },
+            "limit": {
+                "type": "integer",
+                "required": False,
+                "description": "Limit for audit_trail and vault_access_log (default: 20 for audit, 10 for vault)",
+            },
+        }
+
+    @property
+    def bank(self):
+        """Lazy-load CivicBank."""
+        if self._bank is None:
+            from steward.system_agents.civic.tools.economy import CivicBank
+
+            self._bank = CivicBank()
+        return self._bank
+
+    @property
+    def vault(self):
+        """Get vault from bank."""
+        return self.bank.vault if self.bank else None
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate introspection parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = [
+            "agent_status",
+            "explain_freeze",
+            "audit_trail",
+            "system_status",
+            "trace_transaction",
+            "vault_access_log",
+        ]
+
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}. Must be one of {valid_actions}")
+
+        # Validate action-specific requirements
+        if action in ["agent_status", "explain_freeze"] and "agent_id" not in parameters:
+            raise ValueError(f"action '{action}' requires 'agent_id' parameter")
+
+        if action == "trace_transaction" and "tx_id" not in parameters:
+            raise ValueError("action 'trace_transaction' requires 'tx_id' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute introspection operation."""
+        try:
+            action = parameters["action"]
+
+            if action == "agent_status":
+                result = self.get_agent_status(parameters["agent_id"])
+                return ToolResult(success=True, output=result)
+
+            elif action == "explain_freeze":
+                result = self.explain_freeze(parameters["agent_id"])
+                return ToolResult(success=True, output=result)
+
+            elif action == "audit_trail":
+                limit = parameters.get("limit", 20)
+                agent_id = parameters.get("agent_id")
+                result = self.audit_trail(limit=limit, agent_id=agent_id)
+                return ToolResult(success=True, output=result)
+
+            elif action == "system_status":
+                result = self.system_status()
+                return ToolResult(success=True, output=result)
+
+            elif action == "trace_transaction":
+                result = self.trace_transaction(parameters["tx_id"])
+                return ToolResult(success=True, output=result)
+
+            elif action == "vault_access_log":
+                limit = parameters.get("limit", 10)
+                result = self.vault_access_log(limit=limit)
+                return ToolResult(success=True, output=result)
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except IntrospectionError as e:
+            return ToolResult(success=False, error=str(e))
+        except Exception as e:
+            logger.exception(f"Introspection execution failed: {e}")
+            return ToolResult(success=False, error=str(e))
 
     # ==================== AGENT INSPECTION ====================
 
