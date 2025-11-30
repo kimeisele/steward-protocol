@@ -401,12 +401,19 @@ class DeterministicExecutor:
                     phase.result = {"script": target, "params": params}
 
                 elif action_type == "CALL_AGENT":
-                    # Delegate to another agent
-                    logger.info(f"  ✓ Delegated to agent: {target}")
+                    # Delegate to another agent (PLAYBOOK FIX: Actually call the agent!)
+                    logger.info(f"  → Calling agent: {target}")
                     if kernel:
-                        # Would submit task to kernel
-                        pass
-                    phase.result = {"agent": target, "params": params}
+                        from vibe_core.scheduling.task import Task
+                        task = Task(agent_id=target, payload=params)
+                        logger.debug(f"  📤 Submitting task to {target}: {params}")
+                        result = await kernel.submit_task(task)
+                        phase.result = {"agent": target, "result": result, "params": params}
+                        logger.info(f"  ✓ Agent {target} returned: {result.get('status', 'unknown') if isinstance(result, dict) else type(result).__name__}")
+                    else:
+                        logger.warning(f"  ⚠️ No kernel available, cannot execute agent call to {target}")
+                        phase.result = {"error": "No kernel available", "agent": target}
+                        return False  # Fail the phase if no kernel
 
                 elif action_type == "CALL_PLAYBOOK":
                     # Execute nested playbook (FRACTAL/NESTED SUPPORT)
