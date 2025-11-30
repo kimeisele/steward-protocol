@@ -83,7 +83,9 @@ class InvariantChecker:
             data = yaml.safe_load(f)
             return data.get("safety_rules", [])
 
-    def check_tool_call(self, tool_name: str, params: dict[str, Any]) -> SoulResult:
+    def check_tool_call(
+        self, tool_name: str, params: dict[str, Any], agent_id: str | None = None
+    ) -> SoulResult:
         """
         Validate a tool call against all safety rules.
 
@@ -93,21 +95,37 @@ class InvariantChecker:
         Args:
             tool_name: Name of the tool being called (e.g., "write_file")
             params: Tool parameters (e.g., {"path": "/etc/passwd", "content": "..."})
+            agent_id: The agent making the call (for agent-specific rules)
 
         Returns:
             SoulResult indicating whether the call is allowed and why
 
         Example:
             >>> checker = InvariantChecker()
-            >>> result = checker.check_tool_call("write_file", {"path": ".git/config"})
+            >>> result = checker.check_tool_call("write_file", {"path": ".git/config"}, "intern")
             >>> print(result.allowed)  # False
             >>> print(result.reason)   # "Touching .git is forbidden..."
+
+        Agent-specific rules in soul.yaml:
+            - id: "intern_no_delete"
+              agent: "intern"
+              condition: "tool_name"
+              pattern: "delete_*"
+              action: "block"
+              message: "Interns cannot delete"
         """
         # Check each rule in order
         for rule in self.rules:
             # Only apply rules that have "block" action
             if rule.get("action") != "block":
                 continue
+
+            # SECURITY: Agent-specific rules
+            rule_agent = rule.get("agent")
+            if rule_agent is not None:
+                # This rule only applies to a specific agent
+                if agent_id is None or rule_agent != agent_id:
+                    continue  # Skip - rule doesn't apply to this agent
 
             # Check if this rule applies to this tool call
             result = self._check_rule(rule, tool_name, params)

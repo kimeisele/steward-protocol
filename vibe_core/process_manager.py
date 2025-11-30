@@ -36,12 +36,18 @@ class ProcessStatus(Enum):
     QUARANTINED = "quarantined"
 
 
+# SECURITY: Max message size to prevent pipe deadlock (1MB)
+MAX_MESSAGE_SIZE = 1 * 1024 * 1024
+
+
 @dataclass
 class AgentProcessInfo:
     process: Process
     parent_pipe: Any  # Connection object
     agent_id: str
     status: ProcessStatus
+    agent_class: Type[VibeAgent]  # STORED for restart
+    config: Any = None  # STORED for restart
     restarts: int = 0
     last_heartbeat: float = 0.0
 
@@ -99,8 +105,11 @@ class AgentProcess:
                         break
 
                     elif msg.get("type") == "TASK":
-                        # Execute Task
+                        # SECURITY FIX: Send ACK immediately (no more fire-and-forget)
                         task = msg.get("payload")
+                        self.pipe.send({"type": "TASK_ACK", "task_id": getattr(task, 'task_id', None)})
+
+                        # Execute Task
                         child_logger.info(f"⚡ Processing task {task.task_id}")
                         try:
                             result = agent.process(task)
@@ -189,13 +198,24 @@ class ProcessManager:
             parent_pipe=parent_conn,
             agent_id=agent_id,
             status=ProcessStatus.RUNNING,
+            agent_class=agent_class,  # STORED for restart
+            config=config,  # STORED for restart
             last_heartbeat=time.time(),
         )
 
         logger.info(f"✅ Spawned {agent_id} (PID: {process.pid})")
 
-    def send_task(self, agent_id: str, task: Any):
-        """Send a task to an agent."""
+    def send_task(self, agent_id: str, task: Any) -> bool:
+        """
+        Send a task to an agent.
+
+        Returns:
+            True if task was sent and ACK received, False otherwise.
+
+        SECURITY FIX: Message size limits prevent pipe deadlock.
+        """
+        import pickle
+
         if agent_id not in self.processes:
             raise ValueError(f"Agent {agent_id} not running")
 
@@ -203,7 +223,30 @@ class ProcessManager:
         if info.status != ProcessStatus.RUNNING:
             raise ValueError(f"Agent {agent_id} is {info.status.value}")
 
-        info.parent_pipe.send({"type": "TASK", "payload": task})
+        # SECURITY: Check message size to prevent pipe deadlock
+        msg = {"type": "TASK", "payload": task}
+        try:
+            msg_size = len(pickle.dumps(msg))
+            if msg_size > MAX_MESSAGE_SIZE:
+                logger.error(f"⛔ Message too large ({msg_size} bytes > {MAX_MESSAGE_SIZE}). Rejected.")
+                return False
+        except Exception as e:
+            logger.error(f"⛔ Cannot serialize message: {e}")
+            return False
+
+        info.parent_pipe.send(msg)
+
+        # SECURITY FIX: Wait for ACK (no more fire-and-forget)
+        try:
+            if info.parent_pipe.poll(timeout=5.0):  # 5 second timeout
+                ack = info.parent_pipe.recv()
+                if ack.get("type") == "TASK_ACK":
+                    return True
+            logger.warning(f"⚠️ No ACK from {agent_id} within timeout")
+            return False
+        except Exception as e:
+            logger.error(f"⛔ ACK failed from {agent_id}: {e}")
+            return False
 
     def check_health(self):
         """
@@ -236,7 +279,12 @@ class ProcessManager:
         return messages
 
     def _handle_crash(self, agent_id: str):
-        """Restart logic."""
+        """
+        Restart a crashed agent.
+
+        SECURITY FIX: Actually restarts the agent (not just a stub).
+        Uses stored agent_class and config from AgentProcessInfo.
+        """
         info = self.processes[agent_id]
 
         if info.restarts >= self.MAX_RESTARTS:
@@ -246,10 +294,34 @@ class ProcessManager:
 
         logger.info(f"♻️  Restarting {agent_id} (Attempt {info.restarts + 1}/{self.MAX_RESTARTS})...")
 
-        # We need the class and config to restart.
-        # In a real implementation, we'd store these in a registry or the info object.
-        # For now, we assume the caller handles re-spawning or we store the class in info.
-        # (Updating AgentProcessInfo to store class/config would be better)
+        # Clean up old process
+        try:
+            if info.process.is_alive():
+                info.process.terminate()
+                info.process.join(timeout=2)
+            info.parent_pipe.close()
+        except Exception as e:
+            logger.warning(f"Cleanup error for {agent_id}: {e}")
+
+        # REAL RESTART: Create new pipe and process
+        parent_conn, child_conn = Pipe()
+
+        new_process = Process(
+            target=_run_agent_process,
+            args=(agent_id, info.agent_class, child_conn, info.config),
+            name=f"vibe-agent-{agent_id}",
+            daemon=True,
+        )
+        new_process.start()
+
+        # Update info
+        info.process = new_process
+        info.parent_pipe = parent_conn
+        info.status = ProcessStatus.RUNNING
+        info.restarts += 1
+        info.last_heartbeat = time.time()
+
+        logger.info(f"✅ Restarted {agent_id} (PID: {new_process.pid}, restarts: {info.restarts})")
 
     def shutdown(self):
         """Kill all agents."""
