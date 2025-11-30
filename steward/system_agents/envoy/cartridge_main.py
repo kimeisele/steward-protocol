@@ -211,7 +211,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 status = args.get("status", "OPEN")
                 return {
                     "status": "success",
-                    "proposals": self.system.execute_tool("envoy.city_control", {"action": "list_proposals", "status": status}).output.get("proposals", []),
+                    "proposals": self.system.execute_tool(
+                        "envoy.city_control", {"action": "list_proposals", "status": status}
+                    ).output.get("proposals", []),
                 }
 
             elif command == "vote":
@@ -223,14 +225,19 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         "status": "error",
                         "error": "proposal_id and choice required",
                     }
-                result = self.system.execute_tool("envoy.city_control", {"action": "vote_proposal", "proposal_id": proposal_id, "choice": choice, "voter": voter})
+                result = self.system.execute_tool(
+                    "envoy.city_control",
+                    {"action": "vote_proposal", "proposal_id": proposal_id, "choice": choice, "voter": voter},
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "execute":
                 proposal_id = args.get("proposal_id")
                 if not proposal_id:
                     return {"status": "error", "error": "proposal_id required"}
-                result = self.system.execute_tool("envoy.city_control", {"action": "execute_proposal", "proposal_id": proposal_id})
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "execute_proposal", "proposal_id": proposal_id}
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             # Agent commands
@@ -243,7 +250,10 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         "error": "agent_name and action required",
                     }
                 kwargs = args.get("kwargs", {})
-                result = self.system.execute_tool("envoy.city_control", {"action": "trigger_agent", "agent_name": agent_name, "agent_action": action, **kwargs})
+                result = self.system.execute_tool(
+                    "envoy.city_control",
+                    {"action": "trigger_agent", "agent_name": agent_name, "agent_action": action, **kwargs},
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             # Credit commands
@@ -251,7 +261,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 agent_name = args.get("agent_name")
                 if not agent_name:
                     return {"status": "error", "error": "agent_name required"}
-                result = self.system.execute_tool("envoy.city_control", {"action": "check_credits", "agent_name": agent_name})
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "check_credits", "agent_name": agent_name}
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "refill":
@@ -259,7 +271,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 amount = args.get("amount", 50)
                 if not agent_name:
                     return {"status": "error", "error": "agent_name required"}
-                result = self.system.execute_tool("envoy.city_control", {"action": "refill_credits", "agent_name": agent_name, "amount": amount})
+                result = self.system.execute_tool(
+                    "envoy.city_control", {"action": "refill_credits", "agent_name": agent_name, "amount": amount}
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "campaign":
@@ -269,7 +283,10 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     return {"status": "error", "error": "goal required for campaign"}
                 # Extract additional parameters
                 campaign_params = {k: v for k, v in args.items() if k not in ["goal", "campaign_type"]}
-                result = self.system.execute_tool("envoy.campaign", {"action": "run_campaign", "goal": goal, "campaign_type": campaign_type, **campaign_params})
+                result = self.system.execute_tool(
+                    "envoy.campaign",
+                    {"action": "run_campaign", "goal": goal, "campaign_type": campaign_type, **campaign_params},
+                )
                 return result.output if result.success else {"status": "error", "error": result.error}
 
             elif command == "report":
@@ -282,7 +299,10 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
 
                     # Export report
                     output_format = args.get("format", "json")
-                    result = self.system.execute_tool("envoy.gap_report", {"action": "export_report", "report": report, "output_format": output_format})
+                    result = self.system.execute_tool(
+                        "envoy.gap_report",
+                        {"action": "export_report", "report": report, "output_format": output_format},
+                    )
                     report_path = result.output.get("export_path") if result.success else None
 
                     return {
@@ -319,7 +339,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                         logger.warning(f"Could not auto-load latest report: {e}")
                         report_content = "No report available."
 
-                result = self.system.execute_tool("envoy.hil", {"action": "get_next_action", "full_report": report_content})
+                result = self.system.execute_tool(
+                    "envoy.hil", {"action": "get_next_action", "full_report": report_content}
+                )
                 summary = result.output.get("summary") if result.success else "Error: Could not generate summary"
 
                 return {

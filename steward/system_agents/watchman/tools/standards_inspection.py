@@ -175,8 +175,12 @@ class DirectToolCallVisitor(ast.NodeVisitor):
                 attr_name = node.value.attr
                 # Match: *_tool suffix OR known legacy tool names
                 if attr_name.endswith("_tool") or attr_name in [
-                    "city_control", "campaign_tool", "gap_report",
-                    "hil_assistant", "curator", "diplomacy"
+                    "city_control",
+                    "campaign_tool",
+                    "gap_report",
+                    "hil_assistant",
+                    "curator",
+                    "diplomacy",
                 ]:
                     self.violations.append(
                         Violation(

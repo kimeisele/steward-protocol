@@ -326,12 +326,18 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             return {"status": "error", "error": f"Path not found: {system_agents_path}"}
 
         # Run deep inspection
-        result = self.system.execute_tool("watchman.standards", {"action": "inspect_all", "system_agents_path": str(system_agents_path)})
+        result = self.system.execute_tool(
+            "watchman.standards", {"action": "inspect_all", "system_agents_path": str(system_agents_path)}
+        )
         violations = result.output.get("violations", []) if result.success else []
 
         # Generate compliance report
         # Generate report directly (violations already from tool)
-        report = {"total_violations": len(violations), "violations": violations, "should_fail_build": any(v.get("severity") == "CRITICAL" for v in violations)}
+        report = {
+            "total_violations": len(violations),
+            "violations": violations,
+            "should_fail_build": any(v.get("severity") == "CRITICAL" for v in violations),
+        }
 
         # Log summary
         logger.info("\n" + "=" * 70)

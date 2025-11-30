@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 THE WATCHDOG - Runtime Verification Daemon (Tool Protocol)
@@ -25,6 +24,7 @@ from typing import Any, Callable, Dict, List, Optional
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("WATCHDOG")
+
 
 @dataclass
 class WatchdogConfig:
@@ -95,7 +95,6 @@ class Watchdog(Tool):
         logger.info(f"   Ledger: {self.config.ledger_path}")
         logger.info(f"   Check interval: {self.config.check_interval}")
         logger.info(f"   Halt on critical: {self.config.halt_on_critical}")
-
 
     @property
     def name(self) -> str:

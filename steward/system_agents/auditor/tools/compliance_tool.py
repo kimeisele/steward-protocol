@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 GAD-000 Compliance Tool - System Integrity Verification (Tool Protocol)
@@ -25,6 +24,7 @@ import yaml
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("AUDITOR_COMPLIANCE")
+
 
 @dataclass
 class ComplianceViolation:
@@ -98,7 +98,6 @@ class ComplianceTool(Tool):
         self.root_path = root_path
         self.violations: List[ComplianceViolation] = []
         self.warnings: List[ComplianceViolation] = []
-
 
     @property
     def name(self) -> str:

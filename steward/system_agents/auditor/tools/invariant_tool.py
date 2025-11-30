@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 THE JUDGE - Invariant Verification Engine (Tool Protocol)
@@ -30,6 +29,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("JUDGE_INVARIANT")
+
 
 class InvariantSeverity(str, Enum):
     """Severity levels for invariant violations"""
@@ -122,7 +122,6 @@ class InvariantEngine(Tool):
 
         self.rules: Dict[str, InvariantRule] = {}
         self._register_core_invariants()
-
 
     @property
     def name(self) -> str:
