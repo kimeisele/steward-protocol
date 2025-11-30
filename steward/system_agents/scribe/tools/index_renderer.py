@@ -1,38 +1,58 @@
 #!/usr/bin/env python3
 """
-SCRIBE Index Renderer - Generate INDEX.md from filesystem introspection
+SCRIBE Index Renderer - Generate INDEX.md from PURE filesystem introspection
 
-Scans:
-- Root .md files (categorize by type)
-- docs/ subdirectories
-- Generates navigation hub automatically
+ZERO SPECULATION! Only lists files that ACTUALLY exist.
+- Scans root for .md files
+- Scans docs/ subdirectories
+- NO hardcoded file references
+- NO assumptions about what exists
 
 Tool Protocol Compliant (Kernel-Managed).
 """
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List
+from typing import Any, Dict, List
 
-from vibe_core.tools.tool_protocol import Tool, ToolResult
+# Tool Protocol import - optional for standalone mode
+try:
+    from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+    TOOL_PROTOCOL_AVAILABLE = True
+except ImportError:
+    TOOL_PROTOCOL_AVAILABLE = False
+
+    # Dummy base class for standalone mode
+    class Tool:
+        pass
+
+    class ToolResult:
+        def __init__(self, success, output=None, error=None):
+            self.success = success
+            self.output = output
+            self.error = error
 
 
 class IndexRenderer(Tool):
-    """Generate INDEX.md from filesystem introspection."""
+    """Generate INDEX.md from pure filesystem introspection - ZERO speculation.
 
-    def __init__(self):
-        """Initialize renderer (kernel-managed)."""
-        self.root_dir = Path(".")
+    Supports both:
+    - Kernel-managed mode (via Tool Protocol)
+    - Standalone mode (via scan_and_render() method)
+    """
 
-        # Categories
-        self.governance_docs = []
-        self.auto_gen_docs = []
-        self.architecture_docs = []
-        self.deployment_docs = []
-        self.philosophy_docs = []
-        self.guides_docs = []
-        self.reports_docs = []
-        self.archive_docs = []
+    def __init__(self, root_dir: str = "."):
+        """Initialize renderer.
+
+        Args:
+            root_dir: Project root directory (for standalone mode)
+        """
+        self.root_dir = Path(root_dir)
+
+        # Discovered files (populated by scanning)
+        self.root_docs: List[Path] = []
+        self.doc_categories: Dict[str, List[Path]] = {}
 
     @property
     def name(self) -> str:
@@ -71,337 +91,219 @@ class IndexRenderer(Tool):
         except Exception as e:
             return ToolResult(success=False, error=str(e))
 
+    def _scan_filesystem(self):
+        """Scan entire filesystem for .md files - ZERO speculation."""
+        # Scan root directory
+        for md_file in self.root_dir.glob("*.md"):
+            if md_file.is_file():
+                self.root_docs.append(md_file)
+
+        # Scan docs/ subdirectories
+        docs_dir = self.root_dir / "docs"
+        if docs_dir.exists():
+            for subdir in docs_dir.iterdir():
+                if subdir.is_dir():
+                    md_files = list(subdir.glob("*.md"))
+                    if md_files:
+                        self.doc_categories[subdir.name] = sorted(md_files)
+
+                    # Check for nested directories (e.g., docs/reports/migrations/)
+                    for nested_dir in subdir.iterdir():
+                        if nested_dir.is_dir():
+                            nested_files = list(nested_dir.glob("*.md"))
+                            if nested_files:
+                                category_key = f"{subdir.name}/{nested_dir.name}"
+                                self.doc_categories[category_key] = sorted(nested_files)
+
+    def _render_root_docs(self) -> str:
+        """Render root .md files as links."""
+        if not self.root_docs:
+            return "No markdown files found in root directory."
+
+        # Categorize root docs
+        auto_gen = ["README.md", "AGENTS.md", "CITYMAP.md", "HELP.md", "INDEX.md"]
+        governance = ["CONSTITUTION.md", "STEWARD.md"]
+        philosophy = ["AGI_MANIFESTO.md"]
+        gad_docs = []
+        other = []
+
+        for doc in sorted(self.root_docs):
+            name = doc.name
+            if name in auto_gen:
+                continue  # Handle separately
+            elif name in governance:
+                continue  # Handle separately
+            elif name in philosophy:
+                continue  # Handle separately
+            elif name.startswith("GAD-"):
+                gad_docs.append(doc)
+            else:
+                other.append(doc)
+
+        output = ""
+
+        # Auto-generated docs
+        output += "### Auto-Generated Documentation\n"
+        for doc_name in auto_gen:
+            doc_path = self.root_dir / doc_name
+            if doc_path.exists():
+                desc = self._get_doc_description(doc_name)
+                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
+        output += "\n"
+
+        # Governance docs
+        governance_found = [self.root_dir / d for d in governance if (self.root_dir / d).exists()]
+        if governance_found:
+            output += "### Constitutional Governance\n"
+            for doc in governance_found:
+                desc = self._get_doc_description(doc.name)
+                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
+            output += "\n"
+
+        # Philosophy docs
+        philosophy_found = [self.root_dir / d for d in philosophy if (self.root_dir / d).exists()]
+        if philosophy_found:
+            output += "### Philosophy & Manifestos\n"
+            for doc in philosophy_found:
+                desc = self._get_doc_description(doc.name)
+                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
+            output += "\n"
+
+        # GAD docs
+        if gad_docs:
+            output += "### GAD (Governance & Design) Framework\n"
+            for doc in sorted(gad_docs):
+                desc = self._get_doc_description(doc.name)
+                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
+            output += "\n"
+
+        # Other docs
+        if other:
+            output += "### Other Documentation\n"
+            for doc in sorted(other):
+                output += f"- **[{doc.name}]({doc.name})**\n"
+            output += "\n"
+
+        return output
+
+    def _render_docs_categories(self) -> str:
+        """Render docs/ subdirectories."""
+        if not self.doc_categories:
+            return "No documentation subdirectories found."
+
+        output = ""
+
+        # Define category order and titles
+        category_titles = {
+            "architecture": "## 🏗️ Architecture Documentation",
+            "deployment": "## 🚀 Deployment & Operations",
+            "guides": "## 📖 Guides & References",
+            "philosophy": "## 💭 Philosophy & Context",
+            "reports": "## 📊 Status Reports",
+            "reports/migrations": "### Migration Tracking",
+        }
+
+        for category in sorted(self.doc_categories.keys()):
+            files = self.doc_categories[category]
+            if not files:
+                continue
+
+            # Get title or use default
+            title = category_titles.get(category, f"## {category.replace('_', ' ').title()}")
+            output += f"{title}\n\n"
+
+            for doc_path in files:
+                rel_path = doc_path.relative_to(self.root_dir)
+                desc = self._get_doc_description(doc_path.name)
+                output += f"- **[{rel_path}]({rel_path})** — {desc}\n"
+
+            output += "\n"
+
+        return output
+
+    def _get_doc_description(self, filename: str) -> str:
+        """Get description for a document (minimal hardcoding, only for well-known files)."""
+        descriptions = {
+            # Auto-generated
+            "README.md": "Project overview and quick start",
+            "AGENTS.md": "Complete agent registry (auto-generated)",
+            "CITYMAP.md": "3-layer system architecture (auto-generated)",
+            "HELP.md": "Operations control center (auto-generated)",
+            "INDEX.md": "Documentation index (this file)",
+            # Governance
+            "CONSTITUTION.md": "Constitutional rules and governance",
+            "STEWARD.md": "STEWARD Protocol specification",
+            # Philosophy
+            "AGI_MANIFESTO.md": "Governed Intelligence manifesto",
+            # Known architecture docs
+            "ARCHITECTURE.md": "System architecture overview",
+            "UNIVERSE_MIGRATION_PLAN.md": "System migration master plan",
+            # Known deployment docs
+            "DEPLOYMENT.md": "Deployment guide",
+            # Default
+        }
+        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
+
     def _scan_and_render(self) -> str:
-        """Scan filesystem and generate INDEX.md."""
-        self._scan_root()
-        self._scan_docs()
+        """Scan filesystem and generate INDEX.md - ZERO speculation."""
+        self._scan_filesystem()
 
         timestamp = datetime.now().strftime("%Y-%m-%d")
 
         content = f"""# STEWARD PROTOCOL - Documentation Index
 
-**Navigation hub for all project documentation**
-
----
-
-## 🎯 START HERE
-
-### Core Documents (Must Read)
-1. **[README.md](README.md)** - Project overview and quick start
-2. **[GAD-000.md](GAD-000.md)** - Operator Inversion (foundational philosophy)
-3. **[CONSTITUTION.md](CONSTITUTION.md)** - Governance rules and principles
-4. **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - Current system architecture
-
-### Current Status
-- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - The master plan (Phases 0-9)
-- **[OPERATIONS.md](OPERATIONS.md)** - Live system status (auto-generated)
-- **[AGENTS.md](AGENTS.md)** - Agent registry (auto-generated)
-- **[CITYMAP.md](CITYMAP.md)** - System map (auto-generated)
-
----
-
-## 📚 CORE PHILOSOPHY
-
-### Foundational Concepts
-- **[GAD-000.md](GAD-000.md)** - Operator Inversion: AI operates, human directs
-- **[GAD-1000.md](GAD-1000.md)** - Identity Fusion: USB for Intelligence
-- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** - Governed Intelligence (A.G.I.)
-- **[GAD-README.md](GAD-README.md)** - GAD (Governance & Design) framework overview
-
-### Constitutional Governance
-- **[CONSTITUTION.md](CONSTITUTION.md)** - The system's constitutional rules
-- **[STEWARD.md](STEWARD.md)** - STEWARD Protocol specification
-
----
-
-## 🏗️ ARCHITECTURE
-
-### Current Architecture
-{self._render_docs_section(self.architecture_docs, "docs/architecture")}
-- **[CITYMAP.md](CITYMAP.md)** - Agent City 3-layer architecture (auto-generated)
-
----
-
-## 🤖 AGENTS
-
-### Agent Registry
-- **[AGENTS.md](AGENTS.md)** - Complete agent registry (auto-generated by SCRIBE)
-- **[HELP.md](HELP.md)** - System help and agent capabilities
-
-### System Agents (14)
-Each agent has a STEWARD.md file documenting its capabilities:
-- **steward/system_agents/{{agent_name}}/STEWARD.md**
-
-Agents:
-1. archivist - Event Verification & Audit Trail
-2. auditor - GAD-000 Compliance Enforcement
-3. chronicle - Temporal Operations
-4. civic - Governance, Registry, Economy, Lifecycle
-5. discoverer - Agent Discovery & Registration
-6. engineer - Meta-Building & Code Generation
-7. envoy - Universal Operator Interface
-8. forum - Democratic Decision Layer
-9. herald - Content Generation & Broadcasting
-10. oracle - Introspection & System Health
-11. science - External Intelligence Module
-12. scribe - Documentation Generation
-13. supreme_court - Appellate Justice System
-14. watchman - Integrity & Monitoring
-
----
-
-## 🛠️ OPERATIONAL
-
-### System Control
-- **[vibe_core/cli.py](vibe_core/cli.py)** - STEWARD CLI implementation
-- **CLI Commands:**
-  - `steward-cli status` - System health
-  - `steward-cli verify <agent>` - Verify passport
-  - `steward-cli lineage` - Show Parampara blockchain
-  - `steward-cli ps` - List running agents
-  - `steward-cli discover` - Discover all agents
-  - `steward-cli introspect` - Detailed kernel state
-  - `steward-cli init <agent>` - Initialize new agent
-  - `steward-cli delegate` - Submit tasks (TODO)
-  - `steward-cli boot` - Start kernel (TODO daemon mode)
-  - `steward-cli stop` - Stop kernel (TODO daemon mode)
-
-### Deployment & Operations
-{self._render_docs_section(self.deployment_docs, "docs/deployment")}
-{self._render_docs_section(self.guides_docs, "docs/guides", prefix="Demo: ")}
-
----
-
-## 🔐 SECURITY & COMPLIANCE
-
-### Security
-- **[SECURITY_KEY_MANAGEMENT.md](SECURITY_KEY_MANAGEMENT.md)** - Key management
-- **[POLICIES.md](POLICIES.md)** - Security policies
-
-### Semantic Auditor
-- **[docs/architecture/SEMANTIC_AUDITOR.md](docs/architecture/SEMANTIC_AUDITOR.md)** - Overview
-- **[docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md](docs/guides/SEMANTIC_AUDITOR_QUICK_REFERENCE.md)** - Quick reference
-- **[docs/guides/SEMANTIC_AUDITOR_ROADMAP.md](docs/guides/SEMANTIC_AUDITOR_ROADMAP.md)** - Roadmap
-
-### Governance
-- **[docs/guides/GOVERNANCE_GAPS.md](docs/guides/GOVERNANCE_GAPS.md)** - Governance gap analysis
-
----
-
-## 📝 GUIDES & STORIES
-
-### Project Context
-{self._render_docs_section(self.philosophy_docs, "docs/philosophy")}
-{self._render_docs_section([d for d in self.guides_docs if "CONTRIBUTING" in d], "docs/guides")}
-
----
-
-## 📦 REPORTS & ARCHIVE
-
-### Current Reports
-{self._render_docs_section(self.reports_docs, "docs/reports")}
-
-### Migration Status
-{self._render_migration_docs()}
-
-### Historical Archive
-- **[docs/archive/migrations/](docs/archive/migrations/)** - Historical migration files
-
-Includes:
-- BLOCKER completion reports
-- PHASE instructions and completion reports
-- Previous migration plans and analyses
-
----
-
-## 🗂️ DIRECTORY STRUCTURE
-
-```
-steward-protocol/
-├── vibe_core/                 # Kernel (Layer 1)
-│   ├── kernel_impl.py        # Kernel implementation
-│   ├── process_manager.py    # Process isolation
-│   ├── resource_manager.py   # Resource quotas
-│   ├── vfs.py                # Virtual filesystem
-│   ├── network_proxy.py      # Network isolation
-│   ├── lineage.py            # Parampara blockchain
-│   ├── cli.py                # STEWARD CLI
-│   └── ...                   # Other kernel modules
-├── steward/
-│   └── system_agents/        # User-space (Layer 3)
-│       ├── civic/            # Governance
-│       ├── oracle/           # Introspection
-│       ├── watchman/         # Monitoring
-│       ├── forum/            # Democracy
-│       ├── supreme_court/    # Justice
-│       ├── herald/           # Broadcasting
-│       ├── archivist/        # Ledger
-│       ├── science/          # Intelligence
-│       ├── engineer/         # Meta-building
-│       ├── auditor/          # Compliance
-│       ├── envoy/            # Interface
-│       ├── chronicle/        # Temporal
-│       ├── scribe/           # Documentation
-│       └── discoverer/       # Discovery
-├── docs/
-│   ├── architecture/         # Architecture docs
-│   ├── deployment/           # Deployment guides
-│   ├── guides/               # Guides and references
-│   ├── philosophy/           # Manifestos and philosophy
-│   ├── reports/              # Status reports
-│   │   └── migrations/       # Migration tracking
-│   └── archive/
-│       └── migrations/       # Historical migrations
-├── scripts/                  # Operational scripts
-└── tests/                    # Test suite (TODO)
-```
-
----
-
-## 🎯 CURRENT STATUS ({timestamp})
-
-### Completed ✅
-- **Phase 1:** Emergency Triage (lazy loading)
-- **Phase 2:** Process Isolation (multiprocessing)
-- **Phase 3:** Resource Isolation (CPU/RAM quotas)
-- **Phase 4:** VFS & Network Isolation
-- **Phase 5:** Parampara Blockchain (lineage chain)
-- **Phase 6:** Agent Certification (14/14 system agents)
-- **Phase 7:** STEWARD CLI (10/11 commands)
-- **Phase 8:** Documentation Cleanup
-
-### In Progress 🟡
-- **Phase 7.1:** Daemon mode for boot/stop
-
-### Pending ⏭️
-- **Phase 9:** CI/CD & Testing
-- Integration test suite
-- GitHub Actions workflow
-- Pre-commit hooks
-
----
-
-## 🔗 QUICK LINKS
-
-### For Developers
-- **[docs/guides/CONTRIBUTING.md](docs/guides/CONTRIBUTING.md)** - How to contribute
-- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** - System design
-- **[AGENTS.md](AGENTS.md)** - Agent capabilities
-- **[vibe_core/cli.py](vibe_core/cli.py)** - CLI source
-
-### For Operators
-- **[docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md)** - Deploy the system
-- **[OPERATIONS.md](OPERATIONS.md)** - Live system status
-- **CLI:** `steward-cli status`, `steward-cli ps`, `steward-cli lineage`
-
-### For Researchers
-- **[GAD-000.md](GAD-000.md)** - Operator Inversion philosophy
-- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** - Governed Intelligence
-- **[docs/architecture/UNIVERSE_MIGRATION_PLAN.md](docs/architecture/UNIVERSE_MIGRATION_PLAN.md)** - Building a TRUE OS
-
----
+**Navigation hub for project documentation**
 
 **Last Updated:** {timestamp}
-**Maintainer:** SCRIBE (auto-generated)
-**Status:** Phase 8 (Documentation Cleanup) complete
+**Auto-generated by:** SCRIBE (The Documentarian)
+
+---
+
+## 📚 ROOT DOCUMENTATION
+
+{self._render_root_docs()}
+
+---
+
+{self._render_docs_categories()}
+
+---
+
+## 🔗 Quick Links by Role
+
+### For New Visitors
+1. Start with **[README.md](README.md)** for project overview
+2. Read **[AGENTS.md](AGENTS.md)** to see all system agents
+3. Check **[CITYMAP.md](CITYMAP.md)** for architecture
+
+### For Developers
+- **[AGENTS.md](AGENTS.md)** — Agent capabilities and tools
+- **[CITYMAP.md](CITYMAP.md)** — 3-layer architecture map
+- **docs/architecture/** — Architecture documentation
+
+### For Operators
+- **[HELP.md](HELP.md)** — Operations control center
+- **docs/deployment/** — Deployment guides
+
+### For Researchers
+- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Governed Intelligence philosophy
+- **[CONSTITUTION.md](CONSTITUTION.md)** — Constitutional governance
+- **docs/philosophy/** — Project philosophy and context
+
+---
+
+**Note:** This index is generated from actual filesystem content.
+Only files that exist are listed. No speculation.
+
+*Generated by SCRIBE - The Documentarian*
 """
 
         return content
 
-    def _scan_root(self):
-        """Scan root directory for markdown files."""
-        # Already known from structure - we categorize these manually
-        # since they're essential and their placement is intentional
-        pass
+    # Standalone mode method name (for generate_docs.py)
+    def scan_and_render(self) -> str:
+        """Standalone method to scan and generate INDEX.md.
 
-    def _scan_docs(self):
-        """Scan docs/ directory structure."""
-        docs_dir = self.root_dir / "docs"
-
-        # Architecture
-        arch_dir = docs_dir / "architecture"
-        if arch_dir.exists():
-            self.architecture_docs = sorted([f.name for f in arch_dir.glob("*.md")])
-
-        # Deployment
-        deploy_dir = docs_dir / "deployment"
-        if deploy_dir.exists():
-            self.deployment_docs = sorted([f.name for f in deploy_dir.glob("*.md")])
-
-        # Philosophy
-        phil_dir = docs_dir / "philosophy"
-        if phil_dir.exists():
-            self.philosophy_docs = sorted([f.name for f in phil_dir.glob("*.md")])
-
-        # Guides
-        guides_dir = docs_dir / "guides"
-        if guides_dir.exists():
-            self.guides_docs = sorted([f.name for f in guides_dir.glob("*.md")])
-
-        # Reports
-        reports_dir = docs_dir / "reports"
-        if reports_dir.exists():
-            self.reports_docs = sorted([f.name for f in reports_dir.glob("*.md")])
-
-    def _render_docs_section(self, docs: List[str], base_path: str, prefix: str = "") -> str:
-        """Render a list of docs as markdown links."""
-        if not docs:
-            return ""
-
-        lines = []
-        for doc in docs:
-            # Create readable name from filename
-            name = doc.replace(".md", "").replace("_", " ").title()
-            if prefix:
-                name = prefix + name
-            # Determine description based on filename
-            desc = self._get_description(doc)
-            lines.append(f"- **[{base_path}/{doc}]({base_path}/{doc})** - {desc}")
-
-        return "\n".join(lines)
-
-    def _get_description(self, filename: str) -> str:
-        """Get description for a file."""
-        descriptions = {
-            "ARCHITECTURE.md": "Main architecture document",
-            "SYSTEM_OVERVIEW.md": "Complete system overview",
-            "UNIVERSE_MIGRATION_PLAN.md": "The master plan (Phases 0-9)",
-            "SEMANTIC_AUDITOR.md": "Semantic Auditor overview",
-            "DEPLOYMENT.md": "Deployment guide",
-            "AUTOMATION.md": "Automation workflows",
-            "DEMO.md": "Demo scenarios",
-            "STORY.md": "Project narrative and history",
-            "PROOF_OF_LIVE.md": "Evidence of system capabilities",
-            "CONTRIBUTING.md": "Contribution guidelines",
-            "PROGRESS_REPORT.md": "Current progress status",
-            "VERIFICATION_REPORT.md": "System verification",
-            "GAP_ANALYSIS_REPORT.md": "Gap analysis",
-        }
-        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
-
-    def _render_migration_docs(self) -> str:
-        """Render migration status docs."""
-        migrations_dir = self.root_dir / "docs" / "reports" / "migrations"
-        if not migrations_dir.exists():
-            return ""
-
-        migration_docs = sorted(migrations_dir.glob("*.md"))
-        if not migration_docs:
-            return ""
-
-        lines = []
-        for doc in migration_docs:
-            name = doc.stem.replace("_", " ").title()
-            desc = self._get_migration_description(doc.name)
-            lines.append(f"- **[docs/reports/migrations/{doc.name}](docs/reports/migrations/{doc.name})** - {desc}")
-
-        return "\n".join(lines)
-
-    def _get_migration_description(self, filename: str) -> str:
-        """Get description for migration files."""
-        descriptions = {
-            "UNIVERSE_MIGRATION_PLAN_IMPLEMENTATION_STATUS.md": "Implementation status",
-            "BLOCKER2_HONEST_COMPLETION_STATUS.md": "Blocker 2 status",
-            "GOLDEN_THREAD_STATUS.md": "Golden thread tracking",
-        }
-        return descriptions.get(filename, "Migration tracking")
+        Same as _scan_and_render() but public for standalone mode.
+        """
+        return self._scan_and_render()

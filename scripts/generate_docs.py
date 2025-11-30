@@ -43,36 +43,48 @@ def load_renderer(full_module_name, module_path):
 
 
 # Load all renderer modules with full package names
-# This allows relative imports to work correctly
+# Skip __init__.py to avoid circular imports
 tools_dir = project_root / "steward/system_agents/scribe/tools"
 
-# Load introspector first (dependency for others)
+# Load dependencies first
 introspector_module = load_renderer("steward.system_agents.scribe.tools.introspector", tools_dir / "introspector.py")
-
 project_introspector_module = load_renderer(
     "steward.system_agents.scribe.tools.project_introspector",
     tools_dir / "project_introspector.py",
 )
+operations_introspector_module = load_renderer(
+    "steward.system_agents.scribe.tools.operations_introspector",
+    tools_dir / "operations_introspector.py",
+)
+runtime_inspector_module = load_renderer(
+    "steward.system_agents.scribe.tools.runtime_inspector",
+    tools_dir / "runtime_inspector.py",
+)
+vibe_introspector_module = load_renderer(
+    "steward.system_agents.scribe.tools.vibe_introspector",
+    tools_dir / "vibe_introspector.py",
+)
 
+# Now load renderers
 readme_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.readme_renderer",
     tools_dir / "readme_renderer.py",
 )
-
 agents_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.agents_renderer",
     tools_dir / "agents_renderer.py",
 )
-
 citymap_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.citymap_renderer",
     tools_dir / "citymap_renderer.py",
 )
-
-help_renderer_module = load_renderer("steward.system_agents.scribe.tools.help_renderer", tools_dir / "help_renderer.py")
-
+help_renderer_module = load_renderer(
+    "steward.system_agents.scribe.tools.help_renderer",
+    tools_dir / "help_renderer.py",
+)
 index_renderer_module = load_renderer(
-    "steward.system_agents.scribe.tools.index_renderer", tools_dir / "index_renderer.py"
+    "steward.system_agents.scribe.tools.index_renderer",
+    tools_dir / "index_renderer.py",
 )
 
 # Extract classes
