@@ -5,6 +5,7 @@ Constitutional Verdict - CI/CD Script
 Runs the Auditor's constitutional verdict.
 Extracted from inline YAML for maintainability.
 """
+
 import sys
 import json
 from pathlib import Path
@@ -29,7 +30,7 @@ def run_verdict():
 
         print(f"📜 Verdict: {verdict['verdict']}")
 
-        if verdict.get('should_fail_build', False):
+        if verdict.get("should_fail_build", False):
             print("❌ CONSTITUTIONAL VIOLATION DETECTED")
             return False
 
