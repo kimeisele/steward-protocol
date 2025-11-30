@@ -52,7 +52,7 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 ### The Federation
 
-13 specialized agents govern Agent City:
+14 specialized agents govern Agent City:
 
 | Agent | Role |
 |-------|------|
@@ -63,8 +63,9 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 | **ENGINEER** | Builder agent: manifests code and scaffolds new agents |
 | **ENVOY** | Universal Operator Interface - diplomatic and operational bridge |
 | **FORUM** | Democratic decision-making and proposal voting system |
-| **HERALD** | Autonomous intelligence and content distribution agent |
+| **HERALD** | Autonomous intelligence and content distribution agent (offline-first) |
 | **ORACLE** | System introspection and explanation agent |
+| **PING** | Minimal test agent |
 | **SCIENCE** | External intelligence and fact research agent |
 | **SCRIBE** | Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md |
 | **SUPREME_COURT** | Appellate justice and mercy system (Canto 6: Ajamila Protocol) |
