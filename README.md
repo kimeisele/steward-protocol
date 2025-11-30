@@ -31,7 +31,7 @@ python boot.py --check
 
 **Version:** 1.0 (Genesis) **Layer:** 0 (The Immutable Foundation)
 
-- **[Governance Gate Code](vibe_core/kernel_impl.py#L544-L621)** — The cryptographic oath enforcement
+- **[Governance Gate Code](vibe_core/kernel_impl.py#L1071-L1097)** — The cryptographic oath enforcement
 - **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Full system design
 - **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this matters
 
@@ -50,25 +50,17 @@ No workarounds. No exceptions. This is kernel-level, not policy.
 
 ### The Federation
 
-14 specialized agents govern Agent City:
+14 specialized agents govern Agent City.
 
-| Agent | Role |
-|-------|------|
-| **ARCHIVIST** | History keeper: seals verified code into git history |
-| **AUDITOR** | Quality gate: verifies code syntax and linting before commit |
-| **CHRONICLE** | Temporal agent: manages git operations, commits, branches, and code history |
-| **CIVIC** | Governance agent: enforces rules, manages licenses, audits credits |
-| **ENGINEER** | Builder agent: manifests code and scaffolds new agents |
-| **ENVOY** | Universal Operator Interface - diplomatic and operational bridge |
-| **FORUM** | Democratic decision-making and proposal voting system |
-| **HERALD** | Autonomous intelligence and content distribution agent (offline-first) |
-| **ORACLE** | System introspection and explanation agent |
-| **PING** | Minimal test agent |
-| **SCIENCE** | External intelligence and fact research agent |
-| **SCRIBE** | Documentation agent: auto-generates AGENTS.md, CITYMAP.md (3-layer), HELP.md, README.md |
-| **SUPREME_COURT** | Appellate justice and mercy system (Canto 6: Ajamila Protocol) |
-| **WATCHMAN** | System integrity enforcer and governance enforcer |
+**[See complete agent registry →](AGENTS.md)**
 
+Key agents:
+- **CIVIC** — Constitutional governance, registry, and economic system
+- **WATCHMAN** — System integrity enforcement and governance monitoring
+- **ENVOY** — Universal operator interface and orchestration
+- **HERALD** — Autonomous content generation and distribution
+- **ARCHIVIST** — Cryptographic audit trail and event verification
+- **AUDITOR** — Quality gate and compliance enforcement
 
 ### Immutable Ledger
 
