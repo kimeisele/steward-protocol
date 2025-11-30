@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+"""
+AGENT CITY OS - THE ONE ENTRY POINT (PHOENIX EDITION)
+
+Usage:
+    python boot.py              # Boot and run (auto-installs everything)
+    python boot.py --check      # Verify system can boot
+    python boot.py --help       # Show this help
+
+This is ALL you need. Clone the repo, run boot.py. Done.
+No manual pip install. No setup. One command.
+
+PHOENIX GUARANTEES:
+- Works on Windows, Linux, Mac
+- Tries uv → pip → python -m pip (in order)
+- Uses pyproject.toml (not requirements.txt)
+- Cross-platform temp directories
+- Self-diagnosing errors
+- Retry with backoff on network failures
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+# Project root (where this script lives)
+PROJECT_ROOT = Path(__file__).parent.resolve()
+
+# Cross-platform runtime directory
+RUNTIME_DIR = Path(tempfile.gettempdir()) / "vibe_os"
+
+
+def print_banner(title: str):
+    """Print a banner."""
+    print("=" * 60)
+    print(f"  {title}")
+    print("=" * 60)
+
+
+def print_error(msg: str, suggestion: str = None):
+    """Print error with optional fix suggestion."""
+    print(f"\n❌ ERROR: {msg}")
+    if suggestion:
+        print(f"   → FIX: {suggestion}")
+    print()
+
+
+def check_python_version():
+    """Verify Python version >= 3.8"""
+    if sys.version_info < (3, 8):
+        print_error(
+            f"Python 3.8+ required. You have {sys.version}",
+            "Install Python 3.8 or newer from https://python.org",
+        )
+        return False
+    return True
+
+
+def find_installer():
+    """Find the best available package installer.
+
+    Returns (command_list, name) or (None, None) if nothing found.
+    Preference: uv > pip > python -m pip
+    """
+    # Try uv first (fastest, modern) - needs --system for non-venv installs
+    if shutil.which("uv"):
+        return (["uv", "pip", "install", "--system", "-e", "."], "uv")
+
+    # Try pip directly
+    if shutil.which("pip"):
+        return (["pip", "install", "-e", "."], "pip")
+
+    if shutil.which("pip3"):
+        return (["pip3", "install", "-e", "."], "pip3")
+
+    # Fallback to python -m pip
+    return ([sys.executable, "-m", "pip", "install", "-e", "."], "python -m pip")
+
+
+def ensure_dependencies():
+    """Auto-install dependencies from pyproject.toml with retry."""
+    from importlib.util import find_spec
+
+    # Check if ALL key dependencies already installed (not just core ones)
+    required = ["pydantic", "yaml", "rich", "tweepy", "praw", "PIL", "fastapi", "openai"]
+    if all(find_spec(pkg) for pkg in required):
+        return True  # Already installed
+
+    # Find installer
+    install_cmd, installer_name = find_installer()
+    if not install_cmd:
+        print_error(
+            "No package installer found (uv, pip, pip3)",
+            "Install pip: https://pip.pypa.io/en/stable/installation/",
+        )
+        return False
+
+    # Check pyproject.toml exists
+    pyproject = PROJECT_ROOT / "pyproject.toml"
+    if not pyproject.exists():
+        print_error(
+            "pyproject.toml not found",
+            f"Make sure you're in the project root: {PROJECT_ROOT}",
+        )
+        return False
+
+    # Install with retry (network can be flaky)
+    max_retries = 3
+    for attempt in range(max_retries):
+        print(f"Installing dependencies via {installer_name}..." + (f" (attempt {attempt + 1})" if attempt > 0 else ""))
+
+        try:
+            result = subprocess.run(
+                install_cmd,
+                cwd=PROJECT_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 min timeout
+            )
+
+            if result.returncode == 0:
+                print("✓ Dependencies installed.")
+                return True
+
+            # Failed - show error on last attempt
+            if attempt == max_retries - 1:
+                print_error(
+                    f"Installation failed after {max_retries} attempts",
+                    "Check your internet connection and try again",
+                )
+                if result.stderr:
+                    print(f"   Details: {result.stderr[:500]}")
+                return False
+
+        except subprocess.TimeoutExpired:
+            print_error("Installation timed out", "Check your internet connection")
+            return False
+        except Exception as e:
+            if attempt == max_retries - 1:
+                print_error(f"Installation error: {e}")
+                return False
+
+        # Wait before retry (exponential backoff)
+        wait_time = 2**attempt
+        print(f"   Retrying in {wait_time}s...")
+        time.sleep(wait_time)
+
+    return False
+
+
+def ensure_directories():
+    """Create necessary runtime directories (cross-platform)."""
+    dirs = [
+        PROJECT_ROOT / "data",
+        RUNTIME_DIR,
+        RUNTIME_DIR / "agents",
+        RUNTIME_DIR / "tasks",
+        RUNTIME_DIR / "kernel",
+    ]
+    for d in dirs:
+        try:
+            d.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            print_error(
+                f"Cannot create directory: {d}",
+                "Check permissions or run with appropriate access",
+            )
+            return False
+    return True
+
+
+def setup_environment():
+    """Setup environment for boot."""
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+    os.chdir(PROJECT_ROOT)
+    return True
+
+
+def setup_git_hooks():
+    """Activate git pre-commit hooks (ruff auto-format).
+
+    Universal solution - works for any agent, editor, human.
+    No vendor lock-in. Just git.
+    """
+    githooks_dir = PROJECT_ROOT / ".githooks"
+    if not githooks_dir.exists():
+        return True  # No hooks to set up
+
+    # Check if we're in a git repo
+    if not (PROJECT_ROOT / ".git").exists():
+        return True  # Not a git repo, skip
+
+    try:
+        subprocess.run(
+            ["git", "config", "--local", "core.hooksPath", ".githooks"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            check=True,
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # Git not installed or failed - that's fine, non-critical
+        return True
+
+
+def boot_check():
+    """Quick boot verification."""
+    from vibe_core.boot_orchestrator import BootOrchestrator
+
+    print_banner("AGENT CITY OS - BOOT CHECK")
+
+    orchestrator = BootOrchestrator()
+    try:
+        kernel = orchestrator.boot()
+        status = kernel.get_status()
+        agents = status.get("agents_registered", 0)
+        has_ritual = hasattr(kernel, "daily_ritual") and kernel.daily_ritual is not None
+
+        print()
+        print(f"  Python:        {sys.version.split()[0]}")
+        print(f"  Platform:      {sys.platform}")
+        print(f"  Agents:        {agents}")
+        print(f"  Daily Ritual:  {'Active' if has_ritual else 'MISSING'}")
+        print(f"  Runtime:       {RUNTIME_DIR}")
+        print("  Status:        OPERATIONAL")
+        print()
+        print_banner("BOOT CHECK: PASSED")
+        return True
+    except Exception as e:
+        print_error(f"Boot failed: {e}")
+        return False
+
+
+def boot_and_run():
+    """Full boot with interactive operator loop."""
+    import asyncio
+
+    from vibe_core.boot_orchestrator import boot_and_run as _boot_and_run
+
+    print_banner("AGENT CITY OS - STARTING")
+    print("  Press Ctrl+C to shutdown")
+    print()
+
+    try:
+        asyncio.run(_boot_and_run())
+    except KeyboardInterrupt:
+        print("\nShutdown complete.")
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Agent City OS - One Command Boot (Phoenix Edition)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Clone. Run. Done.
+
+    git clone <repo>
+    cd steward-protocol
+    python boot.py
+
+No pip install needed. No setup. This script handles everything.
+Works on Windows, Linux, Mac. Tries uv → pip automatically.
+        """,
+    )
+    parser.add_argument("--check", action="store_true", help="Verify boot works (quick test)")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+    parser.add_argument("--skip-deps", action="store_true", help="Skip dependency check")
+
+    args = parser.parse_args()
+
+    # Setup logging
+    import logging
+
+    level = logging.INFO if args.verbose else logging.WARNING
+    logging.basicConfig(level=level, format="%(asctime)s [%(name)s] %(message)s", datefmt="%H:%M:%S")
+
+    # STEP 1: Check Python version
+    if not check_python_version():
+        sys.exit(1)
+
+    # STEP 2: Setup environment (needed before imports)
+    setup_environment()
+
+    # STEP 3: Auto-install dependencies
+    if not args.skip_deps:
+        if not ensure_dependencies():
+            sys.exit(1)
+
+    # STEP 4: Create directories
+    if not ensure_directories():
+        sys.exit(1)
+
+    # STEP 5: Setup git hooks (universal - no vendor lock-in)
+    setup_git_hooks()
+
+    # STEP 6: Run
+    if args.check:
+        success = boot_check()
+        sys.exit(0 if success else 1)
+    else:
+        boot_and_run()
+
+
+if __name__ == "__main__":
+    main()

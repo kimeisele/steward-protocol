@@ -62,7 +62,7 @@ class TaskManager:
         self.milk_ocean_router = milk_ocean_router
         if not self.milk_ocean_router:
             try:
-                from vibe_core.routing.milk_ocean import MilkOceanRouter
+                from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 
                 self.milk_ocean_router = MilkOceanRouter()
             except ImportError:
@@ -96,6 +96,13 @@ class TaskManager:
                             priority=task_data.get("priority", 0),
                             assignee=task_data.get("assignee"),
                             tags=task_data.get("tags", []),
+                            subtasks=task_data.get("subtasks", []),
+                            metadata=task_data.get("metadata", {}),
+                            # Topology fields (Gap 4.1 persistence fix)
+                            topology_layer=task_data.get("topology_layer"),
+                            varna=task_data.get("varna"),
+                            routing_priority=task_data.get("routing_priority"),
+                            roadmap_id=task_data.get("roadmap_id"),
                         )
                         self.tasks[task_id] = task
             except Exception as e:

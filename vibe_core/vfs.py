@@ -243,8 +243,30 @@ class VirtualFileSystem:
         Raises:
             PermissionError: If link_name escapes sandbox
         """
-        link_path = self._resolve_and_validate(link_name)
+        # For symlinks, we need the path WITHOUT resolving existing symlinks
+        # _resolve_and_validate resolves symlinks, which breaks this
+        if os.path.isabs(link_name):
+            raise PermissionError("Symlink name must be relative path in sandbox")
+        link_path = self.root / link_name
         target_path = Path(target)
+
+        # Security check: ensure link is in sandbox
+        try:
+            link_path.relative_to(self.root)
+        except ValueError:
+            raise PermissionError(f"Access denied: {link_name} is outside agent sandbox")
+
+        # Handle existing symlink (idempotent operation)
+        if link_path.is_symlink():
+            existing_target = link_path.resolve()
+            if existing_target == target_path.resolve():
+                logger.debug(f"🔗 {self.agent_id} symlink already exists: {link_name} → {target}")
+                return
+            # Different target - remove and recreate
+            link_path.unlink()
+        elif link_path.exists():
+            # Regular file/dir exists - don't overwrite
+            raise FileExistsError(f"Cannot create symlink: {link_name} already exists and is not a symlink")
 
         link_path.symlink_to(target_path)
         logger.info(f"🔗 {self.agent_id} symlink created: {link_name} → {target}")

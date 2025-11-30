@@ -85,6 +85,7 @@ Leaderboard = "https://steward-protocol.io/leaderboard"
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+asyncio_mode = "auto"
 
 [tool.hatch.build.targets.wheel]
 packages = ["steward"]

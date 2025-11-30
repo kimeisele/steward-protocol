@@ -17,7 +17,7 @@ from typing import Any
 from jinja2 import Template
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-from .project_introspector import ProjectIntrospector
+from steward.system_agents.scribe.tools.project_introspector import ProjectIntrospector
 
 
 class ReadmeRenderer(Tool):
@@ -86,12 +86,16 @@ class ReadmeRenderer(Tool):
 ## Quick Start
 
 ```bash
-python scripts/summon.py
+git clone https://github.com/kimeisele/steward-protocol.git
+cd steward-protocol
+python boot.py
 ```
 
-Then activate Agent City:
+That's it. One command boots everything. Dependencies auto-install.
+
+**Verify boot:**
 ```bash
-vibe activate cartridges:steward-protocol
+python boot.py --check
 ```
 
 ---

@@ -6,7 +6,7 @@ actions:
   CMD_CREATE: [create, crate, make, build, draft, write, generate, compose, publish]
   CMD_STATUS: [status, health, ping, system, check, alive, info, stats]
   CMD_VERIFY: [verify, audit, check, validate, confirm, validate, inspect, review]
-  CMD_VOTE: [vote, elect, choose, ballot, decide, select]
+  CMD_VOTE: [vote, voting, elect, choose, ballot, decide, select]
   CMD_BRIEFING: [briefing, report, overview, help, who, what, tell, explain, describe]
   CMD_EXECUTE: [execute, deploy, launch, run, trigger, activate]
 

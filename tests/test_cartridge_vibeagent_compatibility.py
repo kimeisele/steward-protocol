@@ -19,12 +19,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from vibe_core import Task, VibeAgent
 
-# Import cartridges
+# Import cartridges from steward/system_agents
 try:
-    from civic.cartridge_main import CivicCartridge
-    from forum.cartridge_main import ForumCartridge
-    from herald.cartridge_main import HeraldCartridge
-    from science.cartridge_main import ScientistCartridge
+    from steward.system_agents.civic.cartridge_main import CivicCartridge
+    from steward.system_agents.forum.cartridge_main import ForumCartridge
+    from steward.system_agents.herald.cartridge_main import HeraldCartridge
+    from steward.system_agents.science.cartridge_main import ScientistCartridge
 
     print("✅ All cartridges imported successfully")
 except ImportError as e:
@@ -32,8 +32,8 @@ except ImportError as e:
     sys.exit(1)
 
 
-def test_cartridge_inheritance(cartridge_class, expected_agent_id):
-    """Test that cartridge inherits from VibeAgent"""
+def _validate_cartridge_inheritance(cartridge_class, expected_agent_id):
+    """Validate that cartridge inherits from VibeAgent (helper function, not a pytest test)"""
     print(f"\n🧪 Testing {expected_agent_id.upper()}...")
 
     # Check inheritance
@@ -159,7 +159,7 @@ def main():
 
     results = []
     for cartridge_class, expected_agent_id in cartridges:
-        success = test_cartridge_inheritance(cartridge_class, expected_agent_id)
+        success = _validate_cartridge_inheritance(cartridge_class, expected_agent_id)
         results.append((expected_agent_id, success))
 
     print("\n" + "=" * 70)

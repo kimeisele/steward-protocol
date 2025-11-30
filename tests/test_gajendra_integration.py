@@ -9,7 +9,7 @@ When the API Gateway receives a response with status="critical",
 it should invoke the kernel directly, bypassing all queue layers.
 """
 
-from envoy.tools.milk_ocean import MilkOceanRouter
+from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 
 
 def test_critical_response_signals_kernel_bypass():

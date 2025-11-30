@@ -29,6 +29,7 @@ import yaml
 # Import Core Definitions
 try:
     from vibe_core.scheduling import Task
+    from vibe_core.kernel_impl import RealVibeKernel as VibeKernel
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
     VibeKernel = Any
@@ -61,7 +62,7 @@ except ImportError:
 
 # Import Deterministic Executor (GAD-5000: DETERMINISTIC INTELLIGENCE)
 try:
-    from envoy.deterministic_executor import DeterministicExecutor
+    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
 except ImportError:
     DeterministicExecutor = None
 
@@ -204,6 +205,10 @@ class UniversalProvider:
             except Exception as e:
                 logger.warning(f"⚠️  Semantic Router initialization failed: {e}, falling back to DeterministicRouter")
                 self.use_semantic = False
+        elif use_semantic and not SemanticRouter:
+            # SemanticRouter import failed - fall back to deterministic
+            logger.info("ℹ️  SemanticRouter not available, using DeterministicRouter")
+            self.use_semantic = False
 
         # Fallback to deterministic router if semantic unavailable
         if not self.use_semantic:
@@ -298,7 +303,7 @@ class UniversalProvider:
             },
         )
 
-    async def route_and_execute(self, user_input: str) -> Dict[str, Any]:
+    async def route_and_execute(self, user_input: str, emit_event=None) -> Dict[str, Any]:
         """
         The Magic Entry Point for VibeChat (GAD-5000 DHARMIC + GAD-7000 STRATEGY PATTERN).
         Routes through three decision engines in sequence:
@@ -308,6 +313,10 @@ class UniversalProvider:
         4. SLOW PATH: Async task queue for heavy operations
 
         NOW WITH PRANA: Emits events to the event bus for visualization.
+
+        Args:
+            user_input: The user's natural language input
+            emit_event: Optional async callback for emitting events to visualization layer
         """
         logger.info(f"📨 Thinking about: '{user_input}'")
 
