@@ -66,7 +66,9 @@ class AuditorCartridge(VibeAgent, OathMixin):
 
         # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
         # - auditor.verdict (ConstitutionalVerdictTool)
-
+        # - auditor.compliance (ComplianceTool)
+        # - auditor.invariant (InvariantEngine)
+        # - auditor.watchdog (Watchdog)
         logger.info("✅ AUDITOR: Ready for operation (NO tool instances owned)")
 
     def get_manifest(self) -> AgentManifest:

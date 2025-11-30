@@ -1,6 +1,7 @@
+
 #!/usr/bin/env python3
 """
-GAD-000 Compliance Tool - System Integrity Verification
+GAD-000 Compliance Tool - System Integrity Verification (Tool Protocol)
 
 This tool enforces GAD-000 (Governance As Design) compliance by verifying:
 1. Identity Integrity: All agents have valid cryptographic identities
@@ -8,6 +9,8 @@ This tool enforces GAD-000 (Governance As Design) compliance by verifying:
 3. Event Log Resilience: Event logs are intact and uncorrupted
 
 The AUDITOR doesn't just verify agents - it verifies the SYSTEM ITSELF.
+
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import json
@@ -19,8 +22,9 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-logger = logging.getLogger("AUDITOR_COMPLIANCE")
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
+logger = logging.getLogger("AUDITOR_COMPLIANCE")
 
 @dataclass
 class ComplianceViolation:
@@ -71,7 +75,7 @@ class ComplianceReport:
         }
 
 
-class ComplianceTool:
+class ComplianceTool(Tool):
     """
     GAD-000 Compliance Verification Tool.
 
@@ -94,6 +98,80 @@ class ComplianceTool:
         self.root_path = root_path
         self.violations: List[ComplianceViolation] = []
         self.warnings: List[ComplianceViolation] = []
+
+
+    @property
+    def name(self) -> str:
+        return "auditor.compliance"
+
+    @property
+    def description(self) -> str:
+        return "GAD-000 compliance verification - identity, documentation, event logs"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'run_audit' | 'save_report'",
+            },
+            "report_path": {
+                "type": "string",
+                "required": False,
+                "description": "Path to save report (for save_report action)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["run_audit", "save_report"]:
+            raise ValueError(f"Invalid action: {action}")
+
+        if action == "save_report" and "report_path" not in parameters:
+            raise ValueError("save_report requires 'report_path' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute compliance audit."""
+        try:
+            action = parameters["action"]
+
+            if action == "run_audit":
+                report = self.run_compliance_audit()
+
+                return ToolResult(
+                    success=True,
+                    output=report.to_dict(),
+                    metadata={
+                        "action": "run_audit",
+                        "violations": len(report.violations),
+                        "warnings": len(report.warnings),
+                        "passed": report.passed,
+                    },
+                )
+
+            elif action == "save_report":
+                # First run audit
+                report = self.run_compliance_audit()
+
+                # Then save
+                report_path = Path(parameters["report_path"])
+                success = self.save_report(report, report_path)
+
+                return ToolResult(
+                    success=success,
+                    output={"report_path": str(report_path), "report": report.to_dict()},
+                    metadata={"action": "save_report"},
+                )
+
+        except Exception as e:
+            error_msg = f"Compliance audit failed: {type(e).__name__}: {e!s}"
+            logger.error(f"ComplianceTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def check_identity_integrity(self) -> Tuple[bool, List[str]]:
         """
@@ -489,3 +567,6 @@ class ComplianceTool:
         except Exception as e:
             logger.error(f"❌ Failed to save compliance report: {e}")
             return False
+
+
+__all__ = ["ComplianceTool"]
