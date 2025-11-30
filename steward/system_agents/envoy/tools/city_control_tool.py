@@ -35,6 +35,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 # Add project root to Python path
 project_root = Path(__file__).parent.parent.parent
 if str(project_root) not in sys.path:
@@ -45,7 +47,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CITY_CONTROL")
 
 
-class CityControlTool:
+class CityControlTool(Tool):
     """
     Universal Operator Interface to Agent City.
 
@@ -75,6 +77,98 @@ class CityControlTool:
         self._forum = None
 
         logger.info(f"🏙️  City Control Tool initialized (Mode: {self.mode})")
+
+    @property
+    def name(self) -> str:
+        return "envoy.city_control"
+
+    @property
+    def description(self) -> str:
+        return "Universal Operator Interface to Agent City (The Golden Straw)"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: get_city_status | list_proposals | vote_proposal | execute_proposal | trigger_agent | check_credits | refill_credits",
+            },
+            "status": {"type": "string", "required": False, "description": "Proposal status filter"},
+            "proposal_id": {"type": "string", "required": False, "description": "Proposal ID"},
+            "choice": {"type": "string", "required": False, "description": "Vote choice (YES/NO)"},
+            "voter": {"type": "string", "required": False, "description": "Voter name"},
+            "agent_name": {"type": "string", "required": False, "description": "Agent name"},
+            "agent_action": {"type": "string", "required": False, "description": "Agent action to trigger"},
+            "amount": {"type": "int", "required": False, "description": "Credit amount"},
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute city control operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "get_city_status":
+                status = self.get_city_status()
+                return ToolResult(success=True, output=status, metadata={"action": action})
+
+            elif action == "list_proposals":
+                status_filter = parameters.get("status", "OPEN")
+                proposals = self.list_proposals(status_filter)
+                return ToolResult(success=True, output={"proposals": proposals}, metadata={"action": action})
+
+            elif action == "vote_proposal":
+                proposal_id = parameters.get("proposal_id")
+                choice = parameters.get("choice")
+                voter = parameters.get("voter", "operator")
+                if not proposal_id or not choice:
+                    return ToolResult(success=False, error="vote_proposal requires proposal_id and choice")
+                result = self.vote_proposal(proposal_id, choice, voter)
+                return ToolResult(success=True, output=result, metadata={"action": action})
+
+            elif action == "execute_proposal":
+                proposal_id = parameters.get("proposal_id")
+                if not proposal_id:
+                    return ToolResult(success=False, error="execute_proposal requires proposal_id")
+                result = self.execute_proposal(proposal_id)
+                return ToolResult(success=True, output=result, metadata={"action": action})
+
+            elif action == "trigger_agent":
+                agent_name = parameters.get("agent_name")
+                agent_action = parameters.get("agent_action")
+                if not agent_name or not agent_action:
+                    return ToolResult(success=False, error="trigger_agent requires agent_name and agent_action")
+                kwargs = {k: v for k, v in parameters.items() if k not in ["action", "agent_name", "agent_action"]}
+                result = self.trigger_agent(agent_name, agent_action, **kwargs)
+                return ToolResult(success=True, output=result, metadata={"action": action})
+
+            elif action == "check_credits":
+                agent_name = parameters.get("agent_name")
+                if not agent_name:
+                    return ToolResult(success=False, error="check_credits requires agent_name")
+                result = self.check_credits(agent_name)
+                return ToolResult(success=True, output=result, metadata={"action": action})
+
+            elif action == "refill_credits":
+                agent_name = parameters.get("agent_name")
+                amount = parameters.get("amount", 50)
+                if not agent_name:
+                    return ToolResult(success=False, error="refill_credits requires agent_name")
+                result = self.refill_credits(agent_name, amount)
+                return ToolResult(success=True, output=result, metadata={"action": action})
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            error_msg = f"City control operation failed: {type(e).__name__}: {e!s}"
+            logger.error(error_msg, exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     # ==================== HIGH-LEVEL OPERATOR METHODS ====================
 
@@ -473,3 +567,6 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("✅ DEMO COMPLETE")
     print("=" * 70)
+
+
+__all__ = ["CityControlTool", "create_city_controller"]

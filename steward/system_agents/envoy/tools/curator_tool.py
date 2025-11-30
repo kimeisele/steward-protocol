@@ -13,10 +13,12 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
+
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 
-class CuratorTool:
+class CuratorTool(Tool):
     """
     Tool for analyzing AI agent projects and generating intelligence reports.
 
@@ -33,6 +35,82 @@ class CuratorTool:
         self.intelligence_dir.mkdir(parents=True, exist_ok=True)
         self.hall_of_fame = Path("hall_of_fame.json")
         self.chain = degradation_chain
+
+    @property
+    def name(self) -> str:
+        return "envoy.curator"
+
+    @property
+    def description(self) -> str:
+        return "Governance analysis and curation of AI agent projects"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'search_repositories' | 'run_curation_cycle'",
+            },
+            "topic": {
+                "type": "string",
+                "required": False,
+                "description": "GitHub topic to search",
+            },
+            "min_stars": {
+                "type": "int",
+                "required": False,
+                "description": "Minimum star count",
+            },
+            "max_results": {
+                "type": "int",
+                "required": False,
+                "description": "Maximum results",
+            },
+            "max_projects": {
+                "type": "int",
+                "required": False,
+                "description": "Max projects for curation cycle",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute curation operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "search_repositories":
+                topic = parameters.get("topic", "ai-agent")
+                min_stars = parameters.get("min_stars", 50)
+                max_results = parameters.get("max_results", 10)
+
+                repos = self.search_repositories(topic, min_stars, max_results)
+                return ToolResult(
+                    success=True,
+                    output={"repositories": repos},
+                    metadata={"action": "search_repositories", "count": len(repos)},
+                )
+
+            elif action == "run_curation_cycle":
+                max_projects = parameters.get("max_projects", 5)
+                result = self.run_curation_cycle(max_projects)
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={"action": "run_curation_cycle"},
+                )
+
+            else:
+                return ToolResult(success=False, error=f"Unknown action: {action}")
+
+        except Exception as e:
+            error_msg = f"Curation operation failed: {type(e).__name__}: {e!s}"
+            return ToolResult(success=False, error=error_msg)
 
     def search_repositories(self, topic="ai-agent", min_stars=50, max_results=10) -> List[Dict]:
         """
@@ -344,3 +422,6 @@ if __name__ == "__main__":
     curator = CuratorTool()
     results = curator.run_curation_cycle(max_projects=3)
     print(f"\nResults: {json.dumps(results, indent=2)}")
+
+
+__all__ = ["CuratorTool"]

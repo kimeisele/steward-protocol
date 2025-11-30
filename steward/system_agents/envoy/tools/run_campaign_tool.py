@@ -24,6 +24,8 @@ import logging
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("RUN_CAMPAIGN_TOOL")
 
@@ -38,7 +40,7 @@ class CampaignPhase(Enum):
     COMPLETE = "complete"
 
 
-class RunCampaignTool:
+class RunCampaignTool(Tool):
     """
     Orchestrates multi-agent marketing campaigns.
 
@@ -60,6 +62,100 @@ class RunCampaignTool:
         self.kernel = kernel
         self.campaigns = {}  # Track active campaigns
         logger.info("🎯 RunCampaignTool initialized (awaiting kernel injection)")
+
+    @property
+    def name(self) -> str:
+        return "envoy.campaign"
+
+    @property
+    def description(self) -> str:
+        return "Multi-agent marketing campaign orchestration"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'run_campaign' | 'list_campaigns' | 'get_campaign'",
+            },
+            "goal": {
+                "type": "string",
+                "required": False,
+                "description": "Campaign goal (for run_campaign)",
+            },
+            "campaign_type": {
+                "type": "string",
+                "required": False,
+                "description": "Campaign type: 'recruitment' | 'product_launch' | etc.",
+            },
+            "campaign_id": {
+                "type": "string",
+                "required": False,
+                "description": "Campaign ID (for get_campaign)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        valid_actions = ["run_campaign", "list_campaigns", "get_campaign"]
+        if action not in valid_actions:
+            raise ValueError(f"Invalid action: {action}")
+
+        if action == "run_campaign" and "goal" not in parameters:
+            raise ValueError("run_campaign requires 'goal' parameter")
+
+        if action == "get_campaign" and "campaign_id" not in parameters:
+            raise ValueError("get_campaign requires 'campaign_id' parameter")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute campaign operations."""
+        try:
+            action = parameters["action"]
+
+            if action == "run_campaign":
+                goal = parameters["goal"]
+                campaign_type = parameters.get("campaign_type", "recruitment")
+                kwargs = {k: v for k, v in parameters.items() if k not in ["action", "goal", "campaign_type"]}
+
+                result = self.run_campaign(goal, campaign_type, **kwargs)
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={"action": "run_campaign", "campaign_type": campaign_type},
+                )
+
+            elif action == "list_campaigns":
+                campaigns = self.list_campaigns()
+                return ToolResult(
+                    success=True,
+                    output={"campaigns": campaigns},
+                    metadata={"action": "list_campaigns", "count": len(campaigns)},
+                )
+
+            elif action == "get_campaign":
+                campaign_id = parameters["campaign_id"]
+                campaign = self.get_campaign(campaign_id)
+                if campaign:
+                    return ToolResult(
+                        success=True,
+                        output=campaign,
+                        metadata={"action": "get_campaign", "campaign_id": campaign_id},
+                    )
+                else:
+                    return ToolResult(
+                        success=False,
+                        error=f"Campaign not found: {campaign_id}",
+                    )
+
+        except Exception as e:
+            error_msg = f"Campaign operation failed: {type(e).__name__}: {e!s}"
+            logger.error(f"RunCampaignTool: {error_msg}", exc_info=True)
+            return ToolResult(success=False, error=error_msg)
 
     def set_kernel(self, kernel):
         """Inject kernel reference after initialization."""
@@ -512,3 +608,6 @@ Experience the power of agentic governance. Steward Protocol is live.
     def get_campaign(self, campaign_id: str) -> Optional[Dict[str, Any]]:
         """Get campaign details by ID."""
         return self.campaigns.get(campaign_id)
+
+
+__all__ = ["RunCampaignTool"]
