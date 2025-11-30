@@ -1,20 +1,9 @@
 #!/usr/bin/env python3
 """
-WATCHMAN System Health Check Tool
+WATCHMAN System Health Check Tool (Tool Protocol)
 
 READ-ONLY monitoring of system infrastructure.
-Reports violations but NEVER modifies infrastructure.
-
-Philosophy: "The Watchman observes. The Operator acts."
-
-Checks:
-1. Git hooks installation status
-2. Hook validity (symlink integrity, content freshness)
-3. Critical infrastructure files
-
-This respects AGENT CITY architecture:
-- Agent (WATCHMAN): Monitors and reports
-- Operator (Human/Script): Executes infrastructure changes via scripts/
+Tool Protocol compliant for kernel-managed execution.
 """
 
 import subprocess
@@ -22,15 +11,77 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
-class SystemHealthCheck:
-    """Read-only system health monitoring."""
+
+class SystemHealthCheck(Tool):
+    """Read-only system health monitoring (Tool Protocol)."""
 
     def __init__(self, repo_root: Path = None):
         """Initialize health checker."""
         self.repo_root = repo_root or Path.cwd()
         self.git_hooks_dir = self.repo_root / ".git" / "hooks"
         self.source_hooks_dir = self.repo_root / ".githooks"
+
+    @property
+    def name(self) -> str:
+        return "watchman.health"  # Namespaced: agent_id.tool_name
+
+    @property
+    def description(self) -> str:
+        return "System health monitoring - check git hooks, infrastructure files"
+
+    @property
+    def parameters_schema(self) -> dict[str, Any]:
+        return {
+            "action": {
+                "type": "string",
+                "required": True,
+                "description": "Action: 'check_all'",
+            },
+            "repo_root": {
+                "type": "string",
+                "required": False,
+                "description": "Repository root path (default: current directory)",
+            },
+        }
+
+    def validate(self, parameters: dict[str, Any]) -> None:
+        """Validate parameters."""
+        if "action" not in parameters:
+            raise ValueError("Missing required parameter: action")
+
+        action = parameters["action"]
+        if action not in ["check_all"]:
+            raise ValueError(f"Invalid action: {action}. Must be 'check_all'")
+
+    def execute(self, parameters: dict[str, Any]) -> ToolResult:
+        """Execute health check."""
+        try:
+            action = parameters["action"]
+
+            if action == "check_all":
+                repo_root = parameters.get("repo_root")
+                if repo_root:
+                    self.repo_root = Path(repo_root)
+                    self.git_hooks_dir = self.repo_root / ".git" / "hooks"
+                    self.source_hooks_dir = self.repo_root / ".githooks"
+
+                report = self.check_all()
+
+                return ToolResult(
+                    success=True,
+                    output=report,
+                    metadata={
+                        "action": "check_all",
+                        "status": report["status"],
+                        "violations_count": len(report["violations"]),
+                    },
+                )
+
+        except Exception as e:
+            error_msg = f"Health check failed: {type(e).__name__}: {e!s}"
+            return ToolResult(success=False, error=error_msg)
 
     def check_all(self) -> Dict[str, Any]:
         """Run all health checks and return comprehensive report."""
@@ -193,3 +244,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+__all__ = ["SystemHealthCheck"]
