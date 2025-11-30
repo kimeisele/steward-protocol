@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 G.A.P. Report Tool - Governability Audit Proof (Tool Protocol)
@@ -112,10 +111,10 @@ class GAPReportTool(Tool):
                 report = parameters.get("report")
                 if not report:
                     return ToolResult(success=False, error="Missing 'report' parameter")
-                
+
                 output_format = parameters.get("output_format", "markdown")
                 output_path = parameters.get("output_path")
-                
+
                 path = self.export_report(report, output_format, output_path)
                 return ToolResult(
                     success=True,
@@ -127,7 +126,7 @@ class GAPReportTool(Tool):
                 report = parameters.get("report")
                 if not report:
                     return ToolResult(success=False, error="Missing 'report' parameter")
-                
+
                 content = self.get_publication_content(report)
                 return ToolResult(
                     success=True,
@@ -139,6 +138,7 @@ class GAPReportTool(Tool):
             error_msg = f"G.A.P. Report operation failed: {type(e).__name__}: {e!s}"
             logger.error(f"GAPReportTool: {error_msg}", exc_info=True)
             return ToolResult(success=False, error=error_msg)
+
     def generate_report(
         self,
         title: str = "System Governability Audit Proof",

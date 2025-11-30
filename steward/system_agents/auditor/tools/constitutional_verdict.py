@@ -81,7 +81,6 @@ class ConstitutionalViolation:
         }
 
 
-
 class ConstitutionalVerdictTool(Tool):
     """
     Constitutional Verdict Tool - The Final Authority (Layer 3) (Tool Protocol).
