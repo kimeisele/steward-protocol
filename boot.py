@@ -66,9 +66,9 @@ def find_installer():
     Returns (command_list, name) or (None, None) if nothing found.
     Preference: uv > pip > python -m pip
     """
-    # Try uv first (fastest, modern)
+    # Try uv first (fastest, modern) - needs --system for non-venv installs
     if shutil.which("uv"):
-        return (["uv", "pip", "install", "-e", "."], "uv")
+        return (["uv", "pip", "install", "--system", "-e", "."], "uv")
 
     # Try pip directly
     if shutil.which("pip"):
@@ -85,8 +85,8 @@ def ensure_dependencies():
     """Auto-install dependencies from pyproject.toml with retry."""
     from importlib.util import find_spec
 
-    # Check if key dependencies already installed
-    required = ["pydantic", "yaml", "rich"]
+    # Check if ALL key dependencies already installed (not just core ones)
+    required = ["pydantic", "yaml", "rich", "tweepy", "praw", "PIL", "fastapi", "openai"]
     if all(find_spec(pkg) for pkg in required):
         return True  # Already installed
 
