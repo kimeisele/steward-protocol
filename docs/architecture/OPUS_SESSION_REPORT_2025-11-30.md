@@ -118,19 +118,15 @@ kernel.boot()
 
 ## 3. WAS IST OFFEN (UNTER EID)
 
-### 3.1 Test Failures - 31 echte Bugs
+### 3.1 Test Failures - 20 echte Bugs (UPDATE: war 31)
 
 ```
-pytest tests/ → 209 passed, 31 failed, 5 skipped
+pytest tests/ → 220 passed, 20 failed, 5 skipped, 1 error
 ```
 
-**Kategorien der Failures:**
+**UPDATE:** Nach tomlkit Installation: 11 mehr Tests bestehen jetzt
 
-#### System Boot Tests (12 failures)
-- `test_system_boot.py::TestStewardRegistration` - Agent Registration
-- `test_system_boot.py::TestAgentDiscovery` - Discovery populates registry
-- `test_system_boot.py::TestGovernanceGate` - oath_sworn attribute
-- `test_system_boot.py::TestSystemIntegration` - Complete boot sequence
+**Verbleibende Failures:**
 
 #### Gajendra/Queue Tests (2 failures)
 - `test_gajendra_moksha.py` - CRITICAL priority bypass, security checks
@@ -145,13 +141,16 @@ pytest tests/ → 209 passed, 31 failed, 5 skipped
 - `test_offline_features.py::TestResearchToolOffline`
 - `test_offline_features.py::TestHeraldMigration`
 
-#### Semantic/Topology Tests (4 failures)
+#### Semantic/Topology Tests (5 failures)
 - `test_semantic_auditor.py` - auditor has judge/watchdog
 - `test_topology_integration.py` - task persistence
-
-#### Other (4 failures)
 - `test_p0_topology_integration.py`
-- `test_playbook_execution.py` (async issues)
+
+#### Async Tests (2 failures)
+- `test_playbook_execution.py` - async marker issues
+
+#### Agent Discovery (1 failure)
+- `test_system_boot.py::TestAgentDiscovery::test_discovered_agents_are_vibeagents`
 
 ### 3.2 Constitutional Oath Warning
 ```
