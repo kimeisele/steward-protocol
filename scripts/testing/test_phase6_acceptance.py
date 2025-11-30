@@ -47,7 +47,6 @@ def test_gateway_api_exists():
     print("\n🔍 TEST 2: Check gateway/api.py imports correctly")
 
     try:
-
         print("   ✅ PASSED: FastAPI app imports successfully")
         return True
     except Exception as e:
