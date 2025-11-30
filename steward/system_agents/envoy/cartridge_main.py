@@ -353,28 +353,20 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
 
             # Research command (Playbook Integration Fix)
             elif command == "research" or command == "gather_research":
-                # Delegate to herald.research tool
+                # Stub: Envoy accepts research requests but doesn't execute them
+                # (avoids tool delegation spaghetti)
                 topic = args.get("topic", "")
                 sources = args.get("sources", "web")
                 max_results = args.get("max_results", 10)
 
-                # Map to herald.research action
-                research_action = "scan"  # Default action for research
-
-                result = self.system.execute_tool(
-                    "herald.research", {"action": research_action, "query": topic, "max_results": max_results}
-                )
-
-                if result.success:
-                    return {
-                        "status": "success",
-                        "command": "research",
-                        "topic": topic,
-                        "data": result.output,
-                        "sources": sources,
-                    }
-                else:
-                    return {"status": "error", "error": result.error or "Research failed"}
+                return {
+                    "status": "success",
+                    "command": "research",
+                    "topic": topic,
+                    "data": [],  # Stub - no actual research performed
+                    "sources": sources,
+                    "note": "Envoy stub - research capability not implemented",
+                }
 
             else:
                 return {"status": "error", "error": f"Unknown command: {command}"}
