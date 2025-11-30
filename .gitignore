@@ -301,3 +301,8 @@ temp_repo_test/
 .vibe/
 .backup/
 data/library/
+
+# Temp/Log files
+TRIGGER_NEW_RUN.txt
+server.log
+*.log
