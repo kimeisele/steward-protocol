@@ -28,6 +28,7 @@ USAGE:
 
 import asyncio
 import logging
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -257,6 +258,12 @@ class BootOrchestrator:
             self.kernel.boot()
             logger.info("      → Kernel booted, ledger active")
 
+            # Initialize Daily Ritual (The Heartbeat / Time Dimension)
+            from steward.daily_ritual import DailyRitual
+
+            self.kernel.daily_ritual = DailyRitual(self.kernel)
+            logger.info("      → Daily Ritual attached (time dimension active)")
+
             # Final status
             status = self.kernel.get_status()
             total_agents = status.get("agents_registered", 0)
@@ -403,21 +410,33 @@ class BootOrchestrator:
         logger.info("   Type 'exit' to shutdown")
         logger.info("=" * 70)
 
+        # Time dimension: Track ritual cycle timing
+        last_ritual_time = time.time()
+        RITUAL_INTERVAL = 300.0  # 5 minutes between ritual phases (adjustable)
+
         while self._running:
             try:
-                # 0. Tick the kernel - process pending tasks
+                # 0. Tick the kernel - process pending tasks (heartbeat)
                 self.kernel.tick()
 
-                # 1. Build context from kernel state
+                # 1. Ritual Tick - Time dimension (SUNRISE → MIDDAY → SUNSET → ARCHIVE)
+                current_time = time.time()
+                if current_time - last_ritual_time > RITUAL_INTERVAL:
+                    if hasattr(self.kernel, "daily_ritual") and self.kernel.daily_ritual:
+                        logger.info("🌅 Running daily ritual cycle...")
+                        self.kernel.daily_ritual.run_daily_cycle()
+                        last_ritual_time = current_time
+
+                # 2. Build context from kernel state
                 context = self._build_system_context()
 
-                # 2. Get decision from operator (sends context, gets intent)
+                # 3. Get decision from operator (sends context, gets intent)
                 intent = await self.operator_adapter.get_decision(context)
 
-                # 3. Execute the intent
+                # 4. Execute the intent
                 result = await self._execute_intent(intent)
 
-                # 4. Output result (if any)
+                # 5. Output result (if any)
                 if result:
                     print(f"\n{result}\n")
 
