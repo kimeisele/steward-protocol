@@ -142,7 +142,7 @@ class ConstitutionalOath:
 
             # 3. SIGNATURE VERIFICATION (SECURITY FIX: P0.2)
             # Only verify signatures if identity_tool is provided and has verification capability
-            if identity_tool and hasattr(identity_tool, 'verify_signature'):
+            if identity_tool and hasattr(identity_tool, "verify_signature"):
                 signature = oath_event.get("signature_full") or oath_event.get("signature")
                 if signature:
                     # The message that should have been signed is the constitution hash
