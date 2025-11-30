@@ -386,7 +386,7 @@ class RealVibeKernel(VibeKernel):
                 "description": trigger.description,
                 "evidence": trigger.evidence,
                 "timestamp": trigger.timestamp,
-            }
+            },
         )
         logger.critical(f"📜 Destruction logged to ledger: {agent_id}")
 
@@ -398,7 +398,7 @@ class RealVibeKernel(VibeKernel):
                 "reason": trigger.indicator_type,
                 "description": trigger.description,
                 "destroyer": "NARASIMHA",
-            }
+            },
         )
         logger.critical(f"⛓️  Destruction recorded in Parampara: {agent_id}")
         logger.critical(f"✝️ NARASIMHA COMPLETE: Agent '{agent_id}' has been annihilated.")
@@ -509,6 +509,7 @@ class RealVibeKernel(VibeKernel):
         Use register_agent() for registration.
         """
         from types import MappingProxyType
+
         return MappingProxyType(self._agent_registry)
 
     @property
@@ -526,11 +527,7 @@ class RealVibeKernel(VibeKernel):
         return self._ledger
 
     def record_verified_event(
-        self,
-        event_type: str,
-        agent_id: str,
-        details: dict,
-        caller_agent: "VibeAgent" = None
+        self, event_type: str, agent_id: str, details: dict, caller_agent: "VibeAgent" = None
     ) -> str:
         """Record an event with identity verification.
 
@@ -559,7 +556,7 @@ class RealVibeKernel(VibeKernel):
 
         # If caller provided, verify it matches
         if caller_agent is not None:
-            if getattr(caller_agent, 'agent_id', None) != agent_id:
+            if getattr(caller_agent, "agent_id", None) != agent_id:
                 raise PermissionError(
                     f"IDENTITY_SPOOFING_BLOCKED: Caller '{getattr(caller_agent, 'agent_id', 'unknown')}' "
                     f"attempted to record event as '{agent_id}'."
