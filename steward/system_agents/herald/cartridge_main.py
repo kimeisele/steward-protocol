@@ -89,7 +89,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             author="Steward Protocol",
             description="Autonomous intelligence and content distribution agent (offline-first)",
             domain="MEDIA",
-            capabilities=["content_generation", "broadcasting", "research", "strategy"],
+            capabilities=["content_generation", "broadcasting", "research"],  # CREDIBILITY FIX: P1.3 - Removed false "strategy" capability
             config=config,  # Pass config to parent
         )
 

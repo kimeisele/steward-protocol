@@ -60,15 +60,20 @@ except ImportError:
     logger_setup = logging.getLogger("VIBE_KERNEL")
     logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
-# Import Constitutional Oath verification (Governance Gate - optional)
+# Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
     from vibe_core.bridge import ConstitutionalOath
 
     OATH_ENFORCEMENT_AVAILABLE = True
-except ImportError:
-    OATH_ENFORCEMENT_AVAILABLE = False
-    logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
+except ImportError as e:
+    # In production, this should be fatal (SECURITY FIX: P0.3)
+    import os
+    if os.environ.get("STEWARD_REQUIRE_OATH", "true").lower() == "true":
+        raise RuntimeError(f"CRITICAL: Constitutional Oath module required but failed to load: {e}")
+    else:
+        OATH_ENFORCEMENT_AVAILABLE = False
+        logger_setup = logging.getLogger("VIBE_KERNEL")
+        logger_setup.warning("⚠️  Constitutional Oath disabled (STEWARD_REQUIRE_OATH=false)")
 
 
 logger = logging.getLogger("VIBE_KERNEL")

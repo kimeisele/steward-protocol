@@ -12,10 +12,6 @@
       {
         "description": "research operation",
         "name": "research"
-      },
-      {
-        "description": "strategy operation",
-        "name": "strategy"
       }
     ]
   },
