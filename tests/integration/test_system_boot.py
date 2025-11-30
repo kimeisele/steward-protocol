@@ -68,12 +68,15 @@ class TestKernelBoot:
         logger.info("✅ Kernel has manifest registry")
 
     def test_kernel_has_agent_registry(self):
-        """Test that kernel has agent registry"""
+        """Test that kernel has agent registry (immutable MappingProxyType)"""
+        from collections.abc import Mapping
+
         kernel = RealVibeKernel(ledger_path=":memory:")
 
         assert kernel.agent_registry is not None
-        assert isinstance(kernel.agent_registry, dict)
-        logger.info("✅ Kernel has agent registry")
+        # SECURITY: Registry is now MappingProxyType (immutable) not dict
+        assert isinstance(kernel.agent_registry, Mapping)
+        logger.info("✅ Kernel has agent registry (immutable)")
 
     def test_kernel_has_scheduler(self):
         """Test that kernel has task scheduler"""
