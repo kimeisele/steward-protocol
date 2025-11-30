@@ -13,18 +13,16 @@
 ## Quick Start
 
 ```bash
-# Boot Agent City
+git clone https://github.com/kimeisele/steward-protocol.git
+cd steward-protocol
 python boot.py
-
-# Or verify boot works first
-python boot.py --check
 ```
 
-The system runs interactively until you press Ctrl+C or type 'exit'.
+That's it. One command boots everything. Dependencies auto-install.
 
-**Create a new agent:**
+**Verify boot:**
 ```bash
-python scripts/summon.py --name "agent_name" --mission "Agent mission"
+python boot.py --check
 ```
 
 ---
