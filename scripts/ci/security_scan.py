@@ -2,83 +2,45 @@
 """
 Security Scan - CI/CD Script
 
-Check for potential security issues:
-- Hardcoded API keys
-- Hardcoded passwords
-- Other security anti-patterns
-
-Extracted from inline YAML script for maintainability.
+Simple grep-based secret detection scan.
+Extracted from inline YAML for maintainability.
 """
 import sys
 import subprocess
-from pathlib import Path
 
 
-def scan_for_pattern(pattern, description):
-    """Scan Python files for a security pattern"""
-    print(f"\nScanning for {description}...")
+def run_scan():
+    print("🔒 Running Security Scan (Secrets Detection)...")
+    # Simple grep based scan (Fail fast)
+    # Exclude tests and dummy data
+    patterns = [
+        "api_key\\s*=\\s*['\"][^'\"]*['\"]",
+        "password\\s*=\\s*['\"][^'\"]*['\"]",
+        "private_key\\s*=\\s*['\"][^'\"]*['\"]"
+    ]
 
-    try:
-        result = subprocess.run(
-            [
-                "grep",
-                "-r",
-                "-i",
-                "-n",
-                "-E",
-                pattern,
-                "--include=*.py",
-                "vibe_core",
-                "steward",
-                "scripts"
-            ],
-            capture_output=True,
-            text=True
-        )
+    found_secrets = False
+    for pattern in patterns:
+        try:
+            # Grep recursive, ignore case, show line number
+            # Using subprocess to use grep power (linux environment in CI)
+            cmd = f'grep -r -i -E "{pattern}" vibe_core steward scripts --include="*.py" || true'
+            result = subprocess.check_output(cmd, shell=True, text=True)
 
-        if result.returncode == 0 and result.stdout.strip():
-            print(f"⚠️  Warning: {description} found:")
-            print(result.stdout)
-            return True
-        else:
-            print(f"✅ No {description} detected")
-            return False
+            if result.strip():
+                print(f"⚠️  POTENTIAL SECRET FOUND (Pattern: {pattern}):")
+                print(result)
+                found_secrets = True
+        except Exception as e:
+            print(f"Error executing grep: {e}")
 
-    except Exception as e:
-        print(f"⚠️  Could not scan for {description}: {e}")
+    if found_secrets:
+        print("❌ Secrets detected in codebase. Build failed.")
         return False
+
+    print("✅ No hardcoded secrets found.")
+    return True
 
 
 if __name__ == "__main__":
-    print("🔒 Starting Security Scan...")
-    print("="*70)
-
-    warnings = []
-
-    # Scan for hardcoded API keys
-    if scan_for_pattern(r'api_key\s*=\s*["\'][^"\']+["\']', "hardcoded API keys"):
-        warnings.append("Potential hardcoded API keys")
-
-    # Scan for hardcoded passwords
-    if scan_for_pattern(r'password\s*=\s*["\'][^"\']+["\']', "hardcoded passwords"):
-        warnings.append("Potential hardcoded passwords")
-
-    # Scan for hardcoded tokens
-    if scan_for_pattern(r'token\s*=\s*["\'][^"\']+["\']', "hardcoded tokens"):
-        warnings.append("Potential hardcoded tokens")
-
-    print("\n" + "="*70)
-    print("Security Scan Complete")
-    print("="*70)
-
-    if warnings:
-        print(f"\n⚠️  Found {len(warnings)} potential security issue(s):")
-        for warning in warnings:
-            print(f"  - {warning}")
-        print("\nNote: These are warnings, not failures.")
-        print("Review the findings and ensure secrets use environment variables.")
-    else:
-        print("\n✅ No security issues detected")
-
-    # Security scan never fails the build, only warns
-    sys.exit(0)
+    sys.exit(0 if run_scan() else 1)

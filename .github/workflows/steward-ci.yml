@@ -62,7 +62,7 @@ jobs:
           pip install -e .
 
       - name: Verify agent manifests
-        run: python scripts/ci/verify_agent_manifests.py
+        run: python scripts/ci/verify_agents_manifest.py
 
   # =========================================================================
   # JOB 3: Infrastructure Health Check
@@ -173,7 +173,7 @@ jobs:
           pip install -e .
 
       - name: Render Constitutional Verdict
-        run: python scripts/ci/run_auditor_verdict.py
+        run: python scripts/ci/run_constitutional_verdict.py
 
       - name: Upload Verdict Report
         if: always()
