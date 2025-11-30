@@ -401,12 +401,50 @@ class DeterministicExecutor:
                     phase.result = {"script": target, "params": params}
 
                 elif action_type == "CALL_AGENT":
-                    # Delegate to another agent
-                    logger.info(f"  ✓ Delegated to agent: {target}")
+                    # Delegate to another agent (PLAYBOOK FIX: Actually call the agent!)
+                    logger.info(f"  → Calling agent: {target}")
                     if kernel:
-                        # Would submit task to kernel
-                        pass
-                    phase.result = {"agent": target, "params": params}
+                        import asyncio
+
+                        from vibe_core.scheduling.task import Task
+
+                        task = Task(agent_id=target, payload=params)
+                        logger.debug(f"  📤 Submitting task to {target}: {params}")
+
+                        # Submit task (synchronous - returns task_id)
+                        task_id = kernel.submit_task(task)
+                        logger.debug(f"  📋 Task submitted: {task_id}")
+
+                        # Wait for result (polling with timeout)
+                        timeout_sec = phase.timeout_seconds
+                        poll_interval = 0.5  # Check every 500ms
+                        elapsed = 0
+                        result = None
+
+                        while elapsed < timeout_sec:
+                            # 1. Drive the kernel (Herzschlag manuell auslösen)
+                            if hasattr(kernel, "tick"):
+                                kernel.tick()
+
+                            # 2. Check for result
+                            result = kernel.get_task_result(task_id)
+                            if result:
+                                break
+                            await asyncio.sleep(poll_interval)
+                            elapsed += poll_interval
+
+                        if result:
+                            phase.result = {"agent": target, "result": result, "params": params, "task_id": task_id}
+                            status = result.get("status", "unknown")
+                            logger.info(f"  ✓ Agent {target} returned: {status}")
+                        else:
+                            logger.warning(f"  ⏱️  Agent {target} timeout after {timeout_sec}s")
+                            phase.result = {"error": "timeout", "agent": target, "task_id": task_id}
+                            return False  # Fail phase on timeout
+                    else:
+                        logger.warning(f"  ⚠️ No kernel available, cannot execute agent call to {target}")
+                        phase.result = {"error": "No kernel available", "agent": target}
+                        return False  # Fail the phase if no kernel
 
                 elif action_type == "CALL_PLAYBOOK":
                     # Execute nested playbook (FRACTAL/NESTED SUPPORT)

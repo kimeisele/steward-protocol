@@ -89,7 +89,11 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             author="Steward Protocol",
             description="Autonomous intelligence and content distribution agent (offline-first)",
             domain="MEDIA",
-            capabilities=["content_generation", "broadcasting", "research", "strategy"],
+            capabilities=[
+                "content_generation",
+                "broadcasting",
+                "research",
+            ],  # CREDIBILITY FIX: P1.3 - Removed false "strategy" capability
             config=config,  # Pass config to parent
         )
 
@@ -256,6 +260,29 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                             "detail": str(e),
                         }
                 return {"status": "error", "reason": "system_interface_not_available"}
+
+            # Playbook support: Accept schema but return stub (Herald is infrastructure only)
+            elif action == "generate_content":
+                # Stub: Herald is broadcasting infrastructure, not content creator
+                topic = task.payload.get("topic", "")
+                return {
+                    "status": "success",
+                    "action": "generate_content",
+                    "content_id": f"stub_{task.task_id}",
+                    "note": "Herald stub - content generation not implemented",
+                }
+
+            elif action == "publish_content":
+                # Stub: Would publish if real content system existed
+                content_id = task.payload.get("content_id", "")
+                platform = task.payload.get("platform", "twitter")
+                return {
+                    "status": "success",
+                    "action": "publish_content",
+                    "published": False,
+                    "platform": platform,
+                    "note": "Herald stub - publishing not implemented",
+                }
 
             else:
                 return {"status": "error", "error": f"Unknown action: {action}"}

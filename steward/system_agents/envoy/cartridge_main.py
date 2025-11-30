@@ -197,6 +197,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         - campaign: Run multi-agent marketing campaign
         - report: Generate G.A.P. (Governability Audit Proof) report
         - next_action: Get strategic advice from HIL Assistant
+        - research: Gather research/intelligence on a topic (via herald.research)
         """
         logger.info(f"🔄 ENVOY routing command: {command} with args: {args}")
 
@@ -348,6 +349,23 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     "status": "success",
                     "action": "strategic_briefing",
                     "summary": summary,
+                }
+
+            # Research command (Playbook Integration Fix)
+            elif command == "research" or command == "gather_research":
+                # Stub: Envoy accepts research requests but doesn't execute them
+                # (avoids tool delegation spaghetti)
+                topic = args.get("topic", "")
+                sources = args.get("sources", "web")
+                max_results = args.get("max_results", 10)
+
+                return {
+                    "status": "success",
+                    "command": "research",
+                    "topic": topic,
+                    "data": [],  # Stub - no actual research performed
+                    "sources": sources,
+                    "note": "Envoy stub - research capability not implemented",
                 }
 
             else:

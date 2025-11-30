@@ -5,6 +5,7 @@ AGENT CITY OS - THE ONE ENTRY POINT (PHOENIX EDITION)
 Usage:
     python boot.py              # Boot and run (auto-installs everything)
     python boot.py --check      # Verify system can boot
+    python boot.py --venv       # Use virtual environment (professional mode)
     python boot.py --help       # Show this help
 
 This is ALL you need. Clone the repo, run boot.py. Done.
@@ -17,6 +18,7 @@ PHOENIX GUARANTEES:
 - Cross-platform temp directories
 - Self-diagnosing errors
 - Retry with backoff on network failures
+- Optional venv support (--venv flag)
 """
 
 import os
@@ -60,17 +62,61 @@ def check_python_version():
     return True
 
 
-def find_installer():
+def ensure_venv(python_exe=None):
+    """Create and activate venv if --venv flag passed (CREDIBILITY FIX: P1.1).
+
+    Args:
+        python_exe: Python executable to use (defaults to sys.executable)
+
+    Returns:
+        Path to venv's Python executable
+    """
+    venv_path = PROJECT_ROOT / ".venv"
+    python_exe = python_exe or sys.executable
+
+    if not venv_path.exists():
+        print("Creating virtual environment...")
+        try:
+            subprocess.run([python_exe, "-m", "venv", str(venv_path)], check=True)
+            print("✓ Virtual environment created.")
+        except subprocess.CalledProcessError as e:
+            print_error(
+                f"Failed to create virtual environment: {e}",
+                "Ensure 'python3-venv' is installed on your system"
+            )
+            return None
+
+    # Return the venv's Python executable
+    if sys.platform == "win32":
+        return venv_path / "Scripts" / "python.exe"
+    return venv_path / "bin" / "python"
+
+
+def find_installer(use_venv=False, venv_python=None):
     """Find the best available package installer.
+
+    Args:
+        use_venv: If True, don't use --system flag for uv
+        venv_python: If provided, use this Python executable for pip
 
     Returns (command_list, name) or (None, None) if nothing found.
     Preference: uv > pip > python -m pip
     """
+    python_exe = str(venv_python) if venv_python else sys.executable
+
     # Try uv first (fastest, modern) - needs --system for non-venv installs
     if shutil.which("uv"):
-        return (["uv", "pip", "install", "--system", "-e", "."], "uv")
+        if use_venv:
+            return (["uv", "pip", "install", "-e", "."], "uv")
+        else:
+            return (["uv", "pip", "install", "--system", "-e", "."], "uv")
 
-    # Try pip directly
+    # Try pip directly (prefer venv's pip if available)
+    if venv_python:
+        venv_pip = venv_python.parent / ("pip.exe" if sys.platform == "win32" else "pip")
+        if venv_pip.exists():
+            return ([str(venv_pip), "install", "-e", "."], "pip (venv)")
+
     if shutil.which("pip"):
         return (["pip", "install", "-e", "."], "pip")
 
@@ -78,11 +124,16 @@ def find_installer():
         return (["pip3", "install", "-e", "."], "pip3")
 
     # Fallback to python -m pip
-    return ([sys.executable, "-m", "pip", "install", "-e", "."], "python -m pip")
+    return ([python_exe, "-m", "pip", "install", "-e", "."], "python -m pip")
 
 
-def ensure_dependencies():
-    """Auto-install dependencies from pyproject.toml with retry."""
+def ensure_dependencies(use_venv=False, venv_python=None):
+    """Auto-install dependencies from pyproject.toml with retry.
+
+    Args:
+        use_venv: Whether to use venv mode (affects uv --system flag)
+        venv_python: Path to venv Python executable if using venv
+    """
     from importlib.util import find_spec
 
     # Check if ALL key dependencies already installed (not just core ones)
@@ -91,7 +142,7 @@ def ensure_dependencies():
         return True  # Already installed
 
     # Find installer
-    install_cmd, installer_name = find_installer()
+    install_cmd, installer_name = find_installer(use_venv=use_venv, venv_python=venv_python)
     if not install_cmd:
         print_error(
             "No package installer found (uv, pip, pip3)",
@@ -272,6 +323,7 @@ Works on Windows, Linux, Mac. Tries uv → pip automatically.
     parser.add_argument("--check", action="store_true", help="Verify boot works (quick test)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
     parser.add_argument("--skip-deps", action="store_true", help="Skip dependency check")
+    parser.add_argument("--venv", action="store_true", help="Use virtual environment (CREDIBILITY FIX: P1.1)")
 
     args = parser.parse_args()
 
@@ -288,9 +340,18 @@ Works on Windows, Linux, Mac. Tries uv → pip automatically.
     # STEP 2: Setup environment (needed before imports)
     setup_environment()
 
+    # STEP 2.5: Setup virtual environment if requested (CREDIBILITY FIX: P1.1)
+    venv_python = None
+    if args.venv:
+        print("Using virtual environment mode...")
+        venv_python = ensure_venv()
+        if not venv_python:
+            sys.exit(1)
+        print(f"✓ Using venv Python: {venv_python}")
+
     # STEP 3: Auto-install dependencies
     if not args.skip_deps:
-        if not ensure_dependencies():
+        if not ensure_dependencies(use_venv=args.venv, venv_python=venv_python):
             sys.exit(1)
 
     # STEP 4: Create directories

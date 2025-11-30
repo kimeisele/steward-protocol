@@ -37,8 +37,8 @@ from .kernel import (
 )
 from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
+from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
-from .narasimha import get_narasimha, ThreatIndicator  # Phase 7: Kill-Switch
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
@@ -60,15 +60,21 @@ except ImportError:
     logger_setup = logging.getLogger("VIBE_KERNEL")
     logger_setup.warning("⚠️  Auditor not available - immune system disabled")
 
-# Import Constitutional Oath verification (Governance Gate - optional)
+# Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
     from vibe_core.bridge import ConstitutionalOath
 
     OATH_ENFORCEMENT_AVAILABLE = True
-except ImportError:
-    OATH_ENFORCEMENT_AVAILABLE = False
-    logger_setup = logging.getLogger("VIBE_KERNEL")
-    logger_setup.warning("⚠️  Constitutional Oath not available - governance gate disabled")
+except ImportError as e:
+    # In production, this should be fatal (SECURITY FIX: P0.3)
+    import os
+
+    if os.environ.get("STEWARD_REQUIRE_OATH", "true").lower() == "true":
+        raise RuntimeError(f"CRITICAL: Constitutional Oath module required but failed to load: {e}")
+    else:
+        OATH_ENFORCEMENT_AVAILABLE = False
+        logger_setup = logging.getLogger("VIBE_KERNEL")
+        logger_setup.warning("⚠️  Constitutional Oath disabled (STEWARD_REQUIRE_OATH=false)")
 
 
 logger = logging.getLogger("VIBE_KERNEL")
@@ -193,6 +199,7 @@ class RealVibeKernel(VibeKernel):
         """Initialize the kernel"""
         self._agent_registry: Dict[str, VibeAgent] = {}
         self._scheduler = InMemoryScheduler()
+        self._completed_tasks: Dict[str, Any] = {}  # Temporary result cache for async IPC
         # Use SQLiteLedger for persistence (not in-memory)
         if ledger_path == ":memory:":
             self._ledger = InMemoryLedger()
@@ -886,11 +893,10 @@ class RealVibeKernel(VibeKernel):
                 status = msg.get("status")
 
                 if status == "success":
-                    _result = msg.get("result")  # noqa: F841 - reserved for future ledger use
+                    result = msg.get("result")
                     logger.info(f"✅ Task {task_id} completed (Async IPC)")
-                    # We need to reconstruct the Task object or look it up if we want to record properly
-                    # For now, we'll just log. In a real system, we'd have a pending_tasks map.
-                    # self._ledger.record_completion(task_id, result)
+                    # Cache result for get_task_result() polling
+                    self._completed_tasks[task_id] = result
 
                 else:
                     error = msg.get("error")
@@ -1133,6 +1139,11 @@ class RealVibeKernel(VibeKernel):
 
     def get_task_result(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Get the result of a completed task"""
+        # First check in-memory cache (for async IPC results)
+        if task_id in self._completed_tasks:
+            return self._completed_tasks[task_id]
+
+        # Fallback to ledger (for sync results)
         event = self._ledger.get_task(task_id)
         if event and event.get("event_type") == "task_completed":
             return {

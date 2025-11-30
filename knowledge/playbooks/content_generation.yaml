@@ -20,10 +20,11 @@ playbook:
         - action_type: "CALL_AGENT"
           target: "envoy"
           params:
-            task: "gather_research"
-            topic: "{{ content_topic }}"
-            sources: "web"
-            max_results: 10
+            command: "research"
+            args:
+              topic: "{{ content_topic }}"
+              sources: "web"
+              max_results: 10
 
       on_success: "phase_2_draft"
       on_failure: "phase_2_draft"  # Proceed even if research fails
@@ -38,7 +39,7 @@ playbook:
         - action_type: "CALL_AGENT"
           target: "herald"
           params:
-            task: "generate_content"
+            action: "generate_content"
             topic: "{{ content_topic }}"
             format: "{{ content_format }}"
             tone: "{{ content_tone }}"
@@ -75,7 +76,7 @@ playbook:
         - action_type: "CALL_AGENT"
           target: "herald"
           params:
-            task: "publish_content"
+            action: "publish_content"
             content_id: "{{ draft_generated.id }}"
             platform: "{{ publish_platform }}"
 

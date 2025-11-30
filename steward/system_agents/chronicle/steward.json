@@ -4,14 +4,6 @@
       {
         "description": "content_generation operation",
         "name": "content_generation"
-      },
-      {
-        "description": "ledger operation",
-        "name": "ledger"
-      },
-      {
-        "description": "orchestration operation",
-        "name": "orchestration"
       }
     ]
   },
