@@ -89,7 +89,11 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             author="Steward Protocol",
             description="Autonomous intelligence and content distribution agent (offline-first)",
             domain="MEDIA",
-            capabilities=["content_generation", "broadcasting", "research"],  # CREDIBILITY FIX: P1.3 - Removed false "strategy" capability
+            capabilities=[
+                "content_generation",
+                "broadcasting",
+                "research",
+            ],  # CREDIBILITY FIX: P1.3 - Removed false "strategy" capability
             config=config,  # Pass config to parent
         )
 
@@ -256,6 +260,59 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                             "detail": str(e),
                         }
                 return {"status": "error", "reason": "system_interface_not_available"}
+
+            # Playbook Integration: Content generation actions
+            elif action == "generate_content":
+                # Generate content based on topic/research
+                topic = task.payload.get("topic", "")
+                content_format = task.payload.get("format", "article")
+                tone = task.payload.get("tone", "professional")
+                research_data = task.payload.get("research_data", {})
+
+                # Use herald.scribe tool for content generation
+                result = self.system.execute_tool(
+                    "herald.scribe",
+                    {
+                        "action": "generate",
+                        "topic": topic,
+                        "format": content_format,
+                        "tone": tone,
+                        "research_context": research_data,
+                    },
+                )
+
+                if result.success:
+                    return {
+                        "status": "success",
+                        "action": "generate_content",
+                        "content_id": f"content_{task.task_id}",
+                        "draft": result.output.get("content", ""),
+                        "format": content_format,
+                    }
+                else:
+                    return {"status": "error", "error": result.error or "Content generation failed"}
+
+            elif action == "publish_content" or action == "publish":
+                # Publish content to platform
+                content_id = task.payload.get("content_id", "")
+                content = task.payload.get("content", "")
+                platform = task.payload.get("platform", "twitter")
+
+                # Use herald.broadcast tool
+                result = self.system.execute_tool(
+                    "herald.broadcast", {"action": "publish", "content": content, "platform": platform}
+                )
+
+                if result.success:
+                    return {
+                        "status": "success",
+                        "action": "publish_content",
+                        "published": True,
+                        "platform": platform,
+                        "content_id": content_id,
+                    }
+                else:
+                    return {"status": "error", "error": result.error or "Publishing failed"}
 
             else:
                 return {"status": "error", "error": f"Unknown action: {action}"}

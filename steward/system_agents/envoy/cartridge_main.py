@@ -197,6 +197,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         - campaign: Run multi-agent marketing campaign
         - report: Generate G.A.P. (Governability Audit Proof) report
         - next_action: Get strategic advice from HIL Assistant
+        - research: Gather research/intelligence on a topic (via herald.research)
         """
         logger.info(f"🔄 ENVOY routing command: {command} with args: {args}")
 
@@ -349,6 +350,31 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     "action": "strategic_briefing",
                     "summary": summary,
                 }
+
+            # Research command (Playbook Integration Fix)
+            elif command == "research" or command == "gather_research":
+                # Delegate to herald.research tool
+                topic = args.get("topic", "")
+                sources = args.get("sources", "web")
+                max_results = args.get("max_results", 10)
+
+                # Map to herald.research action
+                research_action = "scan"  # Default action for research
+
+                result = self.system.execute_tool(
+                    "herald.research", {"action": research_action, "query": topic, "max_results": max_results}
+                )
+
+                if result.success:
+                    return {
+                        "status": "success",
+                        "command": "research",
+                        "topic": topic,
+                        "data": result.output,
+                        "sources": sources,
+                    }
+                else:
+                    return {"status": "error", "error": result.error or "Research failed"}
 
             else:
                 return {"status": "error", "error": f"Unknown command: {command}"}
