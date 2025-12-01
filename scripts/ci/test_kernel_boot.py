@@ -16,7 +16,6 @@ sys.path.insert(0, os.getcwd())
 def test_kernel_import():
     """Test that kernel modules can be imported"""
     try:
-
         print("✅ All kernel modules imported successfully")
         return True
     except Exception as e:
