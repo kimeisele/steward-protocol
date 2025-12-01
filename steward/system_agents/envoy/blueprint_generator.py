@@ -59,12 +59,12 @@ logger = logging.getLogger("BLUEPRINT_GENERATOR")
 
 SYSCALL_INTENT_PATTERNS = {
     SyscallType.SPAWN_COGNITION: [
-        r"create\s+(?:a\s+)?(?:new\s+)?(?:agent|bot|worker|cartridge)",
-        r"build\s+(?:a\s+)?(?:new\s+)?(?:agent|bot|worker)",
-        r"spawn\s+(?:a\s+)?(?:new\s+)?(?:agent|cognition)",
-        r"birth\s+(?:a\s+)?(?:new\s+)?agent",
-        r"make\s+(?:a\s+)?(?:new\s+)?(?:agent|bot)",
-        r"i\s+need\s+(?:a\s+)?(?:new\s+)?agent",
+        r"create\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?(?:agent|bot|worker|cartridge)",
+        r"build\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?(?:agent|bot|worker)",
+        r"spawn\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?(?:agent|cognition|worker|bot)",
+        r"birth\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?agent",
+        r"make\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?(?:agent|bot|worker)",
+        r"i\s+need\s+(?:an?\s+)?(?:new\s+)?(?:\w+\s+)?agent",
         r"(?:agent|bot)\s+(?:that|to|for|which)",
     ],
     SyscallType.ALLOCATE_PRANA: [
@@ -78,6 +78,17 @@ SYSCALL_INTENT_PATTERNS = {
         r"dispatch\s+(?:to\s+)?(?:agent|)",
         r"ask\s+(?:the\s+)?(?:agent|herald|civic)",
         r"tell\s+(?:the\s+)?(?:agent|herald|civic)",
+        # Content Generation patterns (dispatch to herald)
+        r"write\s+(?:a\s+)?(?:blog|post|article|doc)",
+        r"create\s+(?:a\s+)?(?:blog|post|article|content)",
+        r"generate\s+(?:a\s+)?(?:blog|documentation|announcement|content)",
+        r"draft\s+(?:a\s+)?(?:post|article|content)",
+        r"(?:blog|post|article)\s+(?:about|on|for)",
+        # Governance patterns (dispatch to civic)
+        r"vote\s+(?:on|for)\s+",
+        r"start\s+(?:a\s+)?voting",
+        r"proposal\s+(?:#?\d+|vote)",
+        r"governance\s+(?:vote|decision)",
     ],
 }
 
@@ -90,6 +101,35 @@ ROLE_PATTERNS = {
     "artisan": ["design", "create", "craft", "build", "generate", "art"],
     "oracle": ["predict", "forecast", "analyze", "intelligence", "insights"],
     "engineer": ["code", "implement", "develop", "program", "build software"],
+}
+
+# Content-related extraction patterns
+CONTENT_FORMAT_PATTERNS = {
+    "markdown": ["markdown", "md", ".md"],
+    "html": ["html", "web", "webpage"],
+    "text": ["text", "plain", "txt"],
+    "json": ["json", "structured"],
+}
+
+CONTENT_TONE_PATTERNS = {
+    "professional": ["professional", "formal", "business"],
+    "casual": ["casual", "informal", "friendly", "conversational"],
+    "technical": ["technical", "detailed", "in-depth"],
+    "simple": ["simple", "easy", "beginner", "eli5"],
+}
+
+# Governance-related patterns
+GOVERNANCE_PATTERNS = [
+    r"vote\s+(?:on|for)\s+",
+    r"start\s+(?:a\s+)?voting",
+    r"proposal\s+(?:#?\d+|vote)",
+    r"governance\s+(?:vote|decision)",
+]
+
+VOTING_RULES_PATTERNS = {
+    "democratic": ["democratic", "majority", "simple majority"],
+    "supermajority": ["supermajority", "two-thirds", "2/3"],
+    "unanimous": ["unanimous", "all agree", "consensus"],
 }
 
 
@@ -323,8 +363,34 @@ class BlueprintGenerator:
         }
 
     def _extract_dispatch_task_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
-        """Extract DISPATCH_TASK parameters."""
-        # Extract target agent
+        """
+        Extract DISPATCH_TASK parameters.
+
+        This handles:
+        1. Direct agent dispatch ("ask herald to...")
+        2. Content generation ("write a blog post about...")
+        3. Governance voting ("vote on proposal #123")
+        """
+        # Check if this is a governance/voting request
+        is_governance_request = any(re.search(p, input_lower) for p in GOVERNANCE_PATTERNS)
+        if is_governance_request:
+            return self._extract_governance_params(raw_input, input_lower)
+
+        # Check if this is a content generation request
+        content_patterns = [
+            r"write\s+(?:a\s+)?(?:blog|post|article|doc)",
+            r"create\s+(?:a\s+)?(?:blog|post|article|content)",
+            r"generate\s+(?:a\s+)?(?:blog|documentation|announcement|content)",
+            r"draft\s+(?:a\s+)?(?:post|article|content)",
+            r"(?:blog|post|article)\s+(?:about|on|for)",
+        ]
+
+        is_content_request = any(re.search(p, input_lower) for p in content_patterns)
+
+        if is_content_request:
+            return self._extract_content_generation_params(raw_input, input_lower)
+
+        # Standard agent dispatch
         agent_match = re.search(r'(?:to|ask|tell)\s+(?:the\s+)?(\w+)', input_lower)
         agent_id = agent_match.group(1) if agent_match else "envoy"
 
@@ -338,6 +404,138 @@ class BlueprintGenerator:
         return {
             "agent_id": agent_id,
             "task_payload": {"action": "process", "content": task_payload},
+        }
+
+    def _extract_content_generation_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
+        """
+        Extract content generation parameters.
+
+        This is "ML Light" for content - we extract:
+        - topic: What the content is about
+        - format: markdown, html, text
+        - tone: professional, casual, technical
+        - target_audience: (optional)
+        """
+        # Extract topic (everything after "about", "on", "for")
+        topic = raw_input
+        for separator in [" about ", " on ", " for ", " regarding "]:
+            if separator in input_lower:
+                idx = input_lower.index(separator)
+                topic = raw_input[idx + len(separator):].strip()
+                break
+
+        # If no separator found, extract from the full input
+        if topic == raw_input:
+            # Remove common prefixes
+            topic = re.sub(
+                r'^(write|create|generate|draft)\s+(a\s+)?(blog\s+)?(post\s+)?(article\s+)?(about\s+)?',
+                '',
+                input_lower
+            ).strip()
+            if not topic:
+                topic = raw_input
+
+        # Extract format
+        content_format = "markdown"  # default
+        for fmt, keywords in CONTENT_FORMAT_PATTERNS.items():
+            if any(kw in input_lower for kw in keywords):
+                content_format = fmt
+                break
+
+        # Extract tone
+        content_tone = "professional"  # default
+        for tone, keywords in CONTENT_TONE_PATTERNS.items():
+            if any(kw in input_lower for kw in keywords):
+                content_tone = tone
+                break
+
+        # Extract word count if mentioned
+        word_count_match = re.search(r'(\d+)\s*(?:words?|characters?)', input_lower)
+        word_count = int(word_count_match.group(1)) if word_count_match else None
+
+        # Content generation is dispatched to Herald
+        return {
+            "agent_id": "herald",
+            "task_payload": {
+                "action": "generate_content",
+                "topic": topic,
+                "format": content_format,
+                "tone": content_tone,
+                "word_count": word_count,
+            },
+            # Also store as content_params for circuit access
+            "content_params": {
+                "topic": topic,
+                "format": content_format,
+                "tone": content_tone,
+                "word_count": word_count,
+            },
+        }
+
+    def _extract_governance_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
+        """
+        Extract governance/voting parameters.
+
+        This extracts:
+        - proposal_id: The proposal being voted on
+        - rules: Voting rules (democratic, supermajority, unanimous)
+        - deadline: When voting ends (optional)
+        """
+        # Extract proposal ID
+        proposal_id = None
+        proposal_patterns = [
+            r'proposal\s*#?\s*(\d+)',
+            r'#(\d+)',
+            r'prop[- ]?(\d+)',
+            r'vote\s+(?:on|for)\s+(\w+)',
+        ]
+
+        for pattern in proposal_patterns:
+            match = re.search(pattern, input_lower)
+            if match:
+                proposal_id = match.group(1)
+                break
+
+        # If no numeric ID found, try to extract a name
+        if not proposal_id:
+            name_match = re.search(r'vote\s+(?:on|for)\s+(?:the\s+)?(.+?)(?:\s+proposal)?$', input_lower)
+            if name_match:
+                proposal_id = name_match.group(1).strip()
+
+        # Extract voting rules
+        voting_rules = "democratic"  # default
+        for rules, keywords in VOTING_RULES_PATTERNS.items():
+            if any(kw in input_lower for kw in keywords):
+                voting_rules = rules
+                break
+
+        # Extract deadline if mentioned
+        deadline = None
+        deadline_patterns = [
+            r'(?:by|until|deadline)\s+(\d{4}-\d{2}-\d{2})',
+            r'(?:by|until)\s+(\d+)\s*(?:hours?|days?)',
+        ]
+        for pattern in deadline_patterns:
+            match = re.search(pattern, input_lower)
+            if match:
+                deadline = match.group(1)
+                break
+
+        # Governance is dispatched to Civic agent
+        return {
+            "agent_id": "civic",
+            "task_payload": {
+                "action": "initiate_vote",
+                "proposal_id": proposal_id,
+                "rules": voting_rules,
+                "deadline": deadline,
+            },
+            # Also store as vote_params for circuit access
+            "vote_params": {
+                "proposal_id": proposal_id,
+                "rules": voting_rules,
+                "deadline": deadline,
+            },
         }
 
     async def generate_blueprint(
