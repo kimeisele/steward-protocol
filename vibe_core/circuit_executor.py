@@ -20,6 +20,7 @@ This is the runtime for "ML Light" - deterministic execution of neural output.
 """
 
 import logging
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
@@ -40,6 +41,258 @@ from steward.system_agents.envoy.blueprint_generator import (
 )
 
 logger = logging.getLogger("CIRCUIT_EXECUTOR")
+
+
+# ============================================================================
+# INVARIANT CHECKER - Runtime enforcement of circuit constraints
+# ============================================================================
+
+
+@dataclass
+class InvariantViolation:
+    """Record of an invariant violation."""
+
+    invariant: str
+    state: str
+    variables: Dict[str, Any]
+    reason: str
+
+
+class InvariantChecker:
+    """
+    Runtime invariant checker for cognitive circuits.
+
+    Parses and evaluates invariant expressions against circuit state.
+    This is the SECURITY ENFORCEMENT layer - not just documentation.
+
+    Supported invariant patterns:
+    - "variable is not empty"
+    - "variable == value"
+    - "variable != value"
+    - "variable >= number"
+    - "variable <= number"
+    - "variable > number"
+    - "variable < number"
+    - "variable.path == value"
+    - "variable is not in LIST"
+    - "variable is in LIST"
+    """
+
+    def __init__(self):
+        self.violations: List[InvariantViolation] = []
+
+    def check_invariants(
+        self,
+        invariants: List[str],
+        variables: Dict[str, Any],
+        state_name: str,
+    ) -> bool:
+        """
+        Check all invariants against current variables.
+
+        Args:
+            invariants: List of invariant strings from circuit YAML
+            variables: Current state variables
+            state_name: Name of current state (for error reporting)
+
+        Returns:
+            True if all invariants pass, False if any fail
+        """
+        if not invariants:
+            return True
+
+        all_passed = True
+
+        for invariant in invariants:
+            passed, reason = self._evaluate_invariant(invariant, variables)
+
+            if not passed:
+                violation = InvariantViolation(
+                    invariant=invariant,
+                    state=state_name,
+                    variables=variables.copy(),
+                    reason=reason,
+                )
+                self.violations.append(violation)
+                logger.error(f"🚨 INVARIANT VIOLATION in {state_name}: {invariant}")
+                logger.error(f"   Reason: {reason}")
+                all_passed = False
+            else:
+                logger.debug(f"✓ Invariant passed: {invariant}")
+
+        return all_passed
+
+    def _evaluate_invariant(self, invariant: str, variables: Dict[str, Any]) -> tuple[bool, str]:
+        """
+        Evaluate a single invariant expression.
+
+        Returns:
+            (passed: bool, reason: str)
+        """
+        invariant = invariant.strip()
+
+        try:
+            # Pattern: "X is not empty"
+            match = re.match(r"(.+)\s+is\s+not\s+empty", invariant, re.IGNORECASE)
+            if match:
+                path = match.group(1).strip()
+                value = self._resolve_path(path, variables)
+                if value is None or value == "" or value == [] or value == {}:
+                    return False, f"{path} is empty (value: {value})"
+                return True, ""
+
+            # Pattern: "X is empty"
+            match = re.match(r"(.+)\s+is\s+empty", invariant, re.IGNORECASE)
+            if match:
+                path = match.group(1).strip()
+                value = self._resolve_path(path, variables)
+                if value is None or value == "" or value == [] or value == {}:
+                    return True, ""
+                return False, f"{path} is not empty (value: {value})"
+
+            # Pattern: "X is not in LIST"
+            match = re.match(r"(.+)\s+is\s+not\s+in\s+(\w+)", invariant, re.IGNORECASE)
+            if match:
+                path = match.group(1).strip()
+                list_name = match.group(2).strip()
+                value = self._resolve_path(path, variables)
+                forbidden_list = self._resolve_path(list_name, variables) or []
+                if value in forbidden_list:
+                    return False, f"{path}={value} is in forbidden list {list_name}"
+                return True, ""
+
+            # Pattern: "X is in LIST"
+            match = re.match(r"(.+)\s+is\s+in\s+(\w+)", invariant, re.IGNORECASE)
+            if match:
+                path = match.group(1).strip()
+                list_name = match.group(2).strip()
+                value = self._resolve_path(path, variables)
+                allowed_list = self._resolve_path(list_name, variables) or []
+                if value not in allowed_list:
+                    return False, f"{path}={value} is not in allowed list {list_name}"
+                return True, ""
+
+            # Pattern: "X == Y" or "X != Y"
+            match = re.match(r"(.+)\s*(==|!=)\s*(.+)", invariant)
+            if match:
+                left_path = match.group(1).strip()
+                operator = match.group(2)
+                right_raw = match.group(3).strip()
+
+                left_value = self._resolve_path(left_path, variables)
+                right_value = self._parse_value(right_raw, variables)
+
+                if operator == "==":
+                    if str(left_value).lower() != str(right_value).lower():
+                        return False, f"{left_path}={left_value} != {right_value}"
+                    return True, ""
+                else:  # !=
+                    if str(left_value).lower() == str(right_value).lower():
+                        return False, f"{left_path}={left_value} == {right_value}"
+                    return True, ""
+
+            # Pattern: "X >= Y" or "X <= Y" or "X > Y" or "X < Y"
+            match = re.match(r"(.+)\s*(>=|<=|>|<)\s*(.+)", invariant)
+            if match:
+                left_path = match.group(1).strip()
+                operator = match.group(2)
+                right_raw = match.group(3).strip()
+
+                left_value = self._resolve_path(left_path, variables)
+                right_value = self._parse_value(right_raw, variables)
+
+                try:
+                    left_num = float(left_value) if left_value is not None else 0
+                    right_num = float(right_value)
+                except (ValueError, TypeError):
+                    return False, f"Cannot compare non-numeric values: {left_value} {operator} {right_value}"
+
+                if operator == ">=":
+                    if not (left_num >= right_num):
+                        return False, f"{left_path}={left_num} < {right_num}"
+                elif operator == "<=":
+                    if not (left_num <= right_num):
+                        return False, f"{left_path}={left_num} > {right_num}"
+                elif operator == ">":
+                    if not (left_num > right_num):
+                        return False, f"{left_path}={left_num} <= {right_num}"
+                elif operator == "<":
+                    if not (left_num < right_num):
+                        return False, f"{left_path}={left_num} >= {right_num}"
+                return True, ""
+
+            # Pattern: "X has Y" (object has property)
+            match = re.match(r"(.+)\s+has\s+(.+)", invariant, re.IGNORECASE)
+            if match:
+                path = match.group(1).strip()
+                property_name = match.group(2).strip()
+                value = self._resolve_path(path, variables)
+                if value is None:
+                    return False, f"{path} is None"
+                if isinstance(value, dict):
+                    if property_name not in value:
+                        return False, f"{path} does not have property '{property_name}'"
+                    return True, ""
+                return False, f"{path} is not a dict, cannot check for '{property_name}'"
+
+            # Unknown pattern - log warning but pass (permissive for unknown patterns)
+            logger.warning(f"Unknown invariant pattern (skipping): {invariant}")
+            return True, "Unknown pattern - skipped"
+
+        except Exception as e:
+            return False, f"Error evaluating invariant: {e}"
+
+    def _resolve_path(self, path: str, variables: Dict[str, Any]) -> Any:
+        """Resolve a dotted path against variables dict."""
+        parts = path.split(".")
+        value = variables
+
+        for part in parts:
+            if isinstance(value, dict):
+                value = value.get(part)
+            elif hasattr(value, part):
+                value = getattr(value, part)
+            else:
+                return None
+
+        return value
+
+    def _parse_value(self, raw: str, variables: Dict[str, Any]) -> Any:
+        """Parse a value from invariant expression."""
+        # Check if it's a variable reference
+        if "." in raw or raw in variables:
+            resolved = self._resolve_path(raw, variables)
+            if resolved is not None:
+                return resolved
+
+        # String literal
+        if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
+            return raw[1:-1]
+
+        # Boolean
+        if raw.lower() == "true":
+            return True
+        if raw.lower() == "false":
+            return False
+
+        # Number
+        try:
+            if "." in raw:
+                return float(raw)
+            return int(raw)
+        except ValueError:
+            pass
+
+        # Return as string
+        return raw
+
+    def get_violations(self) -> List[InvariantViolation]:
+        """Get all recorded violations."""
+        return self.violations.copy()
+
+    def clear_violations(self) -> None:
+        """Clear recorded violations."""
+        self.violations.clear()
 
 
 @dataclass
@@ -84,6 +337,9 @@ class CognitiveCircuitExecutor:
         self.compiler = BlueprintGenerator(kernel)
         self.circuits: Dict[str, Dict] = {}
 
+        # Invariant checker - SECURITY ENFORCEMENT
+        self.invariant_checker = InvariantChecker()
+
         # Meta-circuit callbacks for TASK_LEDGER and ERROR_RECOVERY integration
         self._on_circuit_start: Optional[callable] = None
         self._on_state_transition: Optional[callable] = None
@@ -93,7 +349,7 @@ class CognitiveCircuitExecutor:
         # Load available circuits
         self._load_circuits()
 
-        logger.info("🔌 Cognitive Circuit Executor initialized")
+        logger.info("🔌 Cognitive Circuit Executor initialized (with invariant enforcement)")
 
     def set_meta_callbacks(
         self,
@@ -273,6 +529,35 @@ class CognitiveCircuitExecutor:
         max_transitions = 20  # Safety limit
         syscall_count = 0
 
+        # Clear any previous violations
+        self.invariant_checker.clear_violations()
+
+        # Check global circuit invariants at start
+        global_invariants = circuit_def.get("invariants", [])
+        global_invariant_checks = [inv.get("check", inv) if isinstance(inv, dict) else inv for inv in global_invariants]
+        if global_invariant_checks:
+            logger.info(f"🔒 Checking {len(global_invariant_checks)} global invariants...")
+            if not self.invariant_checker.check_invariants(global_invariant_checks, state.variables, "GLOBAL"):
+                violations = self.invariant_checker.get_violations()
+                error_msg = f"Global invariant violation: {violations[0].reason if violations else 'unknown'}"
+                logger.error(f"🚨 {error_msg}")
+
+                # META-CIRCUIT: Notify error
+                if self._on_error:
+                    try:
+                        self._on_error(circuit_id, "GLOBAL", error_msg)
+                    except Exception as e:
+                        logger.warning(f"Meta-callback on_error failed: {e}")
+
+                return CircuitExecutionResult(
+                    success=False,
+                    final_state="INVARIANT_VIOLATION",
+                    output={"error": error_msg, "violations": [v.__dict__ for v in violations]},
+                    state_history=state.history,
+                    syscall_count=syscall_count,
+                    error=error_msg,
+                )
+
         while not state.is_terminal and len(state.history) < max_transitions:
             current_state_name = state.current_state
             state.history.append(current_state_name)
@@ -289,6 +574,49 @@ class CognitiveCircuitExecutor:
                     syscall_count=syscall_count,
                     error=f"Circuit has undefined state: {current_state_name}",
                 )
+
+            # ================================================================
+            # INVARIANT ENFORCEMENT - Check state invariants BEFORE execution
+            # ================================================================
+            state_invariants = current_state_def.get("invariants", [])
+            if state_invariants:
+                logger.info(f"🔒 Checking {len(state_invariants)} invariants for state {current_state_name}...")
+                if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
+                    violations = self.invariant_checker.get_violations()
+                    error_msg = f"State invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}"
+                    logger.error(f"🚨 {error_msg}")
+
+                    # META-CIRCUIT: Notify error (may attempt recovery)
+                    if self._on_error:
+                        try:
+                            recovery = self._on_error(circuit_id, current_state_name, error_msg)
+                            if recovery:
+                                logger.info(f"🔧 Recovery suggested: {recovery}")
+                                # Recovery could modify variables or skip state
+                        except Exception as e:
+                            logger.warning(f"Meta-callback on_error failed: {e}")
+
+                    # HALT EXECUTION - invariants are NOT documentation, they are SECURITY
+                    result = CircuitExecutionResult(
+                        success=False,
+                        final_state="INVARIANT_VIOLATION",
+                        output={
+                            "error": error_msg,
+                            "state": current_state_name,
+                            "violations": [v.__dict__ for v in violations],
+                        },
+                        state_history=state.history,
+                        syscall_count=syscall_count,
+                        error=error_msg,
+                    )
+
+                    if self._on_circuit_end:
+                        try:
+                            self._on_circuit_end(circuit_id, False, "INVARIANT_VIOLATION", result.output)
+                        except Exception as e:
+                            logger.warning(f"Meta-callback on_end failed: {e}")
+
+                    return result
 
             # Check if terminal
             if current_state_def.get("terminal", False):
@@ -368,6 +696,44 @@ class CognitiveCircuitExecutor:
                         }
 
                     logger.info(f"⚡ SYSCALL {syscall_type_str}: success={result.success}")
+
+            # ================================================================
+            # POST-OPERATION INVARIANT CHECK - Ensure operations didn't break anything
+            # ================================================================
+            if state_invariants:
+                logger.debug(f"🔒 Re-checking invariants after operations in {current_state_name}...")
+                if not self.invariant_checker.check_invariants(state_invariants, state.variables, current_state_name):
+                    violations = self.invariant_checker.get_violations()
+                    error_msg = f"Post-operation invariant violation in {current_state_name}: {violations[-1].reason if violations else 'unknown'}"
+                    logger.error(f"🚨 {error_msg}")
+
+                    if self._on_error:
+                        try:
+                            self._on_error(circuit_id, current_state_name, error_msg)
+                        except Exception as e:
+                            logger.warning(f"Meta-callback on_error failed: {e}")
+
+                    result = CircuitExecutionResult(
+                        success=False,
+                        final_state="INVARIANT_VIOLATION",
+                        output={
+                            "error": error_msg,
+                            "state": current_state_name,
+                            "phase": "post_operation",
+                            "violations": [v.__dict__ for v in violations],
+                        },
+                        state_history=state.history,
+                        syscall_count=syscall_count,
+                        error=error_msg,
+                    )
+
+                    if self._on_circuit_end:
+                        try:
+                            self._on_circuit_end(circuit_id, False, "INVARIANT_VIOLATION", result.output)
+                        except Exception as e:
+                            logger.warning(f"Meta-callback on_end failed: {e}")
+
+                    return result
 
             # Evaluate transitions
             next_state = self._evaluate_transitions(
@@ -548,6 +914,301 @@ class CognitiveCircuitExecutor:
 
 
 # ============================================================================
+# META-CIRCUIT MANAGER - Auto-instantiates TASK_LEDGER and ERROR_RECOVERY
+# ============================================================================
+
+
+@dataclass
+class TaskLedgerEntry:
+    """Entry in the task ledger for tracking progress."""
+
+    circuit_id: str
+    execution_id: str
+    started_at: float
+    states_visited: List[str] = field(default_factory=list)
+    transitions: List[Dict[str, Any]] = field(default_factory=list)
+    reflections: List[Dict[str, Any]] = field(default_factory=list)
+    stuck_count: int = 0
+    last_state: str = ""
+    completed_at: Optional[float] = None
+    success: Optional[bool] = None
+
+
+@dataclass
+class ErrorRecoveryAttempt:
+    """Record of an error recovery attempt."""
+
+    error_type: str
+    error_message: str
+    state: str
+    timestamp: float
+    strategy: str
+    success: bool
+    retry_count: int = 0
+
+
+class MetaCircuitManager:
+    """
+    Manages TASK_LEDGER_V1 and ERROR_RECOVERY_V1 as active observers.
+
+    This class implements the meta-circuit logic that was previously just
+    YAML definitions. It:
+
+    1. TASK_LEDGER: Tracks progress, detects stuck states, triggers reflection
+    2. ERROR_RECOVERY: Classifies errors, attempts recovery, escalates if needed
+
+    Unlike the circuit definitions in YAML, this is the RUNTIME implementation.
+    """
+
+    def __init__(self, executor: CognitiveCircuitExecutor):
+        self.executor = executor
+        self.ledgers: Dict[str, TaskLedgerEntry] = {}
+        self.recovery_attempts: List[ErrorRecoveryAttempt] = []
+
+        # Config from TASK_LEDGER_V1 circuit definition
+        self.reflection_interval_transitions = 3
+        self.stuck_threshold_same_state = 3
+        self.max_retry_attempts = 5
+
+        # Execution counter for generating IDs
+        self._execution_counter = 0
+
+        logger.info("🧠 Meta-Circuit Manager initialized")
+
+    def wire_callbacks(self) -> None:
+        """Wire this manager as callbacks to the circuit executor."""
+        self.executor.set_meta_callbacks(
+            on_start=self._on_circuit_start,
+            on_transition=self._on_state_transition,
+            on_end=self._on_circuit_end,
+            on_error=self._on_error,
+        )
+        logger.info("🔗 Meta-Circuit Manager wired to executor")
+
+    def _generate_execution_id(self, circuit_id: str) -> str:
+        """Generate unique execution ID."""
+        import time
+
+        self._execution_counter += 1
+        return f"{circuit_id}_{int(time.time())}_{self._execution_counter}"
+
+    # =========================================================================
+    # TASK_LEDGER_V1 Implementation
+    # =========================================================================
+
+    def _on_circuit_start(self, circuit_id: str, raw_input: str, requester_id: str) -> None:
+        """TASK_LEDGER: INIT state - create ledger for execution."""
+        import time
+
+        execution_id = self._generate_execution_id(circuit_id)
+
+        ledger = TaskLedgerEntry(
+            circuit_id=circuit_id,
+            execution_id=execution_id,
+            started_at=time.time(),
+        )
+
+        self.ledgers[execution_id] = ledger
+        logger.info(f"📒 TASK_LEDGER: Initialized tracking for {circuit_id} (exec_id={execution_id})")
+
+    def _on_state_transition(
+        self,
+        circuit_id: str,
+        from_state: str,
+        to_state: str,
+        variables: Dict[str, Any],
+    ) -> None:
+        """TASK_LEDGER: TRACK state - record transition, check for stuck."""
+        import time
+
+        # Find the active ledger for this circuit
+        ledger = self._find_active_ledger(circuit_id)
+        if not ledger:
+            logger.warning(f"📒 No active ledger for {circuit_id}")
+            return
+
+        # Record transition
+        ledger.states_visited.append(to_state)
+        ledger.transitions.append(
+            {
+                "from": from_state,
+                "to": to_state,
+                "timestamp": time.time(),
+            }
+        )
+
+        # Check for stuck state (same state visited multiple times in a row)
+        if to_state == ledger.last_state:
+            ledger.stuck_count += 1
+            if ledger.stuck_count >= self.stuck_threshold_same_state:
+                logger.warning(f"📒 TASK_LEDGER: Stuck detected! {to_state} visited {ledger.stuck_count} times")
+                self._trigger_reflection(ledger, "stuck_detected", variables)
+        else:
+            ledger.stuck_count = 0
+            ledger.last_state = to_state
+
+        # Periodic reflection
+        if len(ledger.transitions) % self.reflection_interval_transitions == 0:
+            self._trigger_reflection(ledger, "periodic", variables)
+
+        logger.debug(f"📒 TASK_LEDGER: Recorded {from_state} → {to_state}")
+
+    def _trigger_reflection(self, ledger: TaskLedgerEntry, reason: str, variables: Dict[str, Any]) -> None:
+        """TASK_LEDGER: REFLECT state - evaluate progress."""
+        import time
+
+        reflection = {
+            "timestamp": time.time(),
+            "reason": reason,
+            "states_so_far": len(ledger.states_visited),
+            "last_state": ledger.last_state,
+            "stuck_count": ledger.stuck_count,
+            "decision": "continue",  # Default decision
+        }
+
+        # Evaluate progress
+        if reason == "stuck_detected":
+            reflection["decision"] = "replan" if ledger.stuck_count > 5 else "adjust"
+            reflection["recommendation"] = "Consider alternative approach"
+        elif len(ledger.states_visited) > 15:
+            reflection["decision"] = "escalate"
+            reflection["recommendation"] = "Taking too many transitions"
+
+        ledger.reflections.append(reflection)
+        logger.info(f"🤔 TASK_LEDGER: Reflection - {reason}: decision={reflection['decision']}")
+
+    def _on_circuit_end(self, circuit_id: str, success: bool, final_state: str, output: Dict[str, Any]) -> None:
+        """TASK_LEDGER: DONE state - finalize ledger."""
+        import time
+
+        ledger = self._find_active_ledger(circuit_id)
+        if not ledger:
+            return
+
+        ledger.completed_at = time.time()
+        ledger.success = success
+
+        duration = ledger.completed_at - ledger.started_at
+        logger.info(
+            f"📒 TASK_LEDGER: Completed {circuit_id} "
+            f"(success={success}, states={len(ledger.states_visited)}, "
+            f"reflections={len(ledger.reflections)}, duration={duration:.2f}s)"
+        )
+
+    def _find_active_ledger(self, circuit_id: str) -> Optional[TaskLedgerEntry]:
+        """Find the most recent active ledger for a circuit."""
+        for exec_id in reversed(list(self.ledgers.keys())):
+            ledger = self.ledgers[exec_id]
+            if ledger.circuit_id == circuit_id and ledger.completed_at is None:
+                return ledger
+        return None
+
+    # =========================================================================
+    # ERROR_RECOVERY_V1 Implementation
+    # =========================================================================
+
+    def _on_error(self, circuit_id: str, state: str, error: str) -> Optional[str]:
+        """
+        ERROR_RECOVERY: DETECT + ANALYZE + REPLAN states.
+
+        Returns recovery action suggestion or None.
+        """
+        import time
+
+        logger.info(f"🔧 ERROR_RECOVERY: Error in {circuit_id}/{state}: {error}")
+
+        # Classify error type (DETECT state logic)
+        error_type = self._classify_error(error)
+
+        # Count previous recovery attempts for this circuit
+        recent_attempts = [
+            a
+            for a in self.recovery_attempts
+            if a.state == state and (time.time() - a.timestamp) < 300  # Last 5 minutes
+        ]
+        retry_count = len(recent_attempts)
+
+        # Determine strategy (ANALYZE + REPLAN logic)
+        strategy = self._select_recovery_strategy(error_type, retry_count)
+
+        # Record attempt
+        attempt = ErrorRecoveryAttempt(
+            error_type=error_type,
+            error_message=error,
+            state=state,
+            timestamp=time.time(),
+            strategy=strategy,
+            success=False,  # Will be updated if circuit succeeds
+            retry_count=retry_count,
+        )
+        self.recovery_attempts.append(attempt)
+
+        if strategy == "escalate":
+            logger.warning(f"🚨 ERROR_RECOVERY: Escalating - {error_type} after {retry_count} attempts")
+            return None  # No recovery possible
+
+        logger.info(f"🔧 ERROR_RECOVERY: Suggesting {strategy} for {error_type}")
+        return strategy
+
+    def _classify_error(self, error: str) -> str:
+        """Classify error based on ERROR_RECOVERY_V1 error_patterns."""
+        error_lower = error.lower()
+
+        # Transient errors - can retry
+        transient_patterns = ["timeout", "connection", "rate_limit", "temporary", "unavailable"]
+        if any(p in error_lower for p in transient_patterns):
+            return "transient"
+
+        # Input errors - need adjustment
+        input_patterns = ["validation", "parse", "missing", "invalid", "type"]
+        if any(p in error_lower for p in input_patterns):
+            return "input_error"
+
+        # State errors - need replan
+        state_patterns = ["invariant", "precondition", "postcondition", "stuck"]
+        if any(p in error_lower for p in state_patterns):
+            return "state_error"
+
+        # Resource errors - need escalation
+        resource_patterns = ["memory", "disk", "quota", "permission"]
+        if any(p in error_lower for p in resource_patterns):
+            return "resource_error"
+
+        # Logic errors - need escalation
+        logic_patterns = ["assertion", "unexpected", "impossible"]
+        if any(p in error_lower for p in logic_patterns):
+            return "logic_error"
+
+        return "unknown"
+
+    def _select_recovery_strategy(self, error_type: str, retry_count: int) -> str:
+        """Select recovery strategy based on ERROR_RECOVERY_V1 config."""
+        if retry_count >= self.max_retry_attempts:
+            return "escalate"
+
+        strategies = {
+            "transient": "retry_same",
+            "input_error": "retry_adjusted",
+            "state_error": "replan",
+            "resource_error": "escalate",
+            "logic_error": "escalate",
+            "unknown": "retry_same" if retry_count < 2 else "escalate",
+        }
+
+        return strategies.get(error_type, "escalate")
+
+    def get_ledger_summary(self) -> Dict[str, Any]:
+        """Get summary of all tracked executions."""
+        return {
+            "total_executions": len(self.ledgers),
+            "active_executions": sum(1 for l in self.ledgers.values() if l.completed_at is None),
+            "successful_executions": sum(1 for l in self.ledgers.values() if l.success is True),
+            "failed_executions": sum(1 for l in self.ledgers.values() if l.success is False),
+            "total_recovery_attempts": len(self.recovery_attempts),
+        }
+
+
+# ============================================================================
 # FACTORY
 # ============================================================================
 
@@ -557,9 +1218,28 @@ def create_circuit_executor(kernel: "RealVibeKernel") -> CognitiveCircuitExecuto
     return CognitiveCircuitExecutor(kernel)
 
 
+def create_circuit_executor_with_meta(kernel: "RealVibeKernel") -> tuple[CognitiveCircuitExecutor, MetaCircuitManager]:
+    """
+    Factory function to create a Cognitive Circuit Executor with meta-circuit support.
+
+    This is the recommended way to create the executor - it automatically
+    wires TASK_LEDGER and ERROR_RECOVERY as active observers.
+    """
+    executor = CognitiveCircuitExecutor(kernel)
+    manager = MetaCircuitManager(executor)
+    manager.wire_callbacks()
+    return executor, manager
+
+
 __all__ = [
     "CognitiveCircuitExecutor",
     "CircuitState",
     "CircuitExecutionResult",
+    "InvariantChecker",
+    "InvariantViolation",
+    "MetaCircuitManager",
+    "TaskLedgerEntry",
+    "ErrorRecoveryAttempt",
     "create_circuit_executor",
+    "create_circuit_executor_with_meta",
 ]

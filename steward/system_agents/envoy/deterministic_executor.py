@@ -62,7 +62,12 @@ except ImportError:
 
 # Cognitive Circuit Executor (GAD-5500 VEDA-4 Integration)
 try:
-    from vibe_core.circuit_executor import CognitiveCircuitExecutor, CircuitExecutionResult
+    from vibe_core.circuit_executor import (
+        CognitiveCircuitExecutor,
+        CircuitExecutionResult,
+        MetaCircuitManager,
+        create_circuit_executor_with_meta,
+    )
 
     CIRCUIT_EXECUTOR_AVAILABLE = True
 except ImportError:
@@ -180,10 +185,12 @@ class DeterministicExecutor:
             logger.warning("⚠️  Blueprint Generator not available (using defaults)")
 
         # Circuit Executor (GAD-5500 VEDA-4) - lazy initialized when kernel available
+        # Includes MetaCircuitManager for TASK_LEDGER and ERROR_RECOVERY
         self.circuit_executor = None
+        self.meta_circuit_manager = None
         self._circuit_executor_available = CIRCUIT_EXECUTOR_AVAILABLE
         if CIRCUIT_EXECUTOR_AVAILABLE:
-            logger.info("✅ Circuit Executor available (will init with kernel)")
+            logger.info("✅ Circuit Executor available (will init with kernel + meta-circuits)")
         else:
             logger.warning("⚠️  Circuit Executor not available")
 
@@ -194,6 +201,10 @@ class DeterministicExecutor:
     def _ensure_circuit_executor(self, kernel) -> bool:
         """
         Lazy-initialize the circuit executor when kernel becomes available.
+
+        Uses create_circuit_executor_with_meta to automatically wire
+        TASK_LEDGER and ERROR_RECOVERY as active observers.
+
         Returns True if circuit executor is ready to use.
         """
         if self.circuit_executor is not None:
@@ -206,8 +217,11 @@ class DeterministicExecutor:
             return False
 
         try:
-            self.circuit_executor = CognitiveCircuitExecutor(kernel)
-            logger.info("🔌 Circuit Executor initialized with kernel")
+            # Create executor WITH meta-circuit support (TASK_LEDGER + ERROR_RECOVERY)
+            self.circuit_executor, self.meta_circuit_manager = create_circuit_executor_with_meta(kernel)
+            logger.info("🔌 Circuit Executor initialized with kernel + meta-circuits")
+            logger.info("   📒 TASK_LEDGER_V1: Active (tracking progress)")
+            logger.info("   🔧 ERROR_RECOVERY_V1: Active (handling errors)")
             return True
         except Exception as e:
             logger.error(f"❌ Failed to initialize Circuit Executor: {e}")
