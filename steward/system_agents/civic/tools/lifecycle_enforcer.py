@@ -27,9 +27,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from vibe_core.tools.tool_protocol import Tool, ToolResult
-
 from steward.system_agents.civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("LIFECYCLE_ENFORCER")
 

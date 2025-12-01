@@ -14,7 +14,6 @@ from typing import Any, Dict, Optional
 from vibe_core import Task, VibeAgent
 
 # NO TOOL IMPORTS - Tools accessed via self.system.execute_tool()
-from .tools.license_tool import LicenseType  # Keep enum for reference
 
 logger = logging.getLogger("ECONOMY_AGENT")
 

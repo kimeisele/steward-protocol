@@ -22,8 +22,8 @@ logger = logging.getLogger("ARCHIVIST_VERIFIER")
 
 # Import real crypto functions
 try:
-    from steward.crypto import verify_signature as crypto_verify_signature
     from steward.crypto import get_public_key_string
+    from steward.crypto import verify_signature as crypto_verify_signature
 
     CRYPTO_AVAILABLE = True
 except ImportError:
@@ -120,7 +120,7 @@ class VerifierTool:
                 return True, f"✅ Signature cryptographically verified from {signer}"
             else:
                 self.logger.warning(f"❌ Signature INVALID for {signer}")
-                return False, f"❌ Signature verification FAILED - signature is invalid or tampered"
+                return False, "❌ Signature verification FAILED - signature is invalid or tampered"
 
         except Exception as e:
             self.logger.error(f"❌ Verification error for {signer}: {e}")

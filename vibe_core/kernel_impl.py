@@ -28,6 +28,8 @@ from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
 # Phase B: Vedic Governance (Varna + Ashrama)
 from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
+from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
+from .event_bus import get_event_bus  # Phase 2: Event Bus
 from .kernel import (
     KernelStatus,
     ManifestRegistry,
@@ -46,8 +48,6 @@ from .sarga import Cycle, get_sarga
 from .scheduling import Task
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
-from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
-from .event_bus import EventBus, get_event_bus  # Phase 2: Event Bus
 
 # Import Auditor for immune system (optional)
 try:
@@ -378,9 +378,7 @@ class RealVibeKernel(VibeKernel):
         # 2. Revoke all capabilities (use CapabilityRegistry)
         if self._capability_registry.is_registered(agent_id):
             self._capability_registry.revoke_all(
-                agent_id=agent_id,
-                revoker_id="NARASIMHA",
-                reason=f"Kill-switch activated: {trigger.threat_type.value}"
+                agent_id=agent_id, revoker_id="NARASIMHA", reason=f"Kill-switch activated: {trigger.threat_type.value}"
             )
             logger.critical(f"🔒 Capabilities revoked: {agent_id}")
 
@@ -1147,11 +1145,7 @@ class RealVibeKernel(VibeKernel):
         return [self._agent_registry[m.agent_id] for m in manifests]
 
     def revoke_capability(
-        self,
-        agent_id: str,
-        capabilities: List[str],
-        revoker_id: str,
-        reason: Optional[str] = None
+        self, agent_id: str, capabilities: List[str], revoker_id: str, reason: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Revoke capabilities from an agent (REVOKE_MANDATE syscall).
@@ -1176,25 +1170,18 @@ class RealVibeKernel(VibeKernel):
                 "success": False,
                 "revoked": [],
                 "not_found": [],
-                "message": f"Permission denied: '{revoker_id}' cannot revoke from '{agent_id}'"
+                "message": f"Permission denied: '{revoker_id}' cannot revoke from '{agent_id}'",
             }
 
         # Delegate to capability registry
         result = self._capability_registry.revoke(
-            agent_id=agent_id,
-            capabilities=capabilities,
-            revoker_id=revoker_id,
-            reason=reason
+            agent_id=agent_id, capabilities=capabilities, revoker_id=revoker_id, reason=reason
         )
 
         return result
 
     def grant_capability(
-        self,
-        agent_id: str,
-        capabilities: List[str],
-        granter_id: str,
-        reason: Optional[str] = None
+        self, agent_id: str, capabilities: List[str], granter_id: str, reason: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Grant capabilities to an agent.
@@ -1218,15 +1205,12 @@ class RealVibeKernel(VibeKernel):
                 "success": False,
                 "granted": [],
                 "already_had": [],
-                "message": f"Permission denied: '{granter_id}' cannot grant capabilities"
+                "message": f"Permission denied: '{granter_id}' cannot grant capabilities",
             }
 
         # Delegate to capability registry
         result = self._capability_registry.grant(
-            agent_id=agent_id,
-            capabilities=capabilities,
-            granter_id=granter_id,
-            reason=reason
+            agent_id=agent_id, capabilities=capabilities, granter_id=granter_id, reason=reason
         )
 
         return result
@@ -1245,10 +1229,7 @@ class RealVibeKernel(VibeKernel):
         return sorted(caps)
 
     def subscribe_to_events(
-        self,
-        callback: Callable,
-        event_type: Optional[str] = None,
-        subscriber_id: Optional[str] = None
+        self, callback: Callable, event_type: Optional[str] = None, subscriber_id: Optional[str] = None
     ) -> str:
         """
         Subscribe to system events via EventBus.
@@ -1276,11 +1257,7 @@ class RealVibeKernel(VibeKernel):
 
         return sub_id
 
-    def unsubscribe_from_events(
-        self,
-        callback: Callable,
-        event_type: Optional[str] = None
-    ):
+    def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
         """
         Unsubscribe from system events.
 
@@ -1291,11 +1268,7 @@ class RealVibeKernel(VibeKernel):
         self._event_bus.unsubscribe(callback, event_type)
 
     async def broadcast_event(
-        self,
-        event_type: str,
-        broadcaster_id: str,
-        data: Optional[Dict[str, Any]] = None,
-        message: Optional[str] = None
+        self, event_type: str, broadcaster_id: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Broadcast an event to all subscribers via EventBus.
@@ -1323,7 +1296,7 @@ class RealVibeKernel(VibeKernel):
             event_type=event_type,
             agent_id=broadcaster_id,
             message=message or f"{event_type} from {broadcaster_id}",
-            details=data or {}
+            details=data or {},
         )
 
         # Emit via EventBus
@@ -1334,17 +1307,14 @@ class RealVibeKernel(VibeKernel):
         subscriber_count = status["subscribers"].get("by_type", {}).get(event_type, 0)
         subscriber_count += status["subscribers"]["global"]  # Add global subscribers
 
-        logger.info(
-            f"📢 BROADCAST: {event_type} from {broadcaster_id} "
-            f"→ {subscriber_count} subscriber(s)"
-        )
+        logger.info(f"📢 BROADCAST: {event_type} from {broadcaster_id} → {subscriber_count} subscriber(s)")
 
         return {
             "event_id": event.event_id,
             "event_type": event_type,
             "broadcaster": broadcaster_id,
             "subscribers_notified": subscriber_count,
-            "timestamp": event.timestamp
+            "timestamp": event.timestamp,
         }
 
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):

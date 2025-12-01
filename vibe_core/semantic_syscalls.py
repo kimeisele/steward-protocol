@@ -15,10 +15,10 @@ This is "ML Light" - we use deterministic structures to channel neural output.
 GAD-5500: Safe Evolution Loop / Cognitive Circuits
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
-import logging
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -277,8 +277,8 @@ class SemanticSyscallExecutor:
             class_name = f"{role.replace(' ', '').title()}Cartridge"
 
             # Step 3: Create a minimal agent that can be registered
-            from vibe_core.protocols import VibeAgent, AgentManifest
             from steward.oath_mixin import OathMixin
+            from vibe_core.protocols import AgentManifest, VibeAgent
 
             # Dynamic agent class with oath
             class DynamicAgent(VibeAgent, OathMixin):
@@ -328,7 +328,7 @@ class SemanticSyscallExecutor:
             try:
                 bank = self.kernel.get_bank()
                 bank.create_account(agent_id)
-                bank.deposit(agent_id, initial_credits, f"Initial allocation from SPAWN_COGNITION")
+                bank.deposit(agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
             except Exception as e:
                 logger.warning(f"Credit allocation failed (non-fatal): {e}")
 
@@ -581,10 +581,7 @@ class SemanticSyscallExecutor:
         # Delegate to kernel (handles permission check + audit trail)
         try:
             result = self.kernel.revoke_capability(
-                agent_id=agent_id,
-                capabilities=capabilities,
-                revoker_id=request.requester_id,
-                reason=reason
+                agent_id=agent_id, capabilities=capabilities, revoker_id=request.requester_id, reason=reason
             )
 
             # Log the action
@@ -594,15 +591,13 @@ class SemanticSyscallExecutor:
                     f"capability(ies) from '{agent_id}': {result['revoked']}"
                 )
             else:
-                logger.warning(
-                    f"⛔ REVOKE_MANDATE FAILED: {result['message']}"
-                )
+                logger.warning(f"⛔ REVOKE_MANDATE FAILED: {result['message']}")
 
             return SyscallResult(
                 success=result["success"],
                 syscall_type=request.syscall_type,
                 output=result,
-                error=None if result["success"] else result["message"]
+                error=None if result["success"] else result["message"],
             )
 
         except Exception as e:
@@ -744,10 +739,7 @@ class SemanticSyscallExecutor:
             # For syscalls, we need to run the coroutine synchronously
             result = asyncio.run(
                 self.kernel.broadcast_event(
-                    event_type=event_type,
-                    broadcaster_id=request.requester_id,
-                    data=event_data,
-                    message=message
+                    event_type=event_type, broadcaster_id=request.requester_id, data=event_data, message=message
                 )
             )
 

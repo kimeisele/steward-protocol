@@ -13,10 +13,9 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
-from vibe_core.tools.tool_protocol import Tool, ToolResult
-
 # Import the abstracted LLM service (not vendor-specific)
 from services.llm_engine import llm
+from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("ENGINEER_BUILDER")
 
