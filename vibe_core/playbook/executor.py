@@ -369,7 +369,7 @@ class GraphExecutor:
 
             config = get_config()
             live_fire_enabled = config.safety.live_fire_enabled
-        except (ImportError, AttributeError):
+        except (ImportError, AttributeError, TypeError):
             # Fallback: Use environment variable if Phoenix config unavailable
             import os
 

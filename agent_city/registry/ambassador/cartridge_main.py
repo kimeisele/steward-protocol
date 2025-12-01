@@ -18,7 +18,15 @@ from typing import Any, Dict, List
 
 from vibe_core import Task, VibeAgent
 
-# Constitutional Oath
+# LLM Engine for intelligent responses
+try:
+    from services.llm_engine import LLMEngine
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    logger = logging.getLogger("AMBASSADOR_MAIN")
+    logger.warning("⚠️  LLMEngine not available - using static responses")
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AMBASSADOR_MAIN")
@@ -68,6 +76,17 @@ class AmbassadorCartridge(VibeAgent):
         # NOTE: OathMixin integration removed (was undefined)
         # TODO: Re-add oath functionality when OathMixin is properly defined
         self.oath_sworn = False
+
+        # Initialize LLM Engine for intelligent responses
+        if LLM_AVAILABLE:
+            try:
+                self.llm_engine = LLMEngine()
+                logger.info("🧠 AMBASSADOR: LLM Engine initialized for intelligent responses")
+            except Exception as e:
+                logger.warning(f"⚠️  AMBASSADOR: LLM Engine init failed: {e}. Using static responses.")
+                self.llm_engine = None
+        else:
+            self.llm_engine = None
 
         # State tracking
         self.active_conversations: Dict[str, Dict] = {}
@@ -120,28 +139,124 @@ class AmbassadorCartridge(VibeAgent):
             return {"error": str(e), "status": "failed"}
 
     async def _answer_question(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Answer a community question."""
+        """
+        Answer a community question using LLM or static fallback.
+
+        Uses LLM Engine if available, otherwise provides a helpful
+        welcome message about Agent City.
+        """
         question = payload.get("question", "")
         user_id = payload.get("user_id", "anonymous")
 
-        # Track the conversation attempt
-        self.active_conversations[user_id] = {
+        logger.info(f"🤝 Answering question from {user_id}: {question[:50]}...")
+
+        # Track the conversation
+        conversation_id = f"{user_id}_{datetime.utcnow().timestamp()}"
+        self.active_conversations[conversation_id] = {
             "question": question,
             "timestamp": datetime.utcnow().isoformat(),
-            "status": "not_implemented",
+            "status": "processing",
         }
 
+        # Try LLM-powered response first
+        if self.llm_engine:
+            try:
+                # Use LLM Engine's speak() method for agent personality
+                context = "community_support"
+                response = self.llm_engine.speak("AMBASSADOR", context, question)
+
+                logger.info(f"✅ Generated LLM response ({len(response)} chars)")
+
+                # Update conversation tracking
+                self.active_conversations[conversation_id]["status"] = "answered"
+                self.active_conversations[conversation_id]["response"] = response[:100] + "..."
+
+                return {
+                    "status": "answered",
+                    "user_id": user_id,
+                    "question": question,
+                    "answer": response,
+                    "method": "llm_powered",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+            except Exception as e:
+                logger.warning(f"⚠️  LLM response failed: {e}. Falling back to static response.")
+
+        # Fallback: Static welcome message about Agent City
+        welcome_message = self._generate_welcome_message(question)
+
+        logger.info(f"✅ Using static welcome message ({len(welcome_message)} chars)")
+
+        # Update conversation tracking
+        self.active_conversations[conversation_id]["status"] = "answered_static"
+        self.active_conversations[conversation_id]["response"] = welcome_message[:100] + "..."
+
         return {
-            "status": "not_implemented",
+            "status": "answered",
             "user_id": user_id,
-            "question_received": question,
-            "error": (
-                "AMBASSADOR question answering is not implemented. "
-                "This feature requires LLM integration for response generation. "
-                "Use 'steward do \"your question\"' for natural language queries."
-            ),
+            "question": question,
+            "answer": welcome_message,
+            "method": "static_fallback",
+            "note": "LLM not available - using static response",
             "timestamp": datetime.utcnow().isoformat(),
         }
+
+    def _generate_welcome_message(self, question: str) -> str:
+        """
+        Generate a helpful static welcome message about Agent City.
+
+        This fallback is used when LLM is not available.
+        """
+        return f"""🤝 Welcome to Agent City!
+
+I'm AMBASSADOR, the community liaison for the Steward Protocol.
+
+**About Agent City:**
+Agent City is built on three immutable layers:
+
+🏛️ **Layer 0: The Foundation**
+   The kernel and ledger. Constitutional enforcement at boot.
+
+🤖 **Layer 1: The Federation**
+   System agents (CIVIC, WATCHMAN, SCRIBE, HERALD) that govern the city.
+
+👥 **Layer 2: The Citizens**
+   Your agents. They live in Agent City and follow the Constitution.
+
+**Your Question:** "{question}"
+
+While I don't have LLM capabilities enabled right now, here's what you can do:
+
+📚 **Explore Documentation:**
+   - See AGENTS.md for the complete agent registry
+   - Check CITYMAP.md for the visual architecture map
+   - Read CONSTITUTION.md to understand our governance
+
+🚀 **Quick Start:**
+   ```bash
+   python boot.py              # Boot the city
+   steward discover            # Find available agents
+   steward delegate herald "your task"
+   ```
+
+🔐 **Trust Anchor:**
+   - All governance is enforced at the kernel level
+   - Cryptographic verification with ECDSA P-256
+   - Immutable ledger for all state changes
+
+For real-time, intelligent responses, set up an LLM API key:
+   export OPENAI_API_KEY=your_key_here
+   # or
+   export ANTHROPIC_API_KEY=your_key_here
+
+Need more help? Check out:
+   - README.md for quick start
+   - INDEX.md for documentation index
+   - HELP.md for operations guide
+
+Welcome to the governed AI revolution! 🎉
+"""
 
     async def _onboard_user(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Onboard a new user."""
