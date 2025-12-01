@@ -50,6 +50,13 @@ try:
 except ImportError:
     ACTION_HANDLERS_AVAILABLE = False
 
+# Blueprint Generator (GAD-5001 Raw Input → Structured Params)
+try:
+    from steward.system_agents.envoy.blueprint_generator import BlueprintGenerator
+    BLUEPRINT_GENERATOR_AVAILABLE = True
+except ImportError:
+    BLUEPRINT_GENERATOR_AVAILABLE = False
+
 logger = logging.getLogger("DETERMINISTIC_EXECUTOR")
 
 
@@ -115,6 +122,8 @@ class PlaybookExecution:
     started_at: float = field(default_factory=lambda: datetime.now().timestamp())
     completed_at: Optional[float] = None
     error_message: Optional[str] = None
+    # GAD-5001: Extracted blueprint values (replaces defaults)
+    blueprint_values: Dict[str, Any] = field(default_factory=dict)
 
     def is_complete(self) -> bool:
         return self.status in ["COMPLETED", "FAILED"]
@@ -150,6 +159,14 @@ class DeterministicExecutor:
             logger.info(f"✅ Action handlers: {self.action_registry.registered_types}")
         else:
             logger.warning("⚠️  Action handlers not available (using stubs)")
+
+        # Initialize Blueprint Generator (GAD-5001 Raw Input → Structured Params)
+        self.blueprint_generator = None
+        if BLUEPRINT_GENERATOR_AVAILABLE:
+            self.blueprint_generator = BlueprintGenerator()
+            logger.info("✅ Blueprint Generator initialized")
+        else:
+            logger.warning("⚠️  Blueprint Generator not available (using defaults)")
 
         self._load_playbooks()
         self._load_persisted_executions()
@@ -318,7 +335,8 @@ class DeterministicExecutor:
         - {{ user_input }} - Original user input
         - {{ phase_results }} - Dict of all phase results by state_var
         - {{ playbook_id }} - Current playbook ID
-        - Any playbook.variables entries
+        - Any playbook.variables entries (defaults)
+        - Blueprint-extracted values (override defaults) [GAD-5001]
         - Intent vector fields (concepts, agent, etc.)
         """
         context = {
@@ -328,8 +346,13 @@ class DeterministicExecutor:
             "playbook_id": playbook.id,
             "execution_id": execution.execution_id,
 
-            # Playbook-defined variables
+            # Playbook-defined variables (DEFAULTS)
             **playbook.variables,
+
+            # GAD-5001: Blueprint-extracted values (OVERRIDE defaults)
+            # This is the key difference: extracted values from raw input
+            # replace generic defaults like "New Feature" with actual values
+            **execution.blueprint_values,
         }
 
         # Add intent vector fields if available
@@ -409,6 +432,20 @@ class DeterministicExecutor:
         playbook = self.playbooks[playbook_id]
         execution_id = f"exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         execution = PlaybookExecution(execution_id=execution_id, playbook_id=playbook_id, user_input=user_input)
+
+        # GAD-5001: Generate blueprint from raw input (SHABDA actualized)
+        # This transforms "Implement JWT auth" → {feature_name: "jwt-auth", ...}
+        if self.blueprint_generator and playbook.variables:
+            try:
+                blueprint_values = await self.blueprint_generator.generate_blueprint(
+                    raw_input=user_input,
+                    playbook_variables=playbook.variables,
+                    playbook_id=playbook_id,
+                )
+                execution.blueprint_values = blueprint_values
+                logger.info(f"📋 Blueprint extracted: {list(blueprint_values.keys())}")
+            except Exception as e:
+                logger.warning(f"⚠️  Blueprint generation failed (using defaults): {e}")
 
         # Start execution
         logger.info(f"🚀 Starting playbook execution: {playbook.id} ({execution_id})")
