@@ -398,6 +398,8 @@ vibe_core/playbook/workflows/design_login_system.yaml → circuits/system_design
 | Date | Change |
 |------|--------|
 | 2025-12-01 | Initial version - documenting GAD-5500 Gleichschaltung |
+| 2025-12-01 | Operation Ironclad - Runtime invariant enforcement |
+| 2025-12-01 | Meta-circuit integration - TASK_LEDGER + ERROR_RECOVERY as active observers |
 
 ---
 
