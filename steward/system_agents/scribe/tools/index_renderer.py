@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-SCRIBE Index Renderer - Generate INDEX.md from PURE filesystem introspection
+SCRIBE Index Renderer - SCHEMA-DRIVEN Documentation Index
 
-ZERO SPECULATION! Only lists files that ACTUALLY exist.
-- Scans root for .md files
-- Scans docs/ subdirectories
-- NO hardcoded file references
-- NO assumptions about what exists
+WHITELIST APPROACH: Only explicitly allowed files/dirs are indexed.
+- Root: Whitelist of allowed .md files
+- Docs: Schema of allowed subdirectories only
+- NO garbage: archive/, prompts/, temp/ ignored by default
 
 Tool Protocol Compliant (Kernel-Managed).
 """
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 # Tool Protocol import - optional for standalone mode
 try:
@@ -35,12 +34,39 @@ except ImportError:
 
 
 class IndexRenderer(Tool):
-    """Generate INDEX.md from pure filesystem introspection - ZERO speculation.
+    """Generate INDEX.md using SCHEMA-DRIVEN indexing (Whitelist approach).
 
-    Supports both:
-    - Kernel-managed mode (via Tool Protocol)
-    - Standalone mode (via scan_and_render() method)
+    Only explicitly allowed files/directories are indexed.
+    Garbage (archive/, prompts/, temp files) is ignored.
     """
+
+    # SCHEMA: Allowed root .md files (WHITELIST)
+    ROOT_ALLOWLIST: Set[str] = {
+        # Auto-generated
+        "README.md", "AGENTS.md", "CITYMAP.md", "HELP.md", "INDEX.md", "SETTINGS.md",
+        # Governance
+        "CONSTITUTION.md", "STEWARD.md", "AGI_MANIFESTO.md",
+        # Operational
+        "OPERATIONS.md", "PROOF.md",
+    }
+
+    # SCHEMA: Allowed docs/ subdirectories (WHITELIST)
+    DOCS_ALLOWLIST: Set[str] = {
+        "architecture", "deployment", "governance", "guides",
+        "philosophy", "reports", "security", "herald"
+    }
+
+    # Category display titles
+    CATEGORY_TITLES: Dict[str, str] = {
+        "architecture": "## 🏗️ Architecture Documentation",
+        "deployment": "## 🚀 Deployment & Operations",
+        "governance": "## ⚖️ Governance",
+        "guides": "## 📖 Guides & References",
+        "philosophy": "## 💭 Philosophy & Context",
+        "reports": "## 📊 Status Reports",
+        "security": "## 🔒 Security",
+        "herald": "## 📢 Herald",
+    }
 
     def __init__(self, root_dir: str = "."):
         """Initialize renderer.
@@ -92,28 +118,35 @@ class IndexRenderer(Tool):
             return ToolResult(success=False, error=str(e))
 
     def _scan_filesystem(self):
-        """Scan entire filesystem for .md files - ZERO speculation."""
-        # Scan root directory
+        """Scan filesystem using WHITELIST approach - only allowed files/dirs."""
+        # Scan root directory - WHITELIST only + GAD-* pattern
         for md_file in self.root_dir.glob("*.md"):
-            if md_file.is_file():
+            if not md_file.is_file():
+                continue
+
+            # Allow GAD-* pattern (Governance & Design docs)
+            if md_file.name.startswith("GAD-"):
+                self.root_docs.append(md_file)
+                continue
+
+            # Check whitelist
+            if md_file.name in self.ROOT_ALLOWLIST:
                 self.root_docs.append(md_file)
 
-        # Scan docs/ subdirectories
+        # Scan docs/ subdirectories - WHITELIST only
         docs_dir = self.root_dir / "docs"
         if docs_dir.exists():
             for subdir in docs_dir.iterdir():
-                if subdir.is_dir():
-                    md_files = list(subdir.glob("*.md"))
-                    if md_files:
-                        self.doc_categories[subdir.name] = sorted(md_files)
+                if not subdir.is_dir():
+                    continue
 
-                    # Check for nested directories (e.g., docs/reports/migrations/)
-                    for nested_dir in subdir.iterdir():
-                        if nested_dir.is_dir():
-                            nested_files = list(nested_dir.glob("*.md"))
-                            if nested_files:
-                                category_key = f"{subdir.name}/{nested_dir.name}"
-                                self.doc_categories[category_key] = sorted(nested_files)
+                # Only scan whitelisted directories
+                if subdir.name not in self.DOCS_ALLOWLIST:
+                    continue
+
+                md_files = list(subdir.glob("*.md"))
+                if md_files:
+                    self.doc_categories[subdir.name] = sorted(md_files)
 
     def _render_root_docs(self) -> str:
         """Render root .md files as links."""
@@ -187,29 +220,18 @@ class IndexRenderer(Tool):
         return output
 
     def _render_docs_categories(self) -> str:
-        """Render docs/ subdirectories."""
+        """Render docs/ subdirectories using category titles."""
         if not self.doc_categories:
-            return "No documentation subdirectories found."
+            return ""
 
         output = ""
 
-        # Define category order and titles
-        category_titles = {
-            "architecture": "## 🏗️ Architecture Documentation",
-            "deployment": "## 🚀 Deployment & Operations",
-            "guides": "## 📖 Guides & References",
-            "philosophy": "## 💭 Philosophy & Context",
-            "reports": "## 📊 Status Reports",
-            "reports/migrations": "### Migration Tracking",
-        }
-
-        for category in sorted(self.doc_categories.keys()):
-            files = self.doc_categories[category]
+        # Render in schema order
+        for category, title in self.CATEGORY_TITLES.items():
+            files = self.doc_categories.get(category, [])
             if not files:
                 continue
 
-            # Get title or use default
-            title = category_titles.get(category, f"## {category.replace('_', ' ').title()}")
             output += f"{title}\n\n"
 
             for doc_path in files:
@@ -292,8 +314,8 @@ class IndexRenderer(Tool):
 
 ---
 
-**Note:** This index is generated from actual filesystem content.
-Only files that exist are listed. No speculation.
+**Note:** This index uses schema-driven indexing (whitelist approach).
+Only approved documentation is listed. Noise/garbage is excluded.
 
 *Generated by SCRIBE - The Documentarian*
 """
