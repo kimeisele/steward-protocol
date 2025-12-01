@@ -95,52 +95,17 @@ class ReadmeRenderer(Tool):
             return ToolResult(success=False, error=str(e))
 
     def _find_governance_gate_lines(self) -> Optional[str]:
-        """Find actual line numbers of GovernanceGate via AST parsing.
+        """Find governance gate code location.
 
         Returns:
-            String like "vibe_core/kernel_impl.py:544-621" or None
+            String like "vibe_core/kernel_impl.py" (NO line numbers - those break locally)
         """
         kernel_file = self.root_dir / "vibe_core" / "kernel_impl.py"
         if not kernel_file.exists():
             return None
 
-        try:
-            source = kernel_file.read_text()
-            tree = ast.parse(source)
-
-            # Find the governance gate enforcement function/class
-            for node in ast.walk(tree):
-                # Look for function or method with "governance" in name
-                if isinstance(node, ast.FunctionDef):
-                    if "governance" in node.name.lower() or "oath" in node.name.lower():
-                        start_line = node.lineno
-                        end_line = node.end_lineno
-                        return f"vibe_core/kernel_impl.py#L{start_line}-L{end_line}"
-
-                # Look for class definitions related to governance
-                if isinstance(node, ast.ClassDef):
-                    if "governance" in node.name.lower():
-                        start_line = node.lineno
-                        end_line = node.end_lineno
-                        return f"vibe_core/kernel_impl.py#L{start_line}-L{end_line}"
-
-            # Fallback: search for specific patterns in source
-            lines = source.split("\n")
-            for i, line in enumerate(lines, 1):
-                if "def _enforce_governance_gate" in line or "class GovernanceGate" in line:
-                    # Find end of function/class
-                    end = i
-                    indent = len(line) - len(line.lstrip())
-                    for j in range(i + 1, len(lines)):
-                        if lines[j].strip() and not lines[j].startswith(" " * (indent + 1)):
-                            end = j - 1
-                            break
-                    return f"vibe_core/kernel_impl.py#L{i}-L{end}"
-
-        except Exception as e:
-            print(f"Warning: Could not parse kernel_impl.py for governance gate: {e}")
-
-        return None
+        # Just return the file path - line numbers (#L123) only work on GitHub, not locally
+        return "vibe_core/kernel_impl.py"
 
     def _render(self) -> str:
         """Generate README.md content from introspection."""
@@ -154,145 +119,69 @@ class ReadmeRenderer(Tool):
         else:
             governance_link = "[Governance Gate Code](vibe_core/kernel_impl.py)"
 
-        # Jinja2 template - MINIMAL agent content
+        # Template based on Senior README concept - NO marketing claims, only facts
         template_str = """# {{ project.name }}
 
-## {{ project.description }}
-
-**Agents literally cannot boot without cryptographically verified oath.**
+*The Immutable Kernel for Governed Artificial Intelligence.*
 
 [![License: {{ project.license }}](https://img.shields.io/badge/License-{{ project.license }}-yellow.svg)](https://opensource.org/licenses/{{ project.license }})
 [![Python {{ project.python_version }}](https://img.shields.io/badge/python-{{ project.python_version }}-blue.svg)](https://www.python.org/downloads/)
-[![Status: LIVE](https://img.shields.io/badge/Status-LIVE-green.svg)](./docs/reports/VERIFICATION_REPORT.md)
 
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/kimeisele/steward-protocol.git
-cd steward-protocol
+git clone https://github.com/{{ project.github_repo }}.git
+cd {{ project.name }}
 python boot.py
 ```
 
-That's it. One command boots everything. Dependencies auto-install.
+---
 
-**Verify boot:**
-```bash
-python boot.py --check
-```
+## The Architecture
+
+Agent City is built on three immutable layers:
+
+### Layer 0: The Foundation
+The kernel and ledger. Constitutional enforcement at boot.
+
+### Layer 1: The Federation
+System agents (CIVIC, WATCHMAN, SCRIBE) that govern the city.
+→ See [AGENTS.md](AGENTS.md) for the complete registry.
+
+### Layer 2: The Citizens
+Your agents. They live in Agent City and follow the Constitution.
+
+→ Full architecture: [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)
+→ Visual map: [CITYMAP.md](CITYMAP.md)
 
 ---
 
-## The Innovation
+## Trust Anchor
 
-**Version:** 1.0 (Genesis) **Layer:** 0 (The Immutable Foundation)
+This system enforces governance at the kernel level:
 
-- **{{ governance_link }}** — The cryptographic oath enforcement
-- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Full system design
-- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this matters
-
----
-
-## How It Works
-
-### Constitutional Enforcement at Boot
-
-Before any agent can run, Steward Protocol verifies:
-- ✅ Cryptographic identity (ECDSA keys)
-- ✅ Constitutional oath signing
-- ✅ Governance compliance markers
-
-No workarounds. No exceptions. This is kernel-level, not policy.
-
-### The Federation
-
-{{ agent_count }} specialized agents govern Agent City.
-
-**[See complete agent registry →](AGENTS.md)**
-
-Key agents:
-- **CIVIC** — Constitutional governance, registry, and economic system
-- **WATCHMAN** — System integrity enforcement and governance monitoring
-- **ENVOY** — Universal operator interface and orchestration
-- **HERALD** — Autonomous content generation and distribution
-- **ARCHIVIST** — Cryptographic audit trail and event verification
-- **AUDITOR** — Quality gate and compliance enforcement
-
-### Immutable Ledger
-
-Every action is cryptographically signed and recorded:
-- **Database:** SQLite (`data/vibe_ledger.db`)
-- **Format:** Append-only event log
-- **Recovery:** Full history restored on restart
-- **Proof:** Unforgeable signatures on every entry
+- **{{ governance_link }}** — Cryptographic enforcement
+- **[CONSTITUTION.md](CONSTITUTION.md)** — The supreme law
+- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this exists
 
 ---
 
-## For Developers
+## Documentation by Role
 
-**Install to VibeOS:**
-```bash
-git clone https://github.com/kimeisele/steward-protocol.git
-cd steward-protocol
-./install_to_vibe.sh /path/to/vibe-agency
-```
+**For Architects:** How the system scales
+→ [docs/architecture/](docs/architecture/)
 
-**Run tests:**
-```bash
-pytest tests/
-```
+**For Operators:** How to control the city
+→ [HELP.md](HELP.md) | [OPERATIONS.md](OPERATIONS.md) | [docs/deployment/](docs/deployment/)
 
-### Testing & Validation
-
-**Integration Test Suite** — Proves Agent City boots and discovers agents:
-
-```bash
-# Run integration tests
-pytest tests/integration/test_system_boot.py -v
-
-# What it validates:
-# ✅ Kernel boots without errors
-# ✅ Discoverer registers successfully
-# ✅ Steward discovers 10+ agents from steward.json manifests
-# ✅ All agents pass Governance Gate (oath_sworn=True)
-# ✅ Constitutional enforcement is active
-```
-
-**CI/CD Pipeline** — Automatic validation on every push:
-- Runs on all `claude/*` branches and `main`
-- Executes full integration test suite
-- Verifies governance gate rejection of unsworn agents
-- See: `.github/workflows/integration-tests.yml`
-
-**Smoke Test** — Quick verification Agent City boots:
-
-```bash
-python -c "
-from vibe_core.kernel_impl import RealVibeKernel
-from steward.system_agents.discoverer.agent import Discoverer
-
-kernel = RealVibeKernel(ledger_path=':memory:')
-steward = Discoverer(kernel)
-kernel.register_agent(steward)
-kernel.boot()
-count = steward.discover_agents()
-print(f'✅ Boot OK: {len(kernel.agent_registry)} agents registered ({count} discovered)')
-"
-```
-
-**Learn the system:**
-1. [AGI_MANIFESTO.md](AGI_MANIFESTO.md) — Why governance matters
-2. [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) — How it works
-3. [CONSTITUTION.md](CONSTITUTION.md) — The rules
-4. [docs/deployment/DEPLOYMENT.md](docs/deployment/DEPLOYMENT.md) — Boot, deploy, and operate Agent City
-5. [vibe_core/](./vibe_core/) — Kernel integration
-
-**For AI Assistants:** Paste [docs/guides/MISSION_BRIEFING.md](./docs/guides/MISSION_BRIEFING.md) into your context to activate as a governed agent.
+**For Developers:** How to build agents
+→ [AGENTS.md](AGENTS.md) | [docs/guides/](docs/guides/)
 
 ---
 
-*Verified by Steward Protocol.*
+*Auto-generated by SCRIBE.*
 """
 
         template = Template(template_str)
