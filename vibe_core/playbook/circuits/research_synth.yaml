@@ -1,0 +1,275 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: RESEARCH_SYNTH_V2
+# ============================================================================
+# Neuro-Symbolic Research & Synthesis Circuit
+#
+# Syscall: DISPATCH_TASK (to oracle agent for research)
+# Pattern: "Research topic", "Investigate subject", "Learn about"
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture research query and objectives
+#   ARTHA    → Extract concepts, define scope, identify domains
+#   PRATYAYA → Identify sources, verify access, plan search
+#   KARMA    → Execute knowledge gathering
+#   SYNTH    → Synthesize findings into coherent report
+#   SUCCESS  → Research complete
+#
+# ============================================================================
+
+circuit:
+  id: "RESEARCH_SYNTH_V2"
+  type: "cognitive_circuit"
+  version: "2.0"
+  domain: "knowledge"
+  security_level: "standard"
+
+  description: |
+    Research and knowledge synthesis workflow.
+    Transforms research queries into actionable knowledge artifacts.
+
+    Replaces legacy: vibe_core/playbook/workflows/research_topic.yaml
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture research query and objectives"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["research_topic"]
+            optional: ["learning_objectives", "depth", "format", "constraints"]
+            defaults:
+              depth: "comprehensive"
+              format: "report"
+        - action: "parse_query"
+          params:
+            extract_keywords: true
+            identify_domain: true
+            determine_scope: true
+      invariants:
+        - "research_topic must be specified"
+        - "topic must be researchable"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Extract concepts and define scope"
+      entry_actions:
+        - action: "extract_concepts"
+          params:
+            topic: "{{ research_topic }}"
+            depth: "{{ depth }}"
+            build_concept_graph: true
+        - action: "define_scope"
+          params:
+            objectives: "{{ learning_objectives }}"
+            constraints: "{{ constraints }}"
+            max_breadth: 5
+            max_depth: 3
+        - action: "identify_domains"
+          params:
+            concepts: "{{ concepts }}"
+            map_to_knowledge_bases: true
+      invariants:
+        - "concepts must be extracted"
+        - "scope must be bounded"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+      state_var: "scope_defined"
+
+    PRATYAYA:
+      description: "Identify sources and plan search strategy"
+      entry_actions:
+        - action: "identify_sources"
+          params:
+            domains: "{{ scope_defined.domains }}"
+            source_types:
+              - "knowledge_base"
+              - "web"
+              - "academic"
+              - "documentation"
+            rank_by: "authority"
+        - action: "verify_access"
+          params:
+            sources: "{{ identified_sources }}"
+            check_availability: true
+        - action: "plan_search"
+          params:
+            concepts: "{{ scope_defined.concepts }}"
+            sources: "{{ accessible_sources }}"
+            strategy: "breadth_first"
+      invariants:
+        - "at least one source must be accessible"
+        - "search plan must cover all key concepts"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+      state_var: "search_plan"
+
+    KARMA:
+      description: "Execute knowledge gathering"
+      entry_actions:
+        - action: "execute_search"
+          params:
+            plan: "{{ search_plan }}"
+            collect:
+              - "articles"
+              - "papers"
+              - "documentation"
+              - "examples"
+            timeout_per_source: 60
+        - action: "filter_results"
+          params:
+            criteria:
+              - "relevance > 0.7"
+              - "recency preference"
+              - "authority score"
+            max_results_per_concept: 10
+        - action: "organize_findings"
+          params:
+            group_by: "concept"
+            extract_key_points: true
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "oracle"
+        task_type: "research"
+      on_success: "SYNTH"
+      on_failure: "FAILURE"
+      state_var: "gathered_knowledge"
+
+    SYNTH:
+      description: "Synthesize findings into report"
+      entry_actions:
+        - action: "synthesize"
+          params:
+            findings: "{{ gathered_knowledge }}"
+            format: "{{ format }}"
+            structure:
+              - "executive_summary"
+              - "key_findings"
+              - "detailed_analysis"
+              - "conclusions"
+              - "sources"
+        - action: "identify_patterns"
+          params:
+            findings: "{{ gathered_knowledge }}"
+            detect_trends: true
+            find_contradictions: true
+        - action: "evaluate_credibility"
+          params:
+            sources: "{{ gathered_knowledge.sources }}"
+            score_authority: true
+        - action: "generate_insights"
+          params:
+            patterns: "{{ patterns }}"
+            objectives: "{{ learning_objectives }}"
+            actionable: true
+      invariants:
+        - "report must address all objectives"
+        - "all claims must have sources"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+      state_var: "research_report"
+
+    SUCCESS:
+      description: "Research complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "research_complete"
+            data:
+              topic: "{{ research_topic }}"
+              report: "{{ research_report }}"
+              sources_count: "{{ gathered_knowledge.sources | length }}"
+        - action: "record_parampara"
+          params:
+            action: "RESEARCH_SYNTH"
+            result: "SUCCESS"
+            artifacts:
+              - "{{ research_report }}"
+        - action: "store_knowledge"
+          params:
+            report: "{{ research_report }}"
+            index_for_retrieval: true
+
+    FAILURE:
+      description: "Research failed"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "research_failed"
+            data:
+              reason: "{{ failure_reason }}"
+              state: "{{ failed_state }}"
+              partial_results: "{{ gathered_knowledge }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "query_captured"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "scope_defined"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "sources_identified"
+    - from: "KARMA"
+      to: "SYNTH"
+      condition: "knowledge_gathered"
+    - from: "SYNTH"
+      to: "SUCCESS"
+      condition: "report_generated"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "scope_before_search"
+      check: "KARMA cannot execute without ARTHA completion"
+    - name: "sources_verified"
+      check: "only accessible sources used in KARMA"
+    - name: "claims_sourced"
+      check: "all claims in report must have source references"
+
+  # ===========================================================================
+  # SEMANTIC GROUNDING (Maps to Kernel Syscalls)
+  # ===========================================================================
+  semantic_grounding:
+    syscall_type: "DISPATCH_TASK"
+    target_agent: "oracle"
+    intent_patterns:
+      - 'research\s+(?:the\s+)?(?:topic\s+)?(.+)'
+      - 'investigate\s+(.+)'
+      - 'learn\s+(?:about|more\s+about)\s+(.+)'
+      - 'find\s+(?:out|information)\s+(?:about\s+)?(.+)'
+      - 'what\s+(?:is|are)\s+(.+)'
+      - 'explain\s+(.+)'
+      - 'tell\s+me\s+about\s+(.+)'
+    param_extraction:
+      research_topic:
+        patterns:
+          - 'research\s+(?:the\s+)?(?:topic\s+)?(.+)'
+          - 'about\s+(.+)'
+          - 'investigate\s+(.+)'
+        required: true
+      depth:
+        patterns:
+          - '(?:deep|comprehensive|thorough)\s+research'
+          - '(?:quick|brief|overview)\s+research'
+        mapping:
+          deep: "comprehensive"
+          comprehensive: "comprehensive"
+          thorough: "comprehensive"
+          quick: "overview"
+          brief: "overview"
+          overview: "overview"
+        default: "standard"

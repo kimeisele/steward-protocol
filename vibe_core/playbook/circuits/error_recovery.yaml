@@ -1,0 +1,361 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: ERROR_RECOVERY_V1
+# ============================================================================
+# Neuro-Symbolic Error Recovery & Replanning Circuit
+#
+# Syscall: Internal kernel operation (meta-circuit)
+# Pattern: Handles FAILURE states from other circuits, attempts recovery
+#
+# VEDA-4 State Machine:
+#   DETECT   → Detect and classify error
+#   ANALYZE  → Analyze root cause
+#   REPLAN   → Generate recovery strategy
+#   RETRY    → Execute recovery attempt
+#   ESCALATE → Escalate if recovery fails
+#   RECOVERED → Error recovered
+#   FAILED   → Recovery failed, error persists
+#
+# This circuit makes the system self-healing.
+#
+# ============================================================================
+
+circuit:
+  id: "ERROR_RECOVERY_V1"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "meta"
+  security_level: "system"
+
+  description: |
+    Meta-circuit for handling errors from other circuit executions.
+    Implements autonomous error recovery with escalation.
+
+    Recovery strategies:
+    1. Retry with same parameters (transient errors)
+    2. Retry with adjusted parameters (input errors)
+    3. Replan and try different approach (strategy errors)
+    4. Escalate to human/higher authority (unrecoverable)
+
+    Key principle: Try to recover autonomously before bothering humans.
+
+  # ===========================================================================
+  # STATES (Recovery States)
+  # ===========================================================================
+  states:
+    DETECT:
+      description: "Detect and classify the error"
+      entry_actions:
+        - action: "capture_error"
+          params:
+            source_circuit: "{{ failed_circuit }}"
+            failed_state: "{{ failed_state }}"
+            error_message: "{{ error_message }}"
+            stack_trace: "{{ stack_trace }}"
+            context: "{{ execution_context }}"
+        - action: "classify_error"
+          params:
+            error: "{{ captured_error }}"
+            categories:
+              - type: "transient"
+                patterns: ["timeout", "connection", "rate_limit", "temporary"]
+                recovery: "retry_same"
+              - type: "input_error"
+                patterns: ["validation", "parse", "missing", "invalid"]
+                recovery: "retry_adjusted"
+              - type: "state_error"
+                patterns: ["invariant", "precondition", "postcondition"]
+                recovery: "replan"
+              - type: "resource_error"
+                patterns: ["memory", "disk", "quota", "permission"]
+                recovery: "escalate"
+              - type: "logic_error"
+                patterns: ["assertion", "unexpected", "impossible"]
+                recovery: "escalate"
+      invariants:
+        - "error must be captured with full context"
+        - "classification must be deterministic"
+      on_success: "ANALYZE"
+      on_failure: "FAILED"
+      state_var: "error_classification"
+
+    ANALYZE:
+      description: "Analyze root cause"
+      entry_actions:
+        - action: "analyze_root_cause"
+          params:
+            error: "{{ error_classification }}"
+            context: "{{ execution_context }}"
+            history: "{{ previous_attempts }}"
+            analyze:
+              - "immediate_cause"    # What directly caused it
+              - "contributing_factors"  # What made it possible
+              - "pattern_match"      # Seen this before?
+        - action: "assess_recoverability"
+          params:
+            error_type: "{{ error_classification.type }}"
+            attempts_so_far: "{{ attempt_count }}"
+            max_attempts: "{{ config.max_retry_attempts }}"
+            time_elapsed: "{{ time_since_first_error }}"
+        - action: "check_previous_strategies"
+          params:
+            error_signature: "{{ error_signature }}"
+            lookup_successful: true
+      invariants:
+        - "root cause must be identified"
+        - "recoverability must be assessed honestly"
+      on_recoverable: "REPLAN"
+      on_unrecoverable: "ESCALATE"
+      on_failure: "ESCALATE"
+      state_var: "analysis"
+
+    REPLAN:
+      description: "Generate recovery strategy"
+      entry_actions:
+        - action: "select_strategy"
+          params:
+            error_type: "{{ error_classification.type }}"
+            analysis: "{{ analysis }}"
+            strategies:
+              retry_same:
+                when: "transient AND attempts < max"
+                backoff: "exponential"
+                max_wait_ms: 30000
+              retry_adjusted:
+                when: "input_error"
+                adjustments:
+                  - "relax_constraints"
+                  - "provide_defaults"
+                  - "request_clarification"
+              replan_approach:
+                when: "state_error OR repeated_failure"
+                actions:
+                  - "identify_alternative_path"
+                  - "skip_problematic_state"
+                  - "decompose_into_smaller_steps"
+        - action: "generate_recovery_plan"
+          params:
+            strategy: "{{ selected_strategy }}"
+            original_input: "{{ original_input }}"
+            adjustments: "{{ required_adjustments }}"
+        - action: "validate_plan"
+          params:
+            plan: "{{ recovery_plan }}"
+            check_feasibility: true
+      invariants:
+        - "strategy must match error type"
+        - "plan must be feasible"
+      on_success: "RETRY"
+      on_no_viable_plan: "ESCALATE"
+      state_var: "recovery_plan"
+
+    RETRY:
+      description: "Execute recovery attempt"
+      entry_actions:
+        - action: "prepare_retry"
+          params:
+            circuit: "{{ failed_circuit }}"
+            plan: "{{ recovery_plan }}"
+            attempt_number: "{{ attempt_count + 1 }}"
+        - action: "apply_backoff"
+          params:
+            strategy: "{{ recovery_plan.backoff }}"
+            attempt: "{{ attempt_count }}"
+            base_ms: 1000
+            max_ms: 30000
+        - action: "execute_retry"
+          params:
+            circuit: "{{ failed_circuit }}"
+            state: "{{ recovery_plan.resume_state }}"
+            input: "{{ recovery_plan.adjusted_input }}"
+            timeout_ms: "{{ recovery_plan.timeout }}"
+        - action: "record_attempt"
+          params:
+            attempt: "{{ attempt_count + 1 }}"
+            strategy: "{{ selected_strategy }}"
+            result: "{{ retry_result }}"
+      invariants:
+        - "backoff must be applied"
+        - "attempt must be recorded"
+      on_success: "RECOVERED"
+      on_failure: "DETECT"  # Loop back for re-analysis
+      max_loops: 5
+      state_var: "retry_result"
+
+    ESCALATE:
+      description: "Escalate to higher authority"
+      entry_actions:
+        - action: "prepare_escalation"
+          params:
+            error: "{{ error_classification }}"
+            analysis: "{{ analysis }}"
+            attempts: "{{ all_attempts }}"
+            context: "{{ execution_context }}"
+        - action: "determine_escalation_target"
+          params:
+            severity: "{{ analysis.severity }}"
+            domain: "{{ failed_circuit_domain }}"
+            targets:
+              - level: "supervisor_agent"
+                when: "recoverable_with_guidance"
+              - level: "human_operator"
+                when: "requires_human_judgment"
+              - level: "system_admin"
+                when: "infrastructure_issue"
+        - action: "emit_escalation"
+          params:
+            event: "error_escalation"
+            target: "{{ escalation_target }}"
+            data:
+              circuit: "{{ failed_circuit }}"
+              error: "{{ error_classification }}"
+              analysis: "{{ analysis }}"
+              attempts_made: "{{ attempt_count }}"
+              recommended_action: "{{ analysis.recommended_action }}"
+        - action: "await_guidance"
+          params:
+            timeout_ms: 300000  # 5 minutes
+            fallback: "FAILED"
+      on_guidance_received: "REPLAN"
+      on_timeout: "FAILED"
+      on_abort_requested: "FAILED"
+      state_var: "escalation_result"
+
+    RECOVERED:
+      description: "Error successfully recovered"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "error_recovered"
+            data:
+              circuit: "{{ failed_circuit }}"
+              error_type: "{{ error_classification.type }}"
+              attempts: "{{ attempt_count }}"
+              strategy: "{{ selected_strategy }}"
+              recovery_time_ms: "{{ total_recovery_time }}"
+        - action: "record_successful_recovery"
+          params:
+            error_signature: "{{ error_signature }}"
+            strategy: "{{ selected_strategy }}"
+            for_future_reference: true
+        - action: "record_parampara"
+          params:
+            action: "ERROR_RECOVERY"
+            result: "SUCCESS"
+            error: "{{ error_classification }}"
+            strategy: "{{ selected_strategy }}"
+
+    FAILED:
+      description: "Recovery failed"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "error_unrecoverable"
+            data:
+              circuit: "{{ failed_circuit }}"
+              error: "{{ error_classification }}"
+              attempts: "{{ attempt_count }}"
+              reason: "{{ failure_reason }}"
+        - action: "create_incident_report"
+          params:
+            error: "{{ error_classification }}"
+            analysis: "{{ analysis }}"
+            attempts: "{{ all_attempts }}"
+            recommendation: "manual_intervention_required"
+        - action: "record_parampara"
+          params:
+            action: "ERROR_RECOVERY"
+            result: "FAILED"
+            error: "{{ error_classification }}"
+            incident_id: "{{ incident_report.id }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "DETECT"
+      to: "ANALYZE"
+      condition: "error_classified"
+    - from: "ANALYZE"
+      to: "REPLAN"
+      condition: "recoverable"
+    - from: "ANALYZE"
+      to: "ESCALATE"
+      condition: "NOT recoverable"
+    - from: "REPLAN"
+      to: "RETRY"
+      condition: "plan_valid"
+    - from: "REPLAN"
+      to: "ESCALATE"
+      condition: "no_viable_plan"
+    - from: "RETRY"
+      to: "RECOVERED"
+      condition: "retry_succeeded"
+    - from: "RETRY"
+      to: "DETECT"
+      condition: "retry_failed AND attempts < max"
+    - from: "RETRY"
+      to: "ESCALATE"
+      condition: "retry_failed AND attempts >= max"
+    - from: "ESCALATE"
+      to: "REPLAN"
+      condition: "guidance_received"
+    - from: "ESCALATE"
+      to: "FAILED"
+      condition: "timeout OR abort"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "max_retry_limit"
+      check: "retry attempts must not exceed config.max_retry_attempts"
+    - name: "backoff_required"
+      check: "exponential backoff must be applied between retries"
+    - name: "escalation_before_give_up"
+      check: "must escalate before declaring FAILED"
+    - name: "full_context_preserved"
+      check: "all error context must be preserved for analysis"
+
+  # ===========================================================================
+  # CONFIGURATION
+  # ===========================================================================
+  config:
+    max_retry_attempts: 5
+    base_backoff_ms: 1000
+    max_backoff_ms: 30000
+    backoff_multiplier: 2
+    escalation_timeout_ms: 300000
+    record_for_learning: true
+
+  # ===========================================================================
+  # ERROR SIGNATURES (for pattern matching)
+  # ===========================================================================
+  error_patterns:
+    transient:
+      - "ConnectionError"
+      - "TimeoutError"
+      - "RateLimitExceeded"
+      - "ServiceUnavailable"
+      - "TemporaryFailure"
+    input:
+      - "ValidationError"
+      - "ParseError"
+      - "MissingParameter"
+      - "InvalidInput"
+      - "TypeMismatch"
+    state:
+      - "InvariantViolation"
+      - "PreconditionFailed"
+      - "PostconditionFailed"
+      - "StateTransitionError"
+    resource:
+      - "OutOfMemory"
+      - "DiskFull"
+      - "QuotaExceeded"
+      - "PermissionDenied"
+    logic:
+      - "AssertionError"
+      - "UnexpectedState"
+      - "ImpossibleCondition"

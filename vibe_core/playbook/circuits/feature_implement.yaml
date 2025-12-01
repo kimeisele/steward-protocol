@@ -1,0 +1,280 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: FEATURE_IMPLEMENT_V2
+# ============================================================================
+# Neuro-Symbolic Feature Implementation Circuit
+#
+# Syscall: DISPATCH_TASK (to engineer agent for code writing)
+# Pattern: "Implement feature", "Add functionality", "Write code for"
+#
+# VEDA-4 State Machine with AUDIT LOOP:
+#   SHABDA   → Capture feature intent and requirements
+#   ARTHA    → Validate requirements, check dependencies
+#   PRATYAYA → Verify context, check preconditions
+#   KARMA    → Engineer writes code
+#   AUDIT    → Auditor verifies code quality
+#   GATE     → Evaluate audit (loop back if failed)
+#   SEAL     → Chronicle commits changes
+#   SUCCESS  → Feature implemented
+#
+# Philosophy: NO CODE WITHOUT CLEAR INTENT AND AUDIT APPROVAL
+#
+# ============================================================================
+
+circuit:
+  id: "FEATURE_IMPLEMENT_V2"
+  type: "cognitive_circuit"
+  version: "2.0"
+  domain: "development"
+  security_level: "elevated"
+
+  description: |
+    Safe feature implementation with mandatory intent capture and code audit.
+    The VEDA-4 Sacred Loop ensures: SHABDA → ARTHA → PRATYAYA → KARMA.
+    Additional AUDIT loop ensures code quality before commit.
+
+    Replaces legacy: knowledge/playbooks/feature_implement_safe.yaml
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States + Audit Loop)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture and clarify feature intent"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["feature_description"]
+            optional: ["feature_name", "target_files", "constraints"]
+            defaults:
+              feature_name: "new_feature"
+        - action: "clarify_intent"
+          params:
+            min_description_length: 10
+            extract_acceptance_criteria: true
+      invariants:
+        - "feature_description must be at least 10 chars"
+        - "intent must be unambiguous"
+      on_success: "ARTHA"
+      on_failure: "CLARIFY"
+
+    CLARIFY:
+      description: "Request clarification if intent unclear"
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "intent_unclear"
+            data:
+              message: "Please provide more details about the feature"
+              missing: "{{ missing_params }}"
+      terminal: true  # Cannot proceed without clear intent
+
+    ARTHA:
+      description: "Validate requirements and meaning"
+      entry_actions:
+        - action: "validate_requirements"
+          params:
+            description: "{{ feature_description }}"
+            check_feasibility: true
+        - action: "resolve_dependencies"
+          params:
+            target_files: "{{ target_files }}"
+            analyze_imports: true
+      invariants:
+        - "requirements must be implementable"
+        - "all dependencies must be resolvable"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+
+    PRATYAYA:
+      description: "Verify conditions for implementation"
+      entry_actions:
+        - action: "check_context"
+          params:
+            verify_codebase_state: true
+            check_conflicts: true
+            verify_permissions: true
+        - action: "prepare_sandbox"
+          params:
+            isolate_changes: true
+            enable_rollback: true
+      invariants:
+        - "codebase must be in clean state"
+        - "no conflicting changes in progress"
+        - "sandbox must be prepared"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+
+    KARMA:
+      description: "Engineer writes code"
+      entry_actions:
+        - action: "write_code"
+          params:
+            prompt: "{{ feature_description }}"
+            target_files: "{{ target_files }}"
+            context: "{{ project_context }}"
+            intent_ref: "{{ intent_captured }}"
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "engineer"
+        task_type: "write_code"
+      on_success: "AUDIT"
+      on_failure: "FAILURE"
+      state_var: "code_written"
+
+    AUDIT:
+      description: "Auditor verifies code quality"
+      entry_actions:
+        - action: "verify_code"
+          params:
+            path: "{{ code_written.path }}"
+            expected_intent: "{{ feature_description }}"
+            checks:
+              - "syntax_valid"
+              - "linting_passed"
+              - "tests_pass"
+              - "security_scan"
+              - "intent_alignment"
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "auditor"
+        task_type: "verify_changes"
+      on_success: "GATE"
+      on_failure: "GATE"
+      state_var: "audit_result"
+
+    GATE:
+      description: "Evaluate audit result - trust gate"
+      entry_actions:
+        - action: "evaluate_audit"
+          params:
+            result: "{{ audit_result }}"
+            required_pass: true
+      invariants:
+        - "audit must have explicit pass/fail"
+        - "failures must have actionable feedback"
+      on_success: "SEAL"
+      on_failure: "KARMA"  # Loop back for fixes
+      max_loops: 3  # Prevent infinite loop
+
+    SEAL:
+      description: "Chronicle commits changes"
+      entry_actions:
+        - action: "commit_changes"
+          params:
+            path: "{{ code_written.path }}"
+            message: "{{ feature_name }}: {{ feature_description | truncate(50) }}"
+            audit_ref: "{{ audit_result }}"
+            signed: true
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "archivist"
+        task_type: "seal_history"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "Feature implementation complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "feature_implemented"
+            data:
+              name: "{{ feature_name }}"
+              description: "{{ feature_description }}"
+              audit_passed: true
+              commit: "{{ commit_hash }}"
+        - action: "record_parampara"
+          params:
+            action: "FEATURE_IMPLEMENT"
+            result: "SUCCESS"
+            phases: ["SHABDA", "ARTHA", "PRATYAYA", "KARMA", "AUDIT", "SEAL"]
+
+    FAILURE:
+      description: "Implementation failed"
+      terminal: true
+      entry_actions:
+        - action: "rollback"
+          params:
+            sandbox: "{{ sandbox_id }}"
+        - action: "emit_event"
+          params:
+            event: "feature_failed"
+            data:
+              reason: "{{ failure_reason }}"
+              state: "{{ failed_state }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "intent_clear"
+    - from: "SHABDA"
+      to: "CLARIFY"
+      condition: "intent_unclear"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "requirements_valid"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "conditions_met"
+    - from: "KARMA"
+      to: "AUDIT"
+      condition: "code_written"
+    - from: "AUDIT"
+      to: "GATE"
+      condition: "always"
+    - from: "GATE"
+      to: "SEAL"
+      condition: "audit_passed"
+    - from: "GATE"
+      to: "KARMA"
+      condition: "audit_failed AND loops < max_loops"
+    - from: "GATE"
+      to: "FAILURE"
+      condition: "audit_failed AND loops >= max_loops"
+    - from: "SEAL"
+      to: "SUCCESS"
+      condition: "commit_created"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "intent_before_action"
+      check: "KARMA cannot execute without SHABDA completion"
+    - name: "audit_before_commit"
+      check: "SEAL cannot execute without AUDIT pass"
+    - name: "rollback_on_failure"
+      check: "all changes rolled back on FAILURE"
+    - name: "max_audit_loops"
+      check: "audit loop cannot exceed 3 iterations"
+
+  # ===========================================================================
+  # SEMANTIC GROUNDING (Maps to Kernel Syscalls)
+  # ===========================================================================
+  semantic_grounding:
+    syscall_type: "DISPATCH_TASK"
+    target_agent: "engineer"
+    intent_patterns:
+      - 'implement\s+(?:a\s+)?(?:new\s+)?feature'
+      - 'add\s+(?:a\s+)?(?:new\s+)?(?:feature|functionality)'
+      - 'write\s+code\s+(?:for|to)'
+      - 'build\s+(?:a\s+)?(?:new\s+)?feature'
+      - 'create\s+(?:a\s+)?(?:new\s+)?(?:feature|module|component)'
+    param_extraction:
+      feature_description:
+        patterns:
+          - 'implement\s+(.+)'
+          - 'add\s+(?:a\s+)?(?:feature\s+)?(?:that\s+)?(.+)'
+          - 'build\s+(.+)'
+        required: true
+      feature_name:
+        patterns:
+          - "feature\\s+(?:called|named)\\s+[\"']?(\\w+)[\"']?"
+        default: "new_feature"

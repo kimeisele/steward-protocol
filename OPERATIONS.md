@@ -1,14 +1,14 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-12-01T08:19:45.398234
+**Last Updated:** 2025-12-01T11:34:02.625041
 **Status:** RUNNING
 
 ## 📊 Kernel Status
 - Kernel: RUNNING
-- Agents Registered: 27
+- Agents Registered: 26
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 42
+- Total Events: 15
 
 ## 🤖 Agent Status
 
@@ -33,14 +33,6 @@
 - domain: SECURITY
 - capabilities: ['verify_changes', 'auditing', 'constitutional_verdict', 'auditor.verdict']
 - description: Quality gate agent (Tool Protocol v3.0)
-
-### chronicle
-- agent_id: chronicle
-- name: CHRONICLE
-- status: operational
-- tasks_processed: 0
-- tasks_successful: 0
-- git_status: {'success': False}
 
 ### civic
 - agent_id: civic

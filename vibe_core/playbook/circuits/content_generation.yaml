@@ -1,0 +1,269 @@
+# CONTENT GENERATION COGNITIVE CIRCUIT
+# =====================================
+# GAD-5500: Neuro-Symbolic OS - Operation Gleichschaltung
+#
+# REFACTORED from legacy linear phases to VEDA-4 Cognitive Circuit.
+# This proves the pattern is UNIVERSAL, not just for agent birth.
+#
+# Architecture:
+#   Neural (User Intent) → Semantic Compiler → [THIS CIRCUIT] → Agents → Content
+#
+# The key insight: Content generation also has the "Probabilistic-Deterministic Gap".
+# We need to compile "Write a blog post about X" into structured syscalls.
+#
+# Version: 2.0 (Neuro-Symbolic)
+
+circuit:
+  id: CONTENT_GENERATION_V2
+  name: Content Generation Cognitive Circuit
+  type: cognitive_circuit
+
+  intent: |
+    Generate content (blog posts, documentation, announcements) from natural language.
+    This circuit handles the full lifecycle:
+    1. SHABDA: Parse and validate the content request
+    2. ARTHA: Verify content parameters and permissions
+    3. PRATYAYA: Allocate resources (research, generation)
+    4. KARMA: Execute content generation via Herald
+
+  description: |
+    The Content Generation Circuit transforms vague requests like
+    "Write a blog post about AI" into structured content operations.
+
+    This is "ML Light" for content - we use deterministic structures
+    to channel neural creativity into auditable, reviewable output.
+
+  version: "2.0"
+
+  # ==========================================================================
+  # SEMANTIC TRIGGERS
+  # ==========================================================================
+
+  triggers:
+    primary:
+      - pattern: "write.*(blog|post|article|doc)"
+        confidence_threshold: 0.8
+      - pattern: "create.*(content|post|article)"
+        confidence_threshold: 0.8
+      - pattern: "generate.*(blog|documentation|announcement)"
+        confidence_threshold: 0.85
+      - pattern: "draft.*(post|article|content)"
+        confidence_threshold: 0.8
+
+    anti_triggers:
+      - "create agent"
+      - "spawn"
+      - "vote"
+      - "governance"
+
+  # ==========================================================================
+  # STATE MACHINE (VEDA-4 Cognitive Circuit)
+  # ==========================================================================
+
+  states:
+    # SHABDA: Parse the content request
+    SHABDA:
+      description: "Parse and compile user intent into content parameters"
+      invariants:
+        - "raw_input is not empty"
+        - "content_topic is extracted"
+      operations:
+        - action: COMPILE_REQUEST
+          input: "{{ raw_input }}"
+          output: "content_params"
+      transitions:
+        - to: ARTHA
+          condition: "content_params.topic != null"
+        - to: FAILURE
+          condition: "content_params.topic == null"
+          reason: "Could not extract content topic from request"
+
+    # ARTHA: Verify content parameters
+    ARTHA:
+      description: "Validate content parameters and permissions"
+      invariants:
+        - "content_params has valid topic"
+        - "content_format is supported"
+      operations:
+        - action: VALIDATE_PARAMS
+          checks:
+            - "Topic is not empty"
+            - "Format is supported (markdown, html, text)"
+            - "Tone is appropriate"
+      transitions:
+        - to: PRATYAYA
+          condition: "validation.passed == true"
+        - to: VALIDATION_FAILED
+          condition: "validation.passed == false"
+
+    # PRATYAYA: Resource allocation (research phase)
+    PRATYAYA:
+      description: "Allocate resources and perform research"
+      invariants:
+        - "research_data is available (even if empty)"
+      operations:
+        - action: DISPATCH_TASK
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "envoy"
+            task_payload:
+              action: "research"
+              topic: "{{ content_params.topic }}"
+              max_results: 10
+      transitions:
+        - to: KARMA
+          condition: "research_complete == true"
+        - to: KARMA
+          condition: "research_timeout == true"
+          # Proceed even if research times out
+
+    # KARMA: Execute content generation
+    KARMA:
+      description: "Generate content via Herald agent"
+      invariants:
+        - "herald agent is available"
+        - "content_params are valid"
+      operations:
+        - action: DISPATCH_TASK
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "herald"
+            task_payload:
+              action: "generate_content"
+              topic: "{{ content_params.topic }}"
+              format: "{{ content_params.format }}"
+              tone: "{{ content_params.tone }}"
+              research_data: "{{ research_data }}"
+        - action: RECORD_KARMA
+          syscall_type: RECORD_KARMA
+          params:
+            event_type: "CONTENT_GENERATED"
+            data:
+              topic: "{{ content_params.topic }}"
+              format: "{{ content_params.format }}"
+      transitions:
+        - to: REVIEW
+          condition: "generation_result.success == true"
+        - to: GENERATION_FAILED
+          condition: "generation_result.success == false"
+
+    # REVIEW: Human approval gate (optional)
+    REVIEW:
+      description: "Content ready for human review"
+      invariants:
+        - "content draft exists"
+      operations:
+        - action: EMIT_EVENT
+          event: "content_ready_for_review"
+          params:
+            content_id: "{{ generation_result.content_id }}"
+            preview: "{{ generation_result.preview }}"
+      transitions:
+        - to: SUCCESS
+          condition: "review_approved == true"
+        - to: SUCCESS
+          condition: "auto_approve == true"
+        - to: REVIEW_REJECTED
+          condition: "review_rejected == true"
+
+    # Terminal states
+    SUCCESS:
+      description: "Content successfully generated"
+      terminal: true
+      output:
+        status: "CONTENT_GENERATED"
+        content_id: "{{ generation_result.content_id }}"
+        topic: "{{ content_params.topic }}"
+        format: "{{ content_params.format }}"
+        preview_url: "{{ generation_result.preview_url }}"
+
+    FAILURE:
+      description: "Could not parse content request"
+      terminal: true
+      output:
+        status: "PARSE_FAILED"
+        reason: "Could not extract content parameters from input"
+
+    VALIDATION_FAILED:
+      description: "Content parameters invalid"
+      terminal: true
+      output:
+        status: "VALIDATION_FAILED"
+        reason: "{{ validation.error }}"
+
+    GENERATION_FAILED:
+      description: "Content generation failed"
+      terminal: true
+      output:
+        status: "GENERATION_FAILED"
+        reason: "{{ generation_result.error }}"
+
+    REVIEW_REJECTED:
+      description: "Content rejected in review"
+      terminal: true
+      output:
+        status: "REVIEW_REJECTED"
+        reason: "Content did not pass human review"
+
+  # Entry point
+  entry_state: SHABDA
+
+  # ==========================================================================
+  # VARIABLES (Blueprint Extraction Points)
+  # ==========================================================================
+
+  variables:
+    raw_input:
+      type: string
+      required: true
+      description: "The raw user input to compile"
+
+    content_params:
+      type: object
+      required: false
+      description: "Extracted content parameters"
+      schema:
+        topic: string
+        format: string  # markdown, html, text
+        tone: string    # professional, casual, technical
+        target_audience: string
+        word_count: integer
+
+    auto_approve:
+      type: boolean
+      required: false
+      default: false
+      description: "Skip human review if true"
+
+  # ==========================================================================
+  # SUPPORTED FORMATS
+  # ==========================================================================
+
+  supported_formats:
+    - "markdown"
+    - "html"
+    - "text"
+    - "json"
+
+  supported_tones:
+    - "professional"
+    - "casual"
+    - "technical"
+    - "friendly"
+    - "formal"
+
+  # ==========================================================================
+  # METADATA
+  # ==========================================================================
+
+  metadata:
+    version: "2.0"
+    created: "2025-12-01"
+    refactored_from: "CONTENT_GENERATION_V1"
+    purpose: "Content Generation - Neuro-Symbolic"
+    paradigm: "neuro_symbolic"
+    circuit_type: "content"
+
+    # Telemetry
+    estimated_latency_ms: 5000  # Content generation takes time
+    syscalls_executed: 2  # DISPATCH_TASK (research) + DISPATCH_TASK (generate)

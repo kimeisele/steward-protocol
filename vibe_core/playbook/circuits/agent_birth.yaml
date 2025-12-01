@@ -1,0 +1,245 @@
+# AGENT BIRTH COGNITIVE CIRCUIT
+# ================================
+# GAD-5500: Neuro-Symbolic OS Implementation
+#
+# This is NOT a traditional workflow (step 1, step 2, step 3).
+# This is a COGNITIVE CIRCUIT - a semantic state machine that orchestrates
+# kernel syscalls to birth new agents.
+#
+# Architecture:
+#   Neural (User Intent) → Semantic Compiler → [THIS CIRCUIT] → Kernel Syscalls → Agent Live
+#
+# The key insight: Playbooks aren't scripts, they're SCHALTKREISE (circuits)
+# that define invariants and state transitions, not just steps.
+#
+# Version: 1.0 (Neuro-Symbolic)
+
+circuit:
+  id: AGENT_BIRTH_V1
+  name: Agent Birth Cognitive Circuit
+  type: cognitive_circuit  # NEW: Not workflow, but circuit
+
+  intent: |
+    Birth a new autonomous agent from natural language specification.
+    This circuit handles the full lifecycle:
+    1. SHABDA: Parse and validate the birth request
+    2. ARTHA: Constitutional verification
+    3. PRATYAYA: Resource allocation
+    4. KARMA: Syscall execution
+
+  description: |
+    The Agent Birth Circuit is the fork() equivalent for VibeOS.
+    It compiles natural language ("I need an agent that monitors health")
+    into kernel syscalls (SPAWN_COGNITION, GRANT_MANDATE, ALLOCATE_PRANA).
+
+    This is "ML Light" - we use deterministic structures (Syscalls) to
+    channel neural output into safe, auditable kernel operations.
+
+  version: "1.0"
+
+  # ==========================================================================
+  # SEMANTIC TRIGGERS
+  # ==========================================================================
+  # Instead of keyword matching, we use semantic patterns
+  # These are evaluated by the BlueprintGenerator (Semantic Compiler)
+
+  triggers:
+    primary:
+      - pattern: "create.*(agent|bot|worker)"
+        confidence_threshold: 0.8
+      - pattern: "spawn.*(cognition|agent)"
+        confidence_threshold: 0.9
+      - pattern: "birth.*(new)?.*(agent)"
+        confidence_threshold: 0.9
+      - pattern: "I need.*(agent|bot)"
+        confidence_threshold: 0.75
+      - pattern: "(agent|bot).*that.*(monitors|watches|handles)"
+        confidence_threshold: 0.8
+
+    # Keywords that PREVENT this circuit from activating
+    anti_triggers:
+      - "delete agent"
+      - "remove agent"
+      - "kill agent"
+      - "status"
+      - "list agents"
+
+  # ==========================================================================
+  # STATE MACHINE (Cognitive Circuit Topology)
+  # ==========================================================================
+  # This defines STATES, not steps. Each state has invariants that must hold.
+  # Transitions happen via syscall completion.
+
+  states:
+    # Initial state: Parse the birth request
+    SHABDA:
+      description: "Parse and compile user intent into SyscallRequest"
+      invariants:
+        - "raw_input is not empty"
+        - "compilation result has role and mission"
+      operations:
+        - action: COMPILE_REQUEST
+          input: "{{ raw_input }}"
+          output: "compiled_request"
+      transitions:
+        - to: ARTHA
+          condition: "compiled_request.is_syscall == true"
+        - to: FAILURE
+          condition: "compiled_request.is_syscall == false"
+          reason: "Could not compile intent to SPAWN_COGNITION syscall"
+
+    # Constitutional verification state
+    ARTHA:
+      description: "Verify agent birth against Constitutional Oath"
+      invariants:
+        - "compiled_request.syscall_type == SPAWN_COGNITION"
+        - "role is not in FORBIDDEN_ROLES"
+      operations:
+        - action: CHECK_CONSTITUTION
+          input: "compiled_request"
+          checks:
+            - "Role is permitted by constitution"
+            - "Requester has authority to spawn agents"
+            - "System is in DAY_OF_BRAHMA cycle"
+      transitions:
+        - to: PRATYAYA
+          condition: "constitutional_check.passed == true"
+        - to: GOVERNANCE_DENIED
+          condition: "constitutional_check.passed == false"
+          reason: "Constitutional violation detected"
+
+    # Resource allocation state
+    PRATYAYA:
+      description: "Allocate resources (credits, capabilities) for new agent"
+      invariants:
+        - "agent has initial_credits >= 0"
+        - "capabilities list is not empty"
+      operations:
+        - action: PREPARE_RESOURCES
+          allocations:
+            credits: "{{ compiled_request.params.initial_credits | default(100) }}"
+            capabilities: "{{ compiled_request.params.capabilities }}"
+            vfs_sandbox: "{{ role }}"
+      transitions:
+        - to: KARMA
+          condition: "resources_prepared == true"
+        - to: RESOURCE_DENIED
+          condition: "resources_prepared == false"
+          reason: "Insufficient resources for agent birth"
+
+    # Execution state: Actually spawn the agent
+    KARMA:
+      description: "Execute kernel syscalls to birth the agent"
+      invariants:
+        - "all previous states completed successfully"
+        - "syscall_result is recorded in Parampara"
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: SPAWN_COGNITION
+          params: "{{ compiled_request.params }}"
+          audit: true  # Record in Parampara blockchain
+        - action: EXECUTE_SYSCALL
+          syscall_type: GRANT_MANDATE
+          params:
+            agent_id: "{{ spawn_result.agent_id }}"
+            capabilities: "{{ compiled_request.params.capabilities }}"
+        - action: EXECUTE_SYSCALL
+          syscall_type: ALLOCATE_PRANA
+          params:
+            agent_id: "{{ spawn_result.agent_id }}"
+            amount: "{{ compiled_request.params.initial_credits }}"
+      transitions:
+        - to: SUCCESS
+          condition: "spawn_result.success == true"
+        - to: SPAWN_FAILED
+          condition: "spawn_result.success == false"
+
+    # Terminal states
+    SUCCESS:
+      description: "Agent successfully birthed"
+      terminal: true
+      output:
+        status: "AGENT_BORN"
+        agent_id: "{{ spawn_result.agent_id }}"
+        role: "{{ compiled_request.params.role }}"
+        mission: "{{ compiled_request.params.mission }}"
+        capabilities: "{{ compiled_request.params.capabilities }}"
+        credits: "{{ compiled_request.params.initial_credits }}"
+        karma_block: "{{ spawn_result.karma_block_id }}"
+
+    FAILURE:
+      description: "Generic compilation failure"
+      terminal: true
+      output:
+        status: "BIRTH_FAILED"
+        reason: "Could not compile intent to agent birth"
+
+    GOVERNANCE_DENIED:
+      description: "Constitutional violation"
+      terminal: true
+      output:
+        status: "GOVERNANCE_DENIED"
+        reason: "{{ constitutional_check.violation }}"
+
+    RESOURCE_DENIED:
+      description: "Insufficient resources"
+      terminal: true
+      output:
+        status: "RESOURCE_DENIED"
+        reason: "System lacks resources for new agent"
+
+    SPAWN_FAILED:
+      description: "Kernel spawn failed"
+      terminal: true
+      output:
+        status: "SPAWN_FAILED"
+        reason: "{{ spawn_result.error }}"
+
+  # Entry point
+  entry_state: SHABDA
+
+  # ==========================================================================
+  # VARIABLES (Template Injection Points)
+  # ==========================================================================
+  # These are filled by the Semantic Compiler (BlueprintGenerator)
+
+  variables:
+    raw_input:
+      type: string
+      required: true
+      description: "The raw user input to compile"
+
+    requester_id:
+      type: string
+      required: true
+      default: "user"
+      description: "Who is requesting this agent birth"
+
+  # ==========================================================================
+  # FORBIDDEN ROLES (Security Constraint)
+  # ==========================================================================
+
+  forbidden_roles:
+    - "kernel"      # Cannot spawn another kernel
+    - "narasimha"   # Cannot spawn kill-switch
+    - "root"        # No root access
+    - "admin"       # No admin escalation
+
+  # ==========================================================================
+  # METADATA
+  # ==========================================================================
+
+  metadata:
+    version: "1.0"
+    created: "2025-12-01"
+    purpose: "Agent Birth - The fork() of VibeOS"
+    paradigm: "neuro_symbolic"
+    circuit_type: "lifecycle"
+
+    # Telemetry
+    estimated_latency_ms: 500
+    syscalls_executed: 3  # SPAWN + GRANT + ALLOCATE
+
+    # Security
+    requires_oath: true
+    audit_trail: "parampara"
