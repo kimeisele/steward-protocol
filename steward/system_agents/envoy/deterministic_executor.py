@@ -548,7 +548,8 @@ class DeterministicExecutor:
         for action in phase.actions:
             try:
                 action_type = action.get("action_type", "EXECUTE_SCRIPT")
-                target = action.get("target")
+                # Support both 'target' and 'agent_id' for backwards compatibility
+                target = action.get("target") or action.get("agent_id")
                 raw_params = action.get("params", {})
 
                 # RESOLVE TEMPLATE VARIABLES (GAD-5000 Variable Injection)
@@ -649,6 +650,11 @@ class DeterministicExecutor:
                         if result:
                             phase.result = {"agent": resolved_target, "result": result, "params": params, "task_id": task_id}
                             status = result.get("status", "unknown")
+                            # Check if agent returned an error
+                            if status == "error":
+                                error_msg = result.get("error", "Unknown error")
+                                logger.warning(f"  ❌ Agent {resolved_target} returned error: {error_msg}")
+                                return False  # Fail phase on agent error
                             logger.info(f"  ✓ Agent {resolved_target} returned: {status}")
                         else:
                             logger.warning(f"  ⏱️  Agent {resolved_target} timeout after {timeout_sec}s")

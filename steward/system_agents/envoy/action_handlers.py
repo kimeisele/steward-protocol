@@ -171,10 +171,48 @@ class CheckStateHandler(ActionHandler):
             return self._check_permissions(params, context)
         elif target == "state_check":
             return self._check_state(params, context)
+        elif target == "audit_gate":
+            return self._check_audit_gate(params, context)
         else:
             # Generic check - just verify params are present
             logger.info(f"  ✓ Generic state check passed: {target}")
             return ActionResult.ok({"check": target, "status": "passed"})
+
+    def _check_audit_gate(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
+        """
+        Check if audit passed (GAD-5500 Safe Evolution Loop).
+
+        Params:
+            check_field: Field path to check (e.g., "audit_result.passed")
+            expected_value: Expected value (e.g., True)
+            on_mismatch: Action to take if mismatch (for logging)
+        """
+        check_field = params.get("check_field", "audit_result.passed")
+        expected_value = params.get("expected_value", True)
+        on_mismatch = params.get("on_mismatch", "fail")
+
+        # Navigate the field path
+        parts = check_field.split(".")
+        value = context.phase_results
+
+        try:
+            for part in parts:
+                if isinstance(value, dict):
+                    value = value.get(part)
+                else:
+                    value = getattr(value, part, None)
+                if value is None:
+                    break
+        except Exception:
+            value = None
+
+        # Compare with expected
+        if value == expected_value:
+            logger.info(f"  ✓ Audit gate PASSED: {check_field} = {value}")
+            return ActionResult.ok({"check": "audit_gate", "field": check_field, "value": value, "status": "passed"})
+        else:
+            logger.warning(f"  ❌ Audit gate FAILED: {check_field} = {value} (expected {expected_value})")
+            return ActionResult.fail(f"Audit gate failed: {check_field} = {value}, expected {expected_value}")
 
     def _validate_input(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Validate input against required fields and constraints"""
