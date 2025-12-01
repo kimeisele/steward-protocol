@@ -15,10 +15,10 @@ This is "ML Light" - we use deterministic structures to channel neural output.
 GAD-5500: Safe Evolution Loop / Cognitive Circuits
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
-import logging
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -277,8 +277,8 @@ class SemanticSyscallExecutor:
             class_name = f"{role.replace(' ', '').title()}Cartridge"
 
             # Step 3: Create a minimal agent that can be registered
-            from vibe_core.protocols import VibeAgent, AgentManifest
             from steward.oath_mixin import OathMixin
+            from vibe_core.protocols import AgentManifest, VibeAgent
 
             # Dynamic agent class with oath
             class DynamicAgent(VibeAgent, OathMixin):
@@ -328,7 +328,7 @@ class SemanticSyscallExecutor:
             try:
                 bank = self.kernel.get_bank()
                 bank.create_account(agent_id)
-                bank.deposit(agent_id, initial_credits, f"Initial allocation from SPAWN_COGNITION")
+                bank.deposit(agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
             except Exception as e:
                 logger.warning(f"Credit allocation failed (non-fatal): {e}")
 
@@ -534,13 +534,29 @@ class SemanticSyscallExecutor:
         """
         REVOKE_MANDATE: Remove capabilities from an agent.
 
-        NOTE: Capability revocation is not yet implemented.
-        Capabilities are currently immutable after agent registration.
-        This syscall will fail until capability registry supports revocation.
+        Allows governance to restrict agent permissions based on behavior.
+        Example: Revoke transfer_prana after suspicious activity.
+
+        Permission Model:
+            - KERNEL can revoke from anyone
+            - CIVIC can revoke from anyone (governance)
+            - Agents can revoke from themselves (voluntary)
+
+        Args (in request.params):
+            - agent_id: The agent to revoke from (required)
+            - capabilities: List of capabilities to revoke (required)
+            - reason: Optional reason for revocation (for audit trail)
+
+        Returns:
+            SyscallResult with:
+                - success: True if any capabilities were revoked
+                - output: Dict with revoked/not_found lists and message
         """
         agent_id = request.params.get("agent_id")
         capabilities = request.params.get("capabilities", [])
+        reason = request.params.get("reason")
 
+        # Validation
         if not agent_id:
             return SyscallResult(
                 success=False,
@@ -548,15 +564,49 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: agent_id",
             )
 
-        # NOT IMPLEMENTED - capabilities are immutable in current design
-        logger.warning(f"⚠️  REVOKE_MANDATE: Not implemented (capabilities immutable)")
+        if not capabilities:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: capabilities (must be non-empty list)",
+            )
 
-        return SyscallResult(
-            success=False,
-            syscall_type=request.syscall_type,
-            error="REVOKE_MANDATE not implemented: capabilities are immutable after registration",
-            output={"agent_id": agent_id, "requested_revocations": capabilities},
-        )
+        if not isinstance(capabilities, list):
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Parameter 'capabilities' must be a list",
+            )
+
+        # Delegate to kernel (handles permission check + audit trail)
+        try:
+            result = self.kernel.revoke_capability(
+                agent_id=agent_id, capabilities=capabilities, revoker_id=request.requester_id, reason=reason
+            )
+
+            # Log the action
+            if result["success"]:
+                logger.info(
+                    f"✅ REVOKE_MANDATE: '{request.requester_id}' revoked {len(result['revoked'])} "
+                    f"capability(ies) from '{agent_id}': {result['revoked']}"
+                )
+            else:
+                logger.warning(f"⛔ REVOKE_MANDATE FAILED: {result['message']}")
+
+            return SyscallResult(
+                success=result["success"],
+                syscall_type=request.syscall_type,
+                output=result,
+                error=None if result["success"] else result["message"],
+            )
+
+        except Exception as e:
+            logger.error(f"❌ REVOKE_MANDATE ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Internal error during revocation: {str(e)}",
+            )
 
     def _handle_transfer_prana(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -647,15 +697,33 @@ class SemanticSyscallExecutor:
 
     def _handle_broadcast_event(self, request: SyscallRequest) -> SyscallResult:
         """
-        BROADCAST_EVENT: Emit system-wide event.
+        BROADCAST_EVENT: Emit system-wide event via EventBus.
 
-        NOTE: Event bus is not yet implemented.
-        Events are logged but not delivered to subscribers.
-        This syscall succeeds for logging purposes but does not broadcast.
+        Allows agents to broadcast events that other agents can subscribe to.
+        Supports loose coupling and reactive patterns.
+
+        Args (in request.params):
+            - event_type: Type of event (required) e.g., "agent.born", "task.complete"
+            - data: Optional event data (dict)
+            - message: Optional human-readable message
+
+        Returns:
+            SyscallResult with:
+                - success: True if event was broadcast
+                - output: Event ID, subscriber count, timestamp
+
+        Usage:
+            syscall(BROADCAST_EVENT, {
+                "event_type": "proposal.created",
+                "data": {"proposal_id": "p123", "title": "..."},
+                "message": "New governance proposal"
+            })
         """
         event_type = request.params.get("event_type")
         event_data = request.params.get("data", {})
+        message = request.params.get("message")
 
+        # Validation
         if not event_type:
             return SyscallResult(
                 success=False,
@@ -663,20 +731,36 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: event_type",
             )
 
-        # Event bus not implemented - log only
-        logger.info(f"📢 BROADCAST_EVENT: {event_type} from {request.requester_id} (logged only, no subscribers)")
+        # Broadcast via kernel EventBus
+        try:
+            import asyncio
 
-        # Return success=True with warning that no actual broadcast occurred
-        return SyscallResult(
-            success=True,
-            syscall_type=request.syscall_type,
-            output={
-                "event_type": event_type,
-                "data": event_data,
-                "broadcaster": request.requester_id,
-                "warning": "Event logged but event bus not implemented - no subscribers notified",
-            },
-        )
+            # Run async broadcast
+            # For syscalls, we need to run the coroutine synchronously
+            result = asyncio.run(
+                self.kernel.broadcast_event(
+                    event_type=event_type, broadcaster_id=request.requester_id, data=event_data, message=message
+                )
+            )
+
+            logger.info(
+                f"✅ BROADCAST_EVENT: '{event_type}' from '{request.requester_id}' "
+                f"→ {result['subscribers_notified']} subscriber(s)"
+            )
+
+            return SyscallResult(
+                success=True,
+                syscall_type=request.syscall_type,
+                output=result,
+            )
+
+        except Exception as e:
+            logger.error(f"❌ BROADCAST_EVENT ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Failed to broadcast event: {str(e)}",
+            )
 
     def _record_karma(self, request: SyscallRequest, result: SyscallResult) -> None:
         """Record syscall in Parampara (blockchain audit trail)."""

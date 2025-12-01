@@ -13,7 +13,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 

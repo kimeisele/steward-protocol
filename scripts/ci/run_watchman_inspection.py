@@ -12,13 +12,13 @@ This is Layer 2 of Defense in Depth:
 Extracted from inline YAML script for maintainability.
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
-from vibe_core.kernel_impl import RealVibeKernel
-from vibe_core.agent_interface import AgentSystemInterface
 from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
+from vibe_core.agent_interface import AgentSystemInterface
+from vibe_core.kernel_impl import RealVibeKernel
 
 print("⚔️  Initializing Watchman...")
 kernel = RealVibeKernel()
