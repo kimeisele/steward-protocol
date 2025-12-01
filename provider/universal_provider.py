@@ -28,8 +28,8 @@ import yaml
 
 # Import Core Definitions
 try:
-    from vibe_core.scheduling import Task
     from vibe_core.kernel_impl import RealVibeKernel as VibeKernel
+    from vibe_core.scheduling import Task
 except ImportError:
     # Mock for bootstrapping if kernel isn't in path yet
     VibeKernel = Any
@@ -444,45 +444,52 @@ class UniversalProvider:
                     pass
             else:
                 # --- EVOLUTIONARY LOOP (EAD) ---
-                # No matching playbook found. Generate a PROPOSAL for a new playbook.
-                # This requires Human Approval (HIL Check) before activation.
+                # No matching playbook found.
+                # For ACTION/CREATION intents: Generate a PROPOSAL for a new playbook (HIL required)
+                # For QUERY/CHAT/SYSTEM intents: Fall through to FAST PATH (no proposal needed)
                 logger.info(f"⚠️  No matching playbook found for concepts: {concepts}")
 
-                if emit_event:
-                    try:
-                        await emit_event(
-                            "ACTION",
-                            "No matching playbook found. Generating proposal...",
-                            "provider",
-                            {"concepts": list(concepts)},
-                        )
-                    except Exception as e:
-                        logger.debug(f"Event emission failed: {e}")
+                # Only generate proposals for ACTION and CREATION intents
+                # QUERY/CHAT/SYSTEM should use FAST PATH instead
+                if vector.intent_type in (IntentType.ACTION, IntentType.CREATION):
+                    if emit_event:
+                        try:
+                            await emit_event(
+                                "ACTION",
+                                "No matching playbook found. Generating proposal...",
+                                "provider",
+                                {"concepts": list(concepts)},
+                            )
+                        except Exception as e:
+                            logger.debug(f"Event emission failed: {e}")
 
-                # Generate playbook proposal
-                proposal = self.playbook_engine.generate_playbook_proposal(user_input, concepts)
+                    # Generate playbook proposal
+                    proposal = self.playbook_engine.generate_playbook_proposal(user_input, concepts)
 
-                if emit_event:
-                    try:
-                        await emit_event(
-                            "ACTION",
-                            f"PROPOSAL Generated: {proposal['proposal_id']} - Awaiting Human Approval (HIL)",
-                            "provider",
-                            {"proposal": proposal},
-                        )
-                    except Exception as e:
-                        logger.debug(f"Event emission failed: {e}")
+                    if emit_event:
+                        try:
+                            await emit_event(
+                                "ACTION",
+                                f"PROPOSAL Generated: {proposal['proposal_id']} - Awaiting Human Approval (HIL)",
+                                "provider",
+                                {"proposal": proposal},
+                            )
+                        except Exception as e:
+                            logger.debug(f"Event emission failed: {e}")
 
-                # Return proposal status (user must review and approve)
-                return {
-                    "status": "PROPOSAL_PENDING",
-                    "summary": proposal["message"],
-                    "proposal_id": proposal["proposal_id"],
-                    "playbook_draft": proposal["playbook_draft"],
-                    "concepts_detected": list(concepts),
-                    "user_input": user_input,
-                    "next_action": "Human review and approval required via HIL (Human-in-the-Loop)",
-                }
+                    # Return proposal status (user must review and approve)
+                    return {
+                        "status": "PROPOSAL_PENDING",
+                        "summary": proposal["message"],
+                        "proposal_id": proposal["proposal_id"],
+                        "playbook_draft": proposal["playbook_draft"],
+                        "concepts_detected": list(concepts),
+                        "user_input": user_input,
+                        "next_action": "Human review and approval required via HIL (Human-in-the-Loop)",
+                    }
+                else:
+                    # QUERY/CHAT/SYSTEM: Fall through to FAST PATH
+                    logger.info(f"ℹ️  Intent type {vector.intent_type.value} - using FAST PATH (no playbook needed)")
 
         # --- DECISION POINT: FAST vs SLOW PATH ---
         # FAST PATH: Instant gratification for reads and casual chat
