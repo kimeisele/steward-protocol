@@ -25,6 +25,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("SEMANTIC_SYSCALLS")
 
+# ============================================================================
+# RESERVED AGENT IDS - System agents that cannot be overwritten
+# ============================================================================
+RESERVED_AGENT_IDS = {
+    "watchman",
+    "herald",
+    "scribe",
+    "auditor",
+    "artisan",
+    "oracle",
+    "engineer",
+    "civic",
+    "envoy",
+    "steward",
+    "archivist",
+    "chronicle",
+    "kernel",
+    "narasimha",
+    "root",
+    "admin",
+    "system",
+}
+
 
 class SyscallType(str, Enum):
     """
@@ -216,27 +239,6 @@ class SemanticSyscallExecutor:
         initial_credits = request.params.get("initial_credits", 100)
         capabilities = request.params.get("capabilities", ["execute"])
         parent_id = request.params.get("parent_id", request.requester_id)
-
-        # SECURITY FIX: Reserved agent names (system agents)
-        RESERVED_AGENT_IDS = {
-            "watchman",
-            "herald",
-            "scribe",
-            "auditor",
-            "artisan",
-            "oracle",
-            "engineer",
-            "civic",
-            "envoy",
-            "steward",
-            "archivist",
-            "chronicle",
-            "kernel",
-            "narasimha",
-            "root",
-            "admin",
-            "system",
-        }
 
         # Generate base agent_id from role
         base_id = role.lower().replace(" ", "_")
