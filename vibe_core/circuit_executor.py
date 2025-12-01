@@ -235,9 +235,11 @@ class InvariantChecker:
                     return True, ""
                 return False, f"{path} is not a dict, cannot check for '{property_name}'"
 
-            # Unknown pattern - log warning but pass (permissive for unknown patterns)
-            logger.warning(f"Unknown invariant pattern (skipping): {invariant}")
-            return True, "Unknown pattern - skipped"
+            # Unknown pattern - FAIL-CLOSED for security
+            # If we can't parse an invariant, we can't verify it's satisfied.
+            # This prevents typos like "role is nota empty" from silently passing.
+            logger.warning(f"Unknown invariant pattern (FAILING): {invariant}")
+            return False, f"Unknown invariant pattern - cannot verify: '{invariant}'"
 
         except Exception as e:
             return False, f"Error evaluating invariant: {e}"
