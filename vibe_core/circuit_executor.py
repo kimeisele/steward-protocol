@@ -45,6 +45,7 @@ logger = logging.getLogger("CIRCUIT_EXECUTOR")
 @dataclass
 class CircuitState:
     """Current state of circuit execution."""
+
     current_state: str
     variables: Dict[str, Any] = field(default_factory=dict)
     history: List[str] = field(default_factory=list)
@@ -56,6 +57,7 @@ class CircuitState:
 @dataclass
 class CircuitExecutionResult:
     """Result of executing a cognitive circuit."""
+
     success: bool
     final_state: str
     output: Dict[str, Any]
@@ -210,7 +212,9 @@ class CognitiveCircuitExecutor:
                 # Store full compilation for is_syscall check
                 "compiled_request": {
                     "is_syscall": compilation.is_syscall,
-                    "syscall_type": compilation.syscall_request.syscall_type.value if compilation.syscall_request else None,
+                    "syscall_type": compilation.syscall_request.syscall_type.value
+                    if compilation.syscall_request
+                    else None,
                     "params": compilation.syscall_request.params if compilation.syscall_request else {},
                     "confidence": compilation.confidence,
                 },
@@ -363,7 +367,9 @@ class CognitiveCircuitExecutor:
         if "compiled_request" in variables:
             cr = variables["compiled_request"]
             if isinstance(cr, dict):
-                logger.info(f"   compiled_request.is_syscall = {cr.get('is_syscall')} (type: {type(cr.get('is_syscall'))})")
+                logger.info(
+                    f"   compiled_request.is_syscall = {cr.get('is_syscall')} (type: {type(cr.get('is_syscall'))})"
+                )
             else:
                 logger.info(f"   compiled_request is {type(cr).__name__}, not dict!")
 
@@ -461,6 +467,7 @@ class CognitiveCircuitExecutor:
 # ============================================================================
 # FACTORY
 # ============================================================================
+
 
 def create_circuit_executor(kernel: "RealVibeKernel") -> CognitiveCircuitExecutor:
     """Factory function to create a Cognitive Circuit Executor."""

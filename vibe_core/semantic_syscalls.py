@@ -33,25 +33,26 @@ class SyscallType(str, Enum):
     Unlike Unix syscalls (read, write, fork), these carry MEANING.
     Each syscall represents a fundamental operation in the agent lifecycle.
     """
+
     # Agent Lifecycle
-    SPAWN_COGNITION = "SPAWN_COGNITION"      # Birth a new agent (fork equivalent)
+    SPAWN_COGNITION = "SPAWN_COGNITION"  # Birth a new agent (fork equivalent)
     DESTROY_COGNITION = "DESTROY_COGNITION"  # Kill an agent (Narasimha)
 
     # Capability Management
-    GRANT_MANDATE = "GRANT_MANDATE"          # Assign capabilities
-    REVOKE_MANDATE = "REVOKE_MANDATE"        # Remove capabilities
+    GRANT_MANDATE = "GRANT_MANDATE"  # Assign capabilities
+    REVOKE_MANDATE = "REVOKE_MANDATE"  # Remove capabilities
 
     # Resource Management
-    ALLOCATE_PRANA = "ALLOCATE_PRANA"        # Grant credits (fuel)
-    TRANSFER_PRANA = "TRANSFER_PRANA"        # Move credits between agents
+    ALLOCATE_PRANA = "ALLOCATE_PRANA"  # Grant credits (fuel)
+    TRANSFER_PRANA = "TRANSFER_PRANA"  # Move credits between agents
 
     # Governance
-    SWEAR_OATH = "SWEAR_OATH"                # Constitutional binding
-    RECORD_KARMA = "RECORD_KARMA"            # Immutable ledger entry
+    SWEAR_OATH = "SWEAR_OATH"  # Constitutional binding
+    RECORD_KARMA = "RECORD_KARMA"  # Immutable ledger entry
 
     # Communication
-    DISPATCH_TASK = "DISPATCH_TASK"          # Send task to agent
-    BROADCAST_EVENT = "BROADCAST_EVENT"      # System-wide event
+    DISPATCH_TASK = "DISPATCH_TASK"  # Send task to agent
+    BROADCAST_EVENT = "BROADCAST_EVENT"  # System-wide event
 
 
 @dataclass
@@ -62,10 +63,11 @@ class SyscallRequest:
     This is what the Blueprint Generator produces - a structured
     representation of user intent compiled into a kernel operation.
     """
+
     syscall_type: SyscallType
     params: Dict[str, Any]
     requester_id: str = "system"  # Who initiated this syscall
-    priority: str = "normal"      # normal, high, critical
+    priority: str = "normal"  # normal, high, critical
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -79,6 +81,7 @@ class SyscallRequest:
 @dataclass
 class SyscallResult:
     """Result of a semantic syscall execution."""
+
     success: bool
     syscall_type: SyscallType
     output: Dict[str, Any] = field(default_factory=dict)
@@ -125,6 +128,7 @@ SYSCALL_SCHEMAS = {
 # SEMANTIC SYSCALL EXECUTOR
 # ============================================================================
 
+
 class SemanticSyscallExecutor:
     """
     Executes semantic syscalls against the kernel.
@@ -165,7 +169,7 @@ class SemanticSyscallExecutor:
             return SyscallResult(
                 success=False,
                 syscall_type=request.syscall_type,
-                error=f"No handler for syscall: {request.syscall_type.value}"
+                error=f"No handler for syscall: {request.syscall_type.value}",
             )
 
         try:
@@ -179,11 +183,7 @@ class SemanticSyscallExecutor:
 
         except Exception as e:
             logger.error(f"❌ Syscall failed: {e}", exc_info=True)
-            return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=str(e)
-            )
+            return SyscallResult(success=False, syscall_type=request.syscall_type, error=str(e))
 
     def _handle_spawn_cognition(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -214,9 +214,23 @@ class SemanticSyscallExecutor:
 
         # SECURITY FIX: Reserved agent names (system agents)
         RESERVED_AGENT_IDS = {
-            "watchman", "herald", "scribe", "auditor", "artisan", "oracle",
-            "engineer", "civic", "envoy", "steward", "archivist", "chronicle",
-            "kernel", "narasimha", "root", "admin", "system",
+            "watchman",
+            "herald",
+            "scribe",
+            "auditor",
+            "artisan",
+            "oracle",
+            "engineer",
+            "civic",
+            "envoy",
+            "steward",
+            "archivist",
+            "chronicle",
+            "kernel",
+            "narasimha",
+            "root",
+            "admin",
+            "system",
         }
 
         # Generate base agent_id from role
@@ -227,10 +241,7 @@ class SemanticSyscallExecutor:
             # Generate unique suffix (short UUID)
             unique_suffix = datetime.utcnow().strftime("%H%M%S") + "_" + uuid.uuid4().hex[:4]
             agent_id = f"{base_id}_{unique_suffix}"
-            logger.warning(
-                f"⚠️ Agent ID '{base_id}' is reserved/exists. "
-                f"Generated unique ID: {agent_id}"
-            )
+            logger.warning(f"⚠️ Agent ID '{base_id}' is reserved/exists. Generated unique ID: {agent_id}")
         else:
             agent_id = base_id
 
@@ -239,7 +250,7 @@ class SemanticSyscallExecutor:
             return SyscallResult(
                 success=False,
                 syscall_type=request.syscall_type,
-                error=f"Agent '{agent_id}' already exists in registry. Cannot overwrite."
+                error=f"Agent '{agent_id}' already exists in registry. Cannot overwrite.",
             )
 
         logger.info(f"🌱 SPAWN_COGNITION: agent_id={agent_id}, role={role}, mission={mission}")
@@ -252,11 +263,7 @@ class SemanticSyscallExecutor:
             code = builder.generate_agent_code(role, mission)
 
             if not code:
-                return SyscallResult(
-                    success=False,
-                    syscall_type=request.syscall_type,
-                    error="Code generation failed"
-                )
+                return SyscallResult(success=False, syscall_type=request.syscall_type, error="Code generation failed")
 
             # Step 2: Create agent class dynamically
             # agent_id is already generated above (with collision protection)
@@ -329,22 +336,14 @@ class SemanticSyscallExecutor:
                     "credits": initial_credits,
                     "parent_id": parent_id,
                     "code_generated": len(code) if code else 0,
-                }
+                },
             )
 
         except PermissionError as e:
             # Governance gate rejection
-            return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=f"Governance gate denied: {e}"
-            )
+            return SyscallResult(success=False, syscall_type=request.syscall_type, error=f"Governance gate denied: {e}")
         except Exception as e:
-            return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=str(e)
-            )
+            return SyscallResult(success=False, syscall_type=request.syscall_type, error=str(e))
 
     def _handle_grant_mandate(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -359,9 +358,7 @@ class SemanticSyscallExecutor:
         # Check if agent exists
         if agent_id not in self.kernel._agent_registry:
             return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=f"Agent '{agent_id}' not registered"
+                success=False, syscall_type=request.syscall_type, error=f"Agent '{agent_id}' not registered"
             )
 
         # Note: In current architecture, capabilities are set at registration
@@ -375,8 +372,8 @@ class SemanticSyscallExecutor:
                 "agent_id": agent_id,
                 "current_capabilities": list(current_caps),
                 "requested_capabilities": capabilities,
-                "note": "Capabilities are immutable after registration (security)"
-            }
+                "note": "Capabilities are immutable after registration (security)",
+            },
         )
 
     def _handle_allocate_prana(self, request: SyscallRequest) -> SyscallResult:
@@ -411,14 +408,10 @@ class SemanticSyscallExecutor:
                     "amount_allocated": amount,
                     "new_balance": new_balance,
                     "source": source,
-                }
+                },
             )
         except Exception as e:
-            return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=str(e)
-            )
+            return SyscallResult(success=False, syscall_type=request.syscall_type, error=str(e))
 
     def _handle_swear_oath(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -432,9 +425,7 @@ class SemanticSyscallExecutor:
         agent = self.kernel._agent_registry.get(agent_id)
         if not agent:
             return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=f"Agent '{agent_id}' not registered"
+                success=False, syscall_type=request.syscall_type, error=f"Agent '{agent_id}' not registered"
             )
 
         # Check current oath status
@@ -447,7 +438,7 @@ class SemanticSyscallExecutor:
                 "agent_id": agent_id,
                 "oath_sworn": oath_sworn,
                 "oath_event": getattr(agent, "oath_event", None),
-            }
+            },
         )
 
     def _handle_dispatch_task(self, request: SyscallRequest) -> SyscallResult:
@@ -462,9 +453,7 @@ class SemanticSyscallExecutor:
 
         if agent_id not in self.kernel._agent_registry:
             return SyscallResult(
-                success=False,
-                syscall_type=request.syscall_type,
-                error=f"Agent '{agent_id}' not registered"
+                success=False, syscall_type=request.syscall_type, error=f"Agent '{agent_id}' not registered"
             )
 
         # Create and submit task
@@ -478,7 +467,7 @@ class SemanticSyscallExecutor:
                 "task_id": task_id,
                 "agent_id": agent_id,
                 "priority": priority,
-            }
+            },
         )
 
     def _record_karma(self, request: SyscallRequest, result: SyscallResult) -> None:
@@ -493,7 +482,7 @@ class SemanticSyscallExecutor:
                     "syscall_type": request.syscall_type.value,
                     "params": request.params,
                     "result": result.output,
-                }
+                },
             )
 
             result.karma_block_id = block.block_id if block else None
@@ -505,6 +494,7 @@ class SemanticSyscallExecutor:
 # ============================================================================
 # FACTORY
 # ============================================================================
+
 
 def create_syscall_executor(kernel: "RealVibeKernel") -> SemanticSyscallExecutor:
     """Factory function to create a Semantic Syscall Executor."""
