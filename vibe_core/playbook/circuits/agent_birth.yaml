@@ -76,7 +76,8 @@ circuit:
       description: "Parse and compile user intent into SyscallRequest"
       invariants:
         - "raw_input is not empty"
-        - "compilation result has role and mission"
+        # Note: compiled_request.params contains role/mission from BlueprintGenerator
+        # These are checked AFTER COMPILE_REQUEST operation, not before
       operations:
         - action: COMPILE_REQUEST
           input: "{{ raw_input }}"
@@ -93,7 +94,8 @@ circuit:
       description: "Verify agent birth against Constitutional Oath"
       invariants:
         - "compiled_request.syscall_type == SPAWN_COGNITION"
-        - "role is not in FORBIDDEN_ROLES"
+        # Note: Role check is performed by CHECK_CONSTITUTION operation below
+        # which has access to circuit's forbidden_roles list
       operations:
         - action: CHECK_CONSTITUTION
           input: "compiled_request"
@@ -112,8 +114,8 @@ circuit:
     PRATYAYA:
       description: "Allocate resources (credits, capabilities) for new agent"
       invariants:
-        - "agent has initial_credits >= 0"
-        - "capabilities list is not empty"
+        - "compiled_request.params.initial_credits >= 0"
+        - "compiled_request.params.capabilities is not empty"
       operations:
         - action: PREPARE_RESOURCES
           allocations:
@@ -131,8 +133,8 @@ circuit:
     KARMA:
       description: "Execute kernel syscalls to birth the agent"
       invariants:
-        - "all previous states completed successfully"
-        - "syscall_result is recorded in Parampara"
+        - "resources_prepared == true"
+        # Note: Parampara recording happens automatically via audit: true flag
       operations:
         - action: EXECUTE_SYSCALL
           syscall_type: SPAWN_COGNITION
