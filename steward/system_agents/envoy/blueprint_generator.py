@@ -136,11 +136,12 @@ VOTING_RULES_PATTERNS = {
 @dataclass
 class CompilationResult:
     """Result of semantic compilation."""
-    is_syscall: bool                          # True if compiled to syscall, False for playbook vars
+
+    is_syscall: bool  # True if compiled to syscall, False for playbook vars
     syscall_request: Optional[SyscallRequest] = None  # The syscall (if is_syscall=True)
-    playbook_vars: Optional[Dict[str, Any]] = None    # Traditional vars (if is_syscall=False)
-    confidence: float = 0.0                   # How confident we are in this compilation
-    source: str = ""                          # What triggered this compilation
+    playbook_vars: Optional[Dict[str, Any]] = None  # Traditional vars (if is_syscall=False)
+    confidence: float = 0.0  # How confident we are in this compilation
+    source: str = ""  # What triggered this compilation
 
 
 class BlueprintGenerator:
@@ -279,7 +280,7 @@ class BlueprintGenerator:
         for separator in [" that ", " to ", " for ", " which "]:
             if separator in input_lower:
                 idx = input_lower.index(separator)
-                mission = raw_input[idx + len(separator):].strip()
+                mission = raw_input[idx + len(separator) :].strip()
                 break
 
         # Fallback: use full input as mission
@@ -290,7 +291,7 @@ class BlueprintGenerator:
         capabilities = self._detect_capabilities(input_lower, role)
 
         # Extract credits if mentioned
-        credits_match = re.search(r'(\d+)\s*credits?', input_lower)
+        credits_match = re.search(r"(\d+)\s*credits?", input_lower)
         initial_credits = int(credits_match.group(1)) if credits_match else 100
 
         return {
@@ -313,7 +314,7 @@ class BlueprintGenerator:
 
         # Fallback: extract noun after "agent"
         if not best_role:
-            match = re.search(r'(?:agent|bot)\s+(?:called\s+)?(\w+)', input_lower)
+            match = re.search(r"(?:agent|bot)\s+(?:called\s+)?(\w+)", input_lower)
             if match:
                 best_role = match.group(1)
 
@@ -350,11 +351,11 @@ class BlueprintGenerator:
     def _extract_allocate_prana_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
         """Extract ALLOCATE_PRANA parameters."""
         # Extract amount
-        amount_match = re.search(r'(\d+)\s*(?:credits?|prana)?', input_lower)
+        amount_match = re.search(r"(\d+)\s*(?:credits?|prana)?", input_lower)
         amount = int(amount_match.group(1)) if amount_match else 100
 
         # Extract agent_id
-        agent_match = re.search(r'(?:to|for)\s+(\w+)', input_lower)
+        agent_match = re.search(r"(?:to|for)\s+(\w+)", input_lower)
         agent_id = agent_match.group(1) if agent_match else "unknown"
 
         return {
@@ -391,7 +392,7 @@ class BlueprintGenerator:
             return self._extract_content_generation_params(raw_input, input_lower)
 
         # Standard agent dispatch
-        agent_match = re.search(r'(?:to|ask|tell)\s+(?:the\s+)?(\w+)', input_lower)
+        agent_match = re.search(r"(?:to|ask|tell)\s+(?:the\s+)?(\w+)", input_lower)
         agent_id = agent_match.group(1) if agent_match else "envoy"
 
         # Everything after the agent name is the task
@@ -421,16 +422,14 @@ class BlueprintGenerator:
         for separator in [" about ", " on ", " for ", " regarding "]:
             if separator in input_lower:
                 idx = input_lower.index(separator)
-                topic = raw_input[idx + len(separator):].strip()
+                topic = raw_input[idx + len(separator) :].strip()
                 break
 
         # If no separator found, extract from the full input
         if topic == raw_input:
             # Remove common prefixes
             topic = re.sub(
-                r'^(write|create|generate|draft)\s+(a\s+)?(blog\s+)?(post\s+)?(article\s+)?(about\s+)?',
-                '',
-                input_lower
+                r"^(write|create|generate|draft)\s+(a\s+)?(blog\s+)?(post\s+)?(article\s+)?(about\s+)?", "", input_lower
             ).strip()
             if not topic:
                 topic = raw_input
@@ -450,7 +449,7 @@ class BlueprintGenerator:
                 break
 
         # Extract word count if mentioned
-        word_count_match = re.search(r'(\d+)\s*(?:words?|characters?)', input_lower)
+        word_count_match = re.search(r"(\d+)\s*(?:words?|characters?)", input_lower)
         word_count = int(word_count_match.group(1)) if word_count_match else None
 
         # Content generation is dispatched to Herald
@@ -484,10 +483,10 @@ class BlueprintGenerator:
         # Extract proposal ID
         proposal_id = None
         proposal_patterns = [
-            r'proposal\s*#?\s*(\d+)',
-            r'#(\d+)',
-            r'prop[- ]?(\d+)',
-            r'vote\s+(?:on|for)\s+(\w+)',
+            r"proposal\s*#?\s*(\d+)",
+            r"#(\d+)",
+            r"prop[- ]?(\d+)",
+            r"vote\s+(?:on|for)\s+(\w+)",
         ]
 
         for pattern in proposal_patterns:
@@ -498,7 +497,7 @@ class BlueprintGenerator:
 
         # If no numeric ID found, try to extract a name
         if not proposal_id:
-            name_match = re.search(r'vote\s+(?:on|for)\s+(?:the\s+)?(.+?)(?:\s+proposal)?$', input_lower)
+            name_match = re.search(r"vote\s+(?:on|for)\s+(?:the\s+)?(.+?)(?:\s+proposal)?$", input_lower)
             if name_match:
                 proposal_id = name_match.group(1).strip()
 
@@ -512,8 +511,8 @@ class BlueprintGenerator:
         # Extract deadline if mentioned
         deadline = None
         deadline_patterns = [
-            r'(?:by|until|deadline)\s+(\d{4}-\d{2}-\d{2})',
-            r'(?:by|until)\s+(\d+)\s*(?:hours?|days?)',
+            r"(?:by|until|deadline)\s+(\d{4}-\d{2}-\d{2})",
+            r"(?:by|until)\s+(\d+)\s*(?:hours?|days?)",
         ]
         for pattern in deadline_patterns:
             match = re.search(pattern, input_lower)
@@ -618,9 +617,31 @@ class BlueprintGenerator:
         """Extract a concise feature name from input."""
         # Remove common verbs and extract key nouns
         stop_words = {
-            'implement', 'create', 'add', 'build', 'make', 'write', 'develop',
-            'the', 'a', 'an', 'for', 'to', 'with', 'and', 'or', 'in', 'on',
-            'please', 'can', 'you', 'could', 'would', 'should', 'need', 'want'
+            "implement",
+            "create",
+            "add",
+            "build",
+            "make",
+            "write",
+            "develop",
+            "the",
+            "a",
+            "an",
+            "for",
+            "to",
+            "with",
+            "and",
+            "or",
+            "in",
+            "on",
+            "please",
+            "can",
+            "you",
+            "could",
+            "would",
+            "should",
+            "need",
+            "want",
         }
 
         words = raw_input.lower().split()
@@ -639,14 +660,14 @@ class BlueprintGenerator:
 
         # Match common file path patterns
         patterns = [
-            r'[\w./]+\.py',      # Python files
-            r'[\w./]+\.ts',      # TypeScript files
-            r'[\w./]+\.js',      # JavaScript files
-            r'[\w./]+\.yaml',    # YAML files
-            r'[\w./]+\.json',    # JSON files
-            r'src/[\w./]+',      # Paths starting with src/
-            r'lib/[\w./]+',      # Paths starting with lib/
-            r'tests?/[\w./]+',   # Test paths
+            r"[\w./]+\.py",  # Python files
+            r"[\w./]+\.ts",  # TypeScript files
+            r"[\w./]+\.js",  # JavaScript files
+            r"[\w./]+\.yaml",  # YAML files
+            r"[\w./]+\.json",  # JSON files
+            r"src/[\w./]+",  # Paths starting with src/
+            r"lib/[\w./]+",  # Paths starting with lib/
+            r"tests?/[\w./]+",  # Test paths
         ]
 
         found = []
@@ -662,9 +683,9 @@ class BlueprintGenerator:
 
         # Match patterns like "proposal #123", "PROP-456", "proposal 789"
         patterns = [
-            r'proposal\s*#?(\d+)',
-            r'PROP-?(\d+)',
-            r'vote\s+on\s+#?(\d+)',
+            r"proposal\s*#?(\d+)",
+            r"PROP-?(\d+)",
+            r"vote\s+on\s+#?(\d+)",
         ]
 
         for pattern in patterns:
@@ -679,15 +700,15 @@ class BlueprintGenerator:
         input_lower = raw_input.lower()
 
         # Detect technology context
-        if any(kw in input_lower for kw in ['react', 'frontend', 'ui', 'component']):
+        if any(kw in input_lower for kw in ["react", "frontend", "ui", "component"]):
             return "frontend"
-        if any(kw in input_lower for kw in ['api', 'backend', 'server', 'endpoint']):
+        if any(kw in input_lower for kw in ["api", "backend", "server", "endpoint"]):
             return "backend"
-        if any(kw in input_lower for kw in ['test', 'spec', 'coverage']):
+        if any(kw in input_lower for kw in ["test", "spec", "coverage"]):
             return "testing"
-        if any(kw in input_lower for kw in ['deploy', 'ci', 'cd', 'pipeline']):
+        if any(kw in input_lower for kw in ["deploy", "ci", "cd", "pipeline"]):
             return "devops"
-        if any(kw in input_lower for kw in ['auth', 'security', 'permission']):
+        if any(kw in input_lower for kw in ["auth", "security", "permission"]):
             return "security"
 
         return "default"
@@ -722,10 +743,12 @@ class BlueprintGenerator:
             return {}
 
         # Build prompt for structured extraction
-        variable_schema = "\n".join([
-            f"  - {name}: {type(default).__name__} (default: {default})"
-            for name, default in playbook_variables.items()
-        ])
+        variable_schema = "\n".join(
+            [
+                f"  - {name}: {type(default).__name__} (default: {default})"
+                for name, default in playbook_variables.items()
+            ]
+        )
 
         prompt = f"""Extract structured parameters from this user request.
 
@@ -756,7 +779,7 @@ Example output format:
             import re
 
             # Find JSON in response
-            json_match = re.search(r'\{[^}]+\}', response, re.DOTALL)
+            json_match = re.search(r"\{[^}]+\}", response, re.DOTALL)
             if json_match:
                 return json.loads(json_match.group())
 
@@ -769,6 +792,7 @@ Example output format:
 # ============================================================================
 # INTEGRATION HELPER
 # ============================================================================
+
 
 def create_blueprint_generator(kernel: Any = None) -> BlueprintGenerator:
     """Factory function to create a BlueprintGenerator instance."""

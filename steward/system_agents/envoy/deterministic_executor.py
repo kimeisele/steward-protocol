@@ -35,6 +35,7 @@ import yaml
 # Jinja2 for template substitution (GAD-5000 Variable Injection)
 try:
     from jinja2 import Environment, BaseLoader, UndefinedError
+
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
@@ -46,6 +47,7 @@ try:
         ActionHandlerRegistry,
         create_default_registry,
     )
+
     ACTION_HANDLERS_AVAILABLE = True
 except ImportError:
     ACTION_HANDLERS_AVAILABLE = False
@@ -53,6 +55,7 @@ except ImportError:
 # Blueprint Generator (GAD-5001 Raw Input → Structured Params)
 try:
     from steward.system_agents.envoy.blueprint_generator import BlueprintGenerator
+
     BLUEPRINT_GENERATOR_AVAILABLE = True
 except ImportError:
     BLUEPRINT_GENERATOR_AVAILABLE = False
@@ -345,10 +348,8 @@ class DeterministicExecutor:
             "phase_results": execution.phase_results,
             "playbook_id": playbook.id,
             "execution_id": execution.execution_id,
-
             # Playbook-defined variables (DEFAULTS)
             **playbook.variables,
-
             # GAD-5001: Blueprint-extracted values (OVERRIDE defaults)
             # This is the key difference: extracted values from raw input
             # replace generic defaults like "New Feature" with actual values
@@ -685,7 +686,12 @@ class DeterministicExecutor:
                             elapsed += poll_interval
 
                         if result:
-                            phase.result = {"agent": resolved_target, "result": result, "params": params, "task_id": task_id}
+                            phase.result = {
+                                "agent": resolved_target,
+                                "result": result,
+                                "params": params,
+                                "task_id": task_id,
+                            }
                             status = result.get("status", "unknown")
                             # Check if agent returned an error
                             if status == "error":

@@ -329,11 +329,7 @@ class ExecuteScriptHandler(ActionHandler):
         # In production, would actually run git init
         logger.info(f"    🔧 Would init git at: {repo_path} (branch: {initial_branch})")
 
-        return ActionResult.ok({
-            "repo_path": repo_path,
-            "branch": initial_branch,
-            "status": "initialized"
-        })
+        return ActionResult.ok({"repo_path": repo_path, "branch": initial_branch, "status": "initialized"})
 
     async def _write_file(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Write content to a file"""
@@ -364,6 +360,7 @@ class ExecuteScriptHandler(ActionHandler):
 # ============================================================================
 # DEFAULT REGISTRY
 # ============================================================================
+
 
 def create_default_registry() -> ActionHandlerRegistry:
     """Create a registry with all default handlers"""
