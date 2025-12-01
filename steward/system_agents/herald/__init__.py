@@ -19,7 +19,7 @@ Standalone Execution:
 """
 
 from .cartridge_main import HeraldCartridge
-from .tools import BroadcastTool, IdentityTool, ResearchTool, Scribe, ScoutTool
+from .tools import BroadcastTool, IdentityTool, ResearchTool, ScoutTool, Scribe
 
 __version__ = "3.0.0"
 __author__ = "Steward Protocol"

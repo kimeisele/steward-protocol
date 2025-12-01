@@ -18,7 +18,7 @@ import logging
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
@@ -28,6 +28,8 @@ from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
 # Phase B: Vedic Governance (Varna + Ashrama)
 from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
+from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
+from .event_bus import get_event_bus  # Phase 2: Event Bus
 from .kernel import (
     KernelStatus,
     ManifestRegistry,
@@ -256,9 +258,10 @@ class RealVibeKernel(VibeKernel):
         self._ashrama_registry: Dict[str, AshramaTransition] = {}
         logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
 
-        # SECURITY (ARCH-HARDENING): Immutable capability registry
-        # Stores original capabilities at registration time - cannot be modified
-        self._agent_capabilities: Dict[str, frozenset] = {}
+        # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
+        # Stores agent capabilities with support for selective revocation
+        # Records all changes to Parampara Ledger for audit trail
+        self._capability_registry = CapabilityRegistry(ledger=self._ledger)
 
         # Phase 6: Universal Tool Registry
         # Single source of truth for all agent tools
@@ -276,6 +279,12 @@ class RealVibeKernel(VibeKernel):
         self._narasimha = get_narasimha()
         self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
         logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
+
+        # Phase 2: Event Bus (Agent Communication & Reactive Patterns)
+        # Allows agents to subscribe to system-wide events
+        # Supports loose coupling between agents
+        self._event_bus = get_event_bus()
+        logger.info("🎵 Event Bus initialized (pub/sub ready)")
 
     def get_bank(self) -> "CivicBank":
         """
@@ -328,27 +337,12 @@ class RealVibeKernel(VibeKernel):
             True if agent has the capability, False otherwise
 
         Security:
-            - Uses frozenset stored at registration (immutable)
+            - Uses CapabilityRegistry with revocation support
             - Agent cannot self-escalate by modifying agent.capabilities
             - Unregistered agents have NO capabilities
         """
-        # Get immutable capability set (stored at registration)
-        agent_caps = self._agent_capabilities.get(agent_id, frozenset())
-
-        # Core capabilities that all registered agents have
-        # (basic operations needed for any agent to function)
-        core_caps = frozenset(["read_file", "write_file", "list_tasks", "add_task", "complete_task"])
-
-        # Check if agent has the capability (or it's a core capability)
-        has_capability = capability in agent_caps or capability in core_caps
-
-        if not has_capability:
-            logger.warning(
-                f"⛔ CAPABILITY_DENIED: Agent '{agent_id}' lacks '{capability}'. "
-                f"Registered capabilities: {list(agent_caps)}"
-            )
-
-        return has_capability
+        # Delegate to CapabilityRegistry (handles core capabilities)
+        return self._capability_registry.has_capability(agent_id, capability)
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
         """
@@ -381,9 +375,11 @@ class RealVibeKernel(VibeKernel):
             except Exception as e:
                 logger.error(f"Process kill failed: {e}")
 
-        # 2. Revoke all capabilities (set to empty frozenset)
-        if agent_id in self._agent_capabilities:
-            self._agent_capabilities[agent_id] = frozenset()
+        # 2. Revoke all capabilities (use CapabilityRegistry)
+        if self._capability_registry.is_registered(agent_id):
+            self._capability_registry.revoke_all(
+                agent_id=agent_id, revoker_id="NARASIMHA", reason=f"Kill-switch activated: {trigger.threat_type.value}"
+            )
             logger.critical(f"🔒 Capabilities revoked: {agent_id}")
 
         # 3. Remove from agent registry (internal - doesn't affect MappingProxyType view)
@@ -673,11 +669,11 @@ class RealVibeKernel(VibeKernel):
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent
 
-        # STEP 4.5: SECURITY (ARCH-HARDENING) - Store capabilities IMMUTABLY
-        # Once set, these cannot be modified - prevents privilege escalation
+        # STEP 4.5: SECURITY (ARCH-HARDENING) - Register capabilities
+        # Uses CapabilityRegistry (supports revocation + audit trail)
         agent_caps = getattr(agent, "capabilities", [])
-        self._agent_capabilities[agent.agent_id] = frozenset(agent_caps)
-        logger.debug(f"🔐 Agent '{agent.agent_id}' capabilities locked: {agent_caps}")
+        self._capability_registry.register_agent(agent.agent_id, agent_caps)
+        logger.debug(f"🔐 Agent '{agent.agent_id}' capabilities registered: {agent_caps}")
 
         # PHASE B: VEDIC GOVERNANCE - Assign Varna and Ashrama
         # Varna = Classification (what kind of being is this agent)
@@ -1147,6 +1143,229 @@ class RealVibeKernel(VibeKernel):
         """Find agents with a specific capability"""
         manifests = self._manifest_registry.find_by_capability(capability)
         return [self._agent_registry[m.agent_id] for m in manifests]
+
+    def revoke_capability(
+        self, agent_id: str, capabilities: List[str], revoker_id: str, reason: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Revoke capabilities from an agent (REVOKE_MANDATE syscall).
+
+        Permission Model:
+            - KERNEL can revoke from anyone
+            - CIVIC can revoke from anyone (governance)
+            - Agents can revoke from themselves (voluntary)
+
+        Args:
+            agent_id: The agent to revoke from
+            capabilities: List of capabilities to revoke
+            revoker_id: The agent/system performing the revocation
+            reason: Optional reason for revocation
+
+        Returns:
+            Dictionary with success, revoked list, and message
+        """
+        # Permission check
+        if not self._can_revoke_capability(revoker_id, agent_id):
+            return {
+                "success": False,
+                "revoked": [],
+                "not_found": [],
+                "message": f"Permission denied: '{revoker_id}' cannot revoke from '{agent_id}'",
+            }
+
+        # Delegate to capability registry
+        result = self._capability_registry.revoke(
+            agent_id=agent_id, capabilities=capabilities, revoker_id=revoker_id, reason=reason
+        )
+
+        return result
+
+    def grant_capability(
+        self, agent_id: str, capabilities: List[str], granter_id: str, reason: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Grant capabilities to an agent.
+
+        Permission Model:
+            - KERNEL can grant to anyone
+            - CIVIC can grant to anyone (governance)
+
+        Args:
+            agent_id: The agent to grant to
+            capabilities: List of capabilities to grant
+            granter_id: The agent/system performing the grant
+            reason: Optional reason for grant
+
+        Returns:
+            Dictionary with success, granted list, and message
+        """
+        # Permission check (stricter than revoke - no self-grant)
+        if not self._can_grant_capability(granter_id):
+            return {
+                "success": False,
+                "granted": [],
+                "already_had": [],
+                "message": f"Permission denied: '{granter_id}' cannot grant capabilities",
+            }
+
+        # Delegate to capability registry
+        result = self._capability_registry.grant(
+            agent_id=agent_id, capabilities=capabilities, granter_id=granter_id, reason=reason
+        )
+
+        return result
+
+    def get_agent_capabilities(self, agent_id: str) -> List[str]:
+        """
+        Get current capabilities for an agent.
+
+        Args:
+            agent_id: The agent to query
+
+        Returns:
+            List of capabilities (empty if unregistered)
+        """
+        caps = self._capability_registry.get_capabilities(agent_id)
+        return sorted(caps)
+
+    def subscribe_to_events(
+        self, callback: Callable, event_type: Optional[str] = None, subscriber_id: Optional[str] = None
+    ) -> str:
+        """
+        Subscribe to system events via EventBus.
+
+        Args:
+            callback: Function to call on event (async or sync)
+            event_type: Optional filter (None = all events)
+            subscriber_id: Optional ID for logging (usually agent_id)
+
+        Returns:
+            Subscription ID
+
+        Usage:
+            def on_agent_born(event):
+                print(f"New agent: {event.details['agent_id']}")
+
+            kernel.subscribe_to_events(on_agent_born, "agent.born")
+        """
+        sub_id = self._event_bus.subscribe(callback, event_type)
+
+        if subscriber_id:
+            logger.debug(f"📡 Agent '{subscriber_id}' subscribed to events: {event_type or 'ALL'}")
+        else:
+            logger.debug(f"📡 Subscriber registered for events: {event_type or 'ALL'}")
+
+        return sub_id
+
+    def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
+        """
+        Unsubscribe from system events.
+
+        Args:
+            callback: The callback to remove
+            event_type: Optional event type filter
+        """
+        self._event_bus.unsubscribe(callback, event_type)
+
+    async def broadcast_event(
+        self, event_type: str, broadcaster_id: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Broadcast an event to all subscribers via EventBus.
+
+        Args:
+            event_type: Type of event (e.g., "agent.born", "transaction.complete")
+            broadcaster_id: ID of agent/system broadcasting
+            data: Optional event data
+            message: Optional human-readable message
+
+        Returns:
+            Dictionary with event_id and subscriber count
+
+        Usage:
+            await kernel.broadcast_event(
+                event_type="agent.born",
+                broadcaster_id="KERNEL",
+                data={"agent_id": "new_agent", "capabilities": ["read", "write"]}
+            )
+        """
+        from .event_bus import Event
+
+        # Create event
+        event = Event(
+            event_type=event_type,
+            agent_id=broadcaster_id,
+            message=message or f"{event_type} from {broadcaster_id}",
+            details=data or {},
+        )
+
+        # Emit via EventBus
+        await self._event_bus.emit(event)
+
+        # Get subscriber count for this event type
+        status = self._event_bus.get_status()
+        subscriber_count = status["subscribers"].get("by_type", {}).get(event_type, 0)
+        subscriber_count += status["subscribers"]["global"]  # Add global subscribers
+
+        logger.info(f"📢 BROADCAST: {event_type} from {broadcaster_id} → {subscriber_count} subscriber(s)")
+
+        return {
+            "event_id": event.event_id,
+            "event_type": event_type,
+            "broadcaster": broadcaster_id,
+            "subscribers_notified": subscriber_count,
+            "timestamp": event.timestamp,
+        }
+
+    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
+        """
+        Get recent event history from EventBus.
+
+        Args:
+            limit: Maximum number of events to return
+            event_type: Optional filter by event type
+
+        Returns:
+            List of recent events
+        """
+        return self._event_bus.get_history(limit=limit, event_type=event_type)
+
+    def get_event_bus_status(self) -> Dict[str, Any]:
+        """Get EventBus status (total events, subscribers, etc.)"""
+        return self._event_bus.get_status()
+
+    def _can_revoke_capability(self, revoker_id: str, target_id: str) -> bool:
+        """
+        Check if revoker_id has permission to revoke capabilities from target_id.
+
+        Permission Model:
+            - KERNEL can revoke from anyone
+            - CIVIC can revoke from anyone (governance)
+            - Agents can revoke from themselves (voluntary)
+            - NARASIMHA can revoke from anyone (kill-switch)
+        """
+        # Kernel and system have full permissions
+        if revoker_id in ["KERNEL", "NARASIMHA", "civic"]:
+            return True
+
+        # Self-revocation allowed (Principle of Least Privilege)
+        if revoker_id == target_id:
+            return True
+
+        # All other cases denied
+        return False
+
+    def _can_grant_capability(self, granter_id: str) -> bool:
+        """
+        Check if granter_id has permission to grant capabilities.
+
+        Permission Model:
+            - KERNEL can grant to anyone
+            - CIVIC can grant to anyone (governance)
+            - No self-grant (prevents privilege escalation)
+        """
+        # Only kernel and civic can grant
+        return granter_id in ["KERNEL", "civic"]
 
     def submit_task(self, task: Task) -> str:
         """Submit a task to the kernel"""

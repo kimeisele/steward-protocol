@@ -39,7 +39,7 @@ Usage (in agent code):
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Any, Dict, List, Optional
+from typing import IO, TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel import VibeKernel
@@ -726,3 +726,78 @@ class AgentSystemInterface:
         logger.info(f"🔧 {self.agent_id} executed tool '{tool_name}' (success={result.success})")
 
         return result
+
+    # ============================================================================
+    # EVENT BUS (Phase 2: Reactive Patterns)
+    # ============================================================================
+
+    def subscribe_to_events(self, callback: Callable, event_type: Optional[str] = None) -> str:
+        """
+        Subscribe to system-wide events.
+
+        Allows this agent to react to events from other agents.
+        Supports reactive patterns and loose coupling.
+
+        Args:
+            callback: Function to call when event occurs (sync or async)
+            event_type: Optional event type filter (None = all events)
+
+        Returns:
+            Subscription ID (for later unsubscribe)
+
+        Example:
+            def on_proposal_created(event):
+                proposal_id = event.details["proposal_id"]
+                print(f"New proposal: {proposal_id}")
+
+            self.system.subscribe_to_events(on_proposal_created, "proposal.created")
+        """
+        return self.kernel.subscribe_to_events(callback=callback, event_type=event_type, subscriber_id=self.agent_id)
+
+    def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
+        """
+        Unsubscribe from events.
+
+        Args:
+            callback: The callback to remove
+            event_type: Optional event type (must match subscribe call)
+        """
+        self.kernel.unsubscribe_from_events(callback, event_type)
+
+    async def broadcast_event(
+        self, event_type: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Broadcast an event to all subscribers.
+
+        Args:
+            event_type: Type of event (e.g., "task.complete", "proposal.created")
+            data: Optional event data
+            message: Optional human-readable message
+
+        Returns:
+            Dict with event_id, subscriber_count, timestamp
+
+        Example:
+            await self.system.broadcast_event(
+                event_type="vote.cast",
+                data={"proposal_id": "p123", "vote": "yes"},
+                message="Vote recorded"
+            )
+        """
+        return await self.kernel.broadcast_event(
+            event_type=event_type, broadcaster_id=self.agent_id, data=data, message=message
+        )
+
+    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Any]:
+        """
+        Get recent event history.
+
+        Args:
+            limit: Maximum number of events
+            event_type: Optional filter by event type
+
+        Returns:
+            List of Event objects
+        """
+        return self.kernel.get_event_history(limit=limit, event_type=event_type)

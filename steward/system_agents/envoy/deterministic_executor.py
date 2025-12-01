@@ -28,13 +28,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set
 
 import yaml
 
 # Jinja2 for template substitution (GAD-5000 Variable Injection)
 try:
-    from jinja2 import Environment, BaseLoader, UndefinedError
+    from jinja2 import BaseLoader, Environment, UndefinedError
 
     JINJA2_AVAILABLE = True
 except ImportError:
@@ -63,8 +63,8 @@ except ImportError:
 # Cognitive Circuit Executor (GAD-5500 VEDA-4 Integration)
 try:
     from vibe_core.circuit_executor import (
-        CognitiveCircuitExecutor,
         CircuitExecutionResult,
+        CognitiveCircuitExecutor,
         MetaCircuitManager,
         create_circuit_executor_with_meta,
     )

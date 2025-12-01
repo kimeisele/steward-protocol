@@ -6,8 +6,8 @@ Verifies that all system agents have STEWARD.md and steward.json.
 Extracted from inline YAML for maintainability.
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
 
 

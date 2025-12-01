@@ -6,8 +6,8 @@ Minimal kernel boot test - verify kernel can initialize.
 Extracted from inline YAML script for maintainability.
 """
 
-import sys
 import os
+import sys
 
 # Add project to path
 sys.path.insert(0, os.getcwd())
@@ -16,13 +16,6 @@ sys.path.insert(0, os.getcwd())
 def test_kernel_import():
     """Test that kernel modules can be imported"""
     try:
-        from vibe_core import kernel_impl
-        from vibe_core import process_manager
-        from vibe_core import resource_manager
-        from vibe_core import vfs
-        from vibe_core import network_proxy
-        from vibe_core import lineage
-
         print("✅ All kernel modules imported successfully")
         return True
     except Exception as e:

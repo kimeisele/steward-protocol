@@ -6,8 +6,8 @@ Simple grep-based secret detection scan.
 Extracted from inline YAML for maintainability.
 """
 
-import sys
 import subprocess
+import sys
 
 
 def run_scan():
