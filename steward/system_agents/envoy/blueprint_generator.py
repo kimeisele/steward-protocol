@@ -1,42 +1,121 @@
 """
 BLUEPRINT GENERATOR (GAD-5001: The Missing Bridge)
+UPGRADED: Semantic Compiler for Neuro-Symbolic OS (GAD-5500)
 
 This is the VIBE_ALIGNER equivalent for steward-protocol.
+Now upgraded to act as a SEMANTIC COMPILER:
+    Neural (raw input) → Symbolic (Syscall Request)
 
 Problem it solves:
 - Playbooks have template variables like {{ feature_description }}
 - These variables have DEFAULT values that mean nothing
 - User input is passed RAW without extracting structured requirements
+- Routing is broken keyword-matching garbage
 
-The Blueprint Generator transforms:
-    RAW: "Implement JWT authentication with RBAC"
+The Blueprint Generator (Semantic Compiler) transforms:
+    RAW: "Create a new monitoring agent that watches system health"
     INTO: {
-        "feature_name": "jwt-authentication",
-        "feature_description": "JWT-based authentication system with role-based access control",
-        "target_files": ["src/auth/jwt.py", "src/auth/rbac.py"],
-        "patterns": ["authentication", "authorization", "security"]
+        "syscall_type": "SPAWN_COGNITION",
+        "params": {
+            "role": "watchman",
+            "mission": "Monitor system health and report anomalies",
+            "capabilities": ["monitor", "alert"],
+        }
     }
 
+Architecture (Neuro-Symbolic OS):
+    Neural (LLM/Intent) → Semantic Compiler → Symbolic (Syscall) → Kernel
+
 This bridges the gap between:
-    INTENT DETECTION → [BLUEPRINT GENERATOR] → PLAYBOOK EXECUTION
+    INTENT DETECTION → [SEMANTIC COMPILER] → SYSCALL EXECUTION
+
+The key insight: We use deterministic structures (Syscalls) to channel neural output.
+This is "ML Light" - robust, stable, no hallucinations in critical paths.
 
 Integration point:
-    Called BEFORE playbook execution, after playbook is matched.
-    Returns populated variables dict that replaces defaults.
+    Called BEFORE playbook execution, after intent is detected.
+    Returns either:
+    - SyscallRequest (for kernel operations like agent birth)
+    - Variable dict (for traditional playbook execution)
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+import re
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
+
+# Import Semantic Syscalls
+from vibe_core.semantic_syscalls import SyscallType, SyscallRequest, SYSCALL_SCHEMAS
 
 logger = logging.getLogger("BLUEPRINT_GENERATOR")
 
 
+# ============================================================================
+# SEMANTIC INTENT PATTERNS
+# ============================================================================
+
+# These patterns map natural language to Syscall types
+# This is the DETERMINISTIC part of the neuro-symbolic bridge
+
+SYSCALL_INTENT_PATTERNS = {
+    SyscallType.SPAWN_COGNITION: [
+        r"create\s+(?:a\s+)?(?:new\s+)?(?:agent|bot|worker|cartridge)",
+        r"build\s+(?:a\s+)?(?:new\s+)?(?:agent|bot|worker)",
+        r"spawn\s+(?:a\s+)?(?:new\s+)?(?:agent|cognition)",
+        r"birth\s+(?:a\s+)?(?:new\s+)?agent",
+        r"make\s+(?:a\s+)?(?:new\s+)?(?:agent|bot)",
+        r"i\s+need\s+(?:a\s+)?(?:new\s+)?agent",
+        r"(?:agent|bot)\s+(?:that|to|for|which)",
+    ],
+    SyscallType.ALLOCATE_PRANA: [
+        r"give\s+(?:credits|prana|funds)\s+to",
+        r"allocate\s+(?:\d+\s+)?(?:credits|prana)",
+        r"fund\s+(?:the\s+)?agent",
+        r"transfer\s+(?:\d+\s+)?credits",
+    ],
+    SyscallType.DISPATCH_TASK: [
+        r"send\s+(?:a\s+)?task\s+to",
+        r"dispatch\s+(?:to\s+)?(?:agent|)",
+        r"ask\s+(?:the\s+)?(?:agent|herald|civic)",
+        r"tell\s+(?:the\s+)?(?:agent|herald|civic)",
+    ],
+}
+
+# Role extraction patterns - maps keywords to canonical agent roles
+ROLE_PATTERNS = {
+    "watchman": ["monitor", "watch", "observe", "guard", "surveillance", "health", "status"],
+    "herald": ["announce", "publish", "broadcast", "communicate", "message", "notify"],
+    "scribe": ["document", "record", "log", "write", "archive", "chronicle"],
+    "auditor": ["verify", "check", "validate", "audit", "inspect", "review"],
+    "artisan": ["design", "create", "craft", "build", "generate", "art"],
+    "oracle": ["predict", "forecast", "analyze", "intelligence", "insights"],
+    "engineer": ["code", "implement", "develop", "program", "build software"],
+}
+
+
+@dataclass
+class CompilationResult:
+    """Result of semantic compilation."""
+    is_syscall: bool                          # True if compiled to syscall, False for playbook vars
+    syscall_request: Optional[SyscallRequest] = None  # The syscall (if is_syscall=True)
+    playbook_vars: Optional[Dict[str, Any]] = None    # Traditional vars (if is_syscall=False)
+    confidence: float = 0.0                   # How confident we are in this compilation
+    source: str = ""                          # What triggered this compilation
+
+
 class BlueprintGenerator:
     """
-    Generates structured blueprints from raw user input.
+    Semantic Compiler: Generates structured blueprints from raw user input.
+
+    UPGRADED for Neuro-Symbolic OS:
+    - Primary: Compile to SyscallRequest (for kernel operations)
+    - Fallback: Extract playbook variables (for traditional playbooks)
 
     This is the SHABDA phase actualized - not just validating input exists,
-    but EXTRACTING structured requirements from raw intent.
+    but COMPILING intent into kernel operations.
+
+    The key insight: We detect WHAT the user wants (syscall type) FIRST,
+    then extract the parameters. This is the opposite of keyword routing.
     """
 
     def __init__(self, kernel: Any = None):
@@ -45,6 +124,221 @@ class BlueprintGenerator:
             kernel: Reference to kernel for LLM access (optional for deterministic mode)
         """
         self.kernel = kernel
+
+    def compile(self, raw_input: str, requester_id: str = "user") -> CompilationResult:
+        """
+        MAIN ENTRY POINT: Compile raw input into a kernel operation.
+
+        This is the Semantic Compiler - it decides:
+        1. Is this a Syscall? (agent birth, resource allocation, etc.)
+        2. Or traditional playbook execution?
+
+        The method uses deterministic pattern matching first, then
+        falls back to LLM extraction if needed.
+
+        Args:
+            raw_input: The raw user input string
+            requester_id: Who is making this request
+
+        Returns:
+            CompilationResult with either syscall_request or playbook_vars
+        """
+        logger.info(f"🔮 SEMANTIC COMPILER: Analyzing '{raw_input[:60]}...'")
+
+        input_lower = raw_input.lower()
+
+        # Step 1: Detect Syscall Intent (Deterministic)
+        syscall_type, confidence, matched_pattern = self._detect_syscall_intent(input_lower)
+
+        if syscall_type and confidence >= 0.7:
+            # This is a kernel operation - compile to syscall
+            logger.info(f"🎯 Detected Syscall: {syscall_type.value} (confidence: {confidence:.2f})")
+
+            try:
+                params = self._extract_syscall_params(syscall_type, raw_input)
+
+                syscall_request = SyscallRequest(
+                    syscall_type=syscall_type,
+                    params=params,
+                    requester_id=requester_id,
+                )
+
+                return CompilationResult(
+                    is_syscall=True,
+                    syscall_request=syscall_request,
+                    confidence=confidence,
+                    source=f"pattern: {matched_pattern}",
+                )
+            except ValueError as e:
+                # Missing required params - log and fall through to playbook
+                logger.warning(f"Syscall compilation failed: {e}")
+
+        # Step 2: Fall back to playbook variables extraction
+        logger.info("📋 Falling back to playbook variable extraction")
+        return CompilationResult(
+            is_syscall=False,
+            playbook_vars={"raw_input": raw_input},
+            confidence=0.5,
+            source="fallback to playbook",
+        )
+
+    def _detect_syscall_intent(self, input_lower: str) -> tuple[Optional[SyscallType], float, str]:
+        """
+        Detect which syscall type this input maps to.
+
+        Returns:
+            (syscall_type, confidence, matched_pattern) or (None, 0, "") if no match
+        """
+        best_match = (None, 0.0, "")
+
+        for syscall_type, patterns in SYSCALL_INTENT_PATTERNS.items():
+            for pattern in patterns:
+                if re.search(pattern, input_lower):
+                    # Calculate confidence based on pattern specificity
+                    # Longer patterns = higher confidence
+                    confidence = min(0.95, 0.7 + len(pattern) / 100)
+
+                    if confidence > best_match[1]:
+                        best_match = (syscall_type, confidence, pattern)
+
+        return best_match
+
+    def _extract_syscall_params(self, syscall_type: SyscallType, raw_input: str) -> Dict[str, Any]:
+        """
+        Extract parameters for a specific syscall type from raw input.
+
+        This is where the "ML Light" magic happens - we use deterministic
+        extraction rules to turn natural language into structured params.
+        """
+        input_lower = raw_input.lower()
+
+        if syscall_type == SyscallType.SPAWN_COGNITION:
+            return self._extract_spawn_cognition_params(raw_input, input_lower)
+
+        elif syscall_type == SyscallType.ALLOCATE_PRANA:
+            return self._extract_allocate_prana_params(raw_input, input_lower)
+
+        elif syscall_type == SyscallType.DISPATCH_TASK:
+            return self._extract_dispatch_task_params(raw_input, input_lower)
+
+        # Default: just use raw input as description
+        return {"description": raw_input}
+
+    def _extract_spawn_cognition_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
+        """
+        Extract SPAWN_COGNITION parameters from input.
+
+        Required: role, mission
+        Optional: initial_credits, capabilities
+        """
+        # Extract role from patterns
+        role = self._detect_role(input_lower)
+
+        # Extract mission (everything after "that", "to", "for", "which")
+        mission = raw_input
+        for separator in [" that ", " to ", " for ", " which "]:
+            if separator in input_lower:
+                idx = input_lower.index(separator)
+                mission = raw_input[idx + len(separator):].strip()
+                break
+
+        # Fallback: use full input as mission
+        if mission == raw_input:
+            mission = f"Agent created from request: {raw_input}"
+
+        # Extract capabilities based on role and keywords
+        capabilities = self._detect_capabilities(input_lower, role)
+
+        # Extract credits if mentioned
+        credits_match = re.search(r'(\d+)\s*credits?', input_lower)
+        initial_credits = int(credits_match.group(1)) if credits_match else 100
+
+        return {
+            "role": role,
+            "mission": mission,
+            "capabilities": capabilities,
+            "initial_credits": initial_credits,
+        }
+
+    def _detect_role(self, input_lower: str) -> str:
+        """Detect agent role from input using keyword patterns."""
+        best_role = None
+        best_score = 0
+
+        for role, keywords in ROLE_PATTERNS.items():
+            score = sum(1 for kw in keywords if kw in input_lower)
+            if score > best_score:
+                best_score = score
+                best_role = role
+
+        # Fallback: extract noun after "agent"
+        if not best_role:
+            match = re.search(r'(?:agent|bot)\s+(?:called\s+)?(\w+)', input_lower)
+            if match:
+                best_role = match.group(1)
+
+        return best_role or "worker"  # Default role
+
+    def _detect_capabilities(self, input_lower: str, role: str) -> List[str]:
+        """Detect capabilities from input and role."""
+        capabilities = ["execute"]  # All agents can execute
+
+        # Role-based defaults
+        role_capabilities = {
+            "watchman": ["monitor", "alert", "report"],
+            "herald": ["publish", "broadcast", "communicate"],
+            "scribe": ["document", "archive", "read", "write"],
+            "auditor": ["verify", "audit", "inspect"],
+            "artisan": ["create", "generate", "design"],
+            "oracle": ["analyze", "predict", "query"],
+            "engineer": ["code", "build", "manifest"],
+        }
+
+        if role in role_capabilities:
+            capabilities.extend(role_capabilities[role])
+
+        # Keyword-based additions
+        if "read" in input_lower or "file" in input_lower:
+            capabilities.append("read_file")
+        if "write" in input_lower:
+            capabilities.append("write_file")
+        if "network" in input_lower or "api" in input_lower:
+            capabilities.append("network")
+
+        return list(set(capabilities))
+
+    def _extract_allocate_prana_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
+        """Extract ALLOCATE_PRANA parameters."""
+        # Extract amount
+        amount_match = re.search(r'(\d+)\s*(?:credits?|prana)?', input_lower)
+        amount = int(amount_match.group(1)) if amount_match else 100
+
+        # Extract agent_id
+        agent_match = re.search(r'(?:to|for)\s+(\w+)', input_lower)
+        agent_id = agent_match.group(1) if agent_match else "unknown"
+
+        return {
+            "agent_id": agent_id,
+            "amount": amount,
+        }
+
+    def _extract_dispatch_task_params(self, raw_input: str, input_lower: str) -> Dict[str, Any]:
+        """Extract DISPATCH_TASK parameters."""
+        # Extract target agent
+        agent_match = re.search(r'(?:to|ask|tell)\s+(?:the\s+)?(\w+)', input_lower)
+        agent_id = agent_match.group(1) if agent_match else "envoy"
+
+        # Everything after the agent name is the task
+        if agent_match:
+            task_start = agent_match.end()
+            task_payload = raw_input[task_start:].strip()
+        else:
+            task_payload = raw_input
+
+        return {
+            "agent_id": agent_id,
+            "task_payload": {"action": "process", "content": task_payload},
+        }
 
     async def generate_blueprint(
         self,
