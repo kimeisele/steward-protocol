@@ -18,7 +18,30 @@ from typing import Any, Dict, List
 
 from vibe_core import Task, VibeAgent
 
-# Constitutional Oath
+# Import Router and Playbook components for proper system integration
+try:
+    from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+    MILK_OCEAN_AVAILABLE = True
+except ImportError:
+    MilkOceanRouter = None
+    MILK_OCEAN_AVAILABLE = False
+    logger = logging.getLogger("AMBASSADOR_MAIN")
+    logger.warning("⚠️  MilkOceanRouter not available - using fallback")
+
+try:
+    from vibe_core.playbook.executor import GraphExecutor, WorkflowGraph, WorkflowNode, WorkflowEdge
+    from vibe_core.playbook.router import AgentRouter
+    PLAYBOOK_AVAILABLE = True
+except ImportError:
+    GraphExecutor = None
+    WorkflowGraph = None
+    WorkflowNode = None
+    WorkflowEdge = None
+    AgentRouter = None
+    PLAYBOOK_AVAILABLE = False
+    logger = logging.getLogger("AMBASSADOR_MAIN")
+    logger.warning("⚠️  Playbook system not available - using fallback")
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AMBASSADOR_MAIN")
@@ -68,6 +91,26 @@ class AmbassadorCartridge(VibeAgent):
         # NOTE: OathMixin integration removed (was undefined)
         # TODO: Re-add oath functionality when OathMixin is properly defined
         self.oath_sworn = False
+
+        # Initialize Router and Playbook components for proper system integration
+        self.milk_ocean_router = None
+        self.graph_executor = None
+        self.agent_router = None
+
+        if MILK_OCEAN_AVAILABLE:
+            try:
+                self.milk_ocean_router = MilkOceanRouter()
+                logger.info("🌊 Milk Ocean Router initialized")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to initialize MilkOceanRouter: {e}")
+
+        if PLAYBOOK_AVAILABLE:
+            try:
+                self.graph_executor = GraphExecutor()
+                self.agent_router = AgentRouter()
+                logger.info("📊 Playbook Executor & AgentRouter initialized")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to initialize Playbook system: {e}")
 
         # State tracking
         self.active_conversations: Dict[str, Dict] = {}
@@ -120,26 +163,169 @@ class AmbassadorCartridge(VibeAgent):
             return {"error": str(e), "status": "failed"}
 
     async def _answer_question(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Answer a community question."""
+        """
+        Answer a community question using Router → Playbook → Execution pipeline.
+
+        This method respects the system architecture:
+        1. Route through MilkOceanRouter (Triage)
+        2. Create Playbook based on priority
+        3. Execute via GraphExecutor (Real agent dispatch)
+        """
         question = payload.get("question", "")
         user_id = payload.get("user_id", "anonymous")
 
-        # Track the conversation attempt
-        self.active_conversations[user_id] = {
+        logger.info(f"🤝 Answering question from {user_id}: {question[:50]}...")
+
+        # Track the conversation
+        conversation_id = f"{user_id}_{datetime.utcnow().timestamp()}"
+        self.active_conversations[conversation_id] = {
             "question": question,
             "timestamp": datetime.utcnow().isoformat(),
-            "status": "not_implemented",
+            "status": "processing",
         }
 
+        # ========== STEP 1: Route through Milk Ocean (Triage) ==========
+        if not self.milk_ocean_router:
+            logger.warning("⚠️  MilkOceanRouter not available - using simple fallback")
+            return self._simple_fallback_answer(question, user_id, conversation_id)
+
+        try:
+            routing_decision = self.milk_ocean_router.process_prayer(
+                question,
+                agent_id="ambassador",
+                critical=False
+            )
+
+            logger.info(f"🌊 Routing decision: {routing_decision.get('path', 'unknown')}")
+
+            # Handle different routing paths
+            if routing_decision.get("status") == "blocked":
+                return {
+                    "status": "blocked",
+                    "user_id": user_id,
+                    "question": question,
+                    "reason": routing_decision.get("reason"),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+            elif routing_decision.get("status") == "queued":
+                # Lazy queue - return early
+                return {
+                    "status": "queued",
+                    "user_id": user_id,
+                    "question": question,
+                    "message": "Your question will be processed during off-peak hours",
+                    "request_id": routing_decision.get("request_id"),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+            # ========== STEP 2: Create Playbook for Flash/Science ==========
+            priority = routing_decision.get("path", "flash")  # flash or science
+            playbook = self._create_qa_playbook(question, priority)
+
+            # ========== STEP 3: Execute Playbook ==========
+            if not self.graph_executor:
+                logger.warning("⚠️  GraphExecutor not available - using simple response")
+                return self._simple_fallback_answer(question, user_id, conversation_id)
+
+            logger.info(f"📊 Executing Q&A playbook (priority: {priority})")
+            result = self.graph_executor.execute(playbook)
+
+            # Update conversation tracking
+            self.active_conversations[conversation_id]["status"] = "completed"
+            self.active_conversations[conversation_id]["result"] = result.get("status")
+
+            # Extract answer from workflow results
+            answer = self._extract_answer_from_results(result)
+
+            return {
+                "status": "answered",
+                "user_id": user_id,
+                "question": question,
+                "answer": answer,
+                "method": f"playbook_{priority}",
+                "workflow_id": result.get("workflow_id"),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Question answering failed: {e}")
+            self.active_conversations[conversation_id]["status"] = "failed"
+            self.active_conversations[conversation_id]["error"] = str(e)
+
+            return {
+                "status": "error",
+                "user_id": user_id,
+                "question": question,
+                "error": f"Failed to process question: {str(e)}",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
+    def _create_qa_playbook(self, question: str, priority: str) -> "WorkflowGraph":
+        """
+        Create a workflow for answering community questions.
+
+        The playbook follows deterministic routing: classify → retrieve → generate
+        """
+        nodes = {
+            "generate_answer": WorkflowNode(
+                id="generate_answer",
+                action="answer_community_question",
+                description=f"Generate answer to: {question}",
+                required_skills=["knowledge_base", "content_generation", priority],
+            )
+        }
+
+        edges = []  # Single node for MVP
+
+        return WorkflowGraph(
+            id="ambassador_qa",
+            name="Community Q&A",
+            intent=question,
+            nodes=nodes,
+            edges=edges,
+            entry_point="generate_answer",
+            exit_points=["generate_answer"],
+        )
+
+    def _extract_answer_from_results(self, workflow_result: Dict[str, Any]) -> str:
+        """Extract the answer from workflow execution results."""
+        results = workflow_result.get("results", [])
+
+        if not results:
+            return "No answer generated (workflow returned empty results)"
+
+        # Get the last result (should be generate_answer node)
+        last_result = results[-1]
+        output = last_result.get("output", {})
+
+        if isinstance(output, dict):
+            return output.get("answer") or output.get("message") or str(output)
+        else:
+            return str(output)
+
+    def _simple_fallback_answer(self, question: str, user_id: str, conversation_id: str) -> Dict[str, Any]:
+        """Simple fallback when Router/Playbook unavailable."""
+        fallback_answer = (
+            f"Hello! I'm AMBASSADOR, the community liaison for Steward Protocol.\n\n"
+            f"Your question: '{question}'\n\n"
+            f"I'm currently running in fallback mode (Router/Playbook system not available). "
+            f"For full functionality, please ensure all system components are initialized.\n\n"
+            f"You can find more information in our documentation:\n"
+            f"- README.md for quick start\n"
+            f"- AGENTS.md for agent registry\n"
+            f"- HELP.md for operations guide"
+        )
+
+        self.active_conversations[conversation_id]["status"] = "answered_fallback"
+
         return {
-            "status": "not_implemented",
+            "status": "answered",
             "user_id": user_id,
-            "question_received": question,
-            "error": (
-                "AMBASSADOR question answering is not implemented. "
-                "This feature requires LLM integration for response generation. "
-                "Use 'steward do \"your question\"' for natural language queries."
-            ),
+            "question": question,
+            "answer": fallback_answer,
+            "method": "fallback",
+            "note": "Router/Playbook system not available",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
