@@ -23,13 +23,32 @@ Enhancements (GOLDEN SHOT):
 
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Union
 
 import yaml
+
+# Jinja2 for template substitution (GAD-5000 Variable Injection)
+try:
+    from jinja2 import Environment, BaseLoader, UndefinedError
+    JINJA2_AVAILABLE = True
+except ImportError:
+    JINJA2_AVAILABLE = False
+
+# Action Handler Registry (GAD-5000 Registry Pattern)
+try:
+    from steward.system_agents.envoy.action_handlers import (
+        ActionContext,
+        ActionHandlerRegistry,
+        create_default_registry,
+    )
+    ACTION_HANDLERS_AVAILABLE = True
+except ImportError:
+    ACTION_HANDLERS_AVAILABLE = False
 
 logger = logging.getLogger("DETERMINISTIC_EXECUTOR")
 
@@ -124,6 +143,14 @@ class DeterministicExecutor:
         except ImportError:
             logger.warning("⚠️  LLM Engine not available (optional)")
 
+        # Initialize Action Handler Registry (GAD-5000 Registry Pattern)
+        self.action_registry = None
+        if ACTION_HANDLERS_AVAILABLE:
+            self.action_registry = create_default_registry()
+            logger.info(f"✅ Action handlers: {self.action_registry.registered_types}")
+        else:
+            logger.warning("⚠️  Action handlers not available (using stubs)")
+
         self._load_playbooks()
         self._load_persisted_executions()
         logger.info(f"🎯 Playbook Engine initialized with {len(self.playbooks)} playbooks")
@@ -180,6 +207,146 @@ class DeterministicExecutor:
             )
             phases.append(phase)
         return phases
+
+    # ===== TEMPLATE RESOLUTION (GAD-5000 VARIABLE INJECTION) =====
+    def _resolve_template_variables(
+        self,
+        value: Any,
+        context: Dict[str, Any],
+    ) -> Any:
+        """
+        Resolve Jinja2 template variables in playbook params.
+
+        Supports:
+        - {{ variable }} - Direct variable substitution
+        - {{ phase_results.phase_name.field }} - Access to previous phase results
+        - {{ user_input }} - Original user input
+        - {{ playbook.variables.name }} - Playbook-defined variables
+
+        Args:
+            value: The value to resolve (string, dict, list, or primitive)
+            context: Template context with available variables
+
+        Returns:
+            Resolved value with all templates substituted
+        """
+        if not JINJA2_AVAILABLE:
+            # Fallback: simple regex replacement for basic {{ var }} patterns
+            return self._resolve_template_fallback(value, context)
+
+        return self._resolve_with_jinja2(value, context)
+
+    def _resolve_with_jinja2(self, value: Any, context: Dict[str, Any]) -> Any:
+        """Resolve templates using Jinja2 engine"""
+        if isinstance(value, str):
+            # Check if string contains template markers
+            if "{{" not in value:
+                return value
+            try:
+                env = Environment(loader=BaseLoader())
+                template = env.from_string(value)
+                resolved = template.render(**context)
+                # Try to preserve type for simple substitutions like "{{ number }}"
+                if value.strip().startswith("{{") and value.strip().endswith("}}"):
+                    # Pure variable reference - try to return original type
+                    var_name = value.strip()[2:-2].strip()
+                    if var_name in context:
+                        return context[var_name]
+                return resolved
+            except UndefinedError as e:
+                logger.warning(f"⚠️  Template variable undefined: {e}")
+                return value  # Return original on error
+            except Exception as e:
+                logger.warning(f"⚠️  Template resolution failed: {e}")
+                return value
+
+        elif isinstance(value, dict):
+            return {k: self._resolve_with_jinja2(v, context) for k, v in value.items()}
+
+        elif isinstance(value, list):
+            return [self._resolve_with_jinja2(item, context) for item in value]
+
+        else:
+            # Primitives (int, float, bool, None) pass through
+            return value
+
+    def _resolve_template_fallback(self, value: Any, context: Dict[str, Any]) -> Any:
+        """Fallback template resolution without Jinja2 (basic {{ var }} only)"""
+        if isinstance(value, str):
+            if "{{" not in value:
+                return value
+
+            # Simple pattern: {{ var_name }} or {{ obj.attr }}
+            pattern = r"\{\{\s*([\w.]+)\s*\}\}"
+
+            def replacer(match):
+                var_path = match.group(1)
+                parts = var_path.split(".")
+                result = context
+                try:
+                    for part in parts:
+                        if isinstance(result, dict):
+                            result = result.get(part)
+                        else:
+                            result = getattr(result, part, None)
+                        if result is None:
+                            return match.group(0)  # Keep original if not found
+                    return str(result) if result is not None else match.group(0)
+                except Exception:
+                    return match.group(0)
+
+            return re.sub(pattern, replacer, value)
+
+        elif isinstance(value, dict):
+            return {k: self._resolve_template_fallback(v, context) for k, v in value.items()}
+
+        elif isinstance(value, list):
+            return [self._resolve_template_fallback(item, context) for item in value]
+
+        return value
+
+    def _build_template_context(
+        self,
+        playbook: "PlaybookDefinition",
+        execution: "PlaybookExecution",
+        intent_vector: Any = None,
+    ) -> Dict[str, Any]:
+        """
+        Build the template context for variable resolution.
+
+        Available in templates:
+        - {{ user_input }} - Original user input
+        - {{ phase_results }} - Dict of all phase results by state_var
+        - {{ playbook_id }} - Current playbook ID
+        - Any playbook.variables entries
+        - Intent vector fields (concepts, agent, etc.)
+        """
+        context = {
+            # Core execution context
+            "user_input": execution.user_input,
+            "phase_results": execution.phase_results,
+            "playbook_id": playbook.id,
+            "execution_id": execution.execution_id,
+
+            # Playbook-defined variables
+            **playbook.variables,
+        }
+
+        # Add intent vector fields if available
+        if intent_vector:
+            if hasattr(intent_vector, "concepts"):
+                context["concepts"] = list(intent_vector.concepts) if intent_vector.concepts else []
+            if hasattr(intent_vector, "target_agent"):
+                context["target_agent"] = intent_vector.target_agent
+            if hasattr(intent_vector, "raw_input"):
+                context["raw_input"] = intent_vector.raw_input
+
+        # Flatten phase_results for easier access: {{ phase_name.field }}
+        for state_var, result in execution.phase_results.items():
+            if isinstance(result, dict):
+                context[state_var] = result
+
+        return context
 
     def find_playbook(self, concepts: Set[str]) -> Optional[PlaybookDefinition]:
         """
@@ -375,41 +542,87 @@ class DeterministicExecutor:
         if not phase.actions:
             return True
 
+        # Build template context for variable resolution (GAD-5000)
+        template_context = self._build_template_context(playbook, execution, intent_vector)
+
         for action in phase.actions:
             try:
                 action_type = action.get("action_type", "EXECUTE_SCRIPT")
                 target = action.get("target")
-                params = action.get("params", {})
+                raw_params = action.get("params", {})
 
-                logger.info(f"  → Executing action: {action_type} ({target})")
+                # RESOLVE TEMPLATE VARIABLES (GAD-5000 Variable Injection)
+                params = self._resolve_template_variables(raw_params, template_context)
+                # Also resolve target if it contains templates
+                resolved_target = self._resolve_template_variables(target, template_context) if target else target
+
+                logger.info(f"  → Executing action: {action_type} ({resolved_target})")
+                if raw_params != params:
+                    logger.debug(f"    📝 Resolved params: {raw_params} → {params}")
 
                 if action_type == "EMIT_EVENT":
                     # Emit visualization event
                     if emit_event:
                         try:
-                            await emit_event("ACTION", f"{target}", "playbook_engine", params)
+                            await emit_event("ACTION", f"{resolved_target}", "playbook_engine", params)
                         except Exception as e:
                             logger.debug(f"Event emission failed: {e}")
 
                 elif action_type == "CHECK_STATE":
-                    # Validate preconditions (stub for now)
-                    logger.info(f"  ✓ State check passed: {target}")
+                    # Validate preconditions via Action Handler Registry
+                    if self.action_registry and self.action_registry.has("CHECK_STATE"):
+                        handler = self.action_registry.get("CHECK_STATE")
+                        action_context = ActionContext(
+                            phase_id=phase.phase_id,
+                            playbook_id=playbook.id,
+                            execution_id=execution.execution_id,
+                            user_input=execution.user_input,
+                            phase_results=execution.phase_results,
+                            kernel=kernel,
+                            emit_event=emit_event,
+                        )
+                        result = await handler.execute(resolved_target, params, action_context)
+                        if not result.success:
+                            logger.warning(f"  ❌ State check failed: {result.error}")
+                            return False
+                        phase.result = result.data
+                    else:
+                        # Fallback stub
+                        logger.info(f"  ✓ State check passed (stub): {resolved_target}")
 
                 elif action_type == "EXECUTE_SCRIPT":
-                    # Execute a script (stub for now - would call actual script)
-                    logger.info(f"  ✓ Script executed: {target}")
-                    phase.result = {"script": target, "params": params}
+                    # Execute script via Action Handler Registry
+                    if self.action_registry and self.action_registry.has("EXECUTE_SCRIPT"):
+                        handler = self.action_registry.get("EXECUTE_SCRIPT")
+                        action_context = ActionContext(
+                            phase_id=phase.phase_id,
+                            playbook_id=playbook.id,
+                            execution_id=execution.execution_id,
+                            user_input=execution.user_input,
+                            phase_results=execution.phase_results,
+                            kernel=kernel,
+                            emit_event=emit_event,
+                        )
+                        result = await handler.execute(resolved_target, params, action_context)
+                        if not result.success:
+                            logger.warning(f"  ❌ Script failed: {result.error}")
+                            return False
+                        phase.result = result.data
+                    else:
+                        # Fallback stub
+                        logger.info(f"  ✓ Script executed (stub): {resolved_target}")
+                        phase.result = {"script": resolved_target, "params": params}
 
                 elif action_type == "CALL_AGENT":
                     # Delegate to another agent (PLAYBOOK FIX: Actually call the agent!)
-                    logger.info(f"  → Calling agent: {target}")
+                    logger.info(f"  → Calling agent: {resolved_target}")
                     if kernel:
                         import asyncio
 
                         from vibe_core.scheduling.task import Task
 
-                        task = Task(agent_id=target, payload=params)
-                        logger.debug(f"  📤 Submitting task to {target}: {params}")
+                        task = Task(agent_id=resolved_target, payload=params)
+                        logger.debug(f"  📤 Submitting task to {resolved_target}: {params}")
 
                         # Submit task (synchronous - returns task_id)
                         task_id = kernel.submit_task(task)
@@ -434,21 +647,21 @@ class DeterministicExecutor:
                             elapsed += poll_interval
 
                         if result:
-                            phase.result = {"agent": target, "result": result, "params": params, "task_id": task_id}
+                            phase.result = {"agent": resolved_target, "result": result, "params": params, "task_id": task_id}
                             status = result.get("status", "unknown")
-                            logger.info(f"  ✓ Agent {target} returned: {status}")
+                            logger.info(f"  ✓ Agent {resolved_target} returned: {status}")
                         else:
-                            logger.warning(f"  ⏱️  Agent {target} timeout after {timeout_sec}s")
-                            phase.result = {"error": "timeout", "agent": target, "task_id": task_id}
+                            logger.warning(f"  ⏱️  Agent {resolved_target} timeout after {timeout_sec}s")
+                            phase.result = {"error": "timeout", "agent": resolved_target, "task_id": task_id}
                             return False  # Fail phase on timeout
                     else:
-                        logger.warning(f"  ⚠️ No kernel available, cannot execute agent call to {target}")
-                        phase.result = {"error": "No kernel available", "agent": target}
+                        logger.warning(f"  ⚠️ No kernel available, cannot execute agent call to {resolved_target}")
+                        phase.result = {"error": "No kernel available", "agent": resolved_target}
                         return False  # Fail the phase if no kernel
 
                 elif action_type == "CALL_PLAYBOOK":
                     # Execute nested playbook (FRACTAL/NESTED SUPPORT)
-                    nested_playbook_id = target
+                    nested_playbook_id = resolved_target
                     if nested_playbook_id in self.playbooks:
                         logger.info(f"  🔗 Calling nested playbook: {nested_playbook_id}")
                         nested_result = await self.execute_nested_playbook(
