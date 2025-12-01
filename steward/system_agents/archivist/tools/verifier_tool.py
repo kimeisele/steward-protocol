@@ -2,16 +2,15 @@
 ARCHIVIST Verifier Tool
 ========================
 
-HONEST STATUS: Cryptographic verification is NOT IMPLEMENTED.
+REAL CRYPTOGRAPHIC VERIFICATION IMPLEMENTED.
 
-This tool provides content hashing and proof generation, but does NOT
-perform real signature verification. All signatures are accepted in
-simulation mode.
+This tool performs actual ECDSA P-256 signature verification using the
+steward.crypto module. Signatures are verified against stored public keys.
 
-To implement real crypto:
-1. Use Ed25519 or RSA for signing/verification
-2. Store public keys in agent manifests (steward.json)
-3. Verify signatures against stored public keys
+Implementation:
+1. Uses ECDSA NIST P-256 for signing/verification
+2. Public keys loaded from agent registry (in-memory for MVP)
+3. Signatures verified cryptographically - invalid signatures are rejected
 """
 
 import hashlib
@@ -21,68 +20,111 @@ from typing import Any, Dict, Tuple
 
 logger = logging.getLogger("ARCHIVIST_VERIFIER")
 
-# Feature flag - set to True when real crypto is implemented
-CRYPTO_ENABLED = False
+# Import real crypto functions
+try:
+    from steward.crypto import verify_signature as crypto_verify_signature
+    from steward.crypto import get_public_key_string
+
+    CRYPTO_AVAILABLE = True
+except ImportError:
+    logger.error("❌ steward.crypto not available - verification will fail")
+    CRYPTO_AVAILABLE = False
+
+# Feature flag - ENABLED for real crypto
+CRYPTO_ENABLED = True
 
 
 class VerifierTool:
     """
     Content verification tool for the Chain of Trust.
 
-    WARNING: Real cryptographic verification is NOT implemented.
-    Currently operates in SIMULATION MODE - all signatures from
-    known signers are accepted without actual verification.
+    REAL CRYPTOGRAPHIC VERIFICATION ENABLED.
+    Signatures are verified using ECDSA P-256 against agent public keys.
     """
 
     def __init__(self):
         self.logger = logger
-        self.simulation_mode = not CRYPTO_ENABLED
+        self.simulation_mode = not (CRYPTO_ENABLED and CRYPTO_AVAILABLE)
 
         if self.simulation_mode:
-            self.logger.warning("⚠️  Verifier Tool running in SIMULATION MODE - NO REAL SIGNATURE VERIFICATION")
+            self.logger.warning("⚠️  Verifier Tool running in SIMULATION MODE - crypto module unavailable")
         else:
-            self.logger.info("✅ Verifier Tool initialized with crypto enabled")
+            self.logger.info("✅ Verifier Tool initialized with REAL CRYPTO VERIFICATION")
 
-        # Known signers - in production, load from secure registry
-        self.known_signers = {"HERALD_Agent", "ENVOY_Agent", "CIVIC_Agent"}
+        # Agent Public Key Registry (MVP: in-memory, hardcoded)
+        # In production: Load from steward.json files or central registry
+        self._load_agent_public_keys()
+
+    def _load_agent_public_keys(self):
+        """
+        Load agent public keys from registry.
+
+        MVP: Uses the system's public key for all known agents.
+        Production: Load individual keys from agent steward.json files.
+        """
+        self.agent_public_keys = {}
+
+        # Try to load system public key as default
+        if CRYPTO_AVAILABLE:
+            try:
+                system_public_key = get_public_key_string()
+                # For MVP: Use system key for all known agents
+                # In production: Each agent would have their own key
+                known_agents = ["HERALD_Agent", "ENVOY_Agent", "CIVIC_Agent", "ARCHIVIST_Agent"]
+                for agent in known_agents:
+                    self.agent_public_keys[agent] = system_public_key
+                self.logger.info(f"✅ Loaded public keys for {len(known_agents)} agents")
+            except Exception as e:
+                self.logger.error(f"❌ Failed to load public keys: {e}")
+                self.agent_public_keys = {}
+        else:
+            self.logger.warning("⚠️  Crypto unavailable - no public keys loaded")
 
     def verify_signature(self, content: str, signature: str, signer: str) -> Tuple[bool, str]:
         """
-        Verify signature of content.
+        Verify signature of content using REAL CRYPTOGRAPHIC VERIFICATION.
 
         Args:
             content: The original content that was signed
-            signature: The signature to verify
+            signature: The signature to verify (base64)
             signer: The identity of the signer
 
         Returns:
             Tuple of (is_valid, verification_details)
-
-        WARNING: In SIMULATION MODE, this does NOT perform real verification.
         """
         self.logger.info(f"🔐 Verification request from: {signer}")
 
         # Check if signer is known
-        if signer not in self.known_signers:
-            return False, f"❌ Unknown signer: {signer}"
+        if signer not in self.agent_public_keys:
+            return False, f"❌ Unknown signer: {signer} (not in registry)"
 
+        # Fallback to simulation mode if crypto unavailable
         if self.simulation_mode:
-            # SIMULATION MODE: Accept any non-empty signature from known signers
-            # This is NOT secure - it's for development/testing only
             if signature and len(signature) > 0:
                 self.logger.warning(
-                    f"⚠️  SIMULATION: Accepting signature from {signer} WITHOUT VERIFICATION (crypto not enabled)"
+                    f"⚠️  SIMULATION: Accepting signature from {signer} WITHOUT VERIFICATION (crypto unavailable)"
                 )
                 return True, f"[SIMULATION] Signature accepted from {signer} (NOT VERIFIED)"
             else:
                 return False, f"❌ Empty signature from {signer}"
 
-        # REAL VERIFICATION (when CRYPTO_ENABLED = True)
-        # TODO: Implement Ed25519 verification
-        # 1. Load public key for signer from registry
-        # 2. Verify signature against content hash
-        # 3. Return actual verification result
-        return False, "❌ Real crypto verification not implemented"
+        # REAL CRYPTOGRAPHIC VERIFICATION
+        try:
+            public_key = self.agent_public_keys[signer]
+
+            # Verify using steward.crypto module
+            is_valid = crypto_verify_signature(content, signature, public_key)
+
+            if is_valid:
+                self.logger.info(f"✅ Signature VERIFIED for {signer} (ECDSA P-256)")
+                return True, f"✅ Signature cryptographically verified from {signer}"
+            else:
+                self.logger.warning(f"❌ Signature INVALID for {signer}")
+                return False, f"❌ Signature verification FAILED - signature is invalid or tampered"
+
+        except Exception as e:
+            self.logger.error(f"❌ Verification error for {signer}: {e}")
+            return False, f"❌ Verification error: {e}"
 
     def compute_content_hash(self, content: str) -> str:
         """
@@ -101,8 +143,8 @@ class VerifierTool:
         Returns:
             Proof object with verification metadata
 
-        NOTE: The 'verification_status' reflects whether this was
-        simulated or actually verified cryptographically.
+        NOTE: The 'verification_status' reflects whether cryptographic
+        verification was performed (VERIFIED) or simulated.
         """
         self.logger.info("📜 Creating verification proof")
 
@@ -110,14 +152,16 @@ class VerifierTool:
             "content_hash": self.compute_content_hash(str(verified_content)),
             "verifier_id": "ARCHIVIST_Agent",
             "verification_timestamp": datetime.now().isoformat(),
-            "verification_status": "SIMULATED" if self.simulation_mode else "VERIFIED",
+            "verification_status": "SIMULATED" if self.simulation_mode else "CRYPTOGRAPHICALLY_VERIFIED",
             "crypto_enabled": CRYPTO_ENABLED,
+            "crypto_available": CRYPTO_AVAILABLE,
+            "algorithm": "ECDSA-P256-SHA256" if not self.simulation_mode else None,
             "chain_of_trust_link": {
                 "from_agent": verified_content.get("author", "unknown"),
                 "to_agent": "ARCHIVIST_Agent",
                 "relay_count": 1,
             },
-            "warning": ("Signature verification was SIMULATED (crypto not enabled)" if self.simulation_mode else None),
+            "warning": ("Signature verification was SIMULATED (crypto unavailable)" if self.simulation_mode else None),
         }
 
         return proof

@@ -369,7 +369,7 @@ class GraphExecutor:
 
             config = get_config()
             live_fire_enabled = config.safety.live_fire_enabled
-        except (ImportError, AttributeError):
+        except (ImportError, AttributeError, TypeError):
             # Fallback: Use environment variable if Phoenix config unavailable
             import os
 
@@ -580,10 +580,12 @@ class GraphExecutor:
 
     def execute(self, graph: WorkflowGraph) -> dict[str, Any]:
         """
-        Execute the workflow (uses agent interface).
+        Execute the workflow with REAL agent invocation.
 
-        For now, this is a stub that returns the execution plan.
-        Phase 2 will implement actual agent invocation.
+        This method now calls execute_step() for each node in the workflow,
+        performing actual execution (not stubs).
+
+        Respects VIBE_LIVE_FIRE setting for safety.
         """
         # Validate first
         is_valid, validation_msg = self.validate_workflow(graph)
@@ -594,22 +596,46 @@ class GraphExecutor:
                 "error": validation_msg,
             }
 
-        # Generate plan
+        # Generate execution plan
         plan = self._topological_sort(graph)
 
-        # Execute (Phase 2: will actually call agents)
+        # Execute REAL workflow: Call execute_step() for each node
         results = []
+        context_accumulator = {}  # Pass results between nodes
+
         for node_id in plan.execution_order:
             node = graph.nodes[node_id]
-            result = ExecutionResult(
-                workflow_id=graph.id,
-                node_id=node_id,
-                status=ExecutionStatus.SUCCESS,
-                output={"message": f"[PHASE 2] Would execute {node.action}"},
-                cost_usd=0.0,
-            )
-            results.append(result)
-            self.execution_history.append(result)
+
+            # Build context from previous results
+            context_prompt = graph.intent or ""
+            if context_accumulator:
+                context_prompt += f"\n\nPrevious results: {context_accumulator}"
+
+            # REAL EXECUTION via execute_step()
+            try:
+                result = self.execute_step(graph, node_id, context_prompt)
+                results.append(result)
+                self.execution_history.append(result)
+
+                # Accumulate output for next node
+                if result.status == ExecutionStatus.SUCCESS and result.output:
+                    context_accumulator[node_id] = result.output
+
+            except Exception as e:
+                # Execution failed - create error result
+                error_result = ExecutionResult(
+                    workflow_id=graph.id,
+                    node_id=node_id,
+                    status=ExecutionStatus.FAILED,
+                    output=None,
+                    error=str(e),
+                    cost_usd=0.0,
+                    duration_seconds=0.0,
+                )
+                results.append(error_result)
+                self.execution_history.append(error_result)
+                # Stop execution on failure
+                break
 
         return {
             "workflow_id": graph.id,
