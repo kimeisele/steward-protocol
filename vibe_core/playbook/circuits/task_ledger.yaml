@@ -1,0 +1,290 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: TASK_LEDGER_V1
+# ============================================================================
+# Neuro-Symbolic Progress Tracking & Self-Reflection Circuit
+#
+# Syscall: Internal kernel operation (meta-circuit)
+# Pattern: Tracks progress of OTHER circuits, enables self-reflection
+#
+# VEDA-4 State Machine:
+#   INIT     → Initialize tracking for a circuit execution
+#   TRACK    → Record progress as states transition
+#   REFLECT  → Self-evaluate progress (are we stuck?)
+#   UPDATE   → Update ledger with reflection results
+#   DONE     → Tracking complete
+#
+# Inspired by: Magentic-One's dual-loop (Task Ledger + Progress Ledger)
+# But: Implemented natively in VEDA-4, no external dependencies
+#
+# ============================================================================
+
+circuit:
+  id: "TASK_LEDGER_V1"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "meta"
+  security_level: "system"
+
+  description: |
+    Meta-circuit for tracking progress of other circuit executions.
+    Implements self-reflection capability: "Am I making progress?"
+
+    This is the "inner loop" of the cognitive system - it monitors
+    whether task execution is progressing or stuck.
+
+    Key concepts:
+    - Task Ledger: Facts and guesses about current task
+    - Progress Ledger: What's done, what's pending, what's blocked
+    - Self-Reflection: Periodic evaluation of progress
+
+  # ===========================================================================
+  # STATES (Meta-Cognitive States)
+  # ===========================================================================
+  states:
+    INIT:
+      description: "Initialize tracking for a circuit execution"
+      entry_actions:
+        - action: "create_ledger"
+          params:
+            ledger_id: "{{ execution_id }}"
+            circuit_id: "{{ target_circuit }}"
+            started_at: "{{ timestamp }}"
+            initial_state: "{{ target_initial_state }}"
+        - action: "extract_task_facts"
+          params:
+            input: "{{ task_input }}"
+            extract:
+              - "known_facts"      # What we know for sure
+              - "assumptions"      # What we assume
+              - "unknowns"         # What we don't know
+              - "goals"            # What success looks like
+      invariants:
+        - "ledger_id must be unique"
+        - "target_circuit must exist"
+      on_success: "TRACK"
+      on_failure: "DONE"
+      state_var: "ledger"
+
+    TRACK:
+      description: "Record progress as states transition"
+      entry_actions:
+        - action: "record_transition"
+          params:
+            ledger_id: "{{ ledger.id }}"
+            from_state: "{{ previous_state }}"
+            to_state: "{{ current_state }}"
+            timestamp: "{{ timestamp }}"
+            duration_ms: "{{ transition_duration }}"
+        - action: "update_progress"
+          params:
+            completed: "{{ completed_states }}"
+            pending: "{{ pending_states }}"
+            current: "{{ current_state }}"
+        - action: "check_reflection_needed"
+          params:
+            transitions_since_last: "{{ transitions_count }}"
+            time_since_last: "{{ time_since_reflection }}"
+            threshold_transitions: 3
+            threshold_time_ms: 30000
+      invariants:
+        - "transitions must be recorded in order"
+        - "no duplicate transitions"
+      on_success: "TRACK"  # Continue tracking
+      on_reflection_needed: "REFLECT"
+      on_circuit_complete: "DONE"
+      state_var: "progress"
+
+    REFLECT:
+      description: "Self-evaluate progress"
+      entry_actions:
+        - action: "evaluate_progress"
+          params:
+            ledger: "{{ ledger }}"
+            progress: "{{ progress }}"
+            evaluate:
+              - "velocity"           # Are we moving faster/slower?
+              - "stuck_detection"    # Same state too long?
+              - "loop_detection"     # Repeating same transitions?
+              - "goal_proximity"     # Getting closer to goal?
+        - action: "generate_reflection"
+          params:
+            evaluation: "{{ evaluation }}"
+            questions:
+              - "Is the current approach working?"
+              - "Should we try a different strategy?"
+              - "Are we blocked by missing information?"
+              - "Is the goal still achievable?"
+        - action: "decide_action"
+          params:
+            reflection: "{{ reflection }}"
+            options:
+              - "continue"     # Keep going
+              - "adjust"       # Minor course correction
+              - "replan"       # Major strategy change
+              - "escalate"     # Need human/higher authority
+      invariants:
+        - "reflection must be honest"
+        - "stuck detection must trigger if same state > 3 transitions"
+      on_success: "UPDATE"
+      on_failure: "UPDATE"
+      state_var: "reflection_result"
+
+    UPDATE:
+      description: "Update ledger with reflection results"
+      entry_actions:
+        - action: "update_task_ledger"
+          params:
+            ledger_id: "{{ ledger.id }}"
+            reflection: "{{ reflection_result }}"
+            new_facts: "{{ discovered_facts }}"
+            revised_assumptions: "{{ revised_assumptions }}"
+        - action: "record_decision"
+          params:
+            decision: "{{ reflection_result.decision }}"
+            reasoning: "{{ reflection_result.reasoning }}"
+            timestamp: "{{ timestamp }}"
+        - action: "emit_reflection_event"
+          params:
+            event: "progress_reflection"
+            data:
+              circuit: "{{ target_circuit }}"
+              decision: "{{ reflection_result.decision }}"
+              velocity: "{{ evaluation.velocity }}"
+              stuck: "{{ evaluation.stuck }}"
+      on_continue: "TRACK"
+      on_replan: "SIGNAL_REPLAN"
+      on_escalate: "SIGNAL_ESCALATE"
+      state_var: "updated_ledger"
+
+    SIGNAL_REPLAN:
+      description: "Signal that replanning is needed"
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "replan_required"
+            data:
+              circuit: "{{ target_circuit }}"
+              execution_id: "{{ execution_id }}"
+              reason: "{{ reflection_result.reasoning }}"
+              ledger_snapshot: "{{ updated_ledger }}"
+      on_success: "TRACK"  # Continue tracking after signal
+
+    SIGNAL_ESCALATE:
+      description: "Signal that escalation is needed"
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "escalation_required"
+            data:
+              circuit: "{{ target_circuit }}"
+              execution_id: "{{ execution_id }}"
+              reason: "{{ reflection_result.reasoning }}"
+              ledger_snapshot: "{{ updated_ledger }}"
+              severity: "{{ reflection_result.severity }}"
+      on_success: "TRACK"  # Continue tracking after signal
+
+    DONE:
+      description: "Tracking complete"
+      terminal: true
+      entry_actions:
+        - action: "finalize_ledger"
+          params:
+            ledger_id: "{{ ledger.id }}"
+            final_state: "{{ final_state }}"
+            success: "{{ circuit_succeeded }}"
+            total_transitions: "{{ total_transitions }}"
+            total_reflections: "{{ total_reflections }}"
+            total_duration_ms: "{{ total_duration }}"
+        - action: "generate_summary"
+          params:
+            ledger: "{{ ledger }}"
+            include:
+              - "timeline"
+              - "decisions"
+              - "lessons_learned"
+        - action: "record_parampara"
+          params:
+            action: "TASK_TRACKING"
+            target: "{{ target_circuit }}"
+            result: "{{ circuit_succeeded }}"
+            summary: "{{ summary }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "INIT"
+      to: "TRACK"
+      condition: "ledger_created"
+    - from: "TRACK"
+      to: "TRACK"
+      condition: "transition_recorded AND NOT reflection_needed"
+    - from: "TRACK"
+      to: "REFLECT"
+      condition: "reflection_needed"
+    - from: "TRACK"
+      to: "DONE"
+      condition: "circuit_complete"
+    - from: "REFLECT"
+      to: "UPDATE"
+      condition: "reflection_complete"
+    - from: "UPDATE"
+      to: "TRACK"
+      condition: "decision == continue OR decision == adjust"
+    - from: "UPDATE"
+      to: "SIGNAL_REPLAN"
+      condition: "decision == replan"
+    - from: "UPDATE"
+      to: "SIGNAL_ESCALATE"
+      condition: "decision == escalate"
+    - from: "SIGNAL_REPLAN"
+      to: "TRACK"
+      condition: "signal_sent"
+    - from: "SIGNAL_ESCALATE"
+      to: "TRACK"
+      condition: "signal_sent"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "ordered_transitions"
+      check: "all transitions recorded in temporal order"
+    - name: "reflection_frequency"
+      check: "reflection occurs at least every 3 transitions or 30s"
+    - name: "stuck_detection"
+      check: "stuck state triggers replan signal"
+    - name: "loop_detection"
+      check: "repeated transition pattern triggers replan signal"
+
+  # ===========================================================================
+  # CONFIGURATION
+  # ===========================================================================
+  config:
+    reflection_interval_transitions: 3
+    reflection_interval_ms: 30000
+    stuck_threshold_same_state: 3
+    loop_detection_window: 10
+    max_reflections_before_escalate: 5
+
+  # ===========================================================================
+  # LEDGER SCHEMA
+  # ===========================================================================
+  ledger_schema:
+    task_ledger:
+      facts: []           # Known truths
+      assumptions: []     # Working assumptions
+      unknowns: []        # Open questions
+      goals: []           # Success criteria
+
+    progress_ledger:
+      completed: []       # Completed states
+      current: null       # Current state
+      pending: []         # Remaining states
+      blocked: []         # Blocked items
+
+    reflection_log:
+      - timestamp: null
+        decision: null
+        reasoning: null
+        velocity: null
