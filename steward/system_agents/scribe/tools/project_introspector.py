@@ -57,6 +57,26 @@ class ProjectIntrospector:
 
         return metadata
 
+    def get_github_repo(self) -> str:
+        """Extract GitHub owner/repo from git remote URL."""
+        try:
+            result = subprocess.run(
+                ["git", "remote", "get-url", "origin"],
+                cwd=self.root_dir,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                url = result.stdout.strip()
+                # Parse GitHub URL: https://github.com/owner/repo.git or git@github.com:owner/repo.git
+                match = re.search(r'github\.com[:/]([^/]+)/([^/\.]+)', url)
+                if match:
+                    return f"{match.group(1)}/{match.group(2)}"
+        except Exception:
+            pass
+        return "kimeisele/steward-protocol"  # Fallback
+
     def get_git_stats(self) -> Dict[str, Any]:
         """Extract git statistics"""
         stats = {"commit_count": 0, "contributors": [], "recent_commits": []}
@@ -166,8 +186,10 @@ class ProjectIntrospector:
 
     def get_all_metadata(self) -> Dict[str, Any]:
         """Get all project metadata"""
+        project_meta = self.get_project_metadata()
+        project_meta["github_repo"] = self.get_github_repo()
         return {
-            "project": self.get_project_metadata(),
+            "project": project_meta,
             "git": self.get_git_stats(),
             "agent_count": self.count_system_agents(),
             "governance": self.get_governance_summary(),
