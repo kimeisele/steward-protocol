@@ -276,23 +276,35 @@ class LLMEngine:
 
     def _call_mock(self, prompt: str) -> str:
         """
-        Mock code generation (no API call).
-        Useful for testing and graceful degradation.
+        Mock code generation - returns error message, NOT fake code.
+
+        This is called when no LLM API key is available.
+        Returns a clear error instead of pretending to generate code.
         """
-        logger.info("🎭 MOCK LLM: Generating synthetic code")
-        # Return a reasonable template that reflects the prompt
-        return f"""# Auto-generated code from prompt
-# Prompt: {prompt[:50]}...
+        logger.warning("⚠️  LLM ENGINE: No API key - cannot generate code")
 
-def generated_function():
-    \"\"\"Generated implementation placeholder.\"\"\"
-    # TODO: Implement based on specification
-    pass
+        # Return a clear error, NOT fake code
+        return f"""# ============================================================
+# ERROR: LLM CODE GENERATION FAILED
+# ============================================================
+# Reason: No LLM API key configured
+#
+# To enable code generation, set one of these environment variables:
+#   - OPENAI_API_KEY
+#   - OPENROUTER_API_KEY
+#   - ANTHROPIC_API_KEY
+#
+# Original prompt (truncated):
+# {prompt[:100]}...
+#
+# This is NOT generated code - this is an error message.
+# ============================================================
 
-
-if __name__ == "__main__":
-    result = generated_function()
-    print(f"Execution result: {{result}}")
+raise NotImplementedError(
+    "LLM code generation is not available. "
+    "Configure an API key (OPENAI_API_KEY, OPENROUTER_API_KEY, or ANTHROPIC_API_KEY) "
+    "to enable this feature."
+)
 """
 
     def _clean_output(self, content: str) -> str:

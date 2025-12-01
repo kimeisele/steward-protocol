@@ -81,8 +81,7 @@ def ensure_venv(python_exe=None):
             print("✓ Virtual environment created.")
         except subprocess.CalledProcessError as e:
             print_error(
-                f"Failed to create virtual environment: {e}",
-                "Ensure 'python3-venv' is installed on your system"
+                f"Failed to create virtual environment: {e}", "Ensure 'python3-venv' is installed on your system"
             )
             return None
 
@@ -262,10 +261,20 @@ def setup_git_hooks():
 def boot_check():
     """Quick boot verification."""
     from vibe_core.boot_orchestrator import BootOrchestrator
+    from vibe_core.config import ConfigLoader
 
     print_banner("AGENT CITY OS - BOOT CHECK")
 
-    orchestrator = BootOrchestrator()
+    # Load Phoenix Config (matrix.yaml) for proper agent configuration
+    try:
+        loader = ConfigLoader()
+        config = loader.load()
+        print(f"  Config:        {config.city_name} (v{config.federation_version})")
+    except Exception as e:
+        print(f"  Config:        ⚠️  Failed to load ({e})")
+        config = None
+
+    orchestrator = BootOrchestrator(config=config)
     try:
         kernel = orchestrator.boot()
         status = kernel.get_status()
