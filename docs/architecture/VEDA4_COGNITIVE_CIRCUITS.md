@@ -330,37 +330,47 @@ vibe_core/playbook/workflows/design_login_system.yaml → circuits/system_design
 
 2. **All Syscall Handlers Implemented**
    - SPAWN_COGNITION ✅
-   - DESTROY_COGNITION ✅ (was missing)
+   - DESTROY_COGNITION ✅
    - GRANT_MANDATE ✅
-   - REVOKE_MANDATE ✅ (was missing)
+   - REVOKE_MANDATE ✅
    - ALLOCATE_PRANA ✅
-   - TRANSFER_PRANA ✅ (was missing)
+   - TRANSFER_PRANA ✅
    - SWEAR_OATH ✅
-   - RECORD_KARMA ✅ (was missing)
+   - RECORD_KARMA ✅
    - DISPATCH_TASK ✅
-   - BROADCAST_EVENT ✅ (was missing)
+   - BROADCAST_EVENT ✅
 
 3. **Meta-Circuit Hooks**
    - `set_meta_callbacks()` method for TASK_LEDGER/ERROR_RECOVERY integration
    - Callbacks: on_circuit_start, on_state_transition, on_circuit_end, on_error
    - Hooks emit events that meta-circuits can observe
 
+4. **Invariant Enforcement (Operation Ironclad)**
+   - `InvariantChecker` class with pattern matching for invariant expressions
+   - Supported patterns: `is not empty`, `==`, `!=`, `>=`, `<=`, `>`, `<`, `is in`, `is not in`, `has`
+   - Pre-execution invariant check (before entering state)
+   - Post-operation invariant check (after operations, before transition)
+   - Global circuit invariants checked at execution start
+   - **HALTS EXECUTION** on violation - not documentation, SECURITY
+
+5. **Meta-Circuit Full Integration**
+   - `MetaCircuitManager` class implements TASK_LEDGER_V1 and ERROR_RECOVERY_V1 logic
+   - Auto-wired via `create_circuit_executor_with_meta()` factory
+   - TASK_LEDGER: Tracks progress, detects stuck states, triggers reflection
+   - ERROR_RECOVERY: Classifies errors, suggests recovery strategies, escalates if needed
+
 ### 🟡 PARTIAL / NEEDS WORK
-
-1. **Invariant Checking**
-   - Invariants defined in YAML but not enforced at runtime
-   - Need: Runtime invariant validator
-
-2. **Meta-Circuit Full Integration**
-   - Callbacks wired but TASK_LEDGER/ERROR_RECOVERY not instantiated as active monitors
-   - Need: Meta-circuit manager to create and connect observers
-
-### ❌ NOT IMPLEMENTED
 
 1. **Testing**
    - Unit tests for each circuit
    - Integration tests for BlueprintGenerator → Circuit → Kernel path
    - Chaos testing for ERROR_RECOVERY_V1
+
+### ❌ NOT IMPLEMENTED
+
+1. **Active Recovery Loop**
+   - ERROR_RECOVERY suggests strategies but doesn't automatically retry
+   - Would need execution loop integration for full autonomous recovery
 
 ---
 
