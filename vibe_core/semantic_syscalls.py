@@ -702,15 +702,33 @@ class SemanticSyscallExecutor:
 
     def _handle_broadcast_event(self, request: SyscallRequest) -> SyscallResult:
         """
-        BROADCAST_EVENT: Emit system-wide event.
+        BROADCAST_EVENT: Emit system-wide event via EventBus.
 
-        NOTE: Event bus is not yet implemented.
-        Events are logged but not delivered to subscribers.
-        This syscall succeeds for logging purposes but does not broadcast.
+        Allows agents to broadcast events that other agents can subscribe to.
+        Supports loose coupling and reactive patterns.
+
+        Args (in request.params):
+            - event_type: Type of event (required) e.g., "agent.born", "task.complete"
+            - data: Optional event data (dict)
+            - message: Optional human-readable message
+
+        Returns:
+            SyscallResult with:
+                - success: True if event was broadcast
+                - output: Event ID, subscriber count, timestamp
+
+        Usage:
+            syscall(BROADCAST_EVENT, {
+                "event_type": "proposal.created",
+                "data": {"proposal_id": "p123", "title": "..."},
+                "message": "New governance proposal"
+            })
         """
         event_type = request.params.get("event_type")
         event_data = request.params.get("data", {})
+        message = request.params.get("message")
 
+        # Validation
         if not event_type:
             return SyscallResult(
                 success=False,
@@ -718,20 +736,53 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: event_type",
             )
 
-        # Event bus not implemented - log only
-        logger.info(f"📢 BROADCAST_EVENT: {event_type} from {request.requester_id} (logged only, no subscribers)")
+        # Broadcast via kernel EventBus
+        try:
+            import asyncio
 
-        # Return success=True with warning that no actual broadcast occurred
-        return SyscallResult(
-            success=True,
-            syscall_type=request.syscall_type,
-            output={
-                "event_type": event_type,
-                "data": event_data,
-                "broadcaster": request.requester_id,
-                "warning": "Event logged but event bus not implemented - no subscribers notified",
-            },
-        )
+            # Run async broadcast in event loop
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Schedule coroutine in running loop
+                future = asyncio.ensure_future(
+                    self.kernel.broadcast_event(
+                        event_type=event_type,
+                        broadcaster_id=request.requester_id,
+                        data=event_data,
+                        message=message
+                    )
+                )
+                # Wait for result (blocking syscall)
+                result = loop.run_until_complete(asyncio.wait_for(future, timeout=5.0))
+            else:
+                # Create new loop
+                result = asyncio.run(
+                    self.kernel.broadcast_event(
+                        event_type=event_type,
+                        broadcaster_id=request.requester_id,
+                        data=event_data,
+                        message=message
+                    )
+                )
+
+            logger.info(
+                f"✅ BROADCAST_EVENT: '{event_type}' from '{request.requester_id}' "
+                f"→ {result['subscribers_notified']} subscriber(s)"
+            )
+
+            return SyscallResult(
+                success=True,
+                syscall_type=request.syscall_type,
+                output=result,
+            )
+
+        except Exception as e:
+            logger.error(f"❌ BROADCAST_EVENT ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Failed to broadcast event: {str(e)}",
+            )
 
     def _record_karma(self, request: SyscallRequest, result: SyscallResult) -> None:
         """Record syscall in Parampara (blockchain audit trail)."""
