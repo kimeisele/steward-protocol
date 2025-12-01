@@ -99,14 +99,6 @@
 
 - **[docs/security/SECURITY_KEY_MANAGEMENT.md](docs/security/SECURITY_KEY_MANAGEMENT.md)** — SECURITY KEY MANAGEMENT
 
-## 📢 Herald
-
-- **[docs/herald/HERALD_AGENT_SPEC.md](docs/herald/HERALD_AGENT_SPEC.md)** — HERALD AGENT SPEC
-- **[docs/herald/HERALD_SETUP_GUIDE.md](docs/herald/HERALD_SETUP_GUIDE.md)** — HERALD SETUP GUIDE
-- **[docs/herald/README_HERALD.md](docs/herald/README_HERALD.md)** — README HERALD
-- **[docs/herald/WHY_DOWNVOTED.md](docs/herald/WHY_DOWNVOTED.md)** — WHY DOWNVOTED
-- **[docs/herald/claude_herald_documents.md](docs/herald/claude_herald_documents.md)** — claude herald documents
-
 
 
 ---

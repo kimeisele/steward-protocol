@@ -53,7 +53,7 @@ class IndexRenderer(Tool):
     # SCHEMA: Allowed docs/ subdirectories (WHITELIST)
     DOCS_ALLOWLIST: Set[str] = {
         "architecture", "deployment", "governance", "guides",
-        "philosophy", "reports", "security", "herald"
+        "philosophy", "reports", "security"
     }
 
     # Category display titles
@@ -65,7 +65,6 @@ class IndexRenderer(Tool):
         "philosophy": "## 💭 Philosophy & Context",
         "reports": "## 📊 Status Reports",
         "security": "## 🔒 Security",
-        "herald": "## 📢 Herald",
     }
 
     def __init__(self, root_dir: str = "."):
