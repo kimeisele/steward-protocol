@@ -15,7 +15,7 @@ Tool Protocol compliant for kernel-managed execution.
 
 import logging
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 

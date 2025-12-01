@@ -23,21 +23,22 @@ import logging
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
 import yaml
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from vibe_core.semantic_syscalls import (
-    SyscallType,
-    SyscallRequest,
-    SyscallResult,
-    SemanticSyscallExecutor,
-)
 from steward.system_agents.envoy.blueprint_generator import (
     BlueprintGenerator,
     CompilationResult,
+)
+from vibe_core.semantic_syscalls import (
+    SemanticSyscallExecutor,
+    SyscallRequest,
+    SyscallResult,
+    SyscallType,
 )
 
 logger = logging.getLogger("CIRCUIT_EXECUTOR")

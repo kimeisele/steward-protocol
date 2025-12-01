@@ -752,11 +752,7 @@ class AgentSystemInterface:
 
             self.system.subscribe_to_events(on_proposal_created, "proposal.created")
         """
-        return self.kernel.subscribe_to_events(
-            callback=callback,
-            event_type=event_type,
-            subscriber_id=self.agent_id
-        )
+        return self.kernel.subscribe_to_events(callback=callback, event_type=event_type, subscriber_id=self.agent_id)
 
     def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
         """
@@ -769,10 +765,7 @@ class AgentSystemInterface:
         self.kernel.unsubscribe_from_events(callback, event_type)
 
     async def broadcast_event(
-        self,
-        event_type: str,
-        data: Optional[Dict[str, Any]] = None,
-        message: Optional[str] = None
+        self, event_type: str, data: Optional[Dict[str, Any]] = None, message: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Broadcast an event to all subscribers.
@@ -793,10 +786,7 @@ class AgentSystemInterface:
             )
         """
         return await self.kernel.broadcast_event(
-            event_type=event_type,
-            broadcaster_id=self.agent_id,
-            data=data,
-            message=message
+            event_type=event_type, broadcaster_id=self.agent_id, data=data, message=message
         )
 
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Any]:

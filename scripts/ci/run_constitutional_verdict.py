@@ -6,12 +6,13 @@ Runs the Auditor's constitutional verdict.
 Extracted from inline YAML for maintainability.
 """
 
-import sys
 import json
+import sys
 from pathlib import Path
-from vibe_core.kernel_impl import RealVibeKernel
+
 from steward.system_agents.auditor.cartridge_main import AuditorCartridge
 from vibe_core.agent_interface import AgentSystemInterface
+from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling.task import Task
 
 

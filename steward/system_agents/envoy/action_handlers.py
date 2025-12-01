@@ -17,9 +17,8 @@ Action Types:
 """
 
 import logging
-import re
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger("ACTION_HANDLERS")
 
@@ -236,21 +235,21 @@ class CheckStateHandler(ActionHandler):
                 field_name = constraint_name.replace("_pattern", "")
                 logger.debug(f"    Pattern check for {field_name}: {constraint_value}")
 
-        logger.info(f"  ✓ Input validation passed")
+        logger.info("  ✓ Input validation passed")
         return ActionResult.ok({"validation": "passed", "fields_checked": required_fields})
 
     def _check_permissions(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Check if user has required permissions"""
         required_permissions = params.get("required_permissions", [])
         # For now, all permissions are granted - actual implementation would check
-        logger.info(f"  ✓ Permission check passed")
+        logger.info("  ✓ Permission check passed")
         return ActionResult.ok({"permissions": "granted"})
 
     def _check_state(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Check if system state meets requirements"""
         required_state = params.get("required_state", {})
         # For now, all state checks pass - actual implementation would verify
-        logger.info(f"  ✓ State check passed")
+        logger.info("  ✓ State check passed")
         return ActionResult.ok({"state": "valid"})
 
 
@@ -305,7 +304,6 @@ class ExecuteScriptHandler(ActionHandler):
 
     async def _create_folders(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Create folder structure for a project"""
-        import os
         from pathlib import Path
 
         base_path = params.get("base_path", ".")

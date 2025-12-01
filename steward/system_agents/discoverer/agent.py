@@ -18,9 +18,9 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from steward.constitutional_oath import ConstitutionalOath
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
-from steward.constitutional_oath import ConstitutionalOath
 
 logger = logging.getLogger("STEWARD")
 

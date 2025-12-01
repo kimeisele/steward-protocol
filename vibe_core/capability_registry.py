@@ -50,13 +50,15 @@ class CapabilityRegistry:
 
         # Core capabilities that all registered agents have
         # (basic operations needed for any agent to function)
-        self._core_capabilities = frozenset([
-            "read_file",
-            "write_file",
-            "list_tasks",
-            "add_task",
-            "complete_task",
-        ])
+        self._core_capabilities = frozenset(
+            [
+                "read_file",
+                "write_file",
+                "list_tasks",
+                "add_task",
+                "complete_task",
+            ]
+        )
 
         logger.info("🔐 CapabilityRegistry initialized")
 
@@ -84,7 +86,7 @@ class CapabilityRegistry:
             details={
                 "capabilities": capabilities,
                 "timestamp": self._get_timestamp(),
-            }
+            },
         )
 
         logger.debug(f"🔐 Registered capabilities for '{agent_id}': {capabilities}")
@@ -125,11 +127,7 @@ class CapabilityRegistry:
         return has_cap
 
     def revoke(
-        self,
-        agent_id: str,
-        capabilities: List[str],
-        revoker_id: str,
-        reason: Optional[str] = None
+        self, agent_id: str, capabilities: List[str], revoker_id: str, reason: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Revoke one or more capabilities from an agent.
@@ -157,7 +155,7 @@ class CapabilityRegistry:
                 "success": False,
                 "revoked": [],
                 "not_found": capabilities,
-                "message": f"Agent '{agent_id}' is not registered"
+                "message": f"Agent '{agent_id}' is not registered",
             }
 
         agent_caps = self._capabilities[agent_id]
@@ -186,26 +184,17 @@ class CapabilityRegistry:
                     "reason": reason or "No reason provided",
                     "remaining_capabilities": sorted(agent_caps),
                     "timestamp": self._get_timestamp(),
-                }
+                },
             )
 
         message = f"Revoked {len(revoked)} capability(ies) from '{agent_id}'"
         if not_found:
             message += f" ({len(not_found)} not found)"
 
-        return {
-            "success": len(revoked) > 0,
-            "revoked": revoked,
-            "not_found": not_found,
-            "message": message
-        }
+        return {"success": len(revoked) > 0, "revoked": revoked, "not_found": not_found, "message": message}
 
     def grant(
-        self,
-        agent_id: str,
-        capabilities: List[str],
-        granter_id: str,
-        reason: Optional[str] = None
+        self, agent_id: str, capabilities: List[str], granter_id: str, reason: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Grant new capabilities to an agent.
@@ -233,7 +222,7 @@ class CapabilityRegistry:
                 "success": False,
                 "granted": [],
                 "already_had": [],
-                "message": f"Agent '{agent_id}' is not registered"
+                "message": f"Agent '{agent_id}' is not registered",
             }
 
         agent_caps = self._capabilities[agent_id]
@@ -262,19 +251,14 @@ class CapabilityRegistry:
                     "reason": reason or "No reason provided",
                     "current_capabilities": sorted(agent_caps),
                     "timestamp": self._get_timestamp(),
-                }
+                },
             )
 
         message = f"Granted {len(granted)} capability(ies) to '{agent_id}'"
         if already_had:
             message += f" ({len(already_had)} already had)"
 
-        return {
-            "success": len(granted) > 0,
-            "granted": granted,
-            "already_had": already_had,
-            "message": message
-        }
+        return {"success": len(granted) > 0, "granted": granted, "already_had": already_had, "message": message}
 
     def get_capabilities(self, agent_id: str) -> FrozenSet[str]:
         """
@@ -338,7 +322,7 @@ class CapabilityRegistry:
                 "revoker_id": revoker_id,
                 "reason": reason or "TOTAL REVOCATION",
                 "timestamp": self._get_timestamp(),
-            }
+            },
         )
 
         logger.critical(f"🔒 ALL CAPABILITIES REVOKED from '{agent_id}' by '{revoker_id}'")
@@ -355,4 +339,5 @@ class CapabilityRegistry:
     def _get_timestamp(self) -> str:
         """Get current timestamp in ISO format."""
         from datetime import datetime
+
         return datetime.utcnow().isoformat()

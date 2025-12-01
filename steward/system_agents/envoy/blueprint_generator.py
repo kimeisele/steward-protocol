@@ -42,10 +42,10 @@ Integration point:
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Import Semantic Syscalls
-from vibe_core.semantic_syscalls import SyscallType, SyscallRequest, SYSCALL_SCHEMAS
+from vibe_core.semantic_syscalls import SyscallRequest, SyscallType
 
 logger = logging.getLogger("BLUEPRINT_GENERATOR")
 
@@ -824,7 +824,7 @@ if __name__ == "__main__":
         )
 
         print("\n=== Test 1: Feature Implementation ===")
-        print(f"Input: 'Implement JWT authentication with RBAC in src/auth/'")
+        print("Input: 'Implement JWT authentication with RBAC in src/auth/'")
         print(f"Result: {result}")
 
         # Test case 2: Governance vote
@@ -841,7 +841,7 @@ if __name__ == "__main__":
         )
 
         print("\n=== Test 2: Governance Vote ===")
-        print(f"Input: 'Vote on proposal #42 for the new treasury allocation'")
+        print("Input: 'Vote on proposal #42 for the new treasury allocation'")
         print(f"Result: {result2}")
 
         # Test case 3: Content generation
@@ -858,7 +858,7 @@ if __name__ == "__main__":
         )
 
         print("\n=== Test 3: Content Generation ===")
-        print(f"Input: 'Create a blog post about AI agent architectures'")
+        print("Input: 'Create a blog post about AI agent architectures'")
         print(f"Result: {result3}")
 
     asyncio.run(test_blueprint())
