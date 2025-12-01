@@ -31,7 +31,7 @@ python boot.py --check
 
 **Version:** 1.0 (Genesis) **Layer:** 0 (The Immutable Foundation)
 
-- **[Governance Gate Code](vibe_core/kernel_impl.py#L1071-L1097)** — The cryptographic oath enforcement
+- **[Governance Gate Code](vibe_core/kernel_impl.py#L1092-L1118)** — The cryptographic oath enforcement
 - **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Full system design
 - **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Why this matters
 
