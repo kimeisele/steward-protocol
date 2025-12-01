@@ -731,11 +731,7 @@ class AgentSystemInterface:
     # EVENT BUS (Phase 2: Reactive Patterns)
     # ============================================================================
 
-    def subscribe_to_events(
-        self,
-        callback: Callable,
-        event_type: Optional[str] = None
-    ) -> str:
+    def subscribe_to_events(self, callback: Callable, event_type: Optional[str] = None) -> str:
         """
         Subscribe to system-wide events.
 
@@ -762,11 +758,7 @@ class AgentSystemInterface:
             subscriber_id=self.agent_id
         )
 
-    def unsubscribe_from_events(
-        self,
-        callback: Callable,
-        event_type: Optional[str] = None
-    ):
+    def unsubscribe_from_events(self, callback: Callable, event_type: Optional[str] = None):
         """
         Unsubscribe from events.
 
@@ -807,11 +799,7 @@ class AgentSystemInterface:
             message=message
         )
 
-    def get_event_history(
-        self,
-        limit: int = 100,
-        event_type: Optional[str] = None
-    ) -> List[Any]:
+    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None) -> List[Any]:
         """
         Get recent event history.
 
