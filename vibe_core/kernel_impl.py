@@ -18,7 +18,7 @@ import logging
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
@@ -47,6 +47,7 @@ from .scheduling import Task
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
+from .event_bus import EventBus, get_event_bus  # Phase 2: Event Bus
 
 # Import Auditor for immune system (optional)
 try:
@@ -278,6 +279,12 @@ class RealVibeKernel(VibeKernel):
         self._narasimha = get_narasimha()
         self._narasimha.register_destruction_handler(self._narasimha_destroy_agent)
         logger.info("⚡ Narasimha Protocol wired (destruction handlers active)")
+
+        # Phase 2: Event Bus (Agent Communication & Reactive Patterns)
+        # Allows agents to subscribe to system-wide events
+        # Supports loose coupling between agents
+        self._event_bus = get_event_bus()
+        logger.info("🎵 Event Bus initialized (pub/sub ready)")
 
     def get_bank(self) -> "CivicBank":
         """
@@ -1236,6 +1243,126 @@ class RealVibeKernel(VibeKernel):
         """
         caps = self._capability_registry.get_capabilities(agent_id)
         return sorted(caps)
+
+    def subscribe_to_events(
+        self,
+        callback: Callable,
+        event_type: Optional[str] = None,
+        subscriber_id: Optional[str] = None
+    ) -> str:
+        """
+        Subscribe to system events via EventBus.
+
+        Args:
+            callback: Function to call on event (async or sync)
+            event_type: Optional filter (None = all events)
+            subscriber_id: Optional ID for logging (usually agent_id)
+
+        Returns:
+            Subscription ID
+
+        Usage:
+            def on_agent_born(event):
+                print(f"New agent: {event.details['agent_id']}")
+
+            kernel.subscribe_to_events(on_agent_born, "agent.born")
+        """
+        sub_id = self._event_bus.subscribe(callback, event_type)
+
+        if subscriber_id:
+            logger.debug(f"📡 Agent '{subscriber_id}' subscribed to events: {event_type or 'ALL'}")
+        else:
+            logger.debug(f"📡 Subscriber registered for events: {event_type or 'ALL'}")
+
+        return sub_id
+
+    def unsubscribe_from_events(
+        self,
+        callback: Callable,
+        event_type: Optional[str] = None
+    ):
+        """
+        Unsubscribe from system events.
+
+        Args:
+            callback: The callback to remove
+            event_type: Optional event type filter
+        """
+        self._event_bus.unsubscribe(callback, event_type)
+
+    async def broadcast_event(
+        self,
+        event_type: str,
+        broadcaster_id: str,
+        data: Optional[Dict[str, Any]] = None,
+        message: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Broadcast an event to all subscribers via EventBus.
+
+        Args:
+            event_type: Type of event (e.g., "agent.born", "transaction.complete")
+            broadcaster_id: ID of agent/system broadcasting
+            data: Optional event data
+            message: Optional human-readable message
+
+        Returns:
+            Dictionary with event_id and subscriber count
+
+        Usage:
+            await kernel.broadcast_event(
+                event_type="agent.born",
+                broadcaster_id="KERNEL",
+                data={"agent_id": "new_agent", "capabilities": ["read", "write"]}
+            )
+        """
+        from .event_bus import Event
+
+        # Create event
+        event = Event(
+            event_type=event_type,
+            agent_id=broadcaster_id,
+            message=message or f"{event_type} from {broadcaster_id}",
+            details=data or {}
+        )
+
+        # Emit via EventBus
+        await self._event_bus.emit(event)
+
+        # Get subscriber count for this event type
+        status = self._event_bus.get_status()
+        subscriber_count = status["subscribers"].get("by_type", {}).get(event_type, 0)
+        subscriber_count += status["subscribers"]["global"]  # Add global subscribers
+
+        logger.info(
+            f"📢 BROADCAST: {event_type} from {broadcaster_id} "
+            f"→ {subscriber_count} subscriber(s)"
+        )
+
+        return {
+            "event_id": event.event_id,
+            "event_type": event_type,
+            "broadcaster": broadcaster_id,
+            "subscribers_notified": subscriber_count,
+            "timestamp": event.timestamp
+        }
+
+    def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
+        """
+        Get recent event history from EventBus.
+
+        Args:
+            limit: Maximum number of events to return
+            event_type: Optional filter by event type
+
+        Returns:
+            List of recent events
+        """
+        return self._event_bus.get_history(limit=limit, event_type=event_type)
+
+    def get_event_bus_status(self) -> Dict[str, Any]:
+        """Get EventBus status (total events, subscribers, etc.)"""
+        return self._event_bus.get_status()
 
     def _can_revoke_capability(self, revoker_id: str, target_id: str) -> bool:
         """
