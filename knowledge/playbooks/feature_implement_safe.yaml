@@ -1,122 +1,189 @@
-# 🛡️ PLAYBOOK: SAFE FEATURE IMPLEMENTATION (GAD-5500)
-# The Sacred Loop: Engineer → Auditor → Chronicle
+# 🛡️ PLAYBOOK: SAFE FEATURE IMPLEMENTATION (GAD-5500 + VEDA-4)
+# The Sacred Loop: SHABDA → ARTHA → PRATYAYA → KARMA
+#
+# VEDA-4 Pattern (Sanskrit roots for AI cognition):
+#   SHABDA (शब्द) - Capture Intent: Clarify what user wants
+#   ARTHA (अर्थ)  - Validate Meaning: Verify the plan makes sense
+#   PRATYAYA (प्रत्यय) - Negotiate Reality: Check conditions before acting
+#   KARMA (कर्म)   - Execute & Verify: Do the work, verify result
 #
 # This playbook implements the "Safe Evolution Loop":
-# 1. ENGINEER writes code (in sandbox)
-# 2. AUDITOR verifies (syntax, linter, tests)
-# 3. CONDITIONAL GATE: If audit FAILS → Loop back to Engineer
-# 4. CHRONICLE commits (only if audit PASSED)
+# 0. SHABDA: Capture and clarify user intent (NEW - VEDA-4)
+# 1. KARMA (Engineer): Write code (in sandbox)
+# 2. ARTHA (Auditor): Verify code quality
+# 3. PRATYAYA (Gate): Check audit result
+# 4. KARMA (Chronicle): Commit (only if audit PASSED)
 #
-# Philosophy: No code is committed without audit approval.
-# The Auditor is the Conscience that guards the Commit Gate.
+# Philosophy: No code is committed without intent clarity AND audit approval.
 
 playbook:
   id: "FEATURE_IMPLEMENT_SAFE_V1"
-  name: "Safe Feature Implementation (Engineer → Audit → Commit)"
+  name: "Safe Feature Implementation (VEDA-4: Intent → Code → Audit → Commit)"
   intent_match:
     primary: "implement_feature"
     secondary: ["add_feature", "write_code_safe", "implement_with_audit"]
 
   description: |
-    Deterministic feature implementation with mandatory code audit before commit.
+    VEDA-4 Feature Implementation with mandatory intent capture and code audit.
 
-    The Sacred Loop (GAD-5500):
-    1. ENGINEER writes code (sandboxed)
-    2. AUDITOR verifies code quality (syntax, linting, tests)
-    3. GATE evaluates audit result
-       - If FAILED: Loop back to Engineer for fixes
+    The VEDA-4 Sacred Loop (GAD-5500):
+    0. SHABDA: Capture user intent, clarify requirements
+    1. KARMA:  ENGINEER writes code (sandboxed)
+    2. ARTHA:  AUDITOR verifies code quality
+    3. PRATYAYA: GATE evaluates audit result
+       - If FAILED: Loop back to KARMA for fixes
        - If PASSED: Continue to commit
-    4. CHRONICLE seals changes with signed commit
+    4. KARMA:  CHRONICLE seals changes with signed commit
 
-    This ensures: NO CODE IS COMMITTED WITHOUT AUDIT APPROVAL
+    This ensures: NO CODE WITHOUT CLEAR INTENT AND AUDIT APPROVAL
 
   phases:
-    # ==================== PHASE 1: ENGINEER WRITES CODE ====================
-    - phase_id: "phase_1_engineer_write"
-      name: "Engineer Writes Code"
-      description: "ENGINEER agent writes code based on feature specification"
+    # ==================== PHASE 0: SHABDA - CAPTURE INTENT ====================
+    - phase_id: "phase_0_shabda_capture_intent"
+      name: "SHABDA: Capture and Clarify Intent"
+      description: |
+        VEDA-4 Phase 1: SHABDA (शब्द - Word/Sound)
+        Before any code is written, we must understand what the user wants.
+        This phase extracts structured requirements from raw input.
+
+      actions:
+        # Validate that we have minimum required information
+        - action_type: "CHECK_STATE"
+          target: "input_validation"
+          params:
+            required_fields: ["feature_description"]
+            constraints:
+              feature_description_min_length: 10
+
+        # Emit intent captured event
+        - action_type: "EMIT_EVENT"
+          target: "intent_captured"
+          params:
+            raw_input: "{{ user_input }}"
+            feature_name: "{{ feature_name }}"
+            feature_description: "{{ feature_description }}"
+            phase: "SHABDA"
+
+      on_success: "phase_1_karma_engineer_write"
+      on_failure: "phase_0b_shabda_clarify"
+      timeout_seconds: 30
+      state_var: "intent_captured"
+
+
+    # ==================== PHASE 0B: SHABDA CLARIFY (ON FAILURE) ====================
+    - phase_id: "phase_0b_shabda_clarify"
+      name: "SHABDA: Request Intent Clarification"
+      description: "User input unclear. Request more information."
+
+      actions:
+        - action_type: "EMIT_EVENT"
+          target: "intent_unclear"
+          params:
+            message: "Intent unclear. Please provide more details about the feature."
+            missing: "feature_description"
+            phase: "SHABDA_CLARIFY"
+
+      on_success: "ABORT"  # Cannot proceed without clear intent
+      on_failure: "ABORT"
+      timeout_seconds: 10
+      state_var: "clarification_requested"
+
+
+    # ==================== PHASE 1: KARMA - ENGINEER WRITES CODE ====================
+    - phase_id: "phase_1_karma_engineer_write"
+      name: "KARMA: Engineer Writes Code"
+      description: |
+        VEDA-4 Phase 4: KARMA (कर्म - Action)
+        ENGINEER agent writes code based on captured intent.
 
       actions:
         - action_type: "CALL_AGENT"
           agent_id: "engineer"
           method: "write_code"
           params:
-            # These are template vars from intent
+            # Intent from SHABDA phase
             prompt: "{{ feature_description }}"
             target_files: "{{ target_files }}"
             context: "{{ project_context }}"
+            # Pass captured intent for traceability
+            intent_ref: "{{ intent_captured }}"
 
-      on_success: "phase_2_audit_verify"
+      on_success: "phase_2_artha_audit_verify"
       on_failure: "phase_final_abort"
-      timeout_seconds: 120  # Engineers need time
+      timeout_seconds: 120
       requires_approval: false
       state_var: "code_written"
 
 
-    # ==================== PHASE 2: AUDITOR VERIFIES ====================
-    - phase_id: "phase_2_audit_verify"
-      name: "Auditor Verifies Code Quality"
-      description: "AUDITOR checks syntax, linting, tests, and compliance (GAD-5500)"
+    # ==================== PHASE 2: ARTHA - AUDITOR VERIFIES ====================
+    - phase_id: "phase_2_artha_audit_verify"
+      name: "ARTHA: Auditor Verifies Code Quality"
+      description: |
+        VEDA-4 Phase 2: ARTHA (अर्थ - Meaning)
+        AUDITOR checks if the code MEANS what it should (syntax, linting, tests, compliance).
 
       actions:
         - action_type: "CALL_AGENT"
           agent_id: "auditor"
           method: "verify_changes"
           params:
-            # Path comes from Engineer's manifest_reality output
             path: "{{ code_written.path }}"
+            # Verify against original intent
+            expected_intent: "{{ feature_description }}"
 
-      on_success: "phase_3_evaluate_audit"
-      on_failure: "phase_3_evaluate_audit"  # Go to eval even on "failure" (we handle it there)
-      timeout_seconds: 60  # Audits can take time
+      on_success: "phase_3_pratyaya_evaluate_gate"
+      on_failure: "phase_3_pratyaya_evaluate_gate"
+      timeout_seconds: 60
       state_var: "audit_result"
 
 
-    # ==================== PHASE 3: EVALUATE AUDIT RESULT ====================
-    - phase_id: "phase_3_evaluate_audit"
-      name: "Evaluate Audit Result"
-      description: "Gate: Check if audit PASSED. If FAILED, loop back to Engineer."
+    # ==================== PHASE 3: PRATYAYA - EVALUATE AUDIT GATE ====================
+    - phase_id: "phase_3_pratyaya_evaluate_gate"
+      name: "PRATYAYA: Evaluate Audit Gate"
+      description: |
+        VEDA-4 Phase 3: PRATYAYA (प्रत्यय - Trust/Belief)
+        Gate: Do we TRUST this code? Check if audit PASSED.
 
       actions:
         - action_type: "CHECK_STATE"
           target: "audit_gate"
           params:
-            check_field: "audit_result.passed"
+            # Result is wrapped: {agent, result: {passed, ...}, params}
+            check_field: "audit_result.result.passed"
             expected_value: true
             on_mismatch: "audit_failed"
 
-      # If audit PASSED, proceed to commit
-      on_success: "phase_4_chronicle_seal"
-      # If audit FAILED, emit event and loop back
-      on_failure: "phase_3b_audit_failed_loop"
+      on_success: "phase_4_karma_chronicle_seal"
+      on_failure: "phase_3b_pratyaya_audit_failed_loop"
       timeout_seconds: 10
       state_var: "audit_validated"
 
 
-    # ==================== PHASE 3B: AUDIT FAILED - LOOP BACK ====================
-    - phase_id: "phase_3b_audit_failed_loop"
-      name: "Audit Failed - Report and Loop Back"
-      description: "Auditor rejected code. Report failures and return to Engineer for fixes."
+    # ==================== PHASE 3B: PRATYAYA FAILED - LOOP BACK ====================
+    - phase_id: "phase_3b_pratyaya_audit_failed_loop"
+      name: "PRATYAYA Failed - Return to KARMA"
+      description: "Auditor rejected code. Trust not established. Loop back."
 
       actions:
-        # Emit failure event (for logging/UI)
         - action_type: "EMIT_EVENT"
-          target: "audit_failed_notification"
+          target: "pratyaya_failed"
           params:
             failures: "{{ audit_result.reason }}"
-            phase: "code_quality_check"
+            phase: "PRATYAYA"
+            action: "returning_to_karma"
 
-      # Loop back to Engineer
-      on_success: "phase_1_engineer_write"
+      on_success: "phase_1_karma_engineer_write"
       on_failure: "phase_final_abort"
       timeout_seconds: 10
       state_var: "audit_failed_reported"
 
 
-    # ==================== PHASE 4: ARCHIVIST SEALS HISTORY ====================
-    - phase_id: "phase_4_chronicle_seal"
-      name: "Archivist Seals History (Create Signed Commit)"
-      description: "ONLY after Audit PASSED: ARCHIVIST creates signed commit (GAD-5500)"
+    # ==================== PHASE 4: KARMA - CHRONICLE SEALS ====================
+    - phase_id: "phase_4_karma_chronicle_seal"
+      name: "KARMA: Chronicle Seals History"
+      description: |
+        VEDA-4 Phase 4: KARMA (कर्म - Action)
+        Final action: CHRONICLE creates signed commit (only after PRATYAYA passed).
 
       actions:
         - action_type: "CALL_AGENT"
@@ -126,27 +193,28 @@ playbook:
             source_path: "{{ code_written.path }}"
             dest_path: "{{ code_written.path }}"
             audit_result: "{{ audit_result }}"
-            message: "{{ feature_name }} (audited and verified)"
+            message: "{{ feature_name }} (VEDA-4: intent verified, audit passed)"
 
       on_success: "phase_5_complete_success"
       on_failure: "phase_final_abort"
       timeout_seconds: 30
-      requires_approval: false  # No manual approval needed (Auditor already approved)
+      requires_approval: false
       state_var: "commit_sealed"
 
 
     # ==================== PHASE 5: SUCCESS ====================
     - phase_id: "phase_5_complete_success"
-      name: "Complete - Feature Implemented"
-      description: "Feature successfully implemented, audited, and committed"
+      name: "VEDA-4 Complete - Feature Implemented"
+      description: "Feature successfully implemented through SHABDA → ARTHA → PRATYAYA → KARMA"
 
       actions:
         - action_type: "EMIT_EVENT"
-          target: "feature_implemented_success"
+          target: "veda4_complete_success"
           params:
             feature_name: "{{ feature_name }}"
             status: "success"
-            message: "✅ Feature implemented, audited, and committed"
+            message: "VEDA-4 Complete: Intent captured, code verified, trust established, action sealed"
+            phases_completed: ["SHABDA", "KARMA", "ARTHA", "PRATYAYA", "KARMA"]
 
       on_success: "COMPLETE"
       on_failure: "ABORT"
@@ -156,12 +224,12 @@ playbook:
 
     # ==================== PHASE FINAL: ABORT ====================
     - phase_id: "phase_final_abort"
-      name: "Abort - Feature Implementation Failed"
-      description: "Something went wrong. Abort workflow and report."
+      name: "Abort - VEDA-4 Loop Failed"
+      description: "Something went wrong in the VEDA-4 loop. Abort workflow."
 
       actions:
         - action_type: "EMIT_EVENT"
-          target: "feature_implementation_failed"
+          target: "veda4_failed"
           params:
             reason: "Unexpected error or user abort"
             last_phase: "{{ current_phase }}"
@@ -180,23 +248,37 @@ playbook:
     project_context: "default"
 
 
-# ==================== EXPLANATION ====================
+# ==================== VEDA-4 EXPLANATION ====================
 #
-# KEY SAFETY MECHANISM: The "Audit Gate" (Phase 4)
+# VEDA-4 Pattern (Sanskrit roots for AI cognition):
 #
-# The gate evaluates: audit_result.passed == true
+# 1. SHABDA (शब्द - Word/Sound)
+#    "What did you say?"
+#    Captures raw input, extracts structured intent.
+#    Without SHABDA, agents act on assumptions.
 #
-# If TRUE:  -> Chronicle seals (commit created)
-# If FALSE: -> Loop back to Engineer (no commit created)
+# 2. ARTHA (अर्थ - Meaning)
+#    "What does this mean?"
+#    Validates that output matches expected semantics.
+#    The Auditor ensures code MEANS what it should.
 #
-# This ensures:
-# ✅ NO CODE IS COMMITTED WITHOUT AUDIT APPROVAL
-# ✅ ENGINEER can fix and re-submit
-# ✅ AUDITOR is the Conscience guarding the Commit Gate
-# ✅ CHRONICLE only commits verified code
+# 3. PRATYAYA (प्रत्यय - Trust/Belief)
+#    "Should we trust this?"
+#    The Gate checks if conditions for proceeding are met.
+#    Trust must be EARNED, not assumed.
 #
-# The difference between Skynet (chaos) and Steward (order):
-# In Skynet: An agent could write code and commit autonomously (dangerous)
-# In Steward: Code must pass the Auditor BEFORE Chronicle commits (safe)
+# 4. KARMA (कर्म - Action)
+#    "Execute the action."
+#    Only after intent is clear and trust is established.
+#    Actions have consequences - we act deliberately.
 #
-# This is GAD-5500: The Safe Evolution Loop.
+# This transforms "dumb LLMs" into structured cognition:
+# - SHABDA ensures we understand before acting
+# - ARTHA ensures our output makes sense
+# - PRATYAYA ensures we verify before committing
+# - KARMA ensures we act with full awareness
+#
+# The difference between chaos and order:
+# Chaos: Input → Action (skip everything)
+# Order: SHABDA → ARTHA → PRATYAYA → KARMA (full cognition)
+#
