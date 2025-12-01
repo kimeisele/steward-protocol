@@ -43,17 +43,30 @@ class IndexRenderer(Tool):
     # SCHEMA: Allowed root .md files (WHITELIST)
     ROOT_ALLOWLIST: Set[str] = {
         # Auto-generated
-        "README.md", "AGENTS.md", "CITYMAP.md", "HELP.md", "INDEX.md", "SETTINGS.md",
+        "README.md",
+        "AGENTS.md",
+        "CITYMAP.md",
+        "HELP.md",
+        "INDEX.md",
+        "SETTINGS.md",
         # Governance
-        "CONSTITUTION.md", "STEWARD.md", "AGI_MANIFESTO.md",
+        "CONSTITUTION.md",
+        "STEWARD.md",
+        "AGI_MANIFESTO.md",
         # Operational
-        "OPERATIONS.md", "PROOF.md",
+        "OPERATIONS.md",
+        "PROOF.md",
     }
 
     # SCHEMA: Allowed docs/ subdirectories (WHITELIST)
     DOCS_ALLOWLIST: Set[str] = {
-        "architecture", "deployment", "governance", "guides",
-        "philosophy", "reports", "security"
+        "architecture",
+        "deployment",
+        "governance",
+        "guides",
+        "philosophy",
+        "reports",
+        "security",
     }
 
     # Category display titles
