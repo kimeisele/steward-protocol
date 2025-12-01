@@ -319,23 +319,48 @@ vibe_core/playbook/workflows/design_login_system.yaml → circuits/system_design
 
 ---
 
-## 10. Next Steps (Honest Assessment)
+## 10. Implementation Status (Updated 2025-12-01)
 
-### Priority 1: Runtime Integration
-The circuits are well-designed but need to actually execute. This requires:
-1. Integrate CognitiveCircuitExecutor into main agent loop
-2. Wire meta-circuits (TASK_LEDGER, ERROR_RECOVERY) as wrappers
-3. Implement invariant checking at runtime
+### ✅ COMPLETED
 
-### Priority 2: Missing Syscall Patterns
-- ALLOCATE_PRANA (resource allocation)
-- TERMINATE_COGNITION (agent cleanup)
-- QUERY_STATE (introspection)
+1. **Runtime Integration**
+   - CognitiveCircuitExecutor integrated into DeterministicExecutor
+   - Syscall intents automatically route to circuit execution
+   - Fallback to traditional playbook if not a syscall
 
-### Priority 3: Testing
-- Unit tests for each circuit
-- Integration tests for BlueprintGenerator → Circuit → Kernel path
-- Chaos testing for ERROR_RECOVERY_V1
+2. **All Syscall Handlers Implemented**
+   - SPAWN_COGNITION ✅
+   - DESTROY_COGNITION ✅ (was missing)
+   - GRANT_MANDATE ✅
+   - REVOKE_MANDATE ✅ (was missing)
+   - ALLOCATE_PRANA ✅
+   - TRANSFER_PRANA ✅ (was missing)
+   - SWEAR_OATH ✅
+   - RECORD_KARMA ✅ (was missing)
+   - DISPATCH_TASK ✅
+   - BROADCAST_EVENT ✅ (was missing)
+
+3. **Meta-Circuit Hooks**
+   - `set_meta_callbacks()` method for TASK_LEDGER/ERROR_RECOVERY integration
+   - Callbacks: on_circuit_start, on_state_transition, on_circuit_end, on_error
+   - Hooks emit events that meta-circuits can observe
+
+### 🟡 PARTIAL / NEEDS WORK
+
+1. **Invariant Checking**
+   - Invariants defined in YAML but not enforced at runtime
+   - Need: Runtime invariant validator
+
+2. **Meta-Circuit Full Integration**
+   - Callbacks wired but TASK_LEDGER/ERROR_RECOVERY not instantiated as active monitors
+   - Need: Meta-circuit manager to create and connect observers
+
+### ❌ NOT IMPLEMENTED
+
+1. **Testing**
+   - Unit tests for each circuit
+   - Integration tests for BlueprintGenerator → Circuit → Kernel path
+   - Chaos testing for ERROR_RECOVERY_V1
 
 ---
 
