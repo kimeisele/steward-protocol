@@ -475,7 +475,7 @@ def quick_boot(ledger_path: Optional[str] = None) -> RealVibeKernel:
     return orchestrator.boot()
 
 
-async def boot_and_run(ledger_path: Optional[str] = None) -> None:
+async def boot_and_run(ledger_path: Optional[str] = None, config: Optional[CityConfig] = None) -> None:
     """
     Boot the system AND start the operator loop.
 
@@ -483,12 +483,25 @@ async def boot_and_run(ledger_path: Optional[str] = None) -> None:
 
     Args:
         ledger_path: Optional custom ledger path
+        config: Optional CityConfig. If not provided, loads from matrix.yaml
 
     Example:
         import asyncio
         asyncio.run(boot_and_run())
     """
-    orchestrator = BootOrchestrator(ledger_path=ledger_path)
+    # Load Phoenix Config if not provided
+    if config is None:
+        try:
+            from vibe_core.config import ConfigLoader
+
+            loader = ConfigLoader()
+            config = loader.load()
+            logger.info(f"📜 Loaded Phoenix Config: {config.city_name}")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to load Phoenix Config: {e} (using defaults)")
+            config = None
+
+    orchestrator = BootOrchestrator(ledger_path=ledger_path, config=config)
     orchestrator.boot()
     await orchestrator.run_with_operator()
 

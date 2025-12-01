@@ -134,14 +134,24 @@ class MockAgent(AgentInterface):
         return all(skill in self.skills for skill in required_skills)
 
     def execute_action(self, action: str, prompt: str, timeout_seconds: int = 300) -> ExecutionResult:
-        """Return mock success (for dry-run)"""
+        """
+        Return mock result (for dry-run/testing).
+
+        WARNING: This is a SIMULATION - no real work is performed.
+        Enable VIBE_LIVE_FIRE=true for real execution.
+        """
         return ExecutionResult(
-            workflow_id="mock",
+            workflow_id="SIMULATION",
             node_id=action,
             status=ExecutionStatus.SUCCESS,
-            output={"message": f"[MOCK] Executed {action}"},
+            output={
+                "warning": "SIMULATION MODE - No real execution performed",
+                "action": action,
+                "real_execution": False,
+                "enable_real": "Set VIBE_LIVE_FIRE=true or config.safety.live_fire_enabled=true",
+            },
             cost_usd=0.0,
-            duration_seconds=0.1,
+            duration_seconds=0.0,
         )
 
 
@@ -540,18 +550,20 @@ class GraphExecutor:
                 )
                 cost_usd = 0.0
         else:
-            # MOCK EXECUTION: Zero cost, safe default
-            logger.debug(f"Mock execution: {node_id} (VIBE_LIVE_FIRE not enabled)")
+            # SIMULATION MODE: No real execution, zero cost
+            logger.warning(f"⚠️  SIMULATION: {node_id} not executed (VIBE_LIVE_FIRE not enabled)")
             result = ExecutionResult(
                 workflow_id=graph.id,
                 node_id=node_id,
                 status=ExecutionStatus.SUCCESS,
                 output={
-                    "message": f"[ROUTED MOCK] {node.action} executed",
-                    "agent": getattr(selected_agent, "name", "unknown"),
-                    "skills_used": node.required_skills,
-                    "mode": "mock",
-                    "context": context,
+                    "warning": "SIMULATION MODE - Action was NOT executed",
+                    "action": node.action,
+                    "would_use_agent": getattr(selected_agent, "name", "unknown"),
+                    "would_use_skills": node.required_skills,
+                    "real_execution": False,
+                    "enable_real": "Set VIBE_LIVE_FIRE=true or config.safety.live_fire_enabled=true",
+                    "context_preview": context[:200] if context else None,
                 },
                 cost_usd=0.0,
                 duration_seconds=0.0,

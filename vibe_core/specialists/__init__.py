@@ -10,37 +10,57 @@ Classes:
   - AgentRegistry: Global registry for specialist instances
   - ExecutionResult: Result of command execution
   - KnowledgeResult: Result of knowledge base queries
+
+STATUS: Phase-specific specialists are NOT IMPLEMENTED.
+The base classes (BaseAgent, BaseSpecialist) work, but the specific
+implementations (Planning, Coding, Testing) are stubs.
 """
 
 from .base_agent import BaseAgent, ExecutionResult, KnowledgeResult
 from .base_specialist import BaseSpecialist, MissionContext, SpecialistResult
 from .registry import AgentRegistry
 
-# Specialist implementations (placeholder classes for Phase 2)
-# TODO: Implement full specialization in v2.0
-# Why: These are placeholder subclasses created during Phase 2 migration
-# to support the HAP (Hierarchical Agent Pattern) framework architecture.
-# Currently they inherit BaseSpecialist without custom logic.
-# Phase 3: These remain as-is (no removal, for backward compatibility)
-# Phase 4: Either implement specialized logic or remove if unused
+# NOTE: These specialists exist for backward compatibility but raise errors if used.
+# When implementing: Remove the NotImplementedError and add real logic.
 
 
 class PlanningSpecialist(BaseSpecialist):
-    """Planning phase specialist agent (Phase 2 placeholder)"""
+    """
+    Planning phase specialist agent.
 
-    pass
+    STATUS: NOT IMPLEMENTED
+    """
+
+    def execute_mission(self, context: MissionContext) -> SpecialistResult:
+        raise NotImplementedError(
+            "PlanningSpecialist is not implemented. Use the playbook system for planning workflows instead."
+        )
 
 
 class CodingSpecialist(BaseSpecialist):
-    """Coding phase specialist agent (Phase 2 placeholder)"""
+    """
+    Coding phase specialist agent.
 
-    pass
+    STATUS: NOT IMPLEMENTED
+    """
+
+    def execute_mission(self, context: MissionContext) -> SpecialistResult:
+        raise NotImplementedError(
+            "CodingSpecialist is not implemented. Use the Engineer agent (engineer.builder tool) for code generation."
+        )
 
 
 class TestingSpecialist(BaseSpecialist):
-    """Testing phase specialist agent (Phase 2 placeholder)"""
+    """
+    Testing phase specialist agent.
 
-    pass
+    STATUS: NOT IMPLEMENTED
+    """
+
+    def execute_mission(self, context: MissionContext) -> SpecialistResult:
+        raise NotImplementedError(
+            "TestingSpecialist is not implemented. Use the Watchman agent for system verification."
+        )
 
 
 __all__ = [

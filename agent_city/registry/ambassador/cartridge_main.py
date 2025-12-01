@@ -65,11 +65,9 @@ class AmbassadorCartridge(VibeAgent):
 
         logger.info("🤝 AMBASSADOR (VibeAgent v1.0) is online - Community Ready")
 
-        # Initialize Constitutional Oath mixin
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ AMBASSADOR has sworn the Constitutional Oath")
+        # NOTE: OathMixin integration removed (was undefined)
+        # TODO: Re-add oath functionality when OathMixin is properly defined
+        self.oath_sworn = False
 
         # State tracking
         self.active_conversations: Dict[str, Dict] = {}
@@ -126,22 +124,22 @@ class AmbassadorCartridge(VibeAgent):
         question = payload.get("question", "")
         user_id = payload.get("user_id", "anonymous")
 
-        # TODO: Implement question answering
-        # - LLM-based response generation
-        # - Knowledge base lookup
-        # - Governance compliance check
-        # - Citation of sources
-
+        # Track the conversation attempt
         self.active_conversations[user_id] = {
             "question": question,
             "timestamp": datetime.utcnow().isoformat(),
-            "status": "answered",
+            "status": "not_implemented",
         }
 
         return {
-            "status": "answered",
+            "status": "not_implemented",
             "user_id": user_id,
-            "answer": "Placeholder response - implement full answer",
+            "question_received": question,
+            "error": (
+                "AMBASSADOR question answering is not implemented. "
+                "This feature requires LLM integration for response generation. "
+                "Use 'steward do \"your question\"' for natural language queries."
+            ),
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -150,20 +148,19 @@ class AmbassadorCartridge(VibeAgent):
         user_id = payload.get("user_id", "")
         user_name = payload.get("user_name", "")
 
-        # TODO: Implement onboarding workflow
-        # - Send welcome message
-        # - Provide starter pack
-        # - Link to documentation
-        # - Schedule intro call
-
+        # Track the onboarding attempt (basic tracking works)
         self.onboarded_users.append(user_id)
 
         return {
-            "status": "onboarding_started",
+            "status": "partial",
             "user_id": user_id,
             "user_name": user_name,
             "total_onboarded": len(self.onboarded_users),
             "timestamp": datetime.utcnow().isoformat(),
+            "note": (
+                "Basic onboarding tracking is working. "
+                "Full workflow (welcome message, starter pack, docs) not implemented."
+            ),
         }
 
     async def _monitor_sentiment(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -171,18 +168,13 @@ class AmbassadorCartridge(VibeAgent):
         channel = payload.get("channel", "general")
         period = payload.get("period", "24h")
 
-        # TODO: Implement sentiment monitoring
-        # - Analyze recent messages
-        # - Compute sentiment score
-        # - Detect concerns or issues
-        # - Alert on negative trends
-
         return {
-            "status": "monitoring",
+            "status": "not_implemented",
             "channel": channel,
             "period": period,
-            "sentiment_score": self.community_sentiment_score,
+            "sentiment_score": None,
             "timestamp": datetime.utcnow().isoformat(),
+            "error": ("Sentiment monitoring is not implemented. Requires integration with message analysis service."),
         }
 
     async def _manage_issues(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -190,18 +182,14 @@ class AmbassadorCartridge(VibeAgent):
         action_type = payload.get("action_type", "list")
         issue_filter = payload.get("filter", "open")
 
-        # TODO: Implement GitHub management
-        # - List issues
-        # - Label and categorize
-        # - Route to appropriate team member
-        # - Provide context and suggestions
-
         return {
-            "status": "managing",
+            "status": "not_implemented",
             "action": action_type,
             "filter": issue_filter,
-            "issues_resolved": self.issues_resolved,
             "timestamp": datetime.utcnow().isoformat(),
+            "error": (
+                "GitHub issue management is not implemented. Requires GitHub API integration (gh CLI or PyGithub)."
+            ),
         }
 
     async def _coordinate_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -210,36 +198,24 @@ class AmbassadorCartridge(VibeAgent):
         event_date = payload.get("event_date", "")
         event_type = payload.get("event_type", "meeting")
 
-        # TODO: Implement event coordination
-        # - Schedule event
-        # - Send invitations
-        # - Prepare agenda
-        # - Manage registrations
-
         return {
-            "status": "coordinating",
+            "status": "not_implemented",
             "event_name": event_name,
             "event_date": event_date,
             "event_type": event_type,
             "timestamp": datetime.utcnow().isoformat(),
+            "error": ("Event coordination is not implemented. Requires calendar/scheduling service integration."),
         }
 
     async def _manage_faq(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Manage FAQ and knowledge base."""
         action = payload.get("action", "list")
-        question = payload.get("question", "")
-        answer = payload.get("answer", "")
-
-        # TODO: Implement FAQ management
-        # - Add/update FAQ entries
-        # - Index for search
-        # - Version control
-        # - Community contribution approval
 
         return {
-            "status": "managing_faq",
+            "status": "not_implemented",
             "action": action,
             "timestamp": datetime.utcnow().isoformat(),
+            "error": ("FAQ management is not implemented. Requires knowledge base integration."),
         }
 
     def _status(self) -> Dict[str, Any]:
