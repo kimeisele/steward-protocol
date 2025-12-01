@@ -75,10 +75,9 @@ class MarketCartridge(VibeAgent):
 
         logger.info("🏪 MARKET (VibeAgent v1.0) is online - Exchange Ready")
 
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ MARKET has sworn the Constitutional Oath")
+        # NOTE: OathMixin integration removed (was undefined)
+        # TODO: Re-add oath functionality when OathMixin is properly defined
+        self.oath_sworn = False
 
         # Economic tracking (via kernel/CIVIC agent)
         self.bank = None
@@ -371,7 +370,8 @@ class MarketCartridge(VibeAgent):
     async def _dispute_resolution(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle disputes (refunds, escalations).
-        TODO: Implement arbitration logic.
+
+        STATUS: Dispute filing works, but arbitration/resolution is NOT implemented.
         """
         order_id = payload.get("order_id", "")
         reason = payload.get("reason", "")
@@ -380,13 +380,18 @@ class MarketCartridge(VibeAgent):
             return {"status": "error", "reason": f"Order {order_id} not found"}
 
         order = self.orders[order_id]
+        order["status"] = "disputed"
+        order["dispute_reason"] = reason
 
         return {
             "status": "dispute_filed",
             "order_id": order_id,
             "reason": reason,
-            "next_step": "arbitration",
             "timestamp": datetime.utcnow().isoformat(),
+            "note": (
+                "Dispute has been filed. Automatic arbitration is NOT implemented. "
+                "Manual review required via Supreme Court agent."
+            ),
         }
 
     def _status(self) -> Dict[str, Any]:
