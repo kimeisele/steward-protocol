@@ -1,0 +1,249 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: DEBUG_FIX_V2
+# ============================================================================
+# Neuro-Symbolic Debugging & Fix Circuit
+#
+# Syscall: DISPATCH_TASK (to engineer agent for bug fixing)
+# Pattern: "Fix this bug", "Debug the error", "Investigate failure"
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture error report / bug description
+#   ARTHA    → Analyze logs, understand error semantics
+#   PRATYAYA → Identify root cause, form hypothesis
+#   KARMA    → Generate and apply fix
+#   VERIFY   → Run tests, confirm fix works
+#   SUCCESS  → Bug fixed
+#
+# ============================================================================
+
+circuit:
+  id: "DEBUG_FIX_V2"
+  type: "cognitive_circuit"
+  version: "2.0"
+  domain: "development"
+  security_level: "standard"
+
+  description: |
+    Autonomous debugging workflow using VEDA-4 pattern.
+    Analyzes errors, identifies root cause, generates fix, verifies solution.
+
+    Replaces legacy: vibe_core/playbook/workflows/auto_debug.yaml
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture error/bug report"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["error_description"]
+            optional: ["error_logs", "stack_trace", "failing_tests", "reproduction_steps"]
+        - action: "parse_error_context"
+          params:
+            extract_file_refs: true
+            extract_line_numbers: true
+            extract_error_type: true
+      invariants:
+        - "error_description must be provided"
+        - "some error context must be available"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Analyze error semantics"
+      entry_actions:
+        - action: "analyze_logs"
+          params:
+            logs: "{{ error_logs }}"
+            stack_trace: "{{ stack_trace }}"
+            parse_patterns: true
+        - action: "identify_symptoms"
+          params:
+            error_type: "{{ error_type }}"
+            categorize: true
+        - action: "locate_error_source"
+          params:
+            file_refs: "{{ file_refs }}"
+            line_numbers: "{{ line_numbers }}"
+      invariants:
+        - "symptoms must be identified"
+        - "error source must be located"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+      state_var: "analysis_result"
+
+    PRATYAYA:
+      description: "Identify root cause and form hypothesis"
+      entry_actions:
+        - action: "trace_root_cause"
+          params:
+            symptoms: "{{ analysis_result.symptoms }}"
+            source_files: "{{ analysis_result.source_files }}"
+            depth: 3  # How deep to trace
+        - action: "form_hypothesis"
+          params:
+            symptoms: "{{ analysis_result.symptoms }}"
+            context: "{{ code_context }}"
+            generate_multiple: true
+        - action: "rank_hypotheses"
+          params:
+            hypotheses: "{{ hypotheses }}"
+            criteria: ["likelihood", "testability", "fix_complexity"]
+      invariants:
+        - "at least one hypothesis must be formed"
+        - "root cause must be identified with confidence > 0.5"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+      state_var: "root_cause"
+
+    KARMA:
+      description: "Generate and apply fix"
+      entry_actions:
+        - action: "generate_fix"
+          params:
+            root_cause: "{{ root_cause }}"
+            target_files: "{{ analysis_result.source_files }}"
+            constraints:
+              - "minimal_change"
+              - "preserve_behavior"
+              - "no_side_effects"
+        - action: "apply_fix"
+          params:
+            fix: "{{ generated_fix }}"
+            sandbox: true
+            backup: true
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "engineer"
+        task_type: "fix_bug"
+      on_success: "VERIFY"
+      on_failure: "FAILURE"
+      state_var: "fix_applied"
+
+    VERIFY:
+      description: "Verify fix resolves the issue"
+      entry_actions:
+        - action: "run_failing_tests"
+          params:
+            tests: "{{ failing_tests }}"
+            expect_pass: true
+        - action: "run_regression_tests"
+          params:
+            scope: "affected_modules"
+            expect_pass: true
+        - action: "verify_no_new_errors"
+          params:
+            compare_to: "{{ original_error }}"
+      invariants:
+        - "originally failing tests must now pass"
+        - "no new test failures introduced"
+        - "original error must not recur"
+      on_success: "SUCCESS"
+      on_failure: "KARMA"  # Try different fix
+      max_loops: 3
+      state_var: "verification_result"
+
+    SUCCESS:
+      description: "Bug fix complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "bug_fixed"
+            data:
+              error: "{{ error_description }}"
+              root_cause: "{{ root_cause.description }}"
+              fix: "{{ fix_applied.summary }}"
+              tests_passed: true
+        - action: "record_parampara"
+          params:
+            action: "DEBUG_FIX"
+            result: "SUCCESS"
+            artifacts:
+              - "{{ fix_applied.diff }}"
+              - "{{ verification_result }}"
+
+    FAILURE:
+      description: "Debug/fix failed"
+      terminal: true
+      entry_actions:
+        - action: "rollback"
+          params:
+            restore_backup: true
+        - action: "emit_event"
+          params:
+            event: "debug_failed"
+            data:
+              reason: "{{ failure_reason }}"
+              state: "{{ failed_state }}"
+              hypotheses_tried: "{{ hypotheses_tried }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "error_captured"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "analysis_complete"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "root_cause_identified"
+    - from: "KARMA"
+      to: "VERIFY"
+      condition: "fix_applied"
+    - from: "VERIFY"
+      to: "SUCCESS"
+      condition: "tests_pass"
+    - from: "VERIFY"
+      to: "KARMA"
+      condition: "tests_fail AND loops < max_loops"
+    - from: "VERIFY"
+      to: "FAILURE"
+      condition: "tests_fail AND loops >= max_loops"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "analyze_before_fix"
+      check: "KARMA cannot execute without PRATYAYA completion"
+    - name: "verify_before_commit"
+      check: "fix must be verified before considered complete"
+    - name: "rollback_on_failure"
+      check: "all changes rolled back on FAILURE"
+    - name: "max_fix_attempts"
+      check: "fix loop cannot exceed 3 iterations"
+
+  # ===========================================================================
+  # SEMANTIC GROUNDING (Maps to Kernel Syscalls)
+  # ===========================================================================
+  semantic_grounding:
+    syscall_type: "DISPATCH_TASK"
+    target_agent: "engineer"
+    intent_patterns:
+      - 'fix\s+(?:this\s+)?(?:bug|error|issue)'
+      - 'debug\s+(?:the\s+)?(?:error|failure|crash)'
+      - 'investigate\s+(?:the\s+)?(?:bug|error|failure)'
+      - 'resolve\s+(?:the\s+)?(?:bug|error|issue)'
+      - 'troubleshoot\s+'
+      - 'why\s+is\s+(?:this|it)\s+(?:failing|broken|crashing)'
+    param_extraction:
+      error_description:
+        patterns:
+          - 'fix\s+(?:the\s+)?(?:bug\s+)?(?:where\s+)?(.+)'
+          - 'debug\s+(.+)'
+          - 'error[:\s]+(.+)'
+        required: true
+      stack_trace:
+        patterns:
+          - 'stack\s*trace[:\s]+(.+)'
+          - 'traceback[:\s]+(.+)'
+        required: false
