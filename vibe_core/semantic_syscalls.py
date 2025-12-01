@@ -740,30 +740,16 @@ class SemanticSyscallExecutor:
         try:
             import asyncio
 
-            # Run async broadcast in event loop
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Schedule coroutine in running loop
-                future = asyncio.ensure_future(
-                    self.kernel.broadcast_event(
-                        event_type=event_type,
-                        broadcaster_id=request.requester_id,
-                        data=event_data,
-                        message=message
-                    )
+            # Run async broadcast
+            # For syscalls, we need to run the coroutine synchronously
+            result = asyncio.run(
+                self.kernel.broadcast_event(
+                    event_type=event_type,
+                    broadcaster_id=request.requester_id,
+                    data=event_data,
+                    message=message
                 )
-                # Wait for result (blocking syscall)
-                result = loop.run_until_complete(asyncio.wait_for(future, timeout=5.0))
-            else:
-                # Create new loop
-                result = asyncio.run(
-                    self.kernel.broadcast_event(
-                        event_type=event_type,
-                        broadcaster_id=request.requester_id,
-                        data=event_data,
-                        message=message
-                    )
-                )
+            )
 
             logger.info(
                 f"✅ BROADCAST_EVENT: '{event_type}' from '{request.requester_id}' "
