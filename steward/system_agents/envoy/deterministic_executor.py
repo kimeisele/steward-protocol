@@ -60,6 +60,14 @@ try:
 except ImportError:
     BLUEPRINT_GENERATOR_AVAILABLE = False
 
+# Cognitive Circuit Executor (GAD-5500 VEDA-4 Integration)
+try:
+    from vibe_core.circuit_executor import CognitiveCircuitExecutor, CircuitExecutionResult
+
+    CIRCUIT_EXECUTOR_AVAILABLE = True
+except ImportError:
+    CIRCUIT_EXECUTOR_AVAILABLE = False
+
 logger = logging.getLogger("DETERMINISTIC_EXECUTOR")
 
 
@@ -171,9 +179,40 @@ class DeterministicExecutor:
         else:
             logger.warning("⚠️  Blueprint Generator not available (using defaults)")
 
+        # Circuit Executor (GAD-5500 VEDA-4) - lazy initialized when kernel available
+        self.circuit_executor = None
+        self._circuit_executor_available = CIRCUIT_EXECUTOR_AVAILABLE
+        if CIRCUIT_EXECUTOR_AVAILABLE:
+            logger.info("✅ Circuit Executor available (will init with kernel)")
+        else:
+            logger.warning("⚠️  Circuit Executor not available")
+
         self._load_playbooks()
         self._load_persisted_executions()
         logger.info(f"🎯 Playbook Engine initialized with {len(self.playbooks)} playbooks")
+
+    def _ensure_circuit_executor(self, kernel) -> bool:
+        """
+        Lazy-initialize the circuit executor when kernel becomes available.
+        Returns True if circuit executor is ready to use.
+        """
+        if self.circuit_executor is not None:
+            return True
+
+        if not self._circuit_executor_available:
+            return False
+
+        if kernel is None:
+            return False
+
+        try:
+            self.circuit_executor = CognitiveCircuitExecutor(kernel)
+            logger.info("🔌 Circuit Executor initialized with kernel")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Circuit Executor: {e}")
+            self._circuit_executor_available = False
+            return False
 
     def _load_playbooks(self):
         """Load all playbooks from knowledge/playbooks/"""
@@ -416,6 +455,8 @@ class DeterministicExecutor:
         """
         Execute a playbook step-by-step.
 
+        GAD-5500: Now routes to VEDA-4 Circuit Executor for syscall intents.
+
         Args:
             playbook_id: ID of the playbook to execute
             user_input: The original user input
@@ -426,6 +467,50 @@ class DeterministicExecutor:
         Returns:
             Execution result with status and phase results
         """
+        # =====================================================================
+        # GAD-5500: VEDA-4 CIRCUIT ROUTING
+        # Try circuit execution first for syscall intents
+        # =====================================================================
+        if kernel and self._ensure_circuit_executor(kernel):
+            try:
+                # Check if input compiles to a syscall
+                compilation = self.circuit_executor.compiler.compile(user_input, "user")
+
+                if compilation.is_syscall:
+                    logger.info(f"🔌 CIRCUIT ROUTE: {compilation.syscall_request.syscall_type.value}")
+
+                    if emit_event:
+                        try:
+                            await emit_event(
+                                "ACTION",
+                                f"Routing to Circuit Executor: {compilation.syscall_request.syscall_type.value}",
+                                "circuit_executor",
+                                {"syscall_type": compilation.syscall_request.syscall_type.value},
+                            )
+                        except Exception:
+                            pass
+
+                    # Execute via circuit
+                    circuit_result = self.circuit_executor.execute(user_input, "user")
+
+                    # Convert CircuitExecutionResult to dict
+                    return {
+                        "status": "COMPLETED" if circuit_result.success else "FAILED",
+                        "execution_mode": "circuit",
+                        "circuit_id": circuit_result.final_state,
+                        "output": circuit_result.output,
+                        "state_history": circuit_result.state_history,
+                        "syscall_count": circuit_result.syscall_count,
+                        "error": circuit_result.error,
+                    }
+
+            except Exception as e:
+                logger.warning(f"⚠️  Circuit execution failed, falling back to playbook: {e}")
+                # Fall through to traditional playbook execution
+
+        # =====================================================================
+        # TRADITIONAL PLAYBOOK EXECUTION (fallback)
+        # =====================================================================
         if playbook_id not in self.playbooks:
             logger.error(f"❌ Playbook not found: {playbook_id}")
             return {"status": "FAILED", "error": f"Playbook not found: {playbook_id}"}

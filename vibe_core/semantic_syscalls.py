@@ -158,10 +158,15 @@ class SemanticSyscallExecutor:
 
         handlers = {
             SyscallType.SPAWN_COGNITION: self._handle_spawn_cognition,
+            SyscallType.DESTROY_COGNITION: self._handle_destroy_cognition,
             SyscallType.GRANT_MANDATE: self._handle_grant_mandate,
+            SyscallType.REVOKE_MANDATE: self._handle_revoke_mandate,
             SyscallType.ALLOCATE_PRANA: self._handle_allocate_prana,
+            SyscallType.TRANSFER_PRANA: self._handle_transfer_prana,
             SyscallType.SWEAR_OATH: self._handle_swear_oath,
+            SyscallType.RECORD_KARMA: self._handle_record_karma_syscall,
             SyscallType.DISPATCH_TASK: self._handle_dispatch_task,
+            SyscallType.BROADCAST_EVENT: self._handle_broadcast_event,
         }
 
         handler = handlers.get(request.syscall_type)
@@ -468,6 +473,157 @@ class SemanticSyscallExecutor:
                 "agent_id": agent_id,
                 "priority": priority,
             },
+        )
+
+    def _handle_destroy_cognition(self, request: SyscallRequest) -> SyscallResult:
+        """
+        DESTROY_COGNITION: Terminate an agent.
+
+        This is the Agent OS equivalent of kill().
+        Only authorized entities can destroy agents.
+        """
+        agent_id = request.params.get("agent_id")
+        reason = request.params.get("reason", "No reason provided")
+
+        if not agent_id:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: agent_id",
+            )
+
+        # Check if agent exists
+        if agent_id not in self.kernel._agent_registry:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Agent not found: {agent_id}",
+            )
+
+        # Check authorization (only system agents can destroy)
+        if request.requester_id not in RESERVED_AGENT_IDS:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Unauthorized: {request.requester_id} cannot destroy agents",
+            )
+
+        # Remove from registry
+        try:
+            del self.kernel._agent_registry[agent_id]
+            logger.info(f"💀 DESTROY_COGNITION: Agent {agent_id} terminated by {request.requester_id}")
+
+            return SyscallResult(
+                success=True,
+                syscall_type=request.syscall_type,
+                output={"agent_id": agent_id, "reason": reason, "status": "terminated"},
+            )
+        except Exception as e:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Failed to destroy agent: {e}",
+            )
+
+    def _handle_revoke_mandate(self, request: SyscallRequest) -> SyscallResult:
+        """
+        REVOKE_MANDATE: Remove capabilities from an agent.
+        """
+        agent_id = request.params.get("agent_id")
+        capabilities = request.params.get("capabilities", [])
+
+        if not agent_id:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: agent_id",
+            )
+
+        # In production, would update capability registry
+        logger.info(f"🚫 REVOKE_MANDATE: Revoking {capabilities} from {agent_id}")
+
+        return SyscallResult(
+            success=True,
+            syscall_type=request.syscall_type,
+            output={"agent_id": agent_id, "revoked": capabilities},
+        )
+
+    def _handle_transfer_prana(self, request: SyscallRequest) -> SyscallResult:
+        """
+        TRANSFER_PRANA: Move credits between agents.
+        """
+        from_agent = request.params.get("from_agent", request.requester_id)
+        to_agent = request.params.get("to_agent")
+        amount = request.params.get("amount", 0)
+
+        if not to_agent:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: to_agent",
+            )
+
+        # In production, would update credit balances
+        logger.info(f"💸 TRANSFER_PRANA: {amount} from {from_agent} to {to_agent}")
+
+        return SyscallResult(
+            success=True,
+            syscall_type=request.syscall_type,
+            output={"from": from_agent, "to": to_agent, "amount": amount},
+        )
+
+    def _handle_record_karma_syscall(self, request: SyscallRequest) -> SyscallResult:
+        """
+        RECORD_KARMA: Write to immutable ledger.
+
+        This is for explicit karma recording (vs automatic recording in _record_karma).
+        """
+        data = request.params.get("data", {})
+        category = request.params.get("category", "general")
+
+        try:
+            from vibe_core.lineage import LineageEventType
+
+            block = self.kernel.lineage.add_block(
+                event_type=LineageEventType.TASK_COMPLETED,
+                agent_id=request.requester_id,
+                data={"category": category, "payload": data},
+            )
+
+            return SyscallResult(
+                success=True,
+                syscall_type=request.syscall_type,
+                output={"block_id": block.block_id if block else None, "category": category},
+                karma_block_id=block.block_id if block else None,
+            )
+        except Exception as e:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Failed to record karma: {e}",
+            )
+
+    def _handle_broadcast_event(self, request: SyscallRequest) -> SyscallResult:
+        """
+        BROADCAST_EVENT: Emit system-wide event.
+        """
+        event_type = request.params.get("event_type")
+        event_data = request.params.get("data", {})
+
+        if not event_type:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: event_type",
+            )
+
+        # In production, would emit to event bus
+        logger.info(f"📢 BROADCAST_EVENT: {event_type} from {request.requester_id}")
+
+        return SyscallResult(
+            success=True,
+            syscall_type=request.syscall_type,
+            output={"event_type": event_type, "data": event_data, "broadcaster": request.requester_id},
         )
 
     def _record_karma(self, request: SyscallRequest, result: SyscallResult) -> None:

@@ -75,6 +75,7 @@ class CognitiveCircuitExecutor:
     2. Manages state transitions based on invariants
     3. Orchestrates syscall execution via SemanticSyscallExecutor
     4. Tracks execution history for audit trail
+    5. Emits events for meta-circuit integration (TASK_LEDGER, ERROR_RECOVERY)
     """
 
     def __init__(self, kernel: "RealVibeKernel"):
@@ -83,10 +84,45 @@ class CognitiveCircuitExecutor:
         self.compiler = BlueprintGenerator(kernel)
         self.circuits: Dict[str, Dict] = {}
 
+        # Meta-circuit callbacks for TASK_LEDGER and ERROR_RECOVERY integration
+        self._on_circuit_start: Optional[callable] = None
+        self._on_state_transition: Optional[callable] = None
+        self._on_circuit_end: Optional[callable] = None
+        self._on_error: Optional[callable] = None
+
         # Load available circuits
         self._load_circuits()
 
         logger.info("🔌 Cognitive Circuit Executor initialized")
+
+    def set_meta_callbacks(
+        self,
+        on_start: Optional[callable] = None,
+        on_transition: Optional[callable] = None,
+        on_end: Optional[callable] = None,
+        on_error: Optional[callable] = None,
+    ) -> None:
+        """
+        Set callbacks for meta-circuit integration.
+
+        These callbacks enable TASK_LEDGER and ERROR_RECOVERY to observe
+        circuit execution.
+
+        Args:
+            on_start: Called when circuit execution begins
+                      Signature: (circuit_id, raw_input, requester_id) -> None
+            on_transition: Called on each state transition
+                          Signature: (circuit_id, from_state, to_state, variables) -> None
+            on_end: Called when circuit execution ends
+                   Signature: (circuit_id, success, final_state, output) -> None
+            on_error: Called when an error occurs
+                     Signature: (circuit_id, state, error) -> Optional[recovery_action]
+        """
+        self._on_circuit_start = on_start
+        self._on_state_transition = on_transition
+        self._on_circuit_end = on_end
+        self._on_error = on_error
+        logger.info("🔗 Meta-circuit callbacks registered")
 
     def _load_circuits(self) -> None:
         """Load all circuit definitions from YAML files."""
@@ -150,11 +186,14 @@ class CognitiveCircuitExecutor:
         # Step 2: Determine which circuit to execute based on syscall type
         syscall_type = compilation.syscall_request.syscall_type
 
+        # Map syscall types to circuits
+        # Note: DISPATCH_TASK uses direct execution (routes to target agent)
+        # Specialized circuits (content, governance, etc.) are for explicit workflows
         circuit_map = {
             SyscallType.SPAWN_COGNITION: "AGENT_BIRTH_V1",
-            # Future circuits:
-            # SyscallType.DISPATCH_TASK: "TASK_DISPATCH_V1",
-            # SyscallType.ALLOCATE_PRANA: "RESOURCE_ALLOCATION_V1",
+            # DISPATCH_TASK: direct execution - routes to agent
+            # ALLOCATE_PRANA: direct execution - kernel handles
+            # DESTROY_COGNITION: direct execution - kernel handles
         }
 
         circuit_id = circuit_map.get(syscall_type)
@@ -200,6 +239,13 @@ class CognitiveCircuitExecutor:
         """
         circuit_id = circuit_def["id"]
         logger.info(f"🔄 Executing circuit: {circuit_id}")
+
+        # META-CIRCUIT: Notify start
+        if self._on_circuit_start:
+            try:
+                self._on_circuit_start(circuit_id, raw_input, requester_id)
+            except Exception as e:
+                logger.warning(f"Meta-callback on_start failed: {e}")
 
         # Initialize state
         # IMPORTANT: Store both the full compilation result AND the syscall request
@@ -330,30 +376,67 @@ class CognitiveCircuitExecutor:
             )
 
             if next_state:
+                # META-CIRCUIT: Notify state transition
+                if self._on_state_transition:
+                    try:
+                        self._on_state_transition(circuit_id, current_state_name, next_state, state.variables)
+                    except Exception as e:
+                        logger.warning(f"Meta-callback on_transition failed: {e}")
+
                 state.current_state = next_state
             else:
                 # No valid transition - stuck
-                return CircuitExecutionResult(
+                error_msg = f"Circuit stuck at state: {current_state_name}"
+
+                # META-CIRCUIT: Notify error (may attempt recovery)
+                if self._on_error:
+                    try:
+                        recovery = self._on_error(circuit_id, current_state_name, error_msg)
+                        if recovery:
+                            logger.info(f"🔧 Recovery action suggested: {recovery}")
+                            # Could implement recovery logic here
+                    except Exception as e:
+                        logger.warning(f"Meta-callback on_error failed: {e}")
+
+                result = CircuitExecutionResult(
                     success=False,
                     final_state=current_state_name,
                     output={"error": "No valid transition from current state"},
                     state_history=state.history,
                     syscall_count=syscall_count,
-                    error=f"Circuit stuck at state: {current_state_name}",
+                    error=error_msg,
                 )
+
+                # META-CIRCUIT: Notify end (failure)
+                if self._on_circuit_end:
+                    try:
+                        self._on_circuit_end(circuit_id, False, current_state_name, result.output)
+                    except Exception as e:
+                        logger.warning(f"Meta-callback on_end failed: {e}")
+
+                return result
 
         # Build final result
         final_state = state.current_state
         success = final_state == "SUCCESS"
 
-        return CircuitExecutionResult(
+        result = CircuitExecutionResult(
             success=success,
             final_state=final_state,
             output=state.output or {},
             state_history=state.history,
             syscall_count=syscall_count,
-            error=None if success else state.output.get("reason"),
+            error=None if success else state.output.get("reason") if state.output else None,
         )
+
+        # META-CIRCUIT: Notify end
+        if self._on_circuit_end:
+            try:
+                self._on_circuit_end(circuit_id, success, final_state, result.output)
+            except Exception as e:
+                logger.warning(f"Meta-callback on_end failed: {e}")
+
+        return result
 
     def _evaluate_transitions(
         self,
