@@ -191,6 +191,11 @@ class SemanticSyscallExecutor:
 
         This is the Agent OS equivalent of fork().
 
+        SECURITY:
+        - Checks if agent_id already exists (prevents overwriting)
+        - Reserved names are protected (system agents)
+        - Generates unique ID with timestamp suffix for dynamic agents
+
         Params:
             role: Agent role identifier (e.g., "watchman", "herald")
             mission: What this agent does
@@ -198,13 +203,46 @@ class SemanticSyscallExecutor:
             capabilities: List of capabilities to grant
             parent_id: ID of spawning agent (for lineage)
         """
+        import uuid
+        from datetime import datetime
+
         role = request.params["role"]
         mission = request.params["mission"]
         initial_credits = request.params.get("initial_credits", 100)
         capabilities = request.params.get("capabilities", ["execute"])
         parent_id = request.params.get("parent_id", request.requester_id)
 
-        logger.info(f"🌱 SPAWN_COGNITION: role={role}, mission={mission}")
+        # SECURITY FIX: Reserved agent names (system agents)
+        RESERVED_AGENT_IDS = {
+            "watchman", "herald", "scribe", "auditor", "artisan", "oracle",
+            "engineer", "civic", "envoy", "steward", "archivist", "chronicle",
+            "kernel", "narasimha", "root", "admin", "system",
+        }
+
+        # Generate base agent_id from role
+        base_id = role.lower().replace(" ", "_")
+
+        # SECURITY FIX: If base_id is reserved OR already exists, generate unique ID
+        if base_id in RESERVED_AGENT_IDS or base_id in self.kernel._agent_registry:
+            # Generate unique suffix (short UUID)
+            unique_suffix = datetime.utcnow().strftime("%H%M%S") + "_" + uuid.uuid4().hex[:4]
+            agent_id = f"{base_id}_{unique_suffix}"
+            logger.warning(
+                f"⚠️ Agent ID '{base_id}' is reserved/exists. "
+                f"Generated unique ID: {agent_id}"
+            )
+        else:
+            agent_id = base_id
+
+        # Double-check: Agent must NOT exist
+        if agent_id in self.kernel._agent_registry:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Agent '{agent_id}' already exists in registry. Cannot overwrite."
+            )
+
+        logger.info(f"🌱 SPAWN_COGNITION: agent_id={agent_id}, role={role}, mission={mission}")
 
         try:
             # Step 1: Generate agent code using Engineer
@@ -221,8 +259,7 @@ class SemanticSyscallExecutor:
                 )
 
             # Step 2: Create agent class dynamically
-            # For now, use the fallback template approach
-            agent_id = role.lower().replace(" ", "_")
+            # agent_id is already generated above (with collision protection)
             class_name = f"{role.replace(' ', '').title()}Cartridge"
 
             # Step 3: Create a minimal agent that can be registered
