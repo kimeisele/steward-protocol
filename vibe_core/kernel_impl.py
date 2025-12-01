@@ -1145,7 +1145,7 @@ class RealVibeKernel(VibeKernel):
         capabilities: List[str],
         revoker_id: str,
         reason: Optional[str] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Revoke capabilities from an agent (REVOKE_MANDATE syscall).
 
@@ -1188,7 +1188,7 @@ class RealVibeKernel(VibeKernel):
         capabilities: List[str],
         granter_id: str,
         reason: Optional[str] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Grant capabilities to an agent.
 

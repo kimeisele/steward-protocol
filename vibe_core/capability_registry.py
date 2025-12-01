@@ -18,7 +18,7 @@ GAD-XXXX: REVOKE_MANDATE Implementation (Phase 2)
 """
 
 import logging
-from typing import Dict, FrozenSet, List, Optional, Set
+from typing import Any, Dict, FrozenSet, List, Optional, Set
 
 from .kernel import VibeLedger
 
@@ -130,7 +130,7 @@ class CapabilityRegistry:
         capabilities: List[str],
         revoker_id: str,
         reason: Optional[str] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Revoke one or more capabilities from an agent.
 
@@ -206,7 +206,7 @@ class CapabilityRegistry:
         capabilities: List[str],
         granter_id: str,
         reason: Optional[str] = None
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Grant new capabilities to an agent.
 
