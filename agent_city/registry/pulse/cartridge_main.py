@@ -19,6 +19,11 @@ from typing import Any, Dict
 from vibe_core import Task, VibeAgent
 
 # Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("PULSE_MAIN")
@@ -64,11 +69,8 @@ class PulseCartridge(VibeAgent):
 
         logger.info("📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready")
 
-        # Initialize Constitutional Oath mixin
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ PULSE has sworn the Constitutional Oath")
+        # Oath status - OathMixin integration deferred until class inheritance added
+        self.oath_sworn = False
 
         # State tracking
         self.tweets_posted = 0
@@ -212,13 +214,3 @@ class PulseCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = PulseCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
-
-    def report_status(self):
-        """Report agent status for kernel health monitoring."""
-        return {
-            "agent_id": "pulse",
-            "name": "PULSE",
-            "status": "healthy",
-            "domain": "MONITORING",
-            "capabilities": ["health_monitoring", "metrics"],
-        }
