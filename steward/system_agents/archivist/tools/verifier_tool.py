@@ -24,6 +24,7 @@ logger = logging.getLogger("ARCHIVIST_VERIFIER")
 try:
     from steward.crypto import verify_signature as crypto_verify_signature
     from steward.crypto import get_public_key_string
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     logger.error("❌ steward.crypto not available - verification will fail")
