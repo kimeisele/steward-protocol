@@ -534,13 +534,29 @@ class SemanticSyscallExecutor:
         """
         REVOKE_MANDATE: Remove capabilities from an agent.
 
-        NOTE: Capability revocation is not yet implemented.
-        Capabilities are currently immutable after agent registration.
-        This syscall will fail until capability registry supports revocation.
+        Allows governance to restrict agent permissions based on behavior.
+        Example: Revoke transfer_prana after suspicious activity.
+
+        Permission Model:
+            - KERNEL can revoke from anyone
+            - CIVIC can revoke from anyone (governance)
+            - Agents can revoke from themselves (voluntary)
+
+        Args (in request.params):
+            - agent_id: The agent to revoke from (required)
+            - capabilities: List of capabilities to revoke (required)
+            - reason: Optional reason for revocation (for audit trail)
+
+        Returns:
+            SyscallResult with:
+                - success: True if any capabilities were revoked
+                - output: Dict with revoked/not_found lists and message
         """
         agent_id = request.params.get("agent_id")
         capabilities = request.params.get("capabilities", [])
+        reason = request.params.get("reason")
 
+        # Validation
         if not agent_id:
             return SyscallResult(
                 success=False,
@@ -548,15 +564,54 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: agent_id",
             )
 
-        # NOT IMPLEMENTED - capabilities are immutable in current design
-        logger.warning(f"⚠️  REVOKE_MANDATE: Not implemented (capabilities immutable)")
+        if not capabilities:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Missing required parameter: capabilities (must be non-empty list)",
+            )
 
-        return SyscallResult(
-            success=False,
-            syscall_type=request.syscall_type,
-            error="REVOKE_MANDATE not implemented: capabilities are immutable after registration",
-            output={"agent_id": agent_id, "requested_revocations": capabilities},
-        )
+        if not isinstance(capabilities, list):
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Parameter 'capabilities' must be a list",
+            )
+
+        # Delegate to kernel (handles permission check + audit trail)
+        try:
+            result = self.kernel.revoke_capability(
+                agent_id=agent_id,
+                capabilities=capabilities,
+                revoker_id=request.requester_id,
+                reason=reason
+            )
+
+            # Log the action
+            if result["success"]:
+                logger.info(
+                    f"✅ REVOKE_MANDATE: '{request.requester_id}' revoked {len(result['revoked'])} "
+                    f"capability(ies) from '{agent_id}': {result['revoked']}"
+                )
+            else:
+                logger.warning(
+                    f"⛔ REVOKE_MANDATE FAILED: {result['message']}"
+                )
+
+            return SyscallResult(
+                success=result["success"],
+                syscall_type=request.syscall_type,
+                output=result,
+                error=None if result["success"] else result["message"]
+            )
+
+        except Exception as e:
+            logger.error(f"❌ REVOKE_MANDATE ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Internal error during revocation: {str(e)}",
+            )
 
     def _handle_transfer_prana(self, request: SyscallRequest) -> SyscallResult:
         """
