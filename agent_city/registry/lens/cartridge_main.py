@@ -19,6 +19,11 @@ from typing import Any, Dict, List
 from vibe_core import Task, VibeAgent
 
 # Constitutional Oath
+try:
+    from steward.oath_mixin import OathMixin
+except ImportError:
+    OathMixin = None
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("LENS_MAIN")
@@ -65,11 +70,8 @@ class LensCartridge(VibeAgent):
 
         logger.info("📊 LENS (VibeAgent v1.0) is online - Analytics Ready")
 
-        # Initialize Constitutional Oath mixin
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ LENS has sworn the Constitutional Oath")
+        # Oath status - OathMixin integration deferred until class inheritance added
+        self.oath_sworn = False
 
         # State tracking
         self.kpis: Dict[str, float] = {}
@@ -246,13 +248,3 @@ class LensCartridge(VibeAgent):
 if __name__ == "__main__":
     cartridge = LensCartridge()
     print(f"✅ {cartridge.name} cartridge loaded")
-
-    def report_status(self):
-        """Report agent status for kernel health monitoring."""
-        return {
-            "agent_id": "lens",
-            "name": "LENS",
-            "status": "healthy",
-            "domain": "ANALYTICS",
-            "capabilities": ["analytics", "visualization"],
-        }

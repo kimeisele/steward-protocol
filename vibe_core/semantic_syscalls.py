@@ -388,6 +388,7 @@ class SemanticSyscallExecutor:
         ALLOCATE_PRANA: Grant credits to an agent.
 
         Credits are the fuel for agent operations.
+        Uses CivicBank.transfer() with MINT as sender (infinite supply).
         """
         agent_id = request.params["agent_id"]
         amount = request.params["amount"]
@@ -396,14 +397,15 @@ class SemanticSyscallExecutor:
         try:
             bank = self.kernel.get_bank()
 
-            # Create account if doesn't exist
-            try:
-                bank.create_account(agent_id)
-            except Exception:
-                pass  # Account might already exist
-
-            # Deposit credits
-            bank.deposit(agent_id, amount, f"ALLOCATE_PRANA from {source}")
+            # Transfer from MINT (infinite supply) to agent
+            # CivicBank.transfer() handles account creation automatically
+            tx_id = bank.transfer(
+                sender="MINT",
+                receiver=agent_id,
+                amount=amount,
+                reason=f"ALLOCATE_PRANA from {source}",
+                service_type="allocation",
+            )
 
             new_balance = bank.get_balance(agent_id)
 
@@ -415,6 +417,7 @@ class SemanticSyscallExecutor:
                     "amount_allocated": amount,
                     "new_balance": new_balance,
                     "source": source,
+                    "transaction_id": tx_id,
                 },
             )
         except Exception as e:
@@ -530,6 +533,10 @@ class SemanticSyscallExecutor:
     def _handle_revoke_mandate(self, request: SyscallRequest) -> SyscallResult:
         """
         REVOKE_MANDATE: Remove capabilities from an agent.
+
+        NOTE: Capability revocation is not yet implemented.
+        Capabilities are currently immutable after agent registration.
+        This syscall will fail until capability registry supports revocation.
         """
         agent_id = request.params.get("agent_id")
         capabilities = request.params.get("capabilities", [])
@@ -541,22 +548,26 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: agent_id",
             )
 
-        # In production, would update capability registry
-        logger.info(f"🚫 REVOKE_MANDATE: Revoking {capabilities} from {agent_id}")
+        # NOT IMPLEMENTED - capabilities are immutable in current design
+        logger.warning(f"⚠️  REVOKE_MANDATE: Not implemented (capabilities immutable)")
 
         return SyscallResult(
-            success=True,
+            success=False,
             syscall_type=request.syscall_type,
-            output={"agent_id": agent_id, "revoked": capabilities},
+            error="REVOKE_MANDATE not implemented: capabilities are immutable after registration",
+            output={"agent_id": agent_id, "requested_revocations": capabilities},
         )
 
     def _handle_transfer_prana(self, request: SyscallRequest) -> SyscallResult:
         """
         TRANSFER_PRANA: Move credits between agents.
+
+        Uses CivicBank.transfer() for atomic double-entry bookkeeping.
         """
         from_agent = request.params.get("from_agent", request.requester_id)
         to_agent = request.params.get("to_agent")
         amount = request.params.get("amount", 0)
+        reason = request.params.get("reason", "transfer")
 
         if not to_agent:
             return SyscallResult(
@@ -565,14 +576,43 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: to_agent",
             )
 
-        # In production, would update credit balances
-        logger.info(f"💸 TRANSFER_PRANA: {amount} from {from_agent} to {to_agent}")
+        if amount <= 0:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error="Amount must be positive",
+            )
 
-        return SyscallResult(
-            success=True,
-            syscall_type=request.syscall_type,
-            output={"from": from_agent, "to": to_agent, "amount": amount},
-        )
+        try:
+            bank = self.kernel.get_bank()
+
+            # Execute real transfer via CivicBank
+            tx_id = bank.transfer(
+                sender=from_agent,
+                receiver=to_agent,
+                amount=amount,
+                reason=reason,
+                service_type="transfer",
+            )
+
+            return SyscallResult(
+                success=True,
+                syscall_type=request.syscall_type,
+                output={
+                    "from": from_agent,
+                    "to": to_agent,
+                    "amount": amount,
+                    "transaction_id": tx_id,
+                    "new_sender_balance": bank.get_balance(from_agent),
+                    "new_receiver_balance": bank.get_balance(to_agent),
+                },
+            )
+        except Exception as e:
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=str(e),
+            )
 
     def _handle_record_karma_syscall(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -608,6 +648,10 @@ class SemanticSyscallExecutor:
     def _handle_broadcast_event(self, request: SyscallRequest) -> SyscallResult:
         """
         BROADCAST_EVENT: Emit system-wide event.
+
+        NOTE: Event bus is not yet implemented.
+        Events are logged but not delivered to subscribers.
+        This syscall succeeds for logging purposes but does not broadcast.
         """
         event_type = request.params.get("event_type")
         event_data = request.params.get("data", {})
@@ -619,13 +663,19 @@ class SemanticSyscallExecutor:
                 error="Missing required parameter: event_type",
             )
 
-        # In production, would emit to event bus
-        logger.info(f"📢 BROADCAST_EVENT: {event_type} from {request.requester_id}")
+        # Event bus not implemented - log only
+        logger.info(f"📢 BROADCAST_EVENT: {event_type} from {request.requester_id} (logged only, no subscribers)")
 
+        # Return success=True with warning that no actual broadcast occurred
         return SyscallResult(
             success=True,
             syscall_type=request.syscall_type,
-            output={"event_type": event_type, "data": event_data, "broadcaster": request.requester_id},
+            output={
+                "event_type": event_type,
+                "data": event_data,
+                "broadcaster": request.requester_id,
+                "warning": "Event logged but event bus not implemented - no subscribers notified",
+            },
         )
 
     def _record_karma(self, request: SyscallRequest, result: SyscallResult) -> None:
