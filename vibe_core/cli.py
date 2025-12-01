@@ -18,7 +18,8 @@ COMMANDS:
   init <agent_id>     Initialize new agent manifest (steward.json)
   discover            Discover all registered agents
   introspect          Show detailed kernel state and statistics
-  delegate            Submit task to agent (TODO)
+  delegate            Submit task to agent
+  do <query>          Execute natural language command (semantic routing)
 
 SAFEGUARDS:
   ✅ Read-only SQLite access (prevents database locks)
@@ -857,6 +858,120 @@ class StewardCLI:
             return 1
 
     # =========================================================================
+    # COMMAND: steward do (Natural Language Interface)
+    # =========================================================================
+
+    def cmd_do(self, query: str) -> int:
+        """
+        Execute a natural language command via SemanticRouter.
+
+        This bridges CLI to the full Agent OS - users can ask questions,
+        give commands, or request actions in natural language.
+
+        Args:
+            query: Natural language query/command
+
+        Returns:
+            0 on success, 1 on error
+        """
+        print("🧠 STEWARD SEMANTIC ROUTER")
+        print("=" * 70)
+        print()
+        print(f"Query: {query}")
+        print()
+
+        try:
+            # Import required components
+            from provider.universal_provider import UniversalProvider
+            from vibe_core.boot_orchestrator import BootOrchestrator
+            from vibe_core.config import ConfigLoader
+
+            # Load Phoenix Config
+            print("Loading configuration...")
+            try:
+                loader = ConfigLoader()
+                config = loader.load()
+            except Exception as e:
+                print(f"⚠️  Config load warning: {e} (using defaults)")
+                config = None
+
+            # Boot kernel (minimal, no operator loop)
+            print("Booting kernel...")
+            orchestrator = BootOrchestrator(config=config)
+            kernel = orchestrator.boot()
+
+            # Initialize provider with kernel
+            provider = UniversalProvider(kernel=kernel)
+
+            # Route the request
+            print("Routing request...")
+            print()
+
+            import asyncio
+
+            result = asyncio.run(provider.route_and_execute(query))
+
+            # Display result based on status
+            status = result.get("status", "unknown")
+
+            if status == "success":
+                print("✅ SUCCESS")
+                print("-" * 70)
+
+                # Show response content
+                if "response" in result:
+                    print(result["response"])
+                elif "data" in result:
+                    import json
+
+                    print(json.dumps(result["data"], indent=2))
+                elif "output" in result:
+                    print(result["output"])
+                else:
+                    # Show full result
+                    for key, value in result.items():
+                        if key not in ["status", "metadata"]:
+                            print(f"{key}: {value}")
+
+            elif status == "PROPOSAL_PENDING":
+                print("📝 PROPOSAL GENERATED")
+                print("-" * 70)
+                print("This request requires Human-in-the-Loop (HIL) approval.")
+                print()
+                if "proposal" in result:
+                    proposal = result["proposal"]
+                    print(f"Proposal ID: {proposal.get('proposal_id', 'N/A')}")
+                    print(f"Summary: {proposal.get('summary', 'N/A')}")
+                print()
+                print("Use 'steward approve <proposal_id>' to approve.")
+
+            elif status == "error":
+                print("❌ ERROR")
+                print("-" * 70)
+                print(result.get("error", "Unknown error"))
+                return 1
+
+            else:
+                print(f"📋 STATUS: {status}")
+                print("-" * 70)
+                import json
+
+                print(json.dumps(result, indent=2, default=str))
+
+            return 0
+
+        except ImportError as e:
+            print(f"❌ Import error: {e}")
+            print("   Make sure you're in the project directory.")
+            return 1
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return 1
+
+    # =========================================================================
     # COMMAND: steward delegate
     # =========================================================================
 
@@ -962,6 +1077,10 @@ def main():
     delegate_parser.add_argument("agent_id", help="Agent ID to delegate to")
     delegate_parser.add_argument("task", help="Task description")
 
+    # steward do <query> - Natural Language Interface
+    do_parser = subparsers.add_parser("do", help="Execute natural language command")
+    do_parser.add_argument("query", nargs="+", help="Natural language query/command")
+
     # Parse args
     args = parser.parse_args()
 
@@ -992,6 +1111,10 @@ def main():
         return cli.cmd_install_llm()
     elif args.command == "delegate":
         return cli.cmd_delegate(args.agent_id, args.task)
+    elif args.command == "do":
+        # Join query words into single string
+        query = " ".join(args.query)
+        return cli.cmd_do(query)
     else:
         parser.print_help()
         return 1

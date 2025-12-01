@@ -351,21 +351,26 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     "summary": summary,
                 }
 
-            # Research command (Playbook Integration Fix)
+            # Research command - Not Implemented (Architecture Decision)
             elif command == "research" or command == "gather_research":
-                # Stub: Envoy accepts research requests but doesn't execute them
-                # (avoids tool delegation spaghetti)
+                # Research is handled by SCIENCE agent, not ENVOY
+                # ENVOY is for coordination/routing, not data gathering
                 topic = args.get("topic", "")
                 sources = args.get("sources", "web")
-                max_results = args.get("max_results", 10)
 
                 return {
-                    "status": "success",
+                    "status": "not_implemented",
                     "command": "research",
                     "topic": topic,
-                    "data": [],  # Stub - no actual research performed
                     "sources": sources,
-                    "note": "Envoy stub - research capability not implemented",
+                    "message": (
+                        "Research capability is not available through ENVOY. "
+                        "Use the SCIENCE agent for research tasks, or route via: "
+                        "'steward do \"research [topic]\"' for automatic agent selection."
+                    ),
+                    "suggestion": "Try: steward delegate science research --topic '{}'".format(topic)
+                    if topic
+                    else None,
                 }
 
             else:
