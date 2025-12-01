@@ -95,52 +95,17 @@ class ReadmeRenderer(Tool):
             return ToolResult(success=False, error=str(e))
 
     def _find_governance_gate_lines(self) -> Optional[str]:
-        """Find actual line numbers of GovernanceGate via AST parsing.
+        """Find governance gate code location.
 
         Returns:
-            String like "vibe_core/kernel_impl.py:544-621" or None
+            String like "vibe_core/kernel_impl.py" (NO line numbers - those break locally)
         """
         kernel_file = self.root_dir / "vibe_core" / "kernel_impl.py"
         if not kernel_file.exists():
             return None
 
-        try:
-            source = kernel_file.read_text()
-            tree = ast.parse(source)
-
-            # Find the governance gate enforcement function/class
-            for node in ast.walk(tree):
-                # Look for function or method with "governance" in name
-                if isinstance(node, ast.FunctionDef):
-                    if "governance" in node.name.lower() or "oath" in node.name.lower():
-                        start_line = node.lineno
-                        end_line = node.end_lineno
-                        return f"vibe_core/kernel_impl.py#L{start_line}-L{end_line}"
-
-                # Look for class definitions related to governance
-                if isinstance(node, ast.ClassDef):
-                    if "governance" in node.name.lower():
-                        start_line = node.lineno
-                        end_line = node.end_lineno
-                        return f"vibe_core/kernel_impl.py#L{start_line}-L{end_line}"
-
-            # Fallback: search for specific patterns in source
-            lines = source.split("\n")
-            for i, line in enumerate(lines, 1):
-                if "def _enforce_governance_gate" in line or "class GovernanceGate" in line:
-                    # Find end of function/class
-                    end = i
-                    indent = len(line) - len(line.lstrip())
-                    for j in range(i + 1, len(lines)):
-                        if lines[j].strip() and not lines[j].startswith(" " * (indent + 1)):
-                            end = j - 1
-                            break
-                    return f"vibe_core/kernel_impl.py#L{i}-L{end}"
-
-        except Exception as e:
-            print(f"Warning: Could not parse kernel_impl.py for governance gate: {e}")
-
-        return None
+        # Just return the file path - line numbers (#L123) only work on GitHub, not locally
+        return "vibe_core/kernel_impl.py"
 
     def _render(self) -> str:
         """Generate README.md content from introspection."""
