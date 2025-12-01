@@ -70,7 +70,7 @@ class ProjectIntrospector:
             if result.returncode == 0:
                 url = result.stdout.strip()
                 # Parse GitHub URL: https://github.com/owner/repo.git or git@github.com:owner/repo.git
-                match = re.search(r'github\.com[:/]([^/]+)/([^/\.]+)', url)
+                match = re.search(r"github\.com[:/]([^/]+)/([^/\.]+)", url)
                 if match:
                     return f"{match.group(1)}/{match.group(2)}"
         except Exception:
