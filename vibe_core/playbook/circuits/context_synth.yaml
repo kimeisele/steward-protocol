@@ -1,0 +1,175 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: CONTEXT_SYNTH
+# ============================================================================
+# Neuro-Symbolic Context Synthesis Circuit
+#
+# RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation)
+#
+# Syscall: DISPATCH_TASK (to analyst agent for context)
+# Pattern: "Generate context", "Analyze repository", "What's happening"
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture context request and scope
+#   ARTHA    → Extract analysis parameters
+#   PRATYAYA → Identify data sources (git, files, deps)
+#   KARMA    → Execute analysis via ANALYST agent
+#   SYNTH    → Synthesize context for RAG.md
+#   SUCCESS  → Context ready for SCRIBE
+#
+# ============================================================================
+
+circuit:
+  id: "CONTEXT_SYNTH"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "research"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  description: |
+    Context synthesis workflow for RAG.md generation.
+    Transforms repository data into actionable context.
+
+    Used by ANALYST agent to provide context to SCRIBE.
+    Git is truth. Code changes tell the story.
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture context request and scope"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: []
+            optional: ["scope", "depth", "focus_areas"]
+            defaults:
+              scope: "full"
+              depth: "comprehensive"
+              focus_areas: []
+        - action: "determine_context_type"
+          params:
+            types: ["short_term", "mid_term", "long_term", "full"]
+      invariants:
+        - "scope must be valid"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Extract analysis parameters"
+      entry_actions:
+        - action: "configure_analysis"
+          params:
+            git_depth_short: 7
+            git_depth_mid: 30
+            git_depth_long: 90
+            churn_limit: 20
+            dependency_depth: 3
+        - action: "identify_targets"
+          params:
+            include_patterns: ["*.py", "*.yaml", "*.md"]
+            exclude_patterns: ["__pycache__", ".git", "*.pyc"]
+      invariants:
+        - "analysis parameters must be set"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+
+    PRATYAYA:
+      description: "Identify data sources and plan analysis"
+      entry_actions:
+        - action: "verify_git_access"
+          params:
+            required_commands: ["log", "diff", "rev-list"]
+        - action: "scan_repository"
+          params:
+            root: "."
+            depth: 2
+        - action: "plan_analysis"
+          params:
+            stages: ["git_activity", "file_churn", "dependencies", "synthesis"]
+      invariants:
+        - "git repository must be accessible"
+        - "analysis plan must be complete"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+
+    KARMA:
+      description: "Execute analysis via ANALYST agent"
+      entry_actions:
+        - syscall: "DISPATCH_TASK"
+          params:
+            agent: "analyst"
+            action: "synthesize"
+            priority: 1
+            timeout: 60
+        - action: "collect_results"
+          params:
+            required_fields:
+              - "timeline"
+              - "hot_files"
+              - "connections"
+              - "summary"
+      invariants:
+        - "analysis must complete successfully"
+        - "results must contain required fields"
+      on_success: "SYNTH"
+      on_failure: "FAILURE"
+
+    SYNTH:
+      description: "Synthesize context for RAG.md"
+      entry_actions:
+        - action: "format_context"
+          params:
+            output_format: "rag_context"
+            include_metadata: true
+        - action: "generate_insights"
+          params:
+            identify_trends: true
+            flag_hot_areas: true
+            suggest_focus: true
+        - action: "prepare_for_scribe"
+          params:
+            template: "rag.jinja2"
+            output: "RAG.md"
+      invariants:
+        - "context must be formatted"
+        - "output must be ready for SCRIBE"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "Context synthesis complete"
+      entry_actions:
+        - action: "finalize"
+          params:
+            log_success: true
+            notify: ["scribe"]
+        - action: "return_result"
+          params:
+            include: ["context", "metadata", "insights"]
+      final: true
+
+    FAILURE:
+      description: "Context synthesis failed"
+      entry_actions:
+        - action: "log_failure"
+          params:
+            include_state: true
+            include_error: true
+        - action: "cleanup"
+          params:
+            preserve_partial: false
+      final: true
+
+  # ===========================================================================
+  # METADATA
+  # ===========================================================================
+  metadata:
+    created: "2025-12-02"
+    author: "Steward Protocol"
+    purpose: "RAG.md context synthesis"
+    integration:
+      agent: "analyst"
+      renderer: "scribe"
+      output: "RAG.md"
