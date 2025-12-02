@@ -690,6 +690,93 @@ class TestFullLifecycle:
 
 
 # =============================================================================
+# IPC CALLBACK TESTS
+# =============================================================================
+
+class TestEnvoyIPCCallback:
+    """Tests for automatic ENVOY.md status update via IPC callbacks."""
+
+    def test_ipc_success_updates_envoy_status(self, kernel, temp_workdir):
+        """Test that IPC TASK_RESULT success updates ENVOY.md pending tasks."""
+        # Dispatch a request and add to pending
+        result = kernel._dispatch_envoy_request("ipc test request")
+        task_id = result["task_id"]
+        kernel._envoy_pending_tasks[task_id] = result
+
+        assert task_id in kernel._envoy_pending_tasks
+        assert len(kernel._envoy_request_history) == 0
+
+        # Mock get_pending_messages to return our test IPC message
+        original_get_messages = kernel.process_manager.get_pending_messages
+        kernel.process_manager.get_pending_messages = lambda: [
+            ("envoy", {"type": "TASK_RESULT", "task_id": task_id, "status": "success", "result": "IPC done!"})
+        ]
+
+        try:
+            # Process IPC events (this triggers the callback)
+            kernel._process_ipc_events()
+
+            # Task should be moved to history
+            assert task_id not in kernel._envoy_pending_tasks
+            assert len(kernel._envoy_request_history) == 1
+            assert kernel._envoy_request_history[0]["status"] == "COMPLETED"
+            assert "IPC done!" in kernel._envoy_request_history[0]["response"]
+        finally:
+            kernel.process_manager.get_pending_messages = original_get_messages
+
+    def test_ipc_failure_updates_envoy_status(self, kernel, temp_workdir):
+        """Test that IPC TASK_RESULT failure updates ENVOY.md pending tasks."""
+        # Dispatch a request and add to pending
+        result = kernel._dispatch_envoy_request("failing ipc test")
+        task_id = result["task_id"]
+        kernel._envoy_pending_tasks[task_id] = result
+
+        assert task_id in kernel._envoy_pending_tasks
+
+        # Mock get_pending_messages to return failure
+        original_get_messages = kernel.process_manager.get_pending_messages
+        kernel.process_manager.get_pending_messages = lambda: [
+            ("envoy", {"type": "TASK_RESULT", "task_id": task_id, "status": "error", "error": "Task failed!"})
+        ]
+
+        try:
+            # Process IPC events
+            kernel._process_ipc_events()
+
+            # Task should be in history with FAILED status
+            assert task_id not in kernel._envoy_pending_tasks
+            assert len(kernel._envoy_request_history) == 1
+            assert kernel._envoy_request_history[0]["status"] == "FAILED"
+            assert "Task failed!" in kernel._envoy_request_history[0]["response"]
+        finally:
+            kernel.process_manager.get_pending_messages = original_get_messages
+
+    def test_non_envoy_task_not_affected(self, kernel, temp_workdir):
+        """Test that non-ENVOY tasks don't trigger ENVOY.md updates."""
+        # Create a regular task (not from ENVOY.md)
+        from vibe_core.scheduling import Task
+        regular_task = Task(agent_id="steward", payload={"type": "regular"})
+        kernel._scheduler.submit_task(regular_task)
+
+        # Mock get_pending_messages
+        original_get_messages = kernel.process_manager.get_pending_messages
+        kernel.process_manager.get_pending_messages = lambda: [
+            ("steward", {"type": "TASK_RESULT", "task_id": regular_task.task_id, "status": "success", "result": "done"})
+        ]
+
+        try:
+            # Process IPC events
+            kernel._process_ipc_events()
+
+            # ENVOY history should be empty (this wasn't an ENVOY task)
+            assert len(kernel._envoy_request_history) == 0
+            # But task should be in completed_tasks
+            assert regular_task.task_id in kernel._completed_tasks
+        finally:
+            kernel.process_manager.get_pending_messages = original_get_messages
+
+
+# =============================================================================
 # MAIN
 # =============================================================================
 
