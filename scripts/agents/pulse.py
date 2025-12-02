@@ -64,7 +64,7 @@ def pulse():
         orchestrator = BootOrchestrator(config=config)
         kernel = orchestrator.boot()
 
-        agents_count = kernel.get_status().get('agents_registered', 0)
+        agents_count = kernel.get_status().get("agents_registered", 0)
         logger.info(f"✅ Boot complete: {agents_count} agents")
 
         logger.info("⏱️  Executing _pulse()...")
