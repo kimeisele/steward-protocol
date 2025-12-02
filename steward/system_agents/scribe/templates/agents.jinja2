@@ -12,10 +12,8 @@
 | Field | Value |
 |-------|-------|
 | **Constitution** | [CONSTITUTION.md](./CONSTITUTION.md) |
-| **Protocol Level** | 3 (Federated Discovery) |
 | **Status** | Active & Enforced |
-| **Registry Version** | 2.0 (CIVIC-managed) |
-| **Authority** | CIVIC Cartridge |
+| **Authority** | CIVIC (Registry Agent) |
 
 ---
 
@@ -53,25 +51,17 @@
 | **System Agents (Devatas)** | {{ system_count }} |
 | **Citizen Agents** | {{ citizen_count }} |
 | **Total Tools** | {{ total_tools }} |
-| **System Status** | All Systems Operational |
-| **Registry Authority** | CIVIC (Immutable) |
 
 ---
 
 ## NOTES
 
-This registry is **auto-generated** by CIVIC and reflects the authoritative citizen registry.
-When you add or modify an agent, CIVIC's `scan_and_register_agents()` method updates this document.
+This registry is **auto-generated** by SCRIBE using CIVIC's registry data.
 
-### How It Works
-
-1. **Discovery**: Scans all `*/cartridge_main.py` files
-2. **Extraction**: Parses class definitions and docstrings
-3. **Validation**: Checks cartridge configurations
-4. **Tools**: Discovers `*/tools/*.py` modules
-5. **Generation**: Updates `AGENTS.md` via RegistryTool
-
-This is **Layer 3 (Discovery)** of the Steward Protocol - the system explaining itself.
+**To regenerate:**
+```bash
+python scripts/generate_docs.py
+```
 
 ---
 
