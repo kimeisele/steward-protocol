@@ -27,7 +27,7 @@ Agent City is built on three immutable layers:
 The kernel and ledger. Constitutional enforcement at boot.
 
 ### Layer 1: The Federation
-System agents (CIVIC, WATCHMAN, SCRIBE) that govern the city.
+System agents that govern the city (26 total).
 -> See [AGENTS.md](AGENTS.md) for the complete registry.
 
 ### Layer 2: The Citizens

@@ -191,7 +191,7 @@ class HelpRenderer(Tool):
         # Ledger check
         if not ledger_status.get("exists"):
             output += "🔴 **LEDGER NOT INITIALIZED**\n"
-            output += "   → **Action:** Run `python scripts/summon.py`\n\n"
+            output += "   → **Action:** Initialize via entry point script\n\n"
         else:
             output += "🟢 **Ledger:** Operational\n"
             if ledger_status.get("total_entries"):
