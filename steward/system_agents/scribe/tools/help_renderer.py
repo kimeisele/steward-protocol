@@ -152,7 +152,11 @@ class HelpRenderer(Tool):
             output += "| Hash | Message | Author | Time |\n"
             output += "|------|---------|--------|------|\n"
             for commit in recent_commits[:5]:
-                output += f"| `{commit.get('hash', '?')}` | {commit.get('message', '?')} | {commit.get('author', '?')} | {commit.get('time', '?')} |\n"
+                h = commit.get("hash", "?")
+                m = commit.get("message", "?")[:40]
+                a = commit.get("author", "?")
+                t = commit.get("time", "?")
+                output += f"| `{h}` | {m} | {a} | {t} |\n"
             output += "\n"
 
         # Contributors
