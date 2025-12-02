@@ -331,14 +331,25 @@ class SQLiteLedger(VibeLedger):
         return None
 
     def get_all_events(self) -> List[Dict[str, Any]]:
-        """Return all ledger events in order"""
+        """Return all ledger events in order with parsed details"""
         if not self.connection:
             return []
 
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM ledger_events ORDER BY id ASC")
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+
+        events = []
+        for row in rows:
+            event = dict(row)
+            # Parse payload JSON and set as details for consistency with InMemoryLedger
+            if event.get("payload") and event.get("details") is None:
+                try:
+                    event["details"] = json.loads(event["payload"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+            events.append(event)
+        return events
 
     def verify_chain_integrity(self) -> Dict[str, Any]:
         """Verify the hash chain is intact (tamper detection)"""

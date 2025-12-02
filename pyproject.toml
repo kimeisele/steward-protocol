@@ -87,6 +87,45 @@ pythonpath = ["."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 
+# ============================================================================
+# PROFESSIONAL TEST CONFIGURATION (Kernel-Grade)
+# ============================================================================
+
+# Ignore patterns - exclude legacy/archived tests
+norecursedirs = [
+    "tests/archive",
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+]
+
+# Test file patterns - only files starting with test_
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Markers for test categorization (use: pytest -m "fast" or pytest -m "not slow")
+markers = [
+    "fast: Quick unit tests (<1s)",
+    "slow: Slow tests (>5s) - run with -m slow",
+    "integration: Integration tests requiring kernel boot",
+    "hardening: Stress/chaos/security tests",
+    "security: Security-focused tests (penetration, crypto)",
+]
+
+# Warning filters - STRICT MODE (no hiding failures)
+filterwarnings = [
+    "error::pytest.PytestReturnNotNoneWarning",  # Tests MUST assert, not return
+    "ignore::DeprecationWarning:pydantic.*:",    # Ignore Pydantic deprecations
+]
+
+# Logging
+log_cli = false
+log_cli_level = "WARNING"
+
+# Performance - parallel test execution (requires pytest-xdist)
+# addopts = "-n auto"  # Uncomment when pytest-xdist is installed
+
 [tool.hatch.build.targets.wheel]
 packages = ["steward"]
 

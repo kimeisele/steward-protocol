@@ -80,11 +80,11 @@ class TestDeterministicExecutor:
         loaded_ids = list(self.engine.playbooks.keys())
         logger.info(f"Loaded playbooks: {loaded_ids}")
 
-        # Check for expected playbooks
+        # Check for expected playbooks (V2 versions from VEDA-4 circuits)
         expected_playbooks = [
-            "PROJECT_SCAFFOLD_V1",
-            "CONTENT_GENERATION_V1",
-            "GOVERNANCE_VOTE_V1",
+            "PROJECT_SCAFFOLD_V2",
+            "CONTENT_GENERATION_V2",
+            "GOVERNANCE_VOTE_V2",
         ]
         for pb_id in expected_playbooks:
             assert pb_id in self.engine.playbooks, f"Expected playbook {pb_id} not found"
@@ -116,7 +116,7 @@ class TestDeterministicExecutor:
         # Create a mock execution
         execution = PlaybookExecution(
             execution_id="test_exec_001",
-            playbook_id="PROJECT_SCAFFOLD_V1",
+            playbook_id="PROJECT_SCAFFOLD_V2",
             user_input="Create a test project",
             current_phase_id="phase_1",
             phase_results={"test": "data"},
@@ -135,7 +135,7 @@ class TestDeterministicExecutor:
         self.engine._load_persisted_executions()
         assert "test_exec_001" in self.engine.executions
         loaded = self.engine.executions["test_exec_001"]
-        assert loaded.playbook_id == "PROJECT_SCAFFOLD_V1"
+        assert loaded.playbook_id == "PROJECT_SCAFFOLD_V2"
         logger.info(f"✅ Execution state loaded from disk: {loaded.execution_id}")
 
     def test_evolutionary_loop_proposal(self):
