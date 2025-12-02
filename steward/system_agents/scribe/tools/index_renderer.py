@@ -31,6 +31,7 @@ class IndexRenderer(Tool):
         "README.md",
         "AGENTS.md",
         "CITYMAP.md",
+        "DASHBOARD.md",
         "HELP.md",
         "INDEX.md",
         "SETTINGS.md",
@@ -154,7 +155,7 @@ class IndexRenderer(Tool):
             return "No markdown files found in root directory."
 
         # Categorize root docs
-        auto_gen = ["README.md", "AGENTS.md", "CITYMAP.md", "HELP.md", "INDEX.md"]
+        auto_gen = ["README.md", "AGENTS.md", "CITYMAP.md", "DASHBOARD.md", "HELP.md", "INDEX.md"]
         governance = ["CONSTITUTION.md", "STEWARD.md"]
         philosophy = ["AGI_MANIFESTO.md"]
         gad_docs = []
@@ -250,6 +251,7 @@ class IndexRenderer(Tool):
             "README.md": "Project overview and quick start",
             "AGENTS.md": "Complete agent registry (auto-generated)",
             "CITYMAP.md": "3-layer system architecture (auto-generated)",
+            "DASHBOARD.md": "Operational dashboard (auto-generated)",
             "HELP.md": "Operations control center (auto-generated)",
             "INDEX.md": "Documentation index (this file)",
             # Governance
