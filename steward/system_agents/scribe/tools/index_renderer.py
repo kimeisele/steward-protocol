@@ -145,7 +145,7 @@ class IndexRenderer(Tool):
             if md_file.name in self.ROOT_ALLOWLIST:
                 self.root_docs.append(md_file)
 
-        # Scan docs/ subdirectories - WHITELIST only
+        # Scan docs/ subdirectories - WHITELIST only, with RECURSIVE support
         docs_dir = self.root_dir / "docs"
         if docs_dir.exists():
             for subdir in docs_dir.iterdir():
@@ -156,7 +156,10 @@ class IndexRenderer(Tool):
                 if subdir.name not in self.DOCS_ALLOWLIST:
                     continue
 
-                md_files = list(subdir.glob("*.md"))
+                # Recursive glob to find .md files in subdirectories (e.g., GAD-0XX/)
+                md_files = list(subdir.glob("**/*.md"))
+                # Exclude archive/ subdirectory
+                md_files = [f for f in md_files if "/archive/" not in str(f)]
                 if md_files:
                     self.doc_categories[subdir.name] = sorted(md_files)
 
