@@ -37,20 +37,46 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger("KERNEL_PULSE")
 
 
-def pulse():
+def pulse(full_boot: bool = False):
     """
     Execute one heartbeat cycle to sync live state with repo artifacts.
+
+    Args:
+        full_boot: If True, use BootOrchestrator for full agent discovery.
+                   If False (default), use bare kernel for quick pulse.
     """
     logger.info("=" * 80)
     logger.info("💓 KERNEL PULSE: Single heartbeat cycle")
     logger.info("=" * 80)
 
     try:
-        # Import concrete kernel implementation
-        from vibe_core.kernel_impl import RealVibeKernel
+        if full_boot:
+            # Full boot with agent discovery via BootOrchestrator
+            from vibe_core.boot_orchestrator import BootOrchestrator
+            from vibe_core.config import ConfigLoader
 
-        logger.info("🔌 Initializing RealVibeKernel...")
-        kernel = RealVibeKernel()
+            logger.info("🔌 Full boot mode: Using BootOrchestrator...")
+
+            # Load Phoenix Config
+            try:
+                loader = ConfigLoader()
+                config = loader.load()
+                logger.info(f"📜 Loaded config: {config.city_name}")
+            except Exception as e:
+                logger.warning(f"⚠️  Config load warning: {e} (using defaults)")
+                config = None
+
+            # Boot with agent discovery
+            orchestrator = BootOrchestrator(config=config)
+            kernel = orchestrator.boot()
+
+            logger.info(f"✅ Full boot complete: {kernel.get_status().get('agents_registered', 0)} agents registered")
+        else:
+            # Quick pulse without agent discovery
+            from vibe_core.kernel_impl import RealVibeKernel
+
+            logger.info("🔌 Quick mode: Initializing bare kernel...")
+            kernel = RealVibeKernel()
 
         logger.info("⏱️  Executing single _pulse() tick...")
         kernel._pulse()
@@ -61,11 +87,13 @@ def pulse():
             with open(snapshot_path, "r") as f:
                 snapshot = json.load(f)
             logger.info(f"   ✅ Snapshot loaded: {snapshot_path}")
+            logger.info(f"   📊 Agents: {len(snapshot.get('agents', {}))}")
+            logger.info(f"   📊 Status: {snapshot.get('kernel_status', 'unknown')}")
         else:
             logger.warning("   ⚠️  Snapshot file not generated")
             snapshot = {}
 
-        logger.info("📝 Snapshot already includes OPERATIONS.md update")
+        logger.info("📝 Snapshot includes OPERATIONS.md + SETTINGS.md update")
 
         logger.info("✅ PULSE COMPLETE: Repo state synchronized")
 
@@ -132,8 +160,23 @@ All previous pulse records are maintained in git history.
 
 
 def main():
-    """Entry point."""
-    success = pulse()
+    """Entry point.
+
+    Usage:
+        python3 scripts/agents/pulse.py           # Quick pulse (bare kernel)
+        python3 scripts/agents/pulse.py --full    # Full boot with agents
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Kernel Pulse - Sync repo state")
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Use full boot with BootOrchestrator (includes agent discovery)",
+    )
+    args = parser.parse_args()
+
+    success = pulse(full_boot=args.full)
     sys.exit(0 if success else 1)
 
 
