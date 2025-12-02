@@ -78,8 +78,20 @@ class AgentsRenderer(Tool):
 
     def _scan_and_render(self) -> str:
         """Scan cartridges and render AGENTS.md."""
-        # Discover all agents
-        self.agents = self.introspector.scan_all(self.root_dir / "steward" / "system_agents")
+        # Discover all agents from BOTH directories (data-driven)
+        # System Agents (Devatas) - core system functionality
+        system_agents = self.introspector.scan_all(self.root_dir / "steward" / "system_agents")
+
+        # Citizen Agents - application-level agents
+        citizen_agents = {}
+        citizen_path = self.root_dir / "agent_city" / "registry"
+        if citizen_path.exists():
+            citizen_agents = CartridgeIntrospector(str(self.root_dir)).scan_all(citizen_path)
+
+        # Merge both
+        self.agents = {**system_agents, **citizen_agents}
+        self.system_agent_names = set(system_agents.keys())
+        self.citizen_agent_names = set(citizen_agents.keys())
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -110,8 +122,10 @@ class AgentsRenderer(Tool):
         for agent in sorted(self.agents.values(), key=lambda a: a["agent_name_pretty"]):
             content += self._format_agent_section(agent)
 
-        # System summary
+        # System summary (data-driven counts)
         total_tools = sum(len(a["tools"]) for a in self.agents.values())
+        system_count = len(self.system_agent_names)
+        citizen_count = len(self.citizen_agent_names)
         content += f"""---
 
 ## 📊 SYSTEM SUMMARY
@@ -119,6 +133,8 @@ class AgentsRenderer(Tool):
 | Metric | Value |
 |--------|-------|
 | **Total Agents** | {len(self.agents)} |
+| **System Agents (Devatas)** | {system_count} |
+| **Citizen Agents** | {citizen_count} |
 | **Total Tools** | {total_tools} |
 | **System Status** | 🟢 All Systems Operational |
 | **Registry Authority** | 🏛️ CIVIC (Immutable) |

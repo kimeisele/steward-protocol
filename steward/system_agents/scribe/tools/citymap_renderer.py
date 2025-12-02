@@ -104,12 +104,30 @@ class CitymapRenderer(Tool):
         # Layer 2: Routing (tools)
         self.tools = self.tools_introspector.scan_all()
 
-        # Layer 3: Agents (cartridges)
-        self.agents = self.cart_introspector.scan_all(self.root_dir / "steward" / "system_agents")
+        # Layer 3: Agents (cartridges) - scan BOTH directories
+        # System Agents (Devatas) - core system functionality
+        system_agents = self.cart_introspector.scan_all(self.root_dir / "steward" / "system_agents")
+
+        # Citizen Agents - application-level agents
+        citizen_agents = {}
+        citizen_path = self.root_dir / "agent_city" / "registry"
+        if citizen_path.exists():
+            citizen_agents = CartridgeIntrospector(str(self.root_dir)).scan_all(citizen_path)
+
+        # Merge both agent types
+        self.agents = {**system_agents, **citizen_agents}
+
+        # Track agent categories for rendering
+        self.system_agent_names = set(system_agents.keys())
+        self.citizen_agent_names = set(citizen_agents.keys())
 
         # Runtime state
         system_status = self.runtime_inspector.get_system_status()
-        agent_count = self.runtime_inspector.get_agent_count()
+
+        # Use ACTUAL scanned count (data-driven, not stale runtime inspector)
+        system_count = len(self.system_agent_names)
+        citizen_count = len(self.citizen_agent_names)
+        total_count = len(self.agents)
 
         # Track agent domains
         for agent_name, metadata in self.agents.items():
@@ -131,7 +149,7 @@ class CitymapRenderer(Tool):
 ╔══════════════════════════════════════════════════════════════╗
 ║                    AGENT CITY STATUS                          ║
 ╠══════════════════════════════════════════════════════════════╣
-║  👥 Agents:          {agent_count:>3} registered                      ║
+║  👥 Total Agents:    {total_count:>3} ({system_count} System + {citizen_count} Citizens)                      ║
 ║  🌌 Boot Cycle:      {system_status["boot_status"]["current_cycle"]:<25}              ║
 ║  ⚡ Security:        {system_status["security_status"]["threat_level"]:<25}              ║
 ║  💰 Economy:         {system_status["economic_status"].get("status", "N/A"):<25}              ║
@@ -147,7 +165,7 @@ Agent City is built on three distinct layers:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  LAYER 3: AGENT LAYER ({agent_count} agents)                    │
+│  LAYER 3: AGENT LAYER ({total_count} agents)                    │
 │  👥 Autonomous agents providing services                │
 ├─────────────────────────────────────────────────────────┤
 │  LAYER 2: ROUTING LAYER                                  │
@@ -180,7 +198,7 @@ The foundational layer that powers Agent City. All agents run on this substrate.
 
 ## 👥 LAYER 3: AGENT LAYER
 
-**The Citizens of Agent City** - {agent_count} autonomous agents.
+**{total_count} Autonomous Agents** ({system_count} System Devatas + {citizen_count} Citizens)
 
 ### 🗺️ Agents by Domain
 
