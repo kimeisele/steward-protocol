@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, load_template
+from .base import Tool, ToolResult, get_kernel_status, load_template
 from .introspector import CartridgeIntrospector
 from .runtime_inspector import RuntimeInspector
 from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
@@ -120,10 +120,17 @@ class CitymapRenderer(Tool):
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+        # Get kernel status for unified header
+        kernel_status = get_kernel_status(str(self.root_dir))
+
         # Pre-render sections for template
         template = load_template("citymap.jinja2")
         content = template.render(
+            # Unified header variables
             timestamp=timestamp,
+            generator="SCRIBE",
+            kernel_status=kernel_status,
+            # Citymap-specific variables
             total_count=total_count,
             system_count=system_count,
             citizen_count=citizen_count,
