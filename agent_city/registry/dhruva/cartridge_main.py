@@ -39,19 +39,20 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List
 
+# NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
+from agent_city.registry.dhruva.tools.data_ethics import DataEthicsEnforcer
+from agent_city.registry.dhruva.tools.genesis_keeper import GenesisKeeper
+from agent_city.registry.dhruva.tools.reference_resolver import ReferenceResolver
+from agent_city.registry.dhruva.tools.truth_matrix import TruthMatrix
+
+# Constitutional Oath Mixin (Golden Template Pattern)
+from steward.oath_mixin import OathMixin
 from vibe_core.agent_protocol import AgentManifest, Capability, VibeAgent
-
-from .tools.data_ethics import DataEthicsEnforcer
-from .tools.genesis_keeper import GenesisKeeper
-from .tools.reference_resolver import ReferenceResolver
-
-# Constitutional Oath binding
-from .tools.truth_matrix import TruthMatrix
 
 logger = logging.getLogger("DHRUVA_ANCHOR")
 
 
-class DhruvaAnchorCartridge(VibeAgent):
+class DhruvaAnchorCartridge(VibeAgent, OathMixin):
     """
     DHRUVA ANCHOR - The Immutable Truth Reference & Stability System.
 
@@ -84,11 +85,10 @@ class DhruvaAnchorCartridge(VibeAgent):
             ],
         )
 
-        # Bind to Constitutional Oath (GAD-000 compliance)
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ DHRUVA ANCHOR has sworn the Constitutional Oath")
+        # Golden Template Pattern: Bind to Constitutional Oath
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ DHRUVA ANCHOR has sworn the Constitutional Oath")
 
         logger.info("🧭 DHRUVA ANCHOR v1.0: Initializing Immutable Reference System")
 

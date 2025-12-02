@@ -13,21 +13,18 @@ REFACTORED: Tool Protocol Compliant
 import logging
 from typing import Any, Dict
 
+# Constitutional Oath Mixin (Golden Template Pattern)
+from steward.oath_mixin import OathMixin
+
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
-
-# Constitutional Oath Mixin
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("ARTISAN_AGENT")
 
 
-class ArtisanCartridge(VibeAgent):
+class ArtisanCartridge(VibeAgent, OathMixin):
     """
     The Artisan Agent Cartridge.
     Specialized in media processing and technical operations.
@@ -52,12 +49,10 @@ class ArtisanCartridge(VibeAgent):
 
         logger.info("🔨 THE ARTISAN is online (Tool Protocol v2.0).")
 
-        # Initialize Constitutional Oath mixin (if available)
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            # SWEAR THE OATH IMMEDIATELY in __init__
-            self.oath_sworn = True
-            logger.info("✅ ARTISAN has sworn the Constitutional Oath")
+        # Golden Template Pattern: Initialize Constitutional Oath
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ ARTISAN has sworn the Constitutional Oath")
 
         # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
         # - artisan.media (MediaTool)
@@ -130,6 +125,8 @@ class ArtisanCartridge(VibeAgent):
             agent_id="artisan",
             name="ARTISAN",
             version=self.version if hasattr(self, "version") else "2.0.0",
+            author="Steward Protocol",
+            description="Media and technical operations agent",
             domain="MEDIA",
             capabilities=["media_operations", "content_creation"],
         )

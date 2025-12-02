@@ -30,13 +30,14 @@ import yaml
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 
+# NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
+from steward.system_agents.civic.economy_agent import EconomyAgent
+from steward.system_agents.civic.lifecycle_agent import LifecycleAgent
+from steward.system_agents.civic.registry_agent import RegistryAgent
+
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CivicConfig
-
-from .economy_agent import EconomyAgent
-from .lifecycle_agent import LifecycleAgent
-from .registry_agent import RegistryAgent
 
 # Import delegated components
 
@@ -118,8 +119,9 @@ class CivicCartridge(VibeAgent, OathMixin):
         self.economy_agent = EconomyAgent()
         self.lifecycle_agent = LifecycleAgent()
 
-        # Load state for parent coordination
-        self.state = self._load_state()
+        # State will be loaded lazily after system interface injection
+        # (self.system is not available in __init__)
+        self.state = {}
 
         logger.info("🏛️  CIVIC: Ready for operation (awaiting kernel injection)")
 
@@ -142,6 +144,9 @@ class CivicCartridge(VibeAgent, OathMixin):
         self.economy_agent.set_system(self.system)
         self.lifecycle_agent.set_system(self.system)
         logger.info("✅ CIVIC sub-agents now have access to system interface")
+
+        # Load state now that self.system is available
+        self.state = self._load_state()
 
     @property
     def registry_path(self):

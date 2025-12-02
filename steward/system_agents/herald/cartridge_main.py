@@ -48,8 +48,9 @@ except ImportError:
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
 
-from .core.memory import EventLog
-from .governance import HeraldConstitution
+# NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
+from steward.system_agents.herald.core.memory import EventLog
+from steward.system_agents.herald.governance import HeraldConstitution
 
 # Constitutional Oath
 # Setup logging
