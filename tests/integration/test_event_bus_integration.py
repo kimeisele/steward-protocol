@@ -25,10 +25,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
+from steward.oath_mixin import OathMixin
+from steward.constitutional_oath import ConstitutionalOath
 
 
-class TestAgent(VibeAgent):
-    """Simple test agent for event testing."""
+class TestAgent(VibeAgent, OathMixin):
+    """Simple test agent for event testing with Constitutional Oath."""
 
     def __init__(self, agent_id: str):
         super().__init__(
@@ -37,6 +39,16 @@ class TestAgent(VibeAgent):
             capabilities=[],
         )
         self.received_events = []
+        # Initialize OathMixin with REAL constitution hash
+        self.oath_mixin_init(agent_id)
+        self.oath_sworn = True
+        real_hash = ConstitutionalOath.compute_constitution_hash()
+        self.oath_event = {
+            "agent_id": agent_id,
+            "constitution_hash": real_hash,
+            "signature": f"TEST_SIG_{agent_id}_{real_hash[:8]}",
+            "timestamp": "2025-01-01T00:00:00Z",
+        }
 
     def process(self, task: Task) -> dict:
         return {"status": "completed", "message": "test"}
