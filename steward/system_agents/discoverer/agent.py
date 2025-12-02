@@ -337,6 +337,11 @@ class Discoverer(VibeAgent):
                 logger.debug(f"   ℹ️  {class_name} is not a VibeAgent: {type(agent)}")
                 return None
 
+            # LATE BINDING: Store cartridge path and class name for ProcessManager
+            # This enables Child processes to load the module themselves (no pickle)
+            agent._cartridge_path = str(cartridge_path)
+            agent._cartridge_class_name = class_name
+
             logger.info(f"   ✅ Loaded cartridge: {class_name} ({agent.agent_id})")
             return agent
 
