@@ -18,6 +18,12 @@ circuit:
   name: Governance Voting Cognitive Circuit
   type: cognitive_circuit
 
+  # Intent matching for DeterministicExecutor concept-based lookup
+  intent_match:
+    primary: "CMD_VOTE"
+    secondary:
+      - "DOM_GOVERNANCE"
+
   intent: |
     Execute a deterministic voting process with immutable ledger recording.
     This circuit handles:

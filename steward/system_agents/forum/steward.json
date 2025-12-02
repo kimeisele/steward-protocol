@@ -27,7 +27,7 @@
   },
   "specs": {
     "description": "Democratic decision layer for governance",
-    "domain": "GOVERNANCE",
+    "domain": "COMMUNITY",
     "version": "1.0.0"
   }
 }

@@ -53,7 +53,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
             version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Quality gate: verifies code syntax and linting before commit",
-            domain="GOVERNANCE",
+            domain="SECURITY",  # Ring 5 (Krauncha) - Protection & Enforcement
             capabilities=["verify_changes", "auditing", "constitutional_verdict", "auditor.verdict"],
         )
         logger.info("🔍 AUDITOR is online (Tool Protocol v3.0)")

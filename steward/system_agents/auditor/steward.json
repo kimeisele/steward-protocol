@@ -27,7 +27,7 @@
   },
   "specs": {
     "description": "GAD-000 compliance enforcement agent",
-    "domain": "GOVERNANCE",
+    "domain": "SECURITY",
     "version": "1.0.0"
   }
 }
