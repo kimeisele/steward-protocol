@@ -726,7 +726,7 @@ class RealVibeKernel(VibeKernel):
                     config=getattr(agent, "config", None),
                 )
             else:
-                logger.warning(f"⚠️  Agent '{agent.agent_id}' has no cartridge_path - skipping process spawn")
+                logger.info(f"📍 Agent '{agent.agent_id}' has no cartridge_path - running in-process (no isolation)")
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
@@ -794,7 +794,7 @@ class RealVibeKernel(VibeKernel):
             cartridge_path = getattr(agent, "_cartridge_path", None)
             cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
             if not cartridge_path or not cartridge_class_name:
-                logger.warning(f"⚠️  Agent '{agent_id}' has no cartridge_path - skipping process spawn")
+                logger.info(f"📍 Agent '{agent_id}' has no cartridge_path - running in-process (no isolation)")
                 continue
 
             try:
@@ -882,20 +882,37 @@ class RealVibeKernel(VibeKernel):
             # Record start
             self._ledger.record_start(task)
 
-            # Execute task via Process Manager (IPC)
-            logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
+            # Check if agent has a running process (Late Binding) or runs in-process
+            has_process = (
+                task.agent_id in self.process_manager.processes
+                and self.process_manager.processes[task.agent_id].process.is_alive()
+            )
 
-            try:
-                self.process_manager.send_task(task.agent_id, task)
-                # Note: Result is now async via pipe. We don't get it immediately here.
-                # The ProcessManager loop handles results.
-                # For this synchronous tick, we might need to wait or change architecture.
-                # For Phase 2 MVP, we'll assume fire-and-forget or polling.
+            if has_process:
+                # Execute task via Process Manager (IPC) - Agent runs in separate process
+                logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
+                try:
+                    self.process_manager.send_task(task.agent_id, task)
+                except ValueError as e:
+                    logger.error(f"❌ IPC Dispatch failed: {e}")
+                    self._ledger.record_failure(task, str(e))
+                    return
+            else:
+                # Execute task directly in-process (GenericAgent or failed process spawn)
+                logger.info(f"⚡ Executing task {task.task_id} on {task.agent_id} (in-process)")
+                try:
+                    import asyncio
 
-            except ValueError as e:
-                logger.error(f"❌ Dispatch failed: {e}")
-                self._ledger.record_failure(task, str(e))
-                return
+                    if asyncio.iscoroutinefunction(agent.process):
+                        result = asyncio.run(agent.process(task))
+                    else:
+                        result = agent.process(task)
+                    self._ledger.record_completion(task, result)
+                    logger.info(f"✅ Task {task.task_id} completed (in-process)")
+                except Exception as e:
+                    logger.error(f"❌ In-process execution failed: {e}")
+                    self._ledger.record_failure(task, str(e))
+                    return
 
             # Record completion (Optimistic for now, or move to callback)
             # In a real async kernel, we'd wait for the result event.
