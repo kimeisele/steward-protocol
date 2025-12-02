@@ -18,30 +18,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-# Tool Protocol import - optional for standalone mode
-try:
-    from vibe_core.tools.tool_protocol import Tool, ToolResult
-
-    TOOL_PROTOCOL_AVAILABLE = True
-except ImportError:
-    TOOL_PROTOCOL_AVAILABLE = False
-
-    class Tool:
-        pass
-
-    class ToolResult:
-        def __init__(self, success, output=None, error=None):
-            self.success = success
-            self.output = output
-            self.error = error
-
-
-from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
-from steward.system_agents.scribe.tools.operations_introspector import (
+# Import from shared base (eliminates DRY violation)
+from .base import Tool, ToolResult
+from .introspector import CartridgeIntrospector
+from .operations_introspector import (
     GitActivityIntrospector,
     WorkflowIntrospector,
 )
-from steward.system_agents.scribe.tools.runtime_inspector import RuntimeInspector
+from .runtime_inspector import RuntimeInspector
 
 
 class DashboardRenderer(Tool):

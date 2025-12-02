@@ -17,27 +17,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
 
-# Tool Protocol import - optional for standalone mode
-try:
-    from vibe_core.tools.tool_protocol import Tool, ToolResult
-
-    TOOL_PROTOCOL_AVAILABLE = True
-except ImportError:
-    TOOL_PROTOCOL_AVAILABLE = False
-
-    class Tool:
-        pass
-
-    class ToolResult:
-        def __init__(self, success, output=None, error=None):
-            self.success = success
-            self.output = output
-            self.error = error
-
-
-from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
-from steward.system_agents.scribe.tools.runtime_inspector import RuntimeInspector
-from steward.system_agents.scribe.tools.vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
+# Import from shared base (eliminates DRY violation)
+from .base import Tool, ToolResult
+from .introspector import CartridgeIntrospector
+from .runtime_inspector import RuntimeInspector
+from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
 
 
 class CitymapRenderer(Tool):
