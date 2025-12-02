@@ -109,18 +109,18 @@
 3. Check **[CITYMAP.md](CITYMAP.md)** for architecture
 
 ### For Developers
-- **[AGENTS.md](AGENTS.md)** — Agent capabilities and tools
-- **[CITYMAP.md](CITYMAP.md)** — 3-layer architecture map
-- **docs/architecture/** — Architecture documentation
+- **[AGENTS.md](AGENTS.md)** - Agent capabilities and tools
+- **[CITYMAP.md](CITYMAP.md)** - 3-layer architecture map
+- **docs/architecture/** - Architecture documentation
 
 ### For Operators
-- **[HELP.md](HELP.md)** — Operations control center
-- **docs/deployment/** — Deployment guides
+- **[HELP.md](HELP.md)** - Operations control center
+- **docs/deployment/** - Deployment guides
 
 ### For Researchers
-- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** — Governed Intelligence philosophy
-- **[CONSTITUTION.md](CONSTITUTION.md)** — Constitutional governance
-- **docs/philosophy/** — Project philosophy and context
+- **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** - Governed Intelligence philosophy
+- **[CONSTITUTION.md](CONSTITUTION.md)** - Constitutional governance
+- **docs/philosophy/** - Project philosophy and context
 
 ---
 
