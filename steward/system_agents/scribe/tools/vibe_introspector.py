@@ -90,8 +90,10 @@ class VibeCoreIntrospector:
         if enum_matches:
             features.extend([f"{name} enum" for name in enum_matches[:3]])
 
-        # Look for main classes
-        class_matches = re.findall(r"class\s+(\w+)(?!\(.*?Enum)", content)
+        # Look for main classes (exclude Enums and match actual class definitions)
+        class_matches = re.findall(r"^class\s+([A-Z]\w+)\s*[:\(]", content, re.MULTILINE)
+        # Filter out Enums
+        class_matches = [c for c in class_matches if c not in enum_matches]
         if class_matches:
             features.extend([f"{name} class" for name in class_matches[:2]])
 
