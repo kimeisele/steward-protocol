@@ -2,18 +2,18 @@
 SCRIBE Documentation Generation Tools
 
 All renderer tools implement the Tool protocol and are kernel-managed.
+
+NOTE: Renderers are NOT auto-imported to avoid circular imports.
+Import explicitly when needed:
+    from steward.system_agents.scribe.tools.agents_renderer import AgentsRenderer
 """
 
-from .agents_renderer import AgentsRenderer
-from .citymap_renderer import CitymapRenderer
-from .help_renderer import HelpRenderer
-from .index_renderer import IndexRenderer
-from .readme_renderer import ReadmeRenderer
+# Export shared utilities only (no circular imports)
+from .base import Tool, ToolResult, get_template_dir, load_template
 
 __all__ = [
-    "AgentsRenderer",
-    "CitymapRenderer",
-    "HelpRenderer",
-    "ReadmeRenderer",
-    "IndexRenderer",
+    "Tool",
+    "ToolResult",
+    "load_template",
+    "get_template_dir",
 ]
