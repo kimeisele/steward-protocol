@@ -80,7 +80,8 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             domain="SYSTEM",
             capabilities=[
                 "content_generation",  # Can create commits (git operations)
-            ],  # CREDIBILITY FIX: P1.4 - Removed false "ledger" and "orchestration" capabilities
+                "chronicle.git",  # Required capability for chronicle.git tool access
+            ],
         )
 
         logger.info("🗡️  CHRONICLE Cartridge initializing (VibeAgent v1.0)...")

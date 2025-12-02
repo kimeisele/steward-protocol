@@ -16,11 +16,14 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 
 # Import Router and Playbook components for proper system integration
 try:
     from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+
     MILK_OCEAN_AVAILABLE = True
 except ImportError:
     MilkOceanRouter = None
@@ -29,8 +32,9 @@ except ImportError:
     logger.warning("⚠️  MilkOceanRouter not available - using fallback")
 
 try:
-    from vibe_core.playbook.executor import GraphExecutor, WorkflowGraph, WorkflowNode, WorkflowEdge
+    from vibe_core.playbook.executor import GraphExecutor, WorkflowEdge, WorkflowGraph, WorkflowNode
     from vibe_core.playbook.router import AgentRouter
+
     PLAYBOOK_AVAILABLE = True
 except ImportError:
     GraphExecutor = None
@@ -47,7 +51,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AMBASSADOR_MAIN")
 
 
-class AmbassadorCartridge(VibeAgent):
+class AmbassadorCartridge(VibeAgent, OathMixin):
     """
     AMBASSADOR Agent Cartridge.
     Community Engagement & Developer Relations.
@@ -88,9 +92,10 @@ class AmbassadorCartridge(VibeAgent):
 
         logger.info("🤝 AMBASSADOR (VibeAgent v1.0) is online - Community Ready")
 
-        # NOTE: OathMixin integration removed (was undefined)
-        # TODO: Re-add oath functionality when OathMixin is properly defined
-        self.oath_sworn = False
+        # Constitutional Oath binding (Golden Template pattern)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ AMBASSADOR has sworn the Constitutional Oath")
 
         # Initialize Router and Playbook components for proper system integration
         self.milk_ocean_router = None
@@ -190,11 +195,7 @@ class AmbassadorCartridge(VibeAgent):
             return self._simple_fallback_answer(question, user_id, conversation_id)
 
         try:
-            routing_decision = self.milk_ocean_router.process_prayer(
-                question,
-                agent_id="ambassador",
-                critical=False
-            )
+            routing_decision = self.milk_ocean_router.process_prayer(question, agent_id="ambassador", critical=False)
 
             logger.info(f"🌊 Routing decision: {routing_decision.get('path', 'unknown')}")
 

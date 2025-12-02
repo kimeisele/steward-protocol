@@ -21,9 +21,7 @@ import traceback
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing import Pipe, Process
-from typing import Any, Dict, List, Tuple, Type
-
-from vibe_core.protocols import VibeAgent
+from typing import Any, Dict, List, Tuple
 
 logger = logging.getLogger("PROCESS_MANAGER")
 
@@ -46,7 +44,8 @@ class AgentProcessInfo:
     parent_pipe: Any  # Connection object
     agent_id: str
     status: ProcessStatus
-    agent_class: Type[VibeAgent]  # STORED for restart
+    cartridge_path: str  # LATE BINDING: Path to cartridge_main.py (for restart)
+    cartridge_class_name: str  # LATE BINDING: Class name (for restart)
     config: Any = None  # STORED for restart
     restarts: int = 0
     last_heartbeat: float = 0.0
@@ -58,17 +57,22 @@ class AgentProcess:
 
     This runs in a SEPARATE process from the kernel.
     It instantiates the agent and runs its event loop.
+
+    LATE BINDING: Receives cartridge_path and class_name instead of agent_class.
+    This avoids pickle errors with dynamically loaded modules.
     """
 
     def __init__(
         self,
         agent_id: str,
-        agent_class: Type[VibeAgent],
+        cartridge_path: str,
+        cartridge_class_name: str,
         child_pipe: Any,
         config: Any = None,
     ):
         self.agent_id = agent_id
-        self.agent_class = agent_class
+        self.cartridge_path = cartridge_path
+        self.cartridge_class_name = cartridge_class_name
         self.pipe = child_pipe
         self.config = config
 
@@ -76,6 +80,10 @@ class AgentProcess:
         """
         The entry point for the child process.
         """
+        import importlib.util
+        import sys
+        from pathlib import Path
+
         # Re-configure logging for child process
         logging.basicConfig(
             level=logging.INFO,
@@ -86,8 +94,34 @@ class AgentProcess:
         try:
             child_logger.info(f"🚀 Process started for {self.agent_id}")
 
+            # LATE BINDING: Load the cartridge module in the child process
+            # This is the key fix - we don't pickle the class, we pickle the path
+            cartridge_path = Path(self.cartridge_path)
+            if not cartridge_path.exists():
+                raise FileNotFoundError(f"Cartridge not found: {self.cartridge_path}")
+
+            module_name = f"cartridge_{self.agent_id}"
+            spec = importlib.util.spec_from_file_location(module_name, cartridge_path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Cannot create module spec for {cartridge_path}")
+
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module  # Register for subsequent imports
+            spec.loader.exec_module(module)
+
+            # Get the cartridge class
+            agent_class = getattr(module, self.cartridge_class_name, None)
+            if agent_class is None:
+                raise AttributeError(f"Class {self.cartridge_class_name} not found in {cartridge_path}")
+
+            child_logger.info(f"📦 Loaded cartridge: {self.cartridge_class_name}")
+
             # Instantiate Agent
-            agent = self.agent_class(config=self.config)
+            try:
+                agent = agent_class(config=self.config)
+            except TypeError:
+                # Cartridge doesn't accept config parameter
+                agent = agent_class()
 
             # Inject Pipe (this replaces direct kernel reference)
             agent.set_kernel_pipe(self.pipe)
@@ -112,7 +146,13 @@ class AgentProcess:
                         # Execute Task
                         child_logger.info(f"⚡ Processing task {task.task_id}")
                         try:
-                            result = agent.process(task)
+                            import asyncio
+
+                            # Handle both async and sync process() methods
+                            if asyncio.iscoroutinefunction(agent.process):
+                                result = asyncio.run(agent.process(task))
+                            else:
+                                result = agent.process(task)
                             self.pipe.send(
                                 {
                                     "type": "TASK_RESULT",
@@ -155,9 +195,14 @@ class AgentProcess:
             raise  # Die and let OS clean up
 
 
-def _run_agent_process(agent_id, agent_class, pipe, config):
-    """Static wrapper for multiprocessing target"""
-    proc = AgentProcess(agent_id, agent_class, pipe, config)
+def _run_agent_process(agent_id, cartridge_path, cartridge_class_name, pipe, config):
+    """
+    Static wrapper for multiprocessing target.
+
+    LATE BINDING: Receives path/classname instead of class object.
+    The AgentProcess will load the module itself in the child process.
+    """
+    proc = AgentProcess(agent_id, cartridge_path, cartridge_class_name, pipe, config)
     proc.run()
 
 
@@ -178,15 +223,26 @@ class ProcessManager:
         self.processes: Dict[str, AgentProcessInfo] = {}
         multiprocessing.set_start_method("spawn", force=True)  # Safer for macOS/Linux
 
-    def spawn_agent(self, agent_id: str, agent_class: Type[VibeAgent], config: Any = None):
-        """Spawn a new agent process."""
+    def spawn_agent(
+        self,
+        agent_id: str,
+        cartridge_path: str,
+        cartridge_class_name: str,
+        config: Any = None,
+    ):
+        """
+        Spawn a new agent process.
+
+        LATE BINDING: Receives cartridge_path and class_name instead of agent_class.
+        The child process loads the module itself - no pickle required for classes.
+        """
         logger.info(f"🌱 Spawning process for {agent_id}...")
 
         parent_conn, child_conn = Pipe()
 
         process = Process(
             target=_run_agent_process,
-            args=(agent_id, agent_class, child_conn, config),
+            args=(agent_id, cartridge_path, cartridge_class_name, child_conn, config),
             name=f"vibe-agent-{agent_id}",
             daemon=True,  # Die if kernel dies
         )
@@ -198,7 +254,8 @@ class ProcessManager:
             parent_pipe=parent_conn,
             agent_id=agent_id,
             status=ProcessStatus.RUNNING,
-            agent_class=agent_class,  # STORED for restart
+            cartridge_path=cartridge_path,  # LATE BINDING: Stored for restart
+            cartridge_class_name=cartridge_class_name,  # LATE BINDING: Stored for restart
             config=config,  # STORED for restart
             last_heartbeat=time.time(),
         )
@@ -283,7 +340,7 @@ class ProcessManager:
         Restart a crashed agent.
 
         SECURITY FIX: Actually restarts the agent (not just a stub).
-        Uses stored agent_class and config from AgentProcessInfo.
+        LATE BINDING: Uses stored cartridge_path and class_name from AgentProcessInfo.
         """
         info = self.processes[agent_id]
 
@@ -303,12 +360,12 @@ class ProcessManager:
         except Exception as e:
             logger.warning(f"Cleanup error for {agent_id}: {e}")
 
-        # REAL RESTART: Create new pipe and process
+        # REAL RESTART: Create new pipe and process (LATE BINDING)
         parent_conn, child_conn = Pipe()
 
         new_process = Process(
             target=_run_agent_process,
-            args=(agent_id, info.agent_class, child_conn, info.config),
+            args=(agent_id, info.cartridge_path, info.cartridge_class_name, child_conn, info.config),
             name=f"vibe-agent-{agent_id}",
             daemon=True,
         )

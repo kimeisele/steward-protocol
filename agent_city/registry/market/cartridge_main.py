@@ -17,6 +17,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +36,7 @@ class ServiceType(Enum):
     BROADCASTING = "broadcasting"  # Pulse broadcasting
 
 
-class MarketCartridge(VibeAgent):
+class MarketCartridge(VibeAgent, OathMixin):
     """
     MARKET System Cartridge.
     The Exchange Economy (Vaishya Function).
@@ -75,9 +77,10 @@ class MarketCartridge(VibeAgent):
 
         logger.info("🏪 MARKET (VibeAgent v1.0) is online - Exchange Ready")
 
-        # NOTE: OathMixin integration removed (was undefined)
-        # TODO: Re-add oath functionality when OathMixin is properly defined
-        self.oath_sworn = False
+        # Constitutional Oath binding (Golden Template pattern)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ MARKET has sworn the Constitutional Oath")
 
         # Economic tracking (via kernel/CIVIC agent)
         self.bank = None

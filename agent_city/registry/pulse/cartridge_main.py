@@ -16,20 +16,16 @@ import logging
 from datetime import datetime
 from typing import Any, Dict
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
-
-# Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("PULSE_MAIN")
 
 
-class PulseCartridge(VibeAgent):
+class PulseCartridge(VibeAgent, OathMixin):
     """
     PULSE Agent Cartridge.
     Social Media Amplification & Real-time Narrative Distribution.
@@ -69,8 +65,10 @@ class PulseCartridge(VibeAgent):
 
         logger.info("📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready")
 
-        # Oath status - OathMixin integration deferred until class inheritance added
-        self.oath_sworn = False
+        # Constitutional Oath binding (Golden Template pattern)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ PULSE has sworn the Constitutional Oath")
 
         # State tracking
         self.tweets_posted = 0
