@@ -274,9 +274,12 @@ class DeterministicExecutor:
                         "id": circuit_data.get("id", playbook_file.stem.upper()),
                         "name": circuit_data.get("id", playbook_file.stem),
                         "description": circuit_data.get("description", ""),
-                        "intent_match": circuit_data.get("intent_match", {
-                            "primary": circuit_data.get("domain", "general").upper(),
-                        }),
+                        "intent_match": circuit_data.get(
+                            "intent_match",
+                            {
+                                "primary": circuit_data.get("domain", "general").upper(),
+                            },
+                        ),
                         "variables": circuit_data.get("variables", {}),
                     }
                 else:
