@@ -1,0 +1,33 @@
+{
+  "identity": {
+    "agent_id": "nexus",
+    "name": "NEXUS"
+  },
+  "specs": {
+    "version": "1.0.0",
+    "description": "Generalist agent for connectivity and coordination",
+    "domain": "COORDINATION"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "ping_federation",
+        "description": "Check connectivity to the Federation"
+      },
+      {
+        "name": "verify_identity",
+        "description": "Prove cryptographic identity"
+      },
+      {
+        "name": "delegate_task",
+        "description": "Route tasks to specialized agents"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "REPLACE_WITH_ACTUAL_HASH",
+    "issued_at": "REPLACE_WITH_TIMESTAMP",
+    "issuer": "passport_office"
+  }
+}

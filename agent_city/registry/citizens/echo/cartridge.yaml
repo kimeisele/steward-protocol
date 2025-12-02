@@ -1,39 +1,17 @@
-# 🔔 ECHO CARTRIDGE MANIFEST 🔔
-# Test Agent - Minimal but valid VibeAgent implementation
-
-cartridge:
-  id: echo
-  name: ECHO
+meta:
+  id: "agent.citizen.echo"
+  name: "ECHO Agent (Test)"
   version: "1.0.0"
   author: "Genesis Protocol"
   description: "Test agent: echoes messages with timestamp"
 
-  type: AGENT
-  domain: TESTING
-
+agent:
+  domain: "TESTING"
   capabilities:
-    - echo_back
+    - "echo_back"
 
-  dependencies:
-    - vibe_core
+dependencies: []
 
-  config:
-    enabled: true
-
-  responsibilities:
-    - "Echo back messages from tasks"
-    - "Respond with timestamp"
-
-  actions:
-    - action: echo_back
-      description: "Echo a message back with timestamp"
-      params:
-        - name: message
-          type: string
-          required: true
-          description: "Message to echo"
-
-steward:
-  constitutional_oath: optional
-  governance_domain: TESTING
-  risk_level: LOW
+config:
+  governance:
+    level: "minimal"
