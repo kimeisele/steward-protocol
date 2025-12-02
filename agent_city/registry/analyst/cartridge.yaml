@@ -1,8 +1,10 @@
 agent_id: analyst
 name: ANALYST
-version: 1.0.0
+version: 2.0.0
 author: Steward Protocol
-description: Repository analysis and context synthesis agent (RAG - Realtime Architecture Guide)
+description: |
+  4D Multi-Dimensional Repository Analysis Agent
+  RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation)
 
 # Agent metadata
 domain: RESEARCH
@@ -10,19 +12,41 @@ capabilities:
   - git_analysis
   - dependency_analysis
   - context_synthesis
+  - temporal_analysis
+  - structural_analysis
+  - semantic_analysis
+  - predictive_analysis
 
 # Tools (auto-discovered from tools/ directory)
 tools:
   - analyst.git       # Git history analysis
   - analyst.context   # Context synthesis
 
-# ANALYST provides context for other agents
-# RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation)
+# 4D ANALYSIS DIMENSIONS
+# =====================
+# 1. TEMPORAL:    Time-based patterns, velocity trends, work rhythms
+# 2. STRUCTURAL:  Dependencies, coupling, architecture hubs
+# 3. SEMANTIC:    Commit types, tech debt, complexity
+# 4. PREDICTIVE:  Risk areas, related files, recommendations
+
+# VEDA-4 CIRCUIT INTEGRATION
+# ==========================
+# Uses context_synth.yaml circuit for semantic state machine:
+#   SHABDA   → Capture request
+#   ARTHA    → Extract parameters
+#   PRATYAYA → Plan analysis
+#   KARMA    → Execute 4D analysis
+#   SYNTH    → Synthesize context
+
 philosophy: |
-  ANALYST provides real-time repository context.
+  ANALYST provides real-time repository context through 4D analysis.
+
   Git is truth. Code changes tell the story.
-  Context synthesis replaces RAG dependencies.
+  Multi-dimensional analysis reveals hidden patterns.
+  Context synthesis replaces external RAG dependencies.
+
   Works FOR SCRIBE to generate RAG.md.
+  VEDA-4 circuit ensures semantic correctness.
 
 # Configuration
 config:
@@ -31,9 +55,24 @@ config:
   monitoring:
     enabled: true
   analysis:
-    git_depth: 90           # Days of git history to analyze
-    churn_threshold: 10     # Files changed >N times = hot
-    dependency_depth: 3     # Import chain depth
+    # Temporal
+    velocity_periods: 4       # Weeks for trend analysis
+    day_analysis_days: 30     # Days for pattern analysis
+
+    # Structural
+    co_change_min_correlation: 3
+    dependency_depth: 3
+
+    # Semantic
+    commit_type_days: 30
+    debt_scan_dirs:
+      - steward
+      - vibe_core
+      - agent_city
+
+    # Predictive
+    relatedness_days: 60
+    stability_period: 14
 
 dependencies:
   - pyyaml

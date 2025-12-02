@@ -8,12 +8,18 @@
 # Syscall: DISPATCH_TASK (to analyst agent for context)
 # Pattern: "Generate context", "Analyze repository", "What's happening"
 #
+# 4D MULTI-DIMENSIONAL ANALYSIS:
+#   - TEMPORAL:    Time patterns, velocity, work rhythms
+#   - STRUCTURAL:  Dependencies, coupling, architecture
+#   - SEMANTIC:    Commit types, tech debt, complexity
+#   - PREDICTIVE:  Risk areas, related files, recommendations
+#
 # VEDA-4 State Machine:
 #   SHABDA   → Capture context request and scope
 #   ARTHA    → Extract analysis parameters
 #   PRATYAYA → Identify data sources (git, files, deps)
-#   KARMA    → Execute analysis via ANALYST agent
-#   SYNTH    → Synthesize context for RAG.md
+#   KARMA    → Execute 4D analysis via dimensions module
+#   SYNTH    → Synthesize multi-dimensional context for RAG.md
 #   SUCCESS  → Context ready for SCRIBE
 #
 # ============================================================================
@@ -21,17 +27,23 @@
 circuit:
   id: "CONTEXT_SYNTH"
   type: "cognitive_circuit"
-  version: "1.0"
+  version: "2.0"
   domain: "research"
   security_level: "standard"
   entry_state: "SHABDA"
 
   description: |
-    Context synthesis workflow for RAG.md generation.
-    Transforms repository data into actionable context.
+    4D Multi-Dimensional Context Synthesis for RAG.md generation.
+    Transforms repository data into actionable, multi-dimensional context.
+
+    Dimensions Analyzed:
+    1. TEMPORAL:    Time-based patterns and velocity trends
+    2. STRUCTURAL:  Dependency graphs and coupling metrics
+    3. SEMANTIC:    Work classification and complexity
+    4. PREDICTIVE:  Risk areas and recommendations
 
     Used by ANALYST agent to provide context to SCRIBE.
-    Git is truth. Code changes tell the story.
+    Git is truth. Multi-dimensional analysis reveals hidden patterns.
 
   # ===========================================================================
   # STATES (VEDA-4 Cognitive States)
@@ -48,98 +60,139 @@ circuit:
               scope: "full"
               depth: "comprehensive"
               focus_areas: []
-        - action: "determine_context_type"
+        - action: "validate_scope"
           params:
-            types: ["short_term", "mid_term", "long_term", "full"]
+            valid_scopes: ["short_term", "mid_term", "long_term", "full"]
       invariants:
         - "scope must be valid"
+        - "request must be captured"
       on_success: "ARTHA"
       on_failure: "FAILURE"
 
     ARTHA:
-      description: "Extract analysis parameters"
+      description: "Extract analysis parameters for 4D synthesis"
       entry_actions:
-        - action: "configure_analysis"
+        - action: "configure_temporal"
           params:
-            git_depth_short: 7
-            git_depth_mid: 30
-            git_depth_long: 90
-            churn_limit: 20
-            dependency_depth: 3
-        - action: "identify_targets"
+            velocity_periods: 4
+            day_analysis_days: 30
+            hour_analysis_days: 30
+        - action: "configure_structural"
           params:
-            include_patterns: ["*.py", "*.yaml", "*.md"]
-            exclude_patterns: ["__pycache__", ".git", "*.pyc"]
+            co_change_min_correlation: 3
+            focus_dirs: ["steward", "vibe_core", "agent_city"]
+        - action: "configure_semantic"
+          params:
+            commit_type_days: 30
+            debt_scan_enabled: true
+            complexity_analysis: true
+        - action: "configure_predictive"
+          params:
+            relatedness_days: 60
+            stability_period: 14
+            risk_analysis: true
       invariants:
+        - "all four dimensions must be configured"
         - "analysis parameters must be set"
       on_success: "PRATYAYA"
       on_failure: "FAILURE"
 
     PRATYAYA:
-      description: "Identify data sources and plan analysis"
+      description: "Identify data sources and plan 4D analysis"
       entry_actions:
         - action: "verify_git_access"
           params:
-            required_commands: ["log", "diff", "rev-list"]
-        - action: "scan_repository"
+            required_commands: ["log", "diff", "rev-list", "status"]
+        - action: "verify_repository"
           params:
-            root: "."
-            depth: 2
+            required_paths: [".", ".git"]
         - action: "plan_analysis"
           params:
-            stages: ["git_activity", "file_churn", "dependencies", "synthesis"]
+            stages:
+              - "temporal_dimension"
+              - "structural_dimension"
+              - "semantic_dimension"
+              - "predictive_dimension"
       invariants:
         - "git repository must be accessible"
+        - "all dimension analyzers must be available"
         - "analysis plan must be complete"
       on_success: "KARMA"
       on_failure: "FAILURE"
 
     KARMA:
-      description: "Execute analysis via ANALYST agent"
+      description: "Execute 4D multi-dimensional analysis"
       entry_actions:
-        - syscall: "DISPATCH_TASK"
+        - action: "execute_temporal"
           params:
-            agent: "analyst"
-            action: "synthesize"
-            priority: 1
-            timeout: 60
-        - action: "collect_results"
+            analyzer: "TemporalDimension"
+            outputs:
+              - "velocity_trend"
+              - "day_patterns"
+              - "hour_patterns"
+              - "activity_bursts"
+        - action: "execute_structural"
           params:
-            required_fields:
-              - "timeline"
-              - "hot_files"
-              - "connections"
-              - "summary"
+            analyzer: "StructuralDimension"
+            outputs:
+              - "co_changes"
+              - "import_graph"
+              - "module_boundaries"
+        - action: "execute_semantic"
+          params:
+            analyzer: "SemanticDimension"
+            outputs:
+              - "commit_types"
+              - "technical_debt"
+              - "complexity"
+        - action: "execute_predictive"
+          params:
+            analyzer: "PredictiveDimension"
+            inputs: ["temporal", "structural", "semantic"]
+            outputs:
+              - "relatedness_map"
+              - "risk_areas"
+              - "stability"
+              - "focus_suggestions"
       invariants:
-        - "analysis must complete successfully"
-        - "results must contain required fields"
+        - "all dimensions must complete successfully"
+        - "results must contain all required outputs"
+        - "predictive dimension must receive other dimension data"
       on_success: "SYNTH"
       on_failure: "FAILURE"
 
     SYNTH:
-      description: "Synthesize context for RAG.md"
+      description: "Synthesize 4D context for RAG.md"
       entry_actions:
-        - action: "format_context"
+        - action: "generate_executive_summary"
           params:
-            output_format: "rag_context"
-            include_metadata: true
-        - action: "generate_insights"
+            include:
+              - "velocity_trend"
+              - "stability"
+              - "debt_level"
+              - "dominant_work"
+              - "suggestions"
+              - "priorities"
+        - action: "add_metadata"
           params:
-            identify_trends: true
-            flag_hot_areas: true
-            suggest_focus: true
+            include_veda4_info: true
+            include_dimensions: true
+        - action: "add_legacy_fields"
+          params:
+            backward_compatible: true
         - action: "prepare_for_scribe"
           params:
             template: "rag.jinja2"
             output: "RAG.md"
       invariants:
-        - "context must be formatted"
-        - "output must be ready for SCRIBE"
+        - "executive summary must be generated"
+        - "all four dimensions must be present"
+        - "output must be ready for SCRIBE rendering"
       on_success: "SUCCESS"
       on_failure: "FAILURE"
 
     SUCCESS:
-      description: "Context synthesis complete"
+      description: "4D context synthesis complete"
       entry_actions:
         - action: "finalize"
           params:
@@ -147,7 +200,13 @@ circuit:
             notify: ["scribe"]
         - action: "return_result"
           params:
-            include: ["context", "metadata", "insights"]
+            include:
+              - "temporal"
+              - "structural"
+              - "semantic"
+              - "predictive"
+              - "executive_summary"
+              - "metadata"
       final: true
 
     FAILURE:
@@ -157,6 +216,7 @@ circuit:
           params:
             include_state: true
             include_error: true
+            include_partial_context: true
         - action: "cleanup"
           params:
             preserve_partial: false
@@ -167,9 +227,21 @@ circuit:
   # ===========================================================================
   metadata:
     created: "2025-12-02"
+    updated: "2025-12-02"
     author: "Steward Protocol"
-    purpose: "RAG.md context synthesis"
+    purpose: "4D Multi-Dimensional RAG.md context synthesis"
+    version_notes: |
+      v2.0: Complete 4D multi-dimensional analysis
+      - Temporal: velocity, patterns, rhythms
+      - Structural: coupling, architecture, dependencies
+      - Semantic: classification, debt, complexity
+      - Predictive: risk, relatedness, recommendations
     integration:
       agent: "analyst"
       renderer: "scribe"
       output: "RAG.md"
+      dimensions:
+        - temporal
+        - structural
+        - semantic
+        - predictive
