@@ -163,9 +163,9 @@ Agents are arranged in concentric rings by authority level:
 {{ economic_section }}
 
 **How Credits Flow:**
-1. MINT creates credits (infinite supply)
-2. Agents receive 100 CR on registration
-3. Services cost credits (e.g., SCIENCE API call = 5 CR)
+1. MINT creates credits (supply managed by CIVIC)
+2. Agents receive initial balance on registration
+3. Services cost credits (amounts defined per-service)
 4. Out of credits? Submit proposal to FORUM for grant
 
 ---
@@ -192,7 +192,7 @@ This map is **auto-generated** from live system introspection:
 
 **To regenerate:**
 ```bash
-python -m steward.system_agents.scribe.cartridge_main
+python scripts/generate_docs.py
 ```
 
 ---
