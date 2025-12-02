@@ -293,6 +293,12 @@ class Discoverer(VibeAgent):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
+            # CRITICAL: Register module in sys.modules for pickle/multiprocessing
+            # Without this, child processes cannot import the dynamically loaded module
+            import sys
+
+            sys.modules[module_name] = module
+
             # Find all Cartridge classes (classes ending with 'Cartridge' that inherit from VibeAgent)
             cartridge_classes = []
             for name, obj in inspect.getmembers(module, inspect.isclass):

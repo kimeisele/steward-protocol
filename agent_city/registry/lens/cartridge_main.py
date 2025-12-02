@@ -16,20 +16,16 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
-
-# Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("LENS_MAIN")
 
 
-class LensCartridge(VibeAgent):
+class LensCartridge(VibeAgent, OathMixin):
     """
     LENS Agent Cartridge.
     Campaign Analytics & Quantitative Data Strategy.
@@ -70,8 +66,10 @@ class LensCartridge(VibeAgent):
 
         logger.info("📊 LENS (VibeAgent v1.0) is online - Analytics Ready")
 
-        # Oath status - OathMixin integration deferred until class inheritance added
-        self.oath_sworn = False
+        # Constitutional Oath binding (Golden Template pattern)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ LENS has sworn the Constitutional Oath")
 
         # State tracking
         self.kpis: Dict[str, float] = {}
