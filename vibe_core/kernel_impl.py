@@ -934,9 +934,20 @@ class RealVibeKernel(VibeKernel):
                     # Cache result for get_task_result() polling
                     self._completed_tasks[task_id] = result
 
+                    # ENVOY.md: Update status if this was a terminal request
+                    if task_id in self._envoy_pending_tasks:
+                        response = str(result) if result else "Task completed successfully"
+                        self.update_envoy_task_status(task_id, "COMPLETED", response)
+                        logger.info(f"📬 ENVOY task {task_id} marked COMPLETED")
+
                 else:
                     error = msg.get("error")
                     logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
+
+                    # ENVOY.md: Update status if this was a terminal request
+                    if task_id in self._envoy_pending_tasks:
+                        self.update_envoy_task_status(task_id, "FAILED", str(error))
+                        logger.info(f"📬 ENVOY task {task_id} marked FAILED")
 
             elif msg_type == "CRASH":
                 error = msg.get("error")
