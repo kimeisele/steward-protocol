@@ -168,7 +168,9 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         # PHASE 2: GRANT AMNESTY TO REDEEMED AGENTS
         # Check all registered agents for thaw eligibility (dynamic, not hardcoded)
         logger.info("\n⚖️ JUSTICE PHASE: Checking for redemption...")
-        registered_agents = list(self.system.kernel.agent_registry.keys()) if hasattr(self, "system") and self.system else []
+        registered_agents = (
+            list(self.system.kernel.agent_registry.keys()) if hasattr(self, "system") and self.system else []
+        )
         for agent_id in registered_agents:
             if self.bank.is_frozen(agent_id) and agent_id not in current_violators:
                 # Agent was frozen but has no current violations = REDEEMED
@@ -192,6 +194,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         else:
             # Fallback: scan known agent directories
             from pathlib import Path
+
             agent_dirs = list(Path("steward/system_agents").iterdir()) + list(Path("agent_city/registry").iterdir())
             agents_to_scan = [d.name for d in agent_dirs if d.is_dir() and not d.name.startswith("_")]
 

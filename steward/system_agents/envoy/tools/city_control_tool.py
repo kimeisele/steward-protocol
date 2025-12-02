@@ -48,14 +48,16 @@ logger = logging.getLogger("CITY_CONTROL")
 
 # PERMISSION LAYER: Agents that Envoy CANNOT trigger without elevated permission
 # These are system-critical agents that could damage the system if misused
-PROTECTED_AGENTS = frozenset([
-    "narasimha",     # Kill switch - can terminate agents
-    "auditor",       # Compliance enforcement - should not be triggered casually
-    "supreme_court", # Justice system - requires formal process
-    "discoverer",    # Agent registration - system-level operation
-    "watchman",      # System integrity - monitoring only, not triggerable
-    "kernel",        # The kernel itself (if exposed as agent)
-])
+PROTECTED_AGENTS = frozenset(
+    [
+        "narasimha",  # Kill switch - can terminate agents
+        "auditor",  # Compliance enforcement - should not be triggered casually
+        "supreme_court",  # Justice system - requires formal process
+        "discoverer",  # Agent registration - system-level operation
+        "watchman",  # System integrity - monitoring only, not triggerable
+        "kernel",  # The kernel itself (if exposed as agent)
+    ]
+)
 
 # Agents that Envoy CAN trigger freely (citizen agents + safe system agents)
 # All agents in kernel.agent_registry are allowed EXCEPT protected ones
@@ -376,7 +378,7 @@ class CityControlTool(Tool):
                     "status": "error",
                     "reason": "permission_denied",
                     "message": f"Agent '{agent_name}' is protected and cannot be triggered via Envoy. "
-                               f"Protected agents: {sorted(PROTECTED_AGENTS)}",
+                    f"Protected agents: {sorted(PROTECTED_AGENTS)}",
                     "hint": "Use kernel syscalls or governance proposals to interact with protected agents.",
                 }
 

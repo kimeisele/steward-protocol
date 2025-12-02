@@ -254,6 +254,7 @@ class BuilderTool(Tool):
             # Cleanup on failure
             if target_dir.exists():
                 import shutil
+
                 shutil.rmtree(target_dir)
             return {"success": False, "error": str(e)}
 
