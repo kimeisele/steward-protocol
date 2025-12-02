@@ -188,11 +188,27 @@ class ComplianceTool(Tool):
         details = []
         passed = True
 
-        # Find all cartridge.yaml files
-        agent_dirs = ["herald", "archivist", "auditor"]
+        # DYNAMIC: Find all agent directories (system + citizen)
+        agent_dirs = []
+        system_agents_path = self.root_path / "steward" / "system_agents"
+        citizen_agents_path = self.root_path / "agent_city" / "registry"
+
+        if system_agents_path.exists():
+            agent_dirs.extend([d.name for d in system_agents_path.iterdir()
+                              if d.is_dir() and not d.name.startswith("_")])
+        if citizen_agents_path.exists():
+            agent_dirs.extend([d.name for d in citizen_agents_path.iterdir()
+                              if d.is_dir() and not d.name.startswith("_") and d.name != "citizens"])
 
         for agent_dir in agent_dirs:
-            cartridge_path = self.root_path / agent_dir / "cartridge.yaml"
+            # Try multiple locations
+            possible_paths = [
+                self.root_path / "steward" / "system_agents" / agent_dir / "cartridge.yaml",
+                self.root_path / "agent_city" / "registry" / agent_dir / "cartridge.yaml",
+            ]
+            cartridge_path = next((p for p in possible_paths if p.exists()), None)
+            if not cartridge_path:
+                cartridge_path = possible_paths[0]  # Use first for error message
 
             if not cartridge_path.exists():
                 self.violations.append(
