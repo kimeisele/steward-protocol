@@ -2,15 +2,32 @@
   "capabilities": {
     "operations": [
       {
-        "description": "Analyze git history and repository activity",
-        "name": "git_analysis"
+        "description": "Git history analysis (velocity, patterns, commits)",
+        "name": "git_analysis",
+        "tool": "analyst.git"
       },
       {
-        "description": "Analyze file dependencies and relationships",
-        "name": "dependency_analysis"
+        "description": "Code analysis (AST, complexity, tech debt)",
+        "name": "code_analysis",
+        "tool": "analyst.code"
       },
       {
-        "description": "Generate context synthesis for agents",
+        "description": "Structure analysis (modules, coupling, hotspots)",
+        "name": "structure_analysis",
+        "tool": "analyst.structure"
+      },
+      {
+        "description": "Dependency analysis (imports, requirements)",
+        "name": "dependency_analysis",
+        "tool": "analyst.deps"
+      },
+      {
+        "description": "Documentation analysis (coverage, quality)",
+        "name": "docs_analysis",
+        "tool": "analyst.docs"
+      },
+      {
+        "description": "Multi-source context synthesis (VEDA-4 circuit)",
         "name": "context_synthesis"
       }
     ]
@@ -26,8 +43,15 @@
     "name": "ANALYST"
   },
   "specs": {
-    "description": "Repository analysis and context synthesis (Realtime Architecture Guide)",
+    "description": "Multi-Source Repository Analysis (Realtime Architecture Guide)",
     "domain": "RESEARCH",
-    "version": "1.0.0"
-  }
+    "version": "2.0.0"
+  },
+  "tools": [
+    "analyst.git",
+    "analyst.code",
+    "analyst.structure",
+    "analyst.deps",
+    "analyst.docs"
+  ]
 }
