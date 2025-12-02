@@ -36,9 +36,9 @@
 
 | Agent | Status | Domain |
 |-------|--------|--------|
-{% for name, agent in agents|dictsort %}
-| **{{ name|upper }}** | {{ agent.status }} | {{ agent.domain[:12] }} |
-{% endfor %}
+{%- for name, agent in agents|dictsort %}
+| **{{ name|upper }}** | ✅ ACTIVE | {{ agent.domain or 'UNKNOWN' }} |
+{%- endfor %}
 
 
 ---

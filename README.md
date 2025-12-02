@@ -48,16 +48,9 @@ This system enforces governance at the kernel level:
 
 ---
 
-## Documentation by Role
+## Documentation
 
-**For Architects:** How the system scales
--> [docs/architecture/](docs/architecture/)
-
-**For Operators:** How to control the city
--> [HELP.md](HELP.md) | [OPERATIONS.md](OPERATIONS.md) | [docs/deployment/](docs/deployment/)
-
-**For Developers:** How to build agents
--> [AGENTS.md](AGENTS.md) | [docs/guides/](docs/guides/)
+See [INDEX.md](INDEX.md) for complete documentation navigation.
 
 ---
 
