@@ -18,6 +18,7 @@ Usage:
     python scripts/generate_docs.py --citymap    # Only CITYMAP.md
     python scripts/generate_docs.py --help-doc   # Only HELP.md
     python scripts/generate_docs.py --index      # Only INDEX.md
+    python scripts/generate_docs.py --dashboard  # Only DASHBOARD.md
 """
 
 import argparse
@@ -86,6 +87,10 @@ index_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.index_renderer",
     tools_dir / "index_renderer.py",
 )
+dashboard_renderer_module = load_renderer(
+    "steward.system_agents.scribe.tools.dashboard_renderer",
+    tools_dir / "dashboard_renderer.py",
+)
 
 # Extract classes
 ReadmeRenderer = readme_renderer_module.ReadmeRenderer
@@ -93,6 +98,7 @@ AgentsRenderer = agents_renderer_module.AgentsRenderer
 CitymapRenderer = citymap_renderer_module.CitymapRenderer
 HelpRenderer = help_renderer_module.HelpRenderer
 IndexRenderer = index_renderer_module.IndexRenderer
+DashboardRenderer = dashboard_renderer_module.DashboardRenderer
 
 
 def generate_readme() -> bool:
@@ -195,6 +201,26 @@ def generate_index() -> bool:
         return False
 
 
+def generate_dashboard() -> bool:
+    """Generate DASHBOARD.md"""
+    print("\n📊 Generating DASHBOARD.md...")
+    try:
+        renderer = DashboardRenderer(root_dir=".")
+        content = renderer.scan_and_render()
+
+        dashboard_path = Path("DASHBOARD.md")
+        dashboard_path.write_text(content)
+
+        print(f"   ✅ DASHBOARD.md generated ({len(content)} bytes)")
+        return True
+    except Exception as e:
+        print(f"   ❌ Failed: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate documentation files")
     parser.add_argument("--readme", action="store_true", help="Generate only README.md")
@@ -202,6 +228,7 @@ def main():
     parser.add_argument("--citymap", action="store_true", help="Generate only CITYMAP.md")
     parser.add_argument("--help-doc", action="store_true", help="Generate only HELP.md")
     parser.add_argument("--index", action="store_true", help="Generate only INDEX.md")
+    parser.add_argument("--dashboard", action="store_true", help="Generate only DASHBOARD.md")
 
     args = parser.parse_args()
 
@@ -210,7 +237,7 @@ def main():
     print("=" * 70)
 
     # If no specific flag, generate all
-    generate_all = not any([args.readme, args.agents, args.citymap, args.help_doc, args.index])
+    generate_all = not any([args.readme, args.agents, args.citymap, args.help_doc, args.index, args.dashboard])
 
     results = {}
 
@@ -228,6 +255,9 @@ def main():
 
     if generate_all or args.index:
         results["INDEX.md"] = generate_index()
+
+    if generate_all or args.dashboard:
+        results["DASHBOARD.md"] = generate_dashboard()
 
     print("\n" + "=" * 70)
     print("📊 SUMMARY")
