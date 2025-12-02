@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, load_template
+from .base import Tool, ToolResult, get_kernel_status, load_template
 from .introspector import CartridgeIntrospector
 from .operations_introspector import (
     GitActivityIntrospector,
@@ -169,21 +169,28 @@ class DashboardRenderer(Tool):
             "issues": health["issues"],
         }
 
-        # Determine kernel/ledger status
-        kernel_status = "ACTIVE" if (self.root_dir / "vibe_core").exists() else "MISSING"
+        # Determine kernel/ledger status (for dashboard-specific display)
+        kernel_dir_status = "ACTIVE" if (self.root_dir / "vibe_core").exists() else "MISSING"
         ledger_status = "INITIALIZED" if (self.root_dir / ".steward" / "ledger.json").exists() else "NOT READY"
+
+        # Get kernel status for unified header
+        kernel_status = get_kernel_status(str(self.root_dir))
 
         # Pre-render using template
         template = load_template("dashboard.jinja2")
         content = template.render(
+            # Unified header variables
             timestamp=timestamp,
+            generator="SCRIBE",
+            kernel_status=kernel_status,
+            # Dashboard-specific variables
             health=health_data,
             agent_counts=agent_counts,
             agents=agents,
             git_activity=git_activity,
             workflows=workflows,
             runtime=runtime,
-            kernel_status=kernel_status,
+            kernel_dir_status=kernel_dir_status,
             ledger_status=ledger_status,
         )
 

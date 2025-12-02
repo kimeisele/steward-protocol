@@ -19,7 +19,8 @@ that enables all other agents to exist.
 import logging
 from typing import Any, Dict
 
-from .agent import Discoverer
+# NOTE: Absolute import required for Late Binding (ProcessManager loads via importlib)
+from steward.system_agents.discoverer.agent import Discoverer
 
 logger = logging.getLogger("DISCOVERER_CARTRIDGE")
 

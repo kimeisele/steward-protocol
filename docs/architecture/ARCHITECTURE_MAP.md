@@ -1,7 +1,7 @@
 # 🏗️ ARCHITECTURE MAP - Steward Protocol (Agent City OS)
 
-**Version:** 1.5 (Phoenix Protocol Complete)
-**Date:** 2025-11-27
+**Version:** 2.0 (Data-Driven Update)
+**Date:** 2025-12-02
 **Status:** ✅ Production Ready
 
 ---
@@ -9,11 +9,13 @@
 ## 🎯 EXECUTIVE SUMMARY
 
 **steward-protocol** is a **fractal AI operating system** combining:
-- 23 governed AI agents (13 system + 10 citizen)
+- 28 governed AI agents (16 system + 12 citizen)
 - Vedic cosmological architecture (Bhu Mandala topology)
 - Constitutional cryptographic governance (GAD-000)
+- Semantic Syscalls (SPAWN_COGNITION, GRANT_MANDATE, etc.)
+- Cognitive Circuits (VEDA-4 / GAD-5500)
 - 4-tier intelligent request routing (MilkOcean)
-- Immutable audit trail (dual-core persistence)
+- Immutable audit trail (Parampara blockchain)
 
 **Key Innovation:** Tasks route through cosmological layers (BRAHMALOKA → BHURLOKA) respecting agent placement, creating a **fractal architecture** where the system structure mirrors universal principles.
 
@@ -31,8 +33,11 @@
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │ Layer 1: KERNEL (VibeOS Runtime)                               │
-│ ├─ RealVibeKernel (kernel_impl.py)                            │
-│ ├─ Agent Registry (23 agents)                                  │
+│ ├─ RealVibeKernel (kernel_impl.py, 1800+ lines)               │
+│ ├─ Semantic Syscalls (spawn, grant, revoke, transfer)         │
+│ ├─ Circuit Executor (VEDA-4 cognitive circuits)               │
+│ ├─ Agent Registry (28 agents)                                  │
+│ ├─ Parampara Lineage (blockchain audit trail)                 │
 │ ├─ Task Management (topology-aware routing)                    │
 │ ├─ MilkOcean Router (4-tier classification)                   │
 │ ├─ Narasimha Protocol (kill-switch)                           │
@@ -40,18 +45,22 @@
 └─────────────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ Layer 2: SYSTEM AGENTS (13 Adityas)                           │
+│ Layer 2: SYSTEM AGENTS (16 Adityas)                           │
 │ ├─ CIVIC - Governance engine (Ilavrta - Center)               │
-│ ├─ HERALD - Content generation (Bhadrashva - Ring 1)          │
-│ ├─ FORUM - Voting & proposals (Nishada - Ring 4)             │
-│ └─ ... (10 more + 2 extended)                                 │
+│ ├─ ENVOY - Task routing & playbooks                           │
+│ ├─ HERALD - Content generation                                │
+│ ├─ AUDITOR - Quality gates                                    │
+│ ├─ ENGINEER - Code generation                                 │
+│ ├─ WATCHMAN - Security patrol                                 │
+│ └─ ... (10 more: SCRIBE, ORACLE, MECHANIC, etc.)             │
 └─────────────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ Layer 3: CITIZEN AGENTS (10 Application Services)             │
+│ Layer 3: CITIZEN AGENTS (12 Application Services)             │
 │ ├─ MARKET - Commerce & transactions                            │
 │ ├─ TEMPLE - Spiritual authority                                │
-│ └─ ... (8 more)                                                │
+│ ├─ AGORA - Public interface                                   │
+│ └─ ... (9 more)                                               │
 └─────────────────────────────────────────────────────────────────┘
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
@@ -168,32 +177,66 @@ WATCHMAN—AUDITOR—ARCHIVIST
 - **Triggers:** constitution_deletion, kernel_escape, etc.
 - **Threat Levels:** GREEN → YELLOW → ORANGE → RED → APOCALYPSE
 
+### 5. Semantic Syscalls (`vibe_core/semantic_syscalls.py`)
+- **SPAWN_COGNITION:** Birth a new agent (fork equivalent)
+- **DESTROY_COGNITION:** Terminate agent (Narasimha kill)
+- **GRANT_MANDATE:** Assign capabilities to agent
+- **REVOKE_MANDATE:** Remove capabilities
+- **ALLOCATE_PRANA:** Grant credits (fuel)
+- **TRANSFER_PRANA:** Move credits between agents
+- **SWEAR_OATH:** Bind agent to Constitutional Oath
+- **DISPATCH_TASK:** Send task to agent
+- **BROADCAST_EVENT:** Emit system-wide event
+
+### 6. Cognitive Circuits (`vibe_core/circuit_executor.py`)
+- **VEDA-4 Architecture:** Neuro-symbolic state machines
+- **Invariant Checker:** Runtime security enforcement
+- **Circuit States:** Declarative transitions based on syscall results
+- **Meta-Circuits:** TASK_LEDGER, ERROR_RECOVERY
+
+### 7. Parampara Lineage (`vibe_core/lineage.py`)
+- **Blockchain Audit:** Immutable action history
+- **Lineage Events:** SPAWN, TASK, KARMA, DESTROY
+- **Hash Chain:** Tamper-proof verification
+
 ---
 
 ## 📁 PROJECT STRUCTURE (Key Files)
 
 \`\`\`
 steward-protocol/
-├── vibe_core/
-│   ├── kernel_impl.py (498L)       # Main kernel
-│   ├── topology.py (477L)          # Bhu Mandala
-│   ├── narasimha.py (306L)         # Kill-switch
-│   ├── task_management/
-│   │   ├── task_manager.py (650L)  # Task system
-│   │   └── next_task_generator.py  # Topology routing
-│   └── store/sqlite_store.py       # Dual-core
+├── vibe_core/                      # KERNEL (25,869 lines)
+│   ├── kernel_impl.py (1813L)      # RealVibeKernel
+│   ├── semantic_syscalls.py        # Syscall layer (GAD-5500)
+│   ├── circuit_executor.py         # VEDA-4 cognitive circuits
+│   ├── lineage.py                  # Parampara blockchain
+│   ├── topology.py                 # Bhu Mandala
+│   ├── narasimha.py                # Kill-switch
+│   ├── process_manager.py          # Agent process management
+│   ├── event_bus.py                # Pub/sub messaging
+│   └── task_management/            # Task system
 │
-├── steward/system_agents/
-│   ├── civic/ (1003L)              # Governance
-│   ├── herald/ (942L)              # Content
-│   ├── envoy/tools/milk_ocean.py   # Routing (740L)
-│   └── ... (10 more agents)
+├── steward/system_agents/          # 16 SYSTEM AGENTS
+│   ├── civic/                      # Governance
+│   ├── envoy/                      # Routing + Playbooks
+│   ├── auditor/                    # Quality gates
+│   ├── engineer/                   # Code generation
+│   ├── watchman/                   # Security
+│   └── ... (11 more)
 │
-├── gateway/api.py (600L)           # REST API
-├── bin/agent-city                  # CLI
+├── agent_city/registry/            # 12 CITIZEN AGENTS
+│   ├── market/                     # Commerce
+│   ├── temple/                     # Spiritual
+│   └── ... (10 more)
+│
+├── docs/architecture/
+│   ├── scripts/                    # Analysis tools
+│   ├── GAD_INDEX.yaml              # Auto-generated
+│   └── KEYWORD_INDEX.yaml          # Auto-generated
+│
 └── data/
-    ├── vibe_agency.db              # SQLite ledger
-    └── milk_ocean.db               # Lazy queue
+    ├── vibe_ledger.db              # SQLite ledger
+    └── parampara/                  # Blockchain state
 \`\`\`
 
 ---
@@ -220,12 +263,30 @@ bin/agent-city roadmap create "Sprint 1" "Q1 goals"
 
 | Metric | Value |
 |--------|-------|
-| **Agents** | 23 (13 system + 10 citizen) |
-| **Code** | ~15,000 lines |
-| **Tests** | 22 passing |
+| **Agents** | 28 (16 system + 12 citizen) |
+| **Code** | ~111,000 lines Python |
+| **Commits** | 539 |
+| **GAD Specs** | 41 (7 documented, 34 in code) |
+| **ARCH Decisions** | 29 |
 | **Topology Layers** | 7 Varshas |
 | **Routing Tiers** | 4 (MilkOcean) |
-| **Persistence** | Dual-core (JSON + SQLite) |
+| **Persistence** | Parampara blockchain + SQLite |
+
+---
+
+## 📋 KEY GAD SPECIFICATIONS
+
+| GAD | Refs | Purpose |
+|-----|------|---------|
+| **GAD-000** | 243 | Constitutional Oath (Foundation) |
+| **GAD-5500** | 61 | VEDA-4 Cognitive Circuits |
+| **GAD-5000** | 54 | Deterministic Execution |
+| **GAD-511** | 75 | Neural Adapter Strategy |
+| **GAD-510** | 42 | Operational Quotas |
+| **GAD-509** | 27 | Circuit Breaker Protocol |
+| **GAD-7000** | 35 | Neural Injection |
+
+*Full index: `docs/architecture/GAD_INDEX.yaml`*
 
 ---
 
