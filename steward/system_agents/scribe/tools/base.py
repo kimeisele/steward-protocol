@@ -9,8 +9,9 @@ Includes template loading utilities.
 Tool Protocol Compliant.
 """
 
+import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader, Template
 
@@ -69,6 +70,65 @@ def get_template_dir() -> Path:
     return Path(__file__).parent.parent / "templates"
 
 
+def get_kernel_status(root_dir: str = ".") -> Dict[str, Any]:
+    """
+    Check kernel status by reading vibe_snapshot.json.
+
+    Returns kernel status dict for unified header template:
+    {
+        'running': bool,
+        'status': str,  # 'RUNNING' | 'NOT DETECTED'
+        'agents': int,
+        'last_pulse': str,  # timestamp or 'never'
+    }
+
+    Logic:
+    - If vibe_snapshot.json exists and timestamp < 5 min old -> RUNNING
+    - Otherwise -> NOT DETECTED
+    """
+    snapshot_path = Path(root_dir) / "vibe_snapshot.json"
+    max_age_seconds = 300  # 5 minutes
+
+    result = {
+        "running": False,
+        "status": "NOT DETECTED",
+        "agents": 0,
+        "last_pulse": "never",
+    }
+
+    if not snapshot_path.exists():
+        return result
+
+    try:
+        data = json.loads(snapshot_path.read_text())
+
+        # Check timestamp freshness
+        timestamp_str = data.get("timestamp", "")
+        if timestamp_str:
+            result["last_pulse"] = timestamp_str
+
+            # Parse ISO timestamp and check age
+            from datetime import datetime
+
+            try:
+                pulse_time = datetime.fromisoformat(timestamp_str)
+                age_seconds = (datetime.now() - pulse_time).total_seconds()
+
+                if age_seconds < max_age_seconds:
+                    result["running"] = True
+                    result["status"] = data.get("kernel_status", "RUNNING")
+                    result["agents"] = len(data.get("agents", {}))
+                else:
+                    result["status"] = f"STALE ({int(age_seconds)}s ago)"
+            except ValueError:
+                pass
+
+    except (json.JSONDecodeError, OSError):
+        pass
+
+    return result
+
+
 def load_template(template_name: str, fallback: Optional[str] = None) -> Template:
     """Load a Jinja2 template from the templates directory.
 
@@ -96,5 +156,6 @@ __all__ = [
     "ToolResult",
     "TOOL_PROTOCOL_AVAILABLE",
     "get_template_dir",
+    "get_kernel_status",
     "load_template",
 ]
