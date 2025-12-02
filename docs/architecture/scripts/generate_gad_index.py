@@ -63,18 +63,16 @@ def scan_codebase():
 
 
 def determine_pillar(gad_num):
-    """Determine which pillar a GAD belongs to based on number."""
-    if gad_num == 0:
-        return "FOUNDATION"
-    elif gad_num < 10:
-        return "LEGACY"  # Old vibe-agency single digits
+    """Determine which pillar a GAD belongs to based on number. Pure math, no hardcoded names."""
+    if gad_num < 10:
+        return f"{gad_num}"  # Single digit as-is
     elif gad_num < 100:
-        return "0XX"
+        return f"{gad_num // 10}X"
     elif gad_num < 1000:
         return f"{gad_num // 100}XX"
     elif gad_num < 10000:
-        return f"{gad_num // 100}XX"  # 5000 -> 50XX, 5500 -> 55XX
-    return "UNKNOWN"
+        return f"{gad_num // 100}XX"
+    return f"{gad_num // 1000}XXX"
 
 
 def build_index(gads):
