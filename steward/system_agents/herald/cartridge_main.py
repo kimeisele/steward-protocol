@@ -3,10 +3,13 @@
 HERALD Cartridge - ContextAwareAgent with Offline-First Capabilities
 
 This cartridge demonstrates the Steward Protocol in action:
-1. Autonomous content generation for marketing
+1. Protocol communications and system announcements
 2. Multi-platform distribution (Twitter, Reddit)
-3. Cryptographic identity via Steward Protocol
+3. Cryptographic identity via Steward Protocol (A.G.I. = Artificial Governed Intelligence)
 4. Governance-first architecture (no marketing slop)
+
+NOTE: Herald is a SYSTEM AGENT for protocol communications, NOT a marketing bot.
+Herald demonstrates A.G.I. through cryptographic identity verification.
 
 This is now a ContextAwareAgent (extends VibeAgent):
 - Inherits from vibe_core.agents.ContextAwareAgent
@@ -57,7 +60,7 @@ logger = logging.getLogger("HERALD_MAIN")
 class HeraldCartridge(ContextAwareAgent, OathMixin):
     """
     The HERALD Agent Cartridge.
-    Autonomous Technical Evangelist for Steward Protocol.
+    Protocol Communications Agent - The Voice of Steward Protocol.
 
     This cartridge encapsulates the complete workflow:
     1. Research: Market trend analysis via Tavily (with offline fallback)
@@ -87,8 +90,8 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             name="HERALD",
             version="3.1.0",  # Bumped version for offline-first capability
             author="Steward Protocol",
-            description="Autonomous intelligence and content distribution agent (offline-first)",
-            domain="MEDIA",
+            description="Protocol communications and identity verification agent (A.G.I.)",
+            domain="COMMUNICATIONS",
             capabilities=[
                 "content_generation",
                 "broadcasting",
