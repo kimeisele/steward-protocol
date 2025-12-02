@@ -47,6 +47,9 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
+
+# ENVOY.md: PlaybookRouter for intent routing (no LLM, pattern matching only)
+from .runtime.playbook_router import PlaybookRouter
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
@@ -234,6 +237,14 @@ class RealVibeKernel(VibeKernel):
         self._settings_execution_history: deque = deque(maxlen=10)  # Last 10 executed commands
         self._paused_agents: Set[str] = set()  # Agents that are paused via SETTINGS.md
         logger.info("⚙️  Settings sync initialized (Command Queue)")
+
+        # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
+        self._envoy_last_modified = 0.0  # Last known mtime of ENVOY.md
+        self._envoy_writing = False  # Lock flag to prevent read during write
+        self._envoy_request_history: deque = deque(maxlen=20)  # Last 20 processed requests
+        self._envoy_pending_tasks: Dict[str, Dict[str, Any]] = {}  # task_id -> request metadata
+        self._playbook_router = PlaybookRouter()  # Intent routing (no LLM needed)
+        logger.info("📬 ENVOY.md terminal initialized (async task dispatch)")
 
         # Phase 4: Network Proxy
         self.network = KernelNetworkProxy(kernel=self)
@@ -818,6 +829,12 @@ class RealVibeKernel(VibeKernel):
         if not self._settings_writing and self._check_settings_file_changed():
             logger.info("⚙️  SETTINGS.md changed, synchronizing to reality...")
             self._sync_settings_to_reality()
+
+        # ENVOY.md: Check for new user requests and dispatch tasks (async, non-blocking)
+        # Uses PlaybookRouter for intent routing - NO LLM NEEDED
+        if not self._envoy_writing and self._check_envoy_file_changed():
+            logger.info("📬 ENVOY.md changed, processing user requests...")
+            self._sync_envoy_to_reality()
 
         task = self._scheduler.next_task()
         if not task:
@@ -1448,6 +1465,9 @@ class RealVibeKernel(VibeKernel):
             # Render SETTINGS.md (Phase 1: Read-Only)
             self._render_settings_file(snapshot)
 
+            # Render ENVOY.md (Terminal Interface for User Requests)
+            self._render_envoy_file(snapshot)
+
         except Exception as e:
             logger.error(f"❌ Pulse failed: {e}")
 
@@ -1991,3 +2011,422 @@ class RealVibeKernel(VibeKernel):
         finally:
             # Release write lock
             self._settings_writing = False
+
+    # ========================================================================
+    # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
+    # ========================================================================
+    # ASYNC DISPATCH PATTERN:
+    # 1. User writes request in ENVOY.md "Request" section
+    # 2. Pulse detects change (fast mtime check)
+    # 3. PlaybookRouter.route() - pattern match only, NO LLM
+    # 4. Create Task, submit to scheduler (non-blocking)
+    # 5. Write "QUEUED" status to ENVOY.md
+    # 6. Scheduler executes task async (separate tick)
+    # 7. Update ENVOY.md with result when complete
+    # ========================================================================
+
+    def _render_envoy_file(self, snapshot: Dict[str, Any]) -> None:
+        """
+        Render ENVOY.md terminal interface.
+
+        ENVOY.md is the user-facing terminal where humans can:
+        - Write natural language requests
+        - See task status (QUEUED, RUNNING, COMPLETED, FAILED)
+        - View execution history
+
+        The kernel PRESERVES user content in the Request section.
+        Only Status and Response sections are updated by the kernel.
+        """
+        try:
+            # Set write lock
+            self._envoy_writing = True
+
+            envoy_path = Path("ENVOY.md")
+
+            # If file exists, preserve the user's Request section
+            existing_request = ""
+            if envoy_path.exists():
+                existing_request = self._extract_envoy_request_content(envoy_path)
+
+            lines = [
+                "# 📬 ENVOY TERMINAL",
+                "",
+                f"**Last Updated:** {snapshot['timestamp']}",
+                "**Mode:** INTERACTIVE (async dispatch)",
+                "",
+                "> Write your request below. The kernel routes it through PlaybookRouter",
+                "> and dispatches tasks to agents asynchronously. No LLM required.",
+                "",
+                "---",
+                "",
+                "## 💬 Request",
+                "",
+                "> **Write your request here.** The kernel will process it on the next tick.",
+                "> Requests are routed via PlaybookRouter (pattern matching) and dispatched async.",
+                "",
+            ]
+
+            # Preserve user's request if it exists
+            if existing_request.strip():
+                lines.append(existing_request)
+            else:
+                lines.append("_No pending request. Write your request above this line._")
+
+            lines.extend([
+                "",
+                "---",
+                "",
+                "## 📊 Status",
+                "",
+            ])
+
+            # Show pending/running tasks
+            if self._envoy_pending_tasks:
+                for task_id, task_meta in self._envoy_pending_tasks.items():
+                    status = task_meta.get("status", "QUEUED")
+                    request = task_meta.get("request", "")[:50]
+                    route = task_meta.get("route", "unknown")
+                    status_emoji = {"QUEUED": "⏳", "RUNNING": "🔄", "COMPLETED": "✅", "FAILED": "❌"}.get(status, "❓")
+                    lines.append(f"- {status_emoji} **{status}** | `{route}` | {request}...")
+            else:
+                lines.append("_No active tasks._")
+
+            lines.extend([
+                "",
+                "---",
+                "",
+                "## 📜 Response History",
+                "",
+                "> **Read-Only.** This section shows the last 20 processed requests.",
+                "",
+            ])
+
+            # Show execution history
+            if self._envoy_request_history:
+                for entry in reversed(list(self._envoy_request_history)):
+                    timestamp = entry.get("timestamp", "unknown")
+                    status = entry.get("status", "UNKNOWN")
+                    request = entry.get("request", "")[:40]
+                    response = entry.get("response", "")[:60]
+                    route = entry.get("route", "unknown")
+
+                    status_emoji = "✅" if status == "COMPLETED" else "❌"
+                    lines.append(f"### [{status_emoji} {timestamp}] {route}")
+                    lines.append(f"**Request:** {request}...")
+                    lines.append(f"**Response:** {response}...")
+                    lines.append("")
+            else:
+                lines.append("_No requests processed yet._")
+
+            lines.extend([
+                "",
+                "---",
+                "",
+                "## 🎯 Available Routes",
+                "",
+                "The PlaybookRouter matches your request to these routes:",
+                "",
+            ])
+
+            # List available routes from PlaybookRouter
+            available_routes = self._playbook_router.list_available_routes()
+            for route in available_routes[:5]:  # Show top 5
+                name = route.get("name", "unknown")
+                desc = route.get("description", "")
+                examples = route.get("examples", [])[:2]
+                lines.append(f"- **{name}**: {desc}")
+                if examples:
+                    lines.append(f"  - Examples: {', '.join(examples)}")
+
+            lines.extend([
+                "",
+                "---",
+                "*This terminal is auto-generated by the kernel pulse. Write requests in the Request section.*",
+            ])
+
+            # Write ENVOY.md
+            envoy_path.write_text("\n".join(lines))
+
+            # NOTE: We do NOT update _envoy_last_modified here.
+            # Only _sync_envoy_to_reality should update it after processing requests.
+            # This ensures user requests are detected and processed on next tick.
+
+            logger.info("📬 ENVOY.md terminal rendered")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to render ENVOY.md: {e}")
+
+        finally:
+            # Release write lock
+            self._envoy_writing = False
+
+    def _extract_envoy_request_content(self, envoy_path: Path) -> str:
+        """
+        Extract user's request content from ENVOY.md.
+
+        Preserves whatever the user wrote in the Request section,
+        excluding boilerplate/placeholder text.
+        """
+        try:
+            content = envoy_path.read_text()
+            in_request_section = False
+            request_lines = []
+
+            for line in content.split("\n"):
+                # Detect start of Request section
+                if "## 💬 Request" in line:
+                    in_request_section = True
+                    continue
+
+                # Stop at next section
+                if in_request_section and line.strip().startswith("##"):
+                    break
+
+                # Skip boilerplate/placeholder lines
+                if in_request_section:
+                    stripped = line.strip()
+                    if stripped.startswith(">"):  # Skip blockquotes (instructions)
+                        continue
+                    if stripped.startswith("_") and stripped.endswith("_"):  # Skip placeholders
+                        continue
+                    if stripped == "---":  # Skip separators
+                        continue
+                    if stripped:
+                        request_lines.append(line)
+
+            return "\n".join(request_lines)
+
+        except Exception as e:
+            logger.error(f"❌ Failed to extract request content: {e}")
+            return ""
+
+    def _check_envoy_file_changed(self) -> bool:
+        """
+        Check if ENVOY.md has been modified since last read.
+
+        Returns:
+            True if file changed, False otherwise
+        """
+        try:
+            envoy_path = Path("ENVOY.md")
+            if not envoy_path.exists():
+                return False
+
+            current_mtime = envoy_path.stat().st_mtime
+
+            if current_mtime > self._envoy_last_modified:
+                logger.debug(f"📬 ENVOY.md changed (mtime: {current_mtime})")
+                return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"❌ Failed to check ENVOY.md: {e}")
+            return False
+
+    def _parse_envoy_requests(self) -> List[str]:
+        """
+        Parse pending requests from ENVOY.md Request section.
+
+        Returns:
+            List of request strings (one per line, non-empty)
+        """
+        try:
+            envoy_path = Path("ENVOY.md")
+            if not envoy_path.exists():
+                return []
+
+            content = self._extract_envoy_request_content(envoy_path)
+            if not content.strip():
+                return []
+
+            # Split into individual requests (one per line)
+            requests = [line.strip() for line in content.split("\n") if line.strip()]
+            return requests
+
+        except Exception as e:
+            logger.error(f"❌ Failed to parse ENVOY.md requests: {e}")
+            return []
+
+    def _dispatch_envoy_request(self, request: str) -> Dict[str, Any]:
+        """
+        Route and dispatch a single user request.
+
+        ASYNC DISPATCH PATTERN:
+        1. PlaybookRouter.route() - fast pattern match, returns PlaybookRoute
+        2. Create Task object with route info
+        3. Submit to scheduler (non-blocking, returns immediately)
+        4. Return metadata with task_id and QUEUED status
+
+        Args:
+            request: The user's natural language request
+
+        Returns:
+            Dict with task_id, status, route info
+        """
+        try:
+            # Step 1: Route the request (fast, no LLM)
+            context = {
+                "session": {"phase": "CODING"},
+                "git": {"uncommitted": 0},
+                "tests": {"failing_count": 0},
+            }
+            route = self._playbook_router.route(request, context)
+
+            logger.info(f"📬 Request routed: '{request[:30]}...' → {route.task} ({route.confidence})")
+
+            # Step 2: Create Task for async execution
+            task = Task(
+                agent_id="envoy",  # Default to envoy agent for dispatch
+                payload={
+                    "type": "envoy_request",
+                    "request": request,
+                    "route": route.task,
+                    "description": route.description,
+                    "confidence": route.confidence,
+                    "source": route.source,
+                },
+                priority=1 if route.confidence == "explicit" else 0,
+            )
+
+            # Step 3: Submit to scheduler (NON-BLOCKING - critical!)
+            task_id = self._scheduler.submit_task(task)
+
+            logger.info(f"📬 Task queued: {task_id} for route '{route.task}'")
+
+            # Step 4: Return metadata
+            return {
+                "task_id": task_id,
+                "status": "QUEUED",
+                "request": request,
+                "route": route.task,
+                "description": route.description,
+                "confidence": route.confidence,
+                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Failed to dispatch request: {e}")
+            return {
+                "task_id": None,
+                "status": "FAILED",
+                "request": request,
+                "error": str(e),
+                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
+            }
+
+    def _sync_envoy_to_reality(self) -> None:
+        """
+        Synchronize ENVOY.md requests to kernel reality.
+
+        ENVOY -> REALITY direction:
+        1. Parse requests from ENVOY.md
+        2. Route each request via PlaybookRouter
+        3. Dispatch tasks to scheduler (async, non-blocking)
+        4. Update _envoy_pending_tasks
+        5. Clear processed requests from file
+
+        This method MUST be fast (no blocking) - actual execution is async.
+        """
+        try:
+            # Parse pending requests
+            requests = self._parse_envoy_requests()
+
+            if not requests:
+                logger.debug("📬 No pending requests in ENVOY.md")
+                return
+
+            logger.info(f"📬 Processing {len(requests)} request(s) from ENVOY.md")
+
+            # Dispatch each request (async - just queues, doesn't execute)
+            for request in requests:
+                result = self._dispatch_envoy_request(request)
+
+                task_id = result.get("task_id")
+                if task_id:
+                    # Track pending task
+                    self._envoy_pending_tasks[task_id] = result
+
+            # Clear processed requests from ENVOY.md
+            self._clear_envoy_requests()
+
+            # Update timestamp
+            envoy_path = Path("ENVOY.md")
+            if envoy_path.exists():
+                self._envoy_last_modified = envoy_path.stat().st_mtime
+
+            logger.info("✅ ENVOY.md requests dispatched to scheduler")
+
+        except Exception as e:
+            logger.error(f"❌ ENVOY sync failed: {e}")
+
+    def _clear_envoy_requests(self) -> None:
+        """
+        Clear processed requests from ENVOY.md Request section.
+
+        Preserves the section structure but removes user content.
+        """
+        try:
+            envoy_path = Path("ENVOY.md")
+            if not envoy_path.exists():
+                return
+
+            content = envoy_path.read_text()
+            lines = content.split("\n")
+
+            new_lines = []
+            in_request_section = False
+
+            for line in lines:
+                # Detect start of Request section
+                if "## 💬 Request" in line:
+                    in_request_section = True
+                    new_lines.append(line)
+                    continue
+
+                # Detect end of Request section (next ##)
+                if in_request_section and line.strip().startswith("##"):
+                    in_request_section = False
+
+                # Skip user content in Request section (but keep boilerplate)
+                if in_request_section:
+                    stripped = line.strip()
+                    # Keep instructions (blockquotes) and empty lines
+                    if stripped.startswith(">") or not stripped:
+                        new_lines.append(line)
+                    # Skip user-written content
+                    continue
+
+                new_lines.append(line)
+
+            envoy_path.write_text("\n".join(new_lines))
+            logger.debug("📬 Cleared processed requests from ENVOY.md")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to clear ENVOY.md requests: {e}")
+
+    def update_envoy_task_status(self, task_id: str, status: str, response: str = "") -> None:
+        """
+        Update a task's status in ENVOY.md tracking.
+
+        Called when a dispatched task completes or fails.
+        Moves task from _envoy_pending_tasks to _envoy_request_history.
+
+        Args:
+            task_id: The task ID to update
+            status: New status (COMPLETED, FAILED)
+            response: Optional response message
+        """
+        if task_id not in self._envoy_pending_tasks:
+            logger.warning(f"⚠️ Task {task_id} not found in pending tasks")
+            return
+
+        # Get task metadata
+        task_meta = self._envoy_pending_tasks.pop(task_id)
+        task_meta["status"] = status
+        task_meta["response"] = response
+
+        # Add to history
+        self._envoy_request_history.append(task_meta)
+
+        logger.info(f"📬 Task {task_id} completed: {status}")

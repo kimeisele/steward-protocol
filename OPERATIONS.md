@@ -1,6 +1,6 @@
 # 🏗️ OPERATIONS DASHBOARD
 
-**Last Updated:** 2025-12-02T11:40:13.849197
+**Last Updated:** 2025-12-02T12:02:30.049968
 **Status:** RUNNING
 
 ## 📊 Kernel Status
@@ -8,7 +8,7 @@
 - Agents Registered: 24
 - Queue Length: 0
 - Completed Tasks: 0
-- Total Events: 108
+- Total Events: 276
 
 ## 🤖 Agent Status
 
@@ -18,47 +18,25 @@
 - status: RUNNING
 - capabilities: ['discovery', 'registration', 'governance']
 
-### forum
-- agent_id: forum
-- name: FORUM
+### discoverer
+- agent_id: discoverer
+- name: DISCOVERER
 - status: RUNNING
-- domain: GOVERNANCE
-- capabilities: ['governance', 'voting', 'proposal_management']
-- governance_metrics: {'total_proposals': 0, 'open_proposals': 0, 'approved_proposals': 0, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 0, 'next_proposal_id': 1, 'proposals_path': '/tmp/vibe_os/agents/forum/governance/proposals', 'votes_ledger_path': '/tmp/vibe_os/agents/forum/governance/votes/votes.jsonl', 'executed_archive_path': '/tmp/vibe_os/agents/forum/governance/executed'}
+- capabilities: ['discovery', 'registration', 'governance']
 
-### auditor
-- agent_id: auditor
-- name: AUDITOR
+### oracle
+- agent_id: oracle
+- name: ORACLE
 - status: RUNNING
-- domain: SECURITY
-- capabilities: ['verify_changes', 'auditing', 'constitutional_verdict', 'auditor.verdict']
-- description: Quality gate agent (Tool Protocol v3.0)
+- domain: INTROSPECTION
+- capabilities: ['introspection', 'audit_trail', 'system_health']
+- description: System introspection and explanation agent
 
-### supreme_court
-- agent_id: supreme_court
-- name: SUPREME_COURT
+### ping
+- agent_id: ping
+- name: PING
 - status: RUNNING
-- capabilities: ['governance', 'auditing']
-
-### chronicle
-- agent_id: chronicle
-- name: CHRONICLE
-- status: operational
-- tasks_processed: 0
-- tasks_successful: 0
-- git_status: {'success': False}
-
-### herald
-- agent_id: herald
-- name: HERALD
-- status: RUNNING
-- capabilities: ['herald.broadcast', 'herald.research', 'herald.scribe', 'herald.scout', 'herald.identity']
-
-### scribe
-- agent_id: scribe
-- name: SCRIBE
-- status: RUNNING
-- capabilities: ['documentation', 'introspection', 'publishing']
+- capabilities: ['ping', 'status']
 
 ### engineer
 - agent_id: engineer
@@ -76,41 +54,13 @@
 - capabilities: ['YOUR_CAPABILITY_1', 'YOUR_CAPABILITY_2']
 - oath_sworn: True
 
-### civic
-- agent_id: civic
-- name: CIVIC
+### forum
+- agent_id: forum
+- name: FORUM
 - status: RUNNING
-- capabilities: ['registry', 'licensing', 'ledger', 'governance']
-
-### watchman
-- agent_id: watchman
-- name: WATCHMAN
-- status: RUNNING
-- domain: ENFORCEMENT
-- capabilities: ['integrity_scanning', 'account_freezing', 'violation_detection']
-- description: System integrity enforcer and governance enforcer
-
-### ping
-- agent_id: ping
-- name: PING
-- status: RUNNING
-- capabilities: ['ping', 'status']
-
-### envoy
-- agent_id: envoy
-- name: ENVOY
-- status: RUNNING
-- domain: ORCHESTRATION
-- capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
-- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
-
-### oracle
-- agent_id: oracle
-- name: ORACLE
-- status: RUNNING
-- domain: INTROSPECTION
-- capabilities: ['introspection', 'audit_trail', 'system_health']
-- description: System introspection and explanation agent
+- domain: GOVERNANCE
+- capabilities: ['governance', 'voting', 'proposal_management']
+- governance_metrics: {'total_proposals': 0, 'open_proposals': 0, 'approved_proposals': 0, 'executed_proposals': 0, 'rejected_proposals': 0, 'total_votes_recorded': 0, 'next_proposal_id': 1, 'proposals_path': '/tmp/vibe_os/agents/forum/governance/proposals', 'votes_ledger_path': '/tmp/vibe_os/agents/forum/governance/votes/votes.jsonl', 'executed_archive_path': '/tmp/vibe_os/agents/forum/governance/executed'}
 
 ### science
 - agent_id: science
@@ -120,11 +70,37 @@
 - capabilities: ['research', 'web_search', 'fact_synthesis']
 - research_metrics: {'cache_entries': 0, 'results_generated': 0, 'cache_dir': '/tmp/vibe_os/agents/science/science/cache', 'results_dir': '/tmp/vibe_os/agents/science/science/results'}
 
-### discoverer
-- agent_id: discoverer
-- name: DISCOVERER
+### auditor
+- agent_id: auditor
+- name: AUDITOR
 - status: RUNNING
-- capabilities: ['discovery', 'registration', 'governance']
+- domain: SECURITY
+- capabilities: ['verify_changes', 'auditing', 'constitutional_verdict', 'auditor.verdict']
+- description: Quality gate agent (Tool Protocol v3.0)
+
+### herald
+- agent_id: herald
+- name: HERALD
+- status: RUNNING
+- capabilities: ['herald.broadcast', 'herald.research', 'herald.scribe', 'herald.scout', 'herald.identity']
+
+### scribe
+- agent_id: scribe
+- name: SCRIBE
+- status: RUNNING
+- capabilities: ['documentation', 'introspection', 'publishing']
+
+### civic
+- agent_id: civic
+- name: CIVIC
+- status: RUNNING
+- capabilities: ['registry', 'licensing', 'ledger', 'governance']
+
+### supreme_court
+- agent_id: supreme_court
+- name: SUPREME_COURT
+- status: RUNNING
+- capabilities: ['governance', 'auditing']
 
 ### archivist
 - agent_id: archivist
@@ -134,11 +110,29 @@
 - capabilities: ['seal_history', 'ledger']
 - description: History keeper: seals verified code into git history
 
-### artisan
-- agent_id: artisan
-- name: ARTISAN
+### chronicle
+- agent_id: chronicle
+- name: CHRONICLE
+- status: operational
+- tasks_processed: 0
+- tasks_successful: 0
+- git_status: {'success': False}
+
+### watchman
+- agent_id: watchman
+- name: WATCHMAN
 - status: RUNNING
-- capabilities: ['media_production']
+- domain: ENFORCEMENT
+- capabilities: ['integrity_scanning', 'account_freezing', 'violation_detection']
+- description: System integrity enforcer and governance enforcer
+
+### envoy
+- agent_id: envoy
+- name: ENVOY
+- status: RUNNING
+- domain: ORCHESTRATION
+- capabilities: ['orchestration', 'governance', 'broadcasting', 'registry', 'auditing']
+- orchestration_metrics: {'city_control_initialized': True, 'operations_logged_in_memory': 0, 'operations_logged_persistent': 0, 'kernel_injected': False, 'log_path': '/tmp/vibe_os/agents/envoy/logs/envoy_operations.jsonl', 'hil_assistant_active': True}
 
 ### mechanic
 - agent_id: mechanic
@@ -153,17 +147,17 @@
 - domain: CONTENT
 - capabilities: ['content_generation', 'tweet_writing', 'reddit_posts', 'reply_generation']
 
-### echo
-- agent_id: echo
-- name: ECHO
+### dhruva
+- agent_id: dhruva
+- name: DHRUVA
 - status: RUNNING
-- capabilities: ['echo_back']
+- capabilities: ['data_ethics', 'truth_verification']
 
-### agora
-- agent_id: agora
-- name: AGORA
+### artisan
+- agent_id: artisan
+- name: ARTISAN
 - status: RUNNING
-- capabilities: ['broadcast_publishing', 'stream_listening', 'message_routing', 'transmission_verification', 'history_auditing']
+- capabilities: ['media_production']
 
 ### librarian
 - agent_id: librarian
@@ -171,11 +165,17 @@
 - status: RUNNING
 - capabilities: []
 
-### dhruva
-- agent_id: dhruva
-- name: DHRUVA
+### agora
+- agent_id: agora
+- name: AGORA
 - status: RUNNING
-- capabilities: ['data_ethics', 'truth_verification']
+- capabilities: ['broadcast_publishing', 'stream_listening', 'message_routing', 'transmission_verification', 'history_auditing']
+
+### echo
+- agent_id: echo
+- name: ECHO
+- status: RUNNING
+- capabilities: ['echo_back']
 
 ---
 *This dashboard is auto-generated by the kernel heartbeat.*
