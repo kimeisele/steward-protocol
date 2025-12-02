@@ -153,17 +153,19 @@ class HelpRenderer(Tool):
         if not economy:
             return "⚠️  Economy parameters not discovered\n"
 
-        output = "**Tunable Parameters:**\n\n"
+        output = "**Discovered Parameters:**\n\n"
 
         if "starting_credits" in economy:
-            output += f"- **Starting Credits:** {economy['starting_credits']} CR per agent\n"
-            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+            value = economy["starting_credits"]
+            source = economy.get("starting_credits_source", "unknown")
+            output += f"- **Initial Credits:** {value} CR per agent\n"
+            output += f"  - *Source:* `{source}`\n\n"
 
-        if "api_cost" in economy:
-            output += f"- **API Cost:** {economy['api_cost']} CR per call\n"
-            output += "  - *Change:* Edit `steward/system_agents/civic/tools/economy.py`\n\n"
+        if "transfer_cost" in economy:
+            output += f"- **Transfer Cost:** {economy['transfer_cost']} CR\n\n"
 
-        output += "**Transparency:** See exactly what credits cost and where to change it.\n"
+        if "note" in economy:
+            output += f"⚠️  {economy['note']}\n\n"
 
         return output
 
