@@ -57,7 +57,7 @@ class LensCartridge(VibeAgent):
             version="1.0.0",
             author="Steward Protocol",
             description="Campaign analytics, KPI tracking, and data-driven insights",
-            domain="SCIENCE",
+            domain="OBSERVATION",
             capabilities=[
                 "kpi_tracking",
                 "data_visualization",

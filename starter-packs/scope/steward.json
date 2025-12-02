@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "agent_id": "scope",
+    "name": "SCOPE"
+  },
+  "specs": {
+    "version": "1.0.0",
+    "description": "Research agent for data analysis and intelligence gathering",
+    "domain": "RESEARCH"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "research_topic",
+        "description": "Search and aggregate information"
+      },
+      {
+        "name": "generate_report",
+        "description": "Create comprehensive analyses"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "REPLACE_WITH_ACTUAL_HASH",
+    "issued_at": "REPLACE_WITH_TIMESTAMP",
+    "issuer": "passport_office"
+  }
+}

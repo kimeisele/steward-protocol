@@ -15,14 +15,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+from steward.oath_mixin import OathMixin
 from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
 
-# Constitutional Oath
 logger = logging.getLogger("ECHO_CARTRIDGE")
 
 
-class EchoCartridge(VibeAgent):
+class EchoCartridge(VibeAgent, OathMixin):
     """
     The ECHO Agent Cartridge (Test Agent).
 
@@ -42,15 +42,13 @@ class EchoCartridge(VibeAgent):
             capabilities=["echo_back"],
         )
 
-        logger.info("🔔 ECHO Cartridge initializing...")
+        logger.info("ECHO Cartridge initializing...")
 
-        # Initialize Constitutional Oath mixin (if available)
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ ECHO has sworn the Constitutional Oath")
+        # Initialize Constitutional Oath
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
 
-        logger.info("🔔 ECHO Cartridge ready")
+        logger.info("ECHO Cartridge ready")
         self.tasks_processed = 0
         self.tasks_successful = 0
 

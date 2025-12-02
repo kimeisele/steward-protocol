@@ -15,8 +15,9 @@ This is NOT a chatroom. This is Parampara (chain of transmission).
 import logging
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +34,7 @@ class AgoraMessageType(Enum):
     SYSTEM = "system"  # Infrastructure message
 
 
-class AgoraCartridge(VibeAgent):
+class AgoraCartridge(VibeAgent, OathMixin):
     """
     AGORA System Cartridge.
     One-Way Broadcast Channel for Steward Protocol.
@@ -52,18 +53,26 @@ class AgoraCartridge(VibeAgent):
     - verify_signal: Ensure no corruption in transmission
     """
 
-    # List of authorized sources (only these can publish)
-    AUTHORIZED_SOURCES = ["herald", "steward", "science"]
+    # Default authorized sources - can be extended via config
+    # These are agents allowed to broadcast to the federation
+    DEFAULT_AUTHORIZED_SOURCES = frozenset(["herald", "steward", "science"])
 
-    def __init__(self):
+    def __init__(self, config: Optional[Any] = None):
         """Initialize AGORA as a SystemCartridge."""
+        self.config = config
+
+        # Authorized sources: default + any from config
+        self.authorized_sources = set(self.DEFAULT_AUTHORIZED_SOURCES)
+        if config and hasattr(config, "authorized_sources"):
+            self.authorized_sources.update(config.authorized_sources)
+
         super().__init__(
             agent_id="agora",
             name="AGORA",
             version="1.0.0",
             author="Steward Protocol",
             description="The Broadcast Channel - One-way transmission system for federation",
-            domain="INFRASTRUCTURE",
+            domain="COMMUNITY",
             capabilities=[
                 "broadcast_publishing",
                 "stream_listening",
@@ -75,18 +84,17 @@ class AgoraCartridge(VibeAgent):
 
         logger.info("📡 AGORA (VibeAgent v1.0) is online - Broadcast Channel Ready")
 
-        if OathMixin:
-            self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
-            logger.info("✅ AGORA has sworn the Constitutional Oath")
+        # Constitutional Oath
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ AGORA has sworn the Constitutional Oath")
 
-        # Broadcast channels (one per source)
+        # Broadcast channels - dynamically created per authorized source
+        # Plus a system channel for infrastructure messages
         self.channels: Dict[str, List[Dict[str, Any]]] = {
-            "herald": [],  # Content/Narrative stream
-            "steward": [],  # Directive/Command stream
-            "science": [],  # Knowledge/Teaching stream
-            "system": [],  # System/Infrastructure stream
+            source: [] for source in self.authorized_sources
         }
+        self.channels["system"] = []  # Always have system channel
 
         # Subscriptions (agent_id -> list of channels they listen to)
         self.subscriptions: Dict[str, List[str]] = {}
@@ -143,12 +151,12 @@ class AgoraCartridge(VibeAgent):
         content = payload.get("content", "")
 
         # Authorization check
-        if source not in self.AUTHORIZED_SOURCES:
+        if source not in self.authorized_sources:
             logger.warning(f"❌ PUBLISH BLOCKED: Unauthorized source '{source}'")
             return {
                 "status": "rejected",
                 "reason": f"Source '{source}' not authorized to publish",
-                "authorized_sources": self.AUTHORIZED_SOURCES,
+                "authorized_sources": sorted(self.authorized_sources),
             }
 
         # Create message with immutable timestamp

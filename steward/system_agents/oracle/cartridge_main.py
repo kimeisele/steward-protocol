@@ -63,7 +63,7 @@ class OracleCartridge(VibeAgent, OathMixin):
             version="1.0.0",
             author="Steward Protocol",
             description="System introspection and explanation agent",
-            domain="INTROSPECTION",
+            domain="SYSTEM",
             capabilities=["introspection", "audit_trail", "system_health"],
         )
 
@@ -422,7 +422,7 @@ class OracleCartridge(VibeAgent, OathMixin):
             version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="System introspection and self-awareness",
-            domain="INTROSPECTION",
+            domain="SYSTEM",
             capabilities=["system_state", "health_check", "diagnostics"],
         )
 

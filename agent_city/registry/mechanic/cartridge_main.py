@@ -75,7 +75,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
             agent_id="mechanic",
             name="MECHANIC",
             version="1.0.0",
-            domain="INFRASTRUCTURE",
+            domain="MAINTENANCE",
             capabilities=["system_diagnosis", "self_healing", "sdlc_management"],
         )
 
