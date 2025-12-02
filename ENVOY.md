@@ -1,6 +1,6 @@
 # 📬 ENVOY TERMINAL
 
-**Last Updated:** 2025-12-02T12:18:59.551487
+**Last Updated:** 2025-12-02T12:27:02.038971
 **Mode:** INTERACTIVE (async dispatch)
 
 > Write your request below. The kernel routes it through PlaybookRouter
