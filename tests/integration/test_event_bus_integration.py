@@ -29,13 +29,16 @@ from steward.oath_mixin import OathMixin
 from steward.constitutional_oath import ConstitutionalOath
 
 
-class TestAgent(VibeAgent, OathMixin):
-    """Simple test agent for event testing with Constitutional Oath."""
+class MockAgent(VibeAgent, OathMixin):
+    """Mock agent for event testing with Constitutional Oath.
+
+    Note: Named MockAgent (not TestAgent) to avoid pytest collection conflict.
+    """
 
     def __init__(self, agent_id: str):
         super().__init__(
             agent_id=agent_id,
-            name=f"Test Agent {agent_id}",
+            name=f"Mock Agent {agent_id}",
             capabilities=[],
         )
         self.received_events = []
@@ -63,7 +66,7 @@ def test_agent_can_subscribe_to_events():
     kernel = RealVibeKernel()
 
     # Register agent
-    agent = TestAgent("test_agent_1")
+    agent = MockAgent("test_agent_1")
     kernel.register_agent(agent, spawn_process=False)
 
     # Subscribe to events
@@ -81,7 +84,7 @@ def test_agent_can_broadcast_events():
     kernel = RealVibeKernel()
 
     # Register agent
-    agent = TestAgent("test_agent_2")
+    agent = MockAgent("test_agent_2")
     kernel.register_agent(agent, spawn_process=False)
 
     # Broadcast event
@@ -104,8 +107,8 @@ def test_subscriber_receives_event():
     kernel = RealVibeKernel()
 
     # Register two agents
-    broadcaster = TestAgent("broadcaster")
-    subscriber = TestAgent("subscriber")
+    broadcaster = MockAgent("broadcaster")
+    subscriber = MockAgent("subscriber")
     kernel.register_agent(broadcaster, spawn_process=False)
     kernel.register_agent(subscriber, spawn_process=False)
 
@@ -139,10 +142,10 @@ def test_multiple_subscribers_receive_event():
     kernel = RealVibeKernel()
 
     # Register broadcaster and 3 subscribers
-    broadcaster = TestAgent("broadcaster")
-    sub1 = TestAgent("sub1")
-    sub2 = TestAgent("sub2")
-    sub3 = TestAgent("sub3")
+    broadcaster = MockAgent("broadcaster")
+    sub1 = MockAgent("sub1")
+    sub2 = MockAgent("sub2")
+    sub3 = MockAgent("sub3")
 
     kernel.register_agent(broadcaster, spawn_process=False)
     kernel.register_agent(sub1, spawn_process=False)
@@ -181,8 +184,8 @@ def test_global_subscriber_receives_all_events():
     kernel = RealVibeKernel()
 
     # Register agents
-    broadcaster = TestAgent("broadcaster")
-    global_sub = TestAgent("global_sub")
+    broadcaster = MockAgent("broadcaster")
+    global_sub = MockAgent("global_sub")
 
     kernel.register_agent(broadcaster, spawn_process=False)
     kernel.register_agent(global_sub, spawn_process=False)
@@ -219,8 +222,8 @@ def test_event_type_filtering():
     kernel = RealVibeKernel()
 
     # Register agents
-    broadcaster = TestAgent("broadcaster")
-    specific_sub = TestAgent("specific_sub")
+    broadcaster = MockAgent("broadcaster")
+    specific_sub = MockAgent("specific_sub")
 
     kernel.register_agent(broadcaster, spawn_process=False)
     kernel.register_agent(specific_sub, spawn_process=False)
@@ -256,7 +259,7 @@ def test_event_history_maintained():
     kernel = RealVibeKernel()
 
     # Register agent
-    agent = TestAgent("agent")
+    agent = MockAgent("agent")
     kernel.register_agent(agent, spawn_process=False)
 
     # Broadcast several events
@@ -287,7 +290,7 @@ def test_syscall_broadcast_event():
     handler = SemanticSyscallHandler(kernel)
 
     # Register subscriber
-    subscriber = TestAgent("subscriber")
+    subscriber = MockAgent("subscriber")
     kernel.register_agent(subscriber, spawn_process=False)
     subscriber.system.subscribe_to_events(subscriber.on_event, "syscall.test")
 
@@ -324,7 +327,7 @@ def test_subscriber_error_doesnt_crash_others():
     kernel = RealVibeKernel()
 
     # Register broadcaster
-    broadcaster = TestAgent("broadcaster")
+    broadcaster = MockAgent("broadcaster")
     kernel.register_agent(broadcaster, spawn_process=False)
 
     # Subscribe with error-prone callback
@@ -332,7 +335,7 @@ def test_subscriber_error_doesnt_crash_others():
         raise RuntimeError("Intentional error")
 
     # Subscribe with good callback
-    good_agent = TestAgent("good_agent")
+    good_agent = MockAgent("good_agent")
     kernel.register_agent(good_agent, spawn_process=False)
 
     # Subscribe both
@@ -360,8 +363,8 @@ def test_unsubscribe_works():
     kernel = RealVibeKernel()
 
     # Register agents
-    broadcaster = TestAgent("broadcaster")
-    subscriber = TestAgent("subscriber")
+    broadcaster = MockAgent("broadcaster")
+    subscriber = MockAgent("subscriber")
 
     kernel.register_agent(broadcaster, spawn_process=False)
     kernel.register_agent(subscriber, spawn_process=False)
@@ -396,8 +399,8 @@ def test_event_bus_status():
     kernel = RealVibeKernel()
 
     # Register agents
-    agent1 = TestAgent("agent1")
-    agent2 = TestAgent("agent2")
+    agent1 = MockAgent("agent1")
+    agent2 = MockAgent("agent2")
     kernel.register_agent(agent1, spawn_process=False)
     kernel.register_agent(agent2, spawn_process=False)
 

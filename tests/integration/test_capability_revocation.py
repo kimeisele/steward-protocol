@@ -28,13 +28,16 @@ from steward.oath_mixin import OathMixin
 from steward.constitutional_oath import ConstitutionalOath
 
 
-class TestAgent(VibeAgent, OathMixin):
-    """Simple test agent for capability testing with Constitutional Oath."""
+class MockAgent(VibeAgent, OathMixin):
+    """Mock agent for capability testing with Constitutional Oath.
+
+    Note: Named MockAgent (not TestAgent) to avoid pytest collection conflict.
+    """
 
     def __init__(self, agent_id: str, capabilities: list[str]):
         super().__init__(
             agent_id=agent_id,
-            name=f"Test Agent {agent_id}",
+            name=f"Mock Agent {agent_id}",
             capabilities=capabilities,
         )
         # Initialize OathMixin with REAL constitution hash
@@ -57,7 +60,7 @@ def test_revoke_removes_capability():
     kernel = RealVibeKernel()
 
     # Register agent with capabilities
-    agent = TestAgent("test_agent_1", ["can_transfer", "can_spawn"])
+    agent = MockAgent("test_agent_1", ["can_transfer", "can_spawn"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Verify agent has capabilities
@@ -89,7 +92,7 @@ def test_revoked_agent_cannot_use_capability():
     kernel = RealVibeKernel()
 
     # Register agent with tool capability
-    agent = TestAgent("test_agent_2", ["execute_code", "read_file"])
+    agent = MockAgent("test_agent_2", ["execute_code", "read_file"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Agent can use capability before revocation
@@ -111,7 +114,7 @@ def test_permission_model_kernel_can_revoke():
     """Test that KERNEL can revoke from any agent."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_3", ["can_transfer"])
+    agent = MockAgent("test_agent_3", ["can_transfer"])
     kernel.register_agent(agent, spawn_process=False)
 
     # KERNEL can revoke from anyone
@@ -129,7 +132,7 @@ def test_permission_model_civic_can_revoke():
     """Test that CIVIC can revoke from any agent (governance)."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_4", ["can_transfer"])
+    agent = MockAgent("test_agent_4", ["can_transfer"])
     kernel.register_agent(agent, spawn_process=False)
 
     # CIVIC can revoke from anyone
@@ -147,7 +150,7 @@ def test_permission_model_self_revocation():
     """Test that agents can revoke their own capabilities (voluntary)."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_5", ["can_transfer", "can_spawn"])
+    agent = MockAgent("test_agent_5", ["can_transfer", "can_spawn"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Agent can revoke from themselves (Principle of Least Privilege)
@@ -166,8 +169,8 @@ def test_permission_model_agent_cannot_revoke_from_others():
     """Test that agents cannot revoke from other agents."""
     kernel = RealVibeKernel()
 
-    agent1 = TestAgent("test_agent_6a", ["can_transfer"])
-    agent2 = TestAgent("test_agent_6b", ["can_transfer"])
+    agent1 = MockAgent("test_agent_6a", ["can_transfer"])
+    agent2 = MockAgent("test_agent_6b", ["can_transfer"])
     kernel.register_agent(agent1, spawn_process=False)
     kernel.register_agent(agent2, spawn_process=False)
 
@@ -190,7 +193,7 @@ def test_audit_trail_in_ledger():
     """Test that revocations are recorded in the audit trail."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_7", ["can_transfer", "can_spawn"])
+    agent = MockAgent("test_agent_7", ["can_transfer", "can_spawn"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Revoke capability
@@ -223,7 +226,7 @@ def test_revoke_multiple_capabilities():
     """Test revoking multiple capabilities at once."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_8", ["cap_a", "cap_b", "cap_c"])
+    agent = MockAgent("test_agent_8", ["cap_a", "cap_b", "cap_c"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Revoke multiple capabilities
@@ -251,7 +254,7 @@ def test_revoke_nonexistent_capability():
     """Test revoking a capability the agent doesn't have."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_9", ["cap_a"])
+    agent = MockAgent("test_agent_9", ["cap_a"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Try to revoke capability agent doesn't have
@@ -288,7 +291,7 @@ def test_narasimha_revokes_all_capabilities():
     """Test that Narasimha kill-switch revokes all capabilities."""
     kernel = RealVibeKernel()
 
-    agent = TestAgent("test_agent_10", ["cap_a", "cap_b", "cap_c"])
+    agent = MockAgent("test_agent_10", ["cap_a", "cap_b", "cap_c"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Verify agent has capabilities
@@ -318,7 +321,7 @@ def test_syscall_revoke_mandate_success():
     handler = SemanticSyscallHandler(kernel)
 
     # Register test agent
-    agent = TestAgent("test_agent_11", ["can_transfer", "can_spawn"])
+    agent = MockAgent("test_agent_11", ["can_transfer", "can_spawn"])
     kernel.register_agent(agent, spawn_process=False)
 
     # Create REVOKE_MANDATE syscall request
@@ -351,8 +354,8 @@ def test_syscall_revoke_mandate_permission_denied():
     handler = SemanticSyscallHandler(kernel)
 
     # Register two test agents
-    agent1 = TestAgent("test_agent_12a", ["can_transfer"])
-    agent2 = TestAgent("test_agent_12b", ["can_transfer"])
+    agent1 = MockAgent("test_agent_12a", ["can_transfer"])
+    agent2 = MockAgent("test_agent_12b", ["can_transfer"])
     kernel.register_agent(agent1, spawn_process=False)
     kernel.register_agent(agent2, spawn_process=False)
 
@@ -383,7 +386,7 @@ def test_core_capabilities_not_revocable():
     kernel = RealVibeKernel()
 
     # Register agent with NO capabilities
-    agent = TestAgent("test_agent_13", [])
+    agent = MockAgent("test_agent_13", [])
     kernel.register_agent(agent, spawn_process=False)
 
     # Core capabilities should still work
