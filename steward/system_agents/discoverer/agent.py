@@ -201,8 +201,8 @@ class Discoverer(VibeAgent):
             if self.config and hasattr(self.config, "agents"):
                 agent_config = getattr(self.config.agents, agent_id, None)
 
-            # BLOCKER #2: Try to load REAL cartridge implementation first
-            agent = self._try_load_real_cartridge(agent_id, agent_config)
+            # Dynamic cartridge loading (no more hardcoded CARTRIDGE_MAP)
+            agent = self._try_load_real_cartridge(agent_id, agent_config, manifest_path)
 
             if agent:
                 # ✅ Real cartridge loaded successfully
@@ -238,72 +238,75 @@ class Discoverer(VibeAgent):
             logger.error(f"❌ Error parsing {manifest_path}: {e}")
             return None
 
-    def _try_load_real_cartridge(self, agent_id: str, config: Optional[Any] = None) -> Optional[VibeAgent]:
+    def _try_load_real_cartridge(
+        self, agent_id: str, config: Optional[Any] = None, manifest_path: Optional[Path] = None
+    ) -> Optional[VibeAgent]:
         """
-        BLOCKER #2: Try to dynamically load REAL cartridge implementation.
+        Dynamically load cartridge from cartridge_main.py.
 
-        Maps agent_id to cartridge module path and tries to instantiate the real class.
-        If it fails, returns None to fallback to GenericAgent.
+        NO MORE HARDCODED CARTRIDGE_MAP. Discovery is fully dynamic:
+        1. Check if cartridge_main.py exists next to steward.json
+        2. Dynamically import the module
+        3. Find all classes ending with 'Cartridge' that inherit from VibeAgent
+        4. Instantiate the first valid one
+
+        Args:
+            agent_id: The agent identifier
+            config: Optional Phoenix Config for this agent
+            manifest_path: Path to steward.json (used to find cartridge_main.py)
 
         Returns:
-            VibeAgent instance if real cartridge exists and loads, None otherwise
+            VibeAgent instance if cartridge loads, None otherwise
         """
-        # Mapping of agent_id to (module_path, class_name)
-        CARTRIDGE_MAP = {
-            "herald": (
-                "steward.system_agents.herald.cartridge_main",
-                "HeraldCartridge",
-            ),
-            "civic": ("steward.system_agents.civic.cartridge_main", "CivicCartridge"),
-            "science": (
-                "steward.system_agents.science.cartridge_main",
-                "ScienceCartridge",
-            ),
-            "forum": ("steward.system_agents.forum.cartridge_main", "ForumCartridge"),
-            "supreme_court": (
-                "steward.system_agents.supreme_court.cartridge_main",
-                "SupremeCourtCartridge",
-            ),
-            "engineer": (
-                "steward.system_agents.engineer.cartridge_main",
-                "EngineerCartridge",
-            ),
-            "watchman": (
-                "steward.system_agents.watchman.cartridge_main",
-                "WatchmanCartridge",
-            ),
-            "archivist": (
-                "steward.system_agents.archivist.cartridge_main",
-                "ArchivistCartridge",
-            ),
-            "auditor": (
-                "steward.system_agents.auditor.cartridge_main",
-                "AuditorCartridge",
-            ),
-            "oracle": (
-                "steward.system_agents.oracle.cartridge_main",
-                "OracleCartridge",
-            ),
-            "envoy": ("steward.system_agents.envoy.cartridge_main", "EnvoyCartridge"),
-            "chronicle": (
-                "steward.system_agents.chronicle.cartridge_main",
-                "ChronicleCartridge",
-            ),
-            "scribe": (
-                "steward.system_agents.scribe.cartridge_main",
-                "ScribeCartridge",
-            ),
-        }
+        import importlib.util
+        import inspect
 
-        if agent_id not in CARTRIDGE_MAP:
-            return None  # No real cartridge defined for this agent
+        # Determine cartridge_main.py path
+        if manifest_path:
+            agent_dir = manifest_path.parent
+        else:
+            # Fallback: Try both scan paths
+            for base in [Path("steward/system_agents"), Path("agent_city/registry")]:
+                candidate = base / agent_id / "cartridge_main.py"
+                if candidate.exists():
+                    agent_dir = candidate.parent
+                    break
+            else:
+                logger.debug(f"   ℹ️  No cartridge_main.py found for {agent_id}")
+                return None
 
-        module_path, class_name = CARTRIDGE_MAP[agent_id]
+        cartridge_path = agent_dir / "cartridge_main.py"
+
+        if not cartridge_path.exists():
+            logger.debug(f"   ℹ️  No cartridge_main.py at {cartridge_path}")
+            return None
 
         try:
             # Dynamically import the module
-            module = __import__(module_path, fromlist=[class_name])
-            CartridgeClass = getattr(module, class_name)
+            module_name = f"cartridge_{agent_id}"
+            spec = importlib.util.spec_from_file_location(module_name, cartridge_path)
+
+            if spec is None or spec.loader is None:
+                logger.debug(f"   ℹ️  Cannot create module spec for {cartridge_path}")
+                return None
+
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            # Find all Cartridge classes (classes ending with 'Cartridge' that inherit from VibeAgent)
+            cartridge_classes = []
+            for name, obj in inspect.getmembers(module, inspect.isclass):
+                if name.endswith("Cartridge") and obj.__module__ == module_name:
+                    # Check if it inherits from VibeAgent
+                    if issubclass(obj, VibeAgent) and obj is not VibeAgent:
+                        cartridge_classes.append((name, obj))
+
+            if not cartridge_classes:
+                logger.debug(f"   ℹ️  No *Cartridge class found in {cartridge_path}")
+                return None
+
+            # Use the first valid cartridge class
+            class_name, CartridgeClass = cartridge_classes[0]
 
             # Instantiate with config
             agent = None
@@ -317,8 +320,7 @@ class Discoverer(VibeAgent):
                 else:
                     agent = CartridgeClass()
             except Exception as init_err:
-                # Cartridge initialization failed - log and fallback
-                logger.debug(f"   ℹ️  Cartridge init error for {class_name}: {type(init_err).__name__}")
+                logger.warning(f"   ⚠️  Cartridge init error for {class_name}: {type(init_err).__name__}: {init_err}")
                 return None
 
             if agent is None:
@@ -329,14 +331,11 @@ class Discoverer(VibeAgent):
                 logger.debug(f"   ℹ️  {class_name} is not a VibeAgent: {type(agent)}")
                 return None
 
-            logger.info(f"   ✅ Loaded REAL cartridge: {class_name} ({agent.agent_id})")
+            logger.info(f"   ✅ Loaded cartridge: {class_name} ({agent.agent_id})")
             return agent
 
-        except ImportError as e:
-            logger.debug(f"   ℹ️  Cannot import {module_path}: {str(e)[:80]}")
-            return None
         except Exception as e:
-            logger.debug(f"   ℹ️  Error loading {agent_id} cartridge: {type(e).__name__}: {str(e)[:100]}")
+            logger.warning(f"   ⚠️  Error loading {agent_id} cartridge: {type(e).__name__}: {str(e)[:100]}")
             return None
 
 
