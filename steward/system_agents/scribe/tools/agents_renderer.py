@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .base import Tool, ToolResult, load_template
+from .base import Tool, ToolResult, get_kernel_status, load_template
 from .introspector import CartridgeIntrospector
 
 
@@ -84,10 +84,17 @@ class AgentsRenderer(Tool):
         # Sort agents by name for consistent output
         sorted_agents = sorted(self.agents.values(), key=lambda a: a["agent_name_pretty"])
 
+        # Get kernel status for unified header
+        kernel_status = get_kernel_status(str(self.root_dir))
+
         # Load and render template
         template = load_template("agents.jinja2")
         content = template.render(
+            # Unified header variables
             timestamp=timestamp,
+            generator="SCRIBE",
+            kernel_status=kernel_status,
+            # Agents-specific variables
             agents=sorted_agents,
             system_count=system_count,
             citizen_count=citizen_count,
