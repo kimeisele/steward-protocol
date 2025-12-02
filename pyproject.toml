@@ -113,10 +113,9 @@ markers = [
     "security: Security-focused tests (penetration, crypto)",
 ]
 
-# Warning filters
-# TODO: 27 tests return values instead of asserting (bad practice)
-# Enable strict mode after fixing: "error::pytest.PytestReturnNotNoneWarning"
+# Warning filters - STRICT MODE (no hiding failures)
 filterwarnings = [
+    "error::pytest.PytestReturnNotNoneWarning",  # Tests MUST assert, not return
     "ignore::DeprecationWarning:pydantic.*:",    # Ignore Pydantic deprecations
 ]
 
