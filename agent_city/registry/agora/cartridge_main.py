@@ -63,7 +63,7 @@ class AgoraCartridge(VibeAgent):
             version="1.0.0",
             author="Steward Protocol",
             description="The Broadcast Channel - One-way transmission system for federation",
-            domain="INFRASTRUCTURE",
+            domain="COMMUNITY",
             capabilities=[
                 "broadcast_publishing",
                 "stream_listening",

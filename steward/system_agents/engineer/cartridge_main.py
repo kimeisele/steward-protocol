@@ -57,7 +57,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
             version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Builder agent: manifests code and scaffolds new agents",
-            domain="ENGINEERING",
+            domain="INFRASTRUCTURE",
             capabilities=["manifest_reality", "agent_scaffolding", "code_generation"],
         )
 

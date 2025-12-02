@@ -77,7 +77,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             version="1.0.0",
             author="Steward Protocol",
             description="Temporal agent: manages git operations, commits, branches, and code history",
-            domain="INFRASTRUCTURE",
+            domain="SYSTEM",
             capabilities=[
                 "content_generation",  # Can create commits (git operations)
             ],  # CREDIBILITY FIX: P1.4 - Removed false "ledger" and "orchestration" capabilities

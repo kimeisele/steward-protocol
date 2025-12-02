@@ -98,7 +98,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="System integrity enforcer and governance enforcer",
-            domain="ENFORCEMENT",
+            domain="SYSTEM",
             capabilities=[
                 "integrity_scanning",
                 "account_freezing",
