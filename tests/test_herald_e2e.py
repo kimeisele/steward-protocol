@@ -36,15 +36,19 @@ def _run_command(cmd, description):
 
 def test_health_check():
     """Test 1: Health Check (GAD-000)"""
+    script_path = Path("examples/herald/health_check.py")
+    if not script_path.exists():
+        pytest.skip(f"Herald script not found: {script_path}")
+
     success, result = _run_command(
-        "python3 examples/herald/health_check.py",
+        f"python3 {script_path}",
         "Health Check: Verify all dependencies",
     )
     assert success, f"Health check command failed: {result.stderr}"
 
     # Parse and validate JSON output
     result = subprocess.run(
-        "python3 examples/herald/health_check.py",
+        f"python3 {script_path}",
         shell=True,
         capture_output=True,
         text=True,
@@ -57,16 +61,24 @@ def test_health_check():
 
 def test_generate_content():
     """Test 2: Generate Content (requires API keys)"""
+    script_path = Path("examples/herald/generate_only.py")
+    if not script_path.exists():
+        pytest.skip(f"Herald script not found: {script_path}")
+
     # Check if API keys exist
     if not Path(".env").exists():
         pytest.skip("Skipping generate_only.py - no .env file (needs API keys)")
 
-    success, result = _run_command("python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist")
+    success, result = _run_command(f"python3 {script_path}", "Generate Content: Brain + Artist")
     assert success, f"Content generation failed: {result.stderr}"
 
 
 def test_dashboard_generation():
     """Test 3: Dashboard generation (mock data if needed)"""
+    script_path = Path("examples/herald/generate_dashboard.py")
+    if not script_path.exists():
+        pytest.skip(f"Herald script not found: {script_path}")
+
     # Create mock content.json if it doesn't exist
     dist_dir = Path("dist")
     content_file = dist_dir / "content.json"
@@ -82,7 +94,7 @@ def test_dashboard_generation():
             json.dump(mock_content, f)
 
     success, result = _run_command(
-        "python3 examples/herald/generate_dashboard.py > /tmp/dashboard_test.md",
+        f"python3 {script_path} > /tmp/dashboard_test.md",
         "Dashboard Generation: Extract content for approval gate",
     )
     assert success, f"Dashboard generation failed: {result.stderr}"

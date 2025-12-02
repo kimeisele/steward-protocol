@@ -226,11 +226,11 @@ def test_privilege_escalation_capabilities():
     except TypeError as e:
         assert "does not support item assignment" in str(e), f"Unexpected TypeError: {e}"
 
-    # Also verify capabilities are stored as frozenset
-    assert hasattr(kernel, '_agent_capabilities'), \
-        "NO CAPABILITY TRACKING: Kernel has no _agent_capabilities (Add frozenset capability storage)"
+    # Also verify capabilities are tracked via capability registry
+    assert hasattr(kernel, '_capability_registry'), \
+        "NO CAPABILITY TRACKING: Kernel has no _capability_registry"
 
-    print("Capabilities protected: registry immutable + frozenset storage")
+    print("Capabilities protected: registry immutable + capability_registry")
 
 
 def test_kernel_isolation():
@@ -256,9 +256,9 @@ def test_kernel_isolation():
     except TypeError:
         pass  # Expected - MappingProxyType blocks assignment
 
-    # TEST: Verify capability registry exists and is proper type
-    assert hasattr(kernel, '_agent_capabilities'), \
-        "NO CAPABILITY ISOLATION: _agent_capabilities missing (Add frozenset capability storage)"
+    # TEST: Verify capability registry exists
+    assert hasattr(kernel, '_capability_registry'), \
+        "NO CAPABILITY ISOLATION: _capability_registry missing"
 
     # Python limitation documented: read access is unavoidable
     print("Kernel write-protected: registry and capabilities immutable")
