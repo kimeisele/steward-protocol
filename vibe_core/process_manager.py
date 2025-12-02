@@ -146,7 +146,13 @@ class AgentProcess:
                         # Execute Task
                         child_logger.info(f"⚡ Processing task {task.task_id}")
                         try:
-                            result = agent.process(task)
+                            import asyncio
+
+                            # Handle both async and sync process() methods
+                            if asyncio.iscoroutinefunction(agent.process):
+                                result = asyncio.run(agent.process(task))
+                            else:
+                                result = agent.process(task)
                             self.pipe.send(
                                 {
                                     "type": "TASK_RESULT",
