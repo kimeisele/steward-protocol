@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, load_template
+from .base import Tool, ToolResult, get_kernel_status, load_template
 from .introspector import (
     CartridgeIntrospector,
     ConfigIntrospector,
@@ -98,10 +98,17 @@ class HelpRenderer(Tool):
 
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+        # Get kernel status for unified header
+        kernel_status = get_kernel_status(str(self.root_dir))
+
         # Pre-render sections for template
         template = load_template("help.jinja2")
         content = template.render(
+            # Unified header variables
             timestamp=timestamp,
+            generator="SCRIBE",
+            kernel_status=kernel_status,
+            # Help-specific variables
             workflows_section=self._render_workflows(workflows),
             git_section=self._render_git_activity(git_activity),
             economy_section=self._render_economy_params(params.get("economy", {})),
