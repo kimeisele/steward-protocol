@@ -16,7 +16,12 @@ NOT a citizen agent. The Discoverer is "The First Citizen" - the guardian
 that enables all other agents to exist.
 """
 
+import logging
+from typing import Any, Dict
+
 from .agent import Discoverer
+
+logger = logging.getLogger("DISCOVERER_CARTRIDGE")
 
 
 class DiscovererCartridge(Discoverer):
@@ -30,7 +35,23 @@ class DiscovererCartridge(Discoverer):
     - Must inherit from VibeAgent (via Discoverer)
     """
 
-    pass
+    def __init__(self, kernel=None, config=None):
+        """Initialize Discoverer cartridge."""
+        super().__init__(kernel=kernel, config=config)
+        logger.info("🧙 DISCOVERER cartridge initialized (The First Citizen)")
+
+    def report_status(self) -> Dict[str, Any]:
+        """Report DISCOVERER status for observability (Article IV compliance)."""
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "RUNNING" if self.monitoring_active else "IDLE",
+            "domain": self.domain,
+            "capabilities": self.capabilities,
+            "known_agents": len(self.known_agents),
+            "monitoring_active": self.monitoring_active,
+            "description": "Guardian of Agent City - discovers and registers agents",
+        }
 
 
 __all__ = ["DiscovererCartridge"]

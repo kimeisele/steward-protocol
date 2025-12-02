@@ -127,9 +127,7 @@ class BhuMandalaTopology:
     }
 
     # Critical agents by ID (can't be determined by domain alone)
-    CRITICAL_AGENT_IDS = frozenset([
-        "civic", "herald", "watchman", "auditor", "agora", "envoy", "discoverer"
-    ])
+    CRITICAL_AGENT_IDS = frozenset(["civic", "herald", "watchman", "auditor", "agora", "envoy", "discoverer"])
 
     def __init__(self, kernel=None):
         """Initialize the Bhu-mandala structure.
@@ -222,12 +220,14 @@ class BhuMandalaTopology:
         # Method 1: From kernel registry
         if self.kernel and hasattr(self.kernel, "agent_registry"):
             for agent_id, agent_obj in self.kernel.agent_registry.items():
-                discovered_agents.append({
-                    "agent_id": agent_id,
-                    "name": getattr(agent_obj, "name", agent_id.upper()),
-                    "domain": getattr(agent_obj, "domain", "SYSTEM"),
-                    "description": getattr(agent_obj, "description", ""),
-                })
+                discovered_agents.append(
+                    {
+                        "agent_id": agent_id,
+                        "name": getattr(agent_obj, "name", agent_id.upper()),
+                        "domain": getattr(agent_obj, "domain", "SYSTEM"),
+                        "description": getattr(agent_obj, "description", ""),
+                    }
+                )
             logger.info(f"Topology: Discovered {len(discovered_agents)} agents from kernel")
 
         # Method 2: Filesystem scan (fallback or supplement)
@@ -254,12 +254,14 @@ class BhuMandalaTopology:
                         if agent_id.startswith("YOUR_"):
                             continue
 
-                        discovered_agents.append({
-                            "agent_id": agent_id,
-                            "name": data.get("identity", {}).get("name", agent_id.upper()),
-                            "domain": data.get("specs", {}).get("domain", "SYSTEM"),
-                            "description": data.get("specs", {}).get("description", ""),
-                        })
+                        discovered_agents.append(
+                            {
+                                "agent_id": agent_id,
+                                "name": data.get("identity", {}).get("name", agent_id.upper()),
+                                "domain": data.get("specs", {}).get("domain", "SYSTEM"),
+                                "description": data.get("specs", {}).get("description", ""),
+                            }
+                        )
                     except Exception as e:
                         logger.warning(f"Failed to parse {steward_json}: {e}")
 
@@ -398,12 +400,14 @@ class BhuMandalaTopology:
                 lines.append(f"    {agent_names}")
                 lines.append("")
 
-        lines.extend([
-            "═══════════════════════════════════════════════════════════",
-            f"  Total Agents: {len(self.agents)} | Critical: {len(self.get_critical_agents())}",
-            "  From center to boundary: Authority decreases",
-            "═══════════════════════════════════════════════════════════",
-        ])
+        lines.extend(
+            [
+                "═══════════════════════════════════════════════════════════",
+                f"  Total Agents: {len(self.agents)} | Critical: {len(self.get_critical_agents())}",
+                "  From center to boundary: Authority decreases",
+                "═══════════════════════════════════════════════════════════",
+            ]
+        )
 
         return "\n".join(lines)
 

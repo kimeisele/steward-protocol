@@ -194,11 +194,17 @@ class ComplianceTool(Tool):
         citizen_agents_path = self.root_path / "agent_city" / "registry"
 
         if system_agents_path.exists():
-            agent_dirs.extend([d.name for d in system_agents_path.iterdir()
-                              if d.is_dir() and not d.name.startswith("_")])
+            agent_dirs.extend(
+                [d.name for d in system_agents_path.iterdir() if d.is_dir() and not d.name.startswith("_")]
+            )
         if citizen_agents_path.exists():
-            agent_dirs.extend([d.name for d in citizen_agents_path.iterdir()
-                              if d.is_dir() and not d.name.startswith("_") and d.name != "citizens"])
+            agent_dirs.extend(
+                [
+                    d.name
+                    for d in citizen_agents_path.iterdir()
+                    if d.is_dir() and not d.name.startswith("_") and d.name != "citizens"
+                ]
+            )
 
         for agent_dir in agent_dirs:
             # Try multiple locations
