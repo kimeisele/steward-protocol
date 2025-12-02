@@ -40,35 +40,46 @@ logger = logging.getLogger("KERNEL_PULSE")
 def pulse():
     """
     Execute one heartbeat cycle to sync live state with repo artifacts.
+
+    Uses BootOrchestrator for full agent discovery - always.
     """
     logger.info("=" * 80)
     logger.info("💓 KERNEL PULSE: Single heartbeat cycle")
     logger.info("=" * 80)
 
     try:
-        # Import concrete kernel implementation
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.boot_orchestrator import BootOrchestrator
+        from vibe_core.config import ConfigLoader
 
-        logger.info("🔌 Initializing RealVibeKernel...")
-        kernel = RealVibeKernel()
+        # Load Phoenix Config
+        try:
+            loader = ConfigLoader()
+            config = loader.load()
+            logger.info(f"📜 Config: {config.city_name}")
+        except Exception as e:
+            logger.warning(f"⚠️  Config warning: {e} (using defaults)")
+            config = None
 
-        logger.info("⏱️  Executing single _pulse() tick...")
+        # Boot with agent discovery
+        orchestrator = BootOrchestrator(config=config)
+        kernel = orchestrator.boot()
+
+        agents_count = kernel.get_status().get("agents_registered", 0)
+        logger.info(f"✅ Boot complete: {agents_count} agents")
+
+        logger.info("⏱️  Executing _pulse()...")
         kernel._pulse()
 
-        logger.info("📸 Reading generated snapshot...")
+        logger.info("📸 Reading snapshot...")
         snapshot_path = Path("vibe_snapshot.json")
         if snapshot_path.exists():
             with open(snapshot_path, "r") as f:
                 snapshot = json.load(f)
-            logger.info(f"   ✅ Snapshot loaded: {snapshot_path}")
+            logger.info(f"   ✅ {len(snapshot.get('agents', {}))} agents, status: {snapshot.get('kernel_status')}")
         else:
-            logger.warning("   ⚠️  Snapshot file not generated")
-            snapshot = {}
+            logger.warning("   ⚠️  Snapshot not generated")
 
-        logger.info("📝 Snapshot already includes OPERATIONS.md update")
-
-        logger.info("✅ PULSE COMPLETE: Repo state synchronized")
-
+        logger.info("✅ PULSE COMPLETE")
         return True
 
     except Exception as e:
