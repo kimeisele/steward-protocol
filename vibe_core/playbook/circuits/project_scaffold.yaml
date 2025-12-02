@@ -22,6 +22,7 @@ circuit:
   version: "2.0"
   domain: "development"
   security_level: "standard"
+  entry_state: "SHABDA"
 
   # Intent matching for DeterministicExecutor concept-based lookup
   intent_match:

@@ -26,6 +26,7 @@ circuit:
   version: "2.0"
   domain: "development"
   security_level: "elevated"
+  entry_state: "SHABDA"
 
   description: |
     Safe feature implementation with mandatory intent capture and code audit.
