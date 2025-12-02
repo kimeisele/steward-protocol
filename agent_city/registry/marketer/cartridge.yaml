@@ -1,31 +1,28 @@
-agent_id: marketer
-name: MARKETER
-version: 1.0.0
-author: Steward Protocol
-description: Autonomous content strategist and generator (citizen agent)
+meta:
+  id: "agent.citizen.marketer"
+  name: "MARKETER Agent"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "Autonomous content strategist and generator (citizen agent)"
 
-# Agent metadata
-domain: CONTENT
-capabilities:
-  - content_generation
-  - tweet_writing
-  - reddit_posts
-  - reply_generation
-  - recruitment_pitches
+agent:
+  domain: "CONTENT"
+  capabilities:
+    - "content_generation"
+    - "tweet_writing"
+    - "reddit_posts"
+    - "reply_generation"
+    - "recruitment_pitches"
 
-# Tools (auto-discovered from tools/ directory)
-tools:
-  - marketer.content  # Content generation with LLM + governance
+dependencies:
+  - "openai"
 
-# MARKETER is a THINKER (generates ideas)
-# HERALD is a SPEAKER (broadcasts them)
-philosophy: |
-  MARKETER thinks (generates content).
-  HERALD speaks (broadcasts content).
-  Separation of concerns: Business logic (MARKETER) vs Infrastructure (HERALD).
-
-# Configuration
 config:
-  openrouter_api_key_env: OPENROUTER_API_KEY
-  governance_mode: strict  # Use HeraldConstitution for validation
-  default_subreddit: r/LocalLLaMA
+  governance:
+    level: "strict"
+  openrouter:
+    api_key_env: "OPENROUTER_API_KEY"
+  philosophy: |
+    MARKETER thinks (generates content).
+    HERALD speaks (broadcasts content).
+    Separation of concerns: Business logic vs Infrastructure.

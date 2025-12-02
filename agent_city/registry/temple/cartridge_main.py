@@ -60,7 +60,7 @@ class TempleCartridge(VibeAgent):
             version="1.0.0",
             author="Steward Protocol",
             description="The Blessing Service - Spiritual verification and system sanctity",
-            domain="INFRASTRUCTURE",
+            domain="SPIRITUAL",
             capabilities=[
                 "blessing_granting",
                 "purity_checking",

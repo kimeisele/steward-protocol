@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "agent_id": "shield",
+    "name": "SHIELD"
+  },
+  "specs": {
+    "version": "1.0.0",
+    "description": "Security agent for auditing and governance enforcement",
+    "domain": "SECURITY"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "audit_repository",
+        "description": "Scan code for compliance"
+      },
+      {
+        "name": "validate_config",
+        "description": "Verify system configurations"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 3,
+    "constitution_hash": "REPLACE_WITH_ACTUAL_HASH",
+    "issued_at": "REPLACE_WITH_TIMESTAMP",
+    "issuer": "passport_office"
+  }
+}

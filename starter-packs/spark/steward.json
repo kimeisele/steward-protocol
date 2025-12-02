@@ -1,0 +1,29 @@
+{
+  "identity": {
+    "agent_id": "spark",
+    "name": "SPARK"
+  },
+  "specs": {
+    "version": "1.0.0",
+    "description": "Creative agent for content generation and social engagement",
+    "domain": "MEDIA"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "name": "generate_tweet",
+        "description": "Generate creative tweets"
+      },
+      {
+        "name": "plan_campaign",
+        "description": "Plan content campaigns"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "REPLACE_WITH_ACTUAL_HASH",
+    "issued_at": "REPLACE_WITH_TIMESTAMP",
+    "issuer": "passport_office"
+  }
+}

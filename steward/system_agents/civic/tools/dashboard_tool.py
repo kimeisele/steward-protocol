@@ -244,21 +244,24 @@ class DashboardGenerator:
             md_lines.append(f"- Credit Supply Cap: {econ.get('total_credit_supply_cap', 'N/A')}")
             md_lines.append("")
 
-        # Agent Parameters
+        # Agent Parameters - DYNAMIC: iterate all agents in config
         if "agents" in self.matrix:
             md_lines.append("### Active Agents")
             agents_config = self.matrix["agents"]
-            for agent_name in ["herald", "science", "forum", "civic"]:
-                if agent_name in agents_config:
-                    config = agents_config[agent_name]
-                    emoji_map = {
-                        "herald": "📢",
-                        "science": "🔬",
-                        "forum": "💬",
-                        "civic": "🏛️",
-                    }
-                    emoji = emoji_map.get(agent_name, "🤖")
-                    md_lines.append(f"- {emoji} **{agent_name.upper()}** - Active")
+            # Dynamic emoji based on domain (no hardcoded agent list)
+            domain_emoji = {
+                "COMMUNICATIONS": "📢",
+                "INTELLIGENCE": "🔬",
+                "GOVERNANCE": "🏛️",
+                "SYSTEM": "⚙️",
+                "INTERFACE": "🖥️",
+                "INFRASTRUCTURE": "🔧",
+                "JUSTICE": "⚖️",
+            }
+            for agent_name, config in sorted(agents_config.items()):
+                domain = config.get("domain", "")
+                emoji = domain_emoji.get(domain, "🤖")
+                md_lines.append(f"- {emoji} **{agent_name.upper()}** - Active")
             md_lines.append("")
 
         # Recent Activity

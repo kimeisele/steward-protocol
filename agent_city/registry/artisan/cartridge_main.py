@@ -46,7 +46,7 @@ class ArtisanCartridge(VibeAgent):
             version="2.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Media and technical operations agent",
-            domain="MEDIA_OPS",
+            domain="MEDIA",
             capabilities=["media_processing", "image_optimization", "asset_branding"],
         )
 
