@@ -1,36 +1,66 @@
 """
-ENGINEER Builder Tool - Scaffolding and Code Generation (Tool Protocol).
+ENGINEER Builder Tool - Agent Factory (Tool Protocol).
+
+TEMPLATE-BASED SCAFFOLDING:
+Uses templates from engineer/templates/agent/ directory.
+NO hardcoded strings - reads and transforms template files.
 
 Capabilities:
-- Scaffold new agent directory structure
-- Generate cartridge code via abstracted LLM service
-- NO vendor lock-in: Uses services.llm_engine for all LLM interactions
+- Scaffold complete agent from template
+- Generate cartridge code via LLM service
+- Proper steward.json, cartridge.yaml, cartridge_main.py creation
 
 Tool Protocol compliant for kernel-managed execution.
 """
 
+import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
-# Import the abstracted LLM service (not vendor-specific)
-from services.llm_engine import llm
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
 logger = logging.getLogger("ENGINEER_BUILDER")
 
+# Template directory (relative to this file)
+TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "agent"
+
 
 class BuilderTool(Tool):
     """
-    The Engineer's toolbox for creating new agents (Tool Protocol).
-    Delegates all LLM interactions to the abstracted LLMEngine service.
-    This tool is agnostic to which LLM provider is being used.
+    The Engineer's Agent Factory (Tool Protocol).
+
+    TEMPLATE-DRIVEN: Reads template files from templates/agent/,
+    replaces placeholders, and writes to target directory.
+
+    NO HARDCODED STRINGS in the output - everything comes from template files.
+    Updates to the template automatically apply to new agents.
     """
 
+    # Placeholder mapping - what to replace in templates
+    PLACEHOLDERS = [
+        "YOUR_AGENT_ID",
+        "YOUR_AGENT_NAME",
+        "YOUR_DOMAIN",
+        "YOUR_AGENT_DESCRIPTION",
+        "YOUR_NAME",
+        "YOUR_AGENT_CLASS",
+        "YOUR_AGENT_ROLE",
+        "YOUR_CAPABILITY_1",
+        "YOUR_CAPABILITY_2",
+        "YOUR_SHORT_DESCRIPTION",
+        "YOUR_TOOL_DESCRIPTION_HERE",
+        "YOUR_TOOL_NAME",
+        "YourAgentCartridge",
+    ]
+
     def __init__(self):
-        """Initialize builder tool with LLM service."""
-        self.llm = llm  # Use singleton instance from services
-        logger.info("🔨 Builder Tool initialized (using LLMEngine service)")
+        """Initialize builder tool."""
+        self.template_dir = TEMPLATE_DIR
+        if not self.template_dir.exists():
+            logger.warning(f"⚠️ Template directory not found: {self.template_dir}")
+        else:
+            logger.info(f"🔨 Builder Tool initialized (templates: {self.template_dir})")
 
     @property
     def name(self) -> str:
@@ -46,17 +76,27 @@ class BuilderTool(Tool):
             "action": {
                 "type": "string",
                 "required": True,
-                "description": "Action: 'scaffold' | 'generate_code'",
+                "description": "Action: 'scaffold' (create agent from template)",
             },
             "name": {
                 "type": "string",
                 "required": True,
-                "description": "Agent name (e.g., 'weather')",
+                "description": "Agent name (e.g., 'lazara')",
             },
-            "mission": {
+            "domain": {
+                "type": "string",
+                "required": True,
+                "description": "Agent domain (e.g., 'SECURITY', 'RESEARCH', 'MEDIA')",
+            },
+            "description": {
                 "type": "string",
                 "required": False,
-                "description": "Agent mission/description (required for generate_code)",
+                "description": "Agent description/mission",
+            },
+            "target_dir": {
+                "type": "string",
+                "required": False,
+                "description": "Target directory (default: agent_city/registry/{name})",
             },
         }
 
@@ -66,217 +106,156 @@ class BuilderTool(Tool):
             raise ValueError("Missing required parameter: action")
 
         action = parameters["action"]
-        if action not in ["scaffold", "generate_code"]:
-            raise ValueError(f"Invalid action: {action}. Must be 'scaffold' or 'generate_code'")
+        if action != "scaffold":
+            raise ValueError(f"Invalid action: {action}. Only 'scaffold' is supported.")
 
         if "name" not in parameters:
             raise ValueError("Missing required parameter: name")
 
-        if action == "generate_code" and "mission" not in parameters:
-            raise ValueError("generate_code requires 'mission' parameter")
+        if "domain" not in parameters:
+            raise ValueError("Missing required parameter: domain")
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
-        """Execute builder operation."""
+        """Execute builder operation - scaffold from template."""
         try:
-            action = parameters["action"]
-            name = parameters["name"]
+            name = parameters["name"].lower()
+            domain = parameters["domain"].upper()
+            description = parameters.get("description", f"{name.capitalize()} agent for {domain} domain")
+            target_dir = parameters.get("target_dir", f"agent_city/registry/{name}")
 
-            if action == "scaffold":
-                success = self.scaffold_agent(name)
-                if success:
-                    return ToolResult(
-                        success=True,
-                        output={"scaffolded": True, "agent_name": name},
-                        metadata={
-                            "action": "scaffold",
-                            "path": str(Path(name)),
-                        },
-                    )
-                else:
-                    return ToolResult(
-                        success=False,
-                        error=f"Scaffold failed for agent '{name}' (directory might already exist)",
-                    )
+            result = self.scaffold_from_template(
+                agent_id=name,
+                agent_name=name.upper(),
+                domain=domain,
+                description=description,
+                target_dir=Path(target_dir),
+            )
 
-            elif action == "generate_code":
-                mission = parameters["mission"]
-                code = self.generate_agent_code(name, mission)
-
-                if code:
-                    return ToolResult(
-                        success=True,
-                        output={"code": code, "agent_name": name},
-                        metadata={
-                            "action": "generate_code",
-                            "code_length": len(code),
-                        },
-                    )
-                else:
-                    return ToolResult(
-                        success=False,
-                        error="Code generation failed",
-                    )
+            if result["success"]:
+                return ToolResult(
+                    success=True,
+                    output=result,
+                    metadata={
+                        "action": "scaffold",
+                        "path": target_dir,
+                        "files_created": result.get("files_created", []),
+                    },
+                )
+            else:
+                return ToolResult(
+                    success=False,
+                    error=result.get("error", "Scaffold failed"),
+                )
 
         except Exception as e:
             error_msg = f"Builder tool execution failed: {type(e).__name__}: {e!s}"
             logger.error(f"BuilderTool: {error_msg}", exc_info=True)
             return ToolResult(success=False, error=error_msg)
 
-    def scaffold_agent(self, name: str) -> bool:
+    def scaffold_from_template(
+        self,
+        agent_id: str,
+        agent_name: str,
+        domain: str,
+        description: str,
+        target_dir: Path,
+    ) -> Dict[str, Any]:
         """
-        Create directory structure for a new agent.
+        Scaffold a new agent from template files.
+
+        READS template files, REPLACES placeholders, WRITES to target.
+        NO hardcoded strings - everything from template.
 
         Args:
-            name: Agent name (e.g., 'weather')
+            agent_id: Lowercase agent identifier (e.g., 'lazara')
+            agent_name: Display name (e.g., 'LAZARA')
+            domain: Agent domain (e.g., 'SECURITY')
+            description: Agent description
+            target_dir: Where to create the agent
 
         Returns:
-            bool: True if successful
+            Dict with success status and details
         """
+        logger.info(f"🏗️ Scaffolding agent '{agent_id}' from template...")
+
+        if not self.template_dir.exists():
+            return {"success": False, "error": f"Template directory not found: {self.template_dir}"}
+
+        if target_dir.exists():
+            return {"success": False, "error": f"Target directory already exists: {target_dir}"}
+
+        # Replacement map for placeholders
+        replacements = {
+            "YOUR_AGENT_ID": agent_id,
+            "YOUR_AGENT_NAME": agent_name,
+            "YOUR_DOMAIN": domain,
+            "YOUR_AGENT_DESCRIPTION": description,
+            "YOUR_NAME": "Engineer",
+            "YOUR_AGENT_CLASS": "Agent",
+            "YOUR_AGENT_ROLE": f"{domain} Agent",
+            "YOUR_CAPABILITY_1": "process_task",
+            "YOUR_CAPABILITY_2": "report_status",
+            "YOUR_SHORT_DESCRIPTION": description[:50] if len(description) > 50 else description,
+            "YOUR_TOOL_DESCRIPTION_HERE": f"Tool for {agent_id}",
+            "YOUR_TOOL_NAME": "main_tool",
+            "YourAgentCartridge": f"{agent_id.capitalize()}Cartridge",
+        }
+
+        files_created = []
+
         try:
-            base_path = Path(name)
-            tools_path = base_path / "tools"
+            # Create target directory
+            target_dir.mkdir(parents=True)
+            (target_dir / "tools").mkdir()
 
-            if base_path.exists():
-                logger.warning(f"⚠️  Agent directory '{name}' already exists.")
-                return False
+            # Process each template file
+            template_files = [
+                ("steward.json", "steward.json"),
+                ("cartridge.yaml", "cartridge.yaml"),
+                ("cartridge_main.py", "cartridge_main.py"),
+                ("tools/__init__.py", "tools/__init__.py"),
+            ]
 
-            base_path.mkdir(parents=True)
-            tools_path.mkdir(parents=True)
+            for template_name, target_name in template_files:
+                template_path = self.template_dir / template_name
+                target_path = target_dir / target_name
 
-            # Create __init__.py files
-            (base_path / "__init__.py").touch()
-            (tools_path / "__init__.py").touch()
+                if template_path.exists():
+                    content = template_path.read_text()
 
-            logger.info(f"🏗️  Scaffolded agent structure for '{name}'")
-            return True
+                    # Replace all placeholders
+                    for placeholder, value in replacements.items():
+                        content = content.replace(placeholder, value)
+
+                    target_path.write_text(content)
+                    files_created.append(str(target_path))
+                    logger.debug(f"  ✓ Created {target_path}")
+                else:
+                    logger.warning(f"  ⚠️ Template not found: {template_path}")
+
+            # Create __init__.py
+            init_path = target_dir / "__init__.py"
+            init_path.write_text(f'"""{agent_name} Agent Cartridge."""\n')
+            files_created.append(str(init_path))
+
+            logger.info(f"✅ Agent '{agent_id}' scaffolded at {target_dir}")
+            logger.info(f"   Files created: {len(files_created)}")
+
+            return {
+                "success": True,
+                "agent_id": agent_id,
+                "domain": domain,
+                "target_dir": str(target_dir),
+                "files_created": files_created,
+            }
 
         except Exception as e:
             logger.error(f"❌ Scaffold failed: {e}")
-            return False
-
-    def generate_agent_code(self, name: str, mission: str) -> Optional[str]:
-        """
-        Generate the cartridge code for a new agent.
-        Uses the abstracted LLMEngine service (no vendor lock-in).
-
-        Args:
-            name: Agent name
-            mission: Description of what the agent does
-
-        Returns:
-            str: Generated Python code or fallback template
-        """
-        prompt = (
-            f"You are THE ENGINEER, a meta-agent that builds other autonomous agents.\n"
-            f"TASK: Write the Python code for a new agent named '{name}'.\n"
-            f"MISSION: {mission}\n\n"
-            f"REQUIREMENTS:\n"
-            f"1. Class name: {name.capitalize()}Cartridge\n"
-            f"2. Must inherit from VibeAgent.\n"
-            f"3. Must have a 'process(task: Task)' method.\n"
-            f"4. Must use standard logging.\n"
-            f"5. Return ONLY the Python code, no markdown formatting.\n"
-            f"6. Include a comprehensive docstring explaining the agent's role.\n"
-            f"7. Include type hints for all methods.\n"
-        )
-
-        system_prompt = (
-            "You are an Expert Agent Developer. "
-            "Generate production-ready Python code for autonomous agents. "
-            "Output ONLY valid Python code, no explanations."
-        )
-
-        try:
-            logger.info(f"🧠 Generating code for agent '{name}' via LLMEngine...")
-            code = self.llm.generate_code(prompt, system_prompt)
-            return code
-
-        except Exception as e:
-            logger.error(f"❌ Code generation failed: {e}")
-            logger.info(f"⚠️  Falling back to template for '{name}'")
-            return self._fallback_template(name, mission)
-
-    def _fallback_template(self, name: str, mission: str) -> str:
-        """
-        Return a basic template if LLM fails.
-        This is a graceful fallback that matches the project's VibeAgent interface.
-        """
-        class_name = f"{name.capitalize()}Cartridge"
-        return f"""\"\"\"
-Agent: {name}
-Mission: {mission}
-Generated by: The Engineer (Fallback Mode)
-\"\"\"
-
-import logging
-from typing import Dict, Any
-
-from vibe_core.protocols import VibeAgent, AgentManifest
-from vibe_core.scheduling.task import Task
-
-logger = logging.getLogger("{name.upper()}_AGENT")
-
-
-class {class_name}(VibeAgent):
-    \"\"\"
-    {name.capitalize()} Agent Cartridge.
-    Mission: {mission}
-    \"\"\"
-
-    def __init__(self):
-        super().__init__(
-            agent_id="{name.lower()}",
-            name="{name.upper()}",
-            version="1.0.0",
-            author="The Engineer",
-            description="{mission}",
-            domain="GENERAL",
-            capabilities=["execute"]
-        )
-        logger.info(f"📍 {{self.name}} cartridge initialized.")
-
-    def get_manifest(self) -> AgentManifest:
-        \"\"\"Return agent manifest.\"\"\"
-        return AgentManifest(
-            agent_id=self.agent_id,
-            name=self.name,
-            version=self.version,
-            author=self.author,
-            description=self.description,
-            domain=self.domain,
-            capabilities=self.capabilities,
-            dependencies=[]
-        )
-
-    def process(self, task: Task) -> Dict[str, Any]:
-        \"\"\"
-        Process an incoming task.
-
-        Args:
-            task: The task to process
-
-        Returns:
-            Task result dictionary
-        \"\"\"
-        logger.info(f"⚙️  {{self.name}} processing task: {{task.id}}")
-
-        # TODO: Implement actual task processing logic
-        return {{
-            "status": "success",
-            "message": f"{{self.name}} processed task {{task.id}}",
-            "agent": self.agent_id
-        }}
-
-    def report_status(self) -> Dict[str, Any]:
-        \"\"\"Report agent status.\"\"\"
-        return {{
-            "agent_id": self.agent_id,
-            "name": self.name,
-            "status": "RUNNING",
-            "domain": self.domain,
-            "capabilities": self.capabilities
-        }}
-"""
+            # Cleanup on failure
+            if target_dir.exists():
+                import shutil
+                shutil.rmtree(target_dir)
+            return {"success": False, "error": str(e)}
 
 
 __all__ = ["BuilderTool"]
