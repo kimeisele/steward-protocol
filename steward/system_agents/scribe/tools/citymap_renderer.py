@@ -251,7 +251,6 @@ class CitymapRenderer(Tool):
         # Find key governance agents
         gov_agents = self.domains.get("GOVERNANCE", [])
         sec_agents = self.domains.get("SECURITY", [])
-        sys_agents = self.domains.get("SYSTEM", [])
 
         output = "```mermaid\ngraph TD\n"
         output += '    CONST["📜 CONSTITUTION<br/>(Immutable Law)"]\n'
