@@ -304,13 +304,9 @@ def test_brahmachari_cannot_act():
     # Pulse is a Brahmachari (student) - newly registered agent
     allowed, reason = enforcer.check_permission("pulse", "transfer")
 
-    if not allowed:
-        print("✅ SUCCESS: Pulse was blocked from transferring")
-        print(f"   Reason: {reason}")
-        return True
-    else:
-        print("❌ FAILURE: Pulse was allowed to transfer (should be denied)")
-        return False
+    assert not allowed, "FAILURE: Pulse was allowed to transfer (should be denied)"
+    print("SUCCESS: Pulse was blocked from transferring")
+    print(f"   Reason: {reason}")
 
 
 def test_brahmachari_can_learn():
@@ -324,13 +320,9 @@ def test_brahmachari_can_learn():
     # Pulse should be able to read
     allowed, reason = enforcer.check_permission("pulse", "query_knowledge")
 
-    if allowed:
-        print("✅ SUCCESS: Pulse allowed to learn")
-        print(f"   Reason: {reason}")
-        return True
-    else:
-        print("❌ FAILURE: Pulse blocked from learning")
-        return False
+    assert allowed, f"FAILURE: Pulse blocked from learning - {reason}"
+    print("SUCCESS: Pulse allowed to learn")
+    print(f"   Reason: {reason}")
 
 
 def test_grihastha_can_act():
@@ -344,13 +336,9 @@ def test_grihastha_can_act():
     # CIVIC is a Grihastha (established) - should be able to transfer
     allowed, reason = enforcer.check_permission("civic", "transfer")
 
-    if allowed:
-        print("✅ SUCCESS: CIVIC allowed to transfer")
-        print(f"   Reason: {reason}")
-        return True
-    else:
-        print("❌ FAILURE: CIVIC blocked from transferring")
-        return False
+    assert allowed, f"FAILURE: CIVIC blocked from transferring - {reason}"
+    print("SUCCESS: CIVIC allowed to transfer")
+    print(f"   Reason: {reason}")
 
 
 def test_promotion_requires_authorization():
@@ -364,29 +352,20 @@ def test_promotion_requires_authorization():
     # Before: Forum is Brahmachari (cannot transfer)
     allowed_before, _ = enforcer.check_permission("forum", "transfer")
 
-    if allowed_before:
-        print("❌ FAILURE: Forum should not be able to transfer before promotion")
-        return False
+    assert not allowed_before, "FAILURE: Forum should not be able to transfer before promotion"
 
     # Promote Forum to Grihastha (CIVIC is authorized)
     promoted, reason = enforcer.promote_to_grihastha("forum", "civic")
 
-    if not promoted:
-        print(f"❌ FAILURE: Promotion failed: {reason}")
-        return False
-
+    assert promoted, f"FAILURE: Promotion failed: {reason}"
     print(f"   {reason}")
 
     # After: Forum should be able to transfer
     allowed_after, reason_after = enforcer.check_permission("forum", "transfer")
 
-    if allowed_after:
-        print("✅ SUCCESS: Forum promoted and can now transfer")
-        print(f"   Reason: {reason_after}")
-        return True
-    else:
-        print("❌ FAILURE: Forum not able to transfer after promotion")
-        return False
+    assert allowed_after, "FAILURE: Forum not able to transfer after promotion"
+    print("SUCCESS: Forum promoted and can now transfer")
+    print(f"   Reason: {reason_after}")
 
 
 def test_vault_signature_verification():
@@ -407,23 +386,16 @@ def test_vault_signature_verification():
     # Verify the signature is valid
     valid = vault.verify_signature("herald", payload, signature)
 
-    if valid:
-        print("✅ SUCCESS: Signature verified (authentic)")
-    else:
-        print("❌ FAILURE: Signature verification failed")
-        return False
+    assert valid, "FAILURE: Signature verification failed"
+    print("SUCCESS: Signature verified (authentic)")
 
     # Try to verify with a different payload (tampering detection)
     tampered = {"action": "transfer", "amount": 1000, "recipient": "civic"}  # Changed!
 
     tampered_valid = vault.verify_signature("herald", tampered, signature)
 
-    if not tampered_valid:
-        print("✅ SUCCESS: Tampered payload detected (signature mismatch)")
-        return True
-    else:
-        print("❌ FAILURE: Tampered payload was accepted (security breach)")
-        return False
+    assert not tampered_valid, "FAILURE: Tampered payload was accepted (security breach)"
+    print("SUCCESS: Tampered payload detected (signature mismatch)")
 
 
 def run_all_tests():

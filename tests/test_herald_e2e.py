@@ -16,9 +16,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 
-def run_command(cmd, description):
-    """Run command and report failure with context."""
+
+def _run_command(cmd, description):
+    """Run command and return (success, result)."""
     print(f"🧪 {description}...")
     result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
@@ -26,46 +28,41 @@ def run_command(cmd, description):
         print(f"❌ FAILED: {description}")
         print(f"STDERR:\n{result.stderr}")
         print(f"STDOUT:\n{result.stdout}")
-        return False
+        return False, result
 
     print(f"✅ {description}")
-    return True
+    return True, result
 
 
 def test_health_check():
     """Test 1: Health Check (GAD-000)"""
-    success = run_command(
+    success, result = _run_command(
         "python3 examples/herald/health_check.py",
         "Health Check: Verify all dependencies",
     )
+    assert success, f"Health check command failed: {result.stderr}"
 
-    if success:
-        # Parse and validate JSON output
-        result = subprocess.run(
-            "python3 examples/herald/health_check.py",
-            shell=True,
-            capture_output=True,
-            text=True,
-        )
-        report = json.loads(result.stdout)
+    # Parse and validate JSON output
+    result = subprocess.run(
+        "python3 examples/herald/health_check.py",
+        shell=True,
+        capture_output=True,
+        text=True,
+    )
+    report = json.loads(result.stdout)
 
-        if report["status"] != "healthy":
-            print(f"❌ Health check CRITICAL: {report['missing_modules']}")
-            return False
-
-        print(f"   Dependencies OK: {list(report.keys())}")
-
-    return success
+    assert report["status"] == "healthy", f"Health check CRITICAL: {report.get('missing_modules', 'unknown')}"
+    print(f"   Dependencies OK: {list(report.keys())}")
 
 
 def test_generate_content():
     """Test 2: Generate Content (requires API keys)"""
     # Check if API keys exist
     if not Path(".env").exists():
-        print("⚠️  Skipping generate_only.py - no .env file (needs API keys)")
-        return True
+        pytest.skip("Skipping generate_only.py - no .env file (needs API keys)")
 
-    return run_command("python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist")
+    success, result = _run_command("python3 examples/herald/generate_only.py", "Generate Content: Brain + Artist")
+    assert success, f"Content generation failed: {result.stderr}"
 
 
 def test_dashboard_generation():
@@ -84,63 +81,28 @@ def test_dashboard_generation():
         with open(content_file, "w") as f:
             json.dump(mock_content, f)
 
-    success = run_command(
+    success, result = _run_command(
         "python3 examples/herald/generate_dashboard.py > /tmp/dashboard_test.md",
         "Dashboard Generation: Extract content for approval gate",
     )
+    assert success, f"Dashboard generation failed: {result.stderr}"
 
-    if success:
-        # Verify output is not empty
-        with open("/tmp/dashboard_test.md") as f:
-            output = f.read()
-            if output.strip():
-                print(f"   Dashboard output: {len(output)} chars")
-            else:
-                print("❌ Dashboard generated empty output")
-                return False
-
-    return success
+    # Verify output is not empty
+    with open("/tmp/dashboard_test.md") as f:
+        output = f.read()
+    assert output.strip(), "Dashboard generated empty output"
+    print(f"   Dashboard output: {len(output)} chars")
 
 
 def main():
-    """Run all E2E tests."""
+    """Run all E2E tests (for standalone execution)."""
     print("\n" + "=" * 70)
     print("🦅 HERALD E2E TEST SUITE")
     print("=" * 70 + "\n")
 
-    tests = [
-        ("Health Check", test_health_check),
-        ("Content Generation", test_generate_content),
-        ("Dashboard Generation", test_dashboard_generation),
-    ]
-
-    results = []
-    for name, test_func in tests:
-        print(f"\n[TEST] {name}")
-        print("-" * 70)
-        results.append((name, test_func()))
-
-    # Summary
-    print("\n" + "=" * 70)
-    print("📊 TEST SUMMARY")
-    print("=" * 70)
-
-    passed = sum(1 for _, result in results if result)
-    total = len(results)
-
-    for name, result in results:
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status}: {name}")
-
-    print(f"\n{passed}/{total} tests passed")
-
-    if passed == total:
-        print("\n🟢 All tests PASSED - safe to commit!")
-        return 0
-    else:
-        print("\n🔴 Some tests FAILED - fix before pushing!")
-        return 1
+    # When run directly, use pytest
+    sys.exit(pytest.main([__file__, "-v"]))
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

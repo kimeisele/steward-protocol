@@ -20,6 +20,8 @@ import logging
 import sys
 from datetime import datetime, timezone
 
+import pytest
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("TEST_LIFECYCLE")
@@ -28,19 +30,18 @@ logger = logging.getLogger("TEST_LIFECYCLE")
 def test_lifecycle_enforcer():
     """Run comprehensive lifecycle tests."""
     logger.info("\n" + "=" * 80)
-    logger.info("🔄 LIFECYCLE ENFORCER TEST SUITE")
+    logger.info("LIFECYCLE ENFORCER TEST SUITE")
     logger.info("=" * 80)
 
     try:
         from civic.tools.lifecycle_enforcer import LifecycleEnforcer
         from civic.tools.lifecycle_manager import LifecycleStatus
     except ImportError as e:
-        logger.error(f"❌ Failed to import: {e}")
-        return False
+        pytest.skip(f"Could not import lifecycle modules: {e}")
 
     # Initialize enforcer
     enforcer = LifecycleEnforcer()
-    logger.info("✅ LifecycleEnforcer initialized")
+    logger.info("LifecycleEnforcer initialized")
 
     # TEST 1: Register new agent as BRAHMACHARI
     logger.info("\n" + "-" * 80)
@@ -49,13 +50,11 @@ def test_lifecycle_enforcer():
 
     test_agent = "test_pulse"
     state = enforcer.lifecycle_mgr.register_new_agent(test_agent)
-    logger.info(f"✅ Agent {test_agent} registered")
+    logger.info(f"Agent {test_agent} registered")
     logger.info(f"   Status: {state.status.value}")
     logger.info(f"   Varna: {state.varna}")
 
-    if state.status != LifecycleStatus.BRAHMACHARI:
-        logger.error("❌ TEST 1 FAILED: Agent not BRAHMACHARI")
-        return False
+    assert state.status == LifecycleStatus.BRAHMACHARI, f"TEST 1 FAILED: Agent not BRAHMACHARI (got {state.status.value})"
 
     # TEST 2: Try to broadcast as BRAHMACHARI -> SHOULD BE REJECTED
     logger.info("\n" + "-" * 80)
@@ -68,11 +67,8 @@ def test_lifecycle_enforcer():
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")
 
-    if permission.permitted:
-        logger.error("❌ TEST 2 FAILED: BRAHMACHARI should NOT have write permission")
-        return False
-
-    logger.info("✅ TEST 2 PASSED: BRAHMACHARI correctly blocked from writing")
+    assert not permission.permitted, "TEST 2 FAILED: BRAHMACHARI should NOT have write permission"
+    logger.info("TEST 2 PASSED: BRAHMACHARI correctly blocked from writing")
 
     # TEST 3: Initiate agent to GRIHASTHA (simulating TEMPLE passing tests)
     logger.info("\n" + "-" * 80)
@@ -86,18 +82,12 @@ def test_lifecycle_enforcer():
     }
 
     success = enforcer.authorize_brahmachari_to_grihastha(test_agent, test_results, initiator="TEMPLE")
-
-    if not success:
-        logger.error("❌ TEST 3 FAILED: Initiation failed")
-        return False
+    assert success, "TEST 3 FAILED: Initiation failed"
 
     # Verify state changed
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
-    if state.status != LifecycleStatus.GRIHASTHA:
-        logger.error(f"❌ TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA")
-        return False
-
-    logger.info("✅ TEST 3 PASSED: Agent promoted to GRIHASTHA")
+    assert state.status == LifecycleStatus.GRIHASTHA, f"TEST 3 FAILED: Status is {state.status.value}, expected GRIHASTHA"
+    logger.info("TEST 3 PASSED: Agent promoted to GRIHASTHA")
 
     # TEST 4: Try to broadcast as GRIHASTHA -> SHOULD SUCCEED
     logger.info("\n" + "-" * 80)
@@ -110,11 +100,8 @@ def test_lifecycle_enforcer():
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")
 
-    if not permission.permitted:
-        logger.error("❌ TEST 4 FAILED: GRIHASTHA should have write permission")
-        return False
-
-    logger.info("✅ TEST 4 PASSED: GRIHASTHA correctly permitted to write")
+    assert permission.permitted, "TEST 4 FAILED: GRIHASTHA should have write permission"
+    logger.info("TEST 4 PASSED: GRIHASTHA correctly permitted to write")
 
     # TEST 5: Report a violation -> Demote to SHUDRA
     logger.info("\n" + "-" * 80)
@@ -129,17 +116,11 @@ def test_lifecycle_enforcer():
     }
 
     success = enforcer.report_violation(test_agent, violation)
-
-    if not success:
-        logger.error("❌ TEST 5 FAILED: Violation report failed")
-        return False
+    assert success, "TEST 5 FAILED: Violation report failed"
 
     state = enforcer.lifecycle_mgr.get_lifecycle_state(test_agent)
-    if state.status != LifecycleStatus.SHUDRA:
-        logger.error(f"❌ TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA")
-        return False
-
-    logger.info("✅ TEST 5 PASSED: Agent demoted to SHUDRA")
+    assert state.status == LifecycleStatus.SHUDRA, f"TEST 5 FAILED: Status is {state.status.value}, expected SHUDRA"
+    logger.info("TEST 5 PASSED: Agent demoted to SHUDRA")
 
     # TEST 6: Try to broadcast as SHUDRA -> SHOULD REJECT
     logger.info("\n" + "-" * 80)
@@ -152,11 +133,8 @@ def test_lifecycle_enforcer():
     logger.info(f"   Reason: {permission.reason}")
     logger.info(f"   Status: {permission.lifecycle_status}")
 
-    if permission.permitted:
-        logger.error("❌ TEST 6 FAILED: SHUDRA should NOT have write permission")
-        return False
-
-    logger.info("✅ TEST 6 PASSED: SHUDRA correctly blocked from writing")
+    assert not permission.permitted, "TEST 6 FAILED: SHUDRA should NOT have write permission"
+    logger.info("TEST 6 PASSED: SHUDRA correctly blocked from writing")
 
     # TEST 7: Verify persistence - Reload and check state survives
     logger.info("\n" + "-" * 80)
@@ -168,18 +146,11 @@ def test_lifecycle_enforcer():
     from civic.tools.lifecycle_manager import LifecycleManager
 
     manager2 = LifecycleManager()
-
     state_after = manager2.get_lifecycle_state(test_agent)
 
-    if not state_after:
-        logger.error("❌ TEST 7 FAILED: State not persisted")
-        return False
-
-    if state_after.status != LifecycleStatus.SHUDRA:
-        logger.error(f"❌ TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA")
-        return False
-
-    logger.info("✅ TEST 7 PASSED: KARMA confirmed - state persisted across restart")
+    assert state_after, "TEST 7 FAILED: State not persisted"
+    assert state_after.status == LifecycleStatus.SHUDRA, f"TEST 7 FAILED: Persisted state is {state_after.status.value}, expected SHUDRA"
+    logger.info("TEST 7 PASSED: KARMA confirmed - state persisted across restart")
     logger.info(f"   Agent {test_agent} still SHUDRA after simulated restart")
 
     # TEST 8: Deprecate to VANAPRASTHA
@@ -193,11 +164,8 @@ def test_lifecycle_enforcer():
         archive_path="/archive/test_pulse_v1",
     )
 
-    if state.status != LifecycleStatus.VANAPRASTHA:
-        logger.error("❌ TEST 8 FAILED: Not VANAPRASTHA")
-        return False
-
-    logger.info("✅ TEST 8 PASSED: Agent retired to VANAPRASTHA")
+    assert state.status == LifecycleStatus.VANAPRASTHA, f"TEST 8 FAILED: Not VANAPRASTHA (got {state.status.value})"
+    logger.info("TEST 8 PASSED: Agent retired to VANAPRASTHA")
 
     # TEST 9: Get statistics
     logger.info("\n" + "-" * 80)
@@ -212,21 +180,18 @@ def test_lifecycle_enforcer():
 
     # SUMMARY
     logger.info("\n" + "=" * 80)
-    logger.info("✅ ALL TESTS PASSED")
+    logger.info("ALL TESTS PASSED")
     logger.info("=" * 80)
-    logger.info("\n🎉 LIFECYCLE ENFORCER IS WORKING!")
+    logger.info("\nLIFECYCLE ENFORCER IS WORKING!")
     logger.info("   - New agents register as BRAHMACHARI (read-only)")
     logger.info("   - Permission gates REJECT unqualified actions")
     logger.info("   - TEMPLE can initiate agents to GRIHASTHA")
     logger.info("   - Violations demote agents to SHUDRA")
     logger.info("   - State persists across restarts (KARMA)")
     logger.info("   - This is NOT a mock - consequences are REAL")
-    logger.info("\n🔄 The simulation is now bound by KARMA and DHARMA")
+    logger.info("\nThe simulation is now bound by KARMA and DHARMA")
     logger.info("=" * 80 + "\n")
-
-    return True
 
 
 if __name__ == "__main__":
-    success = test_lifecycle_enforcer()
-    sys.exit(0 if success else 1)
+    pytest.main([__file__, "-v"])

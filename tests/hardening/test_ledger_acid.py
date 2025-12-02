@@ -12,44 +12,23 @@ NO MOCKS. NO SKIPS. REAL STRESS.
 """
 
 import hashlib
-import json
 import os
-import signal
 import sqlite3
 import subprocess
 import sys
 import tempfile
 import threading
 import time
-from multiprocessing import Process, Queue
 from pathlib import Path
+
+import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from vibe_core.ledger import SQLiteLedger
 
 
-class HardeningResult:
-    def __init__(self, name: str):
-        self.name = name
-        self.passed = False
-        self.message = ""
-        self.details = {}
-
-    def fail(self, msg: str, **details):
-        self.passed = False
-        self.message = msg
-        self.details = details
-        return self
-
-    def success(self, msg: str = "OK", **details):
-        self.passed = True
-        self.message = msg
-        self.details = details
-        return self
-
-
-def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: int = 100) -> HardeningResult:
+def test_concurrent_writes_integrity():
     """
     STRESS TEST: Multiple threads writing simultaneously.
 
@@ -58,7 +37,8 @@ def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: i
     - Hash chain remains unbroken
     - No duplicate event IDs
     """
-    result = HardeningResult("CONCURRENT_WRITES_INTEGRITY")
+    num_threads = 50
+    events_per_thread = 100
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -108,54 +88,37 @@ def test_concurrent_writes_integrity(num_threads: int = 50, events_per_thread: i
         actual_events = len(events)
 
         # Check 1: No lost writes
-        if actual_events != expected_events:
-            return result.fail(
-                f"LOST WRITES: Expected {expected_events}, got {actual_events}",
-                lost=expected_events - actual_events,
-                duration=duration
-            )
+        assert actual_events == expected_events, \
+            f"LOST WRITES: Expected {expected_events}, got {actual_events} (lost: {expected_events - actual_events}, duration: {duration:.2f}s)"
 
         # Check 2: Hash chain integrity
         integrity = verify_ledger.verify_chain_integrity()
-        if integrity["corrupted"]:
-            return result.fail(
-                f"HASH CHAIN CORRUPTED: {len(integrity.get('corruptions', []))} breaks",
-                corruptions=integrity.get("corruptions", [])[:5],
-                duration=duration
-            )
+        assert not integrity["corrupted"], \
+            f"HASH CHAIN CORRUPTED: {len(integrity.get('corruptions', []))} breaks"
 
         # Check 3: No duplicate IDs
         unique_ids = set(e.get("event_id") for e in events)
-        if len(unique_ids) != actual_events:
-            return result.fail(
-                f"DUPLICATE EVENT IDS: {actual_events - len(unique_ids)} duplicates",
-                duration=duration
-            )
+        assert len(unique_ids) == actual_events, \
+            f"DUPLICATE EVENT IDS: {actual_events - len(unique_ids)} duplicates"
 
         verify_ledger.close()
 
-        if errors:
-            return result.fail(f"THREAD ERRORS: {len(errors)}", errors=errors[:5])
+        assert not errors, f"THREAD ERRORS: {len(errors)} - {errors[:5]}"
 
-        return result.success(
-            f"{actual_events} events, chain intact, {duration:.2f}s",
-            events=actual_events,
-            rate=actual_events/duration,
-            duration=duration
-        )
+        print(f"{actual_events} events, chain intact, {duration:.2f}s, rate: {actual_events/duration:.0f} events/s")
 
     finally:
         os.unlink(db_path)
 
 
-def test_crash_durability(num_iterations: int = 10) -> HardeningResult:
+def test_crash_durability():
     """
     CRASH TEST: Write event, kill -9, verify persistence.
 
     Simulates hard crashes (power loss, kernel panic).
     Event MUST survive if record_event() returned.
     """
-    result = HardeningResult("CRASH_DURABILITY")
+    num_iterations = 10
 
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
@@ -221,17 +184,9 @@ os.kill(os.getpid(), 9)
 
             verify_ledger.close()
 
-        if lost > 0:
-            return result.fail(
-                f"DATA LOSS: {lost}/{num_iterations} events lost after crash",
-                survived=survived,
-                lost=lost
-            )
+        assert lost == 0, f"DATA LOSS: {lost}/{num_iterations} events lost after crash (survived: {survived})"
 
-        return result.success(
-            f"{survived}/{num_iterations} events survived hard crash",
-            survived=survived
-        )
+        print(f"{survived}/{num_iterations} events survived hard crash")
 
     finally:
         try:
@@ -245,15 +200,13 @@ os.kill(os.getpid(), 9)
             pass
 
 
-def test_replay_attack_detection() -> HardeningResult:
+def test_replay_attack_detection():
     """
     SECURITY TEST: Attempt to replay old events.
 
     Attack vector: Copy an old event and re-insert it.
     System MUST detect the broken hash chain.
     """
-    result = HardeningResult("REPLAY_ATTACK_DETECTION")
-
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
@@ -292,30 +245,22 @@ def test_replay_attack_detection() -> HardeningResult:
         integrity = ledger.verify_chain_integrity()
         ledger.close()
 
-        if not integrity["corrupted"]:
-            return result.fail(
-                "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean",
-                injected_event="REPLAYED_EVT"
-            )
+        assert integrity["corrupted"], \
+            "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
 
-        return result.success(
-            "Replay attack detected via hash chain verification",
-            corruptions_found=len(integrity.get("corruptions", []))
-        )
+        print(f"Replay attack detected via hash chain verification ({len(integrity.get('corruptions', []))} corruptions found)")
 
     finally:
         os.unlink(db_path)
 
 
-def test_tamper_detection() -> HardeningResult:
+def test_tamper_detection():
     """
     SECURITY TEST: Modify an existing event's payload.
 
     Attack vector: SQL UPDATE to change event data.
     System MUST detect via hash mismatch.
     """
-    result = HardeningResult("TAMPER_DETECTION")
-
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
@@ -341,75 +286,19 @@ def test_tamper_detection() -> HardeningResult:
         integrity = ledger.verify_chain_integrity()
         ledger.close()
 
-        if not integrity["corrupted"]:
-            return result.fail(
-                "TAMPERING UNDETECTED: Modified payload, chain reported clean"
-            )
+        assert integrity["corrupted"], "TAMPERING UNDETECTED: Modified payload, chain reported clean"
 
         # Check if the correct event was flagged
         corruptions = integrity.get("corruptions", [])
         flagged_indices = [c.get("index") for c in corruptions]
 
-        if 2 not in flagged_indices:  # index 2 = id 3
-            return result.fail(
-                "WRONG EVENT FLAGGED: Tampered event #3 not in corruption list",
-                flagged=flagged_indices
-            )
+        assert 2 in flagged_indices, f"WRONG EVENT FLAGGED: Tampered event #3 not in corruption list (flagged: {flagged_indices})"
 
-        return result.success(
-            "Payload tampering detected at correct position",
-            tampered_index=2
-        )
+        print(f"Payload tampering detected at correct position (index 2)")
 
     finally:
         os.unlink(db_path)
 
 
-def run_all_tests() -> dict:
-    """Run all ACID tests and return summary."""
-
-    print("\n" + "=" * 60)
-    print("🔩 KRUPP-STAHL LEDGER ACID TEST SUITE")
-    print("=" * 60)
-
-    tests = [
-        ("Concurrent Writes (50 threads x 100 events)", test_concurrent_writes_integrity),
-        ("Crash Durability (10 kill -9 cycles)", test_crash_durability),
-        ("Replay Attack Detection", test_replay_attack_detection),
-        ("Tamper Detection", test_tamper_detection),
-    ]
-
-    results = {}
-    passed = 0
-    failed = 0
-
-    for name, test_fn in tests:
-        print(f"\n[TEST] {name}")
-        try:
-            result = test_fn()
-            results[result.name] = result
-
-            if result.passed:
-                print(f"  ✅ PASS: {result.message}")
-                passed += 1
-            else:
-                print(f"  ❌ FAIL: {result.message}")
-                if result.details:
-                    for k, v in list(result.details.items())[:3]:
-                        print(f"     {k}: {v}")
-                failed += 1
-
-        except Exception as e:
-            print(f"  💥 ERROR: {e}")
-            failed += 1
-
-    print("\n" + "=" * 60)
-    print(f"SUMMARY: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return {"passed": passed, "failed": failed, "results": results}
-
-
 if __name__ == "__main__":
-    summary = run_all_tests()
-    sys.exit(0 if summary["failed"] == 0 else 1)
+    pytest.main([__file__, "-v"])
