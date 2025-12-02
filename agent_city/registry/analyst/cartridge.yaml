@@ -3,50 +3,64 @@ name: ANALYST
 version: 2.0.0
 author: Steward Protocol
 description: |
-  4D Multi-Dimensional Repository Analysis Agent
+  Multi-Source Repository Analysis Agent
   RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation)
+
+  Provides MULTI-SOURCE analysis, not just git:
+  - Git history and temporal patterns
+  - Code analysis (AST, complexity)
+  - Project structure and architecture
+  - Dependency graphs
+  - Documentation coverage
 
 # Agent metadata
 domain: RESEARCH
 capabilities:
   - git_analysis
+  - code_analysis
+  - structure_analysis
   - dependency_analysis
+  - docs_analysis
   - context_synthesis
-  - temporal_analysis
-  - structural_analysis
-  - semantic_analysis
-  - predictive_analysis
 
-# Tools (auto-discovered from tools/ directory)
+# Tools (kernel-managed, NOT agent-owned)
+# These tools are discovered from tools/ directory
+# and registered with the kernel tool registry
 tools:
-  - analyst.git       # Git history analysis
-  - analyst.context   # Context synthesis
+  - analyst.git        # Git history, velocity, patterns
+  - analyst.code       # Code analysis, AST, complexity
+  - analyst.structure  # Project structure, coupling
+  - analyst.deps       # Dependencies, imports
+  - analyst.docs       # Documentation coverage
 
-# 4D ANALYSIS DIMENSIONS
+# MULTI-SOURCE ANALYSIS
 # =====================
-# 1. TEMPORAL:    Time-based patterns, velocity trends, work rhythms
-# 2. STRUCTURAL:  Dependencies, coupling, architecture hubs
-# 3. SEMANTIC:    Commit types, tech debt, complexity
-# 4. PREDICTIVE:  Risk areas, related files, recommendations
+# Not just git! ANALYST provides:
+# 1. GIT:       Temporal patterns, velocity, commit types
+# 2. CODE:      AST analysis, complexity, tech debt
+# 3. STRUCTURE: Module boundaries, coupling, hotspots
+# 4. DEPS:      Import graphs, external requirements
+# 5. DOCS:      Docstring coverage, documentation quality
 
 # VEDA-4 CIRCUIT INTEGRATION
 # ==========================
 # Uses context_synth.yaml circuit for semantic state machine:
 #   SHABDA   → Capture request
 #   ARTHA    → Extract parameters
-#   PRATYAYA → Plan analysis
-#   KARMA    → Execute 4D analysis
-#   SYNTH    → Synthesize context
+#   PRATYAYA → Plan multi-source analysis
+#   KARMA    → Execute tools via kernel
+#   SYNTH    → Synthesize from all sources
 
 philosophy: |
-  ANALYST provides real-time repository context through 4D analysis.
+  ANALYST provides real-time repository context from MULTIPLE sources.
 
-  Git is truth. Code changes tell the story.
-  Multi-dimensional analysis reveals hidden patterns.
-  Context synthesis replaces external RAG dependencies.
+  Git is truth - but it's not the ONLY truth.
+  Code, structure, dependencies, and docs all contribute.
+  Multi-source analysis reveals the full picture.
 
+  Tools are kernel-managed, not agent-owned.
+  VEDA-4 circuit orchestrates tool execution.
   Works FOR SCRIBE to generate RAG.md.
-  VEDA-4 circuit ensures semantic correctness.
 
 # Configuration
 config:
@@ -55,24 +69,22 @@ config:
   monitoring:
     enabled: true
   analysis:
-    # Temporal
-    velocity_periods: 4       # Weeks for trend analysis
-    day_analysis_days: 30     # Days for pattern analysis
+    # Git analysis
+    git_days: 30
+    velocity_periods: 4
 
-    # Structural
-    co_change_min_correlation: 3
-    dependency_depth: 3
-
-    # Semantic
-    commit_type_days: 30
-    debt_scan_dirs:
+    # Code analysis
+    target_dirs:
       - steward
       - vibe_core
       - agent_city
 
-    # Predictive
-    relatedness_days: 60
-    stability_period: 14
+    # Structure analysis
+    coupling_days: 30
+    min_correlation: 3
+
+    # Docs analysis
+    coverage_threshold: 60
 
 dependencies:
   - pyyaml

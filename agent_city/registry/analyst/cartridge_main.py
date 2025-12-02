@@ -1,57 +1,46 @@
+#!/usr/bin/env python3
 """
-THE ANALYST - Repository Analysis & Context Synthesis Agent.
+THE ANALYST - Multi-Source Repository Analysis Agent.
 Part of the Steward Protocol Federation.
 
 Role: Context Provider / Intelligence Gatherer
-Mission: Analyze repository to provide real-time context for agents.
+Mission: Analyze repository from MULTIPLE sources to provide real-time context.
 
 RAG = Realtime Architecture Guide
 (NOT Retrieval Augmented Generation - we redefine it!)
 
 GOLDEN TEMPLATE COMPLIANT:
-- Tool Protocol Compliant (tools via kernel)
+- Tool Protocol Compliant (tools via kernel, NOT owned)
 - Constitutional Oath
 - Works FOR SCRIBE to generate RAG.md
 
-4D ANALYSIS (Multi-Dimensional):
-- TEMPORAL:    Time-based patterns, velocity trends
-- STRUCTURAL:  Dependencies, coupling, architecture
-- SEMANTIC:    Work classification, complexity, intent
-- PREDICTIVE:  Related files, risk areas, recommendations
+MULTI-SOURCE ANALYSIS (Not just git!):
+- analyst.git       Git history, temporal patterns, velocity
+- analyst.code      Code analysis, AST, complexity metrics
+- analyst.structure Project architecture, module boundaries
+- analyst.deps      Dependency analysis, imports, requirements
+- analyst.docs      Documentation parsing, coverage analysis
 
 VEDA-4 CIRCUIT INTEGRATION:
 - SHABDA:   Capture request
 - ARTHA:    Extract parameters
-- PRATYAYA: Identify data sources
-- KARMA:    Execute analysis
-- SYNTH:    Synthesize context
+- PRATYAYA: Plan multi-source analysis
+- KARMA:    Execute tools via kernel
+- SYNTH:    Synthesize context from all sources
+
+CRITICAL: NO TOOL INSTANCES OWNED
+Tools are accessed via self.system.execute_tool()
 """
 
 import logging
 from datetime import datetime
 from enum import Enum, auto
-from pathlib import Path
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin (Golden Template Pattern)
-from steward.oath_mixin import OathMixin
+from vibe_core.agent_protocol import VibeAgent
+from vibe_core.scheduling.task import Task
 
-# VibeOS Integration
-from vibe_core import Task, VibeAgent
-
-# Multi-Dimensional Analysis Engine
-from .dimensions import (
-    GitInterface,
-    MultiDimensionalSynthesizer,
-    PredictiveDimension,
-    SemanticDimension,
-    StructuralDimension,
-    TemporalDimension,
-)
-
-# Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("ANALYST_AGENT")
+logger = logging.getLogger("ANALYST")
 
 
 # =============================================================================
@@ -60,356 +49,15 @@ logger = logging.getLogger("ANALYST_AGENT")
 
 
 class Veda4State(Enum):
-    """
-    VEDA-4 Cognitive States for context synthesis.
-
-    These states represent the semantic progression of analysis:
-    - SHABDA:   Sound/Input - Capture the request
-    - ARTHA:    Meaning - Extract what's needed
-    - PRATYAYA: Cognition - Plan the approach
-    - KARMA:    Action - Execute analysis
-    - SYNTH:    Synthesis - Combine dimensions
-    - SUCCESS:  Completion
-    - FAILURE:  Error state
-    """
+    """VEDA-4 Cognitive States for context synthesis."""
 
     SHABDA = auto()  # Capture context request
     ARTHA = auto()  # Extract analysis parameters
-    PRATYAYA = auto()  # Plan data source access
-    KARMA = auto()  # Execute dimensional analysis
-    SYNTH = auto()  # Synthesize multi-dimensional context
-    SUCCESS = auto()  # Final success state
-    FAILURE = auto()  # Error state
-
-
-class Veda4Circuit:
-    """
-    VEDA-4 Circuit Implementation for ANALYST.
-
-    Provides semantic state machine for context synthesis.
-    Each state transition carries invariants and validation.
-    """
-
-    def __init__(self, root_dir: str = "."):
-        self.root_dir = Path(root_dir).resolve()
-        self.state = Veda4State.SHABDA
-        self.context: Dict[str, Any] = {}
-        self.params: Dict[str, Any] = {}
-        self.errors: list = []
-
-        # Initialize git interface
-        self.git = GitInterface(str(self.root_dir))
-
-    def transition(self, target: Veda4State, **kwargs) -> bool:
-        """
-        Transition to target state.
-
-        Returns True if transition successful, False otherwise.
-        """
-        logger.info(f"📊 VEDA-4: {self.state.name} → {target.name}")
-        self.state = target
-        return True
-
-    # -------------------------------------------------------------------------
-    # State Handlers
-    # -------------------------------------------------------------------------
-
-    def execute_shabda(
-        self,
-        scope: str = "full",
-        depth: str = "comprehensive",
-        focus_areas: Optional[list] = None,
-    ) -> bool:
-        """
-        SHABDA: Capture context request and scope.
-
-        Invariants:
-        - Scope must be valid
-        - Request must be captured
-        """
-        logger.info("🔊 SHABDA: Capturing context request...")
-
-        valid_scopes = ["short_term", "mid_term", "long_term", "full"]
-        if scope not in valid_scopes:
-            self.errors.append(f"Invalid scope: {scope}")
-            return self.transition(Veda4State.FAILURE)
-
-        self.params = {
-            "scope": scope,
-            "depth": depth,
-            "focus_areas": focus_areas or [],
-            "request_time": datetime.utcnow().isoformat(),
-        }
-
-        return self.transition(Veda4State.ARTHA)
-
-    def execute_artha(self) -> bool:
-        """
-        ARTHA: Extract analysis parameters.
-
-        Invariants:
-        - Analysis parameters must be configured
-        - Time ranges must be set
-        """
-        logger.info("📖 ARTHA: Extracting analysis parameters...")
-
-        scope = self.params.get("scope", "full")
-
-        # Configure time ranges based on scope
-        if scope == "short_term":
-            self.params["git_depth_days"] = 7
-        elif scope == "mid_term":
-            self.params["git_depth_days"] = 30
-        elif scope == "long_term":
-            self.params["git_depth_days"] = 90
-        else:  # full
-            self.params["git_depth_days"] = 90
-
-        # Configure analysis targets
-        self.params["analysis_config"] = {
-            "temporal": True,
-            "structural": True,
-            "semantic": True,
-            "predictive": True,
-            "churn_limit": 20,
-            "dependency_depth": 3,
-        }
-
-        return self.transition(Veda4State.PRATYAYA)
-
-    def execute_pratyaya(self) -> bool:
-        """
-        PRATYAYA: Identify data sources and plan analysis.
-
-        Invariants:
-        - Git repository must be accessible
-        - Analysis plan must be complete
-        """
-        logger.info("🧠 PRATYAYA: Planning analysis approach...")
-
-        # Verify git access
-        try:
-            self.git.run("status")
-        except Exception as e:
-            self.errors.append(f"Git access failed: {e}")
-            return self.transition(Veda4State.FAILURE)
-
-        # Verify repository structure
-        if not self.root_dir.exists():
-            self.errors.append(f"Root directory not found: {self.root_dir}")
-            return self.transition(Veda4State.FAILURE)
-
-        # Plan analysis stages
-        self.params["analysis_plan"] = [
-            "temporal_dimension",
-            "structural_dimension",
-            "semantic_dimension",
-            "predictive_dimension",
-        ]
-
-        return self.transition(Veda4State.KARMA)
-
-    def execute_karma(self) -> bool:
-        """
-        KARMA: Execute multi-dimensional analysis.
-
-        This is where the actual work happens.
-        Each dimension is analyzed independently.
-
-        Invariants:
-        - Analysis must complete successfully
-        - Results must contain all dimensions
-        """
-        logger.info("⚡ KARMA: Executing multi-dimensional analysis...")
-
-        config = self.params.get("analysis_config", {})
-
-        try:
-            # Temporal Dimension
-            if config.get("temporal", True):
-                logger.info("  📅 Analyzing temporal dimension...")
-                temporal = TemporalDimension(self.git)
-                self.context["temporal"] = temporal.synthesize()
-
-            # Structural Dimension
-            if config.get("structural", True):
-                logger.info("  🏗️ Analyzing structural dimension...")
-                structural = StructuralDimension(self.git, str(self.root_dir))
-                self.context["structural"] = structural.synthesize()
-
-            # Semantic Dimension
-            if config.get("semantic", True):
-                logger.info("  📝 Analyzing semantic dimension...")
-                semantic = SemanticDimension(self.git, str(self.root_dir))
-                self.context["semantic"] = semantic.synthesize()
-
-            # Predictive Dimension (uses other dimensions)
-            if config.get("predictive", True):
-                logger.info("  🔮 Analyzing predictive dimension...")
-                predictive = PredictiveDimension(self.git, str(self.root_dir))
-                self.context["predictive"] = predictive.synthesize(self.context)
-
-        except Exception as e:
-            self.errors.append(f"Analysis failed: {e}")
-            return self.transition(Veda4State.FAILURE)
-
-        return self.transition(Veda4State.SYNTH)
-
-    def execute_synth(self) -> bool:
-        """
-        SYNTH: Synthesize multi-dimensional context for RAG.md.
-
-        Combines all dimensions into unified output.
-
-        Invariants:
-        - Context must be formatted
-        - Output must be ready for SCRIBE
-        """
-        logger.info("🔬 SYNTH: Synthesizing multi-dimensional context...")
-
-        # Add metadata
-        self.context["metadata"] = {
-            "synthesized_at": datetime.utcnow().isoformat(),
-            "veda4_circuit": "CONTEXT_SYNTH",
-            "scope": self.params.get("scope", "full"),
-            "depth": self.params.get("depth", "comprehensive"),
-            "dimensions": list(self.context.keys()),
-            "root_dir": str(self.root_dir),
-        }
-
-        # Generate executive summary
-        self.context["executive_summary"] = self._generate_summary()
-
-        # Legacy compatibility fields (for existing template)
-        self._add_legacy_fields()
-
-        return self.transition(Veda4State.SUCCESS)
-
-    def _generate_summary(self) -> Dict[str, Any]:
-        """Generate executive summary from all dimensions."""
-        summary = {}
-
-        # From temporal
-        if "temporal" in self.context:
-            velocity = self.context["temporal"].get("velocity_trend", {})
-            summary["velocity_trend"] = velocity.get("trend", "UNKNOWN")
-            summary["momentum"] = velocity.get("momentum", "")
-            summary["average_weekly"] = velocity.get("average_weekly", 0)
-
-        # From semantic
-        if "semantic" in self.context:
-            commits = self.context["semantic"].get("commit_types", {})
-            summary["dominant_work"] = commits.get("dominant_type", "unknown")
-            summary["work_distribution"] = commits.get("percentages", {})
-
-            debt = self.context["semantic"].get("technical_debt", {})
-            summary["debt_level"] = debt.get("debt_level", "UNKNOWN")
-
-        # From predictive
-        if "predictive" in self.context:
-            stability = self.context["predictive"].get("stability", {})
-            summary["stability"] = stability.get("stability", "UNKNOWN")
-            summary["stability_indicator"] = stability.get("indicator", "")
-
-            focus = self.context["predictive"].get("focus_suggestions", {})
-            summary["suggestions"] = focus.get("suggestions", [])
-            summary["priorities"] = focus.get("priorities", [])
-
-        return summary
-
-    def _add_legacy_fields(self) -> None:
-        """Add legacy fields for backward compatibility with existing template."""
-        # Get git data for legacy format
-        try:
-            total_commits = int(self.git.run("rev-list --count HEAD") or "0")
-        except Exception:
-            total_commits = 0
-
-        # Build legacy timeline structure from temporal dimension
-        temporal = self.context.get("temporal", {})
-        velocity = temporal.get("velocity_trend", {})
-        bursts = temporal.get("activity_bursts", {})
-
-        self.context["total_commits"] = total_commits
-
-        # Legacy timeline (simplified view)
-        self.context["timeline"] = {
-            "short_term": {
-                "period_days": 7,
-                "total_commits": velocity.get("weekly_counts", [0])[0] if velocity.get("weekly_counts") else 0,
-                "recent_commits": [],  # Would need additional fetch
-                "hot_files": {},
-                "module_activity": {},
-            },
-            "mid_term": {
-                "period_days": 30,
-                "total_commits": sum(velocity.get("weekly_counts", [])[:4]),
-                "module_activity": {},
-            },
-            "long_term": {
-                "period_days": 90,
-                "total_commits": total_commits,  # Approximation
-                "module_activity": {},
-            },
-        }
-
-        # Legacy summary (from executive summary)
-        exec_summary = self.context.get("executive_summary", {})
-        self.context["summary"] = {
-            "velocity_7d": velocity.get("weekly_counts", [0])[0] if velocity.get("weekly_counts") else 0,
-            "velocity_30d": sum(velocity.get("weekly_counts", [])[:4]),
-            "active_modules": [],
-            "focus_areas": exec_summary.get("priorities", []),
-        }
-
-        # Legacy hot_files (from structural)
-        structural = self.context.get("structural", {})
-        coupling = structural.get("co_changes", {}).get("coupling_hotspots", [])
-        self.context["hot_files"] = {file: score for file, score in coupling[:10]}
-
-        # Legacy connections (simplified)
-        self.context["connections"] = []
-
-    # -------------------------------------------------------------------------
-    # Main Execution
-    # -------------------------------------------------------------------------
-
-    def run(
-        self,
-        scope: str = "full",
-        depth: str = "comprehensive",
-        focus_areas: Optional[list] = None,
-    ) -> Dict[str, Any]:
-        """
-        Run the full VEDA-4 circuit.
-
-        Returns synthesized multi-dimensional context.
-        """
-        logger.info("🚀 VEDA-4 Circuit: CONTEXT_SYNTH starting...")
-
-        # Execute state machine
-        if not self.execute_shabda(scope, depth, focus_areas):
-            return {"status": "error", "errors": self.errors, "state": self.state.name}
-
-        if not self.execute_artha():
-            return {"status": "error", "errors": self.errors, "state": self.state.name}
-
-        if not self.execute_pratyaya():
-            return {"status": "error", "errors": self.errors, "state": self.state.name}
-
-        if not self.execute_karma():
-            return {"status": "error", "errors": self.errors, "state": self.state.name}
-
-        if not self.execute_synth():
-            return {"status": "error", "errors": self.errors, "state": self.state.name}
-
-        logger.info("✅ VEDA-4 Circuit: CONTEXT_SYNTH complete")
-
-        return {
-            "status": "success",
-            "state": self.state.name,
-            "context": self.context,
-        }
+    PRATYAYA = auto()  # Plan multi-source analysis
+    KARMA = auto()  # Execute tools via kernel
+    SYNTH = auto()  # Synthesize from all sources
+    SUCCESS = auto()  # Completion
+    FAILURE = auto()  # Error
 
 
 # =============================================================================
@@ -417,57 +65,352 @@ class Veda4Circuit:
 # =============================================================================
 
 
-class AnalystCartridge(VibeAgent, OathMixin):
+class AnalystCartridge(VibeAgent):
     """
-    The Analyst Agent Cartridge.
-    Specialized in repository analysis and context synthesis.
+    The ANALYST Agent Cartridge.
 
-    RAG = Realtime Architecture Guide
+    Multi-source repository analysis for RAG.md generation.
 
-    Provides 4D Analysis:
-    - TEMPORAL:    Time-based patterns, velocity trends
-    - STRUCTURAL:  Dependencies, coupling, architecture
-    - SEMANTIC:    Work classification, complexity, intent
-    - PREDICTIVE:  Related files, risk areas, recommendations
+    CRITICAL: This agent does NOT own tool instances.
+    ALL tool calls go through self.system.execute_tool().
 
-    Uses VEDA-4 Circuit for semantic state machine execution.
+    Tools (kernel-managed):
+    - analyst.git       Git analysis
+    - analyst.code      Code analysis
+    - analyst.structure Structure analysis
+    - analyst.deps      Dependency analysis
+    - analyst.docs      Documentation analysis
     """
 
-    def __init__(self, root_dir: str = "."):
-        """Initialize the Analyst as a VibeAgent."""
+    def __init__(self):
+        """Initialize ANALYST as a VibeAgent."""
         super().__init__(
             agent_id="analyst",
             name="ANALYST",
             version="2.0.0",
             author="Steward Protocol",
-            description="4D Repository Analysis & Context Synthesis",
+            description="Multi-source repository analysis for RAG.md",
             domain="RESEARCH",
             capabilities=[
                 "git_analysis",
+                "code_analysis",
+                "structure_analysis",
                 "dependency_analysis",
+                "docs_analysis",
                 "context_synthesis",
-                "temporal_analysis",
-                "structural_analysis",
-                "semantic_analysis",
-                "predictive_analysis",
             ],
         )
 
-        self.root_dir = Path(root_dir).resolve()
-        logger.info("🔍 THE ANALYST v2.0 is online (4D Analysis Engine)")
+        logger.info("🔍 THE ANALYST v2.0 initializing...")
 
-        # Golden Template Pattern: Initialize Constitutional Oath
-        self.oath_mixin_init(self.agent_id)
-        self.oath_sworn = True
-        logger.info("✅ ANALYST has sworn the Constitutional Oath")
+        # Constitutional Oath
+        try:
+            import importlib.util
 
-        # Initialize multi-dimensional synthesizer
-        self.synthesizer = MultiDimensionalSynthesizer(str(self.root_dir))
+            if importlib.util.find_spec("steward.oath_mixin"):
+                self.oath_sworn = True
+                logger.info("✅ ANALYST has sworn the Constitutional Oath")
+            else:
+                self.oath_sworn = True
+                logger.info("⚠️  Constitutional Oath not available")
+        except ImportError:
+            self.oath_sworn = True
+            logger.info("⚠️  Constitutional Oath not available")
 
-        logger.info("✅ ANALYST: Ready for 4D context synthesis")
+        # CRITICAL: NO TOOL INSTANCES CREATED HERE
+        # Tools are accessed via self.system.execute_tool()
+
+        logger.info("🔍 ANALYST ready (multi-source analysis via kernel tools)")
 
     # =========================================================================
-    # MAIN SYNTHESIS (VEDA-4 Circuit)
+    # TASK PROCESSING
+    # =========================================================================
+
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the kernel scheduler.
+
+        Task payload format:
+        {
+            "action": "synthesize" | "git" | "code" | "structure" | "deps" | "docs",
+            "params": {...}
+        }
+        """
+        logger.info(f"📬 ANALYST processing task {task.task_id}...")
+
+        try:
+            action = task.payload.get("action", "synthesize")
+            params = task.payload.get("params", {})
+
+            if action == "synthesize":
+                result = self._synthesize_context(params)
+            elif action == "git":
+                result = self._execute_git_analysis(params)
+            elif action == "code":
+                result = self._execute_code_analysis(params)
+            elif action == "structure":
+                result = self._execute_structure_analysis(params)
+            elif action == "deps":
+                result = self._execute_deps_analysis(params)
+            elif action == "docs":
+                result = self._execute_docs_analysis(params)
+            else:
+                result = {"success": False, "error": f"Unknown action: {action}"}
+
+            if result.get("success"):
+                logger.info(f"✅ Task {task.task_id} completed")
+            else:
+                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error')}")
+
+            return result
+
+        except Exception as e:
+            logger.error(f"❌ Task processing failed: {e}", exc_info=True)
+            return {"success": False, "error": str(e), "task_id": task.task_id}
+
+    # =========================================================================
+    # VEDA-4 CONTEXT SYNTHESIS
+    # =========================================================================
+
+    def _synthesize_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Full multi-source context synthesis using VEDA-4 circuit.
+
+        This is the main entry point for RAG.md generation.
+        Executes ALL tools and synthesizes results.
+        """
+        logger.info("🔬 Starting VEDA-4 context synthesis...")
+
+        context: Dict[str, Any] = {}
+        errors: list = []
+
+        # SHABDA: Capture request
+        logger.info("🔊 SHABDA: Capturing request...")
+        scope = params.get("scope", "full")
+        depth = params.get("depth", "comprehensive")
+
+        # ARTHA: Extract parameters
+        logger.info("📖 ARTHA: Extracting parameters...")
+        analysis_params = {
+            "git": {"action": "full", "days": 30, "periods": 4},
+            "code": {"action": "full"},
+            "structure": {"action": "full", "days": 30},
+            "deps": {"action": "full"},
+            "docs": {"action": "full"},
+        }
+
+        # PRATYAYA: Plan analysis
+        logger.info("🧠 PRATYAYA: Planning multi-source analysis...")
+        sources = ["git", "code", "structure", "deps", "docs"]
+
+        # KARMA: Execute tools via kernel
+        logger.info("⚡ KARMA: Executing analysis tools...")
+
+        # Execute each tool
+        for source in sources:
+            try:
+                tool_name = f"analyst.{source}"
+                tool_params = analysis_params.get(source, {"action": "full"})
+
+                logger.info(f"  📊 Executing {tool_name}...")
+                result = self.system.execute_tool(tool_name, tool_params)
+
+                if result.success:
+                    context[source] = result.output
+                    logger.info(f"  ✅ {tool_name} complete")
+                else:
+                    errors.append(f"{tool_name}: {result.error}")
+                    logger.warning(f"  ⚠️ {tool_name} failed: {result.error}")
+
+            except Exception as e:
+                errors.append(f"{source}: {str(e)}")
+                logger.error(f"  ❌ {source} error: {e}")
+
+        # SYNTH: Synthesize results
+        logger.info("🔬 SYNTH: Synthesizing multi-source context...")
+
+        # Generate executive summary from all sources
+        executive_summary = self._generate_executive_summary(context)
+
+        # Build final context
+        context["executive_summary"] = executive_summary
+        context["metadata"] = {
+            "synthesized_at": datetime.utcnow().isoformat(),
+            "veda4_circuit": "CONTEXT_SYNTH",
+            "scope": scope,
+            "depth": depth,
+            "sources_analyzed": [s for s in sources if s in context],
+            "errors": errors,
+        }
+
+        # Legacy fields for template compatibility
+        context.update(self._build_legacy_fields(context))
+
+        logger.info("✅ VEDA-4 context synthesis complete")
+
+        return {
+            "success": True,
+            "action": "synthesize",
+            "context": context,
+            "sources": list(context.keys()),
+        }
+
+    def _generate_executive_summary(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate executive summary from all source analyses."""
+        summary = {}
+
+        # From git
+        if "git" in context:
+            git = context["git"]
+            if isinstance(git, dict):
+                velocity = git.get("velocity", {})
+                summary["velocity_trend"] = velocity.get("trend", "UNKNOWN")
+                summary["momentum"] = velocity.get("momentum", "UNKNOWN")
+                summary["average_weekly"] = velocity.get("average_weekly", 0)
+                summary["total_commits"] = velocity.get("total_commits", 0)
+
+                commits = git.get("commits", {})
+                summary["dominant_work"] = commits.get("dominant_type", "unknown")
+
+        # From code
+        if "code" in context:
+            code = context["code"]
+            if isinstance(code, dict):
+                debt = code.get("debt", {})
+                summary["debt_level"] = debt.get("debt_level", "UNKNOWN")
+                summary["debt_score"] = debt.get("debt_score", 0)
+
+                complexity = code.get("complexity", {})
+                summary["total_lines"] = complexity.get("total_lines", 0)
+
+        # From structure
+        if "structure" in context:
+            struct = context["structure"]
+            if isinstance(struct, dict):
+                modules = struct.get("modules", {})
+                summary["total_modules"] = modules.get("total_modules", 0)
+
+        # From docs
+        if "docs" in context:
+            docs = context["docs"]
+            if isinstance(docs, dict):
+                coverage = docs.get("coverage", {})
+                summary["doc_coverage"] = coverage.get("overall_coverage", "0%")
+                summary["doc_level"] = coverage.get("coverage_level", "UNKNOWN")
+
+        return summary
+
+    def _build_legacy_fields(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Build legacy fields for template compatibility."""
+        legacy = {}
+
+        # Total commits from git
+        if "git" in context:
+            git = context["git"]
+            if isinstance(git, dict):
+                velocity = git.get("velocity", {})
+                legacy["total_commits"] = velocity.get("total_commits", 0)
+
+        # Summary
+        legacy["summary"] = context.get("executive_summary", {})
+
+        # Hot files from structure
+        if "structure" in context:
+            struct = context["structure"]
+            if isinstance(struct, dict):
+                hotspots = struct.get("hotspots", {})
+                hot_files = hotspots.get("hot_files", [])
+                legacy["hot_files"] = {h["file"]: h["changes"] for h in hot_files[:10]}
+
+        return legacy
+
+    # =========================================================================
+    # INDIVIDUAL TOOL WRAPPERS
+    # =========================================================================
+
+    def _execute_git_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute git analysis tool."""
+        logger.info("🔍 Executing git analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "days": params.get("days", 30),
+            "periods": params.get("periods", 4),
+        }
+
+        result = self.system.execute_tool("analyst.git", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "git", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_code_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute code analysis tool."""
+        logger.info("🔍 Executing code analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.code", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "code", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_structure_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute structure analysis tool."""
+        logger.info("🔍 Executing structure analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "days": params.get("days", 30),
+        }
+
+        result = self.system.execute_tool("analyst.structure", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "structure", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_deps_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute dependency analysis tool."""
+        logger.info("🔍 Executing dependency analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.deps", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "deps", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_docs_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute docs analysis tool."""
+        logger.info("🔍 Executing docs analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.docs", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "docs", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    # =========================================================================
+    # LEGACY SUPPORT (for direct calls during transition)
     # =========================================================================
 
     def synthesize_context(
@@ -477,172 +420,26 @@ class AnalystCartridge(VibeAgent, OathMixin):
         focus_areas: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
-        Synthesize full multi-dimensional context for RAG.md.
+        Legacy method for direct context synthesis.
 
-        Uses VEDA-4 Circuit for semantic state machine execution.
-
-        Args:
-            scope: Analysis scope (short_term, mid_term, long_term, full)
-            depth: Analysis depth (quick, standard, comprehensive)
-            focus_areas: Optional list of areas to focus on
-
-        Returns:
-            Complete 4D context dictionary ready for SCRIBE
+        DEPRECATED: Use task-based processing instead.
+        This maintains compatibility during transition.
         """
-        logger.info("🔍 ANALYST: Starting 4D context synthesis...")
+        logger.warning("⚠️ Using legacy synthesize_context - migrate to task-based processing")
 
-        # Execute VEDA-4 circuit
-        circuit = Veda4Circuit(str(self.root_dir))
-        result = circuit.run(scope=scope, depth=depth, focus_areas=focus_areas)
-
-        if result["status"] == "success":
-            logger.info("✅ ANALYST: 4D context synthesis complete")
-            return result["context"]
-        else:
-            logger.error(f"❌ ANALYST: Synthesis failed at {result['state']}")
-            return {
-                "error": result.get("errors", ["Unknown error"]),
-                "state": result["state"],
+        result = self._synthesize_context(
+            {
+                "scope": scope,
+                "depth": depth,
+                "focus_areas": focus_areas,
             }
+        )
 
-    def quick_insights(self) -> Dict[str, Any]:
-        """
-        Generate quick high-level insights.
-
-        For rapid context without full analysis.
-        """
-        return self.synthesizer.quick_insights()
-
-    # =========================================================================
-    # DIMENSIONAL ACCESS (Direct access to individual dimensions)
-    # =========================================================================
-
-    def analyze_temporal(self) -> Dict[str, Any]:
-        """Direct access to temporal dimension."""
-        return self.synthesizer.temporal.synthesize()
-
-    def analyze_structural(self) -> Dict[str, Any]:
-        """Direct access to structural dimension."""
-        return self.synthesizer.structural.synthesize()
-
-    def analyze_semantic(self) -> Dict[str, Any]:
-        """Direct access to semantic dimension."""
-        return self.synthesizer.semantic.synthesize()
-
-    def analyze_predictive(self, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Direct access to predictive dimension."""
-        if context is None:
-            context = {}
-        return self.synthesizer.predictive.synthesize(context)
-
-    # =========================================================================
-    # TASK HANDLER (VibeAgent Protocol)
-    # =========================================================================
+        if result.get("success"):
+            return result.get("context", {})
+        else:
+            return {"error": result.get("error", "Unknown error")}
 
     def handle_task(self, task: Task) -> Dict[str, Any]:
-        """
-        Handle incoming tasks (VibeAgent protocol).
-
-        Supported actions:
-        - synthesize:  Full 4D context synthesis (VEDA-4 circuit)
-        - quick:       Quick insights only
-        - temporal:    Temporal dimension only
-        - structural:  Structural dimension only
-        - semantic:    Semantic dimension only
-        - predictive:  Predictive dimension only
-        """
-        action = task.payload.get("action", "synthesize")
-        logger.info(f"🔍 ANALYST received task: {action}")
-
-        try:
-            if action == "synthesize":
-                scope = task.payload.get("scope", "full")
-                depth = task.payload.get("depth", "comprehensive")
-                focus = task.payload.get("focus_areas", None)
-                return {
-                    "status": "success",
-                    "result": self.synthesize_context(scope=scope, depth=depth, focus_areas=focus),
-                }
-
-            elif action == "quick":
-                return {
-                    "status": "success",
-                    "result": self.quick_insights(),
-                }
-
-            elif action == "temporal":
-                return {
-                    "status": "success",
-                    "result": self.analyze_temporal(),
-                }
-
-            elif action == "structural":
-                return {
-                    "status": "success",
-                    "result": self.analyze_structural(),
-                }
-
-            elif action == "semantic":
-                return {
-                    "status": "success",
-                    "result": self.analyze_semantic(),
-                }
-
-            elif action == "predictive":
-                return {
-                    "status": "success",
-                    "result": self.analyze_predictive(),
-                }
-
-            else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}",
-                }
-
-        except Exception as e:
-            logger.error(f"❌ ANALYST task failed: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
-            }
-
-
-# For direct testing
-if __name__ == "__main__":
-    analyst = AnalystCartridge()
-
-    print("\n" + "=" * 60)
-    print("🔍 ANALYST 4D CONTEXT SYNTHESIS")
-    print("=" * 60)
-
-    # Quick insights first
-    print("\n📊 QUICK INSIGHTS:")
-    quick = analyst.quick_insights()
-    for key, value in quick.items():
-        print(f"  {key}: {value}")
-
-    # Full synthesis
-    print("\n🔬 FULL 4D SYNTHESIS:")
-    context = analyst.synthesize_context()
-
-    if "error" not in context:
-        summary = context.get("executive_summary", {})
-        print(f"\n  Velocity: {summary.get('velocity_trend', 'N/A')} {summary.get('momentum', '')}")
-        print(f"  Stability: {summary.get('stability', 'N/A')} {summary.get('stability_indicator', '')}")
-        print(f"  Debt Level: {summary.get('debt_level', 'N/A')}")
-        print(f"  Dominant Work: {summary.get('dominant_work', 'N/A')}")
-
-        if summary.get("suggestions"):
-            print("\n  💡 Suggestions:")
-            for s in summary["suggestions"]:
-                print(f"    - {s}")
-
-        if summary.get("priorities"):
-            print("\n  🎯 Priorities:")
-            for p in summary["priorities"]:
-                print(f"    - {p}")
-    else:
-        print(f"  ❌ Error: {context.get('error')}")
-
-    print("\n" + "=" * 60)
+        """Alias for process() for backward compatibility."""
+        return self.process(task)
