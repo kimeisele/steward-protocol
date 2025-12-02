@@ -1,0 +1,271 @@
+meta:
+  generated: '2025-12-02T17:59:34.593541'
+  method: data-driven scan
+numbered_refs:
+  GAD:
+    total: 41
+    total_refs: 950
+    items:
+      GAD-000:
+        count: 243
+        files: 83
+      GAD-1000:
+        count: 84
+        files: 17
+      GAD-511:
+        count: 75
+        files: 10
+      GAD-5500:
+        count: 61
+        files: 24
+      GAD-5000:
+        count: 54
+        files: 13
+      GAD-510:
+        count: 42
+        files: 6
+      GAD-7000:
+        count: 35
+        files: 6
+      GAD-509:
+        count: 27
+        files: 7
+      GAD-5001:
+        count: 18
+        files: 6
+      GAD-002:
+        count: 17
+        files: 6
+      GAD-100:
+        count: 17
+        files: 6
+      GAD-909:
+        count: 15
+        files: 6
+      GAD-900:
+        count: 15
+        files: 5
+      GAD-5:
+        count: 14
+        files: 3
+      GAD-6000:
+        count: 13
+        files: 5
+      GAD-4000:
+        count: 13
+        files: 4
+      GAD-003:
+        count: 13
+        files: 3
+      GAD-904:
+        count: 13
+        files: 4
+      GAD-7:
+        count: 13
+        files: 3
+      GAD-6:
+        count: 13
+        files: 3
+      GAD-906:
+        count: 12
+        files: 3
+      GAD-3000:
+        count: 11
+        files: 5
+      GAD-004:
+        count: 10
+        files: 3
+      GAD-4:
+        count: 10
+        files: 3
+      GAD-006:
+        count: 9
+        files: 4
+      GAD-903:
+        count: 9
+        files: 3
+      GAD-905:
+        count: 9
+        files: 3
+      GAD-913:
+        count: 9
+        files: 3
+      GAD-902:
+        count: 9
+        files: 3
+      GAD-301:
+        count: 9
+        files: 3
+      GAD-502:
+        count: 8
+        files: 3
+      GAD-908:
+        count: 8
+        files: 3
+      GAD-2:
+        count: 8
+        files: 3
+      GAD-201:
+        count: 8
+        files: 3
+      GAD-1100:
+        count: 8
+        files: 4
+      GAD-800:
+        count: 7
+        files: 3
+      GAD-5003:
+        count: 4
+        files: 2
+      GAD-5002:
+        count: 4
+        files: 2
+      GAD-8:
+        count: 1
+        files: 1
+      GAD-005:
+        count: 1
+        files: 1
+      GAD-008:
+        count: 1
+        files: 1
+  ARCH:
+    total: 29
+    total_refs: 125
+    items:
+      ARCH-001:
+        count: 12
+        files: 3
+      ARCH-050:
+        count: 10
+        files: 9
+      ARCH-003:
+        count: 9
+        files: 4
+      ARCH-064:
+        count: 9
+        files: 3
+      ARCH-006:
+        count: 8
+        files: 3
+      ARCH-027:
+        count: 8
+        files: 5
+      ARCH-029:
+        count: 8
+        files: 3
+      ARCH-005:
+        count: 6
+        files: 3
+      ARCH-026:
+        count: 5
+        files: 3
+      ARCH-033:
+        count: 5
+        files: 4
+      ARCH-002:
+        count: 4
+        files: 3
+      ARCH-044:
+        count: 4
+        files: 3
+      ARCH-025:
+        count: 4
+        files: 3
+      ARCH-063:
+        count: 3
+        files: 3
+      ARCH-045:
+        count: 3
+        files: 3
+      ARCH-042:
+        count: 3
+        files: 3
+      ARCH-041:
+        count: 3
+        files: 2
+      ARCH-065:
+        count: 2
+        files: 2
+      ARCH-060:
+        count: 2
+        files: 1
+      ARCH-061:
+        count: 2
+        files: 1
+      ARCH-062:
+        count: 2
+        files: 2
+      ARCH-037:
+        count: 2
+        files: 2
+      ARCH-009:
+        count: 2
+        files: 2
+      ARCH-067:
+        count: 2
+        files: 2
+      ARCH-036:
+        count: 2
+        files: 2
+      ARCH-020:
+        count: 2
+        files: 1
+      ARCH-007:
+        count: 1
+        files: 1
+      ARCH-010:
+        count: 1
+        files: 1
+      ARCH-021:
+        count: 1
+        files: 1
+  ADR:
+    total: 1
+    total_refs: 5
+    items:
+      ADR-002:
+        count: 5
+        files: 4
+concepts:
+  total: 13
+  items:
+    steward:
+      count: 952
+      files: 220
+    civic:
+      count: 435
+      files: 91
+    parampara:
+      count: 97
+      files: 17
+    sarga:
+      count: 88
+      files: 9
+    narasimha:
+      count: 81
+      files: 20
+    dharma:
+      count: 29
+      files: 13
+    karma:
+      count: 27
+      files: 11
+    bhu-mandala:
+      count: 24
+      files: 7
+    prana:
+      count: 19
+      files: 7
+    sankhya:
+      count: 15
+      files: 7
+    veda:
+      count: 12
+      files: 5
+    bhagavat:
+      count: 1
+      files: 1
+    kanto:
+      count: 1
+      files: 1
