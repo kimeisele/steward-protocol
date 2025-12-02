@@ -775,6 +775,44 @@ class TestEnvoyIPCCallback:
         finally:
             kernel.process_manager.get_pending_messages = original_get_messages
 
+    def test_failed_dispatch_goes_to_history(self, kernel, temp_workdir):
+        """Test that failed dispatches are recorded in history immediately."""
+        # Mock _dispatch_envoy_request to simulate failure
+        original_dispatch = kernel._dispatch_envoy_request
+        kernel._dispatch_envoy_request = lambda req: {
+            "task_id": None,
+            "status": "FAILED",
+            "request": req,
+            "error": "Simulated dispatch failure",
+            "timestamp": "00:00:00 UTC",
+        }
+
+        try:
+            envoy_content = """# ENVOY TERMINAL
+
+## 💬 Request
+
+failing request
+
+---
+
+## 📊 Status
+"""
+            envoy_path = temp_workdir / "ENVOY.md"
+            envoy_path.write_text(envoy_content)
+            kernel._envoy_last_modified = 0
+
+            # Sync should handle the failure
+            kernel._sync_envoy_to_reality()
+
+            # Failed dispatch should go directly to history
+            assert len(kernel._envoy_pending_tasks) == 0  # Not in pending
+            assert len(kernel._envoy_request_history) == 1  # In history
+            assert kernel._envoy_request_history[0]["status"] == "FAILED"
+            assert "Simulated dispatch failure" in kernel._envoy_request_history[0]["error"]
+        finally:
+            kernel._dispatch_envoy_request = original_dispatch
+
 
 # =============================================================================
 # MAIN

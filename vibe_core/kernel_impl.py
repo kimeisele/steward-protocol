@@ -2357,6 +2357,10 @@ class RealVibeKernel(VibeKernel):
                 if task_id:
                     # Track pending task
                     self._envoy_pending_tasks[task_id] = result
+                else:
+                    # Dispatch failed - add directly to history (no pending state)
+                    self._envoy_request_history.append(result)
+                    logger.warning(f"📬 Request dispatch failed: {result.get('error', 'unknown')}")
 
             # Clear processed requests from ENVOY.md
             self._clear_envoy_requests()
