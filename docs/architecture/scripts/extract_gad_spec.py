@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""
+SPEC EXTRACTOR - Extract draft specs from code docstrings
+==========================================================
+
+Takes a GAD number, finds all references, extracts docstrings,
+and generates a DRAFT specification document.
+
+This is the NEXT STEP in the pipeline after analyze_gad_references.py
+
+Usage:
+    python docs/architecture/scripts/extract_gad_spec.py GAD-5500
+    python docs/architecture/scripts/extract_gad_spec.py --all  # Extract all undocumented
+
+Output:
+    docs/architecture/drafts/GAD-XXXX_DRAFT.md
+
+This script can be run by:
+1. Human (manual)
+2. SCRIBE agent (via playbook)
+3. VEDA-4 circuit (automated loop)
+"""
+
+import argparse
+import ast
+import re
+from datetime import datetime
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+DRAFTS_DIR = PROJECT_ROOT / "docs" / "architecture" / "drafts"
+
+GAD_PATTERN = re.compile(r"GAD-(\d+)", re.IGNORECASE)
+
+
+def find_files_with_gad(gad_number: str) -> list:
+    """Find all files containing GAD-XXXX references."""
+    files = []
+    search_dirs = [
+        PROJECT_ROOT / "vibe_core",
+        PROJECT_ROOT / "steward",
+        PROJECT_ROOT / "provider",
+    ]
+
+    for scan_dir in search_dirs:
+        if not scan_dir.exists():
+            continue
+        for filepath in scan_dir.rglob("*.py"):
+            try:
+                content = filepath.read_text()
+                if f"GAD-{gad_number}" in content or f"gad-{gad_number}" in content.lower():
+                    files.append(filepath)
+            except Exception:
+                pass
+
+    return files
+
+
+def extract_docstrings(filepath: Path) -> dict:
+    """Extract module docstring and class/function docstrings."""
+    result = {
+        "module_docstring": None,
+        "classes": {},
+        "functions": {},
+    }
+
+    try:
+        content = filepath.read_text()
+        tree = ast.parse(content)
+
+        # Module docstring
+        if tree.body and isinstance(tree.body[0], ast.Expr):
+            if isinstance(tree.body[0].value, ast.Constant):
+                result["module_docstring"] = tree.body[0].value.value
+
+        # Class and function docstrings
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                docstring = ast.get_docstring(node)
+                if docstring:
+                    result["classes"][node.name] = docstring
+
+            elif isinstance(node, ast.FunctionDef):
+                docstring = ast.get_docstring(node)
+                if docstring:
+                    result["functions"][node.name] = docstring
+
+    except Exception as e:
+        result["error"] = str(e)
+
+    return result
+
+
+def extract_gad_context(filepath: Path, gad_number: str) -> list:
+    """Extract lines around GAD references for context."""
+    contexts = []
+
+    try:
+        content = filepath.read_text()
+        lines = content.split("\n")
+
+        for i, line in enumerate(lines):
+            if f"GAD-{gad_number}" in line or f"gad-{gad_number}" in line.lower():
+                # Get 3 lines before and after for context
+                start = max(0, i - 3)
+                end = min(len(lines), i + 4)
+                context_lines = lines[start:end]
+                contexts.append(
+                    {
+                        "file": str(filepath.relative_to(PROJECT_ROOT)),
+                        "line": i + 1,
+                        "context": "\n".join(context_lines),
+                    }
+                )
+    except Exception:
+        pass
+
+    return contexts
+
+
+def generate_draft_spec(gad_number: str) -> str:
+    """Generate a draft specification from extracted code."""
+    files = find_files_with_gad(gad_number)
+
+    if not files:
+        return f"# GAD-{gad_number}\n\n> No code references found for GAD-{gad_number}\n"
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    # Collect all data
+    all_docstrings = []
+    all_contexts = []
+    all_classes = []
+    all_functions = []
+
+    for f in files:
+        docstrings = extract_docstrings(f)
+        contexts = extract_gad_context(f, gad_number)
+
+        if docstrings.get("module_docstring"):
+            all_docstrings.append(
+                {"file": str(f.relative_to(PROJECT_ROOT)), "docstring": docstrings["module_docstring"]}
+            )
+
+        all_contexts.extend(contexts)
+
+        for name, doc in docstrings.get("classes", {}).items():
+            all_classes.append({"name": name, "file": str(f.relative_to(PROJECT_ROOT)), "doc": doc})
+
+        for name, doc in docstrings.get("functions", {}).items():
+            all_functions.append({"name": name, "file": str(f.relative_to(PROJECT_ROOT)), "doc": doc})
+
+    # Generate markdown
+    spec = f"""# GAD-{gad_number} - DRAFT SPECIFICATION
+
+> **Status:** DRAFT (Auto-extracted from code)
+> **Generated:** {timestamp}
+> **Source files:** {len(files)}
+> **Method:** Reverse-engineered from docstrings and code comments
+
+---
+
+## Overview
+
+*This specification was auto-generated by `extract_gad_spec.py` from code analysis.*
+*Human review required to formalize.*
+
+**Files implementing GAD-{gad_number}:**
+"""
+
+    for f in files[:10]:
+        spec += f"\n- `{f.relative_to(PROJECT_ROOT)}`"
+    if len(files) > 10:
+        spec += f"\n- ... and {len(files) - 10} more"
+
+    spec += "\n\n---\n\n## Extracted Module Docstrings\n\n"
+
+    if all_docstrings:
+        for d in all_docstrings[:5]:
+            spec += f"### From `{d['file']}`\n\n"
+            spec += f"```\n{d['docstring'][:1000]}\n```\n\n"
+    else:
+        spec += "*No module-level docstrings found.*\n\n"
+
+    spec += "---\n\n## Key Classes\n\n"
+
+    if all_classes:
+        for c in all_classes[:10]:
+            spec += f"### `{c['name']}` (from `{c['file']}`)\n\n"
+            spec += f"```\n{c['doc'][:500]}\n```\n\n"
+    else:
+        spec += "*No class docstrings found.*\n\n"
+
+    spec += "---\n\n## Key Functions\n\n"
+
+    if all_functions:
+        for fn in all_functions[:15]:
+            spec += f"### `{fn['name']}()` (from `{fn['file']}`)\n\n"
+            doc_preview = fn["doc"][:300] if fn["doc"] else "No docstring"
+            spec += f"```\n{doc_preview}\n```\n\n"
+    else:
+        spec += "*No function docstrings found.*\n\n"
+
+    spec += "---\n\n## Code Contexts (GAD References)\n\n"
+
+    if all_contexts:
+        for ctx in all_contexts[:10]:
+            spec += f"### `{ctx['file']}:{ctx['line']}`\n\n"
+            spec += f"```python\n{ctx['context']}\n```\n\n"
+    else:
+        spec += "*No direct references found.*\n\n"
+
+    spec += """---
+
+## Next Steps
+
+1. [ ] Review extracted content for accuracy
+2. [ ] Write formal "Purpose" section
+3. [ ] Document the API/Interface
+4. [ ] Add usage examples
+5. [ ] Move from drafts/ to core/ when finalized
+
+---
+
+*This is a DRAFT. Do not treat as authoritative until reviewed and moved to core/.*
+"""
+
+    return spec
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Extract GAD specs from code")
+    parser.add_argument("gad", nargs="?", help="GAD number (e.g., GAD-5500 or 5500)")
+    parser.add_argument("--all", action="store_true", help="Extract all undocumented GADs")
+    parser.add_argument("--top", type=int, default=5, help="With --all, extract top N by references")
+    args = parser.parse_args()
+
+    # Ensure drafts directory exists
+    DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.all:
+        # Import and run the analyzer to get undocumented GADs
+        print("Finding undocumented GADs...")
+        # For now, hardcode the top ones from our analysis
+        top_gads = ["5500", "511", "5000", "510", "7000"][: args.top]
+
+        for gad in top_gads:
+            print(f"Extracting GAD-{gad}...")
+            spec = generate_draft_spec(gad)
+            output_path = DRAFTS_DIR / f"GAD-{gad}_DRAFT.md"
+            output_path.write_text(spec)
+            print(f"   → {output_path.relative_to(PROJECT_ROOT)}")
+
+    elif args.gad:
+        # Extract single GAD
+        gad_number = args.gad.upper().replace("GAD-", "").replace("GAD", "")
+        print(f"Extracting GAD-{gad_number}...")
+
+        spec = generate_draft_spec(gad_number)
+        output_path = DRAFTS_DIR / f"GAD-{gad_number}_DRAFT.md"
+        output_path.write_text(spec)
+
+        print(f"✅ Draft saved to: {output_path.relative_to(PROJECT_ROOT)}")
+        print(f"   Lines: {len(spec.splitlines())}")
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()

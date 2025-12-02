@@ -1,0 +1,302 @@
+meta:
+  generated: '2025-12-02T16:21:51.921240'
+  method: data-driven (scanned from code)
+  total_gads: 38
+  documented: 7
+  undocumented: 31
+pillars:
+  '0':
+  - GAD-000
+  55XX:
+  - GAD-5500
+  5XX:
+  - GAD-511
+  - GAD-510
+  - GAD-509
+  - GAD-502
+  50XX:
+  - GAD-5000
+  - GAD-5001
+  - GAD-5002
+  - GAD-5003
+  70XX:
+  - GAD-7000
+  10XX:
+  - GAD-1000
+  1XX:
+  - GAD-100
+  60XX:
+  - GAD-6000
+  40XX:
+  - GAD-4000
+  9XX:
+  - GAD-909
+  - GAD-900
+  - GAD-904
+  - GAD-906
+  - GAD-903
+  - GAD-913
+  - GAD-902
+  - GAD-908
+  - GAD-905
+  '5':
+  - GAD-5
+  '6':
+  - GAD-6
+  - GAD-006
+  '7':
+  - GAD-7
+  '3':
+  - GAD-003
+  30XX:
+  - GAD-3000
+  11XX:
+  - GAD-1100
+  '4':
+  - GAD-4
+  - GAD-004
+  '2':
+  - GAD-002
+  - GAD-2
+  8XX:
+  - GAD-800
+  3XX:
+  - GAD-301
+  2XX:
+  - GAD-201
+gads:
+  GAD-000:
+    refs: 76
+    files: 40
+    documented: true
+    pillar: '0'
+    doc: GAD-000.md
+    sample: '"function": "Governance As Design (GAD-000) Compliance",'
+  GAD-5500:
+    refs: 32
+    files: 17
+    documented: true
+    pillar: 55XX
+    doc: docs/architecture/drafts/GAD-5500_DRAFT.md
+    sample: 'GAD-5500: The Complete Cognitive Circuit Test'
+  GAD-511:
+    refs: 25
+    files: 7
+    documented: true
+    pillar: 5XX
+    doc: docs/architecture/drafts/GAD-511_DRAFT.md
+    sample: LLM Client - Provider-Agnostic Adapter (GAD-511 Refactor)
+  GAD-5000:
+    refs: 20
+    files: 6
+    documented: true
+    pillar: 50XX
+    doc: docs/architecture/drafts/GAD-5000_DRAFT.md
+    sample: 'ACTION HANDLERS (GAD-5000: Registry Pattern)'
+  GAD-510:
+    refs: 14
+    files: 3
+    documented: true
+    pillar: 5XX
+    doc: docs/architecture/drafts/GAD-510_DRAFT.md
+    sample: '- Operational quotas (GAD-510)'
+  GAD-7000:
+    refs: 14
+    files: 4
+    documented: true
+    pillar: 70XX
+    doc: docs/architecture/drafts/GAD-7000_DRAFT.md
+    sample: '⚡ REFLEX ENGINE (GAD-7000: INSTANT RESPONSE LAYER)'
+  GAD-1000:
+    refs: 13
+    files: 5
+    documented: true
+    pillar: 10XX
+    doc: docs/architecture/GAD-1000.md
+    sample: 'r"requests\.get\s*\(",  # HTTP without GAD-1000 verification'
+  GAD-5001:
+    refs: 12
+    files: 4
+    documented: false
+    pillar: 50XX
+    sample: 'E2E Test: Blueprint Generator Integration (GAD-5001)'
+  GAD-100:
+    refs: 11
+    files: 4
+    documented: false
+    pillar: 1XX
+    sample: '# Validate configuration (GAD-100: Phoenix Configuration)'
+  GAD-509:
+    refs: 11
+    files: 4
+    documented: false
+    pillar: 5XX
+    sample: '- Circuit breaker (GAD-509)'
+  GAD-6000:
+    refs: 8
+    files: 4
+    documented: false
+    pillar: 60XX
+    sample: '# Import LLM Engine (GAD-6000)'
+  GAD-4000:
+    refs: 8
+    files: 3
+    documented: false
+    pillar: 40XX
+    sample: 🌌 GAD-4000 Fast-Path Execution Test
+  GAD-909:
+    refs: 8
+    files: 5
+    documented: false
+    pillar: 9XX
+    sample: '# GAD-909: Resolve dynamic context (The Flesh / OPERATION CONTEXT)'
+  GAD-5:
+    refs: 8
+    files: 2
+    documented: false
+    pillar: '5'
+    sample: '- Body (GAD-5): Runtime execution via bin/vibe-shell'
+  GAD-6:
+    refs: 8
+    files: 2
+    documented: false
+    pillar: '6'
+    sample: '- Arms (GAD-6): Knowledge retrieval via bin/vibe-knowledge'
+  GAD-7:
+    refs: 7
+    files: 2
+    documented: false
+    pillar: '7'
+    sample: '- Brain (GAD-7): Mission control & orchestration'
+  GAD-003:
+    refs: 7
+    files: 2
+    documented: false
+    pillar: '3'
+    sample: 'tools: list[str] = None  # GAD-003: List of available tool names'
+  GAD-900:
+    refs: 6
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'Final Launch Script - GAD-900: The HIL-Operator Contract'
+  GAD-3000:
+    refs: 6
+    files: 4
+    documented: false
+    pillar: 30XX
+    sample: app = FastAPI(title="VibeChat Gateway // GAD-3000")
+  GAD-904:
+    refs: 6
+    files: 3
+    documented: false
+    pillar: 9XX
+    sample: 'GAD-904: Agent Routing System (Neural Link)'
+  GAD-906:
+    refs: 6
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'self.lens_prompt = None  # GAD-906/907: Semantic lens injection'
+  GAD-1100:
+    refs: 5
+    files: 3
+    documented: false
+    pillar: 11XX
+    sample: INCLUDES NULL-POINTER PROTECTION & LEGACY MAPPING (GAD-1100).
+  GAD-4:
+    refs: 5
+    files: 2
+    documented: false
+    pillar: '4'
+    sample: '# CONNECTION TO FEET (GAD-4: Quality Assurance)'
+  GAD-004:
+    refs: 5
+    files: 2
+    documented: false
+    pillar: '4'
+    sample: '# v2: QUALITY GATES (GAD-004 Compliance)'
+  GAD-002:
+    refs: 5
+    files: 3
+    documented: false
+    pillar: '2'
+    sample: Implements GAD-002 Decision 6 + GAD-511 Neural Adapter Strategy
+  GAD-5002:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 50XX
+    sample: 🚀 AGENT CITY BOOT TEST (GAD-5002)
+  GAD-5003:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 50XX
+    sample: 🧬 GENESIS FLOW TEST (GAD-5003)
+  GAD-800:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 8XX
+    sample: '- GAD-800 (Graceful Degradation): Reduces cognitive load.'
+  GAD-903:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'GAD-903: Workflow Loader (OPERATION SEMANTIC MOTOR - Phase 2)'
+  GAD-913:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'GAD-913: Playbook Runner (Cartridge Slot Implementation)'
+  GAD-902:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'GAD-902: Graph Executor (Isolated Implementation)'
+  GAD-908:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: '# GAD-908: Knowledge Context Injection (OPERATION INSIGHT)'
+  GAD-905:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 9XX
+    sample: 'GAD-905: Router Bridge (Playbook → Registry Translation)'
+  GAD-301:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 3XX
+    sample: 'BaseAgent: The Integration Hub (GAD-301)'
+  GAD-2:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: '2'
+    sample: '# ATOMIC DELIVERY (GAD-2: The Atomic Gearbox)'
+  GAD-201:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 2XX
+    sample: 'task_id: Task identifier (e.g., GAD-201_TASK_EXECUTOR)'
+  GAD-006:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: '6'
+    sample: 'Resolve inbox message count (GAD-006: Asynchronous Intent).'
+  GAD-502:
+    refs: 4
+    files: 2
+    documented: false
+    pillar: 5XX
+    sample: '# GAD-502: Context Projection - Vibe Injection'
