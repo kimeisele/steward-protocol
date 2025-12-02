@@ -86,8 +86,7 @@ class TestGajendraProtocol:
         assert total == num_requests, f"Queue should have {num_requests} items, got {total}"
         logger.info(f"🐊 Queue FLOODED: {total} requests pending")
         logger.info("   Queue is drowning in LOW priority requests...")
-
-        return request_ids
+        # Test passes - request_ids tracked internally but not returned
 
     # ============================================================================
     # TEST 3: CRITICAL Request Bypasses Queue (The Lotus Flower)

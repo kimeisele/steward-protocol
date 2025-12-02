@@ -6,6 +6,8 @@ SIMPLE LIFECYCLE TEST - Tests the core lifecycle logic without dependencies
 import logging
 import sys
 
+import pytest
+
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("TEST_LIFECYCLE_SIMPLE")
 
@@ -17,10 +19,9 @@ def test_lifecycle_manager():
     logger.info("=" * 80)
 
     try:
-        from civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
+        from steward.system_agents.civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
     except ImportError as e:
-        logger.error(f"❌ Failed to import: {e}")
-        return False
+        pytest.skip(f"Could not import lifecycle modules: {e}")
 
     # Initialize
     logger.info("\n✅ Importing LifecycleManager...")
@@ -188,17 +189,9 @@ def test_lifecycle_manager():
     logger.info("\n   Permission gating is ENFORCED at kernel level")
     logger.info("   This makes consequences PERSISTENT and REAL")
     logger.info("=" * 80 + "\n")
-
-    return True
+    # Test passes if we reach here without any assertion failures
 
 
 if __name__ == "__main__":
-    try:
-        success = test_lifecycle_manager()
-        sys.exit(0 if success else 1)
-    except Exception as e:
-        logger.error(f"❌ Test failed with exception: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)
+    # When run directly, use pytest
+    sys.exit(pytest.main([__file__, "-v"]))

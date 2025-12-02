@@ -151,9 +151,22 @@ class DeterministicExecutor:
     Loads playbooks, matches intents, and executes phases deterministically.
     """
 
-    def __init__(self, knowledge_dir: str = "knowledge"):
+    def __init__(self, knowledge_dir: str = "knowledge", playbooks_dir: str = None):
         self.knowledge_dir = Path(knowledge_dir)
-        self.playbooks_dir = self.knowledge_dir / "playbooks"
+
+        # Playbooks location: use explicit path, or detect from project structure
+        if playbooks_dir:
+            self.playbooks_dir = Path(playbooks_dir)
+        else:
+            # Primary: vibe_core/playbook/circuits (canonical location)
+            project_root = Path(__file__).parent.parent.parent.parent
+            circuits_dir = project_root / "vibe_core" / "playbook" / "circuits"
+            if circuits_dir.exists():
+                self.playbooks_dir = circuits_dir
+            else:
+                # Fallback: knowledge/playbooks (legacy location)
+                self.playbooks_dir = self.knowledge_dir / "playbooks"
+
         self.playbooks: Dict[str, PlaybookDefinition] = {}
         self.executions: Dict[str, PlaybookExecution] = {}
         self.state_dir = Path(".playbook_state")  # Persistence directory
@@ -229,25 +242,50 @@ class DeterministicExecutor:
             return False
 
     def _load_playbooks(self):
-        """Load all playbooks from knowledge/playbooks/"""
+        """Load all playbooks/circuits from playbooks directory
+
+        Supports both legacy 'playbook' format and new VEDA-4 'circuit' format.
+        """
         if not self.playbooks_dir.exists():
             logger.warning(f"⚠️  Playbooks directory not found: {self.playbooks_dir}")
             return
 
         for playbook_file in self.playbooks_dir.glob("*.yaml"):
-            if playbook_file.name == "schema.yaml":
-                continue  # Skip the schema definition file
+            if playbook_file.name in ("schema.yaml", "_registry.yaml"):
+                continue  # Skip meta files
 
             try:
                 with open(playbook_file, "r") as f:
                     data = yaml.safe_load(f)
 
-                if not data or "playbook" not in data:
-                    logger.warning(f"⚠️  Invalid playbook format in {playbook_file.name}")
+                if not data:
+                    logger.warning(f"⚠️  Empty file: {playbook_file.name}")
                     continue
 
-                playbook_data = data["playbook"]
-                phases = self._parse_phases(playbook_data.get("phases", []))
+                # Support both legacy 'playbook' and new 'circuit' format
+                if "playbook" in data:
+                    playbook_data = data["playbook"]
+                    phases = self._parse_phases(playbook_data.get("phases", []))
+                elif "circuit" in data:
+                    # VEDA-4 Cognitive Circuit format
+                    circuit_data = data["circuit"]
+                    phases = self._parse_circuit_states(circuit_data.get("states", {}))
+                    playbook_data = {
+                        "id": circuit_data.get("id", playbook_file.stem.upper()),
+                        "name": circuit_data.get("id", playbook_file.stem),
+                        "description": circuit_data.get("description", ""),
+                        "intent_match": circuit_data.get(
+                            "intent_match",
+                            {
+                                "primary": circuit_data.get("domain", "general").upper(),
+                            },
+                        ),
+                        "variables": circuit_data.get("variables", {}),
+                    }
+                else:
+                    logger.warning(f"⚠️  Invalid format in {playbook_file.name} (no 'playbook' or 'circuit' key)")
+                    continue
+
                 playbook = PlaybookDefinition(
                     id=playbook_data.get("id", playbook_file.stem),
                     name=playbook_data.get("name", "Unknown"),
@@ -262,6 +300,21 @@ class DeterministicExecutor:
 
             except Exception as e:
                 logger.error(f"❌ Error loading playbook {playbook_file.name}: {e}")
+
+    def _parse_circuit_states(self, states_data: Dict) -> List["PlaybookPhase"]:
+        """Parse VEDA-4 circuit states into playbook phases"""
+        phases = []
+        for state_id, state_data in states_data.items():
+            phase = PlaybookPhase(
+                phase_id=state_id,
+                name=state_data.get("name", state_id),
+                description=state_data.get("description", ""),
+                actions=state_data.get("actions", []),
+                on_success=state_data.get("on_success", "COMPLETE"),
+                on_failure=state_data.get("on_failure", "ABORT"),
+            )
+            phases.append(phase)
+        return phases
 
     def _parse_phases(self, phases_data: List[Dict]) -> List[PlaybookPhase]:
         """Parse phase definitions from YAML"""

@@ -22,6 +22,14 @@ circuit:
   version: "2.0"
   domain: "development"
   security_level: "standard"
+  entry_state: "SHABDA"
+
+  # Intent matching for DeterministicExecutor concept-based lookup
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary:
+      - "DOM_DEVELOPMENT"
+      - "DOM_PROJECT"
 
   description: |
     Deterministic project scaffolding with full validation.

@@ -213,6 +213,10 @@ class SemanticSyscallExecutor:
             logger.error(f"❌ Syscall failed: {e}", exc_info=True)
             return SyscallResult(success=False, syscall_type=request.syscall_type, error=str(e))
 
+    def handle(self, request: SyscallRequest) -> SyscallResult:
+        """Alias for execute() - backwards compatibility."""
+        return self.execute(request)
+
     def _handle_spawn_cognition(self, request: SyscallRequest) -> SyscallResult:
         """
         SPAWN_COGNITION: Birth a new agent.
@@ -793,11 +797,15 @@ def create_syscall_executor(kernel: "RealVibeKernel") -> SemanticSyscallExecutor
     return SemanticSyscallExecutor(kernel)
 
 
+# Backwards compatibility alias
+SemanticSyscallHandler = SemanticSyscallExecutor
+
 __all__ = [
     "SyscallType",
     "SyscallRequest",
     "SyscallResult",
     "SemanticSyscallExecutor",
+    "SemanticSyscallHandler",  # Alias for backwards compatibility
     "create_syscall_executor",
     "SYSCALL_SCHEMAS",
 ]

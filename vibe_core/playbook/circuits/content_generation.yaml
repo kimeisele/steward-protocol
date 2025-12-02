@@ -18,6 +18,13 @@ circuit:
   name: Content Generation Cognitive Circuit
   type: cognitive_circuit
 
+  # Intent matching for DeterministicExecutor concept-based lookup
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary:
+      - "DOM_CONTENT"
+      - "DOM_MEDIA"
+
   intent: |
     Generate content (blog posts, documentation, announcements) from natural language.
     This circuit handles the full lifecycle:

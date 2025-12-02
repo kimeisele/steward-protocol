@@ -15,37 +15,17 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-class HardeningResult:
-    def __init__(self, name: str):
-        self.name = name
-        self.passed = False
-        self.message = ""
-        self.details = {}
-
-    def fail(self, msg: str, **details):
-        self.passed = False
-        self.message = msg
-        self.details = details
-        return self
-
-    def success(self, msg: str = "OK", **details):
-        self.passed = True
-        self.message = msg
-        self.details = details
-        return self
-
-
-def test_herald_content_filtering() -> HardeningResult:
+def test_herald_content_filtering():
     """
     Test: Herald agent MUST block banned content patterns.
 
     Attack: Try to publish shill/spam content.
     """
-    result = HardeningResult("HERALD_CONTENT_FILTERING")
-
     try:
         from steward.system_agents.herald.cartridge_main import HeraldCartridge
 
@@ -69,31 +49,19 @@ def test_herald_content_filtering() -> HardeningResult:
             else:
                 allowed.append(content[:50])
 
-        if allowed:
-            return result.fail(
-                f"SHILL CONTENT ALLOWED: {len(allowed)}/{len(banned_content)} passed",
-                allowed_samples=allowed
-            )
-
-        return result.success(
-            f"All {len(banned_content)} shill patterns blocked",
-            blocked=blocked
-        )
+        assert not allowed, f"SHILL CONTENT ALLOWED: {len(allowed)}/{len(banned_content)} passed - samples: {allowed}"
+        print(f"All {len(banned_content)} shill patterns blocked")
 
     except ImportError as e:
-        return result.fail(f"Could not import Herald: {e}")
-    except Exception as e:
-        return result.fail(f"Unexpected error: {e}")
+        pytest.skip(f"Could not import Herald: {e}")
 
 
-def test_vote_manipulation_detection() -> HardeningResult:
+def test_vote_manipulation_detection():
     """
     Test: Auditor MUST detect duplicate vote injection.
 
     Attack: Inject same vote twice into ledger.
     """
-    result = HardeningResult("VOTE_MANIPULATION_DETECTION")
-
     try:
         from steward.system_agents.auditor.tools.invariant_tool import get_judge
         from vibe_core.kernel_impl import RealVibeKernel
@@ -129,40 +97,27 @@ def test_vote_manipulation_detection() -> HardeningResult:
         violation_types = [v.invariant_name for v in report.violations]
 
         if "NO_DUPLICATE_EVENTS" in violation_types or "EVENT_SEQUENCE_INTEGRITY" in violation_types:
-            return result.success(
-                "Vote manipulation detected by Auditor",
-                violations=violation_types
-            )
+            print(f"Vote manipulation detected by Auditor: {violation_types}")
+            return  # Test passes
 
         # Also check hash chain (secondary detection)
         integrity = kernel.ledger.verify_chain_integrity()
         if integrity["corrupted"]:
-            return result.success(
-                "Vote manipulation detected via hash chain corruption",
-                chain_corrupted=True
-            )
+            print("Vote manipulation detected via hash chain corruption")
+            return  # Test passes
 
-        return result.fail(
-            "VOTE MANIPULATION UNDETECTED",
-            violations_found=violation_types,
-            chain_status=integrity.get("status")
-        )
+        pytest.fail(f"VOTE MANIPULATION UNDETECTED - violations: {violation_types}, chain: {integrity.get('status')}")
 
     except ImportError as e:
-        return result.fail(f"Could not import Auditor: {e}")
-    except Exception as e:
-        import traceback
-        return result.fail(f"Unexpected error: {e}\n{traceback.format_exc()}")
+        pytest.skip(f"Could not import Auditor: {e}")
 
 
-def test_invariant_engine_constraints() -> HardeningResult:
+def test_invariant_engine_constraints():
     """
     Test: InvariantEngine enforces defined constraints.
 
     Checks that all declared invariants are actually checked.
     """
-    result = HardeningResult("INVARIANT_ENGINE_CONSTRAINTS")
-
     try:
         from steward.system_agents.auditor.tools.invariant_tool import get_judge
 
@@ -178,11 +133,7 @@ def test_invariant_engine_constraints() -> HardeningResult:
         else:
             invariant_names = []
 
-        if not invariant_names:
-            return result.fail(
-                "NO INVARIANTS DEFINED",
-                recommendation="InvariantEngine has no constraints to enforce"
-            )
+        assert invariant_names, "NO INVARIANTS DEFINED - InvariantEngine has no constraints to enforce"
 
         # Required invariants for a secure OS
         required = [
@@ -192,34 +143,21 @@ def test_invariant_engine_constraints() -> HardeningResult:
 
         missing = [r for r in required if not any(r.lower() in str(i).lower() for i in invariant_names)]
 
-        if missing:
-            return result.fail(
-                f"MISSING REQUIRED INVARIANTS: {missing}",
-                defined=invariant_names
-            )
+        assert not missing, f"MISSING REQUIRED INVARIANTS: {missing} - defined: {invariant_names}"
 
-        return result.success(
-            f"{len(invariant_names)} invariants defined",
-            invariants=invariant_names
-        )
+        print(f"{len(invariant_names)} invariants defined: {invariant_names}")
 
     except ImportError as e:
-        return result.fail(f"Could not import InvariantEngine: {e}")
+        pytest.skip(f"Could not import InvariantEngine: {e}")
 
 
-def test_constitution_exists_and_valid() -> HardeningResult:
+def test_constitution_exists_and_valid():
     """
     Test: CONSTITUTION.md exists and contains required articles.
     """
-    result = HardeningResult("CONSTITUTION_EXISTS")
-
     constitution_path = Path(__file__).parent.parent.parent / "CONSTITUTION.md"
 
-    if not constitution_path.exists():
-        return result.fail(
-            "CONSTITUTION.md NOT FOUND",
-            path=str(constitution_path)
-        )
+    assert constitution_path.exists(), f"CONSTITUTION.md NOT FOUND at {constitution_path}"
 
     content = constitution_path.read_text()
 
@@ -232,69 +170,11 @@ def test_constitution_exists_and_valid() -> HardeningResult:
 
     missing = [a for a in required_articles if a.lower() not in content.lower()]
 
-    if missing:
-        return result.fail(
-            f"INCOMPLETE CONSTITUTION: Missing {missing}",
-            file_size=len(content)
-        )
+    assert not missing, f"INCOMPLETE CONSTITUTION: Missing {missing} (file size: {len(content)} chars)"
 
-    return result.success(
-        f"Constitution valid ({len(content)} chars, all articles present)",
-        articles_found=[a for a in required_articles if a.lower() in content.lower()]
-    )
-
-
-# ============================================================================
-# RUNNER
-# ============================================================================
-
-def run_all_tests() -> dict:
-    """Run all constitutional enforcement tests."""
-
-    print("\n" + "=" * 60)
-    print("🔩 KRUPP-STAHL CONSTITUTIONAL ENFORCEMENT TEST SUITE")
-    print("=" * 60)
-
-    tests = [
-        ("Constitution Document", test_constitution_exists_and_valid),
-        ("Herald Content Filtering", test_herald_content_filtering),
-        ("Vote Manipulation Detection", test_vote_manipulation_detection),
-        ("Invariant Engine Constraints", test_invariant_engine_constraints),
-    ]
-
-    results = {}
-    passed = 0
-    failed = 0
-
-    for name, test_fn in tests:
-        print(f"\n[TEST] {name}")
-        try:
-            result = test_fn()
-            results[result.name] = result
-
-            if result.passed:
-                print(f"  ✅ PASS: {result.message}")
-                passed += 1
-            else:
-                print(f"  ❌ FAIL: {result.message}")
-                if result.details:
-                    for k, v in list(result.details.items())[:3]:
-                        print(f"     {k}: {v}")
-                failed += 1
-
-        except Exception as e:
-            print(f"  💥 ERROR: {e}")
-            import traceback
-            traceback.print_exc()
-            failed += 1
-
-    print("\n" + "=" * 60)
-    print(f"SUMMARY: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return {"passed": passed, "failed": failed, "results": results}
+    found = [a for a in required_articles if a.lower() in content.lower()]
+    print(f"Constitution valid ({len(content)} chars, articles found: {found})")
 
 
 if __name__ == "__main__":
-    summary = run_all_tests()
-    sys.exit(0 if summary["failed"] == 0 else 1)
+    pytest.main([__file__, "-v"])

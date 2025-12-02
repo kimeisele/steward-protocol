@@ -82,8 +82,7 @@ def test_simulation_mode():
     assert "SIMULATION MODE" in result.output.get("warning", ""), "❌ FAILED: Missing simulation warning!"
 
     print("✅ PASSED: Simulation mode confirmed (no real execution)")
-
-    return executor, workflow
+    # Test passes - no return needed for pytest
 
 
 def test_live_fire_mode():
@@ -193,37 +192,10 @@ def test_live_fire_mode():
     # Cleanup
     shutil.rmtree(test_dir)
     print(f"\n🧹 Cleaned up test directory: {test_dir}")
-
-    return executor, workflow
-
-
-def test_live_fire_proof():
-    """Main test: Prove the difference between simulation and live fire."""
-    print("\n" + "=" * 80)
-    print("COMPLETE LIVE FIRE TEST")
-    print("=" * 80)
-
-    # Test 1: Simulation mode
-    print("\n🔵 Testing SIMULATION mode (VIBE_LIVE_FIRE=false)")
-    executor_sim, workflow_sim = test_simulation_mode()
-
-    # Test 2: Live fire mode
-    print("\n🔥 Testing LIVE FIRE mode (VIBE_LIVE_FIRE=true)")
-    executor_live, workflow_live = test_live_fire_mode()
-
-    # Final summary
-    print("\n" + "=" * 80)
-    print("🎉 ALL TESTS PASSED - LIVE FIRE MODE VERIFIED")
-    print("=" * 80)
-    print("\nSUMMARY:")
-    print("✅ Simulation mode: No real execution (as expected)")
-    print("✅ Live Fire mode: REAL execution (file actually created)")
-    print("✅ Clear distinction between modes")
-    print("\n🔥 The system can now execute REAL actions (not just simulate)!")
-
-    # Reset environment
-    os.environ["VIBE_LIVE_FIRE"] = "false"
+    # Test passes - no return needed for pytest
 
 
 if __name__ == "__main__":
-    test_live_fire_proof()
+    """Run tests directly with pytest."""
+    import pytest
+    pytest.main([__file__, "-v"])
