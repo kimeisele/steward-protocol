@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 # This is a HARD SECURITY BOUNDARY - do not expand without review
 EDITABLE_SETTINGS = {
     "kernel.log_level",  # Safe: logging verbosity only
+    "kernel.verbose",  # Safe: verbose mode (true/false)
     # FORBIDDEN - Security risks:
     # "kernel.status"        - Could bypass shutdown
     # "agent.*.capabilities" - Capability escalation
@@ -62,6 +63,9 @@ class SettingsExecutionResult:
     commands_executed: int = 0
     history_entries: List[Dict[str, Any]] = field(default_factory=list)
     paused_agents: Set[str] = field(default_factory=set)
+    restart_agents: Set[str] = field(default_factory=set)  # Agents to restart
+    refresh_topology: bool = False  # Flag to trigger topology refresh
+    verbose_mode: Optional[bool] = None  # Verbose mode setting (if changed)
 
 
 class SettingsSync:
@@ -116,8 +120,11 @@ class SettingsSync:
 
         Supported command formats:
         - SET kernel.log_level=DEBUG
+        - SET kernel.verbose=true
         - PAUSE agent.steward
         - RESUME agent.steward
+        - RESTART agent.steward
+        - REFRESH topology
 
         Returns:
             List of command dicts with 'action' and relevant params
@@ -182,6 +189,24 @@ class SettingsSync:
                         }
                     )
 
+                elif command_text.startswith("RESTART "):
+                    agent_id = command_text[8:].strip()
+                    commands.append(
+                        {
+                            "action": "RESTART",
+                            "agent_id": agent_id,
+                        }
+                    )
+
+                elif command_text.startswith("REFRESH "):
+                    target = command_text[8:].strip().lower()
+                    commands.append(
+                        {
+                            "action": "REFRESH",
+                            "target": target,
+                        }
+                    )
+
                 else:
                     logger.warning(f"⚠️  Unknown command format: {command_text}")
 
@@ -239,6 +264,12 @@ class SettingsSync:
                 elif action == "RESUME":
                     self._execute_resume(cmd, record, result, state.agent_ids)
 
+                elif action == "RESTART":
+                    self._execute_restart(cmd, record, result, state.agent_ids)
+
+                elif action == "REFRESH":
+                    self._execute_refresh(cmd, record, result)
+
                 else:
                     record["status"] = "FAILED"
                     record["reason"] = f"Unknown action: {action}"
@@ -287,6 +318,12 @@ class SettingsSync:
             record["reason"] = "Log level updated successfully"
             logger.info(f"✅ SET {key}={value}")
 
+        elif key == "kernel.verbose":
+            verbose = value.lower() in ("true", "1", "yes", "on")
+            result.verbose_mode = verbose
+            record["reason"] = f"Verbose mode {'enabled' if verbose else 'disabled'}"
+            logger.info(f"✅ SET {key}={verbose}")
+
     def _execute_pause(
         self,
         cmd: Dict[str, str],
@@ -328,6 +365,43 @@ class SettingsSync:
             record["status"] = "FAILED"
             record["reason"] = f"Agent '{agent_id}' not found"
             logger.warning(f"⚠️  RESUME failed: Agent '{agent_id}' not found")
+
+    def _execute_restart(
+        self,
+        cmd: Dict[str, str],
+        record: Dict[str, Any],
+        result: SettingsExecutionResult,
+        agent_ids: Set[str],
+    ) -> None:
+        """Execute RESTART command (pause + resume in one)."""
+        agent_id = cmd.get("agent_id", "").replace("agent.", "")
+
+        if agent_id in agent_ids:
+            result.restart_agents.add(agent_id)
+            record["reason"] = f"Agent '{agent_id}' marked for restart"
+            logger.info(f"🔄 Agent '{agent_id}' RESTART requested")
+        else:
+            record["status"] = "FAILED"
+            record["reason"] = f"Agent '{agent_id}' not found"
+            logger.warning(f"⚠️  RESTART failed: Agent '{agent_id}' not found")
+
+    def _execute_refresh(
+        self,
+        cmd: Dict[str, str],
+        record: Dict[str, Any],
+        result: SettingsExecutionResult,
+    ) -> None:
+        """Execute REFRESH command for topology or docs."""
+        target = cmd.get("target", "").lower()
+
+        if target == "topology":
+            result.refresh_topology = True
+            record["reason"] = "Topology refresh requested"
+            logger.info("🔄 REFRESH topology requested")
+        else:
+            record["status"] = "FAILED"
+            record["reason"] = f"Unknown refresh target: '{target}'. Use 'topology'"
+            logger.warning(f"⚠️  REFRESH failed: Unknown target '{target}'")
 
     def _set_log_level(self, level: str) -> None:
         """Set kernel log level (whitelisted setting)."""
