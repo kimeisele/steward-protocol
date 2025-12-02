@@ -1,19 +1,19 @@
-
-
-# steward-protocol
+{# README.md Template - SCRIBE Auto-generation #}
+{# Variables: project, git, agent_count, governance_link #}
+# {{ project.name }}
 
 *The Immutable Kernel for Governed Artificial Intelligence.*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python >=3.8](https://img.shields.io/badge/python->=3.8-blue.svg)](https://www.python.org/downloads/)
+[![License: {{ project.license }}](https://img.shields.io/badge/License-{{ project.license }}-yellow.svg)](https://opensource.org/licenses/{{ project.license }})
+[![Python {{ project.python_version }}](https://img.shields.io/badge/python-{{ project.python_version }}-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/kimeisele/steward-protocol.git
-cd steward-protocol
+git clone https://github.com/{{ project.github_repo }}.git
+cd {{ project.name }}
 python boot.py
 ```
 
@@ -42,7 +42,7 @@ Your agents. They live in Agent City and follow the Constitution.
 
 This system enforces governance at the kernel level:
 
-- **[Governance Gate Code](vibe_core/kernel_impl.py)** - Cryptographic enforcement
+- **{{ governance_link }}** - Cryptographic enforcement
 - **[CONSTITUTION.md](CONSTITUTION.md)** - The supreme law
 - **[AGI_MANIFESTO.md](AGI_MANIFESTO.md)** - Why this exists
 

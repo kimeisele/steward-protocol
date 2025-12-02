@@ -122,14 +122,33 @@ class ProjectIntrospector:
 
         return stats
 
-    def count_system_agents(self) -> int:
-        """Count system agents"""
-        agents_dir = self.root_dir / "steward" / "system_agents"
-        if not agents_dir.exists():
-            return 0
+    def count_all_agents(self) -> Dict[str, int]:
+        """Count ALL agents (System + Citizens) - data-driven.
 
-        cartridges = list(agents_dir.glob("*/cartridge_main.py"))
-        return len(cartridges)
+        Returns:
+            Dict with 'system', 'citizen', 'total' counts
+        """
+        counts = {"system": 0, "citizen": 0, "total": 0}
+
+        # System Agents (Devatas)
+        system_dir = self.root_dir / "steward" / "system_agents"
+        if system_dir.exists():
+            counts["system"] = len(list(system_dir.glob("*/cartridge_main.py")))
+
+        # Citizen Agents
+        citizen_dir = self.root_dir / "agent_city" / "registry"
+        if citizen_dir.exists():
+            counts["citizen"] = len(list(citizen_dir.glob("*/cartridge_main.py")))
+
+        counts["total"] = counts["system"] + counts["citizen"]
+        return counts
+
+    def count_system_agents(self) -> int:
+        """Count system agents only (backwards compatibility).
+
+        DEPRECATED: Use count_all_agents() for accurate total.
+        """
+        return self.count_all_agents()["system"]
 
     def get_governance_summary(self) -> str:
         """Extract governance summary from CONSTITUTION.md"""
@@ -160,19 +179,28 @@ class ProjectIntrospector:
         return "Constitutional governance enforced at kernel level"
 
     def get_agent_list(self) -> List[Dict[str, str]]:
-        """Get list of actual agents with their metadata"""
+        """Get list of ALL agents (System + Citizens) with metadata - data-driven."""
         from .introspector import CartridgeIntrospector
 
-        agents_dir = self.root_dir / "steward" / "system_agents"
-        if not agents_dir.exists():
-            return []
-
         introspector = CartridgeIntrospector(str(self.root_dir))
-        agents_data = introspector.scan_all(agents_dir)
+        all_agents = {}
+
+        # System Agents (Devatas)
+        system_dir = self.root_dir / "steward" / "system_agents"
+        if system_dir.exists():
+            system_agents = introspector.scan_all(system_dir)
+            all_agents.update(system_agents)
+
+        # Citizen Agents
+        citizen_dir = self.root_dir / "agent_city" / "registry"
+        if citizen_dir.exists():
+            citizen_introspector = CartridgeIntrospector(str(self.root_dir))
+            citizen_agents = citizen_introspector.scan_all(citizen_dir)
+            all_agents.update(citizen_agents)
 
         # Convert to simple list format for template
         agents_list = []
-        for agent_name, metadata in sorted(agents_data.items()):
+        for agent_name, metadata in sorted(all_agents.items()):
             agents_list.append(
                 {
                     "name": agent_name.upper(),
@@ -185,13 +213,18 @@ class ProjectIntrospector:
         return agents_list
 
     def get_all_metadata(self) -> Dict[str, Any]:
-        """Get all project metadata"""
+        """Get all project metadata - data-driven."""
         project_meta = self.get_project_metadata()
         project_meta["github_repo"] = self.get_github_repo()
+
+        # Get full agent counts (System + Citizens)
+        agent_counts = self.count_all_agents()
+
         return {
             "project": project_meta,
             "git": self.get_git_stats(),
-            "agent_count": self.count_system_agents(),
+            "agent_count": agent_counts["total"],  # Total for backwards compat
+            "agent_counts": agent_counts,  # Full breakdown: system, citizen, total
             "governance": self.get_governance_summary(),
             "agents": self.get_agent_list(),
         }
