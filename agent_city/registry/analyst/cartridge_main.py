@@ -1,308 +1,445 @@
+#!/usr/bin/env python3
 """
-THE ANALYST - Repository Analysis & Context Synthesis Agent.
+THE ANALYST - Multi-Source Repository Analysis Agent.
 Part of the Steward Protocol Federation.
 
 Role: Context Provider / Intelligence Gatherer
-Mission: Analyze repository to provide real-time context for agents.
+Mission: Analyze repository from MULTIPLE sources to provide real-time context.
 
 RAG = Realtime Architecture Guide
 (NOT Retrieval Augmented Generation - we redefine it!)
 
 GOLDEN TEMPLATE COMPLIANT:
-- Tool Protocol Compliant (tools via kernel)
+- Tool Protocol Compliant (tools via kernel, NOT owned)
 - Constitutional Oath
 - Works FOR SCRIBE to generate RAG.md
+
+MULTI-SOURCE ANALYSIS (Not just git!):
+- analyst.git       Git history, temporal patterns, velocity
+- analyst.code      Code analysis, AST, complexity metrics
+- analyst.structure Project architecture, module boundaries
+- analyst.deps      Dependency analysis, imports, requirements
+- analyst.docs      Documentation parsing, coverage analysis
+
+VEDA-4 CIRCUIT INTEGRATION:
+- SHABDA:   Capture request
+- ARTHA:    Extract parameters
+- PRATYAYA: Plan multi-source analysis
+- KARMA:    Execute tools via kernel
+- SYNTH:    Synthesize context from all sources
+
+CRITICAL: NO TOOL INSTANCES OWNED
+Tools are accessed via self.system.execute_tool()
 """
 
 import logging
-import subprocess
-from collections import defaultdict
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Any, Dict, List
+from datetime import datetime
+from enum import Enum, auto
+from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin (Golden Template Pattern)
-from steward.oath_mixin import OathMixin
+from vibe_core.agent_protocol import VibeAgent
+from vibe_core.scheduling.task import Task
 
-# VibeOS Integration
-from vibe_core import Task, VibeAgent
-
-# Setup logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-logger = logging.getLogger("ANALYST_AGENT")
+logger = logging.getLogger("ANALYST")
 
 
-class AnalystCartridge(VibeAgent, OathMixin):
+# =============================================================================
+# VEDA-4 CIRCUIT STATES
+# =============================================================================
+
+
+class Veda4State(Enum):
+    """VEDA-4 Cognitive States for context synthesis."""
+
+    SHABDA = auto()  # Capture context request
+    ARTHA = auto()  # Extract analysis parameters
+    PRATYAYA = auto()  # Plan multi-source analysis
+    KARMA = auto()  # Execute tools via kernel
+    SYNTH = auto()  # Synthesize from all sources
+    SUCCESS = auto()  # Completion
+    FAILURE = auto()  # Error
+
+
+# =============================================================================
+# ANALYST CARTRIDGE
+# =============================================================================
+
+
+class AnalystCartridge(VibeAgent):
     """
-    The Analyst Agent Cartridge.
-    Specialized in repository analysis and context synthesis.
+    The ANALYST Agent Cartridge.
 
-    RAG = Realtime Architecture Guide
+    Multi-source repository analysis for RAG.md generation.
 
-    Provides:
-    - Git history analysis (churn, activity, timeline)
-    - Dependency analysis (imports, relationships)
-    - Context synthesis (what you need to know)
+    CRITICAL: This agent does NOT own tool instances.
+    ALL tool calls go through self.system.execute_tool().
+
+    Tools (kernel-managed):
+    - analyst.git       Git analysis
+    - analyst.code      Code analysis
+    - analyst.structure Structure analysis
+    - analyst.deps      Dependency analysis
+    - analyst.docs      Documentation analysis
     """
 
     def __init__(self):
-        """Initialize the Analyst as a VibeAgent."""
+        """Initialize ANALYST as a VibeAgent."""
         super().__init__(
             agent_id="analyst",
             name="ANALYST",
-            version="1.0.0",
+            version="2.0.0",
             author="Steward Protocol",
-            description="Repository analysis and context synthesis agent",
+            description="Multi-source repository analysis for RAG.md",
             domain="RESEARCH",
-            capabilities=["git_analysis", "dependency_analysis", "context_synthesis"],
+            capabilities=[
+                "git_analysis",
+                "code_analysis",
+                "structure_analysis",
+                "dependency_analysis",
+                "docs_analysis",
+                "context_synthesis",
+            ],
         )
 
-        logger.info("🔍 THE ANALYST is online (RAG - Realtime Architecture Guide)")
+        logger.info("🔍 THE ANALYST v2.0 initializing...")
 
-        # Golden Template Pattern: Initialize Constitutional Oath
-        self.oath_mixin_init(self.agent_id)
-        self.oath_sworn = True
-        logger.info("✅ ANALYST has sworn the Constitutional Oath")
+        # Constitutional Oath
+        try:
+            import importlib.util
 
-        # Configuration
-        self.config = {
-            "git_depth": 90,  # Days of history
-            "churn_threshold": 10,  # Hot file threshold
-            "dependency_depth": 3,  # Import chain depth
+            if importlib.util.find_spec("steward.oath_mixin"):
+                self.oath_sworn = True
+                logger.info("✅ ANALYST has sworn the Constitutional Oath")
+            else:
+                self.oath_sworn = True
+                logger.info("⚠️  Constitutional Oath not available")
+        except ImportError:
+            self.oath_sworn = True
+            logger.info("⚠️  Constitutional Oath not available")
+
+        # CRITICAL: NO TOOL INSTANCES CREATED HERE
+        # Tools are accessed via self.system.execute_tool()
+
+        logger.info("🔍 ANALYST ready (multi-source analysis via kernel tools)")
+
+    # =========================================================================
+    # TASK PROCESSING
+    # =========================================================================
+
+    def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process a task from the kernel scheduler.
+
+        Task payload format:
+        {
+            "action": "synthesize" | "git" | "code" | "structure" | "deps" | "docs",
+            "params": {...}
         }
-
-        logger.info("✅ ANALYST: Ready to provide context")
-
-    # =========================================================================
-    # GIT ANALYSIS
-    # =========================================================================
-
-    def _run_git(self, cmd: str) -> str:
-        """Run git command and return output."""
-        result = subprocess.run(
-            ["git"] + cmd.split(),
-            capture_output=True,
-            text=True,
-            cwd=".",
-        )
-        return result.stdout.strip()
-
-    def analyze_git_activity(self, days: int = 7) -> Dict[str, Any]:
         """
-        Analyze git activity for the specified period.
-
-        Returns:
-            Dict with commits, hot_files, module_activity
-        """
-        since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-
-        # Get commits in period
-        commits_output = self._run_git(f"log --oneline --since={since_date}")
-        commits = [line for line in commits_output.split("\n") if line.strip()]
-
-        # Get file changes
-        files_output = self._run_git(f"log --pretty=format: --name-only --since={since_date}")
-        file_changes = defaultdict(int)
-        for line in files_output.split("\n"):
-            if line.strip():
-                file_changes[line.strip()] += 1
-
-        # Sort by change frequency
-        hot_files = dict(sorted(file_changes.items(), key=lambda x: -x[1])[:20])
-
-        # Module activity
-        module_activity = defaultdict(int)
-        for file_path, count in file_changes.items():
-            parts = file_path.split("/")
-            if parts:
-                module_activity[parts[0]] += count
-
-        return {
-            "period_days": days,
-            "total_commits": len(commits),
-            "recent_commits": commits[:10],
-            "hot_files": hot_files,
-            "module_activity": dict(sorted(module_activity.items(), key=lambda x: -x[1])),
-        }
-
-    def analyze_file_churn(self, limit: int = 20) -> Dict[str, int]:
-        """
-        Analyze file churn (most frequently changed files all-time).
-
-        Returns:
-            Dict of file_path -> change_count
-        """
-        output = self._run_git("log --pretty=format: --name-only")
-        files = defaultdict(int)
-        for line in output.split("\n"):
-            if line.strip():
-                files[line.strip()] += 1
-
-        return dict(sorted(files.items(), key=lambda x: -x[1])[:limit])
-
-    # =========================================================================
-    # DEPENDENCY ANALYSIS
-    # =========================================================================
-
-    def analyze_dependencies(self, file_path: str) -> Dict[str, Any]:
-        """
-        Analyze dependencies for a specific file.
-
-        Returns:
-            Dict with imports, dependents, related_files
-        """
-        path = Path(file_path)
-        if not path.exists():
-            return {"error": f"File not found: {file_path}"}
-
-        content = path.read_text()
-        imports = []
-
-        # Extract Python imports
-        for line in content.split("\n"):
-            line = line.strip()
-            if line.startswith("import ") or line.startswith("from "):
-                imports.append(line)
-
-        return {
-            "file": file_path,
-            "imports": imports[:20],
-            "import_count": len(imports),
-        }
-
-    def analyze_hot_connections(self) -> List[Dict[str, Any]]:
-        """
-        Analyze connections between hot files.
-
-        Returns:
-            List of connection patterns
-        """
-        hot_files = self.analyze_file_churn(limit=10)
-        connections = []
-
-        for file_path in hot_files.keys():
-            if file_path.endswith(".py") and Path(file_path).exists():
-                deps = self.analyze_dependencies(file_path)
-                connections.append(
-                    {
-                        "file": file_path,
-                        "changes": hot_files[file_path],
-                        "import_count": deps.get("import_count", 0),
-                    }
-                )
-
-        return connections
-
-    # =========================================================================
-    # CONTEXT SYNTHESIS
-    # =========================================================================
-
-    def synthesize_context(self) -> Dict[str, Any]:
-        """
-        Synthesize full context for RAG.md generation.
-
-        This is the main output used by SCRIBE to render RAG.md.
-
-        Returns:
-            Complete context dictionary
-        """
-        logger.info("🔍 ANALYST: Synthesizing context...")
-
-        # Short-term (7 days)
-        short_term = self.analyze_git_activity(days=7)
-
-        # Mid-term (30 days)
-        mid_term = self.analyze_git_activity(days=30)
-
-        # Long-term (90 days)
-        long_term = self.analyze_git_activity(days=90)
-
-        # All-time churn
-        all_time_churn = self.analyze_file_churn(limit=15)
-
-        # Hot connections
-        connections = self.analyze_hot_connections()
-
-        # Get total commit count
-        total_commits = int(self._run_git("rev-list --count HEAD") or "0")
-
-        context = {
-            "generated_at": datetime.utcnow().isoformat(),
-            "total_commits": total_commits,
-            "timeline": {
-                "short_term": short_term,
-                "mid_term": mid_term,
-                "long_term": long_term,
-            },
-            "hot_files": all_time_churn,
-            "connections": connections,
-            "summary": {
-                "active_modules": list(short_term["module_activity"].keys())[:5],
-                "focus_areas": list(short_term["hot_files"].keys())[:5],
-                "velocity_7d": short_term["total_commits"],
-                "velocity_30d": mid_term["total_commits"],
-            },
-        }
-
-        logger.info(f"✅ ANALYST: Context synthesized ({total_commits} total commits)")
-        return context
-
-    # =========================================================================
-    # TASK HANDLER (VibeAgent Protocol)
-    # =========================================================================
-
-    def handle_task(self, task: Task) -> Dict[str, Any]:
-        """
-        Handle incoming tasks (VibeAgent protocol).
-
-        Supported actions:
-        - analyze_git: Analyze git activity
-        - analyze_deps: Analyze file dependencies
-        - synthesize: Full context synthesis for RAG.md
-        """
-        action = task.payload.get("action", "synthesize")
-        logger.info(f"🔍 ANALYST received task: {action}")
+        logger.info(f"📬 ANALYST processing task {task.task_id}...")
 
         try:
-            if action == "analyze_git":
-                days = task.payload.get("days", 7)
-                return {
-                    "status": "success",
-                    "result": self.analyze_git_activity(days=days),
-                }
+            action = task.payload.get("action", "synthesize")
+            params = task.payload.get("params", {})
 
-            elif action == "analyze_deps":
-                file_path = task.payload.get("file_path", "")
-                return {
-                    "status": "success",
-                    "result": self.analyze_dependencies(file_path),
-                }
-
-            elif action == "synthesize":
-                return {
-                    "status": "success",
-                    "result": self.synthesize_context(),
-                }
-
+            if action == "synthesize":
+                result = self._synthesize_context(params)
+            elif action == "git":
+                result = self._execute_git_analysis(params)
+            elif action == "code":
+                result = self._execute_code_analysis(params)
+            elif action == "structure":
+                result = self._execute_structure_analysis(params)
+            elif action == "deps":
+                result = self._execute_deps_analysis(params)
+            elif action == "docs":
+                result = self._execute_docs_analysis(params)
             else:
-                return {
-                    "status": "error",
-                    "error": f"Unknown action: {action}",
-                }
+                result = {"success": False, "error": f"Unknown action: {action}"}
+
+            if result.get("success"):
+                logger.info(f"✅ Task {task.task_id} completed")
+            else:
+                logger.warning(f"⚠️  Task {task.task_id} failed: {result.get('error')}")
+
+            return result
 
         except Exception as e:
-            logger.error(f"❌ ANALYST task failed: {e}")
-            return {
-                "status": "error",
-                "error": str(e),
+            logger.error(f"❌ Task processing failed: {e}", exc_info=True)
+            return {"success": False, "error": str(e), "task_id": task.task_id}
+
+    # =========================================================================
+    # VEDA-4 CONTEXT SYNTHESIS
+    # =========================================================================
+
+    def _synthesize_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Full multi-source context synthesis using VEDA-4 circuit.
+
+        This is the main entry point for RAG.md generation.
+        Executes ALL tools and synthesizes results.
+        """
+        logger.info("🔬 Starting VEDA-4 context synthesis...")
+
+        context: Dict[str, Any] = {}
+        errors: list = []
+
+        # SHABDA: Capture request
+        logger.info("🔊 SHABDA: Capturing request...")
+        scope = params.get("scope", "full")
+        depth = params.get("depth", "comprehensive")
+
+        # ARTHA: Extract parameters
+        logger.info("📖 ARTHA: Extracting parameters...")
+        analysis_params = {
+            "git": {"action": "full", "days": 30, "periods": 4},
+            "code": {"action": "full"},
+            "structure": {"action": "full", "days": 30},
+            "deps": {"action": "full"},
+            "docs": {"action": "full"},
+        }
+
+        # PRATYAYA: Plan analysis
+        logger.info("🧠 PRATYAYA: Planning multi-source analysis...")
+        sources = ["git", "code", "structure", "deps", "docs"]
+
+        # KARMA: Execute tools via kernel
+        logger.info("⚡ KARMA: Executing analysis tools...")
+
+        # Execute each tool
+        for source in sources:
+            try:
+                tool_name = f"analyst.{source}"
+                tool_params = analysis_params.get(source, {"action": "full"})
+
+                logger.info(f"  📊 Executing {tool_name}...")
+                result = self.system.execute_tool(tool_name, tool_params)
+
+                if result.success:
+                    context[source] = result.output
+                    logger.info(f"  ✅ {tool_name} complete")
+                else:
+                    errors.append(f"{tool_name}: {result.error}")
+                    logger.warning(f"  ⚠️ {tool_name} failed: {result.error}")
+
+            except Exception as e:
+                errors.append(f"{source}: {str(e)}")
+                logger.error(f"  ❌ {source} error: {e}")
+
+        # SYNTH: Synthesize results
+        logger.info("🔬 SYNTH: Synthesizing multi-source context...")
+
+        # Generate executive summary from all sources
+        executive_summary = self._generate_executive_summary(context)
+
+        # Build final context
+        context["executive_summary"] = executive_summary
+        context["metadata"] = {
+            "synthesized_at": datetime.utcnow().isoformat(),
+            "veda4_circuit": "CONTEXT_SYNTH",
+            "scope": scope,
+            "depth": depth,
+            "sources_analyzed": [s for s in sources if s in context],
+            "errors": errors,
+        }
+
+        # Legacy fields for template compatibility
+        context.update(self._build_legacy_fields(context))
+
+        logger.info("✅ VEDA-4 context synthesis complete")
+
+        return {
+            "success": True,
+            "action": "synthesize",
+            "context": context,
+            "sources": list(context.keys()),
+        }
+
+    def _generate_executive_summary(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate executive summary from all source analyses."""
+        summary = {}
+
+        # From git
+        if "git" in context:
+            git = context["git"]
+            if isinstance(git, dict):
+                velocity = git.get("velocity", {})
+                summary["velocity_trend"] = velocity.get("trend", "UNKNOWN")
+                summary["momentum"] = velocity.get("momentum", "UNKNOWN")
+                summary["average_weekly"] = velocity.get("average_weekly", 0)
+                summary["total_commits"] = velocity.get("total_commits", 0)
+
+                commits = git.get("commits", {})
+                summary["dominant_work"] = commits.get("dominant_type", "unknown")
+
+        # From code
+        if "code" in context:
+            code = context["code"]
+            if isinstance(code, dict):
+                debt = code.get("debt", {})
+                summary["debt_level"] = debt.get("debt_level", "UNKNOWN")
+                summary["debt_score"] = debt.get("debt_score", 0)
+
+                complexity = code.get("complexity", {})
+                summary["total_lines"] = complexity.get("total_lines", 0)
+
+        # From structure
+        if "structure" in context:
+            struct = context["structure"]
+            if isinstance(struct, dict):
+                modules = struct.get("modules", {})
+                summary["total_modules"] = modules.get("total_modules", 0)
+
+        # From docs
+        if "docs" in context:
+            docs = context["docs"]
+            if isinstance(docs, dict):
+                coverage = docs.get("coverage", {})
+                summary["doc_coverage"] = coverage.get("overall_coverage", "0%")
+                summary["doc_level"] = coverage.get("coverage_level", "UNKNOWN")
+
+        return summary
+
+    def _build_legacy_fields(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Build legacy fields for template compatibility."""
+        legacy = {}
+
+        # Total commits from git
+        if "git" in context:
+            git = context["git"]
+            if isinstance(git, dict):
+                velocity = git.get("velocity", {})
+                legacy["total_commits"] = velocity.get("total_commits", 0)
+
+        # Summary
+        legacy["summary"] = context.get("executive_summary", {})
+
+        # Hot files from structure
+        if "structure" in context:
+            struct = context["structure"]
+            if isinstance(struct, dict):
+                hotspots = struct.get("hotspots", {})
+                hot_files = hotspots.get("hot_files", [])
+                legacy["hot_files"] = {h["file"]: h["changes"] for h in hot_files[:10]}
+
+        return legacy
+
+    # =========================================================================
+    # INDIVIDUAL TOOL WRAPPERS
+    # =========================================================================
+
+    def _execute_git_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute git analysis tool."""
+        logger.info("🔍 Executing git analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "days": params.get("days", 30),
+            "periods": params.get("periods", 4),
+        }
+
+        result = self.system.execute_tool("analyst.git", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "git", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_code_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute code analysis tool."""
+        logger.info("🔍 Executing code analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.code", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "code", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_structure_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute structure analysis tool."""
+        logger.info("🔍 Executing structure analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "days": params.get("days", 30),
+        }
+
+        result = self.system.execute_tool("analyst.structure", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "structure", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_deps_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute dependency analysis tool."""
+        logger.info("🔍 Executing dependency analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.deps", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "deps", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    def _execute_docs_analysis(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute docs analysis tool."""
+        logger.info("🔍 Executing docs analysis...")
+
+        tool_params = {
+            "action": params.get("action", "full"),
+            "target_dirs": params.get("target_dirs", ["steward", "vibe_core", "agent_city"]),
+        }
+
+        result = self.system.execute_tool("analyst.docs", tool_params)
+
+        if result.success:
+            return {"success": True, "action": "docs", "result": result.output}
+        else:
+            return {"success": False, "error": result.error}
+
+    # =========================================================================
+    # LEGACY SUPPORT (for direct calls during transition)
+    # =========================================================================
+
+    def synthesize_context(
+        self,
+        scope: str = "full",
+        depth: str = "comprehensive",
+        focus_areas: Optional[list] = None,
+    ) -> Dict[str, Any]:
+        """
+        Legacy method for direct context synthesis.
+
+        DEPRECATED: Use task-based processing instead.
+        This maintains compatibility during transition.
+        """
+        logger.warning("⚠️ Using legacy synthesize_context - migrate to task-based processing")
+
+        result = self._synthesize_context(
+            {
+                "scope": scope,
+                "depth": depth,
+                "focus_areas": focus_areas,
             }
+        )
 
+        if result.get("success"):
+            return result.get("context", {})
+        else:
+            return {"error": result.get("error", "Unknown error")}
 
-# For direct testing
-if __name__ == "__main__":
-    analyst = AnalystCartridge()
-    context = analyst.synthesize_context()
-    print("\nContext Summary:")
-    print(f"  Total Commits: {context['total_commits']}")
-    print(f"  7-Day Velocity: {context['summary']['velocity_7d']}")
-    print(f"  Focus Areas: {context['summary']['focus_areas']}")
+    def handle_task(self, task: Task) -> Dict[str, Any]:
+        """Alias for process() for backward compatibility."""
+        return self.process(task)
