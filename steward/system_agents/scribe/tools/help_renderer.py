@@ -132,19 +132,39 @@ class HelpRenderer(Tool):
         return output
 
     def _render_git_activity(self, git_activity: Dict[str, Any]) -> str:
-        """Render Git activity."""
-        last_commit = git_activity.get("last_commit", {})
+        """Render comprehensive Git activity."""
         branch = git_activity.get("current_branch", "unknown")
         status = git_activity.get("status", "unknown")
+        recent_commits = git_activity.get("recent_commits", [])
+        contributors = git_activity.get("contributors", [])
+        stats = git_activity.get("stats", {})
 
         output = "**Current State:**\n\n"
         output += f"- **Branch:** `{branch}`\n"
         output += f"- **Status:** {status}\n"
-        output += (
-            f"- **Last Commit:** `{last_commit.get('hash', 'unknown')}` - {last_commit.get('message', 'unknown')}\n"
-        )
-        output += f"- **Author:** {last_commit.get('author', 'unknown')}\n"
-        output += f"- **Time:** {last_commit.get('time', 'unknown')}\n"
+        if stats.get("total_commits"):
+            output += f"- **Total Commits:** {stats['total_commits']}\n"
+        output += "\n"
+
+        # Recent commits table
+        if recent_commits:
+            output += "**Recent Commits:**\n\n"
+            output += "| Hash | Message | Author | Time |\n"
+            output += "|------|---------|--------|------|\n"
+            for commit in recent_commits[:5]:
+                output += f"| `{commit.get('hash', '?')}` | {commit.get('message', '?')} | {commit.get('author', '?')} | {commit.get('time', '?')} |\n"
+            output += "\n"
+
+        # Contributors
+        if contributors:
+            output += "**Top Contributors:**\n\n"
+            for c in contributors[:3]:
+                output += f"- **{c.get('name', '?')}** ({c.get('commits', 0)} commits)\n"
+            output += "\n"
+
+        # Last change summary
+        if stats.get("last_change_summary"):
+            output += f"**Last Change:** {stats['last_change_summary']}\n"
 
         return output
 

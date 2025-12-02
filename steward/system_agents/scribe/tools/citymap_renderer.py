@@ -137,6 +137,10 @@ class CitymapRenderer(Tool):
             agent_table=self._render_agent_table(),
             economic_section=self._render_economic_status(system_status["economic_status"]),
             security_section=self._render_security_status(system_status["security_status"]),
+            # Dynamic diagrams
+            domain_diagram=self._render_domain_diagram(),
+            governance_diagram=self._render_governance_diagram(),
+            topology_diagram=self._render_topology_diagram(),
         )
 
         return content
@@ -225,6 +229,75 @@ class CitymapRenderer(Tool):
         output += f"- **Threats Detected:** {sec_status.get('threats_detected', 0)}\n"
         output += f"- **Description:** {sec_status.get('description', 'No information')}\n"
 
+        return output
+
+    def _render_domain_diagram(self) -> str:
+        """Generate Mermaid pie chart of agents by domain."""
+        if not self.domains:
+            return ""
+
+        output = "```mermaid\npie showData\n"
+        output += "    title Agent Distribution by Domain\n"
+
+        for domain, agents in sorted(self.domains.items()):
+            domain_label = domain if domain else "UNKNOWN"
+            output += f'    "{domain_label}" : {len(agents)}\n'
+
+        output += "```\n"
+        return output
+
+    def _render_governance_diagram(self) -> str:
+        """Generate Mermaid diagram of governance flow (dynamic from domain data)."""
+        # Find key governance agents
+        gov_agents = self.domains.get("GOVERNANCE", [])
+        sec_agents = self.domains.get("SECURITY", [])
+        sys_agents = self.domains.get("SYSTEM", [])
+
+        output = "```mermaid\ngraph TD\n"
+        output += '    CONST["📜 CONSTITUTION<br/>(Immutable Law)"]\n'
+
+        # Add governance agents
+        for agent in gov_agents[:2]:
+            output += f'    {agent.upper()}["{agent.upper()}"]\n'
+
+        # Add security agents
+        for agent in sec_agents[:1]:
+            output += f'    {agent.upper()}["{agent.upper()}"]\n'
+
+        # Add connections
+        if gov_agents:
+            output += f"    CONST --> {gov_agents[0].upper()}\n"
+        if sec_agents:
+            output += f"    CONST --> {sec_agents[0].upper()}\n"
+            if gov_agents:
+                output += f"    {sec_agents[0].upper()} -.->|monitors| {gov_agents[0].upper()}\n"
+
+        # Add all agents node
+        output += '    AGENTS["👥 ALL AGENTS"]\n'
+        if gov_agents:
+            output += f"    {gov_agents[0].upper()} -->|manages| AGENTS\n"
+        if len(gov_agents) > 1:
+            output += f"    AGENTS -->|submit proposals| {gov_agents[1].upper()}\n"
+
+        output += "```\n"
+        return output
+
+    def _render_topology_diagram(self) -> str:
+        """Generate ASCII topology diagram (dynamic from agent count)."""
+        total = len(self.agents)
+        sys_count = len(self.system_agent_names)
+        citizen_count = len(self.citizen_agent_names)
+
+        output = "```\n"
+        output += "         🏔️ MOUNT MERU (Center)\n"
+        output += "              CIVIC\n"
+        output += "               │\n"
+        output += "    ┌──────────┼──────────┐\n"
+        output += "  INNER      MIDDLE      OUTER\n"
+        output += "  (Core)    (Services)  (Citizens)\n"
+        output += "    │          │           │\n"
+        output += f"  {sys_count} Devatas  {total - sys_count - citizen_count} Routing  {citizen_count} Citizens\n"
+        output += "```\n"
         return output
 
     # Standalone mode method (for generate_docs.py)
