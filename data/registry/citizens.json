@@ -31,18 +31,18 @@
     "test_pulse": {
       "lifecycle_status": {
         "agent_id": "test_pulse",
-        "status": "brahmachari",
-        "varna": "Brahmachari (Student)",
-        "entered_at": "2025-11-30T13:26:41.002493+00:00",
+        "status": "vanaprastha",
+        "varna": "Vanaprastha (Retired)",
+        "entered_at": "2025-12-02T11:14:06.671418+00:00",
         "initiator_agent": null,
-        "reason": "New agent registration - must learn before acting",
+        "reason": "Code deprecated in favor of newer version",
         "diksha_passed": false,
         "diksha_tests": [],
         "diksha_date": null,
         "violations": [],
         "rehabilitation_required": false,
-        "deprecated_reason": null,
-        "archive_path": null
+        "deprecated_reason": "Code deprecated in favor of newer version",
+        "archive_path": "/archive/test_pulse_v1"
       }
     },
     "test_agent": {
@@ -50,7 +50,7 @@
         "agent_id": "test_agent",
         "status": "sannyasa",
         "varna": "Sannyasa (Renounced)",
-        "entered_at": "2025-11-30T13:26:41.013729+00:00",
+        "entered_at": "2025-12-02T11:14:06.690015+00:00",
         "initiator_agent": null,
         "reason": "Merged into core",
         "diksha_passed": false,
