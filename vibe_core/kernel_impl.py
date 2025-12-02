@@ -232,6 +232,7 @@ class RealVibeKernel(VibeKernel):
         self._settings_last_modified = 0.0  # Last known mtime of SETTINGS.md
         self._settings_writing = False  # Lock flag to prevent read during write
         self._settings_execution_history: deque = deque(maxlen=10)  # Last 10 executed commands
+        self._paused_agents: Set[str] = set()  # Agents that are paused via SETTINGS.md
         logger.info("⚙️  Settings sync initialized (Command Queue)")
 
         # Phase 4: Network Proxy
@@ -831,6 +832,13 @@ class RealVibeKernel(VibeKernel):
             self._ledger.record_failure(task, error)
             return
 
+        # Check if agent is paused
+        if task.agent_id in self._paused_agents:
+            logger.info(f"⏸️  Agent '{task.agent_id}' is PAUSED - task deferred")
+            # Re-queue the task for later
+            self._scheduler.add_task(task)
+            return
+
         try:
             # Record start
             self._ledger.record_start(task)
@@ -1421,6 +1429,9 @@ class RealVibeKernel(VibeKernel):
             for agent_id, agent in self._agent_registry.items():
                 try:
                     agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
+                    # Mark paused agents
+                    if agent_id in self._paused_agents:
+                        agent_status["status"] = "PAUSED"
                     snapshot["agents"][agent_id] = agent_status
                 except Exception as e:
                     logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
@@ -1568,8 +1579,8 @@ class RealVibeKernel(VibeKernel):
                     "",
                     "**Available Commands:**",
                     "- `SET kernel.log_level=DEBUG` - Change kernel log level (DEBUG/INFO/WARNING/ERROR/CRITICAL)",
-                    "- `PAUSE agent.<agent_id>` - Pause an agent (not yet implemented)",
-                    "- `RESUME agent.<agent_id>` - Resume an agent (not yet implemented)",
+                    "- `PAUSE agent.<agent_id>` - Pause an agent (stops task execution)",
+                    "- `RESUME agent.<agent_id>` - Resume a paused agent",
                     "",
                     "**Example:**",
                     "```",
@@ -1817,18 +1828,30 @@ class RealVibeKernel(VibeKernel):
                         execution_record["reason"] = "Log level updated successfully"
 
                 elif action == "PAUSE":
-                    agent_id = cmd.get("agent_id", "")
-                    execution_record["status"] = "FAILED"
-                    execution_record["reason"] = "PAUSE command not yet implemented"
-                    logger.info(f"⏸️  PAUSE command for {agent_id} (not yet implemented)")
-                    # TODO: Implement agent pause
+                    agent_id = cmd.get("agent_id", "").replace("agent.", "")
+                    if agent_id in self._agent_registry:
+                        self._paused_agents.add(agent_id)
+                        logger.info(f"⏸️  Agent '{agent_id}' PAUSED")
+                        execution_record["reason"] = f"Agent '{agent_id}' paused successfully"
+                    else:
+                        execution_record["status"] = "FAILED"
+                        execution_record["reason"] = f"Agent '{agent_id}' not found"
+                        logger.warning(f"⚠️  PAUSE failed: Agent '{agent_id}' not found")
 
                 elif action == "RESUME":
-                    agent_id = cmd.get("agent_id", "")
-                    execution_record["status"] = "FAILED"
-                    execution_record["reason"] = "RESUME command not yet implemented"
-                    logger.info(f"▶️  RESUME command for {agent_id} (not yet implemented)")
-                    # TODO: Implement agent resume
+                    agent_id = cmd.get("agent_id", "").replace("agent.", "")
+                    if agent_id in self._paused_agents:
+                        self._paused_agents.discard(agent_id)
+                        logger.info(f"▶️  Agent '{agent_id}' RESUMED")
+                        execution_record["reason"] = f"Agent '{agent_id}' resumed successfully"
+                    elif agent_id in self._agent_registry:
+                        execution_record["status"] = "FAILED"
+                        execution_record["reason"] = f"Agent '{agent_id}' is not paused"
+                        logger.warning(f"⚠️  RESUME failed: Agent '{agent_id}' is not paused")
+                    else:
+                        execution_record["status"] = "FAILED"
+                        execution_record["reason"] = f"Agent '{agent_id}' not found"
+                        logger.warning(f"⚠️  RESUME failed: Agent '{agent_id}' not found")
 
                 else:
                     execution_record["status"] = "FAILED"
