@@ -1,50 +1,72 @@
 #!/usr/bin/env python3
 """
-SCRIBE Index Renderer - SCHEMA-DRIVEN Documentation Index
+SCRIBE Index Renderer - VEDA-4 Circuit Documentation Index
 
-WHITELIST APPROACH: Only explicitly allowed files/dirs are indexed.
-- Root: Whitelist of allowed .md files
-- Docs: Schema of allowed subdirectories only
-- NO garbage: archive/, prompts/, temp/ ignored by default
+VEDA-4 COGNITIVE FLOW:
+  SHABDA   → Entry points (where to start)
+  ARTHA    → Understanding (learn the system)
+  PRATYAYA → Planning (architecture & guides)
+  KARMA    → Execution (operations & agents)
+  SYNTH    → Results (dashboards & reports)
 
 Tool Protocol Compliant (Kernel-Managed).
 """
 
-from datetime import datetime
+import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Set
 
-# Import from shared base (eliminates DRY violation)
 from .base import Tool, ToolResult, get_kernel_status, load_template
+
+logger = logging.getLogger("SCRIBE_INDEX")
 
 
 class IndexRenderer(Tool):
-    """Generate INDEX.md using SCHEMA-DRIVEN indexing (Whitelist approach).
+    """Generate INDEX.md using VEDA-4 Circuit Structure.
 
-    Only explicitly allowed files/directories are indexed.
-    Garbage (archive/, prompts/, temp files) is ignored.
+    Maps documentation to cognitive flow phases:
+    - SHABDA: Entry points for new users
+    - ARTHA: Understanding the system
+    - PRATYAYA: Planning and architecture
+    - KARMA: Execution and operations
+    - SYNTH: Results and dashboards
     """
 
-    # SCHEMA: Allowed root .md files (WHITELIST)
-    ROOT_ALLOWLIST: Set[str] = {
-        # Auto-generated
+    # VEDA-4 SECTION MAPPING
+    # Each phase maps to specific docs for cognitive flow
+
+    SHABDA_DOCS: List[str] = [
         "README.md",
-        "AGENTS.md",
-        "CITYMAP.md",
-        "DASHBOARD.md",
         "HELP.md",
-        "INDEX.md",
-        "SETTINGS.md",
-        # Governance
+    ]
+
+    ARTHA_DOCS: List[str] = [
         "CONSTITUTION.md",
         "STEWARD.md",
+        "CITYMAP.md",
         "AGI_MANIFESTO.md",
-        # Operational
-        "OPERATIONS.md",
-        "PROOF.md",
-    }
+    ]
 
-    # SCHEMA: Allowed docs/ subdirectories (WHITELIST)
+    KARMA_DOCS: List[str] = [
+        "OPERATIONS.md",
+        "SETTINGS.md",
+        "AGENTS.md",
+    ]
+
+    SYNTH_DOCS: List[str] = [
+        "DASHBOARD.md",
+        "PROOF.md",
+        "INDEX.md",
+    ]
+
+    # docs/ subdirectories mapped to VEDA-4 phases
+    PRATYAYA_DIRS: Set[str] = {"architecture", "guides"}
+    KARMA_DIRS: Set[str] = {"deployment", "security"}
+    SYNTH_DIRS: Set[str] = {"reports"}
+    ARTHA_DIRS: Set[str] = {"governance", "philosophy"}
+
+    # All allowed docs/ subdirectories
     DOCS_ALLOWLIST: Set[str] = {
         "architecture",
         "deployment",
@@ -55,27 +77,9 @@ class IndexRenderer(Tool):
         "security",
     }
 
-    # Category display titles
-    CATEGORY_TITLES: Dict[str, str] = {
-        "architecture": "## 🏗️ Architecture Documentation",
-        "deployment": "## 🚀 Deployment & Operations",
-        "governance": "## ⚖️ Governance",
-        "guides": "## 📖 Guides & References",
-        "philosophy": "## 💭 Philosophy & Context",
-        "reports": "## 📊 Status Reports",
-        "security": "## 🔒 Security",
-    }
-
     def __init__(self, root_dir: str = "."):
-        """Initialize renderer.
-
-        Args:
-            root_dir: Project root directory (for standalone mode)
-        """
+        """Initialize VEDA-4 Index Renderer."""
         self.root_dir = Path(root_dir)
-
-        # Discovered files (populated by scanning)
-        self.root_docs: List[Path] = []
         self.doc_categories: Dict[str, List[Path]] = {}
 
     @property
@@ -84,7 +88,7 @@ class IndexRenderer(Tool):
 
     @property
     def description(self) -> str:
-        return "Generate INDEX.md from filesystem introspection"
+        return "Generate INDEX.md using VEDA-4 Circuit cognitive flow"
 
     @property
     def parameters_schema(self) -> dict[str, Any]:
@@ -92,209 +96,211 @@ class IndexRenderer(Tool):
             "action": {
                 "type": "string",
                 "required": True,
-                "description": "Action: 'generate' to scan and render INDEX.md content",
+                "description": "Action: 'generate' to scan and render INDEX.md",
             }
         }
 
     def validate(self, parameters: dict[str, Any]) -> None:
-        """Validate renderer parameters."""
+        """Validate parameters."""
         if "action" not in parameters:
             raise ValueError("Missing required parameter: action")
         if parameters["action"] not in ["generate"]:
-            raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
+            raise ValueError(f"Invalid action: {parameters['action']}")
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
-        """Execute renderer operation."""
+        """Execute VEDA-4 Circuit Index generation."""
+        logger.info("🔬 VEDA-4 Circuit: Generating INDEX.md...")
+
         try:
+            # SHABDA: Capture request
+            logger.info("🔊 SHABDA: Capturing generation request...")
             action = parameters["action"]
+
             if action == "generate":
-                content = self._scan_and_render()
+                # ARTHA: Understand filesystem
+                logger.info("📖 ARTHA: Scanning documentation...")
+                self._scan_docs_directories()
+
+                # PRATYAYA: Plan structure
+                logger.info("🧠 PRATYAYA: Planning VEDA-4 structure...")
+
+                # KARMA: Execute rendering
+                logger.info("⚡ KARMA: Rendering sections...")
+                content = self._render_veda4_index()
+
+                # SYNTH: Synthesize result
+                logger.info("🔬 SYNTH: Index complete!")
                 return ToolResult(success=True, output=content)
             else:
                 return ToolResult(success=False, error=f"Unknown action: {action}")
+
         except Exception as e:
+            logger.error(f"❌ VEDA-4 Circuit failed: {e}")
             return ToolResult(success=False, error=str(e))
 
-    def _scan_filesystem(self):
-        """Scan filesystem using WHITELIST approach - only allowed files/dirs."""
-        # Scan root directory - WHITELIST only + GAD-* pattern
-        for md_file in self.root_dir.glob("*.md"):
-            if not md_file.is_file():
-                continue
-
-            # Allow GAD-* pattern (Governance & Design docs)
-            if md_file.name.startswith("GAD-"):
-                self.root_docs.append(md_file)
-                continue
-
-            # Check whitelist
-            if md_file.name in self.ROOT_ALLOWLIST:
-                self.root_docs.append(md_file)
-
-        # Scan docs/ subdirectories - WHITELIST only, with RECURSIVE support
+    def _scan_docs_directories(self):
+        """Scan docs/ subdirectories."""
         docs_dir = self.root_dir / "docs"
-        if docs_dir.exists():
-            for subdir in docs_dir.iterdir():
-                if not subdir.is_dir():
-                    continue
+        if not docs_dir.exists():
+            return
 
-                # Only scan whitelisted directories
-                if subdir.name not in self.DOCS_ALLOWLIST:
-                    continue
-
-                # Recursive glob to find .md files in subdirectories (e.g., GAD-0XX/)
-                md_files = list(subdir.glob("**/*.md"))
-                # Exclude archive/ subdirectory
-                md_files = [f for f in md_files if "/archive/" not in str(f)]
-                if md_files:
-                    self.doc_categories[subdir.name] = sorted(md_files)
-
-    def _render_root_docs(self) -> str:
-        """Render root .md files as links."""
-        if not self.root_docs:
-            return "No markdown files found in root directory."
-
-        # Categorize root docs
-        auto_gen = ["README.md", "AGENTS.md", "CITYMAP.md", "DASHBOARD.md", "HELP.md", "INDEX.md"]
-        governance = ["CONSTITUTION.md", "STEWARD.md"]
-        philosophy = ["AGI_MANIFESTO.md"]
-        gad_docs = []
-        other = []
-
-        for doc in sorted(self.root_docs):
-            name = doc.name
-            if name in auto_gen:
-                continue  # Handle separately
-            elif name in governance:
-                continue  # Handle separately
-            elif name in philosophy:
-                continue  # Handle separately
-            elif name.startswith("GAD-"):
-                gad_docs.append(doc)
-            else:
-                other.append(doc)
-
-        output = ""
-
-        # Auto-generated docs
-        output += "### Auto-Generated Documentation\n"
-        for doc_name in auto_gen:
-            doc_path = self.root_dir / doc_name
-            if doc_path.exists():
-                desc = self._get_doc_description(doc_name)
-                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
-        output += "\n"
-
-        # Governance docs
-        governance_found = [self.root_dir / d for d in governance if (self.root_dir / d).exists()]
-        if governance_found:
-            output += "### Constitutional Governance\n"
-            for doc in governance_found:
-                desc = self._get_doc_description(doc.name)
-                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
-            output += "\n"
-
-        # Philosophy docs
-        philosophy_found = [self.root_dir / d for d in philosophy if (self.root_dir / d).exists()]
-        if philosophy_found:
-            output += "### Philosophy & Manifestos\n"
-            for doc in philosophy_found:
-                desc = self._get_doc_description(doc.name)
-                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
-            output += "\n"
-
-        # GAD docs
-        if gad_docs:
-            output += "### GAD (Governance & Design) Framework\n"
-            for doc in sorted(gad_docs):
-                desc = self._get_doc_description(doc.name)
-                output += f"- **[{doc.name}]({doc.name})** — {desc}\n"
-            output += "\n"
-
-        # Other docs
-        if other:
-            output += "### Other Documentation\n"
-            for doc in sorted(other):
-                output += f"- **[{doc.name}]({doc.name})**\n"
-            output += "\n"
-
-        return output
-
-    def _render_docs_categories(self) -> str:
-        """Render docs/ subdirectories using category titles."""
-        if not self.doc_categories:
-            return ""
-
-        output = ""
-
-        # Render in schema order
-        for category, title in self.CATEGORY_TITLES.items():
-            files = self.doc_categories.get(category, [])
-            if not files:
+        for subdir in docs_dir.iterdir():
+            if not subdir.is_dir():
+                continue
+            if subdir.name not in self.DOCS_ALLOWLIST:
                 continue
 
-            output += f"{title}\n\n"
+            md_files = list(subdir.glob("**/*.md"))
+            md_files = [f for f in md_files if "/archive/" not in str(f)]
+            if md_files:
+                self.doc_categories[subdir.name] = sorted(md_files)
 
-            for doc_path in files:
-                rel_path = doc_path.relative_to(self.root_dir)
-                desc = self._get_doc_description(doc_path.name)
-                output += f"- **[{rel_path}]({rel_path})** — {desc}\n"
-
-            output += "\n"
-
-        return output
-
-    def _get_doc_description(self, filename: str) -> str:
-        """Get description for a document (minimal hardcoding, only for well-known files)."""
-        descriptions = {
-            # Auto-generated
-            "README.md": "Project overview and quick start",
-            "AGENTS.md": "Complete agent registry (auto-generated)",
-            "CITYMAP.md": "3-layer system architecture (auto-generated)",
-            "DASHBOARD.md": "Operational dashboard (auto-generated)",
-            "HELP.md": "Operations control center (auto-generated)",
-            "INDEX.md": "Documentation index (this file)",
-            # Governance
-            "CONSTITUTION.md": "Constitutional rules and governance",
-            "STEWARD.md": "STEWARD Protocol specification",
-            # Philosophy
-            "AGI_MANIFESTO.md": "Governed Intelligence manifesto",
-            # Known architecture docs
-            "ARCHITECTURE.md": "System architecture overview",
-            "UNIVERSE_MIGRATION_PLAN.md": "System migration master plan",
-            # Known deployment docs
-            "DEPLOYMENT.md": "Deployment guide",
-            # Default
-        }
-        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
-
-    def _scan_and_render(self) -> str:
-        """Scan filesystem and generate INDEX.md using external template."""
-        self._scan_filesystem()
-
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
-
-        # Get kernel status for unified header
+    def _render_veda4_index(self) -> str:
+        """Render INDEX.md with VEDA-4 cognitive structure."""
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         kernel_status = get_kernel_status(str(self.root_dir))
 
-        # Pre-render sections for template
         template = load_template("index.jinja2")
         content = template.render(
-            # Unified header variables
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
-            # Index-specific variables
-            root_docs_content=self._render_root_docs(),
-            docs_categories_content=self._render_docs_categories(),
+            shabda_content=self._render_shabda(),
+            artha_content=self._render_artha(),
+            pratyaya_content=self._render_pratyaya(),
+            karma_content=self._render_karma(),
+            synth_content=self._render_synth(),
         )
 
         return content
 
-    # Standalone mode method name (for generate_docs.py)
-    def scan_and_render(self) -> str:
-        """Standalone method to scan and generate INDEX.md.
+    def _render_shabda(self) -> str:
+        """SHABDA: Entry points - where to start."""
+        output = ""
+        for doc_name in self.SHABDA_DOCS:
+            doc_path = self.root_dir / doc_name
+            if doc_path.exists():
+                desc = self._get_description(doc_name)
+                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
+        return output
 
-        Same as _scan_and_render() but public for standalone mode.
-        """
-        return self._scan_and_render()
+    def _render_artha(self) -> str:
+        """ARTHA: Understanding - learn the system."""
+        output = ""
+
+        # Root docs
+        for doc_name in self.ARTHA_DOCS:
+            doc_path = self.root_dir / doc_name
+            if doc_path.exists():
+                desc = self._get_description(doc_name)
+                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
+
+        # docs/ directories (governance, philosophy)
+        for dir_name in sorted(self.ARTHA_DIRS):
+            files = self.doc_categories.get(dir_name, [])
+            if files:
+                output += f"\n**{dir_name.title()}:**\n"
+                for doc_path in files[:5]:  # Limit to 5
+                    rel_path = doc_path.relative_to(self.root_dir)
+                    desc = self._get_description(doc_path.name)
+                    output += f"- [{rel_path}]({rel_path}) — {desc}\n"
+
+        return output
+
+    def _render_pratyaya(self) -> str:
+        """PRATYAYA: Planning - architecture & guides."""
+        output = ""
+
+        for dir_name in ["architecture", "guides"]:
+            files = self.doc_categories.get(dir_name, [])
+            if files:
+                title = "Architecture" if dir_name == "architecture" else "Guides"
+                output += f"**{title}:**\n"
+                for doc_path in files[:10]:  # Limit to 10
+                    rel_path = doc_path.relative_to(self.root_dir)
+                    desc = self._get_description(doc_path.name)
+                    output += f"- [{rel_path}]({rel_path}) — {desc}\n"
+                output += "\n"
+
+        return output
+
+    def _render_karma(self) -> str:
+        """KARMA: Execution - operations & agents."""
+        output = ""
+
+        # Root docs
+        for doc_name in self.KARMA_DOCS:
+            doc_path = self.root_dir / doc_name
+            if doc_path.exists():
+                desc = self._get_description(doc_name)
+                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
+
+        # docs/ directories (deployment, security)
+        for dir_name in sorted(self.KARMA_DIRS):
+            files = self.doc_categories.get(dir_name, [])
+            if files:
+                output += f"\n**{dir_name.title()}:**\n"
+                for doc_path in files[:5]:
+                    rel_path = doc_path.relative_to(self.root_dir)
+                    desc = self._get_description(doc_path.name)
+                    output += f"- [{rel_path}]({rel_path}) — {desc}\n"
+
+        return output
+
+    def _render_synth(self) -> str:
+        """SYNTH: Results - dashboards & reports."""
+        output = ""
+
+        # Root docs
+        for doc_name in self.SYNTH_DOCS:
+            doc_path = self.root_dir / doc_name
+            if doc_path.exists():
+                desc = self._get_description(doc_name)
+                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
+
+        # docs/reports
+        files = self.doc_categories.get("reports", [])
+        if files:
+            output += "\n**Reports:**\n"
+            for doc_path in files[:8]:
+                rel_path = doc_path.relative_to(self.root_dir)
+                desc = self._get_description(doc_path.name)
+                output += f"- [{rel_path}]({rel_path}) — {desc}\n"
+
+        return output
+
+    def _get_description(self, filename: str) -> str:
+        """Get description for a document."""
+        descriptions = {
+            # SHABDA
+            "README.md": "Quick start guide",
+            "HELP.md": "Operations & commands",
+            # ARTHA
+            "CONSTITUTION.md": "Constitutional governance",
+            "STEWARD.md": "Protocol specification",
+            "CITYMAP.md": "System architecture",
+            "AGI_MANIFESTO.md": "Governed Intelligence philosophy",
+            # KARMA
+            "OPERATIONS.md": "System operations",
+            "SETTINGS.md": "Configuration options",
+            "AGENTS.md": "Agent registry & tools",
+            # SYNTH
+            "DASHBOARD.md": "Live status dashboard",
+            "PROOF.md": "Verification proof",
+            "INDEX.md": "Navigation index (this file)",
+            # Known docs
+            "DEPLOYMENT.md": "Deployment guide",
+            "ARCHITECTURE.md": "Architecture overview",
+        }
+        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
+
+    # Standalone mode
+    def scan_and_render(self) -> str:
+        """Standalone method for generate_docs.py."""
+        self._scan_docs_directories()
+        return self._render_veda4_index()
+
+    def _scan_and_render(self) -> str:
+        """Internal render with scan."""
+        self._scan_docs_directories()
+        return self._render_veda4_index()
