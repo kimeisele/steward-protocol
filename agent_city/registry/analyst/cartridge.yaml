@@ -1,0 +1,40 @@
+agent_id: analyst
+name: ANALYST
+version: 1.0.0
+author: Steward Protocol
+description: Repository analysis and context synthesis agent (RAG - Realtime Architecture Guide)
+
+# Agent metadata
+domain: RESEARCH
+capabilities:
+  - git_analysis
+  - dependency_analysis
+  - context_synthesis
+
+# Tools (auto-discovered from tools/ directory)
+tools:
+  - analyst.git       # Git history analysis
+  - analyst.context   # Context synthesis
+
+# ANALYST provides context for other agents
+# RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation)
+philosophy: |
+  ANALYST provides real-time repository context.
+  Git is truth. Code changes tell the story.
+  Context synthesis replaces RAG dependencies.
+  Works FOR SCRIBE to generate RAG.md.
+
+# Configuration
+config:
+  governance:
+    level: standard
+  monitoring:
+    enabled: true
+  analysis:
+    git_depth: 90           # Days of git history to analyze
+    churn_threshold: 10     # Files changed >N times = hot
+    dependency_depth: 3     # Import chain depth
+
+dependencies:
+  - pyyaml
+  - python-dotenv
