@@ -53,6 +53,11 @@ class CartridgeIntrospector:
         class_doc = self._extract_class_docstring(content, class_name)
 
         # Extract metadata fields
+        description = self._extract_field(content, "description")
+        # Fallback to class docstring or module docstring if no explicit description
+        if not description:
+            description = class_doc or module_doc or ""
+
         metadata = {
             "agent_name": agent_name,
             "agent_name_pretty": agent_name.upper(),
@@ -60,7 +65,7 @@ class CartridgeIntrospector:
             "module_doc": module_doc,
             "class_doc": class_doc,
             "version": self._extract_field(content, "version"),
-            "description": self._extract_field(content, "description"),
+            "description": description,
             "author": self._extract_field(content, "author"),
             "domain": self._extract_field(content, "domain"),
             "tools": self._discover_tools(agent_path),  # Pass full path!
