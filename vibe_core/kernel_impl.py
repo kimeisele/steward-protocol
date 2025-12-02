@@ -53,6 +53,7 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .runtime.playbook_router import PlaybookRouter
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
+from .settings_executor import get_executor as get_settings_executor
 
 # Sync modules: Extracted bidirectional markdown interfaces
 from .settings_sync import SettingsSync, SettingsSyncState
@@ -312,6 +313,7 @@ class RealVibeKernel(VibeKernel):
 
         # SettingsSync: Bidirectional SETTINGS.md interface (extracted from kernel)
         self._settings_sync = SettingsSync()
+        self._settings_executor = get_settings_executor()
         logger.info("⚙️  SettingsSync initialized (command queue)")
 
         # EnvoySync: Bidirectional ENVOY.md interface (extracted from kernel)
@@ -880,6 +882,10 @@ class RealVibeKernel(VibeKernel):
             self._settings_last_modified = result.new_mtime
             self._paused_agents = result.paused_agents
             self._settings_execution_history.extend(result.history_entries)
+
+            # Execute commands that require kernel access (RESTART, REFRESH, verbose)
+            # This is delegated to SettingsExecutor to keep kernel clean
+            self._settings_executor.execute(result, self)
 
         # ENVOY.md: Check for new user requests and dispatch tasks (async, non-blocking)
         # Uses PlaybookRouter for intent routing - NO LLM NEEDED
