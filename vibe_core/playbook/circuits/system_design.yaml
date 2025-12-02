@@ -22,6 +22,7 @@ circuit:
   version: "2.0"
   domain: "architecture"
   security_level: "standard"
+  entry_state: "SHABDA"
 
   description: |
     System design workflow for architecture and planning.
