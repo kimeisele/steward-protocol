@@ -34,8 +34,8 @@ def test_lifecycle_enforcer():
     logger.info("=" * 80)
 
     try:
-        from civic.tools.lifecycle_enforcer import LifecycleEnforcer
-        from civic.tools.lifecycle_manager import LifecycleStatus
+        from steward.system_agents.civic.tools.lifecycle_enforcer import LifecycleEnforcer
+        from steward.system_agents.civic.tools.lifecycle_manager import LifecycleStatus
     except ImportError as e:
         pytest.skip(f"Could not import lifecycle modules: {e}")
 
@@ -54,7 +54,10 @@ def test_lifecycle_enforcer():
     logger.info(f"   Status: {state.status.value}")
     logger.info(f"   Varna: {state.varna}")
 
-    assert state.status == LifecycleStatus.BRAHMACHARI, f"TEST 1 FAILED: Agent not BRAHMACHARI (got {state.status.value})"
+    # Compare status (handle enum vs string serialization)
+    status_val = state.status.value if hasattr(state.status, 'value') else str(state.status)
+    assert status_val.lower() == LifecycleStatus.BRAHMACHARI.value.lower(), \
+        f"TEST 1 FAILED: Agent not BRAHMACHARI (got {status_val})"
 
     # TEST 2: Try to broadcast as BRAHMACHARI -> SHOULD BE REJECTED
     logger.info("\n" + "-" * 80)
@@ -143,7 +146,7 @@ def test_lifecycle_enforcer():
 
     # Create new instance (simulating restart)
     logger.info("   Creating new LifecycleManager instance (simulating server restart)...")
-    from civic.tools.lifecycle_manager import LifecycleManager
+    from steward.system_agents.civic.tools.lifecycle_manager import LifecycleManager
 
     manager2 = LifecycleManager()
     state_after = manager2.get_lifecycle_state(test_agent)
