@@ -4,34 +4,34 @@ SCRIBE RAG Renderer - Generate RAG.md (Realtime Architecture Guide)
 
 RAG = Realtime Architecture Guide (NOT Retrieval Augmented Generation!)
 
-Provides:
-- Git activity timeline (7d, 30d, 90d)
-- Hot files (high churn indicators)
-- Module activity patterns
-- Dependency connections
-- Focus area recommendations
+This renderer works WITH the ANALYST agent:
+- ANALYST provides the 4D multi-dimensional context
+- SCRIBE renders the context to RAG.md
 
-Data source: ANALYST agent context synthesis
+NO analysis duplication - ANALYST is the single source of truth.
 
 Tool Protocol Compliant (Kernel-Managed).
 """
 
-import subprocess
-from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 # Import from shared base
 from .base import Tool, ToolResult, get_kernel_status, load_template
 
 
 class RagRenderer(Tool):
-    """Render RAG.md - Realtime Architecture Guide."""
+    """
+    Render RAG.md - Realtime Architecture Guide.
+
+    Uses ANALYST agent for 4D multi-dimensional context.
+    """
 
     def __init__(self, root_dir: str = "."):
         """Initialize renderer."""
         self.root_dir = Path(root_dir)
+        self._analyst = None
 
     @property
     def name(self) -> str:
@@ -39,7 +39,7 @@ class RagRenderer(Tool):
 
     @property
     def description(self) -> str:
-        return "Generate RAG.md - Realtime Architecture Guide (Git-based context)"
+        return "Generate RAG.md using ANALYST 4D context synthesis"
 
     @property
     def parameters_schema(self) -> dict[str, Any]:
@@ -47,9 +47,32 @@ class RagRenderer(Tool):
             "action": {
                 "type": "string",
                 "required": True,
-                "description": "Action: 'generate' to analyze and render RAG.md",
-            }
+                "description": "Action: 'generate' to render RAG.md with 4D analysis",
+            },
+            "scope": {
+                "type": "string",
+                "required": False,
+                "description": "Analysis scope: 'short_term', 'mid_term', 'long_term', 'full'",
+                "default": "full",
+            },
+            "depth": {
+                "type": "string",
+                "required": False,
+                "description": "Analysis depth: 'quick', 'standard', 'comprehensive'",
+                "default": "comprehensive",
+            },
         }
+
+    def _get_analyst(self):
+        """Lazy load ANALYST agent."""
+        if self._analyst is None:
+            try:
+                from agent_city.registry.analyst.cartridge_main import AnalystCartridge
+
+                self._analyst = AnalystCartridge(str(self.root_dir))
+            except ImportError:
+                raise ImportError("ANALYST agent not found. Ensure agent_city.registry.analyst is available.")
+        return self._analyst
 
     def validate(self, parameters: dict[str, Any]) -> None:
         """Validate renderer parameters."""
@@ -58,143 +81,42 @@ class RagRenderer(Tool):
         if parameters["action"] not in ["generate"]:
             raise ValueError(f"Invalid action: {parameters['action']}. Must be 'generate'")
 
+        # Validate optional scope
+        scope = parameters.get("scope", "full")
+        valid_scopes = ["short_term", "mid_term", "long_term", "full"]
+        if scope not in valid_scopes:
+            raise ValueError(f"Invalid scope: {scope}. Must be one of {valid_scopes}")
+
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """Execute renderer operation."""
         try:
             action = parameters["action"]
             if action == "generate":
-                content = self._analyze_and_render()
+                scope = parameters.get("scope", "full")
+                depth = parameters.get("depth", "comprehensive")
+                content = self._render_with_analyst(scope=scope, depth=depth)
                 return ToolResult(success=True, output=content)
             else:
                 return ToolResult(success=False, error=f"Unknown action: {action}")
         except Exception as e:
             return ToolResult(success=False, error=str(e))
 
-    # =========================================================================
-    # GIT ANALYSIS (Inline - no external dependency)
-    # =========================================================================
+    def _render_with_analyst(self, scope: str = "full", depth: str = "comprehensive") -> str:
+        """
+        Render RAG.md using ANALYST 4D context synthesis.
 
-    def _run_git(self, cmd: str) -> str:
-        """Run git command and return output."""
-        result = subprocess.run(
-            ["git"] + cmd.split(),
-            capture_output=True,
-            text=True,
-            cwd=str(self.root_dir),
-        )
-        return result.stdout.strip()
+        This is the proper integration - ANALYST does analysis,
+        SCRIBE does rendering. No duplication.
+        """
+        # Get ANALYST agent
+        analyst = self._get_analyst()
 
-    def _analyze_git_activity(self, days: int = 7) -> Dict[str, Any]:
-        """Analyze git activity for specified period."""
-        since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+        # Get 4D context from ANALYST (via VEDA-4 circuit)
+        context = analyst.synthesize_context(scope=scope, depth=depth)
 
-        # Get commits
-        commits_output = self._run_git(f"log --oneline --since={since_date}")
-        commits = [line for line in commits_output.split("\n") if line.strip()]
-
-        # Get file changes
-        files_output = self._run_git(f"log --pretty=format: --name-only --since={since_date}")
-        file_changes = defaultdict(int)
-        for line in files_output.split("\n"):
-            if line.strip():
-                file_changes[line.strip()] += 1
-
-        hot_files = dict(sorted(file_changes.items(), key=lambda x: -x[1])[:15])
-
-        # Module activity
-        module_activity = defaultdict(int)
-        for file_path, count in file_changes.items():
-            parts = file_path.split("/")
-            if parts:
-                module_activity[parts[0]] += count
-
-        return {
-            "period_days": days,
-            "total_commits": len(commits),
-            "recent_commits": commits[:10],
-            "hot_files": hot_files,
-            "module_activity": dict(sorted(module_activity.items(), key=lambda x: -x[1])),
-        }
-
-    def _analyze_file_churn(self, limit: int = 15) -> Dict[str, int]:
-        """Analyze all-time file churn."""
-        output = self._run_git("log --pretty=format: --name-only")
-        files = defaultdict(int)
-        for line in output.split("\n"):
-            if line.strip():
-                files[line.strip()] += 1
-
-        return dict(sorted(files.items(), key=lambda x: -x[1])[:limit])
-
-    def _analyze_connections(self, hot_files: Dict[str, int]) -> List[Dict[str, Any]]:
-        """Analyze connections for hot files."""
-        connections = []
-
-        for file_path in list(hot_files.keys())[:10]:
-            if file_path.endswith(".py"):
-                full_path = self.root_dir / file_path
-                if full_path.exists():
-                    try:
-                        content = full_path.read_text()
-                        import_count = sum(
-                            1 for line in content.split("\n") if line.strip().startswith(("import ", "from "))
-                        )
-                        connections.append(
-                            {
-                                "file": file_path,
-                                "changes": hot_files[file_path],
-                                "import_count": import_count,
-                            }
-                        )
-                    except Exception:
-                        pass
-
-        return connections
-
-    def _synthesize_context(self) -> Dict[str, Any]:
-        """Synthesize full context for RAG.md."""
-        # Timeline analysis
-        short_term = self._analyze_git_activity(days=7)
-        mid_term = self._analyze_git_activity(days=30)
-        long_term = self._analyze_git_activity(days=90)
-
-        # All-time churn
-        all_time_churn = self._analyze_file_churn(limit=15)
-
-        # Connections
-        connections = self._analyze_connections(all_time_churn)
-
-        # Total commits
-        try:
-            total_commits = int(self._run_git("rev-list --count HEAD") or "0")
-        except Exception:
-            total_commits = 0
-
-        return {
-            "total_commits": total_commits,
-            "timeline": {
-                "short_term": short_term,
-                "mid_term": mid_term,
-                "long_term": long_term,
-            },
-            "hot_files": all_time_churn,
-            "connections": connections,
-            "summary": {
-                "active_modules": list(short_term["module_activity"].keys())[:5],
-                "focus_areas": list(short_term["hot_files"].keys())[:5],
-                "velocity_7d": short_term["total_commits"],
-                "velocity_30d": mid_term["total_commits"],
-            },
-        }
-
-    # =========================================================================
-    # RENDERING
-    # =========================================================================
-
-    def _analyze_and_render(self) -> str:
-        """Analyze repository and render RAG.md content."""
-        # Get context
-        context = self._synthesize_context()
+        # Check for errors
+        if "error" in context:
+            raise RuntimeError(f"ANALYST synthesis failed: {context['error']}")
 
         # Get kernel status
         kernel_status = get_kernel_status()
@@ -206,9 +128,73 @@ class RagRenderer(Tool):
         template = load_template("rag.jinja2")
         content = template.render(
             timestamp=timestamp,
-            generator="SCRIBE (via ANALYST)",
+            generator="SCRIBE (via ANALYST v2.0)",
             kernel_status=kernel_status,
             context=context,
         )
 
         return content
+
+    def render_quick(self) -> Dict[str, Any]:
+        """
+        Quick render - just get insights without full RAG.md.
+
+        Useful for status checks.
+        """
+        analyst = self._get_analyst()
+        return analyst.quick_insights()
+
+
+# Convenience function for direct usage
+def generate_rag_md(root_dir: str = ".", scope: str = "full", depth: str = "comprehensive") -> str:
+    """
+    Generate RAG.md content.
+
+    Args:
+        root_dir: Repository root directory
+        scope: Analysis scope (short_term, mid_term, long_term, full)
+        depth: Analysis depth (quick, standard, comprehensive)
+
+    Returns:
+        RAG.md content as string
+    """
+    renderer = RagRenderer(root_dir)
+    result = renderer.execute({"action": "generate", "scope": scope, "depth": depth})
+
+    if result.success:
+        return result.output
+    else:
+        raise RuntimeError(f"RAG.md generation failed: {result.error}")
+
+
+# Direct testing
+if __name__ == "__main__":
+    print("=" * 60)
+    print("SCRIBE RAG Renderer - 4D Analysis")
+    print("=" * 60)
+
+    renderer = RagRenderer()
+
+    # Quick insights
+    print("\n📊 Quick Insights:")
+    try:
+        insights = renderer.render_quick()
+        for key, value in insights.items():
+            print(f"  {key}: {value}")
+    except Exception as e:
+        print(f"  Error: {e}")
+
+    # Full render
+    print("\n📝 Generating RAG.md...")
+    try:
+        result = renderer.execute({"action": "generate", "scope": "full"})
+        if result.success:
+            print(f"  Success! ({len(result.output)} characters)")
+            print("\n  Preview (first 500 chars):")
+            print(result.output[:500])
+        else:
+            print(f"  Error: {result.error}")
+    except Exception as e:
+        print(f"  Error: {e}")
+
+    print("\n" + "=" * 60)

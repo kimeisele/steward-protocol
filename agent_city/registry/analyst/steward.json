@@ -2,16 +2,32 @@
   "capabilities": {
     "operations": [
       {
-        "description": "Analyze git history and repository activity",
+        "description": "Analyze git history with temporal patterns",
         "name": "git_analysis"
       },
       {
-        "description": "Analyze file dependencies and relationships",
+        "description": "Analyze file dependencies and coupling",
         "name": "dependency_analysis"
       },
       {
-        "description": "Generate context synthesis for agents",
+        "description": "Full 4D context synthesis (VEDA-4 circuit)",
         "name": "context_synthesis"
+      },
+      {
+        "description": "Temporal dimension: velocity trends, work patterns",
+        "name": "temporal_analysis"
+      },
+      {
+        "description": "Structural dimension: coupling, architecture hubs",
+        "name": "structural_analysis"
+      },
+      {
+        "description": "Semantic dimension: commit types, tech debt",
+        "name": "semantic_analysis"
+      },
+      {
+        "description": "Predictive dimension: risk areas, recommendations",
+        "name": "predictive_analysis"
       }
     ]
   },
@@ -26,8 +42,8 @@
     "name": "ANALYST"
   },
   "specs": {
-    "description": "Repository analysis and context synthesis (Realtime Architecture Guide)",
+    "description": "4D Multi-Dimensional Repository Analysis (Realtime Architecture Guide)",
     "domain": "RESEARCH",
-    "version": "1.0.0"
+    "version": "2.0.0"
   }
 }
