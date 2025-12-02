@@ -29,6 +29,10 @@ from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
 from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
+
+# DocRenderer: Extracted markdown rendering logic
+from .doc_renderer import DocRenderer, EnvoyRenderState, SettingsRenderState
+from .envoy_sync import EnvoySync, EnvoySyncState
 from .event_bus import get_event_bus  # Phase 2: Event Bus
 from .kernel import (
     KernelStatus,
@@ -49,6 +53,9 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .runtime.playbook_router import PlaybookRouter
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
+
+# Sync modules: Extracted bidirectional markdown interfaces
+from .settings_sync import SettingsSync, SettingsSyncState
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
@@ -297,6 +304,19 @@ class RealVibeKernel(VibeKernel):
         # Supports loose coupling between agents
         self._event_bus = get_event_bus()
         logger.info("🎵 Event Bus initialized (pub/sub ready)")
+
+        # DocRenderer: Centralized markdown rendering (extracted from kernel)
+        # Kernel only calls renderer, doesn't format markdown itself
+        self._doc_renderer = DocRenderer()
+        logger.info("📝 DocRenderer initialized (markdown rendering)")
+
+        # SettingsSync: Bidirectional SETTINGS.md interface (extracted from kernel)
+        self._settings_sync = SettingsSync()
+        logger.info("⚙️  SettingsSync initialized (command queue)")
+
+        # EnvoySync: Bidirectional ENVOY.md interface (extracted from kernel)
+        self._envoy_sync = EnvoySync()
+        logger.info("📬 EnvoySync initialized (async dispatch)")
 
     def get_bank(self) -> "CivicBank":
         """
@@ -848,15 +868,39 @@ class RealVibeKernel(VibeKernel):
 
         # Phase 2.5: Check for SETTINGS.md changes and sync to reality
         # This implements the SETTINGS -> REALITY direction (Command Queue)
-        if not self._settings_writing and self._check_settings_file_changed():
+        if not self._settings_writing and self._settings_sync.check_file_changed(self._settings_last_modified):
             logger.info("⚙️  SETTINGS.md changed, synchronizing to reality...")
-            self._sync_settings_to_reality()
+            state = SettingsSyncState(
+                last_modified=self._settings_last_modified,
+                execution_history=list(self._settings_execution_history),
+                paused_agents=self._paused_agents,
+                agent_ids=set(self._agent_registry.keys()),
+            )
+            result = self._settings_sync.sync_to_reality(state, self._ledger.record_event)
+            self._settings_last_modified = result.new_mtime
+            self._paused_agents = result.paused_agents
+            self._settings_execution_history.extend(result.history_entries)
 
         # ENVOY.md: Check for new user requests and dispatch tasks (async, non-blocking)
         # Uses PlaybookRouter for intent routing - NO LLM NEEDED
-        if not self._envoy_writing and self._check_envoy_file_changed():
+        if not self._envoy_writing and self._envoy_sync.check_file_changed(self._envoy_last_modified):
             logger.info("📬 ENVOY.md changed, processing user requests...")
-            self._sync_envoy_to_reality()
+            state = EnvoySyncState(
+                last_modified=self._envoy_last_modified,
+                pending_tasks=self._envoy_pending_tasks,
+                request_history=list(self._envoy_request_history),
+            )
+            result = self._envoy_sync.sync_to_reality(
+                state,
+                router_callback=self._playbook_router.route,
+                submit_callback=self._scheduler.submit_task,
+                task_factory=lambda p: Task(
+                    agent_id=p["agent_id"], payload=p["payload"], priority=p.get("priority", 0)
+                ),
+            )
+            self._envoy_last_modified = result.new_mtime
+            self._envoy_pending_tasks.update(result.pending_tasks)
+            self._envoy_request_history.extend(result.history_entries)
 
         task = self._scheduler.next_task()
         if not task:
@@ -1509,588 +1553,39 @@ class RealVibeKernel(VibeKernel):
             snapshot_path.write_text(json.dumps(snapshot, indent=2))
             logger.info("💓 Pulse written: vibe_snapshot.json")
 
-            # Render OPERATIONS.md
-            self._render_operations_dashboard(snapshot)
+            # Render OPERATIONS.md (via DocRenderer)
+            self._doc_renderer.render_operations(snapshot)
 
-            # Render SETTINGS.md (Phase 1: Read-Only)
-            self._render_settings_file(snapshot)
+            # Render SETTINGS.md (via DocRenderer)
+            self._settings_writing = True
+            try:
+                settings_state = SettingsRenderState(
+                    ledger_path=str(self.ledger_path),
+                    varna_registry=self._varna_registry,
+                    ashrama_registry=self._ashrama_registry,
+                    execution_history=list(self._settings_execution_history),
+                )
+                new_mtime = self._doc_renderer.render_settings(snapshot, settings_state)
+                if new_mtime:
+                    self._settings_last_modified = new_mtime
+            finally:
+                self._settings_writing = False
 
-            # Render ENVOY.md (Terminal Interface for User Requests)
-            self._render_envoy_file(snapshot)
+            # Render ENVOY.md (via DocRenderer)
+            self._envoy_writing = True
+            try:
+                envoy_state = EnvoyRenderState(
+                    pending_tasks=self._envoy_pending_tasks,
+                    request_history=list(self._envoy_request_history),
+                    available_routes=self._playbook_router.list_available_routes(),
+                    extract_request_fn=self._extract_envoy_request_content,
+                )
+                self._doc_renderer.render_envoy(snapshot, envoy_state)
+            finally:
+                self._envoy_writing = False
 
         except Exception as e:
             logger.error(f"❌ Pulse failed: {e}")
-
-    def _render_unified_header(self, generator: str, snapshot: Dict[str, Any]) -> List[str]:
-        """Generate unified header for auto-generated markdown files.
-
-        Args:
-            generator: Name of the generator (e.g., 'KERNEL', 'SCRIBE')
-            snapshot: Kernel snapshot data
-
-        Returns:
-            List of header lines to prepend to markdown file
-        """
-        timestamp = snapshot.get("timestamp", datetime.utcnow().isoformat())
-        kernel_status = snapshot.get("kernel_status", "UNKNOWN")
-        agent_count = len(snapshot.get("agents", {}))
-
-        return [
-            "<!--",
-            "╔══════════════════════════════════════════════════════════════════════╗",
-            f"║  AUTO-GENERATED by {generator}",
-            f"║  Last Updated: {timestamp}",
-            f"║  Kernel: 🟢 {kernel_status} ({agent_count} agents)",
-            "╚══════════════════════════════════════════════════════════════════════╝",
-            "-->",
-        ]
-
-    def _render_operations_dashboard(self, snapshot: Dict[str, Any]) -> None:
-        """Render OPERATIONS.md from snapshot data"""
-        try:
-            # Unified header
-            lines = self._render_unified_header("KERNEL", snapshot)
-
-            lines.extend(
-                [
-                    "# 🏗️ OPERATIONS DASHBOARD",
-                    "",
-                    "## 📊 Kernel Status",
-                    f"- Kernel: {snapshot['kernel_status']}",
-                    f"- Agents Registered: {len(snapshot['agents'])}",
-                    f"- Queue Length: {snapshot['scheduler']['queue_length']}",
-                    f"- Completed Tasks: {snapshot['scheduler']['completed']}",
-                    f"- Total Events: {snapshot['ledger_stats']['total_events']}",
-                    "",
-                    "## 🤖 Agent Status",
-                ]
-            )
-
-            for agent_id, status in snapshot["agents"].items():
-                lines.append(f"\n### {agent_id}")
-                if "error" in status:
-                    lines.append(f"❌ Error: {status['error']}")
-                else:
-                    for key, value in status.items():
-                        lines.append(f"- {key}: {value}")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    "*This dashboard is auto-generated by the kernel heartbeat.*",
-                ]
-            )
-
-            ops_path = Path("OPERATIONS.md")
-            ops_path.write_text("\n".join(lines))
-            logger.info("📋 Operations dashboard rendered")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to render dashboard: {e}")
-
-    def _render_settings_file(self, snapshot: Dict[str, Any]) -> None:
-        """
-        Render SETTINGS.md from snapshot data.
-
-        PHASE 1: READ-ONLY projection of kernel configuration.
-        This file shows the current system state and configuration.
-
-        PHASE 2: Command Queue for SETTINGS -> REALITY sync.
-        """
-        try:
-            # Set write lock to prevent concurrent read
-            self._settings_writing = True
-
-            # Unified header
-            lines = self._render_unified_header("KERNEL", snapshot)
-
-            lines.extend(
-                [
-                    "# ⚙️ SYSTEM SETTINGS",
-                    "",
-                    "**Mode:** READ-ONLY (Phase 1)",
-                    "",
-                    "> Phase 2 enables Command Queue for declarative configuration.",
-                    "",
-                    "## 🔧 Kernel Configuration",
-                    "",
-                    f"- **Status:** {snapshot['kernel_status']}",
-                    f"- **Ledger Path:** {self.ledger_path}",
-                    f"- **Agents Registered:** {len(snapshot['agents'])}",
-                    f"- **Queue Length:** {snapshot['scheduler']['queue_length']}",
-                    f"- **Total Events:** {snapshot['ledger_stats']['total_events']}",
-                    "",
-                ]
-            )
-
-            # Add agent registry details
-            lines.extend(
-                [
-                    "## 🤖 Agent Registry",
-                    "",
-                    "Current agent configuration and status:",
-                    "",
-                ]
-            )
-
-            for agent_id, status in snapshot["agents"].items():
-                lines.append(f"### `{agent_id}`")
-                lines.append("")
-
-                if "error" in status:
-                    lines.append(f"❌ **Error:** {status['error']}")
-                else:
-                    # Display all status fields
-                    for key, value in status.items():
-                        # Format value nicely
-                        if isinstance(value, list):
-                            value_str = ", ".join(f"`{v}`" for v in value)
-                        elif isinstance(value, dict):
-                            value_str = f"{len(value)} items"
-                        else:
-                            value_str = f"{value}"
-                        lines.append(f"- **{key}:** {value_str}")
-
-                # Add governance info if available
-                varna = self._varna_registry.get(agent_id)
-                ashrama_transition = self._ashrama_registry.get(agent_id)
-
-                if varna:
-                    lines.append(f"- **Varna (Class):** `{varna.value}`")
-
-                if ashrama_transition:
-                    lines.append(f"- **Ashrama (Stage):** `{ashrama_transition.current_ashrama.value}`")
-                    permissions = ashrama_transition.get_current_permissions()
-                    if permissions:
-                        lines.append(f"- **Permissions:** {', '.join(f'`{p}`' for p in permissions)}")
-
-                lines.append("")
-
-            # Add Command Queue sections
-            lines.extend(
-                [
-                    "---",
-                    "",
-                    "## ⚡ Pending Commands",
-                    "",
-                    "> **Write your commands here.** The kernel will process them on the next tick.",
-                    "> Commands are executed in order and then moved to the Execution Ledger below.",
-                    "",
-                    "**Available Commands:**",
-                    "- `SET kernel.log_level=DEBUG` - Change kernel log level (DEBUG/INFO/WARNING/ERROR/CRITICAL)",
-                    "- `PAUSE agent.<agent_id>` - Pause an agent (stops task execution)",
-                    "- `RESUME agent.<agent_id>` - Resume a paused agent",
-                    "",
-                    "**Example:**",
-                    "```",
-                    "- SET kernel.log_level=DEBUG",
-                    "```",
-                    "",
-                    "_No pending commands. Add commands above this line._",
-                    "",
-                    "---",
-                    "",
-                    "## 🏛️ Execution Ledger",
-                    "",
-                    "> **Read-Only.** This section shows the last 10 executed commands.",
-                    "> The kernel updates this automatically after processing commands.",
-                    "",
-                ]
-            )
-
-            # Add execution history
-            if self._settings_execution_history:
-                for entry in reversed(list(self._settings_execution_history)):
-                    timestamp = entry.get("timestamp", "unknown")
-                    status = entry.get("status", "UNKNOWN")
-                    command = entry.get("command", "")
-                    reason = entry.get("reason", "")
-
-                    # Format status emoji
-                    status_emoji = "✅" if status == "SUCCESS" else "❌"
-
-                    # Format command text
-                    if isinstance(command, dict):
-                        action = command.get("action", "")
-                        if action == "SET":
-                            cmd_text = f"SET {command.get('key')}={command.get('value')}"
-                        elif action == "PAUSE":
-                            cmd_text = f"PAUSE {command.get('agent_id')}"
-                        elif action == "RESUME":
-                            cmd_text = f"RESUME {command.get('agent_id')}"
-                        else:
-                            cmd_text = str(command)
-                    else:
-                        cmd_text = str(command)
-
-                    # Build ledger line
-                    line_parts = [f"- [{status_emoji} {status} @ {timestamp}]", cmd_text]
-                    if reason:
-                        line_parts.append(f"(Reason: {reason})")
-
-                    lines.append(" ".join(line_parts))
-            else:
-                lines.append("_No commands executed yet._")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    (
-                        "*This file is auto-generated by the kernel pulse. "
-                        "Edit the Pending Commands section to control the system.*"
-                    ),
-                ]
-            )
-
-            # Write SETTINGS.md
-            settings_path = Path("SETTINGS.md")
-            settings_path.write_text("\n".join(lines))
-
-            # Update last modified timestamp (to prevent immediate re-read)
-            self._settings_last_modified = settings_path.stat().st_mtime
-
-            logger.info("⚙️  Settings file rendered: SETTINGS.md")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to render settings file: {e}")
-
-        finally:
-            # Release write lock
-            self._settings_writing = False
-
-    def _check_settings_file_changed(self) -> bool:
-        """
-        Check if SETTINGS.md has been modified since last read.
-
-        Returns:
-            True if file changed, False otherwise
-        """
-        try:
-            settings_path = Path("SETTINGS.md")
-            if not settings_path.exists():
-                return False
-
-            # Get current modification time
-            current_mtime = settings_path.stat().st_mtime
-
-            # Check if changed
-            if current_mtime > self._settings_last_modified:
-                logger.debug(f"⚙️  SETTINGS.md changed (mtime: {current_mtime})")
-                return True
-
-            return False
-
-        except Exception as e:
-            logger.error(f"❌ Failed to check settings file: {e}")
-            return False
-
-    def _parse_settings_commands(self) -> List[Dict[str, str]]:
-        """
-        Parse command queue from SETTINGS.md.
-
-        Returns:
-            List of command dicts: [{"action": "SET", "key": "...", "value": "..."}]
-
-        Command Format:
-            - SET kernel.log_level=DEBUG
-            - PAUSE agent.steward
-            - RESUME agent.steward
-        """
-        try:
-            settings_path = Path("SETTINGS.md")
-            if not settings_path.exists():
-                return []
-
-            content = settings_path.read_text()
-            commands = []
-
-            # Find the "Pending Commands" section
-            in_commands_section = False
-            for line in content.split("\n"):
-                line = line.strip()
-
-                # Detect start of Pending Commands section
-                if "## ⚡ Pending Commands" in line:
-                    in_commands_section = True
-                    continue
-
-                # Stop at next section
-                if in_commands_section and line.startswith("##"):
-                    break
-
-                # Skip non-command lines
-                if not in_commands_section or not line.startswith("-"):
-                    continue
-
-                # Skip placeholder/comment lines
-                if line.startswith("_") or line.startswith("```"):
-                    continue
-
-                # Parse command: "- SET kernel.log_level=DEBUG"
-                command_text = line[1:].strip()  # Remove leading "-"
-
-                # Parse SET commands
-                if command_text.startswith("SET "):
-                    rest = command_text[4:].strip()  # Remove "SET "
-                    if "=" in rest:
-                        key, value = rest.split("=", 1)
-                        commands.append(
-                            {
-                                "action": "SET",
-                                "key": key.strip(),
-                                "value": value.strip(),
-                            }
-                        )
-
-                # Parse PAUSE commands
-                elif command_text.startswith("PAUSE "):
-                    agent_id = command_text[6:].strip()
-                    commands.append(
-                        {
-                            "action": "PAUSE",
-                            "agent_id": agent_id,
-                        }
-                    )
-
-                # Parse RESUME commands
-                elif command_text.startswith("RESUME "):
-                    agent_id = command_text[7:].strip()
-                    commands.append(
-                        {
-                            "action": "RESUME",
-                            "agent_id": agent_id,
-                        }
-                    )
-
-                else:
-                    logger.warning(f"⚠️  Unknown command format: {command_text}")
-
-            return commands
-
-        except Exception as e:
-            logger.error(f"❌ Failed to parse settings commands: {e}")
-            return []
-
-    def _execute_settings_commands(self, commands: List[Dict[str, str]]) -> None:
-        """
-        Execute settings commands with validation and whitelist enforcement.
-
-        Security:
-            - Only whitelisted settings can be modified
-            - Schema validation on all inputs
-            - Execution history tracking (feedback loop)
-            - Audit trail in ledger
-        """
-        if not commands:
-            return
-
-        # WHITELIST: Only these settings can be modified
-        EDITABLE_SETTINGS = {
-            "kernel.log_level",  # Safe: logging verbosity
-            # "kernel.status",      # FORBIDDEN: Security risk
-            # "agent.*.capabilities" # FORBIDDEN: Capability escalation
-        }
-
-        logger.info(f"⚙️  Executing {len(commands)} settings commands")
-
-        for cmd in commands:
-            execution_record = {
-                "command": cmd,
-                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
-                "status": "SUCCESS",
-                "reason": "",
-            }
-
-            try:
-                action = cmd.get("action")
-
-                if action == "SET":
-                    key = cmd.get("key", "")
-                    value = cmd.get("value", "")
-
-                    # Whitelist check
-                    if key not in EDITABLE_SETTINGS:
-                        execution_record["status"] = "FAILED"
-                        execution_record["reason"] = f"Setting '{key}' is not editable (whitelist violation)"
-                        logger.warning(
-                            f"⛔ SETTINGS COMMAND BLOCKED: '{key}' is not editable. "
-                            f"Whitelist: {list(EDITABLE_SETTINGS)}"
-                        )
-                        self._settings_execution_history.append(execution_record)
-                        continue
-
-                    # Execute whitelisted commands
-                    if key == "kernel.log_level":
-                        self._set_log_level(value)
-                        logger.info(f"✅ SET {key}={value}")
-                        execution_record["reason"] = "Log level updated successfully"
-
-                elif action == "PAUSE":
-                    agent_id = cmd.get("agent_id", "").replace("agent.", "")
-                    if agent_id in self._agent_registry:
-                        self._paused_agents.add(agent_id)
-                        logger.info(f"⏸️  Agent '{agent_id}' PAUSED")
-                        execution_record["reason"] = f"Agent '{agent_id}' paused successfully"
-                    else:
-                        execution_record["status"] = "FAILED"
-                        execution_record["reason"] = f"Agent '{agent_id}' not found"
-                        logger.warning(f"⚠️  PAUSE failed: Agent '{agent_id}' not found")
-
-                elif action == "RESUME":
-                    agent_id = cmd.get("agent_id", "").replace("agent.", "")
-                    if agent_id in self._paused_agents:
-                        self._paused_agents.discard(agent_id)
-                        logger.info(f"▶️  Agent '{agent_id}' RESUMED")
-                        execution_record["reason"] = f"Agent '{agent_id}' resumed successfully"
-                    elif agent_id in self._agent_registry:
-                        execution_record["status"] = "FAILED"
-                        execution_record["reason"] = f"Agent '{agent_id}' is not paused"
-                        logger.warning(f"⚠️  RESUME failed: Agent '{agent_id}' is not paused")
-                    else:
-                        execution_record["status"] = "FAILED"
-                        execution_record["reason"] = f"Agent '{agent_id}' not found"
-                        logger.warning(f"⚠️  RESUME failed: Agent '{agent_id}' not found")
-
-                else:
-                    execution_record["status"] = "FAILED"
-                    execution_record["reason"] = f"Unknown action: {action}"
-
-                # Add to execution history (for UI feedback)
-                self._settings_execution_history.append(execution_record)
-
-                # Record command execution in ledger (for audit trail)
-                self._ledger.record_event(
-                    event_type="SETTINGS_COMMAND_EXECUTED",
-                    agent_id="kernel",
-                    details={
-                        "command": cmd,
-                        "status": execution_record["status"],
-                        "reason": execution_record["reason"],
-                        "timestamp": datetime.utcnow().isoformat(),
-                    },
-                )
-
-            except Exception as e:
-                # Record failure in execution history
-                execution_record["status"] = "FAILED"
-                execution_record["reason"] = str(e)
-                self._settings_execution_history.append(execution_record)
-
-                logger.error(f"❌ Failed to execute command {cmd}: {e}")
-                # Continue with other commands (don't fail all if one fails)
-
-    def _set_log_level(self, level: str) -> None:
-        """Set kernel log level (whitelisted setting)"""
-        import logging
-
-        level_map = {
-            "DEBUG": logging.DEBUG,
-            "INFO": logging.INFO,
-            "WARNING": logging.WARNING,
-            "ERROR": logging.ERROR,
-            "CRITICAL": logging.CRITICAL,
-        }
-
-        if level.upper() not in level_map:
-            raise ValueError(f"Invalid log level: {level}. Must be one of {list(level_map.keys())}")
-
-        logging.getLogger("VIBE_KERNEL").setLevel(level_map[level.upper()])
-        logger.info(f"📊 Log level changed to {level.upper()}")
-
-    def _sync_settings_to_reality(self) -> None:
-        """
-        Synchronize SETTINGS.md commands to kernel reality.
-
-        PHASE 2: SETTINGS -> REALITY direction.
-
-        This implements the "Command Queue" pattern:
-        1. Read commands from SETTINGS.md
-        2. Validate against whitelist
-        3. Execute commands
-        4. Remove executed commands from file
-        5. Update last modified timestamp
-        """
-        try:
-            # Parse commands
-            commands = self._parse_settings_commands()
-
-            if not commands:
-                logger.debug("⚙️  No pending commands in SETTINGS.md")
-                return
-
-            logger.info(f"⚙️  Found {len(commands)} pending commands")
-
-            # Execute commands (this updates execution history)
-            self._execute_settings_commands(commands)
-
-            # Remove executed commands from SETTINGS.md
-            self._remove_executed_commands_from_file()
-
-            # Update timestamp to prevent re-execution
-            settings_path = Path("SETTINGS.md")
-            if settings_path.exists():
-                self._settings_last_modified = settings_path.stat().st_mtime
-
-            logger.info("✅ Settings synchronized to reality")
-
-        except Exception as e:
-            logger.error(f"❌ Settings sync failed: {e}")
-            # Don't crash kernel on sync failure
-
-    def _remove_executed_commands_from_file(self) -> None:
-        """
-        Remove executed commands from SETTINGS.md Pending Commands section.
-
-        This creates the feedback loop: Commands move from Pending to Execution Ledger.
-        """
-        try:
-            settings_path = Path("SETTINGS.md")
-            if not settings_path.exists():
-                return
-
-            # Set write lock
-            self._settings_writing = True
-
-            # Read current file
-            content = settings_path.read_text()
-            lines = content.split("\n")
-
-            # Rebuild file, removing commands from Pending Commands section
-            new_lines = []
-            in_pending_section = False
-
-            for line in lines:
-                # Detect Pending Commands section start
-                if "## ⚡ Pending Commands" in line:
-                    in_pending_section = True
-                    new_lines.append(line)
-                    continue
-
-                # Detect next section (end of Pending Commands)
-                if in_pending_section and line.strip().startswith("##"):
-                    in_pending_section = False
-
-                # Skip command lines in Pending Commands section
-                if in_pending_section and line.strip().startswith("- ") and not line.strip().startswith("- `"):
-                    # This is a command line - skip it (it's been executed)
-                    # But preserve example/help lines that start with "- `"
-                    continue
-
-                # Keep all other lines
-                new_lines.append(line)
-
-            # Write updated file
-            settings_path.write_text("\n".join(new_lines))
-            logger.debug("⚙️  Removed executed commands from SETTINGS.md")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to remove executed commands: {e}")
-
-        finally:
-            # Release write lock
-            self._settings_writing = False
 
     # ========================================================================
     # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
@@ -2104,155 +1599,6 @@ class RealVibeKernel(VibeKernel):
     # 6. Scheduler executes task async (separate tick)
     # 7. Update ENVOY.md with result when complete
     # ========================================================================
-
-    def _render_envoy_file(self, snapshot: Dict[str, Any]) -> None:
-        """
-        Render ENVOY.md terminal interface.
-
-        ENVOY.md is the user-facing terminal where humans can:
-        - Write natural language requests
-        - See task status (QUEUED, RUNNING, COMPLETED, FAILED)
-        - View execution history
-
-        The kernel PRESERVES user content in the Request section.
-        Only Status and Response sections are updated by the kernel.
-        """
-        try:
-            # Set write lock
-            self._envoy_writing = True
-
-            envoy_path = Path("ENVOY.md")
-
-            # If file exists, preserve the user's Request section
-            existing_request = ""
-            if envoy_path.exists():
-                existing_request = self._extract_envoy_request_content(envoy_path)
-
-            # Unified header
-            lines = self._render_unified_header("KERNEL", snapshot)
-
-            lines.extend(
-                [
-                    "# 📬 ENVOY TERMINAL",
-                    "",
-                    "**Mode:** INTERACTIVE (async dispatch)",
-                    "",
-                    "> Write your request below. The kernel routes it through PlaybookRouter",
-                    "> and dispatches tasks to agents asynchronously. No LLM required.",
-                    "",
-                    "---",
-                    "",
-                    "## 💬 Request",
-                    "",
-                    "> **Write your request here.** The kernel will process it on the next tick.",
-                    "> Requests are routed via PlaybookRouter (pattern matching) and dispatched async.",
-                    "",
-                ]
-            )
-
-            # Preserve user's request if it exists
-            if existing_request.strip():
-                lines.append(existing_request)
-            else:
-                lines.append("_No pending request. Write your request above this line._")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    "",
-                    "## 📊 Status",
-                    "",
-                ]
-            )
-
-            # Show pending/running tasks
-            if self._envoy_pending_tasks:
-                for task_id, task_meta in self._envoy_pending_tasks.items():
-                    status = task_meta.get("status", "QUEUED")
-                    request = task_meta.get("request", "")[:50]
-                    route = task_meta.get("route", "unknown")
-                    status_emoji = {"QUEUED": "⏳", "RUNNING": "🔄", "COMPLETED": "✅", "FAILED": "❌"}.get(
-                        status, "❓"
-                    )
-                    lines.append(f"- {status_emoji} **{status}** | `{route}` | {request}...")
-            else:
-                lines.append("_No active tasks._")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    "",
-                    "## 📜 Response History",
-                    "",
-                    "> **Read-Only.** This section shows the last 20 processed requests.",
-                    "",
-                ]
-            )
-
-            # Show execution history
-            if self._envoy_request_history:
-                for entry in reversed(list(self._envoy_request_history)):
-                    timestamp = entry.get("timestamp", "unknown")
-                    status = entry.get("status", "UNKNOWN")
-                    request = entry.get("request", "")[:40]
-                    response = entry.get("response", "")[:60]
-                    route = entry.get("route", "unknown")
-
-                    status_emoji = "✅" if status == "COMPLETED" else "❌"
-                    lines.append(f"### [{status_emoji} {timestamp}] {route}")
-                    lines.append(f"**Request:** {request}...")
-                    lines.append(f"**Response:** {response}...")
-                    lines.append("")
-            else:
-                lines.append("_No requests processed yet._")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    "",
-                    "## 🎯 Available Routes",
-                    "",
-                    "The PlaybookRouter matches your request to these routes:",
-                    "",
-                ]
-            )
-
-            # List available routes from PlaybookRouter
-            available_routes = self._playbook_router.list_available_routes()
-            for route in available_routes[:5]:  # Show top 5
-                name = route.get("name", "unknown")
-                desc = route.get("description", "")
-                examples = route.get("examples", [])[:2]
-                lines.append(f"- **{name}**: {desc}")
-                if examples:
-                    lines.append(f"  - Examples: {', '.join(examples)}")
-
-            lines.extend(
-                [
-                    "",
-                    "---",
-                    "*This terminal is auto-generated by the kernel pulse. Write requests in the Request section.*",
-                ]
-            )
-
-            # Write ENVOY.md
-            envoy_path.write_text("\n".join(lines))
-
-            # NOTE: We do NOT update _envoy_last_modified here.
-            # Only _sync_envoy_to_reality should update it after processing requests.
-            # This ensures user requests are detected and processed on next tick.
-
-            logger.info("📬 ENVOY.md terminal rendered")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to render ENVOY.md: {e}")
-
-        finally:
-            # Release write lock
-            self._envoy_writing = False
 
     def _extract_envoy_request_content(self, envoy_path: Path) -> str:
         """
@@ -2293,215 +1639,6 @@ class RealVibeKernel(VibeKernel):
         except Exception as e:
             logger.error(f"❌ Failed to extract request content: {e}")
             return ""
-
-    def _check_envoy_file_changed(self) -> bool:
-        """
-        Check if ENVOY.md has been modified since last read.
-
-        Returns:
-            True if file changed, False otherwise
-        """
-        try:
-            envoy_path = Path("ENVOY.md")
-            if not envoy_path.exists():
-                return False
-
-            current_mtime = envoy_path.stat().st_mtime
-
-            if current_mtime > self._envoy_last_modified:
-                logger.debug(f"📬 ENVOY.md changed (mtime: {current_mtime})")
-                return True
-
-            return False
-
-        except Exception as e:
-            logger.error(f"❌ Failed to check ENVOY.md: {e}")
-            return False
-
-    def _parse_envoy_requests(self) -> List[str]:
-        """
-        Parse pending requests from ENVOY.md Request section.
-
-        Returns:
-            List of request strings (one per line, non-empty)
-        """
-        try:
-            envoy_path = Path("ENVOY.md")
-            if not envoy_path.exists():
-                return []
-
-            content = self._extract_envoy_request_content(envoy_path)
-            if not content.strip():
-                return []
-
-            # Split into individual requests (one per line)
-            requests = [line.strip() for line in content.split("\n") if line.strip()]
-            return requests
-
-        except Exception as e:
-            logger.error(f"❌ Failed to parse ENVOY.md requests: {e}")
-            return []
-
-    def _dispatch_envoy_request(self, request: str) -> Dict[str, Any]:
-        """
-        Route and dispatch a single user request.
-
-        ASYNC DISPATCH PATTERN:
-        1. PlaybookRouter.route() - fast pattern match, returns PlaybookRoute
-        2. Create Task object with route info
-        3. Submit to scheduler (non-blocking, returns immediately)
-        4. Return metadata with task_id and QUEUED status
-
-        Args:
-            request: The user's natural language request
-
-        Returns:
-            Dict with task_id, status, route info
-        """
-        try:
-            # Step 1: Route the request (fast, no LLM)
-            context = {
-                "session": {"phase": "CODING"},
-                "git": {"uncommitted": 0},
-                "tests": {"failing_count": 0},
-            }
-            route = self._playbook_router.route(request, context)
-
-            logger.info(f"📬 Request routed: '{request[:30]}...' → {route.task} ({route.confidence})")
-
-            # Step 2: Create Task for async execution
-            task = Task(
-                agent_id="envoy",  # Default to envoy agent for dispatch
-                payload={
-                    "type": "envoy_request",
-                    "request": request,
-                    "route": route.task,
-                    "description": route.description,
-                    "confidence": route.confidence,
-                    "source": route.source,
-                },
-                priority=1 if route.confidence == "explicit" else 0,
-            )
-
-            # Step 3: Submit to scheduler (NON-BLOCKING - critical!)
-            task_id = self._scheduler.submit_task(task)
-
-            logger.info(f"📬 Task queued: {task_id} for route '{route.task}'")
-
-            # Step 4: Return metadata
-            return {
-                "task_id": task_id,
-                "status": "QUEUED",
-                "request": request,
-                "route": route.task,
-                "description": route.description,
-                "confidence": route.confidence,
-                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
-            }
-
-        except Exception as e:
-            logger.error(f"❌ Failed to dispatch request: {e}")
-            return {
-                "task_id": None,
-                "status": "FAILED",
-                "request": request,
-                "error": str(e),
-                "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
-            }
-
-    def _sync_envoy_to_reality(self) -> None:
-        """
-        Synchronize ENVOY.md requests to kernel reality.
-
-        ENVOY -> REALITY direction:
-        1. Parse requests from ENVOY.md
-        2. Route each request via PlaybookRouter
-        3. Dispatch tasks to scheduler (async, non-blocking)
-        4. Update _envoy_pending_tasks
-        5. Clear processed requests from file
-
-        This method MUST be fast (no blocking) - actual execution is async.
-        """
-        try:
-            # Parse pending requests
-            requests = self._parse_envoy_requests()
-
-            if not requests:
-                logger.debug("📬 No pending requests in ENVOY.md")
-                return
-
-            logger.info(f"📬 Processing {len(requests)} request(s) from ENVOY.md")
-
-            # Dispatch each request (async - just queues, doesn't execute)
-            for request in requests:
-                result = self._dispatch_envoy_request(request)
-
-                task_id = result.get("task_id")
-                if task_id:
-                    # Track pending task
-                    self._envoy_pending_tasks[task_id] = result
-                else:
-                    # Dispatch failed - add directly to history (no pending state)
-                    self._envoy_request_history.append(result)
-                    logger.warning(f"📬 Request dispatch failed: {result.get('error', 'unknown')}")
-
-            # Clear processed requests from ENVOY.md
-            self._clear_envoy_requests()
-
-            # Update timestamp
-            envoy_path = Path("ENVOY.md")
-            if envoy_path.exists():
-                self._envoy_last_modified = envoy_path.stat().st_mtime
-
-            logger.info("✅ ENVOY.md requests dispatched to scheduler")
-
-        except Exception as e:
-            logger.error(f"❌ ENVOY sync failed: {e}")
-
-    def _clear_envoy_requests(self) -> None:
-        """
-        Clear processed requests from ENVOY.md Request section.
-
-        Preserves the section structure but removes user content.
-        """
-        try:
-            envoy_path = Path("ENVOY.md")
-            if not envoy_path.exists():
-                return
-
-            content = envoy_path.read_text()
-            lines = content.split("\n")
-
-            new_lines = []
-            in_request_section = False
-
-            for line in lines:
-                # Detect start of Request section
-                if "## 💬 Request" in line:
-                    in_request_section = True
-                    new_lines.append(line)
-                    continue
-
-                # Detect end of Request section (next ##)
-                if in_request_section and line.strip().startswith("##"):
-                    in_request_section = False
-
-                # Skip user content in Request section (but keep boilerplate)
-                if in_request_section:
-                    stripped = line.strip()
-                    # Keep instructions (blockquotes) and empty lines
-                    if stripped.startswith(">") or not stripped:
-                        new_lines.append(line)
-                    # Skip user-written content
-                    continue
-
-                new_lines.append(line)
-
-            envoy_path.write_text("\n".join(new_lines))
-            logger.debug("📬 Cleared processed requests from ENVOY.md")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to clear ENVOY.md requests: {e}")
 
     def update_envoy_task_status(self, task_id: str, status: str, response: str = "") -> None:
         """
