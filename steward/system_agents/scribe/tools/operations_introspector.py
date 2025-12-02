@@ -54,49 +54,73 @@ class WorkflowIntrospector:
 
     def _parse_workflow(self, workflow_file: Path) -> Optional[Dict[str, Any]]:
         """Parse a workflow YAML file."""
+        content = workflow_file.read_text()
+
+        # First try YAML parsing
         try:
-            content = workflow_file.read_text()
             data = yaml.safe_load(content)
+        except yaml.YAMLError:
+            # YAML failed (embedded code), fall back to regex
+            return self._parse_workflow_regex(workflow_file, content)
 
-            if not data:
-                return None
+        if not data:
+            return None
 
-            # Extract name
-            name = data.get("name", workflow_file.stem)
+        # Extract name
+        name = data.get("name", workflow_file.stem)
 
-            # Extract triggers
-            triggers = []
-            on_config = data.get("on", {})
+        # Extract triggers - YAML 1.1 treats 'on' as boolean True
+        on_config = data.get("on") or data.get(True) or {}
 
-            if isinstance(on_config, dict):
-                triggers = list(on_config.keys())
-            elif isinstance(on_config, list):
-                triggers = on_config
-            elif isinstance(on_config, str):
-                triggers = [on_config]
+        triggers = []
+        if isinstance(on_config, dict):
+            triggers = list(on_config.keys())
+        elif isinstance(on_config, list):
+            triggers = on_config
+        elif isinstance(on_config, str):
+            triggers = [on_config]
 
-            # Extract branches (if any)
-            branches = []
-            if isinstance(on_config, dict):
-                for trigger in ["push", "pull_request"]:
-                    if trigger in on_config and isinstance(on_config[trigger], dict):
-                        branches.extend(on_config[trigger].get("branches", []))
+        # Extract branches (if any)
+        branches = []
+        if isinstance(on_config, dict):
+            for trigger in ["push", "pull_request"]:
+                if trigger in on_config and isinstance(on_config[trigger], dict):
+                    branches.extend(on_config[trigger].get("branches", []))
 
-            return {
-                "name": name,
-                "file": workflow_file.name,
-                "triggers": triggers,
-                "branches": list(set(branches)) if branches else ["any"],
-            }
+        return {
+            "name": name,
+            "file": workflow_file.name,
+            "triggers": triggers,
+            "branches": list(set(branches)) if branches else ["any"],
+        }
 
-        except Exception as e:
-            return {
-                "name": workflow_file.stem,
-                "file": workflow_file.name,
-                "triggers": ["unknown"],
-                "branches": [],
-                "error": str(e)[:50],
-            }
+    def _parse_workflow_regex(self, workflow_file: Path, content: str) -> Dict[str, Any]:
+        """Fallback regex parsing for workflows with embedded code."""
+        # Extract name
+        name_match = re.search(r"^name:\s*(.+)$", content, re.MULTILINE)
+        name = name_match.group(1).strip() if name_match else workflow_file.stem
+
+        # Extract triggers from 'on:' section
+        triggers = []
+        on_match = re.search(r"^on:\s*\n((?:  .+\n)+)", content, re.MULTILINE)
+        if on_match:
+            on_block = on_match.group(1)
+            # Find trigger types (indented lines that end with ':')
+            trigger_matches = re.findall(r"^  (\w+):", on_block, re.MULTILINE)
+            triggers = trigger_matches
+
+        # Extract branches
+        branches = []
+        branch_matches = re.findall(r"branches:\s*\[([^\]]+)\]", content)
+        for match in branch_matches:
+            branches.extend([b.strip().strip("'\"") for b in match.split(",")])
+
+        return {
+            "name": name,
+            "file": workflow_file.name,
+            "triggers": triggers if triggers else ["workflow"],
+            "branches": list(set(branches)) if branches else ["any"],
+        }
 
 
 class GitActivityIntrospector:
@@ -193,36 +217,45 @@ class ParameterIntrospector:
         self.root_dir = Path(root_dir)
 
     def scan_economy_params(self) -> Dict[str, Any]:
-        """Scan economy.py for tunable parameters."""
-        economy_file = self.root_dir / "steward" / "system_agents" / "civic" / "tools" / "economy.py"
+        """Scan CIVIC tools for economic parameters."""
+        params = {}
 
-        if not economy_file.exists():
-            return {}
+        # Search multiple files for economy parameters
+        civic_tools = self.root_dir / "steward" / "system_agents" / "civic" / "tools"
+        registry_file = self.root_dir / "steward" / "system_agents" / "civic" / "registry_agent.py"
 
-        try:
-            content = economy_file.read_text()
+        files_to_scan = []
+        if civic_tools.exists():
+            files_to_scan.extend(civic_tools.glob("*.py"))
+        if registry_file.exists():
+            files_to_scan.append(registry_file)
 
-            params = {}
+        for file_path in files_to_scan:
+            try:
+                content = file_path.read_text()
 
-            # Look for STARTING_BALANCE or similar
-            patterns = {
-                "starting_credits": r"STARTING.*?=\s*(\d+)",
-                "api_cost": r"API.*?COST.*?=\s*(\d+)",
-            }
+                # Look for initial_credits pattern
+                if "starting_credits" not in params:
+                    match = re.search(r'initial_credits["\']?\s*[,:=]\s*(\d+)', content)
+                    if match:
+                        params["starting_credits"] = int(match.group(1))
+                        params["starting_credits_source"] = file_path.name
 
-            for key, pattern in patterns.items():
-                match = re.search(pattern, content, re.IGNORECASE)
-                if match:
-                    params[key] = int(match.group(1))
+                # Look for transaction costs
+                if "transfer_cost" not in params:
+                    match = re.search(r"(?:transfer|transaction).*?cost.*?=\s*(\d+)", content, re.IGNORECASE)
+                    if match:
+                        params["transfer_cost"] = int(match.group(1))
 
-            # Default values if not found
-            if "starting_credits" not in params:
-                params["starting_credits"] = 100  # Known default
+            except Exception:
+                continue
 
-            return params
+        # If still not found, note it's not discoverable
+        if "starting_credits" not in params:
+            params["starting_credits"] = "not discoverable"
+            params["note"] = "No STARTING_CREDITS constant found - values inline in code"
 
-        except Exception:
-            return {"starting_credits": 100}
+        return params
 
     def scan_security_params(self) -> Dict[str, Any]:
         """Scan narasimha.py for security parameters."""
