@@ -2,32 +2,33 @@
   "capabilities": {
     "operations": [
       {
-        "description": "Analyze git history with temporal patterns",
-        "name": "git_analysis"
+        "description": "Git history analysis (velocity, patterns, commits)",
+        "name": "git_analysis",
+        "tool": "analyst.git"
       },
       {
-        "description": "Analyze file dependencies and coupling",
-        "name": "dependency_analysis"
+        "description": "Code analysis (AST, complexity, tech debt)",
+        "name": "code_analysis",
+        "tool": "analyst.code"
       },
       {
-        "description": "Full 4D context synthesis (VEDA-4 circuit)",
+        "description": "Structure analysis (modules, coupling, hotspots)",
+        "name": "structure_analysis",
+        "tool": "analyst.structure"
+      },
+      {
+        "description": "Dependency analysis (imports, requirements)",
+        "name": "dependency_analysis",
+        "tool": "analyst.deps"
+      },
+      {
+        "description": "Documentation analysis (coverage, quality)",
+        "name": "docs_analysis",
+        "tool": "analyst.docs"
+      },
+      {
+        "description": "Multi-source context synthesis (VEDA-4 circuit)",
         "name": "context_synthesis"
-      },
-      {
-        "description": "Temporal dimension: velocity trends, work patterns",
-        "name": "temporal_analysis"
-      },
-      {
-        "description": "Structural dimension: coupling, architecture hubs",
-        "name": "structural_analysis"
-      },
-      {
-        "description": "Semantic dimension: commit types, tech debt",
-        "name": "semantic_analysis"
-      },
-      {
-        "description": "Predictive dimension: risk areas, recommendations",
-        "name": "predictive_analysis"
       }
     ]
   },
@@ -42,8 +43,15 @@
     "name": "ANALYST"
   },
   "specs": {
-    "description": "4D Multi-Dimensional Repository Analysis (Realtime Architecture Guide)",
+    "description": "Multi-Source Repository Analysis (Realtime Architecture Guide)",
     "domain": "RESEARCH",
     "version": "2.0.0"
-  }
+  },
+  "tools": [
+    "analyst.git",
+    "analyst.code",
+    "analyst.structure",
+    "analyst.deps",
+    "analyst.docs"
+  ]
 }
