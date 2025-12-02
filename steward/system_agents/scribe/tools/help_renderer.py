@@ -420,8 +420,22 @@ For detailed information:
         return output
 
     def _load_agents_from_registry(self) -> List[str]:
-        """Extract agent names from AGENTS.md."""
-        return self.config_introspector.load_agents_from_registry()
+        """Discover agents by scanning cartridge files (data-driven)."""
+        agent_names = []
+
+        # System Agents (Devatas)
+        system_dir = self.root_dir / "steward" / "system_agents"
+        if system_dir.exists():
+            for cartridge in system_dir.glob("*/cartridge_main.py"):
+                agent_names.append(cartridge.parent.name.upper())
+
+        # Citizen Agents
+        citizen_dir = self.root_dir / "agent_city" / "registry"
+        if citizen_dir.exists():
+            for cartridge in citizen_dir.glob("*/cartridge_main.py"):
+                agent_names.append(cartridge.parent.name.upper())
+
+        return sorted(agent_names)
 
     def _check_ledger_status(self) -> Dict[str, Any]:
         """Check if ledger exists."""

@@ -234,13 +234,17 @@ class ParameterIntrospector:
         try:
             content = narasimha_file.read_text()
 
-            # Extract UNFORGIVABLE_CRIMES list
+            # Extract UNFORGIVABLE_CRIMES list - find string literals only
             crimes_match = re.search(r"UNFORGIVABLE_CRIMES\s*=\s*\[(.*?)\]", content, re.DOTALL)
 
             crimes = []
             if crimes_match:
                 crimes_text = crimes_match.group(1)
-                crimes = [c.strip().strip('"').strip("'") for c in crimes_text.split(",") if c.strip()]
+                # Extract only quoted strings (handles comments correctly)
+                string_pattern = r'"([^"]+)"|\'([^\']+)\''
+                matches = re.findall(string_pattern, crimes_text)
+                # re.findall with groups returns tuples, get non-empty value
+                crimes = [m[0] or m[1] for m in matches]
 
             return {
                 "unforgivable_crimes": crimes,

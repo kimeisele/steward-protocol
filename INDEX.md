@@ -13,6 +13,7 @@
 - **[README.md](README.md)** — Project overview and quick start
 - **[AGENTS.md](AGENTS.md)** — Complete agent registry (auto-generated)
 - **[CITYMAP.md](CITYMAP.md)** — 3-layer system architecture (auto-generated)
+- **[DASHBOARD.md](DASHBOARD.md)** — Operational dashboard (auto-generated)
 - **[HELP.md](HELP.md)** — Operations control center (auto-generated)
 - **[INDEX.md](INDEX.md)** — Documentation index (this file)
 
