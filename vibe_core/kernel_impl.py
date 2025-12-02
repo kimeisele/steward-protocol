@@ -44,12 +44,12 @@ from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
-from .sarga import Cycle, get_sarga
-from .scheduling import Task
-from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 
 # ENVOY.md: PlaybookRouter for intent routing (no LLM, pattern matching only)
 from .runtime.playbook_router import PlaybookRouter
+from .sarga import Cycle, get_sarga
+from .scheduling import Task
+from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
@@ -714,8 +714,19 @@ class RealVibeKernel(VibeKernel):
         logger.info(f"🔌 {agent.agent_id} received system interface (sandbox: {agent.system.get_sandbox_path()})")
 
         # Phase 2: Spawn Process (deferred if spawn_process=False)
+        # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
         if spawn_process:
-            self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
+            cartridge_path = getattr(agent, "_cartridge_path", None)
+            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
+            if cartridge_path and cartridge_class_name:
+                self.process_manager.spawn_agent(
+                    agent.agent_id,
+                    cartridge_path,
+                    cartridge_class_name,
+                    config=getattr(agent, "config", None),
+                )
+            else:
+                logger.warning(f"⚠️  Agent '{agent.agent_id}' has no cartridge_path - skipping process spawn")
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
@@ -779,9 +790,20 @@ class RealVibeKernel(VibeKernel):
                 if proc_info.process.is_alive():
                     continue
 
-            # Spawn the process
+            # Spawn the process (LATE BINDING)
+            cartridge_path = getattr(agent, "_cartridge_path", None)
+            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
+            if not cartridge_path or not cartridge_class_name:
+                logger.warning(f"⚠️  Agent '{agent_id}' has no cartridge_path - skipping process spawn")
+                continue
+
             try:
-                self.process_manager.spawn_agent(agent_id, type(agent), config=getattr(agent, "config", None))
+                self.process_manager.spawn_agent(
+                    agent_id,
+                    cartridge_path,
+                    cartridge_class_name,
+                    config=getattr(agent, "config", None),
+                )
                 spawned += 1
                 logger.info(f"🌱 Spawned deferred process for {agent_id}")
             except Exception as e:
