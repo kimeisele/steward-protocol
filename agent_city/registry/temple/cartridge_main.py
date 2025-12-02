@@ -16,19 +16,15 @@ import logging
 from datetime import datetime
 from typing import Any, Dict
 
+# Constitutional Oath Mixin
+from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
-
-# Constitutional Oath
-try:
-    from steward.oath_mixin import OathMixin
-except ImportError:
-    OathMixin = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TEMPLE_MAIN")
 
 
-class TempleCartridge(VibeAgent):
+class TempleCartridge(VibeAgent, OathMixin):
     """
     TEMPLE System Cartridge.
     The Blessing Service (Brahmin Function).
@@ -72,8 +68,10 @@ class TempleCartridge(VibeAgent):
 
         logger.info("🏛️  TEMPLE (VibeAgent v1.0) is online - Blessing Service Ready")
 
-        # Oath status - OathMixin integration deferred until class inheritance added
-        self.oath_sworn = False
+        # Constitutional Oath binding (Golden Template pattern)
+        self.oath_mixin_init(self.agent_id)
+        self.oath_sworn = True
+        logger.info("✅ TEMPLE has sworn the Constitutional Oath")
 
         # Economic tracking (via kernel/CIVIC agent)
         self.bank = None

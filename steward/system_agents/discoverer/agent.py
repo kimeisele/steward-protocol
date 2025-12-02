@@ -293,6 +293,12 @@ class Discoverer(VibeAgent):
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
+            # CRITICAL: Register module in sys.modules for pickle/multiprocessing
+            # Without this, child processes cannot import the dynamically loaded module
+            import sys
+
+            sys.modules[module_name] = module
+
             # Find all Cartridge classes (classes ending with 'Cartridge' that inherit from VibeAgent)
             cartridge_classes = []
             for name, obj in inspect.getmembers(module, inspect.isclass):
@@ -331,6 +337,11 @@ class Discoverer(VibeAgent):
                 logger.debug(f"   ℹ️  {class_name} is not a VibeAgent: {type(agent)}")
                 return None
 
+            # LATE BINDING: Store cartridge path and class name for ProcessManager
+            # This enables Child processes to load the module themselves (no pickle)
+            agent._cartridge_path = str(cartridge_path)
+            agent._cartridge_class_name = class_name
+
             logger.info(f"   ✅ Loaded cartridge: {class_name} ({agent.agent_id})")
             return agent
 
@@ -344,8 +355,13 @@ class GenericAgent(VibeAgent):
     A generic agent container for agents discovered via steward.json
     that do not yet have a specialized Python implementation.
 
-    PHASE 2 FIX: Supports both explicit args AND config-based initialization.
-    This allows Process Manager to spawn agents with just config parameter.
+    GOLDEN TEMPLATE COMPLIANT:
+    - Inherits oath-swearing capability via oath_sworn attribute
+    - Async process() method for kernel compatibility
+    - Robust error handling
+    - Flexible initialization (explicit args OR config dict)
+
+    This allows Process Manager to spawn agents with: agent_class(config=config)
     """
 
     def __init__(
@@ -367,7 +383,6 @@ class GenericAgent(VibeAgent):
         2. Config dict: GenericAgent(config={"agent_id": "foo", "name": "Foo", ...})
 
         If config is provided and args are None, hydrate from config (manifest).
-        This enables Process Manager to spawn agents with: agent_class(config=config)
         """
         # Hydrate from config if args are missing
         if config:
@@ -400,13 +415,42 @@ class GenericAgent(VibeAgent):
         )
         self.version = version
 
-    def process(self, task: Task) -> Dict[str, Any]:
-        logger.info(f"🤖 {self.agent_id} received task: {task.task_id}")
-        return {
-            "status": "success",
-            "message": f"I am {self.name} and I have received your task.",
-            "agent_id": self.agent_id,
-        }
+        # GOLDEN TEMPLATE: Oath binding (computed by Discoverer, set here for robustness)
+        # The actual constitution_hash is injected by Discoverer after creation
+        self.oath_sworn = False  # Will be set to True by Discoverer after oath injection
+        self._constitution_hash = None
+
+    async def process(self, task: Task) -> Dict[str, Any]:
+        """
+        Process task from kernel scheduler.
+
+        ROBUST IMPLEMENTATION:
+        - Async for kernel compatibility
+        - Try/except for error resilience
+        - Logs task receipt for debugging
+        """
+        try:
+            logger.info(f"🤖 {self.agent_id} received task: {task.task_id}")
+
+            # Extract action from payload (if any)
+            action = task.payload.get("action", "default") if hasattr(task, "payload") and task.payload else "default"
+
+            return {
+                "status": "success",
+                "message": f"GenericAgent '{self.name}' processed task.",
+                "agent_id": self.agent_id,
+                "task_id": task.task_id,
+                "action": action,
+                "note": "This is a placeholder agent. Implement cartridge_main.py for real functionality.",
+            }
+
+        except Exception as e:
+            logger.error(f"❌ {self.agent_id} task failed: {str(e)}")
+            return {
+                "status": "failed",
+                "error": str(e),
+                "agent_id": self.agent_id,
+            }
 
 
 # Make it importable

@@ -44,12 +44,12 @@ from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
-from .sarga import Cycle, get_sarga
-from .scheduling import Task
-from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 
 # ENVOY.md: PlaybookRouter for intent routing (no LLM, pattern matching only)
 from .runtime.playbook_router import PlaybookRouter
+from .sarga import Cycle, get_sarga
+from .scheduling import Task
+from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
 # Import Auditor for immune system (optional)
@@ -714,8 +714,19 @@ class RealVibeKernel(VibeKernel):
         logger.info(f"🔌 {agent.agent_id} received system interface (sandbox: {agent.system.get_sandbox_path()})")
 
         # Phase 2: Spawn Process (deferred if spawn_process=False)
+        # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
         if spawn_process:
-            self.process_manager.spawn_agent(agent.agent_id, type(agent), config=getattr(agent, "config", None))
+            cartridge_path = getattr(agent, "_cartridge_path", None)
+            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
+            if cartridge_path and cartridge_class_name:
+                self.process_manager.spawn_agent(
+                    agent.agent_id,
+                    cartridge_path,
+                    cartridge_class_name,
+                    config=getattr(agent, "config", None),
+                )
+            else:
+                logger.info(f"📍 Agent '{agent.agent_id}' has no cartridge_path - running in-process (no isolation)")
 
         # Phase 3: Set initial resource quota (default: 100 credits)
         self.resource_manager.set_quota(agent.agent_id, credits=100)
@@ -779,9 +790,20 @@ class RealVibeKernel(VibeKernel):
                 if proc_info.process.is_alive():
                     continue
 
-            # Spawn the process
+            # Spawn the process (LATE BINDING)
+            cartridge_path = getattr(agent, "_cartridge_path", None)
+            cartridge_class_name = getattr(agent, "_cartridge_class_name", None)
+            if not cartridge_path or not cartridge_class_name:
+                logger.info(f"📍 Agent '{agent_id}' has no cartridge_path - running in-process (no isolation)")
+                continue
+
             try:
-                self.process_manager.spawn_agent(agent_id, type(agent), config=getattr(agent, "config", None))
+                self.process_manager.spawn_agent(
+                    agent_id,
+                    cartridge_path,
+                    cartridge_class_name,
+                    config=getattr(agent, "config", None),
+                )
                 spawned += 1
                 logger.info(f"🌱 Spawned deferred process for {agent_id}")
             except Exception as e:
@@ -860,20 +882,37 @@ class RealVibeKernel(VibeKernel):
             # Record start
             self._ledger.record_start(task)
 
-            # Execute task via Process Manager (IPC)
-            logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
+            # Check if agent has a running process (Late Binding) or runs in-process
+            has_process = (
+                task.agent_id in self.process_manager.processes
+                and self.process_manager.processes[task.agent_id].process.is_alive()
+            )
 
-            try:
-                self.process_manager.send_task(task.agent_id, task)
-                # Note: Result is now async via pipe. We don't get it immediately here.
-                # The ProcessManager loop handles results.
-                # For this synchronous tick, we might need to wait or change architecture.
-                # For Phase 2 MVP, we'll assume fire-and-forget or polling.
+            if has_process:
+                # Execute task via Process Manager (IPC) - Agent runs in separate process
+                logger.info(f"⚡ Dispatching task {task.task_id} to {task.agent_id} (IPC)")
+                try:
+                    self.process_manager.send_task(task.agent_id, task)
+                except ValueError as e:
+                    logger.error(f"❌ IPC Dispatch failed: {e}")
+                    self._ledger.record_failure(task, str(e))
+                    return
+            else:
+                # Execute task directly in-process (GenericAgent or failed process spawn)
+                logger.info(f"⚡ Executing task {task.task_id} on {task.agent_id} (in-process)")
+                try:
+                    import asyncio
 
-            except ValueError as e:
-                logger.error(f"❌ Dispatch failed: {e}")
-                self._ledger.record_failure(task, str(e))
-                return
+                    if asyncio.iscoroutinefunction(agent.process):
+                        result = asyncio.run(agent.process(task))
+                    else:
+                        result = agent.process(task)
+                    self._ledger.record_completion(task, result)
+                    logger.info(f"✅ Task {task.task_id} completed (in-process)")
+                except Exception as e:
+                    logger.error(f"❌ In-process execution failed: {e}")
+                    self._ledger.record_failure(task, str(e))
+                    return
 
             # Record completion (Optimistic for now, or move to callback)
             # In a real async kernel, we'd wait for the result event.
