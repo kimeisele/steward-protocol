@@ -23,9 +23,9 @@ Usage:
     # Trigger agent action
     tool.trigger_agent("herald", "run_campaign", dry_run=True)
 
-This tool can run in two modes:
-1. **Kernel Mode**: Integrated with VibeOS kernel (production)
-2. **Direct Mode**: Direct cartridge instantiation (standalone/testing)
+ARCHITECTURE: Requires VibeOS kernel for operation.
+All agent access goes through kernel.agent_registry.
+Protected agents (narasimha, auditor, etc.) cannot be triggered via Envoy.
 """
 
 import json
@@ -45,6 +45,20 @@ if str(project_root) not in sys.path:
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CITY_CONTROL")
+
+# PERMISSION LAYER: Agents that Envoy CANNOT trigger without elevated permission
+# These are system-critical agents that could damage the system if misused
+PROTECTED_AGENTS = frozenset([
+    "narasimha",     # Kill switch - can terminate agents
+    "auditor",       # Compliance enforcement - should not be triggered casually
+    "supreme_court", # Justice system - requires formal process
+    "discoverer",    # Agent registration - system-level operation
+    "watchman",      # System integrity - monitoring only, not triggerable
+    "kernel",        # The kernel itself (if exposed as agent)
+])
+
+# Agents that Envoy CAN trigger freely (citizen agents + safe system agents)
+# All agents in kernel.agent_registry are allowed EXCEPT protected ones
 
 
 class CityControlTool(Tool):
@@ -66,17 +80,15 @@ class CityControlTool(Tool):
         Initialize City Control Tool.
 
         Args:
-            kernel: VibeOS kernel instance (optional, for kernel mode)
+            kernel: VibeOS kernel instance (REQUIRED for production)
         """
         self.kernel = kernel
-        self.mode = "KERNEL" if kernel else "DIRECT"
 
-        # Lazy-load cartridges (only in DIRECT mode)
-        self._herald = None
-        self._civic = None
-        self._forum = None
+        # NO MORE DIRECT MODE - Kernel is required for proper operation
+        if not kernel:
+            logger.warning("⚠️ CityControlTool initialized without kernel - limited functionality")
 
-        logger.info(f"🏙️  City Control Tool initialized (Mode: {self.mode})")
+        logger.info("🏙️  City Control Tool initialized")
 
     @property
     def name(self) -> str:
@@ -357,7 +369,18 @@ class CityControlTool(Tool):
         logger.info(f"🤖 Triggering {agent_name}.{action}...")
 
         try:
-            # DYNAMIC AGENT LOOKUP - NO MORE HARDCODED IF-ELSE
+            # PERMISSION CHECK: Block protected agents
+            if agent_name in PROTECTED_AGENTS:
+                logger.warning(f"🚫 PERMISSION DENIED: '{agent_name}' is a protected system agent")
+                return {
+                    "status": "error",
+                    "reason": "permission_denied",
+                    "message": f"Agent '{agent_name}' is protected and cannot be triggered via Envoy. "
+                               f"Protected agents: {sorted(PROTECTED_AGENTS)}",
+                    "hint": "Use kernel syscalls or governance proposals to interact with protected agents.",
+                }
+
+            # DYNAMIC AGENT LOOKUP
             agent = self._get_agent(agent_name)
             if not agent:
                 # List available agents for helpful error message
@@ -434,91 +457,43 @@ class CityControlTool(Tool):
             logger.error(f"❌ Failed to refill credits: {e}")
             return {"status": "error", "error": str(e)}
 
-    # ==================== CARTRIDGE MANAGEMENT (DYNAMIC) ====================
+    # ==================== AGENT ACCESS (KERNEL REQUIRED) ====================
 
     def _get_agent(self, agent_name: str):
         """
-        Get any agent by name (dynamic lookup).
+        Get any agent by name from kernel registry.
 
-        KERNEL MODE: Uses kernel.agent_registry for dynamic lookup
-        DIRECT MODE: Falls back to legacy cartridge loading (limited agents)
+        KERNEL REQUIRED - No legacy fallback. The kernel is the source of truth.
         """
-        if self.kernel:
-            # KERNEL MODE: Dynamic lookup from registry
-            agent = self.kernel.agent_registry.get(agent_name)
-            if agent:
-                logger.debug(f"📦 Agent '{agent_name}' found in kernel registry")
-                return agent
-            else:
-                logger.warning(f"Agent '{agent_name}' not found in kernel registry")
-                return None
+        if not self.kernel:
+            logger.error("Cannot get agent: kernel not initialized")
+            return None
 
-        # DIRECT MODE: Legacy fallback (limited to specific agents)
-        # This is only for standalone testing without kernel
-        legacy_loaders = {
-            "herald": self._get_herald,
-            "civic": self._get_civic,
-            "forum": self._get_forum,
-        }
-        loader = legacy_loaders.get(agent_name)
-        if loader:
-            return loader()
-        return None
+        agent = self.kernel.agent_registry.get(agent_name)
+        if agent:
+            logger.debug(f"📦 Agent '{agent_name}' found in kernel registry")
+            return agent
+        else:
+            logger.warning(f"Agent '{agent_name}' not found in kernel registry")
+            return None
 
     def _list_available_agents(self) -> List[str]:
-        """List all available agents."""
-        if self.kernel:
-            return list(self.kernel.agent_registry.keys())
-        # Direct mode: limited agents
-        return ["herald", "civic", "forum"]
+        """List all available agents (excluding protected ones)."""
+        if not self.kernel:
+            return []
 
-    def _get_herald(self):
-        """Get Herald cartridge (lazy load)."""
-        if self.kernel:
-            return self.kernel.agent_registry.get("herald")
-
-        if not self._herald:
-            try:
-                from herald.cartridge_main import HeraldCartridge
-
-                self._herald = HeraldCartridge()
-                logger.debug("📦 Herald cartridge loaded")
-            except Exception as e:
-                logger.error(f"Failed to load Herald: {e}")
-
-        return self._herald
+        # Return all agents EXCEPT protected ones
+        all_agents = set(self.kernel.agent_registry.keys())
+        available = all_agents - PROTECTED_AGENTS
+        return sorted(available)
 
     def _get_civic(self):
-        """Get Civic cartridge (lazy load)."""
-        if self.kernel:
-            return self.kernel.agent_registry.get("civic")
-
-        if not self._civic:
-            try:
-                from civic.cartridge_main import CivicCartridge
-
-                self._civic = CivicCartridge()
-                logger.debug("📦 Civic cartridge loaded")
-            except Exception as e:
-                logger.error(f"Failed to load Civic: {e}")
-
-        return self._civic
+        """Get Civic agent from kernel (required for credits/governance)."""
+        return self._get_agent("civic")
 
     def _get_forum(self):
-        """Get Forum cartridge (lazy load)."""
-        if self.kernel:
-            return self.kernel.agent_registry.get("forum")
-
-        if not self._forum:
-            try:
-                from forum.cartridge_main import ForumCartridge
-
-                self._forum = ForumCartridge()
-                logger.debug("📦 Forum cartridge loaded")
-            except Exception as e:
-                logger.error(f"Failed to load Forum: {e}")
-
-        return self._forum
+        """Get Forum agent from kernel (required for proposals)."""
+        return self._get_agent("forum")
 
     # ==================== HELPER METHODS ====================
 

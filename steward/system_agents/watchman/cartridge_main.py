@@ -166,9 +166,10 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                         logger.info(f"ℹ️ {agent_id.upper()} already frozen")
 
         # PHASE 2: GRANT AMNESTY TO REDEEMED AGENTS
-        # Check all known agents for thaw eligibility
+        # Check all registered agents for thaw eligibility (dynamic, not hardcoded)
         logger.info("\n⚖️ JUSTICE PHASE: Checking for redemption...")
-        for agent_id in ["herald", "science", "forum"]:
+        registered_agents = list(self.system.kernel.agent_registry.keys()) if hasattr(self, "system") and self.system else []
+        for agent_id in registered_agents:
             if self.bank.is_frozen(agent_id) and agent_id not in current_violators:
                 # Agent was frozen but has no current violations = REDEEMED
                 logger.info(f"🔥 THAWING: {agent_id.upper()} (violations resolved)")
@@ -184,15 +185,30 @@ class WatchmanCartridge(VibeAgent, OathMixin):
     def _scan_federation(self) -> list:
         """Scan all agent cartridges for violations."""
         violations = []
-        agents_to_scan = ["herald", "science", "forum"]
+
+        # DYNAMIC: Scan all registered agents, not a hardcoded list
+        if hasattr(self, "system") and self.system and hasattr(self.system, "kernel"):
+            agents_to_scan = list(self.system.kernel.agent_registry.keys())
+        else:
+            # Fallback: scan known agent directories
+            from pathlib import Path
+            agent_dirs = list(Path("steward/system_agents").iterdir()) + list(Path("agent_city/registry").iterdir())
+            agents_to_scan = [d.name for d in agent_dirs if d.is_dir() and not d.name.startswith("_")]
 
         for agent_name in agents_to_scan:
-            cartridge_path = Path(f"{agent_name}/cartridge_main.py")
-            tools_dir = Path(f"{agent_name}/tools")
+            # Try multiple possible locations for cartridge
+            possible_paths = [
+                Path(f"steward/system_agents/{agent_name}/cartridge_main.py"),
+                Path(f"agent_city/registry/{agent_name}/cartridge_main.py"),
+                Path(f"{agent_name}/cartridge_main.py"),
+            ]
+            cartridge_path = next((p for p in possible_paths if p.exists()), None)
+            if not cartridge_path:
+                continue  # Skip if no cartridge found
+            tools_dir = cartridge_path.parent / "tools"
 
             # Scan cartridge
-            if cartridge_path.exists():
-                violations.extend(self._scan_file(cartridge_path, agent_name))
+            violations.extend(self._scan_file(cartridge_path, agent_name))
 
             # Scan tools
             if tools_dir.exists():
