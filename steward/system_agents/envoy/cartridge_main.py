@@ -71,7 +71,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             version="3.0.0",  # Bumped for Tool Protocol refactor
             author="Steward Protocol",
             description="Universal Operator Interface - diplomatic and operational bridge",
-            domain="ORCHESTRATION",
+            domain="INTERFACE",
             capabilities=[
                 "orchestration",
                 "governance",
@@ -178,7 +178,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="User interface and orchestration",
-            domain="ORCHESTRATION",
+            domain="INTERFACE",
             capabilities=["playbook_execution", "orchestration"],
         )
 

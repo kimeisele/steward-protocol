@@ -347,7 +347,7 @@ class CityControlTool(Tool):
         Trigger an agent action.
 
         Args:
-            agent_name: Name of agent ("herald", "civic", "forum")
+            agent_name: Name of any registered agent (dynamic lookup)
             action: Action to perform (e.g., "run_campaign", "check_license")
             **kwargs: Additional parameters for the action
 
@@ -357,18 +357,16 @@ class CityControlTool(Tool):
         logger.info(f"🤖 Triggering {agent_name}.{action}...")
 
         try:
-            # Get agent cartridge
-            if agent_name == "herald":
-                agent = self._get_herald()
-            elif agent_name == "civic":
-                agent = self._get_civic()
-            elif agent_name == "forum":
-                agent = self._get_forum()
-            else:
-                return {"status": "error", "reason": f"unknown_agent: {agent_name}"}
-
+            # DYNAMIC AGENT LOOKUP - NO MORE HARDCODED IF-ELSE
+            agent = self._get_agent(agent_name)
             if not agent:
-                return {"status": "error", "reason": "agent_not_available"}
+                # List available agents for helpful error message
+                available = self._list_available_agents()
+                return {
+                    "status": "error",
+                    "reason": f"unknown_agent: {agent_name}",
+                    "available_agents": available,
+                }
 
             # Create task
             from vibe_core.scheduling import Task
@@ -436,7 +434,43 @@ class CityControlTool(Tool):
             logger.error(f"❌ Failed to refill credits: {e}")
             return {"status": "error", "error": str(e)}
 
-    # ==================== CARTRIDGE MANAGEMENT (DIRECT MODE) ====================
+    # ==================== CARTRIDGE MANAGEMENT (DYNAMIC) ====================
+
+    def _get_agent(self, agent_name: str):
+        """
+        Get any agent by name (dynamic lookup).
+
+        KERNEL MODE: Uses kernel.agent_registry for dynamic lookup
+        DIRECT MODE: Falls back to legacy cartridge loading (limited agents)
+        """
+        if self.kernel:
+            # KERNEL MODE: Dynamic lookup from registry
+            agent = self.kernel.agent_registry.get(agent_name)
+            if agent:
+                logger.debug(f"📦 Agent '{agent_name}' found in kernel registry")
+                return agent
+            else:
+                logger.warning(f"Agent '{agent_name}' not found in kernel registry")
+                return None
+
+        # DIRECT MODE: Legacy fallback (limited to specific agents)
+        # This is only for standalone testing without kernel
+        legacy_loaders = {
+            "herald": self._get_herald,
+            "civic": self._get_civic,
+            "forum": self._get_forum,
+        }
+        loader = legacy_loaders.get(agent_name)
+        if loader:
+            return loader()
+        return None
+
+    def _list_available_agents(self) -> List[str]:
+        """List all available agents."""
+        if self.kernel:
+            return list(self.kernel.agent_registry.keys())
+        # Direct mode: limited agents
+        return ["herald", "civic", "forum"]
 
     def _get_herald(self):
         """Get Herald cartridge (lazy load)."""

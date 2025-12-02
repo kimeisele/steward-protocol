@@ -74,7 +74,7 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             version="1.0.0",
             author="Steward Protocol",
             description="Appellate justice and mercy system (Canto 6: Ajamila Protocol)",
-            domain="GOVERNANCE",
+            domain="JUSTICE",
             capabilities=[
                 Capability.GOVERNANCE.value,
                 Capability.AUDITING.value,

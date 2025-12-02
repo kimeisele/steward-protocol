@@ -74,7 +74,7 @@ class DhruvaAnchorCartridge(VibeAgent):
             version="1.0.0",
             author="Steward Protocol",
             description="Immutable truth reference and stability system (Canto 4: Dhruva & Prithu)",
-            domain="GOVERNANCE",
+            domain="DATA_ETHICS",
             capabilities=[
                 Capability.GOVERNANCE.value,
                 "truth_authority",

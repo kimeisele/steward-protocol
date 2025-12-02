@@ -83,7 +83,7 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             version="1.0.0",
             author="Steward Protocol",
             description="External intelligence and fact research agent",
-            domain="SCIENCE",
+            domain="INTELLIGENCE",
             capabilities=["research", "web_search", "fact_synthesis"],
         )
 
@@ -160,7 +160,7 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             version=self.version if hasattr(self, "version") else "1.0.0",
             author="Steward Protocol",
             description="Research and knowledge analysis",
-            domain="SCIENCE",
+            domain="INTELLIGENCE",
             capabilities=["research", "web_search", "fact_verification"],
         )
 
