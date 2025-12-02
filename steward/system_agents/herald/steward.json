@@ -34,8 +34,8 @@
     "name": "HERALD"
   },
   "specs": {
-    "description": "Content generation and broadcasting agent",
-    "domain": "MEDIA",
+    "description": "Protocol communications and identity verification agent (A.G.I.)",
+    "domain": "COMMUNICATIONS",
     "version": "1.0.0"
   }
 }
