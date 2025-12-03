@@ -725,6 +725,29 @@ def get_doc(doc_name: str):
     return {"status": "success", "name": filename, "content": doc_path.read_text(), "size": doc_path.stat().st_size}
 
 
+# --- DIRECT MARKDOWN FILE SERVING ---
+@app.get("/{doc_name}.md")
+def serve_markdown(doc_name: str):
+    """
+    Serve markdown files directly (e.g., /INDEX.md, /README.md)
+    Allows direct linking from INDEX.md to other docs.
+    """
+    from fastapi.responses import PlainTextResponse
+
+    filename = f"{doc_name}.md"
+
+    # Security: only allow known docs
+    if filename not in AUTO_DOCS:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    doc_path = PROJECT_ROOT / filename
+    if not doc_path.exists():
+        raise HTTPException(status_code=404, detail="Document not generated yet")
+
+    # Serve as plain text with UTF-8 encoding
+    return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")
+
+
 # --- MOUNT FRONTEND (LAST STEP!) ---
 # Mount static files at ROOT (/) to serve as the main website
 if os.path.exists("gateway/static") and os.listdir("gateway/static"):
