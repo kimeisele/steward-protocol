@@ -1,0 +1,95 @@
+2025-12-03 20:12:09,306 - root - WARNING - workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+2025-12-03 20:12:09,306 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.analyze_topic (1876 chars)
+2025-12-03 20:12:09,306 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.search_knowledge (1500 chars)
+2025-12-03 20:12:09,306 - vibe_core.runtime.prompt_registry - INFO - Registered prompt: research.synthesize_report (1463 chars)
+2025-12-03 20:12:09,306 - vibe_core.runtime.prompt_registry - INFO - ✅ Initialized default prompts in registry
+2025-12-03 20:12:10,085 - RUN_DEBATE - INFO - 🔮 INITIALIZING SYSTEM FOR DEBATE...
+2025-12-03 20:12:10,086 - CONTEXT_AWARE_AGENT - INFO - ContextAwareAgent initialized: envoy
+2025-12-03 20:12:10,086 - ENVOY_CARTRIDGE - INFO - ✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-03 20:12:10,086 - ENVOY_CARTRIDGE - INFO - 👁️  ENVOY (VibeAgent v3.1) is initializing...
+2025-12-03 20:12:10,122 - SEMANTIC_ROUTER - INFO - 🧠 Semantic Router initialized (awaiting model load)
+2025-12-03 20:12:10,122 - MILK_OCEAN_ROUTER - INFO - 🧠 SemanticRouter loaded (JNANA Cortex Active)
+2025-12-03 20:12:10,123 - MILK_OCEAN_ROUTER - INFO - 🌊 Milk Ocean Router initialized (Brahma Protocol Active)
+2025-12-03 20:12:10,126 - LLM_ENGINE - INFO - 🧠 LLM Engine initialized (Provider: openai, Model: gpt-4o)
+2025-12-03 20:12:10,126 - LLM_ENGINE - INFO - 🧠 LLM Engine initialized (Provider: openai, Model: gpt-4o)
+2025-12-03 20:12:10,126 - DETERMINISTIC_EXECUTOR - INFO - ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT']
+2025-12-03 20:12:10,126 - DETERMINISTIC_EXECUTOR - INFO - ✅ Blueprint Generator initialized
+2025-12-03 20:12:10,126 - DETERMINISTIC_EXECUTOR - INFO - ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-03 20:12:10,246 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-03 20:12:10,337 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-03 20:12:10,415 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+2025-12-03 20:12:10,482 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-03 20:12:10,516 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-03 20:12:10,563 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-03 20:12:10,572 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-03 20:12:10,599 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-03 20:12:10,628 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-03 20:12:10,696 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-03 20:12:10,755 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-03 20:12:10,920 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-03 20:12:10,993 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-03 20:12:11,050 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-03 20:12:11,068 - DETERMINISTIC_EXECUTOR - INFO - ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-03 20:12:11,074 - DETERMINISTIC_EXECUTOR - INFO - 📂 Loaded 7 persisted execution states
+2025-12-03 20:12:11,075 - DETERMINISTIC_EXECUTOR - INFO - 🎯 Playbook Engine initialized with 15 playbooks
+2025-12-03 20:12:11,075 - ENVOY_CARTRIDGE - INFO - 🧠 MilkOcean Router initialized (Classifier)
+2025-12-03 20:12:11,075 - ENVOY_CARTRIDGE - INFO - ✋ Deterministic Executor initialized (Execution Engine)
+2025-12-03 20:12:11,075 - ENVOY_CARTRIDGE - INFO - ✅ ENVOY ready (NO tool instances owned)
+2025-12-03 20:12:11,091 - RUN_DEBATE - INFO - 🗣️  USER INPUT: 'AI is conscious'
+2025-12-03 20:12:11,091 - RUN_DEBATE - INFO - ⚡ STARTING CIRCUIT EXECUTION...
+2025-12-03 20:12:11,091 - ENVOY_CARTRIDGE - INFO - ⚡ ENVOY processing task: debate_001
+2025-12-03 20:12:11,091 - ENVOY_CARTRIDGE - INFO - 🧠 Routing via MilkOcean: AI is conscious
+2025-12-03 20:12:11,091 - ENVOY_CARTRIDGE - INFO - 🧭 Routing Decision: EXECUTE_CIRCUIT (Confidence: 0.99)
+2025-12-03 20:12:11,092 - SEMANTIC_SYSCALLS - INFO - 🔌 Semantic Syscall Executor initialized
+2025-12-03 20:12:11,203 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: ARCHITECTURE_ANALYSIS
+2025-12-03 20:12:11,434 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: DEBUG_FIX_V2
+2025-12-03 20:12:11,539 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: GOVERNANCE_VOTE_V2
+2025-12-03 20:12:11,627 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: RESEARCH_SYNTH_V2
+2025-12-03 20:12:11,668 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: AGENT_BIRTH_V1
+2025-12-03 20:12:11,768 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: TASK_LEDGER_V1
+2025-12-03 20:12:11,781 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: DEBATE_V1
+2025-12-03 20:12:11,814 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: CONTEXT_SYNTH
+2025-12-03 20:12:11,849 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: PROJECT_SCAFFOLD_V2
+2025-12-03 20:12:11,892 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: FEATURE_IMPLEMENT_V2
+2025-12-03 20:12:11,974 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: SYSTEM_DESIGN_V2
+2025-12-03 20:12:12,037 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: ERROR_RECOVERY_V1
+2025-12-03 20:12:12,085 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: CONTENT_GENERATION_V2
+2025-12-03 20:12:12,112 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: DOC_INDEX_RENDER
+2025-12-03 20:12:12,120 - CIRCUIT_EXECUTOR - INFO - 📍 Loaded circuit: PHILOSOPHICAL_DEBATE_V1
+2025-12-03 20:12:12,120 - CIRCUIT_EXECUTOR - INFO - 🔌 Cognitive Circuit Executor initialized (with invariant enforcement)
+2025-12-03 20:12:12,120 - CIRCUIT_EXECUTOR - INFO - 🧠 Meta-Circuit Manager initialized
+2025-12-03 20:12:12,120 - CIRCUIT_EXECUTOR - INFO - 🔗 Meta-circuit callbacks registered
+2025-12-03 20:12:12,120 - CIRCUIT_EXECUTOR - INFO - 🔗 Meta-Circuit Manager wired to executor
+2025-12-03 20:12:12,120 - DETERMINISTIC_EXECUTOR - INFO - 🔌 Circuit Executor initialized with kernel + meta-circuits
+2025-12-03 20:12:12,120 - DETERMINISTIC_EXECUTOR - INFO -    📒 TASK_LEDGER_V1: Active (tracking progress)
+2025-12-03 20:12:12,120 - DETERMINISTIC_EXECUTOR - INFO -    🔧 ERROR_RECOVERY_V1: Active (handling errors)
+2025-12-03 20:12:12,120 - BLUEPRINT_GENERATOR - INFO - 🔮 SEMANTIC COMPILER: Analyzing 'AI is conscious...'
+2025-12-03 20:12:12,125 - BLUEPRINT_GENERATOR - INFO - 📋 Falling back to playbook variable extraction
+2025-12-03 20:12:12,125 - BLUEPRINT_GENERATOR - INFO - 🔮 BLUEPRINT GENERATOR: Extracting from 'AI is conscious...'
+2025-12-03 20:12:12,125 - BLUEPRINT_GENERATOR - INFO - 📋 BLUEPRINT RESULT: []
+2025-12-03 20:12:12,125 - DETERMINISTIC_EXECUTOR - INFO - 📋 Blueprint extracted: []
+2025-12-03 20:12:12,125 - DETERMINISTIC_EXECUTOR - INFO - 🚀 Starting playbook execution: DEBATE_V1 (exec_20251203_201212)
+2025-12-03 20:12:12,125 - DETERMINISTIC_EXECUTOR - INFO - 📍 Executing phase: Thesis Presentation
+2025-12-03 20:12:12,127 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EXECUTE_SCRIPT (vibe_core.scripts.philosophy.generate_argument)
+2025-12-03 20:12:12,128 - RUN_DEBATE - INFO - 📜 EXECUTING SCRIPT: vibe_core.scripts.philosophy.generate_argument with params {'side': 'pro', 'topic': 'AI is conscious'}
+2025-12-03 20:12:12,130 - DETERMINISTIC_EXECUTOR - WARNING - ⚠️  Template variable undefined: 'THESIS' is undefined
+2025-12-03 20:12:12,130 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EMIT_EVENT (THESIS_GENERATED)
+2025-12-03 20:12:12,131 - DETERMINISTIC_EXECUTOR - INFO - 💾 Saved execution state: exec_20251203_201212
+2025-12-03 20:12:12,131 - DETERMINISTIC_EXECUTOR - INFO - 📍 Executing phase: Antithesis Rebuttal
+2025-12-03 20:12:12,132 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EXECUTE_SCRIPT (vibe_core.scripts.philosophy.generate_argument)
+2025-12-03 20:12:12,132 - RUN_DEBATE - INFO - 📜 EXECUTING SCRIPT: vibe_core.scripts.philosophy.generate_argument with params {'side': 'con', 'topic': 'AI is conscious', 'context': 'THESIS: AI is conscious is an emergent property of complex information processing.'}
+2025-12-03 20:12:12,133 - DETERMINISTIC_EXECUTOR - WARNING - ⚠️  Template variable undefined: 'ANTITHESIS' is undefined
+2025-12-03 20:12:12,133 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EMIT_EVENT (ANTITHESIS_GENERATED)
+2025-12-03 20:12:12,134 - DETERMINISTIC_EXECUTOR - INFO - 💾 Saved execution state: exec_20251203_201212
+2025-12-03 20:12:12,134 - DETERMINISTIC_EXECUTOR - INFO - 📍 Executing phase: Dialectical Synthesis
+2025-12-03 20:12:12,137 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EXECUTE_SCRIPT (vibe_core.scripts.philosophy.synthesize)
+2025-12-03 20:12:12,137 - RUN_DEBATE - INFO - 📜 EXECUTING SCRIPT: vibe_core.scripts.philosophy.synthesize with params {'thesis': 'THESIS: AI is conscious is an emergent property of complex information processing.', 'antithesis': 'ANTITHESIS: AI is conscious is a category error; machines only simulate, they do not feel.'}
+2025-12-03 20:12:12,138 - DETERMINISTIC_EXECUTOR - WARNING - ⚠️  Template variable undefined: 'SYNTHESIS' is undefined
+2025-12-03 20:12:12,139 - DETERMINISTIC_EXECUTOR - INFO -   → Executing action: EMIT_EVENT (SYNTHESIS_REACHED)
+2025-12-03 20:12:12,139 - DETERMINISTIC_EXECUTOR - INFO - 💾 Saved execution state: exec_20251203_201212
+2025-12-03 20:12:12,139 - DETERMINISTIC_EXECUTOR - INFO - ✅ Playbook execution complete: exec_20251203_201212 (COMPLETED)
+{"timestamp": "2025-12-03T19:12:12.140033+00:00", "task_id": "debate_001", "command": "EXECUTE_CIRCUIT", "args": {"input": "AI is conscious"}, "result_status": "COMPLETED"}
+2025-12-03 20:12:12,144 - RUN_DEBATE - INFO - ============================================================
+2025-12-03 20:12:12,144 - RUN_DEBATE - INFO - 🏁 DEBATE CONCLUSION
+2025-12-03 20:12:12,144 - RUN_DEBATE - INFO - ============================================================
+2025-12-03 20:12:12,144 - RUN_DEBATE - INFO - RESULT: {'status': 'COMPLETED', 'playbook_id': 'DEBATE_V1', 'playbook_name': 'DEBATE_V1', 'execution_id': 'exec_20251203_201212', 'summary': '✅ Playbook executed successfully', 'phases_executed': [{'phase_id': 'THESIS', 'name': 'Thesis Presentation', 'status': 'completed', 'result': {'argument': 'THESIS: AI is conscious is an emergent property of complex information processing.'}}, {'phase_id': 'ANTITHESIS', 'name': 'Antithesis Rebuttal', 'status': 'completed', 'result': {'argument': 'ANTITHESIS: AI is conscious is a category error; machines only simulate, they do not feel.'}}, {'phase_id': 'SYNTHESIS', 'name': 'Dialectical Synthesis', 'status': 'completed', 'result': {'conclusion': 'SYNTHESIS: THESIS: AI is conscious is an emergent property of complex information processing. AND ANTITHESIS: AI is conscious is a category error; machines only simulate, they do not feel. -> Consciousness is a spectrum, not a binary.'}}], 'duration_seconds': 0.014659881591796875, 'details': {'thesis_result': {'argument': 'THESIS: AI is conscious is an emergent property of complex information processing.'}, 'antithesis_result': {'argument': 'ANTITHESIS: AI is conscious is a category error; machines only simulate, they do not feel.'}, 'synthesis_result': {'conclusion': 'SYNTHESIS: THESIS: AI is conscious is an emergent property of complex information processing. AND ANTITHESIS: AI is conscious is a category error; machines only simulate, they do not feel. -> Consciousness is a spectrum, not a binary.'}}}

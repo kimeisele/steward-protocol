@@ -1,0 +1,62 @@
+# PHILOSOPHICAL DEBATE CIRCUIT (VADA PROTOCOL)
+# Demonstrates deterministic reasoning using Vedic logic structure.
+
+circuit:
+  id: PHILOSOPHICAL_DEBATE_V1
+  description: "Conducts a formal debate using the Nyaya Vada protocol."
+  domain: "reasoning"
+  
+  variables:
+    topic:
+      type: string
+      required: true
+      description: "The proposition to debate (e.g., 'AI is conscious')"
+
+  states:
+    INPUT_TOPIC:
+      type: input
+      description: "Receive the debate topic."
+      on_success: PURVA_PAKSHA
+
+    PURVA_PAKSHA:
+      type: processing
+      description: "Construct the strongest possible opponent argument."
+      state_var: PURVA_PAKSHA
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: generate_argument
+          params:
+            role: "opponent"
+            topic: "{{ topic }}"
+            instruction: "Present the Purva Paksha (Opponent View). Be steel-manned."
+      on_success: KHANDANA
+
+    KHANDANA:
+      type: processing
+      description: "Refute the opponent's argument with logic."
+      state_var: KHANDANA
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: generate_refutation
+          params:
+            role: "proponent"
+            argument: "{{ PURVA_PAKSHA.output }}"
+            instruction: "Perform Khandana (Refutation). Point out logical fallacies."
+      on_success: SIDDHANTA
+
+    SIDDHANTA:
+      type: processing
+      description: "Establish the final conclusion."
+      state_var: SIDDHANTA
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: generate_conclusion
+          params:
+            role: "judge"
+            refutation: "{{ KHANDANA.output }}"
+            instruction: "State the Siddhanta (Final Conclusion). Synthesize the truth."
+      on_success: DEBATE_COMPLETE
+
+    DEBATE_COMPLETE:
+      type: terminal
+      description: "Debate concluded successfully."

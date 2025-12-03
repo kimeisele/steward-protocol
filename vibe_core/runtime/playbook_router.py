@@ -7,9 +7,10 @@ PHASE 3 WIRING: Integrated with MilkOceanRouter for Brahma Protocol gatekeeping
 """
 
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -34,8 +35,11 @@ class PlaybookRouter:
 
     def __init__(self, registry_path: Path | None = None, milk_ocean_router=None):
         self.registry_path = registry_path or Path(__file__).parent.parent / "playbook" / "_registry.yaml"
-        self.registry = self._load_registry()
-
+        self.registry = self._load_registry()  # Keep original registry loading
+        self.matrix_rules = self._load_matrix()  # Add matrix rules initialization
+        logger.info(
+            f"📚 PlaybookRouter initialized with {len(self.registry.get('routes', []))} registry routes and {len(self.matrix_rules)} matrix rules"
+        )
         # Optional integration with MilkOceanRouter (Brahma Protocol)
         self.milk_ocean_router = milk_ocean_router
         self._milk_ocean_available = milk_ocean_router is not None
@@ -199,19 +203,121 @@ class PlaybookRouter:
             logger.warning(f"⚠️ MilkOcean integration error (graceful fallback): {e}")
             return route
 
+    def _load_matrix(self) -> List[Dict[str, Any]]:
+        """
+        Load routing rules from MATRIX.md (The Modular Synth Patch Bay).
+        """
+        matrix_path = Path("MATRIX.md")
+
+        if not matrix_path.exists():
+            logger.warning("⚠️  MATRIX.md not found in root. Using hardcoded routes.")
+            return []
+
+        try:
+            content = matrix_path.read_text()
+            return self._parse_matrix_content(content)
+        except Exception as e:
+            logger.error(f"❌ Failed to parse MATRIX.md: {e}")
+            return []
+
+    def _parse_matrix_content(self, content: str) -> List[Dict[str, Any]]:
+        """Parse the content of MATRIX.md to extract routing rules (Stateless MVP)."""
+        rules = []
+        for line in content.splitlines():
+            line = line.strip()
+            # Only process table rows
+            if not line.startswith("|"):
+                continue
+
+            # Skip headers and separators
+            if "Intent Pattern" in line or "---" in line:
+                continue
+
+            # Parse row
+            try:
+                parts = [p.strip() for p in line.split("|") if p.strip()]
+                if len(parts) >= 2:
+                    pattern = parts[0].strip("`")
+                    circuit = parts[1].strip("`")
+                    priority = parts[2] if len(parts) > 2 else "NORMAL"
+                    status = parts[3] if len(parts) > 3 else "ACTIVE"
+
+                    if "ACTIVE" in status or "🟢" in status:
+                        rules.append({"pattern": pattern, "circuit": circuit, "priority": priority})
+                        logger.info(f"Added rule: {pattern} -> {circuit}")
+            except Exception:
+                continue
+
+        return rules
+
+    def _parse_matrix_row(self, line: str) -> Optional[Dict[str, Any]]:
+        """Parse a single markdown table row into a rule dict."""
+        try:
+            # Split by pipe and strip whitespace
+            parts = [p.strip() for p in line.split("|") if p.strip()]
+
+            # Need at least Pattern and Circuit
+            if len(parts) < 2:
+                return None
+
+            pattern = parts[0].strip("`")
+            circuit = parts[1].strip("`")
+            priority = parts[2] if len(parts) > 2 else "NORMAL"
+            status = parts[3] if len(parts) > 3 else "ACTIVE"
+
+            # Only include active rules
+            if "ACTIVE" in status or "🟢" in status:
+                return {"pattern": pattern, "circuit": circuit, "priority": priority}
+            return None
+        except Exception:
+            return None
+
     def _route_to_task(self, route_name: str) -> str:
-        """Map route name to task playbook name"""
-        # Core routes map to analyze (as they need custom handling)
-        core_routes = ["bootstrap", "session_resume", "status_check"]
-        if route_name in core_routes:
-            return "analyze"  # For MVP, use analyze as fallback
+        """
+        Map a route name (intent) to a specific task ID (Playbook).
+
+        Priority:
+        1. MATRIX.md Rules (Dynamic)
+        2. Hardcoded System Routes (Fallback)
+        """
+        # 1. Check Matrix Rules
+        for rule in self.matrix_rules:
+            # Check if route_name matches the pattern (regex)
+            # We use re.search to match the pattern within the route_name (which is usually the user input or a classified intent)
+            # Actually, route_name passed here is usually the *classified intent* from MilkOcean (e.g. "agent_birth").
+            # But MATRIX.md patterns are regexes on the *input* or *intent*.
+            # If route_name is "agent_birth", and pattern is "(create|spawn).*agent", it might not match directly if route_name is normalized.
+            # However, MilkOcean returns a "route_name" which is often the tool name or a keyword.
+            # Let's assume route_name IS the intent string for now.
+
+            # If the pattern matches the route_name (which might be the raw input if MilkOcean failed, or the intent)
+            try:
+                if re.search(rule["pattern"], route_name, re.IGNORECASE):
+                    logger.info(f"🎛️  Matrix Route Match: '{route_name}' -> {rule['circuit']}")
+                    return rule["circuit"]
+            except re.error:
+                logger.warning(f"Invalid regex in MATRIX.md: {rule['pattern']}")
+                continue
+
+        # 2. Hardcoded Fallbacks (Legacy/System)
+        if route_name == "analyze_architecture":
+            return "ARCHITECTURE_ANALYSIS"
+
+        if route_name == "debug_fix":
+            return "DEBUG_FIX_V2"
+
+        if route_name == "governance_vote":
+            return "GOVERNANCE_VOTE_V2"
+
+        if route_name == "research_synthesis":
+            return "RESEARCH_SYNTH_V2"
 
         # Domain routes also use analyze for now
         domain_routes = ["restaurant_app", "healthcare_app", "ecommerce_app"]
         if route_name in domain_routes:
             return "plan"  # Domain apps typically start with planning
 
-        # GAD-5500: Agent Birth Circuit
+        # GAD-5500: Agent Birth Circuit (Fallback if not in Matrix)
         if route_name in ["agent_birth", "spawn_agent"]:
             return "AGENT_BIRTH_V1"
 
