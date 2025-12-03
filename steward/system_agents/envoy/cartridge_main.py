@@ -22,6 +22,10 @@ from typing import Any, Dict, Optional
 
 # Constitutional Oath Mixin
 from steward.oath_mixin import OathMixin
+from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+
+# GAD-5500: The Missing Link (Wiring)
+from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 
 # VibeOS Integration
 from vibe_core import Task
@@ -68,7 +72,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         super().__init__(
             agent_id="envoy",
             name="ENVOY",
-            version="3.0.0",  # Bumped for Tool Protocol refactor
+            version="3.1.0",  # Bumped for GAD-5500 Wiring
             author="Steward Protocol",
             description="Universal Operator Interface - diplomatic and operational bridge",
             domain="INTERFACE",
@@ -78,6 +82,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 "broadcasting",
                 "registry",
                 "auditing",
+                "circuit_execution",  # GAD-5500
             ],
         )
 
@@ -89,7 +94,13 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             self.oath_sworn = True
             logger.info("✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)")
 
-        logger.info("👁️  ENVOY (VibeAgent v3.0) is initializing...")
+        logger.info("👁️  ENVOY (VibeAgent v3.1) is initializing...")
+
+        # GAD-5500: Initialize The Brain (Router) and The Hand (Executor)
+        self.router = MilkOceanRouter()
+        self.executor = DeterministicExecutor()
+        logger.info("🧠 MilkOcean Router initialized (Classifier)")
+        logger.info("✋ Deterministic Executor initialized (Execution Engine)")
 
         # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
         # NO tool instances owned - agent is NAKED
@@ -117,7 +128,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
 
     # NO set_kernel() override - tools accessed via self.system.execute_tool()
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a Task from the kernel scheduler
 
@@ -137,30 +148,61 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             payload = task.payload or {}
             command = payload.get("command")
             args = payload.get("args", {})
+            user_input = payload.get("input", "") or command  # Fallback to command if input missing
 
-            if not command:
+            if not command and not user_input:
                 return {
                     "status": "error",
                     "task_id": task.task_id,
-                    "error": "No command specified in payload",
+                    "error": "No command or input specified in payload",
                 }
 
-            # Ensure CityControlTool is initialized
-            if False:  # Tools now accessed via kernel
-                return {
-                    "status": "error",
-                    "task_id": task.task_id,
-                    "error": "CityControlTool not initialized (kernel not injected)",
-                }
+            # 1. Check for Internal Envoy Commands first (Fast Path)
+            # These are direct commands like "status", "vote", "credits"
+            if command and command in [
+                "status",
+                "proposals",
+                "vote",
+                "execute",
+                "trigger",
+                "credits",
+                "refill",
+                "campaign",
+                "report",
+                "next_action",
+            ]:
+                # Route the command to appropriate handler
+                result = self._route_command(command, args, task.task_id)
+                self._log_operation(task.task_id, command, args, result)
+                logger.info(f"✅ ENVOY internal command {task.task_id} completed: {result.get('status')}")
+                return result
 
-            # Route the command to appropriate handler
-            result = self._route_command(command, args, task.task_id)
+            # 2. GAD-5500: Route via MilkOcean (The Brain)
+            # If not an internal command, ask the Router what to do
+            logger.info(f"🧠 Routing via MilkOcean: {user_input}")
+            routing_decision = await self.router.route(user_input)
 
-            # Log operation
-            self._log_operation(task.task_id, command, args, result)
+            # Log the routing decision
+            logger.info(
+                f"🧭 Routing Decision: {routing_decision.get('route')} (Confidence: {routing_decision.get('confidence')})"
+            )
 
-            logger.info(f"✅ ENVOY task {task.task_id} completed: {result.get('status')}")
-            return result
+            # 3. Execute via DeterministicExecutor (The Hand)
+            # If MilkOcean says "EXECUTE", we execute.
+            if routing_decision.get("route") == "EXECUTE_CIRCUIT":
+                # Pass the kernel to the executor so it can run syscalls
+                result = await self.executor.execute(
+                    playbook_id=routing_decision.get("target"),
+                    user_input=user_input,
+                    intent_vector=routing_decision.get("intent"),
+                    kernel=self.kernel,  # Inject Kernel for GAD-5500 Syscalls
+                    emit_event=None,  # TODO: Wire up event emission
+                )
+                self._log_operation(task.task_id, "EXECUTE_CIRCUIT", {"input": user_input}, result)
+                return result
+
+            # 4. Fallback: If no route found, return the routing decision for debugging
+            return {"status": "routed", "decision": routing_decision}
 
         except Exception as e:
             error_result = {"status": "error", "task_id": task.task_id, "error": str(e)}
@@ -179,7 +221,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             author="Steward Protocol",
             description="User interface and orchestration",
             domain="INTERFACE",
-            capabilities=["playbook_execution", "orchestration"],
+            capabilities=["playbook_execution", "orchestration", "circuit_execution"],
         )
 
     def _route_command(self, command: str, args: Dict[str, Any], task_id: str) -> Dict[str, Any]:
