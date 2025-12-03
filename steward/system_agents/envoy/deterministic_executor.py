@@ -250,7 +250,7 @@ class DeterministicExecutor:
             logger.warning(f"⚠️  Playbooks directory not found: {self.playbooks_dir}")
             return
 
-        for playbook_file in self.playbooks_dir.glob("*.yaml"):
+        for playbook_file in self.playbooks_dir.glob("**/*.yaml"):
             if playbook_file.name in ("schema.yaml", "_registry.yaml"):
                 continue  # Skip meta files
 
@@ -312,6 +312,7 @@ class DeterministicExecutor:
                 actions=state_data.get("actions", []),
                 on_success=state_data.get("on_success", "COMPLETE"),
                 on_failure=state_data.get("on_failure", "ABORT"),
+                state_var=state_data.get("state_var"),
             )
             phases.append(phase)
         return phases

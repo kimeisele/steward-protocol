@@ -1,7 +1,7 @@
 circuit:
   id: DEBATE_V1
-  name: Philosophical Debate
-  description: A dialectical engine for resolving deep philosophical questions.
+  name: Philosophical Debate (Golden Standard)
+  description: A dialectical engine using autonomous agents.
   domain: PHILOSOPHY
   intent_match:
     primary: PHILOSOPHY
@@ -11,57 +11,83 @@ circuit:
       - CONSCIOUSNESS
   variables:
     topic: "The nature of consciousness"
-    participants: ["Socrates", "Nietzsche"]
+
+  # Entry Point
+  entry_state: THESIS
+
+  # Global Invariants
+  invariants:
+    - "raw_input is not empty"
 
   states:
     THESIS:
-      name: Thesis Presentation
-      description: The Proponent presents the initial argument.
-      actions:
-        - action_type: EXECUTE_SCRIPT
-          target: "vibe_core.scripts.philosophy.generate_argument"
+      name: Thesis Generation
+      description: Spawn a philosopher to argue FOR the topic.
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: SPAWN_COGNITION
           params:
-            side: "pro"
-            topic: "{{ user_input }}"
-        - action_type: EMIT_EVENT
-          target: "THESIS_GENERATED"
+            role: "philosopher"
+            name: "Socrates_Pro"
+            mission: "Construct a compelling argument for the topic."
+            context: "You are a proponent of: {{ raw_input }}"
+        - action: EXECUTE_SYSCALL
+          syscall_type: DISPATCH_TASK
           params:
-            argument: "{{ THESIS.argument }}"
-      on_success: ANTITHESIS
-      on_failure: ABORT
-      state_var: thesis_result
+            agent_id: "{{ spawn_result.agent_id }}"
+            task_payload:
+              instruction: "Present a core argument for: {{ raw_input }}"
+      transitions:
+        - condition: "dispatch_task_result.success == true"
+          to: ANTITHESIS
+        - condition: "spawn_result.success == false"
+          to: ABORT
 
     ANTITHESIS:
-      name: Antithesis Rebuttal
-      description: The Opponent attempts to dismantle the Thesis.
-      actions:
-        - action_type: EXECUTE_SCRIPT
-          target: "vibe_core.scripts.philosophy.generate_argument"
+      name: Antithesis Generation
+      description: Spawn a philosopher to argue AGAINST the topic.
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: SPAWN_COGNITION
           params:
-            side: "con"
-            topic: "{{ user_input }}"
-            context: "{{ thesis_result.argument }}"
-        - action_type: EMIT_EVENT
-          target: "ANTITHESIS_GENERATED"
+            role: "philosopher"
+            name: "Nietzsche_Con"
+            mission: "Deconstruct the proposed argument."
+            context: "You are a skeptic of: {{ raw_input }}"
+        - action: EXECUTE_SYSCALL
+          syscall_type: DISPATCH_TASK
           params:
-            argument: "{{ ANTITHESIS.argument }}"
-      on_success: SYNTHESIS
-      on_failure: ABORT
-      state_var: antithesis_result
+            agent_id: "{{ spawn_result.agent_id }}"
+            task_payload:
+              instruction: "Refute this argument: {{ THESIS.dispatch_task_result.output }}"
+      transitions:
+        - condition: "dispatch_task_result.success == true"
+          to: SYNTHESIS
 
     SYNTHESIS:
       name: Dialectical Synthesis
-      description: A higher truth is formed from the conflict.
-      actions:
-        - action_type: EXECUTE_SCRIPT
-          target: "vibe_core.scripts.philosophy.synthesize"
+      description: Spawn a sage to resolve the conflict.
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: SPAWN_COGNITION
           params:
-            thesis: "{{ thesis_result.argument }}"
-            antithesis: "{{ antithesis_result.argument }}"
-        - action_type: EMIT_EVENT
-          target: "SYNTHESIS_REACHED"
+            role: "sage"
+            name: "Aurobindo_Synth"
+            mission: "Unify the opposing views into a higher truth."
+            context: "You are a dialectical synthesizer."
+        - action: EXECUTE_SYSCALL
+          syscall_type: DISPATCH_TASK
           params:
-            conclusion: "{{ SYNTHESIS.conclusion }}"
-      on_success: COMPLETE
-      on_failure: ABORT
-      state_var: synthesis_result
+            agent_id: "{{ spawn_result.agent_id }}"
+            task_payload:
+              instruction: "Synthesize a higher truth from: Thesis='{{ THESIS.dispatch_task_result.output }}' and Antithesis='{{ ANTITHESIS.dispatch_task_result.output }}'"
+      transitions:
+        - condition: "dispatch_task_result.success == true"
+          to: SUCCESS
+
+    SUCCESS:
+      name: Debate Conclusion
+      description: The debate is finished.
+      terminal: true
+      output:
+        conclusion: "{{ dispatch_task_result.output }}"
