@@ -21,9 +21,6 @@ from typing import Any, Dict
 from .base import (
     Tool,
     ToolResult,
-    format_auto_docs_box,
-    format_auto_docs_nav,
-    get_auto_docs,
     get_kernel_status,
     load_template,
 )
@@ -129,11 +126,6 @@ class RagRenderer(Tool):
         # Get kernel status
         kernel_status = get_kernel_status()
 
-        # Auto-docs from circuit (dynamic, not hardcoded)
-        auto_docs = get_auto_docs()
-        auto_docs_nav = format_auto_docs_nav(auto_docs)
-        auto_docs_box = format_auto_docs_box(auto_docs)
-
         # Timestamp
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
@@ -143,8 +135,6 @@ class RagRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE (via ANALYST v2.0)",
             kernel_status=kernel_status,
-            auto_docs_nav=auto_docs_nav,
-            auto_docs_box=auto_docs_box,
             context=context,
         )
 
