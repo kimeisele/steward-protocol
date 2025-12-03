@@ -1,0 +1,10 @@
+{
+  "title": "Test Heartbeat System",
+  "description": "Verify that the heartbeat engine can ingest tasks from inbox and execute them",
+  "agent": "ping",
+  "priority": 5,
+  "metadata": {
+    "source": "manual_test",
+    "created_by": "system"
+  }
+}
