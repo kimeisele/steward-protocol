@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-# Core API dependencies
+# Core API dependencies + Jinja2 for docs
 RUN pip install --no-cache-dir \
     fastapi \
     uvicorn \
@@ -16,7 +16,9 @@ RUN pip install --no-cache-dir \
     pyyaml \
     requests \
     python-dotenv \
-    cryptography
+    cryptography \
+    jinja2 \
+    toml
 
 # Copy project files FIRST (as root)
 COPY . .
