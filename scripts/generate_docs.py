@@ -19,6 +19,7 @@ Usage:
     python scripts/generate_docs.py --help-doc   # Only HELP.md
     python scripts/generate_docs.py --index      # Only INDEX.md
     python scripts/generate_docs.py --dashboard  # Only DASHBOARD.md
+    python scripts/generate_docs.py --rag        # Only RAG.md
 """
 
 import argparse
@@ -47,7 +48,10 @@ def load_renderer(full_module_name, module_path):
 # Skip __init__.py to avoid circular imports
 tools_dir = project_root / "steward/system_agents/scribe/tools"
 
-# Load dependencies first
+# Load base module FIRST (needed by all renderers)
+base_module = load_renderer("steward.system_agents.scribe.tools.base", tools_dir / "base.py")
+
+# Load dependencies
 introspector_module = load_renderer("steward.system_agents.scribe.tools.introspector", tools_dir / "introspector.py")
 project_introspector_module = load_renderer(
     "steward.system_agents.scribe.tools.project_introspector",
@@ -91,6 +95,10 @@ dashboard_renderer_module = load_renderer(
     "steward.system_agents.scribe.tools.dashboard_renderer",
     tools_dir / "dashboard_renderer.py",
 )
+rag_renderer_module = load_renderer(
+    "steward.system_agents.scribe.tools.rag_renderer",
+    tools_dir / "rag_renderer.py",
+)
 
 # Extract classes
 ReadmeRenderer = readme_renderer_module.ReadmeRenderer
@@ -99,6 +107,7 @@ CitymapRenderer = citymap_renderer_module.CitymapRenderer
 HelpRenderer = help_renderer_module.HelpRenderer
 IndexRenderer = index_renderer_module.IndexRenderer
 DashboardRenderer = dashboard_renderer_module.DashboardRenderer
+RagRenderer = rag_renderer_module.RagRenderer
 
 
 def generate_readme() -> bool:
@@ -221,6 +230,32 @@ def generate_dashboard() -> bool:
         return False
 
 
+def generate_rag() -> bool:
+    """Generate RAG.md"""
+    print("\n🧠 Generating RAG.md...")
+    try:
+        # Fix ANALYST initialization - no root_dir parameter needed
+        RagRenderer = rag_renderer_module.RagRenderer
+        renderer = RagRenderer(root_dir=".")
+
+        result = renderer.execute({"action": "generate", "scope": "full", "depth": "comprehensive"})
+
+        if not result.success:
+            raise RuntimeError(result.error)
+
+        rag_path = Path("RAG.md")
+        rag_path.write_text(result.output)
+
+        print(f"   ✅ RAG.md generated ({len(result.output)} bytes)")
+        return True
+    except Exception as e:
+        print(f"   ❌ Failed: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate documentation files")
     parser.add_argument("--readme", action="store_true", help="Generate only README.md")
@@ -229,6 +264,7 @@ def main():
     parser.add_argument("--help-doc", action="store_true", help="Generate only HELP.md")
     parser.add_argument("--index", action="store_true", help="Generate only INDEX.md")
     parser.add_argument("--dashboard", action="store_true", help="Generate only DASHBOARD.md")
+    parser.add_argument("--rag", action="store_true", help="Generate only RAG.md")
 
     args = parser.parse_args()
 
@@ -237,7 +273,9 @@ def main():
     print("=" * 70)
 
     # If no specific flag, generate all
-    generate_all = not any([args.readme, args.agents, args.citymap, args.help_doc, args.index, args.dashboard])
+    generate_all = not any(
+        [args.readme, args.agents, args.citymap, args.help_doc, args.index, args.dashboard, args.rag]
+    )
 
     results = {}
 
@@ -258,6 +296,9 @@ def main():
 
     if generate_all or args.dashboard:
         results["DASHBOARD.md"] = generate_dashboard()
+
+    if generate_all or args.rag:
+        results["RAG.md"] = generate_rag()
 
     print("\n" + "=" * 70)
     print("📊 SUMMARY")
