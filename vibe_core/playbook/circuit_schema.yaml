@@ -1,0 +1,121 @@
+# VibeOS Cognitive Circuit Schema (The Golden Template)
+# Version: 1.0.0
+# Authority: ARCH-001 (Neuro-Symbolic Core)
+
+$schema: "http://json-schema.org/draft-07/schema#"
+type: object
+title: Cognitive Circuit
+description: A deterministic state machine for neuro-symbolic agent cognition.
+
+required:
+  - circuit
+  - version
+
+properties:
+  version:
+    type: string
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+    description: Semantic version of this circuit definition.
+
+  circuit:
+    type: object
+    required:
+      - id
+      - states
+    properties:
+      id:
+        type: string
+        pattern: "^[A-Z_]+_V\\d+$"
+        description: Unique identifier (e.g., AGENT_BIRTH_V1).
+      
+      description:
+        type: string
+        description: Human-readable purpose of this circuit.
+
+      domain:
+        type: string
+        description: Functional domain (e.g., core, governance, operations).
+
+      meta:
+        type: object
+        description: Metadata for UI/Visualization.
+        properties:
+          author:
+            type: string
+          complexity:
+            type: string
+            enum: [low, medium, high, critical]
+
+      states:
+        type: object
+        description: The state machine definitions.
+        patternProperties:
+          "^[A-Z_]+$":
+            type: object
+            required:
+              - type
+            properties:
+              type:
+                type: string
+                enum: [input, processing, terminal, error]
+                description: Role of this state.
+              
+              description:
+                type: string
+                description: What happens in this state.
+
+              invariants:
+                type: array
+                description: Safety checks that MUST pass before entering/executing.
+                items:
+                  type: string
+                  description: Invariant expression (e.g., "var.is_set").
+
+              operations:
+                type: array
+                description: Actions to perform in this state.
+                items:
+                  type: object
+                  required:
+                    - type
+                  properties:
+                    type:
+                      type: string
+                      enum: [syscall, internal, circuit]
+                    name:
+                      type: string
+                    params:
+                      type: object
+
+              transitions:
+                type: array
+                description: Deterministic rules for moving to the next state.
+                items:
+                  type: object
+                  required:
+                    - target
+                    - condition
+                  properties:
+                    target:
+                      type: string
+                      description: ID of the next state.
+                    condition:
+                      type: string
+                      description: Logic expression (e.g., "result.success == True").
+                    fallback:
+                      type: boolean
+                      description: If true, this is the default transition.
+
+      variables:
+        type: object
+        description: Expected input/context variables.
+        patternProperties:
+          "^[a-z_]+$":
+            type: object
+            properties:
+              type:
+                type: string
+              required:
+                type: boolean
+              description:
+                type: string
