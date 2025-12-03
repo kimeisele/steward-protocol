@@ -25,8 +25,6 @@ import yaml
 from .base import (
     Tool,
     ToolResult,
-    format_auto_docs_box,
-    format_auto_docs_nav,
     get_kernel_status,
     load_template,
 )
@@ -54,7 +52,6 @@ class IndexRenderer(Tool):
         self.doc_schema = self.circuit.get("doc_schema", {})
         self.doc_descriptions = self.circuit.get("doc_descriptions", {})
         self.docs_allowlist = set(self.circuit.get("docs_allowlist", []))
-        self.auto_generated_docs = self.circuit.get("auto_generated_docs", [])
 
     def _load_circuit(self) -> dict[str, Any]:
         """Load circuit definition from YAML."""
@@ -149,17 +146,11 @@ class IndexRenderer(Tool):
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         kernel_status = get_kernel_status(str(self.root_dir))
 
-        # Auto-docs from circuit (dynamic, not hardcoded)
-        auto_docs_nav = format_auto_docs_nav(self.auto_generated_docs)
-        auto_docs_box = format_auto_docs_box(self.auto_generated_docs)
-
         template = load_template("index.jinja2")
         content = template.render(
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
-            auto_docs_nav=auto_docs_nav,
-            auto_docs_box=auto_docs_box,
             shabda_content=self._render_section("shabda"),
             artha_content=self._render_section("artha"),
             pratyaya_content=self._render_section("pratyaya"),
