@@ -54,30 +54,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- BOOT SEQUENCE ---
-logger.info("⚙️  BOOTING KERNEL...")
-kernel = RealVibeKernel(ledger_path="data/vibe_ledger.db")
-
-# 1. Initialize Steward (The Guardian)
-logger.info("🧙‍♂️ SUMMONING THE STEWARD...")
-steward = Discoverer(kernel)
-kernel.register_agent(steward)
-
-# 2. Boot Kernel (Loads other agents)
-kernel.boot()
-
-# 3. Start Steward's Watch (Autonomous Discovery)
-steward.start_monitoring(interval=10.0)
-
-logger.info("🧠 ACTIVATING PROVIDER...")
-provider = UniversalProvider(kernel)
-
-logger.info("🌊 INITIALIZING MILK OCEAN ROUTER (Brahma Protocol)...")
-milk_ocean = MilkOceanRouter(kernel=kernel)
-
-logger.info("💓 INITIALIZING PULSE SYSTEM (Spandana)...")
-pulse_manager = get_pulse_manager()
-event_bus = get_event_bus()
+# --- BOOT SEQUENCE (LAZY INITIALIZATION) ---
+# Initialize these as None - will be created in startup_event()
+kernel = None
+steward = None
+provider = None
+milk_ocean = None
+pulse_manager = None
+event_bus = None
 
 
 # --- WEBSOCKET MANAGEMENT ---
@@ -226,7 +210,39 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 # --- STARTUP/SHUTDOWN EVENTS ---
 @app.on_event("startup")
 async def startup_event():
-    """Start the pulse system on app startup"""
+    """Initialize kernel and start systems on app startup (fixes SQLite threading)"""
+    global kernel, steward, provider, milk_ocean, pulse_manager, event_bus
+
+    # Initialize kernel IN THE CORRECT THREAD (fixes SQLite thread error)
+    logger.info("⚙️  BOOTING KERNEL...")
+    kernel = RealVibeKernel(ledger_path="data/vibe_ledger.db")
+
+    # 1. Initialize Steward (The Guardian)
+    logger.info("🧙‍♂️ SUMMONING THE STEWARD...")
+    try:
+        steward = Discoverer(kernel)
+        kernel.register_agent(steward)
+    except Exception as e:
+        logger.error(f"   ❌ Failed to load discoverer: {e}")
+        # Continue without discoverer - other agents will still work
+
+    # 2. Boot Kernel (Loads other agents)
+    kernel.boot()
+
+    # 3. Start Steward's Watch (if loaded successfully)
+    if steward:
+        steward.start_monitoring(interval=10.0)
+
+    logger.info("🧠 ACTIVATING PROVIDER...")
+    provider = UniversalProvider(kernel)
+
+    logger.info("🌊 INITIALIZING MILK OCEAN ROUTER (Brahma Protocol)...")
+    milk_ocean = MilkOceanRouter(kernel=kernel)
+
+    logger.info("💓 INITIALIZING PULSE SYSTEM (Spandana)...")
+    pulse_manager = get_pulse_manager()
+    event_bus = get_event_bus()
+
     logger.info("🚀 Starting pulse system...")
     await pulse_manager.start()
 
@@ -372,6 +388,9 @@ def get_ledger(limit: int = Query(100, ge=1, le=1000)):
 
     GAD-000: "Don't Trust. Verify."
     """
+    if kernel is None:
+        raise HTTPException(status_code=503, detail="Kernel is initializing, please wait")
+
     try:
         # Get all ledger events (immutable + hash-verified)
         all_events = kernel.ledger.get_all_events()
@@ -402,6 +421,9 @@ def get_agents():
     AGENT REGISTRY ENDPOINT
     Lists all registered agents and their capabilities.
     """
+    if kernel is None:
+        raise HTTPException(status_code=503, detail="Kernel is initializing, please wait")
+
     try:
         agents_list = []
         # agent_registry is already a Dict[agent_id: agent]
