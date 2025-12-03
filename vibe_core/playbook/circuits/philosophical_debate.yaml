@@ -1,0 +1,67 @@
+circuit:
+  id: DEBATE_V1
+  name: Philosophical Debate
+  description: A dialectical engine for resolving deep philosophical questions.
+  domain: PHILOSOPHY
+  intent_match:
+    primary: PHILOSOPHY
+    secondary:
+      - DEBATE
+      - ETHICS
+      - CONSCIOUSNESS
+  variables:
+    topic: "The nature of consciousness"
+    participants: ["Socrates", "Nietzsche"]
+
+  states:
+    THESIS:
+      name: Thesis Presentation
+      description: The Proponent presents the initial argument.
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "vibe_core.scripts.philosophy.generate_argument"
+          params:
+            side: "pro"
+            topic: "{{ user_input }}"
+        - action_type: EMIT_EVENT
+          target: "THESIS_GENERATED"
+          params:
+            argument: "{{ THESIS.argument }}"
+      on_success: ANTITHESIS
+      on_failure: ABORT
+      state_var: thesis_result
+
+    ANTITHESIS:
+      name: Antithesis Rebuttal
+      description: The Opponent attempts to dismantle the Thesis.
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "vibe_core.scripts.philosophy.generate_argument"
+          params:
+            side: "con"
+            topic: "{{ user_input }}"
+            context: "{{ thesis_result.argument }}"
+        - action_type: EMIT_EVENT
+          target: "ANTITHESIS_GENERATED"
+          params:
+            argument: "{{ ANTITHESIS.argument }}"
+      on_success: SYNTHESIS
+      on_failure: ABORT
+      state_var: antithesis_result
+
+    SYNTHESIS:
+      name: Dialectical Synthesis
+      description: A higher truth is formed from the conflict.
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "vibe_core.scripts.philosophy.synthesize"
+          params:
+            thesis: "{{ thesis_result.argument }}"
+            antithesis: "{{ antithesis_result.argument }}"
+        - action_type: EMIT_EVENT
+          target: "SYNTHESIS_REACHED"
+          params:
+            conclusion: "{{ SYNTHESIS.conclusion }}"
+      on_success: COMPLETE
+      on_failure: ABORT
+      state_var: synthesis_result
