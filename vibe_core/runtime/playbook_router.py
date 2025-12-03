@@ -211,6 +211,10 @@ class PlaybookRouter:
         if route_name in domain_routes:
             return "plan"  # Domain apps typically start with planning
 
+        # GAD-5500: Agent Birth Circuit
+        if route_name in ["agent_birth", "spawn_agent"]:
+            return "AGENT_BIRTH_V1"
+
         # Default
         return "analyze"
 

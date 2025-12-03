@@ -12,12 +12,13 @@
 # The key insight: Playbooks aren't scripts, they're SCHALTKREISE (circuits)
 # that define invariants and state transitions, not just steps.
 #
-# Version: 1.0 (Neuro-Symbolic)
+# Version: 1.1 (Golden Standard)
 
 circuit:
   id: AGENT_BIRTH_V1
   name: Agent Birth Cognitive Circuit
-  type: cognitive_circuit  # NEW: Not workflow, but circuit
+  type: cognitive_circuit
+  domain: LIFECYCLE
 
   intent: |
     Birth a new autonomous agent from natural language specification.
@@ -35,14 +36,11 @@ circuit:
     This is "ML Light" - we use deterministic structures (Syscalls) to
     channel neural output into safe, auditable kernel operations.
 
-  version: "1.0"
+  version: "1.1"
 
   # ==========================================================================
   # SEMANTIC TRIGGERS
   # ==========================================================================
-  # Instead of keyword matching, we use semantic patterns
-  # These are evaluated by the BlueprintGenerator (Semantic Compiler)
-
   triggers:
     primary:
       - pattern: "create.*(agent|bot|worker)"
@@ -56,7 +54,6 @@ circuit:
       - pattern: "(agent|bot).*that.*(monitors|watches|handles)"
         confidence_threshold: 0.8
 
-    # Keywords that PREVENT this circuit from activating
     anti_triggers:
       - "delete agent"
       - "remove agent"
@@ -67,35 +64,33 @@ circuit:
   # ==========================================================================
   # STATE MACHINE (Cognitive Circuit Topology)
   # ==========================================================================
-  # This defines STATES, not steps. Each state has invariants that must hold.
-  # Transitions happen via syscall completion.
+  
+  # Entry point
+  entry_state: SHABDA
 
   states:
     # Initial state: Parse the birth request
     SHABDA:
+      name: Shabda (Sound/Word)
       description: "Parse and compile user intent into SyscallRequest"
       invariants:
         - "raw_input is not empty"
-        # Note: compiled_request.params contains role/mission from BlueprintGenerator
-        # These are checked AFTER COMPILE_REQUEST operation, not before
       operations:
         - action: COMPILE_REQUEST
           input: "{{ raw_input }}"
           output: "compiled_request"
       transitions:
-        - to: ARTHA
-          condition: "compiled_request.is_syscall == true"
-        - to: FAILURE
-          condition: "compiled_request.is_syscall == false"
-          reason: "Could not compile intent to SPAWN_COGNITION syscall"
+        - condition: "compiled_request.is_syscall == true"
+          to: ARTHA
+        - condition: "compiled_request.is_syscall == false"
+          to: FAILURE
 
     # Constitutional verification state
     ARTHA:
+      name: Artha (Meaning/Purpose)
       description: "Verify agent birth against Constitutional Oath"
       invariants:
         - "compiled_request.syscall_type == SPAWN_COGNITION"
-        # Note: Role check is performed by CHECK_CONSTITUTION operation below
-        # which has access to circuit's forbidden_roles list
       operations:
         - action: CHECK_CONSTITUTION
           input: "compiled_request"
@@ -104,18 +99,17 @@ circuit:
             - "Requester has authority to spawn agents"
             - "System is in DAY_OF_BRAHMA cycle"
       transitions:
-        - to: PRATYAYA
-          condition: "constitutional_check.passed == true"
-        - to: GOVERNANCE_DENIED
-          condition: "constitutional_check.passed == false"
-          reason: "Constitutional violation detected"
+        - condition: "constitutional_check.passed == true"
+          to: PRATYAYA
+        - condition: "constitutional_check.passed == false"
+          to: GOVERNANCE_DENIED
 
     # Resource allocation state
     PRATYAYA:
+      name: Pratyaya (Cognition/Resource)
       description: "Allocate resources (credits, capabilities) for new agent"
       invariants:
         - "compiled_request.params.initial_credits >= 0"
-        - "compiled_request.params.capabilities is not empty"
       operations:
         - action: PREPARE_RESOURCES
           allocations:
@@ -123,23 +117,22 @@ circuit:
             capabilities: "{{ compiled_request.params.capabilities }}"
             vfs_sandbox: "{{ role }}"
       transitions:
-        - to: KARMA
-          condition: "resources_prepared == true"
-        - to: RESOURCE_DENIED
-          condition: "resources_prepared == false"
-          reason: "Insufficient resources for agent birth"
+        - condition: "resources_prepared == true"
+          to: KARMA
+        - condition: "resources_prepared == false"
+          to: RESOURCE_DENIED
 
     # Execution state: Actually spawn the agent
     KARMA:
+      name: Karma (Action)
       description: "Execute kernel syscalls to birth the agent"
       invariants:
         - "resources_prepared == true"
-        # Note: Parampara recording happens automatically via audit: true flag
       operations:
         - action: EXECUTE_SYSCALL
           syscall_type: SPAWN_COGNITION
           params: "{{ compiled_request.params }}"
-          audit: true  # Record in Parampara blockchain
+          audit: true
         - action: EXECUTE_SYSCALL
           syscall_type: GRANT_MANDATE
           params:
@@ -151,13 +144,14 @@ circuit:
             agent_id: "{{ spawn_result.agent_id }}"
             amount: "{{ compiled_request.params.initial_credits }}"
       transitions:
-        - to: SUCCESS
-          condition: "spawn_result.success == true"
-        - to: SPAWN_FAILED
-          condition: "spawn_result.success == false"
+        - condition: "spawn_result.success == true"
+          to: SUCCESS
+        - condition: "spawn_result.success == false"
+          to: SPAWN_FAILED
 
     # Terminal states
     SUCCESS:
+      name: Success
       description: "Agent successfully birthed"
       terminal: true
       output:
@@ -170,6 +164,7 @@ circuit:
         karma_block: "{{ spawn_result.karma_block_id }}"
 
     FAILURE:
+      name: Failure
       description: "Generic compilation failure"
       terminal: true
       output:
@@ -177,6 +172,7 @@ circuit:
         reason: "Could not compile intent to agent birth"
 
     GOVERNANCE_DENIED:
+      name: Governance Denied
       description: "Constitutional violation"
       terminal: true
       output:
@@ -184,6 +180,7 @@ circuit:
         reason: "{{ constitutional_check.violation }}"
 
     RESOURCE_DENIED:
+      name: Resource Denied
       description: "Insufficient resources"
       terminal: true
       output:
@@ -191,20 +188,16 @@ circuit:
         reason: "System lacks resources for new agent"
 
     SPAWN_FAILED:
+      name: Spawn Failed
       description: "Kernel spawn failed"
       terminal: true
       output:
         status: "SPAWN_FAILED"
         reason: "{{ spawn_result.error }}"
 
-  # Entry point
-  entry_state: SHABDA
-
   # ==========================================================================
-  # VARIABLES (Template Injection Points)
+  # VARIABLES
   # ==========================================================================
-  # These are filled by the Semantic Compiler (BlueprintGenerator)
-
   variables:
     raw_input:
       type: string
@@ -218,30 +211,22 @@ circuit:
       description: "Who is requesting this agent birth"
 
   # ==========================================================================
-  # FORBIDDEN ROLES (Security Constraint)
+  # FORBIDDEN ROLES
   # ==========================================================================
-
   forbidden_roles:
-    - "kernel"      # Cannot spawn another kernel
-    - "narasimha"   # Cannot spawn kill-switch
-    - "root"        # No root access
-    - "admin"       # No admin escalation
+    - "kernel"
+    - "narasimha"
+    - "root"
+    - "admin"
 
   # ==========================================================================
   # METADATA
   # ==========================================================================
-
   metadata:
-    version: "1.0"
-    created: "2025-12-01"
+    version: "1.1"
+    created: "2025-12-03"
     purpose: "Agent Birth - The fork() of VibeOS"
     paradigm: "neuro_symbolic"
     circuit_type: "lifecycle"
-
-    # Telemetry
-    estimated_latency_ms: 500
-    syscalls_executed: 3  # SPAWN + GRANT + ALLOCATE
-
-    # Security
     requires_oath: true
     audit_trail: "parampara"
