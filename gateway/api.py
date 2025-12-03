@@ -725,6 +725,42 @@ def get_doc(doc_name: str):
     return {"status": "success", "name": filename, "content": doc_path.read_text(), "size": doc_path.stat().st_size}
 
 
+# --- DIRECT MARKDOWN FILE SERVING ---
+@app.get("/{filepath:path}.md")
+def serve_markdown(filepath: str):
+    """
+    Serve ALL markdown files from repo (root + subdirectories)
+
+    Examples:
+      /INDEX.md → /INDEX.md
+      /docs/architecture/GAD-000 → /docs/architecture/GAD-0XX/GAD-000.md
+      /docs/architecture/ANALYSIS_REPORT → /docs/architecture/ANALYSIS_REPORT.md
+
+    Security: Prevents directory traversal, only .md files within PROJECT_ROOT
+    """
+    from fastapi.responses import PlainTextResponse
+
+    # Sanitize (prevent directory traversal)
+    filepath = filepath.replace("..", "").strip("/")
+
+    # Build path
+    doc_path = PROJECT_ROOT / f"{filepath}.md"
+
+    if not doc_path.exists():
+        raise HTTPException(status_code=404, detail=f"Markdown not found: {filepath}.md")
+
+    # Security: ensure within PROJECT_ROOT
+    try:
+        doc_path = doc_path.resolve()
+        if not str(doc_path).startswith(str(PROJECT_ROOT)):
+            raise HTTPException(status_code=403, detail="Access denied")
+    except Exception:
+        raise HTTPException(status_code=403, detail="Invalid path")
+
+    # Serve with UTF-8
+    return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")
+
+
 # --- MOUNT FRONTEND (LAST STEP!) ---
 # Mount static files at ROOT (/) to serve as the main website
 if os.path.exists("gateway/static") and os.listdir("gateway/static"):
