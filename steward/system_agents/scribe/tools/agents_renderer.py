@@ -13,9 +13,6 @@ from typing import Any
 from .base import (
     Tool,
     ToolResult,
-    format_auto_docs_box,
-    format_auto_docs_nav,
-    get_auto_docs,
     get_kernel_status,
     load_template,
 )
@@ -95,11 +92,6 @@ class AgentsRenderer(Tool):
         # Get kernel status for unified header
         kernel_status = get_kernel_status(str(self.root_dir))
 
-        # Auto-docs from circuit (dynamic, not hardcoded)
-        auto_docs = get_auto_docs(str(self.root_dir))
-        auto_docs_nav = format_auto_docs_nav(auto_docs)
-        auto_docs_box = format_auto_docs_box(auto_docs)
-
         # Load and render template
         template = load_template("agents.jinja2")
         content = template.render(
@@ -107,8 +99,6 @@ class AgentsRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
-            auto_docs_nav=auto_docs_nav,
-            auto_docs_box=auto_docs_box,
             # Agents-specific variables
             agents=sorted_agents,
             system_count=system_count,
