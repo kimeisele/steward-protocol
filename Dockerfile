@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir \
     python-dotenv \
     cryptography \
     jinja2 \
-    toml
+    toml \
+    psutil
 
 # Copy project files FIRST (as root)
 COPY . .
