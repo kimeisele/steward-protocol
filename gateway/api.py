@@ -726,25 +726,38 @@ def get_doc(doc_name: str):
 
 
 # --- DIRECT MARKDOWN FILE SERVING ---
-@app.get("/{doc_name}.md")
-def serve_markdown(doc_name: str):
+@app.get("/{filepath:path}.md")
+def serve_markdown(filepath: str):
     """
-    Serve markdown files directly (e.g., /INDEX.md, /README.md)
-    Allows direct linking from INDEX.md to other docs.
+    Serve ALL markdown files from repo (root + subdirectories)
+
+    Examples:
+      /INDEX.md → /INDEX.md
+      /docs/architecture/GAD-000 → /docs/architecture/GAD-0XX/GAD-000.md
+      /docs/architecture/ANALYSIS_REPORT → /docs/architecture/ANALYSIS_REPORT.md
+
+    Security: Prevents directory traversal, only .md files within PROJECT_ROOT
     """
     from fastapi.responses import PlainTextResponse
 
-    filename = f"{doc_name}.md"
+    # Sanitize (prevent directory traversal)
+    filepath = filepath.replace("..", "").strip("/")
 
-    # Security: only allow known docs
-    if filename not in AUTO_DOCS:
-        raise HTTPException(status_code=404, detail="Document not found")
+    # Build path
+    doc_path = PROJECT_ROOT / f"{filepath}.md"
 
-    doc_path = PROJECT_ROOT / filename
     if not doc_path.exists():
-        raise HTTPException(status_code=404, detail="Document not generated yet")
+        raise HTTPException(status_code=404, detail=f"Markdown not found: {filepath}.md")
 
-    # Serve as plain text with UTF-8 encoding
+    # Security: ensure within PROJECT_ROOT
+    try:
+        doc_path = doc_path.resolve()
+        if not str(doc_path).startswith(str(PROJECT_ROOT)):
+            raise HTTPException(status_code=403, detail="Access denied")
+    except Exception:
+        raise HTTPException(status_code=403, detail="Invalid path")
+
+    # Serve with UTF-8
     return PlainTextResponse(content=doc_path.read_text(encoding="utf-8"), media_type="text/markdown; charset=utf-8")
 
 
