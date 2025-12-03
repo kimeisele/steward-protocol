@@ -1,0 +1,377 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: ARCHITECTURE_ANALYSIS
+# ============================================================================
+# Multi-dimensional Architecture Introspection & Documentation Circuit
+#
+# Agent: ANALYST (not SCRIBE - separation of concerns!)
+# Output: ARCHITECTURE.md
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture live system state (kernel, registry, ledger)
+#   ARTHA    → Understand structure (dataflow, dependencies, patterns)
+#   PRATYAYA → Plan documentation (sections, diagrams, coverage)
+#   KARMA    → Generate artifacts (Mermaid, schema docs, examples)
+#   SYNTH    → Synthesize final ARCHITECTURE.md
+#
+# Philosophy: ZERO HARDCODING - Everything introspected from live system!
+# ============================================================================
+
+circuit:
+  id: "ARCHITECTURE_ANALYSIS"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "architecture"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  description: |
+    Multi-dimensional architecture analysis circuit for STEWARD Protocol.
+    Produces ARCHITECTURE.md through systematic introspection and analysis.
+    
+    Key Principles:
+    - NO hardcoded values (all introspected from live kernel)
+    - NO redundancy (checks against INDEX.md, CITYMAP.md, etc.)
+    - Tool orchestration (structure, deps, code, git, architecture)
+    - VEDA-4 cognitive flow (SHABDA → ARTHA → PRATYAYA → KARMA → SYNTH)
+
+  # ===========================================================================
+  # TOOL ORCHESTRATION (Multi-Tool Cognitive Sequence)
+  # ===========================================================================
+  tool_sequence:
+    introspection:
+      - "analyst.structure"    # Discover cartridge structure
+      - "analyst.deps"         # Map dependencies
+      - "analyst.code"         # Extract patterns
+    
+    analysis:
+      - "analyst.git"          # Historical context (optional)
+      
+    synthesis:
+      - "analyst.architecture" # NEW - Generate ARCHITECTURE.md
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture live system snapshot"
+      entry_actions:
+        - action: "introspect_kernel"
+          params:
+            extract:
+              - "agent_registry"       # All registered agents
+              - "manifest_registry"    # Agent capabilities
+              - "ledger_schema"        # SQLite schema (NO hardcoded SQL!)
+              - "scheduler_state"      # Task queue state
+        
+        - action: "scan_cartridges"
+          tool: "analyst.structure"
+          params:
+            scan_paths:
+              - "steward/system_agents/"
+              - "agent_city/registry/"
+            extract_manifests: true
+        
+        - action: "extract_ledger_schema"
+          params:
+            introspect_live_db: true  # Read actual SQLite schema
+            sample_events: 5
+      
+      invariants:
+        - "kernel must be accessible"
+        - "at least one agent registered"
+        - "ledger database must exist"
+      
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+      state_var: "system_snapshot"
+
+    ARTHA:
+      description: "Understand system structure and patterns"
+      entry_actions:
+        - action: "analyze_dependencies"
+          tool: "analyst.deps"
+          params:
+            snapshot: "{{ system_snapshot }}"
+            trace_imports: true
+            build_graph: true
+        
+        - action: "trace_dataflow"
+          tool: "analyst.code"
+          params:
+            entry_points:
+              - "vibe_core.kernel.RealVibeKernel.submit_task"
+              - "vibe_core.kernel.RealVibeKernel.process_task"
+              - "vibe_core.ledger.SQLiteLedger.record"
+            trace_depth: 3
+            identify_patterns:
+              - "task_submission"
+              - "agent_invocation"
+              - "ledger_recording"
+              - "governance_check"
+        
+        - action: "extract_lifecycle"
+          tool: "analyst.code"
+          params:
+            patterns:
+              - "cartridge_discovery"
+              - "agent_registration"
+              - "task_execution"
+              - "event_persistence"
+        
+        - action: "discover_tool_protocol"
+          tool: "analyst.code"
+          params:
+            search_pattern: "class.*Tool.*:"
+            extract_base_class: "vibe_core.tools.tool_protocol.Tool"
+      
+      invariants:
+        - "dependency graph must be complete"
+        - "dataflow must be traceable"
+        - "lifecycle patterns must be identified"
+      
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+      state_var: "architecture_understanding"
+
+    PRATYAYA:
+      description: "Plan documentation structure"
+      entry_actions:
+        - action: "design_sections"
+          params:
+            sections:
+              - id: "overview"
+                content: ["layer_diagram", "core_concepts"]
+                purpose: "High-level system architecture"
+              
+              - id: "dataflow"
+                content: ["sequence_diagram", "event_flow_description"]
+                purpose: "How data moves through system"
+              
+              - id: "cartridge_lifecycle"
+                content: ["discovery_flow", "registration_flow", "execution_flow"]
+                purpose: "Cartridge discovery to execution"
+              
+              - id: "event_store"
+                content: ["schema_diagram", "query_examples", "persistence_model"]
+                purpose: "SQLite ledger structure (introspected!)"
+              
+              - id: "tool_invocation"
+                content: ["protocol_diagram", "tool_discovery", "execution_pattern"]
+                purpose: "How tools are discovered and invoked"
+              
+              - id: "integration_patterns"
+                content: ["agent_communication", "governance_flow", "error_handling"]
+                purpose: "Common patterns for developers"
+        
+        - action: "validate_coverage"
+          params:
+            check_redundancy_against:
+              - "INDEX.md"      # Navigation index
+              - "CITYMAP.md"    # System map
+              - "README.md"     # Overview
+              - "OPERATIONS.md" # Operations
+            architecture: "{{ architecture_understanding }}"
+            ensure_unique_content: true
+        
+        - action: "check_existing_docs"
+          params:
+            # Ensure we don't duplicate what's already documented
+            existing_docs:
+              - path: "INDEX.md"
+                aspect: "navigation"
+              - path: "CITYMAP.md"
+                aspect: "agent_map"
+              - path: "README.md"
+                aspect: "quickstart"
+      
+      invariants:
+        - "all architecture aspects must be covered"
+        - "no content duplication with existing docs"
+        - "all sections must have clear purpose"
+      
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+      state_var: "documentation_plan"
+
+    KARMA:
+      description: "Generate architecture artifacts"
+      entry_actions:
+        - action: "generate_layer_diagram"
+          tool: "analyst.architecture"
+          params:
+            diagram_type: "graph"
+            layers:
+              - name: "Layer 0: Constitution"
+                components: ["CONSTITUTION.md", "Constitutional Kernel"]
+              - name: "Layer 1: VibeOS Kernel"
+                components: ["RealVibeKernel", "SQLiteLedger", "Scheduler"]
+              - name: "Layer 2: Governance"
+                components: ["CIVIC", "AUDITOR", "ARCHIVIST"]
+              - name: "Layer 3: Agents"
+                components: "{{ system_snapshot.agents }}"  # LIVE DATA!
+            data: "{{ architecture_understanding }}"
+        
+        - action: "generate_dataflow_sequence"
+          tool: "analyst.architecture"
+          params:
+            diagram_type: "sequence"
+            flow: "{{ architecture_understanding.dataflow }}"
+            actors:
+              - "User"
+              - "Kernel"
+              - "Governance"
+              - "Agent"
+              - "Ledger"
+        
+        - action: "generate_lifecycle_flows"
+          tool: "analyst.architecture"
+          params:
+            diagram_type: "flowchart"
+            flows:
+              - name: "cartridge_discovery"
+                steps: "{{ architecture_understanding.lifecycle.discovery }}"
+              - name: "agent_registration"
+                steps: "{{ architecture_understanding.lifecycle.registration }}"
+              - name: "task_execution"
+                steps: "{{ architecture_understanding.lifecycle.execution }}"
+        
+        - action: "generate_schema_docs"
+          tool: "analyst.architecture"
+          params:
+            schema: "{{ system_snapshot.ledger_schema }}"  # INTROSPECTED!
+            include_examples: true
+            sample_queries:
+              - "Get events by agent"
+              - "Count events by type"
+              - "Recent governance decisions"
+        
+        - action: "generate_pattern_docs"
+          tool: "analyst.architecture"
+          params:
+            patterns: "{{ architecture_understanding.patterns }}"
+            include_code_examples: true
+            extract_from_codebase: true  # REAL CODE, not stubs!
+      
+      invariants:
+        - "all diagrams must be valid Mermaid syntax"
+        - "all code examples must be from actual codebase"
+        - "schema must match actual database"
+      
+      on_success: "SYNTH"
+      on_failure: "FAILURE"
+      state_var: "generated_artifacts"
+
+    SYNTH:
+      description: "Synthesize final ARCHITECTURE.md"
+      entry_actions:
+        - action: "apply_template"
+          tool: "analyst.architecture"
+          params:
+            template: "architecture.jinja2"
+            data:
+              system_snapshot: "{{ system_snapshot }}"
+              understanding: "{{ architecture_understanding }}"
+              artifacts: "{{ generated_artifacts }}"
+              plan: "{{ documentation_plan }}"
+        
+        - action: "validate_output"
+          params:
+            checks:
+              - mermaid_syntax_valid: true
+              - no_hardcoded_values: true
+              - introspection_based: true
+              - unique_content: true  # vs other docs
+        
+        - action: "write_output"
+          params:
+            path: "ARCHITECTURE.md"
+            content: "{{ rendered_architecture }}"
+      
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "Architecture analysis complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "architecture_documented"
+            output_file: "ARCHITECTURE.md"
+        - action: "record_parampara"
+          params:
+            action: "ARCHITECTURE_ANALYSIS"
+            result: "SUCCESS"
+            artifacts:
+              - "ARCHITECTURE.md"
+
+    FAILURE:
+      description: "Architecture analysis failed"
+      terminal: true
+      entry_actions:
+        - action: "log_error"
+          params:
+            state: "{{ failed_state }}"
+            reason: "{{ failure_reason }}"
+        - action: "emit_event"
+          params:
+            event: "architecture_analysis_failed"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "system_snapshot_captured"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "architecture_understood"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "documentation_planned"
+    - from: "KARMA"
+      to: "SYNTH"
+      condition: "artifacts_generated"
+    - from: "SYNTH"
+      to: "SUCCESS"
+      condition: "architecture_md_written"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "no_hardcoded_data"
+      check: "All data must come from live introspection"
+    - name: "no_redundancy"
+      check: "Content must be unique vs INDEX.md, CITYMAP.md, README.md"
+    - name: "valid_mermaid"
+      check: "All Mermaid diagrams must be syntactically valid"
+    - name: "real_code_examples"
+      check: "Code examples must be extracted from actual codebase"
+
+  # ===========================================================================
+  # METADATA
+  # ===========================================================================
+  metadata:
+    created: "2025-12-03"
+    author: "Steward Protocol"
+    purpose: "Multi-dimensional architecture introspection and documentation"
+    integration:
+      agent: "analyst"
+      tools:
+        - "analyst.structure"
+        - "analyst.deps"
+        - "analyst.code"
+        - "analyst.architecture"  # NEW
+      output: "ARCHITECTURE.md"
+    version_notes: |
+      v1.0: Initial circuit implementation
+      - Zero hardcoded values (all introspected)
+      - Tool orchestration (structure, deps, code, architecture)
+      - VEDA-4 cognitive flow
+      - Redundancy checks against existing docs
