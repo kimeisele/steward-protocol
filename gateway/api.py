@@ -38,6 +38,7 @@ from vibe_core.kernel_impl import RealVibeKernel
 
 # PULSE SYSTEM IMPORTS
 from vibe_core.pulse import get_pulse_manager
+from vibe_core.scheduling import Task
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
@@ -644,6 +645,62 @@ def get_queue_status():
     except Exception as e:
         logger.error(f"❌ Queue status fetch failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- AUTO-GENERATED DOCS API ---
+AUTO_DOCS = [
+    "README.md",
+    "INDEX.md",
+    "AGENTS.md",
+    "CITYMAP.md",
+    "HELP.md",
+    "DASHBOARD.md",
+    "RAG.md",
+    "OPERATIONS.md",
+    "SETTINGS.md",
+    "ENVOY.md",
+]
+
+
+@app.get("/api/docs")
+def list_docs():
+    """
+    List all auto-generated documentation files.
+    Returns availability status for each doc.
+    """
+    docs_status = []
+    for doc in AUTO_DOCS:
+        doc_path = PROJECT_ROOT / doc
+        docs_status.append(
+            {
+                "name": doc,
+                "available": doc_path.exists(),
+                "size": doc_path.stat().st_size if doc_path.exists() else 0,
+                "url": f"/api/docs/{doc.replace('.md', '')}",
+            }
+        )
+    return {"status": "success", "docs": docs_status}
+
+
+@app.get("/api/docs/{doc_name}")
+def get_doc(doc_name: str):
+    """
+    Get raw markdown content of an auto-generated doc.
+    doc_name: filename without .md extension (e.g., 'README', 'INDEX')
+    """
+    # Security: only allow known docs
+    filename = f"{doc_name}.md"
+    if filename not in AUTO_DOCS:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Doc '{doc_name}' not found. Available: {[d.replace('.md', '') for d in AUTO_DOCS]}",
+        )
+
+    doc_path = PROJECT_ROOT / filename
+    if not doc_path.exists():
+        raise HTTPException(status_code=404, detail=f"Doc '{filename}' not generated yet")
+
+    return {"status": "success", "name": filename, "content": doc_path.read_text(), "size": doc_path.stat().st_size}
 
 
 # --- MOUNT FRONTEND (LAST STEP!) ---
