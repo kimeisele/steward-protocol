@@ -19,6 +19,7 @@ syscall completion.
 This is the runtime for "ML Light" - deterministic execution of neural output.
 """
 
+import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -486,6 +487,7 @@ class CognitiveCircuitExecutor:
         raw_input: str,
         compilation: CompilationResult,
         requester_id: str,
+        recursion_depth: int = 0,
     ) -> CircuitExecutionResult:
         """
         Execute a specific circuit definition.
@@ -498,7 +500,21 @@ class CognitiveCircuitExecutor:
         5. Repeats until terminal state
         """
         circuit_id = circuit_def["id"]
-        logger.info(f"🔄 Executing circuit: {circuit_id}")
+        logger.info(f"🔄 Executing circuit: {circuit_id} (Depth: {recursion_depth})")
+
+        # SAFETY: Check recursion depth
+        MAX_RECURSION_DEPTH = 5
+        if recursion_depth > MAX_RECURSION_DEPTH:
+            error_msg = f"MAX_RECURSION_DEPTH ({MAX_RECURSION_DEPTH}) exceeded in circuit {circuit_id}"
+            logger.error(f"🚨 {error_msg}")
+            return CircuitExecutionResult(
+                success=False,
+                final_state="RECURSION_LIMIT_EXCEEDED",
+                output={"error": error_msg},
+                state_history=[],
+                syscall_count=0,
+                error=error_msg,
+            )
 
         # META-CIRCUIT: Notify start
         if self._on_circuit_start:
@@ -660,6 +676,85 @@ class CognitiveCircuitExecutor:
                     # Resource preparation (simplified)
                     state.variables["resources_prepared"] = True
                     logger.info("💰 Resources prepared")
+
+                elif action == "GENERATE_MICRO_CIRCUIT":
+                    # VIBECORTEX: Just-in-Time Circuit Generation
+                    context = self._resolve_params(operation.get("context", {}), state.variables)
+                    constraints = operation.get("constraints", {})
+
+                    # Get Architect Agent (or fallback to Science)
+                    architect = self.kernel.get_agent("architect") or self.kernel.get_agent("science")
+                    if not architect:
+                        raise RuntimeError("No Architect agent available for circuit generation")
+
+                    # Prompt for circuit generation
+                    prompt = f"""
+                    TASK: Generate a valid YAML cognitive circuit (micro-circuit) for the following context.
+                    
+                    CONTEXT:
+                    {json.dumps(context, indent=2)}
+                    
+                    CONSTRAINTS:
+                    - Max states: {constraints.get("max_states", 3)}
+                    - Allowed tools: {constraints.get("allowed_tools", "ALL")}
+                    - Output format: ONLY valid YAML, no markdown blocks.
+                    
+                    The circuit must follow the standard schema:
+                    circuit:
+                      id: "MICRO_GENERATED_..."
+                      entry_state: "START"
+                      states: ...
+                    """
+
+                    logger.info("🧠 VibeCortex: Generating micro-circuit...")
+                    generated_yaml = architect.run(prompt)  # Assuming .run() or .execute()
+
+                    # Clean markdown code blocks if present
+                    if "```yaml" in generated_yaml:
+                        generated_yaml = generated_yaml.split("```yaml")[1].split("```")[0]
+                    elif "```" in generated_yaml:
+                        generated_yaml = generated_yaml.split("```")[1].split("```")[0]
+
+                    try:
+                        micro_circuit = yaml.safe_load(generated_yaml)
+                        # Unwrap if nested under 'circuit' key
+                        if "circuit" in micro_circuit:
+                            micro_circuit = micro_circuit["circuit"]
+
+                        # Validate basic structure
+                        if "states" not in micro_circuit:
+                            raise ValueError("Generated YAML missing 'states'")
+
+                        state.variables["generated_circuit"] = micro_circuit
+                        logger.info(f"✨ Micro-circuit generated: {micro_circuit.get('id', 'UNKNOWN')}")
+
+                    except Exception as e:
+                        logger.error(f"Failed to parse generated circuit: {e}")
+                        state.variables["generation_error"] = str(e)
+                        # Don't crash, let invariants handle it
+
+                elif action == "EXECUTE_MICRO_CIRCUIT":
+                    # VIBECORTEX: Recursive Execution
+                    micro_circuit = state.variables.get("generated_circuit")
+                    if not micro_circuit:
+                        logger.error("No micro-circuit found to execute")
+                        state.variables["micro_result"] = {"success": False, "error": "No circuit generated"}
+                    else:
+                        logger.info("🚀 Launching Micro-Circuit...")
+                        micro_result = self._execute_circuit(
+                            micro_circuit,
+                            raw_input=state.variables.get("raw_input", ""),  # Pass original input or derived
+                            compilation=compilation,  # Pass original compilation context
+                            requester_id=requester_id,
+                            recursion_depth=recursion_depth + 1,  # RECURSION!
+                        )
+
+                        state.variables["micro_result"] = {
+                            "success": micro_result.success,
+                            "output": micro_result.output,
+                            "final_state": micro_result.final_state,
+                        }
+                        logger.info(f"🏁 Micro-Circuit finished: {micro_result.success}")
 
                 elif action == "EXECUTE_SYSCALL":
                     # The actual syscall execution
@@ -845,34 +940,68 @@ class CognitiveCircuitExecutor:
         """
         Evaluate a condition string against variables.
 
-        Simple implementation - supports:
-        - "compiled_request.is_syscall == true"
-        - "constitutional_check.passed == true"
-        - "spawn_result.success == true"
+        Supports:
+        - "variable is not empty"
+        - "variable is empty"
+        - "variable == value"
+        - "variable != value"
         """
         try:
-            # Parse condition
-            parts = condition.split(" == ")
-            if len(parts) != 2:
-                logger.debug(f"Condition parse failed (no ==): {condition}")
+            condition = condition.strip()
+
+            # Simple boolean literals
+            if condition.lower() == "true":
+                return True
+            if condition.lower() == "false":
                 return False
 
-            path = parts[0].strip()
-            expected = parts[1].strip().lower()
-
-            # Resolve path
-            value = self._resolve_path(path, variables)
-            logger.debug(f"Condition check: {path} = {value} (expected: {expected})")
-
-            # Compare
-            if expected in ("true", "false"):
-                result = bool(value) == (expected == "true")
-                logger.debug(f"Boolean comparison: bool({value}) == {expected == 'true'} → {result}")
+            # Pattern: "X is not empty"
+            if " is not empty" in condition:
+                path = condition.replace(" is not empty", "").strip()
+                value = self._resolve_path(path, variables)
+                result = value is not None and value != "" and value != [] and value != {}
+                logger.debug(f"Condition check: {path} is not empty? {result} (value: {type(value)})")
                 return result
-            else:
-                result = str(value).lower() == expected
-                logger.debug(f"String comparison: '{str(value).lower()}' == '{expected}' → {result}")
+
+            # Pattern: "X is empty"
+            if " is empty" in condition:
+                path = condition.replace(" is empty", "").strip()
+                value = self._resolve_path(path, variables)
+                result = value is None or value == "" or value == [] or value == {}
+                logger.debug(f"Condition check: {path} is empty? {result} (value: {type(value)})")
                 return result
+
+            # Pattern: "X != Y"
+            if " != " in condition:
+                parts = condition.split(" != ")
+                path = parts[0].strip()
+                expected = parts[1].strip().lower()
+                value = self._resolve_path(path, variables)
+
+                if expected == "null" or expected == "none":
+                    return value is not None
+
+                result = str(value).lower() != expected
+                return result
+
+            # Pattern: "X == Y"
+            if " == " in condition:
+                parts = condition.split(" == ")
+                path = parts[0].strip()
+                expected = parts[1].strip().lower()
+                value = self._resolve_path(path, variables)
+
+                if expected == "null" or expected == "none":
+                    return value is None
+
+                if expected in ("true", "false"):
+                    result = bool(value) == (expected == "true")
+                else:
+                    result = str(value).lower() == expected
+                return result
+
+            logger.warning(f"Unknown condition format: {condition}")
+            return False
 
         except Exception as e:
             logger.warning(f"Condition evaluation failed: {condition} - {e}")

@@ -609,7 +609,9 @@ class MilkOceanRouter:
         except Exception as e:
             logger.debug(f"⚠️  Event emission failed (non-blocking): {e}")
 
-    def process_prayer(self, user_input: str, agent_id: str = "unknown", critical: bool = False) -> Dict[str, Any]:
+    def process_prayer(
+        self, user_input: str, agent_id: str = "unknown", critical: bool = False, recursion_depth: int = 0
+    ) -> Dict[str, Any]:
         """
         Main entry point: Route the user's "prayer" (request) through the gates
 
@@ -617,10 +619,24 @@ class MilkOceanRouter:
             user_input: The user's request
             agent_id: Agent submitting the request
             critical: Is this a CRITICAL priority request? (Gajendra Protocol - emergency bypass)
+            recursion_depth: Current recursion depth for VibeCortex circuits (default: 0)
 
         Returns:
             dict with routing decision and next action
         """
+
+        # Check recursion depth (VibeCortex Safety)
+        MAX_RECURSION_DEPTH = 5
+        if recursion_depth > MAX_RECURSION_DEPTH:
+            logger.warning(
+                f"⛔ Recursion depth exceeded ({recursion_depth} > {MAX_RECURSION_DEPTH}) for agent {agent_id}"
+            )
+            return {
+                "status": "blocked",
+                "reason": "Max recursion depth exceeded",
+                "message": "🚫 Recursion limit reached. Circuit execution halted for safety.",
+                "recursion_depth": recursion_depth,
+            }
 
         # Generate request ID
         request_id = hashlib.md5(f"{user_input}{datetime.now().isoformat()}".encode()).hexdigest()[:16]
