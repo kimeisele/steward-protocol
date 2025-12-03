@@ -1,0 +1,69 @@
+circuit:
+  id: TEMPLATE_CIRCUIT_V1            # Unique Identifier (UPPERCASE_V#)
+  name: Golden Circuit Template      # Human Readable Name
+  description: A template for creating deterministic, agentic circuits.
+  domain: GENERAL                    # e.g., PHILOSOPHY, GOVERNANCE
+  
+  # Entry Point
+  entry_state: START
+
+  # Global Invariants (Checked at start)
+  invariants:
+    - "raw_input is not empty"
+    - "requester_id is not empty"
+
+  # State Definitions
+  states:
+    START:
+      name: Initial State
+      description: The entry point of the circuit.
+      
+      # State Invariants (Pre-condition & Post-condition)
+      invariants: []
+
+      # Operations (The "Doing")
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: SPAWN_COGNITION  # Example: Spawn an agent
+          params:
+            role: "worker"
+            name: "Worker_Agent"
+            mission: "Perform a task."
+            context: "{{ raw_input }}"
+      
+      # Transitions (The "Flow")
+      transitions:
+        - condition: "spawn_result.success == true"
+          to: NEXT_STATE
+        - condition: "spawn_result.success == false"
+          to: ERROR
+
+    NEXT_STATE:
+      name: Next State
+      description: The next step in the process.
+      operations:
+        - action: EXECUTE_SYSCALL
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "{{ spawn_result.agent_id }}"
+            task_payload:
+              instruction: "Do something with: {{ raw_input }}"
+      transitions:
+        - condition: "dispatch_task_result.success == true"
+          to: SUCCESS
+        - condition: "dispatch_task_result.success == false"
+          to: ERROR
+
+    SUCCESS:
+      name: Success
+      description: The circuit completed successfully.
+      terminal: true
+      output:
+        result: "{{ dispatch_task_result.output }}"
+
+    ERROR:
+      name: Error
+      description: The circuit encountered an error.
+      terminal: true
+      output:
+        error: "Circuit failed."
