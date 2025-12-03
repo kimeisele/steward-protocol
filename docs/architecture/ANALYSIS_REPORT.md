@@ -1,6 +1,6 @@
 # STEWARD PROTOCOL - Architecture Analysis Report
 
-> **Generated:** 2025-12-02 15:26:09 UTC
+> **Generated:** 2025-12-03 20:04:14 UTC
 > **Method:** Automated analysis scripts (reproducible)
 > **Scripts:** docs/architecture/scripts/
 
@@ -14,27 +14,34 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
 ======================================================================
 
 📚 Found 2 existing GAD documents:
-   GAD-000: docs/architecture/core/GAD-000.md
-   GAD-1000: docs/architecture/core/GAD-1000.md
+   GAD-5000: docs/architecture/GAD-5000.md
+   GAD-5500: docs/architecture/GAD-5500.md
 
 🔍 Scanning codebase for GAD references...
    Found references to 36 unique GAD specifications
 
 ✅ DOCUMENTED GAD SPECS (have .md files):
 ----------------------------------------------------------------------
-   GAD-000: 82 references in 39 files
-            Doc: docs/architecture/core/GAD-000.md
-   GAD-1000: 8 references in 3 files
-            Doc: docs/architecture/core/GAD-1000.md
+   GAD-5000: 15 references in 4 files
+            Doc: docs/architecture/GAD-5000.md
+   GAD-5500: 26 references in 15 files
+            Doc: docs/architecture/GAD-5500.md
 
 ❌ UNDOCUMENTED GAD SPECS (code exists, no spec doc!):
 ----------------------------------------------------------------------
 
-   GAD-2: 1 references in 1 files
+   GAD-000: 81 references in 38 files
    Files:
-      - vibe_core/specialists/base_agent.py
+      - agent_city/registry/mechanic/__init__.py
+      - agent_city/registry/mechanic/cartridge_main.py
+      - scripts/final_launch.py
+      - scripts/fix_manifests.py
+      - scripts/run_server.py
+      ... and 33 more
    Sample contexts:
-      vibe_core/specialists/base_agent.py:562: # ATOMIC DELIVERY (GAD-2: The Atomic Gearbox)...
+      vibe_core/cli.py:9: GAD-000 (the human) commands. The system obeys....
+      vibe_core/cli.py:380: print(f"          GAD-000:  {anchors.get('philosophy_hash', ...
+      vibe_core/lineage.py:118: - GAD-000 (The Spirit): Operator Inversion Principle...
 
    GAD-002: 2 references in 2 files
    Files:
@@ -43,6 +50,12 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
    Sample contexts:
       vibe_core/runtime/__init__.py:5: GAD-002 Phase 3 Implementation...
       vibe_core/runtime/llm_client.py:6: Implements GAD-002 Decision 6 + GAD-511 Neural Adapter Strat...
+
+   GAD-2: 1 references in 1 files
+   Files:
+      - vibe_core/specialists/base_agent.py
+   Sample contexts:
+      vibe_core/specialists/base_agent.py:562: # ATOMIC DELIVERY (GAD-2: The Atomic Gearbox)...
 
    GAD-003: 4 references in 1 files
    Files:
@@ -74,6 +87,12 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       vibe_core/specialists/base_agent.py:57: 2. Execute commands safely via Runtime (GAD-5)...
       vibe_core/specialists/base_agent.py:164: f"Infrastructure incomplete. Missing: {missing}. Ensure GAD-...
 
+   GAD-006: 1 references in 1 files
+   Files:
+      - vibe_core/runtime/prompt_context.py
+   Sample contexts:
+      vibe_core/runtime/prompt_context.py:322: Resolve inbox message count (GAD-006: Asynchronous Intent)....
+
    GAD-6: 5 references in 1 files
    Files:
       - vibe_core/specialists/base_agent.py
@@ -81,12 +100,6 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       vibe_core/specialists/base_agent.py:8: - Arms (GAD-6): Knowledge retrieval via bin/vibe-knowledge...
       vibe_core/specialists/base_agent.py:58: 3. Consult knowledge base via Knowledge (GAD-6)...
       vibe_core/specialists/base_agent.py:164: f"Infrastructure incomplete. Missing: {missing}. Ensure GAD-...
-
-   GAD-006: 1 references in 1 files
-   Files:
-      - vibe_core/runtime/prompt_context.py
-   Sample contexts:
-      vibe_core/runtime/prompt_context.py:322: Resolve inbox message count (GAD-006: Asynchronous Intent)....
 
    GAD-7: 4 references in 1 files
    Files:
@@ -130,9 +143,9 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       - vibe_core/runtime/llm_client.py
       - vibe_core/runtime/tool_safety_guard.py
    Sample contexts:
-      vibe_core/runtime/circuit_breaker.py:3: GAD-509: Circuit Breaker Protocol...
-      vibe_core/runtime/circuit_breaker.py:20: Version: 1.0 (GAD-509)...
       vibe_core/runtime/tool_safety_guard.py:3: GAD-509 Extension: Tool Safety Guard ("Iron Dome")...
+      vibe_core/runtime/tool_safety_guard.py:16: Version: 1.0 (GAD-509 Extension - Operation Iron Dome)...
+      vibe_core/runtime/circuit_breaker.py:3: GAD-509: Circuit Breaker Protocol...
 
    GAD-510: 10 references in 2 files
    Files:
@@ -187,9 +200,9 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       - vibe_core/playbook/executor.py
       - vibe_core/playbook/router.py
    Sample contexts:
+      vibe_core/playbook/router.py:3: GAD-904: Agent Routing System (Neural Link)...
       vibe_core/playbook/executor.py:169: self.router = None  # AgentRouter (GAD-904) when connected...
       vibe_core/playbook/executor.py:178: # GAD-904: Neural link setup...
-      vibe_core/playbook/router.py:3: GAD-904: Agent Routing System (Neural Link)...
 
    GAD-905: 1 references in 1 files
    Files:
@@ -219,14 +232,24 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       - vibe_core/runtime/prompt_registry.py
    Sample contexts:
       vibe_core/playbook/executor.py:393: # GAD-909: Resolve dynamic context (The Flesh / OPERATION CO...
+      vibe_core/runtime/prompt_registry.py:505: ## SYSTEM CONTEXT (GAD-909: Dynamic Injection)...
       vibe_core/runtime/prompt_context.py:3: Prompt Context Engine - The Flesh (GAD-909)...
-      vibe_core/runtime/prompt_context.py:557: print("🧪 PROMPT CONTEXT ENGINE TEST (GAD-909)")...
 
    GAD-913: 1 references in 1 files
    Files:
       - vibe_core/playbook/runner.py
    Sample contexts:
       vibe_core/playbook/runner.py:3: GAD-913: Playbook Runner (Cartridge Slot Implementation)...
+
+   GAD-1000: 8 references in 3 files
+   Files:
+      - scripts/vibe_cli.py
+      - steward/system_agents/auditor/tools/constitutional_verdict.py
+      - steward/system_agents/watchman/cartridge_main.py
+   Sample contexts:
+      steward/system_agents/watchman/cartridge_main.py:73: r"requests\.get\s*\(",  # HTTP without GAD-1000 verification...
+      steward/system_agents/watchman/cartridge_main.py:280: # Check for raw socket operations without GAD-1000 verificat...
+      steward/system_agents/watchman/cartridge_main.py:297: "reason": "Unauthorized network operation detected - violate...
 
    GAD-1100: 1 references in 1 files
    Files:
@@ -239,8 +262,8 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       - vibe_core/store/sqlite_store.py
       - vibe_core/task_management/task_manager.py
    Sample contexts:
-      vibe_core/store/sqlite_store.py:992: # ROADMAP PERSISTENCE (GAD-3000 VIMANA)...
       vibe_core/task_management/task_manager.py:54: # VIMANA DUAL-CORE PERSISTENCE (GAD-3000)...
+      vibe_core/store/sqlite_store.py:992: # ROADMAP PERSISTENCE (GAD-3000 VIMANA)...
 
    GAD-4000: 5 references in 2 files
    Files:
@@ -251,38 +274,14 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       scripts/standalone_tests/test_gad4000.py:3: 🌌 GAD-4000 Fast-Path Execution Test...
       scripts/standalone_tests/test_gad4000.py:41: """Test the GAD-4000 Fast-Path routing"""...
 
-   GAD-5000: 15 references in 4 files
-   Files:
-      - provider/universal_provider.py
-      - steward/system_agents/envoy/action_handlers.py
-      - steward/system_agents/envoy/deterministic_executor.py
-      - tests/test_playbook_system.py
-   Sample contexts:
-      steward/system_agents/envoy/deterministic_executor.py:2: 🎯 DETERMINISTIC EXECUTOR (GAD-5000: DETERMINISTIC EXECUTION)...
-      steward/system_agents/envoy/deterministic_executor.py:35: # Jinja2 for template substitution (GAD-5000 Variable Inject...
-      steward/system_agents/envoy/deterministic_executor.py:43: # Action Handler Registry (GAD-5000 Registry Pattern)...
-
    GAD-5001: 7 references in 2 files
    Files:
       - steward/system_agents/envoy/blueprint_generator.py
       - steward/system_agents/envoy/deterministic_executor.py
    Sample contexts:
+      steward/system_agents/envoy/blueprint_generator.py:2: BLUEPRINT GENERATOR (GAD-5001: The Missing Bridge)...
       steward/system_agents/envoy/deterministic_executor.py:55: # Blueprint Generator (GAD-5001 Raw Input → Structured Param...
       steward/system_agents/envoy/deterministic_executor.py:141: # GAD-5001: Extracted blueprint values (replaces defaults)...
-      steward/system_agents/envoy/deterministic_executor.py:192: # Initialize Blueprint Generator (GAD-5001 Raw Input → Struc...
-
-   GAD-5500: 25 references in 15 files
-   Files:
-      - scripts/testing/verify_gad5500_live.py
-      - scripts/verification/verify_system_watertight.py
-      - steward/system_agents/archivist/cartridge_main.py
-      - steward/system_agents/auditor/cartridge_main.py
-      - steward/system_agents/engineer/STEWARD.md
-      ... and 10 more
-   Sample contexts:
-      vibe_core/semantic_syscalls.py:15: GAD-5500: Safe Evolution Loop / Cognitive Circuits...
-      vibe_core/circuit_executor.py:4: GAD-5500: Neuro-Symbolic OS Implementation...
-      vibe_core/playbook/circuits/governance_vote.yaml:3: # GAD-5500: Neuro-Symbolic OS - Operation Gleichschaltung...
 
    GAD-6000: 4 references in 2 files
    Files:
@@ -299,9 +298,9 @@ GAD REFERENCE ANALYZER - Reverse Engineering Specs from Code
       - provider/reflex_engine.py
       - provider/universal_provider.py
    Sample contexts:
-      provider/reflex_engine.py:2: ⚡ REFLEX ENGINE (GAD-7000: INSTANT RESPONSE LAYER)...
       provider/universal_provider.py:40: # Import Strategy Pattern Engines (GAD-7000: NEURAL INJECTIO...
       provider/universal_provider.py:219: # === STRATEGY PATTERN ENGINES (GAD-7000: NEURAL INJECTION) ...
+      provider/universal_provider.py:258: logger.info("🌌 Universal Provider GAD-5000 (DHARMIC) initial...
 
 ======================================================================
 SUMMARY
@@ -310,13 +309,13 @@ SUMMARY
    Undocumented: 34 GAD specs  ← NEED SPECS WRITTEN!
 
 🔥 PRIORITY: Write specs for these undocumented GADs:
-   GAD-5500 (25 code references)
+   GAD-000 (81 code references)
    GAD-511 (20 code references)
-   GAD-5000 (15 code references)
    GAD-510 (10 code references)
    GAD-7000 (10 code references)
    GAD-100 (8 code references)
    GAD-509 (8 code references)
+   GAD-1000 (8 code references)
    GAD-5001 (7 code references)
    GAD-5 (5 code references)
    GAD-6 (5 code references)
@@ -357,39 +356,39 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
 ======================================================================
 
 📊 SUMMARY
-   Total modules: 100
-   Total lines:   25,869
-   Total classes: 279
-   Total functions: 38
+   Total modules: 105
+   Total lines:   26,537
+   Total classes: 290
+   Total functions: 40
 
 📦 TOP 15 MODULES BY SIZE:
 ----------------------------------------------------------------------
-    1813 lines | vibe_core/kernel_impl.py
     1316 lines | vibe_core/store/sqlite_store.py [GAD: 004,3000]
+    1205 lines | vibe_core/kernel_impl.py
      923 lines | vibe_core/circuit_executor.py [GAD: 5500]
      784 lines | vibe_core/cli.py [GAD: 000]
      617 lines | vibe_core/semantic_syscalls.py [GAD: 5500]
      550 lines | vibe_core/agent_interface.py
-     545 lines | vibe_core/playbook/executor.py [GAD: 904,902,909]
-     478 lines | vibe_core/specialists/base_agent.py [GAD: 301,7,2]
+     545 lines | vibe_core/playbook/executor.py [GAD: 904,906,909]
+     478 lines | vibe_core/specialists/base_agent.py [GAD: 201,2,7]
      477 lines | vibe_core/runtime/prompt_runtime.py [GAD: 003]
      474 lines | vibe_core/topology.py
      466 lines | vibe_core/runtime/prompt_registry.py [GAD: 909]
      461 lines | vibe_core/task_management/task_manager.py [GAD: 3000]
      446 lines | vibe_core/operator_adapter.py
-     410 lines | vibe_core/runtime/prompt_context.py [GAD: 006,909]
-     409 lines | vibe_core/specialists/base_specialist.py
+     410 lines | vibe_core/runtime/prompt_context.py [GAD: 909,006]
+     409 lines | vibe_core/doc_renderer.py
 
 📝 MODULES WITH SUBSTANTIAL DOCSTRINGS (potential specs):
 ----------------------------------------------------------------------
 
-   📄 vibe_core/kernel_impl.py (1813 lines)
-   GAD refs: None
-   " ⚙️ REAL VIBE KERNEL IMPLEMENTATION ⚙️ =====================================  This is an actual working implementation of the VibeKernel that: 1. Manages a process table of agents 2. Runs a real task ..."
-
    📄 vibe_core/store/sqlite_store.py (1316 lines)
    GAD refs: 004, 3000
    " SQLite persistence layer for vibe-agency (Schema v2)  Implements ARCH-002: SQLiteStore class with CRUD operations for: - Missions (lifecycle tracking + budget + metadata) - Tool calls (audit trail) -..."
+
+   📄 vibe_core/kernel_impl.py (1205 lines)
+   GAD refs: None
+   " ⚙️ REAL VIBE KERNEL IMPLEMENTATION ⚙️ =====================================  This is an actual working implementation of the VibeKernel that: 1. Manages a process table of agents 2. Runs a real task ..."
 
    📄 vibe_core/circuit_executor.py (923 lines)
    GAD refs: 5500
@@ -408,11 +407,11 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    " AGENT SYSTEM INTERFACE - The Bridge Between Kernel and Agents ============================================================== ..."
 
    📄 vibe_core/playbook/executor.py (545 lines)
-   GAD refs: 904, 902, 909, 906, 908
+   GAD refs: 904, 906, 909, 908, 902
    " GAD-902: Graph Executor (Isolated Implementation) ===================================================  Orchestrates workflow execution using graph-based dependencies.  KEY PRINCIPLE: Pure logic first..."
 
    📄 vibe_core/specialists/base_agent.py (478 lines)
-   GAD refs: 301, 7, 2, 201, 5, 6, 4
+   GAD refs: 201, 2, 7, 301, 5, 6, 4
    " BaseAgent: The Integration Hub (GAD-301)  This is the abstract class that connects:   - Body (GAD-5): Runtime execution via bin/vibe-shell   - Brain (GAD-7): Mission control & orchestration   - Arms ..."
 
    📄 vibe_core/runtime/prompt_runtime.py (477 lines)
@@ -432,8 +431,12 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    " UNIVERSAL OPERATOR ADAPTER - TCP/IP for Agent Intelligence  PHOENIX VIMANA UNIFIED BOOT - Phase C  This module implements the operator-agnostic interface for Agent City OS. The system doesn't care WH..."
 
    📄 vibe_core/runtime/prompt_context.py (410 lines)
-   GAD refs: 006, 909
+   GAD refs: 909, 006
    " Prompt Context Engine - The Flesh (GAD-909) ============================================  Provides dynamic context injection for prompts - the "flesh" that makes the skeleton (workflows) and voice (p..."
+
+   📄 vibe_core/doc_renderer.py (409 lines)
+   GAD refs: None
+   " DocRenderer - Markdown document rendering for Kernel output.  EXTRACTED FROM kernel_impl.py to reduce kernel churn.  Kernel should ONLY: 1. Collect state (snapshot) 2. Call DocRenderer.render_all(sna..."
 
    📄 vibe_core/specialists/base_specialist.py (409 lines)
    GAD refs: None
@@ -446,6 +449,10 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    📄 vibe_core/playbook/runner.py (384 lines)
    GAD refs: 913
    " GAD-913: Playbook Runner (Cartridge Slot Implementation) =========================================================  Connects Playbook definitions to CoreOrchestrator execution.  A "Playbook" is a YAM..."
+
+   📄 vibe_core/settings_sync.py (382 lines)
+   GAD refs: None
+   " SettingsSync - Bidirectional SETTINGS.md Interface  EXTRACTED FROM kernel_impl.py to reduce kernel complexity.  Implements the Command Queue pattern: 1. User writes commands in SETTINGS.md "Pending C..."
 
    📄 vibe_core/ledger.py (365 lines)
    GAD refs: None
@@ -491,8 +498,12 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    GAD refs: None
    " Agenda Management Tools for vibe-agency OS (ARCH-045)  Provides tools for managing the backlog/agenda system. These tools allow agents to add, list, and complete tasks in the persistent backlog.  The..."
 
+   📄 vibe_core/envoy_sync.py (292 lines)
+   GAD refs: None
+   " EnvoySync - Bidirectional ENVOY.md Terminal Interface  EXTRACTED FROM kernel_impl.py to reduce kernel complexity.  Implements the Async Dispatch pattern: 1. User writes request in ENVOY.md "Request" ..."
+
    📄 vibe_core/runtime/llm_client.py (289 lines)
-   GAD refs: 002, 510, 509, 511
+   GAD refs: 510, 509, 002, 511
    " LLM Client - Provider-Agnostic Adapter (GAD-511 Refactor) ===========================================================  Implements GAD-002 Decision 6 + GAD-511 Neural Adapter Strategy  Features: - **M..."
 
    📄 vibe_core/agents/llm_agent.py (287 lines)
@@ -703,6 +714,10 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    GAD refs: None
    " LLM Provider abstraction for vibe-agency OS.  This module defines the standard interface for LLM providers (ARCH-025), enabling the kernel to orchestrate cognitive work via language models. ..."
 
+   📄 vibe_core/settings_executor.py (95 lines)
+   GAD refs: None
+   " SettingsExecutor - Executes settings commands from SETTINGS.md  SEPARATED FROM kernel_impl.py to keep kernel clean.  This module handles the ACTUAL execution of settings commands: - RESTART agent.<id..."
+
    📄 vibe_core/knowledge/resolver.py (95 lines)
    GAD refs: None
    " Knowledge Resolver  High-level interface for agents to query knowledge. Provides semantic queries that map to graph operations. ..."
@@ -769,19 +784,19 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
       - vibe_core/runtime/llm_client.py
    GAD-004: 1 modules
       - vibe_core/store/sqlite_store.py
-   GAD-902: 1 modules
-      - vibe_core/playbook/executor.py
    GAD-906: 1 modules
       - vibe_core/playbook/executor.py
    GAD-908: 1 modules
       - vibe_core/playbook/executor.py
-   GAD-301: 1 modules
-      - vibe_core/specialists/base_agent.py
-   GAD-7: 1 modules
+   GAD-902: 1 modules
+      - vibe_core/playbook/executor.py
+   GAD-201: 1 modules
       - vibe_core/specialists/base_agent.py
    GAD-2: 1 modules
       - vibe_core/specialists/base_agent.py
-   GAD-201: 1 modules
+   GAD-7: 1 modules
+      - vibe_core/specialists/base_agent.py
+   GAD-301: 1 modules
       - vibe_core/specialists/base_agent.py
    GAD-5: 1 modules
       - vibe_core/specialists/base_agent.py
@@ -807,13 +822,13 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
 🏛️ CLASS INVENTORY (main classes):
 ----------------------------------------------------------------------
 
+   vibe_core/store/sqlite_store.py:
+      class SQLiteStore: [__init__, _load_schema, _commit, close, __enter__, ... (+47)]
+
    vibe_core/kernel_impl.py:
       class InMemoryScheduler: [__init__, submit_task, next_task, get_queue_status]
       class InMemoryManifestRegistry: [__init__, register, lookup, find_by_capability, list_all]
-      class RealVibeKernel: [__init__, get_bank, get_vault, _check_agent_capability, _narasimha_destroy_agent, ... (+55)]
-
-   vibe_core/store/sqlite_store.py:
-      class SQLiteStore: [__init__, _load_schema, _commit, close, __enter__, ... (+47)]
+      class RealVibeKernel: [__init__, get_bank, get_vault, _check_agent_capability, _narasimha_destroy_agent, ... (+41)]
 
    vibe_core/circuit_executor.py:
       class InvariantViolation: []
@@ -878,6 +893,11 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
    vibe_core/runtime/prompt_context.py:
       class PromptContext: [__init__, set_kernel, _register_core_resolvers, register, resolve, ... (+11)]
 
+   vibe_core/doc_renderer.py:
+      class SettingsRenderState: []
+      class EnvoyRenderState: []
+      class DocRenderer: [render_unified_header, render_operations, render_settings, render_envoy, render_all]
+
    vibe_core/specialists/base_specialist.py:
       class MissionContext: []
       class SpecialistResult: [__post_init__]
@@ -893,15 +913,14 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
       class PlaybookAgent: []
       class PlaybookTool: []
 
+   vibe_core/settings_sync.py:
+      class SettingsSyncState: []
+      class SettingsExecutionResult: []
+      class SettingsSync: [__init__, check_file_changed, parse_commands, execute_commands, _execute_set, ... (+7)]
+
    vibe_core/ledger.py:
       class InMemoryLedger: [__init__, record_event, record_start, record_completion, record_failure, ... (+2)]
       class SQLiteLedger: [__init__, _initialize_db, record_event, record_start, record_completion, ... (+9)]
-
-   vibe_core/boot_orchestrator.py:
-      class BootOrchestrator: [__init__, boot, _phase_shabda, _phase_akasha, _phase_vayu, ... (+8)]
-
-   vibe_core/llm/smart_local_provider.py:
-      class SmartLocalProvider: [__init__, chat, _is_delegation_request, _is_planning_request, _is_coding_request, ... (+9)]
 
 ```
 
@@ -914,45 +933,46 @@ KERNEL MODULE ANALYZER - vibe_core/ Deep Scan
 MANIFEST VALIDATOR - steward.json Compliance Check
 ======================================================================
 
-📦 Found 32 steward.json files
+📦 Found 33 steward.json files
 
-✅ VALID MANIFESTS (30):
+✅ VALID MANIFESTS (31):
 ----------------------------------------------------------------------
-   scribe               | INFRASTRUCTURE  | steward/system_agents/scribe/steward.json
-   oracle               | SYSTEM          | steward/system_agents/oracle/steward.json
-   archivist            | SYSTEM          | steward/system_agents/archivist/steward.json
-   herald               | COMMUNICATIONS  | steward/system_agents/herald/steward.json ⚠️ 1 warnings
-   civic                | GOVERNANCE      | steward/system_agents/civic/steward.json
-   envoy                | INTERFACE       | steward/system_agents/envoy/steward.json
    ping                 | SYSTEM          | steward/system_agents/ping/steward.json
-   engineer             | INFRASTRUCTURE  | steward/system_agents/engineer/steward.json
-   YOUR_AGENT_ID        | YOUR_DOMAIN     | steward/system_agents/engineer/templates/agent/steward.json ⚠️ 1 warnings
-   science              | INTELLIGENCE    | steward/system_agents/science/steward.json ⚠️ 1 warnings
-   auditor              | SECURITY        | steward/system_agents/auditor/steward.json
-   supreme_court        | JUSTICE         | steward/system_agents/supreme_court/steward.json
-   chronicle            | SYSTEM          | steward/system_agents/chronicle/steward.json
+   civic                | GOVERNANCE      | steward/system_agents/civic/steward.json
+   archivist            | SYSTEM          | steward/system_agents/archivist/steward.json
    discoverer           | GOVERNANCE      | steward/system_agents/discoverer/steward.json
+   supreme_court        | JUSTICE         | steward/system_agents/supreme_court/steward.json
+   oracle               | SYSTEM          | steward/system_agents/oracle/steward.json
+   science              | INTELLIGENCE    | steward/system_agents/science/steward.json ⚠️ 1 warnings
+   envoy                | INTERFACE       | steward/system_agents/envoy/steward.json
    forum                | COMMUNITY       | steward/system_agents/forum/steward.json
    watchman             | SYSTEM          | steward/system_agents/watchman/steward.json
-   temple               | SPIRITUAL       | agent_city/registry/temple/steward.json ⚠️ 1 warnings
-   lens                 | OBSERVATION     | agent_city/registry/lens/steward.json
-   ambassador           | DIPLOMACY       | agent_city/registry/ambassador/steward.json ⚠️ 1 warnings
-   dhruva               | DATA_ETHICS     | agent_city/registry/dhruva/steward.json
-   agora                | COMMUNITY       | agent_city/registry/agora/steward.json
+   scribe               | INFRASTRUCTURE  | steward/system_agents/scribe/steward.json
+   herald               | COMMUNICATIONS  | steward/system_agents/herald/steward.json ⚠️ 1 warnings
+   chronicle            | SYSTEM          | steward/system_agents/chronicle/steward.json
+   auditor              | SECURITY        | steward/system_agents/auditor/steward.json
+   engineer             | INFRASTRUCTURE  | steward/system_agents/engineer/steward.json
+   YOUR_AGENT_ID        | YOUR_DOMAIN     | steward/system_agents/engineer/templates/agent/steward.json ⚠️ 1 warnings
+   analyst              | RESEARCH        | agent_city/registry/analyst/steward.json
    mechanic             | MAINTENANCE     | agent_city/registry/mechanic/steward.json
-   artisan              | MEDIA           | agent_city/registry/artisan/steward.json
+   agora                | COMMUNITY       | agent_city/registry/agora/steward.json
+   ambassador           | DIPLOMACY       | agent_city/registry/ambassador/steward.json ⚠️ 1 warnings
    pulse                | MEDIA           | agent_city/registry/pulse/steward.json
+   artisan              | MEDIA           | agent_city/registry/artisan/steward.json
+   lens                 | OBSERVATION     | agent_city/registry/lens/steward.json
    market               | ECONOMY         | agent_city/registry/market/steward.json ⚠️ 1 warnings
+   dhruva               | DATA_ETHICS     | agent_city/registry/dhruva/steward.json
    echo                 | TESTING         | agent_city/registry/citizens/echo/steward.json
-   nexus                | COORDINATION    | starter-packs/nexus/steward.json ⚠️ 1 warnings
-   scope                | RESEARCH        | starter-packs/scope/steward.json
-   spark                | MEDIA           | starter-packs/spark/steward.json
+   temple               | SPIRITUAL       | agent_city/registry/temple/steward.json ⚠️ 1 warnings
    shield               | SECURITY        | starter-packs/shield/steward.json
+   scope                | RESEARCH        | starter-packs/scope/steward.json
+   nexus                | COORDINATION    | starter-packs/nexus/steward.json ⚠️ 1 warnings
+   spark                | MEDIA           | starter-packs/spark/steward.json
 
 ❌ INVALID MANIFESTS (2):
 ----------------------------------------------------------------------
 
-   agent_city/registry/marketer/steward.json
+   agent_city/registry/librarian/steward.json
       ❌ Missing specs.version
       ❌ Missing section: capabilities
       ❌ Missing governance.compliance_level
@@ -960,7 +980,7 @@ MANIFEST VALIDATOR - steward.json Compliance Check
       ❌ Missing governance.issued_at
       ❌ Missing governance.issuer
 
-   agent_city/registry/librarian/steward.json
+   agent_city/registry/marketer/steward.json
       ❌ Missing specs.version
       ❌ Missing section: capabilities
       ❌ Missing governance.compliance_level
@@ -971,24 +991,21 @@ MANIFEST VALIDATOR - steward.json Compliance Check
 ⚠️ WARNINGS (11):
 ----------------------------------------------------------------------
 
+   steward/system_agents/science/steward.json
+      ⚠️ Unknown domain: INTELLIGENCE
+
    steward/system_agents/herald/steward.json
       ⚠️ Unknown domain: COMMUNICATIONS
 
    steward/system_agents/engineer/templates/agent/steward.json
       ⚠️ Unknown domain: YOUR_DOMAIN
 
-   steward/system_agents/science/steward.json
-      ⚠️ Unknown domain: INTELLIGENCE
-
-   agent_city/registry/temple/steward.json
-      ⚠️ Unknown domain: SPIRITUAL
+   agent_city/registry/librarian/steward.json
+      ⚠️ Unknown domain: KNOWLEDGE
+      ⚠️ Constitution hash not set
 
    agent_city/registry/marketer/steward.json
       ⚠️ Unknown domain: CONTENT
-      ⚠️ Constitution hash not set
-
-   agent_city/registry/librarian/steward.json
-      ⚠️ Unknown domain: KNOWLEDGE
       ⚠️ Constitution hash not set
 
    agent_city/registry/ambassador/steward.json
@@ -996,6 +1013,9 @@ MANIFEST VALIDATOR - steward.json Compliance Check
 
    agent_city/registry/market/steward.json
       ⚠️ Unknown domain: ECONOMY
+
+   agent_city/registry/temple/steward.json
+      ⚠️ Unknown domain: SPIRITUAL
 
    starter-packs/nexus/steward.json
       ⚠️ Unknown domain: COORDINATION
@@ -1016,19 +1036,19 @@ MANIFEST VALIDATOR - steward.json Compliance Check
    JUSTICE: supreme_court
    KNOWLEDGE: librarian
    MAINTENANCE: mechanic
-   MEDIA: artisan, pulse, spark
+   MEDIA: pulse, artisan, spark
    OBSERVATION: lens
-   RESEARCH: scope
+   RESEARCH: analyst, scope
    SECURITY: auditor, shield
    SPIRITUAL: temple
-   SYSTEM: oracle, archivist, ping, chronicle, watchman
+   SYSTEM: ping, archivist, oracle, watchman, chronicle
    TESTING: echo
    YOUR_DOMAIN: YOUR_AGENT_ID
 
 ======================================================================
 SUMMARY
 ======================================================================
-   Valid:    30
+   Valid:    31
    Invalid:  2
    Warnings: 11
    Domains:  22
