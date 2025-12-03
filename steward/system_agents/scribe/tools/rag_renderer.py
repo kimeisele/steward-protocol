@@ -74,7 +74,7 @@ class RagRenderer(Tool):
             try:
                 from agent_city.registry.analyst.cartridge_main import AnalystCartridge
 
-                self._analyst = AnalystCartridge(str(self.root_dir))
+                self._analyst = AnalystCartridge()
             except ImportError:
                 raise ImportError("ANALYST agent not found. Ensure agent_city.registry.analyst is available.")
         return self._analyst
