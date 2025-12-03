@@ -7,13 +7,15 @@ These tools are registered with the kernel, not owned by the agent.
 RAG = Realtime Architecture Guide
 
 Tools provide MULTI-SOURCE analysis:
-- analyst.git       Git history, temporal patterns, velocity
-- analyst.code      Code analysis, AST, complexity metrics
-- analyst.structure Project architecture, module boundaries
-- analyst.deps      Dependency analysis, imports, requirements
-- analyst.docs      Documentation parsing, coverage analysis
+- analyst.git          Git history, temporal patterns, velocity
+- analyst.code         Code analysis, AST, complexity metrics
+- analyst.structure    Project architecture, module boundaries
+- analyst.deps         Dependency analysis, imports, requirements
+- analyst.docs         Documentation parsing, coverage analysis
+- analyst.architecture System introspection and ARCHITECTURE.md generation
 """
 
+from .architecture_tool import ArchitectureAnalysisTool
 from .code_tool import CodeAnalysisTool
 from .deps_tool import DependencyAnalysisTool
 from .docs_tool import DocsAnalysisTool
@@ -26,4 +28,5 @@ __all__ = [
     "StructureAnalysisTool",
     "DependencyAnalysisTool",
     "DocsAnalysisTool",
+    "ArchitectureAnalysisTool",
 ]
