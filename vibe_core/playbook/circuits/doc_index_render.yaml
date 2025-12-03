@@ -236,12 +236,42 @@ circuit:
       final: true
 
   # ===========================================================================
+  # AUTO-GENERATED DOCS REGISTRY (Single Source of Truth)
+  # ===========================================================================
+  # All SCRIBE auto-generated documentation files.
+  # Used by header.jinja2 for dynamic navigation.
+  # Add new auto-gen docs here - they will appear in all file headers.
+
+  auto_generated_docs:
+    - name: "README"
+      file: "README.md"
+      description: "Project overview"
+    - name: "INDEX"
+      file: "INDEX.md"
+      description: "Documentation index"
+    - name: "AGENTS"
+      file: "AGENTS.md"
+      description: "Agent registry"
+    - name: "CITYMAP"
+      file: "CITYMAP.md"
+      description: "System architecture"
+    - name: "HELP"
+      file: "HELP.md"
+      description: "Operations control"
+    - name: "DASHBOARD"
+      file: "DASHBOARD.md"
+      description: "System status"
+    - name: "RAG"
+      file: "RAG.md"
+      description: "Realtime Architecture Guide"
+
+  # ===========================================================================
   # METADATA
   # ===========================================================================
 
   metadata:
     created: "2025-12-02"
-    updated: "2025-12-02"
+    updated: "2025-12-03"
     author: "Steward Protocol"
     purpose: "VEDA-4 Documentation Index Generation"
     version_notes: |
@@ -249,6 +279,9 @@ circuit:
       - Schema-driven doc mappings (not hardcoded)
       - VEDA-4 cognitive flow states
       - Declarative configuration
+      v1.1: Added auto_generated_docs registry
+      - Single source of truth for header navigation
+      - Dynamic, not hardcoded
     integration:
       agent: "scribe"
       tool: "scribe.index_renderer"

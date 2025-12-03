@@ -18,7 +18,15 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, get_kernel_status, load_template
+from .base import (
+    Tool,
+    ToolResult,
+    format_auto_docs_box,
+    format_auto_docs_nav,
+    get_auto_docs,
+    get_kernel_status,
+    load_template,
+)
 from .introspector import CartridgeIntrospector
 from .runtime_inspector import RuntimeInspector
 from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
@@ -123,6 +131,11 @@ class CitymapRenderer(Tool):
         # Get kernel status for unified header
         kernel_status = get_kernel_status(str(self.root_dir))
 
+        # Auto-docs from circuit (dynamic, not hardcoded)
+        auto_docs = get_auto_docs(str(self.root_dir))
+        auto_docs_nav = format_auto_docs_nav(auto_docs)
+        auto_docs_box = format_auto_docs_box(auto_docs)
+
         # Pre-render sections for template
         template = load_template("citymap.jinja2")
         content = template.render(
@@ -130,6 +143,8 @@ class CitymapRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
+            auto_docs_nav=auto_docs_nav,
+            auto_docs_box=auto_docs_box,
             # Citymap-specific variables
             total_count=total_count,
             system_count=system_count,
