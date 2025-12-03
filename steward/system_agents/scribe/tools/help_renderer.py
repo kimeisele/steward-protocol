@@ -18,7 +18,15 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, get_kernel_status, load_template
+from .base import (
+    Tool,
+    ToolResult,
+    format_auto_docs_box,
+    format_auto_docs_nav,
+    get_auto_docs,
+    get_kernel_status,
+    load_template,
+)
 from .introspector import (
     CartridgeIntrospector,
     ConfigIntrospector,
@@ -101,6 +109,11 @@ class HelpRenderer(Tool):
         # Get kernel status for unified header
         kernel_status = get_kernel_status(str(self.root_dir))
 
+        # Auto-docs from circuit (dynamic, not hardcoded)
+        auto_docs = get_auto_docs(str(self.root_dir))
+        auto_docs_nav = format_auto_docs_nav(auto_docs)
+        auto_docs_box = format_auto_docs_box(auto_docs)
+
         # Pre-render sections for template
         template = load_template("help.jinja2")
         content = template.render(
@@ -108,6 +121,8 @@ class HelpRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
+            auto_docs_nav=auto_docs_nav,
+            auto_docs_box=auto_docs_box,
             # Help-specific variables
             workflows_section=self._render_workflows(workflows),
             git_section=self._render_git_activity(git_activity),

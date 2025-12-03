@@ -11,9 +11,13 @@ Tool Protocol Compliant.
 
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+import yaml
 from jinja2 import Environment, FileSystemLoader, Template
+
+# Circuit YAML path for auto-generated docs registry
+CIRCUIT_PATH = "vibe_core/playbook/circuits/doc_index_render.yaml"
 
 # Tool Protocol import - optional for standalone mode
 try:
@@ -151,6 +155,62 @@ def load_template(template_name: str, fallback: Optional[str] = None) -> Templat
         raise FileNotFoundError(f"Template not found: {template_name}")
 
 
+def get_auto_docs(root_dir: str = ".") -> List[Dict[str, str]]:
+    """Load auto-generated docs registry from circuit YAML.
+
+    Returns list of auto-generated doc entries from doc_index_render.yaml.
+    This is the SINGLE SOURCE OF TRUTH for header navigation.
+
+    Returns:
+        List of dicts with 'name', 'file', 'description' keys
+    """
+    circuit_file = Path(root_dir) / CIRCUIT_PATH
+    if not circuit_file.exists():
+        # Fallback if circuit not found
+        return [
+            {"name": "README", "file": "README.md"},
+            {"name": "INDEX", "file": "INDEX.md"},
+        ]
+
+    try:
+        with open(circuit_file) as f:
+            data = yaml.safe_load(f)
+        circuit = data.get("circuit", {})
+        return circuit.get("auto_generated_docs", [])
+    except (yaml.YAMLError, OSError):
+        return []
+
+
+def format_auto_docs_nav(auto_docs: List[Dict[str, str]]) -> str:
+    """Format auto-docs list as markdown navigation string.
+
+    Args:
+        auto_docs: List from get_auto_docs()
+
+    Returns:
+        Markdown string like "[README](README.md) · [INDEX](INDEX.md) · ..."
+    """
+    links = [f"[{doc['name']}]({doc['file']})" for doc in auto_docs]
+    return " · ".join(links)
+
+
+def format_auto_docs_box(auto_docs: List[Dict[str, str]]) -> str:
+    """Format auto-docs list for ASCII box in header.
+
+    Args:
+        auto_docs: List from get_auto_docs()
+
+    Returns:
+        Two-line string for ASCII box display
+    """
+    names = [doc["name"] for doc in auto_docs]
+    # Split into two lines of ~6 items each
+    mid = (len(names) + 1) // 2
+    line1 = " | ".join(names[:mid])
+    line2 = " | ".join(names[mid:]) if mid < len(names) else ""
+    return line1, line2
+
+
 __all__ = [
     "Tool",
     "ToolResult",
@@ -158,4 +218,7 @@ __all__ = [
     "get_template_dir",
     "get_kernel_status",
     "load_template",
+    "get_auto_docs",
+    "format_auto_docs_nav",
+    "format_auto_docs_box",
 ]

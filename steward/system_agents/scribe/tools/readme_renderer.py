@@ -19,7 +19,14 @@ from typing import Any, Optional
 from jinja2 import Environment, FileSystemLoader, Template
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, get_kernel_status
+from .base import (
+    Tool,
+    ToolResult,
+    format_auto_docs_box,
+    format_auto_docs_nav,
+    get_auto_docs,
+    get_kernel_status,
+)
 from .project_introspector import ProjectIntrospector
 
 
@@ -123,11 +130,18 @@ class ReadmeRenderer(Tool):
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         kernel_status = get_kernel_status(str(self.root_dir))
 
+        # Auto-docs from circuit (dynamic, not hardcoded)
+        auto_docs = get_auto_docs(str(self.root_dir))
+        auto_docs_nav = format_auto_docs_nav(auto_docs)
+        auto_docs_box = format_auto_docs_box(auto_docs)
+
         content = template.render(
             # Unified header variables
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
+            auto_docs_nav=auto_docs_nav,
+            auto_docs_box=auto_docs_box,
             # README-specific variables
             project=metadata["project"],
             git=metadata["git"],
