@@ -384,14 +384,15 @@ class CognitiveCircuitExecutor:
         logger.info("🔗 Meta-circuit callbacks registered")
 
     def _load_circuits(self) -> None:
-        """Load all circuit definitions from YAML files."""
+        """Load all circuit definitions from YAML files (Recursive)."""
         circuits_dir = Path(__file__).parent / "playbook" / "circuits"
 
         if not circuits_dir.exists():
             logger.warning(f"Circuits directory not found: {circuits_dir}")
             return
 
-        for yaml_file in circuits_dir.glob("*.yaml"):
+        # GAD-5500: Recursive loading for Fractal Circuit Library
+        for yaml_file in circuits_dir.glob("**/*.yaml"):
             try:
                 with open(yaml_file) as f:
                     circuit_def = yaml.safe_load(f)
@@ -665,8 +666,8 @@ class CognitiveCircuitExecutor:
                     syscall_type_str = operation.get("syscall_type")
                     syscall_type = SyscallType[syscall_type_str]
 
-                    # For SPAWN_COGNITION, use the pre-compiled request
-                    if syscall_type == SyscallType.SPAWN_COGNITION and "_syscall_request" in state.variables:
+                    # For SPAWN_COGNITION, use the pre-compiled request IF it exists and is valid
+                    if syscall_type == SyscallType.SPAWN_COGNITION and state.variables.get("_syscall_request"):
                         request = state.variables["_syscall_request"]
                     else:
                         # Resolve params from variables
