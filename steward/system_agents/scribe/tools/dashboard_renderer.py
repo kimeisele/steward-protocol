@@ -19,7 +19,15 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import Tool, ToolResult, get_kernel_status, load_template
+from .base import (
+    Tool,
+    ToolResult,
+    format_auto_docs_box,
+    format_auto_docs_nav,
+    get_auto_docs,
+    get_kernel_status,
+    load_template,
+)
 from .introspector import CartridgeIntrospector
 from .operations_introspector import (
     GitActivityIntrospector,
@@ -176,6 +184,11 @@ class DashboardRenderer(Tool):
         # Get kernel status for unified header
         kernel_status = get_kernel_status(str(self.root_dir))
 
+        # Auto-docs from circuit (dynamic, not hardcoded)
+        auto_docs = get_auto_docs(str(self.root_dir))
+        auto_docs_nav = format_auto_docs_nav(auto_docs)
+        auto_docs_box = format_auto_docs_box(auto_docs)
+
         # Pre-render using template
         template = load_template("dashboard.jinja2")
         content = template.render(
@@ -183,6 +196,8 @@ class DashboardRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
+            auto_docs_nav=auto_docs_nav,
+            auto_docs_box=auto_docs_box,
             # Dashboard-specific variables
             health=health_data,
             agent_counts=agent_counts,
