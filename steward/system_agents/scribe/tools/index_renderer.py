@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-SCRIBE Index Renderer - VEDA-4 Circuit Documentation Index
+SCRIBE Index Renderer - Circuit-Driven Documentation Index
+
+SCHEMA-DRIVEN (NOT HARDCODED):
+  All mappings loaded from: vibe_core/playbook/circuits/doc_index_render.yaml
 
 VEDA-4 COGNITIVE FLOW:
   SHABDA   → Entry points (where to start)
@@ -15,72 +18,49 @@ Tool Protocol Compliant (Kernel-Managed).
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any
+
+import yaml
 
 from .base import Tool, ToolResult, get_kernel_status, load_template
 
 logger = logging.getLogger("SCRIBE_INDEX")
 
+# Circuit YAML path (relative to project root)
+CIRCUIT_PATH = "vibe_core/playbook/circuits/doc_index_render.yaml"
+
 
 class IndexRenderer(Tool):
-    """Generate INDEX.md using VEDA-4 Circuit Structure.
+    """Generate INDEX.md using Circuit-Driven VEDA-4 Structure.
 
-    Maps documentation to cognitive flow phases:
-    - SHABDA: Entry points for new users
-    - ARTHA: Understanding the system
-    - PRATYAYA: Planning and architecture
-    - KARMA: Execution and operations
-    - SYNTH: Results and dashboards
+    All document mappings loaded from circuit YAML - NO HARDCODING.
+    Schema-driven configuration for maintainability.
     """
 
-    # VEDA-4 SECTION MAPPING
-    # Each phase maps to specific docs for cognitive flow
-
-    SHABDA_DOCS: List[str] = [
-        "README.md",
-        "HELP.md",
-    ]
-
-    ARTHA_DOCS: List[str] = [
-        "CONSTITUTION.md",
-        "STEWARD.md",
-        "CITYMAP.md",
-        "AGI_MANIFESTO.md",
-    ]
-
-    KARMA_DOCS: List[str] = [
-        "OPERATIONS.md",
-        "SETTINGS.md",
-        "AGENTS.md",
-    ]
-
-    SYNTH_DOCS: List[str] = [
-        "DASHBOARD.md",
-        "PROOF.md",
-        "INDEX.md",
-    ]
-
-    # docs/ subdirectories mapped to VEDA-4 phases
-    PRATYAYA_DIRS: Set[str] = {"architecture", "guides"}
-    KARMA_DIRS: Set[str] = {"deployment", "security"}
-    SYNTH_DIRS: Set[str] = {"reports"}
-    ARTHA_DIRS: Set[str] = {"governance", "philosophy"}
-
-    # All allowed docs/ subdirectories
-    DOCS_ALLOWLIST: Set[str] = {
-        "architecture",
-        "deployment",
-        "governance",
-        "guides",
-        "philosophy",
-        "reports",
-        "security",
-    }
-
     def __init__(self, root_dir: str = "."):
-        """Initialize VEDA-4 Index Renderer."""
+        """Initialize Circuit-Driven Index Renderer."""
         self.root_dir = Path(root_dir)
-        self.doc_categories: Dict[str, List[Path]] = {}
+        self.doc_categories: dict[str, list[Path]] = {}
+
+        # Load circuit schema
+        self.circuit = self._load_circuit()
+        self.doc_schema = self.circuit.get("doc_schema", {})
+        self.doc_descriptions = self.circuit.get("doc_descriptions", {})
+        self.docs_allowlist = set(self.circuit.get("docs_allowlist", []))
+
+    def _load_circuit(self) -> dict[str, Any]:
+        """Load circuit definition from YAML."""
+        circuit_file = self.root_dir / CIRCUIT_PATH
+        if not circuit_file.exists():
+            logger.warning(f"Circuit file not found: {circuit_file}")
+            return {"circuit": {}}
+
+        with open(circuit_file) as f:
+            data = yaml.safe_load(f)
+
+        circuit = data.get("circuit", {})
+        logger.info(f"📜 Loaded circuit: {circuit.get('id', 'UNKNOWN')}")
+        return circuit
 
     @property
     def name(self) -> str:
@@ -109,10 +89,11 @@ class IndexRenderer(Tool):
 
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """Execute VEDA-4 Circuit Index generation."""
-        logger.info("🔬 VEDA-4 Circuit: Generating INDEX.md...")
+        circuit_id = self.circuit.get("id", "DOC_INDEX_RENDER")
+        logger.info(f"🔬 Circuit [{circuit_id}]: Executing...")
 
         try:
-            # SHABDA: Capture request
+            # SHABDA: Capture request (from circuit states)
             logger.info("🔊 SHABDA: Capturing generation request...")
             action = parameters["action"]
 
@@ -135,11 +116,11 @@ class IndexRenderer(Tool):
                 return ToolResult(success=False, error=f"Unknown action: {action}")
 
         except Exception as e:
-            logger.error(f"❌ VEDA-4 Circuit failed: {e}")
+            logger.error(f"❌ Circuit [{circuit_id}] failed: {e}")
             return ToolResult(success=False, error=str(e))
 
     def _scan_docs_directories(self):
-        """Scan docs/ subdirectories."""
+        """Scan docs/ subdirectories (using circuit allowlist)."""
         docs_dir = self.root_dir / "docs"
         if not docs_dir.exists():
             return
@@ -147,7 +128,7 @@ class IndexRenderer(Tool):
         for subdir in docs_dir.iterdir():
             if not subdir.is_dir():
                 continue
-            if subdir.name not in self.DOCS_ALLOWLIST:
+            if subdir.name not in self.docs_allowlist:
                 continue
 
             md_files = list(subdir.glob("**/*.md"))
@@ -156,7 +137,7 @@ class IndexRenderer(Tool):
                 self.doc_categories[subdir.name] = sorted(md_files)
 
     def _render_veda4_index(self) -> str:
-        """Render INDEX.md with VEDA-4 cognitive structure."""
+        """Render INDEX.md with circuit-driven VEDA-4 structure."""
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         kernel_status = get_kernel_status(str(self.root_dir))
 
@@ -165,134 +146,53 @@ class IndexRenderer(Tool):
             timestamp=timestamp,
             generator="SCRIBE",
             kernel_status=kernel_status,
-            shabda_content=self._render_shabda(),
-            artha_content=self._render_artha(),
-            pratyaya_content=self._render_pratyaya(),
-            karma_content=self._render_karma(),
-            synth_content=self._render_synth(),
+            shabda_content=self._render_section("shabda"),
+            artha_content=self._render_section("artha"),
+            pratyaya_content=self._render_section("pratyaya"),
+            karma_content=self._render_section("karma"),
+            synth_content=self._render_section("synth"),
         )
 
         return content
 
-    def _render_shabda(self) -> str:
-        """SHABDA: Entry points - where to start."""
-        output = ""
-        for doc_name in self.SHABDA_DOCS:
-            doc_path = self.root_dir / doc_name
-            if doc_path.exists():
-                desc = self._get_description(doc_name)
-                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
-        return output
+    def _render_section(self, section_name: str) -> str:
+        """Render a VEDA-4 section from circuit schema."""
+        section = self.doc_schema.get(section_name, {})
+        if not section:
+            return ""
 
-    def _render_artha(self) -> str:
-        """ARTHA: Understanding - learn the system."""
         output = ""
 
-        # Root docs
-        for doc_name in self.ARTHA_DOCS:
+        # Root docs from circuit schema
+        root_docs = section.get("root_docs", [])
+        for doc_name in root_docs:
             doc_path = self.root_dir / doc_name
             if doc_path.exists():
                 desc = self._get_description(doc_name)
                 output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
 
-        # docs/ directories (governance, philosophy)
-        for dir_name in sorted(self.ARTHA_DIRS):
+        # docs/ directories from circuit schema
+        doc_dirs = section.get("doc_dirs", [])
+        for dir_name in sorted(doc_dirs):
             files = self.doc_categories.get(dir_name, [])
             if files:
                 output += f"\n**{dir_name.title()}:**\n"
-                for doc_path in files[:5]:  # Limit to 5
+                # Limit varies by section type
+                limit = 10 if section_name == "pratyaya" else 8 if section_name == "synth" else 5
+                for doc_path in files[:limit]:
                     rel_path = doc_path.relative_to(self.root_dir)
                     desc = self._get_description(doc_path.name)
                     output += f"- [{rel_path}]({rel_path}) — {desc}\n"
-
-        return output
-
-    def _render_pratyaya(self) -> str:
-        """PRATYAYA: Planning - architecture & guides."""
-        output = ""
-
-        for dir_name in ["architecture", "guides"]:
-            files = self.doc_categories.get(dir_name, [])
-            if files:
-                title = "Architecture" if dir_name == "architecture" else "Guides"
-                output += f"**{title}:**\n"
-                for doc_path in files[:10]:  # Limit to 10
-                    rel_path = doc_path.relative_to(self.root_dir)
-                    desc = self._get_description(doc_path.name)
-                    output += f"- [{rel_path}]({rel_path}) — {desc}\n"
-                output += "\n"
-
-        return output
-
-    def _render_karma(self) -> str:
-        """KARMA: Execution - operations & agents."""
-        output = ""
-
-        # Root docs
-        for doc_name in self.KARMA_DOCS:
-            doc_path = self.root_dir / doc_name
-            if doc_path.exists():
-                desc = self._get_description(doc_name)
-                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
-
-        # docs/ directories (deployment, security)
-        for dir_name in sorted(self.KARMA_DIRS):
-            files = self.doc_categories.get(dir_name, [])
-            if files:
-                output += f"\n**{dir_name.title()}:**\n"
-                for doc_path in files[:5]:
-                    rel_path = doc_path.relative_to(self.root_dir)
-                    desc = self._get_description(doc_path.name)
-                    output += f"- [{rel_path}]({rel_path}) — {desc}\n"
-
-        return output
-
-    def _render_synth(self) -> str:
-        """SYNTH: Results - dashboards & reports."""
-        output = ""
-
-        # Root docs
-        for doc_name in self.SYNTH_DOCS:
-            doc_path = self.root_dir / doc_name
-            if doc_path.exists():
-                desc = self._get_description(doc_name)
-                output += f"- **[{doc_name}]({doc_name})** — {desc}\n"
-
-        # docs/reports
-        files = self.doc_categories.get("reports", [])
-        if files:
-            output += "\n**Reports:**\n"
-            for doc_path in files[:8]:
-                rel_path = doc_path.relative_to(self.root_dir)
-                desc = self._get_description(doc_path.name)
-                output += f"- [{rel_path}]({rel_path}) — {desc}\n"
 
         return output
 
     def _get_description(self, filename: str) -> str:
-        """Get description for a document."""
-        descriptions = {
-            # SHABDA
-            "README.md": "Quick start guide",
-            "HELP.md": "Operations & commands",
-            # ARTHA
-            "CONSTITUTION.md": "Constitutional governance",
-            "STEWARD.md": "Protocol specification",
-            "CITYMAP.md": "System architecture",
-            "AGI_MANIFESTO.md": "Governed Intelligence philosophy",
-            # KARMA
-            "OPERATIONS.md": "System operations",
-            "SETTINGS.md": "Configuration options",
-            "AGENTS.md": "Agent registry & tools",
-            # SYNTH
-            "DASHBOARD.md": "Live status dashboard",
-            "PROOF.md": "Verification proof",
-            "INDEX.md": "Navigation index (this file)",
-            # Known docs
-            "DEPLOYMENT.md": "Deployment guide",
-            "ARCHITECTURE.md": "Architecture overview",
-        }
-        return descriptions.get(filename, filename.replace(".md", "").replace("_", " "))
+        """Get description from circuit schema."""
+        # Use circuit-defined descriptions
+        if filename in self.doc_descriptions:
+            return self.doc_descriptions[filename]
+        # Fallback: generate from filename
+        return filename.replace(".md", "").replace("_", " ")
 
     # Standalone mode
     def scan_and_render(self) -> str:
