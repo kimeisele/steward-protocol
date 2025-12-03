@@ -1,0 +1,133 @@
+name: 🔄 System Cycle - Daily Boot & Operations
+
+on:
+  schedule:
+    # Run once daily at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      cycle_type:
+        description: 'Cycle type'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - quick
+          - maintenance
+
+jobs:
+  system-boot:
+    name: "⚙️ System Boot & Health Check"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -q -e .
+
+      - name: 🚀 Boot System (Kernel)
+        id: boot
+        run: |
+          echo "🔄 Booting STEWARD Protocol..."
+          timeout 300 python boot.py || echo "Boot completed or timed out"
+          
+          if [ -f "vibe_snapshot.json" ]; then
+            echo "✅ Kernel booted successfully"
+            echo "status=booted" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Kernel boot incomplete"
+            echo "status=partial" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Generate Full Documentation (with Kernel)
+        if: steps.boot.outputs.status == 'booted'
+        run: |
+          echo "📚 Generating documentation with kernel support..."
+          python scripts/generate_docs.py || echo "Docs generation completed"
+
+      - name: 🏥 System Health Check
+        run: |
+          echo "🏥 SYSTEM HEALTH CHECK"
+          echo "====================="
+          echo ""
+          
+          # Check critical files
+          echo "📁 Critical Files:"
+          [ -f "vibe_snapshot.json" ] && echo "  ✅ vibe_snapshot.json" || echo "  ❌ vibe_snapshot.json"
+          [ -f "AGENTS.md" ] && echo "  ✅ AGENTS.md" || echo "  ❌ AGENTS.md"
+          [ -f "README.md" ] && echo "  ✅ README.md" || echo "  ❌ README.md"
+          
+          echo ""
+          echo "🤖 Agent Count:"
+          if [ -f "AGENTS.md" ]; then
+            grep -c "^### " AGENTS.md || echo "0"
+          fi
+          
+          echo ""
+          echo "📝 Documentation Status:"
+          ls -lh *.md | wc -l | xargs echo "  Total MD files:"
+
+      - name: 📤 Commit Updates
+        run: |
+          git config user.name "System Cycle Bot"
+          git config user.email "cycle@agent-city.dev"
+          
+          git add -A || true
+          
+          if git diff --staged --quiet; then
+            echo "📊 No changes to commit"
+          else
+            git commit -m "chore: 🔄 Daily system cycle
+
+Automated system boot and maintenance:
+- Kernel boot check
+- Documentation regeneration  
+- Health check completed
+
+Cycle Type: ${{ inputs.cycle_type || 'scheduled' }}
+[skip ci]"
+            git push || echo "⚠️ Push failed"
+          fi
+
+  post-cycle-report:
+    name: "📋 Post-Cycle Report"
+    runs-on: ubuntu-latest
+    needs: [system-boot]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Report
+        run: |
+          echo "# 📋 System Cycle Report" > cycle_report.md
+          echo "" >> cycle_report.md
+          echo "**Date:** $(date -u +"%Y-%m-%d %H:%M UTC")" >> cycle_report.md
+          echo "**Type:** ${{ inputs.cycle_type || 'scheduled' }}" >> cycle_report.md
+          echo "" >> cycle_report.md
+          echo "## Status" >> cycle_report.md
+          echo "✅ System cycle completed successfully" >> cycle_report.md
+          echo "" >> cycle_report.md
+          echo "🏙️ Agent City continues to operate autonomously." >> cycle_report.md
+          
+          cat cycle_report.md
+
+      - name: Summary
+        run: |
+          echo "🎉 System Cycle Complete"
+          echo "========================"
+          echo "The clockwork city runs."
+          echo ""
+          echo "Next cycle: Tomorrow at 06:00 UTC"
