@@ -161,8 +161,8 @@ class HeartbeatEngine:
 
         logger.info(f"🚀 Executing task: {next_task.title}")
 
-        # Update status to RUNNING
-        self.task_manager.update_task(next_task.id, status=TaskStatus.RUNNING)
+        # Update status to IN_PROGRESS
+        self.task_manager.update_task(next_task.id, status=TaskStatus.IN_PROGRESS)
 
         try:
             # TODO: Integrate with actual agent execution
@@ -184,9 +184,9 @@ class HeartbeatEngine:
 
         # Categorize tasks
         pending = [t for t in all_tasks if t.status == TaskStatus.PENDING]
-        running = [t for t in all_tasks if t.status == TaskStatus.RUNNING]
+        running = [t for t in all_tasks if t.status == TaskStatus.IN_PROGRESS]
         completed = [t for t in all_tasks if t.status == TaskStatus.COMPLETED]
-        failed = [t for t in all_tasks if t.status == TaskStatus.FAILED]
+        blocked = [t for t in all_tasks if t.status == TaskStatus.BLOCKED]
 
         # Build new TASKS.md content
         content = f"""# 📋 Mission Control
@@ -242,7 +242,7 @@ Write your tasks here. The heartbeat will pick them up automatically.
         content += f"| Pending | {len(pending)} |\n"
         content += f"| Running | {len(running)} |\n"
         content += f"| Completed | {len(completed)} |\n"
-        content += f"| Failed | {len(failed)} |\n\n"
+        content += f"| Blocked | {len(blocked)} |\n\n"
 
         content += "---\n\n"
         content += "**Heartbeat:** Operational  \n"
