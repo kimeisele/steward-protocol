@@ -3,1088 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIMANA - The Universal Launcher</title>
+    <title>STEWARD PROTOCOL - Agent City Gateway</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --color-bg: #0a0e27;
-            --color-text: #00ff88;
-            --color-text-dim: #00aa55;
-            --color-accent: #00ffff;
-            --color-danger: #ff3366;
-            --color-warning: #ffaa00;
-            --color-success: #00ff88;
-            --color-info: #0088ff;
-            --color-gold: #ffd700;
-            --color-border: #00ff88;
-            --glow: 0 0 10px rgba(0, 255, 136, 0.5);
-            --glow-cyan: 0 0 10px rgba(0, 255, 255, 0.5);
+            --bg: #0a0e27;
+            --card-bg: #0d1230;
+            --text: #00ff88;
+            --text-dim: #00aa55;
+            --accent: #00ffff;
+            --border: #00ff88;
+            --glow: 0 0 10px rgba(0, 255, 136, 0.3);
         }
 
         body {
             font-family: 'Courier New', monospace;
-            background: var(--color-bg);
-            color: var(--color-text);
+            background: var(--bg);
+            color: #e0e0e0;
+            min-height: 100vh;
             line-height: 1.6;
-            overflow: hidden;
         }
 
         .container {
-            display: flex;
-            height: 100vh;
-            flex-direction: column;
-        }
-
-        /* ═══════════════════════════════════════════════════════════ */
-        /* HEADER                                                      */
-        /* ═══════════════════════════════════════════════════════════ */
-
-        .header {
-            background: linear-gradient(90deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
-            border-bottom: 2px solid var(--color-border);
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-        }
-
-        .header-left h1 {
-            font-size: 1.5rem;
-            text-shadow: 0 0 10px var(--color-text);
-            letter-spacing: 2px;
-        }
-
-        .header-right {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--color-accent);
-            border-radius: 4px;
-            font-size: 0.85rem;
-            background: rgba(0, 255, 255, 0.1);
-            box-shadow: var(--glow-cyan);
-        }
-
-        .mode-badge {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--color-success);
-            border-radius: 4px;
-            font-size: 0.85rem;
-            background: rgba(0, 255, 136, 0.1);
-            box-shadow: var(--glow);
-        }
-
-        .auth-button {
-            padding: 0.5rem 1rem;
-            background: rgba(0, 255, 136, 0.2);
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
-            cursor: pointer;
-            border-radius: 4px;
-            font-family: monospace;
-            transition: all 0.3s;
-        }
-
-        .auth-button:hover {
-            background: rgba(0, 255, 136, 0.4);
-            box-shadow: var(--glow);
-        }
-
-        /* ═══════════════════════════════════════════════════════════ */
-        /* MAIN CONTENT                                                */
-        /* ═══════════════════════════════════════════════════════════ */
-
-        .main-content {
-            display: flex;
-            flex: 1;
-            gap: 1rem;
-            padding: 1rem;
-            overflow: hidden;
-        }
-
-        /* LEFT: MANDALA */
-        .left-panel {
-            flex: 0 0 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            overflow-y: auto;
-        }
-
-        .mandala-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 50, 100, 0.3);
-            border: 1px solid var(--color-accent);
-            border-radius: 8px;
-            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
-        }
-
-        .mandala {
-            position: relative;
-            width: 250px;
-            height: 250px;
-        }
-
-        .mandala svg {
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.5));
-        }
-
-        .pulse-indicator {
-            position: absolute;
-            bottom: 1rem;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            font-size: 0.8rem;
-        }
-
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--color-success);
-            box-shadow: var(--glow);
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        .stats-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-        }
-
-        .stat-item {
-            padding: 0.75rem;
-            background: rgba(0, 255, 136, 0.05);
-            border: 1px solid var(--color-text-dim);
-            border-radius: 4px;
-        }
-
-        .stat-label {
-            color: var(--color-text-dim);
-            font-size: 0.7rem;
-        }
-
-        .stat-value {
-            color: var(--color-text);
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        /* CENTER: FEED */
-        .center-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .feed-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            background: rgba(0, 20, 50, 0.5);
-            overflow: hidden;
-        }
-
-        .feed-header {
-            padding: 0.75rem;
-            border-bottom: 1px solid var(--color-border);
-            background: rgba(0, 50, 100, 0.3);
-            font-size: 0.9rem;
-            color: var(--color-accent);
-            letter-spacing: 1px;
-        }
-
-        .feed-items {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .feed-item {
-            padding: 0.5rem;
-            border-left: 3px solid var(--color-text-dim);
-            background: rgba(0, 100, 150, 0.1);
-            border-radius: 3px;
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .feed-item.thought {
-            border-left-color: var(--color-info);
-            color: var(--color-info);
-        }
-
-        .feed-item.action {
-            border-left-color: var(--color-success);
-            color: var(--color-success);
-        }
-
-        .feed-item.mercy {
-            border-left-color: var(--color-gold);
-            color: var(--color-gold);
-        }
-
-        .feed-item.error {
-            border-left-color: var(--color-danger);
-            color: var(--color-danger);
-        }
-
-        .feed-timestamp {
-            font-size: 0.7rem;
-            opacity: 0.7;
-        }
-
-        /* COMMAND BAR */
-        .command-bar {
-            display: flex;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background: rgba(0, 50, 100, 0.3);
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-        }
-
-        .command-input {
-            flex: 1;
-            padding: 0.75rem;
-            background: rgba(10, 14, 39, 0.8);
-            border: 1px solid var(--color-text-dim);
-            color: var(--color-text);
-            font-family: monospace;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .command-input::placeholder {
-            color: var(--color-text-dim);
-        }
-
-        .command-input:focus {
-            outline: none;
-            border-color: var(--color-accent);
-            box-shadow: var(--glow-cyan);
-        }
-
-        .command-send {
-            padding: 0.75rem 1.5rem;
-            background: rgba(0, 255, 136, 0.2);
-            border: 1px solid var(--color-border);
-            color: var(--color-text);
-            cursor: pointer;
-            border-radius: 4px;
-            font-family: monospace;
-            transition: all 0.3s;
-        }
-
-        .command-send:hover {
-            background: rgba(0, 255, 136, 0.4);
-            box-shadow: var(--glow);
-        }
-
-        .command-send:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* ═══════════════════════════════════════════════════════════ */
-        /* RIGHT PANEL: RADAR                                          */
-        /* ═══════════════════════════════════════════════════════════ */
-
-        .right-panel {
-            flex: 0 0 250px;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            overflow-y: auto;
-        }
-
-        .radar-container {
-            flex: 1;
-            border: 1px solid var(--color-accent);
-            border-radius: 8px;
-            background: rgba(0, 50, 100, 0.3);
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
-        }
-
-        .radar-header {
-            font-size: 0.9rem;
-            color: var(--color-accent);
-            letter-spacing: 1px;
-            margin-bottom: 1rem;
-        }
-
-        .radar-display {
-            width: 150px;
-            height: 150px;
-            position: relative;
-            background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, rgba(0, 20, 50, 0.3) 100%);
-            border: 1px solid var(--color-accent);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .radar-center {
-            width: 20px;
-            height: 20px;
-            background: var(--color-success);
-            border-radius: 50%;
-            box-shadow: var(--glow);
-        }
-
-        .radar-ring {
-            position: absolute;
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 50%;
-        }
-
-        .agents-list {
-            flex: 1;
-            width: 100%;
-            overflow-y: auto;
-            padding: 1rem 0;
-            border-top: 1px solid var(--color-accent);
-        }
-
-        .agent-item {
-            padding: 0.5rem;
-            margin: 0.25rem 0;
-            background: rgba(0, 255, 136, 0.05);
-            border-left: 2px solid var(--color-success);
-            font-size: 0.75rem;
-            border-radius: 3px;
-        }
-
-        .agent-name {
-            font-weight: bold;
-            color: var(--color-text);
-        }
-
-        .agent-status {
-            font-size: 0.7rem;
-            color: var(--color-text-dim);
-        }
-
-        /* ═══════════════════════════════════════════════════════════ */
-        /* MODAL: AUTHENTICATION                                       */
-        /* ═══════════════════════════════════════════════════════════ */
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--color-bg);
-            border: 2px solid var(--color-accent);
-            border-radius: 8px;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
         }
 
-        .modal-header {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: var(--color-accent);
-            letter-spacing: 1px;
+        /* Header */
+        header {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
         }
 
-        .modal-body {
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--text);
+            text-shadow: var(--glow);
+            margin-bottom: 0.5rem;
+        }
+
+        header .subtitle {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        /* Status Bar */
+        .status-bar {
             display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
         }
 
-        .mode-selector {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .mode-button {
-            flex: 1;
-            padding: 1rem;
-            border: 2px solid var(--color-text-dim);
-            background: rgba(0, 20, 50, 0.5);
-            color: var(--color-text);
-            cursor: pointer;
+        .status-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1rem 2rem;
             border-radius: 4px;
-            font-family: monospace;
+            text-align: center;
+        }
+
+        .status-item .label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .status-item .value {
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-top: 0.25rem;
+        }
+
+        .status-item .value.online { color: #00ff88; }
+        .status-item .value.offline { color: #ff3366; }
+
+        /* Cards Grid */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            color: var(--text);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card p {
+            color: var(--text-dim);
             font-size: 0.9rem;
-            transition: all 0.3s;
+            margin-bottom: 1rem;
         }
 
-        .mode-button:hover {
-            border-color: var(--color-border);
-            box-shadow: var(--glow);
-        }
-
-        .mode-button.active {
+        .card a {
+            display: inline-block;
             background: rgba(0, 255, 136, 0.2);
-            border-color: var(--color-border);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .card a:hover {
+            background: rgba(0, 255, 136, 0.4);
             box-shadow: var(--glow);
         }
 
-        .input-group {
+        /* Quick Links */
+        .quick-links {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .input-label {
-            font-size: 0.85rem;
-            color: var(--color-text-dim);
-        }
-
-        .input-field {
-            padding: 0.75rem;
-            background: rgba(10, 14, 39, 0.8);
-            border: 1px solid var(--color-text-dim);
-            color: var(--color-text);
-            font-family: monospace;
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--color-accent);
-            box-shadow: var(--glow-cyan);
-        }
-
-        .button-group {
-            display: flex;
+            justify-content: center;
             gap: 1rem;
-            margin-top: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
         }
 
-        .button {
-            flex: 1;
-            padding: 0.75rem;
-            border: 1px solid var(--color-border);
-            background: rgba(0, 255, 136, 0.2);
-            color: var(--color-text);
-            cursor: pointer;
-            border-radius: 4px;
-            font-family: monospace;
-            transition: all 0.3s;
-        }
-
-        .button:hover {
-            background: rgba(0, 255, 136, 0.4);
-            box-shadow: var(--glow);
-        }
-
-        .button-secondary {
-            background: rgba(0, 100, 150, 0.2);
-            border-color: var(--color-text-dim);
-        }
-
-        .button-secondary:hover {
-            background: rgba(0, 100, 150, 0.4);
-            border-color: var(--color-accent);
-            box-shadow: var(--glow-cyan);
-        }
-
-        /* ═════════════════════════════════════════════════════════ */
-        /* SCROLLBARS                                                 */
-        /* ═════════════════════════════════════════════════════════ */
-
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 20, 50, 0.5);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 136, 0.4);
+        .quick-links a {
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 1px solid transparent;
             border-radius: 4px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 255, 136, 0.6);
+        .quick-links a:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* API Endpoints List */
+        .endpoints {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .endpoints h3 {
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .endpoints ul {
+            list-style: none;
+        }
+
+        .endpoints li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        }
+
+        .endpoints li:last-child {
+            border-bottom: none;
+        }
+
+        .endpoints code {
+            color: var(--accent);
+            background: rgba(0, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+        }
+
+        .endpoints .method {
+            color: var(--text);
+            font-weight: bold;
+            margin-right: 0.5rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="header-left">
-                <h1>🛸 VIMANA</h1>
+        <header>
+            <h1>STEWARD PROTOCOL</h1>
+            <div class="subtitle">Agent City Gateway - Governed AI Infrastructure</div>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="label">Gateway</div>
+                <div class="value" id="gatewayStatus">Checking...</div>
             </div>
-            <div class="header-right">
-                <div class="status-badge" id="connectionStatus">
-                    ● OFFLINE
-                </div>
-                <div class="mode-badge" id="modeDisplay">
-                    GUEST MODE
-                </div>
-                <button class="auth-button" id="authToggle">
-                    CONNECT IDENTITY
-                </button>
+            <div class="status-item">
+                <div class="label">API</div>
+                <div class="value" id="apiStatus">Checking...</div>
+            </div>
+            <div class="status-item">
+                <div class="label">Docs</div>
+                <div class="value" id="docsStatus">Checking...</div>
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card">
+                <h2>Documentation</h2>
+                <p>Browse auto-generated documentation for the STEWARD Protocol system.</p>
+                <a href="/docs.html">Open Docs Viewer</a>
+            </div>
+
+            <div class="card">
+                <h2>Agent Registry</h2>
+                <p>View all registered agents and their capabilities.</p>
+                <a href="/api/agents" target="_blank">View Agents (JSON)</a>
+            </div>
+
+            <div class="card">
+                <h2>System Health</h2>
+                <p>Check the current health status of the gateway.</p>
+                <a href="/health" target="_blank">Health Check</a>
+            </div>
+
+            <div class="card">
+                <h2>Public Ledger</h2>
+                <p>Transparent audit trail of all system events.</p>
+                <a href="/api/ledger?limit=50" target="_blank">View Ledger</a>
             </div>
         </div>
 
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
-            <!-- LEFT: MANDALA & STATS -->
-            <div class="left-panel">
-                <div class="mandala-container">
-                    <div class="mandala">
-                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Concentric circles (Mandala) -->
-                            <circle cx="100" cy="100" r="90" fill="none" stroke="#00ffff" stroke-width="1" opacity="0.3"/>
-                            <circle cx="100" cy="100" r="70" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
-                            <circle cx="100" cy="100" r="50" fill="none" stroke="#00ffff" stroke-width="2" opacity="0.7"/>
-                            <circle cx="100" cy="100" r="30" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5"/>
-                            <circle cx="100" cy="100" r="10" fill="#00ff88" opacity="0.8"/>
-
-                            <!-- Cardinal points (N, E, S, W) -->
-                            <text x="100" y="20" text-anchor="middle" fill="#00ffff" font-size="10">N</text>
-                            <text x="180" y="105" text-anchor="middle" fill="#00ffff" font-size="10">E</text>
-                            <text x="100" y="190" text-anchor="middle" fill="#00ffff" font-size="10">S</text>
-                            <text x="20" y="105" text-anchor="middle" fill="#00ffff" font-size="10">W</text>
-                        </svg>
-                        <div class="pulse-indicator">
-                            <div class="pulse-dot"></div>
-                            <span id="pulseFreq">1.0 Hz</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="stats-panel">
-                    <div class="stat-item">
-                        <div class="stat-label">AGENTS</div>
-                        <div class="stat-value" id="agentCount">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">QUEUE</div>
-                        <div class="stat-value" id="queueDepth">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">CYCLE</div>
-                        <div class="stat-value" id="cycleId">0</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">STATE</div>
-                        <div class="stat-value" id="systemState">IDLE</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CENTER: FEED & COMMAND -->
-            <div class="center-panel">
-                <div class="feed-container">
-                    <div class="feed-header">
-                        ► AGENT INTELLIGENCE FEED
-                    </div>
-                    <div class="feed-items" id="feedItems">
-                        <div class="feed-item">
-                            Awaiting connection to VibeOS Pulse...
-                        </div>
-                    </div>
-                </div>
-
-                <div class="command-bar">
-                    <input
-                        type="text"
-                        class="command-input"
-                        id="commandInput"
-                        placeholder="What is your desire? Speak thy intent..."
-                    />
-                    <button class="command-send" id="commandSend">
-                        SEND
-                    </button>
-                </div>
-            </div>
-
-            <!-- RIGHT: RADAR -->
-            <div class="right-panel">
-                <div class="radar-container">
-                    <div class="radar-header">FEDERATION RADAR</div>
-                    <div class="radar-display">
-                        <div class="radar-ring" style="width: 100px; height: 100px;"></div>
-                        <div class="radar-ring" style="width: 50px; height: 50px;"></div>
-                        <div class="radar-center"></div>
-                    </div>
-                    <div class="agents-list" id="agentsList">
-                        <div class="agent-item">
-                            <div class="agent-name">LOCAL CITY</div>
-                            <div class="agent-status">Connected</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="endpoints">
+            <h3>API Endpoints</h3>
+            <ul>
+                <li><span class="method">GET</span> <code>/health</code> - System health check</li>
+                <li><span class="method">GET</span> <code>/api/docs</code> - List auto-generated docs</li>
+                <li><span class="method">GET</span> <code>/api/docs/{name}</code> - Get doc content</li>
+                <li><span class="method">GET</span> <code>/api/agents</code> - List registered agents</li>
+                <li><span class="method">GET</span> <code>/api/ledger</code> - Public audit ledger</li>
+                <li><span class="method">GET</span> <code>/api/pulse</code> - System pulse snapshot</li>
+                <li><span class="method">POST</span> <code>/v1/chat</code> - Send commands (requires auth)</li>
+            </ul>
         </div>
+
+        <div class="quick-links">
+            <a href="https://github.com/kimeisele/steward-protocol" target="_blank">GitHub</a>
+            <a href="/docs.html">Documentation</a>
+            <a href="/api/docs" target="_blank">Docs API</a>
+        </div>
+
+        <footer>
+            <p>STEWARD PROTOCOL - The Immutable Kernel for Governed Artificial Intelligence</p>
+            <p><a href="https://github.com/kimeisele/steward-protocol">github.com/kimeisele/steward-protocol</a></p>
+        </footer>
     </div>
-
-    <!-- ERROR OVERLAY (For kernel crashes) -->
-    <div class="modal" id="errorOverlay">
-        <div class="modal-content" style="border-left: 5px solid var(--color-danger);">
-            <div class="modal-header" style="color: var(--color-danger);">🚨 SYSTEM ERROR</div>
-            <div class="modal-body">
-                <p id="errorMessage" style="font-size: 0.9rem; color: var(--color-warning); margin-bottom: 1rem;">
-                    Connection lost to VibeOS Kernel
-                </p>
-                <div id="errorTraceback" style="
-                    background: rgba(255, 51, 102, 0.1);
-                    border: 1px solid var(--color-danger);
-                    padding: 0.75rem;
-                    border-radius: 4px;
-                    font-size: 0.75rem;
-                    max-height: 300px;
-                    overflow-y: auto;
-                    font-family: monospace;
-                    color: var(--color-danger);
-                    margin-bottom: 1rem;
-                "></div>
-                <div class="button-group">
-                    <button class="button" id="retryBtn">RETRY</button>
-                    <button class="button button-secondary" id="dismissErrorBtn">DISMISS</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- AUTHENTICATION MODAL - REMOVED (GAD-000: SILENT KEY PROTOCOL) -->
 
     <script>
-        // ═══════════════════════════════════════════════════════════
-        // GAD-1000: IDENTITY WALLET - Cryptographic Signing
-        // ═══════════════════════════════════════════════════════════
+        // Simple health checks
+        async function checkStatus() {
+            const gatewayEl = document.getElementById('gatewayStatus');
+            const apiEl = document.getElementById('apiStatus');
+            const docsEl = document.getElementById('docsStatus');
 
-        class IdentityWallet {
-            constructor() {
-                this.privateKey = null;
-                this.publicKey = null;
-            }
+            // Gateway is online if this page loads
+            gatewayEl.textContent = 'ONLINE';
+            gatewayEl.className = 'value online';
 
-            async importKey(pem) {
-                try {
-                    // 1. Clean PEM header/footer
-                    const pemHeader = "-----BEGIN PRIVATE KEY-----";
-                    const pemFooter = "-----END PRIVATE KEY-----";
-                    const pemContents = pem
-                        .replace(pemHeader, "")
-                        .replace(pemFooter, "")
-                        .replace(/\s/g, "");
-
-                    // 2. Decode Base64
-                    const binaryDerString = window.atob(pemContents);
-                    const binaryDer = new Uint8Array(binaryDerString.length);
-                    for (let i = 0; i < binaryDerString.length; i++) {
-                        binaryDer[i] = binaryDerString.charCodeAt(i);
-                    }
-
-                    // 3. Import via WebCrypto
-                    this.privateKey = await window.crypto.subtle.importKey(
-                        "pkcs8",
-                        binaryDer.buffer,
-                        {
-                            name: "ECDSA",
-                            namedCurve: "P-256",
-                        },
-                        true,
-                        ["sign"]
-                    );
-
-                    console.log("🔐 Identity Wallet: Private Key Imported Successfully");
-                    return true;
-                } catch (e) {
-                    console.error("🔐 Identity Wallet Error:", e);
-                    throw new Error("Invalid Private Key format. Must be PKCS#8 PEM (EC P-256).");
+            // Check API health
+            try {
+                const healthRes = await fetch('/health');
+                if (healthRes.ok) {
+                    apiEl.textContent = 'ONLINE';
+                    apiEl.className = 'value online';
+                } else {
+                    apiEl.textContent = 'ERROR';
+                    apiEl.className = 'value offline';
                 }
+            } catch (e) {
+                apiEl.textContent = 'OFFLINE';
+                apiEl.className = 'value offline';
             }
 
-            async signMessage(message) {
-                if (!this.privateKey) throw new Error("No identity loaded. Cannot sign.");
-
-                const timestamp = Date.now();
-                const payload = JSON.stringify({ message, timestamp });
-                const encoder = new TextEncoder();
-                const data = encoder.encode(payload);
-
-                const signatureBuffer = await window.crypto.subtle.sign(
-                    {
-                        name: "ECDSA",
-                        hash: { name: "SHA-256" },
-                    },
-                    this.privateKey,
-                    data
-                );
-
-                // Convert signature to Base64
-                const signature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
-
-                // Mock public key return (In real GAD-1000, we'd derive or store it)
-                return {
-                    signature: signature,
-                    timestamp: timestamp,
-                    publicKey: "DERIVED_ON_SERVER"
-                };
+            // Check docs API
+            try {
+                const docsRes = await fetch('/api/docs');
+                if (docsRes.ok) {
+                    const data = await docsRes.json();
+                    const available = data.docs.filter(d => d.available).length;
+                    docsEl.textContent = `${available}/10`;
+                    docsEl.className = 'value online';
+                } else {
+                    docsEl.textContent = 'ERROR';
+                    docsEl.className = 'value offline';
+                }
+            } catch (e) {
+                docsEl.textContent = 'N/A';
+                docsEl.className = 'value offline';
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        // VIMANA COCKPIT - Main Application Logic
-        // ═══════════════════════════════════════════════════════════
-
-        class ViamanaCockpit {
-            constructor() {
-                this.mode = 'guest';
-                this.privateKey = null;
-                this.identityWallet = new IdentityWallet(); // GAD-1000: Initialize wallet
-                this.ws = null;
-                this.feedItems = [];
-                this.maxFeedItems = 50;
-
-                this.initializeUI();
-                this.connectWebSocket();
-                this.setupEventListeners();
-            }
-
-            initializeUI() {
-                // GAD-000: Silent Key - No Modals, No Questions.
-                this.addFeedItem('System', 'Initializing Vimana Cockpit...', 'thought');
-
-                // Auto-connect
-                this.connectWebSocket();
-
-                // Command Bar Focus
-                document.getElementById('commandInput').focus();
-
-                // Setup error handlers
-                document.getElementById('retryBtn').addEventListener('click', () => {
-                    document.getElementById('errorOverlay').classList.remove('active');
-                    this.connectWebSocket();
-                });
-
-                document.getElementById('dismissErrorBtn').addEventListener('click', () => {
-                    document.getElementById('errorOverlay').classList.remove('active');
-                });
-            }
-
-            setupEventListeners() {
-                // GAD-000: SILENT KEY PROTOCOL - No modal auth
-
-                // Command input
-                document.getElementById('commandInput').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        this.handleCommand();
-                    }
-                });
-
-                document.getElementById('commandSend').addEventListener('click', () => {
-                    this.handleCommand();
-                });
-            }
-
-            selectMode(mode, button) {
-                this.mode = mode;
-
-                // Update button states
-                document.querySelectorAll('.mode-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                button.classList.add('active');
-
-                // Show/hide forms
-                document.getElementById('guestModeForm').style.display = mode === 'guest' ? 'block' : 'none';
-                document.getElementById('citizenModeForm').style.display = mode === 'citizen' ? 'block' : 'none';
-            }
-
-            async confirmAuthentication() {
-                if (this.mode === 'citizen') {
-                    const keyInput = document.getElementById('privateKeyInput');
-                    const keyText = keyInput.value.trim();
-
-                    if (!keyText) {
-                        this.addFeedItem('System', 'Error: Please paste your private key', 'error');
-                        return;
-                    }
-
-                    try {
-                        // GAD-1000: Import key into wallet
-                        await this.identityWallet.importKey(keyText);
-                        this.privateKey = keyText; // Keep for reference
-                        this.addFeedItem('System', '🔐 Identity Verified. Welcome, Citizen.', 'mercy');
-                    } catch (e) {
-                        this.addFeedItem('System', `Auth Failed: ${e.message}`, 'error');
-                        this.mode = 'guest'; // Fallback to guest
-                        return;
-                    }
-                } else {
-                    // Guest mode - no key needed
-                    this.addFeedItem('System', 'Guest Mode Active. Read-Only / Router Access.', 'thought');
-                }
-
-                // Update the UI to reflect the mode
-                this.updateIdentityUI();
-
-                document.getElementById('authModal').classList.remove('active');
-                this.enableCommandInput();
-            }
-
-            updateModeDisplay(text) {
-                // Legacy name for compatibility
-                this.updateIdentityUI();
-            }
-
-            updateIdentityUI() {
-                const modeEl = document.getElementById('modeDisplay');
-                const changeBtn = document.getElementById('authToggle');
-
-                if (this.mode === 'citizen') {
-                    modeEl.textContent = 'CITIZEN MODE 🔐';
-                    modeEl.className = 'mode-badge animate-pulse';
-                    changeBtn.textContent = 'IDENTITY VERIFIED';
-                    changeBtn.className = 'auth-button';
-                    changeBtn.style.opacity = '0.7';
-                    changeBtn.style.cursor = 'default';
-                } else {
-                    modeEl.textContent = 'GUEST MODE 👁️';
-                    modeEl.className = 'mode-badge';
-                    changeBtn.textContent = 'CONNECT KEY (OPTIONAL)';
-                    changeBtn.className = 'auth-button';
-                    changeBtn.style.opacity = '0.6';
-                }
-            }
-
-            enableCommandInput() {
-                document.getElementById('commandInput').disabled = false;
-                document.getElementById('commandSend').disabled = false;
-            }
-
-            connectWebSocket() {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}/v1/pulse`;
-
-                try {
-                    this.ws = new WebSocket(wsUrl);
-
-                    this.ws.onopen = () => {
-                        this.updateConnectionStatus('CONNECTED');
-                        this.addFeedItem('System', 'Neural link established to VibeOS Pulse', 'action');
-                    };
-
-                    this.ws.onmessage = (event) => {
-                        try {
-                            const message = JSON.parse(event.data);
-                            this.handlePulseMessage(message);
-                        } catch (e) {
-                            console.error('Failed to parse message:', e);
-                        }
-                    };
-
-                    this.ws.onerror = (error) => {
-                        console.error('WebSocket error:', error);
-                        this.updateConnectionStatus('ERROR');
-                        this.showErrorOverlay('VibeOS Kernel Connection Error', 'Failed to establish neural link to VibeOS Pulse');
-                        this.addFeedItem('System', 'WebSocket connection error', 'error');
-                    };
-
-                    this.ws.onclose = () => {
-                        this.updateConnectionStatus('OFFLINE');
-                        this.addFeedItem('System', 'Connection to VibeOS lost. Reconnecting...', 'error');
-                        // Attempt reconnect after 3 seconds
-                        setTimeout(() => this.connectWebSocket(), 3000);
-                    };
-                } catch (e) {
-                    console.error('Failed to create WebSocket:', e);
-                    this.updateConnectionStatus('OFFLINE');
-                }
-            }
-
-            updateConnectionStatus(status) {
-                const badge = document.getElementById('connectionStatus');
-                const statusMap = {
-                    'CONNECTED': '● ONLINE',
-                    'OFFLINE': '● OFFLINE',
-                    'ERROR': '● ERROR'
-                };
-                badge.textContent = statusMap[status] || status;
-            }
-
-            showErrorOverlay(title, message, traceback = '') {
-                document.getElementById('errorOverlay').classList.add('active');
-                document.getElementById('errorMessage').textContent = message;
-                if (traceback) {
-                    document.getElementById('errorTraceback').textContent = traceback;
-                    document.getElementById('errorTraceback').style.display = 'block';
-                } else {
-                    document.getElementById('errorTraceback').style.display = 'none';
-                }
-            }
-
-            handlePulseMessage(message) {
-                if (message.type === 'system') {
-                    // System message on connection
-                    this.addFeedItem('System', message.message, 'action');
-                } else if (message.type === 'pulse') {
-                    // Update mandala and stats
-                    this.updatePulseVisualization(message.data);
-                } else if (message.type === 'event') {
-                    // Agent event
-                    const event = message.data;
-                    const eventType = this.mapEventType(event.event_type);
-                    this.addFeedItem(event.agent_id, event.message, eventType);
-                }
-            }
-
-            updatePulseVisualization(data) {
-                document.getElementById('agentCount').textContent = data.active_agents?.length || 0;
-                document.getElementById('queueDepth').textContent = data.queue_depth || 0;
-                document.getElementById('cycleId').textContent = data.cycle_id || 0;
-                document.getElementById('systemState').textContent = data.system_state || 'UNKNOWN';
-                document.getElementById('pulseFreq').textContent = (data.frequency || 1.0).toFixed(2) + ' Hz';
-            }
-
-            mapEventType(eventType) {
-                const typeMap = {
-                    'THOUGHT': 'thought',
-                    'ACTION': 'action',
-                    'ERROR': 'error',
-                    'MERCY': 'mercy',
-                    'VIOLATION': 'error',
-                    'PRAYER_RECEIVED': 'thought',
-                    'CRITICAL_INTERRUPT': 'error'
-                };
-                return typeMap[eventType] || 'action';
-            }
-
-            addFeedItem(agent, message, type = 'action') {
-                const feedItems = document.getElementById('feedItems');
-
-                // Remove placeholder
-                if (feedItems.children.length === 1 &&
-                    feedItems.children[0].textContent.includes('Awaiting connection')) {
-                    feedItems.innerHTML = '';
-                }
-
-                const timestamp = new Date().toLocaleTimeString();
-                const item = document.createElement('div');
-                item.className = `feed-item ${type}`;
-                item.innerHTML = `
-                    <div><strong>${agent}</strong></div>
-                    <div>${message}</div>
-                    <div class="feed-timestamp">${timestamp}</div>
-                `;
-
-                feedItems.appendChild(item);
-                feedItems.scrollTop = feedItems.scrollHeight;
-
-                // Keep max items
-                while (feedItems.children.length > this.maxFeedItems) {
-                    feedItems.removeChild(feedItems.firstChild);
-                }
-            }
-
-            async handleCommand() {
-                const input = document.getElementById('commandInput');
-                const message = input.value.trim();
-
-                if (!message) return;
-
-                // 1. ADD TO FEED (User UI)
-                this.addFeedItem('You', message, 'action');
-                input.value = '';
-
-                try {
-                    // GAD-000: SILENT KEY PROTOCOL
-                    // We send raw text. The Backend signs it because it holds the key.
-                    const payload = {
-                        message: message,
-                        agent_id: "HIL", // Human In Loop
-                        signature: "silent_key_mode",
-                        public_key: "backend_managed",
-                        timestamp: Date.now()
-                    };
-
-                    const response = await fetch('/v1/chat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const data = await response.json();
-
-                    // Visual Feedback logic
-                    if (data.error) {
-                        this.addFeedItem('Error', `🛑 ${data.error}`, 'error');
-                    } else if (data.status === 'queued') {
-                        this.addFeedItem('Milk Ocean', `🌊 ${data.message}`, 'mercy');
-                    } else {
-                        let text = data.result || (data.data ? data.data.summary : JSON.stringify(data));
-                        this.addFeedItem('System', text, 'thought');
-                    }
-
-                } catch (error) {
-                    this.addFeedItem('System', `Error: ${error.message}`, 'error');
-                }
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // INITIALIZE ON PAGE LOAD
-        // ═══════════════════════════════════════════════════════════
-
-        window.addEventListener('DOMContentLoaded', () => {
-            new ViamanaCockpit();
-        });
+        // Run on load
+        checkStatus();
+        // Refresh every 30 seconds
+        setInterval(checkStatus, 30000);
     </script>
 </body>
 </html>
