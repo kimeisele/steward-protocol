@@ -91,3 +91,8 @@ circuit:
       terminal: true
       output:
         conclusion: "{{ dispatch_task_result.output }}"
+
+    ABORT:
+      name: "Debate Aborted"
+      description: "Debate aborted due to failure"
+      terminal: true
