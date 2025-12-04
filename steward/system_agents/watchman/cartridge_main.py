@@ -15,12 +15,12 @@ import re
 from pathlib import Path
 from typing import Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # Phase 3.2: Deep inspection tool
 

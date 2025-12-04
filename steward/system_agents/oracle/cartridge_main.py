@@ -21,11 +21,10 @@ from typing import Any, Dict, Optional
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CityConfig
+from vibe_core.steward import OathMixin
 
 # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
 # - oracle.introspection - System introspection engine

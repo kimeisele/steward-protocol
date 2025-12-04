@@ -27,13 +27,13 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # VibeOS Integration
 from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import ScienceConfig
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
 # - science.web_search - External intelligence via Tavily API

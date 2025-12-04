@@ -20,13 +20,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
 from vibe_core.config import CityConfig
 
 # VibeOS Integration
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
