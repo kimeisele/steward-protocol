@@ -312,47 +312,60 @@ class ExecuteScriptHandler(ActionHandler):
         created = []
         for folder in folders:
             folder_path = Path(base_path) / folder
-            # In production, would actually create folders
-            # For safety, just log for now
-            logger.info(f"    📁 Would create: {folder_path}")
+            folder_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"    📁 Created: {folder_path}")
             created.append(str(folder_path))
 
         return ActionResult.ok({"created_folders": created, "base_path": base_path})
 
     async def _init_git(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Initialize git repository"""
+        import subprocess
+        from pathlib import Path
+
         repo_path = params.get("repo_path", ".")
         initial_branch = params.get("initial_branch", "main")
 
-        # In production, would actually run git init
-        logger.info(f"    🔧 Would init git at: {repo_path} (branch: {initial_branch})")
+        repo = Path(repo_path)
+        if not (repo / ".git").exists():
+            subprocess.run(["git", "init", "-b", initial_branch], cwd=repo, check=True)
+            logger.info(f"    🔧 Initialized git at: {repo_path}")
+        else:
+            logger.info(f"    🔧 Git already exists at: {repo_path}")
 
         return ActionResult.ok({"repo_path": repo_path, "branch": initial_branch, "status": "initialized"})
 
     async def _write_file(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Write content to a file"""
+        from pathlib import Path
+
         file_path = params.get("path")
         content = params.get("content", "")
 
         if not file_path:
             return ActionResult.fail("Missing 'path' parameter")
 
-        # In production, would actually write the file
-        logger.info(f"    📝 Would write to: {file_path} ({len(content)} chars)")
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        logger.info(f"    📝 Wrote to: {file_path} ({len(content)} chars)")
 
         return ActionResult.ok({"path": file_path, "bytes_written": len(content)})
 
     async def _read_file(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Read content from a file"""
+        from pathlib import Path
+
         file_path = params.get("path")
 
         if not file_path:
             return ActionResult.fail("Missing 'path' parameter")
 
-        # In production, would actually read the file
-        logger.info(f"    📖 Would read from: {file_path}")
-
-        return ActionResult.ok({"path": file_path, "content": f"[content of {file_path}]"})
+        path = Path(file_path)
+        if not path.exists():
+            return ActionResult.fail(f"File not found: {file_path}")
+        content = path.read_text()
+        return ActionResult.ok({"path": file_path, "content": content})
 
 
 # ============================================================================

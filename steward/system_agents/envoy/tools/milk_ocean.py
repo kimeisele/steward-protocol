@@ -873,14 +873,27 @@ def lazy_queue_worker(max_iterations: Optional[int] = None):
                 queue.mark_processing(request_id)
                 logger.info(f"⏳ Processing {request_id} from queue...")
 
-                # Execute via kernel (would use actual AI models here)
-                # result = kernel.route_and_execute(user_input)
-                # Mock result for now
-                result = {
-                    "status": "completed",
-                    "message": f"Processed queue request: {user_input[:50]}",
-                    "processed_by": "lazy_queue_worker",
-                }
+                # Execute via kernel
+                try:
+                    from vibe_core.scheduling.task import Task
+
+                    task = Task(agent_id="envoy", payload={"input": user_input})
+                    task_id = kernel.submit_task(task)
+
+                    # Wait for completion (with timeout)
+                    import time
+
+                    for _ in range(60):  # 60 second timeout
+                        kernel.tick()
+                        task_result = kernel.get_task_result(task_id)
+                        if task_result:
+                            result = task_result
+                            break
+                        time.sleep(1)
+                    else:
+                        result = {"status": "timeout", "message": "Task execution timed out"}
+                except Exception as e:
+                    result = {"status": "error", "error": str(e)}
 
                 queue.mark_completed(request_id, result)
                 logger.info(f"✅ Completed {request_id}")
