@@ -3,7 +3,7 @@
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -23,6 +23,25 @@ class RoutingRule:
             return bool(re.search(self.pattern, input_text, re.IGNORECASE))
         except re.error:
             return False
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to dict for config persistence/spawning."""
+        return {
+            "pattern": self.pattern,
+            "circuit": self.circuit,
+            "priority": self.priority,
+            "active": self.active,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "RoutingRule":
+        """Create RoutingRule from dict."""
+        return cls(
+            pattern=data.get("pattern", ""),
+            circuit=data.get("circuit", ""),
+            priority=data.get("priority", "NORMAL"),
+            active=data.get("active", True),
+        )
 
 
 def parse_matrix_md(content: str) -> List[RoutingRule]:

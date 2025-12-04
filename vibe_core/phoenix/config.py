@@ -286,6 +286,55 @@ class PhoenixConfig:
         return None
 
     # =========================================================================
+    # Serialization (for 4D Hypercube / child kernel spawning)
+    # =========================================================================
+
+    def to_dict(self) -> Dict:
+        """
+        Serialize config to dictionary for child kernel spawning.
+
+        Returns:
+            Dict representation of entire config
+        """
+        return {
+            "kernel": self.kernel.to_dict(),
+            "city": self.city.to_dict(),
+            "circuits": {name: circuit.to_dict() for name, circuit in self.circuits.items()},
+            "routing": [rule.to_dict() for rule in self.routing],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict) -> "PhoenixConfig":
+        """
+        Deserialize config from dictionary.
+
+        Args:
+            data: Dict representation of config
+
+        Returns:
+            PhoenixConfig instance
+        """
+        from .sections.circuits import CircuitConfig
+
+        kernel = KernelConfig.from_dict(data.get("kernel", {}))
+        city = CityConfig.from_dict(data.get("city", {}))
+
+        circuits = {}
+        for name, circuit_data in data.get("circuits", {}).items():
+            circuits[name] = CircuitConfig.from_dict(circuit_data)
+
+        routing = []
+        for rule_data in data.get("routing", []):
+            routing.append(RoutingRule.from_dict(rule_data))
+
+        return cls(
+            kernel=kernel,
+            city=city,
+            circuits=circuits,
+            routing=routing,
+        )
+
+    # =========================================================================
     # Backward compatibility with old phoenix_config API
     # =========================================================================
 

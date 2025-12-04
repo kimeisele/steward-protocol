@@ -884,13 +884,12 @@ class StewardCLI:
             # Import required components
             from provider.universal_provider import UniversalProvider
             from vibe_core.boot_orchestrator import BootOrchestrator
-            from vibe_core.config import ConfigLoader
+            from vibe_core.config import load_config
 
             # Load Phoenix Config
             print("Loading configuration...")
             try:
-                loader = ConfigLoader()
-                config = loader.load()
+                config = load_config()
             except Exception as e:
                 print(f"⚠️  Config load warning: {e} (using defaults)")
                 config = None

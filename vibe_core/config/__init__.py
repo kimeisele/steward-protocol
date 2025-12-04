@@ -3,9 +3,11 @@ THE DHARMA ENGINE: Configuration-Driven System Architecture
 
 This module provides the configuration system for Steward Protocol.
 Configuration is the DNA of the system - if code dies, config resurrects it.
+
+NOTE: ConfigLoader was removed in favor of PhoenixConfig V2.
+Use vibe_core.phoenix for the unified typed config system.
 """
 
-from .loader import ConfigLoader
 from .schema import (
     CityConfig,
     CivicConfig,
@@ -30,6 +32,5 @@ __all__ = [
     "ForumConfig",
     "CivicConfig",
     "load_config",
-    "ConfigLoader",
     "get_config",
 ]

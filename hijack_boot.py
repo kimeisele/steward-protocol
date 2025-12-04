@@ -10,7 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from vibe_core.boot_orchestrator import BootOrchestrator
-from vibe_core.config import ConfigLoader
+from vibe_core.config import load_config
 from vibe_core.scheduling.task import Task
 
 # Basic logging
@@ -22,8 +22,7 @@ def get_kernel():
     Hijacks the boot process to get a direct handle to the kernel.
     """
     print("🚀 Hijacking boot sequence...")
-    loader = ConfigLoader()
-    config = loader.load()
+    config = load_config("config/matrix.yaml")
     orchestrator = BootOrchestrator(config=config, project_root=PROJECT_ROOT)
     kernel = orchestrator.boot()
     print("✅ Kernel booted successfully.")
