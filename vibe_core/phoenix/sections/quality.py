@@ -437,6 +437,8 @@ class QualityConfig:
     """
     Complete quality configuration.
 
+    Auto-discovered by SectionLoader → loads from config/quality.yaml
+
     This is the SINGLE SOURCE OF TRUTH for:
     - Lint rules
     - Format rules
@@ -449,6 +451,9 @@ class QualityConfig:
     - Agents can read this to understand quality requirements
     - Kernel can enforce these rules
     """
+
+    # Class-level section identifier for auto-discovery
+    section_id = "quality"
 
     lint: LintConfig = field(default_factory=LintConfig)
     format: FormatConfig = field(default_factory=FormatConfig)
