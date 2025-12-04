@@ -173,9 +173,7 @@ class PhoenixConfig:
 
         # === EXTRA SECTIONS: Any new sections we don't know about ===
         known_sections = {"kernel", "city", "quality"}
-        extra_sections = {
-            k: v for k, v in discovered_sections.items() if k not in known_sections
-        }
+        extra_sections = {k: v for k, v in discovered_sections.items() if k not in known_sections}
         if extra_sections:
             logger.info(f"Auto-discovered {len(extra_sections)} extra sections: {list(extra_sections.keys())}")
 
