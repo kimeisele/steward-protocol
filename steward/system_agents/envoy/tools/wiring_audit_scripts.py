@@ -347,15 +347,26 @@ class WiringAuditor:
             content = cartridge.read_text()
             agent_name = agent_dir.name
 
+            # Also check agent.py for inherited methods
+            agent_py = agent_dir / "agent.py"
+            inherited_content = agent_py.read_text() if agent_py.exists() else ""
+
             for method in required_methods:
-                # Check if method exists
+                # Check if method exists in cartridge OR inherited from agent.py
                 sync_pattern = rf"def {method}\s*\("
                 async_pattern = rf"async def {method}\s*\("
 
                 has_sync = bool(re.search(sync_pattern, content))
                 has_async = bool(re.search(async_pattern, content))
 
-                if not has_sync and not has_async:
+                # Check inherited methods
+                inherited_sync = bool(re.search(sync_pattern, inherited_content))
+                inherited_async = bool(re.search(async_pattern, inherited_content))
+
+                total_sync = has_sync or inherited_sync
+                total_async = has_async or inherited_async
+
+                if not total_sync and not total_async:
                     findings.append(
                         {
                             "agent": agent_name,
@@ -365,7 +376,7 @@ class WiringAuditor:
                             "fix": f"Add {method}() method to {agent_name} cartridge",
                         }
                     )
-                elif method in async_required and has_sync and not has_async:
+                elif method in async_required and total_sync and not total_async:
                     findings.append(
                         {
                             "agent": agent_name,

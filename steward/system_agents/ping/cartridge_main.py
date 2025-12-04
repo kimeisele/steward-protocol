@@ -44,7 +44,7 @@ class PingCartridge(ContextAwareAgent, OathMixin):
             capabilities=["ping", "status"],
         )
 
-    def process(self, task) -> Dict[str, Any]:
+    async def process(self, task) -> Dict[str, Any]:
         """Process a task. Simple: ping returns pong."""
         action = task.payload.get("action", "ping")
 
