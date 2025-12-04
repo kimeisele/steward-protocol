@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
+    from vibe_core.phoenix import PhoenixConfig
 
 from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
 
@@ -207,10 +208,32 @@ class RealVibeKernel(VibeKernel):
     - Immutable ledger (append-only)
     - Manifest registry (agent identity)
     - Kernel injection (dependency injection pattern)
+    - Ephemeral Cities (4D Hypercube - spawn child kernels with custom configs)
     """
 
-    def __init__(self, ledger_path: str = "data/vibe_ledger.db"):
-        """Initialize the kernel"""
+    def __init__(
+        self,
+        ledger_path: str = "data/vibe_ledger.db",
+        config: "PhoenixConfig | None" = None,
+        parent: "RealVibeKernel | None" = None,
+    ):
+        """
+        Initialize the kernel.
+
+        Args:
+            ledger_path: Path to ledger database (":memory:" for in-memory)
+            config: Optional PhoenixConfig for dependency injection.
+                    If None, uses global get_config() singleton.
+                    For ephemeral child kernels, pass custom config.
+            parent: Optional parent kernel (for ephemeral cities).
+                    Child kernels can access parent for result folding.
+        """
+        # 4D Hypercube: Store config and parent reference
+        self._config = config
+        self._parent = parent
+        self._child_kernels: list["RealVibeKernel"] = []
+        self._is_ephemeral = parent is not None
+
         self._agent_registry: Dict[str, VibeAgent] = {}
         self._scheduler = InMemoryScheduler()
         self._completed_tasks: Dict[str, Any] = {}  # Temporary result cache for async IPC
@@ -303,6 +326,137 @@ class RealVibeKernel(VibeKernel):
         self._plugins = PluginLoader.discover()
         for plugin in self._plugins:
             plugin.on_boot(self)
+
+    # =========================================================================
+    # 4D HYPERCUBE: Phoenix Config & Ephemeral Cities
+    # =========================================================================
+
+    @property
+    def config(self) -> "PhoenixConfig":
+        """
+        Get the kernel's configuration.
+
+        Returns injected config if provided, otherwise global singleton.
+        This enables fractal kernel spawning with custom configs.
+        """
+        if self._config is not None:
+            return self._config
+
+        # Lazy import to avoid circular dependencies
+        from vibe_core.phoenix import get_config
+
+        return get_config()
+
+    @property
+    def is_ephemeral(self) -> bool:
+        """Check if this is an ephemeral child kernel."""
+        return self._is_ephemeral
+
+    @property
+    def parent_kernel(self) -> "RealVibeKernel | None":
+        """Get parent kernel (if ephemeral child)."""
+        return self._parent
+
+    def spawn_child_kernel(
+        self,
+        config: "PhoenixConfig",
+        ledger_path: str = ":memory:",
+    ) -> "RealVibeKernel":
+        """
+        🌀 SPAWN EPHEMERAL CITY (4D Hypercube Operation)
+
+        Creates a child kernel with custom configuration for specialized tasks.
+        The child runs in isolation and results can be folded back to parent.
+
+        Use cases:
+        - Fast coding swarm (no democracy, just execution)
+        - Sandboxed experimentation (throwaway environment)
+        - Specialized agent configurations
+
+        Args:
+            config: Custom PhoenixConfig for the child kernel
+            ledger_path: Ledger path (default ":memory:" for ephemeral)
+
+        Returns:
+            Child RealVibeKernel instance
+
+        Example:
+            # Agent generates a custom config for fast coding
+            fast_config = PhoenixConfig(...)
+            fast_config.city.governance.voting_threshold = 0  # No democracy
+
+            # Spawn ephemeral city
+            child = parent_kernel.spawn_child_kernel(fast_config)
+
+            # Execute task in child
+            result = await child.execute_circuit("build_app")
+
+            # Child dies, result folds back
+            parent_kernel.merge_child_result(child, result)
+        """
+        logger.info(f"🌀 Spawning ephemeral child kernel (parent: {id(self)})")
+
+        child = RealVibeKernel(
+            ledger_path=ledger_path,
+            config=config,
+            parent=self,
+        )
+
+        self._child_kernels.append(child)
+        logger.info(f"🌀 Child kernel spawned (id: {id(child)}, ephemeral: {child.is_ephemeral})")
+
+        return child
+
+    def get_ledger_hash(self) -> str:
+        """
+        Get cryptographic hash of ledger state (for proof of work).
+
+        Used when folding child kernel results back to parent.
+        """
+        import hashlib
+
+        entries = self._ledger.get_all_entries() if hasattr(self._ledger, "get_all_entries") else []
+        content = str(entries).encode()
+        return hashlib.sha256(content).hexdigest()[:16]
+
+    def merge_child_result(self, child: "RealVibeKernel", result: Any) -> Dict[str, Any]:
+        """
+        Fold child kernel result back into parent.
+
+        Records the merge in parent's ledger with proof from child.
+
+        Args:
+            child: The ephemeral child kernel
+            result: Result from child's execution
+
+        Returns:
+            Merge record with proof
+        """
+        if child not in self._child_kernels:
+            raise ValueError("Cannot merge result from unknown child kernel")
+
+        merge_record = {
+            "child_id": id(child),
+            "child_ledger_hash": child.get_ledger_hash(),
+            "result": str(result)[:500],  # Truncate large results
+            "timestamp": datetime.now().isoformat(),
+        }
+
+        # Record in parent ledger
+        self._ledger.record_event(
+            event_type="EPHEMERAL_CITY_MERGE",
+            agent_id="KERNEL",
+            details=merge_record,
+        )
+        logger.info(f"🌀 Merged child result (proof: {merge_record['child_ledger_hash']})")
+
+        # Remove child from tracking
+        self._child_kernels.remove(child)
+
+        return {
+            "type": "EPHEMERAL_CITY_MERGE",
+            **merge_record,
+        }
 
     def get_bank(self) -> "CivicBank":
         """
