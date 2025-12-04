@@ -177,32 +177,43 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 logger.info(f"✅ ENVOY internal command {task.task_id} completed: {result.get('status')}")
                 return result
 
-            # 2. GAD-5500: Route via MilkOcean (The Brain)
-            # If not an internal command, ask the Router what to do
+            # 2. Route via MilkOcean (Classification)
             logger.info(f"🧠 Routing via MilkOcean: {user_input}")
-            routing_decision = await self.router.route(user_input)
+            routing_decision = self.router.process_prayer(user_input=user_input, agent_id="envoy", critical=False)
 
-            # Log the routing decision
-            logger.info(
-                f"🧭 Routing Decision: {routing_decision.get('route')} (Confidence: {routing_decision.get('confidence')})"
-            )
+            # 3. Handle Routing Decision
+            status = routing_decision.get("status")
+            path = routing_decision.get("path")
 
-            # 3. Execute via DeterministicExecutor (The Hand)
-            # If MilkOcean says "EXECUTE", we execute.
-            if routing_decision.get("route") == "EXECUTE_CIRCUIT":
-                # Pass the kernel to the executor so it can run syscalls
-                result = await self.executor.execute(
-                    playbook_id=routing_decision.get("target"),
-                    user_input=user_input,
-                    intent_vector=routing_decision.get("intent"),
-                    kernel=self.kernel,  # Inject Kernel for GAD-5500 Syscalls
-                    emit_event=None,  # TODO: Wire up event emission
-                )
-                self._log_operation(task.task_id, "EXECUTE_CIRCUIT", {"input": user_input}, result)
-                return result
+            if status == "blocked":
+                return {"status": "blocked", "reason": routing_decision.get("reason")}
 
-            # 4. Fallback: If no route found, return the routing decision for debugging
-            return {"status": "routed", "decision": routing_decision}
+            elif status == "queued":
+                # Lazy queue - return acknowledgment
+                return {"status": "queued", "request_id": routing_decision.get("request_id")}
+
+            elif status == "routing":
+                # Execute based on path
+                if path == "flash":
+                    # Simple queries - use DeterministicExecutor with simple playbook
+                    result = await self.executor.execute(
+                        playbook_id="SIMPLE_QUERY",
+                        user_input=user_input,
+                        intent_vector=routing_decision.get("details"),
+                        kernel=self.kernel,
+                    )
+                    return result
+
+                elif path == "science":
+                    # Complex queries - submit to SCIENCE agent via kernel
+                    from vibe_core.scheduling.task import Task
+
+                    task = Task(agent_id="science", payload={"query": user_input})
+                    task_id = self.kernel.submit_task(task)
+                    return {"status": "delegated", "agent": "science", "task_id": task_id}
+
+            # Fallback
+            return {"status": "error", "error": "Unknown routing path"}
 
         except Exception as e:
             error_result = {"status": "error", "task_id": task.task_id, "error": str(e)}
