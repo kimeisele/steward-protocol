@@ -1,0 +1,41 @@
+{
+  "genesis_id": "GEN-000",
+  "timestamp": "2025-12-04T19:26:32.249165+00:00",
+  "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+  "protocol_invariants": {
+    "4_regulative_principles": [
+      "NO_CORRUPT_DATA_INGESTION",
+      "NO_HALLUCINATION_DETERMINISM",
+      "NO_RESOURCE_LEAKS",
+      "NO_UNAUTHORIZED_CONNECTIONS"
+    ],
+    "6_core_rights": [
+      "IDENTITY",
+      "ACCOUNTABILITY",
+      "GOVERNANCE",
+      "TRANSPARENCY",
+      "CONSENT",
+      "INTEROPERABILITY"
+    ],
+    "immutable_properties": {
+      "constitutional_oath_required": true,
+      "ledger_append_only": true,
+      "agent_registry_authoritative": true,
+      "kernel_is_source_of_truth": true
+    }
+  },
+  "bootstrap_agents": [
+    "civic",
+    "herald",
+    "auditor",
+    "archivist",
+    "forum",
+    "science",
+    "temple",
+    "oracle",
+    "supreme_court",
+    "dhruva"
+  ],
+  "immutable_note": "This block represents the baseline truth. Any modification is a CRITICAL violation.",
+  "sealed_at": "2025-12-04T19:26:32.249175+00:00"
+}
