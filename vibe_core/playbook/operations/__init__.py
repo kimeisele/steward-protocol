@@ -8,8 +8,13 @@ Operations are the "verbs" that playbooks can invoke. Each operation:
 
 Available operations:
 - spawn_city: Spawn ephemeral child kernel (4D Hypercube)
+
+AIRLOCK PATTERN:
+    When spawning ephemeral cities, use the `artifacts` parameter to specify
+    which files should be harvested from the child VFS before the city dies.
+    This prevents data loss when the ephemeral kernel is terminated.
 """
 
-from .kernel_spawn import spawn_city, SpawnCityResult
+from .kernel_spawn import spawn_city, SpawnCityResult, HarvestedArtifact
 
-__all__ = ["spawn_city", "SpawnCityResult"]
+__all__ = ["spawn_city", "SpawnCityResult", "HarvestedArtifact"]
