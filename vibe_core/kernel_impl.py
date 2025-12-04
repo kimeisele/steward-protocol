@@ -31,8 +31,6 @@ from steward.varna import Varna, categorize_agent_by_function, get_varna_descrip
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
 
 # DocRenderer: Extracted markdown rendering logic
-from .doc_renderer import DocRenderer, EnvoyRenderState, SettingsRenderState
-from .envoy_sync import EnvoySync, EnvoySyncState
 from .event_bus import get_event_bus  # Phase 2: Event Bus
 from .kernel import (
     KernelStatus,
@@ -43,8 +41,10 @@ from .kernel import (
 )
 from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
+from .markdown_ui_manager import MarkdownUIManager  # NEU: UI Manager
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
+from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
@@ -53,10 +53,8 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 from .runtime.playbook_router import PlaybookRouter
 from .sarga import Cycle, get_sarga
 from .scheduling import Task
-from .settings_executor import get_executor as get_settings_executor
 
 # Sync modules: Extracted bidirectional markdown interfaces
-from .settings_sync import SettingsSync, SettingsSyncState
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
@@ -228,6 +226,7 @@ class RealVibeKernel(VibeKernel):
 
         # Load immune system (Auditor)
         self._auditor = None
+        self._paused_agents: Set[str] = set()
         if AUDITOR_AVAILABLE:
             self._auditor = get_judge()
             logger.info("🛡️  Immune system loaded (Auditor attached)")
@@ -239,20 +238,9 @@ class RealVibeKernel(VibeKernel):
         self.resource_manager = ResourceManager()
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
 
-        # Phase 2.5: SETTINGS.md synchronization (Command Queue)
-        self._settings_last_modified = 0.0  # Last known mtime of SETTINGS.md
-        self._settings_writing = False  # Lock flag to prevent read during write
-        self._settings_execution_history: deque = deque(maxlen=10)  # Last 10 executed commands
-        self._paused_agents: Set[str] = set()  # Agents that are paused via SETTINGS.md
-        logger.info("⚙️  Settings sync initialized (Command Queue)")
-
-        # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)
-        self._envoy_last_modified = 0.0  # Last known mtime of ENVOY.md
-        self._envoy_writing = False  # Lock flag to prevent read during write
-        self._envoy_request_history: deque = deque(maxlen=20)  # Last 20 processed requests
-        self._envoy_pending_tasks: Dict[str, Dict[str, Any]] = {}  # task_id -> request metadata
-        self._playbook_router = PlaybookRouter()  # Intent routing (no LLM needed)
-        logger.info("📬 ENVOY.md terminal initialized (async task dispatch)")
+        # Markdown UI Manager (Centralized UI Coordination)
+        self._ui_manager = MarkdownUIManager(self)
+        logger.info("🖥️  Markdown UI Manager initialized")
 
         # Phase 4: Network Proxy
         self.network = KernelNetworkProxy(kernel=self)
@@ -306,19 +294,14 @@ class RealVibeKernel(VibeKernel):
         self._event_bus = get_event_bus()
         logger.info("🎵 Event Bus initialized (pub/sub ready)")
 
-        # DocRenderer: Centralized markdown rendering (extracted from kernel)
-        # Kernel only calls renderer, doesn't format markdown itself
-        self._doc_renderer = DocRenderer()
-        logger.info("📝 DocRenderer initialized (markdown rendering)")
+        # Playbook Router for Intent Routing (used by UI Manager)
+        self._playbook_router = PlaybookRouter()
 
-        # SettingsSync: Bidirectional SETTINGS.md interface (extracted from kernel)
-        self._settings_sync = SettingsSync()
-        self._settings_executor = get_settings_executor()
-        logger.info("⚙️  SettingsSync initialized (command queue)")
-
-        # EnvoySync: Bidirectional ENVOY.md interface (extracted from kernel)
-        self._envoy_sync = EnvoySync()
-        logger.info("📬 EnvoySync initialized (async dispatch)")
+        # PLUGIN SYSTEM (The Avatars of Vishnu)
+        # Phase 1: Load and boot all plugins
+        self._plugins = PluginLoader.discover()
+        for plugin in self._plugins:
+            plugin.on_boot(self)
 
     def get_bank(self) -> "CivicBank":
         """
@@ -594,7 +577,7 @@ class RealVibeKernel(VibeKernel):
             PermissionError: If agent_id is not registered or doesn't match caller
         """
         # Validate agent exists
-        if agent_id not in self._agent_registry:
+        if agent_id != "kernel" and agent_id not in self._agent_registry:
             raise PermissionError(
                 f"IDENTITY_SPOOFING_BLOCKED: Agent '{agent_id}' not registered. "
                 f"Cannot record events for unregistered agents."
@@ -799,6 +782,10 @@ class RealVibeKernel(VibeKernel):
         spawn_status = "spawned in isolated process" if spawn_process else "registered (process deferred)"
         logger.info(f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}.")
 
+        # Plugin Hook: Agent Registered
+        for plugin in self._plugins:
+            plugin.on_agent_registered(self, agent.agent_id)
+
     def spawn_deferred_agents(self) -> int:
         """
         Spawn processes for all registered agents that don't have running processes.
@@ -881,45 +868,13 @@ class RealVibeKernel(VibeKernel):
             logger.warning("⚠️  Kernel not running")
             return
 
-        # Phase 2.5: Check for SETTINGS.md changes and sync to reality
-        # This implements the SETTINGS -> REALITY direction (Command Queue)
-        if not self._settings_writing and self._settings_sync.check_file_changed(self._settings_last_modified):
-            logger.info("⚙️  SETTINGS.md changed, synchronizing to reality...")
-            state = SettingsSyncState(
-                last_modified=self._settings_last_modified,
-                execution_history=list(self._settings_execution_history),
-                paused_agents=self._paused_agents,
-                agent_ids=set(self._agent_registry.keys()),
-            )
-            result = self._settings_sync.sync_to_reality(state, self._ledger.record_event)
-            self._settings_last_modified = result.new_mtime
-            self._paused_agents = result.paused_agents
-            self._settings_execution_history.extend(result.history_entries)
+        # Plugin Hook: Pre-Tick (Input Processing)
+        for plugin in self._plugins:
+            plugin.on_tick_pre(self)
 
-            # Execute commands that require kernel access (RESTART, REFRESH, verbose)
-            # This is delegated to SettingsExecutor to keep kernel clean
-            self._settings_executor.execute(result, self)
-
-        # ENVOY.md: Check for new user requests and dispatch tasks (async, non-blocking)
-        # Uses PlaybookRouter for intent routing - NO LLM NEEDED
-        if not self._envoy_writing and self._envoy_sync.check_file_changed(self._envoy_last_modified):
-            logger.info("📬 ENVOY.md changed, processing user requests...")
-            state = EnvoySyncState(
-                last_modified=self._envoy_last_modified,
-                pending_tasks=self._envoy_pending_tasks,
-                request_history=list(self._envoy_request_history),
-            )
-            result = self._envoy_sync.sync_to_reality(
-                state,
-                router_callback=self._playbook_router.route,
-                submit_callback=self._scheduler.submit_task,
-                task_factory=lambda p: Task(
-                    agent_id=p["agent_id"], payload=p["payload"], priority=p.get("priority", 0)
-                ),
-            )
-            self._envoy_last_modified = result.new_mtime
-            self._envoy_pending_tasks.update(result.pending_tasks)
-            self._envoy_request_history.extend(result.history_entries)
+        # Phase 2.5: UI Synchronization (Delegated to MarkdownUIManager)
+        # Handles SETTINGS.md (Command Queue) and ENVOY.md (Terminal Interface)
+        # self._ui_manager.sync_all()  # DEPRECATED: Handled by Plugins
 
         task = self._scheduler.next_task()
         if not task:
@@ -972,9 +927,19 @@ class RealVibeKernel(VibeKernel):
                         result = agent.process(task)
                     self._ledger.record_completion(task, result)
                     logger.info(f"✅ Task {task.task_id} completed (in-process)")
+
+                    # Plugin Hook: Task Completed
+                    for plugin in self._plugins:
+                        plugin.on_task_completed(self, task.task_id, result)
                 except Exception as e:
                     logger.error(f"❌ In-process execution failed: {e}")
                     self._ledger.record_failure(task, str(e))
+
+                    # Plugin Hook: Task Failed
+                    print(f"DEBUG: Calling on_task_failed for {task.task_id} with error {str(e)}")
+                    for plugin in self._plugins:
+                        print(f"DEBUG: Notifying plugin {plugin.plugin_id}")
+                        plugin.on_task_failed(self, task.task_id, str(e))
                     return
 
             # Record completion (Optimistic for now, or move to callback)
@@ -995,10 +960,18 @@ class RealVibeKernel(VibeKernel):
             # Phase 3: Sync resource quotas periodically
             self._sync_resource_quotas()
 
+            # Plugin Hook: Post-Tick (Output/Status)
+            for plugin in self._plugins:
+                plugin.on_tick_post(self)
+
         except Exception as e:
             error = str(e)
             logger.exception(f"❌ Task {task.task_id} failed: {error}")
             self._ledger.record_failure(task, error)
+
+            # Plugin Hook: Task Failed
+            for plugin in self._plugins:
+                plugin.on_task_failed(self, task.task_id, error)
 
     def get_status(self) -> Dict[str, Any]:
         """Get full kernel status"""
@@ -1037,19 +1010,24 @@ class RealVibeKernel(VibeKernel):
                     self._completed_tasks[task_id] = result
 
                     # ENVOY.md: Update status if this was a terminal request
-                    if task_id in self._envoy_pending_tasks:
-                        response = str(result) if result else "Task completed successfully"
-                        self.update_envoy_task_status(task_id, "COMPLETED", response)
-                        logger.info(f"📬 ENVOY task {task_id} marked COMPLETED")
+                    # self._ui_manager.update_envoy_task_status(task_id, "COMPLETED", str(result) if result else "Task completed successfully")
+                    # logger.info(f"📬 ENVOY task {task_id} marked COMPLETED")
+
+                    # Plugin Hook: Task Completed
+                    for plugin in self._plugins:
+                        plugin.on_task_completed(self, task_id, result)
 
                 else:
                     error = msg.get("error")
                     logger.error(f"❌ Task {task_id} failed (Async IPC): {error}")
 
                     # ENVOY.md: Update status if this was a terminal request
-                    if task_id in self._envoy_pending_tasks:
-                        self.update_envoy_task_status(task_id, "FAILED", str(error))
-                        logger.info(f"📬 ENVOY task {task_id} marked FAILED")
+                    # self._ui_manager.update_envoy_task_status(task_id, "FAILED", str(error))
+                    # logger.info(f"📬 ENVOY task {task_id} marked FAILED")
+
+                    # Plugin Hook: Task Failed
+                    for plugin in self._plugins:
+                        plugin.on_task_failed(self, task_id, error)
 
             elif msg_type == "CRASH":
                 error = msg.get("error")
@@ -1266,6 +1244,10 @@ class RealVibeKernel(VibeKernel):
             )
             # Close lineage chain
             self.lineage.close()
+
+        # Plugin Hook: Shutdown
+        for plugin in self._plugins:
+            plugin.on_shutdown(self)
 
         self._status = KernelStatus.STOPPED
         logger.critical(f"🔴 KERNEL SHUTDOWN: {reason}")
@@ -1632,36 +1614,8 @@ class RealVibeKernel(VibeKernel):
             snapshot_path.write_text(json.dumps(snapshot, indent=2))
             logger.info("💓 Pulse written: vibe_snapshot.json")
 
-            # Render OPERATIONS.md (via DocRenderer)
-            self._doc_renderer.render_operations(snapshot)
-
-            # Render SETTINGS.md (via DocRenderer)
-            self._settings_writing = True
-            try:
-                settings_state = SettingsRenderState(
-                    ledger_path=str(self.ledger_path),
-                    varna_registry=self._varna_registry,
-                    ashrama_registry=self._ashrama_registry,
-                    execution_history=list(self._settings_execution_history),
-                )
-                new_mtime = self._doc_renderer.render_settings(snapshot, settings_state)
-                if new_mtime:
-                    self._settings_last_modified = new_mtime
-            finally:
-                self._settings_writing = False
-
-            # Render ENVOY.md (via DocRenderer)
-            self._envoy_writing = True
-            try:
-                envoy_state = EnvoyRenderState(
-                    pending_tasks=self._envoy_pending_tasks,
-                    request_history=list(self._envoy_request_history),
-                    available_routes=self._playbook_router.list_available_routes(),
-                    extract_request_fn=self._extract_envoy_request_content,
-                )
-                self._doc_renderer.render_envoy(snapshot, envoy_state)
-            finally:
-                self._envoy_writing = False
+            # Render ALL UI files via Manager
+            # self._ui_manager.render_all(snapshot)  # DEPRECATED: Handled by Plugins
 
         except Exception as e:
             logger.error(f"❌ Pulse failed: {e}")
@@ -1678,69 +1632,3 @@ class RealVibeKernel(VibeKernel):
     # 6. Scheduler executes task async (separate tick)
     # 7. Update ENVOY.md with result when complete
     # ========================================================================
-
-    def _extract_envoy_request_content(self, envoy_path: Path) -> str:
-        """
-        Extract user's request content from ENVOY.md.
-
-        Preserves whatever the user wrote in the Request section,
-        excluding boilerplate/placeholder text.
-        """
-        try:
-            content = envoy_path.read_text()
-            in_request_section = False
-            request_lines = []
-
-            for line in content.split("\n"):
-                # Detect start of Request section
-                if "## 💬 Request" in line:
-                    in_request_section = True
-                    continue
-
-                # Stop at next section
-                if in_request_section and line.strip().startswith("##"):
-                    break
-
-                # Skip boilerplate/placeholder lines
-                if in_request_section:
-                    stripped = line.strip()
-                    if stripped.startswith(">"):  # Skip blockquotes (instructions)
-                        continue
-                    if stripped.startswith("_") and stripped.endswith("_"):  # Skip placeholders
-                        continue
-                    if stripped == "---":  # Skip separators
-                        continue
-                    if stripped:
-                        request_lines.append(line)
-
-            return "\n".join(request_lines)
-
-        except Exception as e:
-            logger.error(f"❌ Failed to extract request content: {e}")
-            return ""
-
-    def update_envoy_task_status(self, task_id: str, status: str, response: str = "") -> None:
-        """
-        Update a task's status in ENVOY.md tracking.
-
-        Called when a dispatched task completes or fails.
-        Moves task from _envoy_pending_tasks to _envoy_request_history.
-
-        Args:
-            task_id: The task ID to update
-            status: New status (COMPLETED, FAILED)
-            response: Optional response message
-        """
-        if task_id not in self._envoy_pending_tasks:
-            logger.warning(f"⚠️ Task {task_id} not found in pending tasks")
-            return
-
-        # Get task metadata
-        task_meta = self._envoy_pending_tasks.pop(task_id)
-        task_meta["status"] = status
-        task_meta["response"] = response
-
-        # Add to history
-        self._envoy_request_history.append(task_meta)
-
-        logger.info(f"📬 Task {task_id} completed: {status}")
