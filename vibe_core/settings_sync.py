@@ -33,6 +33,9 @@ logger = logging.getLogger(__name__)
 EDITABLE_SETTINGS = {
     "kernel.log_level",  # Safe: logging verbosity only
     "kernel.verbose",  # Safe: verbose mode (true/false)
+    # Provider/Execution settings (UI Enhancement)
+    "provider",  # LLM provider selection (anthropic, openai, openrouter)
+    "mode",  # Execution mode (simulation, live_fire)
     # FORBIDDEN - Security risks:
     # "kernel.status"        - Could bypass shutdown
     # "agent.*.capabilities" - Capability escalation
@@ -66,6 +69,9 @@ class SettingsExecutionResult:
     restart_agents: Set[str] = field(default_factory=set)  # Agents to restart
     refresh_topology: bool = False  # Flag to trigger topology refresh
     verbose_mode: Optional[bool] = None  # Verbose mode setting (if changed)
+    # UI Enhancement: Provider and execution mode
+    new_provider: Optional[str] = None  # Provider change (anthropic, openai, openrouter)
+    new_execution_mode: Optional[str] = None  # Mode change (simulation, live_fire)
 
 
 class SettingsSync:
@@ -323,6 +329,33 @@ class SettingsSync:
             result.verbose_mode = verbose
             record["reason"] = f"Verbose mode {'enabled' if verbose else 'disabled'}"
             logger.info(f"✅ SET {key}={verbose}")
+
+        elif key == "provider":
+            # Validate provider name
+            valid_providers = ("anthropic", "openai", "openrouter")
+            provider = value.lower().strip()
+            if provider not in valid_providers:
+                record["status"] = "FAILED"
+                record["reason"] = f"Invalid provider '{value}'. Use: {', '.join(valid_providers)}"
+                logger.warning(f"⛔ Invalid provider: {value}")
+                return
+            result.new_provider = provider
+            record["reason"] = f"Provider changed to '{provider}' (requires kernel restart)"
+            logger.info(f"✅ SET provider={provider}")
+
+        elif key == "mode":
+            # Validate execution mode
+            valid_modes = ("simulation", "live_fire")
+            mode = value.lower().strip()
+            if mode not in valid_modes:
+                record["status"] = "FAILED"
+                record["reason"] = f"Invalid mode '{value}'. Use: {', '.join(valid_modes)}"
+                logger.warning(f"⛔ Invalid mode: {value}")
+                return
+            result.new_execution_mode = mode
+            is_live = mode == "live_fire"
+            record["reason"] = f"Execution mode changed to '{mode}'" + (" ⚠️ LIVE FIRE ENABLED" if is_live else "")
+            logger.info(f"✅ SET mode={mode}")
 
     def _execute_pause(
         self,

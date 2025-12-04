@@ -169,6 +169,128 @@ class PhoenixConfigEngine:
         """Check if config was successfully loaded"""
         return self._loaded
 
+    # =========================================================================
+    # UI Enhancement: Settings Interface Methods
+    # =========================================================================
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get config value by dotted key path.
+
+        Args:
+            key: Dotted path like "providers.llm_provider"
+            default: Default value if not found
+
+        Returns:
+            Config value or default
+        """
+        parts = key.split(".")
+        value = self.config
+
+        for part in parts:
+            if isinstance(value, dict) and part in value:
+                value = value[part]
+            else:
+                return default
+
+        return value
+
+    def set(self, key: str, value: Any) -> bool:
+        """
+        Set config value by dotted key path.
+
+        Args:
+            key: Dotted path like "features.live_fire_enabled"
+            value: New value to set
+
+        Returns:
+            True if successful, False otherwise
+        """
+        parts = key.split(".")
+        data = self.config
+
+        # Navigate to parent
+        for part in parts[:-1]:
+            if part not in data:
+                data[part] = {}
+            data = data[part]
+
+        # Set value
+        old_value = data.get(parts[-1])
+        data[parts[-1]] = value
+        logger.info(f"⚙️  Config: {key} = {value} (was: {old_value})")
+        return True
+
+    def save(self) -> bool:
+        """Save config back to YAML file."""
+        try:
+            self.config_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.config_path, "w") as f:
+                yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
+            logger.info(f"💾 Config saved to {self.config_path}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to save config: {e}")
+            return False
+
+    @property
+    def llm_provider(self) -> str:
+        """Current LLM provider class path."""
+        return self.get("providers.llm_provider", "")
+
+    @property
+    def live_fire_enabled(self) -> bool:
+        """Whether live fire mode is enabled."""
+        return self.get("features.live_fire_enabled", False)
+
+    @property
+    def debug_mode(self) -> bool:
+        """Whether debug mode is enabled."""
+        return self.get("features.debug_mode", False)
+
+    def get_provider_info(self) -> Dict[str, str]:
+        """
+        Get human-readable provider information.
+
+        Returns:
+            Dict with provider name and details
+        """
+        provider_path = self.llm_provider
+
+        # Extract provider name from class path
+        if "anthropic" in provider_path.lower():
+            return {
+                "name": "anthropic",
+                "display": "Anthropic Claude",
+                "api_key_env": "ANTHROPIC_API_KEY",
+                "pro_model": "claude-sonnet-4-20250514",
+                "low_model": "claude-haiku-3-20240307",
+            }
+        elif "openai" in provider_path.lower():
+            return {
+                "name": "openai",
+                "display": "OpenAI GPT",
+                "api_key_env": "OPENAI_API_KEY",
+                "pro_model": "gpt-4-turbo",
+                "low_model": "gpt-3.5-turbo",
+            }
+        elif "openrouter" in provider_path.lower():
+            return {
+                "name": "openrouter",
+                "display": "OpenRouter",
+                "api_key_env": "OPENROUTER_API_KEY",
+                "pro_model": "anthropic/claude-3-sonnet",
+                "low_model": "anthropic/claude-3-haiku",
+            }
+        else:
+            return {
+                "name": "custom",
+                "display": "Custom Provider",
+                "api_key_env": "LLM_API_KEY",
+                "pro_model": "default",
+                "low_model": "default",
+            }
+
 
 # Singleton instance
 _engine: Optional[PhoenixConfigEngine] = None
