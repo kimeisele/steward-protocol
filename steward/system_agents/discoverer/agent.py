@@ -18,11 +18,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from steward.constitutional_oath import ConstitutionalOath
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
+from vibe_core.steward import ConstitutionalOath
 
-logger = logging.getLogger("STEWARD")
+logger = logging.getLogger("DISCOVERER")
 
 
 class Discoverer(VibeAgent):
@@ -33,8 +33,8 @@ class Discoverer(VibeAgent):
 
     def __init__(self, kernel=None, config=None):
         super().__init__(
-            agent_id="steward",
-            name="The Steward",
+            agent_id="discoverer",
+            name="The Discoverer",
             description="Guardian of Agent City. Discovers and registers agents.",
             domain="GOVERNANCE",
             capabilities=["discovery", "registration", "governance"],
@@ -51,7 +51,7 @@ class Discoverer(VibeAgent):
         self.oath_event = {
             "agent_id": self.agent_id,
             "constitution_hash": self._constitution_hash,
-            "signature": f"steward_{self._constitution_hash[:16]}_signature",
+            "signature": f"discoverer_{self._constitution_hash[:16]}_signature",
             "status": "SWORN",
         }
 

@@ -44,10 +44,10 @@ from agent_city.registry.dhruva.tools.data_ethics import DataEthicsEnforcer
 from agent_city.registry.dhruva.tools.genesis_keeper import GenesisKeeper
 from agent_city.registry.dhruva.tools.reference_resolver import ReferenceResolver
 from agent_city.registry.dhruva.tools.truth_matrix import TruthMatrix
+from vibe_core.agent_protocol import AgentManifest, Capability, VibeAgent
 
 # Constitutional Oath Mixin (Golden Template Pattern)
-from steward.oath_mixin import OathMixin
-from vibe_core.agent_protocol import AgentManifest, Capability, VibeAgent
+from vibe_core.steward import OathMixin
 
 logger = logging.getLogger("DHRUVA_ANCHOR")
 

@@ -22,8 +22,8 @@
     "issuer": "passport_office"
   },
   "identity": {
-    "agent_id": "steward",
-    "name": "STEWARD"
+    "agent_id": "discoverer",
+    "name": "The Discoverer"
   },
   "specs": {
     "description": "Agent discovery, verification, and registration",
