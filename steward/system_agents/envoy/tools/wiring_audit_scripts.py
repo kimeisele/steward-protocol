@@ -238,6 +238,9 @@ class WiringAuditor:
             "vibe_core/specialists/base_specialist.py",
             "vibe_core/playbook/executor.py",
             "steward/system_agents/scribe/tools/base.py",  # Abstract Tool base class
+            # NotImplementedError in strings/pattern lists (not real stubs)
+            "steward/system_agents/oracle/tools/introspection_tool.py",  # Line 328: string reference
+            "steward/system_agents/watchman/cartridge_main.py",  # Line 65: pattern list
             # Templates (TODOs expected)
             "starter-packs/",
             "engineer/templates/",
