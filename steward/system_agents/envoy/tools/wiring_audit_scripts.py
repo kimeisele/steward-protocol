@@ -230,6 +230,29 @@ class WiringAuditor:
         exclude_dirs = ["tests/", "scripts/research/", "__pycache__", ".git", "node_modules"]
         exclude_files = ["wiring_audit_scripts.py"]  # Don't audit ourselves
 
+        # Exclusion patterns for known false positives
+        exclude_patterns = [
+            # Intentional deprecation stubs with helpful error messages
+            "vibe_core/specialists/__init__.py",
+            # Abstract base classes (NotImplementedError is correct pattern)
+            "vibe_core/specialists/base_specialist.py",
+            "vibe_core/playbook/executor.py",
+            "steward/system_agents/scribe/tools/base.py",  # Abstract Tool base class
+            # Templates (TODOs expected)
+            "starter-packs/",
+            "engineer/templates/",
+            # Example agents (not core system)
+            "agent_city/registry/",
+            # Audit tool itself
+            "wiring_audit_scripts.py",
+            # Test files
+            "/test_",
+            "_test.py",
+            # Documentation examples
+            "examples/",
+            "docs/",
+        ]
+
         search_dirs = ["steward/", "vibe_core/", "scripts/"]
 
         for pattern, severity in stub_patterns.items():
@@ -247,8 +270,8 @@ class WiringAuditor:
                     if not line:
                         continue
 
-                    # Skip excluded paths
-                    if any(ex in line for ex in exclude_dirs + exclude_files):
+                    # Skip excluded paths (both dirs and patterns)
+                    if any(ex in line for ex in exclude_dirs + exclude_files + exclude_patterns):
                         continue
 
                     parts = line.split(":", 2)
@@ -417,8 +440,8 @@ class WiringAuditor:
             "",
             "## Summary",
             "",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "| Metric | Value |",
+            "|--------|-------|",
             f"| Total Issues | {results['summary']['total_issues']} |",
             f"| Critical | {results['summary']['critical']} |",
             f"| High | {results['summary']['high']} |",
