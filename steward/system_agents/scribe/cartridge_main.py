@@ -301,6 +301,19 @@ class ScribeCartridge(VibeAgent, OathMixin):
             logger.error("   Hint: SCRIBE requires kernel registration after Phase 2.3")
             return False
 
+    def report_status(self) -> Dict[str, Any]:
+        """Report SCRIBE status for observability (Article IV compliance)."""
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "OPERATIONAL",
+            "domain": self.domain,
+            "capabilities": self.capabilities,
+            "sandbox_initialized": self._root_dir is not None,
+            "oath_sworn": getattr(self, "oath_sworn", False),
+            "description": "Documentation agent - auto-generates system documentation",
+        }
+
 
 def main():
     """Main entry point for standalone usage.
