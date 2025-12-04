@@ -190,7 +190,7 @@ class AgentProcess:
                         "traceback": traceback.format_exc(),
                     }
                 )
-            except:
+            except Exception:
                 pass
             raise  # Die and let OS clean up
 

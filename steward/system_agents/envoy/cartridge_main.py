@@ -507,7 +507,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             try:
                 with open(self.log_path, "r") as f:
                     operations_count = len(f.readlines())
-            except:
+            except Exception:
                 operations_count = 0
 
         return {

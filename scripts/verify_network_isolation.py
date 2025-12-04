@@ -83,7 +83,7 @@ def test_request_logging():
     logger.info("1. Making request to github.com...")
     try:
         proxy.get("test_agent", "https://api.github.com")
-    except:
+    except Exception:
         pass  # Ignore network errors
 
     logger.info("2. Checking request log...")

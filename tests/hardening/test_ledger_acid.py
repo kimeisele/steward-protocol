@@ -196,7 +196,7 @@ os.kill(os.getpid(), 9)
                 wal = db_path + ext
                 if os.path.exists(wal):
                     os.unlink(wal)
-        except:
+        except Exception:
             pass
 
 

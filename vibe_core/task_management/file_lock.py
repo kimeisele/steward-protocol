@@ -46,7 +46,7 @@ class FileLock:
                         self.lock_path.unlink()
                         self.lock_path.write_text(json.dumps(self.lock_data))
                         return True
-                    except:
+                    except Exception:
                         return False
 
                 # Wait a bit and retry
@@ -57,7 +57,7 @@ class FileLock:
         try:
             if self.lock_path.exists():
                 self.lock_path.unlink()
-        except:
+        except Exception:
             pass
 
     def __enter__(self):
