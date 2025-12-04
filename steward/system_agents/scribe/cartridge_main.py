@@ -130,7 +130,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
             logger.info(f"📁 SCRIBE sandbox initialized: {self._root_dir}")
         return self._root_dir
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the kernel scheduler.
 

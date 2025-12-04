@@ -937,9 +937,7 @@ class RealVibeKernel(VibeKernel):
                     self._ledger.record_failure(task, str(e))
 
                     # Plugin Hook: Task Failed
-                    print(f"DEBUG: Calling on_task_failed for {task.task_id} with error {str(e)}")
                     for plugin in self._plugins:
-                        print(f"DEBUG: Notifying plugin {plugin.plugin_id}")
                         plugin.on_task_failed(self, task.task_id, str(e))
                     return
 
