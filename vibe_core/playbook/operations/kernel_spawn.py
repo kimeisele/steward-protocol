@@ -113,7 +113,7 @@ def _harvest_artifacts(
     destination.mkdir(parents=True, exist_ok=True)
 
     # Get all agent IDs registered in child kernel
-    child_agent_ids = list(child_kernel.agent_registry.keys()) if hasattr(child_kernel, 'agent_registry') else []
+    child_agent_ids = list(child_kernel.agent_registry.keys()) if hasattr(child_kernel, "agent_registry") else []
 
     logger.info(f"🚪 AIRLOCK: Harvesting {len(artifacts)} artifacts from {len(child_agent_ids)} child agents")
 
