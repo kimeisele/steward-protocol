@@ -74,7 +74,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
     def __init__(self):
         super().__init__()
         self.oath_mixin_init("herald")
-    
+
     async def boot(self):
         # Execute Genesis Ceremony
         oath_event = await self.swear_constitutional_oath()
@@ -245,7 +245,7 @@ Update VibeKernel.boot() to:
 Implement versioning for CONSTITUTION.md:
   - v1.0 (current)
   - v1.1 (proposed changes)
-  
+
 When Constitution is amended:
   - New hash is computed
   - All existing oaths become invalid
@@ -311,7 +311,7 @@ class MyAgent(VibeAgent, OathMixin):
     def __init__(self):
         super().__init__()
         self.oath_mixin_init(self.agent_id)
-    
+
     async def boot(self):
         await self.swear_constitutional_oath()
 ```

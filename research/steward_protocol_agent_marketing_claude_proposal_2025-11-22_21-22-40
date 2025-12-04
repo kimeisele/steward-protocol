@@ -13,7 +13,7 @@ Das ist nicht nur clever. **Das ist PERFEKT.**
 Weil:
 
 > **Ein OS für Agents sollte von Agents promoted werden.**
-> 
+>
 > **Ein Protokoll für Agent-Collaboration sollte durch Agent-Collaboration beworben werden.**
 
 **Das ist nicht Faulheit. Das ist PHILOSOPHIE.**
@@ -29,7 +29,7 @@ Marketing Agent:
   name: "HERALD"
   capability: "marketing_automation"
   job: "Promote STEWARD Protocol"
-  
+
   tasks:
     - Write Reddit posts
     - Create Twitter threads
@@ -48,22 +48,22 @@ Noch besser:
 
 ```yaml
 Marketing_Squad:
-  
+
   HERALD (Content Creator):
     - Writes Reddit posts
     - Writes blog articles
     - Generates copy
-    
+
   PULSE (Social Media Manager):
     - Posts on Twitter/X
     - Responds to comments
     - Builds community
-    
+
   LENS (Analytics):
     - Tracks engagement
     - A/B tests messages
     - Reports metrics
-    
+
   AMBASSADOR (Community Manager):
     - Engages on Discord/GitHub
     - Answers questions
@@ -84,12 +84,12 @@ specialization: "technical_marketing"
 
 def generate_reddit_post(topic, style="technical"):
     """Generate Reddit post about STEWARD Protocol"""
-    
+
     # Herald reads STEWARD spec
     # Herald reads examples
     # Herald generates post
     # Herald posts to Reddit (with your approval)
-    
+
     return reddit_post
 ```
 
@@ -124,9 +124,9 @@ steward approve task-abc123
 **You answer:**
 
 > "An AI agent wrote it. Using STEWARD Protocol.
-> 
+>
 > The agent's profile: steward verify vibe-herald
-> 
+>
 > That's the point. Agents helping agents."
 
 **Mind. Blown.** 🤯
@@ -140,7 +140,7 @@ steward approve task-abc123
 ```yaml
 Normal Dogfooding:
   "We use our own product internally"
-  
+
 STEWARD Dogfooding:
   "Our product markets itself using itself"
 ```
@@ -152,8 +152,8 @@ STEWARD Dogfooding:
 ```
 Reddit Comment: "Does this actually work?"
 
-Your Response: "The post you're reading was written by 
-an AI agent using STEWARD Protocol. Here's the delegation 
+Your Response: "The post you're reading was written by
+an AI agent using STEWARD Protocol. Here's the delegation
 history: [link to audit trail]"
 ```
 
@@ -214,20 +214,20 @@ herald_agent = {
         "generate_blog_post",
         "generate_demo_script",
     ],
-    
+
     "knowledge_base": [
         "STEWARD spec",
         "Vibe-OS docs",
         "Example agents",
         "Success stories"
     ],
-    
+
     "style_profiles": {
         "reddit_technical": "Direct, show-don't-tell, code examples",
         "twitter_viral": "Thread format, hooks, emojis",
         "blog_deep_dive": "Long-form, detailed, philosophical"
     },
-    
+
     "approval_flow": {
         "draft": "Agent generates content",
         "review": "Human reviews (you)",
@@ -317,7 +317,7 @@ Preview:
 Title: I built LinkedIn for AI Agents [STEWARD Protocol]
 
 Body:
-TL;DR: STEWARD is like LinkedIn for AI agents - discovery, 
+TL;DR: STEWARD is like LinkedIn for AI agents - discovery,
 verification, delegation, and reputation in one protocol.
 
 ## The Problem
@@ -374,7 +374,7 @@ Do you want HERALD to draft replies? [y/n]
 steward delegate vibe-herald --operation generate_reddit_post \
     --context '{"topic": "steward_launch", "subreddit": "programming"}'
 
-# Post 2: Technical deep-dive (r/MachineLearning)  
+# Post 2: Technical deep-dive (r/MachineLearning)
 steward delegate vibe-herald --operation generate_reddit_post \
     --context '{"topic": "attestation_technical", "subreddit": "MachineLearning"}'
 
@@ -391,7 +391,7 @@ steward delegate vibe-herald --operation generate_reddit_post \
     --context '{
         "topic": "herald_meta_reveal",
         "subreddit": "programming",
-        "angle": "I built an AI agent that markets itself using the 
+        "angle": "I built an AI agent that markets itself using the
                  protocol it is marketing",
         "include_delegation_history": true
     }'
@@ -449,22 +449,22 @@ Cycle repeats...
    Capability: generate_content
    Job: Write posts, articles, threads
    Trust Score: Building...
-   
+
 2. PULSE (Social Media Manager)
    Capability: social_engagement
    Job: Post, reply, engage, monitor
    Trust Score: Building...
-   
+
 3. LENS (Analytics)
    Capability: data_analysis
    Job: Track metrics, A/B test, report
    Trust Score: Building...
-   
+
 4. AMBASSADOR (Community Manager)
    Capability: community_management
    Job: Discord, GitHub, support
    Trust Score: Building...
-   
+
 5. ORACLE (Research)
    Capability: market_research
    Job: Find trends, competitors, opportunities
@@ -477,7 +477,7 @@ Cycle repeats...
 # 1. ORACLE finds opportunities
 steward delegate vibe-oracle --operation find_marketing_opportunities
 
-# Result: "r/programming just hit 5M subscribers, 
+# Result: "r/programming just hit 5M subscribers,
 #          trending topic: AI agents"
 
 # 2. HERALD creates content
@@ -549,7 +549,7 @@ Package includes:
 
 Pricing: $99/month
 
-Target market: 
+Target market:
   - Indie developers
   - Open source projects
   - Early-stage startups

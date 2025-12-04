@@ -70,10 +70,7 @@ def test_agent_can_subscribe_to_events():
     kernel.register_agent(agent, spawn_process=False)
 
     # Subscribe to events
-    sub_id = agent.system.subscribe_to_events(
-        callback=agent.on_event,
-        event_type="test.event"
-    )
+    sub_id = agent.system.subscribe_to_events(callback=agent.on_event, event_type="test.event")
 
     assert sub_id is not None
     assert len(sub_id) > 0
@@ -90,9 +87,7 @@ def test_agent_can_broadcast_events():
     # Broadcast event
     result = asyncio.run(
         agent.system.broadcast_event(
-            event_type="test.broadcast",
-            data={"message": "Hello World"},
-            message="Test broadcast"
+            event_type="test.broadcast", data={"message": "Hello World"}, message="Test broadcast"
         )
     )
 
@@ -113,18 +108,10 @@ def test_subscriber_receives_event():
     kernel.register_agent(subscriber, spawn_process=False)
 
     # Subscriber subscribes to events
-    subscriber.system.subscribe_to_events(
-        callback=subscriber.on_event,
-        event_type="test.message"
-    )
+    subscriber.system.subscribe_to_events(callback=subscriber.on_event, event_type="test.message")
 
     # Broadcaster sends event
-    asyncio.run(
-        broadcaster.system.broadcast_event(
-            event_type="test.message",
-            data={"content": "Hello Subscriber!"}
-        )
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="test.message", data={"content": "Hello Subscriber!"}))
 
     # Give event loop time to deliver
     asyncio.run(asyncio.sleep(0.1))
@@ -158,12 +145,7 @@ def test_multiple_subscribers_receive_event():
     sub3.system.subscribe_to_events(sub3.on_event, "test.fanout")
 
     # Broadcast
-    asyncio.run(
-        broadcaster.system.broadcast_event(
-            event_type="test.fanout",
-            data={"value": 42}
-        )
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="test.fanout", data={"value": 42}))
 
     # Wait for delivery
     asyncio.run(asyncio.sleep(0.1))
@@ -193,19 +175,13 @@ def test_global_subscriber_receives_all_events():
     # Subscribe globally (no event_type)
     global_sub.system.subscribe_to_events(
         callback=global_sub.on_event,
-        event_type=None  # All events
+        event_type=None,  # All events
     )
 
     # Broadcast different event types
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.a", data={"num": 1})
-    )
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.b", data={"num": 2})
-    )
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.c", data={"num": 3})
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.a", data={"num": 1}))
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.b", data={"num": 2}))
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.c", data={"num": 3}))
 
     # Wait for delivery
     asyncio.run(asyncio.sleep(0.1))
@@ -229,21 +205,12 @@ def test_event_type_filtering():
     kernel.register_agent(specific_sub, spawn_process=False)
 
     # Subscribe only to "event.important"
-    specific_sub.system.subscribe_to_events(
-        callback=specific_sub.on_event,
-        event_type="event.important"
-    )
+    specific_sub.system.subscribe_to_events(callback=specific_sub.on_event, event_type="event.important")
 
     # Broadcast different types
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.unimportant", data={})
-    )
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.important", data={"flag": True})
-    )
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="event.noise", data={})
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.unimportant", data={}))
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.important", data={"flag": True}))
+    asyncio.run(broadcaster.system.broadcast_event(event_type="event.noise", data={}))
 
     # Wait for delivery
     asyncio.run(asyncio.sleep(0.1))
@@ -264,12 +231,7 @@ def test_event_history_maintained():
 
     # Broadcast several events
     for i in range(5):
-        asyncio.run(
-            agent.system.broadcast_event(
-                event_type="test.history",
-                data={"index": i}
-            )
-        )
+        asyncio.run(agent.system.broadcast_event(event_type="test.history", data={"index": i}))
 
     # Wait for delivery
     asyncio.run(asyncio.sleep(0.1))
@@ -301,8 +263,8 @@ def test_syscall_broadcast_event():
         params={
             "event_type": "syscall.test",
             "data": {"message": "Hello from syscall"},
-            "message": "Test syscall broadcast"
-        }
+            "message": "Test syscall broadcast",
+        },
     )
 
     # Execute syscall
@@ -343,12 +305,7 @@ def test_subscriber_error_doesnt_crash_others():
     good_agent.system.subscribe_to_events(good_agent.on_event, "test.fault")
 
     # Broadcast
-    asyncio.run(
-        broadcaster.system.broadcast_event(
-            event_type="test.fault",
-            data={"value": 123}
-        )
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="test.fault", data={"value": 123}))
 
     # Wait for delivery
     asyncio.run(asyncio.sleep(0.1))
@@ -373,9 +330,7 @@ def test_unsubscribe_works():
     subscriber.system.subscribe_to_events(subscriber.on_event, "test.unsub")
 
     # Send event
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="test.unsub", data={"num": 1})
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="test.unsub", data={"num": 1}))
     asyncio.run(asyncio.sleep(0.1))
 
     # Should have received it
@@ -385,9 +340,7 @@ def test_unsubscribe_works():
     subscriber.system.unsubscribe_from_events(subscriber.on_event, "test.unsub")
 
     # Send another event
-    asyncio.run(
-        broadcaster.system.broadcast_event(event_type="test.unsub", data={"num": 2})
-    )
+    asyncio.run(broadcaster.system.broadcast_event(event_type="test.unsub", data={"num": 2}))
     asyncio.run(asyncio.sleep(0.1))
 
     # Should NOT have received second event

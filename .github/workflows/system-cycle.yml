@@ -42,7 +42,7 @@ jobs:
         run: |
           echo "🔄 Booting STEWARD Protocol..."
           timeout 300 python boot.py || echo "Boot completed or timed out"
-          
+
           if [ -f "vibe_snapshot.json" ]; then
             echo "✅ Kernel booted successfully"
             echo "status=booted" >> $GITHUB_OUTPUT
@@ -62,19 +62,19 @@ jobs:
           echo "🏥 SYSTEM HEALTH CHECK"
           echo "====================="
           echo ""
-          
+
           # Check critical files
           echo "📁 Critical Files:"
           [ -f "vibe_snapshot.json" ] && echo "  ✅ vibe_snapshot.json" || echo "  ❌ vibe_snapshot.json"
           [ -f "AGENTS.md" ] && echo "  ✅ AGENTS.md" || echo "  ❌ AGENTS.md"
           [ -f "README.md" ] && echo "  ✅ README.md" || echo "  ❌ README.md"
-          
+
           echo ""
           echo "🤖 Agent Count:"
           if [ -f "AGENTS.md" ]; then
             grep -c "^### " AGENTS.md || echo "0"
           fi
-          
+
           echo ""
           echo "📝 Documentation Status:"
           ls -lh *.md | wc -l | xargs echo "  Total MD files:"
@@ -86,7 +86,7 @@ jobs:
 
             Automated system boot and maintenance:
             - Kernel boot check
-            - Documentation regeneration  
+            - Documentation regeneration
             - Health check completed
 
             Cycle Type: ${{ inputs.cycle_type || 'scheduled' }}
@@ -94,9 +94,9 @@ jobs:
         run: |
           git config user.name "System Cycle Bot"
           git config user.email "cycle@agent-city.dev"
-          
+
           git add -A || true
-          
+
           if git diff --staged --quiet; then
             echo "📊 No changes to commit"
           else
@@ -124,7 +124,7 @@ jobs:
           echo "✅ System cycle completed successfully" >> cycle_report.md
           echo "" >> cycle_report.md
           echo "🏙️ Agent City continues to operate autonomously." >> cycle_report.md
-          
+
           cat cycle_report.md
 
       - name: Summary

@@ -34,12 +34,12 @@ def create_roadmap(self, name: str, description: str, missions: List[str] = None
         created_at=datetime.now(),
         updated_at=datetime.now()
     )
-    
+
     # Save to .vibe/config/roadmap.yaml
     roadmap_path = self.config_dir / "roadmap.yaml"
     with open(roadmap_path, 'w') as f:
         yaml.dump(roadmap.to_dict(), f)
-    
+
     self.roadmap = roadmap
     return roadmap
 
@@ -48,10 +48,10 @@ def load_roadmap(self) -> Optional[Roadmap]:
     roadmap_path = self.config_dir / "roadmap.yaml"
     if not roadmap_path.exists():
         return None
-    
+
     with open(roadmap_path, 'r') as f:
         data = yaml.safe_load(f)
-    
+
     return Roadmap(
         id=data['id'],
         name=data['name'],
@@ -66,25 +66,25 @@ def update_roadmap(self, **kwargs) -> Roadmap:
     """Update current roadmap."""
     if not self.roadmap:
         raise ValueError("No active roadmap")
-    
+
     for key, value in kwargs.items():
         if hasattr(self.roadmap, key):
             setattr(self.roadmap, key, value)
-    
+
     self.roadmap.updated_at = datetime.now()
-    
+
     # Save
     roadmap_path = self.config_dir / "roadmap.yaml"
     with open(roadmap_path, 'w') as f:
         yaml.dump(self.roadmap.to_dict(), f)
-    
+
     return self.roadmap
 
 Update init:
 
 def __init__(self, project_root: Path, milk_ocean_router=None):
     # ... existing code ...
-    
+
     # Load roadmap if exists
     self.roadmap = self.load_roadmap()
 
@@ -111,7 +111,7 @@ def cmd_roadmap_show(args):
     if not tm.roadmap:
         print("❌ No active roadmap")
         return 1
-    
+
     print(f"📋 Roadmap: {tm.roadmap.name}")
     print(f"   Description: {tm.roadmap.description}")
     print(f"   Missions: {len(tm.roadmap.missions)}")
@@ -123,17 +123,17 @@ def cmd_roadmap_show(args):
 # Update main()
 def main():
     # ... existing code ...
-    
+
     # roadmap subcommand
     roadmap_parser = subparsers.add_parser("roadmap")
     roadmap_subparsers = roadmap_parser.add_subparsers(dest="roadmap_command")
-    
+
     # roadmap create
     roadmap_create = roadmap_subparsers.add_parser("create")
     roadmap_create.add_argument("name")
     roadmap_create.add_argument("description")
     roadmap_create.set_defaults(func=cmd_roadmap_create)
-    
+
     # roadmap show
     roadmap_show = roadmap_subparsers.add_parser("show")
     roadmap_show.set_defaults(func=cmd_roadmap_show)
@@ -146,7 +146,7 @@ bin/agent-city roadmap create \
   "OS Feature Completion Phase" \
   "Missing vibe-agency features that MUST be implemented before architecture refactoring"
 
-# Roadmap 2: Architecture Refactoring  
+# Roadmap 2: Architecture Refactoring
 # (will create after roadmap 1 tasks are done)
 
 4. Group Existing Tasks
@@ -196,7 +196,7 @@ def test_roadmap_create():
 def test_roadmap_persistence():
     tm = TaskManager(Path.cwd())
     tm.create_roadmap("Test", "Test")
-    
+
     # Reload
     tm2 = TaskManager(Path.cwd())
     assert tm2.roadmap is not None

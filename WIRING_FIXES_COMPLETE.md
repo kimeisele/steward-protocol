@@ -127,4 +127,3 @@ The fraktale iteration loop is working! 🎉
 **Commits:**
 - `c2434e7` - HIGH priority fixes  
 - `fac4e9c` - MEDIUM priority fixes
-

@@ -2,7 +2,7 @@ circuit:
   id: "ARCHITECT_V1"
   entry_state: "ANALYSIS"
   description: "The General Contractor circuit that designs and executes micro-circuits for undefined problems."
-  
+
   invariants:
     - "requester_id is not empty"
     - "raw_input is not empty"
@@ -20,9 +20,9 @@ circuit:
               1. The core GOAL.
               2. Any CONSTRAINTS (tools, steps, etc.).
               3. A structured CONTEXT for circuit generation.
-              
+
               Request: {{ raw_input }}
-              
+
               Return JSON:
               {
                 "goal": "...",
@@ -66,11 +66,11 @@ circuit:
             agent_id: "architect"
             instruction: |
               Review the execution results of the generated circuit and provide a final answer to the user.
-              
+
               Original Request: {{ raw_input }}
               Goal: {{ spawn_result.output.goal }}
               Execution Output: {{ micro_result.output }}
-              
+
               Return JSON:
               {
                 "final_answer": "...",

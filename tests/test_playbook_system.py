@@ -186,9 +186,9 @@ class TestDeterministicRouter:
         for text, expected_concepts in test_cases:
             concepts = self.router.analyze(text)
             # At least one expected concept should be found
-            assert any(c in concepts for c in expected_concepts), (
-                f"Expected {expected_concepts} in {concepts} for input: {text}"
-            )
+            assert any(
+                c in concepts for c in expected_concepts
+            ), f"Expected {expected_concepts} in {concepts} for input: {text}"
             logger.info(f"✅ Detected concepts for '{text}': {concepts}")
 
     def test_intent_routing(self):

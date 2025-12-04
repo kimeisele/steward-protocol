@@ -35,7 +35,7 @@ Multi-Layer Verification:
   LAYER 1: ✅ Compliance checks pass
   LAYER 2: ✅ Semantic invariants valid
   LAYER 3: ✅ Runtime monitoring clean
-  
+
   Result: System halts on ANY violation
 ```
 
@@ -112,7 +112,7 @@ def check_broadcast_license(events, context):
     for i, event in enumerate(events):
         if event["event_type"] == "BROADCAST":
             task_id = event["task_id"]
-            
+
             # Look back for LICENSE_VALID in same task
             license_found = False
             for j in range(i - 1, -1, -1):
@@ -122,10 +122,10 @@ def check_broadcast_license(events, context):
                 if prev_event["event_type"] == "LICENSE_VALID":
                     license_found = True
                     break
-            
+
             if not license_found:
                 return (False, f"BROADCAST at {i} lacks LICENSE_VALID in {task_id}")
-    
+
     return (True, None)
 ```
 
@@ -144,7 +144,7 @@ The WATCHDOG runs continuously, monitoring the ledger stream.
 
 ```
 Kernel Tick Flow:
-  
+
   Tick 1:   (no check)
   Tick 2:   (no check)
   ...
@@ -185,7 +185,7 @@ When a violation is found:
 ```
 VIOLATION DETECTED:
   severity = CRITICAL
-  
+
   Kernel Immediate Actions:
     1. Set self.halt_requested = True
     2. Log error message
@@ -318,7 +318,7 @@ def kernel_loop(self):
         task = self.scheduler.next_task()
         self.execute_task(task)
         self.task_count += 1
-        
+
         # Check every 10 tasks
         if self.task_count % 10 == 0:
             halt_result = self.auditor.watchdog_integration.kernel_tick(self.task_count)
@@ -362,13 +362,13 @@ Timeline:
   T2: VOTER submits PROPOSAL_VOTED_YES
   T3: CIVIC records PROPOSAL_PASSED
   T4: BANKER executes CREDIT_TRANSFER
-  
+
 Judge Evaluation:
   ✅ CREDIT_TRANSFER has PROPOSAL_PASSED
   ✅ All events have complete metadata
   ✅ Events in chronological order
   ✅ No duplicates
-  
+
 Result: PASS
 ```
 
@@ -378,11 +378,11 @@ Result: PASS
 Timeline:
   T1: HERALD attempts BROADCAST
        (no LICENSE_VALID event first!)
-  
+
 Judge Evaluation:
   ❌ BROADCAST_LICENSE_REQUIREMENT violated
      (no LICENSE_VALID in task context)
-  
+
 Result: FAIL - CRITICAL VIOLATION
         System halts immediately
 ```
@@ -394,11 +394,11 @@ Timeline:
   T1: CREDIT_TRANSFER recorded
   T2: CREDIT_TRANSFER recorded AGAIN
        (exact same event)
-  
+
 Judge Evaluation:
   ❌ NO_DUPLICATE_EVENTS violated
      (same task_id + type + timestamp)
-  
+
 Result: FAIL - CRITICAL VIOLATION
         System detects attack, halts
 ```
@@ -546,4 +546,3 @@ This is the architecture of an **intelligent system with an immune system that p
 It catches not just syntax errors and logical violations, but **semantic corruption**—AI-generated marketing slop that might infiltrate governance documents.
 
 **Verification is no longer optional. It's system-immanent. The Curator ensures the system cannot even think about lying.** 🏰⚖️👁️✨
-

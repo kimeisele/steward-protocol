@@ -143,7 +143,7 @@ async def test_blueprint_integration():
     logger.info("\n📞 ALL AGENT CALLS:")
     for i, call in enumerate(AGENT_CALLS, 1):
         logger.info(f"   {i}. {call['agent']}")
-        for key, val in call['payload'].items():
+        for key, val in call["payload"].items():
             val_str = str(val)[:100] + "..." if len(str(val)) > 100 else str(val)
             logger.info(f"      {key}: {val_str}")
 

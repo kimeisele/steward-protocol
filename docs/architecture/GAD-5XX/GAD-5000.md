@@ -295,7 +295,7 @@ Supports:
 - {{ playbook.variables.name }} - Playbook-defined variables
 
 Args:
-    
+
 ```
 
 ---

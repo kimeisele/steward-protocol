@@ -31,7 +31,7 @@ def check_prerequisites():
 ❌ Python version too old!
    Current: {py_version.major}.{py_version.minor}
    Required: 3.11+
-   
+
    Fix: Install Python 3.11 or higher
    - macOS: brew install python@3.11
    - Ubuntu: sudo apt install python3.11
@@ -49,7 +49,7 @@ def check_prerequisites():
             False,
             """
 ❌ Git not found!
-   
+
    Fix: Install Git
    - macOS: brew install git
    - Ubuntu: sudo apt install git
@@ -68,7 +68,7 @@ def check_prerequisites():
 ❌ Insufficient disk space!
    Free: {free_mb:.0f}MB
    Required: 100MB
-   
+
    Fix: Free up disk space
 """,
             )
@@ -87,7 +87,7 @@ def check_prerequisites():
             False,
             """
 ❌ No write permissions!
-   
+
    Fix: Run from a directory where you have write access
 """,
         )
@@ -368,7 +368,7 @@ def print_next_steps(agent_name: str, pack_choice: str):
     ───────────────────────────────────────────────────────────────
 
     🦅 "Don't Trust. Verify."
-    
+
     Your journey begins now. Make history. 🚀
     """
     print(next_steps)

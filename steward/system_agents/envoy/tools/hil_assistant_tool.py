@@ -166,16 +166,16 @@ if __name__ == "__main__":
     sample_report = """
     # Mission Cost-Efficient Scaling Proof
     **Type:** Governability Audit Proof
-    
+
     ## Crisis Detection
     System detected governance constraint violation...
-    
+
     ## Self-Correction
     System executed PROP-009...
-    
+
     ## Value Creation
     Campaign CAMP-123456 executed successfully...
-    
+
     ✅ Campaign completed successfully
     """
     print(tool.get_next_action_summary(sample_report))

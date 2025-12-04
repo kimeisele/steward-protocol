@@ -181,21 +181,21 @@ CREATE TABLE sqlite_sequence(name,seq)
 
 ```sql
 -- Get all events for a specific agent
-SELECT * FROM ledger_events 
-WHERE agent_id = 'herald' 
-ORDER BY id DESC 
+SELECT * FROM ledger_events
+WHERE agent_id = 'herald'
+ORDER BY id DESC
 LIMIT 10;
 
 -- Count events by type
-SELECT event_type, COUNT(*) as count 
-FROM ledger_events 
-GROUP BY event_type 
+SELECT event_type, COUNT(*) as count
+FROM ledger_events
+GROUP BY event_type
 ORDER BY count DESC;
 
 -- Recent governance decisions
-SELECT * FROM ledger_events 
-WHERE event_type = 'governance_decision' 
-ORDER BY timestamp DESC 
+SELECT * FROM ledger_events
+WHERE event_type = 'governance_decision'
+ORDER BY timestamp DESC
 LIMIT 5;
 ```
 
@@ -296,18 +296,18 @@ class Tool:
     @property
     def name(self) -> str:
         """Tool identifier (e.g., 'herald.broadcast')"""
-        
+
     @property
     def description(self) -> str:
         """Human-readable description"""
-        
+
     @property
     def parameters_schema(self) -> dict[str, Any]:
         """JSON schema for parameters"""
-    
+
     def validate(self, parameters: dict[str, Any]) -> None:
         """Validate parameters before execution"""
-    
+
     def execute(self, parameters: dict[str, Any]) -> ToolResult:
         """Execute tool and return result"""
 ```

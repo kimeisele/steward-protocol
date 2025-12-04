@@ -92,7 +92,7 @@ def require_constitutional_oath(agent_id, oath_event):
     """
     if oath_event is None:
         return False, "Agent has not sworn the Constitutional Oath"
-    
+
     if ConstitutionalOath.verify_oath(oath_event):
         return True, "Oath verified - license granted"
     else:
@@ -117,7 +117,7 @@ class HeraldCartridge(VibeAgent, OathMixin):
     def __init__(self):
         super().__init__()
         self.oath_mixin_init("herald")
-    
+
     async def boot(self):
         oath_event = await self.swear_constitutional_oath()
         logger.info(f"Herald sworn to Constitution: {oath_event['constitution_hash_short']}")
@@ -131,7 +131,7 @@ class MyAgent(VibeAgent, OathMixin):
     def __init__(self):
         super().__init__()
         self.oath_mixin_init(self.agent_id)
-    
+
     async def boot(self):
         await self.swear_constitutional_oath()
 ```
