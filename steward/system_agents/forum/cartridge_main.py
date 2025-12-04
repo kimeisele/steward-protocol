@@ -138,7 +138,7 @@ class ForumCartridge(VibeAgent, OathMixin):
             self._votes_ledger_path = self.system.get_sandbox_path() / "governance" / "votes" / "votes.jsonl"
         return self._votes_ledger_path
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the VibeKernel scheduler.
 

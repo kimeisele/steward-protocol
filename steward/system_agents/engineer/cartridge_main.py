@@ -87,7 +87,7 @@ class EngineerCartridge(VibeAgent, OathMixin):
             dependencies=[],
         )
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Sync dispatch based on payload 'action' or 'method'.
 
