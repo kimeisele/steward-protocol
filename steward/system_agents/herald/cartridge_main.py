@@ -265,6 +265,18 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
                         }
                 return {"status": "error", "reason": "system_interface_not_available"}
 
+            # P5.1: Simple respond action for SIMPLE_QUERY circuit
+            elif action == "respond":
+                query = task.payload.get("query", "")
+                # Simple acknowledgment for now - could be enhanced with actual response logic
+                return {
+                    "status": "success",
+                    "action": "respond",
+                    "query": query,
+                    "response": f"HERALD acknowledges query: {query[:50]}...",
+                    "note": "Simple response handler - can be enhanced with LLM integration",
+                }
+
             # Playbook support: Accept schema but return stub (Herald is infrastructure only)
             elif action == "generate_content":
                 # Stub: Herald is broadcasting infrastructure, not content creator
