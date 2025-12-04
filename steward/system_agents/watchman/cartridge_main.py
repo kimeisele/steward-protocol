@@ -442,7 +442,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
     # ==================== VIBEOS AGENT INTERFACE ====================
 
-    def process(self, task: Task) -> dict:
+    async def process(self, task: Task) -> dict:
         """
         Process a task from the VibeKernel scheduler.
 
