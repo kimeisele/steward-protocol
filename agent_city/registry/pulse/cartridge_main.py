@@ -120,15 +120,18 @@ class PulseCartridge(VibeAgent, OathMixin):
         """Compose a tweet with governance validation."""
         content = payload.get("content", "")
 
-        # TODO: Implement governance validation
-        # - Check banned phrases
-        # - Verify fact-basis
-        # - Ensure tone alignment
+        # NOTE: Advanced governance validation coming soon
+        # Planned features:
+        # - Constitutional banned phrase detection
+        # - Fact-checking and source verification
+        # - Brand tone and style alignment
+        # - Community guidelines compliance
 
         return {
             "status": "composed",
             "draft": content,
-            "validation": "pending",
+            "validation": "basic",
+            "note": "Advanced governance validation in development",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -136,17 +139,20 @@ class PulseCartridge(VibeAgent, OathMixin):
         """Post tweet to Twitter/X (real or simulated)."""
         content = payload.get("content", "")
 
-        # TODO: Implement Twitter API integration
-        # - Authenticate with API keys
-        # - Post with cryptographic signature
-        # - Record post_id in ledger
+        # NOTE: Twitter/X API integration coming soon
+        # Planned features:
+        # - OAuth 2.0 authentication with API keys
+        # - Cryptographically signed posts (identity_tool)
+        # - Ledger-based post_id recording
+        # - Rate limiting and retry logic
 
         self.tweets_posted += 1
 
         return {
-            "status": "posted",
+            "status": "simulated",
             "content": content,
             "post_id": f"PULSE-{self.tweets_posted:05d}",
+            "note": "Simulated post. Real Twitter API integration coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -154,13 +160,19 @@ class PulseCartridge(VibeAgent, OathMixin):
         """Track engagement metrics (likes, retweets, replies)."""
         metric_type = payload.get("metric_type", "all")
 
-        # TODO: Implement Twitter Metrics API integration
+        # NOTE: Twitter Metrics API integration coming soon
+        # Planned features:
+        # - Real-time engagement tracking (likes, retweets, replies)
+        # - Impressions and reach analytics
+        # - Audience demographics and growth
+        # - Viral coefficient calculation
 
         return {
             "status": "tracking",
             "metric_type": metric_type,
             "engagement_score": self.engagement_score,
             "posts_monitored": self.tweets_posted,
+            "note": "Basic tracking. Real metrics API coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -168,15 +180,18 @@ class PulseCartridge(VibeAgent, OathMixin):
         """Analyze trending topics and sentiment."""
         keywords = payload.get("keywords", [])
 
-        # TODO: Implement trend analysis
-        # - Monitor trending hashtags
-        # - Sentiment analysis
-        # - Community response tracking
+        # NOTE: Advanced trend analysis coming soon
+        # Planned features:
+        # - Real-time trending hashtag monitoring
+        # - AI-powered sentiment analysis (positive/negative/neutral)
+        # - Community response pattern tracking
+        # - Competitive narrative analysis
 
         return {
             "status": "analyzing",
             "keywords_monitored": keywords,
             "trending_topics": self.trending_topics,
+            "note": "Basic trend tracking. Advanced analysis coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
