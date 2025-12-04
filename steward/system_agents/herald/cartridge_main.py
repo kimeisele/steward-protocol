@@ -220,7 +220,7 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         logger.info("🕉️  Genesis Ceremony complete. Herald is fully initialized.")
         logger.info("🕉️  ═══════════════════════════════════════════════════════")
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the VibeKernel scheduler.
 
