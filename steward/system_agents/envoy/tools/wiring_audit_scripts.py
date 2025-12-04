@@ -65,13 +65,11 @@ class WiringAuditor:
         results["phases"]["action_handlers"] = self.check_action_handlers()
 
         # Compile summary
-        total_issues = sum(
-            len(phase.get("findings", []))
-            for phase in results["phases"].values()
-        )
+        total_issues = sum(len(phase.get("findings", [])) for phase in results["phases"].values())
 
         critical = sum(
-            1 for phase in results["phases"].values()
+            1
+            for phase in results["phases"].values()
             for f in phase.get("findings", [])
             if f.get("severity") == "CRITICAL"
         )
@@ -79,9 +77,15 @@ class WiringAuditor:
         results["summary"] = {
             "total_issues": total_issues,
             "critical": critical,
-            "high": sum(1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "HIGH"),
-            "medium": sum(1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "MEDIUM"),
-            "low": sum(1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "LOW"),
+            "high": sum(
+                1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "HIGH"
+            ),
+            "medium": sum(
+                1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "MEDIUM"
+            ),
+            "low": sum(
+                1 for p in results["phases"].values() for f in p.get("findings", []) if f.get("severity") == "LOW"
+            ),
             "passed_phases": sum(1 for p in results["phases"].values() if p.get("passed", False)),
             "total_phases": len(results["phases"]),
         }
@@ -107,23 +111,27 @@ class WiringAuditor:
         for agent_id, agent in self.kernel._agent_registry.items():
             # Check kernel reference
             if agent.kernel is None:
-                findings.append({
-                    "agent": agent_id,
-                    "issue": "agent.kernel is None",
-                    "severity": "CRITICAL",
-                    "fix": "Ensure agent.set_kernel(kernel) is called in register_agent()",
-                    "file": f"steward/system_agents/{agent_id}/cartridge_main.py",
-                })
+                findings.append(
+                    {
+                        "agent": agent_id,
+                        "issue": "agent.kernel is None",
+                        "severity": "CRITICAL",
+                        "fix": "Ensure agent.set_kernel(kernel) is called in register_agent()",
+                        "file": f"steward/system_agents/{agent_id}/cartridge_main.py",
+                    }
+                )
 
             # Check system interface
-            if not hasattr(agent, 'system') or agent.system is None:
-                findings.append({
-                    "agent": agent_id,
-                    "issue": "agent.system is None",
-                    "severity": "HIGH",
-                    "fix": "Ensure agent.system = AgentSystemInterface() in register_agent()",
-                    "file": "vibe_core/kernel_impl.py:740",
-                })
+            if not hasattr(agent, "system") or agent.system is None:
+                findings.append(
+                    {
+                        "agent": agent_id,
+                        "issue": "agent.system is None",
+                        "severity": "HIGH",
+                        "fix": "Ensure agent.system = AgentSystemInterface() in register_agent()",
+                        "file": "vibe_core/kernel_impl.py:740",
+                    }
+                )
 
         passed = len(findings) == 0
         logger.info(f"   {'✅ PASS' if passed else '❌ FAIL'}: {len(findings)} issues found")
@@ -139,12 +147,14 @@ class WiringAuditor:
         if kernel_impl.exists():
             content = kernel_impl.read_text()
             if "agent.set_kernel(self)" not in content:
-                findings.append({
-                    "file": "vibe_core/kernel_impl.py",
-                    "issue": "Missing agent.set_kernel(self) call",
-                    "severity": "CRITICAL",
-                    "fix": "Add 'agent.set_kernel(self)' before system interface injection",
-                })
+                findings.append(
+                    {
+                        "file": "vibe_core/kernel_impl.py",
+                        "issue": "Missing agent.set_kernel(self) call",
+                        "severity": "CRITICAL",
+                        "fix": "Add 'agent.set_kernel(self)' before system interface injection",
+                    }
+                )
 
         return {"findings": findings, "passed": len(findings) == 0, "mode": "static"}
 
@@ -164,11 +174,13 @@ class WiringAuditor:
         for file_path, paths in files_to_check:
             full_path = self.project_root / file_path
             if not full_path.exists():
-                findings.append({
-                    "file": file_path,
-                    "issue": "File not found",
-                    "severity": "HIGH",
-                })
+                findings.append(
+                    {
+                        "file": file_path,
+                        "issue": "File not found",
+                        "severity": "HIGH",
+                    }
+                )
                 continue
 
             content = full_path.read_text()
@@ -183,13 +195,15 @@ class WiringAuditor:
                 patterns = [p for p in patterns if p]
 
                 if not any(p in content for p in patterns):
-                    findings.append({
-                        "file": file_path,
-                        "path": path,
-                        "issue": f"Path/status '{path}' not handled",
-                        "severity": "HIGH" if path in ["flash", "science", "critical"] else "MEDIUM",
-                        "fix": f"Add handler for '{path}' in process() method",
-                    })
+                    findings.append(
+                        {
+                            "file": file_path,
+                            "path": path,
+                            "issue": f"Path/status '{path}' not handled",
+                            "severity": "HIGH" if path in ["flash", "science", "critical"] else "MEDIUM",
+                            "fix": f"Add handler for '{path}' in process() method",
+                        }
+                    )
 
         passed = len(findings) == 0
         logger.info(f"   {'✅ PASS' if passed else '❌ FAIL'}: {len(findings)} issues found")
@@ -221,9 +235,9 @@ class WiringAuditor:
         for pattern, severity in stub_patterns.items():
             try:
                 result = subprocess.run(
-                    ["grep", "-rn", "-E", pattern] +
-                    [str(self.project_root / d) for d in search_dirs if (self.project_root / d).exists()] +
-                    ["--include=*.py"],
+                    ["grep", "-rn", "-E", pattern]
+                    + [str(self.project_root / d) for d in search_dirs if (self.project_root / d).exists()]
+                    + ["--include=*.py"],
                     capture_output=True,
                     text=True,
                     timeout=30,
@@ -239,13 +253,15 @@ class WiringAuditor:
 
                     parts = line.split(":", 2)
                     if len(parts) >= 2:
-                        findings.append({
-                            "file": parts[0].replace(str(self.project_root) + "/", ""),
-                            "line": parts[1],
-                            "pattern": pattern,
-                            "severity": severity,
-                            "content": parts[2][:80] if len(parts) > 2 else "",
-                        })
+                        findings.append(
+                            {
+                                "file": parts[0].replace(str(self.project_root) + "/", ""),
+                                "line": parts[1],
+                                "pattern": pattern,
+                                "severity": severity,
+                                "content": parts[2][:80] if len(parts) > 2 else "",
+                            }
+                        )
 
             except subprocess.TimeoutExpired:
                 logger.warning(f"   ⚠️ Timeout searching for pattern: {pattern}")
@@ -314,21 +330,25 @@ class WiringAuditor:
                 has_async = bool(re.search(async_pattern, content))
 
                 if not has_sync and not has_async:
-                    findings.append({
-                        "agent": agent_name,
-                        "method": method,
-                        "issue": f"Missing method: {method}()",
-                        "severity": "HIGH" if method == "process" else "MEDIUM",
-                        "fix": f"Add {method}() method to {agent_name} cartridge",
-                    })
+                    findings.append(
+                        {
+                            "agent": agent_name,
+                            "method": method,
+                            "issue": f"Missing method: {method}()",
+                            "severity": "HIGH" if method == "process" else "MEDIUM",
+                            "fix": f"Add {method}() method to {agent_name} cartridge",
+                        }
+                    )
                 elif method in async_required and has_sync and not has_async:
-                    findings.append({
-                        "agent": agent_name,
-                        "method": method,
-                        "issue": f"Method {method}() should be async",
-                        "severity": "MEDIUM",
-                        "fix": f"Change 'def {method}' to 'async def {method}'",
-                    })
+                    findings.append(
+                        {
+                            "agent": agent_name,
+                            "method": method,
+                            "issue": f"Method {method}() should be async",
+                            "severity": "MEDIUM",
+                            "fix": f"Change 'def {method}' to 'async def {method}'",
+                        }
+                    )
 
         passed = len(findings) == 0
         logger.info(f"   {'✅ PASS' if passed else '❌ FAIL'}: {len(findings)} issues found")
@@ -351,11 +371,13 @@ class WiringAuditor:
         handler_file = self.project_root / "steward" / "system_agents" / "envoy" / "action_handlers.py"
 
         if not handler_file.exists():
-            findings.append({
-                "file": "action_handlers.py",
-                "issue": "Action handlers file not found",
-                "severity": "CRITICAL",
-            })
+            findings.append(
+                {
+                    "file": "action_handlers.py",
+                    "issue": "Action handlers file not found",
+                    "severity": "CRITICAL",
+                }
+            )
             return {"findings": findings, "passed": False}
 
         content = handler_file.read_text()
@@ -363,18 +385,20 @@ class WiringAuditor:
         for handler_type in required_handlers:
             # Check for handler class or registration
             patterns = [
-                f'action_type.*{handler_type}',
+                f"action_type.*{handler_type}",
                 f'"{handler_type}"',
                 f"'{handler_type}'",
             ]
 
             if not any(re.search(p, content) for p in patterns):
-                findings.append({
-                    "handler": handler_type,
-                    "issue": f"No handler for action type: {handler_type}",
-                    "severity": "HIGH",
-                    "fix": f"Create handler class for {handler_type} action type",
-                })
+                findings.append(
+                    {
+                        "handler": handler_type,
+                        "issue": f"No handler for action type: {handler_type}",
+                        "severity": "HIGH",
+                        "fix": f"Create handler class for {handler_type} action type",
+                    }
+                )
 
         passed = len(findings) == 0
         logger.info(f"   {'✅ PASS' if passed else '❌ FAIL'}: {len(findings)} issues found")
@@ -441,6 +465,7 @@ class WiringAuditor:
 # ============================================================
 # CLI ENTRY POINT
 # ============================================================
+
 
 def main():
     """Run wiring audit from command line."""
