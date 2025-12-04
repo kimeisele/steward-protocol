@@ -57,7 +57,7 @@ class ArchivistCartridge(VibeAgent, OathMixin):
         # Initialize Constitutional Oath
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
+            self.swear_oath_sync()
             logger.info("✅ ARCHIVIST has sworn the Constitutional Oath")
 
     def get_manifest(self) -> AgentManifest:
