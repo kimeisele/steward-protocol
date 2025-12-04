@@ -169,6 +169,88 @@ class PhoenixConfigEngine:
         """Check if config was successfully loaded"""
         return self._loaded
 
+    # =========================================================================
+    # UI Enhancement: Settings Interface Methods
+    # =========================================================================
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """
+        Get config value by dotted key path.
+
+        Args:
+            key: Dotted path like "providers.llm_provider"
+            default: Default value if not found
+
+        Returns:
+            Config value or default
+        """
+        parts = key.split(".")
+        value = self.config
+
+        for part in parts:
+            if isinstance(value, dict) and part in value:
+                value = value[part]
+            else:
+                return default
+
+        return value
+
+    def set(self, key: str, value: Any) -> bool:
+        """
+        Set config value by dotted key path.
+
+        Args:
+            key: Dotted path like "features.live_fire_enabled"
+            value: New value to set
+
+        Returns:
+            True if successful, False otherwise
+        """
+        parts = key.split(".")
+        data = self.config
+
+        # Navigate to parent
+        for part in parts[:-1]:
+            if part not in data:
+                data[part] = {}
+            data = data[part]
+
+        # Set value
+        old_value = data.get(parts[-1])
+        data[parts[-1]] = value
+        logger.info(f"⚙️  Config: {key} = {value} (was: {old_value})")
+        return True
+
+    def save(self) -> bool:
+        """Save config back to YAML file."""
+        try:
+            self.config_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.config_path, "w") as f:
+                yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
+            logger.info(f"💾 Config saved to {self.config_path}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to save config: {e}")
+            return False
+
+    @property
+    def llm_provider(self) -> str:
+        """Current LLM provider class path."""
+        return self.get("providers.llm_provider", "")
+
+    @property
+    def live_fire_enabled(self) -> bool:
+        """Whether live fire mode is enabled."""
+        return self.get("features.live_fire_enabled", False)
+
+    @property
+    def debug_mode(self) -> bool:
+        """Whether debug mode is enabled."""
+        return self.get("features.debug_mode", False)
+
+    # NOTE: get_provider_info() removed - use vibe_core.settings.sections.provider.get_provider_info_from_config()
+    # This keeps business logic in the section, not in infrastructure.
+
 
 # Singleton instance
 _engine: Optional[PhoenixConfigEngine] = None

@@ -37,6 +37,9 @@ class SettingsRenderState:
     varna_registry: Dict[str, Any]  # agent_id -> Varna enum
     ashrama_registry: Dict[str, Any]  # agent_id -> AshramaTransition
     execution_history: List[Dict[str, Any]]
+    # UI Enhancement: Phoenix config state
+    provider_info: Optional[Dict[str, str]] = None  # Provider name, models, etc.
+    live_fire_enabled: bool = False  # Execution mode
 
 
 @dataclass
@@ -96,6 +99,128 @@ class DocRenderer:
             "> **📚 Auto-Generated Docs:** [README](README.md) · [INDEX](INDEX.md) · [AGENTS](AGENTS.md) · [CITYMAP](CITYMAP.md) · [HELP](HELP.md) · [DASHBOARD](DASHBOARD.md) · [RAG](RAG.md) · [OPERATIONS](OPERATIONS.md) · [SETTINGS](SETTINGS.md) · [ENVOY](ENVOY.md)",
             "",
         ]
+
+    @staticmethod
+    def extract_quick_note(file_path: Path) -> str:
+        """
+        Extract preserved Quick Note content from existing file.
+
+        Quick Note format:
+        ## 📝 Quick Note
+        > [User content here - preserved across re-renders]
+
+        Args:
+            file_path: Path to the markdown file
+
+        Returns:
+            The user's Quick Note content, or empty string if not found
+        """
+        try:
+            if not file_path.exists():
+                return ""
+
+            content = file_path.read_text()
+            lines = content.split("\n")
+
+            in_quick_note = False
+            note_lines = []
+
+            for line in lines:
+                if "## 📝 Quick Note" in line:
+                    in_quick_note = True
+                    continue
+
+                if in_quick_note:
+                    # Stop at next section
+                    if line.strip().startswith("## ") or line.strip().startswith("---"):
+                        break
+                    # Collect note content (skip empty lines at start)
+                    if line.strip() or note_lines:
+                        note_lines.append(line)
+
+            # Trim trailing empty lines
+            while note_lines and not note_lines[-1].strip():
+                note_lines.pop()
+
+            return "\n".join(note_lines)
+
+        except Exception:
+            return ""
+
+    @staticmethod
+    def render_quick_note_section(existing_note: str = "") -> List[str]:
+        """
+        Render the Quick Note section with preserved content.
+
+        Args:
+            existing_note: Previously saved note content
+
+        Returns:
+            List of lines for the Quick Note section
+        """
+        lines = [
+            "## 📝 Quick Note",
+            "",
+            "> This note is preserved across re-renders. Write anything you want to remember.",
+            "",
+        ]
+
+        if existing_note.strip():
+            lines.append(existing_note)
+        else:
+            lines.append("_Your note here..._")
+
+        lines.extend(["", "---", ""])
+        return lines
+
+    def _render_settings_sections(self, state: "SettingsRenderState") -> List[str]:
+        """
+        Render all plugin-based settings sections.
+
+        Uses the SettingsSection plugin architecture for scalability.
+        Each section is self-contained and auto-discovered.
+
+        Args:
+            state: Current settings render state
+
+        Returns:
+            List of markdown lines from all sections
+        """
+        lines = []
+
+        try:
+            from vibe_core.settings import SectionContext, get_section_loader
+
+            # Build section context from state
+            context = SectionContext(
+                live_fire_enabled=state.live_fire_enabled,
+                provider_info=state.provider_info or {},
+                provider_name=state.provider_info.get("name", "unknown") if state.provider_info else "unknown",
+            )
+
+            # Load and render all sections (sorted by priority)
+            loader = get_section_loader()
+            for section in loader.load_all():
+                try:
+                    section_lines = section.render(context)
+                    lines.extend(section_lines)
+                except Exception as e:
+                    logger.error(f"Failed to render section '{section.section_id}': {e}")
+                    lines.extend([f"<!-- Section '{section.section_id}' failed to render: {e} -->", ""])
+
+        except ImportError as e:
+            # Fallback if settings module not available
+            logger.warning(f"Settings sections not available: {e}")
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "_Settings sections not available. Install vibe_core.settings module._",
+                    "",
+                ]
+            )
+
+        return lines
 
     def render_operations(self, snapshot: Dict[str, Any], output_path: Path = Path("OPERATIONS.md")) -> None:
         """
@@ -167,16 +292,22 @@ class DocRenderer:
             New file mtime after write (for change detection), or None on error
         """
         try:
+            # Extract existing Quick Note before re-rendering
+            existing_note = self.extract_quick_note(output_path)
+
             # Unified header
             lines = self.render_unified_header("KERNEL", snapshot)
+
+            # Quick Note section (preserved across renders)
+            lines.extend(self.render_quick_note_section(existing_note))
 
             lines.extend(
                 [
                     "# ⚙️ SYSTEM SETTINGS",
                     "",
-                    "**Mode:** READ-ONLY (Phase 1)",
+                    "**Mode:** INTERACTIVE (Command Queue enabled)",
                     "",
-                    "> Phase 2 enables Command Queue for declarative configuration.",
+                    "> Write SET commands in the Pending Commands section below.",
                     "",
                     "## 🔧 Kernel Configuration",
                     "",
@@ -188,6 +319,9 @@ class DocRenderer:
                     "",
                 ]
             )
+
+            # Render plugin-based settings sections
+            lines.extend(self._render_settings_sections(state))
 
             # Add agent registry details
             lines.extend(
