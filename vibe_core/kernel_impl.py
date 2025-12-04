@@ -41,7 +41,8 @@ from .kernel import (
 )
 from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
-from .markdown_ui_manager import MarkdownUIManager  # NEU: UI Manager
+
+# from .markdown_ui_manager import MarkdownUIManager  # DEPRECATED: UI Manager
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
@@ -239,8 +240,8 @@ class RealVibeKernel(VibeKernel):
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
 
         # Markdown UI Manager (Centralized UI Coordination)
-        self._ui_manager = MarkdownUIManager(self)
-        logger.info("🖥️  Markdown UI Manager initialized")
+        # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
+        # logger.info("🖥️  Markdown UI Manager initialized")
 
         # Phase 4: Network Proxy
         self.network = KernelNetworkProxy(kernel=self)
