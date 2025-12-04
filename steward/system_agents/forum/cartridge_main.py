@@ -213,7 +213,7 @@ class ForumCartridge(VibeAgent, OathMixin):
             try:
                 with open(self.votes_ledger_path, "r") as f:
                     votes_count = len(f.readlines())
-            except:
+            except Exception:
                 votes_count = 0
 
         return {
@@ -669,7 +669,7 @@ class ForumCartridge(VibeAgent, OathMixin):
             try:
                 num = int(prop_id.split("-")[1])
                 max_id = max(max_id, num)
-            except:
+            except Exception:
                 pass
 
         return max_id + 1

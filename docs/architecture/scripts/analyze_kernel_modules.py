@@ -29,7 +29,7 @@ def count_lines(filepath: Path) -> int:
         content = filepath.read_text()
         lines = [l for l in content.split("\n") if l.strip() and not l.strip().startswith("#")]
         return len(lines)
-    except:
+    except Exception:
         return 0
 
 

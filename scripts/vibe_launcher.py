@@ -245,7 +245,7 @@ def main():
                 stderr=subprocess.DEVNULL,
             )
             print(f"   ✓ Key forged at {key_path}")
-        except:
+        except Exception:
             print("   ⚠️  OpenSSL not found. Please install or place key manually.")
             # Fallback logic later if needed, but for Mac/Linux usually openssl is there
 

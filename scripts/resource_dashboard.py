@@ -65,7 +65,7 @@ def display_dashboard(kernel: RealVibeKernel):
         try:
             bank = kernel.get_bank()
             credits = bank.get_balance(agent_id)
-        except:
+        except Exception:
             credits = "N/A"
 
         print(f"Agent: {agent_id}")

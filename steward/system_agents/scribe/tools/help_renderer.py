@@ -18,12 +18,13 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import (
+from steward.system_agents.scribe.tools.base import (
     Tool,
     ToolResult,
     get_kernel_status,
     load_template,
 )
+
 from .introspector import (
     CartridgeIntrospector,
     ConfigIntrospector,
@@ -310,7 +311,7 @@ class HelpRenderer(Tool):
                 "initialized": True,
                 "last_update": (entries[-1].get("timestamp", "unknown") if entries else "never"),
             }
-        except:
+        except Exception:
             return {"exists": True, "readable": False}
 
     # Standalone mode method (for generate_docs.py)

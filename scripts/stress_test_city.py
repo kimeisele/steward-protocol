@@ -378,7 +378,7 @@ def stress_test_city():
             try:
                 if hasattr(kernel, "lineage"):
                     kernel.lineage.close()
-            except:
+            except Exception:
                 pass
 
 

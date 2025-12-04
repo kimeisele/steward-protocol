@@ -138,7 +138,7 @@ class CartridgeIntrospector:
                 first_line = text.split("\n")[0].strip()
                 return first_line
             return ""
-        except:
+        except Exception:
             return ""
 
 
@@ -183,7 +183,7 @@ class ScriptIntrospector:
                 first_line = text.split("\n")[0].strip()
                 return first_line
             return ""
-        except:
+        except Exception:
             return ""
 
 
@@ -209,7 +209,7 @@ class ConfigIntrospector:
                     "readme": project.get("readme", "README.md"),
                     "python_requires": project.get("requires-python", ">=3.8"),
                 }
-            except:
+            except Exception:
                 pass
 
         return {}
@@ -229,7 +229,7 @@ class ConfigIntrospector:
                 pattern = r"### 🤖 (\w+)"
                 matches = re.findall(pattern, content)
                 agents = list(dict.fromkeys(matches))
-            except:
+            except Exception:
                 pass
 
         return agents
