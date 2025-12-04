@@ -37,6 +37,9 @@ class SettingsRenderState:
     varna_registry: Dict[str, Any]  # agent_id -> Varna enum
     ashrama_registry: Dict[str, Any]  # agent_id -> AshramaTransition
     execution_history: List[Dict[str, Any]]
+    # UI Enhancement: Phoenix config state
+    provider_info: Optional[Dict[str, str]] = None  # Provider name, models, etc.
+    live_fire_enabled: bool = False  # Execution mode
 
 
 @dataclass
@@ -96,6 +99,79 @@ class DocRenderer:
             "> **📚 Auto-Generated Docs:** [README](README.md) · [INDEX](INDEX.md) · [AGENTS](AGENTS.md) · [CITYMAP](CITYMAP.md) · [HELP](HELP.md) · [DASHBOARD](DASHBOARD.md) · [RAG](RAG.md) · [OPERATIONS](OPERATIONS.md) · [SETTINGS](SETTINGS.md) · [ENVOY](ENVOY.md)",
             "",
         ]
+
+    @staticmethod
+    def extract_quick_note(file_path: Path) -> str:
+        """
+        Extract preserved Quick Note content from existing file.
+
+        Quick Note format:
+        ## 📝 Quick Note
+        > [User content here - preserved across re-renders]
+
+        Args:
+            file_path: Path to the markdown file
+
+        Returns:
+            The user's Quick Note content, or empty string if not found
+        """
+        try:
+            if not file_path.exists():
+                return ""
+
+            content = file_path.read_text()
+            lines = content.split("\n")
+
+            in_quick_note = False
+            note_lines = []
+
+            for line in lines:
+                if "## 📝 Quick Note" in line:
+                    in_quick_note = True
+                    continue
+
+                if in_quick_note:
+                    # Stop at next section
+                    if line.strip().startswith("## ") or line.strip().startswith("---"):
+                        break
+                    # Collect note content (skip empty lines at start)
+                    if line.strip() or note_lines:
+                        note_lines.append(line)
+
+            # Trim trailing empty lines
+            while note_lines and not note_lines[-1].strip():
+                note_lines.pop()
+
+            return "\n".join(note_lines)
+
+        except Exception:
+            return ""
+
+    @staticmethod
+    def render_quick_note_section(existing_note: str = "") -> List[str]:
+        """
+        Render the Quick Note section with preserved content.
+
+        Args:
+            existing_note: Previously saved note content
+
+        Returns:
+            List of lines for the Quick Note section
+        """
+        lines = [
+            "## 📝 Quick Note",
+            "",
+            "> This note is preserved across re-renders. Write anything you want to remember.",
+            "",
+        ]
+
+        if existing_note.strip():
+            lines.append(existing_note)
+        else:
+            lines.append("_Your note here..._")
+
+        lines.extend(["", "---", ""])
+        return lines
 
     def render_operations(self, snapshot: Dict[str, Any], output_path: Path = Path("OPERATIONS.md")) -> None:
         """
@@ -167,16 +243,22 @@ class DocRenderer:
             New file mtime after write (for change detection), or None on error
         """
         try:
+            # Extract existing Quick Note before re-rendering
+            existing_note = self.extract_quick_note(output_path)
+
             # Unified header
             lines = self.render_unified_header("KERNEL", snapshot)
+
+            # Quick Note section (preserved across renders)
+            lines.extend(self.render_quick_note_section(existing_note))
 
             lines.extend(
                 [
                     "# ⚙️ SYSTEM SETTINGS",
                     "",
-                    "**Mode:** READ-ONLY (Phase 1)",
+                    "**Mode:** INTERACTIVE (Command Queue enabled)",
                     "",
-                    "> Phase 2 enables Command Queue for declarative configuration.",
+                    "> Write SET commands in the Pending Commands section below.",
                     "",
                     "## 🔧 Kernel Configuration",
                     "",
@@ -188,6 +270,90 @@ class DocRenderer:
                     "",
                 ]
             )
+
+            # UI Enhancement: Provider Configuration
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## 🔌 LLM Provider Configuration",
+                    "",
+                ]
+            )
+
+            if state.provider_info:
+                provider = state.provider_info
+                lines.extend(
+                    [
+                        f"**Current Provider:** `{provider.get('name', 'unknown')}` ({provider.get('display', '')})",
+                        "",
+                        "| Setting | Value |",
+                        "|---------|-------|",
+                        f"| `provider` | {provider.get('name', 'unknown')} |",
+                        f"| `pro_model` | {provider.get('pro_model', 'default')} |",
+                        f"| `low_model` | {provider.get('low_model', 'default')} |",
+                        f"| `api_key_env` | {provider.get('api_key_env', 'LLM_API_KEY')} |",
+                        "",
+                        "**To change provider:**",
+                        "```",
+                        "- SET provider=anthropic",
+                        "- SET provider=openai",
+                        "- SET provider=openrouter",
+                        "```",
+                        "",
+                    ]
+                )
+            else:
+                lines.extend(
+                    [
+                        "_Provider info not available. Using defaults._",
+                        "",
+                    ]
+                )
+
+            # UI Enhancement: Execution Mode
+            mode_emoji = "🔴" if state.live_fire_enabled else "🟢"
+            mode_name = "LIVE FIRE" if state.live_fire_enabled else "SIMULATION"
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## ⚡ Execution Mode",
+                    "",
+                    f"**Current Mode:** `{mode_name.lower()}` {mode_emoji}",
+                    "",
+                    "| Mode | Description |",
+                    "|------|-------------|",
+                    "| `simulation` | Dry-run mode - no real API calls, no file writes |",
+                    "| `live_fire` | Real execution - API calls, file writes enabled |",
+                    "",
+                ]
+            )
+
+            if state.live_fire_enabled:
+                lines.extend(
+                    [
+                        "**⚠️ WARNING:** Live Fire mode is ACTIVE. Real changes will be made.",
+                        "",
+                        "**To disable:**",
+                        "```",
+                        "- SET mode=simulation",
+                        "```",
+                        "",
+                    ]
+                )
+            else:
+                lines.extend(
+                    [
+                        "**To enable Live Fire:**",
+                        "```",
+                        "- SET mode=live_fire",
+                        "```",
+                        "",
+                        "**⚠️ WARNING:** Live Fire mode makes real changes. Use with caution.",
+                        "",
+                    ]
+                )
 
             # Add agent registry details
             lines.extend(

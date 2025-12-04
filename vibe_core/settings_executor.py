@@ -53,6 +53,14 @@ class SettingsExecutor:
         if result.verbose_mode is not None:
             self._execute_verbose_mode(result.verbose_mode)
 
+        # Handle provider change (UI Enhancement)
+        if result.new_provider is not None:
+            self._execute_provider_change(result.new_provider)
+
+        # Handle execution mode change (UI Enhancement)
+        if result.new_execution_mode is not None:
+            self._execute_mode_change(result.new_execution_mode)
+
     def _execute_restarts(self, agent_ids: Set[str], kernel: "RealVibeKernel") -> None:
         """
         Restart specified agents via ProcessManager.
@@ -129,6 +137,59 @@ class SettingsExecutor:
 
         except Exception as e:
             logger.error(f"❌ Failed to set verbose mode: {e}")
+
+    def _execute_provider_change(self, provider: str) -> None:
+        """
+        Change the LLM provider in phoenix config.
+
+        Note: Requires kernel restart to take effect.
+        """
+        try:
+            from vibe_core.phoenix_config import get_phoenix_engine
+
+            engine = get_phoenix_engine()
+
+            # Map provider name to class path
+            provider_map = {
+                "anthropic": "vibe_core.runtime.providers.anthropic:AnthropicProvider",
+                "openai": "vibe_core.runtime.providers.openai:OpenAIProvider",
+                "openrouter": "vibe_core.runtime.providers.openrouter:OpenRouterProvider",
+            }
+
+            if provider not in provider_map:
+                logger.error(f"❌ Unknown provider: {provider}")
+                return
+
+            engine.set("providers.llm_provider", provider_map[provider])
+            engine.save()
+
+            logger.info(f"🔌 Provider changed to '{provider}' - restart kernel to apply")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to change provider: {e}")
+
+    def _execute_mode_change(self, mode: str) -> None:
+        """
+        Change the execution mode (simulation/live_fire).
+
+        Live Fire mode enables real API calls and file writes.
+        """
+        try:
+            from vibe_core.phoenix_config import get_phoenix_engine
+
+            engine = get_phoenix_engine()
+
+            is_live = mode == "live_fire"
+            engine.set("features.live_fire_enabled", is_live)
+            engine.save()
+
+            if is_live:
+                logger.warning("⚠️  LIVE FIRE MODE ENABLED - Real API calls and writes are now active!")
+            else:
+                logger.info("🔒 Simulation mode enabled - API calls and writes are simulated")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to change execution mode: {e}")
 
 
 # Singleton instance for kernel to use
