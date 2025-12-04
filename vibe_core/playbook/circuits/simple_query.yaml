@@ -1,0 +1,29 @@
+circuit:
+  id: SIMPLE_QUERY
+  description: Handle simple informational queries
+  domain: INTERFACE
+  version: "1.0.0"
+
+  states:
+    classify:
+      name: "Classify Query"
+      description: "Determine query type"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "query_classified"
+          params:
+            type: "simple"
+      on_success: respond
+      on_failure: ABORT
+
+    respond:
+      name: "Generate Response"
+      description: "Generate appropriate response"
+      actions:
+        - action_type: CALL_AGENT
+          target: "herald"
+          params:
+            action: "respond"
+            query: "{{ user_input }}"
+      on_success: COMPLETE
+      on_failure: ABORT
