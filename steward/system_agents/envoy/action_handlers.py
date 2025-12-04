@@ -509,23 +509,26 @@ class CallPlaybookHandler(ActionHandler):
 
         try:
             # Load and execute playbook through kernel's playbook executor
-            # NOTE: This assumes kernel has a playbook execution method
-            # The actual implementation depends on the kernel's playbook API
-
             playbook_path = params.get("playbook_path", f"vibe_core/playbook/circuits/{target}.yaml")
             input_data = params.get("input", {})
 
-            logger.info(f"    📖 Loading playbook: {playbook_path}")
+            logger.info(f"    📖 Executing playbook: {playbook_path}")
 
-            # For now, return success with stub - actual implementation needs kernel.execute_playbook()
-            logger.warning("    ⚠️  Playbook execution stub - implement kernel.execute_playbook()")
+            # Execute the playbook through the kernel
+            result = await context.kernel.execute_playbook(
+                playbook_path=playbook_path,
+                input_data=input_data,
+                user_input=context.user_input,
+            )
+
+            logger.info(f"    ✓ Playbook {target} completed: {result.get('status', 'unknown')}")
 
             return ActionResult.ok(
                 {
                     "playbook": target,
                     "path": playbook_path,
-                    "status": "stub",
-                    "message": "Playbook execution not yet implemented in kernel",
+                    "status": result.get("status", "unknown"),
+                    "result": result,
                 }
             )
         except Exception as e:
