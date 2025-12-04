@@ -308,10 +308,14 @@ def main():
         status = "✅" if success else "❌"
         print(f"{status} {doc_name}")
 
-    all_success = all(results.values())
+    # RAG.md is optional (requires ANALYST agent which may not exist)
+    required_docs = {k: v for k, v in results.items() if k != "RAG.md"}
+    all_required_success = all(required_docs.values())
 
-    if all_success:
-        print("\n✅ ALL DOCUMENTATION GENERATED SUCCESSFULLY")
+    if all_required_success:
+        if not results.get("RAG.md", True):
+            print("\n⚠️  RAG.md skipped (ANALYST agent not available)")
+        print("\n✅ ALL REQUIRED DOCUMENTATION GENERATED SUCCESSFULLY")
         print("=" * 70)
         return 0
     else:
