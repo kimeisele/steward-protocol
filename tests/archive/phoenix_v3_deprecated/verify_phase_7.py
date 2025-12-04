@@ -82,7 +82,7 @@ def run_phase_7():
     with open(malformed_dir / "steward.json", "w") as f:
         f.write("""
 {
-  "identity": {"name": "Broken"}, 
+  "identity": {"name": "Broken"},
   "specs": {}
 }
 """)  # Missing agent_id

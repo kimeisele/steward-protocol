@@ -1,0 +1,57 @@
+# Pre-commit hooks - Run same checks as CI locally
+# Install: pip install pre-commit && pre-commit install
+# Manual run: pre-commit run --all-files
+#
+# This ensures: LOCAL = CI (no surprises)
+
+repos:
+  # Ruff - Fast Python linter and formatter
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.1
+    hooks:
+      # Linter - critical errors only (matches CI line 33)
+      # Only check vibe_core, steward, scripts (same as CI)
+      - id: ruff
+        name: ruff-critical
+        args: ["--select=E9,F63,F7,F82", "--fix"]
+        files: ^(vibe_core|steward|scripts)/
+
+      # Formatter - auto-fix (matches CI line 41)
+      - id: ruff-format
+        files: ^(vibe_core|steward|scripts)/
+
+  # Prevent commits to main/master
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+      # Basics
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^knowledge/playbooks/schema\.yaml$  # Schema definition, not data
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+
+  # Python specific
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-check-blanket-noqa
+        exclude: ^scripts/testing/  # Test utilities may use noqa legitimately
+      # NOTE: python-no-eval removed - too many false positives in security code
+      # (narasimha.py checks FOR eval in code, doesn't execute it)
+
+# CI Parity Note:
+# ===============
+# CI runs:
+#   1. ruff check --select=E9,F63,F7,F82 (MUST pass) <- covered by ruff-critical
+#   2. ruff check --statistics || true (informational)
+#   3. ruff format --check (MUST pass) <- covered by ruff-format
+#
+# Pre-commit runs the same checks with --fix where possible.
+# Result: If pre-commit passes, CI will pass.

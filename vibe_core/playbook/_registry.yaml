@@ -10,7 +10,7 @@ description: |
 # ============================================================================
 # ROUTING STRATEGY
 # ============================================================================
-# 
+#
 # Tier 1: Embedding Match (Fast, <100ms)
 #   - Compute embedding of user input
 #   - Cosinus similarity against intent_patterns
@@ -27,7 +27,7 @@ routes:
   # ==========================================================================
   # CORE WORKFLOWS
   # ==========================================================================
-  
+
   - name: "bootstrap"
     description: "First-time system initialization"
     intent_patterns:
@@ -39,7 +39,7 @@ routes:
     threshold: 0.70
     target_chain: "core/bootstrap.md"
     priority: "HIGH"
-  
+
   - name: "session_resume"
     description: "Continue existing work from handoff"
     intent_patterns:
@@ -51,7 +51,7 @@ routes:
     threshold: 0.75
     target_chain: "core/session_resume.md"
     priority: "HIGH"
-  
+
   - name: "status_check"
     description: "Show current project status"
     intent_patterns:
@@ -66,7 +66,7 @@ routes:
   # ==========================================================================
   # DOMAIN-SPECIFIC WORKFLOWS
   # ==========================================================================
-  
+
   - name: "restaurant_app"
     description: "Restaurant/hospitality domain workflow"
     intent_patterns:
@@ -84,7 +84,7 @@ routes:
       domain: "hospitality"
       complexity: "medium"
       typical_duration: "20-30 min"
-  
+
   - name: "healthcare_app"
     description: "Healthcare/medical domain workflow"
     intent_patterns:
@@ -101,7 +101,7 @@ routes:
       domain: "healthcare"
       complexity: "high"
       typical_duration: "30-45 min"
-  
+
   - name: "ecommerce_app"
     description: "E-commerce/retail domain workflow"
     intent_patterns:
@@ -122,7 +122,7 @@ routes:
   # ==========================================================================
   # FALLBACK ROUTES
   # ==========================================================================
-  
+
   - name: "clarification"
     description: "Request clarification for ambiguous input"
     intent_patterns:
@@ -140,17 +140,17 @@ routes:
 config:
   # Default threshold for all routes (can be overridden per route)
   default_threshold: 0.75
-  
+
   # Embedding model for semantic similarity
   # Options: "text-embedding-3-small" (OpenAI), "voyage-2" (Voyage)
   embedding_model: "text-embedding-3-small"
-  
+
   # Fallback behavior when no route matches
   fallback_strategy: "steward_analysis"
-  
+
   # Maximum number of suggestions when similarity is low
   max_suggestions: 3
-  
+
   # Enable logging of routing decisions
   log_routing: true
 
@@ -163,7 +163,7 @@ metadata:
   created: "2025-11-18"
   purpose: "Semantic routing for vibe-agency playbook system"
   maintainer: "vibe-agency core team"
-  
+
 # ============================================================================
 # USAGE NOTES
 # ============================================================================

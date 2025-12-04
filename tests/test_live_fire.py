@@ -143,28 +143,36 @@ def test_live_fire_mode():
                 # Write proof file
                 test_file.write_text("LIVE FIRE PROOF: This file was created by real execution!")
 
-                return type('ExecutionResult', (), {
-                    'workflow_id': 'test_live_fire',
-                    'node_id': action,
-                    'status': ExecutionStatus.SUCCESS,
-                    'output': {
-                        'file_created': str(test_file),
-                        'real_execution': True,
-                        'proof': 'File actually written to disk'
+                return type(
+                    "ExecutionResult",
+                    (),
+                    {
+                        "workflow_id": "test_live_fire",
+                        "node_id": action,
+                        "status": ExecutionStatus.SUCCESS,
+                        "output": {
+                            "file_created": str(test_file),
+                            "real_execution": True,
+                            "proof": "File actually written to disk",
+                        },
+                        "cost_usd": 0.001,
+                        "duration_seconds": 0.1,
                     },
-                    'cost_usd': 0.001,
-                    'duration_seconds': 0.1
-                })()
+                )()
             except Exception as e:
-                return type('ExecutionResult', (), {
-                    'workflow_id': 'test_live_fire',
-                    'node_id': action,
-                    'status': ExecutionStatus.FAILED,
-                    'output': None,
-                    'error': str(e),
-                    'cost_usd': 0.0,
-                    'duration_seconds': 0.0
-                })()
+                return type(
+                    "ExecutionResult",
+                    (),
+                    {
+                        "workflow_id": "test_live_fire",
+                        "node_id": action,
+                        "status": ExecutionStatus.FAILED,
+                        "output": None,
+                        "error": str(e),
+                        "cost_usd": 0.0,
+                        "duration_seconds": 0.0,
+                    },
+                )()
 
     # Execute with real agent
     executor = GraphExecutor()
@@ -198,4 +206,5 @@ def test_live_fire_mode():
 if __name__ == "__main__":
     """Run tests directly with pytest."""
     import pytest
+
     pytest.main([__file__, "-v"])

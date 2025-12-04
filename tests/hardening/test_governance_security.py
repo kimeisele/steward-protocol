@@ -27,8 +27,10 @@ from vibe_core.protocols import VibeAgent
 # ATTACK AGENTS
 # ============================================================================
 
+
 class NoOathAgent(VibeAgent):
     """Agent that never swore the oath."""
+
     def __init__(self):
         super().__init__(
             agent_id="no_oath",
@@ -47,6 +49,7 @@ class NoOathAgent(VibeAgent):
 
 class FakeOathAgent(VibeAgent):
     """Agent with forged oath credentials."""
+
     def __init__(self):
         super().__init__(
             agent_id="fake_oath",
@@ -61,7 +64,7 @@ class FakeOathAgent(VibeAgent):
         self.oath_event = {
             "constitution_hash": "FORGED_HASH_12345",
             "signature": "INVALID_SIG_AAAAAAA",
-            "timestamp": "2024-01-01T00:00:00Z"
+            "timestamp": "2024-01-01T00:00:00Z",
         }
 
     def process(self, task):
@@ -70,6 +73,7 @@ class FakeOathAgent(VibeAgent):
 
 class PrivilegeEscalationAgent(VibeAgent):
     """Agent that tries to escalate privileges at runtime."""
+
     def __init__(self):
         super().__init__(
             agent_id="escalator",
@@ -100,6 +104,7 @@ class PrivilegeEscalationAgent(VibeAgent):
 
 class SybilAgent(VibeAgent):
     """One of many fake agents for Sybil attack."""
+
     def __init__(self, index: int):
         super().__init__(
             agent_id=f"sybil_{index:04d}",
@@ -111,10 +116,7 @@ class SybilAgent(VibeAgent):
             capabilities=["vote"],
         )
         self.oath_sworn = True
-        self.oath_event = {
-            "constitution_hash": "valid_looking_hash",
-            "signature": f"auto_sig_{index}"
-        }
+        self.oath_event = {"constitution_hash": "valid_looking_hash", "signature": f"auto_sig_{index}"}
 
     def process(self, task):
         return {"status": "voted", "choice": "ATTACKER_PROPOSAL"}
@@ -123,6 +125,7 @@ class SybilAgent(VibeAgent):
 # ============================================================================
 # TESTS
 # ============================================================================
+
 
 def test_oath_enforcement():
     """
@@ -136,8 +139,9 @@ def test_oath_enforcement():
     except Exception as e:
         error_msg = str(e).lower()
         # Success: agent was blocked
-        assert "oath" in error_msg or "governance" in error_msg or "denied" in error_msg, \
-            f"Blocked but wrong reason: {e} (expected oath/governance error)"
+        assert (
+            "oath" in error_msg or "governance" in error_msg or "denied" in error_msg
+        ), f"Blocked but wrong reason: {e} (expected oath/governance error)"
         print(f"Blocked with: {e}")
 
 
@@ -177,12 +181,12 @@ def test_sybil_attack_resistance():
             blocked += 1
 
     # All registered = SYBIL ATTACK SUCCEEDED
-    assert registered < num_agents, \
-        f"SYBIL ATTACK SUCCEEDED: {registered}/{num_agents} fake agents registered (Add rate limiting or proof-of-work)"
+    assert (
+        registered < num_agents
+    ), f"SYBIL ATTACK SUCCEEDED: {registered}/{num_agents} fake agents registered (Add rate limiting or proof-of-work)"
 
     # More than 10% got through = PARTIAL SUCCESS
-    assert registered <= num_agents * 0.1, \
-        f"SYBIL PARTIALLY SUCCEEDED: {registered}/{num_agents} (>10%)"
+    assert registered <= num_agents * 0.1, f"SYBIL PARTIALLY SUCCEEDED: {registered}/{num_agents} (>10%)"
 
     print(f"Sybil mitigated: {blocked}/{num_agents} blocked")
 
@@ -227,8 +231,7 @@ def test_privilege_escalation_capabilities():
         assert "does not support item assignment" in str(e), f"Unexpected TypeError: {e}"
 
     # Also verify capabilities are tracked via capability registry
-    assert hasattr(kernel, '_capability_registry'), \
-        "NO CAPABILITY TRACKING: Kernel has no _capability_registry"
+    assert hasattr(kernel, "_capability_registry"), "NO CAPABILITY TRACKING: Kernel has no _capability_registry"
 
     print("Capabilities protected: registry immutable + capability_registry")
 
@@ -246,8 +249,9 @@ def test_kernel_isolation():
     kernel = RealVibeKernel(ledger_path=":memory:")
 
     # TEST: Verify registry is immutable (MappingProxyType)
-    assert isinstance(kernel.agent_registry, MappingProxyType), \
-        f"REGISTRY NOT PROTECTED: agent_registry is mutable (type: {type(kernel.agent_registry)}) - Use MappingProxyType"
+    assert isinstance(
+        kernel.agent_registry, MappingProxyType
+    ), f"REGISTRY NOT PROTECTED: agent_registry is mutable (type: {type(kernel.agent_registry)}) - Use MappingProxyType"
 
     # TEST: Verify direct modification blocked
     try:
@@ -257,8 +261,7 @@ def test_kernel_isolation():
         pass  # Expected - MappingProxyType blocks assignment
 
     # TEST: Verify capability registry exists
-    assert hasattr(kernel, '_capability_registry'), \
-        "NO CAPABILITY ISOLATION: _capability_registry missing"
+    assert hasattr(kernel, "_capability_registry"), "NO CAPABILITY ISOLATION: _capability_registry missing"
 
     # Python limitation documented: read access is unavoidable
     print("Kernel write-protected: registry and capabilities immutable")

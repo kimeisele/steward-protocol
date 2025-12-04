@@ -28,7 +28,7 @@ Agents were working **parallel to the kernel**:
 Forum creates proposal → Writes to local file
                       ↓
                       LOCAL STATE ✅
-                      
+
 Kernel ledger → EMPTY ❌
 
 If kernel reboots → All proposals are gone (from kernel perspective)
@@ -53,11 +53,11 @@ If kernel reboots → All proposals are gone (from kernel perspective)
 def create_proposal(self, title, description, ...):
     # Create proposal
     self.proposals[proposal_id] = proposal
-    
+
     # OPTIONAL: record in ledger
     if hasattr(self, 'kernel') and self.kernel:
         self.kernel.ledger.record_event(...)
-    
+
     # If kernel not available, nobody knows about this proposal
 ```
 
@@ -69,16 +69,16 @@ def create_proposal(self, title, description, ...):
 def create_proposal(self, title, description, ...):
     # Create proposal
     self.proposals[proposal_id] = proposal
-    
+
     # MANDATORY: record in ledger (NO EXCEPTIONS)
     if not hasattr(self, 'kernel') or not self.kernel:
         raise RuntimeError(
             "FATAL: Cannot create proposal without kernel connection. "
             "All actions MUST be recorded in kernel ledger."
         )
-    
+
     self.kernel.ledger.record_event(...)
-    
+
     # If kernel not available, agent FAILS with clear error
 ```
 
@@ -154,24 +154,24 @@ python3 verify_ledger_integrity.py
 
 def critical_action(self, params):
     """Any action that matters."""
-    
+
     # MANDATORY: Kernel connection check
     if not hasattr(self, 'kernel') or not self.kernel:
         raise RuntimeError(
             f"FATAL: {self.agent_id} cannot perform action - kernel unavailable. "
             "All critical actions MUST record in kernel ledger."
         )
-    
+
     # Perform action
     result = self._do_action(params)
-    
+
     # Record in ledger
     self.kernel.ledger.record_event(
         event_type="action_type",
         agent_id=self.agent_id,
         details={...}
     )
-    
+
     return result
 ```
 

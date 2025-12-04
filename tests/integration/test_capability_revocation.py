@@ -69,10 +69,7 @@ def test_revoke_removes_capability():
 
     # Revoke one capability
     result = kernel.revoke_capability(
-        agent_id="test_agent_1",
-        capabilities=["can_transfer"],
-        revoker_id="KERNEL",
-        reason="Test revocation"
+        agent_id="test_agent_1", capabilities=["can_transfer"], revoker_id="KERNEL", reason="Test revocation"
     )
 
     # Verify revocation succeeded
@@ -100,10 +97,7 @@ def test_revoked_agent_cannot_use_capability():
 
     # Revoke capability
     kernel.revoke_capability(
-        agent_id="test_agent_2",
-        capabilities=["execute_code"],
-        revoker_id="KERNEL",
-        reason="Security violation"
+        agent_id="test_agent_2", capabilities=["execute_code"], revoker_id="KERNEL", reason="Security violation"
     )
 
     # Agent cannot use capability after revocation
@@ -119,10 +113,7 @@ def test_permission_model_kernel_can_revoke():
 
     # KERNEL can revoke from anyone
     result = kernel.revoke_capability(
-        agent_id="test_agent_3",
-        capabilities=["can_transfer"],
-        revoker_id="KERNEL",
-        reason="Test"
+        agent_id="test_agent_3", capabilities=["can_transfer"], revoker_id="KERNEL", reason="Test"
     )
 
     assert result["success"] is True
@@ -137,10 +128,7 @@ def test_permission_model_civic_can_revoke():
 
     # CIVIC can revoke from anyone
     result = kernel.revoke_capability(
-        agent_id="test_agent_4",
-        capabilities=["can_transfer"],
-        revoker_id="civic",
-        reason="Governance decision"
+        agent_id="test_agent_4", capabilities=["can_transfer"], revoker_id="civic", reason="Governance decision"
     )
 
     assert result["success"] is True
@@ -158,7 +146,7 @@ def test_permission_model_self_revocation():
         agent_id="test_agent_5",
         capabilities=["can_transfer"],
         revoker_id="test_agent_5",  # Self-revocation
-        reason="No longer needed"
+        reason="No longer needed",
     )
 
     assert result["success"] is True
@@ -179,7 +167,7 @@ def test_permission_model_agent_cannot_revoke_from_others():
         agent_id="test_agent_6b",
         capabilities=["can_transfer"],
         revoker_id="test_agent_6a",  # Trying to revoke from another agent
-        reason="Malicious attempt"
+        reason="Malicious attempt",
     )
 
     assert result["success"] is False
@@ -198,10 +186,7 @@ def test_audit_trail_in_ledger():
 
     # Revoke capability
     kernel.revoke_capability(
-        agent_id="test_agent_7",
-        capabilities=["can_transfer"],
-        revoker_id="civic",
-        reason="Test audit trail"
+        agent_id="test_agent_7", capabilities=["can_transfer"], revoker_id="civic", reason="Test audit trail"
     )
 
     # Check ledger for revocation event
@@ -209,8 +194,7 @@ def test_audit_trail_in_ledger():
 
     # Find revocation event
     revocation_events = [
-        e for e in events
-        if e.get("event_type") == "capability_revoked" and e.get("agent_id") == "test_agent_7"
+        e for e in events if e.get("event_type") == "capability_revoked" and e.get("agent_id") == "test_agent_7"
     ]
 
     assert len(revocation_events) > 0
@@ -231,10 +215,7 @@ def test_revoke_multiple_capabilities():
 
     # Revoke multiple capabilities
     result = kernel.revoke_capability(
-        agent_id="test_agent_8",
-        capabilities=["cap_a", "cap_b"],
-        revoker_id="KERNEL",
-        reason="Test multiple"
+        agent_id="test_agent_8", capabilities=["cap_a", "cap_b"], revoker_id="KERNEL", reason="Test multiple"
     )
 
     assert result["success"] is True
@@ -259,10 +240,7 @@ def test_revoke_nonexistent_capability():
 
     # Try to revoke capability agent doesn't have
     result = kernel.revoke_capability(
-        agent_id="test_agent_9",
-        capabilities=["cap_b", "cap_c"],
-        revoker_id="KERNEL",
-        reason="Test nonexistent"
+        agent_id="test_agent_9", capabilities=["cap_b", "cap_c"], revoker_id="KERNEL", reason="Test nonexistent"
     )
 
     # Should fail (nothing to revoke)
@@ -277,10 +255,7 @@ def test_revoke_from_unregistered_agent():
 
     # Try to revoke from non-existent agent
     result = kernel.revoke_capability(
-        agent_id="nonexistent_agent",
-        capabilities=["some_cap"],
-        revoker_id="KERNEL",
-        reason="Test nonexistent agent"
+        agent_id="nonexistent_agent", capabilities=["some_cap"], revoker_id="KERNEL", reason="Test nonexistent agent"
     )
 
     assert result["success"] is False
@@ -300,9 +275,7 @@ def test_narasimha_revokes_all_capabilities():
 
     # Simulate Narasimha revoke-all
     success = kernel._capability_registry.revoke_all(
-        agent_id="test_agent_10",
-        revoker_id="NARASIMHA",
-        reason="Kill-switch activated"
+        agent_id="test_agent_10", revoker_id="NARASIMHA", reason="Kill-switch activated"
     )
 
     assert success is True
@@ -328,11 +301,7 @@ def test_syscall_revoke_mandate_success():
     request = SyscallRequest(
         syscall_type=SyscallType.REVOKE_MANDATE,
         requester_id="civic",
-        params={
-            "agent_id": "test_agent_11",
-            "capabilities": ["can_transfer"],
-            "reason": "Test syscall"
-        }
+        params={"agent_id": "test_agent_11", "capabilities": ["can_transfer"], "reason": "Test syscall"},
     )
 
     # Execute syscall
@@ -363,11 +332,7 @@ def test_syscall_revoke_mandate_permission_denied():
     request = SyscallRequest(
         syscall_type=SyscallType.REVOKE_MANDATE,
         requester_id="test_agent_12a",
-        params={
-            "agent_id": "test_agent_12b",
-            "capabilities": ["can_transfer"],
-            "reason": "Malicious"
-        }
+        params={"agent_id": "test_agent_12b", "capabilities": ["can_transfer"], "reason": "Malicious"},
     )
 
     # Execute syscall

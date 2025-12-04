@@ -690,15 +690,15 @@ class CognitiveCircuitExecutor:
                     # Prompt for circuit generation
                     prompt = f"""
                     TASK: Generate a valid YAML cognitive circuit (micro-circuit) for the following context.
-                    
+
                     CONTEXT:
                     {json.dumps(context, indent=2)}
-                    
+
                     CONSTRAINTS:
                     - Max states: {constraints.get("max_states", 3)}
                     - Allowed tools: {constraints.get("allowed_tools", "ALL")}
                     - Output format: ONLY valid YAML, no markdown blocks.
-                    
+
                     The circuit must follow the standard schema:
                     circuit:
                       id: "MICRO_GENERATED_..."

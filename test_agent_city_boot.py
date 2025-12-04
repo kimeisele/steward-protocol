@@ -57,6 +57,7 @@ async def test_agent_city_boot():
     except Exception as e:
         logger.error(f"   ❌ BOOT FAILED: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

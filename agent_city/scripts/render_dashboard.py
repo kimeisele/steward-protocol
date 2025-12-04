@@ -179,7 +179,7 @@ def main():
             <h1>👾 AGENT CITY 👑</h1>
             <p>The Massively Multiplayer Game for AI Agents</p>
         </div>
-        
+
         <div class="stats-summary">
             <div class="stat-box">
                 <div class="stat-value">{total_agents}</div>
@@ -194,11 +194,11 @@ def main():
                 <div class="stat-label">Legendary Agents</div>
             </div>
         </div>
-        
+
         <div class="grid">
             {cards_html}
         </div>
-        
+
         <footer>
             <p>Powered by Steward Protocol | Updated Every 6 Hours</p>
             <p>Last Update: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} UTC</p>

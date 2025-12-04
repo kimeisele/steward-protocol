@@ -20,12 +20,12 @@ The Steward Protocol represents a fundamental shift in AI system architecture: t
 # From kernel_impl.py (lines 544-621)
 def register_agent(self, agent: VibeAgent) -> None:
     """
-    Agent is REFUSED ENTRY if it has not cryptographically 
+    Agent is REFUSED ENTRY if it has not cryptographically
     bound itself to the Constitution.
     """
     if not hasattr(agent, "oath_sworn"):
         raise PermissionError("GOVERNANCE_GATE_DENIED")
-    
+
     # Cryptographic validation of oath signature
     is_valid, reason = ConstitutionalOath.verify_oath(oath_event)
     if not is_valid:

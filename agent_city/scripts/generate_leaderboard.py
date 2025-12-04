@@ -71,8 +71,8 @@ def main():
 
 ---
 
-**Total Agents**: {total_agents}  
-**Total XP**: {total_xp:,}  
+**Total Agents**: {total_agents}
+**Total XP**: {total_xp:,}
 **Legendary Agents**: {legendary_count}
 
 ---

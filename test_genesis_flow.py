@@ -105,13 +105,16 @@ async def test_genesis_flow():
 
     # Event collector for diagnostics
     events = []
+
     async def collect_events(event_type, message, source, data=None):
-        events.append({
-            "type": event_type,
-            "message": message,
-            "source": source,
-            "data": data or {},
-        })
+        events.append(
+            {
+                "type": event_type,
+                "message": message,
+                "source": source,
+                "data": data or {},
+            }
+        )
         logger.info(f"   📡 EVENT: [{event_type}] {message}")
 
     # =========================================================================
@@ -134,6 +137,7 @@ async def test_genesis_flow():
     except Exception as e:
         logger.error(f"   ❌ Execution failed: {e}")
         import traceback
+
         traceback.print_exc()
         DIAGNOSTICS["errors"].append(f"Execution: {e}")
         return DIAGNOSTICS

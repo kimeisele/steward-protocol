@@ -313,7 +313,7 @@ class HeartbeatEngine:
         # Build new TASKS.md content
         content = f"""# 📋 Mission Control
 
-> **Auto-Generated Task Board** | Last Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}  
+> **Auto-Generated Task Board** | Last Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 > **Status:** 🟢 Operational | **Active Tasks:** {len(running)} | **Completed:** {len(completed)}
 
 ---

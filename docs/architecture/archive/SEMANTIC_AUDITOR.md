@@ -271,29 +271,29 @@ print(f"Violations: {len(result['violations'])}")
 class VibeKernel:
     def __init__(self):
         # ... other init ...
-        
+
         # Load AUDITOR cartridge
         self.auditor = self.load_cartridge("auditor")
-        
+
         # Start watchdog daemon
         self.auditor.start_watchdog()
-    
+
     def kernel_loop(self):
         """Main kernel loop"""
         while self.running:
             task = self.scheduler.next_task()
-            
+
             if task:
                 # Execute task
                 self.execute_task(task)
                 self.task_count += 1
-                
+
                 # Every N tasks, watchdog checks
                 if self.task_count % 10 == 0:
                     halt_result = self.auditor.watchdog_integration.kernel_tick(
                         self.task_count
                     )
-                    
+
                     if halt_result["should_halt"]:
                         self.halt_critical_violation(halt_result)
 ```
@@ -433,4 +433,3 @@ This is the step from **"Software that runs"** to **"Software that understands i
 **Verification is no longer optional. It's system-immanent.**
 
 This is how you build a system with an immune system. 🏰⚖️👁️
-

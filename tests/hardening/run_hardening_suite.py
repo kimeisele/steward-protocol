@@ -28,7 +28,7 @@ def run_suite(name: str, module_name: str) -> dict:
     print(f"{'#' * 70}")
 
     try:
-        module = __import__(module_name, fromlist=['run_all_tests'])
+        module = __import__(module_name, fromlist=["run_all_tests"])
         return module.run_all_tests()
     except ImportError as e:
         print(f"  💥 IMPORT ERROR: {e}")
@@ -36,6 +36,7 @@ def run_suite(name: str, module_name: str) -> dict:
     except Exception as e:
         print(f"  💥 RUNTIME ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return {"passed": 0, "failed": 1, "error": str(e)}
 
@@ -46,13 +47,9 @@ def main():
         "--suite",
         choices=["acid", "governance", "constitutional", "all"],
         default="all",
-        help="Which test suite to run"
+        help="Which test suite to run",
     )
-    parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
