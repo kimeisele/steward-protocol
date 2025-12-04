@@ -249,8 +249,6 @@ Current agent configuration and status:
 
 **Example:**
 ```
-- SET kernel.log_level=DEBUG
-- RESTART agent.scribe
 ```
 
 _No pending commands. Add commands above this line._

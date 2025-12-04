@@ -70,11 +70,29 @@ class SettingsUIPlugin(KernelPlugin):
         """Render SETTINGS.md."""
         snapshot = self._generate_snapshot(kernel)
 
+        # Get config state from proper sources (not spaghetti)
+        provider_info = None
+        live_fire_enabled = False
+        try:
+            # Provider info from section's SINGLE SOURCE OF TRUTH
+            from vibe_core.settings.sections.provider import get_provider_info_from_config
+
+            provider_info = get_provider_info_from_config()
+
+            # Live fire from phoenix config
+            from vibe_core.phoenix_config import get_phoenix_engine
+
+            live_fire_enabled = get_phoenix_engine().live_fire_enabled
+        except Exception:
+            pass  # Use defaults if not available
+
         state = SettingsRenderState(
             ledger_path=str(kernel.ledger_path),
             varna_registry=kernel._varna_registry,
             ashrama_registry=kernel._ashrama_registry,
             execution_history=list(self.execution_history),
+            provider_info=provider_info,
+            live_fire_enabled=live_fire_enabled,
         )
 
         new_mtime = self.doc_renderer.render_settings(snapshot, state)
