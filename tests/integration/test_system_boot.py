@@ -95,7 +95,7 @@ class TestStewardRegistration:
         steward = Discoverer(kernel)
 
         assert steward is not None
-        assert steward.agent_id == "steward"
+        assert steward.agent_id == "discoverer"
         logger.info("✅ Discoverer instantiated successfully")
 
     def test_steward_registration(self):
@@ -106,8 +106,8 @@ class TestStewardRegistration:
         # Register steward
         kernel.register_agent(steward)
 
-        assert "steward" in kernel.agent_registry
-        assert kernel.agent_registry["steward"] == steward
+        assert "discoverer" in kernel.agent_registry
+        assert kernel.agent_registry["discoverer"] == steward
         logger.info("✅ Discoverer registered with kernel")
 
     def test_steward_has_discovery_method(self):
@@ -126,7 +126,7 @@ class TestStewardRegistration:
         kernel.register_agent(steward)
 
         # Create a test task
-        task = Task(agent_id="steward", payload={"action": "test"})
+        task = Task(agent_id="discoverer", payload={"action": "test"})
 
         # Process the task
         result = steward.process(task)
@@ -313,7 +313,7 @@ class TestSystemIntegration:
         # Create and register steward
         steward = Discoverer(kernel)
         kernel.register_agent(steward)
-        assert "steward" in kernel.agent_registry
+        assert "discoverer" in kernel.agent_registry
 
         # Boot kernel
         kernel.boot()

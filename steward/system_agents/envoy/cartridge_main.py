@@ -20,8 +20,6 @@ import json
 import logging
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
 from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
 
 # GAD-5500: The Missing Link (Wiring)
@@ -31,6 +29,9 @@ from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core import Task
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.config import CityConfig
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
 # - envoy.city_control (CityControlTool) - The Golden Straw

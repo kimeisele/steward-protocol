@@ -13,9 +13,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from steward.oath_mixin import OathMixin
 from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
+from vibe_core.steward import OathMixin
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [MECHANIC] %(levelname)s: %(message)s")
