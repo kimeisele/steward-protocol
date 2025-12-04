@@ -32,7 +32,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from vibe_core.boot_orchestrator import BootOrchestrator
-from vibe_core.config import ConfigLoader
+from vibe_core.config import load_config
 from vibe_core.kernel_impl import RealVibeKernel
 
 
@@ -92,8 +92,7 @@ def kernel():
 def booted_kernel():
     """Create a fully booted kernel with agents."""
     try:
-        loader = ConfigLoader()
-        config = loader.load()
+        config = load_config()
     except Exception:
         config = None
 

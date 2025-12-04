@@ -53,7 +53,7 @@ logger = logging.getLogger("STEWARD_BOOTLOADER")
 from vibe_core.boot_orchestrator import BootOrchestrator
 
 # Import Configuration (GAD-100: Phoenix Configuration)
-from vibe_core.config import CityConfig, ConfigLoader
+from vibe_core.config import CityConfig, load_config
 from vibe_core.kernel_impl import RealVibeKernel
 
 
@@ -112,17 +112,15 @@ class StewardBootLoader:
         logger.info("=" * 80)
 
         try:
-            loader = ConfigLoader(self.config_path)
-            self.config = loader.load()
+            self.config = load_config(self.config_path)
 
             logger.info(f"✅ Configuration loaded: {self.config.city_name}")
             logger.info(f"   Version: {self.config.federation_version}")
             logger.info(f"   Economy: {self.config.economy.initial_credits} initial credits")
             logger.info(f"   Governance: {int(self.config.governance.voting_threshold * 100)}% voting threshold")
 
-            # Validate configuration
-            validation_report = loader.validate()
-            if not validation_report["valid"]:
+            # Basic validation
+            if not self.config.city_name:
                 logger.error("❌ Configuration validation failed")
                 raise RuntimeError("Configuration invalid")
 

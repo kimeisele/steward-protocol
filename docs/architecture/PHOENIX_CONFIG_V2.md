@@ -325,4 +325,101 @@ merge = parent.merge_child_result(child, result)
 
 ---
 
+## Playbook Operations: spawn_city
+
+The `spawn_city` operation provides a clean API for playbooks to invoke 4D Hypercube:
+
+```python
+from vibe_core.playbook.operations import spawn_city, SpawnCityResult
+
+# Simple usage - spawn child with config overrides
+result = await spawn_city(
+    task="Build the authentication module",
+    circuit="fast_code",
+    config_overrides={
+        "city.governance.voting_threshold": 0,
+        "city.governance.quorum_required": 0,
+    }
+)
+
+if result.success:
+    print(f"Output: {result.output}")
+    print(f"Proof: {result.proof}")  # Ledger hash from child
+```
+
+### Pre-built Config Factories
+
+```python
+from vibe_core.playbook.operations.kernel_spawn import (
+    fast_code_config,      # No governance overhead
+    sandbox_config,        # Isolated experimentation
+    research_swarm_config, # Parallel research workers
+)
+
+# Use factory function
+result = await spawn_city(
+    task="Build feature X",
+    config_factory=fast_code_config,  # Applies optimal settings
+)
+```
+
+---
+
+## Neural Link (FUTURE - Design Only)
+
+> **Status**: Design phase. Requires architecture review before implementation.
+
+### The Vision
+
+What if the routing table wasn't static? What if an LLM could dynamically modify routing based on context?
+
+```
+User Request → LLM Analyzes → "This needs Deep Research Circuit"
+                    ↓
+          Temporarily modify MATRIX.md routing
+                    ↓
+          Execute with optimal circuit
+                    ↓
+          Restore original routing (or persist if approved)
+```
+
+### Proposed API (Conceptual)
+
+```python
+# NOT IMPLEMENTED - Design only
+class NeuralRouter:
+    """LLM-assisted dynamic routing."""
+
+    def suggest_circuit(self, intent: str) -> CircuitSuggestion:
+        """LLM analyzes intent and suggests optimal circuit."""
+        pass
+
+    def temporary_route(self, pattern: str, circuit: str, duration_seconds: int):
+        """Temporarily add routing rule."""
+        pass
+
+    def explain_routing_decision(self, intent: str) -> str:
+        """LLM explains why it chose a particular circuit."""
+        pass
+```
+
+### Security Considerations
+
+1. **Audit Trail**: Every routing change must be logged
+2. **Approval Gate**: Changes above threshold require human approval
+3. **Rollback**: Automatic revert if circuit fails
+4. **Scope Limits**: LLM can't route to privileged circuits
+5. **Rate Limits**: Max N routing changes per time window
+
+### Why Not Now?
+
+- Security implications need thorough review
+- Governance model for routing changes unclear
+- Performance impact of LLM in routing path
+- Need clear rollback semantics
+
+**Recommendation**: Implement static routing + spawn_city first. Neural Link is Phase 2.
+
+---
+
 *Based on the original `phoenix_config` package by kimeisele*

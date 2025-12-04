@@ -30,8 +30,14 @@ class CircuitConfig:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, name: str, data: Dict[str, Any]) -> "CircuitConfig":
-        """Create CircuitConfig from parsed YAML dict."""
+    def from_dict(cls, data: Dict[str, Any], name: str = "") -> "CircuitConfig":
+        """Create CircuitConfig from parsed dict.
+
+        Args:
+            data: Dict with circuit config (may include 'name' key)
+            name: Circuit name (uses data['name'] if not provided)
+        """
+        circuit_name = name or data.get("name", "unnamed")
         steps = []
         for step_data in data.get("steps", []):
             steps.append(
@@ -44,7 +50,7 @@ class CircuitConfig:
             )
 
         return cls(
-            name=name,
+            name=circuit_name,
             description=data.get("description", ""),
             version=data.get("version", "1.0.0"),
             priority=data.get("priority", "NORMAL"),
@@ -53,6 +59,26 @@ class CircuitConfig:
             metadata=data.get("metadata", {}),
         )
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to dict for config persistence/spawning."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "version": self.version,
+            "priority": self.priority,
+            "enabled": self.enabled,
+            "steps": [
+                {
+                    "name": step.name,
+                    "agent": step.agent,
+                    "action": step.action,
+                    "params": step.params,
+                }
+                for step in self.steps
+            ],
+            "metadata": self.metadata,
+        }
+
     @classmethod
     def from_file(cls, path: Path) -> Optional["CircuitConfig"]:
         """Load a circuit from a YAML file."""
@@ -60,7 +86,7 @@ class CircuitConfig:
             with open(path) as f:
                 data = yaml.safe_load(f) or {}
             name = path.stem  # filename without extension
-            return cls.from_dict(name, data)
+            return cls.from_dict(data, name=name)
         except Exception:
             return None
 
