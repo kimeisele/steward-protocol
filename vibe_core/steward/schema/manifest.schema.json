@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://steward-protocol.org/manifest.schema.json",
+  "title": "Agent Manifest Schema",
+  "description": "Schema for agent manifest files (steward.json or manifest.json)",
+  "type": "object",
+
+  "definitions": {
+    "capability": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Capability identifier (e.g., 'discovery', 'herald.broadcast')"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this capability does"
+        }
+      },
+      "required": ["name"]
+    }
+  },
+
+  "properties": {
+    "agent": {
+      "type": "object",
+      "description": "Agent identity (v2.0 schema)",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique agent identifier (e.g., 'discoverer', 'chronicle')",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name (e.g., 'The Discoverer')"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version (e.g., '1.0.0')",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Functional domain",
+          "enum": ["GOVERNANCE", "MEDIA", "RESEARCH", "INFRASTRUCTURE", "ECONOMY", "GENERAL"]
+        },
+        "description": {
+          "type": "string",
+          "description": "What this agent does"
+        }
+      },
+      "required": ["id", "name"]
+    },
+
+    "identity": {
+      "type": "object",
+      "description": "Agent identity (v1.0 schema - backwards compatibility)",
+      "properties": {
+        "agent_id": {
+          "type": "string",
+          "description": "Unique agent identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name"
+        }
+      }
+    },
+
+    "capabilities": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Standard capabilities format",
+          "properties": {
+            "operations": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/capability" }
+            }
+          },
+          "required": ["operations"]
+        },
+        {
+          "type": "array",
+          "description": "Legacy capabilities format (list of strings)",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "$ref": "#/definitions/capability" }
+            ]
+          }
+        }
+      ]
+    },
+
+    "governance": {
+      "type": "object",
+      "description": "Constitutional governance binding",
+      "properties": {
+        "constitution_hash": {
+          "type": "string",
+          "description": "SHA-256 hash of Constitution this agent is bound to"
+        },
+        "compliance_level": {
+          "type": "integer",
+          "description": "Governance compliance level (0-3)",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 2
+        },
+        "issuer": {
+          "type": "string",
+          "description": "Entity that issued this agent's credentials",
+          "default": "passport_office"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When credentials were issued"
+        }
+      }
+    },
+
+    "specs": {
+      "type": "object",
+      "description": "Agent specifications (v1.0 schema)",
+      "properties": {
+        "version": { "type": "string" },
+        "domain": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    }
+  },
+
+  "anyOf": [
+    {
+      "required": ["agent"],
+      "description": "v2.0 schema: agent.id"
+    },
+    {
+      "required": ["identity"],
+      "description": "v1.0 schema: identity.agent_id"
+    },
+    {
+      "required": ["agent_id"],
+      "description": "Legacy schema: root-level agent_id (deprecated)"
+    }
+  ]
+}
