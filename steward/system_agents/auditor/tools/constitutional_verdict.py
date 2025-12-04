@@ -170,8 +170,12 @@ class ConstitutionalVerdictTool(Tool):
 
         self.violations = []
 
-        # Find all agent directories
-        agent_dirs = [d for d in system_agents_path.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        # Find all agent directories (exclude __pycache__ and hidden dirs)
+        agent_dirs = [
+            d
+            for d in system_agents_path.iterdir()
+            if d.is_dir() and not d.name.startswith(".") and d.name != "__pycache__"
+        ]
 
         for agent_dir in agent_dirs:
             logger.info(f"⚖️  Judging {agent_dir.name}...")
