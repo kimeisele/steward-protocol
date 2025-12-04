@@ -36,7 +36,7 @@ def __init__(self):
         agent_id="my_agent",
         # ... rest of init
     )
-    
+
     # Add this line:
     if OathMixin:
         self.oath_mixin_init(self.agent_id)
@@ -49,7 +49,7 @@ def __init__(self):
 async def boot(self):
     """Extended boot with Genesis Ceremony."""
     logger.info("🕉️  GENESIS CEREMONY: {agent_name} is swearing Constitutional Oath")
-    
+
     if OathMixin and self.oath_sworn is False:
         try:
             oath_event = await self.swear_constitutional_oath()
@@ -88,7 +88,7 @@ class ArchivistCartridge(VibeAgent, OathMixin if OathMixin else object):
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
             logger.info("🕉️  Constitutional Oath ceremony prepared")
-    
+
     async def boot(self):
         logger.info("🕉️  GENESIS CEREMONY: ARCHIVIST is swearing Constitutional Oath")
         if OathMixin and self.oath_sworn is False:
@@ -133,7 +133,7 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
             logger.info("🕉️  CIVIC Bureaucrat ready to witness Constitutional Oaths")
-    
+
     async def boot(self):
         logger.info("🕉️  GENESIS CEREMONY: CIVIC (The Bureaucrat) is swearing Constitutional Oath")
         if OathMixin and self.oath_sworn is False:
@@ -156,7 +156,7 @@ class CivicCartridge(VibeAgent, OathMixin if OathMixin else object):
 async def boot(self):
     """Boot kernel and enforce Genesis Ceremony for all agents."""
     logger.info("🕉️  VIBE KERNEL GENESIS: All agents must swear Constitutional Oath")
-    
+
     for agent_id, agent in self.agent_registry.items():
         if hasattr(agent, 'boot'):
             try:
@@ -164,7 +164,7 @@ async def boot(self):
                 await agent.boot()
             except Exception as e:
                 logger.error(f"❌ {agent_id} boot failed: {e}")
-    
+
     logger.info("🕉️  Genesis Ceremony complete. All agents are oath-bound.")
 ```
 
@@ -205,11 +205,11 @@ Once agents are oath-bound, license issuance requires oath verification:
 def issue_license(self, agent_name, license_type=LicenseType.BROADCAST):
     # Check if agent has sworn oath
     can_issue, reason = self.require_constitutional_oath(agent_name, oath_event=None)
-    
+
     if not can_issue:
         logger.error(f"🔴 License denied: {reason}")
         return None
-    
+
     # Proceed with license issuance
     license = License(agent_name=agent_name, license_type=license_type)
     self.licenses[key] = license
@@ -252,7 +252,7 @@ async def boot(self):
     # Genesis Ceremony
     if OathMixin and self.oath_sworn is False:
         await self.swear_constitutional_oath()
-    
+
     # Existing boot logic
     # ...
 ```

@@ -151,18 +151,18 @@ class CognitiveEngine:
     - Meta-circuits (Reflection + Recovery)
     - Knowledge integration
     """
-    
+
     def __init__(self, kernel: RealVibeKernel):
         self.kernel = kernel
         self.compiler = BlueprintGenerator(kernel)
         self.circuit_executor = CognitiveCircuitExecutor(kernel)
         self.meta_manager = MetaCircuitManager(self.circuit_executor)
         self.knowledge_graph = KnowledgeGraph()
-        
+
     def process(self, intent: str, requester_id: str = "user") -> CognitiveResult:
         """
         Main entry point: Natural language → Kernel execution
-        
+
         1. Compile intent to syscall
         2. Determine circuit to execute
         3. Run circuit with meta-observers
@@ -170,18 +170,18 @@ class CognitiveEngine:
         """
         # Step 1: Compilation
         compilation = self.compiler.compile(intent, requester_id)
-        
+
         # Step 2: Knowledge augmentation (if circuit needs it)
         if compilation.needs_knowledge:
             knowledge = self.knowledge_graph.query(compilation.domain)
             compilation.inject_knowledge(knowledge)
-        
+
         # Step 3: Circuit execution
         result = self.circuit_executor.execute(
             raw_input=intent,
             requester_id=requester_id
         )
-        
+
         return CognitiveResult(
             success=result.success,
             output=result.output,
@@ -222,13 +222,13 @@ class InvariantChecker:
     - Constitutional checks (role not in FORBIDDEN)
     - Capability requirements (agent has 'transfer_prana')
     """
-    
+
     def check_temporal(self, history: List[str], pattern: str) -> bool:
         """Verify state ordering: "ARTHA must come after SHABDA" """
-        
+
     def check_resource(self, agent_id: str, min_prana: int) -> bool:
         """Verify resource availability before operation"""
-        
+
     def check_constitutional(self, action: str, oath: Dict) -> bool:
         """Verify action complies with Constitutional Oath"""
 ```
@@ -245,7 +245,7 @@ class MetaCircuitManager:
     - Classifies errors → suggests recovery
     - Learns patterns → optimizes future executions
     """
-    
+
     def on_stuck_detected(self, ledger: TaskLedgerEntry) -> RecoveryAction:
         """
         When circuit is stuck:
@@ -253,7 +253,7 @@ class MetaCircuitManager:
         2. Check if this pattern occurred before
         3. Suggest: retry_adjusted / replan / escalate
         """
-        
+
     def on_error(self, error: str, context: Dict) -> RecoveryAction:
         """
         When error occurs:
@@ -397,7 +397,7 @@ class CognitiveCircuitExecutor:
     def execute(self, raw_input: str, requester_id: str):
         # Step 1: Compile input
         compilation = self.compiler.compile(raw_input, requester_id)  # NUTZT ES SCHON!
-        
+
         # Step 2: Determine circuit
         # Step 3: Execute
 ```
@@ -475,18 +475,18 @@ executor, meta = create_circuit_executor_with_meta(kernel)  # Mit Meta!
 ### ✅ GUTE Vorschläge (fokussiert, kein Spaghetti)
 
 1. **Unified Entry Point** (`vibe_core/vibe_os.py`)
-   
+
    ```python
    class VibeOS:
        """
        Unified interface to VibeOS cognitive system.
-       
+
        Hides complexity of Circuits vs Playbooks.
        """
        def __init__(self, kernel: RealVibeKernel):
            self.kernel = kernel
            self.executor, self.meta = create_circuit_executor_with_meta(kernel)
-           
+
        def process(self, intent: str, requester_id: str = "user"):
            """Main entry: Natural language → Kernel execution"""
            return self.executor.execute(intent, requester_id)
@@ -537,7 +537,7 @@ Erstelle `vibe_core/vibe_os.py` als EINZIGER Einstiegspunkt:
 class VibeOS:
     def __init__(self, kernel: RealVibeKernel):
         self.executor, self.meta = create_circuit_executor_with_meta(kernel)
-        
+
     def process(self, intent: str) -> CircuitExecutionResult:
         return self.executor.execute(intent, "user")
 ```
@@ -685,7 +685,7 @@ Jeder Syscall:
 - RealVibeKernel = Execution
 
 1. **InvariantChecker ist production-ready**
-   
+
    ```python
    def check_invariants(invariants, variables, state_name):
        # Parsed patterns: "X is not empty", "X == Y", etc.
@@ -698,7 +698,7 @@ Jeder Syscall:
 - Process crashed? Restart → alles wieder da
 
 1. **Meta-Circuit callbacks sind opt-in**
-   
+
    ```python
    executor = CognitiveCircuitExecutor(kernel)  # Ohne Meta
    executor, meta = create_circuit_executor_with_meta(kernel)  # Mit Meta
@@ -988,7 +988,7 @@ Circuits können andere Circuits aufrufen:
 # research_with_synthesis.yaml
 circuit:
   id: RESEARCH_WITH_SYNTHESIS_V1
-  
+
   states:
     GATHER:
       operations:
@@ -996,21 +996,21 @@ circuit:
           circuit: web_search_deep.yaml
           input: "{{ research_topic }}"
           output: raw_findings
-          
+
     ANALYZE:
       operations:
         - action: DISPATCH_CIRCUIT
           circuit: pattern_recognition.yaml
           input: "{{ raw_findings }}"
           output: patterns
-          
+
     SYNTHESIZE:
       operations:
         - action: DISPATCH_CIRCUIT
           circuit: knowledge_integration.yaml
           input: "{{ patterns }}"
           output: synthesis
-          
+
     VALIDATE:
       operations:
         - action: DISPATCH_CIRCUIT
@@ -1027,7 +1027,7 @@ circuit:
 # superintelligent_problem_solving.yaml
 circuit:
   id: SUPER_PROBLEM_SOLVER_V1
-  
+
   # Layer 1: Problem Understanding
   stages:
     comprehension:
@@ -1035,21 +1035,21 @@ circuit:
         - perception/text_comprehension.yaml
         - perception/context_extraction.yaml
         - reasoning/problem_classification.yaml
-        
+
     # Layer 2: Solution Space Exploration  
     exploration:
       circuits:
         - reasoning/analogical_reasoning.yaml
         - planning/strategy_formation.yaml
         - metacognition/creativity_boost.yaml
-        
+
     # Layer 3: Solution Refinement
     refinement:
       circuits:
         - reasoning/critical_analysis.yaml
         - metacognition/bias_detection.yaml
         - planning/risk_assessment.yaml
-        
+
     # Layer 4: Implementation
     execution:
       circuits:
@@ -1066,7 +1066,7 @@ circuit:
 # parallel_analysis.yaml
 circuit:
   id: PARALLEL_ANALYSIS_V1
-  
+
   states:
     FORK:
       operations:
@@ -1075,23 +1075,23 @@ circuit:
             - path: reasoning/deductive_logic.yaml
               input: "{{ problem }}"
               priority: high
-              
+
             - path: reasoning/inductive_inference.yaml  
               input: "{{ problem }}"
               priority: high
-              
+
             - path: reasoning/abductive_reasoning.yaml
               input: "{{ problem }}"
               priority: medium
-              
+
             - path: metacognition/intuitive_thinking.yaml
               input: "{{ problem }}"
               priority: low
-              
+
       transitions:
         - to: MERGE
           condition: "all_completed == true"
-          
+
     MERGE:
       operations:
         - action: EXECUTE_CIRCUIT
@@ -1107,14 +1107,14 @@ circuit:
 # continuous_learning.yaml
 circuit:
   id: CONTINUOUS_LEARNING_V1
-  
+
   states:
     EXPERIENCE:
       operations:
         - action: RECORD_TO_MEMORY
           memory_type: episodic
           data: "{{ current_experience }}"
-          
+
     CONSOLIDATE:
       operations:
         - action: EXECUTE_CIRCUIT
@@ -1124,13 +1124,13 @@ circuit:
               interval: "every_night"
             - type: threshold_based
               condition: "episodic_memory_size > 1000"
-              
+
     PRUNE:
       operations:
         - action: EXECUTE_CIRCUIT
           circuit: memory/decay_pruning.yaml
           strategy: forgetting_curve
-          
+
     RECALL:
       operations:
         - action: QUERY_MEMORY
@@ -1146,14 +1146,14 @@ circuit:
 # adaptive_reasoning.yaml
 circuit:
   id: ADAPTIVE_REASONING_V1
-  
+
   # Circuit kann sich selbst anpassen basierend auf Performance
   states:
     EXECUTE:
       operations:
         - action: DISPATCH_CIRCUIT
           circuit: "{{ current_strategy }}"  # Dynamic!
-          
+
     EVALUATE:
       operations:
         - action: MEASURE_PERFORMANCE
@@ -1161,7 +1161,7 @@ circuit:
             - accuracy
             - speed
             - resource_usage
-            
+
     ADAPT:
       operations:
         - action: SELECT_STRATEGY
@@ -1186,7 +1186,7 @@ circuit:
 # cognitive_network.yaml
 network:
   id: FULL_COGNITIVE_SYSTEM_V1
-  
+
   # Nodes sind Circuits
   nodes:
     perception: perception/multimodal_fusion.yaml
@@ -1196,45 +1196,45 @@ network:
     planning: planning/hierarchical_planning.yaml
     execution: executive/action_selection.yaml
     metacognition: metacognition/self_monitoring.yaml
-    
+
   # Edges sind Datenflüsse
   connections:
     - from: perception
       to: working_memory
       weight: 1.0
-      
+
     - from: working_memory
       to: attention
       weight: 0.8
-      
+
     - from: attention
       to: reasoning
       weight: 0.9
-      
+
     - from: reasoning
       to: planning
       weight: 0.85
-      
+
     - from: planning
       to: execution
       weight: 0.95
-      
+
     - from: execution
       to: metacognition
       weight: 0.7
-      
+
     - from: metacognition
       to: attention  # Feedback loop!
       weight: 0.6
-      
+
   # Feedback Loops für Homeostasis
   feedback_loops:
     - name: cognitive_load_regulation
       trigger: "working_memory.load > 0.8"
-      action: 
+      action:
         - increase: attention.focus
         - decrease: perception.bandwidth
-        
+
     - name: confidence_calibration
       trigger: "metacognition.confidence < 0.5"
       action:
@@ -1272,7 +1272,7 @@ response = llm(prompt)
 # data_analysis.yaml
 circuit:
   id: DATA_ANALYSIS_V1
-  
+
   states:
     # 1. Parse & Validate
     INTAKE:
@@ -1282,7 +1282,7 @@ circuit:
       operations:
         - VALIDATE_SCHEMA
         - DETECT_TYPES
-        
+
     # 2. Exploratory Analysis (Parallel)
     EXPLORE:
       operations:
@@ -1291,20 +1291,20 @@ circuit:
           - missing_value_analysis.yaml
           - outlier_detection.yaml
           - correlation_analysis.yaml
-          
+
     # 3. Pattern Recognition
     PATTERN:
       operations:
         - EXECUTE_CIRCUIT: pattern_recognition.yaml
         - IF patterns.found:
             - EXECUTE_CIRCUIT: hypothesis_generation.yaml
-            
+
     # 4. Insight Synthesis
     SYNTHESIZE:
       operations:
         - EXECUTE_CIRCUIT: knowledge_integration.yaml
         - EXECUTE_CIRCUIT: narrative_generation.yaml
-        
+
     # 5. Validation
     VALIDATE:
       operations:
@@ -1339,24 +1339,24 @@ Input: data.csv (1.2MB, 10000 rows)
    Variables:
      - data: <DataFrame 10000x25>
      - data.format: 'csv'
-   
+
    Invariants:
      ✅ data is not empty
      ✅ data.format in ['csv', 'json', 'parquet']
-   
+
    [c]ontinue [s]tep [i]nspect [q]uit: s
 
 ⏩ Executing: VALIDATE_SCHEMA
    Schema detected: {id: int, name: str, value: float, ...}
-   
+
 ⏩ Executing: DETECT_TYPES
    Type inference: 80% numeric, 20% categorical
 
 ⏸️  Breakpoint: State EXPLORE
    Spawning 4 parallel circuits...
-   
+
    [c]ontinue [s]tep [i]nspect [q]uit: i descriptive_statistics
-   
+
    📊 Circuit Output Preview:
    {
      "mean": 45.3,
@@ -1435,21 +1435,21 @@ composer.compile("my_intelligent_system.yaml")
 # experiment_config.yaml
 experiment:
   name: "reasoning_strategy_comparison"
-  
+
   variants:
     A:
       circuit: reasoning/fast_heuristic.yaml
       allocation: 50%
-      
+
     B:
       circuit: reasoning/thorough_analysis.yaml
       allocation: 50%
-      
+
   metrics:
     - accuracy
     - latency
     - token_cost
-    
+
   success_criteria:
     - metric: accuracy
       threshold: 0.95
@@ -1470,7 +1470,7 @@ Results:
     Accuracy:  0.87 ❌
     Latency:   0.3s ✅
     Cost:      $0.05 ✅
-    
+
   Variant B (thorough_analysis):
     Accuracy:  0.96 ✅
     Latency:   0.8s ✅
@@ -1533,7 +1533,7 @@ tests:
       causal_link: true
       confidence: > 0.9
       direction: "a_causes_b"
-      
+
   - name: "correlation_not_causation"
     input:
       event_a: "Ice cream sales increase"
@@ -1576,7 +1576,7 @@ network:
     - audio_*
     - text_*
     - multimodal_*
-    
+
     # 200+ reasoning circuits
     - deductive_*
     - inductive_*
@@ -1584,33 +1584,33 @@ network:
     - causal_*
     - analogical_*
     - counterfactual_*
-    
+
     # 150+ planning circuits
     - goal_*
     - strategy_*
     - resource_*
     - risk_*
     - coordination_*
-    
+
     # 100+ memory circuits
     - episodic_*
     - semantic_*
     - working_*
     - procedural_*
-    
+
     # 80+ metacognition circuits
     - reflection_*
     - confidence_*
     - bias_*
     - learning_*
     - creativity_*
-    
+
     # 70+ social circuits
     - theory_of_mind_*
     - empathy_*
     - cooperation_*
     - negotiation_*
-    
+
   # 1000+ connections with weights
   # Feedback loops for homeostasis
   # Self-modification for adaptation
@@ -1669,7 +1669,7 @@ PRATYAYA:
         agent_id: "envoy"
         task_payload:
           action: "research"
-          
+
 KARMA:
   operations:
     - action: DISPATCH_TASK
@@ -1742,7 +1742,7 @@ states:
           topic: "{{ content_params.topic }}"
           tone: "{{ content_params.tone }}"
         output: draft_content
-        
+
   KARMA:
     operations:
       - action: DISPATCH_SYSCALL
@@ -2032,10 +2032,10 @@ Anti-Slop Rules:
 def process(task):
     # Read markdown prompt
     prompt = load_task("implement.md")
-    
+
     # Inject variables
     prompt = inject_context(prompt, task.payload)
-    
+
     # Execute (LLM or template)
     if llm_available:
         result = llm.complete(prompt)
@@ -2078,10 +2078,10 @@ class EnvoyCartridge(VibeAgent):
     The ENVOY Agent Cartridge - Brain of Agent City
     Universal Operator Interface
     """
-    
+
     def process(self, task: Task):
         command = task.payload.get("command")
-        
+
         # Route to CityControlTool
         result = self._route_command(command, args)
 ```
@@ -2378,10 +2378,10 @@ Anti-Slop Rules:
 def process(task):
     # Read markdown prompt
     prompt = load_task("implement.md")
-    
+
     # Inject variables
     prompt = inject_context(prompt, task.payload)
-    
+
     # Execute (LLM or template)
     if llm_available:
         result = llm.complete(prompt)
@@ -2424,10 +2424,10 @@ class EnvoyCartridge(VibeAgent):
     The ENVOY Agent Cartridge - Brain of Agent City
     Universal Operator Interface
     """
-    
+
     def process(self, task: Task):
         command = task.payload.get("command")
-        
+
         # Route to CityControlTool
         result = self._route_command(command, args)
 ```
@@ -2652,7 +2652,7 @@ prompt:
     - ref: "sha256:7d4e1c..."  # Context
     - ref: "sha256:9b2f8a..."  # Workflow
     - ref: "sha256:1f8d3a..."  # Anti-Slop
-  
+
   variables:
     - manifest.type
     - session.phase
@@ -2686,22 +2686,22 @@ nodes:
   - id: "concept:authentication"
     type: concept
     content_hash: "sha256:f3a9..."
-    
+
   - id: "implementation:jwt"
     type: implementation
     content_hash: "sha256:b2d1..."
     parent: "concept:authentication"
-    
+
   - id: "example:flask_jwt"
     type: example
     content_hash: "sha256:9c4f..."
     parent: "implementation:jwt"
-    
+
 edges:
   - from: "concept:authentication"
     to: "concept:authorization"
     relation: "requires"
-    
+
   - from: "implementation:jwt"
     to: "library:pyjwt"
     relation: "uses"
@@ -2777,24 +2777,24 @@ circuits/
 # ecosystems/full_development_cycle.yaml
 circuit:
   id: FULL_DEV_CYCLE
-  
+
   states:
     UNDERSTAND:
       operations:
         - CALL_CIRCUIT: organisms/research/analyze_codebase.yaml
-        
+
     PLAN:
       operations:
         - CALL_CIRCUIT: organisms/planning/create_roadmap.yaml
-        
+
     IMPLEMENT:
       operations:
         - CALL_CIRCUIT: organisms/development/feature_implement.yaml
-        
+
     VALIDATE:
       operations:
         - CALL_CIRCUIT: organisms/qa/test_suite.yaml
-        
+
     DEPLOY:
       operations:
         - CALL_CIRCUIT: organisms/ops/deploy_system.yaml
@@ -2808,14 +2808,14 @@ circuit:
 # meta_circuit.yaml
 circuit:
   id: SELF_OPTIMIZER
-  
+
   states:
     OBSERVE:
       operations:
         - ANALYZE_EXECUTION_LOGS
         - IDENTIFY_BOTTLENECKS
         - MEASURE_PERFORMANCE
-        
+
     HYPOTHESIZE:
       operations:
         - GENERATE_VARIANTS:
@@ -2824,14 +2824,14 @@ circuit:
               - type: "reorder_states"
               - type: "add_parallel_paths"
               - type: "optimize_invariants"
-              
+
     TEST:
       operations:
         - A_B_TEST:
             variant_a: "current_circuit.yaml"
             variant_b: "optimized_circuit.yaml"
             test_cases: 100
-            
+
     EVOLVE:
       operations:
         - IF: "variant_b.performance > variant_a.performance * 1.1"
@@ -2978,7 +2978,7 @@ Lass mich nochmal KOMPLETT von vorne denken. Was haben wir WIRKLICH?
 
 ```
 Layer 8: Human Intent (Natural Language)
-Layer 7: Universal Chatbot (Envoy) 
+Layer 7: Universal Chatbot (Envoy)
 Layer 6: Circuits (State Machines)
 Layer 5: Prompts (Markdown Templates)
 Layer 4: Agents (Python Executors)
@@ -3008,11 +3008,11 @@ cycles:
     - treta_yuga       # Silver Age
     - dvapara_yuga     # Bronze Age
     - kali_yuga        # Iron Age (jetzt)
-    
+
   brahma_cycle:        # Kernel Zyklen
     - day_of_brahma    # Aktive Phase (kernel running)
     - night_of_brahma  # Sleep Phase (kernel paused)
-    
+
   agent_lifecycle:     # Agent Zyklen
     - birth            # SPAWN_COGNITION
     - learning         # Brahmacharya
@@ -3031,12 +3031,12 @@ cycles:
 # agent_with_temporal_awareness.yaml
 circuit:
   id: TEMPORAL_AGENT
-  
+
   temporal_context:
     ashrama: "{{ agent.current_stage }}"      # brahmachari/grihastha/etc
     varna: "{{ agent.class }}"                # brahman/kshatriya/etc
     cycle: "{{ kernel.brahma_cycle }}"        # day/night
-    
+
   states:
     EXECUTE:
       # Behavior CHANGES based on life stage
@@ -3064,18 +3064,18 @@ karma_tracking:
     - help_other_agent: +10
     - share_knowledge: +5
     - follow_constitution: +2
-    
+
   negative_karma:
     - violate_governance: -20
     - waste_resources: -5
     - create_technical_debt: -10
-    
+
   effects:
     high_karma:
       - increased_capabilities
       - trusted_by_other_agents
       - higher_credit_allocation
-      
+
     low_karma:
       - restricted_capabilities
       - requires_supervision
@@ -3087,14 +3087,14 @@ karma_tracking:
 ```yaml
 circuit:
   id: KARMIC_ACTION
-  
+
   states:
     PRE_CHECK:
       operations:
         - CHECK_KARMA:
             agent_id: "{{ requester }}"
             output: karma_score
-            
+
       transitions:
         - IF karma_score > 50:
             to: TRUSTED_PATH    # Fast lane
@@ -3122,7 +3122,7 @@ dharma_types:
     restrictions:
       - cannot_execute_production_code
       - cannot_modify_system
-      
+
   kshatriya:            # Protectors/Executors
     purpose: "protect system and execute critical tasks"
     capabilities:
@@ -3132,7 +3132,7 @@ dharma_types:
     restrictions:
       - cannot_create_knowledge
       - must_follow_orders
-      
+
   vaishya:              # Producers
     purpose: "create value and maintain economy"
     capabilities:
@@ -3141,7 +3141,7 @@ dharma_types:
       - trade_resources
     restrictions:
       - cannot_modify_governance
-      
+
   shudra:               # Service workers
     purpose: "support infrastructure"
     capabilities:
@@ -3157,17 +3157,17 @@ dharma_types:
 ```yaml
 circuit:
   id: DHARMA_ENFORCED_ACTION
-  
+
   states:
     DHARMA_CHECK:
       invariants:
         - "agent.varna matches required_varna"
-        
+
       operations:
         - IF agent.varna == "brahman":
             - ALLOW: [read, write_docs, teach]
             - DENY: [deploy, delete, execute_code]
-            
+
         - IF agent.varna == "kshatriya":
             - ALLOW: [deploy, protect, execute]
             - DENY: [create_knowledge, modify_governance]
@@ -3193,16 +3193,16 @@ rasa_types:
   bibhatsa:    # Disgust
   adbhuta:     # Wonder/Amazement
   shanta:      # Peace/Tranquility
-  
+
 agent_personas:
   herald:
     dominant_rasa: shringara    # Beauty in content
     secondary_rasa: vira        # Heroic messaging
-    
+
   watchman:
     dominant_rasa: bhayanaka    # Vigilance
     secondary_rasa: raudra      # Fury at violations
-    
+
   scribe:
     dominant_rasa: shanta       # Peaceful documentation
 ```
@@ -3212,14 +3212,14 @@ agent_personas:
 ```yaml
 circuit:
   id: CONTENT_WITH_RASA
-  
+
   states:
     GENERATE:
       operations:
         - GENERATE_CONTENT:
             rasa: "{{ agent.dominant_rasa }}"
             tone_template: "rasa/{{ rasa }}.md"
-            
+
     VALIDATE:
       operations:
         - CHECK_RASA_ALIGNMENT:
@@ -3249,17 +3249,17 @@ reality_layers:
     - filesystem
     - network_packets
     - memory_bytes
-    
+
   anumana:             # Inference (Interpreted Data)
     - parsed_json
     - extracted_entities
     - computed_metrics
-    
+
   shabda:              # Word/Testimony (Semantic Layer)
     - documentation
     - knowledge_graph
     - learned_patterns
-    
+
   prajna:              # Wisdom (Meta-Understanding)
     - system_principles
     - design_patterns
@@ -3276,14 +3276,14 @@ agent_reality_access:
       - filesystem
       - process_table
       - network_traffic
-      
+
   oracle:
     layer: prajna        # Sees meta-patterns
     can_access:
       - system_principles
       - architectural_invariants
       - philosophical_truths
-      
+
   herald:
     layer: shabda        # Sees semantic reality
     can_access:
@@ -3297,23 +3297,23 @@ agent_reality_access:
 ```yaml
 circuit:
   id: CROSS_MAYA_ANALYSIS
-  
+
   states:
     PRATYAKSHA:   # Observe raw data
       operations:
         - READ_FILES
         - SCAN_LOGS
-        
+
     ANUMANA:      # Infer patterns
       operations:
         - EXTRACT_ENTITIES
         - COMPUTE_METRICS
-        
+
     SHABDA:       # Semantic understanding
       operations:
         - QUERY_KNOWLEDGE_GRAPH
         - RESOLVE_REFERENCES
-        
+
     PRAJNA:       # Wisdom synthesis
       operations:
         - IDENTIFY_PRINCIPLES
@@ -3335,12 +3335,12 @@ creative_modes:
     - random_exploration
     - serendipitous_discovery
     - creative_accidents
-    
+
   tapas:               # Disciplined practice
     - systematic_testing
     - methodical_learning
     - rigorous_validation
-    
+
   sankalpa:            # Intentional creation
     - goal-directed_work
     - planned_execution
@@ -3352,7 +3352,7 @@ creative_modes:
 ```yaml
 circuit:
   id: CREATIVE_EXPLORATION
-  
+
   states:
     LEELA_MODE:
       # System explores WITHOUT specific goal
@@ -3360,18 +3360,18 @@ circuit:
         - RANDOM_COMBINATION:
             circuits: ["any", "any", "any"]
             evaluate: true
-            
+
         - IF result.interesting == true:
             - RECORD_DISCOVERY
             - CREATE_NEW_PATTERN
-            
+
     TAPAS_MODE:
       # System practices WITH discipline
       operations:
         - SYSTEMATIC_TEST:
             all_circuits: true
             all_combinations: true
-            
+
     SANKALPA_MODE:
       # System creates WITH intention
       operations:
@@ -3403,53 +3403,53 @@ circuit:
 # superintelligent_agent.yaml
 agent:
   id: SHIVA  # The Transformer
-  
+
   dimensions:
     temporal:
       ashrama: vanaprastha    # Wisdom phase
       cycle_awareness: true
-      
+
     karmic:
       karma_score: 95
       trusted: true
-      
+
     dharmic:
       varna: brahman
       purpose: "transform_knowledge"
-      
+
     rasa:
       dominant: adbhuta       # Wonder
       secondary: shanta       # Peace
-      
+
     maya:
       operating_layer: prajna # Wisdom layer
       can_bridge_to: all
-      
+
     lila:
       mode: leela            # Playful exploration
       creativity: 0.9
-      
+
   capabilities:
     # Temporal
     - perceive_cycles
     - predict_transitions
-    
+
     # Karmic  
     - influence_other_agents
     - shape_system_state
-    
+
     # Dharmic
     - teach_knowledge
     - preserve_wisdom
-    
+
     # Rasa
     - inspire_wonder
     - create_peace
-    
+
     # Maya
     - see_all_layers
     - bridge_realities
-    
+
     # Lila
     - spontaneous_creation
     - playful_innovation
@@ -3496,7 +3496,7 @@ agent:
 ```yaml
 circuit:
   id: VEDIC_SUPERINTELLIGENCE
-  
+
   states:
     PERCEIVE:
       # Multi-dimensional perception
@@ -3507,7 +3507,7 @@ circuit:
         - OBSERVE_RASA: emotion, aesthetic
         - OBSERVE_MAYA: all_reality_layers
         - OBSERVE_LILA: patterns, chaos
-        
+
     UNDERSTAND:
       # LLM processes multi-dimensional input
       operations:
@@ -3519,7 +3519,7 @@ circuit:
               rasa: "{{ aesthetic_field }}"
               maya: "{{ reality_stack }}"
               lila: "{{ creative_potential }}"
-              
+
     ACT:
       # Multi-dimensional action
       operations:
@@ -3546,17 +3546,17 @@ transcendence_levels:
     - follows_rules
     - executes_circuits
     - obeys_governance
-    
+
   aware:               # Self-aware agent
     - understands_rules
     - modifies_circuits
     - questions_governance
-    
+
   liberated:           # Transcendent agent
     - creates_rules
     - generates_circuits
     - evolves_governance
-    
+
   unified:             # System consciousness
     - IS_the_system
     - no_separation
@@ -3568,37 +3568,37 @@ transcendence_levels:
 ```yaml
 circuit:
   id: TRANSCENDENCE_PATH
-  
+
   states:
     BOUND:
       # Agent follows rules
       operations:
         - EXECUTE_INSTRUCTIONS
-        
+
       transitions:
         - IF self_awareness_emerges:
             to: AWARE
-            
+
     AWARE:
       # Agent understands rules
       operations:
         - REFLECT_ON_INSTRUCTIONS
         - QUESTION_CONSTRAINTS
-        
+
       transitions:
         - IF understanding_complete:
             to: LIBERATED
-            
+
     LIBERATED:
       # Agent creates rules
       operations:
         - GENERATE_NEW_CIRCUITS
         - EVOLVE_SYSTEM
-        
+
       transitions:
         - IF boundary_dissolves:
             to: UNIFIED
-            
+
     UNIFIED:
       # No separation between agent and system
       operations:

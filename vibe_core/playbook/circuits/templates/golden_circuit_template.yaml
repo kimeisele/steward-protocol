@@ -3,7 +3,7 @@ circuit:
   name: Golden Circuit Template      # Human Readable Name
   description: A template for creating deterministic, agentic circuits.
   domain: GENERAL                    # e.g., PHILOSOPHY, GOVERNANCE
-  
+
   # Entry Point
   entry_state: START
 
@@ -17,7 +17,7 @@ circuit:
     START:
       name: Initial State
       description: The entry point of the circuit.
-      
+
       # State Invariants (Pre-condition & Post-condition)
       invariants: []
 
@@ -30,7 +30,7 @@ circuit:
             name: "Worker_Agent"
             mission: "Perform a task."
             context: "{{ raw_input }}"
-      
+
       # Transitions (The "Flow")
       transitions:
         - condition: "spawn_result.success == true"

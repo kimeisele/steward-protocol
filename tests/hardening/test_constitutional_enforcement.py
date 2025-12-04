@@ -81,12 +81,14 @@ def test_vote_manipulation_detection():
         duplicate_vote = events[0]  # First vote
 
         # Use internal method to bypass normal checks
-        kernel.ledger._insert_event({
-            "timestamp": duplicate_vote["timestamp"],
-            "event_type": duplicate_vote["event_type"],
-            "agent_id": duplicate_vote["agent_id"],
-            "payload": duplicate_vote.get("payload"),
-        })
+        kernel.ledger._insert_event(
+            {
+                "timestamp": duplicate_vote["timestamp"],
+                "event_type": duplicate_vote["event_type"],
+                "agent_id": duplicate_vote["agent_id"],
+                "payload": duplicate_vote.get("payload"),
+            }
+        )
 
         # Run auditor
         judge = get_judge()
@@ -124,11 +126,11 @@ def test_invariant_engine_constraints():
         judge = get_judge()
 
         # Get list of invariants (stored in judge.rules dict)
-        if hasattr(judge, 'rules') and judge.rules:
+        if hasattr(judge, "rules") and judge.rules:
             invariant_names = list(judge.rules.keys())
-        elif hasattr(judge, 'invariants'):
-            invariant_names = [i.name if hasattr(i, 'name') else str(i) for i in judge.invariants]
-        elif hasattr(judge, 'get_invariants'):
+        elif hasattr(judge, "invariants"):
+            invariant_names = [i.name if hasattr(i, "name") else str(i) for i in judge.invariants]
+        elif hasattr(judge, "get_invariants"):
             invariant_names = judge.get_invariants()
         else:
             invariant_names = []
@@ -163,8 +165,8 @@ def test_constitution_exists_and_valid():
 
     # Required sections for a valid constitution (German: "Artikel")
     required_articles = [
-        "Artikel I",    # Identität
-        "Artikel II",   # Rechenschaft
+        "Artikel I",  # Identität
+        "Artikel II",  # Rechenschaft
         "Artikel III",  # Governance
     ]
 

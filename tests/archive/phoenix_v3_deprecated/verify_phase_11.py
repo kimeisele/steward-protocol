@@ -70,7 +70,7 @@ from vibe_core.tools.tool_registry import Tool
 class PhoenixTool(Tool):
     name = "phoenix_tool"
     description = "A test tool"
-    
+
     def run(self, payload):
         return "Rising!"
 """)

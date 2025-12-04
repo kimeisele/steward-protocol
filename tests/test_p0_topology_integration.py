@@ -191,9 +191,9 @@ def test_fractal_architecture_end_to_end():
 
     # Civic should have higher authority than Watchman
     if civic_placement and watchman_placement:
-        assert civic_placement.authority_level > watchman_placement.authority_level, (
-            "CIVIC should have higher authority than WATCHMAN"
-        )
+        assert (
+            civic_placement.authority_level > watchman_placement.authority_level
+        ), "CIVIC should have higher authority than WATCHMAN"
 
     # Cleanup
     tm.update_task(civic_task.id, status=TaskStatus.COMPLETED)

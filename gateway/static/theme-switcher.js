@@ -1,12 +1,12 @@
 // STEWARD PROTOCOL - Theme Switcher
 (function() {
     const STORAGE_KEY = 'steward-theme';
-    
+
     // Get saved theme or default to dark
     function getTheme() {
         return localStorage.getItem(STORAGE_KEY) || 'dark';
     }
-    
+
     // Apply theme
     function applyTheme(theme) {
         if (theme === 'light') {
@@ -16,7 +16,7 @@
         }
         localStorage.setItem(STORAGE_KEY, theme);
     }
-    
+
     // Toggle theme
     function toggleTheme() {
         const current = getTheme();
@@ -24,12 +24,12 @@
         applyTheme(next);
         updateButton(next);
     }
-    
+
     // Update button text/icon
     function updateButton(theme) {
         const btn = document.getElementById('theme-toggle');
         if (!btn) return;
-        
+
         if (theme === 'dark') {
             btn.innerHTML = `
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -46,12 +46,12 @@
             `;
         }
     }
-    
+
     // Initialize
     function init() {
         const theme = getTheme();
         applyTheme(theme);
-        
+
         // Create button
         const btn = document.createElement('button');
         btn.id = 'theme-toggle';
@@ -59,10 +59,10 @@
         btn.setAttribute('aria-label', 'Toggle theme');
         btn.onclick = toggleTheme;
         document.body.appendChild(btn);
-        
+
         updateButton(theme);
     }
-    
+
     // Run on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

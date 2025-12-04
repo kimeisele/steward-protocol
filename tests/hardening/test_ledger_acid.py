@@ -55,9 +55,7 @@ def test_concurrent_writes_integrity():
             try:
                 for i in range(events_per_thread):
                     event_id = ledger.record_event(
-                        f"stress_test",
-                        f"thread_{thread_id}",
-                        {"thread": thread_id, "seq": i}
+                        f"stress_test", f"thread_{thread_id}", {"thread": thread_id, "seq": i}
                     )
                     local_ids.append(event_id)
             except Exception as e:
@@ -88,18 +86,17 @@ def test_concurrent_writes_integrity():
         actual_events = len(events)
 
         # Check 1: No lost writes
-        assert actual_events == expected_events, \
-            f"LOST WRITES: Expected {expected_events}, got {actual_events} (lost: {expected_events - actual_events}, duration: {duration:.2f}s)"
+        assert (
+            actual_events == expected_events
+        ), f"LOST WRITES: Expected {expected_events}, got {actual_events} (lost: {expected_events - actual_events}, duration: {duration:.2f}s)"
 
         # Check 2: Hash chain integrity
         integrity = verify_ledger.verify_chain_integrity()
-        assert not integrity["corrupted"], \
-            f"HASH CHAIN CORRUPTED: {len(integrity.get('corruptions', []))} breaks"
+        assert not integrity["corrupted"], f"HASH CHAIN CORRUPTED: {len(integrity.get('corruptions', []))} breaks"
 
         # Check 3: No duplicate IDs
         unique_ids = set(e.get("event_id") for e in events)
-        assert len(unique_ids) == actual_events, \
-            f"DUPLICATE EVENT IDS: {actual_events - len(unique_ids)} duplicates"
+        assert len(unique_ids) == actual_events, f"DUPLICATE EVENT IDS: {actual_events - len(unique_ids)} duplicates"
 
         verify_ledger.close()
 
@@ -123,7 +120,7 @@ def test_crash_durability():
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
         db_path = tmp.name
 
-    crash_script = '''
+    crash_script = """
 import os
 import sys
 sys.path.insert(0, "{project_root}")
@@ -136,7 +133,7 @@ sys.stdout.flush()
 # Ensure write is committed before kill
 ledger.connection.execute("PRAGMA wal_checkpoint(FULL)")
 os.kill(os.getpid(), 9)
-'''
+"""
 
     project_root = str(Path(__file__).parent.parent.parent)
 
@@ -147,19 +144,11 @@ os.kill(os.getpid(), 9)
         for i in range(num_iterations):
             marker = hashlib.sha256(f"crash_{i}_{time.time()}".encode()).hexdigest()[:16]
 
-            script = crash_script.format(
-                project_root=project_root,
-                db_path=db_path,
-                iteration=i,
-                marker=marker
-            )
+            script = crash_script.format(project_root=project_root, db_path=db_path, iteration=i, marker=marker)
 
             # Run crash script
             proc = subprocess.Popen(
-                [sys.executable, "-c", script],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                [sys.executable, "-c", script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
 
             try:
@@ -172,10 +161,7 @@ os.kill(os.getpid(), 9)
             verify_ledger = SQLiteLedger(db_path)
             events = verify_ledger.get_all_events()
 
-            found = any(
-                e.get("payload") and marker in str(e.get("payload"))
-                for e in events
-            )
+            found = any(e.get("payload") and marker in str(e.get("payload")) for e in events)
 
             if found:
                 survived += 1
@@ -225,19 +211,22 @@ def test_replay_attack_detection():
 
         # Copy event #2 and insert it again (replay attack)
         old_event = events_before[2]
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ledger_events
             (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            "REPLAYED_EVT",
-            old_event["timestamp"],
-            old_event["event_type"],
-            old_event["agent_id"],
-            old_event.get("payload"),
-            old_event["current_hash"],  # Using OLD hash
-            old_event["previous_hash"]
-        ))
+        """,
+            (
+                "REPLAYED_EVT",
+                old_event["timestamp"],
+                old_event["event_type"],
+                old_event["agent_id"],
+                old_event.get("payload"),
+                old_event["current_hash"],  # Using OLD hash
+                old_event["previous_hash"],
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -245,10 +234,13 @@ def test_replay_attack_detection():
         integrity = ledger.verify_chain_integrity()
         ledger.close()
 
-        assert integrity["corrupted"], \
-            "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
+        assert integrity[
+            "corrupted"
+        ], "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
 
-        print(f"Replay attack detected via hash chain verification ({len(integrity.get('corruptions', []))} corruptions found)")
+        print(
+            f"Replay attack detected via hash chain verification ({len(integrity.get('corruptions', []))} corruptions found)"
+        )
 
     finally:
         os.unlink(db_path)
@@ -292,7 +284,9 @@ def test_tamper_detection():
         corruptions = integrity.get("corruptions", [])
         flagged_indices = [c.get("index") for c in corruptions]
 
-        assert 2 in flagged_indices, f"WRONG EVENT FLAGGED: Tampered event #3 not in corruption list (flagged: {flagged_indices})"
+        assert (
+            2 in flagged_indices
+        ), f"WRONG EVENT FLAGGED: Tampered event #3 not in corruption list (flagged: {flagged_indices})"
 
         print(f"Payload tampering detected at correct position (index 2)")
 

@@ -127,7 +127,7 @@ Results: **19/19 PASS** (100%)
 
 def __init__(self):
     # ... existing kernel init ...
-    
+
     # ADD:
     from auditor.cartridge_main import AuditorCartridge
     self.auditor = AuditorCartridge(root_path=self.root_path)
@@ -136,11 +136,11 @@ def __init__(self):
 def kernel_loop(self):
     while self.running:
         task = self.scheduler.next_task()
-        
+
         # Execute task
         self.execute_task(task)
         self.task_count += 1
-        
+
         # ADD (check every 10 tasks):
         if self.task_count % 10 == 0:
             halt_result = self.auditor.watchdog_integration.kernel_tick(
@@ -177,7 +177,7 @@ def setup_violation_handler():
     def on_violation(violation_event):
         # Send to ENVOY for notification
         envoy.alert(f"System Violation: {violation_event.violation_type}")
-    
+
     auditor.watchdog_integration.register_violation_callback(on_violation)
 ```
 
@@ -205,12 +205,12 @@ def setup_violation_handler():
 ```python
 def main():
     kernel = VibeKernel()
-    
+
     # Pre-boot check
     if not kernel.auditor.run_semantic_verification()["passed"]:
         logger.error("Semantic verification failed - halting")
         sys.exit(1)
-    
+
     kernel.kernel_loop()
 ```
 
@@ -470,4 +470,3 @@ It represents a shift from:
 This is the system's **immune system**. 🏰⚖️👁️
 
 Ready to inject it into the kernel.
-

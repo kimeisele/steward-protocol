@@ -91,9 +91,7 @@ class AgoraCartridge(VibeAgent, OathMixin):
 
         # Broadcast channels - dynamically created per authorized source
         # Plus a system channel for infrastructure messages
-        self.channels: Dict[str, List[Dict[str, Any]]] = {
-            source: [] for source in self.authorized_sources
-        }
+        self.channels: Dict[str, List[Dict[str, Any]]] = {source: [] for source in self.authorized_sources}
         self.channels["system"] = []  # Always have system channel
 
         # Subscriptions (agent_id -> list of channels they listen to)

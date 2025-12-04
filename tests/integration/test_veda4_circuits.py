@@ -454,9 +454,7 @@ class TestCircuitDefinitionValidation:
 
         for circuit_id, circuit_def in executor.circuits.items():
             states = circuit_def.get("states", {})
-            terminal_states = [
-                name for name, state_def in states.items() if state_def.get("terminal", False)
-            ]
+            terminal_states = [name for name, state_def in states.items() if state_def.get("terminal", False)]
 
             assert len(terminal_states) >= 1, f"Circuit {circuit_id} has no terminal states"
             logger.info(f"Circuit {circuit_id} has terminal states: {terminal_states}")
@@ -476,9 +474,7 @@ class TestCircuitDefinitionValidation:
                 transitions = state_def.get("transitions", [])
                 # Non-terminal states should have at least one transition
                 if len(transitions) == 0:
-                    logger.warning(
-                        f"Circuit {circuit_id} state '{state_name}' has no transitions"
-                    )
+                    logger.warning(f"Circuit {circuit_id} state '{state_name}' has no transitions")
 
     def test_circuit_invariants_are_valid_patterns(self):
         """Test that circuit invariants use valid patterns."""
@@ -506,9 +502,7 @@ class TestCircuitDefinitionValidation:
                 inv_str = inv.get("check", inv) if isinstance(inv, dict) else inv
                 has_valid_pattern = any(p in inv_str.lower() for p in valid_patterns)
                 if not has_valid_pattern:
-                    logger.warning(
-                        f"Circuit {circuit_id} has potentially invalid invariant: {inv_str}"
-                    )
+                    logger.warning(f"Circuit {circuit_id} has potentially invalid invariant: {inv_str}")
 
             # Check state invariants
             states = circuit_def.get("states", {})
