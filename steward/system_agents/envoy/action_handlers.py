@@ -368,6 +368,171 @@ class ExecuteScriptHandler(ActionHandler):
         return ActionResult.ok({"path": file_path, "content": content})
 
 
+class EmitEventHandler(ActionHandler):
+    """
+    Handler for EMIT_EVENT actions.
+
+    Emits visualization events for UI/monitoring:
+    - progress updates
+    - status changes
+    - completion notifications
+
+    Target format: "event_name" (e.g., "phase_started", "task_completed")
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "EMIT_EVENT"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Emit an event through the context's emit_event callback"""
+        logger.info(f"  📡 EMIT_EVENT: {target}")
+
+        event_data = {
+            "event_type": target,
+            "phase_id": context.phase_id,
+            "playbook_id": context.playbook_id,
+            "execution_id": context.execution_id,
+            **params,
+        }
+
+        # Emit through context callback if available
+        if context.emit_event:
+            try:
+                context.emit_event(event_data)
+                logger.debug(f"    ✓ Event emitted: {target}")
+                return ActionResult.ok({"event": target, "emitted": True})
+            except Exception as e:
+                logger.error(f"    ❌ Event emission failed: {e}")
+                return ActionResult.fail(f"Event emission failed: {e}")
+        else:
+            logger.debug("    ⚠️  No emit_event callback - event logged only")
+            return ActionResult.ok({"event": target, "emitted": False, "logged_only": True})
+
+
+class CallAgentHandler(ActionHandler):
+    """
+    Handler for CALL_AGENT actions.
+
+    Delegates work to another agent via kernel dispatch:
+    - tool execution
+    - sub-task processing
+    - agent collaboration
+
+    Target format: "agent_id.action" (e.g., "engineer.build", "herald.publish")
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "CALL_AGENT"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Call another agent through the kernel"""
+        logger.info(f"  🤝 CALL_AGENT: {target}")
+
+        if not context.kernel:
+            logger.error("    ❌ No kernel available for agent calls")
+            return ActionResult.fail("No kernel available - cannot call agent")
+
+        # Parse target as "agent_id.action"
+        if "." in target:
+            agent_id, action = target.split(".", 1)
+        else:
+            agent_id = target
+            action = params.get("action", "process")
+
+        try:
+            # Dispatch task to target agent via kernel
+            from vibe_core.scheduling import Task
+
+            task = Task(
+                agent_id=agent_id,
+                action=action,
+                payload=params,
+                priority=params.get("priority", 5),
+            )
+
+            # Execute through kernel (blocking for now, could be async)
+            result = await context.kernel.dispatch_task(task)
+
+            logger.info(f"    ✓ Agent {agent_id} responded")
+            return ActionResult.ok(
+                {
+                    "agent": agent_id,
+                    "action": action,
+                    "result": result,
+                }
+            )
+        except Exception as e:
+            logger.error(f"    ❌ Agent call failed: {e}")
+            return ActionResult.fail(f"Agent call failed: {e}")
+
+
+class CallPlaybookHandler(ActionHandler):
+    """
+    Handler for CALL_PLAYBOOK actions.
+
+    Executes a nested playbook as a sub-workflow:
+    - modular workflows
+    - reusable playbook components
+    - nested execution
+
+    Target format: "playbook_name" (e.g., "wiring_audit", "agent_bootstrap")
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "CALL_PLAYBOOK"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Execute a nested playbook"""
+        logger.info(f"  📚 CALL_PLAYBOOK: {target}")
+
+        if not context.kernel:
+            logger.error("    ❌ No kernel available for playbook execution")
+            return ActionResult.fail("No kernel available - cannot execute playbook")
+
+        try:
+            # Load and execute playbook through kernel's playbook executor
+            # NOTE: This assumes kernel has a playbook execution method
+            # The actual implementation depends on the kernel's playbook API
+
+            playbook_path = params.get("playbook_path", f"vibe_core/playbook/circuits/{target}.yaml")
+            input_data = params.get("input", {})
+
+            logger.info(f"    📖 Loading playbook: {playbook_path}")
+
+            # For now, return success with stub - actual implementation needs kernel.execute_playbook()
+            logger.warning("    ⚠️  Playbook execution stub - implement kernel.execute_playbook()")
+
+            return ActionResult.ok(
+                {
+                    "playbook": target,
+                    "path": playbook_path,
+                    "status": "stub",
+                    "message": "Playbook execution not yet implemented in kernel",
+                }
+            )
+        except Exception as e:
+            logger.error(f"    ❌ Playbook execution failed: {e}")
+            return ActionResult.fail(f"Playbook execution failed: {e}")
+
+
 # ============================================================================
 # DEFAULT REGISTRY
 # ============================================================================
@@ -378,6 +543,9 @@ def create_default_registry() -> ActionHandlerRegistry:
     registry = ActionHandlerRegistry()
     registry.register(CheckStateHandler())
     registry.register(ExecuteScriptHandler())
+    registry.register(EmitEventHandler())
+    registry.register(CallAgentHandler())
+    registry.register(CallPlaybookHandler())
     return registry
 
 
