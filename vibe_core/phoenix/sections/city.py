@@ -127,11 +127,13 @@ class CityConfig:
     """
     Complete city configuration from matrix.yaml.
 
-    Auto-discovered by SectionLoader → loads from config/city.yaml
+    Auto-discovered by SectionLoader → loads from config/matrix.yaml
     """
 
     # Class-level section identifier for auto-discovery
     section_id = "city"
+    # Actual source file (not default city.yaml)
+    source_file = "matrix.yaml"
 
     name: str = "Agent City Alpha"
     federation_version: str = "1.0.0"
