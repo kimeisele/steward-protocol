@@ -28,3 +28,13 @@ circuit:
             query: "{{ user_input }}"
       on_success: COMPLETE
       on_failure: ABORT
+
+    COMPLETE:
+      name: "Query Complete"
+      description: "Query processed successfully"
+      terminal: true
+
+    ABORT:
+      name: "Query Aborted"
+      description: "Query aborted due to failure"
+      terminal: true
