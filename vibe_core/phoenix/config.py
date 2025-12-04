@@ -14,6 +14,7 @@ import yaml
 from .sections.circuits import CircuitConfig, discover_circuits
 from .sections.city import CityConfig
 from .sections.kernel import KernelConfig
+from .sections.quality import QualityConfig, get_default_quality_config
 from .sections.routing import RoutingRule, load_routing_rules, save_routing_rules
 
 logger = logging.getLogger(__name__)
@@ -35,12 +36,14 @@ class PhoenixConfig:
     city: CityConfig = field(default_factory=CityConfig)
     circuits: Dict[str, CircuitConfig] = field(default_factory=dict)
     routing: List[RoutingRule] = field(default_factory=list)
+    quality: QualityConfig = field(default_factory=get_default_quality_config)
 
     # Source file paths (for save/reload)
     _phoenix_path: Optional[Path] = field(default=None, repr=False)
     _matrix_path: Optional[Path] = field(default=None, repr=False)
     _circuits_dir: Optional[Path] = field(default=None, repr=False)
     _routing_path: Optional[Path] = field(default=None, repr=False)
+    _quality_path: Optional[Path] = field(default=None, repr=False)
 
     @classmethod
     def from_files(
@@ -49,6 +52,7 @@ class PhoenixConfig:
         matrix_path: Path = Path("config/matrix.yaml"),
         circuits_dir: Path = Path("vibe_core/playbook/circuits"),
         routing_path: Path = Path("MATRIX.md"),
+        quality_path: Path = Path("config/quality.yaml"),
     ) -> "PhoenixConfig":
         """
         Load configuration from all source files.
@@ -58,6 +62,7 @@ class PhoenixConfig:
             matrix_path: Path to matrix.yaml (city config)
             circuits_dir: Directory containing circuit YAML files
             routing_path: Path to MATRIX.md (routing rules)
+            quality_path: Path to quality.yaml (lint/format/CI config)
 
         Returns:
             Fully loaded PhoenixConfig
@@ -92,11 +97,23 @@ class PhoenixConfig:
         routing = load_routing_rules(routing_path)
         logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
+        # Load quality config (immortal CI/lint settings)
+        quality = get_default_quality_config()
+        if quality_path.exists():
+            try:
+                with open(quality_path) as f:
+                    data = yaml.safe_load(f) or {}
+                quality = QualityConfig.from_dict(data)
+                logger.info(f"Loaded quality config from {quality_path}")
+            except Exception as e:
+                logger.warning(f"Failed to load {quality_path}, using defaults: {e}")
+
         config = cls(
             kernel=kernel,
             city=city,
             circuits=circuits,
             routing=routing,
+            quality=quality,
         )
 
         # Store paths for later save/reload
@@ -104,6 +121,7 @@ class PhoenixConfig:
         config._matrix_path = matrix_path
         config._circuits_dir = circuits_dir
         config._routing_path = routing_path
+        config._quality_path = quality_path
 
         return config
 
@@ -301,6 +319,7 @@ class PhoenixConfig:
             "city": self.city.to_dict(),
             "circuits": {name: circuit.to_dict() for name, circuit in self.circuits.items()},
             "routing": [rule.to_dict() for rule in self.routing],
+            "quality": self.quality.to_dict(),
         }
 
     @classmethod
@@ -327,11 +346,14 @@ class PhoenixConfig:
         for rule_data in data.get("routing", []):
             routing.append(RoutingRule.from_dict(rule_data))
 
+        quality = QualityConfig.from_dict(data.get("quality", {}))
+
         return cls(
             kernel=kernel,
             city=city,
             circuits=circuits,
             routing=routing,
+            quality=quality,
         )
 
     # =========================================================================
