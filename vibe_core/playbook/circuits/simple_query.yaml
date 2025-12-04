@@ -3,6 +3,7 @@ circuit:
   description: Handle simple informational queries
   domain: INTERFACE
   version: "1.0.0"
+  entry_state: "classify"
 
   states:
     classify:
