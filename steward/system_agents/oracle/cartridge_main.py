@@ -373,7 +373,7 @@ class OracleCartridge(VibeAgent, OathMixin):
 
     # ==================== VIBEOS AGENT INTERFACE ====================
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the VibeKernel scheduler.
 

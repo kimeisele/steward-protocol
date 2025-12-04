@@ -118,7 +118,7 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             "capabilities": ["appeals", "precedent"],
         }
 
-    def process(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def process(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a task from the kernel scheduler.
 

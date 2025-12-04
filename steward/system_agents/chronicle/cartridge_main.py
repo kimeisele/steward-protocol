@@ -132,7 +132,7 @@ class ChronicleCartridge(VibeAgent, OathMixin):
             "git_status": git_status,
         }
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the kernel scheduler.
 

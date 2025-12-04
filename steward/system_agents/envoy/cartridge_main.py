@@ -227,6 +227,17 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     task_id = self.kernel.submit_task(task)
                     return {"status": "delegated", "agent": "science", "task_id": task_id}
 
+                elif path == "lazy":
+                    # Lazy processing - queue for background execution
+                    logger.info("⏳ Lazy path - queuing for background processing")
+                    # Note: Actual queuing happens in MilkOcean router
+                    return {
+                        "status": "queued",
+                        "path": "lazy",
+                        "request_id": routing_decision.get("request_id"),
+                        "message": "Request queued for lazy processing",
+                    }
+
                 else:
                     # P4.1: Unknown path - log warning and use flash as fallback
                     logger.warning(f"Unknown routing path '{path}', using flash fallback")
