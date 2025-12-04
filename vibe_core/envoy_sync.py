@@ -139,7 +139,8 @@ class EnvoySync:
                     if stripped:
                         request_lines.append(line)
 
-            return "\n".join(request_lines)
+            result = "\n".join(request_lines)
+            return result
 
         except Exception as e:
             logger.error(f"❌ Failed to extract request content: {e}")
@@ -217,6 +218,7 @@ class EnvoySync:
                 }
             )
 
+            # Submit to scheduler (NON-BLOCKING)
             # Submit to scheduler (NON-BLOCKING)
             task_id = submit_callback(task)
 
