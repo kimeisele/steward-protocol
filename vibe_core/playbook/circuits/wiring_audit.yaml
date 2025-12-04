@@ -15,6 +15,7 @@ circuit:
 
   # Dharmic Purpose: System-Integrität sicherstellen
   dharmic_intent: "satya"  # Truth-seeking
+  entry_state: "check_kernel_injection"
 
   # Input Schema
   input:
