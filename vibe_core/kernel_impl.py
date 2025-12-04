@@ -1447,6 +1447,66 @@ class RealVibeKernel(VibeKernel):
             "timestamp": event.timestamp,
         }
 
+    async def execute_playbook(
+        self,
+        playbook_path: str,
+        input_data: Dict[str, Any],
+        user_input: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Execute a playbook through the DeterministicExecutor.
+
+        This method enables nested playbook execution, allowing playbooks to call
+        other playbooks via the CALL_PLAYBOOK action type.
+
+        Args:
+            playbook_path: Path to the playbook YAML file (relative to knowledge/playbooks/)
+            input_data: Input parameters for the playbook
+            user_input: Optional user input string (defaults to empty string)
+
+        Returns:
+            Dictionary with execution results
+
+        Example:
+            result = await kernel.execute_playbook(
+                playbook_path="vibe_core/playbook/circuits/wiring_audit.yaml",
+                input_data={"scope": "full"},
+                user_input="Run wiring audit"
+            )
+        """
+        # Import here to avoid circular dependency
+        from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+
+        # Get or create executor instance
+        if not hasattr(self, "_playbook_executor"):
+            self._playbook_executor = DeterministicExecutor()
+
+        # Extract playbook_id from path (e.g., "wiring_audit" from "circuits/wiring_audit.yaml")
+        import os
+
+        playbook_id = os.path.splitext(os.path.basename(playbook_path))[0]
+
+        # Create a minimal intent vector (playbooks don't always need full intent analysis)
+        class MinimalIntentVector:
+            def __init__(self, user_input: str):
+                self.raw_input = user_input
+                self.concepts = set()
+                self.target_agent = None
+
+        intent_vector = MinimalIntentVector(user_input or "Nested playbook execution")
+
+        # Execute the playbook
+        logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
+        result = await self._playbook_executor.execute(
+            playbook_id=playbook_id,
+            user_input=user_input or str(input_data),
+            intent_vector=intent_vector,
+            kernel=self,
+            emit_event=None,
+        )
+
+        return result
+
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
         """
         Get recent event history from EventBus.
