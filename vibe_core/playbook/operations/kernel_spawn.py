@@ -5,6 +5,14 @@ This operation enables playbooks to spawn child kernels with custom
 configurations for specialized tasks. Results are folded back to the
 parent kernel with cryptographic proof.
 
+AIRLOCK PATTERN:
+    Before the child kernel dies, we harvest specified artifacts from the
+    child's VFS and transfer them to the parent. This prevents data loss
+    when the ephemeral city is terminated.
+
+    Child VFS: /tmp/vibe_os/agents/{child_agent_id}/
+    Parent VFS: /tmp/vibe_os/agents/{parent_agent_id}/ or specified destination
+
 Use Cases:
     - Fast coding swarm (no governance overhead)
     - Sandboxed experimentation (throwaway environment)
@@ -17,25 +25,44 @@ Example (in playbook node):
     result = await spawn_city(
         task="build feature X",
         config_overrides={"city.governance.voting_threshold": 0},
-        circuit="fast_code"
+        circuit="fast_code",
+        artifacts=["src/main.py", "tests/test_main.py"],  # Harvest these before death
+        artifacts_destination="output/",  # Copy to here
     )
 
     # result.output contains the execution result
     # result.proof contains ledger hash from child
+    # result.harvested_artifacts contains paths to harvested files
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.phoenix import PhoenixConfig
 
 logger = logging.getLogger(__name__)
+
+# VFS root - same as vibe_core/vfs.py
+VFS_ROOT = Path("/tmp/vibe_os/agents")
+
+
+@dataclass
+class HarvestedArtifact:
+    """A file harvested from the ephemeral city before death."""
+
+    source_path: str  # Path in child VFS
+    destination_path: str  # Path where file was copied
+    size_bytes: int
+    success: bool
+    error: Optional[str] = None
 
 
 @dataclass
@@ -47,6 +74,7 @@ class SpawnCityResult:
     proof: str  # Ledger hash from child kernel
     child_id: int  # ID of the (now-dead) child kernel
     error: Optional[str] = None
+    harvested_artifacts: List[HarvestedArtifact] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -58,6 +86,89 @@ def _get_or_create_kernel() -> "RealVibeKernel":
     # (In a real execution context, the kernel would be injected)
     # For now, create a new parent kernel if none exists
     return RealVibeKernel()
+
+
+def _harvest_artifacts(
+    child_kernel: "RealVibeKernel",
+    artifacts: List[str],
+    destination: Path,
+) -> List[HarvestedArtifact]:
+    """
+    AIRLOCK: Harvest artifacts from child VFS before termination.
+
+    Searches all agent sandboxes in the child kernel for requested files.
+    Copies found files to the destination directory.
+
+    Args:
+        child_kernel: The ephemeral child kernel (still alive)
+        artifacts: List of relative file paths to harvest (e.g., ["src/main.py"])
+        destination: Directory to copy files to
+
+    Returns:
+        List of HarvestedArtifact with success/failure status
+    """
+    harvested: List[HarvestedArtifact] = []
+
+    # Ensure destination exists
+    destination.mkdir(parents=True, exist_ok=True)
+
+    # Get all agent IDs registered in child kernel
+    child_agent_ids = list(child_kernel.agent_registry.keys()) if hasattr(child_kernel, "agent_registry") else []
+
+    logger.info(f"🚪 AIRLOCK: Harvesting {len(artifacts)} artifacts from {len(child_agent_ids)} child agents")
+
+    for artifact_path in artifacts:
+        found = False
+        artifact_result = HarvestedArtifact(
+            source_path=artifact_path,
+            destination_path="",
+            size_bytes=0,
+            success=False,
+            error="Not found in any child agent VFS",
+        )
+
+        # Search each child agent's VFS for the artifact
+        for agent_id in child_agent_ids:
+            vfs_path = VFS_ROOT / agent_id / artifact_path
+
+            if vfs_path.exists() and vfs_path.is_file():
+                try:
+                    # Compute destination path
+                    dest_path = destination / artifact_path
+                    dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    # Copy file through the airlock
+                    shutil.copy2(vfs_path, dest_path)
+
+                    artifact_result = HarvestedArtifact(
+                        source_path=str(vfs_path),
+                        destination_path=str(dest_path),
+                        size_bytes=dest_path.stat().st_size,
+                        success=True,
+                    )
+                    found = True
+                    logger.info(f"🚪 Harvested: {artifact_path} ({artifact_result.size_bytes} bytes)")
+                    break
+
+                except Exception as e:
+                    artifact_result = HarvestedArtifact(
+                        source_path=str(vfs_path),
+                        destination_path=str(dest_path),
+                        size_bytes=0,
+                        success=False,
+                        error=str(e),
+                    )
+                    logger.error(f"🚪 Failed to harvest {artifact_path}: {e}")
+
+        if not found:
+            logger.warning(f"🚪 Artifact not found: {artifact_path}")
+
+        harvested.append(artifact_result)
+
+    successful = sum(1 for h in harvested if h.success)
+    logger.info(f"🚪 AIRLOCK complete: {successful}/{len(artifacts)} artifacts harvested")
+
+    return harvested
 
 
 def _apply_config_overrides(
@@ -102,6 +213,8 @@ async def spawn_city(
     config_factory: Optional[Callable[["PhoenixConfig"], "PhoenixConfig"]] = None,
     parent_kernel: Optional["RealVibeKernel"] = None,
     timeout_seconds: int = 300,
+    artifacts: Optional[List[str]] = None,
+    artifacts_destination: Optional[str] = None,
 ) -> SpawnCityResult:
     """
     Spawn an ephemeral child kernel and execute a task.
@@ -109,6 +222,11 @@ async def spawn_city(
     This is the main entry point for 4D Hypercube operations.
     The child kernel runs with custom configuration and its results
     are folded back to the parent with cryptographic proof.
+
+    AIRLOCK PROTOCOL:
+        Before the child kernel is terminated, specified artifacts are
+        harvested from the child's VFS and copied to the destination.
+        This prevents data loss when the ephemeral city dies.
 
     Args:
         task: The task/prompt to execute in the child kernel
@@ -118,25 +236,33 @@ async def spawn_city(
         config_factory: Alternative to overrides - function that transforms parent config
         parent_kernel: Parent kernel (if None, gets/creates one)
         timeout_seconds: Maximum execution time
+        artifacts: List of file paths to harvest from child VFS before death
+            Example: ["src/main.py", "tests/test_main.py"]
+        artifacts_destination: Directory to copy harvested artifacts to
+            Default: "ephemeral_output/{child_id}/"
 
     Returns:
-        SpawnCityResult with output, proof, and metadata
+        SpawnCityResult with output, proof, harvested_artifacts, and metadata
 
     Example:
-        # Fast coding - no governance overhead
+        # Fast coding with artifact harvesting
         result = await spawn_city(
             task="Implement user login feature",
             circuit="fast_code",
             config_overrides={
                 "city.governance.voting_threshold": 0,
                 "city.governance.quorum_required": 0,
-                "kernel.features.democracy_enabled": False,
-            }
+            },
+            artifacts=["src/auth.py", "tests/test_auth.py"],
+            artifacts_destination="output/auth_feature/",
         )
 
         if result.success:
             print(f"Output: {result.output}")
             print(f"Proof: {result.proof}")
+            for artifact in result.harvested_artifacts:
+                if artifact.success:
+                    print(f"Harvested: {artifact.destination_path}")
     """
     from vibe_core.phoenix import get_config
 
@@ -187,7 +313,20 @@ async def spawn_city(
                 timeout=timeout_seconds,
             )
 
-        # Get proof and merge result
+        # =====================================================================
+        # AIRLOCK: Harvest artifacts BEFORE child death
+        # =====================================================================
+        harvested: List[HarvestedArtifact] = []
+        if artifacts:
+            # Determine destination
+            if artifacts_destination:
+                dest = Path(artifacts_destination)
+            else:
+                dest = Path(f"ephemeral_output/{child_id}")
+
+            harvested = _harvest_artifacts(child, artifacts, dest)
+
+        # Get proof and merge result (child dies after this)
         proof = child.get_ledger_hash()
         merge_record = parent_kernel.merge_child_result(child, output)
 
@@ -198,10 +337,12 @@ async def spawn_city(
             output=output,
             proof=proof,
             child_id=child_id,
+            harvested_artifacts=harvested,
             metadata={
                 "merge_record": merge_record,
                 "circuit": circuit,
                 "config_applied": bool(config_overrides or config_factory),
+                "artifacts_requested": artifacts or [],
             },
         )
 
