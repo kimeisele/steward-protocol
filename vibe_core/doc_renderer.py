@@ -173,6 +173,55 @@ class DocRenderer:
         lines.extend(["", "---", ""])
         return lines
 
+    def _render_settings_sections(self, state: "SettingsRenderState") -> List[str]:
+        """
+        Render all plugin-based settings sections.
+
+        Uses the SettingsSection plugin architecture for scalability.
+        Each section is self-contained and auto-discovered.
+
+        Args:
+            state: Current settings render state
+
+        Returns:
+            List of markdown lines from all sections
+        """
+        lines = []
+
+        try:
+            from vibe_core.settings import SectionContext, get_section_loader
+
+            # Build section context from state
+            context = SectionContext(
+                live_fire_enabled=state.live_fire_enabled,
+                provider_info=state.provider_info or {},
+                provider_name=state.provider_info.get("name", "unknown") if state.provider_info else "unknown",
+            )
+
+            # Load and render all sections (sorted by priority)
+            loader = get_section_loader()
+            for section in loader.load_all():
+                try:
+                    section_lines = section.render(context)
+                    lines.extend(section_lines)
+                except Exception as e:
+                    logger.error(f"Failed to render section '{section.section_id}': {e}")
+                    lines.extend([f"<!-- Section '{section.section_id}' failed to render: {e} -->", ""])
+
+        except ImportError as e:
+            # Fallback if settings module not available
+            logger.warning(f"Settings sections not available: {e}")
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "_Settings sections not available. Install vibe_core.settings module._",
+                    "",
+                ]
+            )
+
+        return lines
+
     def render_operations(self, snapshot: Dict[str, Any], output_path: Path = Path("OPERATIONS.md")) -> None:
         """
         Render OPERATIONS.md from snapshot data.
@@ -271,89 +320,8 @@ class DocRenderer:
                 ]
             )
 
-            # UI Enhancement: Provider Configuration
-            lines.extend(
-                [
-                    "---",
-                    "",
-                    "## 🔌 LLM Provider Configuration",
-                    "",
-                ]
-            )
-
-            if state.provider_info:
-                provider = state.provider_info
-                lines.extend(
-                    [
-                        f"**Current Provider:** `{provider.get('name', 'unknown')}` ({provider.get('display', '')})",
-                        "",
-                        "| Setting | Value |",
-                        "|---------|-------|",
-                        f"| `provider` | {provider.get('name', 'unknown')} |",
-                        f"| `pro_model` | {provider.get('pro_model', 'default')} |",
-                        f"| `low_model` | {provider.get('low_model', 'default')} |",
-                        f"| `api_key_env` | {provider.get('api_key_env', 'LLM_API_KEY')} |",
-                        "",
-                        "**To change provider:**",
-                        "```",
-                        "- SET provider=anthropic",
-                        "- SET provider=openai",
-                        "- SET provider=openrouter",
-                        "```",
-                        "",
-                    ]
-                )
-            else:
-                lines.extend(
-                    [
-                        "_Provider info not available. Using defaults._",
-                        "",
-                    ]
-                )
-
-            # UI Enhancement: Execution Mode
-            mode_emoji = "🔴" if state.live_fire_enabled else "🟢"
-            mode_name = "LIVE FIRE" if state.live_fire_enabled else "SIMULATION"
-            lines.extend(
-                [
-                    "---",
-                    "",
-                    "## ⚡ Execution Mode",
-                    "",
-                    f"**Current Mode:** `{mode_name.lower()}` {mode_emoji}",
-                    "",
-                    "| Mode | Description |",
-                    "|------|-------------|",
-                    "| `simulation` | Dry-run mode - no real API calls, no file writes |",
-                    "| `live_fire` | Real execution - API calls, file writes enabled |",
-                    "",
-                ]
-            )
-
-            if state.live_fire_enabled:
-                lines.extend(
-                    [
-                        "**⚠️ WARNING:** Live Fire mode is ACTIVE. Real changes will be made.",
-                        "",
-                        "**To disable:**",
-                        "```",
-                        "- SET mode=simulation",
-                        "```",
-                        "",
-                    ]
-                )
-            else:
-                lines.extend(
-                    [
-                        "**To enable Live Fire:**",
-                        "```",
-                        "- SET mode=live_fire",
-                        "```",
-                        "",
-                        "**⚠️ WARNING:** Live Fire mode makes real changes. Use with caution.",
-                        "",
-                    ]
-                )
+            # Render plugin-based settings sections
+            lines.extend(self._render_settings_sections(state))
 
             # Add agent registry details
             lines.extend(

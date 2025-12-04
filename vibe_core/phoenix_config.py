@@ -248,48 +248,8 @@ class PhoenixConfigEngine:
         """Whether debug mode is enabled."""
         return self.get("features.debug_mode", False)
 
-    def get_provider_info(self) -> Dict[str, str]:
-        """
-        Get human-readable provider information.
-
-        Returns:
-            Dict with provider name and details
-        """
-        provider_path = self.llm_provider
-
-        # Extract provider name from class path
-        if "anthropic" in provider_path.lower():
-            return {
-                "name": "anthropic",
-                "display": "Anthropic Claude",
-                "api_key_env": "ANTHROPIC_API_KEY",
-                "pro_model": "claude-sonnet-4-20250514",
-                "low_model": "claude-haiku-3-20240307",
-            }
-        elif "openai" in provider_path.lower():
-            return {
-                "name": "openai",
-                "display": "OpenAI GPT",
-                "api_key_env": "OPENAI_API_KEY",
-                "pro_model": "gpt-4-turbo",
-                "low_model": "gpt-3.5-turbo",
-            }
-        elif "openrouter" in provider_path.lower():
-            return {
-                "name": "openrouter",
-                "display": "OpenRouter",
-                "api_key_env": "OPENROUTER_API_KEY",
-                "pro_model": "anthropic/claude-3-sonnet",
-                "low_model": "anthropic/claude-3-haiku",
-            }
-        else:
-            return {
-                "name": "custom",
-                "display": "Custom Provider",
-                "api_key_env": "LLM_API_KEY",
-                "pro_model": "default",
-                "low_model": "default",
-            }
+    # NOTE: get_provider_info() removed - use vibe_core.settings.sections.provider.get_provider_info_from_config()
+    # This keeps business logic in the section, not in infrastructure.
 
 
 # Singleton instance
