@@ -1,0 +1,135 @@
+{
+  "verdict": "UNCONSTITUTIONAL",
+  "should_fail_build": true,
+  "total_violations": 13,
+  "by_severity": {
+    "CONSTITUTIONAL": 2,
+    "GOVERNANCE": 0,
+    "WARNING": 11
+  },
+  "by_article": {
+    "Article III: Governance (Boundaries)": 3,
+    "Article V: Zustimmung (Consent)": 8,
+    "Article I: Identity (Cryptographic Proof)": 2
+  },
+  "violations": [
+    {
+      "agent_id": "ping",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "steward/system_agents/ping/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "civic",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/civic/cartridge_main.py",
+      "line_number": 287,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "archivist",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "steward/system_agents/archivist/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "discoverer",
+      "article": "Article III: Governance (Boundaries)",
+      "severity": "WARNING",
+      "message": "Agent may lack architectural governance (no system interface)",
+      "file_path": "steward/system_agents/discoverer/cartridge_main.py",
+      "line_number": null,
+      "remedy": "Use AgentSystemInterface for governed operations"
+    },
+    {
+      "agent_id": "science",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/science/cartridge_main.py",
+      "line_number": 409,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "__pycache__",
+      "article": "Article I: Identity (Cryptographic Proof)",
+      "severity": "CONSTITUTIONAL",
+      "message": "Agent lacks identity manifest (steward.json)",
+      "file_path": "steward/system_agents/__pycache__/steward.json",
+      "line_number": null,
+      "remedy": "Create steward.json with agent ID, version, and public key"
+    },
+    {
+      "agent_id": "__pycache__",
+      "article": "Article I: Identity (Cryptographic Proof)",
+      "severity": "CONSTITUTIONAL",
+      "message": "Agent lacks identity documentation (STEWARD.md)",
+      "file_path": "steward/system_agents/__pycache__/STEWARD.md",
+      "line_number": null,
+      "remedy": "Create STEWARD.md with agent identity and capabilities"
+    },
+    {
+      "agent_id": "envoy",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/envoy/cartridge_main.py",
+      "line_number": 485,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "forum",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/forum/cartridge_main.py",
+      "line_number": 360,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "watchman",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/watchman/cartridge_main.py",
+      "line_number": 228,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "herald",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/herald/cartridge_main.py",
+      "line_number": 778,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "auditor",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/auditor/cartridge_main.py",
+      "line_number": 135,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    },
+    {
+      "agent_id": "engineer",
+      "article": "Article V: Zustimmung (Consent)",
+      "severity": "WARNING",
+      "message": "Agent may perform unauthorized file access",
+      "file_path": "steward/system_agents/engineer/cartridge_main.py",
+      "line_number": 179,
+      "remedy": "Use system.get_sandbox_path() for governed file access"
+    }
+  ],
+  "constitutional_hash": "df4bf7b77c367643"
+}

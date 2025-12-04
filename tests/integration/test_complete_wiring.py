@@ -258,11 +258,12 @@ async def test_action_handlers_real_io():
     print("TEST 5: Action Handlers Real I/O")
     print("=" * 60)
 
-    from steward.system_agents.envoy.action_handlers import DefaultActionHandlers
-    from steward.system_agents.envoy.executor import ActionContext
+    from steward.system_agents.envoy.action_handlers import ActionContext, ExecuteScriptHandler
 
-    handlers = DefaultActionHandlers()
-    context = ActionContext(user_input="test", intent_vector={})
+    handlers = ExecuteScriptHandler()
+    context = ActionContext(
+        phase_id="test", playbook_id="TEST", execution_id="test_exec", user_input="test", phase_results={}
+    )
 
     # Test in a temp directory
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -296,8 +297,8 @@ async def test_action_handlers_real_io():
         result = await handlers._read_file({"path": str(test_file)}, context)
 
         assert result.success, f"Read file failed: {result.error}"
-        assert result.output["content"] == test_content, "Read content should match written content"
-        print(f"✅ File read: {len(result.output['content'])} chars")
+        assert result.data["content"] == test_content, "Read content should match written content"
+        print(f"✅ File read: {len(result.data['content'])} chars")
 
         # Test 4: Git init (optional - might fail if git not available)
         print("\n🔧 Test: Git Init")
