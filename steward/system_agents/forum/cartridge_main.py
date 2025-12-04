@@ -26,13 +26,14 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
 from steward.system_agents.civic.tools.license_tool import LicenseType
 
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import ForumConfig
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # Civic imports for license operations
 

@@ -20,11 +20,12 @@ import os
 import subprocess
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
 from vibe_core.config import CityConfig
 from vibe_core.protocols import AgentManifest, VibeAgent
 from vibe_core.scheduling.task import Task
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 logger = logging.getLogger("AUDITOR_CARTRIDGE")
 

@@ -27,9 +27,6 @@ from typing import Any, Dict, Optional
 
 import yaml
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
 from steward.system_agents.civic.economy_agent import EconomyAgent
 from steward.system_agents.civic.lifecycle_agent import LifecycleAgent
@@ -38,6 +35,9 @@ from steward.system_agents.civic.registry_agent import RegistryAgent
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
 from vibe_core.config import CivicConfig
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # Import delegated components
 

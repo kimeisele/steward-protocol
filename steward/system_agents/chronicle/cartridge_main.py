@@ -32,7 +32,7 @@ except ImportError:
     CityConfig = None
 
 # Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
+from vibe_core.steward import OathMixin
 
 # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
 # - chronicle.git - Git operations (commits, branches, history)

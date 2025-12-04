@@ -17,8 +17,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
+from vibe_core.steward import OathMixin
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AGORA_MAIN")

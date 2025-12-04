@@ -30,15 +30,15 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-# Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # Import enums for external use (not tool instances)
 # NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
 from steward.system_agents.supreme_court.tools.appeals_tool import AppealStatus
 from steward.system_agents.supreme_court.tools.verdict_tool import VerdictType
 from vibe_core.config import CivicConfig
 from vibe_core.protocols import AgentManifest, Capability, VibeAgent
+
+# Constitutional Oath Mixin
+from vibe_core.steward import OathMixin
 
 # Constitutional Oath binding
 

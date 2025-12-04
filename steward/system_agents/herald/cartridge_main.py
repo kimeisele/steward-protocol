@@ -46,11 +46,10 @@ except ImportError:
     HeraldConfig = None
 
 # Constitutional Oath Mixin
-from steward.oath_mixin import OathMixin
-
 # NOTE: Absolute imports required for Late Binding (ProcessManager loads via importlib)
 from steward.system_agents.herald.core.memory import EventLog
 from steward.system_agents.herald.governance import HeraldConstitution
+from vibe_core.steward import OathMixin
 
 # Constitutional Oath
 # Setup logging

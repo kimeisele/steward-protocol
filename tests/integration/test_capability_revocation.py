@@ -24,8 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
-from steward.oath_mixin import OathMixin
-from steward.constitutional_oath import ConstitutionalOath
+from vibe_core.steward import ConstitutionalOath, OathMixin
 
 
 class MockAgent(VibeAgent, OathMixin):

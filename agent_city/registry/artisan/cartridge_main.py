@@ -13,11 +13,11 @@ REFACTORED: Tool Protocol Compliant
 import logging
 from typing import Any, Dict
 
-# Constitutional Oath Mixin (Golden Template Pattern)
-from steward.oath_mixin import OathMixin
-
 # VibeOS Integration
 from vibe_core import Task, VibeAgent
+
+# Constitutional Oath Mixin (Golden Template Pattern)
+from vibe_core.steward import OathMixin
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
