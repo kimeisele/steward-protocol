@@ -53,16 +53,38 @@ class Capability(str, Enum):
 
 @dataclass
 class AgentManifest:
-    """STEWARD Protocol Agent Identity & Capabilities (ARCH-050)"""
+    """
+    STEWARD Protocol Agent Identity & Capabilities.
+
+    CANONICAL LOCATION: This is the single source of truth.
+    vibe_core/steward/protocol.py re-exports from here.
+
+    Fields:
+    - agent_id: Unique identifier (e.g., "discoverer", "chronicle")
+    - name: Human-readable name
+    - version: Semantic version
+    - author: Creator attribution
+    - description: What the agent does
+    - domain: Functional domain (GOVERNANCE, MEDIA, RESEARCH, etc.)
+    - capabilities: List of capability names
+    - dependencies: List of required dependencies
+    - constitution_hash: Hash of Constitution bound to (governance)
+    - compliance_level: Governance compliance level 0-3
+    - issuer: Entity that issued credentials
+    """
 
     agent_id: str
     name: str
-    version: str
-    author: str
-    description: str
-    domain: str  # e.g., "GOVERNANCE", "MEDIA", "RESEARCH"
+    version: str = "1.0.0"
+    author: str = "Steward Protocol"
+    description: str = ""
+    domain: str = "GENERAL"
     capabilities: List[str] = field(default_factory=list)
     dependencies: List[str] = field(default_factory=list)
+    # Governance fields (for Constitutional binding)
+    constitution_hash: Optional[str] = None
+    compliance_level: int = 2
+    issuer: str = "passport_office"
 
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary"""
@@ -75,7 +97,72 @@ class AgentManifest:
             "domain": self.domain,
             "capabilities": self.capabilities,
             "dependencies": self.dependencies,
+            "governance": {
+                "constitution_hash": self.constitution_hash,
+                "compliance_level": self.compliance_level,
+                "issuer": self.issuer,
+            },
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], agent_id_fallback: Optional[str] = None) -> "AgentManifest":
+        """
+        Create AgentManifest from dictionary (loaded from JSON/YAML).
+
+        Supports multiple schemas for backwards compatibility:
+        - v2.0: agent.id (new standard)
+        - v1.0: identity.agent_id (current majority)
+        - legacy: agent_id at root level
+        """
+        # Try v2.0 schema: agent.id
+        agent_data = data.get("agent", {})
+        agent_id = agent_data.get("id")
+
+        # Fallback to v1.0 schema: identity.agent_id
+        if not agent_id:
+            identity = data.get("identity", {})
+            agent_id = identity.get("agent_id")
+
+        # Fallback to legacy: root-level agent_id
+        if not agent_id:
+            agent_id = data.get("agent_id")
+
+        # Final fallback
+        if not agent_id:
+            agent_id = agent_id_fallback or "unknown"
+
+        # Extract fields from various locations
+        name = agent_data.get("name") or data.get("identity", {}).get("name") or data.get("name") or agent_id.upper()
+        version = agent_data.get("version") or data.get("specs", {}).get("version") or data.get("version") or "1.0.0"
+        domain = agent_data.get("domain") or data.get("specs", {}).get("domain") or data.get("domain") or "GENERAL"
+        description = (
+            agent_data.get("description") or data.get("specs", {}).get("description") or data.get("description") or ""
+        )
+
+        # Extract capabilities (handle both formats)
+        capabilities_data = data.get("capabilities", {})
+        if isinstance(capabilities_data, dict):
+            operations = capabilities_data.get("operations", [])
+            capabilities = [op.get("name", "") for op in operations if isinstance(op, dict)]
+        elif isinstance(capabilities_data, list):
+            capabilities = [cap if isinstance(cap, str) else cap.get("name", "") for cap in capabilities_data]
+        else:
+            capabilities = []
+
+        # Extract governance
+        governance = data.get("governance", {})
+
+        return cls(
+            agent_id=agent_id,
+            name=name,
+            version=version,
+            description=description,
+            domain=domain,
+            capabilities=capabilities,
+            constitution_hash=governance.get("constitution_hash"),
+            compliance_level=governance.get("compliance_level", 2),
+            issuer=governance.get("issuer", "passport_office"),
+        )
 
 
 class VibeAgent(ABC):
