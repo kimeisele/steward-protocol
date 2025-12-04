@@ -218,14 +218,59 @@ class HeartbeatEngine:
             )
 
             # Update status based on router response
-            if result.get("status") == "blocked":
+            status = result.get("status")
+
+            if status == "blocked":
                 logger.warning(f"   ⛔ Task blocked: {result.get('reason', 'unknown')}")
                 self.task_manager.update_task(next_task.id, status=TaskStatus.BLOCKED)
-            else:
-                # Task routed successfully - mark as completed
-                # (The actual agent execution happens async, this just confirms routing)
-                logger.info("   🎉 Task successfully routed and executed")
+
+            elif status == "queued":
+                # Task is in lazy queue - keep as IN_PROGRESS
+                logger.info("   📋 Task queued for later processing")
+                # Don't change status - stays IN_PROGRESS
+
+            elif status == "delegated":
+                # Task delegated to agent - track the agent task
+                logger.info(f"   🔄 Task delegated to {result.get('agent')}")
+                self.task_manager.update_task(
+                    next_task.id,
+                    metadata={
+                        **next_task.metadata,
+                        "delegated_task_id": result.get("task_id"),
+                        "delegated_to": result.get("agent"),
+                    },
+                )
+                # Don't mark complete - agent hasn't finished yet
+
+            elif status == "routing":
+                # IMPORTANT: "routing" means MilkOcean decided WHERE to route,
+                # but did NOT actually execute the agent (no LLM configured).
+                # This is a SILENT FAILURE we need to catch!
+                logger.warning(f"   ⚠️  Task routed to '{result.get('path')}' but NOT executed")
+                logger.warning("   💡 Reason: No live execution (missing LLM API keys?)")
+                logger.warning("   📋 This is a DRY RUN - task marked as PENDING for manual review")
+                # Keep task as PENDING, don't mark completed
+                self.task_manager.update_task(
+                    next_task.id,
+                    status=TaskStatus.PENDING,
+                    metadata={
+                        **next_task.metadata,
+                        "routing_result": result,
+                        "warning": "Task was routed but not executed (DRY RUN MODE)",
+                        "recommended_agent": result.get("path"),
+                    },
+                )
+
+            elif status == "COMPLETED" or status == "completed" or status == "success":
+                # Only mark as completed if agent actually ran
+                logger.info("   🎉 Task successfully executed")
                 self.task_manager.update_task(next_task.id, status=TaskStatus.COMPLETED)
+
+            else:
+                # Unknown status - be conservative
+                logger.warning(f"   ⚠️  Unknown router status: {status}")
+                logger.warning("   📋 Marking as PENDING for safety")
+                self.task_manager.update_task(next_task.id, status=TaskStatus.PENDING)
 
         except Exception as e:
             logger.error(f"   ❌ Task execution failed: {e}")
