@@ -19,12 +19,13 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # Import from shared base (eliminates DRY violation)
-from .base import (
+from steward.system_agents.scribe.tools.base import (
     Tool,
     ToolResult,
     get_kernel_status,
     load_template,
 )
+
 from .introspector import CartridgeIntrospector
 from .operations_introspector import (
     GitActivityIntrospector,
