@@ -31,6 +31,15 @@ sys.path.insert(0, str(project_root))
 from vibe_core.task_management.models import TaskStatus
 from vibe_core.task_management.task_manager import TaskManager
 
+# Import the MilkOcean Router for task execution
+try:
+    from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+
+    MILK_OCEAN_AVAILABLE = True
+except ImportError:
+    MilkOceanRouter = None
+    MILK_OCEAN_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("HEARTBEAT")
 
@@ -43,6 +52,17 @@ class HeartbeatEngine:
         self.tasks_md = project_root / "TASKS.md"
         self.inbox_dir = project_root / "data" / "inbox"
         self.task_manager = TaskManager(project_root)
+
+        # Initialize MilkOcean Router for intelligent task execution
+        self.router = None
+        if MILK_OCEAN_AVAILABLE:
+            try:
+                self.router = MilkOceanRouter()
+                logger.info("🌊 MilkOcean Router ready for task execution")
+            except Exception as e:
+                logger.warning(f"⚠️ MilkOcean Router unavailable: {e}")
+        else:
+            logger.warning("⚠️ MilkOcean Router not available - tasks will queue but not execute")
 
     def pulse(self):
         """Execute one heartbeat cycle."""
@@ -165,18 +185,107 @@ class HeartbeatEngine:
         self.task_manager.update_task(next_task.id, status=TaskStatus.IN_PROGRESS)
 
         try:
-            # TODO: Integrate with actual agent execution
-            # For now, just simulate execution
-            logger.info("   🔄 Task execution not yet implemented")
-            logger.info(f"   Agent: {next_task.assignee or 'auto-routed'}")
-            logger.info(f"   Priority: {next_task.priority}")
+            if not self.router:
+                logger.warning("⚠️ No MilkOcean Router available - task queued but not executed")
+                logger.info(f"   📋 Task: {next_task.title}")
+                logger.info(f"   🎯 Agent: {next_task.assignee or 'auto-route'}")
+                logger.info(f"   ⚡ Priority: {next_task.priority}")
+                return
 
-            # Mark as pending for now (will be completed by actual agents)
-            # self.task_manager.update_task(next_task.id, status=TaskStatus.COMPLETED)
+            # Build the execution request
+            # If assignee is specified, mention it in the prompt
+            if next_task.assignee:
+                prompt = f"@{next_task.assignee}: {next_task.description}"
+            else:
+                prompt = next_task.description
+
+            logger.info("   🔄 Routing task through MilkOcean...")
+            logger.info(f"   📝 Prompt: {prompt[:100]}...")
+
+            # Execute via MilkOcean Router (handles agent selection, execution, etc.)
+            result = self.router.process_prayer(user_input=prompt, agent_id="HEARTBEAT_ENGINE", critical=False)
+
+            logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
+
+            # Store result in task metadata
+            self.task_manager.update_task(
+                next_task.id,
+                metadata={
+                    **next_task.metadata,
+                    "execution_result": result,
+                    "executed_at": datetime.now().isoformat(),
+                },
+            )
+
+            # Update status based on router response
+            status = result.get("status")
+
+            if status == "blocked":
+                logger.warning(f"   ⛔ Task blocked: {result.get('reason', 'unknown')}")
+                self.task_manager.update_task(next_task.id, status=TaskStatus.BLOCKED)
+
+            elif status == "queued":
+                # Task is in lazy queue - keep as IN_PROGRESS
+                logger.info("   📋 Task queued for later processing")
+                # Don't change status - stays IN_PROGRESS
+
+            elif status == "delegated":
+                # Task delegated to agent - track the agent task
+                logger.info(f"   🔄 Task delegated to {result.get('agent')}")
+                self.task_manager.update_task(
+                    next_task.id,
+                    metadata={
+                        **next_task.metadata,
+                        "delegated_task_id": result.get("task_id"),
+                        "delegated_to": result.get("agent"),
+                    },
+                )
+                # Don't mark complete - agent hasn't finished yet
+
+            elif status == "routing":
+                # IMPORTANT: "routing" means MilkOcean decided WHERE to route,
+                # but did NOT actually execute the agent (no LLM configured).
+                # This is a SILENT FAILURE we need to catch!
+                logger.warning(f"   ⚠️  Task routed to '{result.get('path')}' but NOT executed")
+                logger.warning("   💡 Reason: No live execution (missing LLM API keys?)")
+                logger.warning("   📋 This is a DRY RUN - task marked as PENDING for manual review")
+                # Keep task as PENDING, don't mark completed
+                self.task_manager.update_task(
+                    next_task.id,
+                    status=TaskStatus.PENDING,
+                    metadata={
+                        **next_task.metadata,
+                        "routing_result": result,
+                        "warning": "Task was routed but not executed (DRY RUN MODE)",
+                        "recommended_agent": result.get("path"),
+                    },
+                )
+
+            elif status == "COMPLETED" or status == "completed" or status == "success":
+                # Only mark as completed if agent actually ran
+                logger.info("   🎉 Task successfully executed")
+                self.task_manager.update_task(next_task.id, status=TaskStatus.COMPLETED)
+
+            else:
+                # Unknown status - be conservative
+                logger.warning(f"   ⚠️  Unknown router status: {status}")
+                logger.warning("   📋 Marking as PENDING for safety")
+                self.task_manager.update_task(next_task.id, status=TaskStatus.PENDING)
 
         except Exception as e:
             logger.error(f"   ❌ Task execution failed: {e}")
-            self.task_manager.update_task(next_task.id, status=TaskStatus.FAILED)
+            import traceback
+
+            traceback.print_exc()
+            self.task_manager.update_task(
+                next_task.id,
+                status=TaskStatus.BLOCKED,
+                metadata={
+                    **next_task.metadata,
+                    "error": str(e),
+                    "failed_at": datetime.now().isoformat(),
+                },
+            )
 
     def _write_tasks_md(self):
         """Write TaskManager state back to TASKS.md."""
