@@ -311,7 +311,7 @@ class HelpRenderer(Tool):
                 "initialized": True,
                 "last_update": (entries[-1].get("timestamp", "unknown") if entries else "never"),
             }
-        except:
+        except Exception:
             return {"exists": True, "readable": False}
 
     # Standalone mode method (for generate_docs.py)

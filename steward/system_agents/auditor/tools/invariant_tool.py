@@ -320,7 +320,7 @@ class InvariantEngine(Tool):
 
                 try:
                     timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
-                except:
+                except Exception:
                     return (False, f"Event at index {i} has invalid timestamp format")
 
                 if task_id not in task_events:

@@ -61,7 +61,7 @@ class MetricsCollector:
                     completed = datetime.fromisoformat(task["completed_at"])
                     completion_time = (completed - created).total_seconds()
                     completion_times.append(completion_time)
-                except:
+                except Exception:
                     pass
 
         # Update metrics

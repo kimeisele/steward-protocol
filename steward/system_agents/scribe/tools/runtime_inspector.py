@@ -105,5 +105,5 @@ class RuntimeInspector:
 
             matches = re.findall(r"### 🤖 (\w+)", content)
             return len(matches)
-        except:
+        except Exception:
             return 0

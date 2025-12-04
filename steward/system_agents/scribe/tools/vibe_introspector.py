@@ -109,7 +109,7 @@ class VibeCoreIntrospector:
         """Count lines in file."""
         try:
             return len(py_file.read_text().split("\n"))
-        except:
+        except Exception:
             return 0
 
 
@@ -195,5 +195,5 @@ class ToolsIntrospector:
         """Count lines in file."""
         try:
             return len(tool_file.read_text().split("\n"))
-        except:
+        except Exception:
             return 0

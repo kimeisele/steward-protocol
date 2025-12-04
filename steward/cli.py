@@ -358,7 +358,7 @@ def cmd_inspect(args):
         try:
             dt = datetime.fromisoformat(last_timestamp.replace("Z", "+00:00"))
             time_str = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
-        except:
+        except Exception:
             time_str = last_timestamp
 
         status_panel = Panel(
@@ -388,7 +388,7 @@ def cmd_inspect(args):
                 try:
                     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                     timestamp = dt.strftime("%H:%M:%S")
-                except:
+                except Exception:
                     timestamp = timestamp[:8] if len(timestamp) > 8 else timestamp
 
                 event_type = event.get("event_type", "unknown")
@@ -429,7 +429,7 @@ def cmd_inspect(args):
                 try:
                     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                     timestamp = dt.strftime("%H:%M:%S")
-                except:
+                except Exception:
                     timestamp = timestamp[:8] if len(timestamp) > 8 else timestamp
 
                 event_type = event.get("event_type", "unknown")
