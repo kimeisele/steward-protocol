@@ -84,90 +84,48 @@ class PhoenixConfig:
     @classmethod
     def from_files(
         cls,
-        phoenix_path: Path = Path("config/phoenix.yaml"),
-        matrix_path: Path = Path("config/matrix.yaml"),
         circuits_dir: Path = Path("vibe_core/playbook/circuits"),
         routing_path: Path = Path("MATRIX.md"),
-        quality_path: Path = Path("config/quality.yaml"),
         config_dir: Path = Path("config"),
     ) -> "PhoenixConfig":
         """
-        Load configuration from all source files.
+        Load configuration from all source files via auto-discovery.
 
-        Uses SectionLoader for auto-discovery of sections.
+        Sections are auto-discovered from vibe_core/phoenix/sections/
+        and loaded from their source_file in config/:
+        - kernel → config/phoenix.yaml
+        - city → config/matrix.yaml
+        - quality → config/quality.yaml
 
         Args:
-            phoenix_path: Path to phoenix.yaml (kernel config) - legacy
-            matrix_path: Path to matrix.yaml (city config) - legacy
             circuits_dir: Directory containing circuit YAML files
             routing_path: Path to MATRIX.md (routing rules)
-            quality_path: Path to quality.yaml (lint/format/CI config) - legacy
-            config_dir: Directory containing section YAML files (new auto-discovery)
+            config_dir: Directory containing section YAML files
 
         Returns:
             Fully loaded PhoenixConfig
         """
-        # === AUTO-DISCOVERY: Load sections from config/*.yaml ===
-        # Clear cache to ensure fresh discovery
+        # === AUTO-DISCOVERY: Load all sections from config/*.yaml ===
         SectionLoader.clear_cache()
         discovered_sections, section_meta = SectionLoader.discover(config_dir=config_dir)
 
-        # Extract known sections (with fallback to legacy loading)
-        kernel = discovered_sections.get("kernel")
-        city = discovered_sections.get("city")
-        quality = discovered_sections.get("quality")
+        # Extract known sections (use defaults if not discovered)
+        kernel = discovered_sections.get("kernel", KernelConfig())
+        city = discovered_sections.get("city", CityConfig())
+        quality = discovered_sections.get("quality", get_default_quality_config())
 
-        # === LEGACY LOADING: Fallback if not discovered from config/*.yaml ===
-
-        # Load kernel config (legacy: phoenix.yaml)
-        if kernel is None:
-            kernel = KernelConfig()
-            if phoenix_path.exists():
-                try:
-                    with open(phoenix_path) as f:
-                        data = yaml.safe_load(f) or {}
-                    kernel = KernelConfig.from_dict(data)
-                    logger.info(f"Loaded kernel config from {phoenix_path} (legacy)")
-                except Exception as e:
-                    logger.warning(f"Failed to load {phoenix_path}: {e}")
-        else:
-            logger.info("Loaded kernel config via auto-discovery")
-
-        # Load city config (legacy: matrix.yaml)
-        if city is None:
-            city = CityConfig()
-            if matrix_path.exists():
-                try:
-                    with open(matrix_path) as f:
-                        data = yaml.safe_load(f) or {}
-                    city = CityConfig.from_dict(data)
-                    logger.info(f"Loaded city config from {matrix_path} (legacy)")
-                except Exception as e:
-                    logger.warning(f"Failed to load {matrix_path}: {e}")
-        else:
-            logger.info("Loaded city config via auto-discovery")
-
-        # Load quality config (legacy: quality.yaml with direct path)
-        if quality is None:
-            quality = get_default_quality_config()
-            if quality_path.exists():
-                try:
-                    with open(quality_path) as f:
-                        data = yaml.safe_load(f) or {}
-                    quality = QualityConfig.from_dict(data)
-                    logger.info(f"Loaded quality config from {quality_path} (legacy)")
-                except Exception as e:
-                    logger.warning(f"Failed to load {quality_path}, using defaults: {e}")
-        else:
-            logger.info("Loaded quality config via auto-discovery")
+        # Log what was loaded
+        for section_id in ["kernel", "city", "quality"]:
+            meta = section_meta.get(section_id)
+            if meta and meta.loaded_from_yaml:
+                logger.info(f"Loaded {section_id} from {meta.source_file}")
+            else:
+                logger.info(f"Using defaults for {section_id}")
 
         # === COLLECTIONS: Circuits and Routing ===
-
-        # Discover circuits
         circuits = discover_circuits(circuits_dir)
         logger.info(f"Discovered {len(circuits)} circuits from {circuits_dir}")
 
-        # Load routing rules
         routing = load_routing_rules(routing_path)
         logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
@@ -175,7 +133,7 @@ class PhoenixConfig:
         known_sections = {"kernel", "city", "quality"}
         extra_sections = {k: v for k, v in discovered_sections.items() if k not in known_sections}
         if extra_sections:
-            logger.info(f"Auto-discovered {len(extra_sections)} extra sections: {list(extra_sections.keys())}")
+            logger.info(f"Auto-discovered extra sections: {list(extra_sections.keys())}")
 
         # === CREATE CONFIG ===
         config = cls(
@@ -188,12 +146,15 @@ class PhoenixConfig:
             _section_metadata=section_meta,
         )
 
-        # Store paths for later save/reload
-        config._phoenix_path = phoenix_path
-        config._matrix_path = matrix_path
+        # Store paths for later save/reload (from section metadata)
+        kernel_meta = section_meta.get("kernel")
+        city_meta = section_meta.get("city")
+        quality_meta = section_meta.get("quality")
+        config._phoenix_path = kernel_meta.source_file if kernel_meta else None
+        config._matrix_path = city_meta.source_file if city_meta else None
+        config._quality_path = quality_meta.source_file if quality_meta else None
         config._circuits_dir = circuits_dir
         config._routing_path = routing_path
-        config._quality_path = quality_path
         config._config_dir = config_dir
 
         return config
