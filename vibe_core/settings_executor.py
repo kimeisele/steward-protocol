@@ -145,9 +145,9 @@ class SettingsExecutor:
         Note: Requires kernel restart to take effect.
         """
         try:
-            from vibe_core.phoenix_config import get_phoenix_engine
+            from vibe_core.phoenix import get_config
 
-            engine = get_phoenix_engine()
+            config = get_config()
 
             # Map provider name to class path
             provider_map = {
@@ -160,8 +160,8 @@ class SettingsExecutor:
                 logger.error(f"❌ Unknown provider: {provider}")
                 return
 
-            engine.set("providers.llm_provider", provider_map[provider])
-            engine.save()
+            config.kernel.providers.llm_provider = provider_map[provider]
+            config.save()
 
             logger.info(f"🔌 Provider changed to '{provider}' - restart kernel to apply")
 
@@ -175,13 +175,13 @@ class SettingsExecutor:
         Live Fire mode enables real API calls and file writes.
         """
         try:
-            from vibe_core.phoenix_config import get_phoenix_engine
+            from vibe_core.phoenix import get_config
 
-            engine = get_phoenix_engine()
+            config = get_config()
 
             is_live = mode == "live_fire"
-            engine.set("features.live_fire_enabled", is_live)
-            engine.save()
+            config.kernel.features.live_fire_enabled = is_live
+            config.save()
 
             if is_live:
                 logger.warning("⚠️  LIVE FIRE MODE ENABLED - Real API calls and writes are now active!")
