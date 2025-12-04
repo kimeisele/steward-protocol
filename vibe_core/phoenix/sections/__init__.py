@@ -9,7 +9,9 @@ from .quality import (
     FormatConfig,
     LintConfig,
     QualityConfig,
+    TestCategory,
     TestConfig,
+    TestProfile,
 )
 from .routing import RoutingRule
 
@@ -29,6 +31,8 @@ __all__ = [
     "LintConfig",
     "FormatConfig",
     "TestConfig",
+    "TestProfile",
+    "TestCategory",
     "CIConfig",
     "CIWorkflow",
     # Dynamic

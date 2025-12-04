@@ -55,16 +55,97 @@ format:
   quote_style: double
 
 # =============================================================================
-# TESTING (pytest)
+# TESTING (pytest) - With Profiles for Speed & Transparency
+# =============================================================================
+# Profiles allow kernel/agents to run tests intelligently:
+#   pytest $(config.quality.get_pytest_args("fast"))
+#   pytest $(config.quality.get_pytest_args("ci"))
 # =============================================================================
 test:
   tool: pytest
   paths:
     - tests
-  default_markers: []
-  timeout: 300  # seconds per test
-  workers: 0    # 0 = auto-detect
-  coverage_threshold: 0  # 0 = disabled
+  default_profile: fast  # Default for local dev
+  timeout: 300  # Global timeout (profiles can override)
+  workers: 0    # Global workers (0 = auto)
+  coverage_threshold: 0  # Global coverage threshold
+
+  # Available test profiles
+  profiles:
+    # FAST - Quick feedback during development
+    fast:
+      name: fast
+      description: "Quick feedback during development (excludes slow tests)"
+      exclude_markers:
+        - slow
+        - integration
+        - e2e
+      workers: 0  # auto-parallel
+      fail_fast: true
+      timeout: 30
+      verbose: false
+      show_durations: 5
+
+    # FULL - Complete test suite with coverage
+    full:
+      name: full
+      description: "Complete test suite with coverage analysis"
+      workers: 0
+      fail_fast: false
+      timeout: 300
+      coverage: true
+      coverage_threshold: 0
+      verbose: true
+      show_durations: 10
+
+    # CI - CI/CD optimized (strict, parallel, fail-fast)
+    ci:
+      name: ci
+      description: "CI-optimized: parallel, fail-fast, timeout enforced"
+      workers: 0
+      fail_fast: true
+      timeout: 300
+      verbose: false
+      show_durations: 10
+      extra_args:
+        - "--tb=short"
+
+    # SMOKE - Quick sanity check
+    smoke:
+      name: smoke
+      description: "Quick sanity check (smoke-tagged tests only)"
+      markers:
+        - smoke
+      workers: 0
+      fail_fast: true
+      timeout: 10
+      verbose: false
+
+    # UNIT - Unit tests only
+    unit:
+      name: unit
+      description: "Unit tests only (fast, isolated)"
+      markers:
+        - unit
+      exclude_markers:
+        - integration
+        - e2e
+        - slow
+      workers: 0
+      fail_fast: false
+      timeout: 30
+      show_durations: 5
+
+    # INTEGRATION - Integration tests only
+    integration:
+      name: integration
+      description: "Integration tests only (sequential for stability)"
+      markers:
+        - integration
+      workers: 1  # sequential for stability
+      fail_fast: false
+      timeout: 120
+      verbose: true
 
 # =============================================================================
 # CI WORKFLOWS
