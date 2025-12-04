@@ -1,0 +1,105 @@
+# Quality Configuration - The immortal CI/lint settings
+#
+# This file survives container wipes. It IS the source of truth for:
+# - Lint rules (what errors to catch)
+# - Format rules (how code should look)
+# - Test configuration (how to run tests)
+# - CI workflows (what checks to run)
+#
+# Agents and kernel can read this to understand quality requirements.
+# Pre-commit hooks can be GENERATED from this config.
+
+# =============================================================================
+# LINTING (ruff)
+# =============================================================================
+lint:
+  tool: ruff
+  # Critical rules - CI FAILS on these
+  critical_rules:
+    - E9    # Runtime errors (syntax errors, etc.)
+    - F63   # Invalid print syntax
+    - F7    # Syntax errors in assertions
+    - F82   # Undefined names
+  # Informational rules - shown but don't fail CI
+  info_rules:
+    - E     # pycodestyle errors
+    - F     # pyflakes
+    - I     # isort
+    - W     # pycodestyle warnings
+  # Paths to check
+  paths:
+    - vibe_core
+    - steward
+    - scripts
+  # Paths to exclude
+  exclude:
+    - .git
+    - .venv
+    - __pycache__
+    - data
+    - archive
+    - node_modules
+  line_length: 120
+
+# =============================================================================
+# FORMATTING (ruff format)
+# =============================================================================
+format:
+  tool: ruff
+  auto_fix: true
+  paths:
+    - vibe_core
+    - steward
+    - scripts
+  line_length: 120
+  quote_style: double
+
+# =============================================================================
+# TESTING (pytest)
+# =============================================================================
+test:
+  tool: pytest
+  paths:
+    - tests
+  default_markers: []
+  timeout: 300  # seconds per test
+  workers: 0    # 0 = auto-detect
+  coverage_threshold: 0  # 0 = disabled
+
+# =============================================================================
+# CI WORKFLOWS
+# =============================================================================
+ci:
+  workflows:
+    - name: Lint & Format Check
+      file: steward-ci.yml
+      triggers:
+        - push
+        - pull_request
+      required: true
+
+    - name: Integration Tests
+      file: integration-tests.yml
+      triggers:
+        - push
+        - pull_request
+      required: true
+
+    - name: Scheduled Agents
+      file: scheduled-agents.yml
+      triggers:
+        - schedule
+      required: false
+
+  protected_branches:
+    - main
+    - master
+
+  require_status_checks: true
+
+# =============================================================================
+# ENFORCEMENT
+# =============================================================================
+enforce_on_commit: true
+enforce_on_push: true
+block_on_failure: true
