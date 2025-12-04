@@ -105,9 +105,7 @@ class SectionLoader:
     _section_registry: Optional[SectionRegistry] = None
 
     @classmethod
-    def discover_classes(
-        cls, sections_dir: str = "vibe_core/phoenix/sections"
-    ) -> SectionRegistry:
+    def discover_classes(cls, sections_dir: str = "vibe_core/phoenix/sections") -> SectionRegistry:
         """
         Discover all config section classes in the sections directory.
 
@@ -174,9 +172,7 @@ class SectionLoader:
 
                     # Register
                     if section_id in registry:
-                        logger.warning(
-                            f"Duplicate section_id '{section_id}' in {attr_name}, skipping"
-                        )
+                        logger.warning(f"Duplicate section_id '{section_id}' in {attr_name}, skipping")
                         continue
 
                     registry[section_id] = attr
@@ -228,9 +224,7 @@ class SectionLoader:
         metadata: Dict[str, SectionMeta] = {}
 
         # Sort by priority
-        sorted_sections = sorted(
-            registry.items(), key=lambda x: _get_section_priority(x[1])
-        )
+        sorted_sections = sorted(registry.items(), key=lambda x: _get_section_priority(x[1]))
 
         for section_id, section_class in sorted_sections:
             try:
@@ -258,10 +252,7 @@ class SectionLoader:
                     loaded_from_yaml=loaded_from_yaml,
                 )
 
-                logger.debug(
-                    f"   Loaded section: {section_id} "
-                    f"(from={'yaml' if loaded_from_yaml else 'defaults'})"
-                )
+                logger.debug(f"   Loaded section: {section_id} (from={'yaml' if loaded_from_yaml else 'defaults'})")
 
             except Exception as e:
                 logger.error(f"Failed to instantiate section {section_id}: {e}")
@@ -270,9 +261,7 @@ class SectionLoader:
         return sections, metadata
 
     @classmethod
-    def validate_all(
-        cls, sections: SectionInstances
-    ) -> Dict[str, List[str]]:
+    def validate_all(cls, sections: SectionInstances) -> Dict[str, List[str]]:
         """
         Validate all sections.
 
