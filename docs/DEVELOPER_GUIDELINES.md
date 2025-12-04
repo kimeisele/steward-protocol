@@ -189,12 +189,12 @@ discoverer = Discoverer()
 
 **Do this instead (configured):**
 ```python
-# ✅ RIGHT - Phoenix wired
-from vibe_core.phoenix_config import get_phoenix_engine
+# ✅ RIGHT - Phoenix V2 typed config
+from vibe_core.phoenix import get_config
 
-phoenix = get_phoenix_engine()
-agents = phoenix.wire_agents()
-discoverer = agents['DiscoveryAgent']()  # Class, not instance
+config = get_config()
+provider = config.kernel.providers.llm_provider  # Typed access
+live_fire = config.kernel.features.live_fire_enabled
 ```
 
 ---
@@ -219,14 +219,13 @@ def test_my_agent():
 ### Integration Testing
 - Test Layer 2 ↔ Layer 1 compatibility
 - Test Layer 3 wiring
-- Use Phoenix engine in tests
+- Use Phoenix Config V2 in tests
 
 ```python
-def test_phoenix_wiring():
-    from vibe_core.phoenix_config import get_phoenix_engine
-    phoenix = get_phoenix_engine()
-    agents = phoenix.wire_agents()
-    assert len(agents) == 12
+def test_phoenix_config():
+    from vibe_core.phoenix import get_config
+    config = get_config()
+    assert config.kernel.providers.llm_provider is not None
 ```
 
 ### Import Testing
