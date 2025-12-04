@@ -49,12 +49,11 @@ def pulse():
 
     try:
         from vibe_core.boot_orchestrator import BootOrchestrator
-        from vibe_core.config import ConfigLoader
+        from vibe_core.config import load_config
 
         # Load Phoenix Config
         try:
-            loader = ConfigLoader()
-            config = loader.load()
+            config = load_config("config/matrix.yaml")
             logger.info(f"📜 Config: {config.city_name}")
         except Exception as e:
             logger.warning(f"⚠️  Config warning: {e} (using defaults)")

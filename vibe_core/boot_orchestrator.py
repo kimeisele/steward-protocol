@@ -492,10 +492,9 @@ async def boot_and_run(ledger_path: Optional[str] = None, config: Optional[CityC
     # Load Phoenix Config if not provided
     if config is None:
         try:
-            from vibe_core.config import ConfigLoader
+            from vibe_core.config import load_config
 
-            loader = ConfigLoader()
-            config = loader.load()
+            config = load_config()
             logger.info(f"📜 Loaded Phoenix Config: {config.city_name}")
         except Exception as e:
             logger.warning(f"⚠️  Failed to load Phoenix Config: {e} (using defaults)")
