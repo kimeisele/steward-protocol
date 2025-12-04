@@ -95,11 +95,7 @@ class SettingsSectionLoader:
             attr = getattr(module, attr_name)
 
             # Check if it's a SettingsSection subclass (not the base class)
-            if (
-                isinstance(attr, type)
-                and issubclass(attr, SettingsSection)
-                and attr is not SettingsSection
-            ):
+            if isinstance(attr, type) and issubclass(attr, SettingsSection) and attr is not SettingsSection:
                 try:
                     instance = attr()
                     self._sections[instance.section_id] = instance
