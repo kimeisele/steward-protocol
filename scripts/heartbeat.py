@@ -261,6 +261,19 @@ class HeartbeatEngine:
                     },
                 )
 
+            elif status == "critical" or status == "critical_handled":
+                # P4.2: Critical tasks were handled with emergency priority
+                logger.info("   🐘 CRITICAL task handled via Gajendra Protocol")
+                self.task_manager.update_task(
+                    next_task.id,
+                    status=TaskStatus.COMPLETED,
+                    metadata={
+                        **next_task.metadata,
+                        "critical_handled": True,
+                        "protocol": "Gajendra",
+                    },
+                )
+
             elif status == "COMPLETED" or status == "completed" or status == "success":
                 # Only mark as completed if agent actually ran
                 logger.info("   🎉 Task successfully executed")

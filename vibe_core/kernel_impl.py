@@ -725,6 +725,11 @@ class RealVibeKernel(VibeKernel):
             f"Ashrama={ashrama.current_ashrama.value}"
         )
 
+        # STEP 4.6: INJECT KERNEL REFERENCE (Legacy Pattern)
+        # Many agents use self.kernel directly. Keep backward compatibility.
+        agent.set_kernel(self)
+        logger.debug(f"🔗 Agent '{agent.agent_id}' received kernel reference")
+
         # PHASE 1.1: INJECT SYSTEM INTERFACE (The Bridge)
         # Give agent standardized access to:
         # - Dependency Management (replaces requirements.txt)

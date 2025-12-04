@@ -122,7 +122,7 @@ class ScientistCartridge(ContextAwareAgent, OathMixin):
             self._results_dir.mkdir(parents=True, exist_ok=True)
         return self._results_dir
 
-    def process(self, task: Task) -> Dict[str, Any]:
+    async def process(self, task: Task) -> Dict[str, Any]:
         """
         Process a task from the VibeKernel scheduler.
 
