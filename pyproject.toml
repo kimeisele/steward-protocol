@@ -127,7 +127,7 @@ log_cli_level = "WARNING"
 # addopts = "-n auto"  # Uncomment when pytest-xdist is installed
 
 [tool.hatch.build.targets.wheel]
-packages = ["steward"]
+packages = ["steward", "vibe_core"]
 
 # ==============================================================================
 # RUFF: Unified Linting & Formatting (replaces black, flake8, isort)
