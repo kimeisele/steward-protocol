@@ -113,14 +113,19 @@ class GenesisKeeper:
         """
         logger.warning("⚠️  INITIATING GENESIS RESET - System returning to baseline")
 
-        # TODO: Implement actual reset logic
-        # This would involve:
-        # 1. Stopping all agents
-        # 2. Clearing post-genesis ledger entries
-        # 3. Restoring baseline state
-        # 4. Restarting agents
+        # NOTE: Full genesis reset implementation coming soon
+        # This emergency operation will involve:
+        # 1. Multi-signature authorization (Supreme Court + governance)
+        # 2. Graceful agent shutdown (all agents receive SIGTERM)
+        # 3. Post-genesis ledger entry purging (with backup)
+        # 4. Baseline state restoration from genesis block
+        # 5. Agent resurrection in bootstrap order
+        # 6. Full system integrity verification
+        #
+        # WARNING: This is a CRITICAL operation requiring multiple authorizations
 
-        logger.info("🔄 Genesis reset complete")
+        logger.info("🔄 Genesis reset placeholder executed (full implementation pending)")
+        logger.warning("⚠️  Production reset requires multi-party authorization")
         return True
 
     # ========== PRIVATE METHODS ==========
