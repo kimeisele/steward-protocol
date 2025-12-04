@@ -124,7 +124,14 @@ class SecurityConfig:
 
 @dataclass
 class CityConfig:
-    """Complete city configuration from matrix.yaml."""
+    """
+    Complete city configuration from matrix.yaml.
+
+    Auto-discovered by SectionLoader → loads from config/city.yaml
+    """
+
+    # Class-level section identifier for auto-discovery
+    section_id = "city"
 
     name: str = "Agent City Alpha"
     federation_version: str = "1.0.0"

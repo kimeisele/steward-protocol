@@ -80,7 +80,14 @@ class PlaybookConfig:
 
 @dataclass
 class KernelConfig:
-    """Complete kernel configuration from phoenix.yaml."""
+    """
+    Complete kernel configuration from phoenix.yaml.
+
+    Auto-discovered by SectionLoader → loads from config/kernel.yaml
+    """
+
+    # Class-level section identifier for auto-discovery
+    section_id = "kernel"
 
     system: SystemConfig = field(default_factory=SystemConfig)
     providers: ProviderConfig = field(default_factory=ProviderConfig)
