@@ -4,6 +4,26 @@ Dynamic wiring of implementations to protocols.
 
 This module provides the runtime system for connecting implementations
 (Layer 2) to protocols (Layer 1) based on configuration.
+
+DEPRECATED: This module is deprecated in favor of vibe_core.phoenix.
+Use `from vibe_core.phoenix import get_config` instead of `get_phoenix_engine()`.
+
+The new Phoenix Config V2 provides:
+- Typed dataclass composition (not flat dict access)
+- Fractal configuration pattern
+- Hot-reload for routing rules
+- Unified access to all config sources
+
+Migration:
+    # Old:
+    from vibe_core.phoenix_config import get_phoenix_engine
+    engine = get_phoenix_engine()
+    provider = engine.get("providers.llm_provider", "")
+
+    # New:
+    from vibe_core.phoenix import get_config
+    config = get_config()
+    provider = config.kernel.providers.llm_provider
 """
 
 import importlib

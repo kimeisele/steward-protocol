@@ -9,7 +9,7 @@ Discovers sections from vibe_core/settings/sections/
 import importlib
 import logging
 from pathlib import Path
-from typing import Dict, List, Type
+from typing import Dict, List
 
 from .protocol import SettingsSection
 

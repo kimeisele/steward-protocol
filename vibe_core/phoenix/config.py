@@ -285,6 +285,79 @@ class PhoenixConfig:
                 return rule.circuit
         return None
 
+    # =========================================================================
+    # Backward compatibility with old phoenix_config API
+    # =========================================================================
+
+    def get(self, key: str, default=None):
+        """
+        Get config value by dotted key path (backward compatibility).
+
+        Maps old-style dotted paths to typed attributes:
+        - "providers.llm_provider" -> self.kernel.providers.llm_provider
+        - "features.live_fire_enabled" -> self.kernel.features.live_fire_enabled
+
+        Args:
+            key: Dotted path like "providers.llm_provider"
+            default: Default value if not found
+
+        Returns:
+            Config value or default
+        """
+        # Map old paths to new typed structure
+        path_map = {
+            "providers.llm_provider": lambda: self.kernel.providers.llm_provider,
+            "providers.fallback_provider": lambda: self.kernel.providers.fallback_provider,
+            "features.live_fire_enabled": lambda: self.kernel.features.live_fire_enabled,
+            "features.debug_mode": lambda: self.kernel.features.debug_mode,
+            "features.oauth_enforcement": lambda: self.kernel.features.oauth_enforcement,
+            "features.performance_metrics": lambda: self.kernel.features.performance_metrics,
+        }
+
+        if key in path_map:
+            try:
+                return path_map[key]()
+            except Exception:
+                return default
+
+        return default
+
+    def set(self, key: str, value) -> bool:
+        """
+        Set config value by dotted key path (backward compatibility).
+
+        Maps old-style dotted paths to typed attributes.
+
+        Args:
+            key: Dotted path like "features.live_fire_enabled"
+            value: New value to set
+
+        Returns:
+            True if successful
+        """
+        try:
+            if key == "providers.llm_provider":
+                self.kernel.providers.llm_provider = value
+            elif key == "providers.fallback_provider":
+                self.kernel.providers.fallback_provider = value
+            elif key == "features.live_fire_enabled":
+                self.kernel.features.live_fire_enabled = value
+            elif key == "features.debug_mode":
+                self.kernel.features.debug_mode = value
+            elif key == "features.oauth_enforcement":
+                self.kernel.features.oauth_enforcement = value
+            elif key == "features.performance_metrics":
+                self.kernel.features.performance_metrics = value
+            else:
+                logger.warning(f"Unknown config key: {key}")
+                return False
+
+            logger.info(f"Config set: {key} = {value}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to set {key}: {e}")
+            return False
+
 
 # =========================================================================
 # Singleton pattern for global access
