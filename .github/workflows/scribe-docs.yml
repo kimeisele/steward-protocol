@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install jinja2 toml
+          pip install jinja2 toml pyyaml
 
       - name: 🚀 Generate all documentation (standalone)
         run: |
