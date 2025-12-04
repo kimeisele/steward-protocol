@@ -80,9 +80,9 @@ class SettingsUIPlugin(KernelPlugin):
             provider_info = get_provider_info_from_config()
 
             # Live fire from phoenix config
-            from vibe_core.phoenix_config import get_phoenix_engine
+            from vibe_core.phoenix import get_config
 
-            live_fire_enabled = get_phoenix_engine().live_fire_enabled
+            live_fire_enabled = get_config().live_fire_enabled
         except Exception:
             pass  # Use defaults if not available
 

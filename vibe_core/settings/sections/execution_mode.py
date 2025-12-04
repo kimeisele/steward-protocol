@@ -99,11 +99,11 @@ class ExecutionModeSection(SettingsSection):
 
         try:
             # Update phoenix config
-            from vibe_core.phoenix_config import get_phoenix_engine
+            from vibe_core.phoenix import get_config
 
-            engine = get_phoenix_engine()
-            engine.set("features.live_fire_enabled", is_live)
-            engine.save()
+            config = get_config()
+            config.kernel.features.live_fire_enabled = is_live
+            config.save()
 
             if is_live:
                 logger.warning("⚠️  LIVE FIRE MODE ENABLED")
