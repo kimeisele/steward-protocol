@@ -37,6 +37,18 @@ jobs:
       - name: Verify Governance Gate
         run: python scripts/ci/test_governance_gate.py
 
+      - name: Verify Kernel Integrity
+        run: python scripts/governance/verify_kernel.py --verify
+
+      - name: Check Protected Files Changed
+        if: github.event_name == 'pull_request'
+        run: |
+          changed=$(python scripts/governance/verify_kernel.py --check --json | jq -r '.changed | length')
+          if [ "$changed" != "0" ]; then
+            echo "::warning::Protected kernel files were modified. Requires SENIOR REVIEW."
+            python scripts/governance/verify_kernel.py --check
+          fi
+
       - name: Test Results
         if: always()
         run: |
