@@ -5,6 +5,7 @@ circuit:
   id: PHILOSOPHICAL_DEBATE_V1
   description: "Conducts a formal debate using the Nyaya Vada protocol."
   domain: "reasoning"
+  entry_state: INPUT_TOPIC
   
   variables:
     topic:
@@ -58,5 +59,5 @@ circuit:
       on_success: DEBATE_COMPLETE
 
     DEBATE_COMPLETE:
-      type: terminal
+      terminal: true
       description: "Debate concluded successfully."
