@@ -41,6 +41,18 @@ class DiscovererCartridge(Discoverer):
         super().__init__(kernel=kernel, config=config)
         logger.info("🧙 DISCOVERER cartridge initialized (The First Citizen)")
 
+    def get_manifest(self) -> Dict[str, Any]:
+        """Return agent manifest (identity + capabilities)."""
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "version": "1.0.0",
+            "domain": self.domain,
+            "capabilities": self.capabilities,
+            "type": "system_agent",
+            "description": "Guardian of Agent City - discovers and registers agents",
+        }
+
     def report_status(self) -> Dict[str, Any]:
         """Report DISCOVERER status for observability (Article IV compliance)."""
         return {

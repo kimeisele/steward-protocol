@@ -70,5 +70,18 @@ class PingCartridge(ContextAwareAgent, OathMixin):
             "level": response.level.value if hasattr(response.level, "value") else str(response.level),
         }
 
+    def report_status(self) -> Dict[str, Any]:
+        """Report PING status for observability (Article IV compliance)."""
+        deg_status = self.get_degradation_status()
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "OPERATIONAL",
+            "domain": self.domain,
+            "capabilities": self.capabilities,
+            "degradation_level": deg_status.get("level", "L0_OFFLINE"),
+            "description": "Minimal test agent for system validation",
+        }
+
 
 __all__ = ["PingCartridge"]

@@ -1,16 +1,15 @@
 {
-  "verdict": "UNCONSTITUTIONAL",
-  "should_fail_build": true,
-  "total_violations": 13,
+  "verdict": "WARNINGS",
+  "should_fail_build": false,
+  "total_violations": 11,
   "by_severity": {
-    "CONSTITUTIONAL": 2,
+    "CONSTITUTIONAL": 0,
     "GOVERNANCE": 0,
     "WARNING": 11
   },
   "by_article": {
     "Article III: Governance (Boundaries)": 3,
-    "Article V: Zustimmung (Consent)": 8,
-    "Article I: Identity (Cryptographic Proof)": 2
+    "Article V: Zustimmung (Consent)": 8
   },
   "violations": [
     {
@@ -57,24 +56,6 @@
       "file_path": "steward/system_agents/science/cartridge_main.py",
       "line_number": 409,
       "remedy": "Use system.get_sandbox_path() for governed file access"
-    },
-    {
-      "agent_id": "__pycache__",
-      "article": "Article I: Identity (Cryptographic Proof)",
-      "severity": "CONSTITUTIONAL",
-      "message": "Agent lacks identity manifest (steward.json)",
-      "file_path": "steward/system_agents/__pycache__/steward.json",
-      "line_number": null,
-      "remedy": "Create steward.json with agent ID, version, and public key"
-    },
-    {
-      "agent_id": "__pycache__",
-      "article": "Article I: Identity (Cryptographic Proof)",
-      "severity": "CONSTITUTIONAL",
-      "message": "Agent lacks identity documentation (STEWARD.md)",
-      "file_path": "steward/system_agents/__pycache__/STEWARD.md",
-      "line_number": null,
-      "remedy": "Create STEWARD.md with agent identity and capabilities"
     },
     {
       "agent_id": "envoy",
