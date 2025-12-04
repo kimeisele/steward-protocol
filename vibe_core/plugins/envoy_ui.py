@@ -36,10 +36,7 @@ class EnvoyUIPlugin(KernelPlugin):
 
     def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
         """Check for changes in ENVOY.md and dispatch tasks."""
-        print(f"DEBUG: EnvoyUIPlugin.on_tick_pre called. last_modified={self.last_modified}")
-
         if self.sync.check_file_changed(self.last_modified):
-            print("DEBUG: File changed detected")
             state = EnvoySyncState(
                 last_modified=self.last_modified,
                 writing=False,
