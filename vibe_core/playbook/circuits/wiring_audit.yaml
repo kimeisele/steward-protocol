@@ -235,6 +235,19 @@ circuit:
       on_success: COMPLETE
       on_failure: ABORT
 
+    # ============================================================
+    # TERMINAL STATES
+    # ============================================================
+    COMPLETE:
+      name: "Audit Complete"
+      description: "Audit finished successfully"
+      terminal: true
+
+    ABORT:
+      name: "Audit Aborted"
+      description: "Audit aborted due to failure"
+      terminal: true
+
 # ============================================================
 # AUDIT SCRIPT IMPLEMENTATIONS
 # ============================================================
