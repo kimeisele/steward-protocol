@@ -224,7 +224,7 @@ circuit:
         - action: "return_result"
           params:
             success: true
-      final: true
+      terminal: true
 
     FAILURE:
       description: "INDEX.md generation failed"
@@ -233,7 +233,7 @@ circuit:
         - action: "return_result"
           params:
             success: false
-      final: true
+      terminal: true
 
   # ===========================================================================
   # METADATA

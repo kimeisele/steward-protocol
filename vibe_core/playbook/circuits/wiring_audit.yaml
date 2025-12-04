@@ -15,6 +15,7 @@ circuit:
 
   # Dharmic Purpose: System-Integrität sicherstellen
   dharmic_intent: "satya"  # Truth-seeking
+  entry_state: "check_kernel_injection"
 
   # Input Schema
   input:
@@ -233,6 +234,19 @@ circuit:
             summary: "{{ phase_results.findings_summary }}"
       on_success: COMPLETE
       on_failure: ABORT
+
+    # ============================================================
+    # TERMINAL STATES
+    # ============================================================
+    COMPLETE:
+      name: "Audit Complete"
+      description: "Audit finished successfully"
+      terminal: true
+
+    ABORT:
+      name: "Audit Aborted"
+      description: "Audit aborted due to failure"
+      terminal: true
 
 # ============================================================
 # AUDIT SCRIPT IMPLEMENTATIONS
