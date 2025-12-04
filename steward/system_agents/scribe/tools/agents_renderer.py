@@ -16,8 +16,7 @@ from steward.system_agents.scribe.tools.base import (
     get_kernel_status,
     load_template,
 )
-
-from .introspector import CartridgeIntrospector
+from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
 
 
 class AgentsRenderer(Tool):

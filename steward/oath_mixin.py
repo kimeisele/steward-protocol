@@ -36,6 +36,39 @@ class OathMixin:
         self.oath_event: Optional[Dict[str, Any]] = None
         logger.debug(f"🕉️  Oath mixin initialized for {agent_id}")
 
+    def swear_oath_sync(self) -> Dict[str, Any]:
+        """
+        SYNCHRONOUS oath ceremony - works in __init__ regardless of event loop state.
+
+        This is the REAL implementation. The async version is only needed when
+        identity_tool or kernel ledger are async operations.
+        """
+        logger.info(f"🕉️  GENESIS CEREMONY (sync): {self.agent_id} swearing Constitutional Oath...")
+
+        try:
+            # Step 1: Compute Constitution hash
+            constitution_hash = ConstitutionalOath.compute_constitution_hash()
+
+            # Step 2: Create fallback signature (sync - no identity_tool)
+            signature = f"OATH_{self.agent_id}_{constitution_hash[:16]}"
+
+            # Step 3: Create oath event
+            self.oath_event = ConstitutionalOath.create_oath_event(
+                agent_id=self.agent_id,
+                constitution_hash=constitution_hash,
+                signature=signature,
+            )
+
+            # Step 4: Mark as sworn (ledger recording is optional)
+            self.oath_sworn = True
+            logger.info(f"✅ {self.agent_id} has sworn Constitutional Oath (sync)")
+
+            return self.oath_event
+
+        except Exception as e:
+            logger.error(f"❌ Oath ceremony failed for {self.agent_id}: {e}")
+            raise RuntimeError(f"Failed to swear Constitutional Oath: {str(e)}")
+
     async def swear_constitutional_oath(self) -> Dict[str, Any]:
         """
         Execute the Genesis Ceremony: Agent binds itself to Constitution.
