@@ -21,8 +21,16 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import tomlkit
-from tomlkit.toml_document import TOMLDocument
+# Try to import tomlkit (optional dependency for tests)
+try:
+    import tomlkit
+    from tomlkit.toml_document import TOMLDocument
+
+    TOMLKIT_AVAILABLE = True
+except ImportError:
+    TOMLKIT_AVAILABLE = False
+    TOMLDocument = None
+    tomlkit = None
 
 logger = logging.getLogger("DEPENDENCY_MANAGER")
 
@@ -42,6 +50,9 @@ class DependencyManager:
         Args:
             pyproject_path: Path to pyproject.toml (default: root)
         """
+        if not TOMLKIT_AVAILABLE:
+            raise ImportError("tomlkit is required for DependencyManager. Install it with: pip install tomlkit")
+
         self.pyproject_path = Path(pyproject_path)
 
         if not self.pyproject_path.exists():
