@@ -35,7 +35,7 @@ from enum import Enum
 from typing import Literal, Optional, Protocol, runtime_checkable
 from uuid import uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # =============================================================================
 # ENUMS - Strict categorization
@@ -93,8 +93,7 @@ class GitState(BaseModel):
     behind_count: int = 0
     is_clean: bool = True
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 class TaskState(BaseModel):
@@ -105,8 +104,7 @@ class TaskState(BaseModel):
     progress: Optional[float] = Field(None, ge=0.0, le=1.0)
     status: Literal["pending", "running", "completed", "failed"] = "pending"
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 class SystemContext(BaseModel):
@@ -147,8 +145,7 @@ class SystemContext(BaseModel):
     available_tools: list[str] = Field(default_factory=list)
     available_agents: list[str] = Field(default_factory=list)
 
-    class Config:
-        frozen = False  # Allow updates during boot
+    model_config = ConfigDict(frozen=False)  # Allow updates during boot
 
 
 class Intent(BaseModel):
@@ -179,8 +176,7 @@ class Intent(BaseModel):
     is_destructive: bool = False
     priority: PriorityLevel = PriorityLevel.NORMAL
 
-    class Config:
-        frozen = True  # Intents are immutable once created
+    model_config = ConfigDict(frozen=True)  # Intents are immutable once created
 
 
 class OperatorResponse(BaseModel):
@@ -206,8 +202,7 @@ class OperatorResponse(BaseModel):
     processing_time_ms: Optional[float] = None
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        frozen = True
+    model_config = ConfigDict(frozen=True)
 
 
 # =============================================================================

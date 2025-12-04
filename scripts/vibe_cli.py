@@ -37,7 +37,7 @@ def check_connection():
     try:
         r = requests.get(f"{BASE_URL}/", timeout=1)
         return r.status_code == 200
-    except:
+    except Exception:
         return False
 
 

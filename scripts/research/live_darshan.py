@@ -217,7 +217,7 @@ class LiveDarshan:
                     # Send keep-alive
                     try:
                         await self.ws.send("ping")
-                    except:
+                    except Exception:
                         pass
         except asyncio.CancelledError:
             pass

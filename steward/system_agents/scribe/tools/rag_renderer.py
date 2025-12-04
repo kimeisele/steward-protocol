@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 # Import from shared base
-from .base import (
+from steward.system_agents.scribe.tools.base import (
     Tool,
     ToolResult,
     get_kernel_status,

@@ -173,7 +173,7 @@ class ProjectIntrospector:
 
             if summary_lines:
                 return " ".join(summary_lines)
-        except:
+        except Exception:
             pass
 
         return "Constitutional governance enforced at kernel level"

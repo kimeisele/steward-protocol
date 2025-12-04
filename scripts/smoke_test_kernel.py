@@ -298,7 +298,7 @@ def smoke_test_kernel():
             try:
                 if hasattr(kernel, "lineage"):
                     kernel.lineage.close()
-            except:
+            except Exception:
                 pass
 
 

@@ -602,7 +602,7 @@ class SupremeCourtCartridge(VibeAgent, OathMixin):
             # Use kernel's public API (get_agent_manifest)
             manifest = self.kernel.get_agent_manifest(agent_id)
             return manifest.domain if manifest else "unknown"
-        except:
+        except Exception:
             return "unknown"
 
     def _determine_mercy_eligibility(self, findings: Dict[str, Any]) -> bool:
