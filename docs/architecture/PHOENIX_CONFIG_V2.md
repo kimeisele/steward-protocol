@@ -255,4 +255,74 @@ config.city.governance           # GovernanceConfig - same interface
 
 ---
 
+## 4D Hypercube: Ephemeral Cities
+
+The final piece that makes the system truly fractal: **Agents can spawn child kernels with custom configurations.**
+
+### The Concept
+
+```
+Parent Kernel (Agent City Alpha)
+├── Governance: Democracy (voting_threshold=0.5)
+├── Economy: Standard credits
+│
+└── Agent detects complex task...
+    │
+    └── SPAWN EPHEMERAL CITY
+        │
+        ├── Child Kernel (Fast Coding Swarm)
+        │   ├── Governance: Dictatorship (voting_threshold=0)
+        │   ├── Economy: Unlimited credits
+        │   └── Agents: 5 coders, 1 tester
+        │
+        └── Task solved → Result + Proof → MERGE BACK
+```
+
+### Implementation
+
+```python
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.phoenix import PhoenixConfig
+
+# Parent kernel (main city)
+parent = RealVibeKernel()
+
+# Agent generates custom config for sub-task
+fast_config = PhoenixConfig.from_files()
+fast_config.city.governance.voting_threshold = 0  # No democracy
+fast_config.city.name = "Fast Coding Swarm"
+
+# Spawn ephemeral child
+child = parent.spawn_child_kernel(fast_config)
+
+# Child executes task...
+result = {"code": "...", "tests": "passed"}
+
+# Merge back with cryptographic proof
+merge = parent.merge_child_result(child, result)
+# merge = {
+#   "type": "EPHEMERAL_CITY_MERGE",
+#   "child_ledger_hash": "4f53cda18c2baa0c",
+#   "result": "...",
+# }
+```
+
+### Key Properties
+
+1. **Isolation**: Child kernel runs in-memory, doesn't affect parent state
+2. **Custom Physics**: Different governance rules, economy, agent configurations
+3. **Proof of Work**: Child's ledger hash is recorded in parent
+4. **Recursive**: Child can spawn grandchildren (infinite depth)
+
+### Use Cases
+
+| Scenario | Parent Config | Child Config |
+|----------|---------------|--------------|
+| Fast Coding | Democracy | Dictatorship (speed) |
+| Experimentation | Production | Sandbox (safe) |
+| Specialized Task | General | Domain-specific agents |
+| Parallel Swarm | 1 executor | N parallel workers |
+
+---
+
 *Based on the original `phoenix_config` package by kimeisele*
