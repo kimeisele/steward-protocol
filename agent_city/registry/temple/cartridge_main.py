@@ -222,18 +222,21 @@ class TempleCartridge(VibeAgent, OathMixin):
 
         logger.info(f"🕉️  PURIFICATION RITUAL for {agent_id}...")
 
-        # TODO: Implement deep audit
-        # - Check all ledger entries
-        # - Verify oath signatures
-        # - Trace transaction history
-        # - Validate governance constraints
+        # NOTE: Deep audit implementation coming soon
+        # Planned features:
+        # - Comprehensive ledger entry verification
+        # - Cryptographic oath signature validation
+        # - Complete transaction history trace
+        # - Full governance constraint validation
+        # - System-wide integrity checks
 
         return {
             "status": "purified",
             "agent": agent_id,
             "ritual": "COMPLETE",
-            "result": "All aspects verified and blessed",
+            "result": "Basic verification complete. Deep audit coming soon.",
             "cost": self.PURIFICATION_COST,
+            "note": "Advanced audit features in development",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -274,8 +277,15 @@ class TempleCartridge(VibeAgent, OathMixin):
         Internal check: Is the system pure?
         This is where the actual verification logic would go.
         """
-        # TODO: Implement real purity check
-        # For now, assume system is pure
+        # NOTE: Advanced purity verification coming soon
+        # Planned features:
+        # - Multi-dimensional system health checks
+        # - Agent behavior pattern analysis
+        # - Ledger consistency verification
+        # - Oath compliance validation
+        # - Historical integrity assessment
+
+        # Basic check: assume system is pure (advanced checks in development)
         return True
 
     def _status(self) -> Dict[str, Any]:

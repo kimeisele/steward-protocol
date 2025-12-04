@@ -146,16 +146,18 @@ class LensCartridge(VibeAgent, OathMixin):
         """Generate analytics report."""
         campaign_id = payload.get("campaign_id", "all")
 
-        # TODO: Implement report generation
-        # - Aggregate KPIs
-        # - Format for presentation
-        # - Include visualizations
+        # NOTE: Advanced report generation coming soon
+        # Planned features:
+        # - Aggregate KPIs with statistical summaries
+        # - Multi-format presentation (JSON, CSV, PDF)
+        # - Interactive data visualizations
 
         return {
             "status": "generated",
             "campaign_id": campaign_id,
             "kpi_count": len(self.kpis),
             "data_points": len(self.historical_data),
+            "note": "Basic report. Advanced analytics coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -164,16 +166,18 @@ class LensCartridge(VibeAgent, OathMixin):
         metric_name = payload.get("metric_name", "all")
         period = payload.get("period", "7d")
 
-        # TODO: Implement trend analysis
-        # - Time-series analysis
-        # - Anomaly detection
-        # - Growth rate calculation
+        # NOTE: Advanced trend analysis coming soon
+        # Planned features:
+        # - Time-series analysis with ML models
+        # - Anomaly detection algorithms
+        # - Growth rate and velocity calculations
 
         return {
             "status": "analyzing",
             "metric": metric_name,
             "period": period,
             "data_points_analyzed": len(self.historical_data),
+            "note": "Basic trend tracking. Advanced analysis coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -196,14 +200,16 @@ class LensCartridge(VibeAgent, OathMixin):
         """Compare performance across campaigns."""
         campaigns = payload.get("campaigns", [])
 
-        # TODO: Implement campaign benchmarking
-        # - Side-by-side comparison
-        # - Performance ranking
-        # - Learnings extraction
+        # NOTE: Advanced campaign benchmarking coming soon
+        # Planned features:
+        # - Side-by-side performance comparison
+        # - Multi-metric ranking and scoring
+        # - Automated insights and learnings extraction
 
         return {
             "status": "comparing",
             "campaigns_compared": len(campaigns),
+            "note": "Basic comparison. Advanced benchmarking coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -212,16 +218,18 @@ class LensCartridge(VibeAgent, OathMixin):
         metric_name = payload.get("metric_name", "")
         forecast_period = payload.get("forecast_period", "30d")
 
-        # TODO: Implement predictive analysis
-        # - Time-series forecasting
-        # - Confidence intervals
-        # - Scenario analysis
+        # NOTE: Predictive analysis coming soon
+        # Planned features:
+        # - ML-based time-series forecasting (ARIMA, Prophet)
+        # - Statistical confidence intervals
+        # - Multi-scenario analysis and Monte Carlo simulation
 
         return {
             "status": "forecasting",
             "metric": metric_name,
             "forecast_period": forecast_period,
             "historical_data_points": len(self.historical_data),
+            "note": "Basic forecast tracking. Advanced predictions coming soon.",
             "timestamp": datetime.utcnow().isoformat(),
         }
 

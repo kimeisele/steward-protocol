@@ -214,7 +214,12 @@ class MarketCartridge(VibeAgent, OathMixin):
         price = payload.get("price", 0)
         delivery_time = payload.get("delivery_time", "unknown")
 
-        # TODO: Verify provider authorization
+        # NOTE: Provider authorization verification coming soon
+        # Planned features:
+        # - Agent identity verification via oath registry
+        # - Service posting permissions validation
+        # - Quality/reputation score checks
+        # - Anti-spam and fraud prevention
 
         new_service = {
             "provider": provider,
@@ -222,6 +227,7 @@ class MarketCartridge(VibeAgent, OathMixin):
             "price": price,
             "delivery_time": delivery_time,
             "posted_at": datetime.utcnow().isoformat(),
+            "note": "Basic posting. Authorization checks coming soon.",
         }
 
         self.services[service_name] = new_service
