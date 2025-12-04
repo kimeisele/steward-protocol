@@ -276,7 +276,7 @@ class CityConfig(BaseModel):
 # ============================================================================
 
 
-def load_config(config_path: str) -> CityConfig:
+def load_config(config_path: str = "config/matrix.yaml") -> CityConfig:
     """
     Load and validate configuration from YAML file.
 

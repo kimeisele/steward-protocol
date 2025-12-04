@@ -24,10 +24,9 @@ from steward.system_agents.scribe.tools.base import (
     get_kernel_status,
     load_template,
 )
-
-from .introspector import CartridgeIntrospector
-from .runtime_inspector import RuntimeInspector
-from .vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
+from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
+from steward.system_agents.scribe.tools.runtime_inspector import RuntimeInspector
+from steward.system_agents.scribe.tools.vibe_introspector import ToolsIntrospector, VibeCoreIntrospector
 
 
 class CitymapRenderer(Tool):

@@ -30,7 +30,7 @@ class PingCartridge(ContextAwareAgent, OathMixin):
 
         # Swear oath
         self.oath_mixin_init(self.agent_id)
-        self.oath_sworn = True
+        self.swear_oath_sync()
         logger.info("🏓 PING agent ready")
 
     def get_manifest(self) -> AgentManifest:

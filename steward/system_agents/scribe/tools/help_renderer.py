@@ -24,13 +24,12 @@ from steward.system_agents.scribe.tools.base import (
     get_kernel_status,
     load_template,
 )
-
-from .introspector import (
+from steward.system_agents.scribe.tools.introspector import (
     CartridgeIntrospector,
     ConfigIntrospector,
     ScriptIntrospector,
 )
-from .operations_introspector import (
+from steward.system_agents.scribe.tools.operations_introspector import (
     GitActivityIntrospector,
     ParameterIntrospector,
     WorkflowIntrospector,
