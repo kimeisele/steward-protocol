@@ -49,20 +49,20 @@ def get_provider_info_from_config() -> dict:
         Dict with name, display, api_key_env, pro_model, low_model
     """
     try:
-        from vibe_core.phoenix_config import get_phoenix_engine
+        from vibe_core.phoenix import get_config
 
-        engine = get_phoenix_engine()
-        provider_path = engine.get("providers.llm_provider", "")
+        phoenix_config = get_config()
+        provider_path = phoenix_config.kernel.providers.llm_provider
 
         # Find matching provider in registry
-        for name, config in PROVIDER_REGISTRY.items():
-            if name in provider_path.lower() or config["class"] == provider_path:
+        for name, provider_cfg in PROVIDER_REGISTRY.items():
+            if name in provider_path.lower() or provider_cfg["class"] == provider_path:
                 return {
                     "name": name,
-                    "display": config["display"],
-                    "api_key_env": config["api_key_env"],
-                    "pro_model": config["pro_model"],
-                    "low_model": config["low_model"],
+                    "display": provider_cfg["display"],
+                    "api_key_env": provider_cfg["api_key_env"],
+                    "pro_model": provider_cfg["pro_model"],
+                    "low_model": provider_cfg["low_model"],
                 }
 
         # Unknown provider
@@ -167,11 +167,11 @@ class ProviderSection(SettingsSection):
 
         try:
             # Update phoenix config
-            from vibe_core.phoenix_config import get_phoenix_engine
+            from vibe_core.phoenix import get_config
 
-            engine = get_phoenix_engine()
-            engine.set("providers.llm_provider", provider_config["class"])
-            engine.save()
+            config = get_config()
+            config.kernel.providers.llm_provider = provider_config["class"]
+            config.save()
 
             logger.info(f"🔌 Provider changed to '{provider}'")
 
