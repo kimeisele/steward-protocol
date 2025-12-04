@@ -261,14 +261,13 @@ def setup_git_hooks():
 def boot_check():
     """Quick boot verification."""
     from vibe_core.boot_orchestrator import BootOrchestrator
-    from vibe_core.config import ConfigLoader
+    from vibe_core.config import load_config
 
     print_banner("AGENT CITY OS - BOOT CHECK")
 
     # Load Phoenix Config (matrix.yaml) for proper agent configuration
     try:
-        loader = ConfigLoader()
-        config = loader.load()
+        config = load_config("config/matrix.yaml")
         print(f"  Config:        {config.city_name} (v{config.federation_version})")
     except Exception as e:
         print(f"  Config:        ⚠️  Failed to load ({e})")
