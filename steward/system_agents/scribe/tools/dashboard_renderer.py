@@ -25,13 +25,12 @@ from steward.system_agents.scribe.tools.base import (
     get_kernel_status,
     load_template,
 )
-
-from .introspector import CartridgeIntrospector
-from .operations_introspector import (
+from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
+from steward.system_agents.scribe.tools.operations_introspector import (
     GitActivityIntrospector,
     WorkflowIntrospector,
 )
-from .runtime_inspector import RuntimeInspector
+from steward.system_agents.scribe.tools.runtime_inspector import RuntimeInspector
 
 
 class DashboardRenderer(Tool):

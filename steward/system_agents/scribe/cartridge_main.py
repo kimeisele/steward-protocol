@@ -88,7 +88,7 @@ class ScribeCartridge(VibeAgent, OathMixin):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            self.oath_sworn = True
+            self.swear_oath_sync()
             logger.info("✅ SCRIBE has sworn the Constitutional Oath")
 
         # PHASE 2.3: Lazy-load root_dir after system interface injection

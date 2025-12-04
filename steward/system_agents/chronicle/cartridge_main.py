@@ -19,7 +19,6 @@ Philosophy:
 Every commit is a verse. Every branch is a possible universe."
 """
 
-import asyncio
 import logging
 from typing import Any, Dict
 
@@ -89,12 +88,9 @@ class ChronicleCartridge(VibeAgent, OathMixin):
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
-            # Swear the oath (async operation)
-            try:
-                asyncio.run(self.swear_constitutional_oath())
-                logger.info("✅ CHRONICLE has sworn the Constitutional Oath")
-            except Exception as e:
-                logger.warning(f"⚠️  Oath swearing failed (non-critical): {e}")
+            # Use SYNC oath ceremony (works in __init__ regardless of event loop)
+            self.swear_oath_sync()
+            logger.info("✅ CHRONICLE has sworn the Constitutional Oath")
 
         # NO tool instances owned - agent is NAKED
         # Tools accessed via self.system.execute_tool()

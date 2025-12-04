@@ -24,8 +24,7 @@ from steward.system_agents.scribe.tools.base import (
     ToolResult,
     get_kernel_status,
 )
-
-from .project_introspector import ProjectIntrospector
+from steward.system_agents.scribe.tools.project_introspector import ProjectIntrospector
 
 
 class ReadmeRenderer(Tool):
