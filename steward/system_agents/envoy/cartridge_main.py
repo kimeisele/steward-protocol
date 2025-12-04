@@ -142,6 +142,11 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             dict: Result of the operation
         """
         try:
+            # P3.2: Inject kernel into router if not already set
+            if self.kernel and not self.router.kernel:
+                self.router.set_kernel(self.kernel)
+                logger.debug("🔗 Kernel injected into MilkOceanRouter")
+
             logger.info(f"⚡ ENVOY processing task: {task.task_id}")
 
             # Extract the command from task payload
@@ -192,6 +197,16 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 # Lazy queue - return acknowledgment
                 return {"status": "queued", "request_id": routing_decision.get("request_id")}
 
+            elif status == "critical":
+                # P4.1: GAJENDRA PROTOCOL - Emergency kernel bypass
+                logger.warning("🐘 CRITICAL PRIORITY - Direct kernel execution")
+                # Execute immediately with highest priority
+                from vibe_core.scheduling.task import Task
+
+                critical_task = Task(agent_id="envoy", payload={"input": user_input, "critical": True})
+                task_id = self.kernel.submit_task(critical_task)
+                return {"status": "critical_handled", "task_id": task_id}
+
             elif status == "routing":
                 # Execute based on path
                 if path == "flash":
@@ -212,8 +227,19 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                     task_id = self.kernel.submit_task(task)
                     return {"status": "delegated", "agent": "science", "task_id": task_id}
 
+                else:
+                    # P4.1: Unknown path - log warning and use flash as fallback
+                    logger.warning(f"Unknown routing path '{path}', using flash fallback")
+                    result = await self.executor.execute(
+                        playbook_id="SIMPLE_QUERY",
+                        user_input=user_input,
+                        intent_vector=routing_decision.get("details"),
+                        kernel=self.kernel,
+                    )
+                    return result
+
             # Fallback
-            return {"status": "error", "error": "Unknown routing path"}
+            return {"status": "error", "error": "Unknown routing status"}
 
         except Exception as e:
             error_result = {"status": "error", "task_id": task.task_id, "error": str(e)}

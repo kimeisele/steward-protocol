@@ -332,9 +332,9 @@ class MilkOceanRouter:
         logger.info("🌊 Milk Ocean Router initialized (Brahma Protocol Active)")
 
     def set_kernel(self, kernel):
-        """Allow kernel injection after initialization"""
+        """P3.2: Inject kernel reference for lazy queue worker."""
         self.kernel = kernel
-        logger.info("🧠 Kernel injected into MilkOceanRouter")
+        logger.info("🔗 Kernel injected into MilkOceanRouter")
 
     # ==================== GATE 0: WATCHMAN ====================
     # Mechanical, free, instant blocking
