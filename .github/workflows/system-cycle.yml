@@ -80,6 +80,17 @@ jobs:
           ls -lh *.md | wc -l | xargs echo "  Total MD files:"
 
       - name: 📤 Commit Updates
+        env:
+          COMMIT_MSG: |
+            chore: 🔄 Daily system cycle
+
+            Automated system boot and maintenance:
+            - Kernel boot check
+            - Documentation regeneration  
+            - Health check completed
+
+            Cycle Type: ${{ inputs.cycle_type || 'scheduled' }}
+            [skip ci]
         run: |
           git config user.name "System Cycle Bot"
           git config user.email "cycle@agent-city.dev"
@@ -89,15 +100,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "📊 No changes to commit"
           else
-            git commit -m "chore: 🔄 Daily system cycle
-
-Automated system boot and maintenance:
-- Kernel boot check
-- Documentation regeneration  
-- Health check completed
-
-Cycle Type: ${{ inputs.cycle_type || 'scheduled' }}
-[skip ci]"
+            git commit -m "$COMMIT_MSG"
             git push || echo "⚠️ Push failed"
           fi
 

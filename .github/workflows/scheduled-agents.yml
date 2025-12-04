@@ -176,6 +176,15 @@ jobs:
           echo "✅ Census recorded: data/census/census_$DATE.json"
 
       - name: Commit Census Data
+        env:
+          COMMIT_MSG: |
+            census: Daily update by ARCHIVIST
+
+            Population: ${{ steps.census.outputs.population }} citizens
+            Events: ${{ steps.census.outputs.events }} total
+            Status: Active
+
+            Automated by Autarky Protocol
         run: |
           git config user.name "ARCHIVIST"
           git config user.email "archivist@agent-city.dev"
@@ -185,13 +194,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "📊 No changes to commit"
           else
-            git commit -m "census: Daily update by ARCHIVIST
-
-Population: ${{ steps.census.outputs.population }} citizens
-Events: ${{ steps.census.outputs.events }} total
-Status: Active
-
-Automated by Autarky Protocol"
+            git commit -m "$COMMIT_MSG"
             git push || echo "⚠️  Push failed (may need permissions)"
           fi
 
