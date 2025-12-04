@@ -2,6 +2,7 @@
 """
 Quick test to verify CALL_AGENT fix in deterministic_executor.py
 """
+
 import asyncio
 import logging
 import sys
@@ -10,7 +11,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("PLAYBOOK_FIX_TEST")
 
 from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
@@ -25,10 +26,7 @@ class MockKernel:
 
     async def submit_task(self, task: Task):
         """Mock submit_task that returns a result dict like real kernel"""
-        self.calls.append({
-            "agent_id": task.agent_id,
-            "payload": task.payload
-        })
+        self.calls.append({"agent_id": task.agent_id, "payload": task.payload})
 
         logger.info(f"MockKernel: Received task for {task.agent_id} with payload: {task.payload}")
 
@@ -37,7 +35,7 @@ class MockKernel:
             "status": "success",
             "agent": task.agent_id,
             "mock_result": f"Result from {task.agent_id}",
-            "payload_echo": task.payload
+            "payload_echo": task.payload,
         }
 
 
@@ -72,7 +70,7 @@ async def test_playbook_execution():
             user_input="Test content generation",
             intent_vector=None,
             kernel=kernel,
-            emit_event=None
+            emit_event=None,
         )
 
         logger.info("\n" + "=" * 60)

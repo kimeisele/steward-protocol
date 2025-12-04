@@ -6,7 +6,7 @@ circuit:
   description: "Conducts a formal debate using the Nyaya Vada protocol."
   domain: "reasoning"
   entry_state: INPUT_TOPIC
-  
+
   variables:
     topic:
       type: string

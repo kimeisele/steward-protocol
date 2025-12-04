@@ -27,13 +27,13 @@ config:
   governance:
     enabled: true
     constitution: "StewardProtocol"
-  
+
   outreach:
     max_candidates_per_week: 3
     min_stars: 100
     topics: ["ai-agent", "autonomous-agent", "llm-agent"]
     auto_post: false  # CRITICAL: Always requires human approval
-  
+
   personality:
     tone: "respectful"
     style: "technical yet warm"

@@ -19,7 +19,7 @@
 ```python
 class DirectToolCallVisitor(ast.NodeVisitor):
     """Detects NAKED agent pattern violations."""
-    
+
     def visit_Attribute(self, node: ast.Attribute):
         # Detects: self.something_tool.method()
         if attr_name.endswith("_tool"):

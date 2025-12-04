@@ -27,7 +27,7 @@ properties:
         type: string
         pattern: "^[A-Z_]+_V\\d+$"
         description: Unique identifier (e.g., AGENT_BIRTH_V1).
-      
+
       description:
         type: string
         description: Human-readable purpose of this circuit.
@@ -59,7 +59,7 @@ properties:
                 type: string
                 enum: [input, processing, terminal, error]
                 description: Role of this state.
-              
+
               description:
                 type: string
                 description: What happens in this state.

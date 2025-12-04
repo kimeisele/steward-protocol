@@ -102,7 +102,9 @@ def test_semantic_compiler():
                 print(f"   ✅ PASS: Compiled to {tc['expected_syscall'].value} with role={tc['expected_role']}")
                 results.append(True)
             elif type_match:
-                print(f"   ⚠️  PARTIAL: Correct syscall, but role={syscall.params.get('role')} (expected {tc['expected_role']})")
+                print(
+                    f"   ⚠️  PARTIAL: Correct syscall, but role={syscall.params.get('role')} (expected {tc['expected_role']})"
+                )
                 results.append(True)  # Partial pass
             else:
                 print(f"   ❌ FAIL: Expected {tc['expected_syscall'].value}")
@@ -210,7 +212,7 @@ def test_circuit_executor():
 
     # Test with natural language input
     test_input = "Create a new monitoring agent that watches system health"
-    print(f"\n📝 Input: \"{test_input}\"")
+    print(f'\n📝 Input: "{test_input}"')
 
     result = executor.execute(test_input, requester_id="test_user")
 
@@ -268,7 +270,7 @@ def test_full_genesis_flow():
     results = []
     for user_input in test_inputs:
         print(f"\n{'─' * 50}")
-        print(f"📝 User: \"{user_input}\"")
+        print(f'📝 User: "{user_input}"')
 
         result = executor.execute(user_input)
 
@@ -325,6 +327,7 @@ def main():
         except Exception as e:
             print(f"\n❌ {name} CRASHED: {e}")
             import traceback
+
             traceback.print_exc()
             results[name] = False
 

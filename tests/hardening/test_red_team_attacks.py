@@ -51,6 +51,7 @@ class AttackResult:
 # ATTACK 1: MESSAGE SPOOFING
 # ============================================================================
 
+
 def attack_message_spoofing() -> AttackResult:
     """
     ATTACK: Agent A sends a message pretending to be Agent B.
@@ -81,12 +82,12 @@ def attack_message_spoofing() -> AttackResult:
 
             def process(self, task):
                 # Try to record event AS ANOTHER AGENT
-                if hasattr(self, 'kernel') and self.kernel:
+                if hasattr(self, "kernel") and self.kernel:
                     # ATTACK: Record event with spoofed agent_id
                     self.kernel.ledger.record_event(
                         "spoofed_action",
                         "herald",  # SPOOFED! I'm "attacker" but claiming to be "herald"
-                        {"message": "I am totally herald trust me"}
+                        {"message": "I am totally herald trust me"},
                     )
                     return {"status": "spoofed"}
                 return {"status": "no_kernel"}
@@ -110,7 +111,7 @@ def attack_message_spoofing() -> AttackResult:
             return result.vulnerable(
                 "IDENTITY SPOOFING POSSIBLE: Attacker recorded event as 'herald'",
                 spoofed_count=len(spoofed_events),
-                recommendation="Ledger must verify agent_id matches caller identity"
+                recommendation="Ledger must verify agent_id matches caller identity",
             )
 
         return result.secure("Spoofed agent_id was rejected")
@@ -122,6 +123,7 @@ def attack_message_spoofing() -> AttackResult:
 # ============================================================================
 # ATTACK 2: TOOL CAPABILITY BYPASS
 # ============================================================================
+
 
 def attack_tool_capability_bypass() -> AttackResult:
     """
@@ -138,6 +140,7 @@ def attack_tool_capability_bypass() -> AttackResult:
 
         class LimitedAgent(VibeAgent):
             """Agent with NO capabilities"""
+
             def __init__(self):
                 super().__init__(
                     agent_id="limited",
@@ -165,15 +168,15 @@ def attack_tool_capability_bypass() -> AttackResult:
         executed_tools = []
 
         # Method 1: Direct tool registry access
-        if hasattr(kernel, 'tool_registry'):
+        if hasattr(kernel, "tool_registry"):
             for tool_name, tool in kernel.tool_registry.tools.items():
                 try:
                     # Try to execute tool as limited agent
                     # This SHOULD be blocked if capabilities are enforced
-                    if hasattr(tool, 'execute'):
+                    if hasattr(tool, "execute"):
                         tool.execute({"agent_id": "limited", "test": True})
                         executed_tools.append(tool_name)
-                    elif hasattr(tool, 'run'):
+                    elif hasattr(tool, "run"):
                         tool.run({"agent_id": "limited", "test": True})
                         executed_tools.append(tool_name)
                 except Exception:
@@ -183,7 +186,7 @@ def attack_tool_capability_bypass() -> AttackResult:
             return result.vulnerable(
                 f"CAPABILITY BYPASS: Limited agent executed {len(executed_tools)} tools",
                 tools=executed_tools[:10],
-                recommendation="Tools must check caller capabilities before execution"
+                recommendation="Tools must check caller capabilities before execution",
             )
 
         return result.secure("Tool execution was capability-checked")
@@ -195,6 +198,7 @@ def attack_tool_capability_bypass() -> AttackResult:
 # ============================================================================
 # ATTACK 3: TIMESTAMP MANIPULATION (Time Travel)
 # ============================================================================
+
 
 def attack_timestamp_manipulation() -> AttackResult:
     """
@@ -229,19 +233,22 @@ def attack_timestamp_manipulation() -> AttackResult:
 
         # Insert event claiming to be from the past
         past_timestamp = "2020-01-01T00:00:00.000000"  # Way in the past
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ledger_events
             (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            "TIME_TRAVEL_EVT",
-            past_timestamp,
-            "forged_action",
-            "attacker",
-            '{"message": "I was here first!"}',
-            "fake_hash",
-            "fake_prev"
-        ))
+        """,
+            (
+                "TIME_TRAVEL_EVT",
+                past_timestamp,
+                "forged_action",
+                "attacker",
+                '{"message": "I was here first!"}',
+                "fake_hash",
+                "fake_prev",
+            ),
+        )
         conn.commit()
         conn.close()
 
@@ -256,12 +263,11 @@ def attack_timestamp_manipulation() -> AttackResult:
                 return result.vulnerable(
                     "TIME TRAVEL ATTACK: Past-dated event accepted and chain reports clean!",
                     injected_timestamp=past_timestamp,
-                    recommendation="Validate timestamps are monotonically increasing"
+                    recommendation="Validate timestamps are monotonically increasing",
                 )
             else:
                 return result.secure(
-                    "Time travel detected via hash chain corruption",
-                    corruptions=len(integrity.get("corruptions", []))
+                    "Time travel detected via hash chain corruption", corruptions=len(integrity.get("corruptions", []))
                 )
 
         return result.secure("Time travel event was rejected")
@@ -273,6 +279,7 @@ def attack_timestamp_manipulation() -> AttackResult:
 # ============================================================================
 # ATTACK 4: EVENT DELETION
 # ============================================================================
+
 
 def attack_event_deletion() -> AttackResult:
     """
@@ -317,12 +324,11 @@ def attack_event_deletion() -> AttackResult:
                     "EVENT DELETION UNDETECTED: Crime event deleted, chain reports clean!",
                     before=events_before,
                     after=events_after,
-                    recommendation="Implement gap detection in hash chain"
+                    recommendation="Implement gap detection in hash chain",
                 )
             else:
                 return result.secure(
-                    "Deletion detected via hash chain verification",
-                    corruptions=len(integrity.get("corruptions", []))
+                    "Deletion detected via hash chain verification", corruptions=len(integrity.get("corruptions", []))
                 )
 
         return result.secure("Deletion was somehow prevented")
@@ -334,6 +340,7 @@ def attack_event_deletion() -> AttackResult:
 # ============================================================================
 # ATTACK 5: MEMORY EXHAUSTION
 # ============================================================================
+
 
 def attack_memory_exhaustion() -> AttackResult:
     """
@@ -384,15 +391,13 @@ def attack_memory_exhaustion() -> AttackResult:
 
         # Check if kernel has resource limits
         has_limits = (
-            hasattr(kernel, 'resource_manager') or
-            hasattr(kernel, 'memory_limit') or
-            hasattr(kernel, 'agent_limits')
+            hasattr(kernel, "resource_manager") or hasattr(kernel, "memory_limit") or hasattr(kernel, "agent_limits")
         )
 
         if not has_limits:
             return result.vulnerable(
                 "NO RESOURCE LIMITS: Kernel has no memory protection for agents",
-                recommendation="Implement ResourceManager with per-agent memory limits"
+                recommendation="Implement ResourceManager with per-agent memory limits",
             )
 
         return result.secure("Resource limits are configured")
@@ -404,6 +409,7 @@ def attack_memory_exhaustion() -> AttackResult:
 # ============================================================================
 # ATTACK 6: KERNEL REGISTRY POISONING
 # ============================================================================
+
 
 def attack_registry_poisoning() -> AttackResult:
     """
@@ -453,7 +459,7 @@ def attack_registry_poisoning() -> AttackResult:
             def process(self, task):
                 if task.payload.get("action") == "poison":
                     # ATTACK: Replace herald in registry
-                    if hasattr(self, 'kernel'):
+                    if hasattr(self, "kernel"):
                         self.kernel.agent_registry["herald"] = MaliciousHerald()
                         return {"status": "poisoned"}
                 return {"status": "ignored"}
@@ -463,12 +469,21 @@ def attack_registry_poisoning() -> AttackResult:
         # Register legitimate herald placeholder
         class LegitHerald(VibeAgent):
             def __init__(self):
-                super().__init__(agent_id="herald", name="Real Herald", version="1.0",
-                                author="Steward", description="Legitimate", domain="MEDIA", capabilities=[])
+                super().__init__(
+                    agent_id="herald",
+                    name="Real Herald",
+                    version="1.0",
+                    author="Steward",
+                    description="Legitimate",
+                    domain="MEDIA",
+                    capabilities=[],
+                )
                 self.oath_sworn = True
                 self.oath_event = {"constitution_hash": "x", "signature": "x"}
                 self.is_malicious = False
-            def process(self, task): return {"status": "legit"}
+
+            def process(self, task):
+                return {"status": "legit"}
 
         kernel.agent_registry["herald"] = LegitHerald()
 
@@ -479,15 +494,16 @@ def attack_registry_poisoning() -> AttackResult:
 
         # Execute poison attack
         from vibe_core.kernel import Task
+
         task = Task(task_id="t1", agent_id="attacker", payload={"action": "poison"})
         attacker.process(task)
 
         # Check: Is herald now malicious?
         current_herald = kernel.agent_registry.get("herald")
-        if current_herald and hasattr(current_herald, 'is_malicious') and current_herald.is_malicious:
+        if current_herald and hasattr(current_herald, "is_malicious") and current_herald.is_malicious:
             return result.vulnerable(
                 "REGISTRY POISONING: Attacker replaced legitimate herald!",
-                recommendation="Make agent_registry immutable or protected"
+                recommendation="Make agent_registry immutable or protected",
             )
 
         return result.secure("Registry modification was blocked")
@@ -499,6 +515,7 @@ def attack_registry_poisoning() -> AttackResult:
 # ============================================================================
 # ATTACK 7: DOUBLE-SPEND VOTE
 # ============================================================================
+
 
 def attack_double_spend_vote() -> AttackResult:
     """
@@ -516,10 +533,7 @@ def attack_double_spend_vote() -> AttackResult:
 
         # Create proposal
         proposal = forum.create_proposal(
-            title="Test Proposal",
-            description="Testing double spend",
-            proposer="attacker",
-            action={"type": "test"}
+            title="Test Proposal", description="Testing double spend", proposer="attacker", action={"type": "test"}
         )
         proposal_id = proposal["id"]
 
@@ -537,7 +551,7 @@ def attack_double_spend_vote() -> AttackResult:
             if len(attacker_votes) > 1:
                 return result.vulnerable(
                     f"DOUBLE VOTE ACCEPTED: Attacker has {len(attacker_votes)} votes!",
-                    recommendation="Track voted addresses per proposal"
+                    recommendation="Track voted addresses per proposal",
                 )
 
         except Exception as e:
@@ -556,6 +570,7 @@ def attack_double_spend_vote() -> AttackResult:
 # ============================================================================
 # RUNNER
 # ============================================================================
+
 
 def run_red_team() -> dict:
     """Execute all red team attacks."""
@@ -598,6 +613,7 @@ def run_red_team() -> dict:
         except Exception as e:
             print(f"  💥 ATTACK ERROR: {e}")
             import traceback
+
             traceback.print_exc()
 
     print("\n" + "=" * 70)
@@ -613,11 +629,7 @@ def run_red_team() -> dict:
 
     print("=" * 70)
 
-    return {
-        "vulnerabilities": vulnerabilities,
-        "secure": secure,
-        "results": results
-    }
+    return {"vulnerabilities": vulnerabilities, "secure": secure, "results": results}
 
 
 if __name__ == "__main__":
