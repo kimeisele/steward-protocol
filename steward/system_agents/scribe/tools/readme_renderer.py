@@ -19,11 +19,12 @@ from typing import Any, Optional
 from jinja2 import Environment, FileSystemLoader, Template
 
 # Import from shared base (eliminates DRY violation)
-from .base import (
+from steward.system_agents.scribe.tools.base import (
     Tool,
     ToolResult,
     get_kernel_status,
 )
+
 from .project_introspector import ProjectIntrospector
 
 

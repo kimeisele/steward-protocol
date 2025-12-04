@@ -422,4 +422,96 @@ class NeuralRouter:
 
 ---
 
+## Airlock Pattern: Harvesting from Ephemeral Cities
+
+When a child kernel creates files in its VFS, those files die with the child. The **Airlock Pattern** solves this:
+
+```python
+result = await spawn_city(
+    task="Generate report",
+    circuit="research",
+    artifacts=["reports/*.md", "data/*.json"],  # Glob patterns
+    artifacts_destination="data/harvested/",     # Where to copy in parent VFS
+)
+
+# result.harvested_artifacts contains:
+# [
+#   HarvestedArtifact(source="reports/analysis.md", dest="data/harvested/analysis.md", success=True),
+#   HarvestedArtifact(source="data/metrics.json", dest="data/harvested/metrics.json", success=True),
+# ]
+```
+
+### How It Works
+
+1. Child executes task, creates files in its VFS
+2. Before merge, spawn_city harvests files matching glob patterns
+3. Files are copied from child VFS to parent VFS
+4. Child dies, but artifacts survive in parent
+5. Harvest metadata included in merge record
+
+### Security
+
+- Only files in child's VFS can be harvested (sandboxed)
+- Destination is validated against parent VFS root
+- No path traversal allowed
+
+---
+
+## Dual Config Architecture (Legacy Transition)
+
+> **Important**: The system currently has TWO config systems. This is intentional during migration.
+
+### Config System Comparison
+
+| System | Location | Type | Used By |
+|--------|----------|------|---------|
+| **Legacy** | `vibe_core/config/schema.py` | Pydantic | System agent cartridges |
+| **Phoenix V2** | `vibe_core/phoenix/sections/` | Dataclass | Kernel, spawn_city |
+
+### Why Two Systems?
+
+1. **Legacy System**: Provides rich Pydantic validation with `extra="forbid"`, used by 13+ agent cartridges for their specific configs (HeraldConfig, ScienceConfig, etc.)
+
+2. **Phoenix V2**: Provides unified typed access for kernel-level config, supports serialization for child kernel spawning, and is designed for the 4D Hypercube
+
+### Relationship
+
+```
+vibe_core/phoenix/config.py:PhoenixConfig
+├── kernel: KernelConfig (phoenix/sections/kernel.py)
+├── city: CityConfig (phoenix/sections/city.py)  ← DATACLASS version
+├── circuits: Dict[str, CircuitConfig]
+└── routing: List[RoutingRule]
+
+vibe_core/config/schema.py:CityConfig  ← PYDANTIC version (legacy)
+├── governance: GovernanceConfig
+├── economy: EconomyConfig
+└── agents: AgentParametersConfig
+```
+
+### Migration Path
+
+1. **Phase 1 (Current)**: Both systems coexist
+   - Kernel uses Phoenix V2 (`vibe_core.phoenix`)
+   - Agents use Legacy (`vibe_core.config`)
+
+2. **Phase 2 (Future)**: Converge agent configs
+   - Agents import from `config.phoenix.city` instead of `config.schema`
+   - Add backward-compatible aliases
+
+3. **Phase 3 (Future)**: Remove legacy
+   - Delete `vibe_core/config/schema.py`
+   - All code uses `vibe_core/phoenix/`
+
+### For New Code
+
+Always use Phoenix V2:
+```python
+from vibe_core.phoenix import get_config, PhoenixConfig
+
+config = get_config()
+```
+
+---
+
 *Based on the original `phoenix_config` package by kimeisele*

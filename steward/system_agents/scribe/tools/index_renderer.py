@@ -22,7 +22,7 @@ from typing import Any
 
 import yaml
 
-from .base import (
+from steward.system_agents.scribe.tools.base import (
     Tool,
     ToolResult,
     get_kernel_status,
