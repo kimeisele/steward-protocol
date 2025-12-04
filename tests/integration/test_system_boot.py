@@ -26,8 +26,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import pytest
 
 from steward.system_agents.discoverer.agent import Discoverer
-from vibe_core.protocols import VibeAgent  # Use canonical protocol location
 from vibe_core.kernel_impl import KernelStatus, RealVibeKernel
+from vibe_core.protocols import VibeAgent  # Use canonical protocol location
 from vibe_core.scheduling import Task
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
@@ -223,8 +223,14 @@ class TestAgentDiscovery:
         for agent_id, agent in kernel.agent_registry.items():
             manifest = agent.get_manifest()
             assert manifest is not None
-            assert manifest.agent_id == agent_id
-            assert manifest.name is not None
+
+            # Handle both object and dict manifests (defensive fix for CI)
+            if isinstance(manifest, dict):
+                assert manifest.get("agent_id") == agent_id
+                assert manifest.get("name") is not None
+            else:
+                assert manifest.agent_id == agent_id
+                assert manifest.name is not None
 
         logger.info("✅ All agents have valid manifests")
 

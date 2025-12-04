@@ -207,7 +207,7 @@ circuit:
               - "predictive"
               - "executive_summary"
               - "metadata"
-      final: true
+      terminal: true
 
     FAILURE:
       description: "Context synthesis failed"
@@ -220,7 +220,7 @@ circuit:
         - action: "cleanup"
           params:
             preserve_partial: false
-      final: true
+      terminal: true
 
   # ===========================================================================
   # METADATA
