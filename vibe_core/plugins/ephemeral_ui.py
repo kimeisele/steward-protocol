@@ -67,27 +67,31 @@ class EphemeralCityPlugin(KernelPlugin):
                     limit=self.max_history,
                 )
                 for event in events:
-                    self.merge_history.append({
-                        "timestamp": event.get("timestamp", ""),
-                        "child_id": event.get("details", {}).get("child_id", ""),
-                        "proof": event.get("details", {}).get("child_ledger_hash", "")[:12],
-                        "result": event.get("details", {}).get("result", "")[:100],
-                    })
+                    self.merge_history.append(
+                        {
+                            "timestamp": event.get("timestamp", ""),
+                            "child_id": event.get("details", {}).get("child_id", ""),
+                            "proof": event.get("details", {}).get("child_ledger_hash", "")[:12],
+                            "result": event.get("details", {}).get("result", "")[:100],
+                        }
+                    )
         except Exception:
             # Ledger may not support query_events
             pass
 
     def record_merge(self, merge_record: Dict[str, Any]) -> None:
         """Record a merge operation (called from spawn_city)."""
-        self.merge_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "child_id": str(merge_record.get("child_id", ""))[:8],
-            "proof": str(merge_record.get("child_ledger_hash", ""))[:12],
-            "result": str(merge_record.get("result", ""))[:100],
-        })
+        self.merge_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "child_id": str(merge_record.get("child_id", ""))[:8],
+                "proof": str(merge_record.get("child_ledger_hash", ""))[:12],
+                "result": str(merge_record.get("result", ""))[:100],
+            }
+        )
         # Keep history bounded
         if len(self.merge_history) > self.max_history:
-            self.merge_history = self.merge_history[-self.max_history:]
+            self.merge_history = self.merge_history[-self.max_history :]
 
     def _render_ephemeral_md(self, kernel: "RealVibeKernel") -> None:
         """Render EPHEMERAL.md with current state."""
@@ -128,10 +132,12 @@ class EphemeralCityPlugin(KernelPlugin):
             lines.append("*No active ephemeral cities*")
             lines.append("")
         else:
-            lines.extend([
-                "| ID | Config | Agents | Status |",
-                "|:---|:-------|:-------|:-------|",
-            ])
+            lines.extend(
+                [
+                    "| ID | Config | Agents | Status |",
+                    "|:---|:-------|:-------|:-------|",
+                ]
+            )
             for child in child_kernels:
                 child_id = hex(id(child))[:10]
                 config_name = getattr(child.config, "city", {})
@@ -159,10 +165,12 @@ class EphemeralCityPlugin(KernelPlugin):
             lines.append("*No merge history yet*")
             lines.append("")
         else:
-            lines.extend([
-                "| Timestamp | Child ID | Proof | Result |",
-                "|:----------|:---------|:------|:-------|",
-            ])
+            lines.extend(
+                [
+                    "| Timestamp | Child ID | Proof | Result |",
+                    "|:----------|:---------|:------|:-------|",
+                ]
+            )
             # Show most recent first
             for merge in reversed(self.merge_history[-10:]):
                 ts = merge.get("timestamp", "")[:19]
@@ -203,10 +211,12 @@ class EphemeralCityPlugin(KernelPlugin):
                 child_id = hex(id(child))[:10]
                 lines.append(f"{prefix} CHILD: {child_id}")
 
-        lines.extend([
-            "```",
-            "",
-        ])
+        lines.extend(
+            [
+                "```",
+                "",
+            ]
+        )
         return lines
 
     def _render_actions(self) -> List[str]:
@@ -217,7 +227,7 @@ class EphemeralCityPlugin(KernelPlugin):
             "<!-- Future: bidirectional control -->",
             "```",
             "# Spawn new city (not yet implemented via markdown)",
-            "# spawn_city task=\"Build feature\" config=\"fast_code\"",
+            '# spawn_city task="Build feature" config="fast_code"',
             "```",
             "",
             "---",
