@@ -365,7 +365,60 @@ This is the pattern all plugins should follow.
 
 ---
 
-## 8. Summary
+## 8. Migration Status
+
+> **Updated:** 2025-12-05 - Honest assessment of implementation progress
+
+### 8.1 Completed ✅
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `vibe_core/io_service.py` | ✅ DONE | Full implementation with audit trail |
+| `kernel.io` integration | ✅ DONE | Available as `kernel.io` |
+| Audit Trail (Ledger) | ✅ DONE | `IO_WRITE` events recorded to ledger |
+| Tool I/O Injection | ✅ DONE | Kernel auto-injects `io_service` into tools with `set_io_service()` |
+| `EphemeralUIPlugin` | ✅ DONE | Uses `kernel.io.write_document()` |
+| `GitHistoryPlugin` | ✅ DONE | Uses `kernel.io.write_document()` |
+| `DocRenderer` | ✅ DONE | Accepts `io_service` param, uses it for writes |
+| `MarkdownUIManager` | ✅ DONE | Passes `kernel.io` to DocRenderer |
+| `SettingsUIPlugin` | ✅ DONE | Initializes DocRenderer with `kernel.io` |
+| `EnvoyUIPlugin` | ✅ DONE | Initializes DocRenderer with `kernel.io` |
+| Kernel `_pulse()` | ✅ DONE | Uses `kernel.io.write_snapshot()` |
+| `scribe_tool.py` | ✅ DONE | Uses `_write_content()` → `kernel.io` when injected |
+| `manifesto.py` | ✅ DONE | Accepts optional `io_service` param, falls back to direct |
+
+### 8.2 Security Exceptions (Intentional Direct Writes)
+
+These components write files directly for SECURITY reasons - this is correct behavior:
+
+| Component | File | Reason |
+|-----------|------|--------|
+| `identity_tool.py` | `steward/system_agents/herald/tools/` | Private keys must NOT be logged in audit trail |
+
+### 8.3 NOT Migrated ❌
+
+These components still write files directly and need migration:
+
+| Component | File | Direct Writes |
+|-----------|------|---------------|
+| `memory.py` | `steward/system_agents/herald/core/` | 1x `f.write()` |
+| `agenda_tools.py` | `vibe_core/tools/` | 3x `.write_text()` |
+| `task_manager.py` | `vibe_core/task_management/` | 2x `.write_text()` |
+| `envoy_sync.py` | `vibe_core/` | 1x `.write_text()` |
+| `settings_sync.py` | `vibe_core/` | 1x `.write_text()` |
+| Various agent tools | `steward/system_agents/*/tools/` | Multiple |
+
+### 8.4 Enforcement Status
+
+| Enforcement | Status |
+|-------------|--------|
+| Lint Rule (ruff) | ❌ NOT IMPLEMENTED |
+| Architecture Test | ❌ NOT IMPLEMENTED |
+| Pre-commit Hook | ❌ NOT IMPLEMENTED |
+
+---
+
+## 9. Summary
 
 | Principle | Description |
 |-----------|-------------|
@@ -383,3 +436,9 @@ This is the pattern all plugins should follow.
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-05 | Claude (Opus) | Initial architecture design |
+| 2025-12-05 | Claude (Opus) | Implemented audit trail (ledger recording) |
+| 2025-12-05 | Claude (Opus) | Migrated DocRenderer to use io_service |
+| 2025-12-05 | Claude (Opus) | Added honest migration status section |
+| 2025-12-05 | Claude (Opus) | Migrated herald agent tools (scribe, manifesto) |
+| 2025-12-05 | Claude (Opus) | Added kernel auto-injection for tools with `set_io_service()` |
+| 2025-12-05 | Claude (Opus) | Documented security exceptions (identity_tool private keys) |

@@ -642,7 +642,14 @@ class RealVibeKernel(VibeKernel):
             try:
                 self.tool_registry.register(tool)
                 registered_count += 1
-                logger.info(f"   ✅ Registered: {tool.name}")
+
+                # Inject I/O Service for tools that support it
+                # This enables audited file writes through kernel.io
+                if hasattr(tool, "set_io_service") and callable(tool.set_io_service):
+                    tool.set_io_service(self.io)
+                    logger.info(f"   ✅ Registered: {tool.name} (with I/O Service)")
+                else:
+                    logger.info(f"   ✅ Registered: {tool.name}")
 
             except ValueError as e:
                 # Tool already registered (e.g., name collision)

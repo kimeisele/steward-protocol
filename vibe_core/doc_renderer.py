@@ -4,27 +4,37 @@ DocRenderer - Markdown document rendering for Kernel output.
 
 EXTRACTED FROM kernel_impl.py to reduce kernel churn.
 
+ARCHITECTURE: DocRenderer produces CONTENT. Kernel I/O Service WRITES.
+
 Kernel should ONLY:
 1. Collect state (snapshot)
-2. Call DocRenderer.render_all(snapshot, state)
-3. Send output
+2. Call DocRenderer.render_all(snapshot, state, io_service)
+3. I/O Service handles atomic writes + audit trail
 
 Kernel should NOT:
 - Format markdown
 - Know about document structure
 - Have 100+ line render methods
+- Write files directly (use io_service)
 
 This module handles all markdown generation for:
 - OPERATIONS.md (operations dashboard)
 - SETTINGS.md (configuration interface)
 - ENVOY.md (user request terminal)
+
+See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
+
+from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +66,78 @@ class DocRenderer:
     """
     Centralized document renderer for kernel markdown output.
 
+    ARCHITECTURE: Produces content, uses I/O Service for writes.
+    When io_service is provided, all writes go through the central I/O layer
+    with atomic writes, file locking, and audit trail.
+
     Usage:
-        renderer = DocRenderer()
-
-        # In kernel pulse:
+        # With I/O Service (preferred):
+        renderer = DocRenderer(io_service=kernel.io)
         renderer.render_operations(snapshot)
-        new_mtime = renderer.render_settings(snapshot, settings_state)
-        renderer.render_envoy(snapshot, envoy_state)
 
-        # Or render all at once:
-        renderer.render_all(snapshot, settings_state, envoy_state)
+        # Legacy mode (direct writes, deprecated):
+        renderer = DocRenderer()
+        renderer.render_operations(snapshot)  # Falls back to Path.write_text()
     """
+
+    def __init__(self, io_service: Optional["KernelIOService"] = None):
+        """
+        Initialize DocRenderer.
+
+        Args:
+            io_service: Kernel I/O Service for centralized file writes.
+                        If None, falls back to direct writes (deprecated).
+        """
+        self._io = io_service
+        if not io_service:
+            logger.warning("⚠️  DocRenderer initialized without io_service - using deprecated direct writes")
+
+    def _write_document(
+        self,
+        name: str,
+        lines: List[str],
+        writer_id: str = "DOC_RENDERER",
+        bidirectional: bool = False,
+    ) -> Optional[float]:
+        """
+        Write document content through I/O Service or fallback.
+
+        Args:
+            name: Document filename (e.g., "OPERATIONS.md")
+            lines: Content lines to write
+            writer_id: ID for audit trail
+            bidirectional: If True, use BIDIRECTIONAL doc type
+
+        Returns:
+            File mtime after write, or None on error
+        """
+        content = "\n".join(lines)
+
+        if self._io:
+            # Use I/O Service (preferred path)
+            from vibe_core.io_service import DocumentType
+
+            doc_type = DocumentType.BIDIRECTIONAL if bidirectional else DocumentType.READONLY
+            result = self._io.write_document(
+                name=name,
+                content=content,
+                doc_type=doc_type,
+                writer_id=writer_id,
+                add_header=False,  # DocRenderer adds its own header
+            )
+            if result.success:
+                return result.mtime
+            logger.error(f"❌ I/O Service write failed: {result.error}")
+            return None
+        else:
+            # Fallback: direct write (deprecated)
+            try:
+                output_path = Path(name)
+                output_path.write_text(content)
+                return output_path.stat().st_mtime
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return None
 
     @staticmethod
     def render_unified_header(generator: str, snapshot: Dict[str, Any]) -> List[str]:
@@ -265,8 +336,14 @@ class DocRenderer:
                 ]
             )
 
-            output_path.write_text("\n".join(lines))
-            logger.info("📋 Operations dashboard rendered")
+            # Write through I/O Service (or fallback)
+            mtime = self._write_document(
+                name=str(output_path),
+                lines=lines,
+                writer_id="KERNEL_OPS",
+            )
+            if mtime:
+                logger.info("📋 Operations dashboard rendered")
 
         except Exception as e:
             logger.error(f"❌ Failed to render dashboard: {e}")
@@ -447,12 +524,17 @@ class DocRenderer:
                 ]
             )
 
-            # Write SETTINGS.md
-            output_path.write_text("\n".join(lines))
-            logger.info("⚙️  Settings file rendered: SETTINGS.md")
-
-            # Return new mtime for change detection
-            return output_path.stat().st_mtime
+            # Write through I/O Service (or fallback)
+            mtime = self._write_document(
+                name=str(output_path),
+                lines=lines,
+                writer_id="KERNEL_SETTINGS",
+                bidirectional=True,  # SETTINGS.md is bidirectional
+            )
+            if mtime:
+                logger.info("⚙️  Settings file rendered: SETTINGS.md")
+                return mtime
+            return None
 
         except Exception as e:
             logger.error(f"❌ Failed to render settings file: {e}")
@@ -598,9 +680,15 @@ class DocRenderer:
                 ]
             )
 
-            # Write ENVOY.md
-            output_path.write_text("\n".join(lines))
-            logger.info("📬 ENVOY.md terminal rendered")
+            # Write through I/O Service (or fallback)
+            mtime = self._write_document(
+                name=str(output_path),
+                lines=lines,
+                writer_id="KERNEL_ENVOY",
+                bidirectional=True,  # ENVOY.md is bidirectional
+            )
+            if mtime:
+                logger.info("📬 ENVOY.md terminal rendered")
 
         except Exception as e:
             logger.error(f"❌ Failed to render ENVOY.md: {e}")
@@ -641,6 +729,15 @@ class DocRenderer:
 
 
 # Convenience function for simple usage
-def render_kernel_docs(snapshot: Dict[str, Any]) -> None:
-    """Quick render of OPERATIONS.md only (no state needed)."""
-    DocRenderer().render_operations(snapshot)
+def render_kernel_docs(
+    snapshot: Dict[str, Any],
+    io_service: Optional["KernelIOService"] = None,
+) -> None:
+    """
+    Quick render of OPERATIONS.md only (no state needed).
+
+    Args:
+        snapshot: Kernel snapshot data
+        io_service: Optional I/O Service for centralized writes
+    """
+    DocRenderer(io_service=io_service).render_operations(snapshot)
