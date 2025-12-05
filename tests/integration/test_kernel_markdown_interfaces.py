@@ -249,20 +249,25 @@ class TestSettingsMarkdownInterface:
         agent_id = agent_ids[0]
         commands = [{"action": "PAUSE", "agent_id": f"agent.{agent_id}"}]
 
-        assert agent_id not in booted_kernel._paused_agents
+        # Get paused agents from governance plugin
+        paused_agents = set()
+        if booted_kernel.governance and hasattr(booted_kernel.governance, "get_paused_agents"):
+            paused_agents = booted_kernel.governance.get_paused_agents()
+
+        assert agent_id not in paused_agents
 
         # Execute via sync_to_reality (simulated)
         from vibe_core.settings_sync import SettingsSyncState
 
-        state = SettingsSyncState(
-            paused_agents=booted_kernel._paused_agents, agent_ids=set(booted_kernel._agent_registry.keys())
-        )
+        state = SettingsSyncState(paused_agents=paused_agents, agent_ids=set(booted_kernel._agent_registry.keys()))
         result = get_plugin(booted_kernel, "settings_ui").sync.execute_commands(commands, state)
 
-        # Update kernel state (normally done by sync_all)
-        booted_kernel._paused_agents = result.paused_agents
+        # Update governance plugin state (normally done by sync_all)
+        if booted_kernel.governance and hasattr(booted_kernel.governance, "_paused_agents"):
+            booted_kernel.governance._paused_agents.clear()
+            booted_kernel.governance._paused_agents.update(result.paused_agents)
 
-        assert agent_id in booted_kernel._paused_agents
+        assert agent_id in result.paused_agents
         assert result.history_entries[-1]["status"] == "SUCCESS"
 
     def test_execute_resume_agent(self, booted_kernel, temp_workdir):
@@ -273,9 +278,13 @@ class TestSettingsMarkdownInterface:
 
         agent_id = agent_ids[0]
 
-        # First pause
-        booted_kernel._paused_agents.add(agent_id)
-        assert agent_id in booted_kernel._paused_agents
+        # First pause via governance plugin
+        if booted_kernel.governance and hasattr(booted_kernel.governance, "pause_agent"):
+            booted_kernel.governance.pause_agent(agent_id)
+        paused_agents = set()
+        if booted_kernel.governance and hasattr(booted_kernel.governance, "get_paused_agents"):
+            paused_agents = booted_kernel.governance.get_paused_agents()
+        assert agent_id in paused_agents
 
         # Then resume
         commands = [{"action": "RESUME", "agent_id": f"agent.{agent_id}"}]
@@ -283,15 +292,15 @@ class TestSettingsMarkdownInterface:
         # Execute via sync_to_reality (simulated)
         from vibe_core.settings_sync import SettingsSyncState
 
-        state = SettingsSyncState(
-            paused_agents=booted_kernel._paused_agents, agent_ids=set(booted_kernel._agent_registry.keys())
-        )
+        state = SettingsSyncState(paused_agents=paused_agents, agent_ids=set(booted_kernel._agent_registry.keys()))
         result = get_plugin(booted_kernel, "settings_ui").sync.execute_commands(commands, state)
 
-        # Update kernel state
-        booted_kernel._paused_agents = result.paused_agents
+        # Update governance plugin state
+        if booted_kernel.governance and hasattr(booted_kernel.governance, "_paused_agents"):
+            booted_kernel.governance._paused_agents.clear()
+            booted_kernel.governance._paused_agents.update(result.paused_agents)
 
-        assert agent_id not in booted_kernel._paused_agents
+        assert agent_id not in result.paused_agents
         assert result.history_entries[-1]["status"] == "SUCCESS"
 
     def test_file_change_detection(self, kernel, temp_workdir):

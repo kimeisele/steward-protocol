@@ -171,6 +171,11 @@ class InMemoryScheduler(VibeScheduler):
             "completed": len(self.completed),
         }
 
+    def requeue_task(self, task: Task) -> None:
+        """Re-queue a deferred task (bypasses Sarga validation)."""
+        self.queue.append(task)
+        logger.debug(f"📨 Task re-queued: {task.task_id} (deferred)")
+
 
 class InMemoryManifestRegistry(ManifestRegistry):
     """Agent Manifest Registry - Identity declarations"""
@@ -1036,8 +1041,8 @@ class RealVibeKernel(VibeKernel):
         for plugin in self._plugins:
             if not plugin.on_task_pre_assign(self, task.agent_id, task):
                 logger.info(f"🚫 Task vetoed by plugin '{plugin.plugin_id}' for agent '{task.agent_id}'")
-                # Re-queue the task for later
-                self._scheduler.add_task(task)
+                # Re-queue the task for later (bypasses Sarga validation)
+                self._scheduler.requeue_task(task)
                 return
 
         try:
