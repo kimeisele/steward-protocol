@@ -2,7 +2,46 @@
 
 > **Purpose:** This document describes the NEXT phase of system architecture.
 > **Previous:** OPUS_WORKING_DOC.md (STEWARD Protocol - COMPLETE)
+> **Consultant Report:** [GEMINI_PRO.md](./GEMINI_PRO.md) (READ THIS FIRST!)
 > **Status:** PLANNING
+
+---
+
+## 🔬 GEMINI RESEARCH REQUEST (From Opus)
+
+**Status:** PENDING ANALYSIS
+**Priority:** BLOCKING - Cannot proceed with Phase 2 until resolved
+
+### The Problem
+
+Die Test-Suite ist **systemisch korrumpiert**. `pytest --collect-only` hängt unendlich, aber einzelne Test-Files laufen durch (`pytest tests/test_unified_loader.py` = 29 passed in 2.4s).
+
+### Meine Hypothesen (Opus)
+
+1. **Import-Zeit Side Effects** - Irgendwo wird bei Import Code ausgeführt der blockt
+2. **Zirkuläre Imports** - Durch die Vermischung alter/neuer Architektur
+3. **Phoenix Config nicht fraktal** - Config wird nicht einheitlich/testbar geladen
+
+### Was ich brauche von dir (Gemini)
+
+Bitte analysiere mit deinem massiven Context Window:
+
+1. **`tests/` Ordner komplett** - Alle Test-Files, conftest.py, fixtures
+2. **`vibe_core/plugins/test_mode.py`** - Das Test Plugin
+3. **`vibe_core/plugins/test_orchestration.py`** - Test Discovery Plugin
+4. **`vibe_core/phoenix/`** - Die ganze Config-Struktur
+5. **`pyproject.toml`** - pytest Konfiguration
+
+### Fragen an dich
+
+1. **WO** hängt pytest genau? Welcher Import/welches Modul?
+2. **WARUM** ist die Test-Suite nicht fraktal? Was fehlt?
+3. **WIE** sollte eine fraktale Test-Konfiguration aussehen?
+4. Gibt es **technische Schuld** die wir JETZT fixen müssen bevor Phase 2?
+
+### Dein Output
+
+Bitte schreibe deine Findings in `GEMINI_PRO.md` Section "Test Suite Analysis".
 
 ---
 
@@ -276,202 +315,358 @@ OR: Make everything Plugin-like with:
 
 ---
 
-## 5. IMPLEMENTATION PLAN
+## 5. THE UNIFIED CARTRIDGE PATTERN
 
-### Phase 1: Plugin Foundation (1-2 days)
-- [ ] Create `vibe_core/plugins/base.py` with BasePlugin
-- [ ] Create `vibe_core/plugins/configurable.py` with ConfigurablePlugin
-- [ ] Create `config/plugins.yaml` schema
-- [ ] Add Phoenix section for plugins
+### 5.1 The Universal Structure (ALLE Items)
 
-### Phase 2: Migrate Existing Plugins (2-3 days)
-- [ ] Migrate sarga_cycle.py to ConfigurablePlugin
-- [ ] Migrate vedic_governance.py to ConfigurablePlugin
-- [ ] Migrate steward_protocol.py to ConfigurablePlugin
-- [ ] Migrate UI plugins (envoy, ephemeral, settings)
+```
+{item_type}/{item_name}/
+    manifest.json         ← SHABDA: Identity + Schema (required)
+    {item_type}_main.py   ← KARMA: Entry Point (required)
+    config.yaml           ← PRATYAYA: Local Config (optional)
+    {sub_items}/          ← Scalable children (optional)
+```
 
-### Phase 3: Module → Plugin Wrappers (3-5 days)
-- [ ] Create CapabilityPlugin wrapper
-- [ ] Create EventBusPlugin wrapper
-- [ ] Create LineagePlugin wrapper
-- [ ] Add new hooks: on_capability_granted, on_event_emitted, etc.
+**Examples:**
+```
+vibe_core/plugins/steward_protocol/
+    manifest.json         ← Plugin identity
+    plugin_main.py        ← StewardProtocolPlugin class
+    config.yaml           ← Plugin-specific settings (optional)
+    validators/           ← Sub-items that scale
 
-### Phase 4: Documentation & Testing (1-2 days)
-- [ ] Update plugin documentation
-- [ ] Create plugin development guide
-- [ ] Add plugin integration tests
+steward/system_agents/herald/
+    manifest.json         ← Agent identity (currently steward.json)
+    cartridge_main.py     ← HeraldCartridge class
+    config.yaml           ← Agent-specific settings (currently cartridge.yaml)
+    tools/                ← Sub-items that scale
+
+vibe_core/phoenix/sections/kernel/
+    manifest.json         ← Section identity
+    section_main.py       ← KernelSection class
+    config.yaml           ← Section defaults
+```
+
+### 5.2 The manifest.json Schema (SHABDA)
+
+```json
+{
+  "$schema": "https://steward-protocol.org/schemas/manifest.v1.json",
+  "type": "plugin|agent|section|workflow",
+  "id": "steward_protocol",
+  "name": "STEWARD Protocol Plugin",
+  "version": "1.0.0",
+  "description": "Protocol enforcement for Agent City",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "StewardProtocolPlugin",
+
+  "config_schema": "config.schema.json",
+
+  "sub_items": {
+    "type": "validators",
+    "path": "validators/"
+  },
+
+  "dependencies": ["vedic_governance"],
+  "priority": 20
+}
+```
+
+**Schema Validation:** If manifest.json doesn't validate → item NOT loaded. No exceptions.
+
+### 5.3 The Config Hierarchy (PRATYAYA)
+
+```
+Priority (highest wins):
+1. Environment Variables     → STEWARD_PLUGIN_STRICT_MODE=true
+2. Phoenix Global Config     → config/plugins.yaml
+3. Local config.yaml         → plugins/steward_protocol/config.yaml
+4. Manifest Defaults         → manifest.json defaults
+5. Code Defaults             → Python class defaults
+```
+
+**Phoenix Integration:**
+```yaml
+# config/plugins.yaml (global)
+plugins:
+  steward_protocol:
+    enabled: true
+    strict_mode: false
+
+  vedic_governance:
+    enabled: true
+```
+
+**Local Override:**
+```yaml
+# plugins/steward_protocol/config.yaml (local)
+strict_mode: true  # Overrides global
+custom_validators:
+  - capability_check
+  - trust_threshold
+```
+
+### 5.4 The Unified Loader (ONE Loader Pattern)
+
+```python
+# vibe_core/loaders/base_loader.py
+
+class UnifiedLoader(ABC):
+    """
+    VEDA-4 Loader Pattern - Same for ALL item types.
+
+    SHABDA   → scan_directory() + load_manifest()
+    ARTHA    → validate_manifest()
+    PRATYAYA → load_config() + check_dependencies()
+    KARMA    → instantiate()
+    """
+
+    # Override in subclass
+    item_type: str           # "plugin", "agent", "section"
+    scan_paths: List[Path]   # Where to look
+    entry_suffix: str        # "_main.py", "_cartridge.py"
+
+    @classmethod
+    def discover_and_load(cls, config: PhoenixConfig) -> Dict[str, Any]:
+        """The universal discovery loop."""
+        items = {}
+
+        for path in cls.scan_paths:
+            for item_dir in path.iterdir():
+                if not item_dir.is_dir():
+                    continue
+
+                # SHABDA - Read manifest
+                manifest = cls.load_manifest(item_dir)
+                if not manifest:
+                    continue
+
+                # ARTHA - Validate
+                if not cls.validate_manifest(manifest):
+                    logger.error(f"Invalid manifest: {item_dir}")
+                    continue
+
+                # PRATYAYA - Load config
+                item_config = cls.load_config(item_dir, config)
+                if not item_config.get("enabled", True):
+                    logger.info(f"Disabled: {manifest['id']}")
+                    continue
+
+                # KARMA - Instantiate
+                instance = cls.instantiate(item_dir, manifest, item_config)
+                if instance:
+                    items[manifest["id"]] = instance
+
+        return items
+```
+
+### 5.5 Migration Path
+
+**Phase 1: Create Schema + Loader**
+- [ ] Define manifest.json JSON Schema
+- [ ] Create UnifiedLoader base class
+- [ ] Create schema validator (pre-flight check)
+
+**Phase 2: Migrate Plugins First**
+- [ ] Convert steward_protocol.py → steward_protocol/
+- [ ] Convert vedic_governance.py → vedic_governance/
+- [ ] Convert UI plugins (envoy_ui, settings_ui, ephemeral_ui)
+- [ ] Update PluginLoader to use UnifiedLoader
+
+**Phase 3: Align Agents**
+- [ ] Rename steward.json → manifest.json (or alias)
+- [ ] Rename cartridge.yaml → config.yaml (or alias)
+- [ ] Update AgentLoader to use UnifiedLoader
+
+**Phase 4: Align Phoenix Sections**
+- [ ] Convert sections to folder structure
+- [ ] Update SectionLoader to use UnifiedLoader
+
+**Phase 5: Pre-flight Validation**
+- [ ] Add manifest validation to pre-commit hook
+- [ ] Add schema check to CI/CD
+- [ ] No "good will" - invalid = rejected
+
+### 5.6 Pre-flight Schema Validation
+
+```bash
+# .githooks/pre-commit addition
+python -m vibe_core.loaders.validate_manifests "$STAGED_FILES"
+```
+
+```python
+# vibe_core/loaders/validate_manifests.py
+def validate_all_manifests(files: List[Path]) -> bool:
+    """
+    Pre-commit check: All manifest.json files must be valid.
+
+    Returns False (blocks commit) if ANY manifest is invalid.
+    """
+    for file in files:
+        if file.name == "manifest.json":
+            if not validate_manifest_schema(file):
+                print(f"❌ Invalid manifest: {file}")
+                return False
+    return True
+```
 
 ---
 
-## 5. SUCCESS CRITERIA
+## 6. OPEN QUESTIONS
 
-1. **All plugins extend BasePlugin** - Common functionality
-2. **All plugins configurable via YAML** - No hardcoded values
-3. **Plugin discovery is automatic** - Drop .py file, it works
-4. **Modules wrapped as plugins** - CapabilityRegistry, EventBus, etc.
-5. **Tests pass** - 374+ tests still green
+1. **Naming:** Keep `steward.json` + `cartridge.yaml` for agents (backward compat) or rename to `manifest.json` + `config.yaml`?
+
+2. **Entry Point Naming:** `plugin_main.py` vs `cartridge_main.py` vs just `main.py`?
+
+3. **Sub-items:** Should sub-items (tools/, validators/) ALSO have manifest.json? (Recursive fractal?)
+
+4. **Phoenix Integration:** Does Phoenix need a `plugins` section, or do plugins self-register?
+
+5. **Hot Reload:** Should UnifiedLoader support hot-reload on file change?
 
 ---
 
-## 6. FRAKTAL GUARD SYSTEM
+## 7. SUCCESS CRITERIA
 
-### 6.1 The Problem
+1. **ONE manifest.json schema** - All items use same structure
+2. **ONE UnifiedLoader** - All loaders inherit from it
+3. **Schema validation in pre-commit** - Invalid = rejected
+4. **Config hierarchy works** - Env → Phoenix → Local → Defaults
+5. **Backward compatible** - Agents still work during migration
+6. **Tests pass** - 374+ tests still green
 
-Pre-commit guards are **hardcoded bash** in `.githooks/pre-commit`:
-```bash
-# HARDCODED - Not fraktal!
-if echo "$STAGED_FILES" | grep -q "requirements.txt"; then
-    exit 1
-fi
+---
+
+## 8. ANSWERS TO OPEN QUESTIONS
+
+Based on the fraktal principle and VEDA-4 pattern:
+
+### 8.1 Naming Convention
+
+**Decision:** Use **universal names** for new items, **alias** for backward compat.
+
+```
+NEW (preferred):           ALIAS (backward compat):
+manifest.json       ←→     steward.json (agents only)
+config.yaml         ←→     cartridge.yaml (agents only)
+{type}_main.py      ←→     cartridge_main.py (agents only)
 ```
 
-This violates the fraktal principle - guards should come from **plugins**.
+**Why:** One name everywhere = less cognitive load. Aliases only for existing agents.
 
-### 6.2 The Solution: GuardProtocol
+### 8.2 Entry Point Naming
 
-```python
-# vibe_core/guards/protocol.py
-class Guard(Protocol):
-    """A single guard check"""
+**Decision:** `{type}_main.py` pattern.
 
-    @property
-    def guard_id(self) -> str:
-        """Unique identifier"""
-        ...
-
-    @property
-    def description(self) -> str:
-        """Human-readable description"""
-        ...
-
-    @property
-    def severity(self) -> Literal["error", "warning", "info"]:
-        """How severe is a violation"""
-        ...
-
-    def check_file(self, file_path: Path, content: str) -> Optional[GuardViolation]:
-        """Check a single file. Return violation or None."""
-        ...
-
-    def check_pattern(self, file_path: Path) -> bool:
-        """Should this guard apply to this file?"""
-        ...
+```
+plugins/     → plugin_main.py
+agents/      → agent_main.py (or cartridge_main.py alias)
+sections/    → section_main.py
+workflows/   → workflow_main.py
 ```
 
-### 6.3 Plugin-Defined Guards
+**Why:** Self-documenting. When you see `plugin_main.py` you know what it is.
 
-```python
-# vibe_core/plugins/steward_protocol.py
-class StewardProtocolPlugin(ConfigurablePlugin):
+### 8.3 Sub-items Manifest (Recursive Fractal)
 
-    def get_guards(self) -> List[Guard]:
-        """Return guards this plugin wants to enforce"""
-        return [
-            RequirementsTxtGuard(),      # No requirements.txt in agent dirs
-            DirectPathGuard(),           # No Path("data/...")
-            HardcodedInitGuard(),        # No paths in __init__
-            CapabilityBypassGuard(),     # No anonymous tool calls
-        ]
+**Decision:** **Optional** manifest.json for sub-items.
+
+```
+steward_protocol/
+    manifest.json              ← Required (parent)
+    plugin_main.py
+    validators/                ← Sub-items
+        __init__.py            ← Simple: Just export classes
+        capability_check.py    ← No manifest needed
+        trust_threshold.py
 ```
 
-### 6.4 Dynamic Pre-Commit Hook
+OR for complex sub-items:
 
-```bash
-#!/bin/bash
-# .githooks/pre-commit - Now DYNAMIC!
-
-# Let Python handle the logic - fraktal!
-python -m vibe_core.guards.precommit "$@"
+```
+steward_protocol/
+    manifest.json
+    plugin_main.py
+    validators/
+        capability_check/      ← Complex: Has own manifest
+            manifest.json
+            validator_main.py
+            config.yaml
 ```
 
-```python
-# vibe_core/guards/precommit.py
-def main():
-    """Dynamic pre-commit that discovers guards from plugins"""
+**Why:** Don't force complexity. Simple sub-items = files. Complex sub-items = folders with manifest.
 
-    # Get staged files
-    staged_files = get_staged_files()
+### 8.4 Phoenix Integration
 
-    # Discover all guards from all plugins
-    guards = discover_guards_from_plugins()
-
-    # Run each guard
-    violations = []
-    for guard in guards:
-        for file_path in staged_files:
-            if guard.check_pattern(file_path):
-                content = read_file(file_path)
-                violation = guard.check_file(file_path, content)
-                if violation:
-                    violations.append(violation)
-
-    # Report results
-    report_violations(violations)
-
-    # Exit based on severity
-    if any(v.severity == "error" for v in violations):
-        sys.exit(1)
-```
-
-### 6.5 Guard Configuration
+**Decision:** Plugins **self-register** via manifest, Phoenix provides **global config**.
 
 ```yaml
-# config/guards.yaml
-guards:
-  # Global settings
-  enabled: true
-  fail_on_warning: false
-
-  # Per-guard configuration
-  requirements_txt:
+# Phoenix config/plugins.yaml (global overrides)
+plugins:
+  steward_protocol:
     enabled: true
-    severity: error
-    paths: ["steward/system_agents/*"]
+    strict_mode: false
 
-  direct_path:
-    enabled: true
-    severity: error
-    patterns: ["Path([\"']data/"]
-
-  hardcoded_init:
-    enabled: true
-    severity: warning  # Just warn, don't block
-
-  # New guards added by plugins automatically discovered
+# Plugin's own config.yaml (local defaults)
+# Merged with Phoenix at load time
 ```
 
-### 6.6 The Fraktal Beauty
+**Why:** Plugins are self-contained. Phoenix is the knob to tune them.
 
-Now we have:
-```
-Runtime                      Commit-Time
-────────                     ───────────
-on_capability_check    ←→    CapabilityBypassGuard
-on_tool_execute        ←→    ToolPatternGuard
-on_agent_registered    ←→    AgentStructureGuard
-on_task_submit         ←→    TaskValidationGuard
-```
+### 8.5 Hot Reload
 
-**Same logic, different enforcement points.**
+**Decision:** **Phase 2** feature. Not in initial implementation.
 
-Plugins define guards ONCE, they work:
-1. At commit time (pre-commit hook)
-2. At runtime (kernel hooks)
-3. In CI/CD (test suite)
-4. In monitoring (dashboards)
+**Why:** Get the basic loader working first. Hot reload adds complexity (state management, cleanup).
 
 ---
 
-## 7. QUESTIONS TO RESOLVE
+## 9. IMPLEMENTATION ORDER
 
-1. Should plugins have their own config files or share plugins.yaml?
-2. Should plugin state be persisted automatically?
-3. How to handle plugin dependencies (Plugin A needs Plugin B)?
-4. Should there be a plugin marketplace/registry?
-5. **NEW:** Should guards be separate from plugins or part of them?
-6. **NEW:** How to handle guard ordering/priority?
+```
+Phase 1: Foundation (FIRST)
+├── vibe_core/loaders/base_loader.py      ← UnifiedLoader ABC
+├── vibe_core/loaders/schema.py           ← JSON Schema validation
+├── vibe_core/loaders/manifest_schema.json ← The schema itself
+└── tests/test_unified_loader.py          ← Tests FIRST
+
+Phase 2: Plugin Migration
+├── Convert steward_protocol.py → steward_protocol/
+├── Convert vedic_governance.py → vedic_governance/
+├── Update PluginLoader to use UnifiedLoader
+└── All 374+ tests still green
+
+Phase 3: Agent Alignment
+├── AgentLoader inherits UnifiedLoader
+├── Add alias support (steward.json → manifest.json)
+└── No breaking changes to existing agents
+
+Phase 4: Section Alignment
+├── Convert Phoenix sections to folder structure
+├── SectionLoader inherits UnifiedLoader
+└── Phoenix config still works
+
+Phase 5: Pre-commit Integration
+├── python -m vibe_core.loaders.validate_manifests
+├── Add to .githooks/pre-commit
+└── CI/CD validation
+```
+
+---
+
+## 10. SUCCESS CRITERIA (FINAL)
+
+| Criterion | Metric |
+|-----------|--------|
+| ONE schema | All manifest.json files validate against same schema |
+| ONE loader | All loaders inherit UnifiedLoader |
+| Backward compat | Existing agents work without changes |
+| Tests green | 374+ tests pass |
+| Pre-commit works | Invalid manifest = blocked commit |
+| Config hierarchy | Env → Phoenix → Local → Defaults |
 
 ---
 
 *Created: 2025-12-05*
-*Status: PLANNING - Awaiting approval to proceed*
+*Status: PLAN COMPLETE - Ready for Implementation*

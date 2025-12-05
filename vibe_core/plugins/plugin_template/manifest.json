@@ -1,0 +1,25 @@
+{
+  "type": "plugin",
+  "id": "plugin_template",
+  "name": "Plugin Template",
+  "version": "1.0.0",
+  "description": "Golden template - copy this folder and rename to create new plugins",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "PluginTemplatePlugin",
+
+  "priority": 999,
+  "enabled": false,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown"
+  ],
+
+  "dependencies": [],
+
+  "defaults": {},
+
+  "author": "STEWARD Protocol",
+  "tags": ["template", "example"]
+}

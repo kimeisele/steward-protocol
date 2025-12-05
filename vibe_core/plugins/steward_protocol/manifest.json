@@ -1,0 +1,39 @@
+{
+  "type": "plugin",
+  "id": "steward_protocol",
+  "name": "STEWARD Protocol Plugin",
+  "version": "1.0.0",
+  "description": "Protocol enforcement for Agent City - The Avatar of Vishnu for Protocol governance",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "StewardProtocolPlugin",
+
+  "priority": 5,
+  "enabled": true,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown",
+    "on_agent_registered",
+    "on_task_submit",
+    "on_task_completed",
+    "on_task_failed",
+    "on_capability_check"
+  ],
+
+  "dependencies": [],
+
+  "defaults": {
+    "strict_mode": false,
+    "sensitive_capabilities": [
+      "write_file",
+      "delete_file",
+      "execute_command",
+      "network_request",
+      "credential_access"
+    ]
+  },
+
+  "author": "STEWARD Protocol",
+  "tags": ["protocol", "governance", "trust", "attestation"]
+}
