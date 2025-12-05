@@ -195,6 +195,16 @@ class TestOrchestrationPlugin(KernelPlugin):
 
     def run_all_tests(self) -> List[TestResult]:
         """Run ALL tests for ALL components."""
+        # GUARDIAN CHECK: Validate tests haven't mutated
+        validation = self.validate_tests_before_run()
+        if validation["mutated"] > 0:
+            logger.warning(f"⚠️  TEST MUTATION DETECTED: {validation['mutated']} files changed!")
+            for error in validation["errors"]:
+                logger.warning(f"  - {error}")
+
+            # If policy is blocked, we might want to stop here (depending on config)
+            # For now, we just log heavily as the guardian already logged errors
+
         self._results = []
 
         for testable in self._registry.testables:
@@ -386,6 +396,12 @@ class TestOrchestrationPlugin(KernelPlugin):
         import pytest
 
         logger.info(f"🧪 Running pytest suite: path={path}, markers='{markers}'")
+
+        # GUARDIAN CHECK: Validate tests haven't mutated
+        validation = self.validate_tests_before_run(path if path.endswith(".py") or path == "tests" else "tests")
+        if validation["mutated"] > 0:
+            logger.warning(f"⚠️  TEST MUTATION DETECTED: {validation['mutated']} files changed!")
+            # We continue but the violation is logged
 
         # Capture output
         capture = StringIO()
