@@ -158,8 +158,8 @@ class SettingsSync:
                 if not in_commands_section or not line.startswith("-"):
                     continue
 
-                # Skip example/help lines (they start with "- `")
-                if line.startswith("- `") or line.startswith("_"):
+                # Skip markdown separators (---, ----) and example/help lines (- `)
+                if line.startswith("---") or line.startswith("- `") or line.startswith("_"):
                     continue
 
                 # Parse command text
