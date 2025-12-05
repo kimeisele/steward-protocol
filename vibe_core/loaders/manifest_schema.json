@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://steward-protocol.org/schemas/manifest.v1.json",
+  "title": "Universal Manifest Schema",
+  "description": "Schema for all loadable items (plugins, agents, sections, workflows)",
+  "type": "object",
+  "required": ["type", "id", "name"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["plugin", "agent", "section", "workflow", "tool", "guard"],
+      "description": "Item type"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Unique identifier (snake_case)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "default": "1.0.0",
+      "description": "Semantic version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the item"
+    },
+    "entry_point": {
+      "type": "string",
+      "description": "Entry point filename (default: {type}_main.py)"
+    },
+    "entry_class": {
+      "type": "string",
+      "description": "Class name to load (default: auto-detect)"
+    },
+    "sub_items": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Type of sub-items (e.g., 'tools', 'validators', 'renderers')"
+        },
+        "path": {
+          "type": "string",
+          "description": "Relative path to sub-items directory"
+        }
+      },
+      "description": "Optional scalable sub-items"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "IDs of required dependencies"
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000,
+      "default": 100,
+      "description": "Load priority (lower = earlier)"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether item is enabled"
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Default configuration values"
+    },
+    "config_schema": {
+      "type": "string",
+      "description": "Path to JSON schema for config validation"
+    },
+    "author": {
+      "type": "string",
+      "description": "Author name or organization"
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "type": { "const": "agent" } }
+      },
+      "then": {
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "description": "Agent-specific ID (alias for 'id')"
+          },
+          "compliance_level": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3,
+            "default": 1,
+            "description": "STEWARD protocol compliance level"
+          },
+          "capabilities": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Declared capabilities"
+          },
+          "oath_taken": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether agent has taken oath"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "type": { "const": "plugin" } }
+      },
+      "then": {
+        "properties": {
+          "plugin_id": {
+            "type": "string",
+            "description": "Plugin-specific ID (alias for 'id')"
+          },
+          "hooks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "on_boot",
+                "on_shutdown",
+                "on_tick_pre",
+                "on_tick_post",
+                "on_agent_registered",
+                "on_agent_unregistered",
+                "on_task_submit",
+                "on_task_pre_assign",
+                "on_task_completed",
+                "on_task_failed",
+                "on_capability_check",
+                "on_tool_execute",
+                "on_tool_executed"
+              ]
+            },
+            "description": "Kernel hooks this plugin uses"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "type": { "const": "section" } }
+      },
+      "then": {
+        "properties": {
+          "section_id": {
+            "type": "string",
+            "description": "Phoenix section ID (alias for 'id')"
+          },
+          "parent_section": {
+            "type": "string",
+            "description": "Parent section ID for nested sections"
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true
+}
