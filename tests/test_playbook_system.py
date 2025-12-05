@@ -15,9 +15,11 @@ logger = logging.getLogger("TEST_PLAYBOOK_SYSTEM")
 
 # Import the systems under test
 try:
-    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
-
-    from provider.universal_provider import DeterministicRouter, UniversalProvider
+    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor, PlaybookExecution
+    from vibe_core.cartridges.system.envoy.provider_legacy.universal_provider import (
+        DeterministicRouter,
+        UniversalProvider,
+    )
 
     IMPORTS_OK = True
 except ImportError as e:
@@ -186,9 +188,9 @@ class TestDeterministicRouter:
         for text, expected_concepts in test_cases:
             concepts = self.router.analyze(text)
             # At least one expected concept should be found
-            assert any(
-                c in concepts for c in expected_concepts
-            ), f"Expected {expected_concepts} in {concepts} for input: {text}"
+            assert any(c in concepts for c in expected_concepts), (
+                f"Expected {expected_concepts} in {concepts} for input: {text}"
+            )
             logger.info(f"✅ Detected concepts for '{text}': {concepts}")
 
     def test_intent_routing(self):
@@ -223,7 +225,7 @@ class TestPlaybookExecution:
         assert playbook is not None
 
         # Create mock intent vector
-        from provider.universal_provider import IntentType, IntentVector
+        from vibe_core.cartridges.system.envoy.provider_legacy.universal_provider import IntentType, IntentVector
 
         intent_vector = IntentVector(
             raw_input="Create a test project",

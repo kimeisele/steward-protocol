@@ -28,7 +28,7 @@ def test_tool_import():
     print("=" * 80)
 
     try:
-        from agent_city.registry.analyst.tools.architecture_tool import ArchitectureAnalysisTool
+        from vibe_core.cartridges.agent_city.analyst.tools.architecture_tool import ArchitectureAnalysisTool
 
         tool = ArchitectureAnalysisTool()
         print(f"✅ Tool imported: {tool.name}")

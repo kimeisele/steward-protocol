@@ -19,7 +19,6 @@ Success criteria:
 """
 
 import asyncio
-import os
 import sys
 from pathlib import Path
 
@@ -27,8 +26,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from agent_city.registry.ambassador.cartridge_main import AmbassadorCartridge
 from vibe_core import Task
+from vibe_core.cartridges.agent_city.ambassador.cartridge_main import AmbassadorCartridge
 
 
 async def test_end_to_end():
@@ -42,7 +41,7 @@ async def test_end_to_end():
     print("-" * 40)
 
     ambassador = AmbassadorCartridge()
-    print(f"✅ Ambassador initialized")
+    print("✅ Ambassador initialized")
     print(f"   - Milk Ocean Router: {ambassador.milk_ocean_router is not None}")
     print(f"   - Graph Executor: {ambassador.graph_executor is not None}")
     print(f"   - Agent Router: {ambassador.agent_router is not None}")
@@ -81,7 +80,7 @@ async def test_end_to_end():
 
     if "answer" in result:
         answer = result["answer"]
-        print(f"\nAnswer (first 200 chars):")
+        print("\nAnswer (first 200 chars):")
         print(answer[:200] if len(answer) > 200 else answer)
     elif "error" in result:
         print(f"\nError: {result['error']}")

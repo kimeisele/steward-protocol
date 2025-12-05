@@ -7,9 +7,9 @@ project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Import REAL components
-from steward.system_agents.auditor.tools.invariant_tool import get_judge
-from steward.system_agents.forum.cartridge_main import ForumCartridge
-from steward.system_agents.herald.cartridge_main import HeraldCartridge
+from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
+from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge
+from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 from vibe_core.kernel_impl import RealVibeKernel
 
 # Configure logging

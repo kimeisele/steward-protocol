@@ -14,12 +14,12 @@ from pathlib import Path
 
 import pytest
 
-from steward.system_agents.auditor.tools.invariant_tool import (
+from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
     InvariantEngine,
     InvariantSeverity,
     get_judge,
 )
-from steward.system_agents.auditor.tools.watchdog_tool import (
+from vibe_core.cartridges.system.auditor.tools.watchdog_tool import (
     ViolationEvent,
     Watchdog,
     WatchdogConfig,
@@ -293,7 +293,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_has_judge(self):
         """Test that AUDITOR cartridge has Judge capability (Tool Protocol v3.0)"""
-        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+        from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
 
         # Tool Protocol v3.0: Tools accessed via kernel, not owned by cartridge
         auditor = AuditorCartridge()
@@ -305,7 +305,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_has_watchdog(self):
         """Test that AUDITOR cartridge has Watchdog capability (Tool Protocol v3.0)"""
-        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+        from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
 
         # Tool Protocol v3.0: Watchdog is a kernel-managed tool, not owned
         auditor = AuditorCartridge()
@@ -317,7 +317,7 @@ class TestSemanticAuditorIntegration:
 
     def test_auditor_version_updated(self):
         """Test that AUDITOR version reflects semantic capabilities"""
-        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
+        from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
 
         auditor = AuditorCartridge()
         assert auditor.version >= "2.0.0"  # Must be 2.0+ for semantic verification

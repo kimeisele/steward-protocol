@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("PLAYBOOK_FIX_TEST")
 
-from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 from vibe_core.scheduling.task import Task
 
 
@@ -82,7 +82,7 @@ async def test_playbook_execution():
         # Check if agents were actually called
         logger.info(f"\n🔍 MockKernel calls: {len(kernel.calls)}")
         for i, call in enumerate(kernel.calls):
-            logger.info(f"  Call {i+1}: {call['agent_id']} <- {call['payload']}")
+            logger.info(f"  Call {i + 1}: {call['agent_id']} <- {call['payload']}")
 
         # Verify
         if len(kernel.calls) > 0:

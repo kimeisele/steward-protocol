@@ -19,8 +19,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from steward.crypto import sign_content, ensure_keys_exist
-from steward.system_agents.archivist.tools.verifier_tool import VerifierTool
+from steward.crypto import ensure_keys_exist, sign_content
+from vibe_core.cartridges.system.archivist.tools.verifier_tool import VerifierTool
 
 
 def test_real_crypto_verification():

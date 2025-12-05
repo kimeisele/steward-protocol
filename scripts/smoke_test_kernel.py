@@ -42,7 +42,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.lineage import LineageChain, LineageEventType
 

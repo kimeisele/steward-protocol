@@ -126,7 +126,7 @@ def test_agent_bank_isolation():
     # Test that CivicBank can be initialized with this path
     logger.info("\n2. Testing CivicBank with agent sandbox path...")
     try:
-        from steward.system_agents.civic.tools.economy import CivicBank
+        from vibe_core.cartridges.system.civic.tools.economy import CivicBank
 
         db_path = f"{sandbox_path}/economy.db"
         agent_bank = CivicBank(db_path=db_path)

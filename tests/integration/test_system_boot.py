@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pytest
 
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import KernelStatus, RealVibeKernel
 from vibe_core.protocols import VibeAgent  # Use canonical protocol location
 from vibe_core.scheduling import Task

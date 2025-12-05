@@ -27,7 +27,7 @@ def main():
     print("\nPhilosophy: ZERO HARDCODED VALUES - All introspected from live system!\n")
 
     try:
-        from agent_city.registry.analyst.tools.architecture_tool import ArchitectureAnalysisTool
+        from vibe_core.cartridges.agent_city.analyst.tools.architecture_tool import ArchitectureAnalysisTool
 
         # Initialize tool
         tool = ArchitectureAnalysisTool(root_dir=".")

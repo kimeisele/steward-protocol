@@ -16,8 +16,8 @@ import json
 import sys
 from pathlib import Path
 
-from steward.system_agents.watchman.cartridge_main import WatchmanCartridge
 from vibe_core.agent_interface import AgentSystemInterface
+from vibe_core.cartridges.system.watchman.cartridge_main import WatchmanCartridge
 from vibe_core.kernel_impl import RealVibeKernel
 
 print("⚔️  Initializing Watchman...")

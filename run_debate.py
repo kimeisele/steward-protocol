@@ -19,12 +19,12 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("RUN_DEBATE")
 
 # Import VibeOS components
-from steward.system_agents.envoy.action_handlers import (
+from vibe_core.cartridges.system.envoy.action_handlers import (
     ActionContext,
     ActionResult,
     ExecuteScriptHandler,
 )
-from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
 # ============================================================================
 # 1. DEFINE THE LOGIC (The "Brain" of the Circuit)

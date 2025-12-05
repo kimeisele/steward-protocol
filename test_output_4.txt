@@ -1,0 +1,604 @@
+root - WARNING - workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+VIBE_KERNEL - WARNING - ⚠️  Constitutional Oath unavailable (No module named 'ecdsa') - running in degraded mode
+============================= test session starts ==============================
+platform darwin -- Python 3.13.3, pytest-8.4.1, pluggy-1.6.0
+rootdir: /Users/ss/Downloads/steward-protocol
+configfile: pyproject.toml
+plugins: anyio-4.9.0, asyncio-1.1.0, timeout-2.4.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+tests/integration/test_kernel_markdown_interfaces.py ARCHIVIST_VERIFIER - ERROR - ❌ steward.crypto not available - verification will fail
+CITY_CONTROL - WARNING - ⚠️ CityControlTool initialized without kernel - limited functionality
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load agents_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load readme_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load rag_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load help_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load index_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load dashboard_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - ERROR -    ❌ Failed to load citymap_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+HERALD_BROADCAST - WARNING - ⚠️  Broadcast: tweepy not installed
+HERALD_BROADCAST - WARNING - ⚠️  Broadcast: praw not installed
+HERALD_RESEARCH - WARNING - ⚠️  Research: Tavily unavailable (running in simulation mode)
+MARKETER_CONTENT - WARNING - ⚠️  Content: No OpenRouter key found (using fallback templates)
+TOOL_DISCOVERY - WARNING - ⚠️  Failed to load 7 tools:
+TOOL_DISCOVERY - WARNING -    - scribe.agents_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.readme_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.rag_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.help_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.index_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.dashboard_renderer.py: Import failed: attempted relative import with no known parent package
+TOOL_DISCOVERY - WARNING -    - scribe.citymap_renderer.py: Import failed: attempted relative import with no known parent package
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for steward: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for ping: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+STEWARD - ERROR -    ❌ Failed to load civic: 'CivicCartridge' object has no attribute 'system'
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for archivist: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for steward: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+STEWARD - ERROR -    ❌ Failed to load discoverer: 'dict' object has no attribute 'name'
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for supreme_court: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for oracle: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for science: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for envoy: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for forum: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WATCHMAN - WARNING - ⚠️  CivicBank not available (running in audit-only mode)
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for watchman: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for scribe: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for herald: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for chronicle: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for auditor: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for engineer: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for YOUR_AGENT_ID: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for librarian: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for analyst: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for marketer: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for mechanic: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for agora: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for ambassador: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for pulse: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for artisan: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for lens: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for market: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for dhruva: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for temple: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+AGENT_INTERFACE - WARNING - ⚠️  DependencyManager unavailable for echo: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+VIBE_KERNEL - WARNING -    ⚠️  Failed to register manifest for steward: 'dict' object has no attribute 'agent_id'
+VIBE_KERNEL - WARNING - ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+2025-12-04 10:31:12,228 [STEWARD] 🚀 Process started for steward
+2025-12-04 10:31:12,240 [STEWARD] 📦 Loaded cartridge: DiscovererCartridge
+2025-12-04 10:31:12,241 [STEWARD] 📜 Constitution hash computed: df4bf7b77c367643...
+2025-12-04 10:31:12,241 [STEWARD] 🧙 DISCOVERER cartridge initialized (The First Citizen)
+2025-12-04 10:31:13,318 [PING] 🚀 Process started for ping
+2025-12-04 10:31:13,589 [SUPREME_COURT] 🚀 Process started for supreme_court
+2025-12-04 10:31:13,648 [ORACLE] 🚀 Process started for oracle
+2025-12-04 10:31:13,825 [ARCHIVIST] 🚀 Process started for archivist
+2025-12-04 10:31:13,857 [ENVOY] 🚀 Process started for envoy
+2025-12-04 10:31:13,913 [CIVIC] 🚀 Process started for civic
+2025-12-04 10:31:13,944 [SCIENCE] 🚀 Process started for science
+2025-12-04 10:31:13,974 [AUDITOR] 🚀 Process started for auditor
+2025-12-04 10:31:13,977 [SCRIBE] 🚀 Process started for scribe
+2025-12-04 10:31:14,008 [CHRONICLE] 🚀 Process started for chronicle
+2025-12-04 10:31:14,050 [FORUM] 🚀 Process started for forum
+2025-12-04 10:31:14,107 [ORACLE] 📦 Loaded cartridge: OracleCartridge
+2025-12-04 10:31:14,107 [ORACLE] 🔮 ORACLE awakened
+2025-12-04 10:31:14,107 [ORACLE] ✅ ORACLE has sworn the Constitutional Oath
+2025-12-04 10:31:14,107 [ORACLE] ✅ ORACLE ready (NO tool instances owned)
+2025-12-04 10:31:14,154 [MARKETER] 🚀 Process started for marketer
+2025-12-04 10:31:14,163 [MARKETER] 📦 Loaded cartridge: MarketerCartridge
+2025-12-04 10:31:14,163 [MARKETER] MARKETER initialized (citizen agent)
+2025-12-04 10:31:14,191 [YOUR_AGENT_ID] 🚀 Process started for YOUR_AGENT_ID
+2025-12-04 10:31:14,200 [YOUR_AGENT_ID] 📦 Loaded cartridge: YourAgentCartridge
+2025-12-04 10:31:14,201 [YOUR_AGENT_ID] YOUR_AGENT_NAME initialized
+2025-12-04 10:31:14,275 [WATCHMAN] 🚀 Process started for watchman
+2025-12-04 10:31:14,326 [AMBASSADOR] 🚀 Process started for ambassador
+2025-12-04 10:31:14,384 [ENGINEER] 🚀 Process started for engineer
+2025-12-04 10:31:14,405 [ARCHIVIST] 📦 Loaded cartridge: ArchivistCartridge
+2025-12-04 10:31:14,406 [ARCHIVIST] 📜 ARCHIVIST is online (History Keeper Ready)
+2025-12-04 10:31:14,406 [ARCHIVIST] ✅ ARCHIVIST has sworn the Constitutional Oath
+2025-12-04 10:31:14,422 [ARTISAN] 🚀 Process started for artisan
+2025-12-04 10:31:14,449 [HERALD] 🚀 Process started for herald
+2025-12-04 10:31:14,489 [STEWARD] 📁 VFS initialized for steward: /private/tmp/vibe_os/agents/steward
+2025-12-04 10:31:14,489 [STEWARD] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:14,489 [STEWARD] 🔧 steward: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:14,489 [STEWARD] 🔧 steward: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:14,489 [STEWARD] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:14,501 [ARTISAN] 📦 Loaded cartridge: ArtisanCartridge
+2025-12-04 10:31:14,501 [ARTISAN] 🔨 THE ARTISAN is online (Tool Protocol v2.0).
+2025-12-04 10:31:14,501 [ARTISAN] ✅ ARTISAN has sworn the Constitutional Oath
+2025-12-04 10:31:14,501 [ARTISAN] ✅ ARTISAN: Ready for operation (NO tool instances owned)
+2025-12-04 10:31:14,505 [TEMPLE] 🚀 Process started for temple
+2025-12-04 10:31:14,523 [TEMPLE] 📦 Loaded cartridge: TempleCartridge
+2025-12-04 10:31:14,523 [TEMPLE] 🏛️  TEMPLE (VibeAgent v1.0) is online - Blessing Service Ready
+2025-12-04 10:31:14,523 [TEMPLE] ✅ TEMPLE has sworn the Constitutional Oath
+2025-12-04 10:31:14,523 [TEMPLE] ✅ TEMPLE: Ready for blessing service
+2025-12-04 10:31:14,533 [PING] workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+2025-12-04 10:31:14,533 [PING] Registered prompt: research.analyze_topic (1876 chars)
+2025-12-04 10:31:14,533 [PING] Registered prompt: research.search_knowledge (1500 chars)
+2025-12-04 10:31:14,533 [PING] Registered prompt: research.synthesize_report (1463 chars)
+2025-12-04 10:31:14,534 [PING] ✅ Initialized default prompts in registry
+2025-12-04 10:31:14,540 [SUPREME_COURT] 📦 Loaded cartridge: SupremeCourtCartridge
+2025-12-04 10:31:14,541 [SUPREME_COURT] ✅ SUPREME COURT has sworn the Constitutional Oath
+2025-12-04 10:31:14,541 [SUPREME_COURT] ⚖️  SUPREME COURT v1.0: Initializing Appellate System
+2025-12-04 10:31:14,541 [SUPREME_COURT] ✅ SUPREME COURT v1.0: Ready for appellate review (NO tool instances owned)
+2025-12-04 10:31:14,541 [PING] 📦 Loaded cartridge: PingCartridge
+2025-12-04 10:31:14,541 [PING] ContextAwareAgent initialized: ping
+2025-12-04 10:31:14,541 [PING] 🏓 PING agent ready
+2025-12-04 10:31:14,578 [CHRONICLE] 📦 Loaded cartridge: ChronicleCartridge
+2025-12-04 10:31:14,578 [CHRONICLE] 🗡️  CHRONICLE Cartridge initializing (VibeAgent v1.0)...
+2025-12-04 10:31:14,587 [PULSE] 🚀 Process started for pulse
+2025-12-04 10:31:14,588 [SCRIBE] 📦 Loaded cartridge: ScribeCartridge
+2025-12-04 10:31:14,588 [SCRIBE] 📚 SCRIBE Cartridge initializing (VibeAgent v1.0)...
+2025-12-04 10:31:14,588 [SCRIBE] ✅ SCRIBE has sworn the Constitutional Oath
+2025-12-04 10:31:14,588 [SCRIBE] ✅ SCRIBE ready (NO tool instances owned)
+2025-12-04 10:31:14,588 [SCRIBE] 📚 SCRIBE: Ready for operation (awaiting system injection)
+2025-12-04 10:31:14,591 [AUDITOR] 📦 Loaded cartridge: AuditorCartridge
+2025-12-04 10:31:14,591 [AUDITOR] 🔍 AUDITOR is online (Tool Protocol v3.0)
+2025-12-04 10:31:14,591 [AUDITOR] ✅ AUDITOR has sworn the Constitutional Oath
+2025-12-04 10:31:14,591 [AUDITOR] ✅ AUDITOR: Ready for operation (NO tool instances owned)
+2025-12-04 10:31:14,595 [AGORA] 🚀 Process started for agora
+2025-12-04 10:31:14,624 [PULSE] 📦 Loaded cartridge: PulseCartridge
+2025-12-04 10:31:14,624 [PULSE] 📡 PULSE (VibeAgent v1.0) is online - Twitter/X Amplification Ready
+2025-12-04 10:31:14,625 [PULSE] ✅ PULSE has sworn the Constitutional Oath
+2025-12-04 10:31:14,625 [PULSE] ✅ PULSE: Ready for Twitter amplification
+2025-12-04 10:31:14,640 [CIVIC] 📦 Loaded cartridge: CivicCartridge
+2025-12-04 10:31:14,640 [CIVIC] 🏛️  CIVIC Cartridge initializing (VibeAgent v2.0) with Phoenix Config
+2025-12-04 10:31:14,640 [CIVIC] ✅ CIVIC has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-04 10:31:14,655 [AGORA] 📦 Loaded cartridge: AgoraCartridge
+2025-12-04 10:31:14,655 [AGORA] 📡 AGORA (VibeAgent v1.0) is online - Broadcast Channel Ready
+2025-12-04 10:31:14,655 [AGORA] ✅ AGORA has sworn the Constitutional Oath
+2025-12-04 10:31:14,655 [AGORA] ✅ AGORA: Ready for one-way broadcast transmission
+2025-12-04 10:31:14,674 [CHRONICLE] 🕉️  GENESIS CEREMONY: chronicle swearing Constitutional Oath...
+2025-12-04 10:31:14,674 [CHRONICLE] 📜 Constitution hash computed: df4bf7b77c367643...
+2025-12-04 10:31:14,674 [CHRONICLE] ⚠️  Using fallback oath signature: OATH_chronicle_df4bf7b77c367643...
+2025-12-04 10:31:14,675 [CHRONICLE] ✅ chronicle has sworn Constitutional Oath
+2025-12-04 10:31:14,683 [CHRONICLE] ✅ CHRONICLE has sworn the Constitutional Oath
+2025-12-04 10:31:14,683 [CHRONICLE] ✅ CHRONICLE ready (NO tool instances owned)
+2025-12-04 10:31:14,737 [LENS] 🚀 Process started for lens
+2025-12-04 10:31:14,743 [MARKET] 🚀 Process started for market
+2025-12-04 10:31:14,747 [LENS] 📦 Loaded cartridge: LensCartridge
+2025-12-04 10:31:14,748 [LENS] 📊 LENS (VibeAgent v1.0) is online - Analytics Ready
+2025-12-04 10:31:14,748 [LENS] ✅ LENS has sworn the Constitutional Oath
+2025-12-04 10:31:14,748 [LENS] ✅ LENS: Ready for data analysis
+2025-12-04 10:31:14,753 [MARKET] 📦 Loaded cartridge: MarketCartridge
+2025-12-04 10:31:14,753 [MARKET] 🏪 MARKET (VibeAgent v1.0) is online - Exchange Ready
+2025-12-04 10:31:14,753 [MARKET] ✅ MARKET has sworn the Constitutional Oath
+2025-12-04 10:31:14,753 [MARKET] ✅ MARKET: Ready for commerce
+2025-12-04 10:31:14,871 [CIVIC] 🎛️  THE MATRIX loaded: Agent City Alpha (Federation v1.0.0)
+2025-12-04 10:31:14,871 [CIVIC] 🏛️  Initializing delegated agents (P1 Refactor)
+2025-12-04 10:31:14,872 [CIVIC] 📋 Registry loaded: 6 agents
+2025-12-04 10:31:14,872 [CIVIC] 💰 CIVIC Economy initialized (Naked Agent - awaiting system injection)
+2025-12-04 10:31:14,872 [CIVIC] 🔄 LIFECYCLE AGENT initialized (Naked Agent - awaiting system injection)
+2025-12-04 10:31:14,872 [CIVIC] 🏛️  CIVIC: Ready for operation (awaiting kernel injection)
+2025-12-04 10:31:14,950 [HERALD] workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+2025-12-04 10:31:14,951 [HERALD] Registered prompt: research.analyze_topic (1876 chars)
+2025-12-04 10:31:14,951 [HERALD] Registered prompt: research.search_knowledge (1500 chars)
+2025-12-04 10:31:14,951 [HERALD] Registered prompt: research.synthesize_report (1463 chars)
+2025-12-04 10:31:14,952 [HERALD] ✅ Initialized default prompts in registry
+2025-12-04 10:31:14,986 [ENGINEER] 📦 Loaded cartridge: EngineerCartridge
+2025-12-04 10:31:14,987 [ENGINEER] 📐 THE ENGINEER is online (Tool Protocol v3.0).
+2025-12-04 10:31:14,987 [ENGINEER] ✅ ENGINEER has sworn the Constitutional Oath
+2025-12-04 10:31:14,987 [ENGINEER] ✅ ENGINEER: Ready for operation (NO tool instances owned)
+2025-12-04 10:31:15,076 [FORUM] 📦 Loaded cartridge: ForumCartridge
+2025-12-04 10:31:15,079 [FORUM] 🗳️  FORUM (VibeAgent) initializing...
+2025-12-04 10:31:15,079 [FORUM] ✅ FORUM has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-04 10:31:15,083 [FORUM] 🗳️  FORUM: Ready for operation (paths will be sandboxed after kernel injection)
+2025-12-04 10:31:15,209 [HERALD] 📦 Loaded cartridge: HeraldCartridge
+2025-12-04 10:31:15,209 [HERALD] ContextAwareAgent initialized: herald
+2025-12-04 10:31:15,209 [HERALD] 🦅 HERALD (ContextAwareAgent v3.1) is online (config: 2h frequency).
+2025-12-04 10:31:15,209 [HERALD] ✅ HERALD has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-04 10:31:15,210 [HERALD] DegradationChain initialized (level: templates)
+2025-12-04 10:31:15,210 [HERALD] herald: DegradationChain initialized (level: templates)
+2025-12-04 10:31:15,210 [HERALD] 📴 Offline capability: templates (LocalLLM: ❌)
+2025-12-04 10:31:15,210 [HERALD] ✅ CONSTITUTION.md loaded from: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-04 10:31:15,210 [HERALD] 🏛️  HERALD Constitution initialized (Living Constitution - File Dependent)
+2025-12-04 10:31:15,210 [HERALD] 📜 Constitutional Authority: /Users/ss/Downloads/steward-protocol/CONSTITUTION.md
+2025-12-04 10:31:15,210 [HERALD] ⚖️  Governance loaded: HeraldConstitution (immutable code-based rules)
+2025-12-04 10:31:15,274 [SCIENCE] workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+2025-12-04 10:31:15,275 [SCIENCE] Registered prompt: research.analyze_topic (1876 chars)
+2025-12-04 10:31:15,275 [SCIENCE] Registered prompt: research.search_knowledge (1500 chars)
+2025-12-04 10:31:15,275 [SCIENCE] Registered prompt: research.synthesize_report (1463 chars)
+2025-12-04 10:31:15,275 [SCIENCE] ✅ Initialized default prompts in registry
+2025-12-04 10:31:15,386 [HERALD] ✅ HERALD: Ready for operation
+2025-12-04 10:31:15,395 [SCIENCE] 📦 Loaded cartridge: ScientistCartridge
+2025-12-04 10:31:15,396 [SCIENCE] ContextAwareAgent initialized: science
+2025-12-04 10:31:15,396 [SCIENCE] ✅ SCIENCE has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-04 10:31:15,396 [SCIENCE] 🔬 SCIENTIST (VibeAgent) initializing...
+2025-12-04 10:31:15,396 [SCIENCE] ✅ SCIENTIST ready (NO tool instances owned - paths will be sandboxed after kernel injection)
+2025-12-04 10:31:15,432 [WATCHMAN] 📦 Loaded cartridge: WatchmanCartridge
+2025-12-04 10:31:15,432 [WATCHMAN] ⚔️ WATCHMAN BOOTING...
+2025-12-04 10:31:15,432 [WATCHMAN] ✅ WATCHMAN has sworn the Constitutional Oath
+2025-12-04 10:31:15,432 [WATCHMAN] ⚠️  CivicBank not available (running in audit-only mode)
+2025-12-04 10:31:15,432 [WATCHMAN] ✅ WATCHMAN: Ready for operation (NO tool instances owned)
+2025-12-04 10:31:15,644 [AMBASSADOR] 📦 Loaded cartridge: AmbassadorCartridge
+2025-12-04 10:31:15,644 [AMBASSADOR] 🤝 AMBASSADOR (VibeAgent v1.0) is online - Community Ready
+2025-12-04 10:31:15,644 [AMBASSADOR] ✅ AMBASSADOR has sworn the Constitutional Oath
+2025-12-04 10:31:15,894 [AMBASSADOR] 🧠 Semantic Router initialized (awaiting model load)
+2025-12-04 10:31:15,894 [AMBASSADOR] 🧠 SemanticRouter loaded (JNANA Cortex Active)
+2025-12-04 10:31:15,894 [AMBASSADOR] 🌊 Milk Ocean Router initialized (Brahma Protocol Active)
+2025-12-04 10:31:15,894 [AMBASSADOR] 🌊 Milk Ocean Router initialized
+2025-12-04 10:31:15,894 [AMBASSADOR] 📊 Playbook Executor & AgentRouter initialized
+2025-12-04 10:31:15,894 [AMBASSADOR] ✅ AMBASSADOR: Ready for community engagement
+VIBE_KERNEL - WARNING - ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+2025-12-04 10:31:16,751 [ORACLE] 📁 VFS initialized for oracle: /private/tmp/vibe_os/agents/oracle
+2025-12-04 10:31:16,752 [ORACLE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:16,752 [ORACLE] 🔧 oracle: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:16,752 [ORACLE] 🔧 oracle: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:16,752 [ORACLE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:16,905 [ENVOY] workspace_utils not available: workspace_utils.py not found at /Users/ss/Downloads/steward-protocol/scripts/workspace_utils.py
+2025-12-04 10:31:16,905 [ENVOY] Registered prompt: research.analyze_topic (1876 chars)
+2025-12-04 10:31:16,977 [ENVOY] Registered prompt: research.search_knowledge (1500 chars)
+2025-12-04 10:31:16,977 [ENVOY] Registered prompt: research.synthesize_report (1463 chars)
+2025-12-04 10:31:16,977 [ENVOY] ✅ Initialized default prompts in registry
+2025-12-04 10:31:16,990 [ENVOY] 📦 Loaded cartridge: EnvoyCartridge
+2025-12-04 10:31:16,991 [ENVOY] ContextAwareAgent initialized: envoy
+2025-12-04 10:31:16,991 [ENVOY] ✅ ENVOY has sworn the Constitutional Oath (Genesis Ceremony)
+2025-12-04 10:31:16,991 [ENVOY] 👁️  ENVOY (VibeAgent v3.1) is initializing...
+2025-12-04 10:31:17,010 [MARKETER] 📁 VFS initialized for marketer: /private/tmp/vibe_os/agents/marketer
+2025-12-04 10:31:17,010 [MARKETER] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,010 [MARKETER] 🔧 marketer: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,010 [MARKETER] 🔧 marketer: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,010 [MARKETER] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,033 [YOUR_AGENT_ID] 📁 VFS initialized for YOUR_AGENT_ID: /private/tmp/vibe_os/agents/YOUR_AGENT_ID
+2025-12-04 10:31:17,033 [YOUR_AGENT_ID] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,033 [YOUR_AGENT_ID] 🔧 YOUR_AGENT_ID: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,033 [YOUR_AGENT_ID] 🔧 YOUR_AGENT_ID: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,033 [YOUR_AGENT_ID] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,037 [ARCHIVIST] 📁 VFS initialized for archivist: /private/tmp/vibe_os/agents/archivist
+2025-12-04 10:31:17,037 [ARCHIVIST] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,037 [ARCHIVIST] 🔧 archivist: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,037 [ARCHIVIST] 🔧 archivist: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,037 [ARCHIVIST] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,157 [AUDITOR] 📁 VFS initialized for auditor: /private/tmp/vibe_os/agents/auditor
+2025-12-04 10:31:17,157 [AUDITOR] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,157 [AUDITOR] 🔧 auditor: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,168 [TEMPLE] 📁 VFS initialized for temple: /private/tmp/vibe_os/agents/temple
+2025-12-04 10:31:17,169 [TEMPLE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,169 [TEMPLE] 🔧 temple: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,170 [TEMPLE] 🔧 temple: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,170 [TEMPLE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,175 [CHRONICLE] 📁 VFS initialized for chronicle: /private/tmp/vibe_os/agents/chronicle
+2025-12-04 10:31:17,175 [CHRONICLE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,175 [CHRONICLE] 🔧 chronicle: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,175 [CHRONICLE] 🔧 chronicle: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,175 [CHRONICLE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,231 [ENVOY] 🧠 Semantic Router initialized (awaiting model load)
+2025-12-04 10:31:17,231 [ENVOY] 🧠 SemanticRouter loaded (JNANA Cortex Active)
+2025-12-04 10:31:17,231 [ENVOY] 🌊 Milk Ocean Router initialized (Brahma Protocol Active)
+2025-12-04 10:31:17,236 [ENVOY] 🧠 LLM Engine initialized (Provider: openai, Model: gpt-4o)
+2025-12-04 10:31:17,236 [ENVOY] 🧠 LLM Engine initialized (Provider: openai, Model: gpt-4o)
+2025-12-04 10:31:17,236 [ENVOY] ✅ Action handlers: ['CHECK_STATE', 'EXECUTE_SCRIPT', 'EMIT_EVENT', 'CALL_AGENT', 'CALL_PLAYBOOK']
+2025-12-04 10:31:17,236 [ENVOY] ✅ Blueprint Generator initialized
+2025-12-04 10:31:17,236 [ENVOY] ✅ Circuit Executor available (will init with kernel + meta-circuits)
+2025-12-04 10:31:17,157 [AUDITOR] 🔧 auditor: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,281 [AUDITOR] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,292 [PING] 📁 VFS initialized for ping: /private/tmp/vibe_os/agents/ping
+2025-12-04 10:31:17,292 [PING] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,292 [PING] 🔧 ping: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,292 [PING] 🔧 ping: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,292 [PING] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,293 [CIVIC] 📁 VFS initialized for civic: /private/tmp/vibe_os/agents/civic
+2025-12-04 10:31:17,293 [CIVIC] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,293 [CIVIC] 🔧 civic: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,293 [CIVIC] 🔧 civic: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,293 [CIVIC] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,294 [AGORA] 📁 VFS initialized for agora: /private/tmp/vibe_os/agents/agora
+2025-12-04 10:31:17,294 [AGORA] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,294 [AGORA] 🔧 agora: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,294 [AGORA] 🔧 agora: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,294 [AGORA] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,304 [SUPREME_COURT] 📁 VFS initialized for supreme_court: /private/tmp/vibe_os/agents/supreme_court
+2025-12-04 10:31:17,304 [SUPREME_COURT] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,304 [SUPREME_COURT] 🔧 supreme_court: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,304 [SUPREME_COURT] 🔧 supreme_court: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,305 [SUPREME_COURT] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,305 [PULSE] 📁 VFS initialized for pulse: /private/tmp/vibe_os/agents/pulse
+2025-12-04 10:31:17,305 [PULSE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,305 [PULSE] 🔧 pulse: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,306 [PULSE] 🔧 pulse: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,306 [PULSE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,327 [ARTISAN] 📁 VFS initialized for artisan: /private/tmp/vibe_os/agents/artisan
+2025-12-04 10:31:17,327 [ARTISAN] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,327 [ARTISAN] 🔧 artisan: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,328 [ARTISAN] 🔧 artisan: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,328 [ARTISAN] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,333 [ENGINEER] 📁 VFS initialized for engineer: /private/tmp/vibe_os/agents/engineer
+2025-12-04 10:31:17,334 [ENGINEER] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,334 [ENGINEER] 🔧 engineer: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,334 [ENGINEER] 🔧 engineer: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,335 [ENGINEER] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,348 [SCRIBE] 📁 VFS initialized for scribe: /private/tmp/vibe_os/agents/scribe
+2025-12-04 10:31:17,348 [SCRIBE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,349 [SCRIBE] 🔧 scribe: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,349 [SCRIBE] 🔧 scribe: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,349 [SCRIBE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,441 [LENS] 📁 VFS initialized for lens: /private/tmp/vibe_os/agents/lens
+2025-12-04 10:31:17,441 [LENS] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,441 [LENS] 🔧 lens: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,441 [LENS] 🔧 lens: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,441 [LENS] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,480 [MARKET] 📁 VFS initialized for market: /private/tmp/vibe_os/agents/market
+2025-12-04 10:31:17,481 [MARKET] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,481 [MARKET] 🔧 market: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,481 [MARKET] 🔧 market: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,481 [MARKET] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,483 [ENVOY] ✅ Loaded playbook: ARCHITECTURE_ANALYSIS (ARCHITECTURE_ANALYSIS)
+2025-12-04 10:31:17,489 [FORUM] 📁 VFS initialized for forum: /private/tmp/vibe_os/agents/forum
+2025-12-04 10:31:17,489 [FORUM] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,489 [FORUM] 🔧 forum: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,489 [FORUM] 🔧 forum: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,489 [FORUM] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,521 [HERALD] 📁 VFS initialized for herald: /private/tmp/vibe_os/agents/herald
+2025-12-04 10:31:17,521 [HERALD] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,521 [HERALD] 🔧 herald: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,521 [HERALD] 🔧 herald: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,521 [HERALD] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,551 [WATCHMAN] 📁 VFS initialized for watchman: /private/tmp/vibe_os/agents/watchman
+2025-12-04 10:31:17,551 [WATCHMAN] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,551 [WATCHMAN] 🔧 watchman: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,551 [WATCHMAN] 🔧 watchman: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,552 [WATCHMAN] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,600 [SCIENCE] 📁 VFS initialized for science: /private/tmp/vibe_os/agents/science
+2025-12-04 10:31:17,600 [SCIENCE] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,600 [SCIENCE] 🔧 science: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,600 [SCIENCE] 🔧 science: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,601 [SCIENCE] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,620 [ENVOY] ✅ Loaded playbook: DEBUG_FIX_V2 (DEBUG_FIX_V2)
+2025-12-04 10:31:17,723 [ENVOY] ✅ Loaded playbook: GOVERNANCE_VOTE_V2 (GOVERNANCE_VOTE_V2)
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+2025-12-04 10:31:17,772 [AMBASSADOR] 📁 VFS initialized for ambassador: /private/tmp/vibe_os/agents/ambassador
+2025-12-04 10:31:17,772 [AMBASSADOR] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:17,772 [AMBASSADOR] 🔧 ambassador: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:17,772 [AMBASSADOR] 🔧 ambassador: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:17,772 [AMBASSADOR] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:17,878 [ENVOY] ✅ Loaded playbook: RESEARCH_SYNTH_V2 (RESEARCH_SYNTH_V2)
+2025-12-04 10:31:18,000 [ENVOY] ✅ Loaded playbook: AGENT_BIRTH_V1 (AGENT_BIRTH_V1)
+2025-12-04 10:31:18,006 [ENVOY] ✅ Loaded playbook: SIMPLE_QUERY (SIMPLE_QUERY)
+2025-12-04 10:31:18,088 [ENVOY] ✅ Loaded playbook: WIRING_AUDIT (WIRING_AUDIT)
+2025-12-04 10:31:18,254 [ENVOY] ✅ Loaded playbook: TASK_LEDGER_V1 (TASK_LEDGER_V1)
+2025-12-04 10:31:18,287 [ENVOY] ✅ Loaded playbook: DEBATE_V1 (DEBATE_V1)
+2025-12-04 10:31:18,345 [ENVOY] ✅ Loaded playbook: CONTEXT_SYNTH (CONTEXT_SYNTH)
+2025-12-04 10:31:18,391 [ENVOY] ✅ Loaded playbook: PROJECT_SCAFFOLD_V2 (PROJECT_SCAFFOLD_V2)
+2025-12-04 10:31:18,432 [ENVOY] ✅ Loaded playbook: FEATURE_IMPLEMENT_V2 (FEATURE_IMPLEMENT_V2)
+2025-12-04 10:31:18,525 [ENVOY] ✅ Loaded playbook: SYSTEM_DESIGN_V2 (SYSTEM_DESIGN_V2)
+2025-12-04 10:31:18,635 [ENVOY] ✅ Loaded playbook: ERROR_RECOVERY_V1 (ERROR_RECOVERY_V1)
+2025-12-04 10:31:18,688 [ENVOY] ✅ Loaded playbook: CONTENT_GENERATION_V2 (CONTENT_GENERATION_V2)
+2025-12-04 10:31:18,780 [ENVOY] ✅ Loaded playbook: DOC_INDEX_RENDER (DOC_INDEX_RENDER)
+2025-12-04 10:31:18,792 [ENVOY] ✅ Loaded playbook: PHILOSOPHICAL_DEBATE_V1 (PHILOSOPHICAL_DEBATE_V1)
+2025-12-04 10:31:18,802 [ENVOY] ✅ Loaded playbook: TEMPLATE_CIRCUIT_V1 (TEMPLATE_CIRCUIT_V1)
+2025-12-04 10:31:18,816 [ENVOY] ✅ Loaded playbook: ARCHITECT_V1 (ARCHITECT_V1)
+2025-12-04 10:31:19,190 [ENVOY] 📂 Loaded 18 persisted execution states
+2025-12-04 10:31:19,190 [ENVOY] 🎯 Playbook Engine initialized with 19 playbooks
+2025-12-04 10:31:19,190 [ENVOY] 🧠 MilkOcean Router initialized (Classifier)
+2025-12-04 10:31:19,190 [ENVOY] ✋ Deterministic Executor initialized (Execution Engine)
+2025-12-04 10:31:19,190 [ENVOY] ✅ ENVOY ready (NO tool instances owned)
+2025-12-04 10:31:19,646 [ENVOY] 📁 VFS initialized for envoy: /private/tmp/vibe_os/agents/envoy
+2025-12-04 10:31:19,646 [ENVOY] 🌐 Network Proxy initialized with 9 whitelisted domains
+2025-12-04 10:31:19,646 [ENVOY] 🔧 envoy: Monkey-patched builtins.open → VFS
+2025-12-04 10:31:19,646 [ENVOY] 🔧 envoy: Monkey-patched requests → Network Proxy
+2025-12-04 10:31:19,646 [ENVOY] ✅ Agent instantiated. Entering event loop.
+2025-12-04 10:31:19,646 [ENVOY] ⚡ Processing task 06d49675-236d-41ca-809a-091643266fd7
+2025-12-04 10:31:19,647 [ENVOY] ⚡ ENVOY processing task: 06d49675-236d-41ca-809a-091643266fd7
+VIBE_KERNEL - WARNING - ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+JUDGE_INVARIANT - WARNING - ⚖️  VIOLATION: NO_ORPHANED_EVENTS (HIGH) - Event at index 0 missing task_id
+JUDGE_INVARIANT - WARNING - ⚖️  VIOLATION: NO_CRITICAL_VOIDS (CRITICAL) - VOID: total_credits is None or 0 after system action
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+CAPABILITY_REGISTRY - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+vibe_core.tools.tool_registry - WARNING - ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+DEBUG: EnvoyUIPlugin.on_tick_pre called. last_modified=0
+DEBUG: File changed detected
+DEBUG: EnvoySync content read: 1953 chars
+DEBUG: Extracted request content: 'start new development'
+DEBUG: Dispatching request: 'start new development'
+DEBUG: Route result: PlaybookRoute(task='analyze', description='First-time system initialization', confidence='explicit', source="matched: 'start'")
+DEBUG: Task submitted, id: 06d49675-236d-41ca-809a-091643266fd7
+DEBUG: result.pending_tasks keys: ['06d49675-236d-41ca-809a-091643266fd7']
+DEBUG: self.pending_tasks keys after update: ['06d49675-236d-41ca-809a-091643266fd7']
+DEBUG: EnvoySync content read: 1927 chars
+DEBUG: Extracted request content: ''
+F
+
+=================================== FAILURES ===================================
+________________ TestFullLifecycle.test_envoy_request_lifecycle ________________
+
+self = <test_kernel_markdown_interfaces.TestFullLifecycle object at 0x10a3f5810>
+booted_kernel = <vibe_core.kernel_impl.RealVibeKernel object at 0x10a470830>
+temp_workdir = PosixPath('/var/folders/gy/bxdj4bdn3dv4_p075fqk80jm0000gn/T/vibe_test_jbjwsksl')
+
+    def test_envoy_request_lifecycle(self, booted_kernel, temp_workdir):
+        """Test: Write request → tick → dispatch → task queued."""
+        envoy_path = temp_workdir / "ENVOY.md"
+    
+        # Generate initial ENVOY.md
+        booted_kernel._pulse()
+        get_plugin(booted_kernel, "envoy_ui").on_tick_post(booted_kernel)
+        assert envoy_path.exists()
+    
+        # Add a request
+        content = envoy_path.read_text()
+        content = content.replace("_No pending request. Write your request above this line._", "start new development")
+        envoy_path.write_text(content)
+        get_plugin(booted_kernel, "envoy_ui").last_modified = 0  # Force change detection
+    
+        # Run tick (processes request)
+        booted_kernel.tick()
+    
+        # Request should be dispatched
+>       assert len(get_plugin(booted_kernel, "envoy_ui").pending_tasks) >= 1
+E       AssertionError: assert 0 >= 1
+E        +  where 0 = len({})
+E        +    where {} = <vibe_core.plugins.envoy_ui.EnvoyUIPlugin object at 0x10bd0d6a0>.pending_tasks
+E        +      where <vibe_core.plugins.envoy_ui.EnvoyUIPlugin object at 0x10bd0d6a0> = get_plugin(<vibe_core.kernel_impl.RealVibeKernel object at 0x10a470830>, 'envoy_ui')
+
+/Users/ss/Downloads/steward-protocol/tests/integration/test_kernel_markdown_interfaces.py:738: AssertionError
+------------------------------ Captured log setup ------------------------------
+ERROR    ARCHIVIST_VERIFIER:verifier_tool.py:30 ❌ steward.crypto not available - verification will fail
+WARNING  CITY_CONTROL:city_control_tool.py:91 ⚠️ CityControlTool initialized without kernel - limited functionality
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load agents_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load readme_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load rag_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load help_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load index_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load dashboard_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+ERROR    TOOL_DISCOVERY:tool_discovery.py:131    ❌ Failed to load citymap_renderer.py: ToolDiscoveryError: Import failed: attempted relative import with no known parent package
+WARNING  HERALD_BROADCAST:broadcast_tool.py:219 ⚠️  Broadcast: tweepy not installed
+WARNING  HERALD_BROADCAST:broadcast_tool.py:245 ⚠️  Broadcast: praw not installed
+WARNING  HERALD_RESEARCH:research_tool.py:84 ⚠️  Research: Tavily unavailable (running in simulation mode)
+WARNING  MARKETER_CONTENT:marketer_content_tool.py:62 ⚠️  Content: No OpenRouter key found (using fallback templates)
+WARNING  TOOL_DISCOVERY:tool_discovery.py:103 ⚠️  Failed to load 7 tools:
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.agents_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.readme_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.rag_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.help_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.index_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.dashboard_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  TOOL_DISCOVERY:tool_discovery.py:105    - scribe.citymap_renderer.py: Import failed: attempted relative import with no known parent package
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for steward: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for ping: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+ERROR    STEWARD:agent.py:157    ❌ Failed to load civic: 'CivicCartridge' object has no attribute 'system'
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for archivist: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for steward: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+ERROR    STEWARD:agent.py:157    ❌ Failed to load discoverer: 'dict' object has no attribute 'name'
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for supreme_court: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for oracle: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for science: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for envoy: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for forum: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  WATCHMAN:cartridge_main.py:127 ⚠️  CivicBank not available (running in audit-only mode)
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for watchman: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for scribe: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for herald: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for chronicle: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for auditor: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for engineer: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for YOUR_AGENT_ID: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for librarian: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for analyst: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for marketer: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for mechanic: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for agora: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for ambassador: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for pulse: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for artisan: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for lens: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for market: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for dhruva: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for temple: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  AGENT_INTERFACE:agent_interface.py:91 ⚠️  DependencyManager unavailable for echo: tomlkit is required for DependencyManager. Install it with: pip install tomlkit
+WARNING  VIBE_KERNEL:kernel_impl.py:865    ⚠️  Failed to register manifest for steward: 'dict' object has no attribute 'agent_id'
+WARNING  VIBE_KERNEL:kernel_impl.py:1617 ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+------------------------------ Captured log call -------------------------------
+WARNING  VIBE_KERNEL:kernel_impl.py:1617 ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  VIBE_KERNEL:kernel_impl.py:1617 ⚠️  Could not get status from civic: 'NoneType' object has no attribute 'execute_tool'
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  JUDGE_INVARIANT:invariant_tool.py:643 ⚖️  VIOLATION: NO_ORPHANED_EVENTS (HIGH) - Event at index 0 missing task_id
+WARNING  JUDGE_INVARIANT:invariant_tool.py:643 ⚖️  VIOLATION: NO_CRITICAL_VOIDS (CRITICAL) - VOID: total_credits is None or 0 after system action
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+WARNING  CAPABILITY_REGISTRY:capability_registry.py:122 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks 'herald.broadcast'. Current capabilities: ['broadcasting', 'content_generation', 'research']
+WARNING  vibe_core.tools.tool_registry:tool_registry.py:245 ⛔ CAPABILITY_DENIED: Agent 'herald' lacks capability 'herald.broadcast' required for tool 'herald.broadcast'.
+=============================== warnings summary ===============================
+tests/integration/test_kernel_markdown_interfaces.py: 30 warnings
+  /Users/ss/Downloads/steward-protocol/vibe_core/capability_registry.py:343: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return datetime.utcnow().isoformat()
+
+tests/integration/test_kernel_markdown_interfaces.py: 66 warnings
+  /Users/ss/Downloads/steward-protocol/vibe_core/ledger.py:170: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().isoformat()
+
+tests/integration/test_kernel_markdown_interfaces.py: 28 warnings
+  /Users/ss/Downloads/steward-protocol/vibe_core/kernel_impl.py:772: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py: 36 warnings
+  /Users/ss/Downloads/steward-protocol/vibe_core/lineage.py:188: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp=datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/kernel_impl.py:784: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/kernel_impl.py:848: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/kernel_impl.py:1599: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/plugins/envoy_ui.py:104: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/doc_renderer.py:80: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = snapshot.get("timestamp", datetime.utcnow().isoformat())
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/scheduling/task.py:37: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/envoy_sync.py:239: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/ledger.py:216: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+  /Users/ss/Downloads/steward-protocol/vibe_core/plugins/settings_ui.py:89: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/integration/test_kernel_markdown_interfaces.py::TestFullLifecycle::test_envoy_request_lifecycle
+======================= 1 failed, 180 warnings in 25.39s =======================

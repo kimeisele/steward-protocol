@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 logging.basicConfig(level=logging.INFO, format="%(name)s - %(message)s")
 logger = logging.getLogger("REAL_KERNEL_TEST")
 
-from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
 from vibe_core.boot_orchestrator import quick_boot
+from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
 
 async def test_with_real_kernel():
