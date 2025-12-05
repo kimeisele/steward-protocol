@@ -626,5 +626,70 @@ Plus SLA enforcement, dispute resolution, anti-gaming measures...
 
 ---
 
-*Last updated: Iteration 4 - Understanding STEWARD as complete universe (8 dimensions, 5+ layers)*
-*Status: DEEP UNDERSTANDING - Ready to plan proper implementation*
+## BLIND SPOT FOUND: STEWARD AS PLUGIN
+
+**The Golden Plugin Pattern exists:** `VedicGovernancePlugin` shows exactly how to do it:
+
+```python
+class VedicGovernancePlugin(KernelPlugin):
+    def __init__(self):
+        self._paused_agents = set()    # Own state
+        self._varna_registry = {}
+
+    def on_boot(self, kernel):
+        kernel.governance = self       # Register on kernel
+
+    def on_agent_registered(self, kernel, agent_id):
+        # Apply governance rules
+
+    def on_task_pre_assign(self, kernel, agent_id, task) -> bool:
+        # GOVERNANCE GATE - can veto
+
+    # Public API: kernel.governance.pause_agent(), etc.
+```
+
+**STEWARD should be the SAME pattern:**
+
+```python
+class StewardProtocolPlugin(KernelPlugin):
+    def __init__(self):
+        self._protocol_config = None   # From Phoenix
+        self._trust_scores = {}
+        self._attestations = {}
+
+    def on_boot(self, kernel):
+        kernel.steward = self          # Register on kernel
+        self._load_protocol_config()   # From config/steward.yaml
+
+    def on_agent_registered(self, kernel, agent_id):
+        # Load steward.json for agent
+        # Verify manifest signature
+        # Initialize trust tracking
+
+    def on_task_submit(self, kernel, task) -> bool:
+        # PROTOCOL GATE - verify delegation
+
+    # Public API:
+    # - kernel.steward.verify(agent_id)
+    # - kernel.steward.delegate(agent_id, task)
+    # - kernel.steward.get_trust_score(agent_id)
+    # - kernel.steward.attest(capability)
+```
+
+**What currently EXISTS but is NOT connected as plugin:**
+- steward/client.py → StewardClient (signing, verification)
+- vibe_core/steward/loader.py → AgentLoader (discovery)
+- steward/crypto.py → Cryptographic functions
+- steward/constitution.py → Constitutional rules
+- config/steward.yaml → Protocol configuration (Layer 1.5/1.6)
+
+**The MISSING piece:** A `StewardProtocolPlugin` that:
+1. Connects all these pieces
+2. Registers as `kernel.steward`
+3. Uses hooks for Protocol enforcement
+4. Provides public API for verification, delegation, trust
+
+---
+
+*Last updated: Iteration 5 - Found the blind spot: STEWARD needs to be a Plugin*
+*Status: READY TO IMPLEMENT - The pattern is clear (like VedicGovernancePlugin)*
