@@ -29,25 +29,154 @@
 ## THE FRACTAL PATTERN (Swastika Metaphor)
 
 ```
-                    KERNEL (center)
-                         │
-         ┌───────────────┼───────────────┐
-         │               │               │
-    PLUGINS ────────── KERNEL ────────── AGENTS
-         │               │               │
-         └───────────────┼───────────────┘
-                         │
-                    SECTIONS
-                         │
-              (each arm extends fractally)
+                         KERNEL (Vishnu - Immutable Center)
+                              │
+         ┌────────────────────┼────────────────────┐
+         │                    │                    │
+    PLUGINS ──────────── KERNEL ──────────── AGENTS
+    (Avatars)            (Core)              (Cartridges)
+         │                    │                    │
+         └────────────────────┼────────────────────┘
+                              │
+                         SECTIONS
+                       (Phoenix Config)
+```
+
+**The REAL Structure (from kernel_impl.py):**
+
+```
+RealVibeKernel.__init__():
+    │
+    ├── self._scheduler = InMemoryScheduler()
+    ├── self._ledger = SQLiteLedger()
+    ├── self._manifest_registry = InMemoryManifestRegistry()
+    │
+    ├── self.process_manager = ProcessManager()
+    ├── self.resource_manager = ResourceManager()
+    ├── self.network = KernelNetworkProxy()
+    ├── self.lineage = LineageChain()
+    │
+    ├── self._capability_registry = CapabilityRegistry()
+    ├── self.io = KernelIOService()       ← I/O Service
+    ├── self.tool_registry = ToolRegistry()
+    │
+    ├── self._event_bus = get_event_bus()
+    ├── self._playbook_router = PlaybookRouter()
+    │
+    └── self._plugins = PluginLoader.discover()   ← PLUGINS!
+        for plugin in self._plugins:
+            plugin.on_boot(self)                   ← Each plugin boots
+```
+
+**Plugins Location:** `vibe_core/plugins/`
+- sarga_cycle.py - Cosmic cycle (day/night of Brahma)
+- vedic_governance.py - Varna/Ashrama governance
+- envoy_ui.py - ENVOY.md interface
+- ephemeral_ui.py - EPHEMERAL.md interface
+- settings_ui.py - SETTINGS.md interface
+- git_history.py - Git integration
+- test_mode.py - Test mode
+
+**KernelPlugin Protocol:**
+```python
+class KernelPlugin(ABC):
+    def on_boot(kernel)           # Kernel starts
+    def on_tick_pre(kernel)       # Before each tick
+    def on_tick_post(kernel)      # After each tick
+    def on_task_submit(kernel, task) -> bool  # COSMIC GATE
+    def on_task_pre_assign(kernel, agent_id, task) -> bool  # GOVERNANCE GATE
+    def on_agent_registered(kernel, agent_id)
+    def on_task_completed/failed(...)
 ```
 
 **Follow the trails:**
-- Kernel → Plugins → What do plugins load?
-- Kernel → Sections → How do sections work?
-- Kernel → Agents → How are agents defined?
+- Kernel → PluginLoader.discover() → vibe_core/plugins/*.py
+- Kernel → config property → PhoenixConfig.from_files() or injected
+- Kernel → manifest_registry → AgentManifest objects
+- Kernel → io → KernelIOService → All file writes
 
 Each level has the SAME PATTERN. If I understand one, I understand all.
+
+---
+
+## THE BOOT CHAIN (Complete Picture)
+
+```
+Entry Point: vibe_core/boot_orchestrator.py
+                    │
+                    ▼
+        BootOrchestrator.boot()
+                    │
+    ┌───────────────┴───────────────┐
+    │  SARGA PHASES (Cosmic Creation)  │
+    │                                  │
+    │  1. SHABDA (Sound)     → Log boot command
+    │  2. AKASHA (Space)     → kernel = RealVibeKernel()
+    │  3. VAYU (Air)         → PromptContext, communication
+    │  4. AGNI (Fire)        → KernelOracle (capabilities)
+    │  5. JALA (Water)       → Discoverer, Knowledge Graph
+    │  6. PRITHVI (Earth)    → kernel.boot(), BootSequence
+    └───────────────────────────────────┘
+                    │
+                    ▼
+        BootOrchestrator.run_with_operator()
+                    │
+                    ▼
+        self.boot_sequence.run()  ← PROMPT GENERATION ONLY!
+```
+
+**Key Insight:**
+- `boot_sequence.py` is NOT the entry point
+- It's just the PROMPT GENERATION component
+- Created in PRITHVI phase: `self.boot_sequence = BootSequence(project_root)`
+- Called in operator loop: `self.boot_sequence.run()`
+
+**The REAL boot is:**
+1. BootOrchestrator creates RealVibeKernel
+2. RealVibeKernel.__init__() loads everything (plugins, tools, etc.)
+3. Discoverer discovers agents from steward.json files
+4. kernel.boot() finalizes
+5. THEN BootSequence runs to generate prompts
+
+**My Previous Mistake:**
+I thought boot_sequence.py was the main entry point and tried to fix prompts there.
+But prompts are DOWNSTREAM of the entire boot chain.
+The PROTOCOL (steward.json, AgentManifest, AgentLoader) happens EARLIER in the chain.
+
+**Where Agent Discovery Happens:**
+```
+JALA Phase (boot_orchestrator.py:228-256):
+    self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
+    self.kernel.register_agent(self.discoverer, spawn_process=False)
+    discovered_count = self.discoverer.discover_agents()
+```
+
+The Discoverer calls AgentLoader.discover_manifests() internally!
+
+**Complete Discovery Chain:**
+```
+Discoverer.discover_agents()  (steward/system_agents/discoverer/agent.py:99-150)
+    │
+    └── AgentLoader.discover_and_load(config)  (vibe_core/steward/loader.py)
+            │
+            ├── Scans: steward/system_agents/*/ → Finds steward.json
+            ├── Scans: agent_city/registry/*/ → Finds steward.json
+            │
+            └── For each steward.json:
+                    │
+                    ├── AgentManifest.from_dict(data)  → Parse manifest
+                    ├── Load cartridge_main.py if exists → Instance
+                    │
+                    └── Returns: {agent_id: agent_instance}, {agent_id: AgentMeta}
+```
+
+**Then in kernel:**
+```
+kernel.register_agent(agent)
+    │
+    ├── self._agent_registry[agent_id] = agent
+    └── self._manifest_registry.register(agent.get_manifest())
+```
 
 ---
 
