@@ -211,6 +211,32 @@ class BehaviorConfig:
 
 
 @dataclass
+class AgentIdentity:
+    """Agent identity (required by STEWARD Protocol)."""
+
+    id: str = "steward"
+    name: str = "STEWARD"
+    agent_class: str = "orchestration_operator"  # 'class' is reserved in Python
+    version: str = "1.0.0"
+    status: str = "ACTIVE"
+    description: str = ""
+
+
+@dataclass
+class PromptTemplates:
+    """
+    Prompt templates loaded from config.
+
+    Templates use ${variable} syntax resolved at runtime.
+    """
+
+    system_prompt_template: str = ""
+    boot_prompt_template: str = ""
+    execution_protocol: str = ""
+    remember_rules: str = ""
+
+
+@dataclass
 class StewardConfig:
     """
     Complete STEWARD Protocol configuration.
@@ -223,6 +249,12 @@ class StewardConfig:
     # Class-level section identifier for auto-discovery
     section_id = "steward"
     source_file = "steward.yaml"
+
+    # Agent Identity (Required by STEWARD Protocol)
+    identity: AgentIdentity = field(default_factory=AgentIdentity)
+
+    # Prompt Templates (loaded from config, NO hardcoding)
+    templates: PromptTemplates = field(default_factory=PromptTemplates)
 
     # Layer 1.5: User & Team Context
     user_context: UserContext = field(default_factory=UserContext)
@@ -239,7 +271,28 @@ class StewardConfig:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "StewardConfig":
         """Create StewardConfig from parsed YAML dict."""
+        # Parse identity
+        identity_data = data.get("identity", {})
+        identity = AgentIdentity(
+            id=identity_data.get("id", "steward"),
+            name=identity_data.get("name", "STEWARD"),
+            agent_class=identity_data.get("class", "orchestration_operator"),
+            version=identity_data.get("version", "1.0.0"),
+            status=identity_data.get("status", "ACTIVE"),
+            description=identity_data.get("description", ""),
+        )
+
+        # Parse templates
+        templates = PromptTemplates(
+            system_prompt_template=data.get("system_prompt_template", ""),
+            boot_prompt_template=data.get("boot_prompt_template", ""),
+            execution_protocol=data.get("execution_protocol", ""),
+            remember_rules=data.get("remember_rules", ""),
+        )
+
         return cls(
+            identity=identity,
+            templates=templates,
             user_context=UserContext.from_dict(data.get("user_context", {})),
             cognitive_policy=CognitivePolicy.from_dict(data.get("cognitive_policy", {})),
             behavior=BehaviorConfig(
@@ -255,6 +308,18 @@ class StewardConfig:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize back to YAML-compatible dict."""
         return {
+            "identity": {
+                "id": self.identity.id,
+                "name": self.identity.name,
+                "class": self.identity.agent_class,
+                "version": self.identity.version,
+                "status": self.identity.status,
+                "description": self.identity.description,
+            },
+            "system_prompt_template": self.templates.system_prompt_template,
+            "boot_prompt_template": self.templates.boot_prompt_template,
+            "execution_protocol": self.templates.execution_protocol,
+            "remember_rules": self.templates.remember_rules,
             "user_context": self.user_context.to_dict(),
             "cognitive_policy": self.cognitive_policy.to_dict(),
             "behavior": {
@@ -269,3 +334,50 @@ class StewardConfig:
     def get_active_user_prefs(self) -> UserPreferences:
         """Get preferences for the active user."""
         return self.user_context.get_user(self.active_user)
+
+    def resolve_template(self, template_name: str, context: Dict[str, Any]) -> str:
+        """
+        Resolve a template with context variables.
+
+        Uses ${variable} syntax replacement.
+
+        Args:
+            template_name: 'system_prompt' or 'boot_prompt'
+            context: Dict with variable values
+
+        Returns:
+            Resolved template string
+        """
+        import re
+
+        # Get template
+        if template_name == "system_prompt":
+            template = self.templates.system_prompt_template
+        elif template_name == "boot_prompt":
+            template = self.templates.boot_prompt_template
+        else:
+            raise ValueError(f"Unknown template: {template_name}")
+
+        if not template:
+            return ""
+
+        # Build full context including identity and nested templates
+        full_context = {
+            "identity.id": self.identity.id,
+            "identity.name": self.identity.name,
+            "identity.class": self.identity.agent_class,
+            "identity.version": self.identity.version,
+            "identity.status": self.identity.status,
+            "identity.description": self.identity.description,
+            "execution_protocol": self.templates.execution_protocol,
+            "remember_rules": self.templates.remember_rules,
+            **context,
+        }
+
+        # Replace ${variable} syntax
+        def replace_var(match):
+            var_name = match.group(1)
+            return str(full_context.get(var_name, f"[{var_name} unavailable]"))
+
+        result = re.sub(r"\$\{([^}]+)\}", replace_var, template)
+        return result
