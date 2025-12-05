@@ -33,7 +33,7 @@ from vibe_core.task_management.task_manager import TaskManager
 
 # Import the MilkOcean Router for task execution
 try:
-    from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+    from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 
     MILK_OCEAN_AVAILABLE = True
 except ImportError:

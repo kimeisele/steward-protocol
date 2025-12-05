@@ -20,7 +20,7 @@ def test_kernel_injection():
     print("=" * 60)
 
     # Import after path is set
-    from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
+    from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
     from vibe_core.kernel_impl import RealVibeKernel
 
     # Create and boot kernel

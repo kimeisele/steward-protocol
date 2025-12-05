@@ -19,7 +19,7 @@ def test_lifecycle_manager():
     logger.info("=" * 80)
 
     try:
-        from steward.system_agents.civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
+        from vibe_core.cartridges.system.civic.tools.lifecycle_manager import LifecycleManager, LifecycleStatus
     except ImportError as e:
         pytest.skip(f"Could not import lifecycle modules: {e}")
 

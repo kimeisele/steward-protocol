@@ -10,7 +10,7 @@ Tests that the complete topology-aware routing system works end-to-end:
 
 from pathlib import Path
 
-from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core.task_management import TaskManager, TaskStatus
 from vibe_core.topology import get_agent_placement
 
@@ -191,9 +191,9 @@ def test_fractal_architecture_end_to_end():
 
     # Civic should have higher authority than Watchman
     if civic_placement and watchman_placement:
-        assert (
-            civic_placement.authority_level > watchman_placement.authority_level
-        ), "CIVIC should have higher authority than WATCHMAN"
+        assert civic_placement.authority_level > watchman_placement.authority_level, (
+            "CIVIC should have higher authority than WATCHMAN"
+        )
 
     # Cleanup
     tm.update_task(civic_task.id, status=TaskStatus.COMPLETED)

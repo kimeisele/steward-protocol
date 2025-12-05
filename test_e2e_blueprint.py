@@ -65,7 +65,7 @@ class MockKernel:
 
 async def test_blueprint_integration():
     """Test that blueprint extraction flows through to agent calls"""
-    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
     logger.info("\n" + "=" * 70)
     logger.info("E2E TEST: Blueprint Generator Integration (GAD-5001)")

@@ -31,9 +31,9 @@ async def run_live_fire():
     print("-" * 80)
 
     try:
-        from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
-        from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-        from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+        from vibe_core.cartridges.system.archivist.cartridge_main import ArchivistCartridge
+        from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
+        from vibe_core.cartridges.system.engineer.cartridge_main import EngineerCartridge
         from vibe_core.kernel_impl import RealVibeKernel
 
         # Create kernel instance
@@ -122,7 +122,7 @@ async def run_live_fire():
         logger.info(f"   Path: {context['path']}")
 
         # Create intent vector (simplified)
-        from provider.universal_provider import IntentType, IntentVector
+        from vibe_core.cartridges.system.envoy.provider_legacy.universal_provider import IntentType, IntentVector
 
         intent_vector = IntentVector(
             raw_input=context["feature_description"],

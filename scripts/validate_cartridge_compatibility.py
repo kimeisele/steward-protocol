@@ -21,10 +21,10 @@ from vibe_core import Task, VibeAgent
 
 # Import cartridges from steward/system_agents
 try:
-    from steward.system_agents.civic.cartridge_main import CivicCartridge
-    from steward.system_agents.forum.cartridge_main import ForumCartridge
-    from steward.system_agents.herald.cartridge_main import HeraldCartridge
-    from steward.system_agents.science.cartridge_main import ScientistCartridge
+    from vibe_core.cartridges.system.civic.cartridge_main import CivicCartridge
+    from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge
+    from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
+    from vibe_core.cartridges.system.science.cartridge_main import ScientistCartridge
 
     print("✅ All cartridges imported successfully")
 except ImportError as e:

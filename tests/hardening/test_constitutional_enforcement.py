@@ -27,7 +27,7 @@ def test_herald_content_filtering():
     Attack: Try to publish shill/spam content.
     """
     try:
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 
@@ -63,7 +63,7 @@ def test_vote_manipulation_detection():
     Attack: Inject same vote twice into ledger.
     """
     try:
-        from steward.system_agents.auditor.tools.invariant_tool import get_judge
+        from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
         from vibe_core.kernel_impl import RealVibeKernel
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
@@ -121,7 +121,7 @@ def test_invariant_engine_constraints():
     Checks that all declared invariants are actually checked.
     """
     try:
-        from steward.system_agents.auditor.tools.invariant_tool import get_judge
+        from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
 
         judge = get_judge()
 
