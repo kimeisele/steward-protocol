@@ -279,9 +279,11 @@ class RealVibeKernel(VibeKernel):
         # Phase 6: Universal Tool Registry
         # Single source of truth for all agent tools
         # Tools are registered here and accessed via AgentSystemInterface
+        # kernel=self enables on_tool_execute/on_tool_executed plugin hooks
         self.tool_registry = ToolRegistry(
             invariant_checker=self._auditor if AUDITOR_AVAILABLE else None,
             capability_checker=self._check_agent_capability,
+            kernel=self,
         )
         self._register_core_tools()
         self._discover_agent_tools()
@@ -493,7 +495,7 @@ class RealVibeKernel(VibeKernel):
             - Uses CapabilityRegistry with revocation support
             - Agent cannot self-escalate by modifying agent.capabilities
             - Unregistered agents have NO capabilities
-            - STEWARD Protocol trust score check (low trust = warning)
+            - Plugin CAPABILITY GATE: Any plugin can veto via on_capability_check
         """
         # Step 1: Check CapabilityRegistry (handles core capabilities)
         has_cap = self._capability_registry.has_capability(agent_id, capability)
@@ -501,18 +503,21 @@ class RealVibeKernel(VibeKernel):
         if not has_cap:
             return False
 
-        # Step 2: STEWARD Protocol trust check (if plugin available)
-        if hasattr(self, "steward") and self.steward:
-            trust_score = self.steward.get_trust_score(agent_id)
-
-            # Low trust warning (but don't block - just log)
-            if trust_score < 0.3:
-                logger.warning(
-                    f"⚠️ STEWARD TRUST WARNING: Agent '{agent_id}' has low trust "
-                    f"({trust_score:.2f}) requesting '{capability}'"
+        # Step 2: CAPABILITY GATE - Ask ALL plugins (generic, eternal)
+        # Any plugin returning False will VETO the capability access
+        for plugin in self._plugins:
+            result = plugin.on_capability_check(self, agent_id, capability)
+            if result is False:
+                logger.info(
+                    f"🚫 Capability VETOED by plugin '{plugin.plugin_id}': agent '{agent_id}' denied '{capability}'"
                 )
+                return False
+            if result is True:
+                # Explicit allow - fast path (skip remaining plugins)
+                return True
 
-        return has_cap
+        # All plugins returned None (no opinion) - allow
+        return True
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
         """
@@ -556,6 +561,10 @@ class RealVibeKernel(VibeKernel):
         if agent_id in self._agent_registry:
             del self._agent_registry[agent_id]
             logger.critical(f"🗑️  Removed from registry: {agent_id}")
+
+            # PLUGIN HOOK: Notify plugins about agent removal
+            for plugin in self._plugins:
+                plugin.on_agent_unregistered(self, agent_id)
 
         # 4. Log to ledger (immutable record of destruction)
         self._ledger.record_event(
@@ -930,10 +939,6 @@ class RealVibeKernel(VibeKernel):
 
         spawn_status = "spawned in isolated process" if spawn_process else "registered (process deferred)"
         logger.info(f"🛡️  ✅ GOVERNANCE GATE PASSED: Agent '{agent.agent_id}' {spawn_status}.")
-
-        # Plugin Hook: Agent Registered
-        for plugin in self._plugins:
-            plugin.on_agent_registered(self, agent.agent_id)
 
     def spawn_deferred_agents(self) -> int:
         """

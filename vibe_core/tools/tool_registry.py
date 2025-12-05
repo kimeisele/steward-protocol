@@ -11,9 +11,12 @@ SECURITY (ARCH-HARDENING):
 """
 
 import logging
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolCall, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 
 # Import Soul Governance (ARCH-029)
 try:
@@ -34,6 +37,7 @@ class ToolRegistry:
     - Tool lookup by name
     - Tool execution (validates + executes)
     - LLM-friendly tool descriptions
+    - Plugin hooks for tool execution (on_tool_execute, on_tool_executed)
 
     Example:
         >>> registry = ToolRegistry()
@@ -50,6 +54,7 @@ class ToolRegistry:
         self,
         invariant_checker: Optional["InvariantChecker"] = None,  # type: ignore
         capability_checker: Optional[Callable[[str, str], bool]] = None,
+        kernel: Optional["RealVibeKernel"] = None,  # type: ignore
     ):
         """
         Initialize tool registry with optional Soul Governance and capability checking.
@@ -60,6 +65,8 @@ class ToolRegistry:
             capability_checker: Optional callback (agent_id, capability) -> bool
                               Returns True if agent has the capability.
                               SECURITY: If set, all tool calls MUST have caller_agent_id.
+            kernel: Optional kernel reference for plugin hooks.
+                   If set, on_tool_execute and on_tool_executed hooks are called.
 
         Example:
             >>> # With governance (recommended for production)
@@ -75,6 +82,7 @@ class ToolRegistry:
         self.tools: dict[str, Tool] = {}
         self._invariant_checker = invariant_checker
         self._capability_checker = capability_checker
+        self._kernel = kernel
         # Map tool_name -> required capability (default: tool name itself)
         self._tool_capabilities: dict[str, str] = {}
 
@@ -271,6 +279,24 @@ class ToolRegistry:
                     },
                 )
 
+        # Step 2.5: 🔌 PLUGIN HOOK: on_tool_execute (TOOL GATE)
+        # Any plugin can veto tool execution
+        if self._kernel and hasattr(self._kernel, "_plugins"):
+            for plugin in self._kernel._plugins:
+                try:
+                    result = plugin.on_tool_execute(
+                        self._kernel, caller_agent_id or "anonymous", tool_name, tool_call.parameters
+                    )
+                    if result is False:
+                        logger.info(f"🚫 Tool VETOED by plugin '{plugin.plugin_id}': {tool_name}")
+                        return ToolResult(
+                            success=False,
+                            error=f"Tool execution blocked by plugin '{plugin.plugin_id}'",
+                            metadata={"blocked_by_plugin": plugin.plugin_id},
+                        )
+                except Exception as e:
+                    logger.warning(f"⚠️ Plugin {plugin.plugin_id} on_tool_execute error: {e}")
+
         # Step 3: Validate parameters
         try:
             tool.validate(tool_call.parameters)
@@ -283,11 +309,43 @@ class ToolRegistry:
         try:
             result = tool.execute(tool_call.parameters)
             logger.info(f"ToolRegistry: Tool '{tool_name}' completed (success={result.success})")
+
+            # Step 5: 🔌 PLUGIN HOOK: on_tool_executed (post-execution)
+            if self._kernel and hasattr(self._kernel, "_plugins"):
+                for plugin in self._kernel._plugins:
+                    try:
+                        plugin.on_tool_executed(
+                            self._kernel,
+                            caller_agent_id or "anonymous",
+                            tool_name,
+                            tool_call.parameters,
+                            result.output if result.success else result.error,
+                            result.success,
+                        )
+                    except Exception as e:
+                        logger.warning(f"⚠️ Plugin {plugin.plugin_id} on_tool_executed error: {e}")
+
             return result
         except Exception as e:
             # Fallback error handling (tools should catch their own exceptions)
             error_msg = f"Tool execution failed: {type(e).__name__}: {e!s}"
             logger.error(f"ToolRegistry: {error_msg} (tool={tool_name})", exc_info=True)
+
+            # Step 5b: PLUGIN HOOK for failures too
+            if self._kernel and hasattr(self._kernel, "_plugins"):
+                for plugin in self._kernel._plugins:
+                    try:
+                        plugin.on_tool_executed(
+                            self._kernel,
+                            caller_agent_id or "anonymous",
+                            tool_name,
+                            tool_call.parameters,
+                            error_msg,
+                            False,
+                        )
+                    except Exception as hook_err:
+                        logger.warning(f"⚠️ Plugin {plugin.plugin_id} on_tool_executed error: {hook_err}")
+
             return ToolResult(success=False, error=error_msg)
 
     def to_llm_prompt(self) -> str:

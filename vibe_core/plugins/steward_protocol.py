@@ -90,6 +90,21 @@ class StewardProtocolPlugin(KernelPlugin):
         # Task to agent mapping for failure tracking {task_id: agent_id}
         self._task_agent_map: Dict[str, str] = {}
 
+        # Delegation permissions {from_agent: {to_agent: [allowed_ops]}}
+        self._delegation_permissions: Dict[str, Dict[str, list]] = {}
+
+        # Sensitive capabilities that require attestation
+        self._sensitive_capabilities: set = {
+            "write_file",
+            "delete_file",
+            "execute_command",
+            "network_request",
+            "credential_access",
+        }
+
+        # Strict mode: if True, block on violations instead of warn
+        self._strict_mode: bool = False
+
         # Connected infrastructure (lazy loaded)
         self._agent_loader = None
         self._steward_client = None
@@ -245,6 +260,36 @@ class StewardProtocolPlugin(KernelPlugin):
         """Clean up on shutdown."""
         logger.info(f"📜 STEWARD Protocol shutting down ({len(self._manifests)} manifests tracked)")
 
+    def on_capability_check(self, kernel: "RealVibeKernel", agent_id: str, capability: str) -> Optional[bool]:
+        """
+        CAPABILITY GATE: Protocol enforcement for capability access.
+
+        This hook is called by the kernel for EVERY capability check.
+        It enables:
+        - Trust-based capability gating
+        - Attestation requirements for sensitive operations
+        - Delegation chain verification
+
+        Returns:
+            True  = Explicitly allow
+            False = VETO (block access)
+            None  = No opinion (default)
+        """
+        # Run full Protocol check
+        result = self.check_capability_access(agent_id, capability)
+
+        # Log warnings
+        for warning in result.get("warnings", []):
+            logger.warning(f"📜 CAPABILITY CHECK: Agent '{agent_id}' - {warning}")
+
+        # In strict mode, denied access returns False (VETO)
+        if not result["allowed"]:
+            logger.info(f"📜 CAPABILITY VETO: Agent '{agent_id}' denied '{capability}' - {result['reason']}")
+            return False
+
+        # Otherwise, no opinion (let other plugins/registry decide)
+        return None
+
     # =========================================================================
     # PUBLIC API (accessible via kernel.steward.*)
     # =========================================================================
@@ -313,6 +358,127 @@ class StewardProtocolPlugin(KernelPlugin):
     def get_attestations(self, agent_id: str) -> Dict[str, Any]:
         """Get all attestations for an agent."""
         return self._attestations.get(agent_id, {})
+
+    def has_attestation(self, agent_id: str, capability: str) -> bool:
+        """
+        Check if agent has valid attestation for a capability.
+
+        Used for sensitive operations that require attestation.
+        """
+        attestations = self._attestations.get(agent_id, {})
+        if capability not in attestations:
+            return False
+
+        attestation = attestations[capability]
+
+        # Check expiry if set
+        valid_until = attestation.get("valid_until")
+        if valid_until:
+            from datetime import datetime
+
+            expiry = datetime.fromisoformat(valid_until)
+            if datetime.utcnow() > expiry:
+                return False
+
+        return True
+
+    def requires_attestation(self, capability: str) -> bool:
+        """Check if a capability requires attestation (sensitive operation)."""
+        return capability in self._sensitive_capabilities
+
+    def check_capability_access(self, agent_id: str, capability: str) -> Dict[str, Any]:
+        """
+        Full Protocol check for capability access.
+
+        Returns dict with:
+        - allowed: bool
+        - reason: str
+        - warnings: list of warnings
+        """
+        warnings = []
+
+        # Check 1: Trust score
+        trust_score = self._trust_scores.get(agent_id, 0.5)
+        if trust_score < 0.3:
+            warnings.append(f"Low trust score ({trust_score:.2f})")
+            if self._strict_mode and trust_score < 0.2:
+                return {
+                    "allowed": False,
+                    "reason": f"Trust score too low ({trust_score:.2f})",
+                    "warnings": warnings,
+                }
+
+        # Check 2: Attestation for sensitive capabilities
+        if self.requires_attestation(capability):
+            if not self.has_attestation(agent_id, capability):
+                msg = f"Sensitive capability '{capability}' requires attestation"
+                warnings.append(msg)
+                if self._strict_mode:
+                    return {
+                        "allowed": False,
+                        "reason": msg,
+                        "warnings": warnings,
+                    }
+
+        return {
+            "allowed": True,
+            "reason": "Access granted",
+            "warnings": warnings,
+        }
+
+    def delegate(
+        self,
+        from_agent: str,
+        to_agent: str,
+        operations: Optional[list] = None,
+    ) -> Dict[str, Any]:
+        """
+        Grant delegation permission from one agent to another.
+
+        Args:
+            from_agent: Agent granting permission
+            to_agent: Agent receiving permission
+            operations: List of allowed operations (None = all)
+
+        Returns:
+            Delegation record
+        """
+        if from_agent not in self._delegation_permissions:
+            self._delegation_permissions[from_agent] = {}
+
+        self._delegation_permissions[from_agent][to_agent] = operations or ["*"]
+
+        record = {
+            "from_agent": from_agent,
+            "to_agent": to_agent,
+            "operations": operations or ["*"],
+            "delegated_at": datetime.utcnow().isoformat(),
+        }
+
+        logger.info(f"📜 Delegation: '{from_agent}' → '{to_agent}' for {operations or 'all operations'}")
+        return record
+
+    def can_delegate_to(self, from_agent: str, to_agent: str, operation: str) -> bool:
+        """
+        Check if from_agent can delegate operation to to_agent.
+        """
+        permissions = self._delegation_permissions.get(from_agent, {})
+        allowed_ops = permissions.get(to_agent, [])
+
+        if not allowed_ops:
+            return False
+
+        return "*" in allowed_ops or operation in allowed_ops
+
+    def set_strict_mode(self, enabled: bool) -> None:
+        """Enable/disable strict mode (block on violations vs warn)."""
+        self._strict_mode = enabled
+        logger.info(f"📜 Strict mode {'ENABLED' if enabled else 'DISABLED'}")
+
+    def add_sensitive_capability(self, capability: str) -> None:
+        """Add a capability to the sensitive list (requires attestation)."""
+        self._sensitive_capabilities.add(capability)
+        logger.info(f"📜 Added sensitive capability: {capability}")
 
     def get_config(self) -> Optional[Any]:
         """Get the Protocol configuration (from steward.yaml)."""
