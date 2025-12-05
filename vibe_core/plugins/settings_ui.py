@@ -36,13 +36,18 @@ class SettingsUIPlugin(KernelPlugin):
     def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
         """Check for changes in SETTINGS.md and execute commands."""
 
+        # Get paused agents from governance plugin (if available)
+        paused_agents: set = set()
+        if kernel.governance and hasattr(kernel.governance, "get_paused_agents"):
+            paused_agents = kernel.governance.get_paused_agents()
+
         # 1. Check for changes
         if self.sync.check_file_changed(self.last_modified):
             # Prepare state
             state = SettingsSyncState(
                 last_modified=self.last_modified,
                 writing=False,
-                paused_agents=kernel._paused_agents,
+                paused_agents=paused_agents,
                 agent_ids=set(kernel.agent_registry.keys()),
                 execution_history=list(self.execution_history),
             )
@@ -56,9 +61,10 @@ class SettingsUIPlugin(KernelPlugin):
 
             self.execution_history.extend(result.history_entries)
 
-            # Update Kernel State (Paused Agents)
-            kernel._paused_agents.clear()
-            kernel._paused_agents.update(result.paused_agents)
+            # Update Governance Plugin State (Paused Agents)
+            if kernel.governance and hasattr(kernel.governance, "_paused_agents"):
+                kernel.governance._paused_agents.clear()
+                kernel.governance._paused_agents.update(result.paused_agents)
 
             # Execute side effects (RESTART, REFRESH, verbose)
             from vibe_core.settings_executor import get_executor
@@ -86,10 +92,19 @@ class SettingsUIPlugin(KernelPlugin):
         except Exception:
             pass  # Use defaults if not available
 
+        # Get governance registries from plugin (if available)
+        varna_registry = {}
+        ashrama_registry = {}
+        if kernel.governance:
+            if hasattr(kernel.governance, "_varna_registry"):
+                varna_registry = kernel.governance._varna_registry
+            if hasattr(kernel.governance, "_ashrama_registry"):
+                ashrama_registry = kernel.governance._ashrama_registry
+
         state = SettingsRenderState(
             ledger_path=str(kernel.ledger_path),
-            varna_registry=kernel._varna_registry,
-            ashrama_registry=kernel._ashrama_registry,
+            varna_registry=varna_registry,
+            ashrama_registry=ashrama_registry,
             execution_history=list(self.execution_history),
             provider_info=provider_info,
             live_fire_enabled=live_fire_enabled,
@@ -114,8 +129,10 @@ class SettingsUIPlugin(KernelPlugin):
         for agent_id, agent in kernel.agent_registry.items():
             try:
                 agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                if agent_id in kernel._paused_agents:
-                    agent_status["status"] = "PAUSED"
+                # Check paused via governance plugin
+                if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
+                    if kernel.governance.is_agent_paused(agent_id):
+                        agent_status["status"] = "PAUSED"
                 snapshot["agents"][agent_id] = agent_status
             except Exception:
                 snapshot["agents"][agent_id] = {"error": "Failed to get status"}

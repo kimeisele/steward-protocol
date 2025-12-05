@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from vibe_core import Task
     from vibe_core.kernel_impl import RealVibeKernel
 
 
@@ -11,6 +12,14 @@ class KernelPlugin(ABC):
 
     Plugins extend the kernel's functionality without modifying the core.
     They are the "Avatars" of the Vishnu Kernel.
+
+    FINAL HOOKS (Kernel will NEVER change after this):
+    - on_boot: Kernel initialization
+    - on_tick_pre/post: Every kernel tick
+    - on_shutdown: Kernel shutdown
+    - on_agent_registered: New agent joins
+    - on_task_pre_assign: VETO hook for task assignment (governance)
+    - on_task_completed/failed: Task lifecycle
     """
 
     @property
@@ -56,6 +65,29 @@ class KernelPlugin(ABC):
     def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
         """Called when a new agent is registered."""
         pass
+
+    def on_task_pre_assign(self, kernel: "RealVibeKernel", agent_id: str, task: "Task") -> bool:
+        """
+        Called BEFORE a task is assigned to an agent.
+
+        This is the GOVERNANCE HOOK - plugins can VETO task assignment.
+        Return False to block the task, True to allow.
+
+        Use cases:
+        - Paused agents (return False)
+        - Lifecycle restrictions (BRAHMACHARI can't write)
+        - Rate limiting
+        - Permission checks
+
+        Args:
+            kernel: The kernel instance
+            agent_id: Agent that would receive the task
+            task: The task to be assigned
+
+        Returns:
+            True to allow task assignment, False to veto/block
+        """
+        return True  # Default: allow all tasks
 
     def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
         """Called when a task completes successfully."""
