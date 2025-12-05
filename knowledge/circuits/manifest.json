@@ -1,0 +1,24 @@
+{
+  "name": "circuits",
+  "version": "1.0.0",
+  "type": "circuit-module",
+  "description": "Cognitive circuit definitions - neuro-symbolic state machines",
+  "circuits": [
+    "agent_birth",
+    "architecture_analysis",
+    "content_generation",
+    "context_synth",
+    "debug_fix",
+    "doc_index_render",
+    "error_recovery",
+    "feature_implement",
+    "governance_vote",
+    "philosophical_debate",
+    "project_scaffold",
+    "research_synth",
+    "simple_query",
+    "system_design",
+    "task_ledger",
+    "wiring_audit"
+  ]
+}

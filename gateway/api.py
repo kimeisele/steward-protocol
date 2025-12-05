@@ -22,17 +22,13 @@ from pydantic import BaseModel
 # Use absolute paths to ensure imports work in Docker containers
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(PROJECT_ROOT / "steward" / "system_agents"))
-sys.path.insert(0, str(PROJECT_ROOT / "agent_city" / "registry"))
 
 # KERNEL IMPORTS
 # MILK OCEAN ROUTER IMPORTS
-from envoy.tools.milk_ocean import MilkOceanRouter
-
-from provider.universal_provider import UniversalProvider
-
 # STEWARD AGENT IMPORT
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.envoy.provider import UniversalProvider
+from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core.event_bus import Event, get_event_bus
 from vibe_core.kernel_impl import RealVibeKernel
 

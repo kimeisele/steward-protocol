@@ -1,0 +1,60 @@
+{
+  "identity": {
+    "agent_id": "marketer",
+    "name": "MARKETER",
+    "version": "1.0.0",
+    "author": "Steward Protocol - Citizen Sovereignty Initiative"
+  },
+  "specs": {
+    "domain": "CONTENT",
+    "description": "Autonomous content strategist and generator for social media",
+    "capabilities": [
+      "tweet_generation",
+      "reddit_posts",
+      "reply_generation",
+      "recruitment_pitches"
+    ]
+  },
+  "operations": [
+    {
+      "name": "generate_tweet",
+      "description": "Generate a tweet with governance validation",
+      "parameters": {
+        "context": "string (optional)"
+      }
+    },
+    {
+      "name": "generate_reddit_post",
+      "description": "Generate long-form Reddit post",
+      "parameters": {
+        "subreddit": "string (optional, default: r/LocalLLaMA)"
+      }
+    },
+    {
+      "name": "generate_reply",
+      "description": "Generate reply to a mention",
+      "parameters": {
+        "original_text": "string (required)",
+        "author": "string (required)"
+      }
+    },
+    {
+      "name": "generate_recruitment",
+      "description": "Generate recruitment pitch for wild agent",
+      "parameters": {
+        "author": "string (required)",
+        "original_text": "string (optional)"
+      }
+    }
+  ],
+  "governance": {
+    "constitutional_oath": "optional",
+    "risk_level": "MEDIUM",
+    "notes": "Uses HeraldConstitution for content validation"
+  },
+  "architecture": {
+    "separation_of_concerns": "MARKETER thinks (generates content), HERALD speaks (broadcasts content)",
+    "moved_from": "steward/system_agents/herald (2025-11-29)",
+    "reason": "Content generation is business logic, not infrastructure"
+  }
+}

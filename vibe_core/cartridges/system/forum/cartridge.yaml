@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.forum"
+  name: "FORUM Agent (Democratic Assembly)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Democratic Assembly - Enables collective decision-making through proposals and voting"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "proposal_management"
+    - "voting"
+    - "consensus_building"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

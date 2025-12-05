@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from steward.system_agents.civic.economy_agent import CivicBank
+    from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
 
 # Vedic Governance types (used for backward-compatible type hints)
@@ -63,7 +63,7 @@ from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registr
 
 # Import Auditor for immune system (optional)
 try:
-    from steward.system_agents.auditor.tools.invariant_tool import (
+    from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
         InvariantSeverity,
         get_judge,
     )
@@ -451,7 +451,7 @@ class RealVibeKernel(VibeKernel):
         if self._bank is None:
             from pathlib import Path
 
-            from steward.system_agents.civic.tools.economy import CivicBank
+            from vibe_core.cartridges.system.civic.tools.economy import CivicBank
 
             # Phase 4c: Create bank with VFS-isolated database path
             kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
@@ -468,7 +468,7 @@ class RealVibeKernel(VibeKernel):
         Requires: cryptography package (see pyproject.toml)
         """
         if self._vault is None:
-            from steward.system_agents.civic.tools.vault import CivicVault
+            from vibe_core.cartridges.system.civic.tools.vault import CivicVault
 
             bank = self.get_bank()
             self._vault = CivicVault(bank.conn)
@@ -1573,7 +1573,7 @@ class RealVibeKernel(VibeKernel):
             )
         """
         # Import here to avoid circular dependency
-        from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+        from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
         # Get or create executor instance
         if not hasattr(self, "_playbook_executor"):

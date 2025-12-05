@@ -1,0 +1,28 @@
+meta:
+  id: "agent.citizen.marketer"
+  name: "MARKETER Agent"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "Autonomous content strategist and generator (citizen agent)"
+
+agent:
+  domain: "CONTENT"
+  capabilities:
+    - "content_generation"
+    - "tweet_writing"
+    - "reddit_posts"
+    - "reply_generation"
+    - "recruitment_pitches"
+
+dependencies:
+  - "openai"
+
+config:
+  governance:
+    level: "strict"
+  openrouter:
+    api_key_env: "OPENROUTER_API_KEY"
+  philosophy: |
+    MARKETER thinks (generates content).
+    HERALD speaks (broadcasts content).
+    Separation of concerns: Business logic vs Infrastructure.

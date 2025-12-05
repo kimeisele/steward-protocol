@@ -1,0 +1,329 @@
+# 🔌 WIRING AUDIT CIRCUIT
+#
+# Meta-Circuit für automatische System-Integration-Audits
+# Findet: Stubs, fehlende Injections, kaputte Kabel, unbehandelte Pfade
+#
+# Designed by Opus (Senior Audit Sprint)
+# Usage: Kann von jedem Agent aufgerufen werden wenn Probleme vermutet werden
+
+circuit:
+  id: WIRING_AUDIT
+  description: Automated system integration audit - finds broken cables and stubs
+  domain: META
+  version: "1.0.0"
+  author: "Opus (Senior Audit)"
+
+  # Dharmic Purpose: System-Integrität sicherstellen
+  dharmic_intent: "satya"  # Truth-seeking
+  entry_state: "check_kernel_injection"
+
+  # Input Schema
+  input:
+    scope:
+      type: string
+      enum: ["full", "kernel", "routing", "stubs", "agents"]
+      default: "full"
+    target_agents:
+      type: array
+      items: string
+      default: []  # Empty = all agents
+    verbose:
+      type: boolean
+      default: false
+
+  states:
+    # ============================================================
+    # PHASE 1: KERNEL INJECTION AUDIT
+    # ============================================================
+    check_kernel_injection:
+      name: "Kernel Injection Audit"
+      description: "Verify all agents have kernel reference"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.kernel_injection"
+          params:
+            checks:
+              - "agent.kernel is not None"
+              - "agent.system is not None"
+              - "agent.system.kernel is not None"
+            report_missing: true
+      on_success: check_routing_paths
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 2: ROUTING PATH AUDIT
+    # ============================================================
+    check_routing_paths:
+      name: "Routing Path Audit"
+      description: "Verify all routing paths are handled"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.routing_paths"
+          params:
+            expected_paths:
+              - "flash"
+              - "science"
+              - "lazy"
+              - "critical"
+            check_files:
+              - "steward/system_agents/envoy/cartridge_main.py"
+              - "scripts/heartbeat.py"
+            pattern: "path == \"{{ path }}\"|status == \"{{ path }}\""
+      on_success: check_stubs
+      on_failure: report_routing_gaps
+
+    report_routing_gaps:
+      name: "Report Routing Gaps"
+      description: "Document unhandled routing paths"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "audit.warning"
+          params:
+            type: "ROUTING_GAP"
+            severity: "HIGH"
+            message: "Unhandled routing paths detected"
+      on_success: check_stubs
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 3: STUB DETECTION
+    # ============================================================
+    check_stubs:
+      name: "Stub Detection"
+      description: "Find simulation stubs that should be live"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.find_stubs"
+          params:
+            patterns:
+              - "# TODO"
+              - "# STUB"
+              - "# Mock"
+              - "Would create"
+              - "Would write"
+              - "Would init"
+              - "pass  #"
+              - "NotImplementedError"
+              - "simulate"
+            exclude_dirs:
+              - "tests/"
+              - "scripts/research/"
+              - "__pycache__"
+            severity_map:
+              "NotImplementedError": "CRITICAL"
+              "# STUB": "HIGH"
+              "simulate": "MEDIUM"
+              "# TODO": "LOW"
+      on_success: check_agent_methods
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 4: AGENT METHOD AUDIT
+    # ============================================================
+    check_agent_methods:
+      name: "Agent Method Audit"
+      description: "Verify agents implement required methods"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.agent_methods"
+          params:
+            required_methods:
+              - "process"
+              - "get_manifest"
+              - "report_status"
+            async_required:
+              - "process"
+            check_pattern: "async def {{ method }}|def {{ method }}"
+      on_success: check_circuit_handlers
+      on_failure: report_missing_methods
+
+    report_missing_methods:
+      name: "Report Missing Methods"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "audit.warning"
+          params:
+            type: "MISSING_METHOD"
+            severity: "HIGH"
+      on_success: check_circuit_handlers
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 5: CIRCUIT HANDLER AUDIT
+    # ============================================================
+    check_circuit_handlers:
+      name: "Circuit Handler Audit"
+      description: "Verify circuits have handlers for all action types"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.circuit_handlers"
+          params:
+            action_types:
+              - "CHECK_STATE"
+              - "EXECUTE_SCRIPT"
+              - "EMIT_EVENT"
+              - "CALL_AGENT"
+              - "CALL_PLAYBOOK"
+            handler_file: "steward/system_agents/envoy/action_handlers.py"
+            check_pattern: "class.*Handler.*action_type.*{{ type }}"
+      on_success: check_tool_registration
+      on_failure: report_missing_handlers
+
+    report_missing_handlers:
+      name: "Report Missing Handlers"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "audit.warning"
+          params:
+            type: "MISSING_HANDLER"
+            severity: "MEDIUM"
+      on_success: check_tool_registration
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 6: TOOL REGISTRATION AUDIT
+    # ============================================================
+    check_tool_registration:
+      name: "Tool Registration Audit"
+      description: "Verify tools are properly registered with kernel"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.tool_registration"
+          params:
+            expected_tools:
+              - "envoy.city_control"
+              - "envoy.curator"
+              - "envoy.diplomacy"
+              - "envoy.gap_report"
+              - "envoy.hil"
+              - "envoy.campaign"
+              - "science.web_search"
+            verify_callable: true
+      on_success: generate_report
+      on_failure: report_tool_issues
+
+    report_tool_issues:
+      name: "Report Tool Issues"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "audit.warning"
+          params:
+            type: "TOOL_REGISTRATION"
+            severity: "HIGH"
+      on_success: generate_report
+      on_failure: ABORT
+
+    # ============================================================
+    # PHASE 7: GENERATE AUDIT REPORT
+    # ============================================================
+    generate_report:
+      name: "Generate Audit Report"
+      description: "Compile all findings into structured report"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "audit.generate_report"
+          params:
+            output_format: "markdown"
+            output_path: "data/audits/wiring_audit_{{ timestamp }}.md"
+            include_recommendations: true
+            severity_threshold: "LOW"
+        - action_type: EMIT_EVENT
+          target: "audit.complete"
+          params:
+            type: "WIRING_AUDIT"
+            summary: "{{ phase_results.findings_summary }}"
+      on_success: COMPLETE
+      on_failure: ABORT
+
+    # ============================================================
+    # TERMINAL STATES
+    # ============================================================
+    COMPLETE:
+      name: "Audit Complete"
+      description: "Audit finished successfully"
+      terminal: true
+
+    ABORT:
+      name: "Audit Aborted"
+      description: "Audit aborted due to failure"
+      terminal: true
+
+# ============================================================
+# AUDIT SCRIPT IMPLEMENTATIONS
+# ============================================================
+# These are the actual Python functions that get called
+
+scripts:
+  audit.kernel_injection: |
+    # Verify kernel injection for all registered agents
+    findings = []
+    for agent_id, agent in kernel.agent_registry.items():
+        if agent.kernel is None:
+            findings.append({
+                "agent": agent_id,
+                "issue": "kernel is None",
+                "severity": "CRITICAL",
+                "fix": "Ensure agent.set_kernel(kernel) is called in register_agent()"
+            })
+        if not hasattr(agent, 'system') or agent.system is None:
+            findings.append({
+                "agent": agent_id,
+                "issue": "system interface missing",
+                "severity": "HIGH",
+                "fix": "Ensure agent.system = AgentSystemInterface() in register_agent()"
+            })
+    return {"findings": findings, "passed": len(findings) == 0}
+
+  audit.find_stubs: |
+    # Grep for stub patterns in Python files
+    import subprocess
+    findings = []
+    for pattern in params["patterns"]:
+        result = subprocess.run(
+            ["grep", "-rn", pattern, "steward/", "vibe_core/", "--include=*.py"],
+            capture_output=True, text=True
+        )
+        for line in result.stdout.strip().split("\n"):
+            if line and not any(ex in line for ex in params.get("exclude_dirs", [])):
+                severity = params["severity_map"].get(pattern, "MEDIUM")
+                findings.append({
+                    "location": line.split(":")[0],
+                    "line": line.split(":")[1] if ":" in line else "?",
+                    "pattern": pattern,
+                    "severity": severity
+                })
+    return {"findings": findings, "stub_count": len(findings)}
+
+  audit.routing_paths: |
+    # Check that all routing paths are handled
+    import re
+    findings = []
+    for check_file in params["check_files"]:
+        with open(check_file) as f:
+            content = f.read()
+        for path in params["expected_paths"]:
+            pattern = params["pattern"].replace("{{ path }}", path)
+            if not re.search(pattern, content):
+                findings.append({
+                    "file": check_file,
+                    "path": path,
+                    "issue": f"Path '{path}' not handled",
+                    "severity": "HIGH"
+                })
+    return {"findings": findings, "passed": len(findings) == 0}
+
+# ============================================================
+# INVOCATION EXAMPLES
+# ============================================================
+#
+# Full audit:
+#   envoy run-circuit WIRING_AUDIT --scope full
+#
+# Quick kernel check:
+#   envoy run-circuit WIRING_AUDIT --scope kernel
+#
+# Find stubs only:
+#   envoy run-circuit WIRING_AUDIT --scope stubs --verbose true
+#
+# Audit specific agents:
+#   envoy run-circuit WIRING_AUDIT --target_agents ["envoy", "herald", "science"]

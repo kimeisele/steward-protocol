@@ -1,0 +1,256 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: DOC_INDEX_RENDER
+# ============================================================================
+# SCRIBE Documentation Index Generator - VEDA-4 Circuit Definition
+#
+# This circuit defines HOW to organize documentation into cognitive categories.
+# The actual rendering is done by scribe.index_renderer tool.
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Entry points (where to start)
+#   ARTHA    → Understanding (learn the system)
+#   PRATYAYA → Planning (architecture & guides)
+#   KARMA    → Execution (operations & agents)
+#   SYNTH    → Results (dashboards & reports)
+#
+# ============================================================================
+
+circuit:
+  id: "DOC_INDEX_RENDER"
+  type: "cognitive_circuit"
+  version: "1.0"
+  domain: "documentation"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  description: |
+    VEDA-4 Cognitive Documentation Index Generator.
+    Maps project documentation to cognitive flow phases for intuitive navigation.
+
+    Philosophy: Documentation should guide the reader's cognitive journey,
+    not just list files alphabetically.
+
+  # ===========================================================================
+  # DOCUMENT MAPPINGS (Schema-Driven, NOT Hardcoded)
+  # ===========================================================================
+
+  doc_schema:
+    # SHABDA: Entry points - where new users should start
+    shabda:
+      description: "Entry points - where to start"
+      icon: "🔊"
+      root_docs:
+        - "README.md"
+        - "HELP.md"
+      doc_dirs: []
+
+    # ARTHA: Understanding - learn the system
+    artha:
+      description: "Understanding - learn the system"
+      icon: "📖"
+      root_docs:
+        - "CONSTITUTION.md"
+        - "STEWARD.md"
+        - "CITYMAP.md"
+        - "AGI_MANIFESTO.md"
+      doc_dirs:
+        - "governance"
+        - "philosophy"
+
+    # PRATYAYA: Planning - architecture & guides
+    pratyaya:
+      description: "Planning - architecture & guides"
+      icon: "🧠"
+      root_docs: []
+      doc_dirs:
+        - "architecture"
+        - "guides"
+
+    # KARMA: Execution - operations & agents
+    karma:
+      description: "Execution - operations & agents"
+      icon: "⚡"
+      root_docs:
+        - "OPERATIONS.md"
+        - "SETTINGS.md"
+        - "AGENTS.md"
+      doc_dirs:
+        - "deployment"
+        - "security"
+
+    # SYNTH: Results - dashboards & reports
+    synth:
+      description: "Results - dashboards & reports"
+      icon: "🔬"
+      root_docs:
+        - "DASHBOARD.md"
+        - "PROOF.md"
+        - "INDEX.md"
+      doc_dirs:
+        - "reports"
+
+  # ===========================================================================
+  # DOCUMENT DESCRIPTIONS (Schema-Driven)
+  # ===========================================================================
+
+  doc_descriptions:
+    # SHABDA
+    "README.md": "Quick start guide"
+    "HELP.md": "Operations & commands"
+    # ARTHA
+    "CONSTITUTION.md": "Constitutional governance"
+    "STEWARD.md": "Protocol specification"
+    "CITYMAP.md": "System architecture"
+    "AGI_MANIFESTO.md": "Governed Intelligence philosophy"
+    # KARMA
+    "OPERATIONS.md": "System operations"
+    "SETTINGS.md": "Configuration options"
+    "AGENTS.md": "Agent registry & tools"
+    # SYNTH
+    "DASHBOARD.md": "Live status dashboard"
+    "PROOF.md": "Verification proof"
+    "INDEX.md": "Navigation index (this file)"
+    # Known docs
+    "DEPLOYMENT.md": "Deployment guide"
+    "ARCHITECTURE.md": "Architecture overview"
+
+  # ===========================================================================
+  # ALLOWED DIRECTORIES (Whitelist)
+  # ===========================================================================
+
+  docs_allowlist:
+    - "architecture"
+    - "deployment"
+    - "governance"
+    - "guides"
+    - "philosophy"
+    - "reports"
+    - "security"
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States for Execution)
+  # ===========================================================================
+
+  states:
+    SHABDA:
+      description: "Capture index generation request"
+      entry_actions:
+        - action: "validate_request"
+          params:
+            required_action: "generate"
+        - action: "log_phase"
+          params:
+            message: "SHABDA: Capturing generation request..."
+      invariants:
+        - "action must be 'generate'"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Scan and understand documentation structure"
+      entry_actions:
+        - action: "scan_root_docs"
+          params:
+            root_dir: "."
+        - action: "scan_docs_directories"
+          params:
+            docs_dir: "docs"
+            allowlist: "{{ docs_allowlist }}"
+        - action: "log_phase"
+          params:
+            message: "ARTHA: Scanning documentation..."
+      invariants:
+        - "doc_categories must be populated"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+
+    PRATYAYA:
+      description: "Plan VEDA-4 section structure"
+      entry_actions:
+        - action: "map_docs_to_sections"
+          params:
+            schema: "{{ doc_schema }}"
+        - action: "log_phase"
+          params:
+            message: "PRATYAYA: Planning VEDA-4 structure..."
+      invariants:
+        - "all five sections must have content arrays"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+
+    KARMA:
+      description: "Render each VEDA-4 section"
+      entry_actions:
+        - action: "render_section"
+          params:
+            section: "shabda"
+        - action: "render_section"
+          params:
+            section: "artha"
+        - action: "render_section"
+          params:
+            section: "pratyaya"
+        - action: "render_section"
+          params:
+            section: "karma"
+        - action: "render_section"
+          params:
+            section: "synth"
+        - action: "log_phase"
+          params:
+            message: "KARMA: Rendering sections..."
+      invariants:
+        - "all sections must render successfully"
+      on_success: "SYNTH"
+      on_failure: "FAILURE"
+
+    SYNTH:
+      description: "Synthesize final INDEX.md output"
+      entry_actions:
+        - action: "apply_template"
+          params:
+            template: "index.jinja2"
+        - action: "log_phase"
+          params:
+            message: "SYNTH: Index complete!"
+      invariants:
+        - "output content must not be empty"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "INDEX.md generation complete"
+      entry_actions:
+        - action: "return_result"
+          params:
+            success: true
+      terminal: true
+
+    FAILURE:
+      description: "INDEX.md generation failed"
+      entry_actions:
+        - action: "log_error"
+        - action: "return_result"
+          params:
+            success: false
+      terminal: true
+
+  # ===========================================================================
+  # METADATA
+  # ===========================================================================
+
+  metadata:
+    created: "2025-12-02"
+    updated: "2025-12-03"
+    author: "Steward Protocol"
+    purpose: "VEDA-4 Documentation Index Generation"
+    version_notes: |
+      v1.0: Initial circuit-based implementation
+      - Schema-driven doc mappings (not hardcoded)
+      - VEDA-4 cognitive flow states
+      - Declarative configuration
+    integration:
+      agent: "scribe"
+      tool: "scribe.index_renderer"
+      template: "index.jinja2"
+      output: "INDEX.md"

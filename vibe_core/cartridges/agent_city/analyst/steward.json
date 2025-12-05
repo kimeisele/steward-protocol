@@ -1,0 +1,57 @@
+{
+  "capabilities": {
+    "operations": [
+      {
+        "description": "Git history analysis (velocity, patterns, commits)",
+        "name": "git_analysis",
+        "tool": "analyst.git"
+      },
+      {
+        "description": "Code analysis (AST, complexity, tech debt)",
+        "name": "code_analysis",
+        "tool": "analyst.code"
+      },
+      {
+        "description": "Structure analysis (modules, coupling, hotspots)",
+        "name": "structure_analysis",
+        "tool": "analyst.structure"
+      },
+      {
+        "description": "Dependency analysis (imports, requirements)",
+        "name": "dependency_analysis",
+        "tool": "analyst.deps"
+      },
+      {
+        "description": "Documentation analysis (coverage, quality)",
+        "name": "docs_analysis",
+        "tool": "analyst.docs"
+      },
+      {
+        "description": "Multi-source context synthesis (VEDA-4 circuit)",
+        "name": "context_synthesis"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-12-02T22:45:00.000000Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "analyst",
+    "name": "ANALYST"
+  },
+  "specs": {
+    "description": "Multi-Source Repository Analysis (Realtime Architecture Guide)",
+    "domain": "RESEARCH",
+    "version": "2.0.0"
+  },
+  "tools": [
+    "analyst.git",
+    "analyst.code",
+    "analyst.structure",
+    "analyst.deps",
+    "analyst.docs"
+  ]
+}
