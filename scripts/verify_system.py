@@ -10,10 +10,12 @@ EXIT CODES:
     1 = Critical tests failed (blocks deployment)
     2 = Non-critical tests failed (warning only)
     3 = System boot failed (fatal error)
+    4 = Lint/Format check failed (blocks deployment)
 
 USAGE:
     python scripts/verify_system.py           # Run all tests
     python scripts/verify_system.py --fast    # Only critical tests
+    python scripts/verify_system.py --lint    # Include lint check (recommended)
     python scripts/verify_system.py --report  # Generate JSON report
 
 CI INTEGRATION:
@@ -25,24 +27,65 @@ CI INTEGRATION:
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 
-def verify_system(fast_mode: bool = False, generate_report: bool = False) -> int:
+def check_lint() -> tuple[bool, str]:
+    """
+    Run ruff lint check on critical directories.
+
+    Returns:
+        (success, message) tuple
+    """
+    try:
+        # Check for critical errors only (same as CI)
+        result = subprocess.run(
+            ["ruff", "check", "--select=E9,F63,F7,F82", "vibe_core", "steward", "scripts"],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+
+        if result.returncode != 0:
+            return False, f"Lint errors:\n{result.stdout}\n{result.stderr}"
+
+        # Check formatting
+        result = subprocess.run(
+            ["ruff", "format", "--check", "vibe_core", "steward", "scripts"],
+            capture_output=True,
+            text=True,
+            cwd=PROJECT_ROOT,
+        )
+
+        if result.returncode != 0:
+            return False, f"Format errors (run 'ruff format .'):\n{result.stdout}"
+
+        return True, "Lint and format checks passed"
+
+    except FileNotFoundError:
+        return True, "ruff not installed, skipping lint check"
+    except Exception as e:
+        return False, f"Lint check failed: {e}"
+
+
+def verify_system(fast_mode: bool = False, generate_report: bool = False, check_lint_flag: bool = False) -> int:
     """
     Boot kernel and run verification tests.
 
     Args:
         fast_mode: Only run critical tests
         generate_report: Generate JSON report file
+        check_lint_flag: Run lint/format check first
 
     Returns:
-        Exit code (0=success, 1=critical fail, 2=warning, 3=boot fail)
+        Exit code (0=success, 1=critical fail, 2=warning, 3=boot fail, 4=lint fail)
     """
     start_time = time.time()
     report = {
@@ -58,12 +101,31 @@ def verify_system(fast_mode: bool = False, generate_report: bool = False) -> int
     print("STEWARD PROTOCOL - SYSTEM VERIFICATION")
     print("=" * 60)
     print(f"Mode: {'FAST (critical only)' if fast_mode else 'FULL'}")
+    if check_lint_flag:
+        print("Lint: ENABLED")
     print()
+
+    # =========================================================================
+    # PHASE 0: Lint Check (Optional but recommended)
+    # =========================================================================
+    if check_lint_flag:
+        print("[0/4] Checking lint and formatting...")
+        lint_ok, lint_msg = check_lint()
+        if lint_ok:
+            print(f"      {lint_msg}")
+        else:
+            print(f"      FAILED: {lint_msg}")
+            report["status"] = "lint_failed"
+            report["error"] = lint_msg
+            _save_report(report, generate_report)
+            return 4
+        print()
 
     # =========================================================================
     # PHASE 1: Boot Kernel
     # =========================================================================
-    print("[1/3] Booting kernel...")
+    phase_prefix = "[1/4]" if check_lint_flag else "[1/3]"
+    print(f"{phase_prefix} Booting kernel...")
 
     try:
         from vibe_core.kernel_impl import RealVibeKernel
@@ -229,9 +291,14 @@ def main():
         action="store_true",
         help="Generate JSON report file",
     )
+    parser.add_argument(
+        "--lint",
+        action="store_true",
+        help="Run lint/format check first (recommended for CI)",
+    )
 
     args = parser.parse_args()
-    exit_code = verify_system(fast_mode=args.fast, generate_report=args.report)
+    exit_code = verify_system(fast_mode=args.fast, generate_report=args.report, check_lint_flag=args.lint)
     sys.exit(exit_code)
 
 
