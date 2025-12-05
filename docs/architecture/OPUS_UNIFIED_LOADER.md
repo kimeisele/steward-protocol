@@ -72,10 +72,12 @@ class AgentLoader(UnifiedLoader):
 - [x] All 29 unified loader tests pass
 - [x] 8 plugins loaded (5 new-style, 3 old-style)
 
-### Phase 3: SectionLoader
-- [ ] Make SectionLoader inherit from UnifiedLoader
-- [ ] Add manifest.json to sections
-- [ ] All section tests still pass
+### Phase 3: SectionLoader + Config Pattern ✅ COMPLETE
+- [x] Design the manifest/config split pattern
+- [x] Make SectionLoader inherit from UnifiedLoader
+- [x] Migrate 4 sections to folder structure (city, kernel, quality, steward)
+- [x] All 29 unified loader tests pass
+- [x] Kernel boots correctly with all sections
 
 ### Phase 4: Cleanup
 - [ ] Remove duplicate code from old loaders
@@ -115,7 +117,144 @@ class AgentLoader(UnifiedLoader):
 - [x] Supports both new-style (folder) and old-style (.py file) plugins
 - [x] 8 plugins loading (5 new-style, 3 old-style)
 - [x] Backward compat `discover()` method preserved
-- [ ] **NEXT:** SectionLoader alignment
+- [x] **COMMITTED:** `1f08196` pushed to `feat/core-io-migration`
+
+### 2025-12-05: Phase 3 Complete
+- [x] SectionLoader now inherits from UnifiedLoader
+- [x] 4 sections migrated to folder structure (city, kernel, quality, steward)
+- [x] Each section has manifest.json + section_main.py
+- [x] Config YAML stays in config/ (separation of schema vs values)
+- [x] All 29 tests pass, kernel boots correctly
+
+---
+
+## 6. PHASE 3 DESIGN: Config Section Pattern
+
+### The Insight
+
+Config Sections are DIFFERENT from Plugins/Agents:
+- **Plugins/Agents:** Code that DOES something (behavior)
+- **Config Sections:** Data that CONFIGURES something (settings)
+
+But they should STILL follow the fraktal pattern!
+
+### Current State (Problem)
+
+```
+vibe_core/phoenix/sections/
+  city.py           # CityConfig class with section_id = "city"
+  kernel.py         # KernelConfig class
+  quality.py        # etc.
+
+config/
+  city.yaml         # values for CityConfig
+  kernel.yaml       # values for KernelConfig
+```
+
+**Issues:**
+1. No manifest.json → no schema, no validation rules, no metadata
+2. Duck typing (`section_id` attribute) instead of explicit manifest
+3. Can't use UnifiedLoader pattern
+
+### Proposed Pattern
+
+```
+vibe_core/phoenix/sections/
+  city/
+    manifest.json     # SCHEMA: type, id, fields, defaults, validation
+    section_main.py   # CityConfig class (code)
+  kernel/
+    manifest.json
+    section_main.py
+  ...
+
+config/                 # INSTANCE VALUES (separate!)
+  city.yaml            # actual values for this deployment
+  kernel.yaml
+```
+
+### manifest.json for Config Sections
+
+```json
+{
+  "type": "section",
+  "id": "city",
+  "name": "City Configuration",
+  "version": "1.0.0",
+
+  "entry_point": "section_main.py",
+  "entry_class": "CityConfig",
+
+  "priority": 10,
+
+  "schema": {
+    "max_agents": {"type": "integer", "default": 100, "min": 1},
+    "enable_federation": {"type": "boolean", "default": false},
+    "api_keys": {
+      "type": "object",
+      "properties": {
+        "openai": {"type": "string", "secret": true},
+        "tavily": {"type": "string", "secret": true}
+      }
+    }
+  },
+
+  "config_file": "city.yaml",
+  "required": false
+}
+```
+
+### The Power: Scalable Config Groups
+
+Imagine 50 API keys:
+
+```
+vibe_core/phoenix/sections/
+  api_keys/
+    manifest.json     # Schema for ALL API keys
+    section_main.py   # APIKeysConfig class
+
+config/
+  api_keys.yaml       # The actual keys (gitignored!)
+```
+
+**manifest.json:**
+```json
+{
+  "type": "section",
+  "id": "api_keys",
+  "schema": {
+    "openai": {"type": "string", "secret": true, "env": "OPENAI_API_KEY"},
+    "anthropic": {"type": "string", "secret": true, "env": "ANTHROPIC_API_KEY"},
+    "tavily": {"type": "string", "secret": true, "env": "TAVILY_API_KEY"},
+    // ... 50 more
+  },
+  "config_file": "api_keys.yaml",
+  "env_fallback": true
+}
+```
+
+### Benefits
+
+1. **Schema validation** - manifest defines what's valid
+2. **Secrets handling** - mark fields as `secret: true`
+3. **Env fallback** - `env: "OPENAI_API_KEY"` means check env if yaml missing
+4. **Autodiscovery** - UnifiedLoader finds all sections
+5. **Fraktal** - same pattern as plugins/agents
+
+### Migration Path
+
+1. Create folder for each section (4 total)
+2. Move class to `section_main.py`
+3. Create `manifest.json` with schema
+4. Update SectionLoader to inherit UnifiedLoader
+5. Keep `config/*.yaml` files where they are (instance data)
+
+### Open Questions
+
+- [ ] Should `config/*.yaml` stay in config/ or move into section folder?
+- [ ] How to handle secrets (gitignore, env vars, vault)?
+- [ ] Schema validation: JSON Schema or custom?
 
 ---
 

@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "city",
+  "name": "City Configuration",
+  "version": "1.0.0",
+  "description": "Agent City settings - governance, economy, agents, monitoring, security",
+
+  "entry_point": "section_main.py",
+  "entry_class": "CityConfig",
+
+  "priority": 10,
+
+  "config_file": "config/matrix.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "city", "governance", "economy"]
+}
