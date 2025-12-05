@@ -1,16 +1,109 @@
 """
 CityMap Renderer.
-Delegates to Scribe.
+Directly renders CITYMAP.md from Kernel Topology.
 """
 
-from .base import ScribeDelegatingRenderer
+from collections import defaultdict
+from typing import Any, Dict, List
+
+from vibe_core.io_service import DocumentType
+
+from .base import BaseRenderer
 
 
-class CityMapRenderer(ScribeDelegatingRenderer):
+class CityMapRenderer(BaseRenderer):
+    """
+    Directly renders CITYMAP.md from the Kernel's Runtime State.
+    """
+
     @property
     def name(self) -> str:
         return "citymap"
 
-    @property
-    def document_name(self) -> str:
-        return "CITYMAP.md"
+    def render(self) -> None:
+        """Render CITYMAP.md directly from kernel state."""
+        # 1. Gather Data
+        agents = self.kernel.agent_registry
+        tools = self.kernel.tool_registry.list_tools()
+
+        # Group agents by domain
+        domains = defaultdict(list)
+        for agent_id, agent in agents.items():
+            domain = getattr(agent, "domain", "UNKNOWN")
+            domains[domain].append(agent)
+
+        # 2. Generate Content
+        content = self._generate_markdown(agents, domains, tools)
+
+        # 3. Write to File via Kernel I/O
+        self.kernel.io.write_document(
+            name="CITYMAP.md",
+            content=content,
+            doc_type=DocumentType.READONLY,
+            writer_id="interface_plugin",
+            add_header=True,
+        )
+
+    def _generate_markdown(self, agents: Dict[str, Any], domains: Dict[str, List[Any]], tools: List[str]) -> str:
+        """Generate Markdown content."""
+        lines = ["# 🗺️ CITY MAP", ""]
+
+        # System Status
+        status = self.kernel.status.value if hasattr(self.kernel, "status") else "UNKNOWN"
+        lines.append(f"**System Status:** `{status}`")
+        lines.append(f"**Population:** {len(agents)} Agents")
+        lines.append(f"**Tools Available:** {len(tools)}")
+        lines.append("")
+
+        # Topology Diagram (ASCII)
+        lines.append("## 🏔️ Topology")
+        lines.append(self._generate_topology_diagram(len(agents)))
+        lines.append("")
+
+        # Domain Breakdown
+        lines.append("## 🏙️ Districts (Domains)")
+
+        if not domains:
+            lines.append("_No active districts_")
+        else:
+            for domain, domain_agents in sorted(domains.items()):
+                lines.append(f"### {domain} ({len(domain_agents)})")
+                for agent in sorted(domain_agents, key=lambda a: getattr(a, "name", "")):
+                    name = getattr(agent, "name", "Unknown")
+                    agent_id = getattr(agent, "agent_id", "unknown")
+                    desc = getattr(agent, "description", "")
+                    lines.append(f"- **{name}** (`{agent_id}`) - {desc}")
+                lines.append("")
+
+        # Routing Layer (Tools)
+        lines.append("## 🔧 Routing Layer (Tools)")
+        if not tools:
+            lines.append("_No tools registered_")
+        else:
+            # Group tools by namespace (agent_id.tool_name)
+            tool_groups = defaultdict(list)
+            for tool in tools:
+                parts = tool.split(".", 1)
+                namespace = parts[0] if len(parts) > 1 else "core"
+                tool_groups[namespace].append(tool)
+
+            for namespace, group_tools in sorted(tool_groups.items()):
+                lines.append(f"**{namespace.upper()}**")
+                lines.append(f"`{', '.join(sorted(group_tools))}`")
+                lines.append("")
+
+        return "\n".join(lines)
+
+    def _generate_topology_diagram(self, total_agents: int) -> str:
+        """Generate ASCII topology diagram."""
+        return f"""```
+         🏔️ MOUNT MERU (Kernel)
+              │
+    ┌─────────┼─────────┐
+  SYSTEM    CIVIC     USER
+   (Core)  (Economy) (Apps)
+     │        │        │
+    ...      ...      ...
+    
+  Total Active Nodes: {total_agents}
+```"""
