@@ -31,6 +31,10 @@ class KernelPlugin(ABC):
 
     CAPABILITY:
     - on_capability_check: CAPABILITY GATE for tool access (Protocol enforcement)
+
+    TOOL EXECUTION:
+    - on_tool_execute: TOOL GATE for execution (Rate limiting, Audit)
+    - on_tool_executed: Post-execution hook (Logging, Metrics)
     ═══════════════════════════════════════════════════
     """
 
@@ -180,3 +184,63 @@ class KernelPlugin(ABC):
             True (allow), False (deny), or None (no opinion)
         """
         return None  # Default: no opinion
+
+    def on_tool_execute(
+        self,
+        kernel: "RealVibeKernel",
+        agent_id: str,
+        tool_name: str,
+        parameters: dict,
+    ) -> Optional[bool]:
+        """
+        TOOL EXECUTION GATE: Called before every tool execution.
+
+        This hook enables:
+        - Audit trail for all tool calls
+        - Rate limiting per tool
+        - Tool-specific security checks
+        - Usage tracking for billing/quotas
+
+        Return values:
+            True  = Explicitly ALLOW
+            False = VETO (block execution)
+            None  = No opinion (default - allow)
+
+        Args:
+            kernel: The kernel instance
+            agent_id: Agent executing the tool
+            tool_name: Name of the tool being called
+            parameters: Tool parameters (read-only)
+
+        Returns:
+            True (allow), False (deny), or None (no opinion)
+        """
+        return None  # Default: no opinion
+
+    def on_tool_executed(
+        self,
+        kernel: "RealVibeKernel",
+        agent_id: str,
+        tool_name: str,
+        parameters: dict,
+        result: Any,
+        success: bool,
+    ) -> None:
+        """
+        Called after tool execution completes (success or failure).
+
+        This hook enables:
+        - Audit logging
+        - Metrics collection
+        - Result modification (via wrappers, not mutation)
+        - Error tracking
+
+        Args:
+            kernel: The kernel instance
+            agent_id: Agent that executed the tool
+            tool_name: Name of the tool
+            parameters: Tool parameters used
+            result: Tool result (output or error)
+            success: Whether execution succeeded
+        """
+        pass

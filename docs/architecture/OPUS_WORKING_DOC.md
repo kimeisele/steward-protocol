@@ -1050,5 +1050,47 @@ vibe_core/plugin_loader.py:   fd26145679af11a9... (unchanged)
 
 ---
 
-*Last updated: 2025-12-05 - FINAL KERNEL HOOKS ADDED*
-*Status: COMPLETE - Kernel has eternal hook system*
+---
+
+## ADDITIONAL HOOKS (2025-12-05) - Tool Execution
+
+Added missing tool execution hooks:
+
+### New Hooks in plugin_protocol.py:
+
+3. **`on_tool_execute(kernel, agent_id, tool_name, parameters) -> Optional[bool]`**
+   - TOOL GATE - Plugins können Tool-Ausführung vetoen
+   - Use Cases: Rate Limiting, Audit Trail, Security
+
+4. **`on_tool_executed(kernel, agent_id, tool_name, parameters, result, success)`**
+   - Post-execution Hook
+   - Use Cases: Logging, Metrics, Error Tracking
+
+### Kernel Changes:
+
+- `tool_registry.py`: Added kernel reference
+- Hooks are called before and after every tool execution
+
+### Final Hook Summary (COMPLETE):
+
+| Category | Hook | Purpose |
+|----------|------|---------|
+| Lifecycle | on_boot | Kernel start |
+| Lifecycle | on_tick_pre/post | Every tick |
+| Lifecycle | on_shutdown | Kernel end |
+| Agent | on_agent_registered | Agent joins |
+| Agent | on_agent_unregistered | Agent destroyed |
+| Task | on_task_submit | COSMIC GATE |
+| Task | on_task_pre_assign | GOVERNANCE GATE |
+| Task | on_task_completed/failed | Task results |
+| Capability | on_capability_check | CAPABILITY GATE |
+| Tool | on_tool_execute | TOOL GATE |
+| Tool | on_tool_executed | Post-execution |
+
+**This is the FINAL hook set. The kernel is now COMPLETE.**
+
+---
+
+*Last updated: 2025-12-05 - ALL HOOKS COMPLETE*
+*Status: STEWARD PROTOCOL IMPLEMENTATION FINISHED*
+*Next: See ARCHITECTURE_NEXT.md for fraktal plugin system*
