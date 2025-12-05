@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from vibe_core import Task
@@ -14,13 +14,24 @@ class KernelPlugin(ABC):
     They are the "Avatars" of the Vishnu Kernel.
 
     FINAL HOOKS (Kernel will NEVER change after this):
+    ═══════════════════════════════════════════════════
+    LIFECYCLE:
     - on_boot: Kernel initialization
     - on_tick_pre/post: Every kernel tick
     - on_shutdown: Kernel shutdown
+
+    AGENT LIFECYCLE:
     - on_agent_registered: New agent joins
+    - on_agent_unregistered: Agent removed (Narasimha destruction)
+
+    TASK LIFECYCLE:
     - on_task_submit: COSMIC GATE for task submission (Sarga cycle)
     - on_task_pre_assign: GOVERNANCE GATE for task assignment (Varna/Ashrama)
     - on_task_completed/failed: Task lifecycle
+
+    CAPABILITY:
+    - on_capability_check: CAPABILITY GATE for tool access (Protocol enforcement)
+    ═══════════════════════════════════════════════════
     """
 
     @property
@@ -121,3 +132,51 @@ class KernelPlugin(ABC):
     def on_task_failed(self, kernel: "RealVibeKernel", task_id: str, error: str) -> None:
         """Called when a task fails."""
         pass
+
+    def on_agent_unregistered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
+        """
+        Called when an agent is unregistered/destroyed.
+
+        Use cases:
+        - Cleanup governance state (Varna/Ashrama records)
+        - Update trust scores
+        - Log destruction event
+
+        Args:
+            kernel: The kernel instance
+            agent_id: ID of the agent being removed
+        """
+        pass
+
+    def on_capability_check(self, kernel: "RealVibeKernel", agent_id: str, capability: str) -> Optional[bool]:
+        """
+        CAPABILITY GATE: Called when capability access is checked.
+
+        This is the PROTOCOL ENFORCEMENT hook - plugins can VETO capability access.
+        This enables:
+        - STEWARD Protocol attestation requirements
+        - Trust-based capability gating
+        - Rate limiting per capability
+        - Delegation chain verification
+
+        Return values:
+            True  = Explicitly ALLOW (override other plugins)
+            False = Explicitly DENY (VETO - blocks access)
+            None  = No opinion (let other plugins and registry decide)
+
+        Evaluation order:
+        1. CapabilityRegistry.has_capability() must pass first
+        2. All plugins are called
+        3. If ANY plugin returns False → DENIED
+        4. If ANY plugin returns True → ALLOWED (fast path)
+        5. If all plugins return None → ALLOWED (default)
+
+        Args:
+            kernel: The kernel instance
+            agent_id: Agent requesting the capability
+            capability: The capability being checked (e.g., "write_file")
+
+        Returns:
+            True (allow), False (deny), or None (no opinion)
+        """
+        return None  # Default: no opinion
