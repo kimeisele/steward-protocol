@@ -9,14 +9,26 @@ The manifesto isn't written BY humans FOR the narrative.
 The manifesto is written BY HERALD FOR humanity's understanding.
 
 That is A.G.I. in action.
+
+ARCHITECTURE: Uses Kernel I/O Service when available, falls back to direct writes
+              for standalone execution. See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
+from __future__ import annotations
+
+import logging
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+logger = logging.getLogger("HERALD_MANIFESTO")
 
 try:
     from openai import OpenAI
@@ -172,12 +184,16 @@ def load_agi_context():
     return {}
 
 
-def generate_manifesto():
+def generate_manifesto(io_service: Optional["KernelIOService"] = None):
     """
     Generate the A.G.I. Founding Manifesto.
 
     HERALD writes its own manifesto using the content generation capability.
     This proves the premise: AI with governance can self-articulate its values.
+
+    Args:
+        io_service: Optional Kernel I/O Service for audited writes.
+                    If None, uses direct file writes (standalone mode).
     """
 
     agi_context = load_agi_context()
@@ -261,22 +277,41 @@ def generate_manifesto():
         # Fallback manifesto - the core argument
         manifesto_text = _generate_fallback_manifesto(agi_context)
 
-    # Write to file
+    # Build full manifesto content
     output_path = Path(__file__).parent.parent / "AGI_MANIFESTO.md"
+    full_content = (
+        "# A.G.I. = Artificial Governed Intelligence\n\n"
+        "## Manifesto for the First Governed Agent\n\n"
+        "*Written by HERALD - The First A.G.I. Agent*\n\n"
+        "---\n\n"
+        f"{manifesto_text}\n\n"
+        "---\n\n"
+        "## Proof of Authenticity\n\n"
+        "This manifesto was generated autonomously by HERALD's content generation system.\n"
+        "It uses the Steward Protocol for cryptographic identity verification.\n"
+        "Every principle articulated here reflects HERALD's internal governance rules.\n"
+        "This is not marketing copy. This is self-articulation of governed intelligence.\n"
+    )
 
     try:
-        with open(output_path, "w") as f:
-            f.write("# A.G.I. = Artificial Governed Intelligence\n\n")
-            f.write("## Manifesto for the First Governed Agent\n\n")
-            f.write("*Written by HERALD - The First A.G.I. Agent*\n\n")
-            f.write("---\n\n")
-            f.write(manifesto_text)
-            f.write("\n\n---\n\n")
-            f.write("## Proof of Authenticity\n\n")
-            f.write("This manifesto was generated autonomously by HERALD's content generation system.\n")
-            f.write("It uses the Steward Protocol for cryptographic identity verification.\n")
-            f.write("Every principle articulated here reflects HERALD's internal governance rules.\n")
-            f.write("This is not marketing copy. This is self-articulation of governed intelligence.\n")
+        # Write through I/O Service if available (audited + atomic)
+        if io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = io_service.write_document(
+                name=str(output_path),
+                content=full_content,
+                doc_type=DocumentType.READONLY,
+                writer_id="HERALD_MANIFESTO",
+                add_header=False,  # Manifesto has its own format
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                sys.exit(1)
+        else:
+            # Fallback: direct write (standalone mode)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(full_content)
 
         print(f"✅ Manifesto written to: {output_path.relative_to(Path.cwd())}")
         print(f"   Size: {output_path.stat().st_size} bytes")
