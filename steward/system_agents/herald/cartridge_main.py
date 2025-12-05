@@ -107,7 +107,13 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
             dry_run = True
 
         if config:
-            self.config = config
+            # Handle CityConfig (nested) vs HeraldConfig (flat)
+            if hasattr(config, "agents") and hasattr(config.agents, "herald"):
+                # CityConfig passed - extract herald-specific config
+                self.config = config.agents.herald
+            else:
+                # Direct HeraldConfig or compatible object
+                self.config = config
         elif HeraldConfig is not None:
             try:
                 self.config = HeraldConfig()
@@ -116,9 +122,9 @@ class HeraldCartridge(ContextAwareAgent, OathMixin):
         else:
             self.config = FallbackConfig()
 
-        logger.info(
-            f"🦅 HERALD (ContextAwareAgent v3.1) is online (config: {self.config.posting_frequency_hours}h frequency)."
-        )
+        # Safe config access with fallback
+        posting_freq = getattr(self.config, "posting_frequency_hours", 4)
+        logger.info(f"🦅 HERALD (ContextAwareAgent v3.1) is online (config: {posting_freq}h frequency).")
 
         # Initialize Constitutional Oath mixin (if available)
         if OathMixin:
