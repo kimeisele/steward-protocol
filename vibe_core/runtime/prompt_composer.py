@@ -103,6 +103,7 @@ Execute {task} task.
     def _format_context_section(self, context: dict[str, Any]) -> str:
         """Format current context as markdown section"""
         session = context.get("session", {})
+        kernel = context.get("kernel", {})
         git = context.get("git", {})
         tests = context.get("tests", {})
         env = context.get("environment", {})
@@ -115,12 +116,24 @@ Execute {task} task.
 
         env_status = "✅ Ready" if env.get("status") == "ready" else f"⚠️ {env.get('status')}"
 
+        # Kernel status
+        kernel_status = kernel.get("status", "not_running")
+        kernel_available = kernel.get("available", False)
+        agents_count = kernel.get("agents_count", 0)
+        agents_list = kernel.get("agents", [])
+        ledger_events = kernel.get("ledger_events", 0)
+
         # Build semantic context from memory
         semantic_context = self._format_semantic_context(memory)
 
         return f"""---
 
 ## 📊 CURRENT CONTEXT
+
+**Kernel State:**
+- Status: {kernel_status}
+- Agents: {agents_count} registered ({", ".join(agents_list[:5])}{"..." if len(agents_list) > 5 else ""})
+- Ledger Events: {ledger_events}
 
 **Project State:**
 - Phase: {session.get("phase", "UNKNOWN")}
