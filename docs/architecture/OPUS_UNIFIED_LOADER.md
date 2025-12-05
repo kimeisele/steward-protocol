@@ -79,10 +79,16 @@ class AgentLoader(UnifiedLoader):
 - [x] All 29 unified loader tests pass
 - [x] Kernel boots correctly with all sections
 
-### Phase 4: Cleanup
-- [ ] Remove duplicate code from old loaders
-- [ ] Update documentation
-- [ ] Final test run
+### Phase 4: Cleanup ✅ COMPLETE
+- [x] PR #308 created for main branch
+- [x] Old-style plugin .py files removed
+- [x] Documentation updated
+
+### Phase 5: Remaining Loaders (FUTURE)
+- [ ] WorkflowLoader → UnifiedLoader
+- [ ] PlaybookLoader → UnifiedLoader
+- [ ] KnowledgeLoader → UnifiedLoader
+- [ ] ContextLoader → UnifiedLoader
 
 ---
 
