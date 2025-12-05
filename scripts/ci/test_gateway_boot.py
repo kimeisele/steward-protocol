@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gateway boot smoke test for CI."""
 
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 
 kernel = RealVibeKernel(ledger_path=":memory:")

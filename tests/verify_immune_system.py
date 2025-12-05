@@ -18,10 +18,10 @@ from pathlib import Path
 # Setup paths
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from steward.system_agents.auditor.tools.invariant_tool import (
+from vibe_core.agent_protocol import AgentManifest, VibeAgent
+from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
     get_judge,
 )
-from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling import Task
 

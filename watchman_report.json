@@ -1,0 +1,15 @@
+{
+  "status": "COMPLIANT",
+  "should_fail_build": false,
+  "total_violations": 0,
+  "critical_count": 0,
+  "report": {
+    "total_violations": 0,
+    "violations": [],
+    "by_severity": {},
+    "by_agent": {},
+    "critical_count": 0,
+    "should_fail_build": false
+  },
+  "violations": []
+}

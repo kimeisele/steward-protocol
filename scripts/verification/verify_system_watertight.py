@@ -15,9 +15,9 @@ import sys
 # Add current dir to Python path
 sys.path.insert(0, "/home/user/steward-protocol")
 
-from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from vibe_core.cartridges.system.archivist.cartridge_main import ArchivistCartridge
+from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
+from vibe_core.cartridges.system.engineer.cartridge_main import EngineerCartridge
 from vibe_core.scheduling.task import Task
 
 # Setup Dummy Environment

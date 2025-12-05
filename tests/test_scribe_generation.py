@@ -9,8 +9,8 @@ sys.path.insert(0, ".")
 
 from pathlib import Path
 
-from steward.system_agents.scribe.tools.introspector import CartridgeIntrospector
-from steward.system_agents.scribe.tools.project_introspector import ProjectIntrospector
+from vibe_core.cartridges.system.scribe.tools.introspector import CartridgeIntrospector
+from vibe_core.cartridges.system.scribe.tools.project_introspector import ProjectIntrospector
 
 print("=" * 70)
 print("SCRIBE GENERATION TEST - ZERO HARDCODE PROOF")

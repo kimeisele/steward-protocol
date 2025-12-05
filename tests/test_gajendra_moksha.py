@@ -19,7 +19,8 @@ import logging
 import time
 
 import pytest
-from steward.system_agents.envoy.tools.milk_ocean import LazyQueue, MilkOceanRouter
+
+from vibe_core.cartridges.system.envoy.tools.milk_ocean import LazyQueue, MilkOceanRouter
 
 logger = logging.getLogger("GAJENDRA_TEST")
 

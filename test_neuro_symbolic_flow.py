@@ -28,8 +28,8 @@ Expected: Each input should compile to SPAWN_COGNITION and result in a live agen
 """
 
 import logging
-import sys
 import os
+import sys
 
 # Setup logging
 logging.basicConfig(
@@ -49,7 +49,7 @@ def test_semantic_compiler():
     print("TEST 1: SEMANTIC COMPILER (Neural → Symbolic)")
     print("=" * 70)
 
-    from steward.system_agents.envoy.blueprint_generator import BlueprintGenerator
+    from vibe_core.cartridges.system.envoy.blueprint_generator import BlueprintGenerator
     from vibe_core.semantic_syscalls import SyscallType
 
     compiler = BlueprintGenerator()
@@ -79,7 +79,7 @@ def test_semantic_compiler():
 
     results = []
     for tc in test_cases:
-        print(f"\n📝 Input: \"{tc['input'][:50]}...\"")
+        print(f'\n📝 Input: "{tc["input"][:50]}..."')
 
         result = compiler.compile(tc["input"])
 
@@ -110,7 +110,7 @@ def test_semantic_compiler():
                 print(f"   ❌ FAIL: Expected {tc['expected_syscall'].value}")
                 results.append(False)
         else:
-            print(f"   ❌ FAIL: Did not compile to syscall")
+            print("   ❌ FAIL: Did not compile to syscall")
             results.append(False)
 
     print(f"\n📊 Semantic Compiler: {sum(results)}/{len(results)} passed")
@@ -125,9 +125,9 @@ def test_syscall_executor():
 
     from vibe_core.boot_orchestrator import BootOrchestrator
     from vibe_core.semantic_syscalls import (
-        SyscallType,
-        SyscallRequest,
         SemanticSyscallExecutor,
+        SyscallRequest,
+        SyscallType,
     )
 
     # Boot minimal kernel
@@ -167,7 +167,7 @@ def test_syscall_executor():
 
         # Verify agent is in registry
         if agent_id in kernel.agent_registry:
-            print(f"   ✅ Agent is in kernel registry")
+            print("   ✅ Agent is in kernel registry")
 
             # Check capabilities
             caps = kernel._agent_capabilities.get(agent_id, frozenset())
@@ -182,7 +182,7 @@ def test_syscall_executor():
 
             return True
         else:
-            print(f"   ❌ Agent NOT in registry")
+            print("   ❌ Agent NOT in registry")
             return False
     else:
         print(f"   ❌ SPAWN_COGNITION failed: {result.error}")
@@ -216,7 +216,7 @@ def test_circuit_executor():
 
     result = executor.execute(test_input, requester_id="test_user")
 
-    print(f"\n📊 Execution Result:")
+    print("\n📊 Execution Result:")
     print(f"   success: {result.success}")
     print(f"   final_state: {result.final_state}")
     print(f"   state_history: {' → '.join(result.state_history)}")
@@ -236,7 +236,7 @@ def test_circuit_executor():
 
         return True
     else:
-        print(f"\n   ❌ Circuit execution failed")
+        print("\n   ❌ Circuit execution failed")
         return False
 
 
@@ -282,7 +282,7 @@ def test_full_genesis_flow():
             print(f"   Syscalls: {result.syscall_count}")
             results.append(True)
         elif result.final_state == "NOT_SYSCALL":
-            print(f"⚠️  Not a syscall intent (traditional playbook)")
+            print("⚠️  Not a syscall intent (traditional playbook)")
             results.append(None)  # Neither pass nor fail
         else:
             print(f"❌ FAILED: {result.error}")

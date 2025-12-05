@@ -13,9 +13,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
-from steward.system_agents.science.cartridge_main import ScientistCartridge
 from vibe_core.agents.context_aware_agent import ContextAwareAgent
+from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
+from vibe_core.cartridges.system.science.cartridge_main import ScientistCartridge
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("VERIFY_BRAIN")

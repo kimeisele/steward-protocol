@@ -75,7 +75,7 @@ class LazyQueueWorker:
         try:
             from envoy.tools.milk_ocean import LazyQueue
 
-            from provider.universal_provider import UniversalProvider
+            from vibe_core.cartridges.system.envoy.provider_legacy.universal_provider import UniversalProvider
             from vibe_core.kernel_impl import RealVibeKernel
 
             queue = LazyQueue()

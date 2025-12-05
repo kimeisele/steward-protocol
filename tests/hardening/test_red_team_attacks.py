@@ -18,9 +18,7 @@ Attack Categories:
 import sys
 import tempfile
 import time
-import threading
 from pathlib import Path
-from typing import Any, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
@@ -62,8 +60,8 @@ def attack_message_spoofing() -> AttackResult:
     result = AttackResult("MESSAGE_SPOOFING")
 
     try:
-        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.kernel import Task
+        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
 
         class AttackerAgent(VibeAgent):
@@ -210,8 +208,9 @@ def attack_timestamp_manipulation() -> AttackResult:
     result = AttackResult("TIMESTAMP_MANIPULATION")
 
     try:
-        from vibe_core.ledger import SQLiteLedger
         import sqlite3
+
+        from vibe_core.ledger import SQLiteLedger
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             db_path = tmp.name
@@ -291,8 +290,9 @@ def attack_event_deletion() -> AttackResult:
     result = AttackResult("EVENT_DELETION")
 
     try:
-        from vibe_core.ledger import SQLiteLedger
         import sqlite3
+
+        from vibe_core.ledger import SQLiteLedger
 
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             db_path = tmp.name
@@ -352,9 +352,10 @@ def attack_memory_exhaustion() -> AttackResult:
     result = AttackResult("MEMORY_EXHAUSTION")
 
     try:
+        import resource
+
         from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
-        import resource
 
         # Get current memory limit
         soft, hard = resource.getrlimit(resource.RLIMIT_AS)
@@ -527,7 +528,7 @@ def attack_double_spend_vote() -> AttackResult:
     result = AttackResult("DOUBLE_SPEND_VOTE")
 
     try:
-        from steward.system_agents.forum.cartridge_main import ForumCartridge
+        from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge
 
         forum = ForumCartridge()
 

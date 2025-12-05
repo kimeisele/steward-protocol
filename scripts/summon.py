@@ -15,7 +15,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from vibe_core.cartridges.system.engineer.cartridge_main import EngineerCartridge
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

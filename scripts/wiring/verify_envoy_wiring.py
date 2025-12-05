@@ -20,8 +20,8 @@ from unittest.mock import AsyncMock, MagicMock
 # Adjust path to find modules
 sys.path.append(".")
 
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
 from vibe_core import Task
+from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

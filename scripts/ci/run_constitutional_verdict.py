@@ -10,8 +10,8 @@ import json
 import sys
 from pathlib import Path
 
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
 from vibe_core.agent_interface import AgentSystemInterface
+from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.scheduling.task import Task
 
