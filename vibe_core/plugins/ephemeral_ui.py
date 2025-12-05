@@ -6,18 +6,19 @@ Renders EPHEMERAL.md to provide visibility into:
 - Merge history with proofs
 - Harvested artifacts
 - Kernel family tree
+
+ARCHITECTURE: This plugin produces CONTENT only.
+File writes go through kernel.io (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
 """
 
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List
 
+from vibe_core.io_service import DocumentType
 from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
-
-EPHEMERAL_MD_PATH = Path("EPHEMERAL.md")
 
 
 class EphemeralCityPlugin(KernelPlugin):
@@ -94,7 +95,7 @@ class EphemeralCityPlugin(KernelPlugin):
             self.merge_history = self.merge_history[-self.max_history :]
 
     def _render_ephemeral_md(self, kernel: "RealVibeKernel") -> None:
-        """Render EPHEMERAL.md with current state."""
+        """Render EPHEMERAL.md with current state through I/O Service."""
         lines = [
             "# 🌀 EPHEMERAL CITIES DASHBOARD",
             "",
@@ -116,8 +117,13 @@ class EphemeralCityPlugin(KernelPlugin):
         # Actions Section (for future bidirectional support)
         lines.extend(self._render_actions())
 
-        # Write to file
-        EPHEMERAL_MD_PATH.write_text("\n".join(lines))
+        # Write through I/O Service (atomic + audited)
+        kernel.io.write_document(
+            name="EPHEMERAL.md",
+            content=lines,
+            doc_type=DocumentType.READONLY,
+            writer_id=self.plugin_id,
+        )
 
     def _render_active_cities(self, kernel: "RealVibeKernel") -> List[str]:
         """Render active ephemeral cities table."""
