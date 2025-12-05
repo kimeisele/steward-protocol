@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "kernel",
+  "name": "Kernel Configuration",
+  "version": "1.0.0",
+  "description": "Core kernel settings - tick rate, timeouts, scheduling",
+
+  "entry_point": "section_main.py",
+  "entry_class": "KernelConfig",
+
+  "priority": 0,
+
+  "config_file": "config/kernel.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "kernel", "core"]
+}
