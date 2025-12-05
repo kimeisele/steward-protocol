@@ -179,6 +179,28 @@ ci:
   require_status_checks: true
 
 # =============================================================================
+# PRE-COMMIT GUARDS (read by .githooks/pre-commit)
+# =============================================================================
+guards:
+  # Paths to scan for agent violations
+  agent_paths:
+    - vibe_core/cartridges/system
+    - vibe_core/cartridges/agent_city
+
+  # Guard 1: Block requirements.txt in agent directories
+  block_requirements_txt: true
+
+  # Guard 2: Block direct Path("data/...") calls
+  block_hardcoded_data_paths: true
+
+  # Guard 3: Warn hardcoded paths in __init__
+  warn_init_hardcoded_paths: true
+
+  # Guard 4: Ruff auto-format + critical error check
+  ruff_autoformat: true
+  ruff_critical_check: true
+
+# =============================================================================
 # ENFORCEMENT
 # =============================================================================
 enforce_on_commit: true
