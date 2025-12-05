@@ -1,0 +1,247 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: PROJECT_SCAFFOLD_V2
+# ============================================================================
+# Neuro-Symbolic Project Scaffolding Circuit
+#
+# Syscall: DISPATCH_TASK (to civic agent for project creation)
+# Pattern: "Create a new project", "Scaffold a project", "Start new repo"
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture project name, type, requirements
+#   ARTHA    → Validate params, resolve template
+#   PRATYAYA → Check permissions, disk space, conflicts
+#   KARMA    → Execute scaffolding actions
+#   VERIFY   → Confirm creation succeeded
+#   SUCCESS  → Project ready
+#
+# ============================================================================
+
+circuit:
+  id: "PROJECT_SCAFFOLD_V2"
+  type: "cognitive_circuit"
+  version: "2.0"
+  domain: "development"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  # Intent matching for DeterministicExecutor concept-based lookup
+  intent_match:
+    primary: "CMD_CREATE"
+    secondary:
+      - "DOM_DEVELOPMENT"
+      - "DOM_PROJECT"
+
+  description: |
+    Deterministic project scaffolding with full validation.
+    Creates folder structure, initializes git, applies templates.
+
+    Replaces legacy: knowledge/playbooks/project_scaffold.yaml
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture project creation intent"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["project_name"]
+            optional: ["project_type", "template", "target_path"]
+            defaults:
+              project_type: "standard"
+              template: "default"
+              target_path: "./"
+      invariants:
+        - "project_name must match ^[a-zA-Z0-9_-]+$"
+        - "project_name length <= 50"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Validate and resolve template"
+      entry_actions:
+        - action: "validate_template"
+          params:
+            template_registry: "knowledge/templates/"
+            validate_structure: true
+        - action: "resolve_paths"
+          params:
+            base: "{{ target_path }}"
+            project: "{{ project_name }}"
+      invariants:
+        - "template must exist in registry"
+        - "resolved_path must be valid filesystem path"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+
+    PRATYAYA:
+      description: "Verify conditions for scaffolding"
+      entry_actions:
+        - action: "check_filesystem"
+          params:
+            path: "{{ resolved_path }}"
+            checks:
+              - "path_not_exists"      # Don't overwrite
+              - "parent_writable"       # Can create
+              - "disk_space_available"  # Has space
+        - action: "check_conflicts"
+          params:
+            name: "{{ project_name }}"
+            scope: "workspace"
+      invariants:
+        - "target directory must not exist"
+        - "parent directory must be writable"
+        - "no naming conflicts in workspace"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+
+    KARMA:
+      description: "Execute scaffolding actions"
+      entry_actions:
+        - action: "create_structure"
+          params:
+            path: "{{ resolved_path }}"
+            folders:
+              - "src"
+              - "tests"
+              - "docs"
+              - "config"
+            files:
+              - path: "README.md"
+                template: "readme.md.j2"
+              - path: ".gitignore"
+                template: "gitignore.j2"
+        - action: "init_git"
+          params:
+            path: "{{ resolved_path }}"
+            branch: "main"
+            initial_commit: true
+            message: "Initial project scaffold (VEDA-4)"
+        - action: "apply_template"
+          params:
+            template: "{{ template }}"
+            target: "{{ resolved_path }}"
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "civic"
+        task_type: "scaffold_project"
+      on_success: "VERIFY"
+      on_failure: "FAILURE"
+
+    VERIFY:
+      description: "Confirm scaffolding succeeded"
+      entry_actions:
+        - action: "verify_structure"
+          params:
+            path: "{{ resolved_path }}"
+            expected:
+              - "src/"
+              - "tests/"
+              - "docs/"
+              - "config/"
+              - "README.md"
+              - ".gitignore"
+              - ".git/"
+        - action: "verify_git"
+          params:
+            path: "{{ resolved_path }}"
+            checks:
+              - "is_git_repo"
+              - "has_initial_commit"
+              - "branch_is_main"
+      invariants:
+        - "all expected paths must exist"
+        - "git repository must be initialized"
+      on_success: "SUCCESS"
+      on_failure: "FAILURE"
+
+    SUCCESS:
+      description: "Project scaffolding complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "project_created"
+            data:
+              name: "{{ project_name }}"
+              path: "{{ resolved_path }}"
+              template: "{{ template }}"
+        - action: "record_parampara"
+          params:
+            action: "PROJECT_SCAFFOLD"
+            result: "SUCCESS"
+            artifacts: ["{{ resolved_path }}"]
+
+    FAILURE:
+      description: "Scaffolding failed"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "project_scaffold_failed"
+            data:
+              reason: "{{ failure_reason }}"
+              state: "{{ failed_state }}"
+        - action: "cleanup"
+          params:
+            path: "{{ resolved_path }}"
+            if_exists: true
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "params_valid"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "template_resolved"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "conditions_met"
+    - from: "KARMA"
+      to: "VERIFY"
+      condition: "actions_completed"
+    - from: "VERIFY"
+      to: "SUCCESS"
+      condition: "verification_passed"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "no_overwrite"
+      check: "target path must not exist before KARMA"
+    - name: "atomic_creation"
+      check: "either full scaffold or nothing"
+    - name: "git_initialized"
+      check: "project must be git repo after success"
+
+  # ===========================================================================
+  # SEMANTIC GROUNDING (Maps to Kernel Syscalls)
+  # ===========================================================================
+  semantic_grounding:
+    syscall_type: "DISPATCH_TASK"
+    target_agent: "civic"
+    intent_patterns:
+      - 'create\s+(?:a\s+)?(?:new\s+)?project'
+      - 'scaffold\s+(?:a\s+)?project'
+      - 'start\s+(?:a\s+)?new\s+(?:project|repo)'
+      - 'init(?:ialize)?\s+project'
+    param_extraction:
+      project_name:
+        patterns:
+          - "project\\s+(?:called|named)\\s+[\"']?(\\w+)[\"']?"
+          - "new\\s+project\\s+(\\w+)"
+          - "(\\w+)\\s+project"
+        required: true
+      template:
+        patterns:
+          - 'using\s+(\w+)\s+template'
+          - '(\w+)\s+template'
+        default: "default"
