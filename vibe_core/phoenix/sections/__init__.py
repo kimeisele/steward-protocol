@@ -1,6 +1,7 @@
 """Phoenix Config Sections - Typed configuration components."""
 
-from .circuits import CircuitConfig
+from ..utils.circuits import CircuitConfig
+from ..utils.routing import RoutingRule
 from .city.section_main import AgentsConfig, CityConfig, EconomyConfig, GovernanceConfig
 from .kernel.section_main import FeaturesConfig, KernelConfig, ProviderConfig, SystemConfig
 from .quality.section_main import (
@@ -13,7 +14,6 @@ from .quality.section_main import (
     TestConfig,
     TestProfile,
 )
-from .routing import RoutingRule
 from .steward.section_main import (
     BehaviorConfig,
     CognitivePolicy,
