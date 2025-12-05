@@ -1,58 +1,44 @@
 """
 Agent Loader - Auto-discovery for Agents.
 
-Mirrors the SectionLoader pattern from phoenix/section_loader.py:
-- Scans agent directories for manifest files (steward.json or manifest.json)
-- Validates manifests against schema
-- Loads cartridge implementations dynamically
-- Returns dict of agent_id -> AgentManifest or agent instance
+INHERITS FROM UnifiedLoader - The fraktal pattern!
 
-FRACTAL PATTERN:
-    phoenix/section_loader.py  → Discovers ConfigSection classes
-    steward/loader.py          → Discovers Agent manifests/cartridges
+Specifics for Agents:
+- Supports steward.json as alias for manifest.json (backward compat)
+- Uses AgentManifest dataclass for manifest parsing
+- Looks for *Cartridge classes in cartridge_main.py
+- Validates agents with is_valid_agent()
 """
 
-import importlib.util
-import inspect
-import json
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type
 
+from vibe_core.loaders import ItemMeta, LoaderRegistry, UnifiedLoader
 from vibe_core.steward.protocol import AgentManifest, is_valid_agent
 
 logger = logging.getLogger("STEWARD.LOADER")
 
 
-@dataclass
-class AgentMeta:
-    """Metadata about a discovered agent."""
-
-    agent_id: str
-    manifest: AgentManifest
-    manifest_path: Path
-    cartridge_path: Optional[Path]
-    cartridge_class: Optional[Type]
-    loaded_successfully: bool
-    error: Optional[str] = None
-
-    def __repr__(self) -> str:
-        status = "OK" if self.loaded_successfully else f"FAILED: {self.error}"
-        return f"<Agent:{self.agent_id} cartridge={self.cartridge_path is not None} status={status}>"
-
-
-# Type aliases
+# Type aliases (keep for backward compatibility)
 AgentRegistry = Dict[str, AgentManifest]
-AgentInstances = Dict[str, Any]  # agent_id -> instance
-AgentMetadata = Dict[str, AgentMeta]
+AgentInstances = Dict[str, Any]
+AgentMetadata = Dict[str, ItemMeta]  # Now uses ItemMeta from UnifiedLoader
+
+# Backward compat: AgentMeta is now ItemMeta
+AgentMeta = ItemMeta
 
 
-class AgentLoader:
+class AgentLoader(UnifiedLoader):
     """
     Auto-discovery loader for Agents.
 
-    Scans directories for manifest files and optionally loads cartridges.
+    Inherits from UnifiedLoader - VEDA-4 pattern.
+
+    Agent-specific:
+    - manifest_filenames includes "steward.json" for backward compat
+    - entry_suffix is "_main.py" (cartridge_main.py)
+    - Validates with is_valid_agent()
 
     Usage:
         # Just discover manifests
@@ -62,201 +48,100 @@ class AgentLoader:
         agents, meta = AgentLoader.discover_and_load()
     """
 
-    # Default directories to scan
-    DEFAULT_SCAN_PATHS = [
-        Path("steward/system_agents"),  # System agents
-        Path("agent_city/registry"),  # Citizen agents
+    # === UNIFIED LOADER CONFIG ===
+    item_type = "agent"
+    scan_paths = [
+        Path("steward/system_agents"),
+        Path("agent_city/registry"),
     ]
+    manifest_filenames = ["manifest.json", "steward.json"]  # steward.json for backward compat
+    entry_suffix = "_main.py"
+    base_class = None  # We use is_valid_agent() instead
 
-    # Supported manifest filenames (in order of preference)
-    MANIFEST_FILENAMES = ["manifest.json", "steward.json"]
-
-    # Cache discovered manifests (class-level)
-    _manifest_cache: Optional[AgentRegistry] = None
-
-    @classmethod
-    def discover_manifests(
-        cls,
-        scan_paths: Optional[List[Path]] = None,
-    ) -> Tuple[AgentRegistry, AgentMetadata]:
-        """
-        Discover all agent manifests in the scan paths.
-
-        Args:
-            scan_paths: List of directories to scan (default: system_agents + agent_city)
-
-        Returns:
-            Tuple of:
-            - manifests: Dict mapping agent_id -> AgentManifest
-            - metadata: Dict mapping agent_id -> AgentMeta
-        """
-        if scan_paths is None:
-            scan_paths = cls.DEFAULT_SCAN_PATHS
-
-        manifests: AgentRegistry = {}
-        metadata: AgentMetadata = {}
-
-        for base_path in scan_paths:
-            if not base_path.exists():
-                logger.debug(f"Scan path does not exist: {base_path}")
-                continue
-
-            logger.info(f"Scanning {base_path} for agents...")
-
-            # Find all directories that contain manifest files
-            for agent_dir in base_path.iterdir():
-                if not agent_dir.is_dir():
-                    continue
-
-                # Skip hidden directories and __pycache__
-                if agent_dir.name.startswith((".", "_")):
-                    continue
-
-                agent_id = agent_dir.name
-
-                # Find manifest file
-                manifest_path = cls._find_manifest_file(agent_dir)
-                if manifest_path is None:
-                    logger.debug(f"  No manifest found in {agent_dir}")
-                    continue
-
-                # Load and parse manifest
-                try:
-                    manifest = cls._load_manifest(manifest_path, agent_id)
-                    manifests[manifest.agent_id] = manifest
-
-                    # Check for cartridge
-                    cartridge_path = agent_dir / "cartridge_main.py"
-
-                    metadata[manifest.agent_id] = AgentMeta(
-                        agent_id=manifest.agent_id,
-                        manifest=manifest,
-                        manifest_path=manifest_path,
-                        cartridge_path=cartridge_path if cartridge_path.exists() else None,
-                        cartridge_class=None,
-                        loaded_successfully=True,
-                    )
-
-                    logger.debug(f"  Discovered: {manifest.agent_id} ({manifest.name})")
-
-                except Exception as e:
-                    logger.warning(f"  Failed to load manifest from {manifest_path}: {e}")
-                    metadata[agent_id] = AgentMeta(
-                        agent_id=agent_id,
-                        manifest=AgentManifest(agent_id=agent_id, name=agent_id),
-                        manifest_path=manifest_path,
-                        cartridge_path=None,
-                        cartridge_class=None,
-                        loaded_successfully=False,
-                        error=str(e),
-                    )
-
-        logger.info(f"Discovered {len(manifests)} agent manifests")
-        return manifests, metadata
+    # === AGENT-SPECIFIC OVERRIDES ===
 
     @classmethod
-    def discover_and_load(
-        cls,
-        scan_paths: Optional[List[Path]] = None,
-        config: Optional[Any] = None,
-    ) -> Tuple[AgentInstances, AgentMetadata]:
+    def _validate_manifest(cls, manifest: Dict[str, Any]) -> List[str]:
         """
-        Discover manifests AND load cartridge instances.
+        Agent-specific manifest validation.
 
-        Args:
-            scan_paths: Directories to scan
-            config: Optional config to pass to cartridge constructors
-
-        Returns:
-            Tuple of:
-            - agents: Dict mapping agent_id -> agent instance
-            - metadata: Dict mapping agent_id -> AgentMeta
+        Supports BOTH formats:
+        - New format: top-level id, name, type
+        - Old format (steward.json): identity.agent_id, identity.name
         """
-        manifests, metadata = cls.discover_manifests(scan_paths)
+        errors = []
 
-        agents: AgentInstances = {}
+        # Check for id/name in either format
+        has_id = bool(
+            manifest.get("id")
+            or manifest.get("agent_id")
+            or (manifest.get("identity") and manifest["identity"].get("agent_id"))
+        )
+        has_name = bool(manifest.get("name") or (manifest.get("identity") and manifest["identity"].get("name")))
 
-        for agent_id, meta in metadata.items():
-            if not meta.loaded_successfully:
-                continue
+        if not has_id:
+            errors.append("Manifest must have 'id' or 'identity.agent_id'")
+        if not has_name:
+            errors.append("Manifest must have 'name' or 'identity.name'")
 
-            if meta.cartridge_path is None:
-                logger.debug(f"  {agent_id}: No cartridge, skipping instance creation")
-                continue
+        # Agent-specific: compliance_level must be 0-3
+        compliance = (
+            manifest.get("compliance_level")
+            or (manifest.get("governance") and manifest["governance"].get("compliance_level"))
+            or 1
+        )
+        if not isinstance(compliance, int) or compliance < 0 or compliance > 3:
+            errors.append("compliance_level must be 0-3")
 
-            # Try to load cartridge
-            try:
-                agent, cartridge_class = cls._load_cartridge(
-                    meta.cartridge_path,
-                    agent_id,
-                    config,
-                )
-
-                if agent is not None:
-                    agents[agent_id] = agent
-                    meta.cartridge_class = cartridge_class
-                    logger.info(f"  Loaded cartridge: {agent_id}")
-                else:
-                    meta.loaded_successfully = False
-                    meta.error = "Cartridge returned None"
-
-            except Exception as e:
-                logger.warning(f"  Failed to load cartridge for {agent_id}: {e}")
-                meta.loaded_successfully = False
-                meta.error = str(e)
-
-        logger.info(f"Loaded {len(agents)} agent cartridges")
-        return agents, metadata
+        return errors
 
     @classmethod
-    def _find_manifest_file(cls, agent_dir: Path) -> Optional[Path]:
-        """Find manifest file in agent directory."""
-        for filename in cls.MANIFEST_FILENAMES:
-            manifest_path = agent_dir / filename
-            if manifest_path.exists():
-                return manifest_path
+    def _find_entry_point(cls, item_dir: Path, manifest: Dict[str, Any]) -> Optional[Path]:
+        """
+        Agent-specific entry point finding.
+
+        Agents use cartridge_main.py (not agent_main.py).
+        """
+        # Check manifest for explicit entry point
+        entry_point = manifest.get("entry_point")
+        if entry_point:
+            return item_dir / entry_point
+
+        # Default for agents: cartridge_main.py
+        cartridge_entry = item_dir / "cartridge_main.py"
+        if cartridge_entry.exists():
+            return cartridge_entry
+
         return None
 
     @classmethod
-    def _load_manifest(cls, manifest_path: Path, agent_id_fallback: str) -> AgentManifest:
-        """Load and parse a manifest file."""
-        with open(manifest_path, "r") as f:
-            data = json.load(f)
-
-        return AgentManifest.from_dict(data, agent_id_fallback=agent_id_fallback)
-
-    @classmethod
-    def _load_cartridge(
+    def _load_entry_class(
         cls,
-        cartridge_path: Path,
-        agent_id: str,
-        config: Optional[Any] = None,
-    ) -> Tuple[Optional[Any], Optional[Type]]:
+        entry_path: Path,
+        item_id: str,
+        manifest: Dict[str, Any],
+    ) -> Optional[Type]:
         """
-        Dynamically load a cartridge from cartridge_main.py.
+        Agent-specific class loading.
 
-        Args:
-            cartridge_path: Path to cartridge_main.py
-            agent_id: Agent identifier
-            config: Optional config to pass to constructor
-
-        Returns:
-            Tuple of (agent_instance, cartridge_class) or (None, None) on failure
+        Looks for *Cartridge classes and validates with is_valid_agent().
         """
+        import importlib.util
+        import inspect
+        import sys
+
         # Import module dynamically
-        module_name = f"cartridge_{agent_id}"
-        spec = importlib.util.spec_from_file_location(module_name, cartridge_path)
+        module_name = f"cartridge_{item_id}"
+        spec = importlib.util.spec_from_file_location(module_name, entry_path)
 
         if spec is None or spec.loader is None:
-            logger.debug(f"Cannot create module spec for {cartridge_path}")
-            return None, None
+            logger.debug(f"Cannot create module spec for {entry_path}")
+            return None
 
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
         # Register in sys.modules for pickle/multiprocessing
-        import sys
-
         sys.modules[module_name] = module
 
         # Find Cartridge class (classes ending with 'Cartridge')
@@ -266,42 +151,77 @@ class AgentLoader:
                 cartridge_classes.append((name, obj))
 
         if not cartridge_classes:
-            logger.debug(f"No *Cartridge class found in {cartridge_path}")
-            return None, None
+            logger.debug(f"No *Cartridge class found in {entry_path}")
+            return None
 
-        # Use first valid cartridge class
-        class_name, CartridgeClass = cartridge_classes[0]
+        # Return first valid cartridge class
+        return cartridge_classes[0][1]
 
-        # Instantiate
+    @classmethod
+    def _create_instance(
+        cls,
+        meta: ItemMeta,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Any]:
+        """
+        Agent-specific instantiation.
+
+        Validates instance with is_valid_agent().
+        """
+        if not meta.entry_class:
+            return None
+
         try:
-            if config:
-                try:
-                    agent = CartridgeClass(config=config)
-                except TypeError:
-                    agent = CartridgeClass()
-            else:
-                agent = CartridgeClass()
+            # Try with config first
+            try:
+                instance = meta.entry_class(config=meta.config)
+            except TypeError:
+                instance = meta.entry_class()
+
+            # Agent-specific: validate with is_valid_agent
+            if not is_valid_agent(instance):
+                logger.debug(f"{meta.entry_class.__name__} does not implement AgentProtocol")
+                return None
+
+            return instance
+
         except Exception as e:
-            logger.warning(f"Cartridge init error for {class_name}: {e}")
-            return None, None
+            logger.warning(f"Failed to instantiate {meta.item_id}: {e}")
+            return None
 
-        # Verify it's a valid agent
-        if not is_valid_agent(agent):
-            logger.debug(f"{class_name} does not implement AgentProtocol")
-            return None, None
+    # === BACKWARD COMPATIBILITY METHODS ===
 
-        return agent, CartridgeClass
+    @classmethod
+    def discover_manifests(
+        cls,
+        scan_paths: Optional[List[Path]] = None,
+    ) -> Tuple[AgentRegistry, AgentMetadata]:
+        """
+        Discover all agent manifests.
+
+        Backward compatible wrapper around UnifiedLoader.discover_manifests().
+        Returns AgentManifest objects instead of raw dicts.
+        """
+        paths = scan_paths or cls.scan_paths
+        raw_manifests, metadata = super().discover_manifests(scan_paths=paths)
+
+        # Convert raw manifests to AgentManifest objects
+        agent_manifests: AgentRegistry = {}
+        for item_id, manifest_dict in raw_manifests.items():
+            try:
+                agent_manifest = AgentManifest.from_dict(manifest_dict, agent_id_fallback=item_id)
+                agent_manifests[item_id] = agent_manifest
+            except Exception as e:
+                logger.warning(f"Failed to parse AgentManifest for {item_id}: {e}")
+
+        return agent_manifests, metadata
 
     @classmethod
     def validate_manifest(cls, manifest: AgentManifest) -> List[str]:
         """
-        Validate a manifest against schema rules.
+        Validate an AgentManifest.
 
-        Args:
-            manifest: AgentManifest to validate
-
-        Returns:
-            List of validation error messages (empty if valid)
+        Backward compatible method.
         """
         errors = []
 
@@ -316,7 +236,6 @@ class AgentLoader:
 
         return errors
 
-    @classmethod
-    def clear_cache(cls) -> None:
-        """Clear the manifest cache (useful for testing)."""
-        cls._manifest_cache = None
+
+# Register with LoaderRegistry
+LoaderRegistry.register("agent", AgentLoader)
