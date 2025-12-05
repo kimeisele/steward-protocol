@@ -279,9 +279,11 @@ class RealVibeKernel(VibeKernel):
         # Phase 6: Universal Tool Registry
         # Single source of truth for all agent tools
         # Tools are registered here and accessed via AgentSystemInterface
+        # kernel=self enables on_tool_execute/on_tool_executed plugin hooks
         self.tool_registry = ToolRegistry(
             invariant_checker=self._auditor if AUDITOR_AVAILABLE else None,
             capability_checker=self._check_agent_capability,
+            kernel=self,
         )
         self._register_core_tools()
         self._discover_agent_tools()
