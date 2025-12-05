@@ -493,9 +493,26 @@ class RealVibeKernel(VibeKernel):
             - Uses CapabilityRegistry with revocation support
             - Agent cannot self-escalate by modifying agent.capabilities
             - Unregistered agents have NO capabilities
+            - STEWARD Protocol trust score check (low trust = warning)
         """
-        # Delegate to CapabilityRegistry (handles core capabilities)
-        return self._capability_registry.has_capability(agent_id, capability)
+        # Step 1: Check CapabilityRegistry (handles core capabilities)
+        has_cap = self._capability_registry.has_capability(agent_id, capability)
+
+        if not has_cap:
+            return False
+
+        # Step 2: STEWARD Protocol trust check (if plugin available)
+        if hasattr(self, "steward") and self.steward:
+            trust_score = self.steward.get_trust_score(agent_id)
+
+            # Low trust warning (but don't block - just log)
+            if trust_score < 0.3:
+                logger.warning(
+                    f"⚠️ STEWARD TRUST WARNING: Agent '{agent_id}' has low trust "
+                    f"({trust_score:.2f}) requesting '{capability}'"
+                )
+
+        return has_cap
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
         """
