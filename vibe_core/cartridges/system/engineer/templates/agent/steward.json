@@ -1,0 +1,25 @@
+{
+  "capabilities": {
+    "operations": [
+      {
+        "description": "YOUR_TOOL_DESCRIPTION_HERE",
+        "name": "YOUR_AGENT_ID.YOUR_TOOL_NAME"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 1,
+    "constitution_hash": "WILL_BE_COMPUTED_AT_BOOT",
+    "issued_at": "WILL_BE_SET_AT_REGISTRATION",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "YOUR_AGENT_ID",
+    "name": "YOUR_AGENT_NAME"
+  },
+  "specs": {
+    "description": "YOUR_AGENT_DESCRIPTION",
+    "domain": "YOUR_DOMAIN",
+    "version": "1.0.0"
+  }
+}

@@ -1,0 +1,276 @@
+# ============================================================================
+# COGNITIVE CIRCUIT: SYSTEM_DESIGN_V2
+# ============================================================================
+# Neuro-Symbolic System Design Circuit
+#
+# Syscall: DISPATCH_TASK (to artisan agent for design)
+# Pattern: "Design a system", "Architect solution", "Plan implementation"
+#
+# VEDA-4 State Machine:
+#   SHABDA   → Capture design requirements
+#   ARTHA    → Analyze constraints, extract requirements
+#   PRATYAYA → Validate feasibility, check resources
+#   KARMA    → Generate design artifacts
+#   REVIEW   → Verify design quality and completeness
+#   SUCCESS  → Design complete
+#
+# ============================================================================
+
+circuit:
+  id: "SYSTEM_DESIGN_V2"
+  type: "cognitive_circuit"
+  version: "2.0"
+  domain: "architecture"
+  security_level: "standard"
+  entry_state: "SHABDA"
+
+  description: |
+    System design workflow for architecture and planning.
+    Produces design artifacts: architecture diagrams, tech choices, implementation plans.
+
+    Replaces legacy: vibe_core/playbook/workflows/design_login_system.yaml
+
+  # ===========================================================================
+  # STATES (VEDA-4 Cognitive States)
+  # ===========================================================================
+  states:
+    SHABDA:
+      description: "Capture design requirements"
+      entry_actions:
+        - action: "extract_params"
+          params:
+            required: ["system_description"]
+            optional: ["requirements", "constraints", "scale", "budget", "timeline"]
+            defaults:
+              scale: "medium"
+              budget: "moderate"
+        - action: "parse_requirements"
+          params:
+            description: "{{ system_description }}"
+            extract_functional: true
+            extract_non_functional: true
+      invariants:
+        - "system_description must be specified"
+        - "at least one requirement identified"
+      on_success: "ARTHA"
+      on_failure: "FAILURE"
+
+    ARTHA:
+      description: "Analyze constraints and elaborate requirements"
+      entry_actions:
+        - action: "analyze_constraints"
+          params:
+            scale: "{{ scale }}"
+            budget: "{{ budget }}"
+            timeline: "{{ timeline }}"
+            identify_tradeoffs: true
+        - action: "elaborate_requirements"
+          params:
+            functional: "{{ functional_requirements }}"
+            non_functional: "{{ non_functional_requirements }}"
+            derive_implied: true
+        - action: "identify_stakeholders"
+          params:
+            from_requirements: true
+            identify_concerns: true
+      invariants:
+        - "constraints must be explicit"
+        - "requirements must be complete"
+      on_success: "PRATYAYA"
+      on_failure: "FAILURE"
+      state_var: "requirements_analysis"
+
+    PRATYAYA:
+      description: "Validate feasibility"
+      entry_actions:
+        - action: "assess_feasibility"
+          params:
+            requirements: "{{ requirements_analysis }}"
+            check_technical: true
+            check_resource: true
+            check_timeline: true
+        - action: "identify_risks"
+          params:
+            requirements: "{{ requirements_analysis }}"
+            categorize: ["technical", "resource", "schedule", "scope"]
+        - action: "evaluate_alternatives"
+          params:
+            requirements: "{{ requirements_analysis }}"
+            generate_options: 3
+            rank_by: ["feasibility", "cost", "time"]
+      invariants:
+        - "feasibility must be confirmed"
+        - "risks must be identified"
+        - "at least one viable approach"
+      on_success: "KARMA"
+      on_failure: "FAILURE"
+      state_var: "feasibility_result"
+
+    KARMA:
+      description: "Generate design artifacts"
+      entry_actions:
+        - action: "design_architecture"
+          params:
+            requirements: "{{ requirements_analysis }}"
+            approach: "{{ feasibility_result.best_approach }}"
+            produce:
+              - "high_level_architecture"
+              - "component_diagram"
+              - "data_model"
+              - "api_contracts"
+        - action: "select_technologies"
+          params:
+            requirements: "{{ requirements_analysis }}"
+            constraints: "{{ constraints }}"
+            justify_choices: true
+        - action: "create_implementation_plan"
+          params:
+            architecture: "{{ architecture }}"
+            phases: true
+            milestones: true
+            dependencies: true
+      syscall:
+        type: "DISPATCH_TASK"
+        target_agent: "artisan"
+        task_type: "design_system"
+      on_success: "REVIEW"
+      on_failure: "FAILURE"
+      state_var: "design_artifacts"
+
+    REVIEW:
+      description: "Verify design quality"
+      entry_actions:
+        - action: "review_completeness"
+          params:
+            design: "{{ design_artifacts }}"
+            requirements: "{{ requirements_analysis }}"
+            check_coverage: true
+        - action: "review_quality"
+          params:
+            design: "{{ design_artifacts }}"
+            criteria:
+              - "scalability"
+              - "maintainability"
+              - "security"
+              - "performance"
+        - action: "identify_gaps"
+          params:
+            design: "{{ design_artifacts }}"
+            requirements: "{{ requirements_analysis }}"
+      invariants:
+        - "all requirements must be addressed"
+        - "quality criteria must be met"
+      on_success: "SUCCESS"
+      on_failure: "KARMA"  # Iterate on design
+      max_loops: 2
+      state_var: "review_result"
+
+    SUCCESS:
+      description: "Design complete"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "design_complete"
+            data:
+              system: "{{ system_description }}"
+              architecture: "{{ design_artifacts.architecture }}"
+              technologies: "{{ design_artifacts.technologies }}"
+              plan: "{{ design_artifacts.implementation_plan }}"
+        - action: "record_parampara"
+          params:
+            action: "SYSTEM_DESIGN"
+            result: "SUCCESS"
+            artifacts: "{{ design_artifacts }}"
+
+    FAILURE:
+      description: "Design failed"
+      terminal: true
+      entry_actions:
+        - action: "emit_event"
+          params:
+            event: "design_failed"
+            data:
+              reason: "{{ failure_reason }}"
+              state: "{{ failed_state }}"
+              partial_design: "{{ design_artifacts }}"
+
+  # ===========================================================================
+  # TRANSITIONS
+  # ===========================================================================
+  transitions:
+    - from: "SHABDA"
+      to: "ARTHA"
+      condition: "requirements_captured"
+    - from: "ARTHA"
+      to: "PRATYAYA"
+      condition: "requirements_analyzed"
+    - from: "PRATYAYA"
+      to: "KARMA"
+      condition: "feasibility_confirmed"
+    - from: "PRATYAYA"
+      to: "FAILURE"
+      condition: "not_feasible"
+    - from: "KARMA"
+      to: "REVIEW"
+      condition: "design_generated"
+    - from: "REVIEW"
+      to: "SUCCESS"
+      condition: "review_passed"
+    - from: "REVIEW"
+      to: "KARMA"
+      condition: "review_failed AND loops < max_loops"
+    - from: "REVIEW"
+      to: "FAILURE"
+      condition: "review_failed AND loops >= max_loops"
+    - from: "*"
+      to: "FAILURE"
+      condition: "error_occurred"
+
+  # ===========================================================================
+  # INVARIANTS (Global Circuit Constraints)
+  # ===========================================================================
+  invariants:
+    - name: "requirements_before_design"
+      check: "KARMA cannot execute without ARTHA completion"
+    - name: "feasibility_confirmed"
+      check: "KARMA cannot execute without PRATYAYA pass"
+    - name: "complete_coverage"
+      check: "design must address all requirements"
+    - name: "justified_choices"
+      check: "all technology choices must have justification"
+
+  # ===========================================================================
+  # SEMANTIC GROUNDING (Maps to Kernel Syscalls)
+  # ===========================================================================
+  semantic_grounding:
+    syscall_type: "DISPATCH_TASK"
+    target_agent: "artisan"
+    intent_patterns:
+      - 'design\s+(?:a\s+)?(?:new\s+)?(?:system|architecture|solution)'
+      - 'architect\s+(?:a\s+)?(?:solution|system)'
+      - 'plan\s+(?:the\s+)?implementation'
+      - 'create\s+(?:an?\s+)?(?:architecture|design)\s+for'
+      - 'how\s+(?:should|would)\s+(?:I|we)\s+(?:build|design|architect)'
+    param_extraction:
+      system_description:
+        patterns:
+          - 'design\s+(?:a\s+)?(.+?)(?:\s+system|\s+architecture)?$'
+          - 'architect\s+(?:a\s+)?(.+)'
+          - 'build\s+(.+)'
+        required: true
+      scale:
+        patterns:
+          - '(\d+(?:,\d+)?)\s+users'
+          - '(small|medium|large|enterprise)\s+scale'
+        mapping:
+          small: "small"
+          medium: "medium"
+          large: "large"
+          enterprise: "enterprise"
+        default: "medium"
+      constraints:
+        patterns:
+          - 'constraints?[:\s]+(.+)'
+          - 'must\s+(?:be\s+)?(.+)'
+        required: false

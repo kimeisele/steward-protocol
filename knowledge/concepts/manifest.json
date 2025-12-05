@@ -1,0 +1,16 @@
+{
+  "name": "concepts",
+  "version": "1.0.0",
+  "type": "concept-module",
+  "description": "Semantic concept maps - SANKHYA analysis layer",
+  "files": {
+    "general": {
+      "path": "general.yaml",
+      "description": "Core concept mappings (actions, domains, entities, patterns)"
+    }
+  },
+  "domains": {
+    "path": "domains/",
+    "description": "Domain-specific concept extensions"
+  }
+}

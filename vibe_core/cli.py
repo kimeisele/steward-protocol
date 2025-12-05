@@ -882,8 +882,8 @@ class StewardCLI:
 
         try:
             # Import required components
-            from provider.universal_provider import UniversalProvider
             from vibe_core.boot_orchestrator import BootOrchestrator
+            from vibe_core.cartridges.system.envoy.provider import UniversalProvider
             from vibe_core.config import load_config
 
             # Load Phoenix Config

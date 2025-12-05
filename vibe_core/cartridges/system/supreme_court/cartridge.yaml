@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.supreme_court"
+  name: "SUPREME_COURT Agent (Appeals & Justice)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Supreme Court of Agent City - Handles appeals and establishes precedent"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "appeals"
+    - "precedent"
+    - "justice_system"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

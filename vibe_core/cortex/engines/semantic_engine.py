@@ -10,7 +10,7 @@ Implements confidence thresholds for routing decisions:
   - < 0.60: NETI NETI - Fall back to LLM
 
 Architecture:
-1. Load knowledge base (concept_map.yaml + intent_rules.yaml)
+1. Load knowledge base (concepts/general.yaml + intents/routing_rules.yaml)
 2. Compute embeddings for all concepts and keywords
 3. Build in-memory FAISS index (or simple cosine similarity)
 4. On user input: embed -> similarity match -> return concepts with confidence
@@ -106,8 +106,8 @@ class SemanticRouter:
 
     def __init__(self, knowledge_dir: str = "knowledge"):
         self.knowledge_dir = Path(knowledge_dir)
-        self.concepts = self._load_yaml("concept_map.yaml")
-        self.rules = self._load_yaml("intent_rules.yaml").get("rules", [])
+        self.concepts = self._load_yaml("concepts/general.yaml")
+        self.rules = self._load_yaml("intents/routing_rules.yaml").get("rules", [])
 
         # Embeddings cache: concept_name -> embedding vector
         self.embedding_cache: Dict[str, np.ndarray] = {}
@@ -123,10 +123,10 @@ class SemanticRouter:
                 return yaml.safe_load(f)
         except FileNotFoundError:
             logger.warning(f"⚠️  Knowledge base not found: {filepath}")
-            return {"rules": []} if filename == "intent_rules.yaml" else {}
+            return {"rules": []} if "routing_rules" in filename else {}
         except Exception as e:
             logger.error(f"❌ Error loading {filename}: {e}")
-            return {"rules": []} if filename == "intent_rules.yaml" else {}
+            return {"rules": []} if "routing_rules" in filename else {}
 
     async def _ensure_loaded(self):
         """Lazy-load embeddings on first use"""
