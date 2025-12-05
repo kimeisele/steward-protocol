@@ -1,0 +1,68 @@
+{#- AGENTS.md Template - SCRIBE Auto-generation -#}
+{#- Variables: timestamp, agents, system_count, citizen_count, total_tools, kernel_status -#}
+{% include 'header.jinja2' %}
+# AGENT CITY REGISTRY
+
+---
+
+## GOVERNANCE
+
+| Field | Value |
+|-------|-------|
+| **Constitution** | [CONSTITUTION.md](./CONSTITUTION.md) |
+| **Status** | Active & Enforced |
+| **Authority** | CIVIC (Registry Agent) |
+
+---
+
+## ACTIVE AGENTS
+
+{% for agent in agents %}
+### {{ agent.agent_name_pretty }}
+
+**Class:** `{{ agent.class_name }}`
+**Version:** `{{ agent.version }}`
+**Status:** OPERATIONAL
+
+**Description:**
+{{ agent.class_doc or "Autonomous agent in the Steward Protocol ecosystem." }}
+
+{% if agent.tools %}
+**Tools:**
+
+{% for tool in agent.tools %}
+- **{{ tool.name }}** (`{{ tool.file }}`){% if tool.description %} - {{ tool.description }}{% endif %}
+
+{% endfor %}
+{% else %}
+**Tools:** None discovered
+{% endif %}
+
+{% endfor %}
+---
+
+## SYSTEM SUMMARY
+
+| Metric | Value |
+|--------|-------|
+| **Total Agents** | {{ agents|length }} |
+| **System Agents (Devatas)** | {{ system_count }} |
+| **Citizen Agents** | {{ citizen_count }} |
+| **Total Tools** | {{ total_tools }} |
+
+---
+
+## NOTES
+
+This registry is **auto-generated** by SCRIBE using CIVIC's registry data.
+
+**To regenerate:**
+```bash
+python scripts/generate_docs.py
+```
+
+---
+
+**CIVIC AUTHORITY NOTICE:**
+This registry is maintained by The Bureaucrat. Any agent not listed here is not registered.
+Unregistered agents cannot obtain broadcast licenses. No exceptions.

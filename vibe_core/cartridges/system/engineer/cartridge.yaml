@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.engineer"
+  name: "ENGINEER Agent (Meta-Builder & Automation)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Meta-Builder Agent - Generates code, builds systems, automates workflows"
+
+agent:
+  domain: "ORCHESTRATION"
+  capabilities:
+    - "code_generation"
+    - "scaffolding"
+    - "automation"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

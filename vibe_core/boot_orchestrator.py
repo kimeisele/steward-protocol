@@ -32,7 +32,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.config import CityConfig
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.operator_adapter import (

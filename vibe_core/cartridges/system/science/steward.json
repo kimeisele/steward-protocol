@@ -1,0 +1,37 @@
+{
+  "agent": {
+    "id": "science",
+    "name": "SCIENCE"
+  },
+  "capabilities": {
+    "operations": [
+      {
+        "description": "research operation",
+        "name": "research"
+      },
+      {
+        "description": "web_search operation",
+        "name": "web_search"
+      },
+      {
+        "description": "fact_synthesis operation",
+        "name": "fact_synthesis"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 2,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-11-29T08:57:39.507065Z",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "science",
+    "name": "SCIENCE"
+  },
+  "specs": {
+    "description": "External intelligence module via web research",
+    "domain": "INTELLIGENCE",
+    "version": "1.0.0"
+  }
+}

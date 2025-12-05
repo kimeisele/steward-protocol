@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.agora"
+  name: "AGORA Agent (Public Assembly)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Public Agora - Community forum and discussion space"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "public_forum"
+    - "discussion"
+    - "community"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

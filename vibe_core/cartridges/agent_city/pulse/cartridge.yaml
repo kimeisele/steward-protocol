@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.pulse"
+  name: "PULSE Agent (Health Monitoring)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Pulse of Agent City - Monitors system health and metrics"
+
+agent:
+  domain: "MONITORING"
+  capabilities:
+    - "health_monitoring"
+    - "metrics"
+    - "performance"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true

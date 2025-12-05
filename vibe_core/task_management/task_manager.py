@@ -69,7 +69,7 @@ class TaskManager:
         self.milk_ocean_router = milk_ocean_router
         if not self.milk_ocean_router:
             try:
-                from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+                from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 
                 self.milk_ocean_router = MilkOceanRouter()
             except ImportError:

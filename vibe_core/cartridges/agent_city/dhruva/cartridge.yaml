@@ -1,0 +1,23 @@
+meta:
+  id: "agent.steward.dhruva"
+  name: "DHRUVA Agent (Data & Knowledge)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Knowledge Keeper - Manages data and knowledge base"
+
+agent:
+  domain: "KNOWLEDGE"
+  capabilities:
+    - "data_management"
+    - "knowledge_base"
+    - "information"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "standard"
+  monitoring:
+    enabled: true
