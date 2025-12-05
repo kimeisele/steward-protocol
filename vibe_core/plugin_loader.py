@@ -1,86 +1,246 @@
+"""
+Plugin Loader - Auto-discovery for Kernel Plugins.
+
+INHERITS FROM UnifiedLoader - The fraktal pattern!
+
+Specifics for Plugins:
+- Supports both NEW-style folders (manifest.json) and OLD-style .py files
+- Uses KernelPlugin as base class
+- Looks for *Plugin classes in plugin_main.py or module file
+- Returns sorted by priority
+"""
+
 import importlib
 import logging
-import pkgutil
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Optional, Tuple
 
-from .plugin_protocol import KernelPlugin
+from vibe_core.loaders import ItemMeta, LoaderRegistry, UnifiedLoader
+from vibe_core.plugin_protocol import KernelPlugin
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("PLUGIN.LOADER")
 
 
-class PluginLoader:
+# Type aliases (backward compat)
+PluginRegistry = Dict[str, KernelPlugin]
+PluginMetadata = Dict[str, ItemMeta]
+PluginMeta = ItemMeta
+
+
+class PluginLoader(UnifiedLoader):
     """
     Auto-discovery loader for Kernel Plugins.
+
+    Inherits from UnifiedLoader - VEDA-4 pattern.
+
+    Plugin-specific:
+    - Supports both new-style (folder + manifest.json) and old-style (single .py file)
+    - base_class is KernelPlugin
+    - Returns plugins sorted by priority
+
+    Usage:
+        # Discover all plugins
+        plugins, meta = PluginLoader.discover_and_load()
     """
+
+    # === UNIFIED LOADER CONFIG ===
+    item_type = "plugin"
+    scan_paths = [Path("vibe_core/plugins")]
+    manifest_filenames = ["manifest.json"]
+    entry_suffix = "_main.py"
+    base_class = KernelPlugin
+
+    # =========================================================================
+    # OVERRIDE: Discover and Load (with backward compat for old-style plugins)
+    # =========================================================================
+
+    @classmethod
+    def discover_and_load(
+        cls,
+        scan_paths: Optional[List[Path]] = None,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[PluginRegistry, PluginMetadata]:
+        """
+        Discover and load all plugins.
+
+        Supports BOTH:
+        - NEW-style: folders with manifest.json + plugin_main.py
+        - OLD-style: single .py files in plugins directory
+
+        Returns:
+            Tuple of (plugin_instances, metadata), sorted by priority
+        """
+        paths = scan_paths or cls.scan_paths
+        all_plugins: List[KernelPlugin] = []
+        metadata: PluginMetadata = {}
+
+        for base_path in paths:
+            if not base_path.exists():
+                logger.debug(f"[plugin] Scan path does not exist: {base_path}")
+                continue
+
+            logger.info(f"[plugin] Scanning {base_path}...")
+
+            # Process directories (NEW-style)
+            for item in base_path.iterdir():
+                if item.is_dir():
+                    # Skip hidden and __pycache__
+                    if item.name.startswith((".", "_")):
+                        continue
+
+                    # NEW-style: folder with manifest.json
+                    manifest_path = item / "manifest.json"
+                    if manifest_path.exists():
+                        meta = cls._process_item_directory(item, config)
+                        if meta and meta.loaded_successfully:
+                            instance = cls._create_instance(meta, config)
+                            if instance:
+                                all_plugins.append(instance)
+                                metadata[meta.item_id] = meta
+                                logger.info(f"  ✅ Loaded: {meta.item_id} (new-style)")
+                        elif meta:
+                            metadata[meta.item_id] = meta
+
+                elif item.is_file() and item.suffix == ".py" and not item.name.startswith("_"):
+                    # OLD-style: single .py file
+                    old_plugins, old_meta = cls._load_old_style_plugin(item, base_path)
+                    all_plugins.extend(old_plugins)
+                    metadata.update(old_meta)
+
+        # Sort by priority
+        sorted_plugins = sorted(all_plugins, key=lambda p: p.priority)
+
+        # Build registry
+        registry: PluginRegistry = {p.plugin_id: p for p in sorted_plugins}
+
+        logger.info(f"[plugin] Total plugins loaded: {len(registry)}")
+        return registry, metadata
+
+    @classmethod
+    def _load_old_style_plugin(
+        cls,
+        file_path: Path,
+        base_path: Path,
+    ) -> Tuple[List[KernelPlugin], PluginMetadata]:
+        """
+        Load an old-style plugin from a single .py file.
+
+        Backward compat for plugins like envoy_ui.py, settings_ui.py
+        """
+        plugins: List[KernelPlugin] = []
+        metadata: PluginMetadata = {}
+
+        try:
+            # Convert file path to module path
+            # e.g., vibe_core/plugins/envoy_ui.py -> vibe_core.plugins.envoy_ui
+            relative_path = file_path.relative_to(base_path.parent.parent)
+            module_name = str(relative_path.with_suffix("")).replace("/", ".")
+
+            module = importlib.import_module(module_name)
+
+            # Find KernelPlugin subclasses
+            for attr_name in dir(module):
+                attr = getattr(module, attr_name)
+                if isinstance(attr, type) and issubclass(attr, KernelPlugin) and attr is not KernelPlugin:
+                    try:
+                        instance = attr()
+                        plugins.append(instance)
+
+                        # Create metadata for old-style plugin
+                        meta = ItemMeta(
+                            item_id=instance.plugin_id,
+                            item_type="plugin",
+                            manifest={
+                                "id": instance.plugin_id,
+                                "type": "plugin",
+                                "priority": instance.priority,
+                            },
+                            manifest_path=file_path,  # Use .py file as "manifest"
+                            entry_path=file_path,
+                            entry_class=attr,
+                            loaded_successfully=True,
+                        )
+                        metadata[instance.plugin_id] = meta
+                        logger.info(f"  ✅ Loaded: {instance.plugin_id} (old-style)")
+
+                    except Exception as e:
+                        logger.error(f"   ❌ Failed to instantiate plugin {attr_name}: {e}")
+
+        except Exception as e:
+            logger.error(f"❌ Failed to load plugin module {file_path.name}: {e}")
+
+        return plugins, metadata
+
+    # =========================================================================
+    # OVERRIDES FOR PLUGIN-SPECIFIC BEHAVIOR
+    # =========================================================================
+
+    @classmethod
+    def _validate_manifest(cls, manifest: Dict[str, Any]) -> List[str]:
+        """
+        Plugin-specific manifest validation.
+
+        Checks for required plugin fields.
+        """
+        errors = []
+
+        # Must have id or name
+        if not manifest.get("id") and not manifest.get("name"):
+            errors.append("Manifest must have 'id' or 'name'")
+
+        # Priority must be 0-100
+        priority = manifest.get("priority", 50)
+        if not isinstance(priority, int) or priority < 0 or priority > 100:
+            errors.append("priority must be 0-100")
+
+        return errors
+
+    @classmethod
+    def _create_instance(
+        cls,
+        meta: ItemMeta,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Optional[KernelPlugin]:
+        """
+        Plugin-specific instantiation.
+
+        Validates instance is a KernelPlugin.
+        """
+        if not meta.entry_class:
+            return None
+
+        try:
+            # Try with config first
+            try:
+                instance = meta.entry_class(config=meta.config)
+            except TypeError:
+                instance = meta.entry_class()
+
+            # Validate it's a KernelPlugin
+            if not isinstance(instance, KernelPlugin):
+                logger.warning(f"{meta.entry_class.__name__} is not a KernelPlugin")
+                return None
+
+            return instance
+
+        except Exception as e:
+            logger.warning(f"Failed to instantiate {meta.item_id}: {e}")
+            return None
+
+    # =========================================================================
+    # BACKWARD COMPAT: Static discover method
+    # =========================================================================
 
     @staticmethod
     def discover(plugin_dir: str = "vibe_core/plugins") -> List[KernelPlugin]:
         """
-        Auto-discover and load all plugins from the specified directory.
+        Backward compatible discover method.
 
-        Args:
-            plugin_dir: Relative path to the plugins directory (default: "vibe_core/plugins")
-
-        Returns:
-            List of instantiated KernelPlugin objects, sorted by priority.
+        Returns list of plugins sorted by priority.
         """
-        plugins: List[KernelPlugin] = []
+        plugins, _ = PluginLoader.discover_and_load(scan_paths=[Path(plugin_dir)])
+        return list(plugins.values())
 
-        # Resolve absolute path
-        # Assuming plugin_dir is relative to the project root or current working directory
-        # We'll try to find it relative to this file's parent (vibe_core) first
-        base_path = Path(__file__).parent.parent
-        plugin_path = base_path / plugin_dir
 
-        if not plugin_path.exists():
-            # Fallback: try relative to CWD
-            plugin_path = Path(plugin_dir)
-            if not plugin_path.exists():
-                logger.warning(f"⚠️  Plugin directory not found: {plugin_path}")
-                return plugins
-
-        logger.info(f"🔌 Discovering plugins in: {plugin_path}")
-
-        # Ensure the directory is a python package (has __init__.py)
-        if not (plugin_path / "__init__.py").exists():
-            logger.warning(f"⚠️  Plugin directory missing __init__.py: {plugin_path}")
-            return plugins
-
-        # Convert file path to module path (e.g., vibe_core/plugins -> vibe_core.plugins)
-        # This assumes the directory structure matches the package structure
-        # We'll construct the package name based on the directory name relative to base
-        try:
-            relative_path = plugin_path.relative_to(base_path)
-            package_name = str(relative_path).replace("/", ".")
-        except ValueError:
-            # Fallback if not relative to base
-            package_name = plugin_dir.replace("/", ".")
-
-        for module_info in pkgutil.iter_modules([str(plugin_path)]):
-            try:
-                full_module_name = f"{package_name}.{module_info.name}"
-                module = importlib.import_module(full_module_name)
-
-                # Find KernelPlugin subclasses
-                for attr_name in dir(module):
-                    attr = getattr(module, attr_name)
-                    if isinstance(attr, type) and issubclass(attr, KernelPlugin) and attr is not KernelPlugin:
-                        # Instantiate and add
-                        try:
-                            plugin_instance = attr()
-                            plugins.append(plugin_instance)
-                            logger.debug(
-                                f"   ✅ Loaded plugin: {plugin_instance.plugin_id} (priority: {plugin_instance.priority})"
-                            )
-                        except Exception as e:
-                            logger.error(f"   ❌ Failed to instantiate plugin {attr_name}: {e}")
-
-            except Exception as e:
-                logger.error(f"❌ Failed to load plugin module {module_info.name}: {e}")
-
-        # Sort by priority (lower first)
-        sorted_plugins = sorted(plugins, key=lambda p: p.priority)
-
-        logger.info(f"🔌 Total plugins loaded: {len(sorted_plugins)}")
-        return sorted_plugins
+# Register with LoaderRegistry
+LoaderRegistry.register("plugin", PluginLoader)

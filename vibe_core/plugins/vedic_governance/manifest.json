@@ -1,0 +1,26 @@
+{
+    "type": "plugin",
+    "id": "vedic_governance",
+    "name": "Vedic Governance Plugin",
+    "version": "1.0.0",
+    "description": "Implements the Vedic governance model (Varna + Ashrama)",
+    "entry_point": "plugin_main.py",
+    "entry_class": "VedicGovernancePlugin",
+    "priority": 10,
+    "enabled": true,
+    "hooks": [
+        "on_boot",
+        "on_agent_registered",
+        "on_task_pre_assign",
+        "on_task_completed",
+        "on_shutdown"
+    ],
+    "dependencies": [],
+    "defaults": {},
+    "author": "STEWARD Protocol",
+    "tags": [
+        "governance",
+        "core",
+        "social"
+    ]
+}
