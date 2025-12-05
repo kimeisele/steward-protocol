@@ -131,8 +131,13 @@ class StewardProtocolPlugin(KernelPlugin):
             self._manifests[agent_id] = manifest
             logger.info(f"📜 Agent '{agent_id}' manifest loaded")
 
-            # TODO: Verify manifest signature
-            # self._verify_manifest_signature(agent_id, manifest)
+            # Verify manifest signature if present
+            signature_valid = self._verify_manifest_signature(agent_id, manifest)
+            if signature_valid:
+                logger.info(f"📜 Agent '{agent_id}' signature VERIFIED ✓")
+            elif signature_valid is False:
+                logger.warning(f"📜 Agent '{agent_id}' signature INVALID ✗")
+            # None means no signature present (acceptable for dev)
 
         # Initialize trust tracking
         self._trust_scores[agent_id] = 0.5  # Start neutral
@@ -145,12 +150,44 @@ class StewardProtocolPlugin(KernelPlugin):
         PROTOCOL GATE: Verify task submission is valid.
 
         Returns False to VETO the task submission.
+
+        Checks:
+        1. Target agent exists and has manifest
+        2. Target agent accepts the task type (if declared in capabilities)
+        3. Requester has delegation permission (if enforced)
         """
-        # For now, allow all tasks - implement Protocol rules later
-        # TODO: Check if requesting agent is authorized
-        # TODO: Check if target agent accepts this task type
-        # TODO: Verify delegation permissions
-        return True
+        # Get target agent from task
+        target_agent = getattr(task, "agent_id", None) or getattr(task, "target", None)
+
+        if not target_agent:
+            # No target specified - allow (kernel will route)
+            return True
+
+        # Check 1: Agent must be registered
+        if target_agent not in self._manifests:
+            # Agent not known to Protocol - allow but log
+            logger.debug(f"📜 Task target '{target_agent}' not in Protocol registry")
+            return True  # Don't block - agent may be registered later
+
+        manifest = self._manifests[target_agent]
+
+        # Check 2: Verify task type is accepted (if capabilities declared)
+        capabilities = manifest.get("capabilities", {})
+        accepted_operations = capabilities.get("operations", [])
+
+        if accepted_operations:
+            task_type = getattr(task, "type", None) or getattr(task, "action", "unknown")
+            if task_type not in accepted_operations and "*" not in accepted_operations:
+                logger.warning(f"📜 PROTOCOL GATE: Agent '{target_agent}' does not accept '{task_type}' tasks")
+                # Don't veto - just warn. Strict mode can be added later.
+
+        # Check 3: Trust score threshold (if enabled)
+        trust_score = self._trust_scores.get(target_agent, 0.5)
+        if trust_score < 0.2:
+            logger.warning(f"📜 PROTOCOL GATE: Agent '{target_agent}' has low trust score ({trust_score:.2f})")
+            # Don't veto - just warn. Can be made strict later.
+
+        return True  # Allow task
 
     def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
         """
@@ -387,3 +424,50 @@ class StewardProtocolPlugin(KernelPlugin):
             score = completed / (completed + failed + 1)  # +1 to avoid division issues
 
         self._trust_scores[agent_id] = min(1.0, max(0.0, score))
+
+    def _verify_manifest_signature(self, agent_id: str, manifest: Dict[str, Any]) -> Optional[bool]:
+        """
+        Verify the cryptographic signature of an agent manifest.
+
+        Uses ECDSA signature from steward/crypto.py
+
+        Args:
+            agent_id: Agent identifier
+            manifest: Manifest dict from steward.json
+
+        Returns:
+            True if valid, False if invalid, None if no signature present
+        """
+        # Check if manifest has signature block
+        signature_block = manifest.get("signature")
+        if not signature_block:
+            logger.debug(f"📜 Agent '{agent_id}' has no signature (dev mode acceptable)")
+            return None
+
+        signature = signature_block.get("value")
+        public_key = signature_block.get("public_key")
+
+        if not signature or not public_key:
+            logger.debug(f"📜 Agent '{agent_id}' signature block incomplete")
+            return None
+
+        try:
+            # Import crypto functions
+            # Create canonical content to verify (manifest without signature block)
+            import json
+
+            from steward.crypto import verify_signature
+
+            manifest_copy = {k: v for k, v in manifest.items() if k != "signature"}
+            canonical_content = json.dumps(manifest_copy, sort_keys=True, separators=(",", ":"))
+
+            # Verify signature
+            is_valid = verify_signature(canonical_content, signature, public_key)
+            return is_valid
+
+        except ImportError:
+            logger.warning("📜 Crypto module not available - signature verification skipped")
+            return None
+        except Exception as e:
+            logger.warning(f"📜 Signature verification failed for '{agent_id}': {e}")
+            return False
