@@ -34,7 +34,8 @@ class MarkdownUIManager:
         # Sub-components
         self.settings_sync = SettingsSync()
         self.envoy_sync = EnvoySync()
-        self.doc_renderer = DocRenderer()
+        # Use kernel.io for centralized file writes (atomic + audited)
+        self.doc_renderer = DocRenderer(io_service=kernel_ref.io)
 
         # Settings Executor (for side effects like RESTART/REFRESH)
         from .settings_executor import get_executor

@@ -365,7 +365,52 @@ This is the pattern all plugins should follow.
 
 ---
 
-## 8. Summary
+## 8. Migration Status
+
+> **Updated:** 2025-12-05 - Honest assessment of implementation progress
+
+### 8.1 Completed ✅
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `vibe_core/io_service.py` | ✅ DONE | Full implementation with audit trail |
+| `kernel.io` integration | ✅ DONE | Available as `kernel.io` |
+| Audit Trail (Ledger) | ✅ DONE | `IO_WRITE` events recorded to ledger |
+| `EphemeralUIPlugin` | ✅ DONE | Uses `kernel.io.write_document()` |
+| `GitHistoryPlugin` | ✅ DONE | Uses `kernel.io.write_document()` |
+| `DocRenderer` | ✅ DONE | Accepts `io_service` param, uses it for writes |
+| `MarkdownUIManager` | ✅ DONE | Passes `kernel.io` to DocRenderer |
+| `SettingsUIPlugin` | ✅ DONE | Initializes DocRenderer with `kernel.io` |
+| `EnvoyUIPlugin` | ✅ DONE | Initializes DocRenderer with `kernel.io` |
+| Kernel `_pulse()` | ✅ DONE | Uses `kernel.io.write_snapshot()` |
+
+### 8.2 NOT Migrated ❌
+
+These components still write files directly and need migration:
+
+| Component | File | Direct Writes |
+|-----------|------|---------------|
+| `scribe_tool.py` | `steward/system_agents/herald/tools/` | 4x `.write_text()` |
+| `manifesto.py` | `steward/system_agents/herald/` | 11x `f.write()` |
+| `identity_tool.py` | `steward/system_agents/herald/tools/` | 2x `f.write()` (keys) |
+| `memory.py` | `steward/system_agents/herald/core/` | 1x `f.write()` |
+| `agenda_tools.py` | `vibe_core/tools/` | 3x `.write_text()` |
+| `task_manager.py` | `vibe_core/task_management/` | 2x `.write_text()` |
+| `envoy_sync.py` | `vibe_core/` | 1x `.write_text()` |
+| `settings_sync.py` | `vibe_core/` | 1x `.write_text()` |
+| Various agent tools | `steward/system_agents/*/tools/` | Multiple |
+
+### 8.3 Enforcement Status
+
+| Enforcement | Status |
+|-------------|--------|
+| Lint Rule (ruff) | ❌ NOT IMPLEMENTED |
+| Architecture Test | ❌ NOT IMPLEMENTED |
+| Pre-commit Hook | ❌ NOT IMPLEMENTED |
+
+---
+
+## 9. Summary
 
 | Principle | Description |
 |-----------|-------------|
@@ -383,3 +428,6 @@ This is the pattern all plugins should follow.
 | Date | Author | Change |
 |------|--------|--------|
 | 2025-12-05 | Claude (Opus) | Initial architecture design |
+| 2025-12-05 | Claude (Opus) | Implemented audit trail (ledger recording) |
+| 2025-12-05 | Claude (Opus) | Migrated DocRenderer to use io_service |
+| 2025-12-05 | Claude (Opus) | Added honest migration status section |
