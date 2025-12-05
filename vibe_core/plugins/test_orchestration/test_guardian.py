@@ -281,7 +281,7 @@ class TestGuardian:
             return (False, error + "\n\nHuman approval required to proceed.")
         else:  # warn_only
             logger.warning(f"WARNING: {error}")
-            return (True, None)
+            return (False, error)
 
     def validate_all_tests(self, test_dir: str = "tests") -> Dict[str, Any]:
         """
