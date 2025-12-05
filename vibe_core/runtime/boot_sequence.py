@@ -169,12 +169,18 @@ Boot will resume once changes are committed or stashed.
 
     def _get_system_prompt(self, route) -> str:
         """
-        System prompt dynamically composed from STEWARD config.
+        System prompt composed from STEWARD config TEMPLATE.
 
-        Uses PromptContext resolvers (Layer 1.5/1.6) instead of hardcoded strings.
-        Source of truth: config/steward.yaml
+        NO HARDCODING - Template comes from config/steward.yaml
+        Variables resolved via PromptContext resolvers.
         """
-        # Resolve all steward context
+        # Load steward config from Phoenix
+        from vibe_core.phoenix.config import PhoenixConfig
+
+        phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+        steward_config = phoenix.steward
+
+        # Resolve all dynamic context values
         resolved = self.prompt_context.resolve(
             [
                 "user_context",
@@ -186,52 +192,8 @@ Boot will resume once changes are committed or stashed.
             ]
         )
 
-        # Build dynamic system prompt
-        return f"""⚡ STEWARD SYSTEM PROMPT
-
-You are STEWARD, the senior orchestration agent.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 BEHAVIOR RULES (Constitutional)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{resolved.get("behavior_rules", "[Rules unavailable]")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👤 USER CONTEXT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{resolved.get("user_context", "[User context unavailable]")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👥 TEAM CONTEXT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{resolved.get("team_context", "[Team context unavailable]")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🧠 COGNITIVE POLICY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{resolved.get("cognitive_policy", "[Cognitive policy unavailable]")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔧 KERNEL STATE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Status: {resolved.get("kernel_status", "unknown")}
-Agents: {resolved.get("kernel_agents_count", "0")}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 EXECUTION PROTOCOL
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. READ: Understand task completely
-2. PLAN: Break into steps
-3. EXECUTE: Run each step, verify
-4. TEST: Verify success criteria met
-5. COMMIT: `git add .` + clear message
-6. HANDOFF: Update .session_handoff.json
-
-Your work is only "done" when:
-• Code changes committed to git
-• .session_handoff.json updated
-• Next agent can pick up where you left off
-"""
+        # Use template from config with resolved context
+        return steward_config.resolve_template("system_prompt", resolved)
 
     def _check_git_sync(self) -> dict:
         """Check if repo is behind remote - graceful fallback if git fails"""
