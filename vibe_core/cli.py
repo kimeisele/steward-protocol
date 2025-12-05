@@ -55,7 +55,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 LINEAGE_DB = Path("/tmp/vibe_os/kernel/lineage.db")
 OPERATIONS_MD = PROJECT_ROOT / "OPERATIONS.md"
 KERNEL_PID_FILE = Path("/tmp/vibe_os/kernel/kernel.pid")
-MANIFESTS_DIR = PROJECT_ROOT / "steward/system_agents"
+MANIFESTS_DIR = PROJECT_ROOT / "vibe_core/cartridges/system"
 
 
 class StewardCLI:

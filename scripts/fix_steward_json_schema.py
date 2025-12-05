@@ -83,7 +83,7 @@ def convert_manifest(manifest_path: Path) -> bool:
 def main():
     """Convert all steward.json files in system_agents/"""
 
-    base_path = Path("steward/system_agents")
+    base_path = Path("vibe_core/cartridges/system")
 
     if not base_path.exists():
         print(f"❌ Path not found: {base_path}")

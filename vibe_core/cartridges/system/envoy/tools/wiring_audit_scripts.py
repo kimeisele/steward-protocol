@@ -117,7 +117,7 @@ class WiringAuditor:
                         "issue": "agent.kernel is None",
                         "severity": "CRITICAL",
                         "fix": "Ensure agent.set_kernel(kernel) is called in register_agent()",
-                        "file": f"steward/system_agents/{agent_id}/cartridge_main.py",
+                        "file": f"vibe_core/cartridges/system/{agent_id}/cartridge_main.py",
                     }
                 )
 
@@ -167,7 +167,7 @@ class WiringAuditor:
         expected_statuses = ["routing", "queued", "blocked", "delegated", "completed", "critical"]
 
         files_to_check = [
-            ("steward/system_agents/envoy/cartridge_main.py", expected_paths + ["routing", "queued", "blocked"]),
+            ("vibe_core/cartridges/system/envoy/cartridge_main.py", expected_paths + ["routing", "queued", "blocked"]),
             ("scripts/heartbeat.py", expected_statuses),
         ]
 
@@ -237,15 +237,15 @@ class WiringAuditor:
             # Abstract base classes (NotImplementedError is correct pattern)
             "vibe_core/specialists/base_specialist.py",
             "vibe_core/playbook/executor.py",
-            "steward/system_agents/scribe/tools/base.py",  # Abstract Tool base class
+            "vibe_core/cartridges/system/scribe/tools/base.py",  # Abstract Tool base class
             # NotImplementedError in strings/pattern lists (not real stubs)
-            "steward/system_agents/oracle/tools/introspection_tool.py",  # Line 328: string reference
-            "steward/system_agents/watchman/cartridge_main.py",  # Line 65: pattern list
+            "vibe_core/cartridges/system/oracle/tools/introspection_tool.py",  # Line 328: string reference
+            "vibe_core/cartridges/system/watchman/cartridge_main.py",  # Line 65: pattern list
             # Templates (TODOs expected)
             "starter-packs/",
             "engineer/templates/",
             # Example agents (not core system)
-            "agent_city/registry/",
+            "vibe_core/cartridges/agent_city/",
             # Audit tool itself
             "wiring_audit_scripts.py",
             # Test files

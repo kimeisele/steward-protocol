@@ -60,7 +60,7 @@ def migrate_herald_dependencies():
 
     print("\n✅ Migration complete!")
     print("📦 pyproject.toml now contains all Herald dependencies")
-    print("\n💡 Next step: Delete steward/system_agents/herald/requirements.txt")
+    print("\n💡 Next step: Delete vibe_core/cartridges/system/herald/requirements.txt")
 
 
 if __name__ == "__main__":

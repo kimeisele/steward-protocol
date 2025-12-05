@@ -585,14 +585,14 @@ class StewardProtocolPlugin(KernelPlugin):
         Load steward.json manifest for an agent.
 
         Searches in standard locations:
-        - steward/system_agents/{agent_id}/steward.json
-        - agent_city/registry/{agent_id}/steward.json
+        - vibe_core/cartridges/system/{agent_id}/steward.json
+        - vibe_core/cartridges/agent_city/{agent_id}/steward.json
         """
         import json
 
         search_paths = [
-            self._project_root / "steward" / "system_agents" / agent_id / "steward.json",
-            self._project_root / "agent_city" / "registry" / agent_id / "steward.json",
+            self._project_root / "vibe_core" / "cartridges" / "system" / agent_id / "steward.json",
+            self._project_root / "vibe_core" / "cartridges" / "agent_city" / agent_id / "steward.json",
         ]
 
         for path in search_paths:

@@ -195,14 +195,16 @@ class WatchmanCartridge(VibeAgent, OathMixin):
             # Fallback: scan known agent directories
             from pathlib import Path
 
-            agent_dirs = list(Path("steward/system_agents").iterdir()) + list(Path("agent_city/registry").iterdir())
+            agent_dirs = list(Path("vibe_core/cartridges/system").iterdir()) + list(
+                Path("vibe_core/cartridges/agent_city").iterdir()
+            )
             agents_to_scan = [d.name for d in agent_dirs if d.is_dir() and not d.name.startswith("_")]
 
         for agent_name in agents_to_scan:
             # Try multiple possible locations for cartridge
             possible_paths = [
-                Path(f"steward/system_agents/{agent_name}/cartridge_main.py"),
-                Path(f"agent_city/registry/{agent_name}/cartridge_main.py"),
+                Path(f"vibe_core/cartridges/system/{agent_name}/cartridge_main.py"),
+                Path(f"vibe_core/cartridges/agent_city/{agent_name}/cartridge_main.py"),
                 Path(f"{agent_name}/cartridge_main.py"),
             ]
             cartridge_path = next((p for p in possible_paths if p.exists()), None)
@@ -338,7 +340,7 @@ class WatchmanCartridge(VibeAgent, OathMixin):
         logger.info("🔬 WATCHMAN DEEP INSPECTION INITIATED (Phase 3.2)")
         logger.info("=" * 70)
 
-        system_agents_path = Path("steward/system_agents")
+        system_agents_path = Path("vibe_core/cartridges/system")
 
         if not system_agents_path.exists():
             logger.error(f"❌ Path not found: {system_agents_path}")
