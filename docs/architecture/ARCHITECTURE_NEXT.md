@@ -51,19 +51,39 @@
 | 🟢 **LOW** | **Git History** | `plugins/git_history.py` | `vibe_core/plugins/git_history/` | Analytics tool. |
 | 🟢 **LOW** | **UI Plugins** | `plugins/*_ui.py` | `vibe_core/plugins/*_ui/` | Interface sync. |
 
-### 3. ROLES & RESPONSIBILITIES
+### 3. ROLES & RESPONSIBILITIES (Parallel Flight)
 
-**Opus (The Builder):**
-- Execute the "Deadlock Breaker" fixes first.
-- Create the folder structures (`mkdir vibe_core/plugins/...`).
-- Move code and create `manifest.json` files.
-- **CRITICAL:** Ensure `plugin_main.py` has NO global side effects (imports only).
+**OPUS (Senior Steward - Fraktal Architecture):**
+- ✅ Deadlock Breaker - DONE
+- ✅ steward_protocol migrated - DONE
+- ✅ plugin_template created - DONE
+- ⏳ **CURRENT:** Fraktal deep work - UnifiedLoader für ALLE item types
+- ⏳ Phoenix Config fraktal machen
+- ⏳ Agent Loader alignment (steward.json → manifest.json)
 
-**Gemini (The Architect):**
-- Monitor `pytest` status.
-- Review `manifest.json` schemas.
-- Debug if "Deadlock" persists after fixes.
-- **Active Task:** I am watching the `tests/` folder.
+**GEMINI (Builder - Plugin Migration):**
+- [ ] **BUILD:** `test_mode/` - Migrate from test_mode.py
+- [ ] **BUILD:** `sarga_cycle/` - Migrate from sarga_cycle.py
+- [ ] **BUILD:** `vedic_governance/` - Migrate from vedic_governance.py
+- [ ] **BUILD:** `crypto/` - Extract from steward/crypto.py
+- [ ] **BUILD:** UI plugins (envoy_ui, settings_ui, ephemeral_ui, git_history)
+
+**Parallel Flight Pattern:**
+```
+OPUS (Deep Architecture)          GEMINI (Bulk Migration)
+─────────────────────────         ─────────────────────────
+UnifiedLoader → ALL types         test_mode/ ✓
+Phoenix fraktal                   sarga_cycle/ ✓
+Agent alignment                   vedic_governance/ ✓
+Schema validation                 crypto/ ✓
+Pre-commit integration            UI plugins/ ✓
+```
+
+**CRITICAL for Gemini:** Each plugin MUST have:
+1. `manifest.json` (use schema from `vibe_core/loaders/manifest_schema.json`)
+2. `plugin_main.py` (NO global side effects!)
+3. `__init__.py` (export the Plugin class)
+4. Copy from `plugin_template/` as starting point
 
 ---
 
