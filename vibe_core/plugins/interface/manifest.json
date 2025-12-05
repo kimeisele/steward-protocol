@@ -21,7 +21,8 @@
             "settings",
             "dashboard",
             "agents",
-            "citymap"
+            "citymap",
+            "ephemeral"
         ]
     },
     "author": "STEWARD Protocol",

@@ -352,3 +352,67 @@ class TestOrchestrationPlugin(KernelPlugin):
 
         lines.append("=" * 60)
         return "\n".join(lines)
+
+    # ========================================================================
+    # PYTEST INTEGRATION (Active Test Runner)
+    # ========================================================================
+
+    def run_pytest(self, markers: str = "", path: str = "tests", verbose: bool = False) -> Dict[str, Any]:
+        """
+        Run pytest suite programmatically.
+
+        Args:
+            markers: Pytest markers to filter (e.g., "integration", "not slow")
+            path: Path to test file or directory
+            verbose: Enable verbose output
+
+        Returns:
+            Dict containing exit code and summary
+        """
+        import sys
+        from io import StringIO
+
+        import pytest
+
+        logger.info(f"🧪 Running pytest suite: path={path}, markers='{markers}'")
+
+        # Capture output
+        capture = StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = capture
+
+        args = [path]
+        if markers:
+            args.extend(["-m", markers])
+        if verbose:
+            args.append("-v")
+        else:
+            args.append("-q")  # Quiet mode by default
+
+        try:
+            exit_code = pytest.main(args)
+        except Exception as e:
+            logger.error(f"Pytest execution failed: {e}")
+            exit_code = -1
+        finally:
+            sys.stdout = old_stdout
+
+        output = capture.getvalue()
+
+        # Parse simple summary from output (last line usually)
+        summary_line = ""
+        for line in output.splitlines():
+            if "passed" in line or "failed" in line or "error" in line:
+                summary_line = line
+
+        result = {"exit_code": int(exit_code), "output": output, "summary": summary_line, "success": exit_code == 0}
+
+        # Record to ledger
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="TEST_SUITE_RUN",
+                agent_id="TEST_ORCHESTRATION",
+                details={"markers": markers, "path": path, "exit_code": int(exit_code), "summary": summary_line},
+            )
+
+        return result

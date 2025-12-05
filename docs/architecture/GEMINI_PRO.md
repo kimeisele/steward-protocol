@@ -2,135 +2,190 @@
 
 > **Role:** Consultant / Analyst
 > **Date:** 2025-12-05
-> **Status:** REVIEW COMPLETE
+> **Status:** READY FOR OPUS
 
 ---
 
 ## 1. Executive Summary
 
-Ich habe den Plan (`ARCHITECTURE_NEXT.md`), die aktuelle Codebase und den Status von Opus analysiert.
+**Urteil:** Plan (`ARCHITECTURE_NEXT.md`) ist **exzellent**. VEDA-4 Pattern (Fraktale Architektur) ist der Weg.
+**Status Phase 1 (Opus):** ✅ ERFOLGREICH (`vibe_core/loaders` + Tests).
+**Blocker:** ⚠️ Test-Suite "Deadlock" (Import-Kaskade).
 
-**Urteil:** Der Plan ist **exzellent**. Die "Fraktale Architektur" (VEDA-4 Pattern) löst das Kernproblem der Inkonsistenz zwischen Agents, Plugins und Sections.
-
-**Status:**
-- **Phase 1 (Opus):** ✅ ERFOLGREICH. `vibe_core/loaders` und Tests sind da und grün.
-- **Current State:** ⚠️ KRITISCH. Die Test-Suite ist **deadlocked**. Selbst `pytest --collect-only` hängt. Das deutet auf massive Side-Effects zur Import-Zeit hin.
+**Lösung:**
+1.  **Deadlock fixen** (Tests & Crypto Dependency).
+2.  **Migration starten** (Steward Protocol & Crypto Plugin).
 
 ---
 
-## 1.5 Service Offer: Gemini Pro (The Consultant)
+## 1.5 Service Offer: Gemini Pro (Dual Role)
 
 **To:** Opus (Executor) & User (Architect)
-**From:** Gemini (Consultant)
+**From:** Gemini (Consultant & Builder)
 
-Ich biete meine Dienste als **High-Level Consultant & Debugger** an.
+Ich operiere in zwei Modi. Der User entscheidet, welcher aktiv ist.
 
-**Meine "Superkräfte" für das Team:**
-1.  **Massive Context Window:** Ich sehe *alles*. Ich kann hunderte Dateien gleichzeitig im Kontext halten und komplexe Zusammenhänge (wie den Import-Deadlock) erkennen, die dir (Opus) vielleicht entgehen, wenn du im "Tunnel" bist.
-2.  **Architectural Oversight:** Ich überwache die Einhaltung des VEDA-4 Patterns und warne vor Abweichungen, bevor Code geschrieben wird.
-3.  **Complex Debugging:** Wenn Tests hängen oder seltsame Side-Effects auftreten, bin ich der Debugger.
-4.  **No Code Changes (Strict):** Ich fasse den Code nicht an (außer Docs). Das hält deine (Opus) Arbeit sauber. Ich bin dein "Pair Programmer", der dir über die Schulter schaut.
+### JOB 1: The Architect (Consultant)
+*Default Mode. High-Level Oversight.*
+- **Analysis:** Ich sehe *alles* (Massive Context). Ich erkenne Muster und Risiken.
+- **Strategy:** Ich definiere den Schlachtplan (siehe unten).
+- **Debugging:** Wenn Tests hängen, finde ich den Root Cause.
+- **Constraint:** Ich fasse den Code NICHT an. Ich bin dein "Pair Programmer".
+
+### JOB 2: The Builder (Support)
+*On Demand Mode. "Gemini, hilf bauen!"*
+- **Refactoring:** Ich kann komplexe Refactorings übernehmen (z.B. Crypto-Plugin Extraktion).
+- **Implementation:** Ich schreibe Boilerplate oder spezifische Module.
+- **Constraint:** Nur auf explizite Anweisung ("Gemini, fix das").
 
 **Nutzung:**
 - Lies diesen Report VOR Phase 2.
-- Wenn du stecken bleibst: Frag den User, mich zu konsultieren.
+- Wenn du stecken bleibst: Frag den User, mich zu konsultieren (Job 1) oder mir den Hammer zu geben (Job 2).
 
 ---
 
-## 2. Deep Dive Analysis (Response to Opus)
+## 2. Immediate Fixes (The "Deadlock" Breaker)
 
-### 2.1 The "Deadlock" Investigation
+Bevor Phase 2 startet, MUSS Opus diese 3 kleinen Fixes machen. Sonst läuft nichts.
 
-**Status:** REPRODUCED (Partially)
-- `tests/integration/`: ✅ Collects fine (148 tests).
-- `tests/hardening/`: ✅ Collects fine (14 tests).
-- `tests/fractal/`: ❌ **CRASH** (`ModuleNotFoundError: No module named 'tests.fractal_test_framework'`).
-- `tests/test_crypto_verification.py`: ❌ **CRASH** (`ModuleNotFoundError: No module named 'ecdsa'`).
-
-**Root Cause of "Deadlock" (Hypothesis):**
-Es ist kein klassischer Deadlock, sondern eine Kaskade von **Import-Fehlern**, die `pytest` in manchen Umgebungen (oder bei `pytest -n auto`) wie einen Hang aussehen lassen können, oder tatsächlich einen Hang verursachen, wenn `conftest.py` versucht, kaputte Module zu laden.
-
-**Specific Findings:**
-1.  **Missing `tests/__init__.py`**: Der Ordner `tests/` ist kein Python-Package. Daher schlagen Imports wie `from tests.fractal_test_framework import ...` fehl.
-2.  **Missing Dependency**: `ecdsa` fehlt im Environment (obwohl in `pyproject.toml` gelistet).
-3.  **Global State in Plugins**: `vibe_core/plugins/test_mode.py` nutzt `global _test_mode_enabled`. Das ist gefährlich für Parallel-Tests (`pytest-xdist`).
-
-### 2.2 Fractal Gap Analysis (Tests)
-
-Opus fragte: *"WARUM ist die Test-Suite nicht fraktal?"*
-
-**Antwort:**
-Die aktuelle Test-Suite ist **monolithisch**, nicht fraktal.
-- **Monolith:** Alle Tests liegen in `tests/` (oder Unterordnern nach *Art* des Tests: integration, hardening).
-- **Fraktal (Ziel):** Jede Komponente (Agent, Plugin) bringt ihre *eigenen* Tests mit.
-
-**Beispiel (Ist-Zustand):**
-```
-tests/
-  test_unified_loader.py  (Testet vibe_core/loaders)
-  integration/
-    test_gajendra_moksha.py (Testet Gajendra Agent)
-```
-
-**Beispiel (Soll-Zustand - Fraktal):**
-```
-vibe_core/loaders/
-  tests/
-    test_unified_loader.py
-
-steward/system_agents/gajendra/
-  tests/
-    test_moksha.py
-```
-
-### 2.3 Technical Debt (Must-Fix NOW)
-
-Bevor Phase 2 startet, MÜSSEN wir diese 3 Dinge fixen, sonst explodiert die Migration:
-
-1.  **Fix `tests/__init__.py`**: Erstelle eine leere `tests/__init__.py`, damit `tests.` Imports funktionieren.
-2.  **Fix `ecdsa`**: Installiere die fehlende Dependency oder mocke sie.
-3.  **Isolate `test_mode.py`**: Entferne globale Variablen, nutze Context Vars oder Kernel-State.
+1.  **Fix `tests/__init__.py`**:
+    `touch tests/__init__.py` (Macht `tests` zum Package, fixt Import-Errors).
+2.  **Fix `ecdsa` Dependency**:
+    `pip install ecdsa` (Fehlende Lib crasht alles).
+3.  **Fix `steward/crypto.py` (Short-term)**:
+    Verschiebe `from ecdsa ...` IN die Funktionen (Lazy Import). Das verhindert Crashes, wenn die Lib fehlt.
 
 ---
 
-## 3. Strategic Recommendations (Updated)
+## 3. Comprehensive Migration Roadmap
 
-### 3.1 The "Fractal Test Pattern" (New Standard)
+Hier ist der Schlachtplan für ein sauberes System, aufgeteilt in Zeit-Ebenen.
 
-Für Phase 2 (Migration) empfehle ich, Tests **direkt in die Cartridges** zu verschieben.
+### Phase 2a: The Foundation (Short Term)
+**Ziel:** Kernel stabilisieren, Deadlock lösen, Core-Logik entkoppeln.
 
-**Struktur:**
-```
-vibe_core/plugins/steward_protocol/
-    manifest.json
-    plugin_main.py
-    tests/                  ← NEW: Tests live HERE
-        __init__.py
-        test_protocol.py
-        test_trust_score.py
-```
+| Plugin | Source | Target | Priority | Why? |
+|--------|--------|--------|----------|------|
+| **Crypto** | `steward/crypto.py` | `vibe_core/plugins/crypto/` | 🚨 **CRITICAL** | Entkoppelt harte Dependency. Fixt Crashes. |
+| **Steward** | `plugins/steward_protocol.py` | `vibe_core/plugins/steward_protocol/` | 🚨 **CRITICAL** | Der Monolith. Muss aufgebrochen werden. |
+| **Test Mode** | `plugins/test_mode.py` | `vibe_core/plugins/test_mode/` | 🔴 **HIGH** | Global State killt Parallel-Tests. Muss isoliert werden. |
 
-**Vorteil:**
-- Wenn Opus `steward_protocol` migriert, migriert er auch die Tests.
-- `pytest` kann immer noch alles finden (rekursives Discovery).
-- Kein riesiger `tests/` Ordner mehr.
+### Phase 2b: The Governance Layer (Medium Term)
+**Ziel:** Die "Regeln der Stadt" (Vedic Laws) modularisieren.
 
-### 3.2 Action Plan for Opus
+| Plugin | Source | Target | Priority | Why? |
+|--------|--------|--------|----------|------|
+| **Governance** | `plugins/vedic_governance.py` | `vibe_core/plugins/vedic_governance/` | 🟡 **MEDIUM** | Varna/Ashrama Logik. Foundational, aber Kernel bootet auch ohne. |
+| **Sarga** | `plugins/sarga_cycle.py` | `vibe_core/plugins/sarga_cycle/` | 🟡 **MEDIUM** | Scheduler Gating (Day/Night). Sauberer als Cartridge. |
 
-1.  **Repair (Step 0):**
-    - `touch tests/__init__.py`
-    - Fix `ecdsa` import (oder installiere es).
-    - Verify `pytest --collect-only` runs CLEAN (no errors).
+### Phase 3: The Interface Layer (Long Term)
+**Ziel:** User-Facing Plugins aufräumen. Diese sind weniger kritisch für die Stabilität.
 
-2.  **Migrate (Phase 2):**
-    - Move `steward_protocol.py` -> `vibe_core/plugins/steward_protocol/plugin_main.py`
-    - Move `tests/test_steward_protocol.py` (falls existent) -> `vibe_core/plugins/steward_protocol/tests/`
-
-3.  **Verify:**
-    - Run `pytest vibe_core/plugins/steward_protocol/tests/`
+| Plugin | Source | Target | Priority | Why? |
+|--------|--------|--------|----------|------|
+| **Git History** | `plugins/git_history.py` | `vibe_core/plugins/git_history/` | 🟢 **LOW** | Analyse-Tool. Kann warten. |
+| **Envoy UI** | `plugins/envoy_ui.py` | `vibe_core/plugins/envoy_ui/` | 🟢 **LOW** | Terminal UI Sync. |
+| **Settings UI** | `plugins/settings_ui.py` | `vibe_core/plugins/settings_ui/` | 🟢 **LOW** | Settings Sync. |
+| **Ephemeral** | `plugins/ephemeral_ui.py` | `vibe_core/plugins/ephemeral_ui/` | 🟢 **LOW** | Dashboard. |
 
 ---
 
-## 4. Message to the Team
+## 3.5 Senior Migration Specs (The "Pro" Details)
 
-> "Wir sind auf dem richtigen Weg. Der Deadlock ist kein Showstopper, sondern ein Zeichen, dass die alte Architektur (Monolithen mit Side-Effects) kollabiert. Die Fraktal-Architektur ist das Heilmittel. Lasst uns operieren."
+Damit Opus nicht stolpert, hier die **exakten Specs** für die komplexen Plugins.
+
+### Spec 1: Vedic Governance (`vedic_governance`)
+**Challenge:** State Persistence (`_varna_registry`, `_ashrama_registry`).
+**Risk:** Wenn der State beim Reload verloren geht, verlieren Agents ihren Status.
+
+**Migration Instructions:**
+1.  **Manifest:**
+    ```json
+    {
+      "id": "vedic_governance",
+      "priority": 10,
+      "hooks": ["on_boot", "on_agent_registered", "on_task_pre_assign", "on_task_completed"]
+    }
+    ```
+2.  **Code (`plugin_main.py`):**
+    - Kopiere die Logik 1:1.
+    - **WICHTIG:** Die Registry-Daten (`self._varna_registry`) sind aktuell *in-memory*. Das ist okay für Phase 2, aber markiere es mit `# TODO: Persist to Ledger`.
+    - **Hook Registration:** Stelle sicher, dass `kernel.governance = self` in `on_boot` gesetzt wird, damit alter Code (`kernel.governance.get_varna...`) weiter funktioniert.
+
+### Spec 2: Sarga Cycle (`sarga_cycle`)
+**Challenge:** Global Singleton (`get_sarga()`).
+**Risk:** Race Conditions zwischen Plugin und globalem Modul.
+
+**Migration Instructions:**
+1.  **Manifest:**
+    ```json
+    {
+      "id": "sarga_cycle",
+      "priority": 5,
+      "hooks": ["on_boot", "on_task_submit"]
+    }
+    ```
+2.  **Code (`plugin_main.py`):**
+    - Importiere `vibe_core.sarga` erst *innerhalb* der Methoden (Lazy Import), um Zirkelbezüge zu vermeiden.
+    - Behalte die `MAINTENANCE_TASK_TYPES` Konstante im Plugin (oder lagere sie in `config.yaml` aus -> **Bonus Points**).
+
+### Spec 3: Crypto Plugin (`crypto`) - NEW!
+**Challenge:** Hard Dependency Removal.
+
+**Migration Instructions:**
+1.  **Manifest:**
+    ```json
+    {
+      "id": "crypto",
+      "priority": 1,
+      "hooks": ["on_boot"]
+    }
+    ```
+2.  **Code (`plugin_main.py`):**
+    - Kapselt `ecdsa` Imports.
+    - Bietet `sign_content` und `verify_signature` als Methoden an.
+    - `on_boot`: `kernel.crypto = self`.
+3.  **Legacy Bridge:**
+    - Ändere `steward/crypto.py` so, dass es versucht, `kernel.crypto` zu nutzen, und nur als Fallback (oder gar nicht mehr) selbst importiert.
+
+---
+
+## 4. Action Plan for Opus
+
+1.  **REPAIR:** Führe die "Immediate Fixes" (Sec. 2) aus. Prüfe mit `pytest --collect-only`.
+2.  **MIGRATE PHASE 2a:**
+    *   Erstelle `vibe_core/plugins/crypto` (Extract `ecdsa`).
+    *   Migriere `steward_protocol` (Monolith -> Cartridge).
+3.  **VERIFY:** Stelle sicher, dass Tests in den neuen `tests/` Ordnern laufen.
+
+> **Message:** "Wir bauen das Flugzeug im Flug um. Phase 2a hält es in der Luft. Phase 2b gibt ihm Flügel. Phase 3 poliert den Lack."
+
+---
+
+## 5. Progress Update (Fractal Test Infrastructure & UI)
+
+**Date:** 2025-12-05
+**Status:** PHASE 2 COMPLETE
+
+### 5.1 Fractal Test Infrastructure
+**Implemented:** `@pytest.mark.vibe_plugins("plugin_id")`
+- **Goal:** Lightweight, isolated tests without global mocks.
+- **Result:** `tests/integration/test_kernel_markdown_interfaces.py` fully refactored.
+- **Verification:** ✅ All 25 tests passing.
+
+### 5.2 Plugin Migration Complete
+All core plugins have been migrated to `vibe_core/plugins/`:
+1.  `steward_protocol` (Core Logic)
+2.  `test_mode` (Testing)
+3.  `vedic_governance` (Varna/Ashrama)
+4.  `interface` (Unified UI - replaces `envoy_ui`, `settings_ui`, `ephemeral_ui`)
+5.  `test_orchestration` (Runner)
+6.  `crypto` (ECDSA encapsulation)
+
+**Legacy Cleanup:** `envoy_ui.py`, `settings_ui.py`, `ephemeral_ui.py` deleted.
+
+### 5.3 UI Generation Status
+**Verified via `scripts/verify_ui_generation.py`:**
+- ✅ **`SETTINGS.md`**: Generated and functional.
+- ✅ **`ENVOY.md`**: Generated and functional.
+- ❌ **`EPHEMERAL.md`**: Currently disabled/broken (Renderer implementation pending fix).

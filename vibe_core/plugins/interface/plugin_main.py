@@ -13,8 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 from vibe_core.plugin_protocol import KernelPlugin
-
-from .renderers.base import BaseRenderer
+from vibe_core.plugins.interface.renderers.base import BaseRenderer
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -78,6 +77,8 @@ class InterfacePlugin(KernelPlugin):
         if not renderers_path.exists():
             logger.warning(f"Renderers directory not found: {renderers_path}")
             return
+
+        print(f"DEBUG: Enabled views: {self._enabled_views}")
 
         # Iterate over modules in renderers/
         for _, name, _ in pkgutil.iter_modules([str(renderers_path)]):

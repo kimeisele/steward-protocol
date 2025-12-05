@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "steward",
+  "name": "STEWARD Protocol Configuration",
+  "version": "1.0.0",
+  "description": "STEWARD Protocol settings - trust, attestation, verification",
+
+  "entry_point": "section_main.py",
+  "entry_class": "StewardConfig",
+
+  "priority": 5,
+
+  "config_file": "config/steward.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "steward", "protocol", "trust"]
+}
