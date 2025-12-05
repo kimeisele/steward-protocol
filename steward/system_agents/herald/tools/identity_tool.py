@@ -7,6 +7,11 @@ Integrates HERALD with the Steward Protocol for cryptographic integrity.
 Fallback: If Steward Protocol is unavailable, uses native HMAC-SHA256 signing.
 
 This tool implements the Tool Protocol for kernel-managed execution.
+
+SECURITY NOTE: Private key writes intentionally bypass the I/O Service.
+              Key material should NOT be logged in the audit trail.
+              Direct writes with restrictive permissions (0o600) are used instead.
+              See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
 import hashlib
