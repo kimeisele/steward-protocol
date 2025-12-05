@@ -31,7 +31,7 @@ import yaml
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from steward.system_agents.envoy.blueprint_generator import (
+from vibe_core.cartridges.system.envoy.blueprint_generator import (
     BlueprintGenerator,
     CompilationResult,
 )

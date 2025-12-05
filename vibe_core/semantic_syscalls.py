@@ -268,7 +268,7 @@ class SemanticSyscallExecutor:
 
         try:
             # Step 1: Generate agent code using Engineer
-            from steward.system_agents.engineer.tools.builder_tool import BuilderTool
+            from vibe_core.cartridges.system.engineer.tools.builder_tool import BuilderTool
 
             builder = BuilderTool()
             code = builder.generate_agent_code(role, mission)
