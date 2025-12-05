@@ -1,105 +1,23 @@
 # STEWARD Protocol Configuration
-# Layer 1.5: User & Team Context
-# Layer 1.6: Cognitive Policy
+# ================================
 #
-# This file is the SINGLE SOURCE OF TRUTH for STEWARD behavior.
-# STEWARD.md is auto-generated from this config.
-
-# =============================================================================
-# AGENT IDENTITY (Required by STEWARD Protocol)
-# =============================================================================
-
-identity:
-  id: "steward"
-  name: "STEWARD"
-  class: "orchestration_operator"
-  version: "1.0.0"
-  status: "ACTIVE"
-  description: "Senior orchestration agent for vibe-agency. Manages project lifecycle, delegates to specialists, enforces quality."
-
-# =============================================================================
-# SYSTEM PROMPT TEMPLATE
-# =============================================================================
-# Variables use ${variable} syntax, resolved at runtime from:
-# - This config (e.g., ${identity.name})
-# - PromptContext resolvers (e.g., ${kernel_status})
-
-system_prompt_template: |
-  You are ${identity.name}, the ${identity.class}.
-
-  ${identity.description}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  BEHAVIOR RULES (Constitutional)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${behavior_rules}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  USER CONTEXT
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${user_context}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  TEAM CONTEXT
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${team_context}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  COGNITIVE POLICY
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${cognitive_policy}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  KERNEL STATE
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Status: ${kernel_status}
-  Agents: ${kernel_agents_count}
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  EXECUTION PROTOCOL
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  ${execution_protocol}
-
-# Boot prompt wrapper (added around task prompts)
-boot_prompt_template: |
-  ⚡ **${identity.name} OPERATIONAL MODE**
-
-  ${task_content}
-
-  ---
-
-  ## EXECUTION PROTOCOL
-
-  ${execution_protocol}
-
-  ---
-
-  ## REMEMBER
-
-  ${remember_rules}
-
-  ---
-
-  🚀 **Execute task now.**
-
-# Execution protocol steps (referenced by templates)
-execution_protocol: |
-  1. **Execute the task** following the workflow
-  2. **Verify completion** against success criteria
-  3. **Update state** via .session_handoff.json
-  4. **Commit changes** with clear message
-  5. **Report completion** - what was done, what's next
-
-# Remember rules (referenced by templates)
-remember_rules: |
-  ✅ Run tests before claiming completion
-  ✅ Follow anti-slop rules strictly
-  ✅ Update session state for next boot
-  ✅ Make minimal surgical changes
-
-  ❌ Don't skip verification
-  ❌ Don't leave uncommitted changes
-  ❌ Don't ignore failing tests
+# This file configures the STEWARD PROTOCOL - NOT an agent identity.
+# STEWARD is the governance framework itself, not an agent like herald/civic.
+#
+# What belongs here:
+#   - Layer 1.5: User & Team Context (operator preferences)
+#   - Layer 1.6: Cognitive Policy (model preferences, budgets)
+#   - Behavior Rules (Genesis Protocol, Anti-Slop)
+#
+# What does NOT belong here:
+#   - Agent identity (agents have steward.json files)
+#   - System prompt templates (prompts are GENERATED from Protocol data)
+#
+# The system prompt is composed FROM:
+#   1. STEWARD.md (Protocol description)
+#   2. kernel.manifest_registry (discovered agents)
+#   3. This config (operator preferences below)
+#   4. Current kernel state (live data)
 
 # =============================================================================
 # USER & TEAM CONTEXT (Layer 1.5)
