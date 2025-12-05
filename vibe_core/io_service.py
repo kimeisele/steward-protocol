@@ -330,9 +330,7 @@ class KernelIOService:
 
         return "\n".join(section_lines)
 
-    def _restore_preserved_sections(
-        self, content: str, preserved: Dict[str, str]
-    ) -> str:
+    def _restore_preserved_sections(self, content: str, preserved: Dict[str, str]) -> str:
         """Restore preserved sections into new content."""
         for key, marker in self._preserve_patterns.items():
             if key in preserved and preserved[key].strip():
