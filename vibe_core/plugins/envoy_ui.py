@@ -103,8 +103,10 @@ class EnvoyUIPlugin(KernelPlugin):
         for agent_id, agent in kernel.agent_registry.items():
             try:
                 agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                if agent_id in kernel._paused_agents:
-                    agent_status["status"] = "PAUSED"
+                # Check paused via governance plugin
+                if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
+                    if kernel.governance.is_agent_paused(agent_id):
+                        agent_status["status"] = "PAUSED"
                 snapshot["agents"][agent_id] = agent_status
             except Exception:
                 snapshot["agents"][agent_id] = {"error": "Failed to get status"}

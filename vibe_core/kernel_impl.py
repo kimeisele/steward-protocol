@@ -18,16 +18,16 @@ import logging
 from collections import deque
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from steward.system_agents.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
 
-from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
-
-# Phase B: Vedic Governance (Varna + Ashrama)
-from steward.varna import Varna, categorize_agent_by_function, get_varna_description
+# Vedic Governance types (used for backward-compatible type hints)
+# Actual governance logic is in vibe_core/plugins/vedic_governance.py
+from steward.ashrama import Ashrama, AshramaTransition
+from steward.varna import Varna
 
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
 
@@ -171,6 +171,11 @@ class InMemoryScheduler(VibeScheduler):
             "completed": len(self.completed),
         }
 
+    def requeue_task(self, task: Task) -> None:
+        """Re-queue a deferred task (bypasses Sarga validation)."""
+        self.queue.append(task)
+        logger.debug(f"📨 Task re-queued: {task.task_id} (deferred)")
+
 
 class InMemoryManifestRegistry(ManifestRegistry):
     """Agent Manifest Registry - Identity declarations"""
@@ -250,7 +255,6 @@ class RealVibeKernel(VibeKernel):
 
         # Load immune system (Auditor)
         self._auditor = None
-        self._paused_agents: Set[str] = set()
         if AUDITOR_AVAILABLE:
             self._auditor = get_judge()
             logger.info("🛡️  Immune system loaded (Auditor attached)")
@@ -283,12 +287,11 @@ class RealVibeKernel(VibeKernel):
         self._data_store: Dict[str, Dict[str, Any]] = {}
         logger.info("📡 Data Exchange Store initialized (Phase 4: Wiring)")
 
-        # Phase B: Vedic Governance (Varna + Ashrama)
-        # Varna = Agent classification (what kind of being)
-        # Ashrama = Lifecycle stage (what stage of life)
-        self._varna_registry: Dict[str, Varna] = {}
-        self._ashrama_registry: Dict[str, AshramaTransition] = {}
-        logger.info("🕉️  Vedic Governance initialized (Varna + Ashrama)")
+        # GOVERNANCE PLUGIN SLOT
+        # Governance is handled by plugins (e.g., VedicGovernancePlugin)
+        # The plugin sets kernel.governance = self on boot
+        # This keeps the kernel CLEAN and governance SWAPPABLE
+        self.governance: Optional[Any] = None
 
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
@@ -847,21 +850,10 @@ class RealVibeKernel(VibeKernel):
         self._capability_registry.register_agent(agent.agent_id, agent_caps)
         logger.debug(f"🔐 Agent '{agent.agent_id}' capabilities registered: {agent_caps}")
 
-        # PHASE B: VEDIC GOVERNANCE - Assign Varna and Ashrama
-        # Varna = Classification (what kind of being is this agent)
-        varna = categorize_agent_by_function(agent.agent_id)
-        self._varna_registry[agent.agent_id] = varna
-
-        # Ashrama = Lifecycle stage (all agents start as students)
-        ashrama = AshramaTransition(agent.agent_id)
-        self._ashrama_registry[agent.agent_id] = ashrama
-
-        varna_desc = get_varna_description(varna)
-        logger.info(
-            f"🕉️  Agent '{agent.agent_id}' classified: "
-            f"Varna={varna.value} ({varna_desc.get('name', 'Unknown')}), "
-            f"Ashrama={ashrama.current_ashrama.value}"
-        )
+        # GOVERNANCE HOOK: Notify plugins about new agent
+        # Plugins (e.g., VedicGovernancePlugin) handle classification/lifecycle
+        for plugin in self._plugins:
+            plugin.on_agent_registered(self, agent.agent_id)
 
         # STEP 4.6: INJECT KERNEL REFERENCE (Legacy Pattern)
         # Many agents use self.kernel directly. Keep backward compatibility.
@@ -1044,12 +1036,14 @@ class RealVibeKernel(VibeKernel):
             self._ledger.record_failure(task, error)
             return
 
-        # Check if agent is paused
-        if task.agent_id in self._paused_agents:
-            logger.info(f"⏸️  Agent '{task.agent_id}' is PAUSED - task deferred")
-            # Re-queue the task for later
-            self._scheduler.add_task(task)
-            return
+        # GOVERNANCE HOOK: Ask plugins if task can be assigned
+        # Any plugin returning False will VETO the task
+        for plugin in self._plugins:
+            if not plugin.on_task_pre_assign(self, task.agent_id, task):
+                logger.info(f"🚫 Task vetoed by plugin '{plugin.plugin_id}' for agent '{task.agent_id}'")
+                # Re-queue the task for later (bypasses Sarga validation)
+                self._scheduler.requeue_task(task)
+                return
 
         try:
             # Record start
@@ -1296,91 +1290,45 @@ class RealVibeKernel(VibeKernel):
         return self._manifest_registry.lookup(agent_id)
 
     # =========================================================================
-    # PHASE B: VEDIC GOVERNANCE (Varna + Ashrama)
+    # GOVERNANCE API (Delegates to governance plugin for backward compatibility)
     # =========================================================================
 
     def get_agent_varna(self, agent_id: str) -> Optional[Varna]:
-        """Get the Varna (classification) of an agent."""
-        return self._varna_registry.get(agent_id)
+        """Get the Varna (classification) of an agent. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "get_agent_varna"):
+            return self.governance.get_agent_varna(agent_id)
+        return None
 
     def get_agent_ashrama(self, agent_id: str) -> Optional[AshramaTransition]:
-        """Get the Ashrama (lifecycle stage) of an agent."""
-        return self._ashrama_registry.get(agent_id)
+        """Get the Ashrama (lifecycle stage) of an agent. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "get_agent_ashrama"):
+            return self.governance.get_agent_ashrama(agent_id)
+        return None
 
     def get_agent_permissions(self, agent_id: str) -> List[str]:
-        """Get the current permissions for an agent based on Ashrama."""
-        ashrama = self._ashrama_registry.get(agent_id)
-        if ashrama:
-            return ashrama.get_current_permissions()
+        """Get the current permissions for an agent. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "get_agent_permissions"):
+            return self.governance.get_agent_permissions(agent_id)
         return []
 
     def check_agent_permission(self, agent_id: str, permission: str) -> bool:
-        """Check if an agent has a specific permission based on Ashrama."""
-        permissions = self.get_agent_permissions(agent_id)
-        return permission in permissions
+        """Check if an agent has a specific permission. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "check_agent_permission"):
+            return self.governance.check_agent_permission(agent_id, permission)
+        return True  # Default: allow if no governance plugin
 
     def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
-        """
-        Transition an agent to a new Ashrama (lifecycle stage).
-
-        Returns True if transition succeeded, False otherwise.
-        """
-        ashrama_transition = self._ashrama_registry.get(agent_id)
-        if not ashrama_transition:
-            logger.error(f"Agent '{agent_id}' not found in Ashrama registry")
-            return False
-
-        old_ashrama = ashrama_transition.current_ashrama
-        success = ashrama_transition.transition_to(new_ashrama, reason)
-
-        if success:
-            logger.info(
-                f"🕉️  Agent '{agent_id}' transitioned: "
-                f"{old_ashrama.value} → {new_ashrama.value} ({reason or 'No reason given'})"
-            )
-
-            # Record in Parampara
-            self.lineage.add_block(
-                event_type=LineageEventType.AGENT_REGISTERED,  # Could add ASHRAMA_TRANSITION type
-                agent_id=agent_id,
-                data={
-                    "event": "ashrama_transition",
-                    "from": old_ashrama.value,
-                    "to": new_ashrama.value,
-                    "reason": reason,
-                    "timestamp": datetime.utcnow().isoformat(),
-                },
-            )
-
-        return success
+        """Transition an agent to a new Ashrama. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "transition_agent_ashrama"):
+            return self.governance.transition_agent_ashrama(agent_id, new_ashrama, reason)
+        logger.warning(f"No governance plugin loaded - cannot transition {agent_id}")
+        return False
 
     def get_governance_status(self, agent_id: str) -> Dict[str, Any]:
-        """Get full governance status for an agent (Varna + Ashrama)."""
-        varna = self._varna_registry.get(agent_id)
-        ashrama = self._ashrama_registry.get(agent_id)
-
-        if not varna or not ashrama:
-            return {"error": f"Agent '{agent_id}' not found"}
-
-        varna_desc = get_varna_description(varna)
-        ashrama_desc = get_ashrama_description(ashrama.current_ashrama)
-
-        return {
-            "agent_id": agent_id,
-            "varna": {
-                "type": varna.value,
-                "name": varna_desc.get("name", "Unknown"),
-                "consciousness": varna_desc.get("consciousness", "Unknown"),
-                "mobility": varna_desc.get("mobility", "Unknown"),
-            },
-            "ashrama": {
-                "stage": ashrama.current_ashrama.value,
-                "name": ashrama_desc.get("name", "Unknown"),
-                "phase": ashrama_desc.get("phase", "Unknown"),
-                "permissions": ashrama.get_current_permissions(),
-                "time_in_stage_seconds": ashrama.time_in_current_stage().total_seconds(),
-            },
-        }
+        """Get full governance status for an agent. Delegates to governance plugin."""
+        if self.governance and hasattr(self.governance, "get_governance_status"):
+            return self.governance.get_governance_status(agent_id)
+        return {"error": "No governance plugin loaded"}
 
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
@@ -1754,9 +1702,10 @@ class RealVibeKernel(VibeKernel):
             for agent_id, agent in self._agent_registry.items():
                 try:
                     agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                    # Mark paused agents
-                    if agent_id in self._paused_agents:
-                        agent_status["status"] = "PAUSED"
+                    # Mark paused agents (via governance plugin)
+                    if self.governance and hasattr(self.governance, "is_agent_paused"):
+                        if self.governance.is_agent_paused(agent_id):
+                            agent_status["status"] = "PAUSED"
                     snapshot["agents"][agent_id] = agent_status
                 except Exception as e:
                     logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
