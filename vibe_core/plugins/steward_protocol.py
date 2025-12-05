@@ -122,7 +122,11 @@ class StewardProtocolPlugin(KernelPlugin):
         """
         Called when a new agent is registered.
 
-        Load steward.json for the agent, verify signature, initialize trust.
+        PROTOCOL ENFORCEMENT:
+        1. Load steward.json manifest (SSOT for agent identity)
+        2. Verify signature if present
+        3. GRANT correct capabilities from manifest (not cartridge hardcoded ones)
+        4. Initialize trust tracking
         """
         # Try to load manifest for this agent
         manifest = self._load_agent_manifest(agent_id)
@@ -138,6 +142,10 @@ class StewardProtocolPlugin(KernelPlugin):
             elif signature_valid is False:
                 logger.warning(f"📜 Agent '{agent_id}' signature INVALID ✗")
             # None means no signature present (acceptable for dev)
+
+            # PROTOCOL ENFORCEMENT: Grant correct capabilities from manifest
+            # steward.json is SSOT, not cartridge hardcoded capabilities
+            self._enforce_manifest_capabilities(kernel, agent_id, manifest)
 
         # Initialize trust tracking
         self._trust_scores[agent_id] = 0.5  # Start neutral
@@ -424,6 +432,56 @@ class StewardProtocolPlugin(KernelPlugin):
             score = completed / (completed + failed + 1)  # +1 to avoid division issues
 
         self._trust_scores[agent_id] = min(1.0, max(0.0, score))
+
+    def _enforce_manifest_capabilities(self, kernel: "RealVibeKernel", agent_id: str, manifest: Dict[str, Any]) -> None:
+        """
+        PROTOCOL ENFORCEMENT: Grant capabilities from steward.json manifest.
+
+        The steward.json is the SSOT for agent capabilities.
+        Cartridge hardcoded capabilities are WRONG - we override with manifest.
+
+        Example:
+            steward.json: ["herald.broadcast", "herald.research"]  ← CORRECT
+            cartridge:    ["broadcasting", "research"]             ← WRONG
+
+        This method grants the CORRECT capabilities from the manifest.
+        """
+        # Extract capabilities from manifest
+        caps_data = manifest.get("capabilities", {})
+        operations = caps_data.get("operations", [])
+
+        # Handle both formats: list of dicts or list of strings
+        manifest_caps = []
+        for op in operations:
+            if isinstance(op, dict):
+                cap_name = op.get("name", "")
+                if cap_name:
+                    manifest_caps.append(cap_name)
+            elif isinstance(op, str):
+                manifest_caps.append(op)
+
+        if not manifest_caps:
+            logger.debug(f"📜 Agent '{agent_id}' has no capabilities in manifest")
+            return
+
+        # Get current capabilities (from cartridge - potentially wrong)
+        current_caps = kernel._capability_registry.get_capabilities(agent_id)
+
+        # Grant manifest capabilities (SSOT)
+        result = kernel._capability_registry.grant(
+            agent_id=agent_id,
+            capabilities=manifest_caps,
+            granter_id="steward_protocol",
+            reason="Protocol enforcement: capabilities from steward.json (SSOT)",
+        )
+
+        if result.get("granted"):
+            logger.info(
+                f"📜 PROTOCOL ENFORCEMENT: Agent '{agent_id}' granted {len(result['granted'])} capabilities from manifest"
+            )
+            logger.debug(f"   Manifest caps: {manifest_caps}")
+            logger.debug(f"   Cartridge had: {list(current_caps)}")
+            logger.debug(f"   Granted: {result['granted']}")
 
     def _verify_manifest_signature(self, agent_id: str, manifest: Dict[str, Any]) -> Optional[bool]:
         """
