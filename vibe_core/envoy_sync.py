@@ -17,11 +17,16 @@ This module handles the ENVOY.md bidirectional interface:
 - Kernel → ENVOY.md → User (status updates)
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +74,48 @@ class EnvoySync:
             state.pending_tasks.update(result.pending_tasks)
     """
 
-    def __init__(self, envoy_path: Path = Path("ENVOY.md")):
-        """Initialize sync with path to ENVOY.md."""
+    def __init__(self, envoy_path: Path = Path("ENVOY.md"), io_service: Optional["KernelIOService"] = None):
+        """
+        Initialize sync with path to ENVOY.md.
+
+        Args:
+            envoy_path: Path to ENVOY.md file
+            io_service: Optional KernelIOService for audited writes
+        """
         self.envoy_path = envoy_path
+        self._io_service = io_service
+
+    def _write_envoy(self, content: str) -> bool:
+        """
+        Write envoy content through I/O Service or fallback.
+
+        BIDIRECTIONAL doc type preserves user sections.
+
+        Returns:
+            True if write succeeded, False otherwise
+        """
+        if self._io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = self._io_service.write_document(
+                name=str(self.envoy_path),
+                content=content,
+                doc_type=DocumentType.BIDIRECTIONAL,
+                writer_id="ENVOY_SYNC",
+                add_header=False,  # ENVOY.md has its own format
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                return False
+            return True
+        else:
+            # Fallback: direct write for standalone/test mode (no kernel)
+            try:
+                self.envoy_path.write_text(content, encoding="utf-8")  # Fallback: standalone mode
+                return True
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return False
 
     def check_file_changed(self, last_modified: float) -> bool:
         """
@@ -280,8 +324,11 @@ class EnvoySync:
 
                 new_lines.append(line)
 
-            self.envoy_path.write_text("\n".join(new_lines))
-            logger.debug("📬 Cleared processed requests from ENVOY.md")
+            content = "\n".join(new_lines)
+            if not self._write_envoy(content):
+                logger.error("❌ Failed to write ENVOY.md after request cleanup")
+            else:
+                logger.debug("📬 Cleared processed requests from ENVOY.md")
 
         except Exception as e:
             logger.error(f"❌ Failed to clear ENVOY.md requests: {e}")
