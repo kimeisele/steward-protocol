@@ -335,24 +335,47 @@ Like Discoverer for agents, a PluginDiscoverer could:
 | KnowledgeLoader | ❌ No | ❌ No | ❌ No |
 | WorkflowLoader | ✅ YAML itself | ✅ YAML itself | ❌ No |
 
-### 4.4 The Unified Pattern Needed
+### 4.4 The UnifiedLoader Alignment Plan
+
+**STATUS: Phase 1 COMPLETE** - `vibe_core/loaders/base_loader.py` exists!
 
 ```
 vibe_core/loaders/
-    base_loader.py        ← Unified loader protocol
-    plugin_loader.py      ← Inherits base
-    section_loader.py     ← Inherits base
-    agent_loader.py       ← Inherits base
-    ...
+    __init__.py           ← ✅ DONE
+    base_loader.py        ← ✅ DONE (UnifiedLoader ABC)
+    manifest_schema.json  ← ✅ DONE (JSON Schema)
+    schema.py             ← ✅ DONE (Validation)
 ```
 
-OR: Make everything Plugin-like with:
+**Phase 2: Loader Alignment** (Opus deep work)
+
+| Loader | Current Location | Action | Complexity |
+|--------|------------------|--------|------------|
+| `AgentLoader` | `vibe_core/steward/loader.py` | Inherit UnifiedLoader | 🟢 LOW - already has manifest |
+| `PluginLoader` | `vibe_core/plugin_loader.py` | Keep as-is, new items use folder | 🟢 LOW |
+| `SectionLoader` | `vibe_core/phoenix/section_loader.py` | Add manifest.json support | 🟡 MEDIUM |
+| `SettingsSectionLoader` | `vibe_core/settings/loader.py` | Merge with SectionLoader | 🟡 MEDIUM |
+| `WorkflowLoader` | `vibe_core/playbook/loader.py` | Keep YAML-based (already has schema) | 🟢 LOW |
+| `KnowledgeLoader` | `vibe_core/knowledge/loader.py` | Keep YAML-based | 🟢 LOW |
+| `ContextLoader` | `vibe_core/runtime/context_loader.py` | Keep as-is (different purpose) | ⚪ SKIP |
+
+**Alignment Strategy (NO BREAKING CHANGES):**
+
+1. **AgentLoader** → KEEP AS-IS (it's the gold standard, UnifiedLoader was modeled after it)
+2. **PluginLoader** → Works with both old .py AND new folders (backward compat)
+3. **New folders** → Use UnifiedLoader pattern (manifest.json + {type}_main.py)
+4. **YAML Loaders** → Keep YAML-native (WorkflowLoader, KnowledgeLoader)
+5. **ContextLoader** → Skip (different purpose, not a discovery loader)
+
+**Key Insight:** AgentLoader IS the fraktal pattern. UnifiedLoader was extracted FROM it.
+The goal is NOT to change working code, but to ensure NEW code follows the pattern.
+
 ```
-{thing}/
-    manifest.json         ← What it is
-    config.yaml           ← How it behaves
-    main.py               ← Entry point
-    sub_items/            ← Scalable children (tools, renderers, etc)
+EXISTING (don't touch):          NEW (use UnifiedLoader pattern):
+─────────────────────────        ─────────────────────────────────
+AgentLoader (steward.json)       manifest.json
+PluginLoader (backward compat)   plugin_template/ as reference
+SectionLoader                    (future) section folders
 ```
 
 ---
