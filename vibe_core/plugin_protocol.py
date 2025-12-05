@@ -18,7 +18,8 @@ class KernelPlugin(ABC):
     - on_tick_pre/post: Every kernel tick
     - on_shutdown: Kernel shutdown
     - on_agent_registered: New agent joins
-    - on_task_pre_assign: VETO hook for task assignment (governance)
+    - on_task_submit: COSMIC GATE for task submission (Sarga cycle)
+    - on_task_pre_assign: GOVERNANCE GATE for task assignment (Varna/Ashrama)
     - on_task_completed/failed: Task lifecycle
     """
 
@@ -65,6 +66,30 @@ class KernelPlugin(ABC):
     def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
         """Called when a new agent is registered."""
         pass
+
+    def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
+        """
+        Called BEFORE a task enters the scheduler queue.
+
+        This is the COSMIC GATE - plugins can VETO task submission.
+        Return False to reject the task, True to allow.
+
+        Use cases:
+        - Sarga Cycle (NIGHT_OF_BRAHMA blocks non-maintenance tasks)
+        - Global rate limiting
+        - System-wide task filtering
+
+        Args:
+            kernel: The kernel instance
+            task: The task being submitted
+
+        Returns:
+            True to allow task into queue, False to reject
+
+        Raises:
+            ValueError: If rejecting, plugin should raise with reason
+        """
+        return True  # Default: allow all tasks
 
     def on_task_pre_assign(self, kernel: "RealVibeKernel", agent_id: str, task: "Task") -> bool:
         """
