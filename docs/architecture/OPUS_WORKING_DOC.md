@@ -879,17 +879,54 @@ Das ist **Protocol Enforcement**, nicht hacky!
 - Plugin skeleton exists
 - Cleanup done (removed wrong identity/templates)
 
-#### Phase 3: Capability Enforcement ⬅️ NÄCHSTER SCHRITT
-- [ ] In `on_agent_registered`: Extract capabilities from steward.json manifest
-- [ ] Call `kernel._capability_registry.grant()` with correct capabilities
-- [ ] Log what was granted vs what cartridge had
-- [ ] Verify with test: herald should have `herald.broadcast` not `broadcasting`
+#### Phase 3: ✅ DONE (2025-12-05)
+- [x] In `on_agent_registered`: Extract capabilities from steward.json manifest
+- [x] Call `kernel._capability_registry.grant()` with correct capabilities
+- [x] Log what was granted vs what cartridge had
+- [x] Verify with test: herald has `herald.broadcast` ✓
 
-#### Phase 4: Tool Integration (SPÄTER)
-- [ ] Audit tool calls via existing capability_checker flow
-- [ ] Trust score affects capability access
+**VERIFIED:**
+```
+HERALD CAPABILITIES:
+  - broadcasting           ← cartridge (old)
+  - herald.broadcast       ← steward.json (NEW) ✓
+  - herald.identity        ← steward.json (NEW) ✓
+  - herald.research        ← steward.json (NEW) ✓
+  - herald.scout           ← steward.json (NEW) ✓
+  - herald.scribe          ← steward.json (NEW) ✓
+```
+
+#### Phase 4: ✅ DONE (2025-12-05)
+- [x] Trust score affects capability access
+- [x] Low trust = warn on sensitive operations
+- [x] Wired into `_check_agent_capability` flow
+- [x] Task tracking for trust calculation (completed/failed)
+
+**Implementation:**
+```
+Agent calls tool → ToolRegistry.execute()
+                        ↓
+              capability_checker(agent_id, cap)
+                        ↓
+              kernel._check_agent_capability()
+                        ↓
+              CapabilityRegistry.has_capability()  ← Step 1
+                        ↓
+              kernel.steward.get_trust_score()    ← Step 2 (NEW)
+                        ↓
+              if trust < 0.3: log warning
+```
+
+**Files changed:**
+- `kernel_impl.py:_check_agent_capability` - added trust check
+- `steward_protocol.py` - task tracking for trust (on_task_submit/completed/failed)
+
+#### Phase 5: Full Protocol (FUTURE)
+- [ ] Attestation required for sensitive operations
+- [ ] Delegation permissions between agents
+- [ ] Strict mode (block on low trust, not just warn)
 
 ---
 
-*Last updated: 2025-12-05 - LÖSUNG GEFUNDEN*
-*Status: Phase 3 ready to implement - grant() statt Kernel-Änderung*
+*Last updated: 2025-12-05 - Phase 4 COMPLETE*
+*Status: Core Protocol enforcement done! Phase 5 is future work.*
