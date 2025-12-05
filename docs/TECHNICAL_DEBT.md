@@ -152,31 +152,42 @@ The kernel is now structured as:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### The Vision: CodeIntegrityPlugin
+### The Vision: AuditorPlugin (Fractal Pattern)
+
+**Key Insight**: Alles kommt aus `PhoenixConfig.quality` - KEIN Hardcoding!
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ FUTURE (KERNEL-ENFORCED)                                    │
+│ FRACTAL ARCHITECTURE                                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  RealVibeKernel                                             │
-│  ├── CodeIntegrityPlugin (priority: -100, runs FIRST)       │
-│  │   ├── on_boot(): Verify codebase integrity               │
-│  │   │   ├── Check lint (critical errors only)              │
-│  │   │   ├── Check format (ruff format --check)             │
-│  │   │   ├── Run fast structural tests                      │
-│  │   │   └── REFUSE TO BOOT if integrity violated           │
-│  │   │                                                      │
-│  │   ├── on_task_submit(): Gate code-modifying tasks        │
-│  │   │   └── Re-verify after code changes                   │
-│  │   │                                                      │
-│  │   └── Hooks into: Narasimha (security), Auditor          │
-│  │                                                          │
-│  └── [All other plugins...]                                 │
+│  PhoenixConfig (config/quality.yaml)                        │
+│  └── QualityConfig                                          │
+│      ├── lint.critical_rules: ["E9", "F63", "F7", "F82"]    │
+│      ├── lint.paths: ["vibe_core", "steward", "scripts"]    │
+│      ├── format.auto_fix: true                              │
+│      ├── test.profiles: {fast, full, ci, smoke...}          │
+│      └── ENFORCEMENT FLAGS:                                 │
+│          ├── enforce_on_commit: bool                        │
+│          ├── enforce_on_push: bool                          │
+│          └── block_on_failure: bool                         │
 │                                                             │
-│  Result: No corrupted code can execute in kernel            │
+│  vibe_core/plugins/auditor.py (NEW)                         │
+│  └── AuditorPlugin (priority: -100)                         │
+│      └── on_boot(kernel):                                   │
+│          quality = get_config().quality                     │
+│          if quality.block_on_failure:                       │
+│              run_lint(quality.get_ruff_critical_args())     │
+│              run_format(quality.format.paths)               │
+│              run_tests(quality.test.get_profile("fast"))    │
+│              → REFUSE BOOT on failure                       │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**File**: `vibe_core/plugins/auditor.py` (~50 LOC)
+**Config**: `config/quality.yaml` (already exists!)
+**Pattern**: Same as SargaCyclePlugin, VedicGovernancePlugin
 
 ### Tests as Living City Architecture
 
@@ -214,7 +225,7 @@ but the tests grow organically on top:
 |-------|-----------|-------------|
 | Phase 1 | ✅ DONE | Universal Testable Protocol, 366 auto-tests |
 | Phase 2 | SHORT-TERM | Add `@pytest.mark.slow`, organize legacy tests |
-| Phase 3 | MEDIUM-TERM | CodeIntegrityPlugin (boot-time verification) |
+| Phase 3 | MEDIUM-TERM | AuditorPlugin (reads from QualityConfig) |
 | Phase 4 | LONG-TERM | Circuit/Playbook test architecture, stale test detection |
 
 ---
@@ -229,10 +240,10 @@ but the tests grow organically on top:
 - [ ] Document all P2 items properly
 
 ### Medium-Term (Kernel Enforcement)
-- [ ] CodeIntegrityPlugin (boot-time lint/test check)
-- [ ] Integration with Narasimha security layer
+- [ ] AuditorPlugin (`vibe_core/plugins/auditor.py` ~50 LOC)
+- [x] `config/quality.yaml` exists with `block_on_failure: true`
+- [ ] Wire plugin to read QualityConfig on boot
 - [ ] Refuse boot on critical integrity violations
-- [ ] Hook into task submission for code changes
 
 ### Long-Term (Living Test System)
 - [ ] Circuit/Playbook test architecture
@@ -253,3 +264,4 @@ but the tests grow organically on top:
 | 2025-12-05 | Claude | Implemented Universal Testable Protocol (Phase 1 complete) |
 | 2025-12-05 | Claude | Added Kernel-Enforced Integrity vision (P0 NEW) |
 | 2025-12-05 | Claude | Added short/medium/long term roadmap |
+| 2025-12-05 | Claude | Refined plan: AuditorPlugin reads from QualityConfig (fractal) |
