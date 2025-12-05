@@ -53,7 +53,6 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
 # ENVOY.md: PlaybookRouter for intent routing (no LLM, pattern matching only)
 from .runtime.playbook_router import PlaybookRouter
-from .sarga import Cycle, get_sarga
 from .scheduling import Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
@@ -96,26 +95,16 @@ logger = logging.getLogger("VIBE_KERNEL")
 
 
 class InMemoryScheduler(VibeScheduler):
-    """FIFO Task Scheduler - Real-time queue management
+    """FIFO Task Scheduler - Pure queue management.
 
-    PHASE 3 WIRING: Respects Sarga Cycle (Brahma's creation/maintenance cycles)
-    - DAY_OF_BRAHMA: All task types allowed (creation, implementation, features)
-    - NIGHT_OF_BRAHMA: Only maintenance tasks allowed (bugfix, refactor, maintenance)
+    This is a PURE scheduler - no cosmic logic, no governance.
+    Task filtering is handled by plugins via on_task_submit hook.
+
+    The scheduler only knows how to:
+    1. Accept tasks into the queue
+    2. Return the next task (FIFO)
+    3. Track completion status
     """
-
-    # Task types allowed during NIGHT_OF_BRAHMA
-    MAINTENANCE_TASK_TYPES = {
-        "bugfix",
-        "fix",
-        "maintenance",
-        "refactor",
-        "cleanup",
-        "optimization",
-        "performance",
-        "security",
-        "test",
-        "debug",
-    }
 
     def __init__(self):
         self.queue: deque = deque()
@@ -123,34 +112,12 @@ class InMemoryScheduler(VibeScheduler):
         self.completed: Dict[str, Task] = {}
 
     def submit_task(self, task: Task) -> str:
-        """Submit task to queue, return task_id
+        """Submit task to queue, return task_id.
 
-        PHASE 3: Checks Sarga cycle before allowing task submission
+        NOTE: Task validation (Sarga cycle, governance, etc.) is handled
+        by plugins via on_task_submit hook BEFORE this method is called.
+        This method is a pure queue operation.
         """
-        # Get current Brahma cycle
-        sarga = get_sarga()
-        current_cycle = sarga.get_cycle()
-
-        # During NIGHT_OF_BRAHMA, restrict task types
-        if current_cycle == Cycle.NIGHT_OF_BRAHMA:
-            task_type = task.payload.get("type", "").lower() if task.payload else ""
-
-            # Check if task type is allowed during night cycle
-            if task_type and task_type not in self.MAINTENANCE_TASK_TYPES:
-                logger.warning(
-                    f"🌙 Task {task.task_id} blocked: type '{task_type}' not allowed during NIGHT_OF_BRAHMA. "
-                    f"Only maintenance tasks permitted."
-                )
-                raise ValueError(
-                    f"Task type '{task_type}' not allowed during NIGHT_OF_BRAHMA. "
-                    f"Only maintenance tasks are permitted: {', '.join(self.MAINTENANCE_TASK_TYPES)}"
-                )
-
-            logger.info(f"🌙 Task {task.task_id} approved for NIGHT_OF_BRAHMA (maintenance cycle)")
-
-        elif current_cycle == Cycle.DAY_OF_BRAHMA:
-            logger.info(f"☀️  Task {task.task_id} approved for DAY_OF_BRAHMA (creation cycle)")
-
         self.queue.append(task)
         logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
         return task.task_id
@@ -1649,7 +1616,16 @@ class RealVibeKernel(VibeKernel):
         return granter_id in ["KERNEL", "civic"]
 
     def submit_task(self, task: Task) -> str:
-        """Submit a task to the kernel"""
+        """Submit a task to the kernel.
+
+        PLUGIN HOOK: Calls on_task_submit for all plugins before queue.
+        Plugins can VETO by raising ValueError.
+        """
+        # COSMIC GATE: Ask plugins if task can be submitted
+        # Any plugin can raise ValueError to reject the task
+        for plugin in self._plugins:
+            plugin.on_task_submit(self, task)
+
         return self._scheduler.submit_task(task)
 
     def get_task_result(self, task_id: str) -> Optional[Dict[str, Any]]:
