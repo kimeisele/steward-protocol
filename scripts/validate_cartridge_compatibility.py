@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from vibe_core import Task, VibeAgent
 
-# Import cartridges from steward/system_agents
+# Import cartridges from vibe_core/cartridges/system
 try:
     from vibe_core.cartridges.system.civic.cartridge_main import CivicCartridge
     from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge

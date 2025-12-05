@@ -155,8 +155,8 @@ def validate_all_manifests(
         # Default: scan common locations
         scan_paths = [
             Path("vibe_core/plugins"),
-            Path("steward/system_agents"),
-            Path("agent_city/registry"),
+            Path("vibe_core/cartridges/system"),
+            Path("vibe_core/cartridges/agent_city"),
             Path("vibe_core/phoenix/sections"),
         ]
 

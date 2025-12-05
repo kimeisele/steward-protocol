@@ -205,7 +205,7 @@ class RegistryAgent(VibeAgent):
     # Private helpers
     def _find_agent_cartridges(self) -> List[Path]:
         """Find all agent cartridge_main.py files."""
-        return list(Path("steward/system_agents").glob("*/cartridge_main.py"))
+        return list(Path("vibe_core/cartridges/system").glob("*/cartridge_main.py"))
 
     def _validate_agent_config(self, cartridge_path: Path) -> Optional[Dict[str, Any]]:
         """Validate an agent's configuration."""

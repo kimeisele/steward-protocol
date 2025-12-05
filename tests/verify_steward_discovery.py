@@ -20,7 +20,7 @@ logger = logging.getLogger("TEST")
 
 def test_discovery():
     # 1. Setup Environment
-    test_agent_dir = Path("agent_city/registry/test-agent-007")
+    test_agent_dir = Path("vibe_core/cartridges/agent_city/test-agent-007")
     if test_agent_dir.exists():
         shutil.rmtree(test_agent_dir)
 

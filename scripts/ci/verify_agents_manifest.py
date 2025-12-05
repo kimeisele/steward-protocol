@@ -13,7 +13,7 @@ from pathlib import Path
 
 def verify_manifests():
     print("📋 Verifying Agent Manifests (STEWARD.md & steward.json)...")
-    agents_dir = Path("steward/system_agents")
+    agents_dir = Path("vibe_core/cartridges/system")
     errors = 0
 
     if not agents_dir.exists():

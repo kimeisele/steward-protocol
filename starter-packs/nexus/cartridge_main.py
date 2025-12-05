@@ -5,7 +5,7 @@ NEXUS Cartridge - Generalist Agent Template
 This is a STARTER PACK - copy this folder to create your own agent.
 
 Steps to customize:
-1. Copy this folder to agent_city/registry/your_agent_name/
+1. Copy this folder to vibe_core/cartridges/agent_city/your_agent_name/
 2. Update steward.json with your agent's identity
 3. Update cartridge.yaml with your agent's config
 4. Modify this file with your agent's logic

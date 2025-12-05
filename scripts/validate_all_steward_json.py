@@ -66,8 +66,8 @@ def validate_manifest(path):
 
 def main():
     # Find all steward.json files
-    paths = list(Path("steward/system_agents").rglob("steward.json"))
-    paths.extend(Path("agent_city/registry").rglob("steward.json"))
+    paths = list(Path("vibe_core/cartridges/system").rglob("steward.json"))
+    paths.extend(Path("vibe_core/cartridges/agent_city").rglob("steward.json"))
 
     # Validate each
     results = []

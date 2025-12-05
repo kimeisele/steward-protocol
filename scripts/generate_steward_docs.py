@@ -3,7 +3,7 @@
 Generate STEWARD.md documentation from steward.json manifests.
 
 This script:
-1. Finds all steward.json files in system_agents/ and agent_city/registry/
+1. Finds all steward.json files in system_agents/ and vibe_core/cartridges/agent_city/
 2. Generates Level 2 STEWARD.md for each agent
 3. Uses sensible defaults based on agent specialization
 
@@ -268,7 +268,7 @@ def main():
                 with open(steward_md_path, "w") as f:
                     f.write(md_content)
 
-                print(f"✅ Generated: steward/system_agents/{agent_dir.name}/STEWARD.md")
+                print(f"✅ Generated: vibe_core/cartridges/system/{agent_dir.name}/STEWARD.md")
                 generated += 1
             except Exception as e:
                 print(f"❌ Error generating {agent_dir.name}: {e}")
@@ -299,7 +299,7 @@ def main():
                 with open(steward_md_path, "w") as f:
                     f.write(md_content)
 
-                print(f"✅ Generated: agent_city/registry/{agent_dir.name}/STEWARD.md")
+                print(f"✅ Generated: vibe_core/cartridges/agent_city/{agent_dir.name}/STEWARD.md")
                 generated += 1
             except Exception as e:
                 print(f"❌ Error generating {agent_dir.name}: {e}")
