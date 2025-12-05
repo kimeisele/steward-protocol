@@ -1,0 +1,45 @@
+{
+  "type": "section",
+  "id": "test_governance",
+  "name": "Test Governance Configuration",
+  "version": "1.0.0",
+  "description": "WHO WATCHES THE WATCHERS - Test suite immutability and governance",
+
+  "entry_point": "section_main.py",
+  "entry_class": "TestGovernanceConfig",
+
+  "priority": 5,
+
+  "config_file": "config/test_governance.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "testing", "governance", "security"],
+
+  "schema": {
+    "mutation_policy": {
+      "type": "string",
+      "enum": ["blocked", "human_approval", "warn_only"],
+      "default": "blocked",
+      "description": "What happens when AI tries to modify a test"
+    },
+    "baseline_enforcement": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enforce test contract hashes from lineage"
+    },
+    "regression_mode": {
+      "type": "string",
+      "enum": ["fix_code_not_test", "allow_test_updates"],
+      "default": "fix_code_not_test",
+      "description": "When test fails: AI must fix CODE, not test"
+    },
+    "frozen_tests": {
+      "type": "array",
+      "description": "Glob patterns for tests that can NEVER be modified"
+    },
+    "human_review_required_patterns": {
+      "type": "array",
+      "description": "Glob patterns requiring human review for any change"
+    }
+  }
+}

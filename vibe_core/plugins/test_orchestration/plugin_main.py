@@ -4,6 +4,7 @@ UNIVERSAL TEST ORCHESTRATION PLUGIN - Tests for ALL Components
 PHILOSOPHY:
 "The observer must be part of the observed system."
 "Every component knows its own tests." - Fractal Testing Principle
+"Quis custodiet ipsos custodes?" - Who watches the watchers?
 
 This plugin auto-discovers and tests ALL component types:
 - Agents (34+)
@@ -13,6 +14,11 @@ This plugin auto-discovers and tests ALL component types:
 - Core Infrastructure (Ledger, Scheduler, EventBus)
 - Governance Components
 - Runtime Components
+
+TEST GOVERNANCE:
+Tests are IMMUTABLE CONTRACTS. When a test fails, the CODE is wrong.
+AI agents are BLOCKED from modifying tests to make them pass.
+The TestGuardian enforces this policy via lineage-recorded contracts.
 """
 
 import logging
@@ -104,6 +110,10 @@ class TestOrchestrationPlugin(KernelPlugin):
     Uses the Testable protocol for component-aware test generation.
     Each component knows its own tests (fractal design).
 
+    TEST GOVERNANCE:
+    Includes TestGuardian for test immutability enforcement.
+    Tests are contracts - AI cannot modify them to hide regressions.
+
     Priority: 200 (runs after all other plugins)
     """
 
@@ -112,6 +122,7 @@ class TestOrchestrationPlugin(KernelPlugin):
         self._results: List[TestResult] = []
         self._kernel: Optional["RealVibeKernel"] = None
         self._discovery_counts: Dict[str, int] = {}
+        self._guardian = None  # Lazy-loaded TestGuardian
 
     @property
     def plugin_id(self) -> str:
@@ -416,3 +427,37 @@ class TestOrchestrationPlugin(KernelPlugin):
             )
 
         return result
+
+    # ========================================================================
+    # TEST GUARDIAN INTEGRATION
+    # ========================================================================
+
+    @property
+    def guardian(self):
+        """Get or create the TestGuardian instance."""
+        if self._guardian is None:
+            from vibe_core.plugins.test_orchestration.test_guardian import TestGuardian
+
+            self._guardian = TestGuardian(self._kernel)
+        return self._guardian
+
+    def validate_tests_before_run(self, test_path: str = "tests") -> Dict[str, Any]:
+        """
+        Validate all tests haven't mutated before running them.
+
+        This is the "who watches the watchers" check.
+        Returns validation results.
+        """
+        return self.guardian.validate_all_tests(test_path)
+
+    def can_modify_test(self, test_path: str, modifier: str = "ai") -> tuple[bool, str]:
+        """
+        Check if a test file can be modified.
+
+        Used by IDE hooks and commit hooks to block unauthorized changes.
+        """
+        return self.guardian.can_modify(test_path, modifier)
+
+    def get_guardian_status(self) -> str:
+        """Get human-readable status of test governance."""
+        return self.guardian.print_status()
