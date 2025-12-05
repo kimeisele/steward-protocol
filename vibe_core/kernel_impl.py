@@ -13,7 +13,6 @@ This is NOT a mock. This is real execution context for cartridges.
 
 from __future__ import annotations
 
-import json
 import logging
 from collections import deque
 from datetime import datetime
@@ -33,6 +32,9 @@ from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revoc
 
 # DocRenderer: Extracted markdown rendering logic
 from .event_bus import get_event_bus  # Phase 2: Event Bus
+
+# I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
+from .io_service import KernelIOService
 from .kernel import (
     KernelStatus,
     ManifestRegistry,
@@ -58,9 +60,6 @@ from .scheduling import Task
 # Sync modules: Extracted bidirectional markdown interfaces
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
-
-# I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
-from .io_service import DocumentType, KernelIOService
 
 # Import Auditor for immune system (optional)
 try:
@@ -268,6 +267,15 @@ class RealVibeKernel(VibeKernel):
         # Records all changes to Parampara Ledger for audit trail
         self._capability_registry = CapabilityRegistry(ledger=self._ledger)
 
+        # I/O SERVICE: Central file operation controller
+        # IMPORTANT: Must be initialized BEFORE tool discovery
+        # Tools may inject io_service during registration via set_io_service()
+        # All file writes MUST go through this service.
+        # Plugins produce content, Kernel writes through self.io
+        # See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
+        self.io = KernelIOService(self)
+        logger.info("📁 Kernel I/O Service initialized (central file controller)")
+
         # Phase 6: Universal Tool Registry
         # Single source of truth for all agent tools
         # Tools are registered here and accessed via AgentSystemInterface
@@ -293,13 +301,6 @@ class RealVibeKernel(VibeKernel):
 
         # Playbook Router for Intent Routing (used by UI Manager)
         self._playbook_router = PlaybookRouter()
-
-        # I/O SERVICE: Central file operation controller
-        # All file writes MUST go through this service.
-        # Plugins produce content, Kernel writes through self.io
-        # See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
-        self.io = KernelIOService(self)
-        logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
         # PLUGIN SYSTEM (The Avatars of Vishnu)
         # Phase 1: Load and boot all plugins
