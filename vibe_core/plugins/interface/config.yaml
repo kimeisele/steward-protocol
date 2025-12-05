@@ -1,0 +1,15 @@
+render_interval_seconds: 1
+enabled_views:
+  - envoy
+  - settings
+  - dashboard
+  - agents
+  - citymap
+  - ephemeral
+  - help
+  - index
+  - operations
+  - proof
+  - rag
+  - tasks
+  - git

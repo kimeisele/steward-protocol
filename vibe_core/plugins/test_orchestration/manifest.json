@@ -1,0 +1,23 @@
+{
+    "type": "plugin",
+    "id": "test_orchestration",
+    "name": "Test Orchestration Plugin",
+    "version": "1.0.0",
+    "description": "Orchestrates complex test scenarios and chaos testing",
+    "entry_point": "plugin_main.py",
+    "entry_class": "TestOrchestrationPlugin",
+    "priority": 50,
+    "enabled": true,
+    "hooks": [
+        "on_boot",
+        "on_shutdown"
+    ],
+    "dependencies": [],
+    "defaults": {},
+    "author": "STEWARD Protocol",
+    "tags": [
+        "test",
+        "orchestration",
+        "chaos"
+    ]
+}

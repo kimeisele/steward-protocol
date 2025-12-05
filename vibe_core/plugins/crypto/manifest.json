@@ -1,0 +1,26 @@
+{
+  "type": "plugin",
+  "id": "crypto",
+  "name": "Crypto Plugin",
+  "version": "1.0.0",
+  "description": "Core cryptographic functions (ECDSA) for Steward Protocol",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "CryptoPlugin",
+
+  "priority": 1,
+  "enabled": true,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown"
+  ],
+
+  "dependencies": [],
+  "defaults": {
+    "key_dir": ".steward/keys"
+  },
+
+  "author": "STEWARD Protocol",
+  "tags": ["core", "security", "crypto"]
+}
