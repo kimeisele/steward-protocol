@@ -8,153 +8,110 @@ NOTE: ecdsa imports are LAZY (inside functions) to prevent crashes when lib is m
 
 import base64
 import hashlib
+import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Tuple
 
-# Lazy import - only for type hints
-if TYPE_CHECKING:
-    from ecdsa import SigningKey, VerifyingKey
+logger = logging.getLogger("STEWARD_CRYPTO")
 
-# Key storage location
-KEYS_DIR = Path(".steward/keys")
-PRIVATE_KEY_PATH = KEYS_DIR / "private.pem"
-PUBLIC_KEY_PATH = KEYS_DIR / "public.pem"
+KEY_DIR = Path(".steward/keys")
+PRIVATE_KEY_PATH = KEY_DIR / "private.pem"
+PUBLIC_KEY_PATH = KEY_DIR / "public.pem"
 
 
 def ensure_keys_exist():
+    """Ensure key directory exists."""
+    if not KEY_DIR.exists():
+        KEY_DIR.mkdir(parents=True, exist_ok=True)
+        # Add .gitignore to keep keys safe
+        gitignore = KEY_DIR / ".gitignore"
+        if not gitignore.exists():
+            gitignore.write_text("*\n!.gitignore\n")
+
+
+def generate_keys() -> Tuple[str, str]:
     """
-    Ensures that key pair exists. Creates one if it doesn't.
-
-    Returns:
-        bool: True if new keys were created, False if they already existed
+    Generate a new ECC key pair (NIST256p).
+    Returns (private_key_pem, public_key_pem).
     """
-    if PRIVATE_KEY_PATH.exists() and PUBLIC_KEY_PATH.exists():
-        return False
+    try:
+        from ecdsa import NIST256p, SigningKey
+    except ImportError:
+        logger.error("ecdsa library not installed. Cannot generate keys.")
+        raise ImportError("ecdsa library not installed. Please run 'pip install ecdsa'")
 
-    # Lazy import
-    from ecdsa import NIST256p, SigningKey
+    sk = SigningKey.generate(curve=NIST256p)
+    vk = sk.verifying_key
 
-    # Create directory
-    KEYS_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Generate new keypair using NIST P-256 curve
-    private_key = SigningKey.generate(curve=NIST256p, hashfunc=hashlib.sha256)
-    public_key = private_key.get_verifying_key()
-
-    # Save private key (PEM format)
-    private_pem = private_key.to_pem().decode("utf-8")
-    PRIVATE_KEY_PATH.write_text(private_pem)
-    PRIVATE_KEY_PATH.chmod(0o600)  # Restrict to owner only
-
-    # Save public key (PEM format)
-    public_pem = public_key.to_pem().decode("utf-8")
-    PUBLIC_KEY_PATH.write_text(public_pem)
-
-    # Add private.pem to .gitignore
-    gitignore_path = Path(".gitignore")
-    gitignore_content = gitignore_path.read_text() if gitignore_path.exists() else ""
-    if ".steward/keys/private.pem" not in gitignore_content:
-        with open(gitignore_path, "a") as f:
-            if gitignore_content and not gitignore_content.endswith("\n"):
-                f.write("\n")
-            f.write(".steward/keys/private.pem\n")
-
-    return True
+    return sk.to_pem().decode(), vk.to_pem().decode()
 
 
-def get_public_key_string():
+def load_or_generate_keys() -> Tuple[str, str]:
     """
-    Returns the public key as a base64 string (without PEM markers).
-    Suitable for embedding in STEWARD.md files.
-
-    Returns:
-        str: Public key in base64 format (without BEGIN/END markers)
+    Load existing keys or generate new ones if missing.
+    Returns (private_key_pem, public_key_pem).
     """
     ensure_keys_exist()
-    public_pem = PUBLIC_KEY_PATH.read_text()
-    # Extract just the base64 content (without BEGIN/END lines)
-    lines = public_pem.split("\n")
-    content = "".join([line for line in lines if line and not line.startswith("-----")])
-    return content
+
+    if PRIVATE_KEY_PATH.exists() and PUBLIC_KEY_PATH.exists():
+        return PRIVATE_KEY_PATH.read_text(), PUBLIC_KEY_PATH.read_text()
+
+    logger.info("Keys not found. Generating new key pair...")
+    priv, pub = generate_keys()
+
+    PRIVATE_KEY_PATH.write_text(priv)
+    PUBLIC_KEY_PATH.write_text(pub)
+
+    # Secure private key permissions (read/write for owner only)
+    try:
+        PRIVATE_KEY_PATH.chmod(0o600)
+    except Exception:
+        pass
+
+    return priv, pub
 
 
-def _load_private_key() -> "SigningKey":
-    """Load private key from file."""
-    from ecdsa import SigningKey
-
-    if not PRIVATE_KEY_PATH.exists():
-        raise FileNotFoundError(f"Private key not found at {PRIVATE_KEY_PATH}")
-
-    private_pem = PRIVATE_KEY_PATH.read_text()
-    private_key = SigningKey.from_pem(private_pem)
-    return private_key
-
-
-def _load_public_key(public_key_b64_str: str) -> "VerifyingKey":
-    """Load public key from base64 string (without PEM markers)."""
-    from ecdsa import VerifyingKey
-
-    # Reconstruct PEM format with BEGIN/END markers
-    pem_str = f"""-----BEGIN PUBLIC KEY-----
-{public_key_b64_str}
------END PUBLIC KEY-----"""
-
-    public_key = VerifyingKey.from_pem(pem_str)
-    return public_key
-
-
-def sign_content(content: str) -> str:
+def sign_content(content: str, private_key_pem: str) -> str:
     """
-    Sign the given content with the private key.
-
-    Args:
-        content (str): The content to sign
-
-    Returns:
-        str: The signature in base64 format
+    Sign a string content using the private key.
+    Returns base64 encoded signature.
     """
-    from ecdsa.util import sigencode_string
+    try:
+        from ecdsa import SigningKey
+        from ecdsa.util import sigencode_string
+    except ImportError:
+        logger.error("ecdsa library not installed. Cannot sign content.")
+        raise ImportError("ecdsa library not installed. Please run 'pip install ecdsa'")
 
-    private_key = _load_private_key()
-
-    # Sign the content using SHA256 hash
-    content_bytes = content.encode("utf-8")
-    signature_bytes = private_key.sign(content_bytes, hashfunc=hashlib.sha256, sigencode=sigencode_string)
-
-    # Encode as base64
-    signature_b64 = base64.b64encode(signature_bytes).decode("utf-8")
-    return signature_b64
+    sk = SigningKey.from_pem(private_key_pem)
+    signature = sk.sign_deterministic(content.encode(), hashfunc=hashlib.sha256, sigencode=sigencode_string)
+    return base64.b64encode(signature).decode()
 
 
-def verify_signature(content: str, signature_b64: str, public_key_b64: str) -> bool:
+def verify_signature(content: str, signature_b64: str, public_key_pem: str) -> bool:
     """
     Verify a signature against content using the public key.
-
-    Args:
-        content (str): The original content that was signed
-        signature_b64 (str): The signature in base64 format
-        public_key_b64 (str): The public key (base64 content without BEGIN/END markers)
-
-    Returns:
-        bool: True if signature is valid, False otherwise
     """
-    from ecdsa.util import sigdecode_string
+    try:
+        from ecdsa import VerifyingKey
+        from ecdsa.util import sigdecode_string
+    except ImportError:
+        logger.error("ecdsa library not installed. Cannot verify signature.")
+        raise ImportError("ecdsa library not installed. Please run 'pip install ecdsa'")
 
     try:
-        public_key = _load_public_key(public_key_b64)
-
-        # Decode signature from base64
-        signature_bytes = base64.b64decode(signature_b64)
-
-        # Verify the signature
-        content_bytes = content.encode("utf-8")
-        public_key.verify(
-            signature_bytes,
-            content_bytes,
-            hashfunc=hashlib.sha256,
-            sigdecode=sigdecode_string,
-        )
-        return True
-    except Exception:
-        # Any exception means verification failed
+        vk = VerifyingKey.from_pem(public_key_pem)
+        signature = base64.b64decode(signature_b64)
+        return vk.verify(signature, content.encode(), hashfunc=hashlib.sha256, sigdecode=sigdecode_string)
+    except Exception as e:
+        logger.warning(f"Signature verification failed: {e}")
         return False
+
+
+def get_public_key_fingerprint(public_key_pem: str) -> str:
+    """
+    Get a short fingerprint (SHA256 hex) of the public key.
+    """
+    # Normalize by stripping whitespace
+    clean_key = public_key_pem.strip().encode()
+    return hashlib.sha256(clean_key).hexdigest()[:16]

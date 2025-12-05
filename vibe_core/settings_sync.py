@@ -104,6 +104,14 @@ class SettingsSync:
         self.settings_path = settings_path
         self._io_service = io_service
 
+    def render_document(self, content: str) -> bool:
+        """
+        Render the document content.
+
+        Preserves user sections via I/O Service (BIDIRECTIONAL mode).
+        """
+        return self._write_settings(content)
+
     def _write_settings(self, content: str) -> bool:
         """
         Write settings content through I/O Service or fallback.

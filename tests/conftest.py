@@ -78,6 +78,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "integration: Integration tests requiring kernel")
     config.addinivalue_line("markers", "hardening: Stress/chaos/security tests")
     config.addinivalue_line("markers", "security: Penetration and crypto tests")
+    config.addinivalue_line("markers", "vibe_plugins(plugins): List of plugin IDs to load for this test")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -192,3 +193,72 @@ def pytest_sessionfinish(session, exitstatus):
         except Exception:
             pass
     _kernel_cache.clear()
+
+
+# ============================================================================
+# FRACTAL PATTERN SUPPORT
+# ============================================================================
+
+
+@pytest.fixture(scope="function", autouse=True)
+def configure_plugins(request):
+    """
+    Fractal Plugin Loader:
+    Configures PluginLoader to load ONLY the plugins requested by the test.
+
+    Usage:
+        @pytest.mark.vibe_plugins("interface", "governance")
+        def test_something(kernel):
+            ...
+
+    Default:
+        If no marker is present, loads NO plugins (lightweight default).
+    """
+    from unittest.mock import patch
+
+
+    # Get requested plugins from marker
+    marker = request.node.get_closest_marker("vibe_plugins")
+    requested_plugins = marker.args if marker else ()
+
+    # Define a side_effect for discover() that returns only requested plugins
+    def discover_filtered(*args, **kwargs):
+        # If specific plugins requested, instantiate and return them
+        # We need to map plugin IDs to their classes/modules
+        # This is a bit tricky since we don't have a central registry of ID -> Class
+        # But PluginLoader.discover usually scans directories.
+
+        # Strategy: Let the real discover run, but filter the results!
+        # This assumes discover() is fast enough if we don't boot them?
+        # No, discover() imports modules which might be slow.
+        # But we want to avoid importing heavy stuff if not needed.
+
+        # Better Strategy:
+        # If requested_plugins is empty, return [].
+        # If not empty, we need to know how to load them.
+        # For now, let's assume we can import them by convention or hardcode common ones.
+
+        plugins = []
+
+        if "interface" in requested_plugins:
+            from vibe_core.plugins.interface.plugin_main import InterfacePlugin
+
+            plugins.append(InterfacePlugin())
+
+        if "governance" in requested_plugins:
+            from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin
+
+            plugins.append(VedicGovernancePlugin())
+
+        if "test_orchestration" in requested_plugins:
+            from vibe_core.plugins.test_orchestration.plugin_main import TestOrchestrationPlugin
+
+            plugins.append(TestOrchestrationPlugin())
+
+        # Add other plugins as needed...
+
+        return plugins
+
+    # Patch discover
+    with patch("vibe_core.plugin_loader.PluginLoader.discover", side_effect=discover_filtered):
+        yield
