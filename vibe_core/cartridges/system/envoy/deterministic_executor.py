@@ -175,7 +175,7 @@ class DeterministicExecutor:
         # Import LLM Engine (GAD-6000)
         self.llm = None
         try:
-            from services.llm_engine import llm
+            from vibe_core.runtime.llm_engine import llm
 
             self.llm = llm
         except ImportError:
