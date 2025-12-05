@@ -16,11 +16,16 @@ Security:
 - Execution history visible in SETTINGS.md
 """
 
+from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Set
+
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +93,48 @@ class SettingsSync:
             state.paused_agents = result.paused_agents
     """
 
-    def __init__(self, settings_path: Path = Path("SETTINGS.md")):
-        """Initialize sync with path to SETTINGS.md."""
+    def __init__(self, settings_path: Path = Path("SETTINGS.md"), io_service: Optional["KernelIOService"] = None):
+        """
+        Initialize sync with path to SETTINGS.md.
+
+        Args:
+            settings_path: Path to SETTINGS.md file
+            io_service: Optional KernelIOService for audited writes
+        """
         self.settings_path = settings_path
+        self._io_service = io_service
+
+    def _write_settings(self, content: str) -> bool:
+        """
+        Write settings content through I/O Service or fallback.
+
+        BIDIRECTIONAL doc type preserves user sections.
+
+        Returns:
+            True if write succeeded, False otherwise
+        """
+        if self._io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = self._io_service.write_document(
+                name=str(self.settings_path),
+                content=content,
+                doc_type=DocumentType.BIDIRECTIONAL,
+                writer_id="SETTINGS_SYNC",
+                add_header=False,  # SETTINGS.md has its own format
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                return False
+            return True
+        else:
+            # Fallback: direct write for standalone/test mode (no kernel)
+            try:
+                self.settings_path.write_text(content, encoding="utf-8")  # Fallback: standalone mode
+                return True
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return False
 
     def check_file_changed(self, last_modified: float) -> bool:
         """
@@ -484,8 +528,11 @@ class SettingsSync:
 
                 new_lines.append(line)
 
-            self.settings_path.write_text("\n".join(new_lines))
-            logger.debug("⚙️  Removed executed commands from SETTINGS.md")
+            content = "\n".join(new_lines)
+            if not self._write_settings(content):
+                logger.error("❌ Failed to write SETTINGS.md after command cleanup")
+            else:
+                logger.debug("⚙️  Removed executed commands from SETTINGS.md")
 
         except Exception as e:
             logger.error(f"❌ Failed to remove executed commands: {e}")

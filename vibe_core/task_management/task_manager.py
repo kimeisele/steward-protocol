@@ -1,11 +1,13 @@
 """Main task manager class."""
 
+from __future__ import annotations
+
 import json
 import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import yaml
 
@@ -21,24 +23,29 @@ from .models import ActiveMission, Roadmap, Task, TaskStatus
 from .next_task_generator import NextTaskGenerator
 from .validator_registry import ValidationError, ValidatorRegistry
 
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
+
 logger = logging.getLogger("TASK_MANAGER")
 
 
 class TaskManager:
     """Main task management system."""
 
-    def __init__(self, project_root: Path, milk_ocean_router=None):
+    def __init__(self, project_root: Path, milk_ocean_router=None, io_service: Optional["KernelIOService"] = None):
         """
         Initialize task manager.
 
         Args:
             project_root: Root directory of the project
             milk_ocean_router: Optional MilkOceanRouter instance for request routing
+            io_service: Optional KernelIOService for centralized file writes
         """
         self.project_root = Path(project_root)
         self.tasks_dir = self.project_root / ".vibe" / "state"
         self.config_dir = self.project_root / ".vibe" / "config"
         self.history_dir = self.project_root / ".vibe" / "history" / "mission_logs"
+        self._io_service = io_service
 
         # Create directories
         self.tasks_dir.mkdir(parents=True, exist_ok=True)
@@ -170,6 +177,40 @@ class TaskManager:
             except Exception as e:
                 print(f"Error loading mission: {e}")
 
+    def _write_json(self, path: Path, content: str) -> bool:
+        """
+        Write JSON content through I/O Service or fallback.
+
+        Args:
+            path: Path to write to
+            content: JSON content to write
+
+        Returns:
+            True if write succeeded, False otherwise
+        """
+        if self._io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = self._io_service.write_document(
+                name=str(path.relative_to(self.project_root)),
+                content=content,
+                doc_type=DocumentType.SNAPSHOT,
+                writer_id="TASK_MANAGER",
+                add_header=False,
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                return False
+            return True
+        else:
+            # Fallback: direct write (standalone/test mode only)
+            try:
+                path.write_text(content, encoding="utf-8")
+                return True
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return False
+
     def _save_tasks(self):
         """Save tasks to disk."""
         tasks_file = self.tasks_dir / "tasks.json"
@@ -177,7 +218,9 @@ class TaskManager:
         try:
             with self.lock:
                 tasks_data = {task_id: task.to_dict() for task_id, task in self.tasks.items()}
-                tasks_file.write_text(json.dumps(tasks_data, indent=2))
+                content = json.dumps(tasks_data, indent=2)
+                if not self._write_json(tasks_file, content):
+                    print("Error saving tasks: Failed to write file")
         except Exception as e:
             print(f"Error saving tasks: {e}")
 
@@ -189,7 +232,9 @@ class TaskManager:
         mission_file = self.config_dir / "active_mission.json"
 
         try:
-            mission_file.write_text(json.dumps(self.active_mission.to_dict(), indent=2))
+            content = json.dumps(self.active_mission.to_dict(), indent=2)
+            if not self._write_json(mission_file, content):
+                print("Error saving mission: Failed to write file")
         except Exception as e:
             print(f"Error saving mission: {e}")
 
