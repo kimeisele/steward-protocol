@@ -16,6 +16,7 @@ from vibe_core.runtime.context_loader import ContextLoader
 from vibe_core.runtime.playbook_router import PlaybookRouter
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
+from vibe_core.runtime.prompt_context import get_prompt_context
 from vibe_core.store.sqlite_store import SQLiteStore
 
 
@@ -27,6 +28,7 @@ class BootSequence:
         self.context_loader = ContextLoader(self.project_root)
         self.playbook_engine = PlaybookRouter()
         self.prompt_composer = PromptComposer()
+        self.prompt_context = get_prompt_context()
 
         # Initialize SQLite persistence (ARCH-003: Dual Write Mode)
         db_path = self.project_root / ".vibe" / "state" / "vibe_agency.db"
@@ -50,6 +52,22 @@ class BootSequence:
         # Conveyor Belt 1: Load Context
         print("🔄 Loading context...", file=sys.stderr)
         context = self.context_loader.load()
+
+        # Resolve dynamic context from PromptContext resolvers
+        print("🔌 Resolving dynamic context...", file=sys.stderr)
+        resolved = self.prompt_context.resolve(
+            [
+                "kernel_status",
+                "kernel_agents",
+                "kernel_agents_count",
+                "kernel_ledger_events",
+                "inbox_count",
+                "agenda_summary",
+                "git_sync_status",
+                "system_time",
+            ]
+        )
+        context["resolved"] = resolved
 
         # Load project memory (semantic layer)
         print("🧠 Loading project memory...", file=sys.stderr)
