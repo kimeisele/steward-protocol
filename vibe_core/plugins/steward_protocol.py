@@ -87,6 +87,9 @@ class StewardProtocolPlugin(KernelPlugin):
         # Task metrics for trust calculation {agent_id: {completed, failed}}
         self._task_metrics: Dict[str, Dict[str, int]] = {}
 
+        # Task to agent mapping for failure tracking {task_id: agent_id}
+        self._task_agent_map: Dict[str, str] = {}
+
         # Connected infrastructure (lazy loaded)
         self._agent_loader = None
         self._steward_client = None
@@ -153,6 +156,39 @@ class StewardProtocolPlugin(KernelPlugin):
 
         logger.debug(f"📜 Agent '{agent_id}' Protocol tracking initialized")
 
+    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
+        """
+        Track task completion for trust calculation.
+
+        Success increases trust score.
+        """
+        # Extract agent_id from result or task map
+        agent_id = None
+        if isinstance(result, dict):
+            agent_id = result.get("agent_id")
+
+        if not agent_id:
+            agent_id = self._task_agent_map.pop(task_id, None)
+
+        if agent_id and agent_id in self._task_metrics:
+            self._task_metrics[agent_id]["completed"] += 1
+            self._update_trust_score(agent_id)
+            logger.debug(f"📜 Trust: Agent '{agent_id}' completed task, score updated")
+
+    def on_task_failed(self, kernel: "RealVibeKernel", task_id: str, error: str) -> None:
+        """
+        Track task failure for trust calculation.
+
+        Failure decreases trust score.
+        """
+        # Get agent_id from task map
+        agent_id = self._task_agent_map.pop(task_id, None)
+
+        if agent_id and agent_id in self._task_metrics:
+            self._task_metrics[agent_id]["failed"] += 1
+            self._update_trust_score(agent_id)
+            logger.info(f"📜 Trust: Agent '{agent_id}' failed task, score decreased")
+
     def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
         """
         PROTOCOL GATE: Verify task submission is valid.
@@ -163,9 +199,15 @@ class StewardProtocolPlugin(KernelPlugin):
         1. Target agent exists and has manifest
         2. Target agent accepts the task type (if declared in capabilities)
         3. Requester has delegation permission (if enforced)
+        4. Track task→agent mapping for trust calculation
         """
         # Get target agent from task
         target_agent = getattr(task, "agent_id", None) or getattr(task, "target", None)
+        task_id = getattr(task, "task_id", None) or getattr(task, "id", None)
+
+        # Track task→agent for trust calculation
+        if task_id and target_agent:
+            self._task_agent_map[task_id] = target_agent
 
         if not target_agent:
             # No target specified - allow (kernel will route)
@@ -185,7 +227,9 @@ class StewardProtocolPlugin(KernelPlugin):
 
         if accepted_operations:
             task_type = getattr(task, "type", None) or getattr(task, "action", "unknown")
-            if task_type not in accepted_operations and "*" not in accepted_operations:
+            # Extract operation names from list of dicts
+            op_names = [op.get("name", "") if isinstance(op, dict) else op for op in accepted_operations]
+            if task_type not in op_names and "*" not in op_names:
                 logger.warning(f"📜 PROTOCOL GATE: Agent '{target_agent}' does not accept '{task_type}' tasks")
                 # Don't veto - just warn. Strict mode can be added later.
 
@@ -196,26 +240,6 @@ class StewardProtocolPlugin(KernelPlugin):
             # Don't veto - just warn. Can be made strict later.
 
         return True  # Allow task
-
-    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
-        """
-        Track task completion for trust calculation.
-        """
-        # Extract agent_id from result if available
-        agent_id = None
-        if isinstance(result, dict):
-            agent_id = result.get("agent_id")
-
-        if agent_id and agent_id in self._task_metrics:
-            self._task_metrics[agent_id]["completed"] += 1
-            self._update_trust_score(agent_id)
-
-    def on_task_failed(self, kernel: "RealVibeKernel", task_id: str, error: str) -> None:
-        """
-        Track task failure for trust calculation.
-        """
-        # We don't have agent_id in failure - would need to track tasks
-        pass
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Clean up on shutdown."""
