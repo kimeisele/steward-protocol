@@ -2,14 +2,18 @@
 STEWARD Protocol Cryptographic Functions
 Real ECDSA (Elliptic Curve Digital Signature Algorithm) implementation for identity verification
 Using pure Python ECDSA library for maximum compatibility
+
+NOTE: ecdsa imports are LAZY (inside functions) to prevent crashes when lib is missing.
 """
 
 import base64
 import hashlib
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from ecdsa import NIST256p, SigningKey, VerifyingKey
-from ecdsa.util import sigdecode_string, sigencode_string
+# Lazy import - only for type hints
+if TYPE_CHECKING:
+    from ecdsa import SigningKey, VerifyingKey
 
 # Key storage location
 KEYS_DIR = Path(".steward/keys")
@@ -26,6 +30,9 @@ def ensure_keys_exist():
     """
     if PRIVATE_KEY_PATH.exists() and PUBLIC_KEY_PATH.exists():
         return False
+
+    # Lazy import
+    from ecdsa import NIST256p, SigningKey
 
     # Create directory
     KEYS_DIR.mkdir(parents=True, exist_ok=True)
@@ -71,8 +78,10 @@ def get_public_key_string():
     return content
 
 
-def _load_private_key():
+def _load_private_key() -> "SigningKey":
     """Load private key from file."""
+    from ecdsa import SigningKey
+
     if not PRIVATE_KEY_PATH.exists():
         raise FileNotFoundError(f"Private key not found at {PRIVATE_KEY_PATH}")
 
@@ -81,8 +90,10 @@ def _load_private_key():
     return private_key
 
 
-def _load_public_key(public_key_b64_str):
+def _load_public_key(public_key_b64_str: str) -> "VerifyingKey":
     """Load public key from base64 string (without PEM markers)."""
+    from ecdsa import VerifyingKey
+
     # Reconstruct PEM format with BEGIN/END markers
     pem_str = f"""-----BEGIN PUBLIC KEY-----
 {public_key_b64_str}
@@ -102,6 +113,8 @@ def sign_content(content: str) -> str:
     Returns:
         str: The signature in base64 format
     """
+    from ecdsa.util import sigencode_string
+
     private_key = _load_private_key()
 
     # Sign the content using SHA256 hash
@@ -125,6 +138,8 @@ def verify_signature(content: str, signature_b64: str, public_key_b64: str) -> b
     Returns:
         bool: True if signature is valid, False otherwise
     """
+    from ecdsa.util import sigdecode_string
+
     try:
         public_key = _load_public_key(public_key_b64)
 
