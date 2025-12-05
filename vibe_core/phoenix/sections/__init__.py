@@ -15,12 +15,10 @@ from .quality import (
 )
 from .routing import RoutingRule
 from .steward import (
-    AgentIdentity,
     BehaviorConfig,
     CognitivePolicy,
     EconomicConstraints,
     ModelPreferences,
-    PromptTemplates,
     StewardConfig,
     TeamContext,
     UserContext,
@@ -47,10 +45,8 @@ __all__ = [
     "TestCategory",
     "CIConfig",
     "CIWorkflow",
-    # Steward (Layer 1.5/1.6)
+    # Steward (Layer 1.5/1.6 - Protocol config, NOT agent identity)
     "StewardConfig",
-    "AgentIdentity",
-    "PromptTemplates",
     "UserContext",
     "UserPreferences",
     "TeamContext",
