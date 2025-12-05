@@ -90,16 +90,87 @@ python3 -c "from vibe_core.phoenix.sections.steward import StewardConfig; print(
 
 ## GAP ANALYSIS: SPECIFICATION vs IMPLEMENTATION
 
-| Spec Section | In steward.yaml? | In StewardConfig? | Verified? |
-|--------------|------------------|-------------------|-----------|
-| Identity | ✅ Added | ✅ Added | ❌ |
-| Capabilities | ❌ | ❌ | ❌ |
-| Behavior | ✅ | ✅ | ❌ |
-| User Context (1.5) | ✅ | ✅ | ❌ |
-| Cognitive Policy (1.6) | ✅ | ✅ | ❌ |
-| Quality Guarantees | ❌ | ❌ | ❌ |
-| Verification | ❌ | ❌ | ❌ |
-| Attestation | ❌ | ❌ | ❌ |
+### The REAL Structure (from SPECIFICATION.md)
+
+**STEWARD Protocol is 5 LAYERS:**
+1. Layer 1: Agent Manifest (steward.json) - Machine-readable identity
+2. Layer 1.5: User Context - User/Team preferences
+3. Layer 1.6: Cognitive Policy - Model preferences, economic constraints
+4. Layer 2: Registry - Discovery, versioning, reputation
+5. Layer 3: Verification - Cryptographic signing, attestation
+6. Layer 4: Delegation - Task submission, monitoring
+7. Layer 5: CLI Tools - steward init/verify/delegate/discover
+
+### Existing Implementation (steward/ directory)
+
+| File | What it does | Status |
+|------|--------------|--------|
+| client.py | StewardClient - sign artifacts, assert identity | EXISTS |
+| crypto.py | Cryptographic signing | EXISTS |
+| agent_metadata.py | AgentBiology registry (Varna/Ashrama) | EXISTS |
+| varna.py | Species classification (MANUSHA, PASHU, etc.) | EXISTS |
+| ashrama.py | Lifecycle stages | EXISTS |
+| cli.py | CLI commands | EXISTS |
+
+### What I Added (Iteration 1) - WRONG LAYER
+
+| My Addition | Where | Problem |
+|-------------|-------|---------|
+| identity in steward.yaml | Phoenix Config | Should be in steward.json (Layer 1) |
+| system_prompt_template | Phoenix Config | Prompts are DOWNSTREAM of Protocol |
+| templates in StewardConfig | Phoenix Section | Mixing concerns |
+
+### The REAL Gap (Updated after reading code)
+
+**steward.json FILES EXIST!** In:
+- `steward/system_agents/*/steward.json` (for each system agent)
+- `agent_city/registry/*/steward.json` (for city agents)
+
+**Format (example from herald):**
+```json
+{
+  "identity": { "agent_id": "herald", "name": "HERALD" },
+  "specs": { "version": "1.0.0", "domain": "COMMUNICATIONS" },
+  "capabilities": { "operations": [...] },
+  "governance": { "compliance_level": 2, "constitution_hash": "..." }
+}
+```
+
+**The REAL Gap is:**
+1. Phoenix Config doesn't READ these steward.json files
+2. boot_sequence.py doesn't use the existing Protocol structure
+3. My steward.yaml duplicates what steward.json already does
+
+### What SHOULD happen:
+
+```
+steward.json (Layer 1)          steward/client.py (Runtime)
+       │                                │
+       └──────────┬────────────────────┘
+                  │
+                  ▼
+           Phoenix Config (Reads steward.json)
+                  │
+                  ▼
+           boot_sequence.py (Uses both)
+                  │
+                  ▼
+           System Prompt (Generated from Protocol)
+```
+
+### Priority Fix (Revised)
+
+1. ~~Find/create steward.json~~ - ALREADY EXISTS in steward/system_agents/
+2. Phoenix Config should LOAD steward.json, not duplicate it in steward.yaml
+3. Remove identity/templates from steward.yaml (use steward.json instead)
+4. System prompt should be GENERATED from steward.json Protocol data
+
+### Iteration 2 TODO
+
+- [ ] Check how steward.json files are currently loaded (if at all)
+- [ ] Find loader for steward.json (should exist in steward/ or vibe_core/)
+- [ ] Connect Phoenix to use steward.json data
+- [ ] Remove duplicate identity config from steward.yaml
 
 ---
 
