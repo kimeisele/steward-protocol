@@ -7,41 +7,83 @@
 
 ---
 
-## 🔬 GEMINI RESEARCH REQUEST (From Opus)
+## 🎯 BATTLE PLAN: PHASE 2 (The Fraktal Transition)
 
-**Status:** PENDING ANALYSIS
-**Priority:** BLOCKING - Cannot proceed with Phase 2 until resolved
+**Status:** 🚀 READY FOR EXECUTION
+**Consultant:** Gemini Pro (Architecture & Debugging)
+**Executor:** Opus (Migration & Refactoring)
 
-### The Problem
+### 1. THE DEADLOCK BREAKER (Immediate Action)
 
-Die Test-Suite ist **systemisch korrumpiert**. `pytest --collect-only` hängt unendlich, aber einzelne Test-Files laufen durch (`pytest tests/test_unified_loader.py` = 29 passed in 2.4s).
+**Objective:** Fix the test suite crash (`pytest --collect-only` hang) BEFORE migration.
 
-### Meine Hypothesen (Opus)
+| Task | Command / Action | Owner |
+|------|------------------|-------|
+| **Fix Package** | `touch tests/__init__.py` | Opus |
+| **Fix Dependency** | `pip install ecdsa` | Opus |
+| **Fix Crypto** | Refactor `steward/crypto.py` to use **Lazy Imports** for `ecdsa` | Opus |
+| **Verify** | Run `pytest --collect-only` (Must be clean) | Opus |
 
-1. **Import-Zeit Side Effects** - Irgendwo wird bei Import Code ausgeführt der blockt
-2. **Zirkuläre Imports** - Durch die Vermischung alter/neuer Architektur
-3. **Phoenix Config nicht fraktal** - Config wird nicht einheitlich/testbar geladen
+### 2. MIGRATION ROADMAP (The 3 Phases)
 
-### Was ich brauche von dir (Gemini)
+#### Phase 2a: The Foundation (Short Term)
+*Goal: Stabilize Kernel & Decouple Core Logic*
 
-Bitte analysiere mit deinem massiven Context Window:
+| Priority | Plugin | Source | Target | Why? |
+|----------|--------|--------|--------|------|
+| 🚨 **CRITICAL** | **Crypto** | `steward/crypto.py` | `vibe_core/plugins/crypto/` | Decouple hard dependency. |
+| 🚨 **CRITICAL** | **Steward** | `plugins/steward_protocol.py` | `vibe_core/plugins/steward_protocol/` | Break the Monolith. |
+| 🔴 **HIGH** | **Test Mode** | `plugins/test_mode.py` | `vibe_core/plugins/test_mode/` | Fix global state issues. |
 
-1. **`tests/` Ordner komplett** - Alle Test-Files, conftest.py, fixtures
-2. **`vibe_core/plugins/test_mode.py`** - Das Test Plugin
-3. **`vibe_core/plugins/test_orchestration.py`** - Test Discovery Plugin
-4. **`vibe_core/phoenix/`** - Die ganze Config-Struktur
-5. **`pyproject.toml`** - pytest Konfiguration
+#### Phase 2b: The Governance Layer (Medium Term)
+*Goal: Modularize "Vedic Laws"*
 
-### Fragen an dich
+| Priority | Plugin | Source | Target | Why? |
+|----------|--------|--------|--------|------|
+| 🟡 **MEDIUM** | **Governance** | `plugins/vedic_governance.py` | `vibe_core/plugins/vedic_governance/` | Foundational logic. |
+| 🟡 **MEDIUM** | **Sarga** | `plugins/sarga_cycle.py` | `vibe_core/plugins/sarga_cycle/` | Scheduler gating. |
 
-1. **WO** hängt pytest genau? Welcher Import/welches Modul?
-2. **WARUM** ist die Test-Suite nicht fraktal? Was fehlt?
-3. **WIE** sollte eine fraktale Test-Konfiguration aussehen?
-4. Gibt es **technische Schuld** die wir JETZT fixen müssen bevor Phase 2?
+#### Phase 3: The Interface Layer (Long Term)
+*Goal: Cleanup User-Space Plugins*
 
-### Dein Output
+| Priority | Plugin | Source | Target | Why? |
+|----------|--------|--------|--------|------|
+| 🟢 **LOW** | **Git History** | `plugins/git_history.py` | `vibe_core/plugins/git_history/` | Analytics tool. |
+| 🟢 **LOW** | **UI Plugins** | `plugins/*_ui.py` | `vibe_core/plugins/*_ui/` | Interface sync. |
 
-Bitte schreibe deine Findings in `GEMINI_PRO.md` Section "Test Suite Analysis".
+### 3. ROLES & RESPONSIBILITIES (Parallel Flight)
+
+**OPUS (Senior Steward - Fraktal Architecture):**
+- ✅ Deadlock Breaker - DONE
+- ✅ steward_protocol migrated - DONE
+- ✅ plugin_template created - DONE
+- ⏳ **CURRENT:** Fraktal deep work - UnifiedLoader für ALLE item types
+- ⏳ Phoenix Config fraktal machen
+- ⏳ Agent Loader alignment (steward.json → manifest.json)
+
+**GEMINI (Builder - Plugin Migration):**
+- [ ] **BUILD:** `test_mode/` - Migrate from test_mode.py
+- [ ] **BUILD:** `sarga_cycle/` - Migrate from sarga_cycle.py
+- [ ] **BUILD:** `vedic_governance/` - Migrate from vedic_governance.py
+- [ ] **BUILD:** `crypto/` - Extract from steward/crypto.py
+- [ ] **BUILD:** UI plugins (envoy_ui, settings_ui, ephemeral_ui, git_history)
+
+**Parallel Flight Pattern:**
+```
+OPUS (Deep Architecture)          GEMINI (Bulk Migration)
+─────────────────────────         ─────────────────────────
+UnifiedLoader → ALL types         test_mode/ ✓
+Phoenix fraktal                   sarga_cycle/ ✓
+Agent alignment                   vedic_governance/ ✓
+Schema validation                 crypto/ ✓
+Pre-commit integration            UI plugins/ ✓
+```
+
+**CRITICAL for Gemini:** Each plugin MUST have:
+1. `manifest.json` (use schema from `vibe_core/loaders/manifest_schema.json`)
+2. `plugin_main.py` (NO global side effects!)
+3. `__init__.py` (export the Plugin class)
+4. Copy from `plugin_template/` as starting point
 
 ---
 
@@ -293,24 +335,47 @@ Like Discoverer for agents, a PluginDiscoverer could:
 | KnowledgeLoader | ❌ No | ❌ No | ❌ No |
 | WorkflowLoader | ✅ YAML itself | ✅ YAML itself | ❌ No |
 
-### 4.4 The Unified Pattern Needed
+### 4.4 The UnifiedLoader Alignment Plan
+
+**STATUS: Phase 1 COMPLETE** - `vibe_core/loaders/base_loader.py` exists!
 
 ```
 vibe_core/loaders/
-    base_loader.py        ← Unified loader protocol
-    plugin_loader.py      ← Inherits base
-    section_loader.py     ← Inherits base
-    agent_loader.py       ← Inherits base
-    ...
+    __init__.py           ← ✅ DONE
+    base_loader.py        ← ✅ DONE (UnifiedLoader ABC)
+    manifest_schema.json  ← ✅ DONE (JSON Schema)
+    schema.py             ← ✅ DONE (Validation)
 ```
 
-OR: Make everything Plugin-like with:
+**Phase 2: Loader Alignment** (Opus deep work)
+
+| Loader | Current Location | Action | Complexity |
+|--------|------------------|--------|------------|
+| `AgentLoader` | `vibe_core/steward/loader.py` | Inherit UnifiedLoader | 🟢 LOW - already has manifest |
+| `PluginLoader` | `vibe_core/plugin_loader.py` | Keep as-is, new items use folder | 🟢 LOW |
+| `SectionLoader` | `vibe_core/phoenix/section_loader.py` | Add manifest.json support | 🟡 MEDIUM |
+| `SettingsSectionLoader` | `vibe_core/settings/loader.py` | Merge with SectionLoader | 🟡 MEDIUM |
+| `WorkflowLoader` | `vibe_core/playbook/loader.py` | Keep YAML-based (already has schema) | 🟢 LOW |
+| `KnowledgeLoader` | `vibe_core/knowledge/loader.py` | Keep YAML-based | 🟢 LOW |
+| `ContextLoader` | `vibe_core/runtime/context_loader.py` | Keep as-is (different purpose) | ⚪ SKIP |
+
+**Alignment Strategy (NO BREAKING CHANGES):**
+
+1. **AgentLoader** → KEEP AS-IS (it's the gold standard, UnifiedLoader was modeled after it)
+2. **PluginLoader** → Works with both old .py AND new folders (backward compat)
+3. **New folders** → Use UnifiedLoader pattern (manifest.json + {type}_main.py)
+4. **YAML Loaders** → Keep YAML-native (WorkflowLoader, KnowledgeLoader)
+5. **ContextLoader** → Skip (different purpose, not a discovery loader)
+
+**Key Insight:** AgentLoader IS the fraktal pattern. UnifiedLoader was extracted FROM it.
+The goal is NOT to change working code, but to ensure NEW code follows the pattern.
+
 ```
-{thing}/
-    manifest.json         ← What it is
-    config.yaml           ← How it behaves
-    main.py               ← Entry point
-    sub_items/            ← Scalable children (tools, renderers, etc)
+EXISTING (don't touch):          NEW (use UnifiedLoader pattern):
+─────────────────────────        ─────────────────────────────────
+AgentLoader (steward.json)       manifest.json
+PluginLoader (backward compat)   plugin_template/ as reference
+SectionLoader                    (future) section folders
 ```
 
 ---
