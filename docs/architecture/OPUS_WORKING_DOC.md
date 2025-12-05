@@ -693,43 +693,203 @@ class StewardProtocolPlugin(KernelPlugin):
 
 ## IMPLEMENTATION PLAN: StewardProtocolPlugin
 
-### Phase 1: Basic Plugin Skeleton ✅ READY
-**File:** `vibe_core/plugins/steward_protocol.py`
-- [ ] Class skeleton extending KernelPlugin
-- [ ] plugin_id = "steward_protocol"
-- [ ] priority = 5 (before vedic_governance which is 10)
-- [ ] on_boot: register as kernel.steward
+### ⚠️ CRITICAL FINDINGS (2025-12-05) - DAS HABE ICH VERPASST
 
-### Phase 2: Connect Existing Infrastructure
-- [ ] Import and use AgentLoader from vibe_core/steward/loader.py
-- [ ] Import and use StewardClient from steward/client.py
-- [ ] Import crypto functions from steward/crypto.py
-- [ ] Import ConstitutionalOath from steward/constitution.py
+**ICH WAR BLIND FÜR DAS ECHTE SYSTEM:**
 
-### Phase 3: Protocol Hooks
-- [ ] on_agent_registered: Load steward.json, verify signature, init trust
-- [ ] on_task_submit: Verify delegation permissions (PROTOCOL GATE)
-- [ ] on_task_completed: Update trust metrics
+1. **Das Plugin ist nur BOOKKEEPING** - es trackt Manifests aber ist NICHT in den Datenfluss eingebunden!
 
-### Phase 4: Public API
-- [ ] kernel.steward.verify(agent_id) → Verify agent identity
-- [ ] kernel.steward.get_trust_score(agent_id) → Get trust score
-- [ ] kernel.steward.get_manifest(agent_id) → Get agent manifest
-- [ ] kernel.steward.attest(agent_id, capability) → Create attestation
+2. **Capabilities kommen aus dem FALSCHEN ORT:**
+   ```python
+   # kernel_impl.py:834 - FALSCH
+   agent_caps = getattr(agent, "capabilities", [])
+   self._capability_registry.register_agent(agent.agent_id, agent_caps)
+   ```
+   Capabilities kommen aus `agent.capabilities`, NICHT aus steward.json manifest!
 
-### Phase 5: Phoenix Config Integration
-- [ ] Load steward.yaml via PhoenixConfig
-- [ ] Apply Layer 1.5 (User Context)
-- [ ] Apply Layer 1.6 (Cognitive Policy)
-- [ ] Generate system prompt FROM Protocol data (not hardcoded)
+3. **Timing Problem:**
+   ```
+   kernel.register_agent():
+     Line 835: _capability_registry.register_agent(agent_id, agent_caps)  ← HIER
+     Line 841: plugin.on_agent_registered(...)                            ← ZU SPÄT!
+   ```
+   Die Plugin-Hook wird NACH der Capability-Registrierung aufgerufen!
 
-### Cleanup: Remove Wrong Code
-- [ ] Remove identity section from steward.yaml
-- [ ] Remove templates from steward.yaml (keep only Layer 1.5/1.6)
-- [ ] Remove AgentIdentity, PromptTemplates from steward.py section
-- [ ] Update boot_sequence.py to use kernel.steward
+4. **Tool Execution Flow ist KOMPLETT GETRENNT:**
+   ```
+   Agent → ToolRegistry.execute() → _check_agent_capability() → CapabilityRegistry
+                                          ↑
+                                    STEWARD Plugin ist NICHT hier!
+   ```
+
+### DAS ECHTE SYSTEM (Das ich ignoriert habe)
+
+```
+vibe_core/kernel_impl.py:
+├── self._capability_registry = CapabilityRegistry(ledger)
+├── self.tool_registry = ToolRegistry(capability_checker=self._check_agent_capability)
+│
+└── register_agent(agent):
+        agent_caps = agent.capabilities  ← HIER kommen capabilities her
+        _capability_registry.register_agent(agent_id, agent_caps)
+        for plugin in plugins:
+            plugin.on_agent_registered(...)  ← Plugin kommt zu spät
+
+vibe_core/capability_registry.py:
+├── register_agent(agent_id, capabilities)  ← Speichert capabilities
+├── has_capability(agent_id, cap)           ← Tool calls prüfen hier
+├── revoke(agent_id, caps, revoker)         ← Capabilities entziehen
+└── grant(agent_id, caps, granter)          ← Capabilities hinzufügen
+
+vibe_core/tools/tool_registry.py:
+└── execute(tool_call):
+        if capability_checker:
+            has_cap = capability_checker(agent_id, required_cap)  ← Prüft capabilities
+```
+
+### WAS DAS STEWARD PLUGIN WIRKLICH TUN MUSS
+
+**NICHT NUR BOOKKEEPING** - sondern echte Integration:
+
+1. **Capabilities müssen aus steward.json kommen:**
+   - Plugin lädt manifest in on_agent_registered
+   - Plugin muss capabilities an CapabilityRegistry weitergeben
+   - ABER: Timing Problem - Hook ist zu spät!
+
+2. **Lösung A: Pre-Registration Hook (SAUBER)**
+   ```python
+   # In kernel_impl.py register_agent() VORHER einfügen:
+   if hasattr(self, 'steward') and self.steward:
+       manifest_caps = self.steward.get_manifest_capabilities(agent.agent_id)
+       if manifest_caps:
+           agent_caps = manifest_caps
+   ```
+
+3. **Lösung B: Grant nach Registration (HACKY)**
+   ```python
+   # In plugin on_agent_registered:
+   caps_from_manifest = manifest['capabilities']['operations']
+   self._kernel._capability_registry.grant(agent_id, caps_from_manifest, 'steward')
+   ```
+
+4. **Tool Execution Auditing:**
+   - Plugin sollte Tool-Aufrufe sehen können
+   - Braucht Hook: `on_tool_execute(agent_id, tool_name, params)`
+   - EXISTIERT NICHT im KernelPlugin Protocol!
+
+### REVISED PHASES
+
+#### Phase 1: Basic Skeleton ✅ DONE
+- Plugin exists at vibe_core/plugins/steward_protocol.py
+- Registers as kernel.steward
+- Loads config, connects infrastructure
+
+#### Phase 2: Cleanup ✅ DONE
+- Removed wrong identity/templates from steward.yaml
+- Removed AgentIdentity/PromptTemplates from section classes
+- Fixed boot_sequence.py prompt generation
+
+#### Phase 3: MISSING - Capability Integration ❌ NOT DONE
+**Das ist das ECHTE Problem!**
+
+Option A (CLEAN - requires kernel change):
+- [ ] Add new method: `StewardProtocolPlugin.get_manifest_capabilities(agent_id)`
+- [ ] Modify kernel_impl.py register_agent() to call plugin first
+- [ ] Capabilities come from manifest, not agent.capabilities
+
+Option B (HACKY - no kernel change):
+- [ ] In on_agent_registered, grant capabilities from manifest
+- [ ] Overwrites whatever agent.capabilities had
+- [ ] Works but timing is weird
+
+#### Phase 4: MISSING - Tool Call Integration ❌ NOT DONE
+**Keine Hooks für Tool-Aufrufe!**
+
+Options:
+- [ ] Add new hook to KernelPlugin: on_tool_execute()
+- [ ] Or: Plugin registers as observer on ToolRegistry
+- [ ] Or: Wrap _check_agent_capability to go through plugin
+
+#### Phase 5: MISSING - Full Protocol Enforcement ❌ NOT DONE
+
+What the plugin SHOULD control:
+- [ ] Which agents can call which tools (via capabilities)
+- [ ] Which agents can delegate to which agents
+- [ ] Trust score affects capability access
+- [ ] Attestation required for sensitive operations
+
+### BEWEIS: DUALITÄT DER CAPABILITIES (2025-12-05)
+
+**steward.json** (Protocol Source of Truth):
+```json
+// steward/system_agents/herald/steward.json
+"capabilities": {
+  "operations": [
+    {"name": "herald.broadcast"},
+    {"name": "herald.research"},
+    {"name": "herald.scribe"},
+    {"name": "herald.scout"},
+    {"name": "herald.identity"}
+  ]
+}
+```
+
+**cartridge_main.py** (Hardcoded - FALSCH):
+```python
+# steward/system_agents/herald/cartridge_main.py:95
+capabilities=[
+    "content_generation", "broadcasting", "research", "strategy"
+]
+```
+
+**DAS SIND VERSCHIEDENE WERTE!** Der Kernel nimmt die falschen.
+
+### LÖSUNG: Protocol Enforcement via grant()
+
+**KEINE Kernel-Änderung nötig!**
+
+```python
+# In StewardProtocolPlugin.on_agent_registered():
+
+def on_agent_registered(self, kernel, agent_id):
+    # 1. Load manifest from steward.json
+    manifest = self._load_agent_manifest(agent_id)
+
+    if manifest:
+        # 2. Extract CORRECT capabilities from manifest
+        caps = manifest.get("capabilities", {})
+        operations = caps.get("operations", [])
+        correct_caps = [op.get("name", "") for op in operations if isinstance(op, dict)]
+
+        # 3. Grant correct capabilities (overwrites/extends wrong cartridge caps)
+        if correct_caps:
+            kernel._capability_registry.grant(
+                agent_id=agent_id,
+                capabilities=correct_caps,
+                granter_id="steward_protocol",
+                reason="Protocol enforcement: capabilities from steward.json"
+            )
+```
+
+Das ist **Protocol Enforcement**, nicht hacky!
+
+### IMPLEMENTATION PLAN (FINAL)
+
+#### Phase 1-2: ✅ DONE
+- Plugin skeleton exists
+- Cleanup done (removed wrong identity/templates)
+
+#### Phase 3: Capability Enforcement ⬅️ NÄCHSTER SCHRITT
+- [ ] In `on_agent_registered`: Extract capabilities from steward.json manifest
+- [ ] Call `kernel._capability_registry.grant()` with correct capabilities
+- [ ] Log what was granted vs what cartridge had
+- [ ] Verify with test: herald should have `herald.broadcast` not `broadcasting`
+
+#### Phase 4: Tool Integration (SPÄTER)
+- [ ] Audit tool calls via existing capability_checker flow
+- [ ] Trust score affects capability access
 
 ---
 
-*Last updated: Iteration 6 - Implementation plan created*
-*Status: READY TO START - Phase 1 first*
+*Last updated: 2025-12-05 - LÖSUNG GEFUNDEN*
+*Status: Phase 3 ready to implement - grant() statt Kernel-Änderung*
