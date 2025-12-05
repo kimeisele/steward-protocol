@@ -410,5 +410,45 @@ timeout 30 python -m pytest tests/integration/test_system_boot.py -v 2>&1 | tail
 
 ---
 
-*Last updated: Iteration 1 - Prompt templates added but Protocol not verified*
-*Status: INCOMPLETE - Must iterate*
+---
+
+## KEY REALIZATION: STEWARD IS NOT AN AGENT
+
+From STEWARD.md:
+> **Type:** Protocol (Governance Framework)
+> STEWARD is a **distributed governance protocol** that coordinates autonomous agents
+
+**STEWARD is NOT an agent like herald or civic!**
+STEWARD is the ENTIRE PROTOCOL - the governance framework itself.
+
+```
+STEWARD Protocol (The Whole System)
+    │
+    ├── Layer 1: VibeOS Kernel (vibe_core)
+    │       └── RealVibeKernel, Ledger, Scheduler, etc.
+    │
+    ├── Layer 2: Core Agents (herald, civic, forum, science)
+    │
+    ├── Layer 3: System Agents (engineer, auditor, archivist)
+    │
+    └── Layer 4: Citizen Agents (user-created)
+```
+
+**This explains:**
+- Why there's no `steward/system_agents/steward/steward.json`
+- Why "STEWARD boot" means booting the WHOLE PROTOCOL
+- Why BootSequence generates prompts FOR THE OPERATOR (human/LLM)
+
+**The "STEWARD System Prompt" is:**
+- NOT the identity of an agent
+- The instructions FOR THE OPERATOR running the protocol
+- What the human/LLM sees when they boot the system
+
+**My Fundamental Error:**
+I tried to treat STEWARD like an agent with identity/capabilities in steward.yaml.
+But STEWARD IS THE FRAMEWORK - it doesn't have a steward.json because IT IS the thing that LOADS steward.json files.
+
+---
+
+*Last updated: Iteration 3 - Understanding STEWARD as Protocol not Agent*
+*Status: IN PROGRESS - Architecture understood, need to revise implementation*
