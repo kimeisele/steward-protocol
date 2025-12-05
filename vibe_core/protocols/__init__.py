@@ -40,6 +40,25 @@ from .operator_protocol import (
     create_system_context,
 )
 
+# Universal Testable Protocol
+from .testable import (
+    AgentTestableAdapter,
+    BaseTestable,
+    EventBusTestableAdapter,
+    LedgerTestableAdapter,
+    PluginTestableAdapter,
+    SchedulerTestableAdapter,
+    Testable,
+    TestableType,
+    TestCase,
+    ToolTestableAdapter,
+)
+from .testable_registry import (
+    TestableRegistry,
+    get_global_registry,
+    reset_global_registry,
+)
+
 # Note: ManifestRegistry and VibeScheduler are re-exported from .ledger module
 # The .registry and .scheduler modules exist for backwards compatibility
 
@@ -69,4 +88,18 @@ __all__ = [
     "create_system_context",
     "create_intent",
     "create_response",
+    # Universal Testable Protocol (Fractal Testing)
+    "Testable",
+    "TestableType",
+    "TestCase",
+    "BaseTestable",
+    "AgentTestableAdapter",
+    "PluginTestableAdapter",
+    "ToolTestableAdapter",
+    "LedgerTestableAdapter",
+    "SchedulerTestableAdapter",
+    "EventBusTestableAdapter",
+    "TestableRegistry",
+    "get_global_registry",
+    "reset_global_registry",
 ]
