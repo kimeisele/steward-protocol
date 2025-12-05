@@ -8,11 +8,16 @@ The backlog is stored as BACKLOG.md in the workspace directory for human readabi
 and persistence across sessions.
 """
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
+
+if TYPE_CHECKING:
+    from vibe_core.io_service import KernelIOService
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +39,52 @@ class AddTaskTool(Tool):
         ...     "priority": "HIGH"
         ... })
     """
+
+    def __init__(self):
+        """Initialize AddTaskTool."""
+        self._io_service: Optional[KernelIOService] = None
+
+    def set_io_service(self, io_service: KernelIOService) -> None:
+        """
+        Set the I/O Service for centralized file writes.
+        Called by kernel after tool registration.
+        """
+        self._io_service = io_service
+        logger.debug("AddTaskTool: I/O Service injected")
+
+    def _write_backlog(self, content: str) -> bool:
+        """
+        Write backlog content through I/O Service or fallback.
+
+        Args:
+            content: Full BACKLOG.md content to write
+
+        Returns:
+            True if write succeeded, False otherwise
+        """
+        if self._io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = self._io_service.write_document(
+                name=str(BACKLOG_PATH),
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="AGENDA_TOOL",
+                add_header=False,
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                return False
+            return True
+        else:
+            # Fallback: direct write (standalone/test mode only)
+            try:
+                BACKLOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+                BACKLOG_PATH.write_text(content, encoding="utf-8")
+                return True
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return False
 
     @property
     def name(self) -> str:
@@ -102,12 +153,13 @@ class AddTaskTool(Tool):
             if not BACKLOG_PATH.exists():
                 logger.warning(f"Backlog file not found at {BACKLOG_PATH}, creating it")
                 BACKLOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-                BACKLOG_PATH.write_text(
+                initial_content = (
                     "# VIBE AGENCY BACKLOG\n\n"
                     "## Outstanding Tasks\n\n"
                     "## Completed Tasks\n\n"
                     "*(Archive of completed work)*\n"
                 )
+                self._write_backlog(initial_content)
 
             # Read current backlog
             content = BACKLOG_PATH.read_text()
@@ -141,7 +193,8 @@ class AddTaskTool(Tool):
             new_content = before_outstanding + "## Outstanding Tasks" + new_outstanding + after_completed
 
             # Write back
-            BACKLOG_PATH.write_text(new_content)
+            if not self._write_backlog(new_content):
+                return ToolResult(success=False, error="Failed to write backlog file")
 
             logger.info(f"AddTaskTool: Added task '[{priority}] {description}' to backlog")
             return ToolResult(
@@ -283,6 +336,52 @@ class CompleteTaskTool(Tool):
         ... })
     """
 
+    def __init__(self):
+        """Initialize CompleteTaskTool."""
+        self._io_service: Optional[KernelIOService] = None
+
+    def set_io_service(self, io_service: KernelIOService) -> None:
+        """
+        Set the I/O Service for centralized file writes.
+        Called by kernel after tool registration.
+        """
+        self._io_service = io_service
+        logger.debug("CompleteTaskTool: I/O Service injected")
+
+    def _write_backlog(self, content: str) -> bool:
+        """
+        Write backlog content through I/O Service or fallback.
+
+        Args:
+            content: Full BACKLOG.md content to write
+
+        Returns:
+            True if write succeeded, False otherwise
+        """
+        if self._io_service:
+            from vibe_core.io_service import DocumentType
+
+            result = self._io_service.write_document(
+                name=str(BACKLOG_PATH),
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="AGENDA_TOOL",
+                add_header=False,
+            )
+            if not result.success:
+                logger.error(f"❌ I/O Service write failed: {result.error}")
+                return False
+            return True
+        else:
+            # Fallback: direct write (standalone/test mode only)
+            try:
+                BACKLOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+                BACKLOG_PATH.write_text(content, encoding="utf-8")
+                return True
+            except Exception as e:
+                logger.error(f"❌ Direct write failed: {e}")
+                return False
+
     @property
     def name(self) -> str:
         return "complete_task"
@@ -394,7 +493,8 @@ class CompleteTaskTool(Tool):
             new_content = before_outstanding + "## Outstanding Tasks" + new_outstanding + "\n" + new_completed
 
             # Write back
-            BACKLOG_PATH.write_text(new_content)
+            if not self._write_backlog(new_content):
+                return ToolResult(success=False, error="Failed to write backlog file")
 
             logger.info(f"CompleteTaskTool: Marked task as completed: {found_task.strip()}")
             return ToolResult(
