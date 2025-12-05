@@ -9,7 +9,7 @@ It issues cryptographically-sealed passports (steward.json) for all agents.
 PHASE 6: STEWARD PROTOCOL COMPLIANCE
 
 The Passport Office:
-1. Scans steward/system_agents/ for existing steward.json manifests
+1. Scans vibe_core/cartridges/system/ for existing steward.json manifests
 2. Extracts agent metadata from existing manifests
 3. Generates new steward.json with Phase 6 schema
 4. Calculates SHA-256 hash of the manifest (The Seal)
@@ -255,7 +255,7 @@ def discover_manifests(include_citizens: bool = True) -> List[Path]:
     Discover all existing steward.json manifests.
 
     Args:
-        include_citizens: If True, also scan agent_city/registry/ for citizen agents
+        include_citizens: If True, also scan vibe_core/cartridges/agent_city/ for citizen agents
 
     Returns:
         List of paths to steward.json files
@@ -263,13 +263,13 @@ def discover_manifests(include_citizens: bool = True) -> List[Path]:
     manifests = []
 
     # Scan system agents
-    system_agents_path = Path("steward/system_agents")
+    system_agents_path = Path("vibe_core/cartridges/system")
     for manifest_path in system_agents_path.glob("*/steward.json"):
         manifests.append(manifest_path)
 
-    # Scan citizen agents (agent_city/registry/)
+    # Scan citizen agents (vibe_core/cartridges/agent_city/)
     if include_citizens:
-        citizen_agents_path = Path("agent_city/registry")
+        citizen_agents_path = Path("vibe_core/cartridges/agent_city")
         for manifest_path in citizen_agents_path.glob("*/steward.json"):
             manifests.append(manifest_path)
 

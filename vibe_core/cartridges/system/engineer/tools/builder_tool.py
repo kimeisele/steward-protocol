@@ -95,7 +95,7 @@ class BuilderTool(Tool):
             "target_dir": {
                 "type": "string",
                 "required": False,
-                "description": "Target directory (default: agent_city/registry/{name})",
+                "description": "Target directory (default: vibe_core/cartridges/agent_city/{name})",
             },
         }
 
@@ -120,7 +120,7 @@ class BuilderTool(Tool):
             name = parameters["name"].lower()
             domain = parameters["domain"].upper()
             description = parameters.get("description", f"{name.capitalize()} agent for {domain} domain")
-            target_dir = parameters.get("target_dir", f"agent_city/registry/{name}")
+            target_dir = parameters.get("target_dir", f"vibe_core/cartridges/agent_city/{name}")
 
             result = self.scaffold_from_template(
                 agent_id=name,

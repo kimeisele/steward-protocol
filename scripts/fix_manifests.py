@@ -118,7 +118,7 @@ def fix_manifest(agent_id: str, manifest_path: Path):
 
 
 def main():
-    agents_dir = Path("steward/system_agents")
+    agents_dir = Path("vibe_core/cartridges/system")
     fixed = 0
 
     for agent_dir in agents_dir.iterdir():

@@ -28,7 +28,7 @@ AGENTS = [
 
 def verify_agent(agent_name: str) -> dict:
     """Verify a single agent has proper config integration."""
-    agent_path = Path(f"/home/user/steward-protocol/steward/system_agents/{agent_name}/cartridge_main.py")
+    agent_path = Path(f"/home/user/steward-protocol/vibe_core/cartridges/system/{agent_name}/cartridge_main.py")
 
     result = {
         "agent": agent_name,

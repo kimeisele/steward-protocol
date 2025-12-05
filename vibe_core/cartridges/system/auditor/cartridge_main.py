@@ -196,7 +196,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
         that verifies adherence to THE AGENT CONSTITUTION.
 
         Payload:
-        - system_agents_path: Path to steward/system_agents (optional)
+        - system_agents_path: Path to vibe_core/cartridges/system (optional)
 
         Returns:
         - verdict: CONSTITUTIONAL | GOVERNANCE_VIOLATIONS | WARNINGS | UNCONSTITUTIONAL
@@ -208,7 +208,7 @@ class AuditorCartridge(VibeAgent, OathMixin):
         # Get system agents path
         system_agents_path = task.payload.get("system_agents_path")
         if not system_agents_path:
-            system_agents_path = Path("steward/system_agents")
+            system_agents_path = Path("vibe_core/cartridges/system")
         else:
             system_agents_path = Path(system_agents_path)
 

@@ -239,7 +239,7 @@ class StandardsInspectionTool(Tool):
             "system_agents_path": {
                 "type": "string",
                 "required": False,
-                "description": "Path to steward/system_agents (for inspect_all)",
+                "description": "Path to vibe_core/cartridges/system (for inspect_all)",
             },
             "agent_path": {
                 "type": "string",
@@ -325,7 +325,7 @@ class StandardsInspectionTool(Tool):
         Inspect a single agent for violations.
 
         Args:
-            agent_path: Path to agent directory (e.g., steward/system_agents/herald)
+            agent_path: Path to agent directory (e.g., vibe_core/cartridges/system/herald)
 
         Returns:
             List of violations found
@@ -421,7 +421,7 @@ class StandardsInspectionTool(Tool):
         Inspect all agents in the system_agents directory.
 
         Args:
-            system_agents_path: Path to steward/system_agents
+            system_agents_path: Path to vibe_core/cartridges/system
 
         Returns:
             List of all violations found

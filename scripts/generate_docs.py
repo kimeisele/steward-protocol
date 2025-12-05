@@ -46,7 +46,7 @@ def load_renderer(full_module_name, module_path):
 
 # Load all renderer modules with full package names
 # Skip __init__.py to avoid circular imports
-tools_dir = project_root / "steward/system_agents/scribe/tools"
+tools_dir = project_root / "vibe_core/cartridges/system/scribe/tools"
 
 # Load base module FIRST (needed by all renderers)
 base_module = load_renderer("steward.system_agents.scribe.tools.base", tools_dir / "base.py")

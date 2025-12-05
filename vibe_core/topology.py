@@ -233,8 +233,8 @@ class BhuMandalaTopology:
         # Method 2: Filesystem scan (fallback or supplement)
         if not discovered_agents:
             search_paths = [
-                Path("steward/system_agents"),
-                Path("agent_city/registry"),
+                Path("vibe_core/cartridges/system"),
+                Path("vibe_core/cartridges/agent_city"),
             ]
 
             for base_path in search_paths:

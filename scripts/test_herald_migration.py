@@ -78,7 +78,7 @@ def test_herald_migration():
 
     # Step 5: Verify requirements.txt doesn't exist
     print("\n5️⃣  Verifying requirements.txt deleted...")
-    req_path = project_root / "steward/system_agents/herald/requirements.txt"
+    req_path = project_root / "vibe_core/cartridges/system/herald/requirements.txt"
     if req_path.exists():
         print(f"   ❌ requirements.txt still exists: {req_path}")
         return False
