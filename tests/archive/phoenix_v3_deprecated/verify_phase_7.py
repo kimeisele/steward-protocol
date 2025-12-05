@@ -59,7 +59,7 @@ def run_phase_7():
 
     # We will verify that the manifest is VALID and discoverable.
     # Wait, ToolDiscovery discovers TOOLS. What discovers AGENTS?
-    # `steward/system_agents/discoverer/agent.py`?
+    # `vibe_core/cartridges/system/discoverer/agent.py`?
 
     # Let's assume there is a mechanism. For this test, we verify the file is there and valid.
     if manifest_path.exists():

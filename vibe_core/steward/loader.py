@@ -51,8 +51,8 @@ class AgentLoader(UnifiedLoader):
     # === UNIFIED LOADER CONFIG ===
     item_type = "agent"
     scan_paths = [
-        Path("steward/system_agents"),
-        Path("agent_city/registry"),
+        Path("vibe_core/cartridges/system"),
+        Path("vibe_core/cartridges/agent_city"),
     ]
     manifest_filenames = ["manifest.json", "steward.json"]  # steward.json for backward compat
     entry_suffix = "_main.py"

@@ -11,7 +11,7 @@ def fix_cartridge_imports(file_path: Path):
     original_content = content
 
     # Extract agent_id from the file path
-    # e.g., steward/system_agents/civic/cartridge_main.py -> civic
+    # e.g., vibe_core/cartridges/system/civic/cartridge_main.py -> civic
     agent_id = file_path.parent.name
 
     # Regex to find relative imports: from .module import Class
@@ -57,7 +57,7 @@ def main():
     project_root = script_dir.parent.parent  # Adjust based on script location
 
     # Find all cartridge_main.py files
-    cartridge_files = project_root.glob("steward/system_agents/*/cartridge_main.py")
+    cartridge_files = project_root.glob("vibe_core/cartridges/system/*/cartridge_main.py")
 
     fixed_count = 0
     for file_path in cartridge_files:

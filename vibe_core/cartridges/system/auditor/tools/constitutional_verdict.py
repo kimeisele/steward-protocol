@@ -114,7 +114,7 @@ class ConstitutionalVerdictTool(Tool):
             "system_agents_path": {
                 "type": "string",
                 "required": True,
-                "description": "Path to steward/system_agents directory",
+                "description": "Path to vibe_core/cartridges/system directory",
             },
         }
 
@@ -159,7 +159,7 @@ class ConstitutionalVerdictTool(Tool):
         Render constitutional verdict on all agents.
 
         Args:
-            system_agents_path: Path to steward/system_agents
+            system_agents_path: Path to vibe_core/cartridges/system
 
         Returns:
             Verdict dict with constitutional judgment

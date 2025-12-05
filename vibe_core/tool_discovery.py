@@ -26,8 +26,8 @@ class ToolDiscovery:
     Discovers and loads tools from agent directories.
 
     Scans:
-    - steward/system_agents/{agent_id}/tools/*.py
-    - agent_city/registry/{agent_id}/tools/*.py
+    - vibe_core/cartridges/system/{agent_id}/tools/*.py
+    - vibe_core/cartridges/agent_city/{agent_id}/tools/*.py
 
     For each .py file:
     1. Import module dynamically
@@ -42,8 +42,8 @@ class ToolDiscovery:
 
     # Directories to scan for agent tools
     SCAN_PATHS = [
-        "steward/system_agents",
-        "agent_city/registry",
+        "vibe_core/cartridges/system",
+        "vibe_core/cartridges/agent_city",
     ]
 
     def __init__(self, root_path: Path = Path(".")):

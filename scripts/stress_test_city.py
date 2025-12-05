@@ -116,7 +116,7 @@ def stress_test_city():
         # STEP 3: DISCOVER ALL AGENTS
         # =====================================================================
         print("\n[STEP 3] Discovering agents via steward.json scan...")
-        print("         Scanning: steward/system_agents/")
+        print("         Scanning: vibe_core/cartridges/system/")
 
         agents_before = len(kernel.agent_registry)
 

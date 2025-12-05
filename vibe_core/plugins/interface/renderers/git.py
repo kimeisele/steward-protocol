@@ -165,9 +165,9 @@ class GitAnalyzerV2:
             subsystems.add("plugins")
         elif filename.startswith("vibe_core/protocols/"):
             subsystems.add("protocols")
-        elif filename.startswith("steward/system_agents/"):
+        elif filename.startswith("vibe_core/cartridges/system/"):
             subsystems.add("system_agents")
-        elif filename.startswith("agent_city/registry/"):
+        elif filename.startswith("vibe_core/cartridges/agent_city/"):
             subsystems.add("citizen_agents")
         elif filename.startswith("tests/"):
             subsystems.add("tests")
