@@ -165,12 +165,54 @@ steward.json (Layer 1)          steward/client.py (Runtime)
 3. Remove identity/templates from steward.yaml (use steward.json instead)
 4. System prompt should be GENERATED from steward.json Protocol data
 
-### Iteration 2 TODO
+### Iteration 2 FINDINGS (COMPLETE PICTURE)
 
-- [ ] Check how steward.json files are currently loaded (if at all)
-- [ ] Find loader for steward.json (should exist in steward/ or vibe_core/)
-- [ ] Connect Phoenix to use steward.json data
-- [ ] Remove duplicate identity config from steward.yaml
+**THE SYSTEM ALREADY EXISTS!**
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| steward.json files | `steward/system_agents/*/steward.json` | EXISTS |
+| AgentLoader | `vibe_core/steward/loader.py` | EXISTS |
+| AgentManifest | `vibe_core/protocols/agent.py` | EXISTS |
+| AgentLoader.discover_manifests() | Scans directories, loads JSON | EXISTS |
+| VibeAgent.get_manifest() | Returns AgentManifest | EXISTS |
+
+**The Fractal Pattern:**
+```
+phoenix/section_loader.py  → Discovers ConfigSection classes
+steward/loader.py          → Discovers Agent manifests
+```
+
+**My Mistake:**
+I DUPLICATED what already exists instead of USING it.
+- identity in steward.yaml → Should use steward.json via AgentLoader
+- templates in steward.yaml → Prompts should be GENERATED from AgentManifest
+
+### What SHOULD Happen (Corrected)
+
+```
+steward/system_agents/steward/steward.json   (THE IDENTITY)
+                    │
+                    ▼
+           AgentLoader.discover_manifests()
+                    │
+                    ▼
+           AgentManifest (from_dict)
+                    │
+                    ▼
+           BootSequence uses AgentManifest.to_dict()
+                    │
+                    ▼
+           System Prompt GENERATED from manifest data
+```
+
+### Iteration 3 TODO
+
+- [ ] Check if steward/system_agents/steward/steward.json exists (STEWARD itself)
+- [ ] If not, create it following the existing pattern
+- [ ] Modify boot_sequence to use AgentLoader instead of Phoenix steward.yaml
+- [ ] Remove identity/templates from steward.yaml (keep Layer 1.5/1.6 only)
+- [ ] Generate system prompt from AgentManifest
 
 ---
 
