@@ -27,11 +27,12 @@ class SettingsUIPlugin(KernelPlugin):
         self.sync = SettingsSync()
         self.last_modified = 0.0
         self.execution_history: List[Dict[str, Any]] = []
-        self.doc_renderer = DocRenderer()
+        self.doc_renderer: DocRenderer = None  # type: ignore  # Initialized in on_boot
 
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """Initialize settings sync on boot."""
-        pass
+        # Initialize DocRenderer with kernel.io for centralized file writes
+        self.doc_renderer = DocRenderer(io_service=kernel.io)
 
     def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
         """Check for changes in SETTINGS.md and execute commands."""

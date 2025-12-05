@@ -89,6 +89,10 @@ class KernelIOService:
             "request": "## 💬 Request",
         }
 
+        # Audit trail: track all writes
+        self._write_count = 0
+        self._audit_enabled = True  # Can be disabled for high-frequency internal writes
+
         logger.info(f"📁 Kernel I/O Service initialized (root: {self._root})")
 
     def _get_lock(self, name: str) -> threading.Lock:
@@ -97,6 +101,51 @@ class KernelIOService:
             if name not in self._locks:
                 self._locks[name] = threading.Lock()
             return self._locks[name]
+
+    def _record_write_audit(
+        self,
+        name: str,
+        writer_id: str,
+        doc_type: DocumentType,
+        size: int,
+        mtime: float,
+        preserved_keys: List[str],
+    ) -> None:
+        """
+        Record a write operation to the ledger for audit trail.
+
+        This is called AFTER every successful write. The audit record includes:
+        - What file was written
+        - Who (which plugin/component) wrote it
+        - Document type (readonly/bidirectional/snapshot)
+        - Size in bytes
+        - Timestamp (mtime)
+        - Which user sections were preserved (for bidirectional docs)
+        """
+        if not self._audit_enabled:
+            return
+
+        self._write_count += 1
+
+        # Record to ledger if available
+        try:
+            if self._kernel and hasattr(self._kernel, "_ledger") and self._kernel._ledger:
+                self._kernel._ledger.record_event(
+                    event_type="IO_WRITE",
+                    agent_id=writer_id,
+                    details={
+                        "file": name,
+                        "doc_type": doc_type.value,
+                        "size_bytes": size,
+                        "mtime": mtime,
+                        "preserved_sections": preserved_keys,
+                        "write_number": self._write_count,
+                    },
+                )
+                logger.debug(f"📝 Audit: IO_WRITE #{self._write_count} - {name} by {writer_id}")
+        except Exception as e:
+            # Audit failure should not break writes
+            logger.warning(f"⚠️  Audit trail recording failed: {e}")
 
     def write_document(
         self,
@@ -153,6 +202,16 @@ class KernelIOService:
                 mtime = path.stat().st_mtime
 
                 logger.debug(f"✅ I/O Write: {name} by {writer_id} ({len(content)} chars)")
+
+                # AUDIT TRAIL: Record write to ledger
+                self._record_write_audit(
+                    name=name,
+                    writer_id=writer_id,
+                    doc_type=doc_type,
+                    size=len(content),
+                    mtime=mtime,
+                    preserved_keys=list(preserved.keys()) if preserved else [],
+                )
 
                 return WriteResult(
                     success=True,
@@ -364,6 +423,31 @@ class KernelIOService:
                         content = "\n".join(new_lines)
 
         return content
+
+    def get_audit_stats(self) -> Dict[str, Any]:
+        """
+        Get audit statistics for this session.
+
+        Returns:
+            Dict with write_count, audit_enabled status, and ledger availability
+        """
+        ledger_available = bool(self._kernel and hasattr(self._kernel, "_ledger") and self._kernel._ledger)
+        return {
+            "write_count": self._write_count,
+            "audit_enabled": self._audit_enabled,
+            "ledger_available": ledger_available,
+            "root_path": str(self._root),
+        }
+
+    def set_audit_enabled(self, enabled: bool) -> None:
+        """
+        Enable or disable audit trail recording.
+
+        Use with caution - disabling audit loses visibility into writes.
+        Typically only disabled for high-frequency internal operations.
+        """
+        self._audit_enabled = enabled
+        logger.info(f"📝 Audit trail {'enabled' if enabled else 'disabled'}")
 
 
 # Factory function for kernel integration
