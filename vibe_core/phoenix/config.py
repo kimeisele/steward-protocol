@@ -23,11 +23,11 @@ import yaml
 
 from .section_loader import SectionLoader, SectionMeta
 from .sections.circuits import CircuitConfig, discover_circuits
-from .sections.city import CityConfig
-from .sections.kernel import KernelConfig
-from .sections.quality import QualityConfig, get_default_quality_config
+from .sections.city.section_main import CityConfig
+from .sections.kernel.section_main import KernelConfig
+from .sections.quality.section_main import QualityConfig, get_default_quality_config
 from .sections.routing import RoutingRule, load_routing_rules, save_routing_rules
-from .sections.steward import StewardConfig
+from .sections.steward.section_main import StewardConfig
 
 logger = logging.getLogger(__name__)
 
