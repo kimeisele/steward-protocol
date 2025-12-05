@@ -85,6 +85,14 @@ class EnvoySync:
         self.envoy_path = envoy_path
         self._io_service = io_service
 
+    def render_document(self, content: str) -> bool:
+        """
+        Render the document content.
+
+        Preserves user sections via I/O Service (BIDIRECTIONAL mode).
+        """
+        return self._write_envoy(content)
+
     def _write_envoy(self, content: str) -> bool:
         """
         Write envoy content through I/O Service or fallback.

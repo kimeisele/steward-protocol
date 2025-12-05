@@ -6,8 +6,6 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
-from vibe_core.doc_renderer import DocRenderer
-
 from .base import BaseRenderer
 
 logger = logging.getLogger("RENDERER_EPHEMERAL")
@@ -18,7 +16,6 @@ class EphemeralRenderer(BaseRenderer):
 
     def __init__(self, kernel):
         super().__init__(kernel)
-        self.doc_renderer = DocRenderer()
         self.merge_history: List[Dict[str, Any]] = []
         self.max_history = 10
 
@@ -27,29 +24,43 @@ class EphemeralRenderer(BaseRenderer):
         return "ephemeral"
 
     def render(self) -> None:
-        # Gather state
-        state = {
-            "merge_history": self.merge_history,
-            "active_cities": [],
-            "family_tree": {},
-        }
-
-        # Render
         try:
-            self.doc_renderer.render_ephemeral(state)
+            content = self._generate_content()
+            with open("EPHEMERAL.md", "w") as f:
+                f.write(content)
         except Exception as e:
             logger.error(f"Error rendering EPHEMERAL.md: {e}")
 
+    def _generate_content(self) -> str:
+        lines = ["# 🧊 EPHEMERAL HYPERCUBE", ""]
+
+        # Merge History
+        lines.extend(
+            ["## 🧬 Merge History", "", "| Time | Child ID | Proof | Result |", "| :--- | :--- | :--- | :--- |"]
+        )
+
+        if not self.merge_history:
+            lines.append("_No merges recorded_")
+        else:
+            for entry in reversed(self.merge_history):
+                lines.append(
+                    f"| {entry.get('timestamp', '')} | {entry.get('child_id', '')} | {entry.get('proof', '')} | {entry.get('result', '')} |"
+                )
+
+        lines.append("")
+
+        # Active Cities (Placeholder for now)
+        lines.extend(["## 🏙️ Active Cities", "", "_No active cities detected_", ""])
+
+        return "\n".join(lines)
+
     # Public API for recording merges (can be called by kernel via interface plugin if needed)
-    # Note: Currently this state is local to the renderer.
-    # Ideally, this should be in a separate 'EphemeralPlugin' that just holds state,
-    # and this renderer just reads it. But for now, we keep it simple.
     def record_merge(self, merge_record: Dict[str, Any]) -> None:
         self.merge_history.append(
             {
                 "timestamp": datetime.now().isoformat(),
                 "child_id": str(merge_record.get("child_id", ""))[:8],
-                "proof": str(merge_record.get("child_ledger_hash", ""))[:12],
+                "child_ledger_hash": str(merge_record.get("child_ledger_hash", ""))[:12],
                 "result": str(merge_record.get("result", ""))[:100],
             }
         )
