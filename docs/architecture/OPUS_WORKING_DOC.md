@@ -450,5 +450,54 @@ But STEWARD IS THE FRAMEWORK - it doesn't have a steward.json because IT IS the 
 
 ---
 
+## REVISED UNDERSTANDING: What steward.yaml SHOULD Be
+
+**steward.yaml is for OPERATOR configuration, NOT agent identity.**
+
+The OPERATOR is the Human or LLM (like Claude Code) that RUNS the protocol.
+The system prompt tells the OPERATOR how to behave.
+
+**CORRECT use of steward.yaml:**
+- Layer 1.5: User Context (Operator preferences - verbosity, language, etc.)
+- Layer 1.6: Cognitive Policy (Model preferences - which LLM for what)
+- Behavior Rules (Genesis Protocol, Anti-Slop - rules FOR THE OPERATOR)
+
+**INCORRECT (what I added):**
+- identity section → STEWARD doesn't have an identity like an agent
+- capabilities section → Agents have capabilities, not STEWARD
+- system_prompt_template → Should be GENERATED from Protocol state, not configured
+
+**The System Prompt should be COMPOSED from:**
+1. STEWARD.md (Protocol description - already exists)
+2. kernel.manifest_registry (discovered agents and their capabilities)
+3. steward.yaml Layer 1.5/1.6 (operator preferences)
+4. Current kernel state (from PromptContext resolvers)
+
+**NOT from:**
+- Hardcoded templates in steward.yaml
+- Fake "identity" pretending STEWARD is an agent
+
+---
+
+## WHAT NEEDS TO BE FIXED
+
+1. **Remove from steward.yaml:**
+   - identity section (WRONG - STEWARD is not an agent)
+   - system_prompt_template (WRONG - should be generated)
+   - boot_prompt_template (WRONG - should be generated)
+
+2. **Keep in steward.yaml:**
+   - user_context (Layer 1.5 - correct)
+   - cognitive_policy (Layer 1.6 - correct)
+   - behavior (rules for operator - correct)
+
+3. **Change system prompt generation:**
+   - Read STEWARD.md for protocol description
+   - Read kernel.manifest_registry for agent capabilities
+   - Apply behavior rules from steward.yaml
+   - Apply user preferences from steward.yaml
+
+---
+
 *Last updated: Iteration 3 - Understanding STEWARD as Protocol not Agent*
-*Status: IN PROGRESS - Architecture understood, need to revise implementation*
+*Status: IN PROGRESS - Architecture understood, know what to fix*
