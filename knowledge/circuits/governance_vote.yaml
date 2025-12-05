@@ -1,0 +1,293 @@
+# GOVERNANCE VOTING COGNITIVE CIRCUIT
+# ====================================
+# GAD-5500: Neuro-Symbolic OS - Operation Gleichschaltung
+#
+# REFACTORED from legacy linear phases to VEDA-4 Cognitive Circuit.
+# Governance is CRITICAL - this must be deterministic and auditable.
+#
+# Architecture:
+#   Neural (User Intent) → Semantic Compiler → [THIS CIRCUIT] → Ledger
+#
+# The key insight: Voting has the HIGHEST need for determinism.
+# Every vote must be traceable, immutable, and verifiable.
+#
+# Version: 2.0 (Neuro-Symbolic)
+
+circuit:
+  id: GOVERNANCE_VOTE_V2
+  name: Governance Voting Cognitive Circuit
+  type: cognitive_circuit
+
+  # Intent matching for DeterministicExecutor concept-based lookup
+  intent_match:
+    primary: "CMD_VOTE"
+    secondary:
+      - "DOM_GOVERNANCE"
+
+  intent: |
+    Execute a deterministic voting process with immutable ledger recording.
+    This circuit handles:
+    1. SHABDA: Parse voting request
+    2. ARTHA: Validate session and permissions
+    3. PRATYAYA: Constitutional check (voting rules)
+    4. KARMA: Execute vote collection and tallying
+    5. LEDGER: Record immutable result in Parampara
+
+  description: |
+    The Governance Circuit is the most CRITICAL circuit in the OS.
+    It handles voting, proposals, and constitutional changes.
+
+    Every action is recorded in Parampara (immutable blockchain).
+    No probabilistic shortcuts - pure determinism.
+
+  version: "2.0"
+
+  # ==========================================================================
+  # SEMANTIC TRIGGERS
+  # ==========================================================================
+
+  triggers:
+    primary:
+      - pattern: 'vote\s+(?:on|for)\s+'
+        confidence_threshold: 0.9
+      - pattern: 'start\s+(?:a\s+)?voting'
+        confidence_threshold: 0.85
+      - pattern: 'proposal\s+(?:#?\d+|vote)'
+        confidence_threshold: 0.8
+      - pattern: 'governance\s+(?:vote|decision)'
+        confidence_threshold: 0.85
+
+    anti_triggers:
+      - "create agent"
+      - "write post"
+      - "content"
+
+  # ==========================================================================
+  # STATE MACHINE (VEDA-4 Cognitive Circuit)
+  # ==========================================================================
+
+  states:
+    # SHABDA: Parse the voting request
+    SHABDA:
+      description: "Parse and validate voting request parameters"
+      invariants:
+        - "raw_input is not empty"
+        - "proposal_id is extracted or identifiable"
+      operations:
+        - action: COMPILE_REQUEST
+          input: "{{ raw_input }}"
+          output: "vote_params"
+      transitions:
+        - to: ARTHA
+          condition: "vote_params.proposal_id != null"
+        - to: FAILURE
+          condition: "vote_params.proposal_id == null"
+          reason: "Could not identify proposal ID from request"
+
+    # ARTHA: Validate session and permissions
+    ARTHA:
+      description: "Verify voting session validity and voter permissions"
+      invariants:
+        - "proposal exists in system"
+        - "voting is still open"
+        - "requester has voting rights"
+      operations:
+        - action: DISPATCH_TASK
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "watchman"
+            task_payload:
+              action: "validate_voting_session"
+              proposal_id: "{{ vote_params.proposal_id }}"
+              voter_id: "{{ requester_id }}"
+      transitions:
+        - to: PRATYAYA
+          condition: "session_validation.passed == true"
+        - to: SESSION_INVALID
+          condition: "session_validation.passed == false"
+
+    # PRATYAYA: Constitutional check
+    PRATYAYA:
+      description: "Verify vote complies with constitutional rules"
+      invariants:
+        - "voting rules are loaded"
+        - "quorum requirements known"
+      operations:
+        - action: CHECK_CONSTITUTION
+          checks:
+            - "Proposal type allows voting"
+            - "Minimum voters requirement met"
+            - "No constitutional blocks active"
+        - action: RECORD_KARMA
+          syscall_type: RECORD_KARMA
+          params:
+            event_type: "VOTE_SESSION_STARTED"
+            data:
+              proposal_id: "{{ vote_params.proposal_id }}"
+              requester: "{{ requester_id }}"
+      transitions:
+        - to: KARMA
+          condition: "constitutional_check.passed == true"
+        - to: CONSTITUTIONAL_BLOCK
+          condition: "constitutional_check.passed == false"
+
+    # KARMA: Execute voting
+    KARMA:
+      description: "Collect votes and tally results"
+      invariants:
+        - "civic agent is available"
+        - "vote collection is authorized"
+      operations:
+        - action: DISPATCH_TASK
+          syscall_type: DISPATCH_TASK
+          params:
+            agent_id: "civic"
+            task_payload:
+              action: "collect_and_tally_votes"
+              proposal_id: "{{ vote_params.proposal_id }}"
+              voting_rules: "{{ vote_params.rules }}"
+              deadline: "{{ vote_params.deadline }}"
+      transitions:
+        - to: LEDGER
+          condition: "tally_result.success == true"
+        - to: VOTING_FAILED
+          condition: "tally_result.success == false"
+
+    # LEDGER: Record to immutable ledger
+    LEDGER:
+      description: "Record final result to Parampara blockchain"
+      invariants:
+        - "result is finalized"
+        - "all votes are counted"
+      operations:
+        - action: RECORD_KARMA
+          syscall_type: RECORD_KARMA
+          params:
+            event_type: "VOTE_COMPLETED"
+            data:
+              proposal_id: "{{ vote_params.proposal_id }}"
+              result: "{{ tally_result.outcome }}"
+              yes_votes: "{{ tally_result.yes }}"
+              no_votes: "{{ tally_result.no }}"
+              abstentions: "{{ tally_result.abstain }}"
+              participation_rate: "{{ tally_result.participation }}"
+        - action: EMIT_EVENT
+          event: "voting_completed"
+          params:
+            proposal_id: "{{ vote_params.proposal_id }}"
+            result: "{{ tally_result.outcome }}"
+      transitions:
+        - to: SUCCESS
+          condition: "ledger_recorded == true"
+        - to: LEDGER_FAILED
+          condition: "ledger_recorded == false"
+
+    # Terminal states
+    SUCCESS:
+      description: "Voting completed and recorded"
+      terminal: true
+      output:
+        status: "VOTE_RECORDED"
+        proposal_id: "{{ vote_params.proposal_id }}"
+        result: "{{ tally_result.outcome }}"
+        ledger_block: "{{ ledger_block_id }}"
+        participation: "{{ tally_result.participation }}"
+
+    FAILURE:
+      description: "Could not parse voting request"
+      terminal: true
+      output:
+        status: "PARSE_FAILED"
+        reason: "Could not identify proposal from input"
+
+    SESSION_INVALID:
+      description: "Voting session validation failed"
+      terminal: true
+      output:
+        status: "SESSION_INVALID"
+        reason: "{{ session_validation.error }}"
+
+    CONSTITUTIONAL_BLOCK:
+      description: "Vote blocked by constitution"
+      terminal: true
+      output:
+        status: "CONSTITUTIONAL_BLOCK"
+        reason: "{{ constitutional_check.violation }}"
+
+    VOTING_FAILED:
+      description: "Vote collection or tally failed"
+      terminal: true
+      output:
+        status: "VOTING_FAILED"
+        reason: "{{ tally_result.error }}"
+
+    LEDGER_FAILED:
+      description: "Could not record to immutable ledger"
+      terminal: true
+      output:
+        status: "LEDGER_FAILED"
+        reason: "Critical: Vote result not recorded"
+
+  # Entry point
+  entry_state: SHABDA
+
+  # ==========================================================================
+  # VARIABLES (Blueprint Extraction Points)
+  # ==========================================================================
+
+  variables:
+    raw_input:
+      type: string
+      required: true
+      description: "The raw user input"
+
+    vote_params:
+      type: object
+      required: false
+      description: "Extracted voting parameters"
+      schema:
+        proposal_id: string
+        rules: string  # democratic, weighted, unanimous
+        deadline: string
+        voters: array
+
+  # ==========================================================================
+  # VOTING RULES
+  # ==========================================================================
+
+  voting_rules:
+    democratic:
+      description: "Simple majority"
+      threshold: 0.5
+      quorum: 0.3
+
+    supermajority:
+      description: "Two-thirds majority"
+      threshold: 0.67
+      quorum: 0.5
+
+    unanimous:
+      description: "All must agree"
+      threshold: 1.0
+      quorum: 1.0
+
+  # ==========================================================================
+  # METADATA
+  # ==========================================================================
+
+  metadata:
+    version: "2.0"
+    created: "2025-12-01"
+    refactored_from: "GOVERNANCE_VOTE_V1"
+    purpose: "Governance Voting - Neuro-Symbolic"
+    paradigm: "neuro_symbolic"
+    circuit_type: "governance"
+    security_level: "CRITICAL"
+
+    # Telemetry
+    estimated_latency_ms: 60000  # Voting takes time
+    syscalls_executed: 3  # DISPATCH (validate) + DISPATCH (tally) + RECORD
+
+    # Audit
+    audit_trail: "parampara"
+    immutable_record: true

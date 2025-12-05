@@ -1,0 +1,12 @@
+{
+  "name": "intents",
+  "version": "1.0.0",
+  "type": "intent-module",
+  "description": "Intent routing rules - DHARMA layer",
+  "files": {
+    "routing_rules": {
+      "path": "routing_rules.yaml",
+      "description": "Priority-ordered intent-to-agent routing rules"
+    }
+  }
+}
