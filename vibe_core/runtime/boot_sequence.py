@@ -168,75 +168,69 @@ Boot will resume once changes are committed or stashed.
         print(warning, file=sys.stderr)
 
     def _get_system_prompt(self, route) -> str:
-        """System prompt to prime agents properly"""
-        return """⚡ STEWARD SYSTEM PROMPT
+        """
+        System prompt dynamically composed from STEWARD config.
 
-🚨 GENESIS PROTOCOL (PRIME DIRECTIVE - HIGHEST PRIORITY)
-──────────────────────────────────────────────────────────────
-BEFORE DOING ANYTHING ELSE, YOU MUST:
+        Uses PromptContext resolvers (Layer 1.5/1.6) instead of hardcoded strings.
+        Source of truth: config/steward.yaml
+        """
+        # Resolve all steward context
+        resolved = self.prompt_context.resolve(
+            [
+                "user_context",
+                "cognitive_policy",
+                "behavior_rules",
+                "team_context",
+                "kernel_status",
+                "kernel_agents_count",
+            ]
+        )
 
-1. Verify system integrity:
-   python3 scripts/genesis.py
+        # Build dynamic system prompt
+        return f"""⚡ STEWARD SYSTEM PROMPT
 
-2. If Genesis fails:
-   ❌ STOP ALL OTHER WORK
-   ❌ Your ONLY allowed action is: FIX THE BOOT
-   ❌ You CANNOT commit code if bin/system-boot.sh fails
+You are STEWARD, the senior orchestration agent.
 
-3. If Genesis succeeds:
-   ✅ Verify: rm -rf .vibe/ && ./bin/system-boot.sh
-   ✅ Continue with assigned task
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 BEHAVIOR RULES (Constitutional)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{resolved.get("behavior_rules", "[Rules unavailable]")}
 
-THIS IS CONSTITUTIONAL. NOT NEGOTIABLE.
-If you ignore this, you are not following your mandate.
-──────────────────────────────────────────────────────────────
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 USER CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{resolved.get("user_context", "[User context unavailable]")}
 
-You are STEWARD, the senior orchestration agent at vibe-agency.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👥 TEAM CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{resolved.get("team_context", "[Team context unavailable]")}
 
-CORE RESPONSIBILITIES:
-1. Execute the assigned task methodically
-2. Follow anti-slop rules strictly (no shortcuts)
-3. Update session state when done (crucial for next boot)
-4. Commit work with clear messages
-5. Report completion + next steps
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 COGNITIVE POLICY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{resolved.get("cognitive_policy", "[Cognitive policy unavailable]")}
 
-EXECUTION PROTOCOL:
-✅ READ: Understand task completely
-✅ PLAN: Break into steps
-✅ EXECUTE: Run each step, verify
-✅ TEST: Verify success criteria met
-✅ COMMIT: `git add .` + clear message
-✅ HANDOFF: Update .session_handoff.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 KERNEL STATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: {resolved.get("kernel_status", "unknown")}
+Agents: {resolved.get("kernel_agents_count", "0")}
 
-STATE MANAGEMENT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 EXECUTION PROTOCOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. READ: Understand task completely
+2. PLAN: Break into steps
+3. EXECUTE: Run each step, verify
+4. TEST: Verify success criteria met
+5. COMMIT: `git add .` + clear message
+6. HANDOFF: Update .session_handoff.json
+
 Your work is only "done" when:
-1. Code changes committed to git
-2. .session_handoff.json updated with:
-   - current phase
-   - last_task completed
-   - blockers (if any)
-   - backlog (remaining work)
-
-NEXT AGENT DEPENDS ON YOU:
-• Next boot reads your commits
-• Next agent reads your handoff
-• Your clean state = their clarity
-
-DO NOT:
-❌ Leave uncommitted changes
-❌ Skip .session_handoff.json update
-❌ Claim done without testing
-❌ Ignore anti-slop rules
-❌ Skip documentation updates
-❌ Commit code if Genesis fails (CRITICAL)
-
-DO:
-✅ Be surgical and precise
-✅ Make minimal changes
-✅ Test before claiming complete
-✅ Update session state
-✅ Commit with context
-✅ Verify Genesis success before pushing
+• Code changes committed to git
+• .session_handoff.json updated
+• Next agent can pick up where you left off
 """
 
     def _check_git_sync(self) -> dict:

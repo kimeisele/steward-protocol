@@ -96,7 +96,13 @@ class PromptContext:
         self.register("kernel_agents_count", self._resolve_kernel_agents_count)
         self.register("kernel_ledger_events", self._resolve_kernel_ledger_events)
 
-        logger.debug("✅ Registered 14 core context resolvers")
+        # STEWARD Protocol resolvers (Layer 1.5/1.6)
+        self.register("user_context", self._resolve_user_context)
+        self.register("cognitive_policy", self._resolve_cognitive_policy)
+        self.register("behavior_rules", self._resolve_behavior_rules)
+        self.register("team_context", self._resolve_team_context)
+
+        logger.debug("✅ Registered 18 core context resolvers")
 
     def register(self, key: str, resolver: Callable[[], str]) -> None:
         """
@@ -563,6 +569,89 @@ class PromptContext:
         """Resolve ledger events count from vibe_snapshot.json."""
         snapshot = self._load_kernel_snapshot()
         return str(snapshot.get("ledger_stats", {}).get("total_events", 0))
+
+    # =========================================================================
+    # STEWARD Protocol Resolvers (Layer 1.5/1.6)
+    # =========================================================================
+
+    def _get_steward_config(self):
+        """Load StewardConfig from PhoenixConfig."""
+        try:
+            from vibe_core.phoenix.config import get_config
+
+            return get_config().steward
+        except Exception as e:
+            logger.warning(f"Failed to load steward config: {e}")
+            return None
+
+    def _resolve_user_context(self) -> str:
+        """Resolve user context (Layer 1.5) for prompt injection."""
+        config = self._get_steward_config()
+        if config is None:
+            return "[User context unavailable]"
+
+        user_prefs = config.get_active_user_prefs()
+        lines = [
+            f"Workflow: {user_prefs.workflow_style}",
+            f"Verbosity: {user_prefs.verbosity}",
+            f"Communication: {user_prefs.communication}",
+            f"Language: {user_prefs.language}",
+        ]
+        if user_prefs.constraints:
+            lines.append(f"Constraints: {', '.join(user_prefs.constraints)}")
+        return "\n".join(lines)
+
+    def _resolve_cognitive_policy(self) -> str:
+        """Resolve cognitive policy (Layer 1.6) for prompt injection."""
+        config = self._get_steward_config()
+        if config is None:
+            return "[Cognitive policy unavailable]"
+
+        cp = config.cognitive_policy
+        lines = [
+            f"Reasoning Model: {cp.model_preferences.reasoning or 'default'}",
+            f"Efficiency Model: {cp.model_preferences.efficiency or 'default'}",
+            f"Max Cost/Run: ${cp.economic_constraints.max_cost_per_run:.2f}",
+            f"Max Daily Budget: ${cp.economic_constraints.max_daily_budget:.2f}",
+        ]
+        return "\n".join(lines)
+
+    def _resolve_behavior_rules(self) -> str:
+        """Resolve behavior rules for prompt injection."""
+        config = self._get_steward_config()
+        if config is None:
+            return "[Behavior rules unavailable]"
+
+        b = config.behavior
+        rules = []
+        if b.genesis_protocol:
+            rules.append("Genesis Protocol: Verify system integrity before work")
+        if b.anti_slop_rules:
+            rules.append("Anti-Slop: No shortcuts, verify everything")
+        if b.require_tests:
+            rules.append("Tests Required: Run tests before claiming done")
+        if b.require_commit:
+            rules.append("Commits Required: Commit all changes")
+        if b.require_handoff:
+            rules.append("Handoff Required: Update .session_handoff.json")
+        return "\n".join(rules)
+
+    def _resolve_team_context(self) -> str:
+        """Resolve team context for prompt injection."""
+        config = self._get_steward_config()
+        if config is None:
+            return "[Team context unavailable]"
+
+        team = config.user_context.team
+        lines = [
+            f"Development Style: {team.development_style}",
+            f"Git Workflow: {team.git_workflow}",
+            f"Commit Style: {team.commit_style}",
+            f"Min Coverage: {team.min_coverage * 100:.0f}%",
+        ]
+        if team.quality_gates:
+            lines.append(f"Quality Gates: {len(team.quality_gates)} rules")
+        return "\n".join(lines)
 
 
 # ========================================================================
