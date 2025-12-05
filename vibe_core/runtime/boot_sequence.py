@@ -169,10 +169,15 @@ Boot will resume once changes are committed or stashed.
 
     def _get_system_prompt(self, route) -> str:
         """
-        System prompt composed from STEWARD config TEMPLATE.
+        System prompt GENERATED from Protocol data.
 
-        NO HARDCODING - Template comes from config/steward.yaml
-        Variables resolved via PromptContext resolvers.
+        NO HARDCODING - Prompt is COMPOSED from:
+        1. STEWARD.md (Protocol description)
+        2. kernel.steward config (behavior rules, user context)
+        3. Current kernel state (live data)
+
+        The system prompt describes the OPERATOR's behavior,
+        not an agent identity (STEWARD is the Protocol, not an agent).
         """
         # Load steward config from Phoenix
         from vibe_core.phoenix.config import PhoenixConfig
@@ -180,20 +185,82 @@ Boot will resume once changes are committed or stashed.
         phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
         steward_config = phoenix.steward
 
-        # Resolve all dynamic context values
+        # Resolve dynamic context values
         resolved = self.prompt_context.resolve(
             [
-                "user_context",
-                "cognitive_policy",
-                "behavior_rules",
-                "team_context",
                 "kernel_status",
                 "kernel_agents_count",
             ]
         )
 
-        # Use template from config with resolved context
-        return steward_config.resolve_template("system_prompt", resolved)
+        # Build behavior rules from config
+        behavior = steward_config.behavior
+        behavior_rules = []
+        if behavior.genesis_protocol:
+            behavior_rules.append("• Genesis Protocol: Verify system integrity before work")
+        if behavior.anti_slop_rules:
+            behavior_rules.append("• Anti-Slop: No shortcuts, verify everything")
+        if behavior.require_tests:
+            behavior_rules.append("• Tests Required: Run tests before claiming done")
+        if behavior.require_commit:
+            behavior_rules.append("• Commits Required: Must commit changes")
+        if behavior.require_handoff:
+            behavior_rules.append("• Handoff Required: Update .session_handoff.json")
+
+        # Build user context from config
+        user_prefs = steward_config.get_active_user_prefs()
+        user_context = f"Workflow: {user_prefs.workflow_style}, Verbosity: {user_prefs.verbosity}, Communication: {user_prefs.communication}"
+
+        # Build cognitive policy summary
+        cog = steward_config.cognitive_policy
+        cognitive_policy = f"Budget: ${cog.economic_constraints.max_cost_per_run}/run, ${cog.economic_constraints.max_daily_budget}/day"
+
+        # Build team context
+        team = steward_config.user_context.team
+        team_context = (
+            f"Style: {team.development_style}, Git: {team.git_workflow}, Coverage: {team.min_coverage * 100:.0f}%"
+        )
+
+        # Compose the system prompt FROM Protocol data
+        return f"""You are operating the STEWARD Protocol.
+
+STEWARD is a distributed governance protocol for autonomous agents.
+You are the OPERATOR - a human or LLM interfacing with the system.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEHAVIOR RULES (Constitutional)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{chr(10).join(behavior_rules)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+USER CONTEXT (Layer 1.5)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{user_context}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEAM CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{team_context}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COGNITIVE POLICY (Layer 1.6)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{cognitive_policy}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KERNEL STATE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: {resolved.get("kernel_status", "unknown")}
+Agents: {resolved.get("kernel_agents_count", 0)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXECUTION PROTOCOL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Execute the task following the workflow
+2. Verify completion against success criteria
+3. Update state via .session_handoff.json
+4. Commit changes with clear message
+5. Report completion - what was done, what's next"""
 
     def _check_git_sync(self) -> dict:
         """Check if repo is behind remote - graceful fallback if git fails"""
