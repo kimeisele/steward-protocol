@@ -27,6 +27,7 @@ from .sections.city import CityConfig
 from .sections.kernel import KernelConfig
 from .sections.quality import QualityConfig, get_default_quality_config
 from .sections.routing import RoutingRule, load_routing_rules, save_routing_rules
+from .sections.steward import StewardConfig
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class PhoenixConfig:
     kernel: KernelConfig = field(default_factory=KernelConfig)
     city: CityConfig = field(default_factory=CityConfig)
     quality: QualityConfig = field(default_factory=get_default_quality_config)
+    steward: StewardConfig = field(default_factory=StewardConfig)
 
     # Dynamic collections
     circuits: Dict[str, CircuitConfig] = field(default_factory=dict)
@@ -113,9 +115,10 @@ class PhoenixConfig:
         kernel = discovered_sections.get("kernel", KernelConfig())
         city = discovered_sections.get("city", CityConfig())
         quality = discovered_sections.get("quality", get_default_quality_config())
+        steward = discovered_sections.get("steward", StewardConfig())
 
         # Log what was loaded
-        for section_id in ["kernel", "city", "quality"]:
+        for section_id in ["kernel", "city", "quality", "steward"]:
             meta = section_meta.get(section_id)
             if meta and meta.loaded_from_yaml:
                 logger.info(f"Loaded {section_id} from {meta.source_file}")
@@ -130,7 +133,7 @@ class PhoenixConfig:
         logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
         # === EXTRA SECTIONS: Any new sections we don't know about ===
-        known_sections = {"kernel", "city", "quality"}
+        known_sections = {"kernel", "city", "quality", "steward"}
         extra_sections = {k: v for k, v in discovered_sections.items() if k not in known_sections}
         if extra_sections:
             logger.info(f"Auto-discovered extra sections: {list(extra_sections.keys())}")
@@ -140,6 +143,7 @@ class PhoenixConfig:
             kernel=kernel,
             city=city,
             quality=quality,
+            steward=steward,
             circuits=circuits,
             routing=routing,
             _extra_sections=extra_sections,
@@ -296,9 +300,9 @@ class PhoenixConfig:
         List all discovered section IDs.
 
         Returns:
-            List of section identifiers (e.g., ["kernel", "city", "quality"])
+            List of section identifiers (e.g., ["kernel", "city", "quality", "steward"])
         """
-        known = ["kernel", "city", "quality"]
+        known = ["kernel", "city", "quality", "steward"]
         extra = list(self._extra_sections.keys()) if self._extra_sections else []
         return known + extra
 
@@ -307,7 +311,7 @@ class PhoenixConfig:
         Get a section by ID (works for both typed and dynamic sections).
 
         Args:
-            section_id: Section identifier (e.g., "kernel", "quality")
+            section_id: Section identifier (e.g., "kernel", "quality", "steward")
 
         Returns:
             Section instance or None if not found
@@ -318,6 +322,8 @@ class PhoenixConfig:
             return self.city
         elif section_id == "quality":
             return self.quality
+        elif section_id == "steward":
+            return self.steward
         elif self._extra_sections and section_id in self._extra_sections:
             return self._extra_sections[section_id]
         return None
@@ -401,6 +407,7 @@ class PhoenixConfig:
             "circuits": {name: circuit.to_dict() for name, circuit in self.circuits.items()},
             "routing": [rule.to_dict() for rule in self.routing],
             "quality": self.quality.to_dict(),
+            "steward": self.steward.to_dict(),
         }
 
     @classmethod
@@ -428,6 +435,7 @@ class PhoenixConfig:
             routing.append(RoutingRule.from_dict(rule_data))
 
         quality = QualityConfig.from_dict(data.get("quality", {}))
+        steward = StewardConfig.from_dict(data.get("steward", {}))
 
         return cls(
             kernel=kernel,
@@ -435,6 +443,7 @@ class PhoenixConfig:
             circuits=circuits,
             routing=routing,
             quality=quality,
+            steward=steward,
         )
 
     # =========================================================================

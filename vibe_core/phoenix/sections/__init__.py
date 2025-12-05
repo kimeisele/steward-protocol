@@ -14,6 +14,16 @@ from .quality import (
     TestProfile,
 )
 from .routing import RoutingRule
+from .steward import (
+    BehaviorConfig,
+    CognitivePolicy,
+    EconomicConstraints,
+    ModelPreferences,
+    StewardConfig,
+    TeamContext,
+    UserContext,
+    UserPreferences,
+)
 
 __all__ = [
     # Kernel
@@ -35,6 +45,15 @@ __all__ = [
     "TestCategory",
     "CIConfig",
     "CIWorkflow",
+    # Steward (Layer 1.5/1.6)
+    "StewardConfig",
+    "UserContext",
+    "UserPreferences",
+    "TeamContext",
+    "CognitivePolicy",
+    "ModelPreferences",
+    "EconomicConstraints",
+    "BehaviorConfig",
     # Dynamic
     "CircuitConfig",
     "RoutingRule",
