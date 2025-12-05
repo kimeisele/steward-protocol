@@ -1,0 +1,24 @@
+{
+    "type": "plugin",
+    "id": "sarga_cycle",
+    "name": "Sarga Cycle Plugin",
+    "version": "1.0.0",
+    "description": "Implements the Brahma Cycle (Day/Night) task gating",
+    "entry_point": "plugin_main.py",
+    "entry_class": "SargaCyclePlugin",
+    "priority": 5,
+    "enabled": true,
+    "hooks": [
+        "on_boot",
+        "on_task_submit",
+        "on_shutdown"
+    ],
+    "dependencies": [],
+    "defaults": {},
+    "author": "STEWARD Protocol",
+    "tags": [
+        "scheduler",
+        "core",
+        "cosmic"
+    ]
+}

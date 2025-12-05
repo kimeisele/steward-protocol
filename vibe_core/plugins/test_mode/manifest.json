@@ -1,0 +1,22 @@
+{
+    "type": "plugin",
+    "id": "test_mode",
+    "name": "Test Mode Plugin",
+    "version": "1.0.0",
+    "description": "Accelerates kernel for testing by skipping slow operations",
+    "entry_point": "plugin_main.py",
+    "entry_class": "TestModePlugin",
+    "priority": 1,
+    "enabled": true,
+    "hooks": [
+        "on_boot"
+    ],
+    "dependencies": [],
+    "defaults": {},
+    "author": "STEWARD Protocol",
+    "tags": [
+        "core",
+        "test",
+        "system"
+    ]
+}
