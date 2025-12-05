@@ -218,7 +218,65 @@ Like Discoverer for agents, a PluginDiscoverer could:
 
 ---
 
-## 4. IMPLEMENTATION PLAN
+## 4. THE REAL PROBLEM - LOADER EXPLOSION
+
+### 4.1 All Loaders in the System
+
+| Loader | Location | Discovers | Pattern |
+|--------|----------|-----------|---------|
+| **PluginLoader** | `vibe_core/plugin_loader.py` | KernelPlugin classes | scan .py → find subclass |
+| **SectionLoader** | `vibe_core/phoenix/section_loader.py` | ConfigSection classes | scan .py → find section_id |
+| **SettingsSectionLoader** | `vibe_core/settings/loader.py` | SettingsSection classes | scan .py → find subclass |
+| **AgentLoader** | `vibe_core/steward/loader.py` | Agent manifests + cartridges | scan dirs → find manifest.json |
+| **KnowledgeLoader** | `vibe_core/knowledge/loader.py` | Knowledge files | scan dirs → load files |
+| **WorkflowLoader** | `vibe_core/playbook/loader.py` | Workflow YAML | scan .yaml files |
+| **PlaybookLoader** | `vibe_core/playbook/runner.py` | Playbook definitions | scan playbooks |
+| **ContextLoader** | `vibe_core/runtime/context_loader.py` | Context files | load context |
+| **ToolDiscovery** | `vibe_core/tool_discovery.py` | Tool classes | scan for Tools |
+
+### 4.2 The Pattern They ALL Follow
+
+```
+1. SHABDA  → Scan directory for files
+2. ARTHA   → Find valid items (by class, manifest, or pattern)
+3. PRATYAYA → Validate/filter
+4. KARMA   → Return instances
+```
+
+### 4.3 What's DIFFERENT About Each
+
+| Loader | Manifest? | Config? | Sub-items? |
+|--------|-----------|---------|------------|
+| PluginLoader | ❌ No | ❌ No | ❌ No |
+| SectionLoader | ❌ No | ✅ YAML | ❌ No |
+| SettingsSectionLoader | ❌ No | ❌ No | ❌ No |
+| AgentLoader | ✅ steward.json | ✅ cartridge.yaml | ✅ tools/ |
+| KnowledgeLoader | ❌ No | ❌ No | ❌ No |
+| WorkflowLoader | ✅ YAML itself | ✅ YAML itself | ❌ No |
+
+### 4.4 The Unified Pattern Needed
+
+```
+vibe_core/loaders/
+    base_loader.py        ← Unified loader protocol
+    plugin_loader.py      ← Inherits base
+    section_loader.py     ← Inherits base
+    agent_loader.py       ← Inherits base
+    ...
+```
+
+OR: Make everything Plugin-like with:
+```
+{thing}/
+    manifest.json         ← What it is
+    config.yaml           ← How it behaves
+    main.py               ← Entry point
+    sub_items/            ← Scalable children (tools, renderers, etc)
+```
+
+---
+
+## 5. IMPLEMENTATION PLAN
 
 ### Phase 1: Plugin Foundation (1-2 days)
 - [ ] Create `vibe_core/plugins/base.py` with BasePlugin
