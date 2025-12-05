@@ -132,3 +132,63 @@ def mock_kernel():
             return self._task_results.get(task_id)
 
     return MinimalMockKernel()
+
+
+# ============================================================================
+# CACHED KERNEL FIXTURE (for fast integration tests)
+# ============================================================================
+
+# Module-level kernel cache (shared across tests in same module)
+_kernel_cache = {}
+
+
+@pytest.fixture(scope="module")
+def cached_kernel():
+    """
+    Create a CACHED kernel instance shared across tests in the same module.
+
+    This dramatically speeds up integration tests by reusing the kernel
+    initialization (which takes 3-5 seconds each time).
+
+    The kernel uses in-memory SQLite and skips slow operations.
+
+    Usage:
+        def test_something(cached_kernel):
+            kernel = cached_kernel
+            # Use kernel...
+    """
+    from vibe_core.kernel_impl import RealVibeKernel
+
+    # Check cache
+    cache_key = "default"
+    if cache_key not in _kernel_cache:
+        # Create kernel with in-memory ledger (faster)
+        kernel = RealVibeKernel(ledger_path=":memory:")
+        _kernel_cache[cache_key] = kernel
+
+    return _kernel_cache[cache_key]
+
+
+@pytest.fixture
+def fresh_kernel():
+    """
+    Create a FRESH kernel instance for tests that modify kernel state.
+
+    Use this when you need isolation from other tests.
+    Slower than cached_kernel but provides clean state.
+    """
+    from vibe_core.kernel_impl import RealVibeKernel
+
+    return RealVibeKernel(ledger_path=":memory:")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Clean up cached kernels at end of test session."""
+    global _kernel_cache
+    for kernel in _kernel_cache.values():
+        try:
+            if hasattr(kernel, "shutdown"):
+                kernel.shutdown(reason="Test session ended")
+        except Exception:
+            pass
+    _kernel_cache.clear()
