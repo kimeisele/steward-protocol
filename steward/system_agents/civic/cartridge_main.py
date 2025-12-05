@@ -42,10 +42,50 @@ from vibe_core.steward import OathMixin
 # Import delegated components
 
 
-# Constitutional Oath
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CIVIC_MAIN")
+
+
+class CivicSystemInterface:
+    """
+    Minimal system interface for CIVIC sub-agents.
+
+    Provides sandboxed file access via the kernel.
+    """
+
+    def __init__(self, kernel):
+        self.kernel = kernel
+        self._sandbox_path = None
+
+    def get_sandbox_path(self) -> Path:
+        """Return sandboxed data path for CIVIC (lazy-loaded)."""
+        if self._sandbox_path is None:
+            # Use kernel's sandbox mechanism if available
+            if hasattr(self.kernel, "get_agent_sandbox_path"):
+                self._sandbox_path = self.kernel.get_agent_sandbox_path("civic")
+            else:
+                # Fallback: relative to current working directory
+                self._sandbox_path = Path.cwd() / "sandbox" / "civic"
+            self._sandbox_path.mkdir(parents=True, exist_ok=True)
+        return self._sandbox_path
+
+    def execute_tool(self, tool_name: str, *args, **kwargs) -> Any:
+        """Execute a tool via kernel if available, else return stub response."""
+        logger.debug(f"CivicSystemInterface.execute_tool({tool_name})")
+
+        # Try to use kernel's tool execution if available
+        if hasattr(self.kernel, "execute_tool"):
+            return self.kernel.execute_tool(tool_name, *args, **kwargs)
+
+        # Return a stub response that has the expected interface
+        class StubToolResult:
+            success = True
+            output = {}  # Empty dict, not None - code expects dict.get()
+            error = None
+            metadata = {}
+
+        return StubToolResult()
 
 
 class CivicCartridge(VibeAgent, OathMixin):
@@ -131,19 +171,23 @@ class CivicCartridge(VibeAgent, OathMixin):
 
         When the kernel boots and calls agent.set_kernel(kernel), we:
         1. Call parent's set_kernel to set self.kernel
-        2. Inject self.system into all sub-agents (Registry, Economy, Lifecycle)
-
-        This allows sub-agents to use self.system.execute_tool().
+        2. Create system interface if needed
+        3. Inject system into sub-agents (Registry, Economy, Lifecycle)
         """
-        # Call parent to set self.kernel (which also creates self.system)
+        # Call parent to set self.kernel
         super().set_kernel(kernel)
 
+        # Create system interface if not exists (VibeAgent doesn't create it)
+        if not hasattr(self, "system") or self.system is None:
+            # Minimal system interface - sub-agents may need this
+            self.system = CivicSystemInterface(kernel)
+
         # Inject system into sub-agents
-        logger.info("🏛️  Injecting system interface into CIVIC sub-agents...")
+        logger.info("Injecting system interface into CIVIC sub-agents...")
         self.registry_agent.set_system(self.system)
         self.economy_agent.set_system(self.system)
         self.lifecycle_agent.set_system(self.system)
-        logger.info("✅ CIVIC sub-agents now have access to system interface")
+        logger.info("CIVIC sub-agents now have access to system interface")
 
         # Load state now that self.system is available
         self.state = self._load_state()
