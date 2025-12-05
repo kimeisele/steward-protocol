@@ -149,19 +149,6 @@ class MechanicCartridge(VibeAgent, OathMixin):
             capabilities=self.capabilities,
         )
 
-    def report_status_vibeagent(self) -> Dict[str, Any]:
-        """Report agent status for kernel health monitoring.
-
-        Returns:
-            Dict with status information
-        """
-        return {
-            "agent_id": self.agent_id,
-            "name": self.name,
-            "status": "healthy",
-            "diagnostics": self.get_diagnostics(),
-        }
-
     # =========================================================================
     # PHASE 1: SELF-DIAGNOSIS
     # =========================================================================
@@ -667,8 +654,21 @@ class MechanicCartridge(VibeAgent, OathMixin):
         """
         return self.diagnostics.copy()
 
-    def report_status(self):
-        """Print human-readable status report."""
+    def report_status(self) -> Dict[str, Any]:
+        """Report agent status for kernel health monitoring.
+
+        Returns:
+            Dict with status information (VibeAgent interface)
+        """
+        return {
+            "agent_id": self.agent_id,
+            "name": self.name,
+            "status": "healthy",
+            "diagnostics": self.get_diagnostics(),
+        }
+
+    def print_status(self):
+        """Print human-readable status report to console."""
         diagnostics = self.get_diagnostics()
 
         print("\n" + "=" * 70)
@@ -726,7 +726,7 @@ class MechanicCartridge(VibeAgent, OathMixin):
         try:
             # DIAGNOSIS PHASE
             broken = self.diagnose()
-            self.report_status()
+            self.print_status()
 
             if not broken:
                 self.logger.info("✨ System is healthy. No healing required.")

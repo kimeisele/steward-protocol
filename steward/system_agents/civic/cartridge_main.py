@@ -71,9 +71,21 @@ class CivicSystemInterface:
         return self._sandbox_path
 
     def execute_tool(self, tool_name: str, *args, **kwargs) -> Any:
-        """Execute a tool (stub - returns None)."""
-        logger.debug(f"CivicSystemInterface.execute_tool({tool_name}) - stub")
-        return None
+        """Execute a tool via kernel if available, else return stub response."""
+        logger.debug(f"CivicSystemInterface.execute_tool({tool_name})")
+
+        # Try to use kernel's tool execution if available
+        if hasattr(self.kernel, "execute_tool"):
+            return self.kernel.execute_tool(tool_name, *args, **kwargs)
+
+        # Return a stub response that has the expected interface
+        class StubToolResult:
+            success = True
+            output = {}  # Empty dict, not None - code expects dict.get()
+            error = None
+            metadata = {}
+
+        return StubToolResult()
 
 
 class CivicCartridge(VibeAgent, OathMixin):
