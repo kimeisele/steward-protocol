@@ -127,7 +127,7 @@ async def test_agent_city_boot():
         # Tick a few times to process
         for i in range(3):
             kernel.tick()
-            logger.info(f"   → Tick {i+1}/3 complete")
+            logger.info(f"   → Tick {i + 1}/3 complete")
             await asyncio.sleep(0.1)
 
         logger.info("   ✅ Kernel ticked successfully!")
@@ -170,10 +170,10 @@ async def test_agent_city_boot():
 
     if success:
         logger.info("✅ BOOT TEST PASSED")
-        logger.info(f"   • Kernel booted: YES")
+        logger.info("   • Kernel booted: YES")
         logger.info(f"   • Agents registered: {agents_registered}")
-        logger.info(f"   • Task submitted: YES")
-        logger.info(f"   • Kernel ticked: YES")
+        logger.info("   • Task submitted: YES")
+        logger.info("   • Kernel ticked: YES")
     else:
         logger.warning("⚠️  BOOT TEST PARTIAL")
         logger.warning("   • Kernel booted but no agents discovered")
