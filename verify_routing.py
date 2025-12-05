@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
+from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 from vibe_core.operator_adapter import TerminalOperator, UniversalOperatorAdapter
 from vibe_core.scheduling import Task
 

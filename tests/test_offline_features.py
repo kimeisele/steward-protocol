@@ -229,7 +229,7 @@ class TestResearchToolOffline:
 
     def test_research_tool_with_degradation_chain(self):
         """Test ResearchTool accepts DegradationChain."""
-        from steward.system_agents.herald.tools.research_tool import ResearchTool
+        from vibe_core.cartridges.system.herald.tools.research_tool import ResearchTool
         from vibe_core.llm.degradation_chain import DegradationChain
 
         chain = DegradationChain()
@@ -239,7 +239,7 @@ class TestResearchToolOffline:
 
     def test_research_tool_offline_fallback(self):
         """Test ResearchTool falls back to templates when offline (Tool Protocol)."""
-        from steward.system_agents.herald.tools.research_tool import ResearchTool
+        from vibe_core.cartridges.system.herald.tools.research_tool import ResearchTool
         from vibe_core.llm.degradation_chain import DegradationChain
 
         chain = DegradationChain()
@@ -254,7 +254,7 @@ class TestResearchToolOffline:
 
     def test_research_tool_status(self):
         """Test ResearchTool has Tool Protocol properties."""
-        from steward.system_agents.herald.tools.research_tool import ResearchTool
+        from vibe_core.cartridges.system.herald.tools.research_tool import ResearchTool
         from vibe_core.llm.degradation_chain import DegradationChain
 
         chain = DegradationChain()
@@ -272,8 +272,8 @@ class TestHeraldMigration:
 
     def test_herald_inherits_from_context_aware_agent(self):
         """Test HERALD inherits from ContextAwareAgent."""
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
         from vibe_core.agents import ContextAwareAgent
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 
@@ -281,7 +281,7 @@ class TestHeraldMigration:
 
     def test_herald_has_degradation_chain(self):
         """Test HERALD has DegradationChain available."""
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 
@@ -290,7 +290,7 @@ class TestHeraldMigration:
 
     def test_herald_research_tool_has_degradation_chain(self):
         """Test HERALD provides DegradationChain for tools (Tool Protocol v3.0)."""
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 
@@ -301,7 +301,7 @@ class TestHeraldMigration:
 
     def test_herald_version_bumped(self):
         """Test HERALD version was bumped for migration."""
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 
@@ -316,7 +316,7 @@ class TestHeraldMigration:
 
     def test_herald_chat_with_fallback(self):
         """Test HERALD can use chat_with_fallback."""
-        from steward.system_agents.herald.cartridge_main import HeraldCartridge
+        from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
 
         herald = HeraldCartridge()
 

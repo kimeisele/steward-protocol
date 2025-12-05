@@ -24,9 +24,9 @@ from typing import Any, Dict, Optional
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from steward.system_agents.archivist.cartridge_main import ArchivistCartridge
-from steward.system_agents.auditor.cartridge_main import AuditorCartridge
-from steward.system_agents.engineer.cartridge_main import EngineerCartridge
+from vibe_core.cartridges.system.archivist.cartridge_main import ArchivistCartridge
+from vibe_core.cartridges.system.auditor.cartridge_main import AuditorCartridge
+from vibe_core.cartridges.system.engineer.cartridge_main import EngineerCartridge
 
 # Steward Protocol imports
 from vibe_core.scheduling.task import Task
@@ -529,7 +529,7 @@ def step5_validate() -> bool:
     try:
         # Add echo to path if needed
         sys.path.insert(0, REPO_ROOT)
-        from agent_city.registry.citizens.echo.cartridge_main import EchoCartridge
+        from vibe_core.cartridges.agent_city.citizens.echo.cartridge_main import EchoCartridge
 
         print_success("✓ EchoCartridge class can be imported")
 

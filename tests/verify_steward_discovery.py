@@ -10,7 +10,7 @@ import logging
 import shutil
 from pathlib import Path
 
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 
 # Setup logging

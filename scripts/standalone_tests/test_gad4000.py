@@ -34,7 +34,7 @@ class MockKernel:
         return f"TASK_{task.agent_id.upper()}_123456"
 
 
-from provider.universal_provider import UniversalProvider
+from vibe_core.cartridges.system.envoy.provider_legacy.universal_provider import UniversalProvider
 
 
 def test_gad4000():

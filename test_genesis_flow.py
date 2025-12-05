@@ -81,10 +81,10 @@ async def test_genesis_flow():
     logger.info("\n🌐 STEP 2: Initialize UniversalProvider")
 
     try:
-        from provider.universal_provider import UniversalProvider
+        from vibe_core.cartridges.system.envoy.provider import UniversalProvider
 
         provider = UniversalProvider(kernel=kernel)
-        logger.info(f"   ✅ UniversalProvider initialized")
+        logger.info("   ✅ UniversalProvider initialized")
         logger.info(f"   → Router: {type(provider.router).__name__}")
         logger.info(f"   → Playbook Engine: {type(provider.playbook_engine).__name__}")
 
@@ -128,7 +128,7 @@ async def test_genesis_flow():
             emit_event=collect_events,
         )
 
-        logger.info(f"   ✅ Execution complete")
+        logger.info("   ✅ Execution complete")
         logger.info(f"   → Status: {result.get('status')}")
         logger.info(f"   → Result keys: {list(result.keys())}")
 
@@ -193,14 +193,14 @@ async def test_genesis_flow():
     logger.info("🧬 GENESIS FLOW SUMMARY")
     logger.info("=" * 70)
 
-    logger.info(f"\n📋 DIAGNOSTICS:")
+    logger.info("\n📋 DIAGNOSTICS:")
     logger.info(f"   • Flow Result: {DIAGNOSTICS.get('flow_result', 'UNKNOWN')}")
     logger.info(f"   • Playbook Matched: {DIAGNOSTICS.get('playbook_matched', 'None')}")
     logger.info(f"   • Concepts: {DIAGNOSTICS.get('concepts_extracted', [])}")
     logger.info(f"   • Errors: {len(DIAGNOSTICS.get('errors', []))}")
 
     if DIAGNOSTICS.get("errors"):
-        logger.info(f"\n❌ ERRORS:")
+        logger.info("\n❌ ERRORS:")
         for err in DIAGNOSTICS["errors"]:
             logger.info(f"   • {err}")
 

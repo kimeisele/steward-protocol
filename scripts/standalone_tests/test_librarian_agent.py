@@ -17,8 +17,8 @@ from pathlib import Path
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from agent_city.registry.librarian.cartridge_main import LibrarianCartridge
-from agent_city.registry.librarian.tools import (
+from vibe_core.cartridges.agent_city.librarian.cartridge_main import LibrarianCartridge
+from vibe_core.cartridges.agent_city.librarian.tools import (
     CatalogBookTool,
     RecommendBooksTool,
     SearchBooksTool,

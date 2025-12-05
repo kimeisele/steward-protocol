@@ -35,7 +35,7 @@ from typing import Any, Dict, List, Optional
 
 # Import SemanticRouter for intelligent classification (PROJECT JNANA)
 try:
-    from provider.semantic_router import SemanticRouter
+    from vibe_core.cortex.engines.semantic_engine import SemanticRouter
 
     SEMANTIC_ROUTER_AVAILABLE = True
 except ImportError:

@@ -42,7 +42,7 @@ def get_test_kernel():
         _test_envoy = _test_kernel._agent_registry.get("envoy")
         if _test_envoy is None:
             # Fallback: create manually if not auto-registered
-            from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
+            from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 
             _test_envoy = EnvoyCartridge()
             _test_kernel.register_agent(_test_envoy, spawn_process=False)
@@ -209,8 +209,8 @@ async def test_critical_priority():
     print("TEST 4: Critical Priority (Gajendra Protocol)")
     print("=" * 60)
 
-    from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
-    from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+    from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
+    from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
     from vibe_core.kernel_impl import RealVibeKernel
 
     # Setup
@@ -258,7 +258,7 @@ async def test_action_handlers_real_io():
     print("TEST 5: Action Handlers Real I/O")
     print("=" * 60)
 
-    from steward.system_agents.envoy.action_handlers import ActionContext, ExecuteScriptHandler
+    from vibe_core.cartridges.system.envoy.action_handlers import ActionContext, ExecuteScriptHandler
 
     handlers = ExecuteScriptHandler()
     context = ActionContext(
