@@ -24,11 +24,49 @@ class ContextLoader:
         """Load all context sources with robust error handling"""
         return {
             "session": self._load_session_handoff(),
+            "kernel": self._load_kernel_snapshot(),
             "git": self._load_git_status(),
             "tests": self._load_test_status(),
             "manifest": self._load_project_manifest(),
             "environment": self._load_environment(),
         }
+
+    def _load_kernel_snapshot(self) -> dict[str, Any]:
+        """Read vibe_snapshot.json - live kernel state from _pulse()"""
+        try:
+            snapshot_file = self.project_root / "vibe_snapshot.json"
+            if snapshot_file.exists():
+                with open(snapshot_file) as f:
+                    data = json.load(f)
+                return {
+                    "status": data.get("kernel_status", "unknown"),
+                    "timestamp": data.get("timestamp"),
+                    "agents": list(data.get("agents", {}).keys()),
+                    "agents_count": len(data.get("agents", {})),
+                    "scheduler": data.get("scheduler", {}),
+                    "ledger_events": data.get("ledger_stats", {}).get("total_events", 0),
+                    "available": True,
+                }
+            else:
+                return {
+                    "status": "not_running",
+                    "timestamp": None,
+                    "agents": [],
+                    "agents_count": 0,
+                    "scheduler": {},
+                    "ledger_events": 0,
+                    "available": False,
+                }
+        except Exception as e:
+            return {
+                "status": f"error: {e!s}",
+                "timestamp": None,
+                "agents": [],
+                "agents_count": 0,
+                "scheduler": {},
+                "ledger_events": 0,
+                "available": False,
+            }
 
     def _load_session_handoff(self) -> dict[str, Any]:
         """Read .session_handoff.json - safe defaults if missing"""
