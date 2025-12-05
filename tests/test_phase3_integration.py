@@ -17,7 +17,6 @@ import pytest
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from vibe_core.kernel_impl import InMemoryScheduler
 from vibe_core.runtime.playbook_router import PlaybookRouter
 from vibe_core.sarga import Cycle, get_sarga
 from vibe_core.scheduling import Task
@@ -127,11 +126,18 @@ class TestPhase3PlaybookRouterMilkOceanWiring:
 
 
 class TestPhase3SchedulerSargaWiring:
-    """WIRING 3: Scheduler <-> Sarga (Respect Creation/Maintenance Cycles)"""
+    """WIRING 3: Kernel <-> SargaCyclePlugin (Respect Creation/Maintenance Cycles)
+
+    NOTE: Sarga cycle enforcement is now in SargaCyclePlugin, not the scheduler.
+    Tests must use the kernel to trigger the plugin hooks.
+    """
 
     def setup_method(self):
         """Setup for each test"""
-        self.scheduler = InMemoryScheduler()
+        from vibe_core.kernel_impl import RealVibeKernel
+
+        # Create kernel with in-memory ledger (loads plugins automatically)
+        self.kernel = RealVibeKernel(ledger_path=":memory:")
         self.sarga = get_sarga()
         # Reset to DAY_OF_BRAHMA for clean state
         self.sarga.set_cycle(Cycle.DAY_OF_BRAHMA)
@@ -144,20 +150,21 @@ class TestPhase3SchedulerSargaWiring:
             agent_id="ENGINEER",
             payload={"type": "feature", "description": "New API endpoint"},
         )
-        task_id = self.scheduler.submit_task(task)
+        # Use kernel.submit_task which triggers plugin hooks
+        task_id = self.kernel.submit_task(task)
         assert task_id == task.task_id
 
     def test_only_maintenance_tasks_allowed_during_night(self):
         """During NIGHT_OF_BRAHMA, only maintenance tasks allowed"""
         self.sarga.set_cycle(Cycle.NIGHT_OF_BRAHMA)
 
-        # Try to submit a creation task (should fail)
+        # Try to submit a creation task (should fail via SargaCyclePlugin)
         creation_task = Task(
             agent_id="ENGINEER",
             payload={"type": "feature", "description": "New user dashboard"},
         )
         with pytest.raises(ValueError) as exc_info:
-            self.scheduler.submit_task(creation_task)
+            self.kernel.submit_task(creation_task)
         assert "not allowed during NIGHT_OF_BRAHMA" in str(exc_info.value)
 
     def test_maintenance_tasks_allowed_during_night(self):
@@ -168,7 +175,7 @@ class TestPhase3SchedulerSargaWiring:
             agent_id="ENGINEER",
             payload={"type": "bugfix", "description": "Fix memory leak in auth"},
         )
-        task_id = self.scheduler.submit_task(maintenance_task)
+        task_id = self.kernel.submit_task(maintenance_task)
         assert task_id == maintenance_task.task_id
 
     def test_all_maintenance_types_recognized(self):
@@ -193,7 +200,7 @@ class TestPhase3SchedulerSargaWiring:
                 agent_id="ENGINEER",
                 payload={"type": task_type, "description": f"Do {task_type}"},
             )
-            task_id = self.scheduler.submit_task(task)
+            task_id = self.kernel.submit_task(task)
             assert task_id == task.task_id
 
     def test_cycle_enforcement_queues_appropriately(self):
@@ -205,17 +212,17 @@ class TestPhase3SchedulerSargaWiring:
             agent_id="ENGINEER",
             payload={"type": "feature", "description": "New dashboard"},
         )
-        self.scheduler.submit_task(creation_task)
+        self.kernel.submit_task(creation_task)
 
         # Switch to night
         self.sarga.set_cycle(Cycle.NIGHT_OF_BRAHMA)
 
         # Submit maintenance task during night
         maintenance_task = Task(agent_id="ENGINEER", payload={"type": "bugfix", "description": "Fix bug"})
-        self.scheduler.submit_task(maintenance_task)
+        self.kernel.submit_task(maintenance_task)
 
         # Check queue has both tasks
-        assert len(self.scheduler.queue) == 2
+        assert len(self.kernel.scheduler.queue) == 2
 
     def test_switch_cycles(self):
         """Test switching between cycles"""
@@ -233,19 +240,26 @@ class TestPhase3SchedulerSargaWiring:
 
 
 class TestPhase3IntegrationFlow:
-    """Integration tests for complete Phase 3 flow"""
+    """Integration tests for complete Phase 3 flow
+
+    NOTE: Sarga cycle enforcement is now in SargaCyclePlugin, not the scheduler.
+    Tests that involve Sarga must use the kernel to trigger the plugin hooks.
+    """
 
     def setup_method(self):
         """Setup for each test"""
+        from vibe_core.kernel_impl import RealVibeKernel
+
         with tempfile.TemporaryDirectory() as tmpdir:
             self.task_manager = TaskManager(Path(tmpdir))
         self.router = PlaybookRouter()
-        self.scheduler = InMemoryScheduler()
+        # Use kernel instead of raw scheduler (plugins enforce Sarga)
+        self.kernel = RealVibeKernel(ledger_path=":memory:")
         self.sarga = get_sarga()
         self.sarga.set_cycle(Cycle.DAY_OF_BRAHMA)
 
     def test_complete_flow_task_to_scheduler(self):
-        """Test complete flow: TaskManager -> Narasimha -> Router -> Scheduler -> Sarga"""
+        """Test complete flow: TaskManager -> Narasimha -> Router -> Kernel -> SargaPlugin"""
         # 1. Create a safe task (passes Narasimha)
         task = self.task_manager.add_task(
             title="Implement feature",
@@ -259,7 +273,7 @@ class TestPhase3IntegrationFlow:
         assert route is not None
         assert "feature" in route.source or route.task is not None
 
-        # 3. Create scheduler task and submit (respects Sarga cycle)
+        # 3. Create scheduler task and submit via kernel (respects Sarga plugin)
         scheduler_task = Task(
             agent_id="ENGINEER",
             payload={
@@ -268,11 +282,11 @@ class TestPhase3IntegrationFlow:
                 "task_id": task.id,
             },
         )
-        task_id = self.scheduler.submit_task(scheduler_task)
+        task_id = self.kernel.submit_task(scheduler_task)
         assert task_id == scheduler_task.task_id
 
         # 4. Verify task is in queue
-        assert len(self.scheduler.queue) == 1
+        assert len(self.kernel.scheduler.queue) == 1
 
     def test_blocked_task_prevents_scheduling(self):
         """Test that Narasimha-blocked tasks prevent scheduling"""
@@ -285,21 +299,21 @@ class TestPhase3IntegrationFlow:
             )
 
         # Verify queue remains empty
-        assert len(self.scheduler.queue) == 0
+        assert len(self.kernel.scheduler.queue) == 0
 
     def test_night_cycle_prevents_feature_creation(self):
-        """Test that night cycle prevents feature creation"""
+        """Test that night cycle prevents feature creation via SargaCyclePlugin"""
         self.sarga.set_cycle(Cycle.NIGHT_OF_BRAHMA)
 
-        # Try to create feature task (should fail during night)
+        # Try to create feature task (should fail during night via plugin)
         task = Task(
             agent_id="ENGINEER",
             payload={"type": "feature", "description": "New dashboard"},
         )
         with pytest.raises(ValueError):
-            self.scheduler.submit_task(task)
+            self.kernel.submit_task(task)
 
-        assert len(self.scheduler.queue) == 0
+        assert len(self.kernel.scheduler.queue) == 0
 
 
 if __name__ == "__main__":
