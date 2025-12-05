@@ -59,6 +59,9 @@ from .scheduling import Task
 from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
 from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
 
+# I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
+from .io_service import DocumentType, KernelIOService
+
 # Import Auditor for immune system (optional)
 try:
     from steward.system_agents.auditor.tools.invariant_tool import (
@@ -290,6 +293,13 @@ class RealVibeKernel(VibeKernel):
 
         # Playbook Router for Intent Routing (used by UI Manager)
         self._playbook_router = PlaybookRouter()
+
+        # I/O SERVICE: Central file operation controller
+        # All file writes MUST go through this service.
+        # Plugins produce content, Kernel writes through self.io
+        # See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
+        self.io = KernelIOService(self)
+        logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
         # PLUGIN SYSTEM (The Avatars of Vishnu)
         # Phase 1: Load and boot all plugins
@@ -1687,10 +1697,12 @@ class RealVibeKernel(VibeKernel):
                     logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
                     snapshot["agents"][agent_id] = {"error": str(e)}
 
-            # Write snapshot
-            snapshot_path = Path("vibe_snapshot.json")
-            snapshot_path.write_text(json.dumps(snapshot, indent=2))
-            logger.info("💓 Pulse written: vibe_snapshot.json")
+            # Write snapshot through I/O Service (atomic + audited)
+            result = self.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
+            if result.success:
+                logger.info("💓 Pulse written: vibe_snapshot.json (via I/O Service)")
+            else:
+                logger.error(f"❌ Pulse snapshot write failed: {result.error}")
 
             # Render ALL UI files via Manager
             # self._ui_manager.render_all(snapshot)  # DEPRECATED: Handled by Plugins
