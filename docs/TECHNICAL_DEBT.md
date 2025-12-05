@@ -9,67 +9,46 @@ Each item is prioritized by **SEVERITY** (P0 = fix NOW, P1 = soon, P2 = when pos
 
 ## P0: CRITICAL - Test Suite Performance Crisis
 
-**Status**: OPEN
+**Status**: ✅ RESOLVED (Phase 1)
 **Impact**: Tests take 4+ minutes, causing development slowdown
 **Root Cause**: No kernel isolation, real initialization in every test
 
-### Symptoms
-- `pytest tests/` hangs for 4+ minutes
-- Individual test files timeout after 20 seconds
-- CI becomes unusable as test count grows
+### Solution Implemented (2025-12-05)
 
-### Affected Files
-| File | Problem | Time |
-|------|---------|------|
-| `tests/hardening/test_ledger_acid.py` | 50 threads × 100 writes = 5000 SQLite ops | TIMEOUT |
-| `tests/integration/test_event_bus_integration.py` | 12× `RealVibeKernel()` init, many `sleep(0.1)` | TIMEOUT |
-| `tests/integration/test_system_boot.py` | `discover_agents()` imports 22+ agents | TIMEOUT |
-| `tests/integration/test_kernel_markdown_interfaces.py` | Kernel init per test × 36 tests | TIMEOUT |
-
-### Root Cause Analysis
-1. **No Test Kernel**: Tests use `RealVibeKernel()` which:
-   - Initializes SQLite ledger
-   - Loads 5+ plugins
-   - Sets up ProcessManager, ResourceManager
-   - Creates NetworkProxy, ToolRegistry
-   - This happens PER TEST
-
-2. **Agent Discovery in Tests**: `discover_agents()` dynamically imports 22+ agent classes, each with:
-   - Own SQLite connections
-   - Oath verification
-   - Tool registration
-
-3. **Stress Tests Without Isolation**: `test_ledger_acid.py` is a real stress test (50 threads) that should be marked as `@pytest.mark.slow`
-
-### Proposed Solution: Fractal Test Architecture
+**Universal Testable Protocol** - Self-testing components:
 
 ```
-TIER 1: Unit Tests (< 10ms each)
-├── No kernel initialization
-├── Mock all external dependencies
-└── Test pure functions only
-
-TIER 2: Integration Tests (< 500ms each)
-├── Use LightweightTestKernel (no plugins)
-├── In-memory SQLite only
-└── No agent discovery
-
-TIER 3: System Tests (< 5s each)
-├── Full kernel, but cached
-├── Lazy agent discovery
-└── Mark with @pytest.mark.slow
-
-TIER 4: Stress Tests (unbounded)
-├── Real 50-thread stress
-├── Mark with @pytest.mark.stress
-└── Run only in CI nightly
+┌─────────────────────────────────────────────────────────────┐
+│ IMPLEMENTED TEST ECOSYSTEM                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ LAYER 1: AUTO-GENERATED (Testable Protocol)                 │
+│ ├── 65 components auto-discovered                           │
+│ ├── 366 structural tests generated                          │
+│ ├── Execution: < 2 seconds                                  │
+│ └── Files: vibe_core/protocols/testable.py                  │
+│           vibe_core/protocols/testable_registry.py          │
+│           vibe_core/plugins/test_orchestration.py           │
+│                                                             │
+│ LAYER 2: LEGACY SUITE (tests/ - organisch)                  │
+│ ├── Behavioral tests (edge cases, ACID, integration)        │
+│ ├── Bleibt als Sicherheitsnetz                              │
+│ └── Wächst organisch weiter                                 │
+│                                                             │
+│ CI SCRIPT: scripts/verify_system.py                         │
+│ ├── --fast: Critical tests only                             │
+│ ├── --lint: Lint/format check                               │
+│ └── Exit codes: 0=OK, 1=Critical, 2=Warning, 3=Boot, 4=Lint │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Action Items
-- [ ] Create `LightweightTestKernel` that skips plugin loading
+### Remaining Action Items
+- [x] Create `LightweightTestKernel` (tests/fractal_test_framework.py)
+- [x] Create Universal Testable Protocol
+- [x] Create CI Fast Lane script
 - [ ] Add `@pytest.mark.slow` to stress tests
-- [ ] Cache kernel instances in test fixtures
-- [ ] Create test plugin that disables slow initialization
+- [ ] Move legacy tests to tests/legacy_integration/
 
 ---
 
@@ -149,6 +128,132 @@ The kernel is now structured as:
 
 ---
 
+## P0 NEW: Kernel-Enforced Integrity (VISION)
+
+**Status**: PLANNED
+**Impact**: External agents (e.g., Claude Code CLI) can bypass lint/test scripts via `--no-verify`
+**Root Cause**: Integrity checks are external to kernel, not enforced at boot
+
+### The Problem
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ CURRENT (VULNERABLE)                                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  [External Agent] ──git commit --no-verify──> [Repo]        │
+│        │                                         │          │
+│        └── BYPASSES ─┐                           │          │
+│                      ▼                           │          │
+│              scripts/verify_system.py            │          │
+│              (runs lint, tests)                  │          │
+│                                                             │
+│  Result: Corrupted code enters codebase                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### The Vision: AuditorPlugin (Fractal Pattern)
+
+**Key Insight**: Alles kommt aus `PhoenixConfig.quality` - KEIN Hardcoding!
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ FRACTAL ARCHITECTURE                                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PhoenixConfig (config/quality.yaml)                        │
+│  └── QualityConfig                                          │
+│      ├── lint.critical_rules: ["E9", "F63", "F7", "F82"]    │
+│      ├── lint.paths: ["vibe_core", "steward", "scripts"]    │
+│      ├── format.auto_fix: true                              │
+│      ├── test.profiles: {fast, full, ci, smoke...}          │
+│      └── ENFORCEMENT FLAGS:                                 │
+│          ├── enforce_on_commit: bool                        │
+│          ├── enforce_on_push: bool                          │
+│          └── block_on_failure: bool                         │
+│                                                             │
+│  vibe_core/plugins/auditor.py (NEW)                         │
+│  └── AuditorPlugin (priority: -100)                         │
+│      └── on_boot(kernel):                                   │
+│          quality = get_config().quality                     │
+│          if quality.block_on_failure:                       │
+│              run_lint(quality.get_ruff_critical_args())     │
+│              run_format(quality.format.paths)               │
+│              run_tests(quality.test.get_profile("fast"))    │
+│              → REFUSE BOOT on failure                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**File**: `vibe_core/plugins/auditor.py` (~50 LOC)
+**Config**: `config/quality.yaml` (already exists!)
+**Pattern**: Same as SargaCyclePlugin, VedicGovernancePlugin
+
+### Tests as Living City Architecture
+
+The test system should be like a **city** - we build infrastructure (protocols, adapters),
+but the tests grow organically on top:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ LIVING TEST CITY                                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ INFRASTRUCTURE LAYER (we build once)                        │
+│ ├── Testable Protocol (interfaces)                          │
+│ ├── TestableRegistry (discovery)                            │
+│ ├── TestOrchestrationPlugin (execution)                     │
+│ └── Adapters (Agent, Plugin, Tool, Ledger, etc.)            │
+│                                                             │
+│ ORGANIC GROWTH LAYER (adapts automatically)                 │
+│ ├── When interface changes → Tests adapt                    │
+│ ├── When component added → Auto-discovered                  │
+│ ├── When test becomes stale → Detected by Circuit/Playbook  │
+│ └── No manual test maintenance for structural checks        │
+│                                                             │
+│ BEHAVIORAL LAYER (human-written, grows organically)         │
+│ ├── tests/legacy_integration/ (safety net)                  │
+│ ├── Edge cases, ACID tests, integration scenarios           │
+│ └── Grows as developers add complex behaviors               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Implementation Roadmap
+
+| Phase | Timeframe | Deliverable |
+|-------|-----------|-------------|
+| Phase 1 | ✅ DONE | Universal Testable Protocol, 366 auto-tests |
+| Phase 2 | SHORT-TERM | Add `@pytest.mark.slow`, organize legacy tests |
+| Phase 3 | MEDIUM-TERM | AuditorPlugin (reads from QualityConfig) |
+| Phase 4 | LONG-TERM | Circuit/Playbook test architecture, stale test detection |
+
+---
+
+## Roadmap Summary
+
+### Short-Term (Stabilization)
+- [x] Universal Testable Protocol
+- [x] CI Fast Lane script (verify_system.py)
+- [ ] Add `@pytest.mark.slow` to stress tests
+- [ ] Move legacy tests to tests/legacy_integration/
+- [ ] Document all P2 items properly
+
+### Medium-Term (Kernel Enforcement)
+- [ ] AuditorPlugin (`vibe_core/plugins/auditor.py` ~50 LOC)
+- [x] `config/quality.yaml` exists with `block_on_failure: true`
+- [ ] Wire plugin to read QualityConfig on boot
+- [ ] Refuse boot on critical integrity violations
+
+### Long-Term (Living Test System)
+- [ ] Circuit/Playbook test architecture
+- [ ] Stale test detection (test references deleted code)
+- [ ] Test dependency graph
+- [ ] Auto-update tests when interfaces change
+- [ ] Test coverage metrics by component type
+
+---
+
 ## Changelog
 
 | Date | Author | Change |
@@ -156,3 +261,7 @@ The kernel is now structured as:
 | 2025-12-05 | Claude | Created document, documented test performance crisis |
 | 2025-12-05 | Claude | Extracted SargaCyclePlugin from kernel |
 | 2025-12-05 | Claude | Extracted VedicGovernancePlugin from kernel |
+| 2025-12-05 | Claude | Implemented Universal Testable Protocol (Phase 1 complete) |
+| 2025-12-05 | Claude | Added Kernel-Enforced Integrity vision (P0 NEW) |
+| 2025-12-05 | Claude | Added short/medium/long term roadmap |
+| 2025-12-05 | Claude | Refined plan: AuditorPlugin reads from QualityConfig (fractal) |
