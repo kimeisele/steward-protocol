@@ -691,5 +691,45 @@ class StewardProtocolPlugin(KernelPlugin):
 
 ---
 
-*Last updated: Iteration 5 - Found the blind spot: STEWARD needs to be a Plugin*
-*Status: READY TO IMPLEMENT - The pattern is clear (like VedicGovernancePlugin)*
+## IMPLEMENTATION PLAN: StewardProtocolPlugin
+
+### Phase 1: Basic Plugin Skeleton ✅ READY
+**File:** `vibe_core/plugins/steward_protocol.py`
+- [ ] Class skeleton extending KernelPlugin
+- [ ] plugin_id = "steward_protocol"
+- [ ] priority = 5 (before vedic_governance which is 10)
+- [ ] on_boot: register as kernel.steward
+
+### Phase 2: Connect Existing Infrastructure
+- [ ] Import and use AgentLoader from vibe_core/steward/loader.py
+- [ ] Import and use StewardClient from steward/client.py
+- [ ] Import crypto functions from steward/crypto.py
+- [ ] Import ConstitutionalOath from steward/constitution.py
+
+### Phase 3: Protocol Hooks
+- [ ] on_agent_registered: Load steward.json, verify signature, init trust
+- [ ] on_task_submit: Verify delegation permissions (PROTOCOL GATE)
+- [ ] on_task_completed: Update trust metrics
+
+### Phase 4: Public API
+- [ ] kernel.steward.verify(agent_id) → Verify agent identity
+- [ ] kernel.steward.get_trust_score(agent_id) → Get trust score
+- [ ] kernel.steward.get_manifest(agent_id) → Get agent manifest
+- [ ] kernel.steward.attest(agent_id, capability) → Create attestation
+
+### Phase 5: Phoenix Config Integration
+- [ ] Load steward.yaml via PhoenixConfig
+- [ ] Apply Layer 1.5 (User Context)
+- [ ] Apply Layer 1.6 (Cognitive Policy)
+- [ ] Generate system prompt FROM Protocol data (not hardcoded)
+
+### Cleanup: Remove Wrong Code
+- [ ] Remove identity section from steward.yaml
+- [ ] Remove templates from steward.yaml (keep only Layer 1.5/1.6)
+- [ ] Remove AgentIdentity, PromptTemplates from steward.py section
+- [ ] Update boot_sequence.py to use kernel.steward
+
+---
+
+*Last updated: Iteration 6 - Implementation plan created*
+*Status: READY TO START - Phase 1 first*
