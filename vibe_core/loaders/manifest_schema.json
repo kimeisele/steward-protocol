@@ -121,10 +121,15 @@
             "items": { "type": "string" },
             "description": "Declared capabilities"
           },
-          "oath_taken": {
+          "oath_required": {
             "type": "boolean",
-            "default": false,
-            "description": "Whether agent has taken oath"
+            "default": true,
+            "description": "Agent MUST swear Constitutional Oath (enforced by Kernel)"
+          },
+          "sandbox_required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Agent MUST use sandbox paths via system.get_sandbox_path() (enforced by Kernel)"
           }
         }
       }
