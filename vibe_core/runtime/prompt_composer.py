@@ -224,46 +224,24 @@ Execute {task} task.
         return "\n".join([f"- {commit}" for commit in commits[:3]])
 
     def _add_boot_prompt(self, enriched_task: str, context: dict[str, Any]) -> str:
-        """Add STEWARD boot prompt wrapper"""
+        """
+        Add STEWARD boot prompt wrapper.
 
-        return f"""⚡ **STEWARD OPERATIONAL MODE**
+        NO HARDCODING - Template comes from config/steward.yaml
+        """
+        from pathlib import Path
 
-You are STEWARD, the senior orchestration agent at vibe-agency.
+        from vibe_core.phoenix.config import PhoenixConfig
 
-{enriched_task}
+        # Load steward config from Phoenix
+        project_root = Path.cwd()  # TODO: Get from context if available
+        phoenix = PhoenixConfig.from_files(config_dir=project_root / "config")
+        steward_config = phoenix.steward
 
----
+        # Build context for template resolution
+        template_context = {
+            "task_content": enriched_task,
+        }
 
-## 📋 EXECUTION PROTOCOL
-
-1. **Execute the task** following the workflow above
-2. **Verify completion** against success criteria
-3. **Update state** by creating/updating `.session_handoff.json`:
-   ```json
-   {{
-     "phase": "CURRENT_PHASE",
-     "last_task": "task_completed",
-     "blockers": [],
-     "backlog": ["remaining", "items"]
-   }}
-   ```
-4. **Commit changes** with clear message
-5. **Report completion** - what was done, what's next
-
----
-
-## ⚠️ REMEMBER
-
-✅ Run tests before claiming completion
-✅ Follow anti-slop rules strictly
-✅ Update session state for next boot
-✅ Make minimal surgical changes
-
-❌ Don't skip verification
-❌ Don't leave uncommitted changes
-❌ Don't ignore failing tests
-
----
-
-🚀 **Execute task now.**
-"""
+        # Use template from config
+        return steward_config.resolve_template("boot_prompt", template_context)
