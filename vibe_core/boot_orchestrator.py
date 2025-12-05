@@ -48,6 +48,7 @@ from vibe_core.protocols.operator_protocol import (
     OperatorType,
     SystemContext,
 )
+from vibe_core.runtime.boot_sequence import BootSequence
 from vibe_core.sarga import Element, get_sarga
 
 logger = logging.getLogger("BOOT_ORCHESTRATOR")
@@ -83,6 +84,9 @@ class BootOrchestrator:
         # Sarga phase components (initialized during boot)
         self.prompt_context = None  # VAYU phase
         self.oracle = None  # AGNI phase
+
+        # Conveyor Belt - Prompt generation for operators
+        self.boot_sequence: Optional[BootSequence] = None
 
         # Universal Operator Adapter - THE SOCKET
         self.operator_adapter: Optional[UniversalOperatorAdapter] = None
@@ -255,6 +259,7 @@ class BootOrchestrator:
         """PRITHVI: Earth - Persistence (boot kernel, ledger ready)."""
         try:
             # Boot the kernel (finalizes manifests, ledger, scheduler)
+            # NOTE: kernel.boot() calls _pulse() which writes vibe_snapshot.json
             self.kernel.boot()
             logger.info("      → Kernel booted, ledger active")
 
@@ -263,6 +268,11 @@ class BootOrchestrator:
 
             self.kernel.daily_ritual = DailyRitual(self.kernel)
             logger.info("      → Daily Ritual attached (time dimension active)")
+
+            # Initialize Conveyor Belt (BootSequence) for prompt generation
+            # This connects kernel state → ContextLoader → PromptComposer
+            self.boot_sequence = BootSequence(self.project_root)
+            logger.info("      → Conveyor Belt initialized (prompt generation ready)")
 
             # Final status
             status = self.kernel.get_status()
@@ -409,6 +419,14 @@ class BootOrchestrator:
         logger.info(f"   Operator: {self.operator_adapter.get_current_operator_type().value}")
         logger.info("   Type 'exit' to shutdown")
         logger.info("=" * 70)
+
+        # Run Conveyor Belt to display context and generate operator prompt
+        # This shows the dashboard with kernel state, git, tests, etc.
+        if self.boot_sequence:
+            try:
+                self.boot_sequence.run()
+            except Exception as e:
+                logger.warning(f"Boot sequence display failed (non-fatal): {e}")
 
         # Time dimension: Track ritual cycle timing
         last_ritual_time = time.time()
