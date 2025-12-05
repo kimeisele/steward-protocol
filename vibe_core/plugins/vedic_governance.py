@@ -200,6 +200,14 @@ class VedicGovernancePlugin(KernelPlugin):
         """Get all paused agents."""
         return self._paused_agents.copy()
 
+    def get_varna_registry(self) -> Dict[str, Varna]:
+        """Get all agent Varna classifications."""
+        return self._varna_registry.copy()
+
+    def get_ashrama_registry(self) -> Dict[str, AshramaTransition]:
+        """Get all agent Ashrama lifecycle states."""
+        return self._ashrama_registry.copy()
+
     def get_agent_varna(self, agent_id: str) -> Optional[Varna]:
         """Get the Varna (classification) of an agent."""
         return self._varna_registry.get(agent_id)

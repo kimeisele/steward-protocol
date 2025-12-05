@@ -263,9 +263,14 @@ class TestSettingsMarkdownInterface:
         result = get_plugin(booted_kernel, "settings_ui").sync.execute_commands(commands, state)
 
         # Update governance plugin state (normally done by sync_all)
-        if booted_kernel.governance and hasattr(booted_kernel.governance, "_paused_agents"):
-            booted_kernel.governance._paused_agents.clear()
-            booted_kernel.governance._paused_agents.update(result.paused_agents)
+        # Use public API instead of accessing private _paused_agents
+        if booted_kernel.governance:
+            current_paused = booted_kernel.governance.get_paused_agents()
+            new_paused = result.paused_agents
+            for agent_id in current_paused - new_paused:
+                booted_kernel.governance.resume_agent(agent_id)
+            for agent_id in new_paused - current_paused:
+                booted_kernel.governance.pause_agent(agent_id)
 
         assert agent_id in result.paused_agents
         assert result.history_entries[-1]["status"] == "SUCCESS"
@@ -296,9 +301,14 @@ class TestSettingsMarkdownInterface:
         result = get_plugin(booted_kernel, "settings_ui").sync.execute_commands(commands, state)
 
         # Update governance plugin state
-        if booted_kernel.governance and hasattr(booted_kernel.governance, "_paused_agents"):
-            booted_kernel.governance._paused_agents.clear()
-            booted_kernel.governance._paused_agents.update(result.paused_agents)
+        # Use public API instead of accessing private _paused_agents
+        if booted_kernel.governance:
+            current_paused = booted_kernel.governance.get_paused_agents()
+            new_paused = result.paused_agents
+            for agent_id in current_paused - new_paused:
+                booted_kernel.governance.resume_agent(agent_id)
+            for agent_id in new_paused - current_paused:
+                booted_kernel.governance.pause_agent(agent_id)
 
         assert agent_id not in result.paused_agents
         assert result.history_entries[-1]["status"] == "SUCCESS"

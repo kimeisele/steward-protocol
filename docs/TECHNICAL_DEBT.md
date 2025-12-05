@@ -52,6 +52,58 @@ Each item is prioritized by **SEVERITY** (P0 = fix NOW, P1 = soon, P2 = when pos
 
 ---
 
+## P0: CRITICAL - Plugin Extraction Left Spaghetti
+
+**Status**: 🔴 ACTIVE PROBLEM
+**Discovered**: 2025-12-05 (system boot analysis)
+**Impact**: System shows "27 healthy agents" but logs polluted with errors/warnings
+**Root Cause**: Opus extracted plugins but left broken references throughout codebase
+
+### The Spaghetti
+
+**Problem 1: VedicGovernancePlugin owns `_paused_agents` but old code still references `kernel._paused_agents`**
+
+Evidence:
+- `SETTINGS.md` shows for ALL agents: `❌ **Error:** 'RealVibeKernel' object has no attribute '_paused_agents'`
+- `vibe_core/plugins/vedic_governance.py:30` - Plugin owns `self._paused_agents: Set[str]`
+- `vibe_core/kernel_impl.py:1685` - Tries to check `kernel.governance.is_agent_paused()` (correct pattern)
+- But somewhere agents/docs still reference old `kernel._paused_agents` directly
+
+**Problem 2: SettingsSync reads "---" markdown separators as commands**
+
+Evidence:
+- Logs show every 2 seconds: `[vibe_core.settings_sync] ⚠️  Unknown command format: --`
+- `SETTINGS.md` has `---` separators between sections
+- Parser in `vibe_core/settings_sync.py` treats these as commands
+
+**Problem 3: agent.report_status() error handling masks real problems**
+
+Evidence:
+- `vibe_core/kernel_impl.py:1688` catches exceptions and creates error entries
+- SETTINGS.md shows errors but system reports "healthy"
+- Logs show warnings but metrics report all green
+
+### Files Affected
+
+| File | Issue | Fix Needed |
+|------|-------|------------|
+| `vibe_core/settings_sync.py` | Reads "---" as command | Better validation, ignore markdown |
+| `vibe_core/kernel_impl.py:1680-1688` | Creates error entries in snapshot | Handle missing report_status() gracefully |
+| `steward/system_agents/*/cartridge_main.py` | May reference old kernel attrs | Audit all agent.report_status() implementations |
+| `tests/integration/test_kernel_markdown_interfaces.py` | Tests old patterns | Update to use `kernel.governance.*` |
+
+### Action Items
+
+- [ ] **P0.1**: Fix SettingsSync command parser (ignore markdown separators)
+- [ ] **P0.2**: Audit all `agent.report_status()` implementations
+- [ ] **P0.3**: Fix OPERATIONS.md/SETTINGS.md error handling
+- [ ] **P0.4**: Update tests to use `kernel.governance.*` not `kernel._paused_agents`
+- [ ] **P0.5**: Grep codebase for `kernel._paused_agents` references
+
+**Discovery Method**: Booted system with `python boot.py`, analyzed logs vs reported metrics
+
+---
+
 ## P1: Kernel Plugin Extraction Incomplete
 
 **Status**: IN PROGRESS
@@ -395,3 +447,5 @@ but the tests grow organically on top:
 | 2025-12-05 | Claude (Sonnet) | **CORRECTED**: Verified refactoring success - kernel SMALLER, tests PASSING |
 | 2025-12-05 | Claude (Sonnet) | Fixed untracked markdown_ui_manager.py formatting issue |
 | 2025-12-05 | Claude (Sonnet) | **NEW**: Built GitHistoryPlugin - auto-generates GIT.md with 7-day analysis |
+| 2025-12-05 | Claude (Sonnet) | Documented P0 Plugin Extraction Spaghetti (real problems from boot) |
+| 2025-12-05 | Claude (Sonnet) | **FIXED**: Cleaned up plugin API - enforce public boundaries (pause/resume/registries) |

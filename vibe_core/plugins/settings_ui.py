@@ -62,9 +62,19 @@ class SettingsUIPlugin(KernelPlugin):
             self.execution_history.extend(result.history_entries)
 
             # Update Governance Plugin State (Paused Agents)
-            if kernel.governance and hasattr(kernel.governance, "_paused_agents"):
-                kernel.governance._paused_agents.clear()
-                kernel.governance._paused_agents.update(result.paused_agents)
+            # Use public API instead of accessing private _paused_agents
+            if kernel.governance:
+                # Get current paused agents
+                current_paused = kernel.governance.get_paused_agents()
+                new_paused = result.paused_agents
+
+                # Resume agents that are no longer paused
+                for agent_id in current_paused - new_paused:
+                    kernel.governance.resume_agent(agent_id)
+
+                # Pause agents that should be paused
+                for agent_id in new_paused - current_paused:
+                    kernel.governance.pause_agent(agent_id)
 
             # Execute side effects (RESTART, REFRESH, verbose)
             from vibe_core.settings_executor import get_executor
@@ -93,13 +103,14 @@ class SettingsUIPlugin(KernelPlugin):
             pass  # Use defaults if not available
 
         # Get governance registries from plugin (if available)
+        # Use public API instead of accessing private registries
         varna_registry = {}
         ashrama_registry = {}
         if kernel.governance:
-            if hasattr(kernel.governance, "_varna_registry"):
-                varna_registry = kernel.governance._varna_registry
-            if hasattr(kernel.governance, "_ashrama_registry"):
-                ashrama_registry = kernel.governance._ashrama_registry
+            if hasattr(kernel.governance, "get_varna_registry"):
+                varna_registry = kernel.governance.get_varna_registry()
+            if hasattr(kernel.governance, "get_ashrama_registry"):
+                ashrama_registry = kernel.governance.get_ashrama_registry()
 
         state = SettingsRenderState(
             ledger_path=str(kernel.ledger_path),
