@@ -107,6 +107,7 @@ Execute {task} task.
         tests = context.get("tests", {})
         env = context.get("environment", {})
         memory = context.get("memory", {})
+        resolved = context.get("resolved", {})
 
         failing_count = tests.get("failing_count", 0)
         test_status = "✅ Passing" if failing_count == 0 else f"❌ {failing_count} Failing"
@@ -117,6 +118,9 @@ Execute {task} task.
 
         # Build semantic context from memory
         semantic_context = self._format_semantic_context(memory)
+
+        # Build kernel state from resolved context
+        kernel_context = self._format_kernel_context(resolved)
 
         return f"""---
 
@@ -132,6 +136,8 @@ Execute {task} task.
 - Git: {git_status}
 - Environment: {env_status}
 
+{kernel_context}
+
 {semantic_context}
 
 **Backlog:**
@@ -142,6 +148,26 @@ Execute {task} task.
 
 ---
 """
+
+    def _format_kernel_context(self, resolved: dict) -> str:
+        """Format kernel state from resolved PromptContext values"""
+        if not resolved:
+            return ""
+
+        kernel_status = resolved.get("kernel_status", "not_running")
+        if kernel_status == "not_running":
+            return "**🔧 Kernel:** not running"
+
+        agents = resolved.get("kernel_agents", "none")
+        agents_count = resolved.get("kernel_agents_count", "0")
+        ledger_events = resolved.get("kernel_ledger_events", "0")
+        inbox_count = resolved.get("inbox_count", "0")
+
+        return f"""**🔧 Kernel:**
+- Status: {kernel_status}
+- Agents: {agents_count} ({agents})
+- Ledger Events: {ledger_events}
+- Inbox: {inbox_count} message(s)"""
 
     def _format_semantic_context(self, memory: dict) -> str:
         """Format semantic memory context for prompt injection"""

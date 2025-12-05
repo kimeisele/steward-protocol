@@ -90,7 +90,13 @@ class PromptContext:
         # ARCH-064: Oracle resolver (system capabilities for Steward)
         self.register("kernel_capabilities", self._resolve_kernel_capabilities)
 
-        logger.debug("✅ Registered 10 core context resolvers (5 legacy + 4 kernel state + 1 oracle)")
+        # Kernel state from vibe_snapshot.json
+        self.register("kernel_status", self._resolve_kernel_status)
+        self.register("kernel_agents", self._resolve_kernel_agents)
+        self.register("kernel_agents_count", self._resolve_kernel_agents_count)
+        self.register("kernel_ledger_events", self._resolve_kernel_ledger_events)
+
+        logger.debug("✅ Registered 14 core context resolvers")
 
     def register(self, key: str, resolver: Callable[[], str]) -> None:
         """
@@ -520,6 +526,43 @@ class PromptContext:
         except Exception as e:
             logger.warning(f"Failed to resolve kernel_capabilities: {e}")
             return f"[Error loading kernel capabilities: {e}]"
+
+    def _load_kernel_snapshot(self) -> dict:
+        """Load vibe_snapshot.json - shared helper for kernel resolvers."""
+        try:
+            import json
+
+            snapshot_file = self.vibe_root / "vibe_snapshot.json"
+            if snapshot_file.exists():
+                with open(snapshot_file) as f:
+                    return json.load(f)
+            return {}
+        except Exception as e:
+            logger.warning(f"Failed to load kernel snapshot: {e}")
+            return {}
+
+    def _resolve_kernel_status(self) -> str:
+        """Resolve kernel status from vibe_snapshot.json."""
+        snapshot = self._load_kernel_snapshot()
+        return snapshot.get("kernel_status", "not_running")
+
+    def _resolve_kernel_agents(self) -> str:
+        """Resolve kernel agents list from vibe_snapshot.json."""
+        snapshot = self._load_kernel_snapshot()
+        agents = list(snapshot.get("agents", {}).keys())
+        if not agents:
+            return "none"
+        return ", ".join(agents[:5]) + ("..." if len(agents) > 5 else "")
+
+    def _resolve_kernel_agents_count(self) -> str:
+        """Resolve kernel agents count from vibe_snapshot.json."""
+        snapshot = self._load_kernel_snapshot()
+        return str(len(snapshot.get("agents", {})))
+
+    def _resolve_kernel_ledger_events(self) -> str:
+        """Resolve ledger events count from vibe_snapshot.json."""
+        snapshot = self._load_kernel_snapshot()
+        return str(snapshot.get("ledger_stats", {}).get("total_events", 0))
 
 
 # ========================================================================
