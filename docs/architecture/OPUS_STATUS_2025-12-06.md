@@ -62,7 +62,7 @@ The ONEWORD.md pattern is a **Markdown IDE** - every `.md` file in root is a rea
 |------|---------|-----------------|--------|
 | **README.md** | NO RENDERER - was delegated to scribe | Agent registry, kernel state | Create ReadmeRenderer |
 | **STEWARD.md** | NO RENDERER - corrupted (136 vs 568 line template), references OLD paths | `steward/templates/STEWARD_TEMPLATE.md` + live config | Create StewardRenderer |
-| **MATRIX.md** | Stub only (117 bytes) | 4D analysis (git, ast, topology, docs) | Create MatrixRenderer |
+| **MATRIX.md** | ✅ DONE | CircuitLoader + PlaybookLoader view | MatrixRenderer created |
 
 **Evidence of STEWARD.md corruption:**
 - Current file: 136 lines, minimal
