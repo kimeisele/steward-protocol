@@ -1,6 +1,6 @@
-# 📬 ENVOY TERMINAL
+# ENVOY TERMINAL
 
-## 💬 Request
+## Request
 
 > Write your request here.
 
@@ -8,23 +8,21 @@ _No pending request. Write your request above this line._
 
 ---
 
-## 📊 Status
+## Status
 
 | Task ID | Status | Request |
 | :--- | :--- | :--- |
 _No active tasks_
 
-## 📜 Response History
+## Response History
 
 | Time | Request | Status | Response |
 | :--- | :--- | :--- | :--- |
 
-## 🎯 Available Routes
+## Available Routes
 
 | Route | Description |
 | :--- | :--- |
-| `version` |  |
-| `description` |  |
-| `routes` |  |
-| `config` |  |
-| `metadata` |  |
+| `bootstrap` | System Bootstrap |
+| `status` | System Status |
+| _EnvoyPlugin not loaded_ | |
