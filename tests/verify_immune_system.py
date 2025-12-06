@@ -18,44 +18,15 @@ from pathlib import Path
 # Setup paths
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from vibe_core.agent_protocol import AgentManifest, VibeAgent
 from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
     get_judge,
 )
 from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestAgents
 from vibe_core.scheduling import Task
 
 logging.basicConfig(level=logging.DEBUG, format="%(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("TEST_IMMUNE_SYSTEM")
-
-
-class TestAgent(VibeAgent):
-    """Properly initialized test agent"""
-
-    def __init__(self):
-        super().__init__(
-            agent_id="test-agent-001",
-            name="Test Agent",
-            version="1.0.0",
-            author="test-suite",
-            description="Test agent for immune system verification",
-            domain="TEST",
-            capabilities=["test"],
-        )
-
-    def get_manifest(self) -> AgentManifest:
-        return AgentManifest(
-            agent_id=self.agent_id,
-            name=self.name,
-            version=self.version,
-            author=self.author,
-            description=self.description,
-            domain=self.domain,
-            capabilities=self.capabilities,
-        )
-
-    def process(self, task: Task) -> dict:
-        return {"status": "ok", "task_id": task.task_id}
 
 
 def test_immune_system_boot():
@@ -65,7 +36,7 @@ def test_immune_system_boot():
     logger.info("=" * 60)
 
     kernel = RealVibeKernel(ledger_path=":memory:")
-    agent = TestAgent()
+    agent = TestAgents.compliant("test-agent-001")
     kernel.register_agent(agent)
     kernel.boot()
 
@@ -78,14 +49,18 @@ def test_immune_system_boot():
     assert "NO_CRITICAL_VOIDS" in judge.rules, "❌ VOID rule not registered"
     logger.info("✅ VOID rule (Rule 7) registered")
 
-    return kernel
 
-
-def test_normal_task_execution(kernel):
+def test_normal_task_execution():
     """TEST 2: Execute normal task (health check passes)"""
     logger.info("\n" + "=" * 60)
     logger.info("TEST 2: Execute normal task (should pass)")
     logger.info("=" * 60)
+
+    # Setup kernel
+    kernel = RealVibeKernel(ledger_path=":memory:")
+    agent = TestAgents.compliant("test-agent-001")
+    kernel.register_agent(agent)
+    kernel.boot()
 
     task = Task(task_id="task-001", agent_id="test-agent-001", payload={"action": "test"})
 
@@ -110,7 +85,7 @@ def test_void_detection():
 
     # Create a new kernel
     kernel = RealVibeKernel(ledger_path=":memory:")
-    agent = TestAgent()
+    agent = TestAgents.compliant("test-agent-001")
     kernel.register_agent(agent)
     kernel.boot()
 
@@ -163,9 +138,12 @@ def test_critical_violation_halts_kernel():
     logger.info("=" * 60)
 
     kernel = RealVibeKernel(ledger_path=":memory:")
-    agent = TestAgent()
+    agent = TestAgents.compliant("test-agent-001")
     kernel.register_agent(agent)
     kernel.boot()
+
+    # Assert kernel is running to prove setup worked
+    assert kernel.status.value == "RUNNING", "Kernel should be running"
 
     # Execute setup task
     task = Task(task_id="task-halt-001", agent_id="test-agent-001", payload={"action": "setup"})
