@@ -54,11 +54,22 @@ class InterfacePlugin(KernelPlugin):
 
         logger.info(f"🖥️  Interface Plugin booted ({len(self._renderers)} views active)")
 
+    def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
+        """
+        Called BEFORE task processing - ALWAYS runs even if no tasks.
+        Trigger all active renderers to keep UI fresh.
+        """
+        self._render_all()
+
     def on_tick_post(self, kernel: "RealVibeKernel") -> None:
         """
-        Called after task processing.
-        Trigger all active renderers.
+        Called after task processing (only if task was processed).
+        UI already rendered in on_tick_pre, nothing to do here.
         """
+        pass
+
+    def _render_all(self) -> None:
+        """Render all active views."""
         for name, renderer in self._renderers.items():
             try:
                 renderer.render()
