@@ -60,6 +60,9 @@ dependencies = [
     "google-api-python-client>=2.100.0",
     "google-generativeai>=0.8.5",
 
+    # Templating
+    "Jinja2>=3.0.0",
+
     # Utilities
     "gitpython>=3.1.0",
     "Pillow>=10.0.0",

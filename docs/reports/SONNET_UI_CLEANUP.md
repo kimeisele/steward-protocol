@@ -1,175 +1,219 @@
-# SONNET/GEMINI TASK: Markdown UI Cleanup
+# SONNET TASK: ONEWORD.md UI Compliance Fixes
 
-**Priority**: HIGH (After plugin migration)
-**Effort**: 4-6 hours
-**Type**: Refactoring + Cleanup
-
----
-
-## The Problem
-
-30+ markdown files in root directory. Two rendering patterns exist:
-
-| Pattern | Files | Status |
-|---------|-------|--------|
-| **Direct** (GOOD) | ENVOY.md, SETTINGS.md, DASHBOARD.md | Works, sync, reliable |
-| **Delegated** (BAD) | AGENTS.md, CITYMAP.md, HELP.md, INDEX.md, RAG.md | Fragile, async, fails silently |
-
-The "Delegated" pattern submits tasks to the `scribe` agent which writes files asynchronously. This breaks when:
-- Scribe agent is not running
-- Scheduler is full
-- Sandbox/publish logic fails
+**Priority**: HIGH
+**Effort**: 2-3 hours
+**Type**: Compliance fixes
+**Reference**: `docs/architecture/ONEWORD_UI_STANDARD.md`
 
 ---
 
-## The Solution
+## Objective
 
-**Make ALL renderers Direct.**
+Fix 4 non-compliant renderers to follow the ONEWORD.md standard.
 
-```
-BEFORE:
-  Renderer.render() → kernel.submit_task(scribe) → [async queue] → scribe writes
-
-AFTER:
-  Renderer.render() → generate_content() → write_file() → DONE
-```
+**IMPORTANT**: Read `docs/architecture/ONEWORD_UI_STANDARD.md` first!
 
 ---
 
-## Files to Fix
+## Task 1: Fix EphemeralRenderer (CRITICAL)
 
-### Renderers that need Direct conversion:
+**File**: `vibe_core/plugins/interface/renderers/ephemeral.py`
 
-| Renderer | Current | Action |
-|----------|---------|--------|
-| `renderers/agents.py` | Delegated | Convert to Direct |
-| `renderers/citymap.py` | Delegated | Convert to Direct |
-| `renderers/help.py` | Delegated | Convert to Direct |
-| `renderers/index.py` | Delegated | Convert to Direct |
-| `renderers/rag.py` | Delegated | Convert to Direct |
+**Problem**: Uses direct `open()` write instead of `kernel.io.write_document()`
 
-### Renderers already Direct (verify):
-
-| Renderer | Status |
-|----------|--------|
-| `renderers/envoy.py` | ✅ Direct |
-| `renderers/settings.py` | Verify |
-| `renderers/dashboard.py` | Verify |
-| `renderers/tasks.py` | Verify |
-| `renderers/ephemeral.py` | Verify |
-
----
-
-## Step-by-Step for Each Renderer
-
-### 1. Check current implementation
-
-```bash
-# If it contains "submit_task" or "scribe", it's Delegated
-grep -l "submit_task\|scribe" vibe_core/plugins/interface/renderers/*.py
-```
-
-### 2. Convert to Direct pattern
-
+**Current Code (BAD)**:
 ```python
-# BEFORE (Delegated)
-def render(self):
-    task = Task(agent_id="scribe", payload={"action": "render_agents"})
-    self.kernel.submit_task(task)
+def render(self) -> None:
+    try:
+        content = self._generate_content()
+        with open("EPHEMERAL.md", "w") as f:
+            f.write(content)
+```
 
-# AFTER (Direct)
-def render(self):
-    content = self._generate_content()
-    Path("AGENTS.md").write_text(content)
+**Fixed Code (GOOD)**:
+```python
+from vibe_core.io_service import DocumentType
 
-def _generate_content(self) -> str:
-    lines = ["# 🤖 Agent Registry", ""]
-    for agent_id, agent in self.kernel._agent_registry.items():
-        lines.append(f"- **{agent_id}**: {agent.name}")
+def render(self) -> None:
+    try:
+        content = self._generate_content()
+        self.kernel.io.write_document(
+            name="EPHEMERAL.md",
+            content=content,
+            doc_type=DocumentType.READONLY,
+            writer_id="RENDERER_EPHEMERAL",
+        )
+```
+
+---
+
+## Task 2: Fix OperationsRenderer
+
+**File**: `vibe_core/plugins/interface/renderers/operations.py`
+
+**Problem**: Uses legacy `DocRenderer` class instead of direct pattern
+
+**Current Code (LEGACY)**:
+```python
+from vibe_core.doc_renderer import DocRenderer
+
+def __init__(self, kernel):
+    super().__init__(kernel)
+    self.doc_renderer = DocRenderer(io_service=kernel.io)
+
+def render(self) -> None:
+    self.doc_renderer.render_operations(snapshot)
+```
+
+**Fixed Code (DIRECT)**:
+```python
+from vibe_core.io_service import DocumentType
+
+def render(self) -> None:
+    # Gather snapshot
+    snapshot = {
+        "timestamp": self.kernel.get_status().get("timestamp", ""),
+        "kernel_status": self.kernel.get_status().get("status", "UNKNOWN"),
+        # ... existing snapshot code ...
+    }
+
+    # Generate content directly
+    content = self._generate_content(snapshot)
+
+    # Write through kernel I/O
+    self.kernel.io.write_document(
+        name="OPERATIONS.md",
+        content=content,
+        doc_type=DocumentType.READONLY,
+        writer_id="RENDERER_OPERATIONS",
+    )
+
+def _generate_content(self, snapshot: dict) -> str:
+    """Generate OPERATIONS.md content."""
+    lines = ["# 📊 OPERATIONS DASHBOARD", ""]
+    # ... generate content from snapshot ...
     return "\n".join(lines)
 ```
 
-### 3. Move logic from scribe tools
+---
 
-The generation logic might be in:
-```
-vibe_core/cartridges/system/scribe/tools/agents_renderer.py
+## Task 3: Fix DashboardRenderer
+
+**File**: `vibe_core/plugins/interface/renderers/dashboard.py`
+
+**Problem**: Too simple, doesn't follow document structure standard
+
+**Current Code**:
+```python
+def render(self) -> None:
+    status = self.kernel.get_status()
+    content = ["# 📊 Live Dashboard", "", ...]  # Too minimal
 ```
 
-Move that logic INTO the renderer.
+**Fixed Code**:
+Follow the standard document structure:
+```python
+def _generate_content(self) -> str:
+    status = self.kernel.get_status()
+    lines = [
+        "# 📊 LIVE DASHBOARD",
+        "",
+        "> Real-time system status",
+        "",
+        "---",
+        "",
+        "## 📊 System Status",
+        "",
+        f"| Metric | Value |",
+        f"|--------|-------|",
+        f"| Status | `{status.get('status', 'UNKNOWN')}` |",
+        f"| Timestamp | {status.get('timestamp', '')} |",
+        f"| Agents | {len(self.kernel.agent_registry)} |",
+        f"| Queue | {self.kernel.scheduler.queue_size()} |",
+        "",
+        "---",
+        "",
+        "## 📖 Quick Links",
+        "",
+        "- [OPERATIONS.md](OPERATIONS.md) - Detailed metrics",
+        "- [AGENTS.md](AGENTS.md) - Agent registry",
+        "- [TASKS.md](TASKS.md) - Task board",
+        "",
+        "---",
+        "",
+        "*Generated by InterfacePlugin (DashboardRenderer)*",
+    ]
+    return "\n".join(lines)
+```
 
 ---
 
-## Root Directory Cleanup
+## Task 4: Fix ProofRenderer
 
-After fixing renderers, evaluate which .md files should exist:
+**File**: `vibe_core/plugins/interface/renderers/proof.py`
 
-### KEEP (UI/Interactive):
-- ENVOY.md (chat terminal)
-- SETTINGS.md (configuration)
-- TASKS.md (task board)
-- EPHEMERAL.md (ephemeral cities)
+**Problem**: No-op placeholder (does nothing)
 
-### KEEP (Documentation):
-- README.md
-- CONSTITUTION.md
-- STEWARD.md
-- INDEX.md
+**Options**:
 
-### MOVE to docs/:
-- ARCHITECTURE.md → docs/architecture/
-- AGI_MANIFESTO.md → docs/
-- CARTRIDGE_SPEC.md → docs/specs/
+### Option A: Remove (Recommended)
+Delete the file if PROOF.md is only generated by verification scripts.
 
-### DELETE (stale/generated):
-- AUDIT_FINDINGS.md (one-time report)
-- PLAYBOOK_FIX_REPORT.md (one-time report)
-- WIRING_*.md (completed tasks)
-- GEMINI_ANALYSIS_REPORT.md (one-time)
-- UNIVERSE_MAP_RESULTS.md (one-time)
+### Option B: Implement
+If PROOF.md should be a live UI document:
+```python
+def render(self) -> None:
+    # Read existing proof data
+    proofs = self._load_proof_data()
 
----
+    content = self._generate_content(proofs)
 
-## Deprecated Code to Remove
-
-```bash
-# Check if this still exists
-ls vibe_core/markdown_ui_manager.py
+    self.kernel.io.write_document(
+        name="PROOF.md",
+        content=content,
+        doc_type=DocumentType.READONLY,
+        writer_id="RENDERER_PROOF",
+    )
 ```
-
-If it exists, DELETE it - the InterfacePlugin replaces it.
 
 ---
 
 ## Validation
 
+After each fix:
+
 ```bash
-# 1. Boot kernel and check files update
-python -m vibe_core.cli boot
+# 1. Boot kernel and verify file updates
+python -c "
+from vibe_core.kernel_impl import RealVibeKernel
+k = RealVibeKernel(':memory:')
+k.boot()
+k.tick()  # Trigger renderers
+"
 
-# 2. Check all UI files have recent timestamps
-ls -la ENVOY.md SETTINGS.md TASKS.md AGENTS.md
+# 2. Check file was updated
+ls -la EPHEMERAL.md OPERATIONS.md DASHBOARD.md
 
-# 3. Verify no scribe dependency
-grep -r "scribe" vibe_core/plugins/interface/renderers/
-# Should return NOTHING
+# 3. Run tests
+python -m pytest tests/ -v --tb=short -x
 ```
 
 ---
 
 ## Success Criteria
 
-- [ ] All renderers are Direct (no scribe delegation)
-- [ ] Root has < 15 markdown files
-- [ ] UI files update on every kernel tick
-- [ ] No deprecated MarkdownUIManager code
-- [ ] Documentation moved to docs/
+- [ ] EphemeralRenderer uses `kernel.io.write_document()`
+- [ ] OperationsRenderer uses direct pattern (no DocRenderer)
+- [ ] DashboardRenderer follows document structure standard
+- [ ] ProofRenderer either removed or implemented
+- [ ] All files update on kernel tick
+- [ ] Tests pass
 
 ---
 
 ## Reference
 
-- Analysis: `MARKDOWN_UI_ANALYSIS.md`
-- InterfacePlugin: `vibe_core/plugins/interface/plugin_main.py`
-- BaseRenderer: `vibe_core/plugins/interface/renderers/base.py`
-- EnvoyRenderer (example): `vibe_core/plugins/interface/renderers/envoy.py`
+- Architecture Standard: `docs/architecture/ONEWORD_UI_STANDARD.md`
+- Gold Standard Example: `vibe_core/plugins/interface/renderers/envoy.py`
+- Base Renderer: `vibe_core/plugins/interface/renderers/base.py`
+- I/O Service: `vibe_core/io_service.py`
