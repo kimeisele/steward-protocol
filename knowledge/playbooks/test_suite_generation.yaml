@@ -1,0 +1,347 @@
+# COMPREHENSIVE TEST SUITE GENERATION - Layer 3 of PANOPTICON+
+# ==============================================================
+#
+# "Multiple perspectives, collective intelligence"
+#
+# This playbook orchestrates multiple agents to generate
+# a comprehensive test suite for any new plugin/agent.
+#
+# Stages:
+# 1. Discovery (analyst) - Understand what we're testing
+# 2. Design (engineer) - Plan test strategy
+# 3. Generation (mechanic) - Generate test files
+# 4. Execution (watchman) - Run and validate tests
+# 5. Enhancement (analyst) - Find gaps, iterate
+#
+# Output: Complete test suite in tests/{component}/
+
+playbook_id: comprehensive_test_suite
+version: "1.0.0"
+type: dag
+description: "Multi-agent test suite generation"
+
+# Trigger conditions
+triggers:
+  - event: plugin_installed
+    data: plugin_manifest
+  - event: agent_registered
+    data: agent_manifest
+  - event: manual
+    command: "generate_tests"
+    args: [component_path]
+
+# Input requirements
+inputs:
+  component_path:
+    type: path
+    required: true
+    description: "Path to plugin/agent to test"
+
+  component_type:
+    type: enum
+    values: [plugin, agent, tool]
+    default: auto_detect
+
+  thoroughness:
+    type: enum
+    values: [quick, standard, comprehensive]
+    default: standard
+
+# DAG Stages
+stages:
+  # ========================================
+  # STAGE 1: Discovery
+  # ========================================
+  - id: discovery
+    name: "Analyze Component"
+    agent: analyst
+    description: "Understand what we're testing"
+
+    task:
+      action: analyze
+      targets:
+        - "{{ component_path }}/manifest.json"
+        - "{{ component_path }}/**/*.py"
+
+      analysis_types:
+        - structure: "File layout, imports, exports"
+        - behavior: "What does this component DO?"
+        - dependencies: "What does it depend on?"
+        - hooks: "What kernel hooks does it use?"
+        - capabilities: "What capabilities does it need?"
+
+    output:
+      component_analysis:
+        description: "Detailed analysis of component"
+        schema:
+          name: string
+          type: enum[plugin, agent, tool]
+          purpose: string
+          behaviors: list[string]
+          hooks_used: list[string]
+          capabilities: list[string]
+          dependencies: list[string]
+          risk_areas: list[string]
+
+    timeout: 60s
+
+  # ========================================
+  # STAGE 2: Design Test Strategy
+  # ========================================
+  - id: design
+    name: "Design Test Strategy"
+    agent: engineer
+    depends_on: [discovery]
+    description: "Plan what tests to write"
+
+    task:
+      action: design
+      input: "{{ stages.discovery.output.component_analysis }}"
+
+      design_aspects:
+        - test_categories:
+            - structure: "Manifest, imports, exports"
+            - contracts: "Hook signatures, return types"
+            - behavior: "Does what it claims"
+            - integration: "Works with kernel/other plugins"
+            - edge_cases: "Error handling, limits"
+            - security: "Capability enforcement, isolation"
+
+        - fixture_mapping:
+            description: "Map scenarios to PANOPTICON+ fixtures"
+            rules:
+              - scenario: "Test governance rejection"
+                fixture: "TestAgents.without_oath()"
+              - scenario: "Test compliant flow"
+                fixture: "TestAgents.compliant()"
+              - scenario: "Test isolated kernel"
+                fixture: "TestKernel.minimal()"
+              - scenario: "Test with full governance"
+                fixture: "TestKernel.with_governance()"
+
+        - priority_order:
+            - P0: "Critical path tests (must pass)"
+            - P1: "Important behavior tests"
+            - P2: "Edge cases"
+            - P3: "Nice-to-have"
+
+    output:
+      test_strategy:
+        description: "Complete test plan"
+        schema:
+          test_files: list[TestFileSpec]
+          fixture_usage: map[scenario, fixture]
+          priority_order: list[TestSpec]
+          estimated_coverage: percentage
+
+    timeout: 120s
+
+  # ========================================
+  # STAGE 3: Generate Tests
+  # ========================================
+  - id: generation
+    name: "Generate Test Files"
+    agent: mechanic
+    depends_on: [design]
+    description: "Write the actual test code"
+
+    task:
+      action: generate
+      input: "{{ stages.design.output.test_strategy }}"
+
+      generation_rules:
+        # MANDATORY: Use PANOPTICON+ fixtures
+        - rule: "Always import from fixtures"
+          code: |
+            from vibe_core.plugins.test_orchestration import (
+                TestAgents,
+                TestKernel,
+                TestPlugins,
+                TestContext,
+            )
+
+        # MANDATORY: No custom mock classes
+        - rule: "Never define Agent classes in tests"
+          forbidden_patterns:
+            - "class.*Agent.*VibeAgent"
+            - "class Mock.*"
+
+        # REQUIRED: Meaningful assertions
+        - rule: "Every test must assert something"
+          min_assertions: 1
+
+        # REQUIRED: Test isolation
+        - rule: "Use TestContext for cleanup"
+          pattern: "with TestContext() as ctx:"
+
+      file_structure:
+        output_dir: "tests/{{ component_type }}/{{ component_name }}/"
+        files:
+          - name: "test_structure.py"
+            contains: "Structure and manifest tests"
+          - name: "test_contracts.py"
+            contains: "Hook signature tests"
+          - name: "test_behavior.py"
+            contains: "Behavioral tests"
+          - name: "test_integration.py"
+            contains: "Integration with kernel"
+          - name: "test_edge_cases.py"
+            contains: "Error handling"
+
+    output:
+      test_files:
+        description: "Generated test file paths"
+        schema:
+          files: list[path]
+          line_count: number
+          test_count: number
+
+    timeout: 300s
+
+  # ========================================
+  # STAGE 4: Execute & Validate
+  # ========================================
+  - id: execution
+    name: "Run & Validate Tests"
+    agent: watchman
+    depends_on: [generation]
+    description: "Run tests, check they pass and are valid"
+
+    task:
+      action: validate_and_run
+
+      steps:
+        # Step 1: Run test_validation circuit
+        - name: "Validate test quality"
+          circuit: test_validation
+          input: "{{ stages.generation.output.test_files }}"
+          block_on: critical
+
+        # Step 2: Run pytest
+        - name: "Execute tests"
+          command: pytest
+          args:
+            - "{{ output_dir }}"
+            - "-v"
+            - "--tb=short"
+          expect: all_pass
+
+        # Step 3: Check coverage
+        - name: "Measure coverage"
+          command: pytest
+          args:
+            - "--cov={{ component_path }}"
+            - "--cov-report=json"
+          threshold: 80%
+
+    output:
+      test_results:
+        description: "Test execution results"
+        schema:
+          passed: number
+          failed: number
+          coverage: percentage
+          validation_report: path
+          issues: list[string]
+
+    timeout: 600s
+
+  # ========================================
+  # STAGE 5: Enhancement Loop
+  # ========================================
+  - id: enhancement
+    name: "Identify Gaps & Improve"
+    agent: analyst
+    depends_on: [execution]
+    description: "Find what's missing, suggest improvements"
+
+    # This stage can loop back to generation
+    loop:
+      condition: "{{ coverage < 80% or failed > 0 }}"
+      max_iterations: 3
+      back_to: generation
+
+    task:
+      action: analyze_gaps
+      input: "{{ stages.execution.output.test_results }}"
+
+      analysis:
+        - coverage_gaps:
+            description: "What code paths aren't tested?"
+            action: "Generate tests for uncovered paths"
+
+        - failure_analysis:
+            description: "Why did tests fail?"
+            action: "Fix test or report bug in component"
+
+        - quality_assessment:
+            description: "Are tests meaningful?"
+            checks:
+              - "Tests actually assert behavior"
+              - "Edge cases covered"
+              - "Error paths tested"
+
+    output:
+      enhancement_suggestions:
+        description: "Improvements for next iteration"
+        schema:
+          gaps: list[string]
+          fixes: list[TestFix]
+          new_scenarios: list[TestScenario]
+
+    timeout: 120s
+
+  # ========================================
+  # FINAL: Report
+  # ========================================
+  - id: report
+    name: "Generate Final Report"
+    agent: scribe
+    depends_on: [enhancement]
+    description: "Compile comprehensive report"
+
+    task:
+      action: render
+      template: test_suite_report
+      input:
+        analysis: "{{ stages.discovery.output }}"
+        strategy: "{{ stages.design.output }}"
+        files: "{{ stages.generation.output }}"
+        results: "{{ stages.execution.output }}"
+        enhancements: "{{ stages.enhancement.output }}"
+
+    output:
+      report_path: "docs/test_reports/{{ component_name }}.md"
+
+# Quality gates
+quality_gates:
+  - name: "No critical fixture violations"
+    check: "fixture_violations.critical == 0"
+    block: true
+
+  - name: "All tests pass"
+    check: "test_results.failed == 0"
+    block: true
+
+  - name: "Minimum coverage"
+    check: "test_results.coverage >= 80"
+    warn: true
+
+  - name: "Uses PANOPTICON+ fixtures"
+    check: "uses_fixtures == true"
+    block: true
+
+# Integration
+integration:
+  ledger:
+    event: "TEST_SUITE_GENERATED"
+    data:
+      - component_name
+      - test_count
+      - coverage
+
+  event_bus:
+    publish: "playbook.test_suite.completed"
+
+  ci_trigger:
+    on_success: "Run full test suite"

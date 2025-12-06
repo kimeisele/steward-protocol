@@ -2,7 +2,7 @@
 Unified Loader System - VEDA-4 Pattern for ALL Item Types.
 
 FRAKTAL PRINCIPLE:
-    Agents, Plugins, Sections, Workflows - ALL follow the same pattern.
+    Agents, Plugins, Sections, Circuits - ALL follow the same pattern.
     One loader to rule them all.
 
 VEDA-4 LOADER PATTERN:
@@ -12,19 +12,25 @@ VEDA-4 LOADER PATTERN:
     KARMA    → instantiate()
 
 Usage:
-    from vibe_core.loaders import UnifiedLoader, PluginLoader, AgentLoader
+    from vibe_core.loaders import UnifiedLoader, CircuitLoader
 
-    # Discover all plugins
-    plugins, meta = PluginLoader.discover_and_load()
+    # Discover all circuits from knowledge/circuits/
+    circuits, meta = CircuitLoader.discover_and_load()
 
-    # Discover all agents
-    agents, meta = AgentLoader.discover_and_load()
+    # Get circuits for a trigger
+    test_circuits = CircuitLoader.get_circuits_for_trigger("file_modified")
 """
 
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
+from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
 
 __all__ = [
     "UnifiedLoader",
     "ItemMeta",
     "LoaderRegistry",
+    # Circuit Loader
+    "CircuitLoader",
+    "CircuitMeta",
+    "CircuitRegistry",
+    "CircuitMetadata",
 ]
