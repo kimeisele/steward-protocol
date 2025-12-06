@@ -8,15 +8,17 @@ Task filtering is handled by plugins via on_task_submit hook.
 
 import logging
 from collections import deque
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from ..kernel import VibeScheduler
 from .task import Task
+
+if TYPE_CHECKING:
+    pass
 
 logger = logging.getLogger("SCHEDULER")
 
 
-class InMemoryScheduler(VibeScheduler):
+class InMemoryScheduler:
     """FIFO Task Scheduler - Pure queue management.
 
     This is a PURE scheduler - no cosmic logic, no governance.

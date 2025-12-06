@@ -103,6 +103,9 @@ from .kernel_ops import (
     grant_repo_access as _grant_repo_access_impl,
 )
 from .kernel_ops import (
+    narasimha_destroy_agent as _narasimha_destroy_agent_impl,
+)
+from .kernel_ops import (
     pulse as _pulse_impl,
 )
 from .kernel_ops import (
@@ -455,78 +458,8 @@ class RealVibeKernel(VibeKernel):
         return True
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
-        """
-        NARASIMHA DESTRUCTION HANDLER - Called when Narasimha activates.
-
-        This is the REAL kill-switch. When Narasimha detects an existential threat,
-        this method executes total annihilation of the rogue agent:
-        1. Kill process (if running)
-        2. Revoke all capabilities
-        3. Remove from registry
-        4. Log to ledger (immutable record)
-        5. Quarantine data
-
-        Args:
-            agent_id: The agent to destroy
-            trigger: The threat that triggered destruction
-        """
-        logger.critical(f"⚡⚡⚡ NARASIMHA EXECUTING: Destroying agent '{agent_id}' ⚡⚡⚡")
-
-        # 1. Kill process immediately
-        if agent_id in self.process_manager.processes:
-            proc_info = self.process_manager.processes[agent_id]
-            try:
-                if proc_info.process.is_alive():
-                    proc_info.process.terminate()
-                    proc_info.process.join(timeout=1)
-                    if proc_info.process.is_alive():
-                        proc_info.process.kill()  # SIGKILL if terminate fails
-                logger.critical(f"🔥 Process killed: {agent_id}")
-            except Exception as e:
-                logger.error(f"Process kill failed: {e}")
-
-        # 2. Revoke all capabilities (use CapabilityRegistry)
-        if self._capability_registry.is_registered(agent_id):
-            self._capability_registry.revoke_all(
-                agent_id=agent_id, revoker_id="NARASIMHA", reason=f"Kill-switch activated: {trigger.threat_type.value}"
-            )
-            logger.critical(f"🔒 Capabilities revoked: {agent_id}")
-
-        # 3. Remove from agent registry (internal - doesn't affect MappingProxyType view)
-        if agent_id in self._agent_registry:
-            del self._agent_registry[agent_id]
-            logger.critical(f"🗑️  Removed from registry: {agent_id}")
-
-            # PLUGIN HOOK: Notify plugins about agent removal
-            for plugin in self._plugins:
-                plugin.on_agent_unregistered(self, agent_id)
-
-        # 4. Log to ledger (immutable record of destruction)
-        self._ledger.record_event(
-            event_type="NARASIMHA_DESTRUCTION",
-            agent_id=agent_id,
-            details={
-                "trigger_type": trigger.indicator_type,
-                "severity": trigger.severity.value,
-                "description": trigger.description,
-                "evidence": trigger.evidence,
-                "timestamp": trigger.timestamp,
-            },
-        )
-        logger.critical(f"📜 Destruction logged to ledger: {agent_id}")
-
-        # 5. Mark in lineage (permanent blockchain record)
-        self.lineage.add_block(
-            event_type=LineageEventType.AGENT_DESTROYED,
-            agent_id=agent_id,
-            data={
-                "reason": trigger.indicator_type,
-                "description": trigger.description,
-                "destroyer": "NARASIMHA",
-            },
-        )
-        logger.critical(f"⛓️  Destruction recorded in Parampara: {agent_id}")
-        logger.critical(f"✝️ NARASIMHA COMPLETE: Agent '{agent_id}' has been annihilated.")
+        """⚡ NARASIMHA DESTRUCTION HANDLER - Delegates to kernel_ops."""
+        _narasimha_destroy_agent_impl(self, agent_id, trigger)
 
     # _register_core_tools: EXTRACTED TO ToolsPlugin (vibe_core/plugins/tools/plugin_main.py)
 
