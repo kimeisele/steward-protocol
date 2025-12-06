@@ -17,7 +17,98 @@
 | **Cartridge Consolidation** | ✅ COMPLETE | 17 system + 14 city agents in vibe_core/cartridges/ |
 | **Directory Cleanup** | ✅ COMPLETE | Root: 14→11 dirs (deleted diplomatic_bag, intelligence, sandbox) |
 | **Plugin Folder Migration** | 📋 GEMINI | Task file: docs/reports/GEMINI_PLUGIN_MIGRATION.md |
-| **ONEWORD.md UI** | 🔴 NEXT OPUS | ENVOY/EPHEMERAL/SETTINGS/TASKS - needs revolution |
+| **ONEWORD.md UI** | 🟡 IN PROGRESS | See docs/architecture/ONEWORD_UI_STANDARD.md |
+
+---
+
+## 0. ONEWORD.md UI ANALYSIS (OPUS Deep Dive)
+
+### The Revolutionary Pattern
+
+The ONEWORD.md pattern is a **Markdown IDE** - every `.md` file in root is a reactive interface window:
+
+| Document Type | Direction | Example Files |
+|--------------|-----------|---------------|
+| **READONLY** | Kernel → User | AGENTS.md, CITYMAP.md, HELP.md, INDEX.md, GIT.md, RAG.md |
+| **BIDIRECTIONAL** | User ↔ Kernel | ENVOY.md (GOLD), SETTINGS.md (GOLD), TASKS.md |
+| **BROKEN** | Inconsistent | EPHEMERAL.md, OPERATIONS.md, PROOF.md |
+
+### Compliant Renderers (9/14)
+
+| Renderer | Pattern | Sync Class | Quality |
+|----------|---------|------------|---------|
+| EnvoyRenderer | BIDIRECTIONAL | EnvoySync | ✅ GOLD STANDARD |
+| SettingsRenderer | BIDIRECTIONAL | SettingsSync | ✅ GOLD STANDARD |
+| TasksRenderer | BIDIRECTIONAL | TaskManager | ✅ Good |
+| AgentsRenderer | READONLY | - | ✅ Good |
+| CityMapRenderer | READONLY | - | ✅ Good |
+| HelpRenderer | READONLY | - | ✅ Good |
+| IndexRenderer | READONLY | Circuit YAML | ✅ Good |
+| RagRenderer | READONLY | - | ✅ Good |
+| GitRenderer | READONLY | GitAnalyzerV2 | ✅ Excellent |
+
+### Non-Compliant Renderers (5/14)
+
+| Renderer | Issue | Fix |
+|----------|-------|-----|
+| EphemeralRenderer | Direct `open()` write | Use `kernel.io.write_document()` |
+| OperationsRenderer | Legacy DocRenderer | Migrate to direct pattern |
+| DashboardRenderer | Too simple | Add proper structure |
+| ProofRenderer | No-op placeholder | Implement or remove |
+
+### Missing Renderers (CRITICAL)
+
+| File | Problem | Source of Truth | Action |
+|------|---------|-----------------|--------|
+| **README.md** | NO RENDERER - was delegated to scribe | Agent registry, kernel state | Create ReadmeRenderer |
+| **STEWARD.md** | NO RENDERER - corrupted (136 vs 568 line template), references OLD paths | `steward/templates/STEWARD_TEMPLATE.md` + live config | Create StewardRenderer |
+| **MATRIX.md** | Stub only (117 bytes) | 4D analysis (git, ast, topology, docs) | Create MatrixRenderer |
+
+**Evidence of STEWARD.md corruption:**
+- Current file: 136 lines, minimal
+- Template: 568 lines, includes cognitive policy, user/team context, SLA
+- References `steward/system_agents/` but agents moved to `vibe_core/cartridges/system/`
+- Proof that agents WILL corrupt manual files → MUST auto-generate
+
+### Root Directory Cleanup Needed
+
+```
+AUTO-GENERATED (Need Renderers):   DELETE (stale reports):
+├── README.md    ❌ NO RENDERER!   ├── AUDIT_FINDINGS.md
+├── STEWARD.md   ❌ NO RENDERER!   ├── GEMINI_ANALYSIS_REPORT.md
+├── MATRIX.md    ❌ STUB ONLY!     ├── MARKDOWN_UI_ANALYSIS.md
+│                                  ├── PLAYBOOK_FIX_REPORT.md
+AUTO-GENERATED (Have Renderers):   ├── UNIVERSE_MAP_RESULTS.md
+├── ENVOY.md     ✅               └── WIRING_*.md
+├── SETTINGS.md  ✅
+├── TASKS.md     ✅             MOVE to docs/:
+├── AGENTS.md    ✅             ├── AGI_MANIFESTO.md
+├── CITYMAP.md   ✅             ├── ARCHITECTURE.md
+├── HELP.md      ✅             ├── ARCHITECTURE_IMPLEMENTATION.md
+├── GIT.md       ✅             └── CARTRIDGE_SPEC.md
+├── INDEX.md     ✅
+├── RAG.md       ✅             KEEP (MUST have renderer):
+├── DASHBOARD.md ⚠️             └── CONSTITUTION.md (governance source)
+├── EPHEMERAL.md ⚠️
+└── OPERATIONS.md ⚠️
+```
+
+**RULE ZERO**: NO manual .md files in root. ALL must be auto-generated.
+
+### Architecture Standard
+
+Created: `docs/architecture/ONEWORD_UI_STANDARD.md`
+
+Defines:
+1. **RULE ZERO**: No manual files in root - all auto-generated
+2. Three document types (READONLY, BIDIRECTIONAL, SNAPSHOT)
+3. Sync class contract for bidirectional documents
+4. Renderer contract for all documents
+5. Standard document structure with section markers
+6. **Production Hardening** (Gemini feedback):
+   - Anti-Cursor-War Strategy (Safe Zones)
+   - Echo Loop Prevention (Hash Watermark)
+   - Inline Governance Feedback (`- [⛔]` syntax)
 
 ---
 

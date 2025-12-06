@@ -1,0 +1,25 @@
+{
+  "capabilities": {
+    "operations": [
+      {
+        "description": "Tool for test_watchman",
+        "name": "test_watchman.main_tool"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 1,
+    "constitution_hash": "WILL_BE_COMPUTED_AT_BOOT",
+    "issued_at": "WILL_BE_SET_AT_REGISTRATION",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "test_watchman",
+    "name": "TEST_WATCHMAN"
+  },
+  "specs": {
+    "description": "Monitor system health for testing purposes",
+    "domain": "SPAWNED",
+    "version": "1.0.0"
+  }
+}

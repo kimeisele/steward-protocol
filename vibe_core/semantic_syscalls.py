@@ -386,20 +386,52 @@ class SemanticSyscallExecutor:
                 success=False, syscall_type=request.syscall_type, error=f"Agent '{agent_id}' not registered"
             )
 
-        # Note: In current architecture, capabilities are set at registration
-        # This is here for future dynamic capability management
-        current_caps = self.kernel._agent_capabilities.get(agent_id, frozenset())
+        # Delegate to kernel (handles permission check + audit trail)
+        try:
+            # Check if kernel has the method (it should)
+            if hasattr(self.kernel, "grant_capability"):
+                result = self.kernel.grant_capability(
+                    agent_id=agent_id,
+                    capabilities=capabilities,
+                    granter_id=request.requester_id,
+                    reason=request.params.get("reason"),
+                )
 
-        return SyscallResult(
-            success=True,
-            syscall_type=request.syscall_type,
-            output={
-                "agent_id": agent_id,
-                "current_capabilities": list(current_caps),
-                "requested_capabilities": capabilities,
-                "note": "Capabilities are immutable after registration (security)",
-            },
-        )
+                if result["success"]:
+                    logger.info(
+                        f"🔓 GRANT_MANDATE: '{request.requester_id}' granted {len(result['granted'])} "
+                        f"capability(ies) to '{agent_id}': {result['granted']}"
+                    )
+                else:
+                    logger.warning(f"⛔ GRANT_MANDATE FAILED: {result['message']}")
+
+                return SyscallResult(
+                    success=result["success"],
+                    syscall_type=request.syscall_type,
+                    output=result,
+                    error=None if result["success"] else result["message"],
+                )
+            else:
+                # Fallback for kernels without mutable capabilities (unlikely in Phase 2+)
+                current_caps = getattr(self.kernel, "_agent_capabilities", {}).get(agent_id, frozenset())
+                return SyscallResult(
+                    success=True,
+                    syscall_type=request.syscall_type,
+                    output={
+                        "agent_id": agent_id,
+                        "current_capabilities": list(current_caps),
+                        "requested_capabilities": capabilities,
+                        "note": "Kernel does not support dynamic grants (immutable mode)",
+                    },
+                )
+
+        except Exception as e:
+            logger.error(f"❌ GRANT_MANDATE ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Internal error during grant: {str(e)}",
+            )
 
     def _handle_allocate_prana(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -695,7 +727,7 @@ class SemanticSyscallExecutor:
             from vibe_core.lineage import LineageEventType
 
             block = self.kernel.lineage.add_block(
-                event_type=LineageEventType.TASK_COMPLETED,
+                event_type=LineageEventType.KARMA_RECORDED,
                 agent_id=request.requester_id,
                 data={"category": category, "payload": data},
             )
