@@ -82,6 +82,26 @@ class KernelPlugin(ABC):
         """Called when a new agent is registered."""
         pass
 
+    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: Any) -> bool:
+        """
+        AGENT REGISTRATION GATE: Called BEFORE agent registration.
+
+        Return False to VETO registration, True to allow.
+
+        Use cases:
+        - Constitutional Oath verification (STEWARD Protocol)
+        - Trust level checks
+        - Capability validation
+
+        Args:
+            kernel: The kernel instance
+            agent: The agent attempting to register
+
+        Returns:
+            True to allow registration, False to VETO
+        """
+        return True  # Default: allow
+
     def on_task_submit(self, kernel: "RealVibeKernel", task: "Task") -> bool:
         """
         Called BEFORE a task enters the scheduler queue.
