@@ -216,7 +216,6 @@ def configure_plugins(request):
     """
     from unittest.mock import patch
 
-
     # Get requested plugins from marker
     marker = request.node.get_closest_marker("vibe_plugins")
     requested_plugins = marker.args if marker else ()
@@ -254,6 +253,11 @@ def configure_plugins(request):
             from vibe_core.plugins.test_orchestration.plugin_main import TestOrchestrationPlugin
 
             plugins.append(TestOrchestrationPlugin())
+
+        if "steward_protocol" in requested_plugins:
+            from vibe_core.plugins.steward_protocol.plugin_main import StewardProtocolPlugin
+
+            plugins.append(StewardProtocolPlugin())
 
         # Add other plugins as needed...
 

@@ -235,6 +235,7 @@ class TestAgentDiscovery:
         logger.info("✅ All agents have valid manifests")
 
 
+@pytest.mark.vibe_plugins("steward_protocol")
 class TestGovernanceGate:
     """Test that agents pass governance gate (Constitutional Oath)"""
 
@@ -258,11 +259,12 @@ class TestGovernanceGate:
     def test_governance_gate_rejects_oath_violators(self):
         """Test that kernel rejects agents without oath"""
         kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel.boot()  # Boot required to activate steward_protocol plugin
 
         # Create agent without oath using standardized fixture
         bad_agent = TestAgents.without_oath("bad-agent")
 
-        # Try to register - should fail
+        # Try to register - should fail (steward_protocol vetoes)
         with pytest.raises(Exception) as exc_info:
             kernel.register_agent(bad_agent)
 
@@ -271,11 +273,12 @@ class TestGovernanceGate:
     def test_governance_gate_rejects_false_oath(self):
         """Test that kernel rejects agents with oath_sworn=False"""
         kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel.boot()  # Boot required to activate steward_protocol plugin
 
         # Create agent with false oath using standardized fixture
         false_oath_agent = TestAgents.with_false_oath("false-oath-agent")
 
-        # Try to register - should fail
+        # Try to register - should fail (steward_protocol vetoes)
         with pytest.raises(Exception) as exc_info:
             kernel.register_agent(false_oath_agent)
 
