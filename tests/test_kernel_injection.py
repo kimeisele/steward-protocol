@@ -21,11 +21,11 @@ def test_kernel_injection():
 
     # Import after path is set
     from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.plugins.test_orchestration import TestKernel
 
     # Create and boot kernel
     print("\n1️⃣ Creating and booting kernel...")
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     kernel.boot()
     print("✅ Kernel booted")
 
@@ -37,28 +37,16 @@ def test_kernel_injection():
 
     # Check if kernel was injected
     print("\n3️⃣ Verifying kernel injection...")
-    if envoy.kernel is None:
-        print("❌ FAIL: Kernel not injected! envoy.kernel is None")
-        return False
-
-    if envoy.kernel != kernel:
-        print("❌ FAIL: Wrong kernel injected!")
-        print(f"   Expected: {kernel}")
-        print(f"   Got: {envoy.kernel}")
-        return False
-
+    # Check if kernel was injected
+    print("\n3️⃣ Verifying kernel injection...")
+    assert envoy.kernel is not None, "Kernel not injected! envoy.kernel is None"
+    assert envoy.kernel == kernel, f"Wrong kernel injected! Expected {kernel}, Got {envoy.kernel}"
     print("✅ PASS: Kernel correctly injected to ENVOY")
 
     # Check if system interface was also injected
     print("\n4️⃣ Verifying system interface...")
-    if envoy.system is None:
-        print("❌ FAIL: System interface not injected!")
-        return False
-
-    if envoy.system.kernel != kernel:
-        print("❌ FAIL: System interface has wrong kernel!")
-        return False
-
+    assert envoy.system is not None, "System interface not injected!"
+    assert envoy.system.kernel == kernel, "System interface has wrong kernel!"
     print("✅ PASS: System interface correctly injected")
 
     # Test MilkOcean router kernel injection
@@ -79,14 +67,16 @@ def test_kernel_injection():
     except Exception as e:
         print(f"   Note: Process errored (expected): {e}")
 
-    if envoy.router.kernel is not None:
-        print("✅ PASS: Router received kernel injection")
-    else:
+    # Router kernel should might be set now, but if not it's a warning not failure in strict terms if P3.2 not fully implemented
+    # But for this test to pass "standard", we should probably assert specific behavior or just remove the conditional fail logic.
+    # The original test printed warning if not set.
+    if envoy.router.kernel is None:
         print("⚠️  Router still has no kernel (check P3.2 implementation)")
+    else:
+        print("✅ PASS: Router received kernel injection")
 
     print("\n" + "=" * 60)
     print("🎉 ALL TESTS PASSED - Kernel injection working!")
-    return True
 
 
 if __name__ == "__main__":

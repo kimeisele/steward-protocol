@@ -15,8 +15,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 import os
 import tempfile
 
-from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.lineage import LineageChain, LineageEventType
+from vibe_core.plugins.test_orchestration import TestKernel
 from vibe_core.process_manager import ProcessManager
 
 
@@ -68,7 +68,7 @@ class TestRunner:
 
 def test_kernel_boots():
     """Test that kernel can boot without crashing."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert kernel is not None
     # Status is an Enum, check its value
     status_value = kernel._status.value if hasattr(kernel._status, "value") else str(kernel._status)
@@ -77,7 +77,7 @@ def test_kernel_boots():
 
 def test_kernel_has_parampara():
     """Test that kernel has Parampara lineage chain."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert kernel.lineage is not None
 
     # Verify Genesis Block exists
@@ -89,7 +89,7 @@ def test_kernel_has_parampara():
 
 def test_kernel_has_economic_substrate():
     """Test that kernel can access CivicBank (lazy-loaded)."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Bank should be lazy-loaded (not initialized yet)
     assert kernel._bank is None
@@ -107,7 +107,7 @@ def test_kernel_has_economic_substrate():
 
 def test_kernel_status_has_credits():
     """Test that kernel status includes total_credits from CivicBank."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     status = kernel.get_status()
     assert "total_credits" in status
@@ -122,7 +122,7 @@ def test_kernel_status_has_credits():
 
 def test_process_manager_exists():
     """Test that kernel has ProcessManager."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert hasattr(kernel, "process_manager")
     assert kernel.process_manager is not None
     assert isinstance(kernel.process_manager, ProcessManager)

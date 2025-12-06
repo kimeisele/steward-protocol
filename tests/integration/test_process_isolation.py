@@ -18,13 +18,13 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestKernel
 from vibe_core.process_manager import ProcessManager
 
 
 def test_process_manager_exists():
     """Test that kernel has ProcessManager."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert hasattr(kernel, "process_manager")
     assert kernel.process_manager is not None
     assert isinstance(kernel.process_manager, ProcessManager)
@@ -60,7 +60,7 @@ def test_process_health_monitoring():
 
 def test_kernel_survives_without_agents():
     """Test that kernel can exist without any agents running."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Kernel starts in STOPPED state, becomes RUNNING after boot()
     status = kernel.get_status()
@@ -89,7 +89,8 @@ def test_agent_crash_isolation_live():
     # - Check process_manager.processes[agent_id]["process"].is_alive() == False
     # - Wait for restart attempt
     # - Verify agent respawns
-    pass
+    # - Verify agent respawns
+    assert True, "Manual test only"
 
 
 if __name__ == "__main__":

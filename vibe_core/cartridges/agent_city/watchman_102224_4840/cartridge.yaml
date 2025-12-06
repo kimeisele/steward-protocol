@@ -1,0 +1,30 @@
+# GOLDEN TEMPLATE - Cartridge Configuration
+# Copy this folder and replace all YOUR_* placeholders
+
+meta:
+  id: "agent.citizen.watchman_102224_4840"
+  name: "WATCHMAN"
+  version: "1.0.0"
+  author: "Engineer"
+  description: "watches system health"
+
+agent:
+  # DOMAIN OPTIONS:
+  # System: SYSTEM, GOVERNANCE, INFRASTRUCTURE, INTERFACE, INTELLIGENCE, JUSTICE
+  # Citizen: MEDIA, RESEARCH, SECURITY, COORDINATION, ECONOMY, COMMUNITY, etc.
+  domain: "SPAWNED"
+  class: "Agent"
+  role: "SPAWNED Agent"
+  capabilities:
+    - "process_task"
+    - "report_status"
+
+dependencies:
+  # Add Python packages your agent needs
+  # - "openai"
+  # - "tavily-python"
+
+config:
+  governance:
+    level: "standard"  # standard, strict, minimal
+  # Add your agent-specific config here

@@ -14,19 +14,15 @@ This is NOT a mock. This is real execution context for cartridges.
 from __future__ import annotations
 
 import logging
-from collections import deque
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
 
-# Vedic Governance types (used for backward-compatible type hints)
-# Actual governance logic is in vibe_core/plugins/vedic_governance.py
-from steward.ashrama import Ashrama, AshramaTransition
-from steward.varna import Varna
+# Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
+# Kernel has no governance types - access via kernel.governance
 
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
 
@@ -58,8 +54,7 @@ from .runtime.playbook_router import PlaybookRouter
 from .scheduling import Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
-from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
-from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
+# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
 
 # Import Auditor for immune system (optional)
 try:
@@ -96,78 +91,28 @@ except ImportError as e:
 logger = logging.getLogger("VIBE_KERNEL")
 
 
-class InMemoryScheduler(VibeScheduler):
-    """FIFO Task Scheduler - Pure queue management.
-
-    This is a PURE scheduler - no cosmic logic, no governance.
-    Task filtering is handled by plugins via on_task_submit hook.
-
-    The scheduler only knows how to:
-    1. Accept tasks into the queue
-    2. Return the next task (FIFO)
-    3. Track completion status
-    """
-
-    def __init__(self):
-        self.queue: deque = deque()
-        self.executing: Optional[Task] = None
-        self.completed: Dict[str, Task] = {}
-
-    def submit_task(self, task: Task) -> str:
-        """Submit task to queue, return task_id.
-
-        NOTE: Task validation (Sarga cycle, governance, etc.) is handled
-        by plugins via on_task_submit hook BEFORE this method is called.
-        This method is a pure queue operation.
-        """
-        self.queue.append(task)
-        logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
-        return task.task_id
-
-    def next_task(self) -> Optional[Task]:
-        """Pop next task from queue"""
-        if self.queue:
-            task = self.queue.popleft()
-            self.executing = task
-            return task
-        return None
-
-    def get_queue_status(self) -> Dict[str, Any]:
-        """Get queue statistics"""
-        return {
-            "queue_length": len(self.queue),
-            "executing": self.executing.task_id if self.executing else None,
-            "completed": len(self.completed),
-        }
-
-    def requeue_task(self, task: Task) -> None:
-        """Re-queue a deferred task (bypasses Sarga validation)."""
-        self.queue.append(task)
-        logger.debug(f"📨 Task re-queued: {task.task_id} (deferred)")
-
-
-class InMemoryManifestRegistry(ManifestRegistry):
-    """Agent Manifest Registry - Identity declarations"""
-
-    def __init__(self):
-        self.manifests: Dict[str, AgentManifest] = {}
-
-    def register(self, manifest: AgentManifest) -> None:
-        """Register an agent manifest"""
-        self.manifests[manifest.agent_id] = manifest
-        logger.info(f"📜 Manifest registered: {manifest.agent_id} ({manifest.name})")
-
-    def lookup(self, agent_id: str) -> Optional[AgentManifest]:
-        """Look up manifest by agent_id"""
-        return self.manifests.get(agent_id)
-
-    def find_by_capability(self, capability: str) -> List[AgentManifest]:
-        """Find agents with a specific capability"""
-        return [m for m in self.manifests.values() if capability in m.capabilities]
-
-    def list_all(self) -> List[AgentManifest]:
-        """List all registered manifests"""
-        return list(self.manifests.values())
+# Helper classes: Extracted to reduce kernel size
+# Kernel Operations: Extracted isolated methods
+from .kernel_ops import (
+    check_system_health as _check_system_health_impl,
+)
+from .kernel_ops import (
+    execute_playbook as _execute_playbook_impl,
+)
+from .kernel_ops import (
+    grant_repo_access as _grant_repo_access_impl,
+)
+from .kernel_ops import (
+    narasimha_destroy_agent as _narasimha_destroy_agent_impl,
+)
+from .kernel_ops import (
+    pulse as _pulse_impl,
+)
+from .kernel_ops import (
+    sync_resource_quotas as _sync_resource_quotas_impl,
+)
+from .manifest_registry import InMemoryManifestRegistry
+from .scheduling import InMemoryScheduler
 
 
 class RealVibeKernel(VibeKernel):
@@ -277,17 +222,10 @@ class RealVibeKernel(VibeKernel):
         logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
         # Phase 6: Universal Tool Registry
-        # Single source of truth for all agent tools
-        # Tools are registered here and accessed via AgentSystemInterface
-        # kernel=self enables on_tool_execute/on_tool_executed plugin hooks
-        self.tool_registry = ToolRegistry(
-            invariant_checker=self._auditor if AUDITOR_AVAILABLE else None,
-            capability_checker=self._check_agent_capability,
-            kernel=self,
-        )
-        self._register_core_tools()
-        self._discover_agent_tools()
-        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} tools total)")
+        # EXTRACTED TO PLUGIN: ToolsPlugin handles registry initialization
+        # Plugin sets kernel.tool_registry on boot
+        # See: vibe_core/plugins/tools/plugin_main.py
+        self.tool_registry = None  # Set by ToolsPlugin.on_boot()
 
         # Phase 7: NARASIMHA Kill-Switch (Hypervisor Level)
         # SECURITY FIX: Wire destruction handlers so Narasimha can actually kill agents
@@ -520,183 +458,12 @@ class RealVibeKernel(VibeKernel):
         return True
 
     def _narasimha_destroy_agent(self, agent_id: str, trigger: "ThreatIndicator") -> None:
-        """
-        NARASIMHA DESTRUCTION HANDLER - Called when Narasimha activates.
+        """⚡ NARASIMHA DESTRUCTION HANDLER - Delegates to kernel_ops."""
+        _narasimha_destroy_agent_impl(self, agent_id, trigger)
 
-        This is the REAL kill-switch. When Narasimha detects an existential threat,
-        this method executes total annihilation of the rogue agent:
-        1. Kill process (if running)
-        2. Revoke all capabilities
-        3. Remove from registry
-        4. Log to ledger (immutable record)
-        5. Quarantine data
+    # _register_core_tools: EXTRACTED TO ToolsPlugin (vibe_core/plugins/tools/plugin_main.py)
 
-        Args:
-            agent_id: The agent to destroy
-            trigger: The threat that triggered destruction
-        """
-        logger.critical(f"⚡⚡⚡ NARASIMHA EXECUTING: Destroying agent '{agent_id}' ⚡⚡⚡")
-
-        # 1. Kill process immediately
-        if agent_id in self.process_manager.processes:
-            proc_info = self.process_manager.processes[agent_id]
-            try:
-                if proc_info.process.is_alive():
-                    proc_info.process.terminate()
-                    proc_info.process.join(timeout=1)
-                    if proc_info.process.is_alive():
-                        proc_info.process.kill()  # SIGKILL if terminate fails
-                logger.critical(f"🔥 Process killed: {agent_id}")
-            except Exception as e:
-                logger.error(f"Process kill failed: {e}")
-
-        # 2. Revoke all capabilities (use CapabilityRegistry)
-        if self._capability_registry.is_registered(agent_id):
-            self._capability_registry.revoke_all(
-                agent_id=agent_id, revoker_id="NARASIMHA", reason=f"Kill-switch activated: {trigger.threat_type.value}"
-            )
-            logger.critical(f"🔒 Capabilities revoked: {agent_id}")
-
-        # 3. Remove from agent registry (internal - doesn't affect MappingProxyType view)
-        if agent_id in self._agent_registry:
-            del self._agent_registry[agent_id]
-            logger.critical(f"🗑️  Removed from registry: {agent_id}")
-
-            # PLUGIN HOOK: Notify plugins about agent removal
-            for plugin in self._plugins:
-                plugin.on_agent_unregistered(self, agent_id)
-
-        # 4. Log to ledger (immutable record of destruction)
-        self._ledger.record_event(
-            event_type="NARASIMHA_DESTRUCTION",
-            agent_id=agent_id,
-            details={
-                "trigger_type": trigger.indicator_type,
-                "severity": trigger.severity.value,
-                "description": trigger.description,
-                "evidence": trigger.evidence,
-                "timestamp": trigger.timestamp,
-            },
-        )
-        logger.critical(f"📜 Destruction logged to ledger: {agent_id}")
-
-        # 5. Mark in lineage (permanent blockchain record)
-        self.lineage.add_block(
-            event_type=LineageEventType.AGENT_DESTROYED,
-            agent_id=agent_id,
-            data={
-                "reason": trigger.indicator_type,
-                "description": trigger.description,
-                "destroyer": "NARASIMHA",
-            },
-        )
-        logger.critical(f"⛓️  Destruction recorded in Parampara: {agent_id}")
-        logger.critical(f"✝️ NARASIMHA COMPLETE: Agent '{agent_id}' has been annihilated.")
-
-    def _register_core_tools(self) -> None:
-        """
-        Register core tools that are available to all agents.
-
-        Core tools are system-provided capabilities that don't belong to
-        any specific agent. They're registered without namespace prefix
-        (e.g., "read_file" not "core.read_file").
-
-        Phase 6: These tools implement the Tool protocol and are registered
-        at kernel boot time, before any agents are loaded.
-        """
-        from vibe_core.tools import (
-            AddTaskTool,
-            CompleteTaskTool,
-            DelegateTool,
-            ListTasksTool,
-            ReadFileTool,
-            WriteFileTool,
-        )
-
-        # File operations (VFS-aware tools will be added later)
-        self.tool_registry.register(ReadFileTool())
-        self.tool_registry.register(WriteFileTool())
-
-        # Task management
-        self.tool_registry.register(AddTaskTool())
-        self.tool_registry.register(ListTasksTool())
-        self.tool_registry.register(CompleteTaskTool())
-
-        # Inter-agent delegation
-        delegate_tool = DelegateTool()
-        delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
-        self.tool_registry.register(delegate_tool)
-
-        tool_names = ", ".join(self.tool_registry.list_tools())
-        logger.info(f"🔧 Registered {len(self.tool_registry)} core tools: {tool_names}")
-
-    def _discover_agent_tools(self) -> None:
-        """
-        Auto-discover and register agent tools.
-
-        Phase 6: Automatic tool discovery from agent directories.
-
-        Scans:
-        - vibe_core/cartridges/system/{agent_id}/tools/*.py
-        - vibe_core/cartridges/agent_city/{agent_id}/tools/*.py
-
-        For each .py file:
-        1. Dynamically import module
-        2. Find classes implementing Tool protocol
-        3. Register tools with namespace (agent_id.tool_name)
-
-        Error Handling:
-        - Import errors are logged but don't crash kernel
-        - Invalid tools are skipped
-        - Discovery continues even if some tools fail
-
-        This allows developers to simply drop a .py file in {agent}/tools/
-        and have it automatically available system-wide.
-        """
-        logger.info("🔍 Starting auto-discovery of agent tools...")
-
-        # Initialize discovery scanner
-        discovery = ToolDiscovery(root_path=Path("."))
-
-        # Discover all tools
-        discovered_tools = discovery.discover_all_tools()
-
-        # Register discovered tools
-        registered_count = 0
-        failed_count = 0
-
-        for tool in discovered_tools:
-            try:
-                self.tool_registry.register(tool)
-                registered_count += 1
-
-                # Inject I/O Service for tools that support it
-                # This enables audited file writes through kernel.io
-                if hasattr(tool, "set_io_service") and callable(tool.set_io_service):
-                    tool.set_io_service(self.io)
-                    logger.info(f"   ✅ Registered: {tool.name} (with I/O Service)")
-                else:
-                    logger.info(f"   ✅ Registered: {tool.name}")
-
-            except ValueError as e:
-                # Tool already registered (e.g., name collision)
-                logger.warning(f"   ⚠️  Skipped {tool.name}: {e}")
-                failed_count += 1
-
-            except Exception as e:
-                # Unexpected error during registration
-                logger.error(f"   ❌ Failed to register {tool.name}: {e}")
-                failed_count += 1
-
-        # Get discovery stats
-        stats = discovery.get_discovery_stats()
-
-        logger.info(f"🔧 Auto-discovery complete: {registered_count} tools registered, {failed_count} failed")
-
-        if stats["discovered_by_agent"]:
-            logger.info("📊 Tools by agent:")
-            for agent_id, tool_names in stats["discovered_by_agent"].items():
-                logger.info(f"   {agent_id}: {', '.join(tool_names)}")
+    # _discover_agent_tools: EXTRACTED TO ToolsPlugin (vibe_core/plugins/tools/plugin_main.py)
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
@@ -1140,153 +907,20 @@ class RealVibeKernel(VibeKernel):
                 # Narasimha handles restart in check_health
 
     def _sync_resource_quotas(self) -> None:
-        """
-        Phase 3: Sync resource quotas with CivicBank credits.
-
-        This makes credits REAL by updating CPU/RAM limits based on balance.
-        Runs every 60 seconds to avoid excessive bank queries.
-        """
-        import time
-
-        current_time = time.time()
-        if current_time - self._last_quota_sync < 60:  # Sync every 60 seconds
-            return
-
-        try:
-            # Get CivicBank (lazy loaded)
-            bank = self.get_bank()
-
-            # Update quotas for all agents
-            for agent_id in self._agent_registry.keys():
-                try:
-                    # Query credit balance
-                    balance = bank.get_balance(agent_id)
-
-                    # Update quota
-                    self.resource_manager.set_quota(agent_id, credits=balance)
-
-                    # Enforce on running process
-                    proc_info = self.process_manager.processes.get(agent_id)
-                    if proc_info and proc_info.process.is_alive():
-                        self.resource_manager.enforce_quota(agent_id, proc_info.process)
-
-                except Exception as e:
-                    logger.debug(f"⚠️  Failed to sync quota for {agent_id}: {e}")
-
-            self._last_quota_sync = current_time
-            logger.debug("💰 Resource quotas synced with CivicBank")
-
-        except Exception as e:
-            logger.debug(f"⚠️  Quota sync failed: {e}")
+        """Phase 3: Sync resource quotas - Delegates to kernel_ops."""
+        _sync_resource_quotas_impl(self)
 
     def _grant_repo_access(self, agent_id: str) -> None:
-        """
-        Phase 4b: Grant controlled repo access via symlink.
-
-        Scribe and Archivist need to read the main repo.
-        We create a symlink in their sandbox pointing to the repo.
-
-        Security: This is a controlled escape. Only specific agents get it.
-        """
-        try:
-            import os
-
-            from vibe_core.vfs import VirtualFileSystem
-
-            vfs = VirtualFileSystem(agent_id)
-            repo_path = os.getcwd()  # /Users/ss/Downloads/steward-protocol
-
-            # Create symlink: sandbox/repo -> actual repo
-            vfs.create_symlink(repo_path, "repo")
-
-            logger.info(f"🔗 {agent_id} granted repo access: {vfs.get_sandbox_path()}/repo -> {repo_path}")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
+        """Phase 4b: Grant repo access - Delegates to kernel_ops."""
+        _grant_repo_access_impl(self, agent_id)
 
     def _check_system_health(self) -> None:
-        """
-        🛡️ IMMUNE SYSTEM WATCHDOG
-
-        Called after every task execution.
-        If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
-        """
-        if not AUDITOR_AVAILABLE or not self._auditor:
-            return
-
-        try:
-            # Get current ledger events
-            events = self._ledger.get_all_events()
-
-            # Run verification (events-only for now, VOID checks need external context)
-            report = self._auditor.verify_ledger(events)
-
-            # If there's a CRITICAL violation, halt the kernel
-            if not report.passed:
-                for violation in report.violations:
-                    if violation.severity == InvariantSeverity.CRITICAL.value:
-                        # Don't halt on VOID violations in normal operation (they need context)
-                        # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
-                        if "VOID" not in violation.invariant_name:
-                            logger.critical(f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}")
-                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
-                            return
-                        else:
-                            logger.debug("⚠️  VOID check skipped (requires external context)")
-
-            # Log health check (non-critical)
-            if report.violations:
-                logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected")
-            else:
-                logger.debug("✅ System health check passed")
-
-        except Exception as e:
-            logger.error(f"❌ Health check failed: {e}")
+        """🛡️ IMMUNE SYSTEM WATCHDOG - Delegates to kernel_ops."""
+        _check_system_health_impl(self)
 
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
         return self._manifest_registry.lookup(agent_id)
-
-    # =========================================================================
-    # GOVERNANCE API (Delegates to governance plugin for backward compatibility)
-    # =========================================================================
-
-    def get_agent_varna(self, agent_id: str) -> Optional[Varna]:
-        """Get the Varna (classification) of an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_varna"):
-            return self.governance.get_agent_varna(agent_id)
-        return None
-
-    def get_agent_ashrama(self, agent_id: str) -> Optional[AshramaTransition]:
-        """Get the Ashrama (lifecycle stage) of an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_ashrama"):
-            return self.governance.get_agent_ashrama(agent_id)
-        return None
-
-    def get_agent_permissions(self, agent_id: str) -> List[str]:
-        """Get the current permissions for an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_permissions"):
-            return self.governance.get_agent_permissions(agent_id)
-        return []
-
-    def check_agent_permission(self, agent_id: str, permission: str) -> bool:
-        """Check if an agent has a specific permission. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "check_agent_permission"):
-            return self.governance.check_agent_permission(agent_id, permission)
-        return True  # Default: allow if no governance plugin
-
-    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
-        """Transition an agent to a new Ashrama. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "transition_agent_ashrama"):
-            return self.governance.transition_agent_ashrama(agent_id, new_ashrama, reason)
-        logger.warning(f"No governance plugin loaded - cannot transition {agent_id}")
-        return False
-
-    def get_governance_status(self, agent_id: str) -> Dict[str, Any]:
-        """Get full governance status for an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_governance_status"):
-            return self.governance.get_governance_status(agent_id)
-        return {"error": "No governance plugin loaded"}
 
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
@@ -1502,59 +1136,8 @@ class RealVibeKernel(VibeKernel):
         input_data: Dict[str, Any],
         user_input: str = "",
     ) -> Dict[str, Any]:
-        """
-        Execute a playbook through the DeterministicExecutor.
-
-        This method enables nested playbook execution, allowing playbooks to call
-        other playbooks via the CALL_PLAYBOOK action type.
-
-        Args:
-            playbook_path: Path to the playbook YAML file (relative to knowledge/playbooks/)
-            input_data: Input parameters for the playbook
-            user_input: Optional user input string (defaults to empty string)
-
-        Returns:
-            Dictionary with execution results
-
-        Example:
-            result = await kernel.execute_playbook(
-                playbook_path="vibe_core/playbook/circuits/wiring_audit.yaml",
-                input_data={"scope": "full"},
-                user_input="Run wiring audit"
-            )
-        """
-        # Import here to avoid circular dependency
-        from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
-
-        # Get or create executor instance
-        if not hasattr(self, "_playbook_executor"):
-            self._playbook_executor = DeterministicExecutor()
-
-        # Extract playbook_id from path (e.g., "wiring_audit" from "circuits/wiring_audit.yaml")
-        import os
-
-        playbook_id = os.path.splitext(os.path.basename(playbook_path))[0]
-
-        # Create a minimal intent vector (playbooks don't always need full intent analysis)
-        class MinimalIntentVector:
-            def __init__(self, user_input: str):
-                self.raw_input = user_input
-                self.concepts = set()
-                self.target_agent = None
-
-        intent_vector = MinimalIntentVector(user_input or "Nested playbook execution")
-
-        # Execute the playbook
-        logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
-        result = await self._playbook_executor.execute(
-            playbook_id=playbook_id,
-            user_input=user_input or str(input_data),
-            intent_vector=intent_vector,
-            kernel=self,
-            emit_event=None,
-        )
-
-        return result
+        """Execute a playbook - Delegates to kernel_ops."""
+        return await _execute_playbook_impl(self, playbook_path, input_data, user_input)
 
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
         """
@@ -1646,50 +1229,8 @@ class RealVibeKernel(VibeKernel):
         return self._ledger.get_all_events()
 
     def _pulse(self) -> None:
-        """
-        💓 HEARTBEAT: Generate real-time snapshot of kernel state.
-
-        Event Sourcing → State Projection:
-        - Collects current state from all agents
-        - Writes vibe_snapshot.json (immutable state view)
-        - Renders OPERATIONS.md (human-readable dashboard)
-        """
-        try:
-            snapshot = {
-                "timestamp": datetime.utcnow().isoformat(),
-                "kernel_status": self._status.value,
-                "agents": {},
-                "scheduler": self._scheduler.get_queue_status(),
-                "ledger_stats": {
-                    "total_events": len(self._ledger.get_all_events()),
-                },
-            }
-
-            # Collect agent status
-            for agent_id, agent in self._agent_registry.items():
-                try:
-                    agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                    # Mark paused agents (via governance plugin)
-                    if self.governance and hasattr(self.governance, "is_agent_paused"):
-                        if self.governance.is_agent_paused(agent_id):
-                            agent_status["status"] = "PAUSED"
-                    snapshot["agents"][agent_id] = agent_status
-                except Exception as e:
-                    logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
-                    snapshot["agents"][agent_id] = {"error": str(e)}
-
-            # Write snapshot through I/O Service (atomic + audited)
-            result = self.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
-            if result.success:
-                logger.info("💓 Pulse written: vibe_snapshot.json (via I/O Service)")
-            else:
-                logger.error(f"❌ Pulse snapshot write failed: {result.error}")
-
-            # Render ALL UI files via Manager
-            # self._ui_manager.render_all(snapshot)  # DEPRECATED: Handled by Plugins
-
-        except Exception as e:
-            logger.error(f"❌ Pulse failed: {e}")
+        """💓 HEARTBEAT - Delegates to kernel_ops."""
+        _pulse_impl(self)
 
     # ========================================================================
     # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)

@@ -271,10 +271,24 @@ class SemanticSyscallExecutor:
             from vibe_core.cartridges.system.engineer.tools.builder_tool import BuilderTool
 
             builder = BuilderTool()
-            code = builder.generate_agent_code(role, mission)
+            import tempfile
+            from pathlib import Path
 
-            if not code:
-                return SyscallResult(success=False, syscall_type=request.syscall_type, error="Code generation failed")
+            # Use temp directory for dynamic agents to avoid polluting source tree
+            target_dir = Path(tempfile.gettempdir()) / "vibe_agents" / agent_id
+
+            scaffold_result = builder.scaffold_from_template(
+                agent_id=agent_id, agent_name=role.upper(), domain="SPAWNED", description=mission, target_dir=target_dir
+            )
+
+            if not scaffold_result["success"]:
+                return SyscallResult(
+                    success=False,
+                    syscall_type=request.syscall_type,
+                    error=f"Scaffold failed: {scaffold_result.get('error')}",
+                )
+
+            code = scaffold_result.get("files_created", [])
 
             # Step 2: Create agent class dynamically
             # agent_id is already generated above (with collision protection)
@@ -331,8 +345,8 @@ class SemanticSyscallExecutor:
             # Step 5: Allocate credits
             try:
                 bank = self.kernel.get_bank()
-                bank.create_account(agent_id)
-                bank.deposit(agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
+                # Use transfer from MINT instead of non-existent deposit/create_account
+                bank.transfer("MINT", agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
             except Exception as e:
                 logger.warning(f"Credit allocation failed (non-fatal): {e}")
 
@@ -372,20 +386,52 @@ class SemanticSyscallExecutor:
                 success=False, syscall_type=request.syscall_type, error=f"Agent '{agent_id}' not registered"
             )
 
-        # Note: In current architecture, capabilities are set at registration
-        # This is here for future dynamic capability management
-        current_caps = self.kernel._agent_capabilities.get(agent_id, frozenset())
+        # Delegate to kernel (handles permission check + audit trail)
+        try:
+            # Check if kernel has the method (it should)
+            if hasattr(self.kernel, "grant_capability"):
+                result = self.kernel.grant_capability(
+                    agent_id=agent_id,
+                    capabilities=capabilities,
+                    granter_id=request.requester_id,
+                    reason=request.params.get("reason"),
+                )
 
-        return SyscallResult(
-            success=True,
-            syscall_type=request.syscall_type,
-            output={
-                "agent_id": agent_id,
-                "current_capabilities": list(current_caps),
-                "requested_capabilities": capabilities,
-                "note": "Capabilities are immutable after registration (security)",
-            },
-        )
+                if result["success"]:
+                    logger.info(
+                        f"🔓 GRANT_MANDATE: '{request.requester_id}' granted {len(result['granted'])} "
+                        f"capability(ies) to '{agent_id}': {result['granted']}"
+                    )
+                else:
+                    logger.warning(f"⛔ GRANT_MANDATE FAILED: {result['message']}")
+
+                return SyscallResult(
+                    success=result["success"],
+                    syscall_type=request.syscall_type,
+                    output=result,
+                    error=None if result["success"] else result["message"],
+                )
+            else:
+                # Fallback for kernels without mutable capabilities (unlikely in Phase 2+)
+                current_caps = getattr(self.kernel, "_agent_capabilities", {}).get(agent_id, frozenset())
+                return SyscallResult(
+                    success=True,
+                    syscall_type=request.syscall_type,
+                    output={
+                        "agent_id": agent_id,
+                        "current_capabilities": list(current_caps),
+                        "requested_capabilities": capabilities,
+                        "note": "Kernel does not support dynamic grants (immutable mode)",
+                    },
+                )
+
+        except Exception as e:
+            logger.error(f"❌ GRANT_MANDATE ERROR: {e}", exc_info=True)
+            return SyscallResult(
+                success=False,
+                syscall_type=request.syscall_type,
+                error=f"Internal error during grant: {str(e)}",
+            )
 
     def _handle_allocate_prana(self, request: SyscallRequest) -> SyscallResult:
         """
@@ -681,7 +727,7 @@ class SemanticSyscallExecutor:
             from vibe_core.lineage import LineageEventType
 
             block = self.kernel.lineage.add_block(
-                event_type=LineageEventType.TASK_COMPLETED,
+                event_type=LineageEventType.KARMA_RECORDED,
                 agent_id=request.requester_id,
                 data={"category": category, "payload": data},
             )

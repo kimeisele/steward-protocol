@@ -1,0 +1,25 @@
+{
+  "capabilities": {
+    "operations": [
+      {
+        "description": "Tool for scribe_102232_4509",
+        "name": "scribe_102232_4509.main_tool"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 1,
+    "constitution_hash": "WILL_BE_COMPUTED_AT_BOOT",
+    "issued_at": "WILL_BE_SET_AT_REGISTRATION",
+    "issuer": "passport_office"
+  },
+  "identity": {
+    "agent_id": "scribe_102232_4509",
+    "name": "SCRIBE"
+  },
+  "specs": {
+    "description": "documents code changes",
+    "domain": "SPAWNED",
+    "version": "1.0.0"
+  }
+}

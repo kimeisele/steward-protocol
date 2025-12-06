@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "agents",
+  "name": "System Agents Configuration",
+  "version": "1.0.0",
+  "description": "System agent wiring - maps agent names to implementation classes",
+
+  "entry_point": "section_main.py",
+  "entry_class": "AgentsConfig",
+
+  "priority": 50,
+
+  "config_file": "config/agents.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "agents", "wiring", "cartridges"]
+}

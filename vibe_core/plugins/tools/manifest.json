@@ -1,0 +1,9 @@
+{
+  "id": "tools",
+  "name": "Tools Plugin",
+  "version": "1.0.0",
+  "description": "Universal Tool Registry and Auto-Discovery",
+  "author": "KERNEL",
+  "priority": 5,
+  "dependencies": []
+}
