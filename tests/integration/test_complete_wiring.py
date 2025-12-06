@@ -156,6 +156,11 @@ def test_heartbeat_full_cycle():
     else:
         print(f"✅ Task status: {updated_task.status}")
 
+    # Assert that status is valid
+    assert updated_task.status in [TaskStatus.COMPLETED, TaskStatus.PENDING, TaskStatus.FAILED, "delegated"], (
+        f"Invalid status {updated_task.status}"
+    )
+
     print("✅ TEST 2 PASSED")
 
 

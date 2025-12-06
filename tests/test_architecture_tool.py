@@ -31,11 +31,13 @@ def test_tool_import():
         from vibe_core.cartridges.agent_city.analyst.tools.architecture_tool import ArchitectureAnalysisTool
 
         tool = ArchitectureAnalysisTool()
+        assert tool is not None, "Tool must be instantiated"
         print(f"✅ Tool imported: {tool.name}")
         print(f"   Description: {tool.description}")
         return tool
     except Exception as e:
         print(f"❌ Import failed: {e}")
+        assert False, f"Import failed: {e}"
         return None
 
 
@@ -50,6 +52,7 @@ def test_kernel_introspection(tool):
 
         if result.success:
             data = result.output
+            assert data is not None, "Output should not be None"
             print("✅ Kernel introspected successfully")
             print(f"   Kernel Type: {data.get('kernel_type')}")
             print(f"   Agent Count: {data.get('agent_count')}")
@@ -65,6 +68,7 @@ def test_kernel_introspection(tool):
             return data
         else:
             print(f"❌ Introspection failed: {result.error}")
+            assert False, f"Introspection failed: {result.error}"
             return None
 
     except Exception as e:
@@ -86,6 +90,7 @@ def test_schema_extraction(tool):
 
         if result.success:
             data = result.output
+            assert data is not None, "Output should not be None"
             print("✅ Schema extracted successfully")
             print(f"   Database Path: {data.get('path')}")
             print(f"   Event Count: {data.get('event_count')}")
@@ -106,6 +111,7 @@ def test_schema_extraction(tool):
             return data
         else:
             print(f"❌ Schema extraction failed: {result.error}")
+            assert False, f"Schema extraction failed: {result.error}"
             return None
 
     except Exception as e:
@@ -145,12 +151,14 @@ def test_diagram_generation(tool):
             diagrams["layer"] = result.output
             print("✅ Layer diagram generated")
             print(f"   Length: {len(result.output)} chars")
+            assert "```mermaid" in result.output, "Mermaid syntax marker not found"
             if "```mermaid" in result.output:
                 print("   ✅ Valid Mermaid syntax detected")
             else:
                 print("   ⚠️  Mermaid syntax marker not found")
         else:
             print(f"❌ Layer diagram failed: {result.error}")
+            assert False, f"Layer diagram failed: {result.error}"
 
     except Exception as e:
         print(f"❌ Layer diagram error: {e}")
@@ -199,6 +207,7 @@ def test_template_rendering(tool, kernel_data, schema_data, diagrams):
 
         if result.success:
             content = result.output
+            assert content is not None, "Content should not be None"
             print("✅ Template rendered successfully")
             print(f"   Content Length: {len(content)} chars")
             print(f"   Lines: {len(content.splitlines())}")
@@ -218,6 +227,7 @@ def test_template_rendering(tool, kernel_data, schema_data, diagrams):
             return content
         else:
             print(f"❌ Rendering failed: {result.error}")
+            assert False, f"Rendering failed: {result.error}"
             return None
 
     except Exception as e:
