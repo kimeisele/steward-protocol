@@ -150,9 +150,51 @@ steward --json myns-hello       # JSON output
 | Mode | Description | Use When |
 |------|-------------|----------|
 | `offline` | No kernel, file operations only | Config, logs, static data |
-| `boot` | Spin up ephemeral kernel | Need kernel state |
-| `rpc` | Talk to running kernel | Daemon mode |
+| `boot` | Spin up kernel with persistent DB | Need kernel state |
+| `rpc` | Talk to running kernel | Daemon mode (FUTURE) |
 | `hybrid` | Try RPC, fallback to boot | Default |
+
+### Important: No Ghost Kernels!
+
+Built-in commands (`observe`, `status`) use **persistent DB** by default:
+
+```python
+# CORRECT - Uses real DB
+db_path = _get_default_db_path()  # data/vibe_ledger.db
+kernel = RealVibeKernel(db_path)
+
+# WRONG - Ghost kernel sees nothing!
+kernel = RealVibeKernel(":memory:")  # DON'T DO THIS
+```
+
+The CLI auto-discovers the DB path in this order:
+1. `data/vibe_ledger.db` (project default)
+2. `.vibe/state/vibe_agency.db` (agent state)
+3. `/tmp/vibe_os/kernel/lineage.db` (lineage DB)
+
+**Note:** RPC mode requires a running Gateway daemon.
+
+### TODO: Graceful Degradation (Future Enhancement)
+
+Current implementation uses DB-read only. For production-grade CLI:
+
+```
+IDEAL Graceful Degradation:
+1. Try RPC to Gateway (localhost:8000) → Live State
+2. Fallback: DB-read → Persistent Snapshot State
+3. Fallback: Clear error message
+
+CURRENT:
+1. DB-read only → Works but no live state from running daemon
+```
+
+**Required for RPC-First:**
+- [ ] Implement `CLIClient` that talks to `gateway/api.py`
+- [ ] Add `/v1/system/monitors` endpoint to Gateway
+- [ ] `--offline` flag to force DB-only mode
+- [ ] Clear distinction: Live State vs Snapshot State in output
+
+**Priority:** Enhancement (not blocking - current implementation is functional)
 
 ```json
 {
