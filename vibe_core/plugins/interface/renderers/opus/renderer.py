@@ -1,23 +1,19 @@
 """
-OPUS Renderer - Bidirectional Dashboard.
+OPUS Renderer - AI Workspace Dashboard.
 
-MERGES live data into existing OPUS.md, preserving:
-- Blockers (AI can write)
-- Next Actions (AI proposes, human approves)
-- Extraction Log history
+OPUS.md is MY (Claude's) master dashboard for tracking kernel work.
 
-Updates:
-- Kernel Stats (LOC)
-- Test counts
-- Git status
-- Timestamp
+Sections:
+- LIVE (auto-updated): status, metrics
+- AI (I maintain): current_goal, phase_status, extraction_log, blockers
+- HUMAN (user writes): next_actions
+
+The AI sections are PRESERVED between renders - I update them as I work.
 """
 
 import logging
-import re
-from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from ..base import BaseRenderer
 
@@ -28,75 +24,79 @@ logger = logging.getLogger("RENDERER_OPUS")
 
 
 class OpusRenderer(BaseRenderer):
-    """Renders OPUS.md with bidirectional merge."""
+    """Renders OPUS.md - the AI workspace dashboard."""
 
     def __init__(self, kernel: "RealVibeKernel"):
         super().__init__(kernel)
-        self._opus_path = Path("OPUS.md")
+        self._kernel_path = Path("vibe_core/kernel_impl.py")
+        self._register_data_sources()
 
     @property
     def name(self) -> str:
         return "opus"
 
+    def _register_data_sources(self) -> None:
+        """Register LIVE data sources only."""
+        self.register_data_source("kernel.status", self._get_kernel_status)
+        self.register_data_source("opus.metrics", self._get_metrics)
+
     def render(self) -> None:
-        """Merge live data into existing OPUS.md."""
-        if not self._opus_path.exists():
-            logger.warning("OPUS.md not found - skipping render")
-            return
+        """Render OPUS.md with section preservation."""
+        config = self.get_config()
+        if config and config.sections:
+            content = self.render_sections()
+            self.merge_and_write(content)
 
-        content = self._opus_path.read_text()
+    # =========================================================================
+    # LIVE DATA SOURCES (auto-updated)
+    # =========================================================================
 
-        # Update live sections
-        content = self._update_kernel_loc(content)
-        content = self._update_timestamp(content)
+    def _get_kernel_status(self) -> str:
+        """Kernel status line."""
+        status = getattr(self.kernel, "status", "UNKNOWN")
+        if hasattr(status, "value"):
+            status = status.value
 
-        # Write back
+        agent_count = 0
+        if hasattr(self.kernel, "agent_registry"):
+            try:
+                agent_count = len(self.kernel.agent_registry.list_agents())
+            except Exception:
+                pass
+
+        loc = self._count_kernel_loc()
+        return f"**Kernel**: {status} | **Agents**: {agent_count} | **LOC**: {loc}"
+
+    def _get_metrics(self) -> List[Dict[str, Any]]:
+        """Kernel metrics table."""
+        loc = self._count_kernel_loc()
+        target = 1008
+
+        plugin_count = len(self.kernel._plugins) if hasattr(self.kernel, "_plugins") else 0
+
+        return [
+            {
+                "Metric": "kernel_impl.py LOC",
+                "Current": loc,
+                "Target": target,
+                "Status": "✅" if loc <= target else ("🟡" if loc <= target + 100 else "🔴"),
+            },
+            {
+                "Metric": "Plugins Loaded",
+                "Current": plugin_count,
+                "Target": "8+",
+                "Status": "✅" if plugin_count >= 8 else "🟡",
+            },
+        ]
+
+    def _count_kernel_loc(self) -> int:
+        """Count kernel lines of code."""
         try:
-            self.kernel.io.write_document(name="OPUS.md", content=content, writer_id="RENDERER_OPUS")
-        except Exception as e:
-            logger.error(f"Write failed: {e}")
-
-    def _update_kernel_loc(self, content: str) -> str:
-        """Update kernel_impl.py LOC in the table."""
-        try:
-            kernel_path = Path("vibe_core/kernel_impl.py")
-            if kernel_path.exists():
-                loc = len(kernel_path.read_text().splitlines())
-
-                # Update the LOC value in the metrics table
-                # Pattern: | kernel_impl.py LOC | NUMBER | 1008 | STATUS |
-                pattern = r"\| kernel_impl\.py LOC \| \d+ \|"
-                replacement = f"| kernel_impl.py LOC | {loc} |"
-                content = re.sub(pattern, replacement, content)
-
-                # Update status based on LOC
-                if loc <= 1008:
-                    status = "COMPLETE"
-                elif loc <= 1108:
-                    status = "ALMOST"
-                else:
-                    status = "IN_PROGRESS"
-
-                # Update status in same row
-                pattern = r"(\| kernel_impl\.py LOC \| \d+ \| 1008 \| )\w+"
-                replacement = f"\\g<1>{status}"
-                content = re.sub(pattern, replacement, content)
-
-        except Exception as e:
-            logger.warning(f"Could not update kernel LOC: {e}")
-
-        return content
-
-    def _update_timestamp(self, content: str) -> str:
-        """Update the last updated timestamp."""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-
-        # Update footer timestamp
-        pattern = r"\*Rendered by: OpusRenderer \| Last updated: [^*]+\*"
-        replacement = f"*Rendered by: OpusRenderer | Last updated: {timestamp}*"
-        content = re.sub(pattern, replacement, content)
-
-        return content
+            if self._kernel_path.exists():
+                return len(self._kernel_path.read_text().splitlines())
+        except Exception:
+            pass
+        return 0
 
 
 def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> OpusRenderer:
