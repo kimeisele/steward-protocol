@@ -1,8 +1,8 @@
 """
 Envoy Renderer (Terminal Interface).
 
-UNIFIED UI: Implements generate_content() pattern.
-Bidirectional: Processes user input AND generates output.
+Renders ENVOY.md and handles bidirectional terminal commands.
+Uses EnvoyPlugin (kernel.envoy) for routing when available.
 """
 
 import logging
@@ -38,6 +38,25 @@ class EnvoyRenderer(BaseRenderer):
     @property
     def doc_type(self) -> DocumentType:
         return DocumentType.BIDIRECTIONAL
+
+    def _envoy_route_adapter(self, request: str, context: dict):
+        """Adapter to convert EnvoyPlugin.route() to PlaybookRoute format."""
+        from dataclasses import dataclass
+
+        @dataclass
+        class RouteResult:
+            task: str
+            description: str
+            confidence: str
+            source: str
+
+        result = self.kernel.envoy.route(request, context)
+        return RouteResult(
+            task=result.get("task", "fallback"),
+            description=result.get("description", ""),
+            confidence=result.get("confidence", "none"),
+            source=result.get("source", "envoy_plugin"),
+        )
 
     def generate_content(self) -> Optional[str]:
         """
@@ -76,9 +95,16 @@ class EnvoyRenderer(BaseRenderer):
     def _sync_from_file(self) -> None:
         """Read and process user commands from ENVOY.md."""
         try:
+            # Use EnvoyPlugin if available (the proper way)
+            if hasattr(self.kernel, "envoy"):
+                router_callback = self._envoy_route_adapter
+            else:
+                # Fallback to legacy _playbook_router
+                router_callback = self.kernel._playbook_router.route
+
             result = self.sync.sync_to_reality(
                 self.state,
-                router_callback=self.kernel._playbook_router.route,
+                router_callback=router_callback,
                 submit_callback=self.kernel.scheduler.submit_task,
                 task_factory=lambda payload: self._create_task(payload),
             )
@@ -88,7 +114,7 @@ class EnvoyRenderer(BaseRenderer):
                 self.state.pending_tasks = result.pending_tasks
                 self.state.request_history = result.history_entries
         except Exception as e:
-            logger.error(f"Error syncing from ENVOY.md: {e}")
+            logger.error(f"Error syncing ENVOY.md: {e}")
 
     def render(self) -> None:
         """Legacy render - DEPRECATED. Use generate_content()."""
@@ -107,12 +133,12 @@ class EnvoyRenderer(BaseRenderer):
 
     def _generate_content(self) -> str:
         """Generate ENVOY.md content."""
-        lines = ["# 📬 ENVOY TERMINAL", ""]
+        lines = ["# ENVOY TERMINAL", ""]
 
         # Request Section
         lines.extend(
             [
-                "## 💬 Request",
+                "## Request",
                 "",
                 "> Write your request here.",
                 "",
@@ -124,7 +150,7 @@ class EnvoyRenderer(BaseRenderer):
         )
 
         # Status Section
-        lines.extend(["## 📊 Status", "", "| Task ID | Status | Request |", "| :--- | :--- | :--- |"])
+        lines.extend(["## Status", "", "| Task ID | Status | Request |", "| :--- | :--- | :--- |"])
 
         if not self.state.pending_tasks:
             lines.append("_No active tasks_")
@@ -136,13 +162,12 @@ class EnvoyRenderer(BaseRenderer):
 
         # Response History
         lines.extend(
-            ["## 📜 Response History", "", "| Time | Request | Status | Response |", "| :--- | :--- | :--- | :--- |"]
+            ["## Response History", "", "| Time | Request | Status | Response |", "| :--- | :--- | :--- | :--- |"]
         )
 
         # Show last 5 entries
         for entry in reversed(self.state.request_history[-5:]):
             response = entry.get("response", "") or entry.get("error", "")
-            # Truncate response
             if len(response) > 50:
                 response = response[:47] + "..."
             lines.append(
@@ -152,22 +177,27 @@ class EnvoyRenderer(BaseRenderer):
         lines.append("")
 
         # Available Routes
-        lines.extend(["## 🎯 Available Routes", "", "| Route | Description |", "| :--- | :--- |"])
+        lines.extend(["## Available Routes", "", "| Route | Description |", "| :--- | :--- |"])
 
-        # Get routes from router if possible
-        if hasattr(self.kernel, "_playbook_router"):
-            # This is a bit hacky, accessing private registry
+        # Get routes from EnvoyPlugin (the proper way)
+        if hasattr(self.kernel, "envoy"):
             try:
-                registry = self.kernel._playbook_router.registry
-                for name, playbook in registry.items():
-                    desc = playbook.description if hasattr(playbook, "description") else ""
+                routes = self.kernel.envoy.get_routes()
+                for route in routes[:20]:  # Limit display
+                    name = route.get("name", "")
+                    desc = route.get("description", "")[:50]
                     lines.append(f"| `{name}` | {desc} |")
-            except Exception:
+                if not routes:
+                    lines.append("| _No routes discovered_ | |")
+            except Exception as e:
+                logger.debug(f"Could not get routes: {e}")
                 lines.append("| `bootstrap` | System Bootstrap |")
                 lines.append("| `status` | System Status |")
         else:
+            # Fallback if EnvoyPlugin not loaded
             lines.append("| `bootstrap` | System Bootstrap |")
             lines.append("| `status` | System Status |")
+            lines.append("| _EnvoyPlugin not loaded_ | |")
 
         return "\n".join(lines)
 
