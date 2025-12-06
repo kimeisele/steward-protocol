@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "providers",
+  "name": "LLM Providers Configuration",
+  "version": "1.0.0",
+  "description": "LLM provider wiring - maps provider types to implementation classes",
+
+  "entry_point": "section_main.py",
+  "entry_class": "ProvidersConfig",
+
+  "priority": 40,
+
+  "config_file": "config/providers.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "providers", "llm", "wiring"]
+}
