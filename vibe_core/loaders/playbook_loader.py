@@ -109,8 +109,12 @@ class PlaybookLoader(UnifiedLoader):
     manifest_filenames = ["manifest.json"]  # Optional
     entry_suffix = ".yaml"
 
+    # === CLASS-LEVEL CACHE ===
+    _playbook_cache: Optional[PlaybookRegistry] = None
+    _metadata_cache: Optional[PlaybookMetadata] = None
+
     # =========================================================================
-    # OVERRIDE: Custom discovery for YAML playbooks
+    # OVERRIDE: Custom discovery for YAML playbooks (WITH CACHING)
     # =========================================================================
 
     @classmethod
@@ -118,17 +122,27 @@ class PlaybookLoader(UnifiedLoader):
         cls,
         scan_paths: Optional[List[Path]] = None,
         config: Optional[Dict[str, Any]] = None,
+        force_refresh: bool = False,
     ) -> Tuple[PlaybookRegistry, PlaybookMetadata]:
         """
-        Discover and load all playbooks.
+        Discover and load all playbooks. CACHED after first call.
 
         Playbooks are YAML files that are self-describing:
         - playbook_id comes from 'playbook_id' field in YAML
         - No manifest.json needed
 
+        Args:
+            scan_paths: Override default paths
+            config: Optional config
+            force_refresh: If True, bypass cache
+
         Returns:
             Tuple of (playbook_definitions, metadata)
         """
+        # Return cached if available
+        if not force_refresh and cls._playbook_cache is not None:
+            return cls._playbook_cache, cls._metadata_cache or {}
+
         paths = scan_paths or cls.scan_paths
         playbooks: PlaybookRegistry = {}
         metadata: PlaybookMetadata = {}
@@ -139,7 +153,7 @@ class PlaybookLoader(UnifiedLoader):
                 logger.debug(f"[playbook] Scan path does not exist: {base_path}")
                 continue
 
-            logger.info(f"[playbook] Scanning {base_path}...")
+            logger.debug(f"[playbook] Scanning {base_path}...")
 
             # Recursive YAML discovery
             for yaml_file in base_path.glob("**/*.yaml"):
@@ -152,12 +166,22 @@ class PlaybookLoader(UnifiedLoader):
                     if meta and meta.loaded_successfully:
                         playbooks[meta.playbook_id] = meta.definition
                         metadata[meta.playbook_id] = meta
-                        logger.info(f"  ✅ Loaded: {meta.playbook_id} ({len(meta.stages)} stages)")
+                        logger.debug(f"  Loaded: {meta.playbook_id} ({len(meta.stages)} stages)")
                 except Exception as e:
                     logger.warning(f"  ❌ Failed: {yaml_file.name}: {e}")
 
-        logger.info(f"[playbook] Loaded {len(playbooks)} playbooks")
+        # Cache results
+        cls._playbook_cache = playbooks
+        cls._metadata_cache = metadata
+
+        logger.info(f"[playbook] Loaded {len(playbooks)} playbooks (cached)")
         return playbooks, metadata
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear cached playbook data."""
+        cls._playbook_cache = None
+        cls._metadata_cache = None
 
     @classmethod
     def _load_playbook_file(cls, yaml_file: Path) -> Optional[PlaybookMeta]:

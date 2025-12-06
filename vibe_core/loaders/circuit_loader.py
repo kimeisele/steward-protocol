@@ -84,8 +84,12 @@ class CircuitLoader(UnifiedLoader):
     manifest_filenames = ["manifest.json"]  # Optional for circuits
     entry_suffix = ".yaml"  # Circuits are YAML files
 
+    # === CLASS-LEVEL CACHE ===
+    _circuit_cache: Optional[CircuitRegistry] = None
+    _metadata_cache: Optional[CircuitMetadata] = None
+
     # =========================================================================
-    # OVERRIDE: Custom discovery for YAML circuits
+    # OVERRIDE: Custom discovery for YAML circuits (WITH CACHING)
     # =========================================================================
 
     @classmethod
@@ -93,19 +97,27 @@ class CircuitLoader(UnifiedLoader):
         cls,
         scan_paths: Optional[List[Path]] = None,
         config: Optional[Dict[str, Any]] = None,
+        force_refresh: bool = False,
     ) -> Tuple[CircuitRegistry, CircuitMetadata]:
         """
-        Discover and load all circuits.
+        Discover and load all circuits. CACHED after first call.
 
         Circuits are YAML files that are self-describing:
         - circuit_id comes from 'circuit_id' or 'circuit.id' in YAML
         - No manifest.json needed
 
-        Scans recursively for **/*.yaml
+        Args:
+            scan_paths: Override default paths
+            config: Optional config
+            force_refresh: If True, bypass cache
 
         Returns:
             Tuple of (circuit_definitions, metadata)
         """
+        # Return cached if available
+        if not force_refresh and cls._circuit_cache is not None:
+            return cls._circuit_cache, cls._metadata_cache or {}
+
         paths = scan_paths or cls.scan_paths
         circuits: CircuitRegistry = {}
         metadata: CircuitMetadata = {}
@@ -116,7 +128,7 @@ class CircuitLoader(UnifiedLoader):
                 logger.debug(f"[circuit] Scan path does not exist: {base_path}")
                 continue
 
-            logger.info(f"[circuit] Scanning {base_path}...")
+            logger.debug(f"[circuit] Scanning {base_path}...")
 
             # Recursive YAML discovery
             for yaml_file in base_path.glob("**/*.yaml"):
@@ -125,12 +137,22 @@ class CircuitLoader(UnifiedLoader):
                     if meta and meta.loaded_successfully:
                         circuits[meta.circuit_id] = meta.definition
                         metadata[meta.circuit_id] = meta
-                        logger.info(f"  ✅ Loaded: {meta.circuit_id}")
+                        logger.debug(f"  Loaded: {meta.circuit_id}")
                 except Exception as e:
                     logger.warning(f"  ❌ Failed: {yaml_file.name}: {e}")
 
-        logger.info(f"[circuit] Loaded {len(circuits)} circuits")
+        # Cache results
+        cls._circuit_cache = circuits
+        cls._metadata_cache = metadata
+
+        logger.info(f"[circuit] Loaded {len(circuits)} circuits (cached)")
         return circuits, metadata
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clear cached circuit data."""
+        cls._circuit_cache = None
+        cls._metadata_cache = None
 
     @classmethod
     def _load_circuit_file(cls, yaml_file: Path) -> Optional[CircuitMeta]:
