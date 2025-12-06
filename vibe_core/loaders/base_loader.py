@@ -432,8 +432,17 @@ class UnifiedLoader(ABC):
 
         # Merge global config for this item
         if global_config:
+            # PHOENIX V2 FIX: Handle Pydantic models (Architectural Fix)
+            # If global_config is a Pydantic model (CityConfig), convert to dict
+            if hasattr(global_config, "model_dump"):
+                global_config_dict = global_config.model_dump()
+            elif hasattr(global_config, "dict"):  # Pydantic v1 compat
+                global_config_dict = global_config.dict()
+            else:
+                global_config_dict = global_config
+
             item_id = manifest.get("id", item_dir.name)
-            item_global_config = global_config.get(cls.item_type + "s", {}).get(item_id, {})
+            item_global_config = global_config_dict.get(cls.item_type + "s", {}).get(item_id, {})
             config.update(item_global_config)
 
         return config
