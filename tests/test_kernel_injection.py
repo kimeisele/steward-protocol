@@ -62,7 +62,6 @@ def test_kernel_injection():
     # This should trigger kernel injection in process()
     import asyncio
 
-
     try:
         asyncio.run(envoy.process(test_task))
     except Exception as e:
@@ -78,7 +77,6 @@ def test_kernel_injection():
 
     print("\n" + "=" * 60)
     print("🎉 ALL TESTS PASSED - Kernel injection working!")
-    return True
 
 
 if __name__ == "__main__":
