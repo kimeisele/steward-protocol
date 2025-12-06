@@ -135,12 +135,12 @@ class EnvoyRenderer(BaseRenderer):
         """Generate ENVOY.md content."""
         lines = ["# ENVOY TERMINAL", ""]
 
-        # Request Section
+        # Request Section - MUST match envoy_sync.py pattern "## 💬 Request"
         lines.extend(
             [
-                "## Request",
+                "## 💬 Request",
                 "",
-                "> Write your request here.",
+                "> Write your request here (one per line).",
                 "",
                 "_No pending request. Write your request above this line._",
                 "",
