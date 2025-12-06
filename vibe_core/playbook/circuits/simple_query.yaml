@@ -1,31 +1,22 @@
+# SIMPLE_QUERY - Self-contained query handler
+# NO external agent dependencies - returns direct response
 circuit:
   id: SIMPLE_QUERY
-  description: Handle simple informational queries
+  description: Handle simple queries with direct response (no agent deps)
   domain: INTERFACE
-  version: "1.0.0"
-  entry_state: "classify"
+  version: "2.0.0"
+  entry_state: "process"
 
   states:
-    classify:
-      name: "Classify Query"
-      description: "Determine query type"
+    process:
+      name: "Process Query"
+      description: "Process user query and generate response"
       actions:
         - action_type: EMIT_EVENT
-          target: "query_classified"
+          target: "query_received"
           params:
-            type: "simple"
-      on_success: respond
-      on_failure: ABORT
-
-    respond:
-      name: "Generate Response"
-      description: "Generate appropriate response"
-      actions:
-        - action_type: CALL_AGENT
-          target: "herald"
-          params:
-            action: "respond"
             query: "{{ user_input }}"
+            status: "processing"
       on_success: COMPLETE
       on_failure: ABORT
 
@@ -33,8 +24,14 @@ circuit:
       name: "Query Complete"
       description: "Query processed successfully"
       terminal: true
+      result:
+        status: "success"
+        message: "Request received: {{ user_input }}"
 
     ABORT:
       name: "Query Aborted"
       description: "Query aborted due to failure"
       terminal: true
+      result:
+        status: "failed"
+        message: "Failed to process request"

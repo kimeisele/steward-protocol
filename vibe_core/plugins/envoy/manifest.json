@@ -1,0 +1,10 @@
+{
+  "id": "envoy",
+  "name": "Envoy Plugin",
+  "version": "1.0.0",
+  "description": "System shell for Agent City - routes user intent to circuits and agents",
+  "entry_point": "plugin_main.py",
+  "priority": 15,
+  "dependencies": ["steward_protocol"],
+  "provides_api": true
+}
