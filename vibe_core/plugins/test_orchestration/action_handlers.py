@@ -167,12 +167,33 @@ class PatternMatchHandler(TestValidationHandler):
         for rule in rules:
             pattern = rule.get("pattern", "")
             required = rule.get("required", False)
+            required_when = rule.get("required_when")  # Conditional requirement
+            exclude_paths = rule.get("exclude_paths", [])  # Paths to exclude from this rule
             severity = rule.get("severity", "warning")
             message = rule.get("message", "Pattern violation")
 
+            # Check if current file should be excluded from this rule
+            if exclude_paths:
+                skip_rule = any(excl in context.file_path for excl in exclude_paths)
+                if skip_rule:
+                    continue
+
             try:
-                if required:
-                    # Pattern MUST be present
+                # Check if this is a conditional requirement
+                if required_when:
+                    # Only require pattern if required_when matches
+                    if re.search(required_when, context.source):
+                        if not re.search(pattern, context.source):
+                            violations.append(
+                                {
+                                    "rule": pattern,
+                                    "severity": severity,
+                                    "message": message,
+                                    "type": "missing_required_conditional",
+                                }
+                            )
+                elif required:
+                    # Pattern MUST be present (unconditional)
                     if not re.search(pattern, context.source):
                         violations.append(
                             {
@@ -183,7 +204,14 @@ class PatternMatchHandler(TestValidationHandler):
                             }
                         )
                 else:
-                    # Pattern is FORBIDDEN
+                    # Pattern is FORBIDDEN (unless 'without' condition is met)
+                    without_pattern = rule.get("without")
+
+                    # If 'without' is specified, only flag if 'without' pattern is NOT present
+                    if without_pattern and re.search(without_pattern, context.source):
+                        # The 'without' pattern IS present, so this is OK
+                        continue
+
                     matches = list(re.finditer(pattern, context.source))
                     for match in matches:
                         line_num = context.source[: match.start()].count("\n") + 1
