@@ -369,12 +369,138 @@ jobs:
         run: python scripts/ci/security_scan.py
 
   # =========================================================================
-  # JOB 10: Build Summary
+  # JOB 10: PANOPTICON+ Test Validation (Layer 4)
+  # =========================================================================
+  panopticon-validation:
+    name: PANOPTICON+ Test Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run PANOPTICON+ Test Validation
+        id: panopticon
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+          from vibe_core.plugins.test_orchestration import validate_test_files
+
+          test_files = list(Path('tests').glob('**/*.py'))
+          results = validate_test_files([str(f) for f in test_files])
+
+          blocked = [r for r in results if r['blocked']]
+          warned = [r for r in results if r['verdict'] == 'warn']
+          passed = [r for r in results if r['verdict'] == 'passed']
+
+          report = {
+              'total_files': len(results),
+              'blocked': len(blocked),
+              'warned': len(warned),
+              'passed': len(passed),
+              'blocked_files': [r['file_path'] for r in blocked],
+              'violations': []
+          }
+
+          for r in blocked:
+              for v in r.get('violations', []):
+                  if v.get('severity') == 'critical':
+                      report['violations'].append({
+                          'file': r['file_path'],
+                          'message': v.get('message', 'Unknown violation')
+                      })
+
+          with open('panopticon_report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+
+          print(f'PANOPTICON+ Validation Results:')
+          print(f'  Total files: {report[\"total_files\"]}')
+          print(f'  BLOCKED: {report[\"blocked\"]}')
+          print(f'  WARNED: {report[\"warned\"]}')
+          print(f'  PASSED: {report[\"passed\"]}')
+
+          if report['blocked'] > 0:
+              print()
+              print('BLOCKED FILES:')
+              for f in report['blocked_files']:
+                  print(f'  - {f}')
+              exit(1)
+          else:
+              print()
+              print('✅ All test files pass PANOPTICON+ validation')
+          "
+
+      - name: Upload PANOPTICON+ Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: panopticon-validation-report
+          path: panopticon_report.json
+          retention-days: 30
+
+      - name: Comment on PR (if violations found)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('panopticon_report.json', 'utf8'));
+
+            let comment = '## 🔍 PANOPTICON+ Test Validation Report\n\n';
+            comment += `**Status:** ❌ ${report.blocked} test file(s) blocked\n\n`;
+            comment += `| Metric | Count |\n`;
+            comment += `|--------|-------|\n`;
+            comment += `| Total Files | ${report.total_files} |\n`;
+            comment += `| Blocked | ${report.blocked} |\n`;
+            comment += `| Warned | ${report.warned} |\n`;
+            comment += `| Passed | ${report.passed} |\n\n`;
+
+            if (report.blocked_files.length > 0) {
+              comment += '### Blocked Files\n\n';
+              for (const file of report.blocked_files) {
+                comment += `- \`${file}\`\n`;
+              }
+            }
+
+            if (report.violations.length > 0) {
+              comment += '\n### Violations\n\n';
+              for (const v of report.violations) {
+                comment += `- **${v.file}:** ${v.message}\n`;
+              }
+            }
+
+            comment += '\n### How to Fix\n\n';
+            comment += '1. Use `TestAgents.compliant()` instead of custom Agent classes\n';
+            comment += '2. Use `TestAgents.without_oath()` for governance rejection tests\n';
+            comment += '3. Never manually set `self.oath_sworn = True/False`\n';
+            comment += '4. See `vibe_core/plugins/test_orchestration/fixtures.py` for available fixtures\n\n';
+            comment += '📖 **Reference:** See `knowledge/circuits/test_validation.yaml` for validation rules\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+  # =========================================================================
+  # JOB 11: Build Summary
   # =========================================================================
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [lint, verify-agents, infrastructure-check, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security]
+    needs: [lint, verify-agents, infrastructure-check, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security, panopticon-validation]
     if: always()
 
     steps:
@@ -391,5 +517,6 @@ jobs:
           echo "  Layer 1: Pre-commit hook (fast grep) - 95% violation block"
           echo "  Layer 2: Watchman CI (AST analysis) - architectural violations"
           echo "  Layer 3: Auditor Verdict (constitutional judgment) - supreme law"
+          echo "  Layer 4: PANOPTICON+ (test validation) - fixture compliance"
           echo ""
           echo "System is ready for deployment."
