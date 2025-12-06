@@ -1,225 +1,195 @@
 # VISNU KERNEL EXTRACTION PLAN
 
-**Status:** Draft
+**Status:** IN PROGRESS (Phase 2 COMPLETE)
 **Priority:** P0
 **Goal:** Reduce kernel_impl.py from 1705 LOC to EXACTLY 1008 LOC
+**Current:** 1553 LOC (Phase 1+2 complete)
 
 > **1008** - The sacred number of Visnu's names. The kernel is Visnu.
 > Everything else is an Avatar (Plugin).
 
-## The Problem
+## Current State Analysis (REAL)
 
-The "kernel" is not a kernel - it's a MONOLITH.
-
-Current `kernel_impl.py` does:
-- Event loop (tick) - KERNEL
-- Plugin management - KERNEL
-- Agent registry - KERNEL (minimal)
-- Task scheduling - KERNEL
-- Config loading - NOT KERNEL (should be plugin)
-- Tool discovery - NOT KERNEL (should be plugin)
-- Capability management - NOT KERNEL (should be plugin)
-- Governance (Varna/Ashrama) - NOT KERNEL (should be plugin)
-- Resource management - NOT KERNEL (should be plugin)
-- Bank/Vault - NOT KERNEL (should be plugin)
-- Narasimha (kill-switch) - NOT KERNEL (should be plugin)
-- IPC events - NOT KERNEL (should be plugin)
-- Health checks - NOT KERNEL (should be plugin)
-
-**Result:** Every change breaks something. Tests take forever because they boot the whole system.
-
-## What a REAL Kernel Should Be
-
+### What's ALREADY a Plugin:
 ```
-┌─────────────────────────────────────────────┐
-│                 KERNEL (~1000 LOC)          │
-├─────────────────────────────────────────────┤
-│  1. Boot/Shutdown                           │
-│  2. Tick Loop (Event Loop)                  │
-│  3. Plugin Registry (load/unload)           │
-│  4. Agent Registry (register/lookup)        │
-│  5. Task Queue (submit/next)                │
-│  6. Event Bus (publish/subscribe)           │
-│  7. I/O Service (file access)               │
-│  8. Ledger (append-only log)                │
-└─────────────────────────────────────────────┘
-         │
-         │ Plugins attach via hooks:
-         │   on_boot, on_tick_pre, on_tick_post, on_shutdown
-         ▼
-┌─────────────────────────────────────────────┐
-│                 PLUGINS                      │
-├─────────────────────────────────────────────┤
-│  ConfigPlugin      - Phoenix config loading │
-│  GovernancePlugin  - Varna/Ashrama          │
-│  CapabilityPlugin  - Capability registry    │
-│  SecurityPlugin    - Narasimha, threats     │
-│  ToolPlugin        - Tool discovery/registry│
-│  ResourcePlugin    - Resource quotas        │
-│  InterfacePlugin   - UI rendering           │
-│  EconomyPlugin     - Bank/Vault             │
-│  HealthPlugin      - System health checks   │
-└─────────────────────────────────────────────┘
+vibe_core/plugins/
+├── interface/           # UI rendering (DONE)
+├── vedic_governance/    # Varna/Ashrama (DONE)
+├── steward_protocol/    # Constitutional Oath (DONE)
+├── sarga_cycle/         # Cosmic cycle (DONE)
+├── test_orchestration/  # PANOPTICON+ (DONE)
+├── test_mode/           # Test mode (DONE)
+├── crypto/              # Crypto plugin (DONE)
+└── tools/               # ToolRegistry + Discovery (EXTRACTED 2025-12-06)
 ```
 
-## Current Method Analysis
+### What's HARDCODED in Kernel `__init__`:
+```python
+# Line 232 - Should be ProcessPlugin
+self.process_manager = ProcessManager()
 
-### MUST STAY IN KERNEL (Core)
+# Line 235 - Should be ResourcePlugin
+self.resource_manager = ResourceManager()
+
+# Line 243 - Should be NetworkPlugin
+self.network = KernelNetworkProxy(kernel=self)
+
+# Line 247 - Should be LineagePlugin
+self.lineage = LineageChain(db_path=lineage_path)
+
+# Line 283-289 - Should be ToolPlugin
+self.tool_registry = ToolRegistry(...)
+self._register_core_tools()
+self._discover_agent_tools()
+
+# Line 294-296 - Should be NarasimhaPlugin
+self._narasimha = get_narasimha()
+self._narasimha.register_destruction_handler(...)
+
+# Line 301 - Should be EventPlugin (or keep - it's fundamental)
+self._event_bus = get_event_bus()
+
+# Line 305 - Should be PlaybookPlugin
+self._playbook_router = PlaybookRouter()
 ```
-__init__           - Boot initialization
-boot()             - Start kernel
-tick()             - Main event loop
-shutdown()         - Clean shutdown
-register_agent()   - Agent registration (basic)
-scheduler property - Task queue access
-ledger property    - Ledger access
-agent_registry     - Agent lookup
+
+### DEAD CODE in Kernel (Wrapper Methods):
+Lines 1254-1289 are pure delegation to `self.governance`:
+```python
+def get_agent_varna(self, agent_id):
+    return self.governance.get_agent_varna(agent_id)  # JUST DELEGATION!
+
+def get_agent_ashrama(self, agent_id):
+    return self.governance.get_agent_ashrama(agent_id)  # JUST DELEGATION!
 ```
+These should be REMOVED. Callers use `kernel.governance.get_varna()` directly.
 
-### SHOULD BECOME PLUGINS
+## Extraction Targets
 
-| Current Method | Target Plugin | LOC Saved |
-|----------------|---------------|-----------|
-| `_register_core_tools()` | ToolPlugin | ~40 |
-| `_discover_agent_tools()` | ToolPlugin | ~70 |
-| `get_agent_varna/ashrama/permissions` | GovernancePlugin | ~50 |
-| `transition_agent_ashrama()` | GovernancePlugin | ~20 |
-| `get_governance_status()` | GovernancePlugin | ~20 |
-| `_check_agent_capability()` | CapabilityPlugin | ~40 |
-| `revoke_capability()` | CapabilityPlugin | ~40 |
-| `grant_capability()` | CapabilityPlugin | ~40 |
-| `get_agent_capabilities()` | CapabilityPlugin | ~20 |
-| `_narasimha_destroy_agent()` | SecurityPlugin | ~70 |
-| `_check_system_health()` | HealthPlugin | ~40 |
-| `_sync_resource_quotas()` | ResourcePlugin | ~40 |
-| `_grant_repo_access()` | ResourcePlugin | ~30 |
-| `_process_ipc_events()` | IPCPlugin | ~40 |
-| `get_bank()` | EconomyPlugin | ~30 |
-| `get_vault()` | EconomyPlugin | ~20 |
-| `spawn_child_kernel()` | HypercubePlugin | ~50 |
-| `merge_child_result()` | HypercubePlugin | ~40 |
+### REMOVE (Dead Code) - ~40 LOC
+- `get_agent_varna()` wrapper
+- `get_agent_ashrama()` wrapper
+- `get_agent_permissions()` wrapper
+- `check_agent_permission()` wrapper
+- `transition_agent_ashrama()` wrapper
+- `get_governance_status()` wrapper
 
-**Estimated LOC saved: ~700**
-**Target kernel: ~1000 LOC**
+### EXTRACT TO PLUGINS - ~600 LOC
+
+| Component | Current LOC | Target Plugin |
+|-----------|-------------|---------------|
+| ProcessManager init + methods | ~50 | ProcessPlugin |
+| ResourceManager init + methods | ~40 | ResourcePlugin |
+| ToolRegistry + discovery | ~100 | ToolPlugin |
+| Narasimha wiring | ~80 | SecurityPlugin |
+| Network proxy | ~30 | NetworkPlugin |
+| Lineage chain | ~30 | LineagePlugin |
+| Playbook router | ~60 | PlaybookPlugin |
+| Economy (Bank/Vault) | ~50 | EconomyPlugin |
+| Health checks | ~40 | HealthPlugin |
+| IPC event processing | ~40 | IPCPlugin |
+| Quota syncing | ~40 | QuotaPlugin |
+| Repo access grants | ~30 | SandboxPlugin |
+
+**Total extractable: ~600 LOC**
+**Current: 1705 LOC**
+**Target: 1008 LOC**
+**Deficit: 97 LOC** - will hit it with cleanup!
+
+## What STAYS in Kernel (Core 1008)
+
+```python
+class RealVibeKernel:
+    # CORE STATE (~100 LOC)
+    _agent_registry: Dict[str, VibeAgent]
+    _scheduler: InMemoryScheduler
+    _ledger: VibeLedger
+    _manifest_registry: ManifestRegistry
+    _status: KernelStatus
+    _plugins: List[KernelPlugin]
+    _capability_registry: CapabilityRegistry
+    io: KernelIOService
+
+    # CORE METHODS (~400 LOC)
+    __init__()           # Boot only - loads plugins, they init their stuff
+    boot()               # Start kernel
+    tick()               # Main loop
+    shutdown()           # Graceful stop
+    register_agent()     # Agent registration
+    submit_task()        # Task submission
+
+    # PLUGIN API (~200 LOC)
+    api(plugin_id)       # Get plugin API
+    _call_hooks()        # Call plugin hooks
+
+    # PROPERTIES (~100 LOC)
+    agent_registry
+    scheduler
+    ledger
+    manifest_registry
+    status
+    config
+
+    # UTILITY (~200 LOC)
+    _pulse()             # Heartbeat
+    get_status()         # Status report
+    record_verified_event()
+    find_agents_by_capability()
+```
 
 ## Extraction Order
 
-### Phase 1: Low-Risk Extractions
-1. **ToolPlugin** - Tool discovery is already isolated
-2. **EconomyPlugin** - Bank/Vault are already isolated
-3. **HealthPlugin** - Health checks are independent
+### Phase 1: Remove Dead Code (TODAY)
+1. Delete governance wrapper methods
+2. Update callers to use `kernel.governance.X()` directly
+3. Test suite passes
 
-### Phase 2: Medium-Risk Extractions
-4. **GovernancePlugin** - Already partially extracted
-5. **CapabilityPlugin** - Used by governance
-6. **ResourcePlugin** - Resource management
+### Phase 2: Low-Risk Extractions (THIS WEEK)
+1. **ToolPlugin** - ToolRegistry is already isolated
+2. **EconomyPlugin** - Bank/Vault are already lazy-loaded
+3. **HealthPlugin** - `_check_system_health()` is self-contained
 
-### Phase 3: High-Risk Extractions
-7. **SecurityPlugin** - Narasimha integration
-8. **IPCPlugin** - Process communication
-9. **HypercubePlugin** - Child kernel spawning
+### Phase 3: Medium-Risk Extractions
+4. **ProcessPlugin** - ProcessManager is isolated
+5. **ResourcePlugin** - ResourceManager is isolated
+6. **LineagePlugin** - LineageChain is isolated
 
-## Plugin Interface Contract
+### Phase 4: High-Risk Extractions
+7. **SecurityPlugin** - Narasimha is critical
+8. **NetworkPlugin** - Network proxy
+9. **PlaybookPlugin** - Playbook router
 
-Each plugin implements:
+## Safety Features (Senior Review - Gemini)
 
-```python
-class KernelPlugin(Protocol):
-    @property
-    def plugin_id(self) -> str: ...
-
-    @property
-    def priority(self) -> int: ...  # Lower = earlier
-
-    def on_boot(self, kernel: "VibeKernel") -> None: ...
-    def on_tick_pre(self, kernel: "VibeKernel") -> None: ...
-    def on_tick_post(self, kernel: "VibeKernel") -> None: ...
-    def on_shutdown(self, kernel: "VibeKernel") -> None: ...
-```
-
-Plugins can expose APIs via kernel:
-```python
-# Plugin registers its API
-kernel.register_api("governance", self)
-
-# Other code accesses it
-kernel.api("governance").get_varna(agent_id)
-```
-
-## Why Tests Are Slow
-
-Current test flow:
-```
-Test starts
-  → Import kernel_impl
-    → Import 20+ modules
-    → Load PhoenixConfig (4+ seconds!)
-      → SectionLoader.discover()
-        → Import ALL sections
-        → Parse ALL YAML files
-    → Initialize ALL managers
-  → Run actual test (0.1 seconds)
-```
-
-With plugin extraction:
-```
-Test starts
-  → Import minimal kernel
-  → Mock plugins or load only needed ones
-  → Run test
-```
+Already implemented in `plugin_protocol.py`:
+- `dependencies` property (topological sort)
+- `on_boot(kernel, config)` (config injection)
+- `HookResult` (error boundaries)
+- `get_api()` (plugin API registration)
 
 ## Success Criteria
 
 1. `kernel_impl.py` = EXACTLY 1008 LOC (Visnu's names)
-2. Tests pass without loading PhoenixConfig
+2. Tests pass without loading all managers
 3. Each plugin independently testable
 4. Boot time < 1 second (currently 4-5s)
+5. `kernel.governance` accessed directly, not via wrappers
 
-## Safety Features (Senior Review - Gemini)
+## LOC Tracking
 
-Based on critical architecture review, the plugin system has:
-
-### 1. Dependencies (not magic priority integers)
-```python
-@property
-def dependencies(self) -> Set[str]:
-    return {"capability", "governance"}  # Topological sort
+```
+START:     1705 LOC
+Phase 1:   -43 LOC  (wrapper removal) = 1662 LOC ✅ DONE 2025-12-06
+Phase 2:  -109 LOC  (ToolPlugin extraction) = 1553 LOC ✅ DONE 2025-12-06
+Phase 3:  -??? LOC  (Economy+Health) = ???? LOC
+Phase 4:  -??? LOC  (Process+Resource+Lineage) = ???? LOC
+Phase 5:  -??? LOC  (Security+Network+Playbook) = ???? LOC
+Target:   1008 LOC (remaining: 545 LOC to extract)
 ```
 
-### 2. Config Injection (no global get_config)
-```python
-def on_boot(self, kernel, config: Dict[str, Any]) -> HookResult:
-    # Plugin receives ONLY its config section
-    self.timeout = config.get("timeout", 30)
-```
+### Extraction Log
 
-### 3. Error Boundaries (plugins can't crash kernel)
-```python
-def on_tick_pre(self, kernel) -> HookResult:
-    try:
-        # work
-        return HookResult.ok()
-    except Exception as e:
-        return HookResult.error(str(e))  # Logged, continue
-```
-
-### 4. State Isolation (plugins own their state)
-- No writing to kernel attributes
-- Communication via APIs and Events only
-- `kernel.api("governance").get_varna(agent_id)`
-
-### 5. Plugin API Registration
-```python
-def get_api(self) -> Optional[Any]:
-    return GovernanceAPI(self)  # Other plugins call kernel.api("governance")
-```
-
-## Next Steps
-
-1. ✅ Create plugin interface contract (done: plugin_protocol.py with Safety Features)
-2. Extract ToolPlugin (lowest risk)
-3. Extract EconomyPlugin
-4. Extract GovernancePlugin
-5. Update tests to use MockKernel/TestHarness
-6. Count LOC - target EXACTLY 1008
+| Date | Phase | Component | LOC Removed | New LOC |
+|------|-------|-----------|-------------|---------|
+| 2025-12-06 | 1 | Governance wrappers | -43 | 1662 |
+| 2025-12-06 | 2 | ToolsPlugin | -109 | 1553 |
