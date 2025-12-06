@@ -477,3 +477,85 @@ class TestOrchestrationPlugin(KernelPlugin):
     def get_guardian_status(self) -> str:
         """Get human-readable status of test governance."""
         return self.guardian.print_status()
+
+    # ========================================================================
+    # CLI COMMAND HANDLERS (GAD-000 Compliant)
+    # ========================================================================
+
+    def cmd_run(
+        self,
+        target: str = "all",
+        tag: Optional[str] = None,
+        type: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        CLI handler: Run tests.
+
+        Returns structured data (GAD-000 compliant).
+        """
+        from vibe_core.cli.protocol import ProgressUpdate
+
+        # Yield progress updates for streaming
+        yield ProgressUpdate(status="starting", message="Discovering tests...")
+
+        if tag:
+            results = self.run_tests_by_tag(tag)
+        elif type:
+            try:
+                t_type = TestableType(type)
+                results = self.run_tests_by_type(t_type)
+            except ValueError:
+                return {"error": f"Unknown type: {type}"}
+        else:
+            results = self.run_all_tests()
+
+        yield ProgressUpdate(
+            status="done",
+            message=f"Completed {len(results)} tests",
+            percent=100,
+        )
+
+        # Return structured result
+        summary = self.get_summary()
+        return {
+            "total": summary.get("total", 0),
+            "passed": summary.get("passed", 0),
+            "failed": summary.get("failed", 0),
+            "pass_rate": summary.get("pass_rate", 0),
+            "duration_ms": summary.get("duration_ms", 0),
+            "by_type": summary.get("by_type", {}),
+            "failures": [
+                {
+                    "test_id": r.test_id,
+                    "error": r.error,
+                }
+                for r in self.get_failures()
+            ],
+        }
+
+    def cmd_summary(self) -> Dict[str, Any]:
+        """CLI handler: Show test discovery summary."""
+        return self._registry.get_summary()
+
+    def cmd_pytest(
+        self,
+        path: str = "tests",
+        markers: Optional[str] = None,
+        verbose: bool = False,
+    ) -> Dict[str, Any]:
+        """CLI handler: Run pytest suite."""
+        return self.run_pytest(
+            markers=markers or "",
+            path=path,
+            verbose=verbose,
+        )
+
+    def cmd_guardian(self) -> Dict[str, Any]:
+        """CLI handler: Show test guardian status."""
+        validation = self.validate_tests_before_run()
+        return {
+            "status": "healthy" if validation["mutated"] == 0 else "compromised",
+            "total_tests": validation["total"],
+            "mutated": validation["mutated"],
+            "errors": validation["errors"],
+        }
