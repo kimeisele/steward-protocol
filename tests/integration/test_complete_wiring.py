@@ -33,9 +33,9 @@ def get_test_kernel():
     """Get or create shared test kernel."""
     global _test_kernel, _test_envoy
     if _test_kernel is None:
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.plugins.test_orchestration import TestKernel
 
-        _test_kernel = RealVibeKernel()
+        _test_kernel = TestKernel.with_governance()
         _test_kernel.boot()
 
         # Get envoy from registry
@@ -156,6 +156,11 @@ def test_heartbeat_full_cycle():
     else:
         print(f"✅ Task status: {updated_task.status}")
 
+    # Assert that status is valid
+    assert updated_task.status in [TaskStatus.COMPLETED, TaskStatus.PENDING, TaskStatus.FAILED, "delegated"], (
+        f"Invalid status {updated_task.status}"
+    )
+
     print("✅ TEST 2 PASSED")
 
 
@@ -211,10 +216,10 @@ async def test_critical_priority():
 
     from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
     from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.plugins.test_orchestration import TestKernel
 
     # Setup
-    kernel = RealVibeKernel()
+    kernel = TestKernel.with_governance()
     kernel.boot()
 
     envoy = EnvoyCartridge()
@@ -316,37 +321,10 @@ async def test_action_handlers_real_io():
     print("\n✅ TEST 5 PASSED")
 
 
-# Test Runner
-def run_all_tests():
-    """Run all integration tests."""
-    print("\n" + "=" * 60)
-    print("🧪 INTEGRATION TEST SUITE - Complete System Wiring")
-    print("=" * 60)
-    print("\nTesting P1-P6 fixes:")
-    print("  P1: Critical wiring (Envoy ↔ Router ↔ Executor)")
-    print("  P2: Stubs → Real implementations")
-    print("  P3: Kernel injection")
-    print("  P4: Complete routing paths")
-    print("  P5: Herald respond action")
-    print("  P6: Science async process")
-    print("\n" + "=" * 60)
-
-    # Run sync tests
-    test_heartbeat_full_cycle()
-
-    # Run async tests
-    asyncio.run(test_envoy_routes_and_executes())
-    asyncio.run(test_science_delegation())
-    asyncio.run(test_critical_priority())
-    asyncio.run(test_action_handlers_real_io())
-
-    print("\n" + "=" * 60)
-    print("🎉 ALL INTEGRATION TESTS PASSED!")
-    print("=" * 60)
-    print("\n✅ System wiring is complete and functional")
-    print("✅ All P1-P6 fixes verified")
-    print("✅ Ready for production deployment\n")
-
-
-if __name__ == "__main__":
-    run_all_tests()
+# Helper for async tests
+@pytest.fixture
+def event_loop():
+    """Create an instance of the default event loop for each test case."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()

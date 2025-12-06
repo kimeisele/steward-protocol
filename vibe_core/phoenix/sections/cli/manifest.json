@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "cli",
+  "name": "CLI Configuration",
+  "version": "1.0.0",
+  "description": "Fractal CLI System settings - output format, namespaces, observability",
+
+  "entry_point": "section_main.py",
+  "entry_class": "CLIConfig",
+
+  "priority": 50,
+
+  "config_file": "config/cli.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "cli", "core"]
+}

@@ -1,6 +1,8 @@
 """
 Git Renderer (History).
 Ported from GitHistoryPluginV2.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 import logging
@@ -707,11 +709,43 @@ class GitRenderer(BaseRenderer):
     def name(self) -> str:
         return "git"
 
+    @property
+    def output_file(self) -> str:
+        return "GIT.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate GIT.md content (UNIFIED UI pattern)."""
+        if self.disabled:
+            return None
+
+        # Throttle updates (default 5 minutes)
+        now = time.time()
+        if now - self.last_update < self.update_interval:
+            # Return cached analysis if available
+            if self.last_analysis:
+                return self.renderer.render_to_string(self.last_analysis)
+            return None
+
+        self.last_update = now
+
+        try:
+            commits = self.analyzer.get_commit_history(days=self.analysis_days)
+            analysis = self.analyzer.analyze_commits(commits, self.analysis_days)
+            self.last_analysis = analysis
+            return self.renderer.render_to_string(analysis)
+        except Exception as e:
+            logger.error(f"Git analysis failed: {e}")
+            return None
+
     def render(self) -> None:
+        """Legacy render - DEPRECATED."""
         if self.disabled:
             return
 
-        # Throttle updates (default 5 minutes)
         now = time.time()
         if now - self.last_update < self.update_interval:
             return

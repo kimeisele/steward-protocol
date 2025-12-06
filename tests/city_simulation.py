@@ -79,9 +79,9 @@ class CitySimulation:
 
             # Create kernel
             logger.info("⚙️  Creating kernel...")
-            from vibe_core.kernel_impl import RealVibeKernel
+            from vibe_core.plugins.test_orchestration import TestKernel
 
-            self.kernel = RealVibeKernel(ledger_path=self.ledger_path)
+            self.kernel = TestKernel.with_governance()
 
             # Load all cartridges
             logger.info("🤖 Loading agents...")
@@ -324,10 +324,10 @@ class CitySimulation:
             logger.info(f"  Voting Threshold: {int(config.governance.voting_threshold * 100)}%")
 
             # Basic validation
-            logger.info(f"  Governance: OK")
-            logger.info(f"  Economy: OK")
-            logger.info(f"  Security: OK")
-            logger.info(f"  Integrations: OK")
+            logger.info("  Governance: OK")
+            logger.info("  Economy: OK")
+            logger.info("  Security: OK")
+            logger.info("  Integrations: OK")
 
             self.results["scenarios"]["config_validation"] = {
                 "status": "PASS",

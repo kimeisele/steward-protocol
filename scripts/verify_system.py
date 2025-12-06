@@ -159,9 +159,22 @@ def verify_system(fast_mode: bool = False, generate_report: bool = False, check_
         kernel.register_plugin(test_plugin)
         test_plugin.on_boot(kernel)
 
-    discovery = test_plugin._registry.get_summary()
-    print(f"      Discovered: {discovery['total_testables']} components")
-    print(f"      Total tests: {discovery['total_tests']}")
+    # Manual Agent Registration for Verification (since we don't run full boot)
+    try:
+        from vibe_core.cartridges.system.discoverer.agent import Discoverer
+
+        discoverer = Discoverer(kernel=kernel, config=kernel.config)
+        kernel.register_agent(discoverer, spawn_process=False)
+        print("      Registered generic agent: Discoverer")
+    except Exception as e:
+        print(f"      Warning: Failed to register Discoverer for testing: {e}")
+
+    # Re-run discovery to pick up the agent
+    discovery = test_plugin._registry.discover_from_kernel(kernel)
+    summary = test_plugin._registry.get_summary()
+
+    print(f"      Discovered: {summary['total_testables']} components")
+    print(f"      Total tests: {summary['total_tests']}")
 
     # =========================================================================
     # PHASE 3: Run Tests
@@ -175,6 +188,7 @@ def verify_system(fast_mode: bool = False, generate_report: bool = False, check_
             TestableType.SCHEDULER,
             TestableType.EVENT_BUS,
             TestableType.PLUGIN,
+            TestableType.AGENT,  # Added for Fractal Test verification
         ]
         results = []
         for t_type in critical_types:
