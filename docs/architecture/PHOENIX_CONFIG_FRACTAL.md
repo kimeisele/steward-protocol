@@ -155,13 +155,57 @@ search:
     api_key_env: "TAVILY_API_KEY"
 ```
 
-### Phase 3: Lösche phoenix.yaml
+### Phase 3: Dual-Load Strategy (WICHTIG!)
 
-Nach Migration enthält `phoenix.yaml` nur noch `system.kernel` - das gehört in `kernel.yaml` (existiert schon als Section).
+**NICHT Big Bang löschen!** Stattdessen Dual-Load für Übergangsperiode:
 
-**phoenix.yaml wird gelöscht.**
+```python
+# vibe_core/phoenix/config.py
 
-### Phase 4: Update PhoenixConfig
+class PhoenixConfig:
+    @classmethod
+    def load(cls) -> "PhoenixConfig":
+        """Load with Dual-Load Strategy."""
+        config = cls()
+
+        # 1. First: Load all discovered Sections (new way)
+        sections, metadata = SectionLoader.discover()
+        config._sections = sections
+
+        # 2. Fallback: Load phoenix.yaml for missing keys (legacy)
+        legacy_path = Path("config/phoenix.yaml")
+        if legacy_path.exists():
+            import yaml
+            with open(legacy_path) as f:
+                legacy_data = yaml.safe_load(f) or {}
+
+            # Only use legacy for keys NOT in sections
+            for key, value in legacy_data.items():
+                if key not in config._sections:
+                    logger.warning(f"[DEPRECATED] Loading '{key}' from phoenix.yaml - migrate to Section!")
+                    config._legacy[key] = value
+
+        return config
+```
+
+**Deprecation Warnings:**
+- Log warning when phoenix.yaml fallback is used
+- After 2 weeks: Remove fallback, delete phoenix.yaml
+
+### Phase 4: Delete phoenix.yaml (nach Dual-Load Periode)
+
+Erst wenn ALLE consumers migriert sind und keine Warnings mehr:
+
+```bash
+# Verify no legacy access
+grep -r "phoenix.yaml" vibe_core/ --include="*.py"
+# Should return nothing except config.py loader
+
+# Then delete
+rm config/phoenix.yaml
+```
+
+### Phase 5: Update PhoenixConfig
 
 ```python
 # vibe_core/phoenix/config.py
@@ -330,11 +374,13 @@ touch config/my_section.yaml
 1. **Create Golden Template** `docs/templates/config_section/`
 2. **Create `agents` Section** (extrahiere aus phoenix.yaml)
 3. **Create `providers` Section** (extrahiere aus phoenix.yaml)
-4. **Update `kernel` Section** (übernimm Rest aus phoenix.yaml)
-5. **Delete phoenix.yaml**
+4. **Implement Dual-Load Strategy** in PhoenixConfig.load()
+5. **Update `kernel` Section** (übernimm Rest aus phoenix.yaml)
 6. **Update PhoenixConfig** (typed accessors)
 7. **Update all consumers** (use new accessors)
 8. **Tests** für jede Section
+9. **Wait for deprecation period** (2 weeks, no warnings)
+10. **Delete phoenix.yaml** (only after step 9!)
 
 ---
 
