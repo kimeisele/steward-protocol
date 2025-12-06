@@ -52,7 +52,7 @@ class InterfacePlugin(KernelPlugin):
         # Discover and load renderers
         self._load_renderers()
 
-        logger.info(f"🖥️  Interface Plugin booted ({len(self._renderers)} views active)")
+        logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active)")
 
     def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
         """
@@ -78,7 +78,7 @@ class InterfacePlugin(KernelPlugin):
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Clean up."""
-        logger.info("🖥️  Interface Plugin shutting down")
+        logger.info("InterfacePlugin shutting down")
 
     def _load_renderers(self) -> None:
         """Dynamically load renderers from the renderers/ directory."""

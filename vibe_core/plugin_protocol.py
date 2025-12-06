@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core import Task
+    from vibe_core.cli.monitors import SystemMonitor
     from vibe_core.kernel_impl import RealVibeKernel
 
 
@@ -264,3 +265,29 @@ class KernelPlugin(ABC):
             success: Whether execution succeeded
         """
         pass
+
+    # =========================================================================
+    # INTROSPECTION PROTOCOL (Glass Box)
+    # =========================================================================
+
+    def get_monitors(self) -> List["SystemMonitor"]:
+        """
+        Return system monitors exposed by this plugin.
+
+        The CLI discovers these to enable `steward observe` commands.
+        Each monitor provides a view into the plugin's internal state.
+
+        Example monitors:
+        - Queue depth (MilkOcean)
+        - Routing tables (Matrix)
+        - Agent lifecycle states (Governance)
+        - Health checks
+
+        Returns:
+            List of SystemMonitor instances
+
+        Usage in CLI:
+            steward observe              → List all monitors
+            steward observe queue:depth  → Show specific monitor
+        """
+        return []  # Default: no monitors
