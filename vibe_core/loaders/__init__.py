@@ -23,6 +23,7 @@ Usage:
 
 from .base_loader import ItemMeta, LoaderRegistry, UnifiedLoader
 from .circuit_loader import CircuitLoader, CircuitMeta, CircuitMetadata, CircuitRegistry
+from .playbook_loader import PlaybookLoader, PlaybookMeta, PlaybookMetadata, PlaybookRegistry, PlaybookStage
 
 __all__ = [
     "UnifiedLoader",
@@ -33,4 +34,10 @@ __all__ = [
     "CircuitMeta",
     "CircuitRegistry",
     "CircuitMetadata",
+    # Playbook Loader
+    "PlaybookLoader",
+    "PlaybookMeta",
+    "PlaybookRegistry",
+    "PlaybookMetadata",
+    "PlaybookStage",
 ]
