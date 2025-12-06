@@ -1,0 +1,257 @@
+# TEST VALIDATION CIRCUIT - Layer 2 of PANOPTICON+
+# ===================================================
+#
+# "Who watches the watchers?"
+#
+# This circuit validates that tests are actually GOOD:
+# - Uses correct fixtures (not custom mocks)
+# - Has meaningful assertions
+# - Covers edge cases
+# - Follows test patterns
+#
+# Triggered: After any test file is created/modified
+# Output: Validation report + auto-fix suggestions
+
+circuit_id: test_validation
+version: "1.0.0"
+type: state_machine
+description: "Validates test quality and enforces PANOPTICON+ standards"
+
+# Entry conditions
+triggers:
+  - event: file_created
+    pattern: "tests/**/*.py"
+  - event: file_modified
+    pattern: "tests/**/*.py"
+  - event: manual
+    command: "validate_tests"
+
+# State machine
+states:
+  # ========================================
+  # STATE 1: Parse the test file
+  # ========================================
+  - id: parse_test
+    description: "Parse test file AST"
+    action: ast_parse
+    input:
+      file: "{{ trigger.file_path }}"
+    output: ast_tree
+    on_success: check_fixtures
+    on_failure: report_parse_error
+
+  # ========================================
+  # STATE 2: Check fixture usage
+  # ========================================
+  - id: check_fixtures
+    description: "Verify test uses PANOPTICON+ fixtures"
+    action: pattern_match
+    rules:
+      # FORBIDDEN: Custom mock agent classes
+      - pattern: "class.*Agent.*VibeAgent"
+        location: "inside test file"
+        severity: critical
+        message: "FORBIDDEN: Custom Agent class in test. Use TestAgents.xxx()"
+
+      # FORBIDDEN: Direct kernel instantiation without TestKernel
+      - pattern: "RealVibeKernel\\("
+        without: "TestKernel"
+        severity: warning
+        message: "Use TestKernel.minimal() instead of direct instantiation"
+
+      # REQUIRED: Import from fixtures
+      - pattern: "from vibe_core.plugins.test_orchestration import"
+        required: true
+        severity: critical
+        message: "REQUIRED: Import TestAgents/TestKernel from fixtures"
+
+      # FORBIDDEN: Manual oath_sworn assignment
+      - pattern: "oath_sworn\\s*=\\s*(True|False)"
+        location: "outside fixtures.py"
+        severity: critical
+        message: "FORBIDDEN: Manual oath assignment. Use TestAgents.with_false_oath()"
+
+    output: fixture_violations
+    on_violations: report_violations
+    on_clean: check_assertions
+
+  # ========================================
+  # STATE 3: Check assertion quality
+  # ========================================
+  - id: check_assertions
+    description: "Verify tests have meaningful assertions"
+    action: assertion_analysis
+    rules:
+      # REQUIRED: At least one assertion per test
+      - check: assertion_count
+        min: 1
+        per: test_function
+        message: "Test has no assertions - useless test"
+
+      # FORBIDDEN: assert True (meaningless)
+      - pattern: "assert\\s+True"
+        severity: warning
+        message: "assert True is meaningless"
+
+      # FORBIDDEN: except: pass (swallowing errors)
+      - pattern: "except.*:\\s*pass"
+        severity: critical
+        message: "FORBIDDEN: Swallowing exceptions hides failures"
+
+      # RECOMMENDED: Test isolation
+      - check: shared_state
+        severity: warning
+        message: "Tests share state - may cause flaky tests"
+
+    output: assertion_violations
+    on_violations: report_violations
+    on_clean: check_coverage_intent
+
+  # ========================================
+  # STATE 4: Check coverage intent
+  # ========================================
+  - id: check_coverage_intent
+    description: "Verify test covers meaningful scenarios"
+    action: semantic_analysis
+    rules:
+      # Each test should have clear intent
+      - check: docstring_present
+        severity: info
+        message: "Test missing docstring - unclear intent"
+
+      # Test name should describe scenario
+      - check: test_name_descriptive
+        pattern: "test_[a-z]+_[a-z]+"  # test_thing_does_action
+        severity: info
+        message: "Test name should describe scenario"
+
+      # Edge cases for governance tests
+      - check: governance_test_coverage
+        if_testing: "governance|oath|capability"
+        required_scenarios:
+          - "without_oath"
+          - "with_false_oath"
+          - "compliant"
+        message: "Governance test missing required scenarios"
+
+    output: coverage_issues
+    on_issues: suggest_improvements
+    on_complete: generate_report
+
+  # ========================================
+  # STATE 5: Suggest improvements
+  # ========================================
+  - id: suggest_improvements
+    description: "Generate improvement suggestions"
+    action: generate_suggestions
+    input:
+      violations: "{{ fixture_violations + assertion_violations }}"
+      issues: "{{ coverage_issues }}"
+    output: suggestions
+    transition: generate_report
+
+  # ========================================
+  # STATE 6: Generate validation report
+  # ========================================
+  - id: generate_report
+    description: "Compile final validation report"
+    action: compile_report
+    template: |
+      # Test Validation Report: {{ trigger.file_path }}
+
+      ## Fixture Compliance
+      {% if fixture_violations %}
+      VIOLATIONS FOUND:
+      {% for v in fixture_violations %}
+      - [{{ v.severity }}] {{ v.message }}
+        Location: {{ v.location }}
+      {% endfor %}
+      {% else %}
+      All fixtures correctly used.
+      {% endif %}
+
+      ## Assertion Quality
+      {% if assertion_violations %}
+      ISSUES FOUND:
+      {% for v in assertion_violations %}
+      - [{{ v.severity }}] {{ v.message }}
+      {% endfor %}
+      {% else %}
+      Assertions look good.
+      {% endif %}
+
+      ## Suggestions
+      {% for s in suggestions %}
+      - {{ s }}
+      {% endfor %}
+
+      ## Verdict
+      {% if has_critical %}
+      BLOCKED: Fix critical issues before merge
+      {% elif has_warnings %}
+      WARN: Consider fixing warnings
+      {% else %}
+      PASSED: Test meets PANOPTICON+ standards
+      {% endif %}
+    output: validation_report
+    transition: apply_verdict
+
+  # ========================================
+  # STATE 7: Apply verdict
+  # ========================================
+  - id: apply_verdict
+    description: "Enforce verdict (block if critical)"
+    action: enforce
+    rules:
+      - if: has_critical
+        action: block_commit
+        message: "PANOPTICON+: Test blocked - fix critical issues"
+
+      - if: has_warnings
+        action: warn_only
+        message: "PANOPTICON+: Test passed with warnings"
+
+      - else:
+        action: approve
+        message: "PANOPTICON+: Test approved"
+    output: verdict
+    transition: done
+
+  # ========================================
+  # ERROR STATES
+  # ========================================
+  - id: report_parse_error
+    description: "Handle parse failure"
+    action: error_report
+    message: "Could not parse test file - syntax error?"
+    severity: critical
+    transition: done
+
+  - id: report_violations
+    description: "Log violations and continue"
+    action: log_violations
+    transition: "{{ next_state }}"
+
+# Output destinations
+outputs:
+  validation_report:
+    - ledger: "TEST_VALIDATION"
+    - file: ".test_validation/{{ trigger.file_path | basename }}.md"
+
+  verdict:
+    - event_bus: "test.validated"
+    - pre_commit_hook: true  # Block commits if critical
+
+# Integration points
+integrations:
+  pre_commit:
+    enabled: true
+    block_on: critical
+
+  ci_pipeline:
+    enabled: true
+    fail_on: critical
+
+  editor_plugin:
+    enabled: true
+    show_inline: true

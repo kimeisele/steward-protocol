@@ -208,6 +208,7 @@ class BehaviorConfig:
     require_tests: bool = True  # Must run tests before claiming done
     require_commit: bool = True  # Must commit changes
     require_handoff: bool = True  # Must update .session_handoff.json
+    enforce_oath: bool = True  # Enforce Constitutional Oath for all agents
 
 
 @dataclass
@@ -260,6 +261,7 @@ class StewardConfig:
                 require_tests=data.get("behavior", {}).get("require_tests", True),
                 require_commit=data.get("behavior", {}).get("require_commit", True),
                 require_handoff=data.get("behavior", {}).get("require_handoff", True),
+                enforce_oath=data.get("behavior", {}).get("enforce_oath", True),
             ),
             active_user=data.get("active_user"),
         )
@@ -275,6 +277,7 @@ class StewardConfig:
                 "require_tests": self.behavior.require_tests,
                 "require_commit": self.behavior.require_commit,
                 "require_handoff": self.behavior.require_handoff,
+                "enforce_oath": self.behavior.enforce_oath,
             },
         }
 

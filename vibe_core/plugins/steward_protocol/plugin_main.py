@@ -136,6 +136,75 @@ class StewardProtocolPlugin(KernelPlugin):
         if self._config:
             logger.info("   Config loaded: Layer 1.5/1.6 active")
 
+    def on_agent_pre_register(self, kernel: "RealVibeKernel", agent: Any) -> bool:
+        """
+        AGENT REGISTRATION GATE: Called BEFORE agent registration.
+
+        Enforces Constitutional Oath if enabled in config.
+        """
+        # Check if Oath enforcement is enabled (default: True)
+        enforce_oath = True
+        if self._config and hasattr(self._config, "behavior"):
+            enforce_oath = self._config.behavior.enforce_oath
+
+        if not enforce_oath:
+            logger.debug(f"📜 Oath enforcement DISABLED - Agent '{agent.agent_id}' allowed")
+            return True
+
+        # STEP 1: THE INSPECTION (Does the agent possess the Oath badge?)
+        # Check for oath attributes that OathMixin provides
+        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(agent, "oath_event")
+
+        if not has_oath_attribute:
+            logger.critical(
+                f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' "
+                f"attempted registration WITHOUT Constitutional Oath."
+            )
+            # VETO registration
+            return False
+
+        # STEP 2: THE VERIFICATION (Is the Oath valid?)
+        # Check if agent has actually sworn the oath (oath_sworn = True)
+        oath_sworn = getattr(agent, "oath_sworn", False)
+        oath_event = getattr(agent, "oath_event", None)
+
+        if not oath_sworn:
+            logger.critical(
+                f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' "
+                f"has oath attributes but oath_sworn={oath_sworn}. "
+                f"Agent has not executed Genesis Ceremony."
+            )
+            return False
+
+        # STEP 3: THE CRYPTOGRAPHIC VALIDATION (Is the oath genuine?)
+        # Verify the oath signature against current Constitution
+        # Note: We need OATH_ENFORCEMENT_AVAILABLE equivalent here
+        # For now, we assume if crypto module is available, we use it.
+        if oath_event:
+            try:
+                # Import here to avoid circular deps if needed, or use existing imports
+                from vibe_core.steward.constitution import ConstitutionalOath
+
+                is_valid, reason = ConstitutionalOath.verify_oath(oath_event, getattr(agent, "identity_tool", None))
+
+                if not is_valid:
+                    logger.critical(
+                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' oath verification FAILED: {reason}"
+                    )
+                    return False
+
+                logger.info(f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' oath verified ({reason})")
+
+            except ImportError:
+                # Crypto not available - skip strict verification but warn
+                logger.warning(f"📜 Crypto module missing - skipping signature check for '{agent.agent_id}'")
+            except Exception as e:
+                logger.error(f"❌ Governance gate verification error for '{agent.agent_id}': {e}")
+                # Fail open or closed? Security says closed.
+                return False
+
+        return True
+
     def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
         """
         Called when a new agent is registered.
