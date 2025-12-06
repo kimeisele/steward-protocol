@@ -6,9 +6,10 @@ Uses EnvoyPlugin (kernel.envoy) for routing when available.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.envoy_sync import EnvoySync, EnvoySyncState
+from vibe_core.io_service import DocumentType
 
 from .base import BaseRenderer
 
@@ -30,6 +31,14 @@ class EnvoyRenderer(BaseRenderer):
     def name(self) -> str:
         return "envoy"
 
+    @property
+    def output_file(self) -> str:
+        return "ENVOY.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.BIDIRECTIONAL
+
     def _envoy_route_adapter(self, request: str, context: dict):
         """Adapter to convert EnvoyPlugin.route() to PlaybookRoute format."""
         from dataclasses import dataclass
@@ -49,9 +58,25 @@ class EnvoyRenderer(BaseRenderer):
             source=result.get("source", "envoy_plugin"),
         )
 
-    def render(self) -> None:
-        """Render ENVOY.md with bidirectional sync."""
-        # 0. Check for completed tasks
+    def generate_content(self) -> Optional[str]:
+        """
+        Generate ENVOY.md content (UNIFIED UI pattern).
+
+        Note: This renderer is BIDIRECTIONAL. Input processing
+        happens in on_tick_pre via render(). This method only
+        generates the output content for the KING to write.
+        """
+        # Process any completed tasks first
+        self._process_completed_tasks()
+
+        # Process user input from ENVOY.md
+        self._sync_from_file()
+
+        # Return content for KING to write
+        return self._generate_content()
+
+    def _process_completed_tasks(self) -> None:
+        """Process completed tasks and update state."""
         if hasattr(self.kernel, "scheduler") and hasattr(self.kernel.scheduler, "completed"):
             completed_tasks = self.kernel.scheduler.completed
             for task_id in list(self.state.pending_tasks.keys()):
@@ -67,7 +92,8 @@ class EnvoyRenderer(BaseRenderer):
                         task_id, status, response, self.state.pending_tasks, self.state.request_history
                     )
 
-        # 1. Sync to reality (Render + Read Commands)
+    def _sync_from_file(self) -> None:
+        """Read and process user commands from ENVOY.md."""
         try:
             # Use EnvoyPlugin if available (the proper way)
             if hasattr(self.kernel, "envoy"):
@@ -83,16 +109,22 @@ class EnvoyRenderer(BaseRenderer):
                 task_factory=lambda payload: self._create_task(payload),
             )
 
-            # Update state from result
             if result:
                 self.state.last_modified = result.new_mtime
                 self.state.pending_tasks = result.pending_tasks
                 self.state.request_history = result.history_entries
-
         except Exception as e:
             logger.error(f"Error syncing ENVOY.md: {e}")
 
-        # 2. Generate and Write Document
+    def render(self) -> None:
+        """Legacy render - DEPRECATED. Use generate_content()."""
+        # Process completed tasks
+        self._process_completed_tasks()
+
+        # Sync from file (read user commands)
+        self._sync_from_file()
+
+        # Generate and Write Document (legacy - sync writes directly)
         try:
             content = self._generate_content()
             self.sync.render_document(content)

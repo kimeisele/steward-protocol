@@ -1,0 +1,85 @@
+# OPUS Configuration - AI Meister-Kasten
+#
+# All configuration for the OPUS renderer lives here.
+# The renderer reads these values - NO hardcoding in code.
+#
+# FRACTAL: This pattern can be used for any renderer that needs
+# complex configuration beyond what interface.yaml provides.
+
+# =============================================================================
+# VISNU KERNEL EXTRACTION GOALS
+# =============================================================================
+# Named after Vishnu's 1008 names - the target for kernel_impl.py
+visnu:
+  target_loc: 1008      # Ideal target (Vishnu's 1008 names)
+  acceptable_loc: 1080  # Acceptable upper bound
+  start_loc: 1705       # Starting point (for progress calculation)
+
+# =============================================================================
+# FILES TO TRACK
+# =============================================================================
+# These files are monitored for LOC and displayed in the dashboard
+tracked_files:
+  primary:
+    path: vibe_core/kernel_impl.py
+    label: "Kernel"
+
+  extracted:
+    - path: vibe_core/kernel_ops.py
+      label: "KernelOps"
+    - path: vibe_core/scheduling/in_memory.py
+      label: "Scheduler"
+    - path: vibe_core/manifest_registry.py
+      label: "ManifestRegistry"
+
+# =============================================================================
+# BIDIRECTIONAL SECTIONS
+# =============================================================================
+# These sections are preserved when re-rendering (user/AI can edit)
+bidirectional_sections:
+  - marker: "## Blockers"
+    end_marker: "## Next Actions"
+    default_content: "_No blockers identified._"
+
+  - marker: "## Next Actions"
+    end_marker: "## Extraction Candidates"
+    default_content: "1. [ ] Define next actions"
+
+# =============================================================================
+# QUICK COMMANDS
+# =============================================================================
+# Commands shown in the dashboard for easy copy-paste
+quick_commands:
+  - command: "wc -l vibe_core/kernel_impl.py"
+    description: "Check current LOC"
+  - command: "python -m pytest tests/ -x -q"
+    description: "Quick test run"
+  - command: "ruff check vibe_core/"
+    description: "Lint check"
+  - command: "git diff --stat HEAD~3"
+    description: "Recent changes"
+
+# =============================================================================
+# DISPLAY OPTIONS
+# =============================================================================
+display:
+  show_progress_bar: true
+  show_extraction_candidates: true
+  max_candidates: 8
+  show_recent_commits: 5
+  show_test_status: true
+
+# =============================================================================
+# EXTRACTION CANDIDATE DETECTION
+# =============================================================================
+# Thresholds for auto-detecting extractable functions
+extraction_detection:
+  min_loc_for_candidate: 15      # Minimum LOC to consider
+  min_loc_for_recommendation: 30  # LOC to recommend extraction
+  complexity_keywords:
+    - "if "
+    - "for "
+    - "while "
+    - "try:"
+    - "except"
+    - "with "

@@ -120,21 +120,68 @@ class InterfacePlugin(KernelPlugin):
         return (now - last) >= interval
 
     def _render_scheduled(self) -> None:
-        """Render views that are due based on their intervals."""
+        """
+        Render views that are due based on their intervals.
+
+        UNIFIED UI ARCHITECTURE:
+        - InterfacePlugin is the KING (single writer)
+        - Renderers are SLAVES (content generators only)
+        - All writes go through InterfacePlugin with UNIFIED headers
+        """
         now = time.time()
         for name, renderer in self._renderers.items():
             if self._should_render(name):
                 try:
-                    renderer.render()
+                    # NEW: Try unified approach first (generate_content)
+                    content = renderer.generate_content()
+                    if content is not None:
+                        # KING writes with unified header
+                        self._write_unified(renderer, content)
+                    else:
+                        # LEGACY: Fall back to direct render()
+                        renderer.render()
                     self._last_render[name] = now
                 except Exception as e:
                     logger.error(f"Error rendering view '{name}': {e}")
+
+    def _write_unified(self, renderer: BaseRenderer, content: str) -> None:
+        """
+        Write content through I/O service with UNIFIED header.
+
+        This is the ONLY place where UI files get written.
+        All renderers produce content, InterfacePlugin writes.
+        """
+
+        # Get output config
+        output_file = renderer.output_file
+        doc_type = renderer.doc_type
+        writer_id = f"RENDERER_{renderer.name.upper()}"
+
+        # Write through kernel I/O (header added by io_service)
+        if self._kernel and hasattr(self._kernel, "io"):
+            result = self._kernel.io.write_document(
+                name=output_file,
+                content=content,
+                doc_type=doc_type,
+                writer_id=writer_id,
+                add_header=True,
+            )
+            if not result.success:
+                logger.error(f"Failed to write {output_file}: {result.error}")
+        else:
+            logger.warning(f"Cannot write {output_file}: kernel.io not available")
 
     def render_all(self) -> None:
         """Force render all views (ignores intervals)."""
         for name, renderer in self._renderers.items():
             try:
-                renderer.render()
+                # Try unified approach first
+                content = renderer.generate_content()
+                if content is not None:
+                    self._write_unified(renderer, content)
+                else:
+                    # Legacy fallback
+                    renderer.render()
                 self._last_render[name] = time.time()
             except Exception as e:
                 logger.error(f"Error rendering view '{name}': {e}")

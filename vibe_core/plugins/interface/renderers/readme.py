@@ -7,12 +7,14 @@ Generates README.md from:
 - kernel.status (live status)
 
 Zero Hardcoding: All data from existing sources.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.io_service import DocumentType
 from vibe_core.loaders import TemplateLoader
@@ -42,6 +44,14 @@ class ReadmeRenderer(BaseRenderer):
     def name(self) -> str:
         return "readme"
 
+    @property
+    def output_file(self) -> str:
+        return "README.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
     def _load_project_data(self) -> None:
         """Load project metadata from pyproject.toml."""
         try:
@@ -64,14 +74,13 @@ class ReadmeRenderer(BaseRenderer):
             logger.error(f"Failed to load pyproject.toml: {e}")
             self._project_data = {}
 
-    def render(self) -> None:
-        """Render README.md from template + live data."""
+    def generate_content(self) -> Optional[str]:
+        """Generate README.md content (UNIFIED UI pattern)."""
         if not self._template_loader.template_exists("readme.md.j2"):
             logger.warning("Template readme.md.j2 not found, skipping")
-            return
+            return None
 
         try:
-            # Gather context from existing sources
             context = {
                 "project": self._project_data,
                 "kernel_status": self.kernel.status.value if hasattr(self.kernel, "status") else "UNKNOWN",
@@ -79,22 +88,21 @@ class ReadmeRenderer(BaseRenderer):
                 "system_agents": self._get_system_agents(),
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
             }
+            return self._template_loader.render("readme.md.j2", **context)
+        except Exception as e:
+            logger.error(f"Failed to generate README content: {e}")
+            return None
 
-            # Render template
-            content = self._template_loader.render("readme.md.j2", **context)
-
-            # Write via kernel I/O
+    def render(self) -> None:
+        """Legacy render - DEPRECATED. Use generate_content()."""
+        content = self.generate_content()
+        if content:
             self.kernel.io.write_document(
                 name="README.md",
                 content=content,
                 doc_type=DocumentType.READONLY,
                 writer_id="RENDERER_README",
             )
-
-            logger.debug("README.md rendered successfully")
-
-        except Exception as e:
-            logger.error(f"Failed to render README.md: {e}")
 
     def _get_system_agents(self) -> list:
         """Get list of system agents from registry."""

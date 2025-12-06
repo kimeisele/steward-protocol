@@ -1,10 +1,12 @@
 """
 CityMap Renderer.
 Directly renders CITYMAP.md from Kernel Topology.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from vibe_core.io_service import DocumentType
 
@@ -12,37 +14,43 @@ from .base import BaseRenderer
 
 
 class CityMapRenderer(BaseRenderer):
-    """
-    Directly renders CITYMAP.md from the Kernel's Runtime State.
-    """
+    """Directly renders CITYMAP.md from the Kernel's Runtime State."""
 
     @property
     def name(self) -> str:
         return "citymap"
 
-    def render(self) -> None:
-        """Render CITYMAP.md directly from kernel state."""
-        # 1. Gather Data
+    @property
+    def output_file(self) -> str:
+        return "CITYMAP.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate CITYMAP.md content (UNIFIED UI pattern)."""
         agents = self.kernel.agent_registry
         tools = self.kernel.tool_registry.list_tools()
 
-        # Group agents by domain
         domains = defaultdict(list)
         for agent_id, agent in agents.items():
             domain = getattr(agent, "domain", "UNKNOWN")
             domains[domain].append(agent)
 
-        # 2. Generate Content
-        content = self._generate_markdown(agents, domains, tools)
+        return self._generate_markdown(agents, domains, tools)
 
-        # 3. Write to File via Kernel I/O
-        self.kernel.io.write_document(
-            name="CITYMAP.md",
-            content=content,
-            doc_type=DocumentType.READONLY,
-            writer_id="interface_plugin",
-            add_header=True,
-        )
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
+            self.kernel.io.write_document(
+                name="CITYMAP.md",
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="interface_plugin",
+                add_header=True,
+            )
 
     def _generate_markdown(self, agents: Dict[str, Any], domains: Dict[str, List[Any]], tools: List[str]) -> str:
         """Generate Markdown content."""
