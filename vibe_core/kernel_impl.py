@@ -793,64 +793,15 @@ class RealVibeKernel(VibeKernel):
                           spawn_registered_agents().
         """
 
-        # STEP 1: THE INSPECTION (Does the agent possess the Oath badge?)
-        # Check for oath attributes that OathMixin provides
-        has_oath_attribute = hasattr(agent, "oath_sworn") or hasattr(agent, "oath_event")
-
-        if not has_oath_attribute:
-            logger.critical(
-                f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' "
-                f"attempted registration WITHOUT Constitutional Oath."
-            )
-            raise PermissionError(
-                f"GOVERNANCE_GATE_DENIED: Agent '{agent.agent_id}' "
-                f"has not sworn the Constitutional Oath. "
-                f"Access to VibeOS kernel is refused."
-            )
-
-        # STEP 2: THE VERIFICATION (Is the Oath valid?)
-        # Check if agent has actually sworn the oath (oath_sworn = True)
-        oath_sworn = getattr(agent, "oath_sworn", False)
-        oath_event = getattr(agent, "oath_event", None)
-
-        if not oath_sworn:
-            logger.critical(
-                f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' "
-                f"has oath attributes but oath_sworn={oath_sworn}. "
-                f"Agent has not executed Genesis Ceremony."
-            )
-            raise PermissionError(
-                f"GOVERNANCE_GATE_DENIED: Agent '{agent.agent_id}' "
-                f"has not sworn the Constitutional Oath (oath_sworn=False). "
-                f"Kernel refuses entry."
-            )
-
-        # STEP 3: THE CRYPTOGRAPHIC VALIDATION (Is the oath genuine?)
-        # Verify the oath signature against current Constitution
-        if oath_event and OATH_ENFORCEMENT_AVAILABLE:
-            try:
-                is_valid, reason = ConstitutionalOath.verify_oath(oath_event, getattr(agent, "identity_tool", None))
-
-                if not is_valid:
-                    logger.critical(
-                        f"⛔ GOVERNANCE GATE VIOLATION: Agent '{agent.agent_id}' oath verification FAILED: {reason}"
-                    )
-                    raise PermissionError(
-                        f"GOVERNANCE_GATE_DENIED: Agent '{agent.agent_id}' "
-                        f"oath is invalid. {reason} "
-                        f"Kernel refuses entry."
-                    )
-
-                logger.info(f"✅ Governance Gate PASSED: Agent '{agent.agent_id}' oath verified ({reason})")
-
-            except PermissionError:
-                # Re-raise governance violations
-                raise
-            except Exception as e:
-                logger.error(f"❌ Governance gate verification error for '{agent.agent_id}': {e}")
+        # GOVERNANCE GATE: Let plugins decide (e.g., steward_protocol)
+        for plugin in self._plugins:
+            if not plugin.on_agent_pre_register(self, agent):
                 raise PermissionError(
-                    f"GOVERNANCE_GATE_ERROR: Agent '{agent.agent_id}' oath verification failed: {str(e)}"
+                    f"PLUGIN_VETO: Agent '{agent.agent_id}' registration denied by {plugin.plugin_id}"
                 )
+
+        # Retrieve oath_event for lineage recording (if present)
+        oath_event = getattr(agent, "oath_event", None)
 
         # STEP 4: THE REGISTRATION (Gate Opens - Agent Enters)
         self._agent_registry[agent.agent_id] = agent

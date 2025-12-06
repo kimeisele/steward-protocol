@@ -86,3 +86,4 @@ behavior:
   require_tests: true         # Must run tests before claiming done
   require_commit: true        # Must commit changes
   require_handoff: true       # Must update .session_handoff.json
+  enforce_oath: true          # Enforce Constitutional Oath for all agents
