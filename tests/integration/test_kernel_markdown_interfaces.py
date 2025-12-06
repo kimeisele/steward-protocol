@@ -32,7 +32,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from vibe_core.config import load_config
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestKernel
 
 
 def get_interface_plugin(kernel):
@@ -92,7 +92,7 @@ def temp_workdir():
 @pytest.fixture
 def kernel():
     """Create a real kernel instance (no boot, just kernel)."""
-    return RealVibeKernel()
+    return TestKernel.minimal()
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def booted_kernel():
         config = None
 
     # Manual boot to avoid BootOrchestrator complexity/phases
-    kernel = RealVibeKernel(config=config)
+    kernel = TestKernel.with_governance(config=config)
 
     # Load plugins (configured by @pytest.mark.vibe_plugins)
     from vibe_core.plugin_loader import PluginLoader

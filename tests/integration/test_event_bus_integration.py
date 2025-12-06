@@ -22,7 +22,7 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
 from vibe_core.steward import ConstitutionalOath, OathMixin
@@ -62,7 +62,7 @@ class MockAgent(VibeAgent, OathMixin):
 
 def test_agent_can_subscribe_to_events():
     """Test that agents can subscribe to events via system interface."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agent
     agent = MockAgent("test_agent_1")
@@ -77,7 +77,7 @@ def test_agent_can_subscribe_to_events():
 
 def test_agent_can_broadcast_events():
     """Test that agents can broadcast events."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agent
     agent = MockAgent("test_agent_2")
@@ -98,7 +98,7 @@ def test_agent_can_broadcast_events():
 
 def test_subscriber_receives_event():
     """Test that subscribed agents receive broadcast events."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register two agents
     broadcaster = MockAgent("broadcaster")
@@ -125,7 +125,7 @@ def test_subscriber_receives_event():
 
 def test_multiple_subscribers_receive_event():
     """Test that multiple subscribers all receive the same event."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register broadcaster and 3 subscribers
     broadcaster = MockAgent("broadcaster")
@@ -162,7 +162,7 @@ def test_multiple_subscribers_receive_event():
 
 def test_global_subscriber_receives_all_events():
     """Test that global subscribers (no event_type filter) receive all events."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agents
     broadcaster = MockAgent("broadcaster")
@@ -194,7 +194,7 @@ def test_global_subscriber_receives_all_events():
 
 def test_event_type_filtering():
     """Test that event type filtering works correctly."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agents
     broadcaster = MockAgent("broadcaster")
@@ -222,7 +222,7 @@ def test_event_type_filtering():
 
 def test_event_history_maintained():
     """Test that event history is maintained."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agent
     agent = MockAgent("agent")
@@ -247,7 +247,7 @@ def test_syscall_broadcast_event():
     """Test BROADCAST_EVENT syscall end-to-end."""
     from vibe_core.semantic_syscalls import SemanticSyscallHandler, SyscallRequest, SyscallType
 
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     handler = SemanticSyscallHandler(kernel)
 
     # Register subscriber
@@ -285,7 +285,7 @@ def test_syscall_broadcast_event():
 
 def test_subscriber_error_doesnt_crash_others():
     """Test that error in one subscriber doesn't affect others (fault tolerance)."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register broadcaster
     broadcaster = MockAgent("broadcaster")
@@ -316,7 +316,7 @@ def test_subscriber_error_doesnt_crash_others():
 
 def test_unsubscribe_works():
     """Test that unsubscribe removes subscription."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agents
     broadcaster = MockAgent("broadcaster")
@@ -348,7 +348,7 @@ def test_unsubscribe_works():
 
 def test_event_bus_status():
     """Test that event bus status is accurate."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Register agents
     agent1 = MockAgent("agent1")

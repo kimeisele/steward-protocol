@@ -95,26 +95,20 @@ def test_semantic_compiler():
             print(f"   params.capabilities: {syscall.params.get('capabilities')}")
 
             # Validate
-            type_match = syscall.syscall_type == tc["expected_syscall"]
-            role_match = syscall.params.get("role") == tc["expected_role"]
-
-            if type_match and role_match:
+            assert syscall.syscall_type == tc["expected_syscall"], (
+                f"Expected {tc['expected_syscall']} but got {syscall.syscall_type}"
+            )
+            if "expected_role" in tc:
+                assert syscall.params.get("role") == tc["expected_role"], f"Expected role {tc['expected_role']}"
                 print(f"   ✅ PASS: Compiled to {tc['expected_syscall'].value} with role={tc['expected_role']}")
-                results.append(True)
-            elif type_match:
-                print(
-                    f"   ⚠️  PARTIAL: Correct syscall, but role={syscall.params.get('role')} (expected {tc['expected_role']})"
-                )
-                results.append(True)  # Partial pass
             else:
-                print(f"   ❌ FAIL: Expected {tc['expected_syscall'].value}")
-                results.append(False)
-        else:
-            print("   ❌ FAIL: Did not compile to syscall")
-            results.append(False)
+                print(f"   ✅ PASS: Compiled to {tc['expected_syscall'].value}")
 
-    print(f"\n📊 Semantic Compiler: {sum(results)}/{len(results)} passed")
-    return all(results)
+        else:
+            assert result.is_syscall, "Did not compile to syscall"
+
+    print("\n📊 Semantic Compiler: PASSED")
+    return True
 
 
 def test_syscall_executor():
@@ -123,7 +117,7 @@ def test_syscall_executor():
     print("TEST 2: SYSCALL EXECUTOR (Symbolic → Kernel)")
     print("=" * 70)
 
-    from vibe_core.boot_orchestrator import BootOrchestrator
+    from vibe_core.plugins.test_orchestration import TestKernel
     from vibe_core.semantic_syscalls import (
         SemanticSyscallExecutor,
         SyscallRequest,
@@ -132,8 +126,8 @@ def test_syscall_executor():
 
     # Boot minimal kernel
     print("\n🚀 Booting kernel...")
-    orchestrator = BootOrchestrator(ledger_path=":memory:")
-    kernel = orchestrator.boot()
+    kernel = TestKernel.with_governance()
+    kernel.boot()
 
     print(f"✅ Kernel booted: {len(kernel.agent_registry)} agents registered")
 
@@ -161,32 +155,27 @@ def test_syscall_executor():
     if result.error:
         print(f"   error: {result.error}")
 
-    if result.success:
-        agent_id = result.output.get("agent_id")
-        print(f"\n   ✅ Agent spawned: {agent_id}")
+    assert result.success, f"SPAWN_COGNITION failed: {result.error}"
 
-        # Verify agent is in registry
-        if agent_id in kernel.agent_registry:
-            print("   ✅ Agent is in kernel registry")
+    agent_id = result.output.get("agent_id")
+    print(f"\n   ✅ Agent spawned: {agent_id}")
 
-            # Check capabilities
-            caps = kernel._agent_capabilities.get(agent_id, frozenset())
-            print(f"   ✅ Capabilities locked: {list(caps)}")
+    # Verify agent is in registry
+    assert agent_id in kernel.agent_registry, "Agent NOT in kernel registry"
+    print("   ✅ Agent is in kernel registry")
 
-            # Check bank account
-            try:
-                balance = kernel.get_bank().get_balance(agent_id)
-                print(f"   ✅ Credits allocated: {balance}")
-            except Exception as e:
-                print(f"   ⚠️  Bank check failed: {e}")
+    # Check capabilities
+    caps = kernel._agent_capabilities.get(agent_id, frozenset())
+    print(f"   ✅ Capabilities locked: {list(caps)}")
 
-            return True
-        else:
-            print("   ❌ Agent NOT in registry")
-            return False
-    else:
-        print(f"   ❌ SPAWN_COGNITION failed: {result.error}")
-        return False
+    # Check bank account
+    try:
+        balance = kernel.get_bank().get_balance(agent_id)
+        print(f"   ✅ Credits allocated: {balance}")
+    except Exception as e:
+        print(f"   ⚠️  Bank check failed: {e}")
+
+    return True
 
 
 def test_circuit_executor():
@@ -195,13 +184,13 @@ def test_circuit_executor():
     print("TEST 3: COGNITIVE CIRCUIT EXECUTOR (End-to-End)")
     print("=" * 70)
 
-    from vibe_core.boot_orchestrator import BootOrchestrator
     from vibe_core.circuit_executor import CognitiveCircuitExecutor
+    from vibe_core.plugins.test_orchestration import TestKernel
 
     # Boot kernel
     print("\n🚀 Booting kernel...")
-    orchestrator = BootOrchestrator(ledger_path=":memory:")
-    kernel = orchestrator.boot()
+    kernel = TestKernel.with_governance()
+    kernel.boot()
 
     initial_agents = len(kernel.agent_registry)
     print(f"✅ Kernel booted: {initial_agents} agents registered")
@@ -226,18 +215,16 @@ def test_circuit_executor():
     if result.error:
         print(f"   error: {result.error}")
 
-    if result.success:
-        agent_id = result.output.get("agent_id")
-        final_agents = len(kernel.agent_registry)
+    assert result.success, "Circuit execution failed"
 
-        print(f"\n   ✅ Agent birthed: {agent_id}")
-        print(f"   ✅ Registry: {initial_agents} → {final_agents} agents")
-        print(f"   ✅ State machine completed: {result.final_state}")
+    agent_id = result.output.get("agent_id")
+    final_agents = len(kernel.agent_registry)
 
-        return True
-    else:
-        print("\n   ❌ Circuit execution failed")
-        return False
+    print(f"\n   ✅ Agent birthed: {agent_id}")
+    print(f"   ✅ Registry: {initial_agents} → {final_agents} agents")
+    print(f"   ✅ State machine completed: {result.final_state}")
+
+    return True
 
 
 def test_full_genesis_flow():
@@ -246,13 +233,13 @@ def test_full_genesis_flow():
     print("TEST 4: FULL GENESIS FLOW (Intent → Agent)")
     print("=" * 70)
 
-    from vibe_core.boot_orchestrator import BootOrchestrator
     from vibe_core.circuit_executor import CognitiveCircuitExecutor
+    from vibe_core.plugins.test_orchestration import TestKernel
 
     # Boot kernel
     print("\n🚀 Booting kernel for Genesis Flow...")
-    orchestrator = BootOrchestrator(ledger_path=":memory:")
-    kernel = orchestrator.boot()
+    kernel = TestKernel.with_governance()
+    kernel.boot()
 
     initial_agents = list(kernel.agent_registry.keys())
     print(f"✅ Initial agents: {len(initial_agents)}")
@@ -303,7 +290,8 @@ def test_full_genesis_flow():
     print(f"   Final agents: {len(final_agents)}")
     print(f"   New agents born: {new_agents}")
 
-    return all(r is True for r in results if r is not None)
+    assert all(r is True for r in results if r is not None), "Some genesis flows failed"
+    return True
 
 
 def main():
