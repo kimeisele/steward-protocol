@@ -44,16 +44,45 @@ def _add_builtin_commands(subparsers: argparse._SubParsersAction) -> None:
     )
 
 
+def _get_default_db_path() -> str:
+    """Get the default database path for the system."""
+    from pathlib import Path
+
+    # Check common locations in order of priority
+    candidates = [
+        Path("data/vibe_ledger.db"),  # Project default
+        Path(".vibe/state/vibe_agency.db"),  # Agent state
+        Path("/tmp/vibe_os/kernel/lineage.db"),  # Lineage DB
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+
+    # Fallback to default (may not exist)
+    return "data/vibe_ledger.db"
+
+
 def _execute_builtin(command: str, args: argparse.Namespace) -> dict:
-    """Execute a built-in command (observe, status)."""
+    """
+    Execute a built-in command (observe, status).
+
+    IMPORTANT: Uses persistent DB, NOT ephemeral kernel.
+    This ensures we see REAL system state, not a ghost kernel.
+    """
     from datetime import datetime
+    from pathlib import Path
 
     from vibe_core.kernel_impl import RealVibeKernel
 
     from .monitor_loader import MonitorLoader
 
-    # Boot ephemeral kernel for introspection
-    kernel = RealVibeKernel(":memory:")
+    # Use persistent DB path - NOT :memory:!
+    db_path = _get_default_db_path()
+    db_exists = Path(db_path).exists()
+
+    # Boot kernel with real DB (read-only introspection)
+    kernel = RealVibeKernel(db_path)
     kernel.boot()
 
     try:
@@ -67,6 +96,8 @@ def _execute_builtin(command: str, args: argparse.Namespace) -> dict:
                 return {
                     "monitors": monitors,
                     "total": len(monitors),
+                    "db_path": db_path,
+                    "db_exists": db_exists,
                     "hint": "Use 'steward observe <monitor_id>' to view a specific monitor",
                 }
 
@@ -77,15 +108,30 @@ def _execute_builtin(command: str, args: argparse.Namespace) -> dict:
             return snapshot.to_dict()
 
         elif command == "status":
-            # Aggregate status from all monitors
+            # Aggregate status from all monitors + real kernel state
             status = {
                 "timestamp": datetime.now().isoformat(),
+                "db_path": db_path,
+                "db_exists": db_exists,
                 "kernel": {
                     "agents": len(kernel.agent_registry) if hasattr(kernel, "agent_registry") else 0,
                     "plugins": len(kernel.plugin_manager.plugins) if hasattr(kernel, "plugin_manager") else 0,
                 },
                 "monitors": {},
             }
+
+            # Add ledger stats if available
+            if hasattr(kernel, "ledger") and kernel.ledger:
+                try:
+                    # Try to get ledger stats
+                    ledger = kernel.ledger
+                    if hasattr(ledger, "get_all_events"):
+                        events = ledger.get_all_events()
+                        status["ledger"] = {
+                            "total_events": len(events) if events else 0,
+                        }
+                except Exception:
+                    pass
 
             snapshots = MonitorLoader.get_all_snapshots(kernel)
             for monitor_id, snapshot in snapshots.items():
