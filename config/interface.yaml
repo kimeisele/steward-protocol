@@ -123,6 +123,14 @@ renderers:
     doc_type: readonly
     interval: 60
 
+  # OPUS - Architecture Operations Dashboard (AI workspace)
+  opus:
+    enabled: true
+    output: OPUS.md
+    doc_type: bidirectional
+    interval: 30  # AI can update progress
+    data_source: opus.manifest  # reads from docs/architecture/OPUS/manifest.json
+
 # =============================================================================
 # CUSTOM RENDERERS (user/agent defined)
 # =============================================================================

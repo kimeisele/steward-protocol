@@ -14,7 +14,6 @@ This is NOT a mock. This is real execution context for cartridges.
 from __future__ import annotations
 
 import logging
-from collections import deque
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
@@ -92,78 +91,25 @@ except ImportError as e:
 logger = logging.getLogger("VIBE_KERNEL")
 
 
-class InMemoryScheduler(VibeScheduler):
-    """FIFO Task Scheduler - Pure queue management.
-
-    This is a PURE scheduler - no cosmic logic, no governance.
-    Task filtering is handled by plugins via on_task_submit hook.
-
-    The scheduler only knows how to:
-    1. Accept tasks into the queue
-    2. Return the next task (FIFO)
-    3. Track completion status
-    """
-
-    def __init__(self):
-        self.queue: deque = deque()
-        self.executing: Optional[Task] = None
-        self.completed: Dict[str, Task] = {}
-
-    def submit_task(self, task: Task) -> str:
-        """Submit task to queue, return task_id.
-
-        NOTE: Task validation (Sarga cycle, governance, etc.) is handled
-        by plugins via on_task_submit hook BEFORE this method is called.
-        This method is a pure queue operation.
-        """
-        self.queue.append(task)
-        logger.info(f"📨 Task queued: {task.task_id} for {task.agent_id}")
-        return task.task_id
-
-    def next_task(self) -> Optional[Task]:
-        """Pop next task from queue"""
-        if self.queue:
-            task = self.queue.popleft()
-            self.executing = task
-            return task
-        return None
-
-    def get_queue_status(self) -> Dict[str, Any]:
-        """Get queue statistics"""
-        return {
-            "queue_length": len(self.queue),
-            "executing": self.executing.task_id if self.executing else None,
-            "completed": len(self.completed),
-        }
-
-    def requeue_task(self, task: Task) -> None:
-        """Re-queue a deferred task (bypasses Sarga validation)."""
-        self.queue.append(task)
-        logger.debug(f"📨 Task re-queued: {task.task_id} (deferred)")
-
-
-class InMemoryManifestRegistry(ManifestRegistry):
-    """Agent Manifest Registry - Identity declarations"""
-
-    def __init__(self):
-        self.manifests: Dict[str, AgentManifest] = {}
-
-    def register(self, manifest: AgentManifest) -> None:
-        """Register an agent manifest"""
-        self.manifests[manifest.agent_id] = manifest
-        logger.info(f"📜 Manifest registered: {manifest.agent_id} ({manifest.name})")
-
-    def lookup(self, agent_id: str) -> Optional[AgentManifest]:
-        """Look up manifest by agent_id"""
-        return self.manifests.get(agent_id)
-
-    def find_by_capability(self, capability: str) -> List[AgentManifest]:
-        """Find agents with a specific capability"""
-        return [m for m in self.manifests.values() if capability in m.capabilities]
-
-    def list_all(self) -> List[AgentManifest]:
-        """List all registered manifests"""
-        return list(self.manifests.values())
+# Helper classes: Extracted to reduce kernel size
+# Kernel Operations: Extracted isolated methods
+from .kernel_ops import (
+    check_system_health as _check_system_health_impl,
+)
+from .kernel_ops import (
+    execute_playbook as _execute_playbook_impl,
+)
+from .kernel_ops import (
+    grant_repo_access as _grant_repo_access_impl,
+)
+from .kernel_ops import (
+    pulse as _pulse_impl,
+)
+from .kernel_ops import (
+    sync_resource_quotas as _sync_resource_quotas_impl,
+)
+from .manifest_registry import InMemoryManifestRegistry
+from .scheduling import InMemoryScheduler
 
 
 class RealVibeKernel(VibeKernel):
@@ -1028,108 +974,16 @@ class RealVibeKernel(VibeKernel):
                 # Narasimha handles restart in check_health
 
     def _sync_resource_quotas(self) -> None:
-        """
-        Phase 3: Sync resource quotas with CivicBank credits.
-
-        This makes credits REAL by updating CPU/RAM limits based on balance.
-        Runs every 60 seconds to avoid excessive bank queries.
-        """
-        import time
-
-        current_time = time.time()
-        if current_time - self._last_quota_sync < 60:  # Sync every 60 seconds
-            return
-
-        try:
-            # Get CivicBank (lazy loaded)
-            bank = self.get_bank()
-
-            # Update quotas for all agents
-            for agent_id in self._agent_registry.keys():
-                try:
-                    # Query credit balance
-                    balance = bank.get_balance(agent_id)
-
-                    # Update quota
-                    self.resource_manager.set_quota(agent_id, credits=balance)
-
-                    # Enforce on running process
-                    proc_info = self.process_manager.processes.get(agent_id)
-                    if proc_info and proc_info.process.is_alive():
-                        self.resource_manager.enforce_quota(agent_id, proc_info.process)
-
-                except Exception as e:
-                    logger.debug(f"⚠️  Failed to sync quota for {agent_id}: {e}")
-
-            self._last_quota_sync = current_time
-            logger.debug("💰 Resource quotas synced with CivicBank")
-
-        except Exception as e:
-            logger.debug(f"⚠️  Quota sync failed: {e}")
+        """Phase 3: Sync resource quotas - Delegates to kernel_ops."""
+        _sync_resource_quotas_impl(self)
 
     def _grant_repo_access(self, agent_id: str) -> None:
-        """
-        Phase 4b: Grant controlled repo access via symlink.
-
-        Scribe and Archivist need to read the main repo.
-        We create a symlink in their sandbox pointing to the repo.
-
-        Security: This is a controlled escape. Only specific agents get it.
-        """
-        try:
-            import os
-
-            from vibe_core.vfs import VirtualFileSystem
-
-            vfs = VirtualFileSystem(agent_id)
-            repo_path = os.getcwd()  # /Users/ss/Downloads/steward-protocol
-
-            # Create symlink: sandbox/repo -> actual repo
-            vfs.create_symlink(repo_path, "repo")
-
-            logger.info(f"🔗 {agent_id} granted repo access: {vfs.get_sandbox_path()}/repo -> {repo_path}")
-
-        except Exception as e:
-            logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
+        """Phase 4b: Grant repo access - Delegates to kernel_ops."""
+        _grant_repo_access_impl(self, agent_id)
 
     def _check_system_health(self) -> None:
-        """
-        🛡️ IMMUNE SYSTEM WATCHDOG
-
-        Called after every task execution.
-        If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
-        """
-        if not AUDITOR_AVAILABLE or not self._auditor:
-            return
-
-        try:
-            # Get current ledger events
-            events = self._ledger.get_all_events()
-
-            # Run verification (events-only for now, VOID checks need external context)
-            report = self._auditor.verify_ledger(events)
-
-            # If there's a CRITICAL violation, halt the kernel
-            if not report.passed:
-                for violation in report.violations:
-                    if violation.severity == InvariantSeverity.CRITICAL.value:
-                        # Don't halt on VOID violations in normal operation (they need context)
-                        # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
-                        if "VOID" not in violation.invariant_name:
-                            logger.critical(f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}")
-                            self.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
-                            return
-                        else:
-                            logger.debug("⚠️  VOID check skipped (requires external context)")
-
-            # Log health check (non-critical)
-            if report.violations:
-                logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected")
-            else:
-                logger.debug("✅ System health check passed")
-
-        except Exception as e:
-            logger.error(f"❌ Health check failed: {e}")
+        """🛡️ IMMUNE SYSTEM WATCHDOG - Delegates to kernel_ops."""
+        _check_system_health_impl(self)
 
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
@@ -1349,59 +1203,8 @@ class RealVibeKernel(VibeKernel):
         input_data: Dict[str, Any],
         user_input: str = "",
     ) -> Dict[str, Any]:
-        """
-        Execute a playbook through the DeterministicExecutor.
-
-        This method enables nested playbook execution, allowing playbooks to call
-        other playbooks via the CALL_PLAYBOOK action type.
-
-        Args:
-            playbook_path: Path to the playbook YAML file (relative to knowledge/playbooks/)
-            input_data: Input parameters for the playbook
-            user_input: Optional user input string (defaults to empty string)
-
-        Returns:
-            Dictionary with execution results
-
-        Example:
-            result = await kernel.execute_playbook(
-                playbook_path="vibe_core/playbook/circuits/wiring_audit.yaml",
-                input_data={"scope": "full"},
-                user_input="Run wiring audit"
-            )
-        """
-        # Import here to avoid circular dependency
-        from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
-
-        # Get or create executor instance
-        if not hasattr(self, "_playbook_executor"):
-            self._playbook_executor = DeterministicExecutor()
-
-        # Extract playbook_id from path (e.g., "wiring_audit" from "circuits/wiring_audit.yaml")
-        import os
-
-        playbook_id = os.path.splitext(os.path.basename(playbook_path))[0]
-
-        # Create a minimal intent vector (playbooks don't always need full intent analysis)
-        class MinimalIntentVector:
-            def __init__(self, user_input: str):
-                self.raw_input = user_input
-                self.concepts = set()
-                self.target_agent = None
-
-        intent_vector = MinimalIntentVector(user_input or "Nested playbook execution")
-
-        # Execute the playbook
-        logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
-        result = await self._playbook_executor.execute(
-            playbook_id=playbook_id,
-            user_input=user_input or str(input_data),
-            intent_vector=intent_vector,
-            kernel=self,
-            emit_event=None,
-        )
-
-        return result
+        """Execute a playbook - Delegates to kernel_ops."""
+        return await _execute_playbook_impl(self, playbook_path, input_data, user_input)
 
     def get_event_history(self, limit: int = 100, event_type: Optional[str] = None):
         """
@@ -1493,50 +1296,8 @@ class RealVibeKernel(VibeKernel):
         return self._ledger.get_all_events()
 
     def _pulse(self) -> None:
-        """
-        💓 HEARTBEAT: Generate real-time snapshot of kernel state.
-
-        Event Sourcing → State Projection:
-        - Collects current state from all agents
-        - Writes vibe_snapshot.json (immutable state view)
-        - Renders OPERATIONS.md (human-readable dashboard)
-        """
-        try:
-            snapshot = {
-                "timestamp": datetime.utcnow().isoformat(),
-                "kernel_status": self._status.value,
-                "agents": {},
-                "scheduler": self._scheduler.get_queue_status(),
-                "ledger_stats": {
-                    "total_events": len(self._ledger.get_all_events()),
-                },
-            }
-
-            # Collect agent status
-            for agent_id, agent in self._agent_registry.items():
-                try:
-                    agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
-                    # Mark paused agents (via governance plugin)
-                    if self.governance and hasattr(self.governance, "is_agent_paused"):
-                        if self.governance.is_agent_paused(agent_id):
-                            agent_status["status"] = "PAUSED"
-                    snapshot["agents"][agent_id] = agent_status
-                except Exception as e:
-                    logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
-                    snapshot["agents"][agent_id] = {"error": str(e)}
-
-            # Write snapshot through I/O Service (atomic + audited)
-            result = self.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
-            if result.success:
-                logger.info("💓 Pulse written: vibe_snapshot.json (via I/O Service)")
-            else:
-                logger.error(f"❌ Pulse snapshot write failed: {result.error}")
-
-            # Render ALL UI files via Manager
-            # self._ui_manager.render_all(snapshot)  # DEPRECATED: Handled by Plugins
-
-        except Exception as e:
-            logger.error(f"❌ Pulse failed: {e}")
+        """💓 HEARTBEAT - Delegates to kernel_ops."""
+        _pulse_impl(self)
 
     # ========================================================================
     # ENVOY.md: Terminal Interface (User Chat + Task Dispatch)

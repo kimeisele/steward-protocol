@@ -1,0 +1,242 @@
+"""
+KernelOps - Isolated Kernel Operations
+
+Extracted from kernel_impl.py to reduce kernel size.
+Contains self-contained operations that don't need tight kernel coupling:
+- Health monitoring (Auditor/Immune System)
+- Resource quota synchronization
+- Repo access granting
+- Pulse (heartbeat/snapshot)
+"""
+
+import logging
+from datetime import datetime
+from typing import TYPE_CHECKING, Any, Dict
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
+
+logger = logging.getLogger("KERNEL_OPS")
+
+
+def check_system_health(kernel: "RealVibeKernel") -> None:
+    """
+    🛡️ IMMUNE SYSTEM WATCHDOG
+
+    Called after every task execution.
+    If Auditor detects CRITICAL_VIOLATION -> Kernel shuts down.
+    """
+    # Import here to avoid circular imports
+    try:
+        from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
+            InvariantSeverity,
+        )
+
+        AUDITOR_AVAILABLE = True
+    except ImportError:
+        AUDITOR_AVAILABLE = False
+
+    if not AUDITOR_AVAILABLE or not kernel._auditor:
+        return
+
+    try:
+        # Get current ledger events
+        events = kernel._ledger.get_all_events()
+
+        # Run verification (events-only for now, VOID checks need external context)
+        report = kernel._auditor.verify_ledger(events)
+
+        # If there's a CRITICAL violation, halt the kernel
+        if not report.passed:
+            for violation in report.violations:
+                if violation.severity == InvariantSeverity.CRITICAL.value:
+                    # Don't halt on VOID violations in normal operation (they need context)
+                    # Only halt on event-based violations (BROADCAST_LICENSE, DUPLICATES, etc)
+                    if "VOID" not in violation.invariant_name:
+                        logger.critical(f"🛡️  IMMUNE SYSTEM ALERT: {violation.invariant_name} - {violation.message}")
+                        kernel.shutdown(reason=f"Immune system reaction: {violation.invariant_name}")
+                        return
+                    else:
+                        logger.debug("⚠️  VOID check skipped (requires external context)")
+
+        # Log health check (non-critical)
+        if report.violations:
+            logger.debug(f"⚠️  Auditor info: {len(report.violations)} issue(s) detected")
+        else:
+            logger.debug("✅ System health check passed")
+
+    except Exception as e:
+        logger.error(f"❌ Health check failed: {e}")
+
+
+def sync_resource_quotas(kernel: "RealVibeKernel") -> None:
+    """
+    Phase 3: Sync resource quotas with CivicBank credits.
+
+    This makes credits REAL by updating CPU/RAM limits based on balance.
+    Runs every 60 seconds to avoid excessive bank queries.
+    """
+    import time
+
+    current_time = time.time()
+    if current_time - kernel._last_quota_sync < 60:  # Sync every 60 seconds
+        return
+
+    try:
+        # Get CivicBank (lazy loaded)
+        bank = kernel.get_bank()
+
+        # Update quotas for all agents
+        for agent_id in kernel._agent_registry.keys():
+            try:
+                # Query credit balance
+                balance = bank.get_balance(agent_id)
+
+                # Update quota
+                kernel.resource_manager.set_quota(agent_id, credits=balance)
+
+                # Enforce on running process
+                proc_info = kernel.process_manager.processes.get(agent_id)
+                if proc_info and proc_info.process.is_alive():
+                    kernel.resource_manager.enforce_quota(agent_id, proc_info.process)
+
+            except Exception as e:
+                logger.debug(f"⚠️  Failed to sync quota for {agent_id}: {e}")
+
+        kernel._last_quota_sync = current_time
+        logger.debug("💰 Resource quotas synced with CivicBank")
+
+    except Exception as e:
+        logger.debug(f"⚠️  Quota sync failed: {e}")
+
+
+def grant_repo_access(kernel: "RealVibeKernel", agent_id: str) -> None:
+    """
+    Phase 4b: Grant controlled repo access via symlink.
+
+    Scribe and Archivist need to read the main repo.
+    We create a symlink in their sandbox pointing to the repo.
+
+    Security: This is a controlled escape. Only specific agents get it.
+    """
+    try:
+        import os
+
+        from vibe_core.vfs import VirtualFileSystem
+
+        vfs = VirtualFileSystem(agent_id)
+        repo_path = os.getcwd()  # /Users/ss/Downloads/steward-protocol
+
+        # Create symlink: sandbox/repo -> actual repo
+        vfs.create_symlink(repo_path, "repo")
+
+        logger.info(f"🔗 {agent_id} granted repo access: {vfs.get_sandbox_path()}/repo -> {repo_path}")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to grant repo access to {agent_id}: {e}")
+
+
+def pulse(kernel: "RealVibeKernel") -> None:
+    """
+    💓 HEARTBEAT: Generate real-time snapshot of kernel state.
+
+    Event Sourcing → State Projection:
+    - Collects current state from all agents
+    - Writes vibe_snapshot.json (immutable state view)
+    - Renders OPERATIONS.md (human-readable dashboard)
+    """
+    try:
+        snapshot = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "kernel_status": kernel._status.value,
+            "agents": {},
+            "scheduler": kernel._scheduler.get_queue_status(),
+            "ledger_stats": {
+                "total_events": len(kernel._ledger.get_all_events()),
+            },
+        }
+
+        # Collect agent status
+        for agent_id, agent in kernel._agent_registry.items():
+            try:
+                agent_status = agent.report_status() if hasattr(agent, "report_status") else {}
+                # Mark paused agents (via governance plugin)
+                if kernel.governance and hasattr(kernel.governance, "is_agent_paused"):
+                    if kernel.governance.is_agent_paused(agent_id):
+                        agent_status["status"] = "PAUSED"
+                snapshot["agents"][agent_id] = agent_status
+            except Exception as e:
+                logger.warning(f"⚠️  Could not get status from {agent_id}: {e}")
+                snapshot["agents"][agent_id] = {"error": str(e)}
+
+        # Write snapshot through I/O Service (atomic + audited)
+        result = kernel.io.write_snapshot("vibe_snapshot.json", snapshot, writer_id="KERNEL")
+        if result.success:
+            logger.info("💓 Pulse written: vibe_snapshot.json (via I/O Service)")
+        else:
+            logger.error(f"❌ Pulse snapshot write failed: {result.error}")
+
+    except Exception as e:
+        logger.error(f"❌ Pulse failed: {e}")
+
+
+async def execute_playbook(
+    kernel: "RealVibeKernel",
+    playbook_path: str,
+    input_data: Dict[str, Any],
+    user_input: str = "",
+) -> Dict[str, Any]:
+    """
+    Execute a playbook through the DeterministicExecutor.
+
+    This method enables nested playbook execution, allowing playbooks to call
+    other playbooks via the CALL_PLAYBOOK action type.
+
+    Args:
+        kernel: The kernel instance
+        playbook_path: Path to the playbook YAML file (relative to knowledge/playbooks/)
+        input_data: Input parameters for the playbook
+        user_input: Optional user input string (defaults to empty string)
+
+    Returns:
+        Dictionary with execution results
+
+    Example:
+        result = await kernel.execute_playbook(
+            playbook_path="vibe_core/playbook/circuits/wiring_audit.yaml",
+            input_data={"scope": "full"},
+            user_input="Run wiring audit"
+        )
+    """
+    # Import here to avoid circular dependency
+    import os
+
+    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+
+    # Get or create executor instance
+    if not hasattr(kernel, "_playbook_executor"):
+        kernel._playbook_executor = DeterministicExecutor()
+
+    # Extract playbook_id from path (e.g., "wiring_audit" from "circuits/wiring_audit.yaml")
+    playbook_id = os.path.splitext(os.path.basename(playbook_path))[0]
+
+    # Create a minimal intent vector (playbooks don't always need full intent analysis)
+    class MinimalIntentVector:
+        def __init__(self, user_input: str):
+            self.raw_input = user_input
+            self.concepts = set()
+            self.target_agent = None
+
+    intent_vector = MinimalIntentVector(user_input or "Nested playbook execution")
+
+    # Execute the playbook
+    logger.info(f"🎯 Kernel executing playbook: {playbook_id} from {playbook_path}")
+    result = await kernel._playbook_executor.execute(
+        playbook_id=playbook_id,
+        user_input=user_input or str(input_data),
+        intent_vector=intent_vector,
+        kernel=kernel,
+        emit_event=None,
+    )
+
+    return result
