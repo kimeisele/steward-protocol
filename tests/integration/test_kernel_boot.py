@@ -18,12 +18,12 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestKernel
 
 
 def test_kernel_boots():
     """Test that kernel can be instantiated without crashing."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert kernel is not None
     # Kernel starts in STOPPED state, becomes RUNNING after boot()
     assert kernel._status.value in ["STOPPED", "INIT", "BOOTING", "RUNNING"]
@@ -31,7 +31,7 @@ def test_kernel_boots():
 
 def test_kernel_has_parampara():
     """Test that kernel has Parampara lineage chain."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
     assert kernel.lineage is not None
 
     # Verify Genesis Block exists
@@ -43,7 +43,7 @@ def test_kernel_has_parampara():
 
 def test_kernel_has_economic_substrate():
     """Test that kernel can access CivicBank (lazy-loaded)."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     # Bank should be lazy-loaded (not initialized yet)
     assert kernel._bank is None
@@ -61,7 +61,7 @@ def test_kernel_has_economic_substrate():
 
 def test_kernel_status_has_credits():
     """Test that kernel status includes total_credits from CivicBank."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     status = kernel.get_status()
     assert "total_credits" in status
@@ -71,7 +71,7 @@ def test_kernel_status_has_credits():
 
 def test_manifest_registry():
     """Test that manifest registry can list all manifests."""
-    kernel = RealVibeKernel()
+    kernel = TestKernel.minimal()
 
     manifests = kernel._manifest_registry.list_all()
     assert isinstance(manifests, list)

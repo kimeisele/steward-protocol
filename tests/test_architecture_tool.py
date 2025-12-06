@@ -242,6 +242,13 @@ def main():
         print("\n❌ CRITICAL: Tool import failed. Aborting tests.")
         sys.exit(1)
 
+    # Inject TestKernel for introspection
+    print("\n[SETUP] Injecting TestKernel fixture...")
+    from vibe_core.plugins.test_orchestration import TestKernel
+
+    tool.kernel = TestKernel.with_governance()
+    print("✅ TestKernel injected")
+
     # Test 2: Kernel introspection
     kernel_data = test_kernel_introspection(tool)
 

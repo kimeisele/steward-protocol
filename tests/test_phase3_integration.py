@@ -134,10 +134,10 @@ class TestPhase3SchedulerSargaWiring:
 
     def setup_method(self):
         """Setup for each test"""
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.plugins.test_orchestration import TestKernel
 
         # Create kernel with in-memory ledger (loads plugins automatically)
-        self.kernel = RealVibeKernel(ledger_path=":memory:")
+        self.kernel = TestKernel.with_governance()
         self.sarga = get_sarga()
         # Reset to DAY_OF_BRAHMA for clean state
         self.sarga.set_cycle(Cycle.DAY_OF_BRAHMA)
@@ -248,13 +248,13 @@ class TestPhase3IntegrationFlow:
 
     def setup_method(self):
         """Setup for each test"""
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.plugins.test_orchestration import TestKernel
 
         with tempfile.TemporaryDirectory() as tmpdir:
             self.task_manager = TaskManager(Path(tmpdir))
         self.router = PlaybookRouter()
         # Use kernel instead of raw scheduler (plugins enforce Sarga)
-        self.kernel = RealVibeKernel(ledger_path=":memory:")
+        self.kernel = TestKernel.with_governance()
         self.sarga = get_sarga()
         self.sarga.set_cycle(Cycle.DAY_OF_BRAHMA)
 

@@ -14,9 +14,10 @@
 | **PANOPTICON+ Nano Agents** | ✅ COMPLETE | CircuitLoader, 8 handlers, pre-commit, CI/CD |
 | **PlaybookLoader/Executor** | ✅ COMPLETE | Layer 3 deterministic execution |
 | **UnifiedLoader Base** | ✅ COMPLETE | VEDA-4 pattern for all loaders |
-| **Plugin Folder Migration** | ❌ PENDING | 10 plugins need folder structure |
-| **Cartridge Consolidation** | ❌ PENDING | steward/ + agent_city/ → vibe_core/cartridges/ |
-| **CLI as Plugin** | ❓ DECISION NEEDED | See analysis below |
+| **Cartridge Consolidation** | ✅ COMPLETE | 17 system + 14 city agents in vibe_core/cartridges/ |
+| **Directory Cleanup** | ✅ COMPLETE | Root: 14→11 dirs (deleted diplomatic_bag, intelligence, sandbox) |
+| **Plugin Folder Migration** | 📋 GEMINI | Task file: docs/reports/GEMINI_PLUGIN_MIGRATION.md |
+| **ONEWORD.md UI** | 🔴 NEXT OPUS | ENVOY/EPHEMERAL/SETTINGS/TASKS - needs revolution |
 
 ---
 

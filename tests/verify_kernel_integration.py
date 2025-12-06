@@ -30,11 +30,11 @@ logger = logging.getLogger("INTEGRATION_TEST")
 # ============================================================================
 
 try:
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.plugins.test_orchestration import TestKernel
 
-    logger.info("🔌 CONNECTED: Real VibeOS Kernel imported")
+    logger.info("🔌 CONNECTED: Test Fixture for Kernel imported")
 except ImportError as e:
-    logger.error(f"❌ FATAL: Could not import real kernel: {e}")
+    logger.error(f"❌ FATAL: Could not import TestKernel: {e}")
     sys.exit(1)
 
 # ============================================================================
@@ -83,8 +83,8 @@ def run_integration_test():
     # PHASE 1: BOOT THE KERNEL
     # ========================================================================
 
-    print("\n[PHASE 1] 🚀 BOOTING REAL VIBE KERNEL...")
-    kernel = RealVibeKernel(ledger_path=":memory:")
+    print("\n[PHASE 1] 🚀 BOOTING TEST KERNEL WITH GOVERNANCE...")
+    kernel = TestKernel.with_governance()
 
     # ========================================================================
     # PHASE 2: LOAD CARTRIDGES

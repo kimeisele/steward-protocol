@@ -33,9 +33,9 @@ def get_test_kernel():
     """Get or create shared test kernel."""
     global _test_kernel, _test_envoy
     if _test_kernel is None:
-        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.plugins.test_orchestration import TestKernel
 
-        _test_kernel = RealVibeKernel()
+        _test_kernel = TestKernel.with_governance()
         _test_kernel.boot()
 
         # Get envoy from registry
@@ -211,10 +211,10 @@ async def test_critical_priority():
 
     from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
     from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
-    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.plugins.test_orchestration import TestKernel
 
     # Setup
-    kernel = RealVibeKernel()
+    kernel = TestKernel.with_governance()
     kernel.boot()
 
     envoy = EnvoyCartridge()
