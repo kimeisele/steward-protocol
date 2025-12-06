@@ -354,14 +354,14 @@ renderers:
     view_type: dashboard
     interval: 60
 
-  # OPUS - Architecture Operations Dashboard (AI workspace)
+  # OPUS - Master AI Dashboard (SSOT for kernel work)
   opus:
     enabled: true
     output: OPUS.md
     view_type: workspace
     interval: 30
     sections:
-      # LIVE sections - auto-updated from kernel
+      # LIVE: Kernel status
       - id: status
         owner: live
         source: kernel.status
@@ -369,7 +369,19 @@ renderers:
         owner: live
         source: opus.metrics
         element_type: table
-      # AI sections - I (Claude) maintain these
+      # LIVE: Architecture (integrated)
+      - id: architecture
+        owner: live
+        source: arch.mermaid
+      - id: component_sizes
+        owner: live
+        source: arch.components
+        element_type: table
+      - id: plugin_status
+        owner: live
+        source: arch.plugins
+        element_type: table
+      # AI: I maintain these
       - id: current_goal
         owner: ai
       - id: phase_status
@@ -381,7 +393,7 @@ renderers:
       - id: blockers
         owner: ai
         element_type: list
-      # HUMAN sections - user approves
+      # HUMAN: User approves
       - id: next_actions
         owner: human
         element_type: list
