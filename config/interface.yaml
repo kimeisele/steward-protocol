@@ -264,11 +264,12 @@ renderers:
     interval: 30
 
   # Bidirectional (user can write)
+  # IMPORTANT: interval=0 so completions are detected immediately on every tick
   envoy:
     enabled: true
     output: ENVOY.md
     view_type: terminal
-    interval: 5
+    interval: 0
     sections:
       - id: request
         owner: human

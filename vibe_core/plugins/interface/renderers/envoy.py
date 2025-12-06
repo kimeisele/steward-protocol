@@ -66,11 +66,13 @@ class EnvoyRenderer(BaseRenderer):
         happens in on_tick_pre via render(). This method only
         generates the output content for the KING to write.
         """
-        # Process any completed tasks first
-        self._process_completed_tasks()
-
-        # Process user input from ENVOY.md
+        # Process user input from ENVOY.md FIRST
+        # This may add new tasks to pending_tasks
         self._sync_from_file()
+
+        # THEN process completed tasks
+        # This moves completed tasks from pending to history
+        self._process_completed_tasks()
 
         # Return content for KING to write
         return self._generate_content()
@@ -94,9 +96,15 @@ class EnvoyRenderer(BaseRenderer):
 
             if event_type == "task_completed":
                 result_val = event.get("result", {})
-                # Extract response from result dict or stringify
+                # Extract response from result dict - try common fields
                 if isinstance(result_val, dict):
-                    response = result_val.get("message") or result_val.get("status") or str(result_val)
+                    response = (
+                        result_val.get("message")
+                        or result_val.get("summary")
+                        or result_val.get("response")
+                        or result_val.get("status")
+                        or "Done"
+                    )
                 else:
                     response = str(result_val) if result_val else "Done"
 
