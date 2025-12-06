@@ -159,7 +159,9 @@ class DeterministicExecutor:
             self.playbooks_dir = Path(playbooks_dir)
         else:
             # Primary: vibe_core/playbook/circuits (canonical location)
-            project_root = Path(__file__).parent.parent.parent.parent
+            # Path: vibe_core/cartridges/system/envoy/deterministic_executor.py
+            # Need 5 parents to get to project root: envoy(1) -> system(2) -> cartridges(3) -> vibe_core(4) -> project(5)
+            project_root = Path(__file__).parent.parent.parent.parent.parent
             circuits_dir = project_root / "vibe_core" / "playbook" / "circuits"
             if circuits_dir.exists():
                 self.playbooks_dir = circuits_dir
