@@ -28,12 +28,12 @@ def fix_cartridge_imports(file_path: Path):
 
         if dots == ".":
             # from .module import Class -> from vibe_core.cartridges.system.agent_id.module import Class
-            absolute_path = f"steward.system_agents.{agent_id}.{module_name}"
+            absolute_path = f"vibe_core.cartridges.system.{agent_id}.{module_name}"
         elif dots == "..":
-            # This implies importing from the parent of agent_id, e.g., steward.system_agents
+            # This implies importing from the parent of agent_id, e.g., vibe_core.cartridges.system
             # from ..module import Class -> from vibe_core.cartridges.system.module import Class
             # This pattern is less common given the current structure, but good to handle.
-            absolute_path = f"steward.system_agents.{module_name}"
+            absolute_path = f"vibe_core.cartridges.system.{module_name}"
         else:
             # More than two dots, indicating further up the hierarchy
             # This is complex and might need manual review.
