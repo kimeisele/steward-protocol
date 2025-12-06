@@ -1,6 +1,8 @@
 """
 Tasks Renderer.
 Renders TASKS.md (Mission Control).
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 import logging
@@ -8,8 +10,9 @@ import re
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
+from vibe_core.io_service import DocumentType
 from vibe_core.task_management.models import TaskStatus
 from vibe_core.task_management.task_manager import TaskManager
 
@@ -42,18 +45,37 @@ class TasksRenderer(BaseRenderer):
     def name(self) -> str:
         return "tasks"
 
-    def render(self) -> None:
+    @property
+    def output_file(self) -> str:
+        return "TASKS.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.BIDIRECTIONAL
+
+    def generate_content(self) -> Optional[str]:
+        """Generate TASKS.md content (UNIFIED UI pattern)."""
         # Throttle updates
         now = time.time()
         if now - self.last_update < self.update_interval:
-            return
+            return None
 
         self.last_update = now
 
         # 1. Read TASKS.md (Sync User Input -> TaskManager)
         self._read_tasks_md()
 
-        # 2. Write TASKS.md (Sync TaskManager -> User Output)
+        # 2. Generate content
+        return self._generate_markdown()
+
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        now = time.time()
+        if now - self.last_update < self.update_interval:
+            return
+
+        self.last_update = now
+        self._read_tasks_md()
         self._write_tasks_md()
 
     def _read_tasks_md(self) -> None:
@@ -114,19 +136,16 @@ class TasksRenderer(BaseRenderer):
         except Exception as e:
             logger.error(f"Error reading TASKS.md: {e}")
 
-    def _write_tasks_md(self) -> None:
-        """Write TaskManager state back to TASKS.md."""
-        try:
-            all_tasks = self.task_manager.list_tasks()
+    def _generate_markdown(self) -> str:
+        """Generate TASKS.md content."""
+        all_tasks = self.task_manager.list_tasks()
 
-            # Categorize tasks
-            pending = [t for t in all_tasks if t.status == TaskStatus.PENDING]
-            running = [t for t in all_tasks if t.status == TaskStatus.IN_PROGRESS]
-            completed = [t for t in all_tasks if t.status == TaskStatus.COMPLETED]
-            blocked = [t for t in all_tasks if t.status == TaskStatus.BLOCKED]
+        pending = [t for t in all_tasks if t.status == TaskStatus.PENDING]
+        running = [t for t in all_tasks if t.status == TaskStatus.IN_PROGRESS]
+        completed = [t for t in all_tasks if t.status == TaskStatus.COMPLETED]
+        blocked = [t for t in all_tasks if t.status == TaskStatus.BLOCKED]
 
-            # Build new TASKS.md content
-            content = f"""# 📋 Mission Control
+        content = f"""# 📋 Mission Control
 
 > **Auto-Generated Task Board** | Last Updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 > **Status:** 🟢 Operational | **Active Tasks:** {len(running)} | **Completed:** {len(completed)}
@@ -152,43 +171,41 @@ Write your tasks here. The system will pick them up automatically.
 ## 🔄 Active Missions (In Progress)
 
 """
-            if running:
-                for task in running:
-                    agent = task.assignee or "auto-routed"
-                    content += f"- [~] {task.title} @{agent}\n"
-                    content += f"  > *Status: RUNNING (ID: {task.id[:8]}...)*\n"
-                    content += (
-                        f"  > **Priority:** {task.priority} | **Started:** {task.updated_at.strftime('%H:%M')}\n\n"
-                    )
-            else:
-                content += "No active missions yet.\n\n"
+        if running:
+            for task in running:
+                agent = task.assignee or "auto-routed"
+                content += f"- [~] {task.title} @{agent}\n"
+                content += f"  > *Status: RUNNING (ID: {task.id[:8]}...)*\n"
+                content += f"  > **Priority:** {task.priority} | **Started:** {task.updated_at.strftime('%H:%M')}\n\n"
+        else:
+            content += "No active missions yet.\n\n"
 
-            content += "---\n\n## ✅ Recently Completed\n\n"
+        content += "---\n\n## ✅ Recently Completed\n\n"
 
-            if completed:
-                recent = sorted(completed, key=lambda t: t.updated_at, reverse=True)[:5]
-                for task in recent:
-                    agent = task.assignee or "auto-routed"
-                    content += f"- [x] {task.title} @{agent}\n"
-                    content += f"  > *Completed: {task.updated_at.strftime('%Y-%m-%d %H:%M')}*\n\n"
-            else:
-                content += "No completed tasks yet.\n\n"
+        if completed:
+            recent = sorted(completed, key=lambda t: t.updated_at, reverse=True)[:5]
+            for task in recent:
+                agent = task.assignee or "auto-routed"
+                content += f"- [x] {task.title} @{agent}\n"
+                content += f"  > *Completed: {task.updated_at.strftime('%Y-%m-%d %H:%M')}*\n\n"
+        else:
+            content += "No completed tasks yet.\n\n"
 
-            content += "---\n\n## 📊 System Health\n\n"
-            content += "| Metric | Value |\n"
-            content += "|--------|-------|\n"
-            content += f"| Total Tasks | {len(all_tasks)} |\n"
-            content += f"| Pending | {len(pending)} |\n"
-            content += f"| Running | {len(running)} |\n"
-            content += f"| Completed | {len(completed)} |\n"
-            content += f"| Blocked | {len(blocked)} |\n\n"
+        content += "---\n\n## 📊 System Health\n\n"
+        content += "| Metric | Value |\n"
+        content += "|--------|-------|\n"
+        content += f"| Total Tasks | {len(all_tasks)} |\n"
+        content += f"| Pending | {len(pending)} |\n"
+        content += f"| Running | {len(running)} |\n"
+        content += f"| Completed | {len(completed)} |\n"
+        content += f"| Blocked | {len(blocked)} |\n\n"
 
-            content += "---\n\n"
-            content += "**Heartbeat:** Operational  \n"
-            content += f"**Last Pulse:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}  \n"
-            content += "**Next Check:** ~1 minute\n\n"
+        content += "---\n\n"
+        content += "**Heartbeat:** Operational  \n"
+        content += f"**Last Pulse:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}  \n"
+        content += "**Next Check:** ~1 minute\n\n"
 
-            content += """---
+        content += """---
 
 ## 📖 How It Works
 
@@ -202,14 +219,17 @@ Write your tasks here. The system will pick them up automatically.
 
 *Generated by InterfacePlugin (TasksRenderer)*
 """
-            # Write using kernel IO if possible, but TaskManager logic usually writes directly.
-            # We should use kernel.io for consistency.
+        return content
+
+    def _write_tasks_md(self) -> None:
+        """Legacy write method - DEPRECATED."""
+        try:
+            content = self._generate_markdown()
             self.kernel.io.write_document(
                 name="TASKS.md",
                 content=content,
                 writer_id="RENDERER_TASKS",
-                doc_type=1,  # Bidirectional
+                doc_type=DocumentType.BIDIRECTIONAL,
             )
-
         except Exception as e:
             logger.error(f"Error writing TASKS.md: {e}")
