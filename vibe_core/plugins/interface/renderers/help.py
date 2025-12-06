@@ -1,10 +1,12 @@
 """
 Help Renderer.
 Directly renders HELP.md from Kernel State and File System.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from vibe_core.io_service import DocumentType
 
@@ -12,30 +14,36 @@ from .base import BaseRenderer
 
 
 class HelpRenderer(BaseRenderer):
-    """
-    Directly renders HELP.md as a System Control Center.
-    """
+    """Directly renders HELP.md as a System Control Center."""
 
     @property
     def name(self) -> str:
         return "help"
 
-    def render(self) -> None:
-        """Render HELP.md directly."""
-        # 1. Gather Data
+    @property
+    def output_file(self) -> str:
+        return "HELP.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate HELP.md content (UNIFIED UI pattern)."""
         scripts = self._scan_scripts()
+        return self._generate_markdown(scripts)
 
-        # 2. Generate Content
-        content = self._generate_markdown(scripts)
-
-        # 3. Write to File via Kernel I/O
-        self.kernel.io.write_document(
-            name="HELP.md",
-            content=content,
-            doc_type=DocumentType.READONLY,
-            writer_id="interface_plugin",
-            add_header=True,
-        )
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
+            self.kernel.io.write_document(
+                name="HELP.md",
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="interface_plugin",
+                add_header=True,
+            )
 
     def _scan_scripts(self) -> List[str]:
         """Scan scripts/ directory for entry points."""

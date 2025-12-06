@@ -66,6 +66,7 @@ class HeaderConfig:
     show_timestamp: bool = True
     show_kernel_status: bool = True
     generator_name: str = "InterfacePlugin"
+    quick_start_command: str = "python -m vibe_core.cli boot"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -73,6 +74,7 @@ class HeaderConfig:
             "show_timestamp": self.show_timestamp,
             "show_kernel_status": self.show_kernel_status,
             "generator_name": self.generator_name,
+            "quick_start_command": self.quick_start_command,
         }
 
     @classmethod
@@ -82,6 +84,7 @@ class HeaderConfig:
             show_timestamp=data.get("show_timestamp", True),
             show_kernel_status=data.get("show_kernel_status", True),
             generator_name=data.get("generator_name", "InterfacePlugin"),
+            quick_start_command=data.get("quick_start_command", "python -m vibe_core.cli boot"),
         )
 
 

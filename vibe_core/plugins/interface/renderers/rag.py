@@ -1,7 +1,11 @@
 """
 RAG Renderer.
 Directly renders RAG.md as a Realtime Architecture Guide Status Page.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
+
+from typing import Optional
 
 from vibe_core.io_service import DocumentType
 
@@ -9,30 +13,36 @@ from .base import BaseRenderer
 
 
 class RagRenderer(BaseRenderer):
-    """
-    Directly renders RAG.md as a status page for the RAG system.
-    """
+    """Directly renders RAG.md as a status page for the RAG system."""
 
     @property
     def name(self) -> str:
         return "rag"
 
-    def render(self) -> None:
-        """Render RAG.md directly."""
-        # 1. Gather Data (Lightweight)
+    @property
+    def output_file(self) -> str:
+        return "RAG.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate RAG.md content (UNIFIED UI pattern)."""
         status = self.kernel.status.value if hasattr(self.kernel, "status") else "UNKNOWN"
+        return self._generate_markdown(status)
 
-        # 2. Generate Content
-        content = self._generate_markdown(status)
-
-        # 3. Write to File via Kernel I/O
-        self.kernel.io.write_document(
-            name="RAG.md",
-            content=content,
-            doc_type=DocumentType.READONLY,
-            writer_id="interface_plugin",
-            add_header=True,
-        )
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
+            self.kernel.io.write_document(
+                name="RAG.md",
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="interface_plugin",
+                add_header=True,
+            )
 
     def _generate_markdown(self, status: str) -> str:
         """Generate Markdown content."""

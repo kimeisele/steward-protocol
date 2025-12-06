@@ -129,7 +129,7 @@ renderers:
     output: OPUS.md
     doc_type: bidirectional
     interval: 30  # AI can update progress
-    data_source: opus.manifest  # reads from docs/architecture/OPUS/manifest.json
+    config_file: config/opus.yaml  # Renderer-specific config (VISNU goals, etc.)
 
 # =============================================================================
 # CUSTOM RENDERERS (user/agent defined)
@@ -161,6 +161,7 @@ header:
   show_timestamp: true
   show_kernel_status: true
   generator_name: InterfacePlugin
+  quick_start_command: "python -m vibe_core.cli boot"  # Shown in header comment
 
 # =============================================================================
 # DOCUMENT TYPES
