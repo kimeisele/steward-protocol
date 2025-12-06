@@ -48,10 +48,10 @@ states:
     action: pattern_match
     rules:
       # FORBIDDEN: Custom mock agent classes
-      # EXCEPTION: Security/hardening tests + integration tests with custom event handling
+      # EXCEPTION: Security/hardening tests + integration tests with custom event handling + archived/deprecated
       - pattern: "class.*Agent.*VibeAgent"
         location: "inside test file"
-        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "test_kernel_markdown"]
+        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "test_kernel_markdown", "tests/archive/"]
         severity: critical
         message: "FORBIDDEN: Custom Agent class in test. Use TestAgents.xxx()"
 
@@ -69,10 +69,10 @@ states:
 
       # FORBIDDEN: Manual oath_sworn assignment (self.oath_sworn = True/False)
       # Excludes: comparisons (is True), docstrings, comments
-      # EXCEPTION: Security/hardening tests + integration tests with custom event handling
+      # EXCEPTION: Security/hardening tests + integration tests with custom event handling + archived/deprecated
       - pattern: "self\\.oath_sworn\\s*=\\s*(True|False)"
         location: "outside fixtures.py"
-        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "fixtures.py"]
+        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "fixtures.py", "tests/archive/"]
         severity: critical
         message: "FORBIDDEN: Manual oath assignment. Use TestAgents.with_false_oath()"
 
