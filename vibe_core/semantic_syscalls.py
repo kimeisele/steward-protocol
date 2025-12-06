@@ -18,7 +18,6 @@ GAD-5500: Safe Evolution Loop / Cognitive Circuits
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
@@ -272,21 +271,24 @@ class SemanticSyscallExecutor:
             from vibe_core.cartridges.system.engineer.tools.builder_tool import BuilderTool
 
             builder = BuilderTool()
-            # Use scaffold_from_template instead of missing generate_agent_code
+            import tempfile
+            from pathlib import Path
+
+            # Use temp directory for dynamic agents to avoid polluting source tree
+            target_dir = Path(tempfile.gettempdir()) / "vibe_agents" / agent_id
+
             scaffold_result = builder.scaffold_from_template(
-                agent_id=agent_id,
-                agent_name=role.upper().replace(" ", "_"),
-                domain="SPAWNED",
-                description=mission,
-                target_dir=Path(f"vibe_core/cartridges/agent_city/{agent_id}"),
+                agent_id=agent_id, agent_name=role.upper(), domain="SPAWNED", description=mission, target_dir=target_dir
             )
-            code = scaffold_result.get("files_created", [])
 
             if not scaffold_result["success"]:
-                # Log warning but continue with dynamic in-memory creation if scaffolding fails
-                logger.warning(
-                    f"⚠️ Scaffolding failed: {scaffold_result.get('error')} (continuing with dynamic creation)"
+                return SyscallResult(
+                    success=False,
+                    syscall_type=request.syscall_type,
+                    error=f"Scaffold failed: {scaffold_result.get('error')}",
                 )
+
+            code = scaffold_result.get("files_created", [])
 
             # Step 2: Create agent class dynamically
             # agent_id is already generated above (with collision protection)
@@ -343,8 +345,8 @@ class SemanticSyscallExecutor:
             # Step 5: Allocate credits
             try:
                 bank = self.kernel.get_bank()
-                # bank.create_account(agent_id) - Implicit in transfer
-                bank.deposit(agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
+                # Use transfer from MINT instead of non-existent deposit/create_account
+                bank.transfer("MINT", agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
             except Exception as e:
                 logger.warning(f"Credit allocation failed (non-fatal): {e}")
 
