@@ -1,0 +1,37 @@
+{
+  "name": "OPUS Architecture Plans",
+  "description": "Claude Opus architectural analysis and refactoring plans for Steward Protocol",
+  "version": "1.0.0",
+  "created": "2025-12-06",
+  "documents": [
+    {
+      "id": "001-kernel-extraction",
+      "title": "Kernel Extraction Plan",
+      "file": "001-KERNEL-EXTRACTION.md",
+      "status": "draft",
+      "priority": "P0",
+      "description": "Extract non-kernel logic to plugins. Target: 1000 LOC kernel."
+    },
+    {
+      "id": "002-phoenix-config-optimization",
+      "title": "Phoenix Config Optimization",
+      "file": "002-PHOENIX-CONFIG.md",
+      "status": "planned",
+      "priority": "P0",
+      "description": "Fix slow config loading (4s -> <100ms)"
+    },
+    {
+      "id": "003-test-suite-refactor",
+      "title": "Test Suite Refactor",
+      "file": "003-TEST-SUITE.md",
+      "status": "planned",
+      "priority": "P1",
+      "description": "Tests that don't depend on full kernel boot"
+    }
+  ],
+  "roadmap": {
+    "phase1": "Kernel Extraction - Remove all non-essential logic",
+    "phase2": "Config Optimization - Lazy loading, caching",
+    "phase3": "Test Independence - Unit tests without kernel"
+  }
+}
