@@ -87,6 +87,7 @@ class EnvoyPlugin(KernelPlugin):
 
         Register as THE envoy plugin on the kernel.
         Initialize routers and load circuits.
+        Register EnvoyCartridge as the actual agent for task execution.
         """
         self._kernel = kernel
 
@@ -102,6 +103,10 @@ class EnvoyPlugin(KernelPlugin):
         # Discover circuits and playbooks
         self._discover_circuits()
         self._discover_playbooks()
+
+        # Register EnvoyCartridge as the actual agent
+        # This connects ENVOY.md requests -> Task -> EnvoyCartridge.process()
+        self._register_envoy_agent(kernel)
 
         logger.info("📬 ENVOY Plugin booted")
         logger.info(f"   Circuits: {len(self._circuits)}")
@@ -421,3 +426,30 @@ class EnvoyPlugin(KernelPlugin):
                 # Trim history
                 if len(self._request_history) > self._max_history:
                     self._request_history = self._request_history[-self._max_history :]
+
+    def _register_envoy_agent(self, kernel: "RealVibeKernel") -> None:
+        """
+        Register EnvoyCartridge as the actual agent for task execution.
+
+        This is the missing link that connects:
+        ENVOY.md -> EnvoySync -> Task(agent_id="envoy") -> Scheduler -> EnvoyCartridge.process()
+
+        Without this, tasks queued for "envoy" would fail with "Agent not found".
+        """
+        try:
+            from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
+
+            # Check if envoy agent already registered (avoid duplicate)
+            if "envoy" in kernel._agent_registry:
+                logger.debug("📬 EnvoyCartridge already registered, skipping")
+                return
+
+            # Create and register the EnvoyCartridge
+            envoy_agent = EnvoyCartridge()
+            kernel.register_agent(envoy_agent, spawn_process=False)  # In-process execution
+
+            logger.info("📬 EnvoyCartridge registered as agent (task execution enabled)")
+
+        except Exception as e:
+            logger.error(f"📬 Failed to register EnvoyCartridge: {e}")
+            logger.warning("📬 ENVOY.md requests will fail - no agent to execute tasks")
