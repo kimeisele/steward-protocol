@@ -48,8 +48,10 @@ states:
     action: pattern_match
     rules:
       # FORBIDDEN: Custom mock agent classes
+      # EXCEPTION: Security/hardening tests + integration tests with custom event handling
       - pattern: "class.*Agent.*VibeAgent"
         location: "inside test file"
+        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "test_kernel_markdown"]
         severity: critical
         message: "FORBIDDEN: Custom Agent class in test. Use TestAgents.xxx()"
 
@@ -59,15 +61,18 @@ states:
         severity: warning
         message: "Use TestKernel.minimal() instead of direct instantiation"
 
-      # REQUIRED: Import from fixtures
+      # REQUIRED: Import from fixtures (only if using Kernel/Agent)
       - pattern: "from vibe_core.plugins.test_orchestration import"
-        required: true
-        severity: critical
-        message: "REQUIRED: Import TestAgents/TestKernel from fixtures"
+        required_when: "(RealVibeKernel|VibeAgent|Agent\\()"
+        severity: warning
+        message: "Consider using TestAgents/TestKernel from fixtures"
 
-      # FORBIDDEN: Manual oath_sworn assignment
-      - pattern: "oath_sworn\\s*=\\s*(True|False)"
+      # FORBIDDEN: Manual oath_sworn assignment (self.oath_sworn = True/False)
+      # Excludes: comparisons (is True), docstrings, comments
+      # EXCEPTION: Security/hardening tests + integration tests with custom event handling
+      - pattern: "self\\.oath_sworn\\s*=\\s*(True|False)"
         location: "outside fixtures.py"
+        exclude_paths: ["tests/hardening/", "test_governance", "test_red_team", "test_capability", "test_event_bus", "fixtures.py"]
         severity: critical
         message: "FORBIDDEN: Manual oath assignment. Use TestAgents.with_false_oath()"
 

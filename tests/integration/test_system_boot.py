@@ -18,7 +18,6 @@ This is the "smoke test" that proves the system is alive.
 import logging
 import sys
 from pathlib import Path
-from typing import Any, Dict
 
 # Setup paths
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -27,6 +26,7 @@ import pytest
 
 from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import KernelStatus, RealVibeKernel
+from vibe_core.plugins.test_orchestration import TestAgents
 from vibe_core.protocols import VibeAgent  # Use canonical protocol location
 from vibe_core.scheduling import Task
 
@@ -259,16 +259,8 @@ class TestGovernanceGate:
         """Test that kernel rejects agents without oath"""
         kernel = RealVibeKernel(ledger_path=":memory:")
 
-        # Create agent without oath
-        class BadAgent(VibeAgent):
-            def __init__(self):
-                super().__init__(agent_id="bad-agent", name="Bad Agent", version="1.0.0")
-                # Deliberately not setting oath_sworn
-
-            def process(self, task: Task) -> Dict[str, Any]:
-                return {"status": "ok"}
-
-        bad_agent = BadAgent()
+        # Create agent without oath using standardized fixture
+        bad_agent = TestAgents.without_oath("bad-agent")
 
         # Try to register - should fail
         with pytest.raises(Exception) as exc_info:
@@ -280,20 +272,8 @@ class TestGovernanceGate:
         """Test that kernel rejects agents with oath_sworn=False"""
         kernel = RealVibeKernel(ledger_path=":memory:")
 
-        # Create agent with false oath
-        class FalseOathAgent(VibeAgent):
-            def __init__(self):
-                super().__init__(
-                    agent_id="false-oath-agent",
-                    name="False Oath Agent",
-                    version="1.0.0",
-                )
-                self.oath_sworn = False  # Explicitly false
-
-            def process(self, task: Task) -> Dict[str, Any]:
-                return {"status": "ok"}
-
-        false_oath_agent = FalseOathAgent()
+        # Create agent with false oath using standardized fixture
+        false_oath_agent = TestAgents.with_false_oath("false-oath-agent")
 
         # Try to register - should fail
         with pytest.raises(Exception) as exc_info:
@@ -338,8 +318,10 @@ class TestSystemIntegration:
             kernel.boot()
             steward.discover_agents()
 
+            # Verify boot was successful
+            assert kernel.status == KernelStatus.RUNNING
+            assert len(kernel.agent_registry) > 0
             logger.info("✅ Agent City boots successfully without errors")
-            assert True
         except Exception as e:
             pytest.fail(f"Agent City boot failed with error: {e}")
 
