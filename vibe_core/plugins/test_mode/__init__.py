@@ -57,3 +57,15 @@ def should_skip_tool_discovery() -> bool:
 def should_skip_process_spawn() -> bool:
     """Check if process spawning should be skipped."""
     return _test_mode_enabled and _skip_process_spawn
+
+
+from .plugin_main import TestModePlugin
+
+__all__ = [
+    "enable_test_mode",
+    "disable_test_mode",
+    "is_test_mode",
+    "should_skip_tool_discovery",
+    "should_skip_process_spawn",
+    "TestModePlugin",
+]

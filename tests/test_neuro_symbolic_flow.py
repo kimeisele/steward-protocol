@@ -108,7 +108,6 @@ def test_semantic_compiler():
             assert result.is_syscall, "Did not compile to syscall"
 
     print("\n📊 Semantic Compiler: PASSED")
-    return True
 
 
 def test_syscall_executor():
@@ -165,7 +164,9 @@ def test_syscall_executor():
     print("   ✅ Agent is in kernel registry")
 
     # Check capabilities
-    caps = kernel._agent_capabilities.get(agent_id, frozenset())
+    caps = kernel.get_agent_capabilities(agent_id)
+    assert "monitor" in caps
+    assert "alert" in caps
     print(f"   ✅ Capabilities locked: {list(caps)}")
 
     # Check bank account
@@ -174,8 +175,6 @@ def test_syscall_executor():
         print(f"   ✅ Credits allocated: {balance}")
     except Exception as e:
         print(f"   ⚠️  Bank check failed: {e}")
-
-    return True
 
 
 def test_circuit_executor():
@@ -223,8 +222,6 @@ def test_circuit_executor():
     print(f"\n   ✅ Agent birthed: {agent_id}")
     print(f"   ✅ Registry: {initial_agents} → {final_agents} agents")
     print(f"   ✅ State machine completed: {result.final_state}")
-
-    return True
 
 
 def test_full_genesis_flow():
@@ -291,7 +288,6 @@ def test_full_genesis_flow():
     print(f"   New agents born: {new_agents}")
 
     assert all(r is True for r in results if r is not None), "Some genesis flows failed"
-    return True
 
 
 def main():
