@@ -63,6 +63,9 @@ class InterfacePlugin(KernelPlugin):
         # Discover and load renderers
         self._load_renderers()
 
+        # Initial render on boot - don't wait for ticks!
+        self.render_all()
+
         logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active)")
 
     def _load_interface_config(self) -> None:
