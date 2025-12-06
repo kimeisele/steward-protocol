@@ -16,17 +16,14 @@ from __future__ import annotations
 import logging
 from collections import deque
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
 
-# Vedic Governance types (used for backward-compatible type hints)
-# Actual governance logic is in vibe_core/plugins/vedic_governance.py
-from steward.ashrama import Ashrama, AshramaTransition
-from steward.varna import Varna
+# Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
+# Kernel has no governance types - access via kernel.governance
 
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
 
@@ -58,8 +55,7 @@ from .runtime.playbook_router import PlaybookRouter
 from .scheduling import Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
-from .tool_discovery import ToolDiscovery  # Phase 6: Auto-Discovery
-from .tools.tool_registry import ToolRegistry  # Phase 6: Universal Tool Registry
+# NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
 
 # Import Auditor for immune system (optional)
 try:
@@ -277,17 +273,10 @@ class RealVibeKernel(VibeKernel):
         logger.info("📁 Kernel I/O Service initialized (central file controller)")
 
         # Phase 6: Universal Tool Registry
-        # Single source of truth for all agent tools
-        # Tools are registered here and accessed via AgentSystemInterface
-        # kernel=self enables on_tool_execute/on_tool_executed plugin hooks
-        self.tool_registry = ToolRegistry(
-            invariant_checker=self._auditor if AUDITOR_AVAILABLE else None,
-            capability_checker=self._check_agent_capability,
-            kernel=self,
-        )
-        self._register_core_tools()
-        self._discover_agent_tools()
-        logger.info(f"🔧 Tool Registry initialized ({len(self.tool_registry)} tools total)")
+        # EXTRACTED TO PLUGIN: ToolsPlugin handles registry initialization
+        # Plugin sets kernel.tool_registry on boot
+        # See: vibe_core/plugins/tools/plugin_main.py
+        self.tool_registry = None  # Set by ToolsPlugin.on_boot()
 
         # Phase 7: NARASIMHA Kill-Switch (Hypervisor Level)
         # SECURITY FIX: Wire destruction handlers so Narasimha can actually kill agents
@@ -593,110 +582,9 @@ class RealVibeKernel(VibeKernel):
         logger.critical(f"⛓️  Destruction recorded in Parampara: {agent_id}")
         logger.critical(f"✝️ NARASIMHA COMPLETE: Agent '{agent_id}' has been annihilated.")
 
-    def _register_core_tools(self) -> None:
-        """
-        Register core tools that are available to all agents.
+    # _register_core_tools: EXTRACTED TO ToolsPlugin (vibe_core/plugins/tools/plugin_main.py)
 
-        Core tools are system-provided capabilities that don't belong to
-        any specific agent. They're registered without namespace prefix
-        (e.g., "read_file" not "core.read_file").
-
-        Phase 6: These tools implement the Tool protocol and are registered
-        at kernel boot time, before any agents are loaded.
-        """
-        from vibe_core.tools import (
-            AddTaskTool,
-            CompleteTaskTool,
-            DelegateTool,
-            ListTasksTool,
-            ReadFileTool,
-            WriteFileTool,
-        )
-
-        # File operations (VFS-aware tools will be added later)
-        self.tool_registry.register(ReadFileTool())
-        self.tool_registry.register(WriteFileTool())
-
-        # Task management
-        self.tool_registry.register(AddTaskTool())
-        self.tool_registry.register(ListTasksTool())
-        self.tool_registry.register(CompleteTaskTool())
-
-        # Inter-agent delegation
-        delegate_tool = DelegateTool()
-        delegate_tool.set_kernel(self)  # Late binding to avoid circular dependency
-        self.tool_registry.register(delegate_tool)
-
-        tool_names = ", ".join(self.tool_registry.list_tools())
-        logger.info(f"🔧 Registered {len(self.tool_registry)} core tools: {tool_names}")
-
-    def _discover_agent_tools(self) -> None:
-        """
-        Auto-discover and register agent tools.
-
-        Phase 6: Automatic tool discovery from agent directories.
-
-        Scans:
-        - vibe_core/cartridges/system/{agent_id}/tools/*.py
-        - vibe_core/cartridges/agent_city/{agent_id}/tools/*.py
-
-        For each .py file:
-        1. Dynamically import module
-        2. Find classes implementing Tool protocol
-        3. Register tools with namespace (agent_id.tool_name)
-
-        Error Handling:
-        - Import errors are logged but don't crash kernel
-        - Invalid tools are skipped
-        - Discovery continues even if some tools fail
-
-        This allows developers to simply drop a .py file in {agent}/tools/
-        and have it automatically available system-wide.
-        """
-        logger.info("🔍 Starting auto-discovery of agent tools...")
-
-        # Initialize discovery scanner
-        discovery = ToolDiscovery(root_path=Path("."))
-
-        # Discover all tools
-        discovered_tools = discovery.discover_all_tools()
-
-        # Register discovered tools
-        registered_count = 0
-        failed_count = 0
-
-        for tool in discovered_tools:
-            try:
-                self.tool_registry.register(tool)
-                registered_count += 1
-
-                # Inject I/O Service for tools that support it
-                # This enables audited file writes through kernel.io
-                if hasattr(tool, "set_io_service") and callable(tool.set_io_service):
-                    tool.set_io_service(self.io)
-                    logger.info(f"   ✅ Registered: {tool.name} (with I/O Service)")
-                else:
-                    logger.info(f"   ✅ Registered: {tool.name}")
-
-            except ValueError as e:
-                # Tool already registered (e.g., name collision)
-                logger.warning(f"   ⚠️  Skipped {tool.name}: {e}")
-                failed_count += 1
-
-            except Exception as e:
-                # Unexpected error during registration
-                logger.error(f"   ❌ Failed to register {tool.name}: {e}")
-                failed_count += 1
-
-        # Get discovery stats
-        stats = discovery.get_discovery_stats()
-
-        logger.info(f"🔧 Auto-discovery complete: {registered_count} tools registered, {failed_count} failed")
-
-        if stats["discovered_by_agent"]:
-            logger.info("📊 Tools by agent:")
-            for agent_id, tool_names in stats["discovered_by_agent"].items():
-                logger.info(f"   {agent_id}: {', '.join(tool_names)}")
+    # _discover_agent_tools: EXTRACTED TO ToolsPlugin (vibe_core/plugins/tools/plugin_main.py)
 
     @property
     def agent_registry(self) -> Dict[str, VibeAgent]:
@@ -1246,47 +1134,6 @@ class RealVibeKernel(VibeKernel):
     def get_agent_manifest(self, agent_id: str) -> Optional[AgentManifest]:
         """Get manifest for an agent"""
         return self._manifest_registry.lookup(agent_id)
-
-    # =========================================================================
-    # GOVERNANCE API (Delegates to governance plugin for backward compatibility)
-    # =========================================================================
-
-    def get_agent_varna(self, agent_id: str) -> Optional[Varna]:
-        """Get the Varna (classification) of an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_varna"):
-            return self.governance.get_agent_varna(agent_id)
-        return None
-
-    def get_agent_ashrama(self, agent_id: str) -> Optional[AshramaTransition]:
-        """Get the Ashrama (lifecycle stage) of an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_ashrama"):
-            return self.governance.get_agent_ashrama(agent_id)
-        return None
-
-    def get_agent_permissions(self, agent_id: str) -> List[str]:
-        """Get the current permissions for an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_agent_permissions"):
-            return self.governance.get_agent_permissions(agent_id)
-        return []
-
-    def check_agent_permission(self, agent_id: str, permission: str) -> bool:
-        """Check if an agent has a specific permission. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "check_agent_permission"):
-            return self.governance.check_agent_permission(agent_id, permission)
-        return True  # Default: allow if no governance plugin
-
-    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
-        """Transition an agent to a new Ashrama. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "transition_agent_ashrama"):
-            return self.governance.transition_agent_ashrama(agent_id, new_ashrama, reason)
-        logger.warning(f"No governance plugin loaded - cannot transition {agent_id}")
-        return False
-
-    def get_governance_status(self, agent_id: str) -> Dict[str, Any]:
-        """Get full governance status for an agent. Delegates to governance plugin."""
-        if self.governance and hasattr(self.governance, "get_governance_status"):
-            return self.governance.get_governance_status(agent_id)
-        return {"error": "No governance plugin loaded"}
 
     def shutdown(self, reason: str = "User shutdown") -> None:
         """Gracefully shut down the kernel"""
