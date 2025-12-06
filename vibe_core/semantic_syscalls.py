@@ -271,10 +271,24 @@ class SemanticSyscallExecutor:
             from vibe_core.cartridges.system.engineer.tools.builder_tool import BuilderTool
 
             builder = BuilderTool()
-            code = builder.generate_agent_code(role, mission)
+            import tempfile
+            from pathlib import Path
 
-            if not code:
-                return SyscallResult(success=False, syscall_type=request.syscall_type, error="Code generation failed")
+            # Use temp directory for dynamic agents to avoid polluting source tree
+            target_dir = Path(tempfile.gettempdir()) / "vibe_agents" / agent_id
+
+            scaffold_result = builder.scaffold_from_template(
+                agent_id=agent_id, agent_name=role.upper(), domain="SPAWNED", description=mission, target_dir=target_dir
+            )
+
+            if not scaffold_result["success"]:
+                return SyscallResult(
+                    success=False,
+                    syscall_type=request.syscall_type,
+                    error=f"Scaffold failed: {scaffold_result.get('error')}",
+                )
+
+            code = scaffold_result.get("files_created", [])
 
             # Step 2: Create agent class dynamically
             # agent_id is already generated above (with collision protection)
@@ -331,8 +345,8 @@ class SemanticSyscallExecutor:
             # Step 5: Allocate credits
             try:
                 bank = self.kernel.get_bank()
-                bank.create_account(agent_id)
-                bank.deposit(agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
+                # Use transfer from MINT instead of non-existent deposit/create_account
+                bank.transfer("MINT", agent_id, initial_credits, "Initial allocation from SPAWN_COGNITION")
             except Exception as e:
                 logger.warning(f"Credit allocation failed (non-fatal): {e}")
 
