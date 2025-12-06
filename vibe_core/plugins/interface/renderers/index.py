@@ -1,11 +1,13 @@
 """
 Index Renderer.
 Directly renders INDEX.md from Circuit Schema.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -39,22 +41,30 @@ class IndexRenderer(BaseRenderer):
     def name(self) -> str:
         return "index"
 
-    def render(self) -> None:
-        """Render INDEX.md directly."""
-        # 1. Scan Docs
+    @property
+    def output_file(self) -> str:
+        return "INDEX.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate INDEX.md content (UNIFIED UI pattern)."""
         self._scan_docs_directories()
+        return self._generate_markdown()
 
-        # 2. Generate Content
-        content = self._generate_markdown()
-
-        # 3. Write to File via Kernel I/O
-        self.kernel.io.write_document(
-            name="INDEX.md",
-            content=content,
-            doc_type=DocumentType.READONLY,
-            writer_id="interface_plugin",
-            add_header=True,
-        )
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
+            self.kernel.io.write_document(
+                name="INDEX.md",
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="interface_plugin",
+                add_header=True,
+            )
 
     def _load_circuit(self) -> Dict[str, Any]:
         """Load circuit definition from YAML."""

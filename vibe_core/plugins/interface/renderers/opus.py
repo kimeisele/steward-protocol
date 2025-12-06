@@ -1,24 +1,45 @@
 """
-OPUS Renderer - Architecture Operations Dashboard
+OPUS Renderer - Fractal Dashboard with Hot-Swappable Panels.
 
-Bidirectional workspace for AI-driven architecture operations.
-Reads from docs/architecture/OPUS/manifest.json and renders OPUS.md.
+VEDA-4 Pattern: Panels are auto-discovered from panels/ directory.
+Each panel is independent and can be added/removed without code changes.
 
-Features:
-- Real-time kernel LOC tracking
-- Phase status from manifest
-- Blockers section (AI can write)
-- Next actions (AI proposes, human approves)
-- Links to analysis circuits
+UNIFIED UI ARCHITECTURE:
+    - OpusRenderer is a SLAVE to InterfacePlugin (the KING)
+    - OpusRenderer implements generate_content() → returns string
+    - InterfacePlugin writes OPUS.md with UNIFIED header
+    - OpusRenderer does NOT call kernel.io directly
+
+Architecture:
+    OpusRenderer (this file)
+        └── Panels (auto-discovered)
+            ├── VisnuPanel (kernel LOC tracking)
+            ├── CandidatesPanel (extraction analysis)
+            ├── BlockersPanel (bidirectional)
+            ├── NextActionsPanel (bidirectional)
+            ├── ActivityPanel (git commits)
+            └── CommandsPanel (quick commands)
+            └── ... (add more by creating .py files!)
+
+To add a new panel:
+    1. Create panels/my_panel.py
+    2. Extend OpusPanel
+    3. Done - auto-discovered on next render!
 """
 
-import json
+import importlib
 import logging
+import pkgutil
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+import yaml
+
+from vibe_core.io_service import DocumentType
+
 from .base import BaseRenderer
+from .panels.base_panel import OpusPanel
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -27,157 +48,180 @@ logger = logging.getLogger("RENDERER_OPUS")
 
 
 class OpusRenderer(BaseRenderer):
-    """Renders OPUS.md - AI workspace for architecture operations."""
+    """
+    OPUS - Fractal Dashboard Renderer.
 
-    def __init__(self, kernel: "RealVibeKernel", config: Dict[str, Any] = None):
+    Uses VEDA-4 pattern for panel auto-discovery.
+    All config from config/opus.yaml.
+    """
+
+    CONFIG_PATH = Path("config/opus.yaml")
+
+    def __init__(self, kernel: "RealVibeKernel"):
         super().__init__(kernel)
-        self.config = config or {}
-        self.manifest_path = Path("docs/architecture/OPUS/manifest.json")
-        self.kernel_path = Path("vibe_core/kernel_impl.py")
+        self.config = self._load_config()
+        self.output_path = Path("OPUS.md")
+        self._panels: Dict[str, OpusPanel] = {}
+        self._load_panels()
 
     @property
     def name(self) -> str:
-        """Unique name of the renderer."""
         return "opus"
 
-    def _get_kernel_loc(self) -> int:
-        """Get current kernel lines of code."""
-        try:
-            if self.kernel_path.exists():
-                return len(self.kernel_path.read_text().splitlines())
-        except Exception as e:
-            logger.warning(f"Could not count kernel LOC: {e}")
-        return 0
+    @property
+    def output_file(self) -> str:
+        """Output filename for InterfacePlugin."""
+        return "OPUS.md"
 
-    def _load_manifest(self) -> Dict[str, Any]:
-        """Load OPUS manifest."""
+    @property
+    def doc_type(self) -> DocumentType:
+        """OPUS is bidirectional (user can edit blockers/actions)."""
+        return DocumentType.BIDIRECTIONAL
+
+    def _load_config(self) -> Dict[str, Any]:
+        """Load config from config/opus.yaml."""
         try:
-            if self.manifest_path.exists():
-                return json.loads(self.manifest_path.read_text())
+            if self.CONFIG_PATH.exists():
+                return yaml.safe_load(self.CONFIG_PATH.read_text()) or {}
         except Exception as e:
-            logger.warning(f"Could not load OPUS manifest: {e}")
+            logger.warning(f"Could not load OPUS config: {e}")
         return {}
 
-    def _parse_existing_blockers(self, content: str) -> str:
-        """Extract user-written blockers from existing OPUS.md."""
-        # Preserve content between Blockers and Next Actions
+    def _load_panels(self) -> None:
+        """
+        VEDA-4: Auto-discover and load panels.
+
+        Same pattern as InterfacePlugin loading renderers.
+        """
+        panels_pkg = "vibe_core.plugins.interface.renderers.panels"
+        panels_path = Path(__file__).parent / "panels"
+
+        if not panels_path.exists():
+            logger.warning(f"Panels directory not found: {panels_path}")
+            return
+
+        # SHABDA: Discover panel modules
+        for importer, module_name, ispkg in pkgutil.iter_modules([str(panels_path)]):
+            if module_name in ("base_panel", "__init__"):
+                continue
+
+            try:
+                # ARTHA: Import module
+                module = importlib.import_module(f"{panels_pkg}.{module_name}")
+
+                # PRATYAYA: Find OpusPanel subclasses
+                for attr_name in dir(module):
+                    attr = getattr(module, attr_name)
+                    if isinstance(attr, type) and issubclass(attr, OpusPanel) and attr is not OpusPanel:
+                        # KARMA: Instantiate panel
+                        panel = attr()
+
+                        # Check if enabled
+                        if panel.is_enabled(self.config):
+                            self._panels[panel.panel_id] = panel
+                            logger.debug(f"Loaded OPUS panel: {panel.panel_id}")
+                        else:
+                            logger.debug(f"Skipped disabled panel: {panel.panel_id}")
+
+            except Exception as e:
+                logger.error(f"Failed to load panel '{module_name}': {e}")
+
+        logger.info(f"OPUS loaded {len(self._panels)} panels")
+
+    def generate_content(self) -> Optional[str]:
+        """
+        Generate OPUS.md content (UNIFIED UI pattern).
+
+        Returns:
+            Markdown content WITHOUT header (InterfacePlugin adds it)
+            None if rendering fails
+        """
         try:
-            if "## Blockers" in content and "## Next Actions" in content:
-                start = content.index("## Blockers")
-                end = content.index("## Next Actions")
-                blockers_section = content[start:end]
-                # Extract just the content after the header
-                lines = blockers_section.split("\n")[2:]  # Skip header and comment
-                user_blockers = "\n".join(l for l in lines if l.strip() and not l.startswith("<!--"))
-                return user_blockers if user_blockers.strip() else "None currently."
-        except Exception:
-            pass
-        return "None currently."
+            return self._compose_panels()
+        except Exception as e:
+            logger.error(f"Error generating OPUS content: {e}")
+            return None
 
-    def _parse_existing_actions(self, content: str) -> str:
-        """Extract user-written actions from existing OPUS.md."""
-        try:
-            if "## Next Actions" in content and "## Available Circuits" in content:
-                start = content.index("## Next Actions")
-                end = content.index("## Available Circuits")
-                actions_section = content[start:end]
-                lines = actions_section.split("\n")[2:]
-                user_actions = "\n".join(l for l in lines if l.strip() and not l.startswith("<!--"))
-                return user_actions if user_actions.strip() else "1. [ ] No actions defined"
-        except Exception:
-            pass
-        return "1. [ ] No actions defined"
+    def render(self) -> None:
+        """
+        Legacy render method - DEPRECATED.
 
-    def render(self) -> Optional[str]:
-        """Render OPUS.md content."""
-        manifest = self._load_manifest()
-        kernel_loc = self._get_kernel_loc()
-        target_loc = manifest.get("goals", {}).get("kernel_loc_target", 1008)
-
-        # Read existing content for bidirectional preservation
-        existing_content = ""
-        output_path = Path(self.config.get("output", "OPUS.md"))
-        if output_path.exists():
-            existing_content = output_path.read_text()
-
-        blockers = self._parse_existing_blockers(existing_content)
-        next_actions = self._parse_existing_actions(existing_content)
-
-        # Calculate status
-        if kernel_loc <= target_loc:
-            status = "COMPLETE"
-        elif kernel_loc <= target_loc + 100:
-            status = "ALMOST"
-        else:
-            status = "IN_PROGRESS"
-
-        # Get extraction history from manifest
-        phases = manifest.get("phases", [])
-        extraction_log = manifest.get("extraction_log", [])
-
-        # Build phase checklist
-        phase_lines = []
-        for phase in phases:
-            checkbox = "[x]" if phase.get("status") == "complete" else "[ ]"
-            delta = phase.get("loc_delta", "?")
-            phase_lines.append(f"- {checkbox} {phase.get('name', 'Unknown')} ({delta} LOC)")
-
-        # Build extraction log table
-        log_lines = [
-            "| Date | Component | LOC Before | LOC After | Delta |",
-            "|------|-----------|------------|-----------|-------|",
-        ]
-        for entry in extraction_log[-10:]:  # Last 10 entries
-            log_lines.append(
-                f"| {entry.get('date', '?')} | {entry.get('component', '?')} | "
-                f"{entry.get('loc_before', '?')} | {entry.get('loc_after', '?')} | "
-                f"{entry.get('delta', '?')} |"
+        InterfacePlugin now calls generate_content() and writes itself.
+        This is kept for backwards compatibility only.
+        """
+        # Legacy path - direct write (shouldn't be called anymore)
+        content = self.generate_content()
+        if content and self.kernel:
+            self.kernel.io.write_document(
+                name="OPUS.md",
+                content=content,
+                doc_type=DocumentType.BIDIRECTIONAL,
+                writer_id="opus_renderer",
+                add_header=True,
             )
 
+    def _compose_panels(self) -> str:
+        """Generate content by composing panels in priority order."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        return f"""# OPUS - Architecture Operations Dashboard
+        # Header
+        header = """# OPUS - AI Meister-Kasten
 
-> Bidirectional workspace for kernel refactoring and architecture decisions.
-> This file is rendered by InterfacePlugin and can trigger circuits.
-
-## Current Focus: VISNU Kernel Extraction
-
-| Metric | Value | Target | Status |
-|--------|-------|--------|--------|
-| kernel_impl.py LOC | {kernel_loc} | {target_loc} | {status} |
-| Remaining to extract | {kernel_loc - target_loc} | 0 | {"DONE" if kernel_loc <= target_loc else "PENDING"} |
-
-## Phase Status
-
-{chr(10).join(phase_lines) if phase_lines else "No phases defined in manifest."}
-
-## Extraction Log
-
-{chr(10).join(log_lines)}
-
-## Blockers
-
-<!-- AI can write here to flag issues -->
-{blockers}
-
-## Next Actions
-
-<!-- AI proposes, human approves -->
-{next_actions}
-
-## Available Circuits
-
-<!-- Links to analysis playbooks -->
-- `steward run kernel-analysis` - Analyze kernel structure
-- `steward run loc-count` - Count lines of code
-- `steward run test-suite` - Run tests with timeout
+> **Fractal Dashboard with Hot-Swappable Panels**
+> Config: `config/opus.yaml` | Panels: auto-discovered | VEDA-4
 
 ---
-*Rendered by: OpusRenderer | Last updated: {timestamp}*
 """
 
+        # Create shared context for panels
+        context: Dict[str, Any] = {
+            "existing_opus_content": self._read_existing(),
+        }
 
-def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> OpusRenderer:
-    """Factory function for renderer discovery."""
-    return OpusRenderer(kernel, config)
+        # Render panels in priority order
+        sorted_panels = sorted(self._panels.items(), key=lambda x: x[1].priority)
+
+        panel_contents = []
+        for panel_id, panel in sorted_panels:
+            try:
+                panel_content = panel.render(self.config, context)
+                if panel_content:  # Skip empty panels
+                    panel_contents.append(panel_content)
+            except Exception as e:
+                logger.error(f"Error rendering panel {panel_id}: {e}")
+                panel_contents.append(f"<!-- Panel {panel_id} failed: {e} -->\n")
+
+        # Footer
+        panel_list = ", ".join(p.panel_id for p in sorted(self._panels.values(), key=lambda x: x.priority))
+        footer = f"""
+*Rendered by OpusRenderer | {timestamp}*
+*Active panels: {panel_list}*
+"""
+
+        return header + "\n".join(panel_contents) + footer
+
+    def _read_existing(self) -> str:
+        """Read existing OPUS.md for bidirectional preservation."""
+        try:
+            if self.output_path.exists():
+                return self.output_path.read_text()
+        except Exception:
+            pass
+        return ""
+
+    def reload_panels(self) -> None:
+        """Hot-reload panels (useful for development)."""
+        self._panels.clear()
+        self._load_panels()
+        logger.info("OPUS panels reloaded")
+
+    def list_panels(self) -> Dict[str, Dict[str, Any]]:
+        """List all loaded panels with metadata."""
+        return {
+            panel_id: {
+                "priority": panel.priority,
+                "enabled": panel.is_enabled(self.config),
+                "section_id": panel.section_id,
+            }
+            for panel_id, panel in self._panels.items()
+        }

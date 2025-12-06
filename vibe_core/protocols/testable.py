@@ -265,6 +265,25 @@ class AgentTestableAdapter(BaseTestable):
             )
         )
 
+        # FRACTAL: Delegate to agent's own tests if available
+        if hasattr(self._agent, "get_test_cases"):
+            try:
+                # Agent implementation of get_test_cases might require arguments or not
+                # We try calling it without arguments first
+                custom_cases = self._agent.get_test_cases()
+                if custom_cases and isinstance(custom_cases, list):
+                    # Prefix custom tests to avoid collision
+                    for case in custom_cases:
+                        if "::" not in case.name:
+                            case.name = f"{self.testable_id}::{case.name}"
+                    cases.extend(custom_cases)
+            except Exception as e:
+                # Log but don't crash
+                import logging
+
+                logger = logging.getLogger("AgentTestableAdapter")
+                logger.debug(f"Failed to get custom tests from {self._agent.agent_id}: {e}")
+
         return cases
 
     def _test_has_manifest(self, kernel: "RealVibeKernel", comp: Any) -> bool:

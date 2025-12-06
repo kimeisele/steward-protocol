@@ -1,9 +1,14 @@
 """
 Settings Renderer (Control Panel).
+
+UNIFIED UI: Implements generate_content() pattern.
+Bidirectional: Processes user commands AND generates output.
 """
 
 import logging
+from typing import Optional
 
+from vibe_core.io_service import DocumentType
 from vibe_core.settings_sync import SettingsSync, SettingsSyncState
 
 from .base import BaseRenderer
@@ -23,40 +28,65 @@ class SettingsRenderer(BaseRenderer):
     def name(self) -> str:
         return "settings"
 
-    def render(self) -> None:
+    @property
+    def output_file(self) -> str:
+        return "SETTINGS.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.BIDIRECTIONAL
+
+    def generate_content(self) -> Optional[str]:
+        """
+        Generate SETTINGS.md content (UNIFIED UI pattern).
+
+        Note: This renderer is BIDIRECTIONAL. Input processing
+        happens here before content generation.
+        """
         # Update state from kernel
+        self._update_state_from_kernel()
+
+        # Process user commands from SETTINGS.md
+        self._sync_from_file()
+
+        # Return content for KING to write
+        return self._generate_content()
+
+    def _update_state_from_kernel(self) -> None:
+        """Update state from kernel."""
         if hasattr(self.kernel, "governance") and self.kernel.governance:
             self.state.paused_agents = set(self.kernel.governance.get_paused_agents())
-
-        # Update known agents
         if hasattr(self.kernel, "agent_registry"):
             self.state.agent_ids = set(self.kernel.agent_registry.keys())
 
-        # 1. Sync to reality (Process commands)
+    def _sync_from_file(self) -> None:
+        """Read and process user commands from SETTINGS.md."""
         try:
-            # We need to pass a callback if we want ledger recording
             callback = getattr(self.kernel, "record_verified_event", None)
-
             result = self.sync.sync_to_reality(self.state, ledger_callback=callback)
 
-            # Update state with result
             if result:
                 self.state.last_modified = result.new_mtime
                 self.state.execution_history.extend(result.history_entries)
                 self.state.paused_agents = result.paused_agents
 
-                # Handle side effects
                 if result.refresh_topology:
                     logger.info("🔄 Topology refresh requested (handled by kernel)")
-
                 if result.restart_agents:
                     for agent_id in result.restart_agents:
                         logger.info(f"🔄 Restart requested for {agent_id}")
-
         except Exception as e:
-            logger.error(f"Error rendering SETTINGS.md: {e}")
+            logger.error(f"Error syncing from SETTINGS.md: {e}")
 
-        # 2. Generate and Write Document
+    def render(self) -> None:
+        """Legacy render - DEPRECATED. Use generate_content()."""
+        # Update state from kernel
+        self._update_state_from_kernel()
+
+        # Sync from file (read user commands)
+        self._sync_from_file()
+
+        # Generate and Write Document (legacy - sync writes directly)
         try:
             content = self._generate_content()
             self.sync.render_document(content)

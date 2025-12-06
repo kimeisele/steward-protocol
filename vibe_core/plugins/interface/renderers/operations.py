@@ -1,10 +1,12 @@
 """
 Operations Renderer.
 Renders OPERATIONS.md (Dashboard) via kernel.io.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from vibe_core.io_service import DocumentType
 
@@ -26,10 +28,26 @@ class OperationsRenderer(BaseRenderer):
     def name(self) -> str:
         return "operations"
 
-    def render(self) -> None:
-        """Render OPERATIONS.md from live kernel state."""
+    @property
+    def output_file(self) -> str:
+        return "OPERATIONS.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate OPERATIONS.md content (UNIFIED UI pattern)."""
         try:
-            content = self._generate_content()
+            return self._generate_markdown()
+        except Exception as e:
+            logger.error(f"Error generating OPERATIONS content: {e}")
+            return None
+
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
             self.kernel.io.write_document(
                 name="OPERATIONS.md",
                 content=content,
@@ -37,10 +55,8 @@ class OperationsRenderer(BaseRenderer):
                 writer_id="interface_plugin",
                 add_header=True,
             )
-        except Exception as e:
-            logger.error(f"Error rendering OPERATIONS.md: {e}")
 
-    def _generate_content(self) -> str:
+    def _generate_markdown(self) -> str:
         """Generate markdown content from live kernel state."""
         lines = ["# OPERATIONS DASHBOARD", ""]
 

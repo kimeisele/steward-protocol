@@ -1,9 +1,11 @@
 """
 Agents Renderer.
 Directly renders AGENTS.md from Kernel Registry.
+
+UNIFIED UI: Implements generate_content() pattern.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from vibe_core.io_service import DocumentType
 
@@ -11,31 +13,36 @@ from .base import BaseRenderer
 
 
 class AgentsRenderer(BaseRenderer):
-    """
-    Directly renders AGENTS.md from the Kernel's Agent Registry.
-    """
+    """Directly renders AGENTS.md from the Kernel's Agent Registry."""
 
     @property
     def name(self) -> str:
         return "agents"
 
-    def render(self) -> None:
-        """Render AGENTS.md directly from kernel state."""
-        # 1. Get Agents from Registry
-        # Note: agent_registry is a MappingProxyType, so we can iterate it safely
+    @property
+    def output_file(self) -> str:
+        return "AGENTS.md"
+
+    @property
+    def doc_type(self) -> DocumentType:
+        return DocumentType.READONLY
+
+    def generate_content(self) -> Optional[str]:
+        """Generate AGENTS.md content (UNIFIED UI pattern)."""
         agents = self.kernel.agent_registry
+        return self._generate_markdown(agents)
 
-        # 2. Generate Content
-        content = self._generate_markdown(agents)
-
-        # 3. Write to File via Kernel I/O
-        self.kernel.io.write_document(
-            name="AGENTS.md",
-            content=content,
-            doc_type=DocumentType.READONLY,
-            writer_id="interface_plugin",
-            add_header=True,
-        )
+    def render(self) -> None:
+        """Legacy render - DEPRECATED."""
+        content = self.generate_content()
+        if content:
+            self.kernel.io.write_document(
+                name="AGENTS.md",
+                content=content,
+                doc_type=DocumentType.READONLY,
+                writer_id="interface_plugin",
+                add_header=True,
+            )
 
     def _generate_markdown(self, agents: Dict[str, Any]) -> str:
         """Generate Markdown content."""
