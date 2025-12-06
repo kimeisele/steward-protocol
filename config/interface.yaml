@@ -381,6 +381,20 @@ renderers:
         owner: live
         source: arch.plugins
         element_type: table
+      # LIVE: Roadmap from manifest.json
+      - id: roadmap
+        owner: live
+        source: opus.roadmap
+        element_type: table
+      # LIVE: Architecture docs from manifest.json
+      - id: documents
+        owner: live
+        source: opus.documents
+        element_type: table
+      # LIVE: P0 Plans (expanded)
+      - id: p0_plans
+        owner: live
+        source: opus.p0_plans
       # AI: I maintain these
       - id: current_goal
         owner: ai
@@ -397,6 +411,7 @@ renderers:
       - id: next_actions
         owner: human
         element_type: list
+
 
   # ARCHITECTURE - Dynamic code analysis
   architecture:
