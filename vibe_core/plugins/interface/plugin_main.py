@@ -11,7 +11,6 @@ Fractal: Custom agents can register their own renderers!
 
 import importlib
 import logging
-import pkgutil
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional
@@ -62,6 +61,9 @@ class InterfacePlugin(KernelPlugin):
 
         # Discover and load renderers
         self._load_renderers()
+
+        # Initial render on boot - don't wait for ticks!
+        self.render_all()
 
         logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active)")
 
@@ -202,9 +204,19 @@ class InterfacePlugin(KernelPlugin):
         if self._interface_config:
             enabled_renderers = self._interface_config.get_enabled_renderers()
 
-        # Iterate over modules in renderers/
-        for _, name, _ in pkgutil.iter_modules([str(renderers_path)]):
-            if name == "base":
+        # Find all renderer directories and modules
+        for item in renderers_path.iterdir():
+            if item.name.startswith("_") or item.name == "base.py":
+                continue
+
+            # Determine renderer name
+            if item.is_dir() and (item / "renderer.py").exists():
+                name = item.name
+                module_path = f"{renderers_pkg}.{name}.renderer"
+            elif item.is_file() and item.suffix == ".py":
+                name = item.stem
+                module_path = f"{renderers_pkg}.{name}"
+            else:
                 continue
 
             # Check if enabled in config
@@ -213,13 +225,18 @@ class InterfacePlugin(KernelPlugin):
                 continue
 
             try:
-                module = importlib.import_module(f"{renderers_pkg}.{name}")
+                module = importlib.import_module(module_path)
 
-                # Find the renderer class (must inherit from BaseRenderer)
+                # Find the renderer class DEFINED in this module (not imported)
                 renderer_class = None
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
-                    if isinstance(attr, type) and issubclass(attr, BaseRenderer) and attr is not BaseRenderer:
+                    if (
+                        isinstance(attr, type)
+                        and issubclass(attr, BaseRenderer)
+                        and attr is not BaseRenderer
+                        and attr.__module__ == module.__name__  # Must be defined HERE
+                    ):
                         renderer_class = attr
                         break
 
@@ -228,7 +245,7 @@ class InterfacePlugin(KernelPlugin):
                     self._last_render[name] = 0  # Initialize last render time
                     logger.debug(f"Loaded renderer: {name}")
                 else:
-                    logger.warning(f"No BaseRenderer subclass found in {name}.py")
+                    logger.warning(f"No BaseRenderer subclass found in {module_path}")
 
             except Exception as e:
                 logger.error(f"Failed to load renderer '{name}': {e}")
