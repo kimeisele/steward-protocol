@@ -180,11 +180,16 @@ class InterfacePlugin(KernelPlugin):
             try:
                 module = importlib.import_module(module_path)
 
-                # Find the renderer class (must inherit from BaseRenderer)
+                # Find the renderer class DEFINED in this module (not imported)
                 renderer_class = None
                 for attr_name in dir(module):
                     attr = getattr(module, attr_name)
-                    if isinstance(attr, type) and issubclass(attr, BaseRenderer) and attr is not BaseRenderer:
+                    if (
+                        isinstance(attr, type)
+                        and issubclass(attr, BaseRenderer)
+                        and attr is not BaseRenderer
+                        and attr.__module__ == module.__name__  # Must be defined HERE
+                    ):
                         renderer_class = attr
                         break
 
