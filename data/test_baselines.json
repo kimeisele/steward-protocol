@@ -1,0 +1,430 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2025-12-06T13:01:01.778843",
+  "contracts": {
+    "tests/test_topology_integration.py": {
+      "test_path": "tests/test_topology_integration.py",
+      "content_hash": "ad8fed867ce70b64",
+      "created_at": "2025-12-06T13:01:01.571208",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_roadmap.py": {
+      "test_path": "tests/test_roadmap.py",
+      "content_hash": "795c2cf71c5ae972",
+      "created_at": "2025-12-06T13:01:01.572054",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_knowledge_integration.py": {
+      "test_path": "tests/test_knowledge_integration.py",
+      "content_hash": "b051ce457c28aa16",
+      "created_at": "2025-12-06T13:01:01.582786",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_playbook_fix.py": {
+      "test_path": "tests/test_playbook_fix.py",
+      "content_hash": "126ce8451f49e3f7",
+      "created_at": "2025-12-06T13:01:01.594384",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_gajendra_integration.py": {
+      "test_path": "tests/test_gajendra_integration.py",
+      "content_hash": "ca161ff143abc7cc",
+      "created_at": "2025-12-06T13:01:01.595910",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_agent_city_boot.py": {
+      "test_path": "tests/test_agent_city_boot.py",
+      "content_hash": "b83b17e60dcbd0c0",
+      "created_at": "2025-12-06T13:01:01.600075",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_lifecycle_enforcer_native.py": {
+      "test_path": "tests/test_lifecycle_enforcer_native.py",
+      "content_hash": "c0778fa02d39ce2b",
+      "created_at": "2025-12-06T13:01:01.601700",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_live_fire.py": {
+      "test_path": "tests/test_live_fire.py",
+      "content_hash": "4b1ae888f4bd5e34",
+      "created_at": "2025-12-06T13:01:01.605015",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_knowledge_resolver.py": {
+      "test_path": "tests/test_knowledge_resolver.py",
+      "content_hash": "77a980bf34f5dabc",
+      "created_at": "2025-12-06T13:01:01.610320",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_lifecycle_simple.py": {
+      "test_path": "tests/test_lifecycle_simple.py",
+      "content_hash": "60f3a6a58b5196e5",
+      "created_at": "2025-12-06T13:01:01.613355",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_prana_init.py": {
+      "test_path": "tests/test_prana_init.py",
+      "content_hash": "4e56ca8c35e2e79e",
+      "created_at": "2025-12-06T13:01:01.614119",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_io_service_enforcement.py": {
+      "test_path": "tests/test_io_service_enforcement.py",
+      "content_hash": "d9a3e86828079e0d",
+      "created_at": "2025-12-06T13:01:01.614970",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_scribe_generation.py": {
+      "test_path": "tests/test_scribe_generation.py",
+      "content_hash": "fce847bfe4a45469",
+      "created_at": "2025-12-06T13:01:01.615822",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_gajendra_moksha.py": {
+      "test_path": "tests/test_gajendra_moksha.py",
+      "content_hash": "1c0f8ba4a4fd5939",
+      "created_at": "2025-12-06T13:01:01.616801",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_semantic_auditor.py": {
+      "test_path": "tests/test_semantic_auditor.py",
+      "content_hash": "a21a8b716e461405",
+      "created_at": "2025-12-06T13:01:01.618998",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_visa_protocol.py": {
+      "test_path": "tests/test_visa_protocol.py",
+      "content_hash": "1b5e578df9c95abe",
+      "created_at": "2025-12-06T13:01:01.622971",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_neuro_symbolic_flow.py": {
+      "test_path": "tests/test_neuro_symbolic_flow.py",
+      "content_hash": "5a1a08146b008459",
+      "created_at": "2025-12-06T13:01:01.624941",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_playbook_system.py": {
+      "test_path": "tests/test_playbook_system.py",
+      "content_hash": "b5faa6e85315dcb8",
+      "created_at": "2025-12-06T13:01:01.626682",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_unified_loader.py": {
+      "test_path": "tests/test_unified_loader.py",
+      "content_hash": "90c6d8f8bd7dcb8b",
+      "created_at": "2025-12-06T13:01:01.628339",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_phase3_integration.py": {
+      "test_path": "tests/test_phase3_integration.py",
+      "content_hash": "4eefafde798a1c1b",
+      "created_at": "2025-12-06T13:01:01.629633",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_playbook_real_kernel.py": {
+      "test_path": "tests/test_playbook_real_kernel.py",
+      "content_hash": "feb6caea2b90d1a0",
+      "created_at": "2025-12-06T13:01:01.630842",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_kernel_injection.py": {
+      "test_path": "tests/test_kernel_injection.py",
+      "content_hash": "366df9ccf7599f63",
+      "created_at": "2025-12-06T13:01:01.632272",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_p0_topology_integration.py": {
+      "test_path": "tests/test_p0_topology_integration.py",
+      "content_hash": "5a796ecfd60e4b32",
+      "created_at": "2025-12-06T13:01:01.635563",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_offline_features.py": {
+      "test_path": "tests/test_offline_features.py",
+      "content_hash": "848b03b65614df4d",
+      "created_at": "2025-12-06T13:01:01.638336",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_e2e_blueprint.py": {
+      "test_path": "tests/test_e2e_blueprint.py",
+      "content_hash": "faef6cc93faadfc3",
+      "created_at": "2025-12-06T13:01:01.640689",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_lifecycle_enforcer.py": {
+      "test_path": "tests/test_lifecycle_enforcer.py",
+      "content_hash": "00ac8418ca433940",
+      "created_at": "2025-12-06T13:01:01.642050",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_listener_logic.py": {
+      "test_path": "tests/test_listener_logic.py",
+      "content_hash": "5b8b390a0a4d47c7",
+      "created_at": "2025-12-06T13:01:01.643311",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_ambassador_end_to_end.py": {
+      "test_path": "tests/test_ambassador_end_to_end.py",
+      "content_hash": "0e669f58c3375016",
+      "created_at": "2025-12-06T13:01:01.644473",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_knowledge_graph.py": {
+      "test_path": "tests/test_knowledge_graph.py",
+      "content_hash": "e1510375150dd877",
+      "created_at": "2025-12-06T13:01:01.647916",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_architecture_tool.py": {
+      "test_path": "tests/test_architecture_tool.py",
+      "content_hash": "8c8f66302d25c0d8",
+      "created_at": "2025-12-06T13:01:01.650635",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_playbook_execution.py": {
+      "test_path": "tests/test_playbook_execution.py",
+      "content_hash": "62feff00ff479cee",
+      "created_at": "2025-12-06T13:01:01.655257",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_crypto_verification.py": {
+      "test_path": "tests/test_crypto_verification.py",
+      "content_hash": "f2f28a12dd4fef6c",
+      "created_at": "2025-12-06T13:01:01.657579",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/test_genesis_flow.py": {
+      "test_path": "tests/test_genesis_flow.py",
+      "content_hash": "76cccc0d1d109550",
+      "created_at": "2025-12-06T13:01:01.659403",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/archive/legacy_herald/test_resilience.py": {
+      "test_path": "tests/archive/legacy_herald/test_resilience.py",
+      "content_hash": "37bdce987c2f78f1",
+      "created_at": "2025-12-06T13:01:01.662215",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/archive/legacy_herald/test_auth_fix.py": {
+      "test_path": "tests/archive/legacy_herald/test_auth_fix.py",
+      "content_hash": "91520b2bfe3cf8a9",
+      "created_at": "2025-12-06T13:01:01.664875",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/archive/legacy_herald/test_herald_publisher.py": {
+      "test_path": "tests/archive/legacy_herald/test_herald_publisher.py",
+      "content_hash": "fc9c800063605986",
+      "created_at": "2025-12-06T13:01:01.666543",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_process_isolation.py": {
+      "test_path": "tests/integration/test_process_isolation.py",
+      "content_hash": "08966239d4c1dc90",
+      "created_at": "2025-12-06T13:01:01.673017",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_complete_wiring.py": {
+      "test_path": "tests/integration/test_complete_wiring.py",
+      "content_hash": "48c46485c8a3c12e",
+      "created_at": "2025-12-06T13:01:01.675450",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_capability_revocation.py": {
+      "test_path": "tests/integration/test_capability_revocation.py",
+      "content_hash": "e95aafd7e4bced7b",
+      "created_at": "2025-12-06T13:01:01.681827",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_test_governance.py": {
+      "test_path": "tests/integration/test_test_governance.py",
+      "content_hash": "016e9f69462ac74f",
+      "created_at": "2025-12-06T13:01:01.684430",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_system_boot.py": {
+      "test_path": "tests/integration/test_system_boot.py",
+      "content_hash": "998b1ed67c26898e",
+      "created_at": "2025-12-06T13:01:01.687096",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_veda4_circuits.py": {
+      "test_path": "tests/integration/test_veda4_circuits.py",
+      "content_hash": "d2202132a6232e1a",
+      "created_at": "2025-12-06T13:01:01.689325",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_kernel_markdown_interfaces.py": {
+      "test_path": "tests/integration/test_kernel_markdown_interfaces.py",
+      "content_hash": "fb9a24510735b84a",
+      "created_at": "2025-12-06T13:01:01.690913",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_parampara_integrity.py": {
+      "test_path": "tests/integration/test_parampara_integrity.py",
+      "content_hash": "3f6447de7d9a3289",
+      "created_at": "2025-12-06T13:01:01.693364",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_settings_commands.py": {
+      "test_path": "tests/integration/test_settings_commands.py",
+      "content_hash": "845d2046f88e89dd",
+      "created_at": "2025-12-06T13:01:01.743189",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_event_bus_integration.py": {
+      "test_path": "tests/integration/test_event_bus_integration.py",
+      "content_hash": "9acb2125968254db",
+      "created_at": "2025-12-06T13:01:01.750450",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/integration/test_kernel_boot.py": {
+      "test_path": "tests/integration/test_kernel_boot.py",
+      "content_hash": "b27cfe69eb81f9c4",
+      "created_at": "2025-12-06T13:01:01.760064",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/fractal/test_example_fractal.py": {
+      "test_path": "tests/fractal/test_example_fractal.py",
+      "content_hash": "e742a34cf537b6ee",
+      "created_at": "2025-12-06T13:01:01.765048",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/fractal/test_universal_orchestration.py": {
+      "test_path": "tests/fractal/test_universal_orchestration.py",
+      "content_hash": "f9a05ed8c9cbef8f",
+      "created_at": "2025-12-06T13:01:01.769723",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_red_team_attacks.py": {
+      "test_path": "tests/hardening/test_red_team_attacks.py",
+      "content_hash": "aa07a7f30ee066af",
+      "created_at": "2025-12-06T13:01:01.773658",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_constitutional_enforcement.py": {
+      "test_path": "tests/hardening/test_constitutional_enforcement.py",
+      "content_hash": "cab58f7ee5cff131",
+      "created_at": "2025-12-06T13:01:01.775114",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_governance_security.py": {
+      "test_path": "tests/hardening/test_governance_security.py",
+      "content_hash": "28c49381d55741f4",
+      "created_at": "2025-12-06T13:01:01.777249",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    },
+    "tests/hardening/test_ledger_acid.py": {
+      "test_path": "tests/hardening/test_ledger_acid.py",
+      "content_hash": "a9d3751e6a01a98a",
+      "created_at": "2025-12-06T13:01:01.778785",
+      "created_by": "unknown",
+      "frozen": false,
+      "notes": ""
+    }
+  }
+}

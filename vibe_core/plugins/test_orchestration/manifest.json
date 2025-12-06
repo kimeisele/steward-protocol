@@ -19,5 +19,77 @@
         "test",
         "orchestration",
         "chaos"
-    ]
+    ],
+    "cli": {
+        "namespace": "test",
+        "commands": [
+            {
+                "name": "run",
+                "handler": "cmd_run",
+                "execution_mode": "boot",
+                "help": "Run tests (all, by type, or by tag)",
+                "streaming": true,
+                "args": [
+                    {
+                        "name": "target",
+                        "type": "str",
+                        "help": "Test target: 'all', type name, or tag name",
+                        "required": false,
+                        "default": "all"
+                    },
+                    {
+                        "name": "tag",
+                        "type": "str",
+                        "help": "Run tests with specific tag",
+                        "required": false
+                    },
+                    {
+                        "name": "type",
+                        "type": "str",
+                        "help": "Run tests for component type (agent, plugin, tool)",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "name": "summary",
+                "handler": "cmd_summary",
+                "execution_mode": "boot",
+                "help": "Show test discovery summary"
+            },
+            {
+                "name": "pytest",
+                "handler": "cmd_pytest",
+                "execution_mode": "offline",
+                "help": "Run pytest suite",
+                "args": [
+                    {
+                        "name": "path",
+                        "type": "str",
+                        "help": "Path to test file or directory",
+                        "required": false,
+                        "default": "tests"
+                    },
+                    {
+                        "name": "markers",
+                        "type": "str",
+                        "help": "Pytest markers to filter (e.g., 'integration')",
+                        "required": false
+                    },
+                    {
+                        "name": "verbose",
+                        "type": "bool",
+                        "help": "Enable verbose output",
+                        "required": false
+                    }
+                ]
+            },
+            {
+                "name": "guardian",
+                "handler": "cmd_guardian",
+                "execution_mode": "boot",
+                "help": "Show test guardian status (mutation protection)"
+            }
+        ]
+    }
 }
