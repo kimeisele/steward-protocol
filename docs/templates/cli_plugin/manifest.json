@@ -1,0 +1,52 @@
+{
+  "type": "plugin",
+  "id": "my_plugin",
+  "name": "My Plugin",
+  "version": "1.0.0",
+  "description": "Description of what this plugin does",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "MyPlugin",
+
+  "priority": 100,
+  "enabled": true,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown"
+  ],
+
+  "dependencies": [],
+
+  "defaults": {},
+
+  "author": "Your Name",
+  "tags": ["example"],
+
+  "cli": {
+    "namespace": "my",
+    "commands": [
+      {
+        "name": "hello",
+        "handler": "cmd_hello",
+        "execution_mode": "offline",
+        "help": "Say hello (offline - no kernel needed)",
+        "args": [
+          {
+            "name": "name",
+            "type": "str",
+            "help": "Name to greet",
+            "required": false,
+            "default": "World"
+          }
+        ]
+      },
+      {
+        "name": "status",
+        "handler": "cmd_status",
+        "execution_mode": "boot",
+        "help": "Show status (boot - needs kernel)"
+      }
+    ]
+  }
+}
