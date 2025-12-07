@@ -110,27 +110,19 @@ class LayeredRouter:
                 compiled = []
                 for pattern in regex_patterns:
                     try:
-                        compiled.append(
-                            (re.compile(pattern, re.IGNORECASE), pattern)
-                        )
+                        compiled.append((re.compile(pattern, re.IGNORECASE), pattern))
                     except re.error as e:
-                        logger.warning(
-                            f"Invalid regex in {circuit_id}: {pattern} - {e}"
-                        )
+                        logger.warning(f"Invalid regex in {circuit_id}: {pattern} - {e}")
 
                 if compiled:
                     self._semantic_patterns[circuit_id] = compiled
-                    self._param_extractors[circuit_id] = semantic.get(
-                        "param_extraction", {}
-                    )
+                    self._param_extractors[circuit_id] = semantic.get("param_extraction", {})
                     self._semantic_metadata[circuit_id] = {
                         "syscall_type": semantic.get("syscall_type"),
                         "target_agent": semantic.get("target_agent"),
                     }
 
-    def route(
-        self, user_input: str, context: Optional[Dict] = None
-    ) -> RouteResult:
+    def route(self, user_input: str, context: Optional[Dict] = None) -> RouteResult:
         """
         Route user input through the 3-layer cascade.
 
@@ -153,9 +145,7 @@ class LayeredRouter:
         # Layer 2: Semantic match
         result = self._layer2_semantic(user_input)
         if result:
-            logger.debug(
-                f"[L2] Semantic match: {result.circuit_id} (conf={result.confidence:.2f})"
-            )
+            logger.debug(f"[L2] Semantic match: {result.circuit_id} (conf={result.confidence:.2f})")
 
             # Layer 3: Context boost (if available)
             if self._ephemeral or self._kg:
@@ -256,9 +246,7 @@ class LayeredRouter:
 
         return params
 
-    def _layer3_context_boost(
-        self, result: RouteResult, user_input: str
-    ) -> RouteResult:
+    def _layer3_context_boost(self, result: RouteResult, user_input: str) -> RouteResult:
         """Layer 3: Boost confidence based on context signals."""
         boost = 0.0
 
