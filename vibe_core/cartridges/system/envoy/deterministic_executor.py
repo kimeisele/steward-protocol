@@ -735,10 +735,10 @@ class DeterministicExecutor:
         if not phase.actions:
             return True
 
-        # Build template context for variable resolution (GAD-5000)
-        template_context = self._build_template_context(playbook, execution, intent_vector)
-
         for action in phase.actions:
+            # CRITICAL FIX (BREAK 3): Rebuild context EVERY action to get fresh phase_results
+            # This ensures that render_output phase can see results from query_status, query_agents, query_tools
+            template_context = self._build_template_context(playbook, execution, intent_vector)
             try:
                 action_type = action.get("action_type", "EXECUTE_SCRIPT")
                 # Support both 'target' and 'agent_id' for backwards compatibility
@@ -880,6 +880,29 @@ class DeterministicExecutor:
                     else:
                         logger.warning(f"  ⚠️  Nested playbook not found: {nested_playbook_id}")
                         return False
+
+                else:
+                    # GENERIC HANDLER DISPATCH (GAD-6000: QUERY_GRAPH, RENDER_TEMPLATE, etc.)
+                    # Delegate to Action Handler Registry for all other action types
+                    if self.action_registry and self.action_registry.has(action_type):
+                        handler = self.action_registry.get(action_type)
+                        action_context = ActionContext(
+                            phase_id=phase.phase_id,
+                            playbook_id=playbook.id,
+                            execution_id=execution.execution_id,
+                            user_input=execution.user_input,
+                            phase_results=execution.phase_results,
+                            kernel=kernel,
+                            emit_event=emit_event,
+                        )
+                        result = await handler.execute(resolved_target, params, action_context)
+                        if not result.success:
+                            logger.warning(f"  ❌ {action_type} failed: {result.error}")
+                            return False
+                        phase.result = result.data
+                        logger.info(f"  ✓ {action_type} completed: {resolved_target}")
+                    else:
+                        logger.warning(f"  ⚠️ Unknown action type (no handler): {action_type}")
 
             except Exception as e:
                 logger.error(f"❌ Action failed: {action} - {e}")
