@@ -32,6 +32,26 @@
       ]
     },
 
+    "EXECUTION_PROMPTS": {
+      "description": "Detailed execution prompts for Sonnet/Gemini",
+      "files": [
+        {
+          "file": "../prompts/OPUS_REFACTOR_PHASE2.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "IMMEDIATE DEBT: 5 Tasks - Kill legacy routers, Fix EphemeralStorage, Async panels, Externalize templates, Unit tests"
+        },
+        {
+          "file": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md",
+          "status": "APPROVED",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "FULL WAR: All 7 Schlachten with step-by-step prompts - Cortex, Knowledge, Cartridges, Provider, Services, Legacy, Integration"
+        }
+      ]
+    },
+
     "INFRASTRUCTURE_PLANS": {
       "description": "Subsystem-specific plans",
       "files": [
@@ -342,11 +362,75 @@
   "reading_order": [
     "OPUS_STATUS_2025-12-06.md",
     "MASTER_PLAN_V4.1_FINAL.md",
+    "../prompts/OPUS_REFACTOR_PHASE2.md",
+    "../prompts/TOTAL_WAR_EXECUTION_PLAN.md",
     "OPUS/OPUS_RUNTIME_SEPARATION.md",
     "FRAKTAL_TEST_ARCHITECTURE.md",
     "PHOENIX_CONFIG_FRACTAL.md",
     "ONEWORD_UI_STANDARD.md"
   ],
+
+  "execution_order": {
+    "description": "Complete execution order for Der Totale Krieg",
+    "phases": [
+      {
+        "phase": "0",
+        "name": "IMMEDIATE DEBT",
+        "prompt": "../prompts/OPUS_REFACTOR_PHASE2.md",
+        "status": "READY",
+        "tasks": ["Kill legacy routers", "Fix EphemeralStorage", "Async panels", "Externalize templates", "Unit tests"]
+      },
+      {
+        "phase": "1",
+        "name": "FOUNDATION",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-1-cortex-foundation",
+        "status": "PENDING",
+        "tasks": ["Create vibe_core/cortex/", "Move engines", "Create CortexLoader"]
+      },
+      {
+        "phase": "2",
+        "name": "KNOWLEDGE",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-2-knowledge-fraktalisierung",
+        "status": "PENDING",
+        "tasks": ["Structure knowledge/", "Create manifests", "KnowledgeLoader"]
+      },
+      {
+        "phase": "3",
+        "name": "CARTRIDGES",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-3-cartridge-consolidation",
+        "status": "PENDING",
+        "tasks": ["Move all agents to vibe_core/cartridges/", "Update imports"]
+      },
+      {
+        "phase": "4",
+        "name": "PROVIDER",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-4-provider-elimination",
+        "status": "PENDING",
+        "tasks": ["Eliminate provider/", "Update gateway"]
+      },
+      {
+        "phase": "5",
+        "name": "SERVICES",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-5-services-cleanup",
+        "status": "PENDING",
+        "tasks": ["Move llm_engine to runtime/", "Delete services/"]
+      },
+      {
+        "phase": "6",
+        "name": "LEGACY",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-6-legacy-cleanup",
+        "status": "PENDING",
+        "tasks": ["Delete legacy dirs", "Move workspace to data/"]
+      },
+      {
+        "phase": "7",
+        "name": "INTEGRATION",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-7-final-integration",
+        "status": "PENDING",
+        "tasks": ["Full verification", "Documentation update"]
+      }
+    ]
+  },
 
   "critical_tech_debt": [
     {
