@@ -83,6 +83,13 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 "registry",
                 "auditing",
                 "circuit_execution",  # GAD-5500
+                # Tool capabilities (required to execute tools via self.system)
+                "envoy.city_control",
+                "envoy.curator",
+                "envoy.diplomacy",
+                "envoy.gap_report",
+                "envoy.hil",
+                "envoy.campaign",
             ],
         )
 

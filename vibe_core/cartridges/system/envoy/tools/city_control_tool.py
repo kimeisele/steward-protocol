@@ -90,6 +90,9 @@ class CityControlTool(Tool):
         if not kernel:
             logger.warning("⚠️ CityControlTool initialized without kernel - limited functionality")
 
+        # Operating mode (for status display)
+        self.mode = "KERNEL" if kernel else "STANDALONE"
+
         logger.info("🏙️  City Control Tool initialized")
 
     @property
