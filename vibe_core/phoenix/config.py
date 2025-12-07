@@ -12,22 +12,33 @@ FRACTAL ARCHITECTURE:
 
 Sections are auto-discovered from vibe_core/phoenix/sections/.
 Any class with section_id, from_dict(), to_dict() is a valid section.
+
+ZERO MANUAL REGISTRATION:
+    Add folder to sections/ with manifest.json → auto-loaded!
+    Add config/section_id.yaml → auto-populated!
+    Access via config.section_id → works!
 """
 
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import yaml
 
 from .section_loader import SectionLoader, SectionMeta
-from .sections.city.section_main import CityConfig
-from .sections.kernel.section_main import KernelConfig
-from .sections.quality.section_main import QualityConfig, get_default_quality_config
-from .sections.steward.section_main import StewardConfig
 from .utils.circuits import CircuitConfig, discover_circuits
 from .utils.routing import RoutingRule, load_routing_rules, save_routing_rules
+
+# Type imports for IDE support (no runtime dependency)
+if TYPE_CHECKING:
+    from .sections.city.section_main import CityConfig
+    from .sections.kernel.section_main import KernelConfig
+    from .sections.paths.section_main import PathsConfig
+    from .sections.prompts.section_main import PromptsConfig
+    from .sections.quality.section_main import QualityConfig
+    from .sections.steward.section_main import StewardConfig
+    from .sections.templates.section_main import TemplatesConfig
 
 logger = logging.getLogger(__name__)
 
@@ -37,51 +48,90 @@ class PhoenixConfig:
     """
     Unified configuration - the Phoenix that never dies.
 
-    Combines all configuration sources into a single typed interface:
-    - kernel: System configuration from phoenix.yaml
-    - city: Agent City configuration from matrix.yaml
-    - quality: Lint/format/test/CI configuration from quality.yaml
-    - circuits: Dynamic circuit configs from circuits/*.yaml
-    - routing: Hot-swappable routing from MATRIX.md
+    TRUE FRACTAL PATTERN:
+    - ALL sections are auto-discovered from vibe_core/phoenix/sections/
+    - ALL sections are stored in _sections dict
+    - Access via config.section_id uses __getattr__
+    - NO manual field registration required!
 
-    FRACTAL: Sections are auto-discovered from vibe_core/phoenix/sections/.
-    New section = new file in sections/ with section_id = auto-loaded!
+    Legacy compatibility:
+    - config.kernel, config.city, etc. still work via __getattr__
+    - Type hints available via TYPE_CHECKING imports
+
+    Usage:
+        config = PhoenixConfig.from_files()
+        config.kernel.features.live_fire_enabled
+        config.paths.data.resolve("economy_db")
+        config.templates.render("status_summary", ...)
+        config.prompts.get_prompt("system_boot", ...)
     """
 
-    # Core sections (typed for IDE support)
-    kernel: KernelConfig = field(default_factory=KernelConfig)
-    city: CityConfig = field(default_factory=CityConfig)
-    quality: QualityConfig = field(default_factory=get_default_quality_config)
-    steward: StewardConfig = field(default_factory=StewardConfig)
+    # ALL sections stored here - auto-discovered
+    _sections: Dict[str, Any] = field(default_factory=dict)
+    _section_metadata: Dict[str, SectionMeta] = field(default_factory=dict, repr=False)
 
-    # Dynamic collections
+    # Dynamic collections (not sections)
     circuits: Dict[str, CircuitConfig] = field(default_factory=dict)
     routing: List[RoutingRule] = field(default_factory=list)
 
-    # Auto-discovered sections (for extensibility)
-    # Any NEW section added to sections/ appears here automatically
-    _extra_sections: Dict[str, Any] = field(default_factory=dict, repr=False)
-    _section_metadata: Dict[str, SectionMeta] = field(default_factory=dict, repr=False)
-
-    # Source file paths (for save/reload)
-    _phoenix_path: Optional[Path] = field(default=None, repr=False)
-    _matrix_path: Optional[Path] = field(default=None, repr=False)
+    # Source paths (for save/reload)
     _circuits_dir: Optional[Path] = field(default=None, repr=False)
     _routing_path: Optional[Path] = field(default=None, repr=False)
-    _quality_path: Optional[Path] = field(default=None, repr=False)
     _config_dir: Optional[Path] = field(default=None, repr=False)
 
     def __getattr__(self, name: str) -> Any:
         """
-        Dynamic access to auto-discovered sections.
+        Dynamic access to ALL auto-discovered sections.
 
-        Allows: config.new_section even if new_section was added
-        after this code was written.
+        This is the ONLY way sections are accessed - no manual fields!
         """
-        # Check extra sections for dynamically discovered ones
-        if "_extra_sections" in self.__dict__ and name in self._extra_sections:
-            return self._extra_sections[name]
-        raise AttributeError(f"'{type(self).__name__}' has no attribute '{name}'")
+        if "_sections" in self.__dict__ and name in self._sections:
+            return self._sections[name]
+        raise AttributeError(f"'{type(self).__name__}' has no section '{name}'")
+
+    # =========================================================================
+    # Type-hinted properties for IDE support (optional, for core sections only)
+    # These don't add manual fields - they just provide type hints
+    # =========================================================================
+
+    @property
+    def kernel(self) -> "KernelConfig":
+        """Kernel configuration (type-hinted for IDE)."""
+        return self._sections.get("kernel")
+
+    @property
+    def city(self) -> "CityConfig":
+        """City configuration (type-hinted for IDE)."""
+        return self._sections.get("city")
+
+    @property
+    def quality(self) -> "QualityConfig":
+        """Quality configuration (type-hinted for IDE)."""
+        return self._sections.get("quality")
+
+    @property
+    def steward(self) -> "StewardConfig":
+        """Steward configuration (type-hinted for IDE)."""
+        return self._sections.get("steward")
+
+    @property
+    def paths(self) -> "PathsConfig":
+        """Paths configuration (type-hinted for IDE)."""
+        return self._sections.get("paths")
+
+    @property
+    def templates(self) -> "TemplatesConfig":
+        """Templates configuration (type-hinted for IDE)."""
+        return self._sections.get("templates")
+
+    @property
+    def prompts(self) -> "PromptsConfig":
+        """Prompts configuration (type-hinted for IDE)."""
+        return self._sections.get("prompts")
+
+    # =========================================================================
+    # MAIN ENTRY POINT
+    # =========================================================================
 
     @classmethod
     def from_files(
@@ -93,11 +143,11 @@ class PhoenixConfig:
         """
         Load configuration from all source files via auto-discovery.
 
-        Sections are auto-discovered from vibe_core/phoenix/sections/
-        and loaded from their source_file in config/:
-        - kernel → config/phoenix.yaml
-        - city → config/matrix.yaml
-        - quality → config/quality.yaml
+        ZERO MANUAL REGISTRATION:
+        - SectionLoader.discover() finds ALL sections in sections/
+        - Each section has manifest.json defining config_file
+        - YAML from config/ is loaded and passed to from_dict()
+        - Result stored in _sections dict
 
         Args:
             circuits_dir: Directory containing circuit YAML files
@@ -107,23 +157,16 @@ class PhoenixConfig:
         Returns:
             Fully loaded PhoenixConfig
         """
-        # === AUTO-DISCOVERY: Load all sections from config/*.yaml ===
+        # === AUTO-DISCOVERY: Load ALL sections ===
         SectionLoader.clear_cache()
-        discovered_sections, section_meta = SectionLoader.discover(config_dir=config_dir)
-
-        # Extract known sections (use defaults if not discovered)
-        kernel = discovered_sections.get("kernel", KernelConfig())
-        city = discovered_sections.get("city", CityConfig())
-        quality = discovered_sections.get("quality", get_default_quality_config())
-        steward = discovered_sections.get("steward", StewardConfig())
+        sections, section_meta = SectionLoader.discover(config_dir=config_dir)
 
         # Log what was loaded
-        for section_id in ["kernel", "city", "quality", "steward"]:
-            meta = section_meta.get(section_id)
-            if meta and meta.loaded_from_yaml:
-                logger.info(f"Loaded {section_id} from {meta.source_file}")
+        for section_id, meta in section_meta.items():
+            if meta.loaded_from_yaml:
+                logger.info(f"Loaded section '{section_id}' from {meta.source_file}")
             else:
-                logger.info(f"Using defaults for {section_id}")
+                logger.debug(f"Section '{section_id}' using defaults")
 
         # === COLLECTIONS: Circuits and Routing ===
         circuits = discover_circuits(circuits_dir)
@@ -132,34 +175,20 @@ class PhoenixConfig:
         routing = load_routing_rules(routing_path)
         logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
-        # === EXTRA SECTIONS: Any new sections we don't know about ===
-        known_sections = {"kernel", "city", "quality", "steward"}
-        extra_sections = {k: v for k, v in discovered_sections.items() if k not in known_sections}
-        if extra_sections:
-            logger.info(f"Auto-discovered extra sections: {list(extra_sections.keys())}")
-
         # === CREATE CONFIG ===
         config = cls(
-            kernel=kernel,
-            city=city,
-            quality=quality,
-            steward=steward,
+            _sections=sections,
+            _section_metadata=section_meta,
             circuits=circuits,
             routing=routing,
-            _extra_sections=extra_sections,
-            _section_metadata=section_meta,
         )
 
-        # Store paths for later save/reload (from section metadata)
-        kernel_meta = section_meta.get("kernel")
-        city_meta = section_meta.get("city")
-        quality_meta = section_meta.get("quality")
-        config._phoenix_path = kernel_meta.source_file if kernel_meta else None
-        config._matrix_path = city_meta.source_file if city_meta else None
-        config._quality_path = quality_meta.source_file if quality_meta else None
+        # Store paths for reload
         config._circuits_dir = circuits_dir
         config._routing_path = routing_path
         config._config_dir = config_dir
+
+        logger.info(f"PhoenixConfig loaded with {len(sections)} sections: {list(sections.keys())}")
 
         return config
 
@@ -172,20 +201,19 @@ class PhoenixConfig:
         """
         import os
 
-        # Start with file-based config
         config = cls.from_files()
 
         # Override with environment variables
-        if os.getenv("PHOENIX_LIVE_FIRE"):
+        if config.kernel and os.getenv("PHOENIX_LIVE_FIRE"):
             config.kernel.features.live_fire_enabled = os.getenv("PHOENIX_LIVE_FIRE", "").lower() == "true"
 
-        if os.getenv("PHOENIX_DEBUG"):
+        if config.kernel and os.getenv("PHOENIX_DEBUG"):
             config.kernel.features.debug_mode = os.getenv("PHOENIX_DEBUG", "").lower() == "true"
 
-        if os.getenv("PHOENIX_LLM_PROVIDER"):
+        if config.kernel and os.getenv("PHOENIX_LLM_PROVIDER"):
             config.kernel.providers.llm_provider = os.getenv("PHOENIX_LLM_PROVIDER", "")
 
-        if os.getenv("PHOENIX_LOG_LEVEL"):
+        if config.city and os.getenv("PHOENIX_LOG_LEVEL"):
             config.city.monitoring.log_level = os.getenv("PHOENIX_LOG_LEVEL", "INFO")
 
         return config
@@ -194,17 +222,23 @@ class PhoenixConfig:
     def create_for_simulation(cls) -> "PhoenixConfig":
         """Factory: Create config for safe simulation mode."""
         config = cls.from_files()
-        config.kernel.features.live_fire_enabled = False
-        config.kernel.features.debug_mode = True
+        if config.kernel:
+            config.kernel.features.live_fire_enabled = False
+            config.kernel.features.debug_mode = True
         return config
 
     @classmethod
     def create_for_live_fire(cls) -> "PhoenixConfig":
         """Factory: Create config for production/live mode."""
         config = cls.from_files()
-        config.kernel.features.live_fire_enabled = True
-        config.kernel.features.debug_mode = False
+        if config.kernel:
+            config.kernel.features.live_fire_enabled = True
+            config.kernel.features.debug_mode = False
         return config
+
+    # =========================================================================
+    # Validation
+    # =========================================================================
 
     def validate(self) -> List[str]:
         """
@@ -215,19 +249,12 @@ class PhoenixConfig:
         """
         errors: List[str] = []
 
-        # Kernel validation
-        if not self.kernel.providers.llm_provider:
-            errors.append("kernel.providers.llm_provider is required")
-
-        # City validation
-        if self.city.governance.voting_threshold < 0 or self.city.governance.voting_threshold > 1:
-            errors.append("city.governance.voting_threshold must be between 0 and 1")
-
-        if self.city.governance.quorum_required < 0 or self.city.governance.quorum_required > 1:
-            errors.append("city.governance.quorum_required must be between 0 and 1")
-
-        if self.city.economy.initial_credits < 0:
-            errors.append("city.economy.initial_credits must be non-negative")
+        # Validate each section that has a validate() method
+        for section_id, section in self._sections.items():
+            if hasattr(section, "validate"):
+                section_errors = section.validate()
+                for err in section_errors:
+                    errors.append(f"{section_id}: {err}")
 
         # Routing validation
         for i, rule in enumerate(self.routing):
@@ -238,6 +265,10 @@ class PhoenixConfig:
 
         return errors
 
+    # =========================================================================
+    # Save/Reload
+    # =========================================================================
+
     def save(self) -> bool:
         """
         Persist configuration back to files.
@@ -247,35 +278,25 @@ class PhoenixConfig:
         """
         success = True
 
-        # Save kernel config
-        if self._phoenix_path:
-            try:
-                self._phoenix_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(self._phoenix_path, "w") as f:
-                    yaml.dump(self.kernel.to_dict(), f, default_flow_style=False, sort_keys=False)
-                logger.info(f"Saved kernel config to {self._phoenix_path}")
-            except Exception as e:
-                logger.error(f"Failed to save kernel config: {e}")
-                success = False
-
-        # Save city config
-        if self._matrix_path:
-            try:
-                self._matrix_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(self._matrix_path, "w") as f:
-                    yaml.dump(self.city.to_dict(), f, default_flow_style=False, sort_keys=False)
-                logger.info(f"Saved city config to {self._matrix_path}")
-            except Exception as e:
-                logger.error(f"Failed to save city config: {e}")
-                success = False
+        # Save each section that has source file
+        for section_id, meta in self._section_metadata.items():
+            if meta.source_file and meta.source_file.exists():
+                section = self._sections.get(section_id)
+                if section and hasattr(section, "to_dict"):
+                    try:
+                        meta.source_file.parent.mkdir(parents=True, exist_ok=True)
+                        with open(meta.source_file, "w") as f:
+                            yaml.dump(section.to_dict(), f, default_flow_style=False, sort_keys=False)
+                        logger.info(f"Saved {section_id} to {meta.source_file}")
+                    except Exception as e:
+                        logger.error(f"Failed to save {section_id}: {e}")
+                        success = False
 
         # Save routing rules
         if self._routing_path:
             if not save_routing_rules(self.routing, self._routing_path):
                 logger.error("Failed to save routing rules")
                 success = False
-            else:
-                logger.info(f"Saved routing rules to {self._routing_path}")
 
         return success
 
@@ -291,81 +312,79 @@ class PhoenixConfig:
             self.circuits = discover_circuits(self._circuits_dir)
             logger.info(f"Reloaded {len(self.circuits)} circuits")
 
+    def reload_section(self, section_id: str) -> bool:
+        """
+        Reload a single section from its YAML file.
+
+        Args:
+            section_id: Section to reload
+
+        Returns:
+            True if successful
+        """
+        meta = self._section_metadata.get(section_id)
+        if not meta or not meta.source_file:
+            logger.warning(f"Cannot reload {section_id}: no source file")
+            return False
+
+        try:
+            yaml_data = SectionLoader._load_yaml(meta.source_file)
+            new_instance = meta.section_class.from_dict(yaml_data)
+            self._sections[section_id] = new_instance
+            logger.info(f"Reloaded {section_id} from {meta.source_file}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to reload {section_id}: {e}")
+            return False
+
     # =========================================================================
-    # Section Discovery (fractal pattern - mirrors plugin discovery)
+    # Section Discovery
     # =========================================================================
 
     def list_sections(self) -> List[str]:
-        """
-        List all discovered section IDs.
-
-        Returns:
-            List of section identifiers (e.g., ["kernel", "city", "quality", "steward"])
-        """
-        known = ["kernel", "city", "quality", "steward"]
-        extra = list(self._extra_sections.keys()) if self._extra_sections else []
-        return known + extra
+        """List all discovered section IDs."""
+        return list(self._sections.keys())
 
     def get_section(self, section_id: str) -> Optional[Any]:
-        """
-        Get a section by ID (works for both typed and dynamic sections).
-
-        Args:
-            section_id: Section identifier (e.g., "kernel", "quality", "steward")
-
-        Returns:
-            Section instance or None if not found
-        """
-        if section_id == "kernel":
-            return self.kernel
-        elif section_id == "city":
-            return self.city
-        elif section_id == "quality":
-            return self.quality
-        elif section_id == "steward":
-            return self.steward
-        elif self._extra_sections and section_id in self._extra_sections:
-            return self._extra_sections[section_id]
-        return None
+        """Get a section by ID."""
+        return self._sections.get(section_id)
 
     def get_section_metadata(self, section_id: str) -> Optional[SectionMeta]:
-        """
-        Get metadata about a section (source file, priority, etc.).
+        """Get metadata about a section (source file, priority, etc.)."""
+        return self._section_metadata.get(section_id)
 
-        Args:
-            section_id: Section identifier
-
-        Returns:
-            SectionMeta or None if not found
-        """
-        return self._section_metadata.get(section_id) if self._section_metadata else None
+    def has_section(self, section_id: str) -> bool:
+        """Check if a section exists."""
+        return section_id in self._sections
 
     # =========================================================================
-    # Convenience accessors (fractal pattern - same interface at every level)
+    # Convenience accessors
     # =========================================================================
 
     @property
     def live_fire_enabled(self) -> bool:
         """Quick access to live fire mode."""
-        return self.kernel.features.live_fire_enabled
+        return self.kernel.features.live_fire_enabled if self.kernel else False
 
     @live_fire_enabled.setter
     def live_fire_enabled(self, value: bool) -> None:
-        self.kernel.features.live_fire_enabled = value
+        if self.kernel:
+            self.kernel.features.live_fire_enabled = value
 
     @property
     def debug_mode(self) -> bool:
         """Quick access to debug mode."""
-        return self.kernel.features.debug_mode
+        return self.kernel.features.debug_mode if self.kernel else False
 
     @debug_mode.setter
     def debug_mode(self, value: bool) -> None:
-        self.kernel.features.debug_mode = value
+        if self.kernel:
+            self.kernel.features.debug_mode = value
 
     @property
     def provider_name(self) -> str:
         """Quick access to provider name."""
-        return self.kernel.providers.name
+        return self.kernel.providers.name if self.kernel else "unknown"
 
     def get_circuit(self, name: str) -> Optional[CircuitConfig]:
         """Get a circuit by name."""
@@ -376,145 +395,79 @@ class PhoenixConfig:
         return [r for r in self.routing if r.active]
 
     def route_intent(self, intent: str) -> Optional[str]:
-        """
-        Route an intent string to a circuit name.
-
-        Args:
-            intent: User intent or input string
-
-        Returns:
-            Circuit name if matched, None otherwise
-        """
+        """Route an intent string to a circuit name."""
         for rule in self.get_active_routes():
             if rule.matches(intent):
                 return rule.circuit
         return None
 
     # =========================================================================
-    # Serialization (for 4D Hypercube / child kernel spawning)
+    # Serialization
     # =========================================================================
 
     def to_dict(self) -> Dict:
-        """
-        Serialize config to dictionary for child kernel spawning.
-
-        Returns:
-            Dict representation of entire config
-        """
-        return {
-            "kernel": self.kernel.to_dict(),
-            "city": self.city.to_dict(),
+        """Serialize config to dictionary for child kernel spawning."""
+        result = {
             "circuits": {name: circuit.to_dict() for name, circuit in self.circuits.items()},
             "routing": [rule.to_dict() for rule in self.routing],
-            "quality": self.quality.to_dict(),
-            "steward": self.steward.to_dict(),
         }
+        # Add all sections
+        for section_id, section in self._sections.items():
+            if hasattr(section, "to_dict"):
+                result[section_id] = section.to_dict()
+        return result
 
     @classmethod
     def from_dict(cls, data: Dict) -> "PhoenixConfig":
-        """
-        Deserialize config from dictionary.
+        """Deserialize config from dictionary."""
+        # This is more complex - need to know section classes
+        # For now, just load from files and override
+        config = cls.from_files()
 
-        Args:
-            data: Dict representation of config
+        # Override circuits
+        if "circuits" in data:
+            config.circuits = {}
+            for name, circuit_data in data["circuits"].items():
+                config.circuits[name] = CircuitConfig.from_dict(circuit_data)
 
-        Returns:
-            PhoenixConfig instance
-        """
-        from .sections.circuits import CircuitConfig
+        # Override routing
+        if "routing" in data:
+            config.routing = [RoutingRule.from_dict(r) for r in data["routing"]]
 
-        kernel = KernelConfig.from_dict(data.get("kernel", {}))
-        city = CityConfig.from_dict(data.get("city", {}))
+        # Override sections
+        for section_id, section in config._sections.items():
+            if section_id in data and hasattr(section, "from_dict"):
+                config._sections[section_id] = type(section).from_dict(data[section_id])
 
-        circuits = {}
-        for name, circuit_data in data.get("circuits", {}).items():
-            circuits[name] = CircuitConfig.from_dict(circuit_data)
-
-        routing = []
-        for rule_data in data.get("routing", []):
-            routing.append(RoutingRule.from_dict(rule_data))
-
-        quality = QualityConfig.from_dict(data.get("quality", {}))
-        steward = StewardConfig.from_dict(data.get("steward", {}))
-
-        return cls(
-            kernel=kernel,
-            city=city,
-            circuits=circuits,
-            routing=routing,
-            quality=quality,
-            steward=steward,
-        )
+        return config
 
     # =========================================================================
-    # Backward compatibility with old phoenix_config API
+    # Backward compatibility
     # =========================================================================
 
     def get(self, key: str, default=None):
-        """
-        Get config value by dotted key path (backward compatibility).
-
-        Maps old-style dotted paths to typed attributes:
-        - "providers.llm_provider" -> self.kernel.providers.llm_provider
-        - "features.live_fire_enabled" -> self.kernel.features.live_fire_enabled
-
-        Args:
-            key: Dotted path like "providers.llm_provider"
-            default: Default value if not found
-
-        Returns:
-            Config value or default
-        """
-        # Map old paths to new typed structure
-        path_map = {
-            "providers.llm_provider": lambda: self.kernel.providers.llm_provider,
-            "providers.fallback_provider": lambda: self.kernel.providers.fallback_provider,
-            "features.live_fire_enabled": lambda: self.kernel.features.live_fire_enabled,
-            "features.debug_mode": lambda: self.kernel.features.debug_mode,
-            "features.oauth_enforcement": lambda: self.kernel.features.oauth_enforcement,
-            "features.performance_metrics": lambda: self.kernel.features.performance_metrics,
-        }
-
-        if key in path_map:
-            try:
-                return path_map[key]()
-            except Exception:
-                return default
-
+        """Get config value by dotted key path (backward compatibility)."""
+        # Map old paths to new structure
+        if key.startswith("providers."):
+            attr = key.split(".", 1)[1]
+            return getattr(self.kernel.providers, attr, default) if self.kernel else default
+        elif key.startswith("features."):
+            attr = key.split(".", 1)[1]
+            return getattr(self.kernel.features, attr, default) if self.kernel else default
         return default
 
     def set(self, key: str, value) -> bool:
-        """
-        Set config value by dotted key path (backward compatibility).
-
-        Maps old-style dotted paths to typed attributes.
-
-        Args:
-            key: Dotted path like "features.live_fire_enabled"
-            value: New value to set
-
-        Returns:
-            True if successful
-        """
+        """Set config value by dotted key path (backward compatibility)."""
         try:
-            if key == "providers.llm_provider":
-                self.kernel.providers.llm_provider = value
-            elif key == "providers.fallback_provider":
-                self.kernel.providers.fallback_provider = value
-            elif key == "features.live_fire_enabled":
-                self.kernel.features.live_fire_enabled = value
-            elif key == "features.debug_mode":
-                self.kernel.features.debug_mode = value
-            elif key == "features.oauth_enforcement":
-                self.kernel.features.oauth_enforcement = value
-            elif key == "features.performance_metrics":
-                self.kernel.features.performance_metrics = value
-            else:
-                logger.warning(f"Unknown config key: {key}")
-                return False
-
-            logger.info(f"Config set: {key} = {value}")
-            return True
+            if key.startswith("providers.") and self.kernel:
+                attr = key.split(".", 1)[1]
+                setattr(self.kernel.providers, attr, value)
+                return True
+            elif key.startswith("features.") and self.kernel:
+                attr = key.split(".", 1)[1]
+                setattr(self.kernel.features, attr, value)
+                return True
+            return False
         except Exception as e:
             logger.error(f"Failed to set {key}: {e}")
             return False
@@ -528,14 +481,7 @@ _config: Optional[PhoenixConfig] = None
 
 
 def get_config() -> PhoenixConfig:
-    """
-    Get the global PhoenixConfig instance.
-
-    Lazy-loads from files on first access.
-
-    Returns:
-        The PhoenixConfig singleton
-    """
+    """Get the global PhoenixConfig instance."""
     global _config
     if _config is None:
         _config = PhoenixConfig.from_files()

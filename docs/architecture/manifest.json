@@ -1,0 +1,467 @@
+{
+  "name": "Architecture Documentation Index",
+  "version": "2025-12-07",
+  "description": "Single source of truth for all architecture documents and their status",
+  "last_updated": "2025-12-07T08:45:00Z",
+
+  "categories": {
+    "ACTIVE_PLANS": {
+      "description": "Currently executing or approved plans",
+      "files": [
+        {
+          "file": "MASTER_PLAN_V4.1_FINAL.md",
+          "status": "APPROVED",
+          "priority": "P0",
+          "last_modified": "2025-12-05",
+          "summary": "7 Schlachten: Cortex, Knowledge, Cartridges, Provider Kill, Services, Cleanup, Integration"
+        },
+        {
+          "file": "OPUS_STATUS_2025-12-06.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "Current status tracker - what's done, what's in progress, tech debt inventory"
+        },
+        {
+          "file": "OPUS/OPUS_RUNTIME_SEPARATION.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "8 BREAKS identified, UnifiedExecutor solution documented"
+        }
+      ]
+    },
+
+    "EXECUTION_PROMPTS": {
+      "description": "Detailed execution prompts for Sonnet/Gemini",
+      "files": [
+        {
+          "file": "../prompts/OPUS_REFACTOR_PHASE2.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "IMMEDIATE DEBT: 5 Tasks - Kill legacy routers, Fix EphemeralStorage, Async panels, Externalize templates, Unit tests"
+        },
+        {
+          "file": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md",
+          "status": "APPROVED",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "FULL WAR: All 7 Schlachten with step-by-step prompts - Cortex, Knowledge, Cartridges, Provider, Services, Legacy, Integration"
+        }
+      ]
+    },
+
+    "INFRASTRUCTURE_PLANS": {
+      "description": "Subsystem-specific plans",
+      "files": [
+        {
+          "file": "PHOENIX_CONFIG_FRACTAL.md",
+          "status": "PLAN",
+          "priority": "P1",
+          "last_modified": "2025-12-06",
+          "summary": "phoenix.yaml elimination, all configs as Sections"
+        },
+        {
+          "file": "FRAKTAL_TEST_ARCHITECTURE.md",
+          "status": "IMPLEMENTED",
+          "priority": "P1",
+          "last_modified": "2025-12-06",
+          "summary": "4D Hypercube test system - PANOPTICON+ complete"
+        },
+        {
+          "file": "ONEWORD_UI_STANDARD.md",
+          "status": "IN_PROGRESS",
+          "priority": "P1",
+          "last_modified": "2025-12-07",
+          "summary": "Markdown IDE pattern - all root .md files auto-generated"
+        },
+        {
+          "file": "CLI_IMPLEMENTATION.md",
+          "status": "PLAN",
+          "priority": "P2",
+          "last_modified": "2025-12-07",
+          "summary": "CLI fractal pattern with plugin delegation"
+        }
+      ]
+    },
+
+    "REFERENCE_ARCHITECTURE": {
+      "description": "System design and structure",
+      "files": [
+        {
+          "file": "ARCHITECTURE.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Original system overview"
+        },
+        {
+          "file": "ARCHITECTURE_NEXT.md",
+          "status": "SUPERSEDED",
+          "priority": "P3",
+          "last_modified": "2025-12-05",
+          "summary": "Future vision (superseded by MASTER_PLAN_V4.1_FINAL)"
+        },
+        {
+          "file": "KERNEL_IO_ARCHITECTURE.md",
+          "status": "IMPLEMENTED",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Kernel I/O Service design"
+        }
+      ]
+    },
+
+    "DEBT_AND_CLEANUP": {
+      "description": "Technical debt tracking and cleanup plans",
+      "files": [
+        {
+          "file": "TECHNICAL_DEBT.md",
+          "status": "STALE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Old debt tracker - needs refresh from OPUS_STATUS"
+        },
+        {
+          "file": "STUB_CLEANUP_ROADMAP.md",
+          "status": "PARTIAL",
+          "priority": "P3",
+          "last_modified": "2025-12-05",
+          "summary": "Stub file removal plan"
+        },
+        {
+          "file": "WIRING_ROADMAP_V3.md",
+          "status": "STALE",
+          "priority": "P3",
+          "last_modified": "2025-12-05",
+          "summary": "Tool wiring (superseded by Cartridge model)"
+        }
+      ]
+    },
+
+    "GEMINI_TASKS": {
+      "description": "Tasks delegated to Gemini for bulk work",
+      "files": [
+        {
+          "file": "GEMINI_DEEP_DIVE_MISSION.md",
+          "status": "ACTIVE",
+          "priority": "P1",
+          "last_modified": "2025-12-06",
+          "summary": "Deep architecture analysis"
+        },
+        {
+          "file": "GEMINI_TASKS.md",
+          "status": "ACTIVE",
+          "priority": "P1",
+          "last_modified": "2025-12-05",
+          "summary": "Current Gemini task list"
+        },
+        {
+          "file": "GEMINI_PRO.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Gemini Pro analysis results"
+        },
+        {
+          "file": "GEMINI_UNIVERSE_MAP.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Gemini's universe mapping"
+        }
+      ]
+    },
+
+    "OPUS_SUBSYSTEM": {
+      "description": "OPUS rendering and execution architecture",
+      "files": [
+        {
+          "file": "OPUS/README.md",
+          "status": "REFERENCE",
+          "priority": "P1",
+          "last_modified": "2025-12-07",
+          "summary": "OPUS subsystem overview"
+        },
+        {
+          "file": "OPUS/001-KERNEL-EXTRACTION.md",
+          "status": "REFERENCE",
+          "priority": "P1",
+          "last_modified": "2025-12-07",
+          "summary": "Kernel extraction plan"
+        },
+        {
+          "file": "OPUS/002-PHOENIX-CONFIG.md",
+          "status": "REFERENCE",
+          "priority": "P1",
+          "last_modified": "2025-12-07",
+          "summary": "Phoenix Config integration"
+        },
+        {
+          "file": "OPUS/OPUS_RUNTIME_SEPARATION.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "CODE|CONFIG|RUNTIME separation, 8 BREAKS, UnifiedExecutor"
+        },
+        {
+          "file": "OPUS_WORKING_DOC.md",
+          "status": "SUPERSEDED",
+          "priority": "P3",
+          "last_modified": "2025-12-05",
+          "summary": "Old working doc (see OPUS_STATUS instead)"
+        },
+        {
+          "file": "OPUS_UNIFIED_LOADER.md",
+          "status": "IMPLEMENTED",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "VEDA-4 Unified Loader pattern"
+        },
+        {
+          "file": "OPUS_PANOPTICON_NANO_AGENTS.md",
+          "status": "IMPLEMENTED",
+          "priority": "P2",
+          "last_modified": "2025-12-06",
+          "summary": "Nano agent test system"
+        },
+        {
+          "file": "OPUS_CLI_FRACTAL_DESIGN.md",
+          "status": "PLAN",
+          "priority": "P2",
+          "last_modified": "2025-12-07",
+          "summary": "CLI fractal architecture"
+        }
+      ]
+    },
+
+    "LEGACY_VERSIONS": {
+      "description": "Superseded plans kept for reference",
+      "files": [
+        {
+          "file": "MASTER_PLAN_TOTAL_WAR.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-05",
+          "summary": "V1 of Total War (see V4.1 instead)"
+        },
+        {
+          "file": "MASTER_PLAN_TOTAL_WAR_V2.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-05",
+          "summary": "V2 of Total War (see V4.1 instead)"
+        },
+        {
+          "file": "MASTER_PLAN_V4_FINAL.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-05",
+          "summary": "V4.0 (see V4.1 instead)"
+        },
+        {
+          "file": "PHOENIX_CONFIG_V2.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-05",
+          "summary": "Old Phoenix Config (see FRACTAL version)"
+        },
+        {
+          "file": "WIRING_ROADMAP.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-04",
+          "summary": "V1 wiring (see V3)"
+        },
+        {
+          "file": "WIRING_ROADMAP_V2.md",
+          "status": "SUPERSEDED",
+          "priority": "P4",
+          "last_modified": "2025-12-04",
+          "summary": "V2 wiring (see V3)"
+        }
+      ]
+    },
+
+    "GAD_SYSTEM": {
+      "description": "Gemini Architecture Documents",
+      "files": [
+        {
+          "file": "GAD-5000.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "GAD template system"
+        },
+        {
+          "file": "GAD-5500.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-02",
+          "summary": "GAD extended system"
+        },
+        {
+          "file": "GAD-README.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-11-30",
+          "summary": "GAD system documentation"
+        }
+      ]
+    },
+
+    "PROTOCOL_DOCS": {
+      "description": "Protocol and layer documentation",
+      "files": [
+        {
+          "file": "STEWARD_PROTOCOL.md",
+          "status": "REFERENCE",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "STEWARD Protocol specification"
+        },
+        {
+          "file": "STEWARD_LAYERS_GAP.md",
+          "status": "STALE",
+          "priority": "P3",
+          "last_modified": "2025-12-05",
+          "summary": "Gap analysis (needs refresh)"
+        },
+        {
+          "file": "KERNEL_STABILIZATION_PLAN.md",
+          "status": "PARTIAL",
+          "priority": "P2",
+          "last_modified": "2025-12-05",
+          "summary": "Kernel stabilization roadmap"
+        }
+      ]
+    }
+  },
+
+  "status_legend": {
+    "ACTIVE": "Currently being worked on",
+    "APPROVED": "Approved for execution",
+    "PLAN": "Planned but not started",
+    "IMPLEMENTED": "Completed and in production",
+    "IN_PROGRESS": "Partially implemented",
+    "PARTIAL": "Some parts done, some remain",
+    "REFERENCE": "Reference documentation",
+    "STALE": "Needs refresh - information may be outdated",
+    "SUPERSEDED": "Replaced by newer version - keep for history"
+  },
+
+  "priority_legend": {
+    "P0": "CRITICAL - Must be addressed immediately",
+    "P1": "HIGH - Core to current sprint",
+    "P2": "MEDIUM - Important but not blocking",
+    "P3": "LOW - Nice to have",
+    "P4": "ARCHIVE - Historical reference only"
+  },
+
+  "reading_order": [
+    "OPUS_STATUS_2025-12-06.md",
+    "MASTER_PLAN_V4.1_FINAL.md",
+    "../prompts/OPUS_REFACTOR_PHASE2.md",
+    "../prompts/TOTAL_WAR_EXECUTION_PLAN.md",
+    "OPUS/OPUS_RUNTIME_SEPARATION.md",
+    "FRAKTAL_TEST_ARCHITECTURE.md",
+    "PHOENIX_CONFIG_FRACTAL.md",
+    "ONEWORD_UI_STANDARD.md"
+  ],
+
+  "execution_order": {
+    "description": "Complete execution order for Der Totale Krieg",
+    "phases": [
+      {
+        "phase": "0",
+        "name": "IMMEDIATE DEBT",
+        "prompt": "../prompts/OPUS_REFACTOR_PHASE2.md",
+        "status": "READY",
+        "tasks": ["Kill legacy routers", "Fix EphemeralStorage", "Async panels", "Externalize templates", "Unit tests"]
+      },
+      {
+        "phase": "1",
+        "name": "FOUNDATION",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-1-cortex-foundation",
+        "status": "PENDING",
+        "tasks": ["Create vibe_core/cortex/", "Move engines", "Create CortexLoader"]
+      },
+      {
+        "phase": "2",
+        "name": "KNOWLEDGE",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-2-knowledge-fraktalisierung",
+        "status": "PENDING",
+        "tasks": ["Structure knowledge/", "Create manifests", "KnowledgeLoader"]
+      },
+      {
+        "phase": "3",
+        "name": "CARTRIDGES",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-3-cartridge-consolidation",
+        "status": "PENDING",
+        "tasks": ["Move all agents to vibe_core/cartridges/", "Update imports"]
+      },
+      {
+        "phase": "4",
+        "name": "PROVIDER",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-4-provider-elimination",
+        "status": "PENDING",
+        "tasks": ["Eliminate provider/", "Update gateway"]
+      },
+      {
+        "phase": "5",
+        "name": "SERVICES",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-5-services-cleanup",
+        "status": "PENDING",
+        "tasks": ["Move llm_engine to runtime/", "Delete services/"]
+      },
+      {
+        "phase": "6",
+        "name": "LEGACY",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-6-legacy-cleanup",
+        "status": "PENDING",
+        "tasks": ["Delete legacy dirs", "Move workspace to data/"]
+      },
+      {
+        "phase": "7",
+        "name": "INTEGRATION",
+        "prompt": "../prompts/TOTAL_WAR_EXECUTION_PLAN.md#schlacht-7-final-integration",
+        "status": "PENDING",
+        "tasks": ["Full verification", "Documentation update"]
+      }
+    ]
+  },
+
+  "critical_tech_debt": [
+    {
+      "issue": "Split-brain routing (legacy + unified parallel)",
+      "location": "vibe_core/plugins/envoy/plugin_main.py",
+      "documented_in": "docs/prompts/OPUS_REFACTOR_PHASE2.md",
+      "priority": "P0"
+    },
+    {
+      "issue": "EphemeralStorage global singleton",
+      "location": "vibe_core/playbook/ephemeral_storage.py",
+      "documented_in": "docs/prompts/OPUS_REFACTOR_PHASE2.md",
+      "priority": "P0"
+    },
+    {
+      "issue": "Panel I/O blocking render loop",
+      "location": "vibe_core/plugins/interface/renderers/opus/panels/",
+      "documented_in": "docs/prompts/OPUS_REFACTOR_PHASE2.md",
+      "priority": "P1"
+    },
+    {
+      "issue": "33 tests using old patterns",
+      "location": "tests/**/*.py",
+      "documented_in": "OPUS_STATUS_2025-12-06.md",
+      "priority": "P1"
+    },
+    {
+      "issue": "Non-compliant renderers (5/14)",
+      "location": "vibe_core/plugins/interface/renderers/",
+      "documented_in": "OPUS_STATUS_2025-12-06.md",
+      "priority": "P2"
+    }
+  ]
+}
