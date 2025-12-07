@@ -285,12 +285,17 @@ class UnifiedExecutor:
     - Delegates to specialized executors
     """
 
-    def __init__(self, kernel: "RealVibeKernel"):
+    def __init__(self, kernel: "RealVibeKernel", ephemeral=None):
         """
         Eager initialization - all executors created at construction time.
         No lazy loading = no race conditions.
+
+        Args:
+            kernel: The kernel instance
+            ephemeral: EphemeralStorage instance (OPUS Phase 2: dependency injection)
         """
         self._kernel = kernel
+        self._ephemeral = ephemeral
 
         # Import and initialize executors eagerly
         self._circuit_executor = None
@@ -299,11 +304,11 @@ class UnifiedExecutor:
         logger.info("[EXECUTOR] UnifiedExecutor initialized (eager)")
 
     def _init_circuit_executor(self):
-        """Initialize circuit executor"""
+        """Initialize circuit executor with ephemeral storage (OPUS Phase 2)"""
         try:
             from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
-            self._circuit_executor = DeterministicExecutor()
+            self._circuit_executor = DeterministicExecutor(ephemeral=self._ephemeral)
             logger.info("[EXECUTOR] DeterministicExecutor ready")
         except Exception as e:
             logger.warning(f"[EXECUTOR] DeterministicExecutor not available: {e}")

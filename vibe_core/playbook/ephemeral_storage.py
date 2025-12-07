@@ -358,23 +358,6 @@ class EphemeralStorage:
 
 
 # =============================================================================
-# SINGLETON INSTANCE (for shared access)
+# DEPRECATED: Global singleton pattern removed (OPUS Refactor Phase 2)
+# Use dependency injection instead - get EphemeralStorage from kernel.envoy
 # =============================================================================
-
-_instance: Optional[EphemeralStorage] = None
-
-
-def get_ephemeral_storage() -> EphemeralStorage:
-    """Get the singleton ephemeral storage instance."""
-    global _instance
-    if _instance is None:
-        _instance = EphemeralStorage()
-    return _instance
-
-
-def reset_ephemeral_storage() -> None:
-    """Reset the singleton instance (for testing)."""
-    global _instance
-    if _instance is not None:
-        _instance.clear()
-    _instance = None
