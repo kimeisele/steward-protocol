@@ -1,7 +1,7 @@
 """Tests for apis configuration section."""
 
 import os
-import pytest
+
 from vibe_core.phoenix.sections.apis.section_main import APIsConfig, ExternalAPIEntry
 
 
@@ -195,9 +195,7 @@ class TestAPIsConfig:
 
     def test_get_env_var_exists(self):
         """Test get_env_var returns env var name if API exists."""
-        config = APIsConfig.from_dict(
-            {"external": {"test": {"env_var": "TEST_KEY"}}}
-        )
+        config = APIsConfig.from_dict({"external": {"test": {"env_var": "TEST_KEY"}}})
         env_var = config.get_env_var("test")
         assert env_var == "TEST_KEY"
 

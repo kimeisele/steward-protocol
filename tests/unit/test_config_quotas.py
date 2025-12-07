@@ -1,11 +1,10 @@
 """Tests for quotas configuration section."""
 
-import pytest
 from vibe_core.phoenix.sections.quotas.section_main import (
-    QuotasConfig,
-    RateLimitsConfig,
     BudgetConfig,
     CircuitBreakerConfig,
+    QuotasConfig,
+    RateLimitsConfig,
 )
 
 
