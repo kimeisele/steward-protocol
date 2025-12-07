@@ -2,8 +2,31 @@
 
 > **Purpose:** Complete execution prompts for every battle in MASTER_PLAN_V4.1_FINAL.md
 > **Prerequisite:** OPUS_REFACTOR_PHASE2.md (immediate tech debt) MUST be complete first
-> **Timeline:** 7-10 days total execution
 > **Assignee:** Sonnet (execution), Opus (review)
+> **Last Validated:** 2025-12-07 (against actual codebase)
+
+---
+
+## CRITICAL STATUS UPDATE (2025-12-07)
+
+**The Codebase has evolved beyond MASTER_PLAN_V4.1_FINAL.md!**
+
+Most battles are ALREADY COMPLETE:
+
+| Schlacht | Status | Evidence |
+|----------|--------|----------|
+| 1: CORTEX | ✅ DONE | `vibe_core/cortex/engines/` exists |
+| 2: KNOWLEDGE | ✅ DONE | `knowledge/{concepts,intents,circuits,playbooks}/` structured |
+| 3: CARTRIDGES | ✅ DONE | All agents in `vibe_core/cartridges/{system,agent_city}/` |
+| 4: PROVIDER | ✅ DONE | `provider/` directory deleted |
+| 5: SERVICES | ✅ DONE | `services/` directory deleted |
+| 6: LEGACY | ✅ DONE | sandbox, diplomatic_bag, intelligence deleted (2025-12-07) |
+| 7: INTEGRATION | 🟡 PARTIAL | Needs final verification pass |
+
+**Remaining Work:**
+- Phase 0 (OPUS_REFACTOR_PHASE2.md) - Still pending
+- Schlacht 7 verification pass
+- Delete stale auto-generated cartridges (DONE 2025-12-07: 9 test cartridges removed)
 
 ---
 
@@ -19,27 +42,27 @@ PHASE 0: OPUS_REFACTOR_PHASE2.md (Immediate Debt)    ← YOU ARE HERE
     └─ Task 5: Unit Test Coverage
     │
     ▼
-PHASE 1: SCHLACHT 1-2 (Foundation)
+PHASE 1: SCHLACHT 1-2 (Foundation) ─────────────────── ✅ ALREADY DONE
     │
-    ├─ Schlacht 1: CORTEX FOUNDATION
-    └─ Schlacht 2: KNOWLEDGE FRAKTALISIERUNG
-    │
-    ▼
-PHASE 2: SCHLACHT 3 (The Big Move)
-    │
-    └─ Schlacht 3: CARTRIDGE CONSOLIDATION (HIGH RISK!)
+    ├─ Schlacht 1: CORTEX FOUNDATION ✅
+    └─ Schlacht 2: KNOWLEDGE FRAKTALISIERUNG ✅
     │
     ▼
-PHASE 3: SCHLACHT 4-5 (Cleanup)
+PHASE 2: SCHLACHT 3 (The Big Move) ─────────────────── ✅ ALREADY DONE
     │
-    ├─ Schlacht 4: PROVIDER ELIMINATION
-    └─ Schlacht 5: SERVICES CLEANUP
+    └─ Schlacht 3: CARTRIDGE CONSOLIDATION ✅
     │
     ▼
-PHASE 4: SCHLACHT 6-7 (Polish)
+PHASE 3: SCHLACHT 4-5 (Cleanup) ────────────────────── ✅ ALREADY DONE
     │
-    ├─ Schlacht 6: LEGACY CLEANUP
-    └─ Schlacht 7: FINAL INTEGRATION
+    ├─ Schlacht 4: PROVIDER ELIMINATION ✅
+    └─ Schlacht 5: SERVICES CLEANUP ✅
+    │
+    ▼
+PHASE 4: SCHLACHT 6-7 (Polish) ─────────────────────── 🟡 PARTIAL
+    │
+    ├─ Schlacht 6: LEGACY CLEANUP ✅ (completed 2025-12-07)
+    └─ Schlacht 7: FINAL INTEGRATION 🟡 (needs verification)
 ```
 
 ---
