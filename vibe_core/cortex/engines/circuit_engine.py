@@ -49,9 +49,11 @@ def _get_runtime_config():
     """Get runtime config with fallback for standalone usage."""
     try:
         from vibe_core.phoenix.config import get_config
+
         return get_config().runtime
     except Exception:
         from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
         return RuntimeConfig()
 
 
