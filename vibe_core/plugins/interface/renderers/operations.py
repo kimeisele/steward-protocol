@@ -63,7 +63,12 @@ class OperationsRenderer(BaseRenderer):
         # Kernel Status
         status = self.kernel.status.value if hasattr(self.kernel, "status") else "UNKNOWN"
         agent_count = len(self.kernel.agent_registry)
-        queue_size = self.kernel.scheduler.queue_size() if hasattr(self.kernel, "scheduler") else 0
+
+        # Get queue length from scheduler status
+        queue_size = 0
+        if hasattr(self.kernel, "_scheduler"):
+            queue_status = self.kernel._scheduler.get_queue_status()
+            queue_size = queue_status.get("queue_length", 0)
 
         lines.extend(
             [
