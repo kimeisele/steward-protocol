@@ -237,31 +237,19 @@ class UnifiedRouter:
 
         # Map LayeredRouter layers to ExecutionPath
         if route_result.layer in ("exact", "exact_prefix"):
-            request.mark_routed(
-                ExecutionPath.FAST_COMMAND,
-                route_result.circuit_id,
-                route_result.confidence
-            )
+            request.mark_routed(ExecutionPath.FAST_COMMAND, route_result.circuit_id, route_result.confidence)
             logger.info(
                 f"[ROUTER] {route_result.layer} match: {route_result.circuit_id} "
                 f"(confidence={route_result.confidence:.2f})"
             )
         elif route_result.layer in ("semantic", "context"):
-            request.mark_routed(
-                ExecutionPath.CIRCUIT,
-                route_result.circuit_id,
-                route_result.confidence
-            )
+            request.mark_routed(ExecutionPath.CIRCUIT, route_result.circuit_id, route_result.confidence)
             logger.info(
                 f"[ROUTER] {route_result.layer} match: {route_result.circuit_id} "
                 f"(confidence={route_result.confidence:.2f})"
             )
         else:
-            request.mark_routed(
-                ExecutionPath.FALLBACK,
-                route_result.circuit_id,
-                route_result.confidence
-            )
+            request.mark_routed(ExecutionPath.FALLBACK, route_result.circuit_id, route_result.confidence)
             logger.info(f"[ROUTER] Fallback: {route_result.circuit_id}")
 
         # Store extracted params for executor
