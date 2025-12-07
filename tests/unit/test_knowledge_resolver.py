@@ -16,7 +16,9 @@ from vibe_core.knowledge.resolver import KnowledgeResolver, get_resolver
 def resolver():
     """Resolver with loaded knowledge."""
     graph = UnifiedKnowledgeGraph()
-    knowledge_dir = Path(__file__).parent.parent / "knowledge"
+    # FIX: Path goes from tests/unit/ to root knowledge/
+    # tests/unit/test_knowledge_resolver.py -> tests/ -> steward-protocol/ -> knowledge/
+    knowledge_dir = Path(__file__).parent.parent.parent / "knowledge"
     if knowledge_dir.exists():
         graph.load(knowledge_dir)
     return KnowledgeResolver(graph)

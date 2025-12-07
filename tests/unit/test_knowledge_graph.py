@@ -33,7 +33,9 @@ def empty_graph():
 def loaded_graph():
     """Graph loaded with test knowledge."""
     graph = UnifiedKnowledgeGraph()
-    knowledge_dir = Path(__file__).parent.parent / "knowledge"
+    # FIX: Path goes from tests/unit/ to root knowledge/
+    # tests/unit/test_knowledge_graph.py -> tests/ -> steward-protocol/ -> knowledge/
+    knowledge_dir = Path(__file__).parent.parent.parent / "knowledge"
     if knowledge_dir.exists():
         graph.load(knowledge_dir)
     return graph

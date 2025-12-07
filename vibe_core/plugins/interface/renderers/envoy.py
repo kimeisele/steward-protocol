@@ -96,15 +96,28 @@ class EnvoyRenderer(BaseRenderer):
 
             if event_type == "task_completed":
                 result_val = event.get("result", {})
-                # Extract response from result dict - try common fields
+                # FIX 7: Extract response from result dict
+                # Check circuit result structure first (phases_executed)
+                response = ""
                 if isinstance(result_val, dict):
-                    response = (
-                        result_val.get("message")
-                        or result_val.get("summary")
-                        or result_val.get("response")
-                        or result_val.get("status")
-                        or "Done"
-                    )
+                    # Try circuit result structure first
+                    if "phases_executed" in result_val:
+                        for phase in result_val.get("phases_executed", []):
+                            if phase.get("phase_id") == "render_output":
+                                response = phase.get("result", {}).get("rendered", "")
+                                break
+                    # Then try standard response field
+                    if not response:
+                        response = result_val.get("response", "")
+                    # Then try other common fields
+                    if not response:
+                        response = (
+                            result_val.get("message")
+                            or result_val.get("summary")
+                            or result_val.get("output")
+                            or result_val.get("status")
+                            or "Done"
+                        )
                 else:
                     response = str(result_val) if result_val else "Done"
 
@@ -121,12 +134,12 @@ class EnvoyRenderer(BaseRenderer):
     def _sync_from_file(self) -> None:
         """Read and process user commands from ENVOY.md."""
         try:
-            # Use EnvoyPlugin if available (the proper way)
-            if hasattr(self.kernel, "envoy"):
-                router_callback = self._envoy_route_adapter
-            else:
-                # Fallback to legacy _playbook_router
-                router_callback = self.kernel._playbook_router.route
+            # FIX 1: Use EnvoyPlugin's UnifiedRouter (the ONLY way)
+            # Legacy _playbook_router removed - UnifiedRouter is always available
+            if not hasattr(self.kernel, "envoy"):
+                logger.warning("EnvoyPlugin not loaded - cannot process requests")
+                return
+            router_callback = self._envoy_route_adapter
 
             result = self.sync.sync_to_reality(
                 self.state,
