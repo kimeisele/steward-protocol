@@ -61,11 +61,11 @@ class VedicGovernancePlugin(KernelPlugin):
         self._paused_agents: Set[str] = set()
 
         # Varna = Classification (what kind of being)
-        # TODO: Persist to Ledger (currently in-memory)
+        # Persisted to Ledger via _persist_varna(), restored on boot via _restore_from_ledger()
         self._varna_registry: Dict[str, Varna] = {}
 
         # Ashrama = Lifecycle (student → active → retired → system)
-        # TODO: Persist to Ledger (currently in-memory)
+        # Persisted to Ledger via _persist_ashrama(), restored on boot via _restore_from_ledger()
         self._ashrama_registry: Dict[str, AshramaTransition] = {}
 
         # Track task completions for automatic graduation

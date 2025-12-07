@@ -237,37 +237,67 @@ Kernel: {status}
 {chr(10).join(table_lines)}
 <!-- /@LIVE -->"""
 
+    def _extract_preserved_section(self, content: str, section_name: str, tag_prefix: str = "@AI") -> str:
+        """Extract content from a preserved section (AI or HUMAN) in existing file.
+
+        Returns the content between <!-- @AI:section_name --> and <!-- /@AI -->,
+        or None if not found.
+        """
+        import re
+
+        pattern = rf"<!-- {tag_prefix}:{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]+ -->\n(.*?)<!-- /{tag_prefix} -->"
+        match = re.search(pattern, content, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return None
+
     def _render_ai_sections(self) -> str:
-        """Render AI-writable sections (preserved content)."""
-        return """<!-- @AI:current_goal -->
+        """Render AI-writable sections, PRESERVING existing content."""
+        # Read existing OPUS.md to preserve AI sections
+        opus_path = self._root / "OPUS.md"
+        existing_content = ""
+        if opus_path.exists():
+            try:
+                existing_content = opus_path.read_text()
+            except Exception:
+                pass
+
+        # Extract preserved content or use defaults
+        current_goal = self._extract_preserved_section(existing_content, "current_goal") or "_No entries_"
+        phase_status = self._extract_preserved_section(existing_content, "phase_status") or "_No entries_"
+        extraction_log = self._extract_preserved_section(existing_content, "extraction_log") or "_No entries_"
+        blockers = self._extract_preserved_section(existing_content, "blockers") or "_No entries_"
+        next_actions = self._extract_preserved_section(existing_content, "next_actions", "@HUMAN") or "_No entries_"
+
+        return f"""<!-- @AI:current_goal -->
 ## Current Goal
 
 <!-- AI can write here -->
-_No entries_
+{current_goal}
 <!-- /@AI -->
 <!-- @AI:phase_status -->
 ## Phase Status
 
 <!-- AI can write here -->
-_No entries_
+{phase_status}
 <!-- /@AI -->
 <!-- @AI:extraction_log -->
 ## Extraction Log
 
 <!-- AI can write here -->
-_No entries_
+{extraction_log}
 <!-- /@AI -->
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI can write here -->
-_No entries_
+{blockers}
 <!-- /@AI -->
 <!-- @HUMAN:next_actions -->
 ## Next Actions
 
 <!-- User section -->
-_No entries_
+{next_actions}
 <!-- /@HUMAN -->"""
 
     def _render_footer(self) -> str:
