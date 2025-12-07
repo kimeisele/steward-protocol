@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "paths",
+  "name": "Paths Configuration",
+  "version": "1.0.0",
+  "description": "All system paths - data, cartridges, knowledge, system. Replaces 105 hardcoded Path() violations.",
+
+  "entry_point": "section_main.py",
+  "entry_class": "PathsConfig",
+
+  "priority": 10,
+
+  "config_file": "config/paths.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "paths", "core"]
+}

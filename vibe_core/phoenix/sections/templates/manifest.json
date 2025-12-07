@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "templates",
+  "name": "Templates Configuration",
+  "version": "1.0.0",
+  "description": "Jinja2 template registry - replaces 5 hardcoded BUILTIN_TEMPLATES violations.",
+
+  "entry_point": "section_main.py",
+  "entry_class": "TemplatesConfig",
+
+  "priority": 20,
+
+  "config_file": "config/templates.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "templates", "rendering"]
+}
