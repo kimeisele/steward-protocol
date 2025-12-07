@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "apis",
+  "name": "External APIs Configuration",
+  "version": "1.0.0",
+  "description": "Registry of external API env var names",
+
+  "entry_point": "section_main.py",
+  "entry_class": "APIsConfig",
+
+  "priority": 10,
+
+  "config_file": "config/apis.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "apis", "external"]
+}
