@@ -218,32 +218,31 @@ def quality_config():
 # =============================================================================
 
 
+# =============================================================================
+# STANDARDIZED TEST FIXTURES (from test_orchestration)
+# =============================================================================
+# USE THESE instead of creating custom mocks or direct RealVibeKernel!
+# =============================================================================
+
+
 @pytest.fixture
 def test_kernel():
     """
     Minimal kernel for isolated unit tests.
-
-    USAGE:
-        def test_something(test_kernel):
-            test_kernel.register_agent(...)
-
-    This is the RECOMMENDED way to get a kernel in tests.
-    Uses in-memory ledger, no plugins.
+    Configured via quality.yaml (fixtures.kernel_presets.minimal).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
+    # Verify config matches expectation (optional safety check)
+    # preset = _quality_config.test.fixtures.get_kernel_preset("minimal")
     return TestKernel.minimal()
 
 
 @pytest.fixture
 def permissive_kernel():
     """
-    Kernel that allows all operations (no governance restrictions).
-
-    USAGE:
-        def test_feature_without_governance(permissive_kernel):
-            # No oath required, all tasks allowed
-            permissive_kernel.register_agent(agent)
+    Kernel that allows all operations.
+    Configured via quality.yaml (fixtures.kernel_presets.permissive).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
@@ -253,12 +252,8 @@ def permissive_kernel():
 @pytest.fixture
 def governance_kernel():
     """
-    Kernel with full governance stack (StewardProtocol).
-
-    USAGE:
-        def test_governance_enforcement(governance_kernel):
-            # Only oath-sworn agents can register
-            governance_kernel.register_agent(compliant_agent)
+    Kernel with full governance stack.
+    Configured via quality.yaml (fixtures.kernel_presets.governance).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
@@ -268,13 +263,8 @@ def governance_kernel():
 @pytest.fixture
 def recording_kernel():
     """
-    Kernel with recording plugin for assertions.
-
-    USAGE:
-        def test_hooks_called(recording_kernel):
-            kernel, recorder = recording_kernel
-            kernel.register_agent(agent)
-            assert recorder.get_calls("on_agent_registered")
+    Kernel with recording plugin.
+    Configured via quality.yaml (fixtures.kernel_presets.recording).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
@@ -285,58 +275,42 @@ def recording_kernel():
 def compliant_agent():
     """
     Fully compliant agent with valid oath.
-
-    USAGE:
-        def test_with_agent(test_kernel, compliant_agent):
-            test_kernel.register_agent(compliant_agent)
+    Configured via quality.yaml (fixtures.agents.compliant).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestAgents
 
-    return TestAgents.compliant("test-agent")
+    conf = _quality_config.test.fixtures.get_agent_config("compliant")
+    return TestAgents.compliant(agent_id=conf.id_prefix, capabilities=conf.capabilities)
 
 
 @pytest.fixture
 def no_oath_agent():
     """
-    Agent WITHOUT oath (governance gate MUST reject).
-
-    USAGE:
-        def test_governance_rejection(governance_kernel, no_oath_agent):
-            with pytest.raises(GovernanceError):
-                governance_kernel.register_agent(no_oath_agent)
+    Agent WITHOUT oath.
+    Configured via quality.yaml (fixtures.agents.no_oath).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestAgents
 
-    return TestAgents.without_oath("test-no-oath")
+    conf = _quality_config.test.fixtures.get_agent_config("no_oath")
+    return TestAgents.without_oath(agent_id=conf.id_prefix, capabilities=conf.capabilities)
 
 
 @pytest.fixture
 def false_oath_agent():
     """
-    Agent with oath_sworn=False (governance gate MUST reject).
-
-    USAGE:
-        def test_unsworn_rejection(governance_kernel, false_oath_agent):
-            # Has attributes but hasn't sworn
-            assert not governance_kernel.register_agent(false_oath_agent)
+    Agent with oath_sworn=False.
+    Configured via quality.yaml (fixtures.agents.false_oath).
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestAgents
 
-    return TestAgents.with_false_oath("test-false-oath")
+    conf = _quality_config.test.fixtures.get_agent_config("false_oath")
+    return TestAgents.with_false_oath(agent_id=conf.id_prefix, capabilities=conf.capabilities)
 
 
 @pytest.fixture
 def test_context():
     """
     Full test context with isolation and cleanup.
-
-    USAGE:
-        def test_with_context(test_context):
-            with test_context as ctx:
-                ctx.register_compliant_agent("my-agent")
-                ctx.kernel.boot()
-                assert ctx.recorder.get_calls("on_boot")
-            # Auto-cleanup after context exits
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestContext
 
@@ -347,12 +321,6 @@ def test_context():
 def test_task():
     """
     Simple test task factory.
-
-    USAGE:
-        def test_task_submission(test_kernel, test_task, compliant_agent):
-            test_kernel.register_agent(compliant_agent)
-            task = test_task(compliant_agent.agent_id)
-            test_kernel.submit_task(task)
     """
     from vibe_core.plugins.test_orchestration.fixtures import TestTasks
 
