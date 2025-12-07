@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "guardrails",
+  "name": "Guardrails Configuration",
+  "version": "1.0.0",
+  "description": "Preflight checks before boot - git state, tests, environment",
+
+  "entry_point": "section_main.py",
+  "entry_class": "GuardrailsConfig",
+
+  "priority": 5,
+
+  "config_file": "config/guardrails.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "guardrails", "preflight", "boot"]
+}

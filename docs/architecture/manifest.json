@@ -175,8 +175,29 @@
     },
 
     "OPUS_SUBSYSTEM": {
-      "description": "OPUS rendering and execution architecture",
+      "description": "OPUS rendering and execution architecture - SINGLE SOURCE OF TRUTH",
       "files": [
+        {
+          "file": "OPUS/SONNET_EXECUTION_PLAN.md",
+          "status": "READY",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "COMPLETE 4-phase remediation plan ready for Sonnet - EXECUTE THIS"
+        },
+        {
+          "file": "OPUS/VERIFIED_DELTA_PLAN.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "SSOT - What needs fixing (verified against live code)"
+        },
+        {
+          "file": "OPUS/OPUS_RUNTIME_SEPARATION.md",
+          "status": "ACTIVE",
+          "priority": "P0",
+          "last_modified": "2025-12-07",
+          "summary": "CODE|CONFIG|RUNTIME separation, 8 BREAKS, UnifiedExecutor"
+        },
         {
           "file": "OPUS/README.md",
           "status": "REFERENCE",
@@ -186,24 +207,17 @@
         },
         {
           "file": "OPUS/001-KERNEL-EXTRACTION.md",
-          "status": "REFERENCE",
-          "priority": "P1",
+          "status": "SUPERSEDED",
+          "priority": "P2",
           "last_modified": "2025-12-07",
-          "summary": "Kernel extraction plan"
+          "summary": "Kernel extraction (superseded by SONNET_EXECUTION_PLAN)"
         },
         {
           "file": "OPUS/002-PHOENIX-CONFIG.md",
-          "status": "REFERENCE",
-          "priority": "P1",
+          "status": "IMPLEMENTED",
+          "priority": "P2",
           "last_modified": "2025-12-07",
-          "summary": "Phoenix Config integration"
-        },
-        {
-          "file": "OPUS/OPUS_RUNTIME_SEPARATION.md",
-          "status": "ACTIVE",
-          "priority": "P0",
-          "last_modified": "2025-12-07",
-          "summary": "CODE|CONFIG|RUNTIME separation, 8 BREAKS, UnifiedExecutor"
+          "summary": "Phoenix Config - IMPLEMENTED"
         },
         {
           "file": "OPUS_WORKING_DOC.md",
@@ -360,11 +374,13 @@
   },
 
   "reading_order": [
+    "OPUS/SONNET_EXECUTION_PLAN.md",
+    "OPUS/VERIFIED_DELTA_PLAN.md",
     "OPUS_STATUS_2025-12-06.md",
+    "OPUS/OPUS_RUNTIME_SEPARATION.md",
     "MASTER_PLAN_V4.1_FINAL.md",
     "../prompts/OPUS_REFACTOR_PHASE2.md",
     "../prompts/TOTAL_WAR_EXECUTION_PLAN.md",
-    "OPUS/OPUS_RUNTIME_SEPARATION.md",
     "FRAKTAL_TEST_ARCHITECTURE.md",
     "PHOENIX_CONFIG_FRACTAL.md",
     "ONEWORD_UI_STANDARD.md"
