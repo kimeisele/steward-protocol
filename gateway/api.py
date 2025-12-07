@@ -39,6 +39,20 @@ from vibe_core.scheduling import Task
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")
 
+
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config().runtime
+    except Exception:
+        # Fallback for standalone/testing
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
+        return RuntimeConfig()
+
+
 app = FastAPI(title="VibeChat Gateway // GAD-3000")
 
 # --- CORS: THE DOOR UNLOCKER (FIXES 405/422 ERRORS) ---
@@ -227,7 +241,8 @@ async def startup_event():
 
     # 3. Start Steward's Watch (if loaded successfully)
     if steward:
-        steward.start_monitoring(interval=10.0)
+        runtime_config = _get_runtime_config()
+        steward.start_monitoring(interval=runtime_config.orchestration.monitoring_interval)
 
     logger.info("🧠 ACTIVATING PROVIDER...")
     provider = UniversalProvider(kernel)

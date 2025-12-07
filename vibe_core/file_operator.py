@@ -15,6 +15,20 @@ from vibe_core.protocols.operator_protocol import (
 
 logger = logging.getLogger("FILE_OPERATOR")
 
+
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config().runtime
+    except Exception:
+        # Fallback for standalone/testing
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
+        return RuntimeConfig()
+
+
 # The placeholder text indicating no request is pending.
 # This must match what's in the ENVOY.md template.
 NO_REQUEST_PLACEHOLDER = "> **Write your request here.**"
@@ -52,7 +66,8 @@ class FileBasedOperator:
         Reads the designated file, provides an intent if a new request is found,
         and then clears the request from the file.
         """
-        await asyncio.sleep(2)  # Prevent high-CPU polling
+        runtime_config = _get_runtime_config()
+        await asyncio.sleep(runtime_config.orchestration.file_poll_interval)  # Prevent high-CPU polling
 
         if not self.file_path.exists():
             logger.warning(f"File not found: {self.file_path}. Waiting.")

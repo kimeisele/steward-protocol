@@ -28,6 +28,19 @@ from uuid import uuid4
 logger = logging.getLogger("PULSE")
 
 
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config().runtime
+    except Exception:
+        # Fallback for standalone/testing
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
+        return RuntimeConfig()
+
+
 class SystemState(str, Enum):
     """System health states"""
 
@@ -120,6 +133,7 @@ class PulseManager:
         Main heartbeat loop - runs continuously in background
         Emits pulse packets at configured frequency
         """
+        runtime_config = _get_runtime_config()
         try:
             while self._running:
                 # Create packet
@@ -129,8 +143,8 @@ class PulseManager:
                 # Emit to all subscribers (non-blocking)
                 await self._emit_packet(packet)
 
-                # Calculate sleep duration
-                sleep_duration = 1.0 / self._frequency.value  # Convert Hz to seconds
+                # Use configured pulse sleep duration (default: 1.0 second)
+                sleep_duration = runtime_config.orchestration.pulse_sleep
 
                 # Sleep until next beat
                 await asyncio.sleep(sleep_duration)

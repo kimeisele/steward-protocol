@@ -91,6 +91,17 @@ except ImportError as e:
 logger = logging.getLogger("VIBE_KERNEL")
 
 
+def _get_config():
+    """Get PhoenixConfig with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config()
+    except Exception:
+        # Fallback for standalone/testing - return None to use defaults
+        return None
+
+
 # Helper classes: Extracted to reduce kernel size
 # Kernel Operations: Extracted isolated methods
 from .kernel_ops import (
@@ -132,7 +143,7 @@ class RealVibeKernel(VibeKernel):
 
     def __init__(
         self,
-        ledger_path: str = "data/vibe_ledger.db",
+        ledger_path: str | None = None,
         config: "PhoenixConfig | None" = None,
         parent: "RealVibeKernel | None" = None,
     ):
@@ -140,7 +151,7 @@ class RealVibeKernel(VibeKernel):
         Initialize the kernel.
 
         Args:
-            ledger_path: Path to ledger database (":memory:" for in-memory)
+            ledger_path: Path to ledger database (":memory:" for in-memory, None for config default)
             config: Optional PhoenixConfig for dependency injection.
                     If None, uses global get_config() singleton.
                     For ephemeral child kernels, pass custom config.
@@ -152,6 +163,14 @@ class RealVibeKernel(VibeKernel):
         self._parent = parent
         self._child_kernels: list["RealVibeKernel"] = []
         self._is_ephemeral = parent is not None
+
+        # Resolve ledger path from config if not provided
+        if ledger_path is None:
+            phoenix_config = _get_config()
+            if phoenix_config and hasattr(phoenix_config, "paths"):
+                ledger_path = str(phoenix_config.paths.data.vibe_ledger)
+            else:
+                ledger_path = "data/vibe_ledger.db"  # Fallback default
 
         self._agent_registry: Dict[str, VibeAgent] = {}
         self._scheduler = InMemoryScheduler()
@@ -188,7 +207,11 @@ class RealVibeKernel(VibeKernel):
         self.network = KernelNetworkProxy(kernel=self)
 
         # Phase 5: Parampara Lineage Chain
-        lineage_path = "/tmp/vibe_os/kernel/lineage.db"
+        phoenix_config = _get_config()
+        if phoenix_config and hasattr(phoenix_config, "paths"):
+            lineage_path = str(phoenix_config.paths.system.resolve("lineage_db"))
+        else:
+            lineage_path = "/tmp/vibe_os/kernel/lineage.db"  # Fallback default
         self.lineage = LineageChain(db_path=lineage_path)
         logger.info("⛓️  Parampara chain initialized")
 
