@@ -40,10 +40,10 @@ class BootSequence:
     def run(self, user_input: str | None = None):
         """Execute the boot sequence"""
 
-        # PRE-FLIGHT: Check for uncommitted changes (graceful guardrail)
+        # PRE-FLIGHT: Check for uncommitted changes (configurable guardrail)
         git_status = self._check_uncommitted_changes()
-        if git_status["has_uncommitted"] and not git_status["is_clean_state"]:
-            self._display_commit_warning(git_status)
+        guardrail_action = self._handle_uncommitted_guardrail(git_status)
+        if guardrail_action == "halt":
             return  # Soft halt - exit cleanly, agent sees warning
 
         # MIGRATION: Import legacy JSON state if present (ARCH-003)
@@ -94,8 +94,46 @@ class BootSequence:
         print(final_prompt)
         print("=" * 80 + "\n", file=sys.stderr)
 
+    def _handle_uncommitted_guardrail(self, git_status: dict) -> str:
+        """Handle uncommitted changes based on guardrails config.
+
+        Returns:
+            "halt" - stop boot
+            "continue" - proceed with boot
+        """
+        if not git_status["has_uncommitted"] or git_status["is_clean_state"]:
+            return "continue"
+
+        # Load guardrails config
+        from vibe_core.phoenix.config import PhoenixConfig
+        from vibe_core.phoenix.sections.guardrails import GuardrailMode
+
+        phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+
+        # Default to WARN if guardrails section not loaded
+        mode = GuardrailMode.WARN
+        if phoenix.guardrails:
+            mode = phoenix.guardrails.git.uncommitted_changes
+
+        if mode == GuardrailMode.IGNORE:
+            # Skip check entirely
+            return "continue"
+        elif mode == GuardrailMode.WARN:
+            # Show warning but continue
+            self._display_commit_warning(git_status, block=False)
+            return "continue"
+        else:  # BLOCK
+            # Show warning and halt
+            self._display_commit_warning(git_status, block=True)
+            return "halt"
+
     def _check_uncommitted_changes(self) -> dict:
-        """Check for uncommitted changes - graceful detection"""
+        """Check for uncommitted changes - graceful detection
+
+        Auto-generated markdown files are excluded from the check.
+        These are determined by the InterfaceConfig (config/interface.yaml)
+        which defines all renderers and their output files.
+        """
         try:
             import subprocess
 
@@ -108,13 +146,37 @@ class BootSequence:
                 check=True,
             )
 
-            uncommitted = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+            # Get auto-generated files from Interface Config (SSOT)
+            # The InterfacePlugin is the authority for which files it generates
+            from vibe_core.phoenix.config import PhoenixConfig
+
+            phoenix = PhoenixConfig.from_files(config_dir=self.project_root / "config")
+            auto_generated_files = set()
+            if phoenix.interface:
+                for renderer in phoenix.interface.get_enabled_renderers().values():
+                    if renderer.output:
+                        auto_generated_files.add(renderer.output)
+
+            all_changes = [line.strip() for line in result.stdout.strip().split("\n") if line.strip()]
+
+            # Filter out auto-generated root markdown files
+            significant_changes = []
+            for change in all_changes:
+                # Format is "XY filename" or "XY old -> new" for renames
+                parts = change.split()
+                if len(parts) >= 2:
+                    filename = parts[-1]
+                    # Check if it's a root-level auto-generated file
+                    if "/" not in filename and filename in auto_generated_files:
+                        continue
+                significant_changes.append(change)
 
             return {
-                "has_uncommitted": len(uncommitted) > 0,
-                "files": uncommitted[:10],  # First 10
-                "count": len(uncommitted),
-                "is_clean_state": len(uncommitted) == 0,
+                "has_uncommitted": len(significant_changes) > 0,
+                "files": significant_changes[:10],  # First 10
+                "count": len(significant_changes),
+                "is_clean_state": len(significant_changes) == 0,
+                "filtered_count": len(all_changes) - len(significant_changes),
             }
         except Exception as e:
             return {
@@ -125,24 +187,58 @@ class BootSequence:
                 "error": str(e),
             }
 
-    def _display_commit_warning(self, git_status: dict) -> None:
-        """Display graceful halt warning for uncommitted changes"""
+    def _display_commit_warning(self, git_status: dict, block: bool = True) -> None:
+        """Display warning for uncommitted changes.
+
+        Args:
+            git_status: Dict with uncommitted file info
+            block: If True, shows "HALTED". If False, shows "WARNING" and continues.
+        """
         count = git_status["count"]
         files = git_status["files"]
 
-        warning = f"""
+        if block:
+            header = """
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                         ⚠️  BOOT HALTED - SOFT GUARDRAIL                     ║
+║                         ⚠️  BOOT HALTED - GUARDRAIL (block)                  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+            footer = """
+────────────────────────────────────────────────────────────────────────────────
+🎯 Why this matters:
+  • Agents need clean state to track their work
+  • Uncommitted changes hide what was actually changed
+  • Forces explicit handoff via git commits
 
+Boot will resume once changes are committed or stashed.
+To change this behavior: config/guardrails.yaml → git.uncommitted_changes: warn
+────────────────────────────────────────────────────────────────────────────────
+"""
+        else:
+            header = """
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    ⚠️  WARNING - GUARDRAIL (warn) - CONTINUING               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+            footer = """
+────────────────────────────────────────────────────────────────────────────────
+To block on uncommitted changes: config/guardrails.yaml → git.uncommitted_changes: block
+────────────────────────────────────────────────────────────────────────────────
+"""
+
+        warning = (
+            header
+            + f"""
 ❌ UNCOMMITTED CHANGES DETECTED ({count} files)
 
 Files:
 """
+        )
         for f in files:
             warning += f"  {f}\n"
 
-        warning += """
+        if block:
+            warning += """
 ACTION REQUIRED:
 
   Option 1: Commit changes (recommended)
@@ -152,19 +248,10 @@ ACTION REQUIRED:
   Option 2: Stash changes (if not ready)
     git stash
 
-  Option 3: Force boot (if absolutely necessary)
-    ./vibe-cli boot --force
-
-────────────────────────────────────────────────────────────────────────────────
-🎯 Why this matters:
-  • Agents need clean state to track their work
-  • Uncommitted changes hide what was actually changed
-  • Forces explicit handoff via git commits
-  • Prevents "forgot what I did" scenarios
-
-Boot will resume once changes are committed or stashed.
-────────────────────────────────────────────────────────────────────────────────
+  Option 3: Change guardrail mode
+    config/guardrails.yaml → git.uncommitted_changes: warn
 """
+        warning += footer
         print(warning, file=sys.stderr)
 
     def _get_system_prompt(self, route) -> str:
