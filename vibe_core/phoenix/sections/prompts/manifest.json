@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "prompts",
+  "name": "Prompts Configuration",
+  "version": "1.0.0",
+  "description": "LLM prompt registry - replaces 38 inline f-string prompt violations.",
+
+  "entry_point": "section_main.py",
+  "entry_class": "PromptsConfig",
+
+  "priority": 20,
+
+  "config_file": "config/prompts.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "prompts", "llm"]
+}

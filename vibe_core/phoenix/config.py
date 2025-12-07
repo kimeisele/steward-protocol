@@ -24,8 +24,11 @@ import yaml
 from .section_loader import SectionLoader, SectionMeta
 from .sections.city.section_main import CityConfig
 from .sections.kernel.section_main import KernelConfig
+from .sections.paths.section_main import PathsConfig
+from .sections.prompts.section_main import PromptsConfig
 from .sections.quality.section_main import QualityConfig, get_default_quality_config
 from .sections.steward.section_main import StewardConfig
+from .sections.templates.section_main import TemplatesConfig
 from .utils.circuits import CircuitConfig, discover_circuits
 from .utils.routing import RoutingRule, load_routing_rules, save_routing_rules
 
@@ -53,6 +56,11 @@ class PhoenixConfig:
     city: CityConfig = field(default_factory=CityConfig)
     quality: QualityConfig = field(default_factory=get_default_quality_config)
     steward: StewardConfig = field(default_factory=StewardConfig)
+
+    # New VEDA-4 sections (paths, templates, prompts)
+    paths: PathsConfig = field(default_factory=PathsConfig)
+    templates: TemplatesConfig = field(default_factory=TemplatesConfig)
+    prompts: PromptsConfig = field(default_factory=PromptsConfig)
 
     # Dynamic collections
     circuits: Dict[str, CircuitConfig] = field(default_factory=dict)
@@ -117,8 +125,13 @@ class PhoenixConfig:
         quality = discovered_sections.get("quality", get_default_quality_config())
         steward = discovered_sections.get("steward", StewardConfig())
 
+        # New VEDA-4 sections
+        paths = discovered_sections.get("paths", PathsConfig())
+        templates = discovered_sections.get("templates", TemplatesConfig())
+        prompts = discovered_sections.get("prompts", PromptsConfig())
+
         # Log what was loaded
-        for section_id in ["kernel", "city", "quality", "steward"]:
+        for section_id in ["kernel", "city", "quality", "steward", "paths", "templates", "prompts"]:
             meta = section_meta.get(section_id)
             if meta and meta.loaded_from_yaml:
                 logger.info(f"Loaded {section_id} from {meta.source_file}")
@@ -133,7 +146,7 @@ class PhoenixConfig:
         logger.info(f"Loaded {len(routing)} routing rules from {routing_path}")
 
         # === EXTRA SECTIONS: Any new sections we don't know about ===
-        known_sections = {"kernel", "city", "quality", "steward"}
+        known_sections = {"kernel", "city", "quality", "steward", "paths", "templates", "prompts"}
         extra_sections = {k: v for k, v in discovered_sections.items() if k not in known_sections}
         if extra_sections:
             logger.info(f"Auto-discovered extra sections: {list(extra_sections.keys())}")
@@ -144,6 +157,9 @@ class PhoenixConfig:
             city=city,
             quality=quality,
             steward=steward,
+            paths=paths,
+            templates=templates,
+            prompts=prompts,
             circuits=circuits,
             routing=routing,
             _extra_sections=extra_sections,
@@ -300,9 +316,9 @@ class PhoenixConfig:
         List all discovered section IDs.
 
         Returns:
-            List of section identifiers (e.g., ["kernel", "city", "quality", "steward"])
+            List of section identifiers (e.g., ["kernel", "city", "quality", "steward", ...])
         """
-        known = ["kernel", "city", "quality", "steward"]
+        known = ["kernel", "city", "quality", "steward", "paths", "templates", "prompts"]
         extra = list(self._extra_sections.keys()) if self._extra_sections else []
         return known + extra
 
@@ -311,7 +327,7 @@ class PhoenixConfig:
         Get a section by ID (works for both typed and dynamic sections).
 
         Args:
-            section_id: Section identifier (e.g., "kernel", "quality", "steward")
+            section_id: Section identifier (e.g., "kernel", "quality", "steward", "paths")
 
         Returns:
             Section instance or None if not found
@@ -324,6 +340,12 @@ class PhoenixConfig:
             return self.quality
         elif section_id == "steward":
             return self.steward
+        elif section_id == "paths":
+            return self.paths
+        elif section_id == "templates":
+            return self.templates
+        elif section_id == "prompts":
+            return self.prompts
         elif self._extra_sections and section_id in self._extra_sections:
             return self._extra_sections[section_id]
         return None
