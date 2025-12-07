@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test Real Cryptographic Verification
 =====================================
@@ -12,12 +11,7 @@ Success criteria:
 3. No simulation mode warnings appear
 """
 
-import sys
-from pathlib import Path
-
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+import pytest
 
 from steward.crypto import ensure_keys_exist, sign_content
 from vibe_core.cartridges.system.archivist.tools.verifier_tool import VerifierTool
@@ -106,18 +100,3 @@ def test_real_crypto_verification():
     assert proof["algorithm"] == "ECDSA-P256-SHA256", "❌ FAILED: Wrong algorithm in proof!"
     assert proof["warning"] is None, "❌ FAILED: Warning present in proof!"
     print("✅ PASSED: Verification proof shows real cryptography")
-
-    # Final summary
-    print("\n" + "=" * 80)
-    print("🎉 ALL TESTS PASSED - REAL CRYPTOGRAPHIC VERIFICATION CONFIRMED")
-    print("=" * 80)
-    print("\nSUMMARY:")
-    print("✅ Valid signatures are accepted")
-    print("✅ Invalid signatures are REJECTED")
-    print("✅ Content tampering is DETECTED")
-    print("✅ Verification uses ECDSA P-256")
-    print("\n🔒 The system is now SECURE. No more simulation.")
-
-
-if __name__ == "__main__":
-    test_real_crypto_verification()
