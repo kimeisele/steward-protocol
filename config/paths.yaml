@@ -1,0 +1,59 @@
+# Paths Configuration
+# All system paths - eliminates 105 hardcoded Path() violations
+#
+# Usage in code:
+#   path = config.paths.data.resolve("economy_db")
+#   path = config.paths.cartridges.resolve("system")
+#   path = config.paths.knowledge.resolve("circuits")
+
+data:
+  root: "data"
+  economy_db: "{root}/economy.db"
+  registry_citizens: "{root}/registry/citizens.json"
+  registry_licenses: "{root}/registry/licenses.json"
+  security_master_key: "{root}/security/master.key"
+  ledger_audit_trail: "{root}/ledger/audit_trail.jsonl"
+  ledger_kernel: "{root}/ledger/kernel.jsonl"
+  ledger_violations: "{root}/ledger/violations.jsonl"
+  reports: "{root}/reports"
+  events_herald: "{root}/events/herald.jsonl"
+  identities: "{root}/identities"
+  federation_pokedex: "{root}/federation/pokedex.json"
+  supreme_court: "{root}/supreme_court"
+
+cartridges:
+  system: "vibe_core/cartridges/system"
+  agent_city: "vibe_core/cartridges/agent_city"
+  plugins: "vibe_core/plugins"
+  phoenix_sections: "vibe_core/phoenix/sections"
+
+knowledge:
+  root: "knowledge"
+  circuits: "{root}/circuits"
+  playbooks: "{root}/playbooks"
+  templates: "{root}/templates"
+  prompts: "{root}/prompts"
+  config: "config"
+  matrix: "MATRIX.md"
+  # Legacy paths (emit deprecation warning when used)
+  legacy_circuits: "vibe_core/playbook/circuits"
+  legacy_playbooks: "vibe_core/playbook/playbooks"
+
+system:
+  runtime_root: "/tmp/vibe_os"
+  agents: "{runtime_root}/agents"
+  models: "{runtime_root}/models"
+  cache: "{runtime_root}/cache"
+  logs: "{runtime_root}/logs"
+
+docs:
+  operations: "OPERATIONS.md"
+  settings: "SETTINGS.md"
+  envoy: "ENVOY.md"
+  readme: "README.md"
+  index: "INDEX.md"
+  agents: "AGENTS.md"
+  help: "HELP.md"
+  tasks: "TASKS.md"
+  opus: "OPUS.md"
+  citymap: "CITYMAP.md"
