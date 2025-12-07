@@ -83,6 +83,13 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 "registry",
                 "auditing",
                 "circuit_execution",  # GAD-5500
+                # Tool capabilities (required to execute tools via self.system)
+                "envoy.city_control",
+                "envoy.curator",
+                "envoy.diplomacy",
+                "envoy.gap_report",
+                "envoy.hil",
+                "envoy.campaign",
             ],
         )
 
@@ -304,8 +311,29 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         logger.info(f"🔄 ENVOY routing command: {command} with args: {args}")
 
         try:
-            # Status commands
+            # Status commands - GAD-6000: Route to SYSTEM_STATUS_V2 circuit
             if command == "status":
+                # Try circuit execution first (neuro-symbolic, no LLM)
+                if self.kernel and hasattr(self.kernel, "envoy"):
+                    try:
+                        circuit_result = self.kernel.envoy.execute_circuit(
+                            "SYSTEM_STATUS_V2",
+                            params={"user_input": "status"},
+                        )
+                        if circuit_result.get("status") == "COMPLETED":
+                            # Extract rendered output from circuit
+                            details = circuit_result.get("details", {})
+                            rendered = details.get("rendered", {}).get("rendered", "")
+                            if rendered:
+                                return {
+                                    "status": "success",
+                                    "response": rendered,
+                                    "source": "circuit:SYSTEM_STATUS_V2",
+                                }
+                    except Exception as e:
+                        logger.warning(f"Circuit execution failed, falling back to tool: {e}")
+
+                # Fallback: direct tool call
                 result = self.system.execute_tool("envoy.city_control", {"action": "get_city_status"})
                 return result.output if result.success else {"status": "error", "error": result.error}
 

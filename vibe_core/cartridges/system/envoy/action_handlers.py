@@ -537,6 +537,331 @@ class CallPlaybookHandler(ActionHandler):
 
 
 # ============================================================================
+# NEURO-SYMBOLIC HANDLERS (GAD-6000: Smart ENVOY)
+# ============================================================================
+
+
+class QueryGraphHandler(ActionHandler):
+    """
+    Handler for QUERY_GRAPH actions.
+
+    Queries kernel state directly (no LLM needed):
+    - kernel.status: Get kernel status
+    - kernel.agents: List registered agents
+    - kernel.tools: List available tools
+    - kernel.bank: Get economic stats
+    - kernel.ledger: Get recent events
+
+    This is the "neuro" part - direct graph queries, zero hallucination.
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "QUERY_GRAPH"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Query kernel graph state"""
+        logger.info(f"  🔍 QUERY_GRAPH: {target}")
+
+        if not context.kernel:
+            logger.warning("    ⚠️ No kernel - returning empty state")
+            return ActionResult.ok({"query": target, "result": None, "error": "no_kernel"})
+
+        try:
+            result = self._execute_query(target, params, context.kernel)
+            logger.info(f"    ✓ Query returned {type(result).__name__}")
+            return ActionResult.ok({"query": target, "result": result})
+        except Exception as e:
+            logger.error(f"    ❌ Query failed: {e}")
+            return ActionResult.fail(f"Query failed: {e}")
+
+    def _execute_query(self, target: str, params: Dict[str, Any], kernel) -> Any:
+        """Execute the actual graph query"""
+
+        # Kernel status query
+        if target == "kernel.status":
+            return {
+                "status": str(kernel.status) if hasattr(kernel, "status") else "UNKNOWN",
+                "uptime": getattr(kernel, "_uptime", 0),
+            }
+
+        # Agent registry query
+        if target == "kernel.agents":
+            registry = getattr(kernel, "_agent_registry", {})
+            return {
+                "total": len(registry),
+                "agents": [
+                    {
+                        "id": aid,
+                        "type": type(agent).__name__,
+                        "capabilities": getattr(agent, "capabilities", [])[:5],
+                    }
+                    for aid, agent in registry.items()
+                ],
+            }
+
+        # Tool registry query
+        if target == "kernel.tools":
+            tool_registry = getattr(kernel, "tool_registry", None)
+            if tool_registry:
+                tools = tool_registry.list_tools() if hasattr(tool_registry, "list_tools") else []
+                return {"total": len(tools), "tools": tools[:20]}
+            return {"total": 0, "tools": []}
+
+        # Economic stats query
+        if target == "kernel.bank":
+            bank = kernel.get_bank() if hasattr(kernel, "get_bank") else None
+            if bank:
+                return bank.get_system_stats()
+            return {"accounts": 0, "total_balance": 0}
+
+        # Ledger events query
+        if target == "kernel.ledger":
+            ledger = getattr(kernel, "ledger", None)
+            limit = params.get("limit", 10)
+            if ledger and hasattr(ledger, "get_all_events"):
+                events = ledger.get_all_events()[-limit:]
+                return {"total": len(events), "recent": events}
+            return {"total": 0, "recent": []}
+
+        # Circuit registry query
+        if target == "kernel.circuits":
+            envoy = getattr(kernel, "envoy", None)
+            if envoy:
+                circuits = envoy.list_circuits() if hasattr(envoy, "list_circuits") else []
+                return {"total": len(circuits), "circuits": circuits}
+            return {"total": 0, "circuits": []}
+
+        # Unknown query - return empty
+        logger.warning(f"    ⚠️ Unknown query target: {target}")
+        return None
+
+
+class RenderTemplateHandler(ActionHandler):
+    """
+    Handler for RENDER_TEMPLATE actions.
+
+    Renders output using Jinja2 templates:
+    - Transforms JSON data into readable markdown
+    - Supports conditional formatting
+    - Zero LLM - pure template rendering
+
+    This is the "symbolic" part - structured output, deterministic.
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "RENDER_TEMPLATE"
+
+    def __init__(self):
+        # Built-in templates for common outputs
+        self._templates: Dict[str, str] = {
+            "status_summary": """## 🏙️ {{ city_name | default('Agent City') }} Status
+
+**Mode:** {{ mode | default('UNKNOWN') }}
+**Health:** {{ health | default('🟡 UNKNOWN') }}
+
+### Agents ({{ agents.total | default(0) }})
+{% if agents.registry %}
+{% for agent in agents.registry[:10] %}
+- `{{ agent.id }}` ({{ agent.type | default('Agent') }})
+{% endfor %}
+{% else %}
+_No agents registered_
+{% endif %}
+
+### Tools ({{ tools.total | default(0) }})
+{% if tools.tools %}
+{% for tool in tools.tools[:10] %}
+- `{{ tool }}`
+{% endfor %}
+{% else %}
+_No tools available_
+{% endif %}
+""",
+            "agent_list": """### Registered Agents ({{ total }})
+{% for agent in agents %}
+- **{{ agent.id }}** - {{ agent.type }}
+  - Capabilities: {{ agent.capabilities | join(', ') | default('none') }}
+{% endfor %}
+""",
+            "error": """### ❌ Error
+
+{{ message | default('Unknown error') }}
+
+{% if details %}
+```
+{{ details }}
+```
+{% endif %}
+""",
+            "simple": """{{ message }}""",
+        }
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Render a template with the given data"""
+        logger.info(f"  📝 RENDER_TEMPLATE: {target}")
+
+        try:
+            from jinja2 import Template
+
+            # Get template
+            template_str = self._get_template(target, params)
+            if not template_str:
+                return ActionResult.fail(f"Template not found: {target}")
+
+            # Get data from params or phase_results
+            data = params.get("data", {})
+            if not data:
+                # Merge all phase results as data
+                data = dict(context.phase_results)
+
+            # Render
+            template = Template(template_str)
+            rendered = template.render(**data)
+
+            logger.info(f"    ✓ Rendered {len(rendered)} chars")
+            return ActionResult.ok({"template": target, "rendered": rendered})
+
+        except ImportError:
+            # Fallback without Jinja2
+            logger.warning("    ⚠️ Jinja2 not available - using simple format")
+            return ActionResult.ok(
+                {
+                    "template": target,
+                    "rendered": str(params.get("data", context.phase_results)),
+                }
+            )
+        except Exception as e:
+            logger.error(f"    ❌ Render failed: {e}")
+            return ActionResult.fail(f"Render failed: {e}")
+
+    def _get_template(self, target: str, params: Dict[str, Any]) -> Optional[str]:
+        """Get template string by name or from params"""
+        # Check if template is in params
+        if "template" in params:
+            return params["template"]
+
+        # Check built-in templates
+        if target in self._templates:
+            return self._templates[target]
+
+        # Try to load from file
+        from pathlib import Path
+
+        template_path = Path(f"vibe_core/playbook/templates/{target}.md.j2")
+        if template_path.exists():
+            return template_path.read_text()
+
+        return None
+
+    def register_template(self, name: str, template: str) -> None:
+        """Register a custom template"""
+        self._templates[name] = template
+
+
+class StoreEphemeralHandler(ActionHandler):
+    """
+    Handler for STORE_EPHEMERAL actions.
+
+    Stores computed results in session cache:
+    - TTL-based expiration
+    - Tag-based retrieval
+    - Avoids recomputation
+
+    Uses EphemeralStorage from playbook module.
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "STORE_EPHEMERAL"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Store value in ephemeral cache"""
+        logger.info(f"  💾 STORE_EPHEMERAL: {target}")
+
+        try:
+            from vibe_core.playbook.ephemeral_storage import get_ephemeral_storage
+
+            storage = get_ephemeral_storage()
+
+            # Get value from params or phase_results
+            value = params.get("value")
+            if value is None and "value_from" in params:
+                # Get from phase results
+                value_path = params["value_from"]
+                value = context.phase_results.get(value_path)
+
+            ttl = params.get("ttl_seconds", 300)
+            tags = params.get("tags", [])
+
+            # Store
+            cache_key = storage.set(target, value, ttl_seconds=ttl, tags=tags)
+
+            logger.info(f"    ✓ Stored: {cache_key} (ttl={ttl}s)")
+            return ActionResult.ok({"key": cache_key, "ttl": ttl, "stored": True})
+
+        except Exception as e:
+            logger.error(f"    ❌ Store failed: {e}")
+            return ActionResult.fail(f"Store failed: {e}")
+
+
+class RetrieveEphemeralHandler(ActionHandler):
+    """
+    Handler for RETRIEVE_EPHEMERAL actions.
+
+    Retrieves cached values from session storage.
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "RETRIEVE_EPHEMERAL"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Retrieve value from ephemeral cache"""
+        logger.info(f"  📦 RETRIEVE_EPHEMERAL: {target}")
+
+        try:
+            from vibe_core.playbook.ephemeral_storage import get_ephemeral_storage
+
+            storage = get_ephemeral_storage()
+
+            # Retrieve
+            value = storage.get(target)
+
+            if value is not None:
+                logger.info(f"    ✓ Cache HIT: {target}")
+                return ActionResult.ok({"key": target, "value": value, "hit": True})
+            else:
+                logger.info(f"    ○ Cache MISS: {target}")
+                return ActionResult.ok({"key": target, "value": None, "hit": False})
+
+        except Exception as e:
+            logger.error(f"    ❌ Retrieve failed: {e}")
+            return ActionResult.fail(f"Retrieve failed: {e}")
+
+
+# ============================================================================
 # DEFAULT REGISTRY
 # ============================================================================
 
@@ -544,11 +869,20 @@ class CallPlaybookHandler(ActionHandler):
 def create_default_registry() -> ActionHandlerRegistry:
     """Create a registry with all default handlers"""
     registry = ActionHandlerRegistry()
+
+    # Core handlers
     registry.register(CheckStateHandler())
     registry.register(ExecuteScriptHandler())
     registry.register(EmitEventHandler())
     registry.register(CallAgentHandler())
     registry.register(CallPlaybookHandler())
+
+    # Neuro-symbolic handlers (GAD-6000)
+    registry.register(QueryGraphHandler())
+    registry.register(RenderTemplateHandler())
+    registry.register(StoreEphemeralHandler())
+    registry.register(RetrieveEphemeralHandler())
+
     return registry
 
 
