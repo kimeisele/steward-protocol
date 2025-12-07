@@ -1,0 +1,156 @@
+# SYSTEM_STATUS_V2 - Neuro-Symbolic Status Circuit
+# GAD-6000: Smart ENVOY without LLM
+#
+# This circuit queries the kernel graph directly and renders
+# a human-readable status using templates. ZERO LLM calls.
+#
+# Flow:
+#   QUERY_GRAPH(kernel.status) → QUERY_GRAPH(kernel.agents) →
+#   QUERY_GRAPH(kernel.tools) → RENDER_TEMPLATE(status_summary) →
+#   STORE_EPHEMERAL(status_cache)
+#
+circuit:
+  id: SYSTEM_STATUS_V2
+  description: Neuro-symbolic system status - queries kernel graph, renders template, no LLM
+  domain: INTERFACE
+  version: "2.0.0"
+  entry_state: "query_status"
+
+  # Intent patterns for routing
+  intent_patterns:
+    - "status"
+    - "system status"
+    - "show status"
+    - "what's running"
+    - "agents"
+    - "health"
+
+  states:
+    # Phase 1: Query kernel status
+    query_status:
+      name: "Query Kernel Status"
+      description: "Fetch kernel status from graph"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "circuit_started"
+          params:
+            circuit: "SYSTEM_STATUS_V2"
+            phase: "query_status"
+        - action_type: QUERY_GRAPH
+          target: "kernel.status"
+          params: {}
+      on_success: query_agents
+      on_failure: render_error
+
+    # Phase 2: Query agent registry
+    query_agents:
+      name: "Query Agent Registry"
+      description: "Fetch registered agents from graph"
+      actions:
+        - action_type: QUERY_GRAPH
+          target: "kernel.agents"
+          params: {}
+      on_success: query_tools
+      on_failure: render_error
+
+    # Phase 3: Query tool registry
+    query_tools:
+      name: "Query Tool Registry"
+      description: "Fetch available tools from graph"
+      actions:
+        - action_type: QUERY_GRAPH
+          target: "kernel.tools"
+          params: {}
+      on_success: render_output
+      on_failure: render_error
+
+    # Phase 4: Render human-readable output
+    render_output:
+      name: "Render Status Output"
+      description: "Transform graph data into markdown using template"
+      actions:
+        - action_type: RENDER_TEMPLATE
+          target: "status_summary"
+          params:
+            data:
+              city_name: "Agent City"
+              mode: "{{ kernel_status.status | default('UNKNOWN') }}"
+              health: "🟢 OPERATIONAL"
+              agents: "{{ kernel_agents }}"
+              tools: "{{ kernel_tools }}"
+      on_success: cache_result
+      on_failure: render_error
+
+    # Phase 5: Cache for subsequent requests
+    cache_result:
+      name: "Cache Status Result"
+      description: "Store rendered status in ephemeral cache"
+      actions:
+        - action_type: STORE_EPHEMERAL
+          target: "system_status_cache"
+          params:
+            value_from: "rendered"
+            ttl_seconds: 60
+            tags: ["status", "envoy"]
+        - action_type: EMIT_EVENT
+          target: "circuit_completed"
+          params:
+            circuit: "SYSTEM_STATUS_V2"
+            status: "success"
+      on_success: COMPLETE
+      on_failure: COMPLETE  # Cache failure shouldn't fail the circuit
+
+    # Success terminal state
+    COMPLETE:
+      name: "Status Complete"
+      description: "Status query completed successfully"
+      terminal: true
+      result:
+        status: "success"
+        response: "{{ rendered }}"
+
+    # Error terminal state
+    render_error:
+      name: "Status Error"
+      description: "Failed to generate status"
+      terminal: true
+      actions:
+        - action_type: RENDER_TEMPLATE
+          target: "error"
+          params:
+            data:
+              message: "Failed to query system status"
+              details: "{{ error }}"
+      result:
+        status: "failed"
+        response: "{{ rendered }}"
+
+
+# Template for status rendering (embedded for portability)
+templates:
+  status_summary: |
+    ## 🏙️ Agent City Status
+
+    **Kernel:** {{ mode }}
+    **Health:** {{ health }}
+
+    ### Agents ({{ agents.total | default(0) }})
+    {% if agents.agents %}
+    {% for agent in agents.agents[:10] %}
+    - `{{ agent.id }}` ({{ agent.type }})
+    {% endfor %}
+    {% else %}
+    _No agents registered_
+    {% endif %}
+
+    ### Tools ({{ tools.total | default(0) }})
+    {% if tools.tools %}
+    {% for tool in tools.tools[:10] %}
+    - `{{ tool }}`
+    {% endfor %}
+    {% else %}
+    _No tools available_
+    {% endif %}
+
+    ---
+    _Circuit: SYSTEM_STATUS_V2 | Cached for 60s_

@@ -231,17 +231,21 @@ class CityControlTool(Tool):
                 open_proposals = forum.list_proposals(status="OPEN")
 
             # Compile status
+            agent_list = list(registry_data.get("agents", {}).keys())
+            credits_allocated = operations_data.get("credits_allocated", 0) if operations_data else 0
+            total_transactions = operations_data.get("total_transactions", 0) if operations_data else 0
+
             status = {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "city_name": "Agent City",
                 "mode": self.mode,
                 "agents": {
                     "total": agent_count,
-                    "registry": list(registry_data.get("agents", {}).keys()),
+                    "registry": agent_list,
                 },
                 "economy": {
-                    "total_credits_allocated": (operations_data.get("credits_allocated", 0) if operations_data else 0),
-                    "total_transactions": (operations_data.get("total_transactions", 0) if operations_data else 0),
+                    "total_credits_allocated": credits_allocated,
+                    "total_transactions": total_transactions,
                 },
                 "governance": {
                     "open_proposals": len(open_proposals),
@@ -256,6 +260,10 @@ class CityControlTool(Tool):
                     ],
                 },
                 "health": "🟢 OPERATIONAL",
+                # Human-readable response for ENVOY.md display
+                "response": self._format_status_markdown(
+                    agent_count, agent_list, credits_allocated, total_transactions, open_proposals, self.mode
+                ),
             }
 
             logger.info(f"✅ City status retrieved: {agent_count} agents, {len(open_proposals)} open proposals")
@@ -267,7 +275,51 @@ class CityControlTool(Tool):
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "error": str(e),
                 "health": "🔴 ERROR",
+                "response": f"Error: {e}",
             }
+
+    def _format_status_markdown(
+        self,
+        agent_count: int,
+        agent_list: List[str],
+        credits_allocated: int,
+        total_transactions: int,
+        open_proposals: List[Dict],
+        mode: str,
+    ) -> str:
+        """
+        Format status data as human-readable markdown.
+
+        This is the neuro-symbolic output layer - transforms structured
+        data into readable format without LLM.
+        """
+        lines = [
+            f"🏙️ **Agent City** | Mode: {mode} | Health: 🟢 OPERATIONAL",
+            "",
+        ]
+
+        # Agents section
+        if agent_count > 0:
+            agent_display = ", ".join(agent_list[:5])
+            if agent_count > 5:
+                agent_display += f" (+{agent_count - 5} more)"
+            lines.append(f"**Agents ({agent_count}):** {agent_display}")
+        else:
+            lines.append("**Agents:** None registered")
+
+        # Economy section
+        if credits_allocated > 0 or total_transactions > 0:
+            lines.append(f"**Economy:** {credits_allocated} credits | {total_transactions} transactions")
+
+        # Governance section
+        if open_proposals:
+            lines.append(f"**Proposals ({len(open_proposals)} open):**")
+            for p in open_proposals[:3]:
+                lines.append(f"  - {p.get('id', '?')}: {p.get('title', 'Untitled')}")
+        else:
+            lines.append("**Proposals:** None open")
+
+        return " | ".join(lines[:3]) if len(lines) <= 3 else "\n".join(lines)
 
     def list_proposals(self, status: str = "OPEN") -> List[Dict[str, Any]]:
         """
