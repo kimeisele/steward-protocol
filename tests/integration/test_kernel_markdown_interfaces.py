@@ -31,7 +31,7 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from vibe_core.plugins.test_orchestration import TestKernel
+from vibe_core.plugins.test_orchestration import TestAgents, TestKernel
 
 
 def get_interface_plugin(kernel):
@@ -134,15 +134,8 @@ def booted_kernel():
         if hasattr(plugin, "on_boot"):
             plugin.on_boot(kernel)
 
-    # Register dummy agent for tests
-    from vibe_core.protocols import VibeAgent
-
-    class DummyAgent(VibeAgent):
-        def process(self, message):
-            pass
-
-    dummy_agent = DummyAgent(agent_id="steward", name="Steward")
-    # Manually register to avoid oath checks if any
+    # Register test agent using TestAgents fixture
+    dummy_agent = TestAgents.compliant("steward")
     kernel._agent_registry["steward"] = dummy_agent
 
     return kernel
