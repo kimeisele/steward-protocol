@@ -748,21 +748,30 @@ _No tools available_
             return ActionResult.fail(f"Render failed: {e}")
 
     def _get_template(self, target: str, params: Dict[str, Any]) -> Optional[str]:
-        """Get template string by name or from params"""
-        # Check if template is in params
+        """
+        Get template string by name or from params.
+
+        OPUS Phase 2: Load from files first, builtin as fallback.
+        """
+        # Check if template is in params (highest priority)
         if "template" in params:
             return params["template"]
 
-        # Check built-in templates
+        # OPUS Phase 2: Try to load from knowledge/templates/ FIRST
+        from pathlib import Path
+
+        template_path = Path(f"knowledge/templates/{target}.j2")
+        if template_path.exists():
+            return template_path.read_text()
+
+        # Fallback: Check built-in templates (kept for backwards compatibility)
         if target in self._templates:
             return self._templates[target]
 
-        # Try to load from file
-        from pathlib import Path
-
-        template_path = Path(f"vibe_core/playbook/templates/{target}.md.j2")
-        if template_path.exists():
-            return template_path.read_text()
+        # Legacy fallback: old template location
+        legacy_path = Path(f"vibe_core/playbook/templates/{target}.md.j2")
+        if legacy_path.exists():
+            return legacy_path.read_text()
 
         return None
 
