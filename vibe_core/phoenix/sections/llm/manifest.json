@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "llm",
+  "name": "LLM Provider Configuration",
+  "version": "1.0.0",
+  "description": "Local LLM and provider settings",
+
+  "entry_point": "section_main.py",
+  "entry_class": "LLMConfig",
+
+  "priority": 10,
+
+  "config_file": "config/llm.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "llm", "providers"]
+}

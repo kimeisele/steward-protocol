@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "runtime",
+  "name": "Runtime Configuration",
+  "version": "1.0.0",
+  "description": "Timeouts, intervals, limits for runtime behavior",
+
+  "entry_point": "section_main.py",
+  "entry_class": "RuntimeConfig",
+
+  "priority": 10,
+
+  "config_file": "config/runtime.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "runtime", "timeouts"]
+}

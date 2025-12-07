@@ -1,0 +1,18 @@
+# Quotas Configuration
+# Auto-loaded by PhoenixConfig -> config.quotas
+
+rate_limits:
+  requests_per_minute: 10
+  tokens_per_minute: 10000
+
+budget:
+  cost_per_hour_usd: 2.0
+  cost_per_day_usd: 5.0
+  cost_per_request_usd: 0.10
+  alert_threshold: 0.80
+
+circuit_breaker:
+  failure_threshold: 5
+  recovery_timeout_seconds: 30
+  window_size_seconds: 60
+  success_threshold_half_open: 1
