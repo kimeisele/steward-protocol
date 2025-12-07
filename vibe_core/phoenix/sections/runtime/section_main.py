@@ -115,6 +115,42 @@ class ActionDefaultsConfig:
 
 
 @dataclass
+class OrchestrationConfig:
+    """Kernel tick/process coordination configuration."""
+
+    health_check_interval: float = 2.0  # vibe_launcher supervisor loop
+    discovery_interval: float = 60.0  # Discoverer cartridge scan interval
+    pulse_sleep: float = 1.0  # Pulse async sleep between updates
+    file_poll_interval: float = 2.0  # FileOperator polling delay
+    monitoring_interval: float = 10.0  # Gateway monitoring start interval
+    heartbeat_max_tasks_per_pulse: int = 5  # Max tasks per heartbeat cycle
+    heartbeat_commit_changes: bool = True  # Auto-commit task progress
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "OrchestrationConfig":
+        return cls(
+            health_check_interval=data.get("health_check_interval", 2.0),
+            discovery_interval=data.get("discovery_interval", 60.0),
+            pulse_sleep=data.get("pulse_sleep", 1.0),
+            file_poll_interval=data.get("file_poll_interval", 2.0),
+            monitoring_interval=data.get("monitoring_interval", 10.0),
+            heartbeat_max_tasks_per_pulse=data.get("heartbeat_max_tasks_per_pulse", 5),
+            heartbeat_commit_changes=data.get("heartbeat_commit_changes", True),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "health_check_interval": self.health_check_interval,
+            "discovery_interval": self.discovery_interval,
+            "pulse_sleep": self.pulse_sleep,
+            "file_poll_interval": self.file_poll_interval,
+            "monitoring_interval": self.monitoring_interval,
+            "heartbeat_max_tasks_per_pulse": self.heartbeat_max_tasks_per_pulse,
+            "heartbeat_commit_changes": self.heartbeat_commit_changes,
+        }
+
+
+@dataclass
 class RuntimeConfig:
     """
     Runtime Configuration.
@@ -129,6 +165,7 @@ class RuntimeConfig:
     limits: LimitsConfig = field(default_factory=LimitsConfig)
     circuit_recovery: CircuitRecoveryConfig = field(default_factory=CircuitRecoveryConfig)
     action_defaults: ActionDefaultsConfig = field(default_factory=ActionDefaultsConfig)
+    orchestration: OrchestrationConfig = field(default_factory=OrchestrationConfig)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "RuntimeConfig":
@@ -137,6 +174,7 @@ class RuntimeConfig:
             limits=LimitsConfig.from_dict(data.get("limits", {})),
             circuit_recovery=CircuitRecoveryConfig.from_dict(data.get("circuit_recovery", {})),
             action_defaults=ActionDefaultsConfig.from_dict(data.get("action_defaults", {})),
+            orchestration=OrchestrationConfig.from_dict(data.get("orchestration", {})),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -145,6 +183,7 @@ class RuntimeConfig:
             "limits": self.limits.to_dict(),
             "circuit_recovery": self.circuit_recovery.to_dict(),
             "action_defaults": self.action_defaults.to_dict(),
+            "orchestration": self.orchestration.to_dict(),
         }
 
     def validate(self) -> List[str]:
