@@ -1,0 +1,22 @@
+## 🏙️ {{ city_name | default('Agent City') }} Status
+
+**Mode:** {{ mode | default('UNKNOWN') }}
+**Health:** {{ health | default('🟡 UNKNOWN') }}
+
+### Agents ({{ agents.total | default(0) }})
+{% if agents.registry %}
+{% for agent in agents.registry[:10] %}
+- `{{ agent.id }}` ({{ agent.type | default('Agent') }})
+{% endfor %}
+{% else %}
+_No agents registered_
+{% endif %}
+
+### Tools ({{ tools.total | default(0) }})
+{% if tools.tools %}
+{% for tool in tools.tools[:10] %}
+- `{{ tool }}`
+{% endfor %}
+{% else %}
+_No tools available_
+{% endif %}
