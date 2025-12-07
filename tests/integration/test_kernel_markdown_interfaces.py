@@ -530,7 +530,7 @@ show me the status
 
         result = get_renderer(kernel, "envoy").sync.sync_to_reality(
             state,
-            router_callback=kernel._playbook_router.route,
+            router_callback=kernel.envoy.route,  # OPUS Phase 2: Use public API
             submit_callback=mock_submit,
             task_factory=lambda p: Task(agent_id=p["agent_id"], payload=p["payload"]),
         )
