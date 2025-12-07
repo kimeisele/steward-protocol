@@ -62,6 +62,11 @@ class EnvoyPlugin(KernelPlugin):
         # Config (from Phoenix envoy.yaml)
         self._config = None
 
+        # EphemeralStorage (OPUS Phase 2: kernel-bound, not global)
+        from vibe_core.playbook.ephemeral_storage import EphemeralStorage
+
+        self._ephemeral = EphemeralStorage()
+
         # UNIFIED ROUTER + EXECUTOR (OPUS Architecture)
         # Replaces _playbook_router and _milk_ocean_router
         self._unified_router = None
@@ -139,6 +144,11 @@ class EnvoyPlugin(KernelPlugin):
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Clean up on shutdown."""
+        # Clear ephemeral storage (OPUS Phase 2: proper lifecycle management)
+        if hasattr(self, "_ephemeral") and self._ephemeral:
+            cleared_count = self._ephemeral.clear()
+            logger.info(f"📬 Ephemeral storage cleared: {cleared_count} entries")
+
         logger.info(f"📬 ENVOY Plugin shutting down ({len(self._request_history)} requests processed)")
 
     # =========================================================================
@@ -444,8 +454,9 @@ class EnvoyPlugin(KernelPlugin):
             # Create router with circuit knowledge
             self._unified_router = UnifiedRouter(self._kernel)
 
-            # Create executor with eager initialization
-            self._unified_executor = UnifiedExecutor(self._kernel)
+            # Create executor with eager initialization and ephemeral storage
+            # (OPUS Phase 2: dependency injection, not global singleton)
+            self._unified_executor = UnifiedExecutor(self._kernel, ephemeral=self._ephemeral)
 
             logger.info("📬 OPUS Runtime initialized (UnifiedRouter + UnifiedExecutor)")
         except Exception as e:

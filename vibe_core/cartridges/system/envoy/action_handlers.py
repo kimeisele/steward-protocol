@@ -780,8 +780,17 @@ class StoreEphemeralHandler(ActionHandler):
     - Tag-based retrieval
     - Avoids recomputation
 
-    Uses EphemeralStorage from playbook module.
+    Uses EphemeralStorage via dependency injection (OPUS Phase 2).
     """
+
+    def __init__(self, ephemeral=None):
+        """
+        Initialize handler with ephemeral storage.
+
+        Args:
+            ephemeral: EphemeralStorage instance (injected dependency)
+        """
+        self._ephemeral = ephemeral
 
     @property
     def action_type(self) -> str:
@@ -796,10 +805,12 @@ class StoreEphemeralHandler(ActionHandler):
         """Store value in ephemeral cache"""
         logger.info(f"  💾 STORE_EPHEMERAL: {target}")
 
-        try:
-            from vibe_core.playbook.ephemeral_storage import get_ephemeral_storage
+        if not self._ephemeral:
+            logger.warning("    ⚠️ No ephemeral storage available")
+            return ActionResult.ok({"key": target, "stored": False, "error": "no_storage"})
 
-            storage = get_ephemeral_storage()
+        try:
+            storage = self._ephemeral
 
             # Get value from params or phase_results
             value = params.get("value")
@@ -827,7 +838,17 @@ class RetrieveEphemeralHandler(ActionHandler):
     Handler for RETRIEVE_EPHEMERAL actions.
 
     Retrieves cached values from session storage.
+    Uses EphemeralStorage via dependency injection (OPUS Phase 2).
     """
+
+    def __init__(self, ephemeral=None):
+        """
+        Initialize handler with ephemeral storage.
+
+        Args:
+            ephemeral: EphemeralStorage instance (injected dependency)
+        """
+        self._ephemeral = ephemeral
 
     @property
     def action_type(self) -> str:
@@ -842,10 +863,12 @@ class RetrieveEphemeralHandler(ActionHandler):
         """Retrieve value from ephemeral cache"""
         logger.info(f"  📦 RETRIEVE_EPHEMERAL: {target}")
 
-        try:
-            from vibe_core.playbook.ephemeral_storage import get_ephemeral_storage
+        if not self._ephemeral:
+            logger.warning("    ⚠️ No ephemeral storage available")
+            return ActionResult.ok({"key": target, "value": None, "hit": False, "error": "no_storage"})
 
-            storage = get_ephemeral_storage()
+        try:
+            storage = self._ephemeral
 
             # Retrieve
             value = storage.get(target)
@@ -868,7 +891,12 @@ class RetrieveEphemeralHandler(ActionHandler):
 
 
 def create_default_registry() -> ActionHandlerRegistry:
-    """Create a registry with all default handlers"""
+    """
+    Create a registry with all default handlers.
+
+    DEPRECATED: Use create_registry_with_ephemeral() instead (OPUS Phase 2).
+    This function is kept for backwards compatibility.
+    """
     registry = ActionHandlerRegistry()
 
     # Core handlers
@@ -881,11 +909,41 @@ def create_default_registry() -> ActionHandlerRegistry:
     # Neuro-symbolic handlers (GAD-6000)
     registry.register(QueryGraphHandler())
     registry.register(RenderTemplateHandler())
-    registry.register(StoreEphemeralHandler())
-    registry.register(RetrieveEphemeralHandler())
+    registry.register(StoreEphemeralHandler())  # No ephemeral storage injected
+    registry.register(RetrieveEphemeralHandler())  # No ephemeral storage injected
 
     return registry
 
 
-# Singleton instance for convenience
+def create_registry_with_ephemeral(ephemeral=None) -> ActionHandlerRegistry:
+    """
+    Create a registry with all handlers and inject ephemeral storage (OPUS Phase 2).
+
+    Args:
+        ephemeral: EphemeralStorage instance to inject into handlers
+
+    Returns:
+        ActionHandlerRegistry with all handlers configured
+    """
+    registry = ActionHandlerRegistry()
+
+    # Core handlers (no dependencies)
+    registry.register(CheckStateHandler())
+    registry.register(ExecuteScriptHandler())
+    registry.register(EmitEventHandler())
+    registry.register(CallAgentHandler())
+    registry.register(CallPlaybookHandler())
+
+    # Neuro-symbolic handlers (GAD-6000)
+    registry.register(QueryGraphHandler())
+    registry.register(RenderTemplateHandler())
+
+    # Ephemeral storage handlers (with dependency injection)
+    registry.register(StoreEphemeralHandler(ephemeral=ephemeral))
+    registry.register(RetrieveEphemeralHandler(ephemeral=ephemeral))
+
+    return registry
+
+
+# Singleton instance for convenience (DEPRECATED: use create_registry_with_ephemeral)
 default_registry = create_default_registry()
