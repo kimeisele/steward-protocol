@@ -1,81 +1,116 @@
 """
-OPUS Renderer - Master AI Dashboard.
+OPUS Renderer - Master AI Dashboard with modular panels.
 
-Extends ArchitectureRenderer + OpusDocsProvider for all data sources.
+Uses the panel system - to add new panels, just add files to panels/ directory.
+No need to edit this file!
 """
 
-import json
+import logging
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from ..architecture.renderer import ArchitectureRenderer
+from ..base import BaseRenderer
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+logger = logging.getLogger("OPUS_RENDERER")
 
-class OpusRenderer(ArchitectureRenderer):
-    """Master AI Dashboard - extends Architecture with opus.* sources."""
+
+class OpusRenderer(BaseRenderer):
+    """Master AI Dashboard with auto-discovered panels."""
 
     def __init__(self, kernel: "RealVibeKernel"):
         super().__init__(kernel)
+        self._root = Path(".")
         self._docs_path = Path("docs/architecture/OPUS")
+        self._panels = []
+        self._discover_panels()
 
     @property
     def name(self) -> str:
         return "opus"
 
-    def _register_data_sources(self) -> None:
-        """Register arch.* + opus.* sources."""
-        super()._register_data_sources()
-        # Kernel status
-        self.register_data_source("kernel.status", self._get_kernel_status)
-        self.register_data_source("opus.metrics", self._get_metrics)
-        # From manifest.json (dynamic)
-        self.register_data_source("opus.roadmap", self._get_roadmap)
-        self.register_data_source("opus.documents", self._get_documents)
-        self.register_data_source("opus.p0_plans", self._get_p0_plans)
+    def _discover_panels(self) -> None:
+        """Auto-discover panels from panels/ directory."""
+        try:
+            from .panels import discover_panels
 
-    def _load_manifest(self) -> Dict[str, Any]:
-        """Load manifest.json fresh each time."""
-        manifest_path = self._docs_path / "manifest.json"
-        if manifest_path.exists():
-            return json.loads(manifest_path.read_text())
-        return {}
+            self._panels = discover_panels(self.kernel)
+            logger.info(f"[OPUS] Discovered {len(self._panels)} panels")
+        except Exception as e:
+            logger.warning(f"[OPUS] Panel discovery failed: {e}")
+            self._panels = []
 
-    def _get_roadmap(self) -> List[Dict[str, str]]:
-        """Return roadmap from manifest.json."""
-        manifest = self._load_manifest()
-        roadmap = manifest.get("roadmap", {})
-        return [{"Phase": k, "Description": v} for k, v in roadmap.items()]
+    def render(self) -> None:
+        """Render OPUS.md with all panels."""
+        content = self.generate_content()
+        output_path = Path("OPUS.md")
+        output_path.write_text(content)
+        logger.info(f"[OPUS] Rendered to {output_path}")
 
-    def _get_documents(self) -> List[Dict[str, Any]]:
-        """Return documents table from manifest.json."""
-        manifest = self._load_manifest()
-        return [
-            {"ID": d["id"], "Title": d["title"], "Status": d["status"], "Priority": d["priority"]}
-            for d in manifest.get("documents", [])
-        ]
-
-    def _get_p0_plans(self) -> str:
-        """Return P0 doc contents from manifest.json."""
-        manifest = self._load_manifest()
-        p0_docs = [d for d in manifest.get("documents", []) if d.get("priority") == "P0"]
+    def generate_content(self) -> str:
+        """Generate full OPUS.md content."""
         lines = []
-        for doc in p0_docs:
-            doc_path = self._docs_path / doc["file"]
-            if doc_path.exists():
-                lines.append("<details>")
-                lines.append(f"<summary>{doc['title']}</summary>")
-                lines.append("")
-                lines.append(doc_path.read_text())
-                lines.append("")
-                lines.append("</details>")
-                lines.append("")
-        return "\n".join(lines) if lines else "_No P0 plans_"
 
-    def _get_kernel_status(self) -> str:
-        """Kernel status line."""
+        # Header
+        lines.append(self._render_header())
+
+        # Status section (built-in)
+        lines.append(self._render_status())
+
+        # Metrics section (built-in)
+        lines.append(self._render_metrics())
+
+        # Dynamic panels from panels/ directory
+        for panel in self._panels:
+            try:
+                panel_content = panel.render()
+                if panel_content:
+                    lines.append(f"<!-- @LIVE:{panel.panel_id} -->")
+                    lines.append(panel_content)
+                    lines.append("<!-- /@LIVE -->")
+            except Exception as e:
+                logger.warning(f"[OPUS] Panel {panel.panel_id} failed: {e}")
+                lines.append(f"<!-- @LIVE:{panel.panel_id} -->")
+                lines.append(f"## {panel.title}")
+                lines.append("")
+                lines.append(f"_Panel error: {e}_")
+                lines.append("<!-- /@LIVE -->")
+
+        # Architecture diagram (built-in)
+        lines.append(self._render_architecture())
+
+        # Component sizes (built-in)
+        lines.append(self._render_components())
+
+        # Plugin status (built-in)
+        lines.append(self._render_plugins())
+
+        # AI sections (preserved)
+        lines.append(self._render_ai_sections())
+
+        # Footer
+        lines.append(self._render_footer())
+
+        return "\n".join(lines)
+
+    def _render_header(self) -> str:
+        """Render document header."""
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        status = getattr(self.kernel, "status", "UNKNOWN")
+
+        return f"""<!--
+AUTO-GENERATED by InterfacePlugin
+Last Updated: {timestamp} UTC
+Kernel: {status}
+-->
+> **Docs:** [README](README.md) · [INDEX](INDEX.md) · [AGENTS](AGENTS.md) · [CITYMAP](CITYMAP.md) · [HELP](HELP.md) · [TASKS](TASKS.md) · [SETTINGS](SETTINGS.md) · [ENVOY](ENVOY.md)
+"""
+
+    def _render_status(self) -> str:
+        """Render kernel status."""
         status = getattr(self.kernel, "status", "UNKNOWN")
         if hasattr(status, "value"):
             status = status.value
@@ -88,30 +123,167 @@ class OpusRenderer(ArchitectureRenderer):
                 pass
 
         loc = self._count_loc("vibe_core/kernel_impl.py")
-        return f"**Kernel**: {status} | **Agents**: {agent_count} | **LOC**: {loc}"
 
-    def _get_metrics(self) -> List[Dict[str, Any]]:
-        """Kernel metrics table."""
+        return f"""<!-- @LIVE:status -->
+## Status
+
+**Kernel**: {status} | **Agents**: {agent_count} | **LOC**: {loc}
+<!-- /@LIVE -->"""
+
+    def _render_metrics(self) -> str:
+        """Render metrics table."""
         loc = self._count_loc("vibe_core/kernel_impl.py")
         target = 1008
-        plugin_count = len(self.kernel._plugins) if hasattr(self.kernel, "_plugins") else 0
+        delta = loc - target
+        status_icon = "✅" if loc <= target else ("🟡" if loc <= target + 100 else "🔴")
 
-        return [
-            {
-                "Metric": "kernel_impl.py LOC",
-                "Current": loc,
-                "Target": target,
-                "Delta": loc - target,
-                "Status": "✅" if loc <= target else ("🟡" if loc <= target + 100 else "🔴"),
-            },
-            {
-                "Metric": "Plugins Loaded",
-                "Current": plugin_count,
-                "Target": "8+",
-                "Delta": "-",
-                "Status": "✅" if plugin_count >= 8 else "🟡",
-            },
+        plugin_count = len(self.kernel._plugins) if hasattr(self.kernel, "_plugins") else 0
+        plugin_status = "✅" if plugin_count >= 8 else "🟡"
+
+        return f"""<!-- @LIVE:metrics -->
+## Metrics
+
+| Metric | Current | Target | Delta | Status |
+| --- | --- | --- | --- | --- |
+| kernel_impl.py LOC | {loc} | {target} | {delta} | {status_icon} |
+| Plugins Loaded | {plugin_count} | 8+ | - | {plugin_status} |
+<!-- /@LIVE -->"""
+
+    def _render_architecture(self) -> str:
+        """Render Mermaid architecture diagram."""
+        plugins = self._discover_plugins()
+        loc = self._count_loc("vibe_core/kernel_impl.py")
+
+        mermaid_lines = ["```mermaid", "graph TB"]
+        mermaid_lines.append(f'    K["🧠 Kernel ({loc} LOC)"]')
+        mermaid_lines.append('    subgraph Plugins["📦 Plugins"]')
+
+        for name in plugins:
+            mermaid_lines.append(f'        P_{name}["{name}"]')
+
+        mermaid_lines.append("    end")
+        mermaid_lines.append("    K --> Plugins")
+        mermaid_lines.append('    subgraph Config["🔥 Phoenix Config"]')
+        mermaid_lines.append("        PC[PhoenixConfig]")
+        mermaid_lines.append("    end")
+        mermaid_lines.append("    K --> Config")
+        mermaid_lines.append("```")
+
+        return f"""<!-- @LIVE:architecture -->
+## Architecture
+
+{chr(10).join(mermaid_lines)}
+<!-- /@LIVE -->"""
+
+    def _render_components(self) -> str:
+        """Render component sizes table."""
+        components = [
+            ("vibe_core/kernel_impl.py", "Kernel"),
+            ("vibe_core/phoenix/sections/interface/section_main.py", "InterfaceConfig"),
+            ("vibe_core/phoenix/config.py", "PhoenixConfig"),
+            ("vibe_core/plugins/interface/renderers/base.py", "BaseRenderer"),
+            ("vibe_core/kernel_ops.py", "Kernel Ops"),
+            ("vibe_core/plugins/interface/plugin_main.py", "InterfacePlugin"),
+            ("vibe_core/event_bus.py", "EventBus"),
         ]
+
+        rows = []
+        for path, name in components:
+            loc = self._count_loc(path)
+            if loc > 0:
+                rows.append((name, path.split("/")[-1], loc))
+
+        rows.sort(key=lambda x: x[2], reverse=True)
+
+        table_lines = ["| Component | File | LOC |", "| --- | --- | --- |"]
+        for name, file, loc in rows:
+            table_lines.append(f"| {name} | {file} | {loc} |")
+
+        return f"""<!-- @LIVE:component_sizes -->
+## Component Sizes
+
+{chr(10).join(table_lines)}
+<!-- /@LIVE -->"""
+
+    def _render_plugins(self) -> str:
+        """Render plugin status table."""
+        rows = []
+        if hasattr(self.kernel, "_plugins"):
+            for plugin in self.kernel._plugins:
+                plugin_id = getattr(plugin, "plugin_id", type(plugin).__name__)
+                rows.append((plugin_id, "✅ Active", type(plugin).__name__))
+
+        if not rows:
+            rows = [("None loaded", "⚪", "-")]
+
+        table_lines = ["| Plugin | Status | Type |", "| --- | --- | --- |"]
+        for plugin, status, ptype in rows:
+            table_lines.append(f"| {plugin} | {status} | {ptype} |")
+
+        return f"""<!-- @LIVE:plugin_status -->
+## Plugin Status
+
+{chr(10).join(table_lines)}
+<!-- /@LIVE -->"""
+
+    def _render_ai_sections(self) -> str:
+        """Render AI-writable sections (preserved content)."""
+        return """<!-- @AI:current_goal -->
+## Current Goal
+
+<!-- AI can write here -->
+_No entries_
+<!-- /@AI -->
+<!-- @AI:phase_status -->
+## Phase Status
+
+<!-- AI can write here -->
+_No entries_
+<!-- /@AI -->
+<!-- @AI:extraction_log -->
+## Extraction Log
+
+<!-- AI can write here -->
+_No entries_
+<!-- /@AI -->
+<!-- @AI:blockers -->
+## Blockers
+
+<!-- AI can write here -->
+_No entries_
+<!-- /@AI -->
+<!-- @HUMAN:next_actions -->
+## Next Actions
+
+<!-- User section -->
+_No entries_
+<!-- /@HUMAN -->"""
+
+    def _render_footer(self) -> str:
+        """Render footer."""
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        return f"*Generated by InterfacePlugin | {timestamp} UTC*"
+
+    def _discover_plugins(self) -> List[str]:
+        """Discover plugin names."""
+        plugins_dir = self._root / "vibe_core" / "plugins"
+        result = []
+        if plugins_dir.exists():
+            for item in plugins_dir.iterdir():
+                if item.is_dir() and not item.name.startswith("_"):
+                    if (item / "plugin_main.py").exists():
+                        result.append(item.name)
+        return result
+
+    def _count_loc(self, path: str) -> int:
+        """Count lines of code."""
+        try:
+            full_path = self._root / path
+            if full_path.exists():
+                return len(full_path.read_text().splitlines())
+        except Exception:
+            pass
+        return 0
 
 
 def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> OpusRenderer:
