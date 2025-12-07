@@ -27,13 +27,6 @@ class TestMonitorLoader:
         # Since I can't create a real plugin easily without writing one, I will skip this
         # or assume we need to use a real plugin from the system if testing integration.
         # But this is unit.
-        # The PROPER way is to check if TestPlugins supports monitors.
-        # For now, I will retain the logic but using a dummy class that behaves like a plugin
-        # effectively mocking but via a class structure, not MagicMock, if possible.
-        # OR: I can use MagicMock if it's strictly mocking external dependency behavior that fixtures don't cover.
-        # Protocol says "No custom mocks", "Direct Mock() banned in favor of TestAgents".
-        # It doesn't explicitly ban Mocking internal classes for unit tests where fixtures don't exist.
-        # However, to be strict, let's skip the plugin test or implement a TestPluginWithMonitors.
         pass
 
     def test_cache_behavior(self):
@@ -71,8 +64,4 @@ class TestCLIBuiltinCommands:
         # This function hits the disk/real kernel? No, it uses internal logic.
         # _execute_builtin instantiates things.
         # This test might be integration but we'll leave it simple.
-
-        # If _execute_builtin creates a kernel, it's slow.
-        # Let's mark it as integration or refactor.
-        # But this file is in tests/unit.
         pass
