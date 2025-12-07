@@ -616,8 +616,9 @@ class MilkOceanRouter:
                 # Queue it for next iteration
                 try:
                     loop.run_until_complete(emit_event(event_type, "envoy", message, details=details or {}))
-                except Exception:
-                    pass  # Silently fail - don't disrupt routing
+                except Exception as inner_e:
+                    logger.warning(f"Event emission failed (non-blocking): {inner_e}")
+                    # Continue routing - event emission is not critical
         except Exception as e:
             logger.debug(f"⚠️  Event emission failed (non-blocking): {e}")
 

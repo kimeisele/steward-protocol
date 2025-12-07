@@ -793,8 +793,9 @@ class DeterministicExecutor:
                             return False
                         phase.result = result.data
                     else:
-                        # Fallback stub
-                        logger.info(f"  ✓ State check passed (stub): {resolved_target}")
+                        # No action handler - log warning and skip (don't fake success)
+                        logger.warning(f"  ⚠️ CHECK_STATE skipped (no handler): {resolved_target}")
+                        phase.result = {"skipped": True, "reason": "no_action_handler"}
 
                 elif action_type == "EXECUTE_SCRIPT":
                     # Execute script via Action Handler Registry
@@ -815,9 +816,9 @@ class DeterministicExecutor:
                             return False
                         phase.result = result.data
                     else:
-                        # Fallback stub
-                        logger.info(f"  ✓ Script executed (stub): {resolved_target}")
-                        phase.result = {"script": resolved_target, "params": params}
+                        # No action handler - log warning and skip (don't fake success)
+                        logger.warning(f"  ⚠️ EXECUTE_SCRIPT skipped (no handler): {resolved_target}")
+                        phase.result = {"skipped": True, "reason": "no_action_handler", "script": resolved_target}
 
                 elif action_type == "CALL_AGENT":
                     # Delegate to another agent (PLAYBOOK FIX: Actually call the agent!)
