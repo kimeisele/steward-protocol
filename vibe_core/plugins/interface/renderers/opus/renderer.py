@@ -32,6 +32,10 @@ class OpusRenderer(BaseRenderer):
     def name(self) -> str:
         return "opus"
 
+    @property
+    def output_file(self) -> Path:
+        return Path("OPUS.md")
+
     def _discover_panels(self) -> None:
         """Auto-discover panels from panels/ directory."""
         try:
