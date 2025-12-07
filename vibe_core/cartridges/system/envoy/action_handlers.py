@@ -575,7 +575,8 @@ class QueryGraphHandler(ActionHandler):
         try:
             result = self._execute_query(target, params, context.kernel)
             logger.info(f"    ✓ Query returned {type(result).__name__}")
-            return ActionResult.ok({"query": target, "result": result})
+            # Return the result directly so it can be used in templates without .result wrapper
+            return ActionResult.ok(result if isinstance(result, dict) else {"value": result})
         except Exception as e:
             logger.error(f"    ❌ Query failed: {e}")
             return ActionResult.fail(f"Query failed: {e}")
