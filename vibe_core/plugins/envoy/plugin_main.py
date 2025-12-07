@@ -11,14 +11,16 @@ Like STEWARD, ENVOY is FRAKTAL:
 3. The Avatar (EnvoyCartridge agent)
 
 This plugin:
-1. Owns routing infrastructure (PlaybookRouter, MilkOceanRouter)
+1. Owns routing infrastructure (UnifiedRouter - replaces PlaybookRouter + MilkOceanRouter)
 2. Uses kernel hooks to intercept and route requests
 3. Provides public API via kernel.envoy.*
-4. Connects to circuit/playbook execution
+4. Connects to circuit/playbook execution via UnifiedExecutor
 
+Architecture: OPUS RUNTIME SEPARATION (docs/architecture/OPUS/OPUS_RUNTIME_SEPARATION.md)
 Pattern: Same as StewardProtocolPlugin (the Golden Plugin Standard)
 """
 
+import asyncio
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
@@ -60,7 +62,12 @@ class EnvoyPlugin(KernelPlugin):
         # Config (from Phoenix envoy.yaml)
         self._config = None
 
-        # Routers (lazy loaded)
+        # UNIFIED ROUTER + EXECUTOR (OPUS Architecture)
+        # Replaces _playbook_router and _milk_ocean_router
+        self._unified_router = None
+        self._unified_executor = None
+
+        # Legacy routers (kept for backwards compatibility, will be removed)
         self._playbook_router = None
         self._milk_ocean_router = None
 
@@ -77,6 +84,9 @@ class EnvoyPlugin(KernelPlugin):
         self._request_history: List[Dict[str, Any]] = []
         self._max_history = 50
 
+        # Lazy-loaded executor (legacy)
+        self._executor = None
+
     # =========================================================================
     # KERNEL HOOKS
     # =========================================================================
@@ -86,7 +96,7 @@ class EnvoyPlugin(KernelPlugin):
         Called when kernel boots.
 
         Register as THE envoy plugin on the kernel.
-        Initialize routers and load circuits.
+        Initialize unified router + executor (OPUS Architecture).
         Register EnvoyCartridge as the actual agent for task execution.
         """
         self._kernel = kernel
@@ -97,21 +107,26 @@ class EnvoyPlugin(KernelPlugin):
         # Load config
         self._load_config()
 
-        # Initialize routers
-        self._init_routers()
-
-        # Discover circuits and playbooks
+        # Discover circuits and playbooks FIRST (needed by router)
         self._discover_circuits()
         self._discover_playbooks()
+
+        # Initialize UNIFIED ROUTER + EXECUTOR (OPUS Architecture)
+        # This replaces the legacy _init_routers() call
+        self._init_unified_runtime()
+
+        # Legacy routers (for backwards compatibility during transition)
+        self._init_routers()
 
         # Register EnvoyCartridge as the actual agent
         # This connects ENVOY.md requests -> Task -> EnvoyCartridge.process()
         self._register_envoy_agent(kernel)
 
-        logger.info("📬 ENVOY Plugin booted")
+        logger.info("📬 ENVOY Plugin booted (OPUS Architecture)")
         logger.info(f"   Circuits: {len(self._circuits)}")
         logger.info(f"   Playbooks: {len(self._playbooks)}")
-        logger.info("   Shell is now PLUGIN-BASED (kernel.envoy)")
+        logger.info(f"   UnifiedRouter: {'OK' if self._unified_router else 'FAIL'}")
+        logger.info(f"   UnifiedExecutor: {'OK' if self._unified_executor else 'FAIL'}")
 
     def on_tick(self, kernel: "RealVibeKernel") -> None:
         """
@@ -188,7 +203,7 @@ class EnvoyPlugin(KernelPlugin):
         if circuit_id not in self._circuits:
             return {"error": f"Circuit '{circuit_id}' not found", "status": "FAILED"}
 
-        circuit = self._circuits[circuit_id]
+        _ = self._circuits[circuit_id]  # Validate circuit exists
         logger.info(f"📬 Executing circuit: {circuit_id}")
 
         try:
@@ -337,7 +352,10 @@ class EnvoyPlugin(KernelPlugin):
         """
         return {
             "plugin_id": self.plugin_id,
+            "architecture": "OPUS" if self._unified_router else "legacy",
             "routers": {
+                "unified_router": self._unified_router is not None,
+                "unified_executor": self._unified_executor is not None,
                 "playbook_router": self._playbook_router is not None,
                 "milk_ocean_router": self._milk_ocean_router is not None,
             },
@@ -347,6 +365,51 @@ class EnvoyPlugin(KernelPlugin):
             "history_size": len(self._request_history),
             "config_loaded": self._config is not None,
         }
+
+    def execute_unified(self, user_input: str, source: str = "envoy") -> Dict[str, Any]:
+        """
+        Execute user input via UNIFIED ARCHITECTURE (OPUS).
+
+        This is the new main entry point that uses:
+        - UnifiedRouter for routing decisions
+        - UnifiedExecutor for execution
+
+        Args:
+            user_input: The user's request
+            source: Where the request came from
+
+        Returns:
+            ExecutionResult as dict
+        """
+        if not self._unified_router or not self._unified_executor:
+            return {
+                "status": "failed",
+                "error": "OPUS Runtime not initialized",
+                "response": "Internal error: Unified execution not available",
+            }
+
+        # Route
+        request = self._unified_router.route(user_input, source)
+
+        # Check gate
+        gate = self._unified_router.check_gate(request)
+        if gate.value == "block":
+            return {
+                "status": "blocked",
+                "error": "Request blocked by MilkOcean gate",
+                "response": "Request was blocked",
+            }
+
+        # Execute
+        try:
+            result = asyncio.get_event_loop().run_until_complete(self._unified_executor.execute(request))
+            return result.to_dict()
+        except Exception as e:
+            return {
+                "status": "failed",
+                "error": str(e),
+                "response": f"Execution failed: {e}",
+            }
 
     # =========================================================================
     # PRIVATE METHODS
@@ -362,14 +425,42 @@ class EnvoyPlugin(KernelPlugin):
         except Exception as e:
             logger.warning(f"📬 Could not load ENVOY config: {e}")
 
+    def _init_unified_runtime(self) -> None:
+        """
+        Initialize UNIFIED ROUTER + EXECUTOR (OPUS Architecture).
+
+        This replaces the legacy PlaybookRouter + MilkOceanRouter with a
+        single unified routing and execution system.
+
+        Fixes:
+        - BREAK 1: Dual Routing -> Single UnifiedRouter
+        - BREAK 2: Path Uncertainty -> Decision at routing time
+        - BREAK 4: Lazy Init -> Eager initialization
+        - BREAK 5: Result Mismatch -> Unified ExecutionResult
+        """
+        try:
+            from vibe_core.runtime.unified_execution import UnifiedExecutor, UnifiedRouter
+
+            # Create router with circuit knowledge
+            self._unified_router = UnifiedRouter(self._kernel)
+
+            # Create executor with eager initialization
+            self._unified_executor = UnifiedExecutor(self._kernel)
+
+            logger.info("📬 OPUS Runtime initialized (UnifiedRouter + UnifiedExecutor)")
+        except Exception as e:
+            logger.error(f"📬 Failed to init OPUS Runtime: {e}")
+            self._unified_router = None
+            self._unified_executor = None
+
     def _init_routers(self) -> None:
-        """Initialize routing infrastructure."""
+        """Initialize legacy routing infrastructure (backwards compatibility)."""
         # Initialize PlaybookRouter
         try:
             from vibe_core.runtime.playbook_router import PlaybookRouter
 
             self._playbook_router = PlaybookRouter()
-            logger.debug("📬 PlaybookRouter initialized")
+            logger.debug("📬 PlaybookRouter initialized (legacy)")
         except Exception as e:
             logger.warning(f"📬 Could not init PlaybookRouter: {e}")
 
@@ -378,7 +469,7 @@ class EnvoyPlugin(KernelPlugin):
             from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 
             self._milk_ocean_router = MilkOceanRouter()
-            logger.debug("📬 MilkOceanRouter initialized")
+            logger.debug("📬 MilkOceanRouter initialized (legacy)")
         except Exception as e:
             logger.debug(f"📬 MilkOceanRouter not available: {e}")
 
