@@ -45,6 +45,18 @@ except ImportError:
 logger = logging.getLogger("MILK_OCEAN_ROUTER")
 
 
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config().runtime
+    except Exception:
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
+        return RuntimeConfig()
+
+
 class RequestPriority(str, Enum):
     """Request priority levels"""
 
@@ -626,7 +638,8 @@ class MilkOceanRouter:
         """
 
         # Check recursion depth (VibeCortex Safety)
-        MAX_RECURSION_DEPTH = 5
+        runtime_config = _get_runtime_config()
+        MAX_RECURSION_DEPTH = runtime_config.limits.max_recursion_depth
         if recursion_depth > MAX_RECURSION_DEPTH:
             logger.warning(
                 f"⛔ Recursion depth exceeded ({recursion_depth} > {MAX_RECURSION_DEPTH}) for agent {agent_id}"
@@ -867,7 +880,7 @@ def lazy_queue_worker(max_iterations: Optional[int] = None):
         for request in batch:
             request_id = request["request_id"]
             user_input = request["user_input"]
-            agent_id = request["agent_id"]
+            _agent_id = request["agent_id"]  # Extracted but not used in current implementation
 
             try:
                 queue.mark_processing(request_id)
