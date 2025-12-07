@@ -176,10 +176,13 @@ class EnvoyPlugin(KernelPlugin):
             # Use UnifiedRouter (OPUS Phase 2)
             request = self._unified_router.route(user_input, source="envoy")
 
+            # Convert float confidence to string labels expected by tests/envoy_sync
+            confidence_str = self._confidence_to_label(request.confidence)
+
             return {
                 "task": request.target_id,
                 "description": f"{request.execution_path.value}: {request.target_id}",
-                "confidence": str(request.confidence),
+                "confidence": confidence_str,
                 "source": request.source,
             }
         except Exception as e:
@@ -190,6 +193,23 @@ class EnvoyPlugin(KernelPlugin):
                 "description": "Routing failed",
                 "confidence": "none",
             }
+
+    def _confidence_to_label(self, confidence: float) -> str:
+        """
+        Convert float confidence (0.0-1.0) to string label.
+
+        Args:
+            confidence: Float confidence score
+
+        Returns:
+            String label: "explicit", "contextual", or "suggested"
+        """
+        if confidence >= 0.8:
+            return "explicit"
+        elif confidence >= 0.5:
+            return "contextual"
+        else:
+            return "suggested"
 
     def execute_circuit(self, circuit_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """

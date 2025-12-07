@@ -22,6 +22,54 @@ from typing import Any, Dict, List
 
 
 @dataclass
+class ProjectPathsConfig:
+    """
+    Project-level workspace paths.
+
+    Maps to violations in:
+    - list_directory.py, search_file.py: workspace_root (Path.cwd())
+    - diplomacy_tool.py: diplomatic_bag
+    - curator_tool.py: intelligence
+    - task_manager.py: archive (.vibe/state/archive)
+    """
+
+    workspace_root: str = "."
+    diplomatic_bag: str = "diplomatic_bag"
+    intelligence: str = "intelligence"
+    archive: str = ".vibe/state/archive"
+    migration: str = ".vibe/migrations"
+    starter_packs: str = "knowledge/starter_packs"
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ProjectPathsConfig":
+        return cls(
+            workspace_root=data.get("workspace_root", "."),
+            diplomatic_bag=data.get("diplomatic_bag", "diplomatic_bag"),
+            intelligence=data.get("intelligence", "intelligence"),
+            archive=data.get("archive", ".vibe/state/archive"),
+            migration=data.get("migration", ".vibe/migrations"),
+            starter_packs=data.get("starter_packs", "knowledge/starter_packs"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "workspace_root": self.workspace_root,
+            "diplomatic_bag": self.diplomatic_bag,
+            "intelligence": self.intelligence,
+            "archive": self.archive,
+            "migration": self.migration,
+            "starter_packs": self.starter_packs,
+        }
+
+    def resolve(self, path_key: str) -> Path:
+        """Resolve a project path."""
+        value = getattr(self, path_key, None)
+        if value is None:
+            raise KeyError(f"Unknown project path: {path_key}")
+        return Path(value)
+
+
+@dataclass
 class DataPathsConfig:
     """
     Data paths for runtime state and persistence.
@@ -38,6 +86,11 @@ class DataPathsConfig:
     - identity_tool.py: data/identities
     - scout_tool_legacy.py: data/federation/pokedex.json
     - supreme_court tools: data/supreme_court
+    - kernel_impl.py: data/vibe_ledger.db
+    - librarian tools: data/library/catalog.json
+    - milk_ocean.py: data/milk_ocean.db
+    - test_governance: data/test_baselines.json, data/logs/test_mutations.log
+    - gap_report_tool.py: data/governance/executed
     """
 
     root: str = "data"
@@ -53,6 +106,16 @@ class DataPathsConfig:
     identities: str = "{root}/identities"
     federation_pokedex: str = "{root}/federation/pokedex.json"
     supreme_court: str = "{root}/supreme_court"
+
+    # Phase 2 additions - missing data paths
+    vibe_ledger: str = "{root}/vibe_ledger.db"
+    library_catalog: str = "{root}/library/catalog.json"
+    logs_transactions: str = "{root}/logs/transactions.log"
+    milk_ocean_db: str = "{root}/milk_ocean.db"
+    test_baselines: str = "{root}/test_baselines.json"
+    test_mutations_log: str = "{root}/logs/test_mutations.log"
+    governance_executed: str = "{root}/governance/executed"
+    vibe_agency_db: str = "{root}/vibe_agency.db"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPathsConfig":
@@ -70,6 +133,15 @@ class DataPathsConfig:
             identities=data.get("identities", "{root}/identities"),
             federation_pokedex=data.get("federation_pokedex", "{root}/federation/pokedex.json"),
             supreme_court=data.get("supreme_court", "{root}/supreme_court"),
+            # Phase 2 additions
+            vibe_ledger=data.get("vibe_ledger", "{root}/vibe_ledger.db"),
+            library_catalog=data.get("library_catalog", "{root}/library/catalog.json"),
+            logs_transactions=data.get("logs_transactions", "{root}/logs/transactions.log"),
+            milk_ocean_db=data.get("milk_ocean_db", "{root}/milk_ocean.db"),
+            test_baselines=data.get("test_baselines", "{root}/test_baselines.json"),
+            test_mutations_log=data.get("test_mutations_log", "{root}/logs/test_mutations.log"),
+            governance_executed=data.get("governance_executed", "{root}/governance/executed"),
+            vibe_agency_db=data.get("vibe_agency_db", "{root}/vibe_agency.db"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -87,6 +159,15 @@ class DataPathsConfig:
             "identities": self.identities,
             "federation_pokedex": self.federation_pokedex,
             "supreme_court": self.supreme_court,
+            # Phase 2 additions
+            "vibe_ledger": self.vibe_ledger,
+            "library_catalog": self.library_catalog,
+            "logs_transactions": self.logs_transactions,
+            "milk_ocean_db": self.milk_ocean_db,
+            "test_baselines": self.test_baselines,
+            "test_mutations_log": self.test_mutations_log,
+            "governance_executed": self.governance_executed,
+            "vibe_agency_db": self.vibe_agency_db,
         }
 
     def resolve(self, path_key: str) -> Path:
@@ -152,6 +233,8 @@ class KnowledgePathsConfig:
     - playbook_loader.py: knowledge/playbooks, vibe_core/playbook/playbooks (LEGACY)
     - phoenix/config.py: vibe_core/playbook/circuits, MATRIX.md, config
     - section_loader.py: vibe_core/phoenix/sections, config
+    - interface/section_main.py: knowledge/interface/templates
+    - governance/invariants.py: config/soul.yaml
     """
 
     root: str = "knowledge"
@@ -166,6 +249,10 @@ class KnowledgePathsConfig:
     legacy_circuits: str = "vibe_core/playbook/circuits"
     legacy_playbooks: str = "vibe_core/playbook/playbooks"
 
+    # Phase 2 additions - missing knowledge paths
+    interface_templates: str = "{root}/interface/templates"
+    soul: str = "config/soul.yaml"
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "KnowledgePathsConfig":
         return cls(
@@ -178,6 +265,9 @@ class KnowledgePathsConfig:
             matrix=data.get("matrix", "MATRIX.md"),
             legacy_circuits=data.get("legacy_circuits", "vibe_core/playbook/circuits"),
             legacy_playbooks=data.get("legacy_playbooks", "vibe_core/playbook/playbooks"),
+            # Phase 2 additions
+            interface_templates=data.get("interface_templates", "{root}/interface/templates"),
+            soul=data.get("soul", "config/soul.yaml"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -191,6 +281,9 @@ class KnowledgePathsConfig:
             "matrix": self.matrix,
             "legacy_circuits": self.legacy_circuits,
             "legacy_playbooks": self.legacy_playbooks,
+            # Phase 2 additions
+            "interface_templates": self.interface_templates,
+            "soul": self.soul,
         }
 
     def resolve(self, path_key: str) -> Path:
@@ -212,6 +305,7 @@ class SystemPathsConfig:
     - local_llama_provider.py: /tmp/vibe_os/models
     - kernel_spawn.py: /tmp/vibe_os/agents
     - vfs.py: /tmp/vibe_os/agents
+    - lineage.py: /tmp/vibe_os/kernel/lineage.db
     """
 
     runtime_root: str = "/tmp/vibe_os"
@@ -219,6 +313,9 @@ class SystemPathsConfig:
     models: str = "{runtime_root}/models"
     cache: str = "{runtime_root}/cache"
     logs: str = "{runtime_root}/logs"
+
+    # Phase 2 additions - missing system paths
+    lineage_db: str = "{runtime_root}/kernel/lineage.db"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SystemPathsConfig":
@@ -228,6 +325,8 @@ class SystemPathsConfig:
             models=data.get("models", "{runtime_root}/models"),
             cache=data.get("cache", "{runtime_root}/cache"),
             logs=data.get("logs", "{runtime_root}/logs"),
+            # Phase 2 additions
+            lineage_db=data.get("lineage_db", "{runtime_root}/kernel/lineage.db"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -237,6 +336,8 @@ class SystemPathsConfig:
             "models": self.models,
             "cache": self.cache,
             "logs": self.logs,
+            # Phase 2 additions
+            "lineage_db": self.lineage_db,
         }
 
     def resolve(self, path_key: str) -> Path:
@@ -326,11 +427,13 @@ class PathsConfig:
 
         # After (GOOD - injected):
         path = config.paths.data.resolve("economy_db")
+        path = config.paths.project.resolve("workspace_root")
     """
 
     section_id: str = "paths"
     source_file: str = "paths.yaml"
 
+    project: ProjectPathsConfig = field(default_factory=ProjectPathsConfig)
     data: DataPathsConfig = field(default_factory=DataPathsConfig)
     cartridges: CartridgePathsConfig = field(default_factory=CartridgePathsConfig)
     knowledge: KnowledgePathsConfig = field(default_factory=KnowledgePathsConfig)
@@ -341,6 +444,7 @@ class PathsConfig:
     def from_dict(cls, data: Dict[str, Any]) -> "PathsConfig":
         """Create PathsConfig from YAML dictionary."""
         return cls(
+            project=ProjectPathsConfig.from_dict(data.get("project", {})),
             data=DataPathsConfig.from_dict(data.get("data", {})),
             cartridges=CartridgePathsConfig.from_dict(data.get("cartridges", {})),
             knowledge=KnowledgePathsConfig.from_dict(data.get("knowledge", {})),
@@ -351,6 +455,7 @@ class PathsConfig:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary (for saving/export)."""
         return {
+            "project": self.project.to_dict(),
             "data": self.data.to_dict(),
             "cartridges": self.cartridges.to_dict(),
             "knowledge": self.knowledge.to_dict(),
@@ -394,6 +499,13 @@ class PathsConfig:
         """
         result = {}
 
+        # Project paths
+        for key in ["workspace_root", "diplomatic_bag", "intelligence", "archive", "migration", "starter_packs"]:
+            try:
+                result[f"project.{key}"] = self.project.resolve(key)
+            except KeyError:
+                pass
+
         # Data paths
         for key in [
             "root",
@@ -409,6 +521,15 @@ class PathsConfig:
             "identities",
             "federation_pokedex",
             "supreme_court",
+            # Phase 2 additions
+            "vibe_ledger",
+            "library_catalog",
+            "logs_transactions",
+            "milk_ocean_db",
+            "test_baselines",
+            "test_mutations_log",
+            "governance_executed",
+            "vibe_agency_db",
         ]:
             try:
                 result[f"data.{key}"] = self.data.resolve(key)
@@ -433,6 +554,9 @@ class PathsConfig:
             "matrix",
             "legacy_circuits",
             "legacy_playbooks",
+            # Phase 2 additions
+            "interface_templates",
+            "soul",
         ]:
             try:
                 result[f"knowledge.{key}"] = self.knowledge.resolve(key)
@@ -440,7 +564,7 @@ class PathsConfig:
                 pass
 
         # System paths
-        for key in ["runtime_root", "agents", "models", "cache", "logs"]:
+        for key in ["runtime_root", "agents", "models", "cache", "logs", "lineage_db"]:
             try:
                 result[f"system.{key}"] = self.system.resolve(key)
             except KeyError:
