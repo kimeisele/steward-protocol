@@ -10,7 +10,7 @@
 
 # Git State Checks
 git:
-  uncommitted_changes: warn    # block | warn | ignore
+  uncommitted_changes: ignore  # block | warn | ignore
   behind_remote: ignore        # block | warn | ignore
   untracked_files: ignore      # block | warn | ignore
 
@@ -23,3 +23,12 @@ tests:
 environment:
   required_env_vars: warn      # block | warn | ignore
   python_version: ignore       # block | warn | ignore
+
+# Auto-Generated Files (UI) Management
+ui_files:
+  auto_commit: true            # Auto-commit generated .md files after render
+  auto_push: false             # Auto-push after commit (risky, default false)
+  commit_message: "auto: Update generated UI files"
+  patterns:                    # Files to auto-commit (glob patterns)
+    - "*.md"                   # All root .md files (UI)
+    - "!docs/**"               # Exclude docs folder (human-edited)

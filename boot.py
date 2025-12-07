@@ -21,6 +21,7 @@ PHOENIX GUARANTEES:
 - Optional venv support (--venv flag)
 """
 
+import importlib
 import os
 import shutil
 import subprocess
@@ -62,8 +63,28 @@ def check_python_version():
     return True
 
 
+def get_venv_python() -> Path:
+    """Get the path to the venv python executable."""
+    venv_dir = PROJECT_ROOT / ".venv"
+    if sys.platform == "win32":
+        return venv_dir / "Scripts" / "python.exe"
+    return venv_dir / "bin" / "python"
+
+
+def is_running_in_venv() -> bool:
+    """Check if we are currently running inside the project's venv."""
+    expected = get_venv_python()
+    try:
+        if Path(sys.executable).resolve() == expected.resolve():
+            return True
+    except Exception:
+        pass
+    # Fallback: check if we are in any venv
+    return sys.prefix != sys.base_prefix
+
+
 def ensure_venv(python_exe=None):
-    """Create and activate venv if --venv flag passed (CREDIBILITY FIX: P1.1).
+    """Create venv if missing (CREDIBILITY FIX: P1.1).
 
     Args:
         python_exe: Python executable to use (defaults to sys.executable)
@@ -85,10 +106,7 @@ def ensure_venv(python_exe=None):
             )
             return None
 
-    # Return the venv's Python executable
-    if sys.platform == "win32":
-        return venv_path / "Scripts" / "python.exe"
-    return venv_path / "bin" / "python"
+    return get_venv_python()
 
 
 def find_installer(use_venv=False, venv_python=None):
@@ -341,35 +359,52 @@ Works on Windows, Linux, Mac. Tries uv → pip automatically.
     level = logging.INFO if args.verbose else logging.WARNING
     logging.basicConfig(level=level, format="%(asctime)s [%(name)s] %(message)s", datefmt="%H:%M:%S")
 
-    # STEP 1: Check Python version
-    if not check_python_version():
-        sys.exit(1)
-
-    # STEP 2: Setup environment (needed before imports)
-    setup_environment()
-
-    # STEP 2.5: Setup virtual environment if requested (CREDIBILITY FIX: P1.1)
-    venv_python = None
+    # STEP 1: VENV HANDLING (Self-Restart Fix)
+    # Must happen BEFORE anything else - if we need venv, restart in venv first
     if args.venv:
-        print("Using virtual environment mode...")
         venv_python = ensure_venv()
         if not venv_python:
             sys.exit(1)
-        print(f"✓ Using venv Python: {venv_python}")
 
-    # STEP 3: Auto-install dependencies
+        # If we are NOT currently running the venv python, RESTART ourselves!
+        if not is_running_in_venv():
+            print(f"Switching to Virtual Environment: {venv_python}")
+            try:
+                if sys.platform == "win32":
+                    # Windows: subprocess (os.execv doesn't work well)
+                    result = subprocess.run([str(venv_python), __file__] + sys.argv[1:])
+                    sys.exit(result.returncode)
+                else:
+                    # Unix: replace current process with venv process
+                    os.execv(str(venv_python), [str(venv_python), __file__] + sys.argv[1:])
+            except Exception as e:
+                print_error(f"Failed to switch to venv: {e}")
+                sys.exit(1)
+        else:
+            print(f"✓ Running in venv: {venv_python}")
+
+    # STEP 2: Check Python version
+    if not check_python_version():
+        sys.exit(1)
+
+    # STEP 3: Setup environment (needed before imports)
+    setup_environment()
+
+    # STEP 4: Auto-install dependencies
     if not args.skip_deps:
-        if not ensure_dependencies(use_venv=args.venv, venv_python=venv_python):
+        if not ensure_dependencies(use_venv=args.venv, venv_python=get_venv_python() if args.venv else None):
             sys.exit(1)
+        # Invalidate caches so Python sees new packages without restart
+        importlib.invalidate_caches()
 
-    # STEP 4: Create directories
+    # STEP 5: Create directories
     if not ensure_directories():
         sys.exit(1)
 
-    # STEP 5: Setup git hooks (universal - no vendor lock-in)
+    # STEP 6: Setup git hooks (universal - no vendor lock-in)
     setup_git_hooks()
 
-    # STEP 6: Run
+    # STEP 7: Run
     if args.check:
         success = boot_check()
         sys.exit(0 if success else 1)
