@@ -1,37 +1,91 @@
 {
   "name": "OPUS Architecture Plans",
-  "description": "Claude Opus architectural analysis and refactoring plans for Steward Protocol",
-  "version": "1.0.0",
+  "description": "Claude Opus architectural analysis, remediation plans, and execution guides for Steward Protocol",
+  "version": "2.0.0",
   "created": "2025-12-06",
+  "updated": "2025-12-07",
   "documents": [
+    {
+      "id": "sonnet-execution-plan",
+      "title": "Sonnet Execution Plan",
+      "file": "SONNET_EXECUTION_PLAN.md",
+      "status": "ready",
+      "priority": "P0",
+      "description": "Complete 4-phase remediation plan ready for Sonnet execution"
+    },
+    {
+      "id": "verified-delta-plan",
+      "title": "Verified Delta Plan",
+      "file": "VERIFIED_DELTA_PLAN.md",
+      "status": "active",
+      "priority": "P0",
+      "description": "SSOT - Single Source of Truth for what needs fixing"
+    },
+    {
+      "id": "runtime-separation",
+      "title": "Runtime Separation",
+      "file": "OPUS_RUNTIME_SEPARATION.md",
+      "status": "active",
+      "priority": "P0",
+      "description": "CODE|CONFIG|RUNTIME separation, 8 BREAKS identified"
+    },
     {
       "id": "001-kernel-extraction",
       "title": "Kernel Extraction Plan",
       "file": "001-KERNEL-EXTRACTION.md",
-      "status": "draft",
-      "priority": "P0",
-      "description": "Extract non-kernel logic to plugins. Target: 1000 LOC kernel."
+      "status": "superseded",
+      "priority": "P2",
+      "description": "Extract non-kernel logic to plugins (superseded by SONNET_EXECUTION_PLAN)"
     },
     {
-      "id": "002-phoenix-config-optimization",
+      "id": "002-phoenix-config",
       "title": "Phoenix Config Optimization",
       "file": "002-PHOENIX-CONFIG.md",
-      "status": "planned",
-      "priority": "P0",
-      "description": "Fix slow config loading (4s -> <100ms)"
-    },
-    {
-      "id": "003-test-suite-refactor",
-      "title": "Test Suite Refactor",
-      "file": "003-TEST-SUITE.md",
-      "status": "planned",
-      "priority": "P1",
-      "description": "Tests that don't depend on full kernel boot"
+      "status": "implemented",
+      "priority": "P2",
+      "description": "Config loading optimization - IMPLEMENTED"
     }
   ],
   "roadmap": {
-    "phase1": "Kernel Extraction - Remove all non-essential logic",
-    "phase2": "Config Optimization - Lazy loading, caching",
-    "phase3": "Test Independence - Unit tests without kernel"
+    "phase1": "Plugin TODOs - Fix signature_valid and valid_until",
+    "phase2": "State Persistence - Add Ledger persistence to plugins",
+    "phase3": "Stub Elimination - Replace stubs with warnings",
+    "phase4": "Test Restore - Move archived tests back to active"
+  },
+  "execution_order": {
+    "description": "SONNET_EXECUTION_PLAN phases",
+    "phases": [
+      {
+        "phase": "1",
+        "name": "PLUGIN_TODOS",
+        "status": "ready",
+        "tasks": ["signature_valid fix", "valid_until fix", "is_attestation_valid helper"]
+      },
+      {
+        "phase": "2",
+        "name": "PERSISTENCE",
+        "status": "pending",
+        "tasks": ["VedicGovernance ledger", "StewardProtocol ledger", "Boot restore"]
+      },
+      {
+        "phase": "3",
+        "name": "STUB_ELIMINATION",
+        "status": "pending",
+        "tasks": ["deterministic_executor stubs", "milk_ocean silent fail"]
+      },
+      {
+        "phase": "4",
+        "name": "TEST_RESTORE",
+        "status": "pending",
+        "tasks": ["Move UniversalProvider tests from archive"]
+      }
+    ]
+  },
+  "status_legend": {
+    "ready": "Ready for execution",
+    "active": "Currently being worked on",
+    "pending": "Waiting to be started",
+    "implemented": "Completed",
+    "superseded": "Replaced by newer version"
   }
 }

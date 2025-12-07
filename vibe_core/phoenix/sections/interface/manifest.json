@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "interface",
+  "name": "Interface Configuration",
+  "version": "1.0.0",
+  "description": "UI Rendering System - defines renderers, layouts, and output files",
+
+  "entry_point": "section_main.py",
+  "entry_class": "InterfaceConfig",
+
+  "priority": 10,
+
+  "config_file": "config/interface.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "interface", "ui", "renderers"]
+}
