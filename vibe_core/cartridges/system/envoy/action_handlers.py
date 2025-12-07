@@ -751,24 +751,36 @@ _No tools available_
         """
         Get template string by name or from params.
 
-        OPUS Phase 2: Load from files first, builtin as fallback.
+        Phoenix Config: Circuit YAML templates have HIGHEST priority (Code/Config Split).
+        Priority order:
+        1. params["template"] - Inline template override
+        2. params["circuit_templates"][target] - From Circuit YAML (Phoenix Config)
+        3. knowledge/templates/{target}.j2 - File-based templates
+        4. self._templates[target] - Built-in fallback
+        5. vibe_core/playbook/templates/{target}.md.j2 - Legacy location
         """
-        # Check if template is in params (highest priority)
+        # Priority 1: Check if template is in params (inline override)
         if "template" in params:
             return params["template"]
 
-        # OPUS Phase 2: Try to load from knowledge/templates/ FIRST
+        # Priority 2: Phoenix Config - Circuit YAML templates (Code/Config Split)
+        circuit_templates = params.get("circuit_templates", {})
+        if target in circuit_templates:
+            logger.debug(f"    📜 Using template from Circuit YAML: {target}")
+            return circuit_templates[target]
+
+        # Priority 3: Try to load from knowledge/templates/
         from pathlib import Path
 
         template_path = Path(f"knowledge/templates/{target}.j2")
         if template_path.exists():
             return template_path.read_text()
 
-        # Fallback: Check built-in templates (kept for backwards compatibility)
+        # Priority 4: Check built-in templates (kept for backwards compatibility)
         if target in self._templates:
             return self._templates[target]
 
-        # Legacy fallback: old template location
+        # Priority 5: Legacy fallback - old template location
         legacy_path = Path(f"vibe_core/playbook/templates/{target}.md.j2")
         if legacy_path.exists():
             return legacy_path.read_text()

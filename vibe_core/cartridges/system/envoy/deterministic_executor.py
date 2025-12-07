@@ -123,6 +123,8 @@ class PlaybookDefinition:
     intent_match: Dict[str, Any]
     phases: List[PlaybookPhase]
     variables: Dict[str, Any] = field(default_factory=dict)
+    # Phoenix Config: Templates from YAML (Code/Config Split)
+    templates: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -277,9 +279,15 @@ class DeterministicExecutor:
                     continue
 
                 # Support both legacy 'playbook' and new 'circuit' format
+                # Phoenix Config: Templates from YAML (Code/Config Split)
+                templates = data.get("templates", {})
+
                 if "playbook" in data:
                     playbook_data = data["playbook"]
                     phases = self._parse_phases(playbook_data.get("phases", []))
+                    # Legacy playbooks may have templates in playbook_data
+                    if not templates:
+                        templates = playbook_data.get("templates", {})
                 elif "circuit" in data:
                     # VEDA-4 Cognitive Circuit format
                     circuit_data = data["circuit"]
@@ -307,6 +315,7 @@ class DeterministicExecutor:
                     intent_match=playbook_data.get("intent_match", {}),
                     phases=phases,
                     variables=playbook_data.get("variables", {}),
+                    templates=templates,  # Phoenix Config: Templates from YAML
                 )
 
                 self.playbooks[playbook.id] = playbook
@@ -908,6 +917,9 @@ class DeterministicExecutor:
                             kernel=kernel,
                             emit_event=emit_event,
                         )
+                        # Phoenix Config: Inject circuit templates for RENDER_TEMPLATE handler
+                        if action_type == "RENDER_TEMPLATE" and playbook.templates:
+                            params = {**params, "circuit_templates": playbook.templates}
                         result = await handler.execute(resolved_target, params, action_context)
                         if not result.success:
                             logger.warning(f"  ❌ {action_type} failed: {result.error}")
