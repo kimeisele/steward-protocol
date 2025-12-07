@@ -10,7 +10,7 @@ Quick Start: python -m vibe_core.cli boot
 
 **Analysis Period**: 2025-11-30 to 2025-12-07 (7 days)
 
-**Last Updated**: 2025-12-07 23:56:16
+**Last Updated**: 2025-12-07 23:56:56
 
 **Overall Health**: 🟠 **HIGH**
 
@@ -26,7 +26,7 @@ Quick Start: python -m vibe_core.cli boot
 - **Subsystems Affected**: 9
 
 **Work Breakdown**:
-- 🐛 Bug Fixes: 174 (36.7%)
+- 🐛 Bug Fixes: 173 (36.5%)
 - ✨ Features: 197 (41.6%)
 - 🔧 Refactoring: 38 (8.0%)
 - 📝 Documentation: 79 (16.7%)
@@ -55,7 +55,7 @@ Quick Start: python -m vibe_core.cli boot
 | `config` | 86 | +13,497 | 805 | 🟠 VOLATILE | 12-07 |
 | `tests` | 79 | -35,832 | 814 | 🟠 VOLATILE | 12-07 |
 | `plugins` | 78 | +23,132 | 324 | 🟠 VOLATILE | 12-07 |
-| `kernel` | 47 | +60,022 | 417 | 🟡 EVOLVING | 12-07 |
+| `kernel` | 46 | +60,020 | 417 | 🟡 EVOLVING | 12-07 |
 | `scripts` | 38 | +1,870 | 547 | 🟡 EVOLVING | 12-07 |
 | `system_agents` | 23 | -763 | 680 | 🟡 EVOLVING | 12-07 |
 | `protocols` | 5 | +977 | 65 | 🟢 STABLE | 12-06 |
@@ -73,15 +73,15 @@ Quick Start: python -m vibe_core.cli boot
 | Meaningful Commits | 474 |
 | Auto-Generated (Excluded) | 192 |
 | Files Changed | 1496 |
-| Lines Added | +235,451 |
-| Lines Removed | -117,557 |
+| Lines Added | +235,486 |
+| Lines Removed | -117,592 |
 | Net Change | +117,894 |
 
 ### Special Events
 
 | Type | Count |
 |------|-------|
-| 🏗️ Architecture Changes | 52 |
+| 🏗️ Architecture Changes | 51 |
 | ⚠️ Breaking Changes | 28 |
 | 📦 Plugin Additions | 22 |
 | 📏 Large Commits (>500 lines) | 103 |
@@ -93,8 +93,8 @@ Quick Start: python -m vibe_core.cli boot
 
 | Author | Commits | % of Total |
 |--------|---------|-----------|
-| kimeisele | 267 | 56.3% |
-| Claude | 205 | 43.2% |
+| kimeisele | 268 | 56.5% |
+| Claude | 204 | 43.0% |
 | ARCHIVIST | 2 | 0.4% |
 
 ---
@@ -103,10 +103,10 @@ Quick Start: python -m vibe_core.cli boot
 
 | File | Changes | Subsystem |
 |------|---------|-----------|
-| `OPUS.md` | ████████████████████ 73 | other |
-| `README.md` | ████████████████████ 62 | other |
-| `ARCHITECTURE.md` | ████████████████████ 54 | other |
-| `vibe_core/kernel_impl.py` | ████████████████████ 47 | kernel |
+| `OPUS.md` | ████████████████████ 74 | other |
+| `README.md` | ████████████████████ 63 | other |
+| `ARCHITECTURE.md` | ████████████████████ 55 | other |
+| `vibe_core/kernel_impl.py` | ████████████████████ 46 | kernel |
 | `tests/integration/test_kernel_markdown_interfaces.py` | █████████████████ 17 | tests |
 | `vibe_core/semantic_syscalls.py` | ██████████████ 14 | other |
 | `steward/system_agents/scribe/tools/help_renderer.py` | ██████████████ 14 | other |
@@ -125,6 +125,7 @@ Quick Start: python -m vibe_core.cli boot
 
 | Date | Author | Message | Changes | Risk |
 |------|--------|---------|---------|------|
+| 12-07 23:56 | kimeisele | auto: Update generated UI files | +40/-38 | 🟢 |
 | 12-07 23:50 | kimeisele | auto: Update generated UI files | +44/-42 | 🟢 |
 | 12-07 23:48 | kimeisele | auto: Update generated UI files | +43/-41 | 🟢 |
 | 12-07 23:47 | kimeisele | auto: Update generated UI files | +64/-62 | 🟢 |
@@ -144,7 +145,6 @@ Quick Start: python -m vibe_core.cli boot
 | 12-07 20:52 | kimeisele | auto: Update generated UI files | +44/-42 | 🟢 |
 | 12-07 20:51 | kimeisele | auto: Update generated UI files | +45/-43 | 🟢 |
 | 12-07 20:49 | kimeisele | auto: Update generated UI files | +38/-36 | 🟢 |
-| 12-07 20:48 | kimeisele | auto: Update generated UI files | +24/-22 | 🟢 |
 
 ---
 
