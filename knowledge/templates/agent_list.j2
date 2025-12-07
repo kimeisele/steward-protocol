@@ -1,0 +1,5 @@
+### Registered Agents ({{ total }})
+{% for agent in agents %}
+- **{{ agent.id }}** - {{ agent.type }}
+  - Capabilities: {{ agent.capabilities | join(', ') | default('none') }}
+{% endfor %}
