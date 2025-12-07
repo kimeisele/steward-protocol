@@ -27,11 +27,22 @@ import requests
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "steward", "system_agents"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "agent_city", "registry"))
 
+
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+        return get_config().runtime
+    except Exception:
+        # Fallback for standalone/testing
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+        return RuntimeConfig()
+
+
 # --- CONFIGURATION ---
 DEFAULT_PORT = 8000
 MAX_PORT_RETRIES = 10
 HOST = "127.0.0.1"
-HEALTH_CHECK_INTERVAL = 2.0  # Seconds
 
 # Global process registry for cleanup
 active_processes = []
@@ -270,13 +281,14 @@ def main():
 
         # SUPERVISOR LOOP
         try:
+            runtime_config = _get_runtime_config()
             while True:
                 # Check if child processes are still alive
                 for p in active_processes:
                     if p.poll() is not None:
                         print(f"\n❌ ALERT: Critical process (PID {p.pid}) died unexpectedly.")
                         sys.exit(1)  # Triggers cleanup
-                time.sleep(HEALTH_CHECK_INTERVAL)
+                time.sleep(runtime_config.orchestration.health_check_interval)
 
         except KeyboardInterrupt:
             # Handled by signal_handler -> atexit
