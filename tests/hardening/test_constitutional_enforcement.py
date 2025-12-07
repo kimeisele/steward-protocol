@@ -9,6 +9,10 @@ Tests that the Constitution is actually enforced, not just declared.
 - Constitutional invariants MUST hold under attack
 
 USES REAL COMPONENTS. NO MOCKS.
+
+MIGRATION NOTE (2024-12):
+    Uses standardized TestAgents fixtures from test_orchestration plugin.
+    Kernel tests use governance_kernel/test_kernel fixtures.
 """
 
 import sys
@@ -20,6 +24,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
+
+@pytest.mark.hardening
 def test_herald_content_filtering():
     """
     Test: Herald agent MUST block banned content patterns.
@@ -56,11 +62,16 @@ def test_herald_content_filtering():
         pytest.skip(f"Could not import Herald: {e}")
 
 
+@pytest.mark.hardening
+@pytest.mark.slow
 def test_vote_manipulation_detection():
     """
     Test: Auditor MUST detect duplicate vote injection.
 
     Attack: Inject same vote twice into ledger.
+
+    Note: Uses RealVibeKernel directly because attack requires raw SQL injection
+    on a file-based ledger. TestKernel.minimal() uses :memory: by default.
     """
     try:
         from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
@@ -69,7 +80,8 @@ def test_vote_manipulation_detection():
         with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             ledger_path = tmp.name
 
-        kernel = RealVibeKernel(ledger_path=ledger_path)
+        # Use RealVibeKernel with file ledger for SQL attack simulation
+        kernel = RealVibeKernel(ledger_path=ledger_path, load_plugins=False)
 
         # Create legitimate vote events
         kernel.ledger.record_event("vote", "citizen_1", {"proposal": "P001", "choice": "YES"})
@@ -114,6 +126,7 @@ def test_vote_manipulation_detection():
         pytest.skip(f"Could not import Auditor: {e}")
 
 
+@pytest.mark.hardening
 def test_invariant_engine_constraints():
     """
     Test: InvariantEngine enforces defined constraints.
@@ -153,6 +166,7 @@ def test_invariant_engine_constraints():
         pytest.skip(f"Could not import InvariantEngine: {e}")
 
 
+@pytest.mark.hardening
 def test_constitution_exists_and_valid():
     """
     Test: CONSTITUTION.md exists and contains required articles.
