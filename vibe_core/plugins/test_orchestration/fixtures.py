@@ -584,9 +584,7 @@ class TestKernel:
         """
         from vibe_core.kernel_impl import RealVibeKernel
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
-        # Clear default plugins
-        kernel._plugins = []
+        kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
         return kernel
 
     @staticmethod

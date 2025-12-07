@@ -13,22 +13,21 @@ Success criteria:
 """
 
 import os
-import sys
-from pathlib import Path
-import tempfile
 import shutil
+import sys
+import tempfile
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from vibe_core.playbook.executor import (
+    ExecutionStatus,
     GraphExecutor,
+    MockAgent,
     WorkflowGraph,
     WorkflowNode,
-    WorkflowEdge,
-    MockAgent,
-    ExecutionStatus,
 )
 
 
@@ -189,7 +188,7 @@ def test_live_fire_mode():
     # Most importantly: Check that the file was ACTUALLY created
     if test_file.exists():
         content = test_file.read_text()
-        print(f"\n📄 PROOF FILE CREATED:")
+        print("\n📄 PROOF FILE CREATED:")
         print(f"   Path: {test_file}")
         print(f"   Content: {content}")
         print("✅ PASSED: Live Fire mode confirmed - File was ACTUALLY written!")

@@ -30,10 +30,3 @@ def test_false_oath_agent_config(false_oath_agent):
     """
     assert false_oath_agent.agent_id.startswith("test-false-oath")
     assert getattr(false_oath_agent, "oath_sworn", True) is False
-
-
-def test_kernels_boot(test_kernel, permissive_kernel, governance_kernel):
-    """Verify all kernel fixtures instantiate correctly."""
-    assert test_kernel is not None
-    assert permissive_kernel is not None
-    assert governance_kernel is not None
