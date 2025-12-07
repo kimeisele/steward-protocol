@@ -231,6 +231,149 @@ class FormatConfig:
 
 
 @dataclass
+class AgentFixtureConfig:
+    """Configuration for a test agent type."""
+
+    id_prefix: str
+    oath_sworn: Optional[bool] = True
+    capabilities: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id_prefix": self.id_prefix,
+            "oath_sworn": self.oath_sworn,
+            "capabilities": self.capabilities,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "AgentFixtureConfig":
+        return cls(
+            id_prefix=data.get("id_prefix", "test-agent"),
+            oath_sworn=data.get("oath_sworn", True),
+            capabilities=data.get("capabilities", []),
+        )
+
+
+@dataclass
+class KernelPresetConfig:
+    """Configuration for a kernel preset."""
+
+    description: str = ""
+    plugins: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"description": self.description, "plugins": self.plugins}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "KernelPresetConfig":
+        return cls(
+            description=data.get("description", ""),
+            plugins=data.get("plugins", []),
+        )
+
+
+@dataclass
+class FixturesConfig:
+    """
+    Test fixtures configuration - Phoenix Config style.
+
+    This configures the standardized test objects:
+    - Kernel settings (ledger path, plugin loading)
+    - Agent presets (compliant, no_oath, false_oath)
+    - Kernel presets (minimal, permissive, governance, recording)
+
+    conftest.py reads from HERE - no hardcoded values!
+    """
+
+    # Kernel defaults
+    kernel_ledger_path: str = ":memory:"
+    kernel_load_plugins: bool = False
+
+    # Agent presets
+    agents: Dict[str, AgentFixtureConfig] = field(default_factory=dict)
+
+    # Kernel presets
+    kernel_presets: Dict[str, KernelPresetConfig] = field(default_factory=dict)
+
+    def __post_init__(self):
+        """Initialize defaults if not provided."""
+        if not self.agents:
+            self.agents = self._get_default_agents()
+        if not self.kernel_presets:
+            self.kernel_presets = self._get_default_presets()
+
+    def _get_default_agents(self) -> Dict[str, AgentFixtureConfig]:
+        return {
+            "compliant": AgentFixtureConfig(
+                id_prefix="test-compliant",
+                oath_sworn=True,
+                capabilities=["governance", "task_execution"],
+            ),
+            "no_oath": AgentFixtureConfig(
+                id_prefix="test-no-oath",
+                oath_sworn=None,  # Attribute missing
+                capabilities=[],
+            ),
+            "false_oath": AgentFixtureConfig(
+                id_prefix="test-false-oath",
+                oath_sworn=False,
+                capabilities=[],
+            ),
+        }
+
+    def _get_default_presets(self) -> Dict[str, KernelPresetConfig]:
+        return {
+            "minimal": KernelPresetConfig(
+                description="Bare kernel, no plugins, memory ledger",
+                plugins=[],
+            ),
+            "permissive": KernelPresetConfig(
+                description="All operations allowed, no governance",
+                plugins=["test_mode"],
+            ),
+            "governance": KernelPresetConfig(
+                description="Full governance stack enabled",
+                plugins=["steward_protocol", "vedic_governance"],
+            ),
+            "recording": KernelPresetConfig(
+                description="Records all hook calls for assertions",
+                plugins=["test_orchestration"],
+            ),
+        }
+
+    def get_agent_config(self, agent_type: str) -> AgentFixtureConfig:
+        """Get agent config by type (compliant, no_oath, false_oath)."""
+        return self.agents.get(agent_type, self.agents.get("compliant"))
+
+    def get_kernel_preset(self, preset_name: str) -> KernelPresetConfig:
+        """Get kernel preset by name."""
+        return self.kernel_presets.get(preset_name, self.kernel_presets.get("minimal"))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "kernel": {
+                "ledger_path": self.kernel_ledger_path,
+                "load_plugins": self.kernel_load_plugins,
+            },
+            "agents": {k: v.to_dict() for k, v in self.agents.items()},
+            "kernel_presets": {k: v.to_dict() for k, v in self.kernel_presets.items()},
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FixturesConfig":
+        kernel_data = data.get("kernel", {})
+        agents_data = data.get("agents", {})
+        presets_data = data.get("kernel_presets", {})
+
+        return cls(
+            kernel_ledger_path=kernel_data.get("ledger_path", ":memory:"),
+            kernel_load_plugins=kernel_data.get("load_plugins", False),
+            agents={k: AgentFixtureConfig.from_dict(v) for k, v in agents_data.items()},
+            kernel_presets={k: KernelPresetConfig.from_dict(v) for k, v in presets_data.items()},
+        )
+
+
+@dataclass
 class TestConfig:
     """
     Test runner configuration with profiles.
@@ -256,6 +399,8 @@ class TestConfig:
     workers: int = 0
     # Coverage threshold (can be overridden by profile)
     coverage_threshold: int = 0
+    # Fixtures configuration (Phoenix Config style)
+    fixtures: FixturesConfig = field(default_factory=FixturesConfig)
 
     def __post_init__(self):
         """Initialize default profiles if none provided."""
@@ -366,6 +511,7 @@ class TestConfig:
             timeout=data.get("timeout", 300),
             workers=data.get("workers", 0),
             coverage_threshold=data.get("coverage_threshold", 0),
+            fixtures=FixturesConfig.from_dict(data.get("fixtures", {})),
         )
         # Ensure default profiles exist if none provided
         if not config.profiles:
