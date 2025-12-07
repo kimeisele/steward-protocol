@@ -70,6 +70,13 @@ class ReadmeRenderer(BaseRenderer):
                     "version": "0.0.0",
                     "description": "Unknown",
                 }
+        except ImportError:
+            logger.warning("⚠️ tomlkit not installed - ReadmeRenderer running in fallback mode")
+            self._project_data = {
+                "name": "steward-protocol",
+                "version": "0.0.0",
+                "description": "Fallback (tomlkit missing)",
+            }
         except Exception as e:
             logger.error(f"Failed to load pyproject.toml: {e}")
             self._project_data = {}

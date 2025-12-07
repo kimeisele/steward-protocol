@@ -133,7 +133,7 @@ class EphemeralStorage:
         if len(self._cache) >= self._max_entries:
             self._evict_expired()
             if len(self._cache) >= self._max_entries:
-                self._evict_lru(count=self._max_entries // 10)
+                self._evict_lru(count=max(1, self._max_entries // 10))
 
         entry = CacheEntry(
             key=key,

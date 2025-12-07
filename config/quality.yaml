@@ -70,6 +70,46 @@ test:
   workers: 0    # Global workers (0 = auto)
   coverage_threshold: 0  # Global coverage threshold
 
+  # ==========================================================================
+  # FIXTURES - Standardized Test Objects (Phoenix Config Style)
+  # ==========================================================================
+  # These configure the test fixtures exposed via conftest.py
+  # DO NOT hardcode values in Python - read from here!
+  # ==========================================================================
+  fixtures:
+    # Default kernel configuration for tests
+    kernel:
+      ledger_path: ":memory:"  # In-memory for isolation
+      load_plugins: false      # Minimal by default
+
+    # Test agent defaults
+    agents:
+      compliant:
+        id_prefix: "test-compliant"
+        oath_sworn: true
+        capabilities: ["governance", "task_execution"]
+      no_oath:
+        id_prefix: "test-no-oath"
+        oath_sworn: null  # Attribute missing entirely
+      false_oath:
+        id_prefix: "test-false-oath"
+        oath_sworn: false
+
+    # Kernel presets (used by TestKernel factory)
+    kernel_presets:
+      minimal:
+        description: "Bare kernel, no plugins, memory ledger"
+        plugins: []
+      permissive:
+        description: "All operations allowed, no governance"
+        plugins: ["test_mode"]
+      governance:
+        description: "Full governance stack enabled"
+        plugins: ["steward_protocol", "vedic_governance"]
+      recording:
+        description: "Records all hook calls for assertions"
+        plugins: ["test_orchestration"]
+
   # Available test profiles
   profiles:
     # FAST - Quick feedback during development

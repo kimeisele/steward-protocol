@@ -146,6 +146,7 @@ class RealVibeKernel(VibeKernel):
         ledger_path: str | None = None,
         config: "PhoenixConfig | None" = None,
         parent: "RealVibeKernel | None" = None,
+        load_plugins: bool = True,
     ):
         """
         Initialize the kernel.
@@ -157,12 +158,15 @@ class RealVibeKernel(VibeKernel):
                     For ephemeral child kernels, pass custom config.
             parent: Optional parent kernel (for ephemeral cities).
                     Child kernels can access parent for result folding.
+            load_plugins: If True, auto-discover and boot plugins (default: True).
+                          Set False for isolated testing or minimal boot.
         """
         # 4D Hypercube: Store config and parent reference
         self._config = config
         self._parent = parent
         self._child_kernels: list["RealVibeKernel"] = []
         self._is_ephemeral = parent is not None
+        self._load_plugins = load_plugins
 
         # Resolve ledger path from config if not provided
         if ledger_path is None:
@@ -267,9 +271,13 @@ class RealVibeKernel(VibeKernel):
 
         # PLUGIN SYSTEM (The Avatars of Vishnu)
         # Phase 1: Load and boot all plugins
-        self._plugins = PluginLoader.discover()
-        for plugin in self._plugins:
-            plugin.on_boot(self)
+        if self._load_plugins:
+            self._plugins = PluginLoader.discover()
+            for plugin in self._plugins:
+                plugin.on_boot(self)
+        else:
+            self._plugins = []
+            logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
 
     # =========================================================================
     # 4D HYPERCUBE: Phoenix Config & Ephemeral Cities
