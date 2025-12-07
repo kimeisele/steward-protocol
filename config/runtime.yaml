@@ -22,3 +22,13 @@ circuit_recovery:
 
 action_defaults:
   retry_count: 3
+
+# Orchestration - Kernel tick/process coordination
+orchestration:
+  health_check_interval: 2.0      # vibe_launcher supervisor loop
+  discovery_interval: 60.0        # Discoverer cartridge scan interval
+  pulse_sleep: 1.0                # Pulse async sleep between updates
+  file_poll_interval: 2.0         # FileOperator polling delay
+  monitoring_interval: 10.0       # Gateway monitoring start interval
+  heartbeat_max_tasks_per_pulse: 5  # Max tasks per heartbeat cycle
+  heartbeat_commit_changes: true  # Auto-commit task progress
