@@ -28,6 +28,48 @@ class ArchitectureRenderer(BaseRenderer):
     def name(self) -> str:
         return "architecture"
 
+    @property
+    def output_file(self) -> str:
+        return "ARCHITECTURE.md"
+
+    @property
+    def doc_type(self):
+        """Document type for IO service."""
+        from vibe_core.io_service import DocumentType
+
+        return DocumentType.READONLY
+
+    def generate_content(self) -> str:
+        """Generate full ARCHITECTURE.md content (UNIFIED UI pattern)."""
+        lines = ["# Architecture Overview", ""]
+
+        # Mermaid diagram
+        lines.append(self._generate_mermaid())
+        lines.append("")
+
+        # Component sizes
+        lines.append("## Component Sizes")
+        lines.append("")
+        components = self._get_component_sizes()
+        if components:
+            lines.append("| Component | File | LOC |")
+            lines.append("| --- | --- | --- |")
+            for c in components:
+                lines.append(f"| {c['Component']} | {c['File']} | {c['LOC']} |")
+        lines.append("")
+
+        # Plugin status
+        lines.append("## Plugin Status")
+        lines.append("")
+        plugins = self._get_plugin_info()
+        if plugins:
+            lines.append("| Plugin | Status | Type |")
+            lines.append("| --- | --- | --- |")
+            for p in plugins:
+                lines.append(f"| {p['Plugin']} | {p['Status']} | {p['Type']} |")
+
+        return "\n".join(lines)
+
     def _register_data_sources(self) -> None:
         """Register live data sources."""
         self.register_data_source("arch.mermaid", self._generate_mermaid)

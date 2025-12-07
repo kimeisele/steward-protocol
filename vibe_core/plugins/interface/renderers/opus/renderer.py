@@ -33,8 +33,15 @@ class OpusRenderer(BaseRenderer):
         return "opus"
 
     @property
-    def output_file(self) -> Path:
-        return Path("OPUS.md")
+    def output_file(self) -> str:
+        return "OPUS.md"
+
+    @property
+    def doc_type(self):
+        """Document type for IO service."""
+        from vibe_core.io_service import DocumentType
+
+        return DocumentType.BIDIRECTIONAL
 
     def _discover_panels(self) -> None:
         """Auto-discover panels from panels/ directory."""
