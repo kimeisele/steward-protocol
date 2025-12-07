@@ -252,7 +252,21 @@ class EnvoySync:
             }
             route = router_callback(request, context)
 
-            logger.info(f"📬 Request routed: '{request[:30]}...' → {route.task} ({route.confidence})")
+            # Handle both dict and PlaybookRoute object responses
+            if isinstance(route, dict):
+                # dict response (from kernel.envoy.route or provider.route)
+                task_name = route.get("task", route.get("rule_name", "unknown"))
+                description = route.get("description", route.get("intent_type", "CHAT"))
+                confidence = route.get("confidence", "contextual")
+                source = route.get("source", route.get("agent", "envoy"))
+            else:
+                # PlaybookRoute object (from PlaybookRouter.route)
+                task_name = route.task
+                description = route.description
+                confidence = route.confidence
+                source = route.source
+
+            logger.info(f"📬 Request routed: '{request[:30]}...' → {task_name} ({confidence})")
 
             # Create task
             task = task_factory(
@@ -261,12 +275,12 @@ class EnvoySync:
                     "payload": {
                         "type": "envoy_request",
                         "request": request,
-                        "route": route.task,
-                        "description": route.description,
-                        "confidence": route.confidence,
-                        "source": route.source,
+                        "route": task_name,
+                        "description": description,
+                        "confidence": confidence,
+                        "source": source,
                     },
-                    "priority": 1 if route.confidence == "explicit" else 0,
+                    "priority": 1 if confidence == "explicit" else 0,
                 }
             )
 
@@ -274,15 +288,15 @@ class EnvoySync:
             # Submit to scheduler (NON-BLOCKING)
             task_id = submit_callback(task)
 
-            logger.info(f"📬 Task queued: {task_id} for route '{route.task}'")
+            logger.info(f"📬 Task queued: {task_id} for route '{task_name}'")
 
             return {
                 "task_id": task_id,
                 "status": "QUEUED",
                 "request": request,
-                "route": route.task,
-                "description": route.description,
-                "confidence": route.confidence,
+                "route": task_name,
+                "description": description,
+                "confidence": confidence,
                 "timestamp": datetime.utcnow().strftime("%H:%M:%S UTC"),
             }
 
