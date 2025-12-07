@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "quotas",
+  "name": "Quota Configuration",
+  "version": "1.0.0",
+  "description": "Rate limits, budgets, circuit breaker settings",
+
+  "entry_point": "section_main.py",
+  "entry_class": "QuotasConfig",
+
+  "priority": 10,
+
+  "config_file": "config/quotas.yaml",
+
+  "author": "STEWARD Protocol",
+  "tags": ["config", "quotas", "limits"]
+}
