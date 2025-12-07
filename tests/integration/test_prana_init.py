@@ -215,7 +215,8 @@ class TestPranaInitializer:
 
     def test_constitution_verification(self):
         """Test that constitution file exists"""
-        constitution_path = Path(__file__).parent.parent / "CONSTITUTION.md"
+        # Go up 3 levels: test_prana_init.py -> integration/ -> tests/ -> project root
+        constitution_path = Path(__file__).parent.parent.parent / "CONSTITUTION.md"
         assert constitution_path.exists(), "Constitution file should exist"
 
     def test_prana_initialization_without_kernel(self):
