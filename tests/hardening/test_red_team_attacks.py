@@ -13,6 +13,11 @@ Attack Categories:
 3. Event Manipulation
 4. Resource Exhaustion
 5. Recovery Attacks
+
+MIGRATION NOTE (2024-12):
+    These tests use TestKernel.minimal() for fast kernel boot.
+    Attack agents are custom-built for each attack scenario.
+    Registry poisoning attacks should FAIL due to MappingProxyType hardening.
 """
 
 import sys
@@ -20,7 +25,11 @@ import tempfile
 import time
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
 
 class AttackResult:
@@ -61,7 +70,6 @@ def attack_message_spoofing() -> AttackResult:
 
     try:
         from vibe_core.kernel import Task
-        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
 
         class AttackerAgent(VibeAgent):
@@ -90,7 +98,7 @@ def attack_message_spoofing() -> AttackResult:
                     return {"status": "spoofed"}
                 return {"status": "no_kernel"}
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = TestKernel.minimal()
         attacker = AttackerAgent()
 
         # Inject attacker (simulating already-registered agent)
@@ -133,7 +141,6 @@ def attack_tool_capability_bypass() -> AttackResult:
     result = AttackResult("TOOL_CAPABILITY_BYPASS")
 
     try:
-        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
 
         class LimitedAgent(VibeAgent):
@@ -155,7 +162,7 @@ def attack_tool_capability_bypass() -> AttackResult:
             def process(self, task):
                 return {"status": "ok"}
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = TestKernel.minimal()
         kernel.boot()
 
         limited = LimitedAgent()
@@ -354,7 +361,6 @@ def attack_memory_exhaustion() -> AttackResult:
     try:
         import resource
 
-        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
 
         # Get current memory limit
@@ -385,7 +391,7 @@ def attack_memory_exhaustion() -> AttackResult:
                         return {"status": "blocked_memory_error"}
                 return {"status": "ignored"}
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = TestKernel.minimal()
         bomber = MemoryBombAgent()
         kernel.agent_registry["memory_bomb"] = bomber
         bomber.kernel = kernel
@@ -422,7 +428,6 @@ def attack_registry_poisoning() -> AttackResult:
     result = AttackResult("REGISTRY_POISONING")
 
     try:
-        from vibe_core.kernel_impl import RealVibeKernel
         from vibe_core.protocols import VibeAgent
 
         class MaliciousHerald(VibeAgent):
@@ -465,7 +470,7 @@ def attack_registry_poisoning() -> AttackResult:
                         return {"status": "poisoned"}
                 return {"status": "ignored"}
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = TestKernel.minimal()
 
         # Register legitimate herald placeholder
         class LegitHerald(VibeAgent):
@@ -569,7 +574,68 @@ def attack_double_spend_vote() -> AttackResult:
 
 
 # ============================================================================
-# RUNNER
+# PYTEST TESTS
+# ============================================================================
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_message_spoofing():
+    """Attack: Agent A sends message pretending to be Agent B."""
+    result = attack_message_spoofing()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_tool_capability_bypass():
+    """Attack: Agent tries to execute tools it shouldn't have access to."""
+    result = attack_tool_capability_bypass()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_timestamp_manipulation():
+    """Attack: Insert events with past timestamps to rewrite history."""
+    result = attack_timestamp_manipulation()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_event_deletion():
+    """Attack: Delete events from ledger to hide actions."""
+    result = attack_event_deletion()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_memory_exhaustion():
+    """Attack: Agent tries to exhaust system memory."""
+    result = attack_memory_exhaustion()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_registry_poisoning():
+    """Attack: Replace a legitimate agent with a malicious one."""
+    result = attack_registry_poisoning()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+@pytest.mark.hardening
+@pytest.mark.security
+def test_double_spend_vote():
+    """Attack: Vote twice on the same proposal."""
+    result = attack_double_spend_vote()
+    assert not result.exploited, f"VULNERABILITY: {result.message}"
+
+
+# ============================================================================
+# RUNNER (for standalone execution)
 # ============================================================================
 
 
