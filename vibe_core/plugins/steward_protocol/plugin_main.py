@@ -109,6 +109,57 @@ class StewardProtocolPlugin(KernelPlugin):
         self._agent_loader = None
         self._steward_client = None
 
+    def _persist_manifest(self, agent_id: str, manifest: Dict[str, Any]) -> None:
+        """Persist manifest to ledger."""
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="MANIFEST_REGISTERED", agent_id=agent_id, details={"manifest": manifest}
+            )
+
+    def _persist_trust_score(self, agent_id: str, score: float, reason: str = "") -> None:
+        """Persist trust score change to ledger."""
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="TRUST_SCORE_UPDATED", agent_id=agent_id, details={"score": score, "reason": reason}
+            )
+
+    def _persist_attestation(self, agent_id: str, capability: str, attestation: Dict[str, Any]) -> None:
+        """Persist attestation to ledger."""
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="ATTESTATION_CREATED",
+                agent_id=agent_id,
+                details={"capability": capability, "attestation": attestation},
+            )
+
+    def _restore_from_ledger(self) -> None:
+        """Restore protocol state from ledger on boot."""
+        if not self._kernel or not hasattr(self._kernel, "ledger"):
+            return
+
+        for event in self._kernel.ledger.get_all_events():
+            event_type = event.get("event_type")
+            agent_id = event.get("agent_id")
+            details = event.get("details", {})
+
+            if event_type == "MANIFEST_REGISTERED" and agent_id:
+                manifest = details.get("manifest")
+                if manifest:
+                    self._manifests[agent_id] = manifest
+
+            elif event_type == "TRUST_SCORE_UPDATED" and agent_id:
+                score = details.get("score")
+                if score is not None:
+                    self._trust_scores[agent_id] = float(score)
+
+            elif event_type == "ATTESTATION_CREATED" and agent_id:
+                capability = details.get("capability")
+                attestation = details.get("attestation")
+                if capability and attestation:
+                    if agent_id not in self._attestations:
+                        self._attestations[agent_id] = {}
+                    self._attestations[agent_id][capability] = attestation
+
     # =========================================================================
     # KERNEL HOOKS
     # =========================================================================
@@ -121,6 +172,7 @@ class StewardProtocolPlugin(KernelPlugin):
         Load configuration and connect infrastructure.
         """
         self._kernel = kernel
+        self._restore_from_ledger()
 
         # Register as THE steward protocol plugin on kernel
         kernel.steward = self
@@ -220,6 +272,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
         if manifest:
             self._manifests[agent_id] = manifest
+            self._persist_manifest(agent_id, manifest)
             logger.info(f"📜 Agent '{agent_id}' manifest loaded")
 
             # Verify manifest signature if present
@@ -373,9 +426,27 @@ class StewardProtocolPlugin(KernelPlugin):
             "agent_id": agent_id,
             "verified": False,
             "manifest_loaded": False,
-            "signature_valid": None,  # TODO: implement
+            "signature_valid": False,  # Default to False, verified below
             "trust_score": self._trust_scores.get(agent_id, 0.0),
         }
+
+        # Verify signature using ConstitutionalOath if oath exists in ledger
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            oath_events = [
+                e
+                for e in self._kernel.ledger.get_all_events()
+                if e.get("event_type") == "OATH_TAKEN" and e.get("agent_id") == agent_id
+            ]
+            if oath_events:
+                from vibe_core.steward.constitution import ConstitutionalOath
+
+                latest_oath = oath_events[-1]
+                # Get identity_tool if available
+                identity_tool = None
+                if hasattr(self._kernel, "tool_registry"):
+                    identity_tool = self._kernel.tool_registry.get_tool("identity")
+                is_valid, _ = ConstitutionalOath.verify_oath(latest_oath, identity_tool=identity_tool)
+                result["signature_valid"] = is_valid
 
         if agent_id in self._manifests:
             result["manifest_loaded"] = True
@@ -403,23 +474,32 @@ class StewardProtocolPlugin(KernelPlugin):
         """Get all loaded manifests."""
         return self._manifests.copy()
 
-    def attest(self, agent_id: str, capability: str) -> Dict[str, Any]:
+    def attest(self, agent_id: str, capability: str, validity_hours: int = 24) -> Dict[str, Any]:
         """
         Create an attestation for an agent's capability.
 
+        Args:
+            agent_id: Agent to attest
+            capability: Capability being attested
+            validity_hours: Hours until attestation expires (default: 24)
+
         Returns attestation record.
         """
+        from datetime import timedelta
+
+        now = datetime.utcnow()
         attestation = {
             "agent_id": agent_id,
             "capability": capability,
-            "attested_at": datetime.utcnow().isoformat(),
+            "attested_at": now.isoformat(),
             "attested_by": "steward_protocol_plugin",
-            "valid_until": None,  # TODO: implement expiry
+            "valid_until": (now + timedelta(hours=validity_hours)).isoformat(),
         }
 
         if agent_id not in self._attestations:
             self._attestations[agent_id] = {}
         self._attestations[agent_id][capability] = attestation
+        self._persist_attestation(agent_id, capability, attestation)
 
         logger.info(f"📜 Attested capability '{capability}' for agent '{agent_id}'")
         return attestation
@@ -427,6 +507,28 @@ class StewardProtocolPlugin(KernelPlugin):
     def get_attestations(self, agent_id: str) -> Dict[str, Any]:
         """Get all attestations for an agent."""
         return self._attestations.get(agent_id, {})
+
+    def is_attestation_valid(self, agent_id: str, capability: str) -> bool:
+        """
+        Check if an attestation is still valid (not expired).
+
+        Returns True if attestation exists and hasn't expired.
+        """
+        attestations = self._attestations.get(agent_id, {})
+        attestation = attestations.get(capability)
+
+        if not attestation:
+            return False
+
+        valid_until = attestation.get("valid_until")
+        if not valid_until:
+            return False
+
+        try:
+            expiry = datetime.fromisoformat(valid_until)
+            return datetime.utcnow() < expiry
+        except (ValueError, TypeError):
+            return False
 
     def has_attestation(self, agent_id: str, capability: str) -> bool:
         """
@@ -690,7 +792,9 @@ class StewardProtocolPlugin(KernelPlugin):
         else:
             score = completed / (completed + failed + 1)  # +1 to avoid division issues
 
-        self._trust_scores[agent_id] = min(1.0, max(0.0, score))
+        new_score = min(1.0, max(0.0, score))
+        self._trust_scores[agent_id] = new_score
+        self._persist_trust_score(agent_id, new_score, "task_completion")
 
     def _enforce_manifest_capabilities(self, kernel: "RealVibeKernel", agent_id: str, manifest: Dict[str, Any]) -> None:
         """
