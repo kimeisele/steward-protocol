@@ -151,8 +151,17 @@ class DeterministicExecutor:
     Loads playbooks, matches intents, and executes phases deterministically.
     """
 
-    def __init__(self, knowledge_dir: str = "knowledge", playbooks_dir: str = None):
+    def __init__(self, knowledge_dir: str = "knowledge", playbooks_dir: str = None, ephemeral=None):
+        """
+        Initialize DeterministicExecutor.
+
+        Args:
+            knowledge_dir: Knowledge directory path
+            playbooks_dir: Playbooks directory path (optional)
+            ephemeral: EphemeralStorage instance (OPUS Phase 2: dependency injection)
+        """
         self.knowledge_dir = Path(knowledge_dir)
+        self._ephemeral = ephemeral
 
         # Playbooks location: use explicit path, or detect from project structure
         if playbooks_dir:
@@ -184,9 +193,12 @@ class DeterministicExecutor:
             logger.warning("⚠️  LLM Engine not available (optional)")
 
         # Initialize Action Handler Registry (GAD-5000 Registry Pattern)
+        # OPUS Phase 2: Pass ephemeral storage to handlers via dependency injection
         self.action_registry = None
         if ACTION_HANDLERS_AVAILABLE:
-            self.action_registry = create_default_registry()
+            from vibe_core.cartridges.system.envoy.action_handlers import create_registry_with_ephemeral
+
+            self.action_registry = create_registry_with_ephemeral(ephemeral)
             logger.info(f"✅ Action handlers: {self.action_registry.registered_types}")
         else:
             logger.warning("⚠️  Action handlers not available (using stubs)")
