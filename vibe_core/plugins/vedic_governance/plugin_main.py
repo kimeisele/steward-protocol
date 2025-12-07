@@ -94,30 +94,32 @@ class VedicGovernancePlugin(KernelPlugin):
 
     def _persist_varna(self, agent_id: str, varna: "Varna") -> None:
         """Persist varna assignment to ledger."""
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
                 event_type="VARNA_ASSIGNED",
                 agent_id=agent_id,
-                details={"varna": varna.value if hasattr(varna, 'value') else str(varna)}
+                details={"varna": varna.value if hasattr(varna, "value") else str(varna)},
             )
 
-    def _persist_ashrama(self, agent_id: str, transition: "AshramaTransition") -> None:
+    def _persist_ashrama(
+        self, agent_id: str, transition: "AshramaTransition", from_stage: Optional[Ashrama] = None, reason: str = ""
+    ) -> None:
         """Persist ashrama transition to ledger."""
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
                 event_type="ASHRAMA_TRANSITION",
                 agent_id=agent_id,
                 details={
-                    "from_stage": transition.from_stage.value if transition.from_stage else None,
-                    "to_stage": transition.to_stage.value if hasattr(transition.to_stage, 'value') else str(transition.to_stage),
-                    "reason": transition.reason,
-                    "timestamp": transition.timestamp.isoformat() if transition.timestamp else None
-                }
+                    "from_stage": from_stage.value if from_stage else None,
+                    "to_stage": transition.current_ashrama.value,
+                    "reason": reason,
+                    "timestamp": transition.entry_time.isoformat(),
+                },
             )
 
     def _restore_from_ledger(self) -> None:
         """Restore governance state from ledger on boot."""
-        if not self._kernel or not hasattr(self._kernel, 'ledger'):
+        if not self._kernel or not hasattr(self._kernel, "ledger"):
             return
 
         for event in self._kernel.ledger.get_all_events():
@@ -138,12 +140,13 @@ class VedicGovernancePlugin(KernelPlugin):
                 to_stage = details.get("to_stage")
                 if to_stage:
                     try:
-                        self._ashrama_registry[agent_id] = AshramaTransition(
-                            from_stage=Ashrama(details.get("from_stage")) if details.get("from_stage") else None,
-                            to_stage=Ashrama(to_stage),
-                            reason=details.get("reason", "restored from ledger"),
-                            timestamp=datetime.fromisoformat(details["timestamp"]) if details.get("timestamp") else datetime.utcnow()
-                        )
+                        # Create transition object and set current stage
+                        transition = AshramaTransition(agent_id)
+                        transition.current_ashrama = Ashrama(to_stage)
+                        # Restore entry time if available
+                        if details.get("timestamp"):
+                            transition.entry_time = datetime.fromisoformat(details["timestamp"])
+                        self._ashrama_registry[agent_id] = transition
                     except (ValueError, KeyError):
                         pass  # Invalid transition data
 
@@ -162,7 +165,7 @@ class VedicGovernancePlugin(KernelPlugin):
         # All agents start as students
         ashrama = AshramaTransition(agent_id)
         self._ashrama_registry[agent_id] = ashrama
-        self._persist_ashrama(agent_id, ashrama)
+        self._persist_ashrama(agent_id, ashrama, from_stage=None, reason="initial_registration")
 
         # Initialize task counter
         self._task_completions[agent_id] = 0
@@ -311,7 +314,7 @@ class VedicGovernancePlugin(KernelPlugin):
         success = ashrama_transition.transition_to(new_ashrama, reason)
 
         if success:
-            self._persist_ashrama(agent_id, ashrama_transition)
+            self._persist_ashrama(agent_id, ashrama_transition, from_stage=old_ashrama, reason=reason)
             logger.info(
                 f"🕉️  Agent '{agent_id}' transitioned: "
                 f"{old_ashrama.value} → {new_ashrama.value} ({reason or 'No reason given'})"
