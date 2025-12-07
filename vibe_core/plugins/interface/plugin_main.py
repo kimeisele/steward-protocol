@@ -11,6 +11,7 @@ Fractal: Custom agents can register their own renderers!
 
 import importlib
 import logging
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -131,7 +132,12 @@ class InterfacePlugin(KernelPlugin):
         - InterfacePlugin is the KING (single writer)
         - Renderers are SLAVES (content generators only)
         - All writes go through InterfacePlugin with UNIFIED headers
+
+        Skipped in test mode to prevent file overwrites.
         """
+        if self._is_test_mode():
+            return
+
         now = time.time()
         for name, renderer in self._renderers.items():
             if self._should_render(name):
@@ -180,8 +186,20 @@ class InterfacePlugin(KernelPlugin):
         else:
             logger.warning(f"Cannot write {output_file}: kernel.io not available")
 
+    def _is_test_mode(self) -> bool:
+        """Check if running in pytest - skip file rendering in tests."""
+        return bool(os.environ.get("PYTEST_CURRENT_TEST"))
+
     def render_all(self) -> None:
-        """Force render all views (ignores intervals)."""
+        """Force render all views (ignores intervals).
+
+        IMPORTANT: Skipped in test mode to prevent test kernels from
+        overwriting real interface files (OPUS.md, ENVOY.md, etc.).
+        """
+        if self._is_test_mode():
+            logger.debug("InterfacePlugin: Skipping render in test mode")
+            return
+
         for name, renderer in self._renderers.items():
             try:
                 # Try unified approach first
