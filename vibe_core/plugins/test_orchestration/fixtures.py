@@ -600,7 +600,7 @@ class TestKernel:
         """
         from vibe_core.kernel_impl import RealVibeKernel
 
-        kernel = RealVibeKernel(ledger_path=":memory:")
+        kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
         kernel._plugins = plugins
         # Boot plugins
         for plugin in plugins:
