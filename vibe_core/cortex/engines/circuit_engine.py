@@ -1346,9 +1346,9 @@ class MetaCircuitManager:
         """Get summary of all tracked executions."""
         return {
             "total_executions": len(self.ledgers),
-            "active_executions": sum(1 for l in self.ledgers.values() if l.completed_at is None),
-            "successful_executions": sum(1 for l in self.ledgers.values() if l.success is True),
-            "failed_executions": sum(1 for l in self.ledgers.values() if l.success is False),
+            "active_executions": sum(1 for ledger in self.ledgers.values() if ledger.completed_at is None),
+            "successful_executions": sum(1 for ledger in self.ledgers.values() if ledger.success is True),
+            "failed_executions": sum(1 for ledger in self.ledgers.values() if ledger.success is False),
             "total_recovery_attempts": len(self.recovery_attempts),
         }
 

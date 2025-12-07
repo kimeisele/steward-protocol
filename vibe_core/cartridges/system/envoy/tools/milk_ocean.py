@@ -878,7 +878,7 @@ def lazy_queue_worker(max_iterations: Optional[int] = None):
         for request in batch:
             request_id = request["request_id"]
             user_input = request["user_input"]
-            agent_id = request["agent_id"]
+            _agent_id = request["agent_id"]  # Extracted but not used in current implementation
 
             try:
                 queue.mark_processing(request_id)
