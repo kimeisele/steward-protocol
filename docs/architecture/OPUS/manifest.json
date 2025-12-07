@@ -1,7 +1,7 @@
 {
   "name": "OPUS Architecture Plans",
   "description": "Claude Opus architectural analysis, remediation plans, and execution guides for Steward Protocol",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "created": "2025-12-06",
   "updated": "2025-12-07",
   "documents": [
@@ -53,18 +53,18 @@
     "phase4": "Test Restore - Move archived tests back to active"
   },
   "execution_order": {
-    "description": "SONNET_EXECUTION_PLAN phases",
+    "description": "SONNET_EXECUTION_PLAN phases + TEST_STANDARDIZATION",
     "phases": [
       {
         "phase": "1",
         "name": "PLUGIN_TODOS",
-        "status": "ready",
+        "status": "completed",
         "tasks": ["signature_valid fix", "valid_until fix", "is_attestation_valid helper"]
       },
       {
         "phase": "2",
         "name": "PERSISTENCE",
-        "status": "pending",
+        "status": "completed",
         "tasks": ["VedicGovernance ledger", "StewardProtocol ledger", "Boot restore"]
       },
       {
@@ -78,6 +78,17 @@
         "name": "TEST_RESTORE",
         "status": "pending",
         "tasks": ["Move UniversalProvider tests from archive"]
+      },
+      {
+        "phase": "5",
+        "name": "TEST_STANDARDIZATION",
+        "status": "in_progress",
+        "tasks": [
+          "Expose fixtures in conftest.py",
+          "Add test_health OPUS panel",
+          "Migrate tests to use TestKernel/TestAgents",
+          "Revive broken_async tests one by one"
+        ]
       }
     ]
   },
