@@ -1,22 +1,18 @@
-name: 📚 SCRIBE - Auto-Generate Documentation
+name: 📚 SCRIBE - Auto-Generate Documentation (DISABLED - Legacy)
 
+# DISABLED: Renderer modules moved/removed during OPUS refactor
+# Re-enable when scribe tools are restored
 on:
-  push:
-    branches:
-      - main
-      - claude/*
-    paths:
-      - 'steward/system_agents/**'
-      - 'agent_city/registry/**'
-      - 'vibe_core/**'
-      - 'scripts/**'
-      - 'pyproject.toml'
-      - 'agent_city.yaml'
-      - 'steward.yaml'
-  schedule:
-    # Auto-regenerate docs every 3 hours
-    - cron: "0 */3 * * *"
   workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force run (renderers currently missing)'
+        required: true
+        default: 'false'
+
+# Legacy workflow - disabled until renderer modules restored
+# Missing files: introspector.py, project_introspector.py, etc.
+# TODO: Restore or remove after OPUS Phase 2 complete
 
 permissions:
   contents: write
@@ -25,6 +21,8 @@ jobs:
   generate-docs:
     runs-on: ubuntu-latest
     name: Generate Documentation with SCRIBE
+    # Only run if explicitly forced (workflow disabled - missing renderer modules)
+    if: github.event.inputs.force_run == 'true'
 
     steps:
       - name: Checkout code
