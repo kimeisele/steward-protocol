@@ -173,14 +173,17 @@ class EnvoyPlugin(KernelPlugin):
 
     def execute_circuit(self, circuit_id: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Execute a circuit by ID.
+        Execute a circuit by ID using DeterministicExecutor.
+
+        GAD-6000: Real circuit execution via action handlers.
+        No more stubs - actual QUERY_GRAPH, RENDER_TEMPLATE, etc.
 
         Args:
             circuit_id: The circuit identifier
             params: Optional parameters for the circuit
 
         Returns:
-            Execution result
+            Execution result with rendered output
         """
         if circuit_id not in self._circuits:
             return {"error": f"Circuit '{circuit_id}' not found", "status": "FAILED"}
@@ -188,14 +191,36 @@ class EnvoyPlugin(KernelPlugin):
         circuit = self._circuits[circuit_id]
         logger.info(f"📬 Executing circuit: {circuit_id}")
 
-        # TODO: Wire to DeterministicExecutor or CircuitEngine
-        # For now, return circuit info
-        return {
-            "circuit_id": circuit_id,
-            "status": "QUEUED",
-            "circuit": circuit,
-            "params": params or {},
-        }
+        try:
+            # Get the DeterministicExecutor (lazy init)
+            if not hasattr(self, "_executor") or self._executor is None:
+                from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+
+                self._executor = DeterministicExecutor()
+                logger.info("📬 DeterministicExecutor initialized")
+
+            # Execute circuit via DeterministicExecutor
+            import asyncio
+
+            result = asyncio.get_event_loop().run_until_complete(
+                self._executor.execute(
+                    playbook_id=circuit_id,
+                    user_input=params.get("user_input", "") if params else "",
+                    intent_vector=params.get("intent_vector") if params else None,
+                    kernel=self._kernel,
+                )
+            )
+
+            logger.info(f"📬 Circuit {circuit_id} completed: {result.get('status')}")
+            return result
+
+        except Exception as e:
+            logger.error(f"📬 Circuit execution failed: {e}")
+            return {
+                "circuit_id": circuit_id,
+                "status": "FAILED",
+                "error": str(e),
+            }
 
     def list_circuits(self) -> List[Dict[str, Any]]:
         """

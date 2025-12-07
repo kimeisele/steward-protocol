@@ -30,6 +30,7 @@ circuit:
     query_status:
       name: "Query Kernel Status"
       description: "Fetch kernel status from graph"
+      state_var: "kernel_status"
       actions:
         - action_type: EMIT_EVENT
           target: "circuit_started"
@@ -46,6 +47,7 @@ circuit:
     query_agents:
       name: "Query Agent Registry"
       description: "Fetch registered agents from graph"
+      state_var: "kernel_agents"
       actions:
         - action_type: QUERY_GRAPH
           target: "kernel.agents"
@@ -57,6 +59,7 @@ circuit:
     query_tools:
       name: "Query Tool Registry"
       description: "Fetch available tools from graph"
+      state_var: "kernel_tools"
       actions:
         - action_type: QUERY_GRAPH
           target: "kernel.tools"
@@ -68,13 +71,14 @@ circuit:
     render_output:
       name: "Render Status Output"
       description: "Transform graph data into markdown using template"
+      state_var: "rendered"
       actions:
         - action_type: RENDER_TEMPLATE
           target: "status_summary"
           params:
             data:
               city_name: "Agent City"
-              mode: "{{ kernel_status.status | default('UNKNOWN') }}"
+              mode: "{{ kernel_status.status | default('RUNNING') }}"
               health: "🟢 OPERATIONAL"
               agents: "{{ kernel_agents }}"
               tools: "{{ kernel_tools }}"
