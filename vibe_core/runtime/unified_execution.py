@@ -284,6 +284,11 @@ class UnifiedRouter:
         request.gate_decision = MilkOceanGate.ALLOW
         return MilkOceanGate.ALLOW
 
+    @property
+    def kernel(self) -> Optional["RealVibeKernel"]:
+        """Expose kernel for access by tests and other code."""
+        return self._kernel
+
 
 # =============================================================================
 # UNIFIED EXECUTOR (BREAK 4 + BREAK 6 fix)

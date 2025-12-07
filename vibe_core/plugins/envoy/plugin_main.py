@@ -444,6 +444,19 @@ class EnvoyPlugin(KernelPlugin):
             }
 
     # =========================================================================
+    # PUBLIC ROUTER ACCESS
+    # =========================================================================
+
+    @property
+    def router(self):
+        """
+        Access the UnifiedRouter instance.
+
+        Returns the current _unified_router or None if not initialized.
+        """
+        return self._unified_router
+
+    # =========================================================================
     # DEPRECATED LEGACY ROUTER PROPERTIES (OPUS Phase 2)
     # =========================================================================
 
