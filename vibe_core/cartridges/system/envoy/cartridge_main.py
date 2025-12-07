@@ -136,7 +136,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
     def router(self):
         """Get UnifiedRouter from EnvoyPlugin."""
         if self._router is None and self.kernel:
-            if hasattr(self.kernel, 'envoy') and self.kernel.envoy:
+            if hasattr(self.kernel, "envoy") and self.kernel.envoy:
                 self._router = self.kernel.envoy._unified_router
         return self._router
 
@@ -210,7 +210,6 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 logger.error("❌ UnifiedRouter not available - EnvoyPlugin not loaded?")
                 return {"status": "error", "error": "Router not initialized"}
 
-            from vibe_core.runtime.unified_execution import ExecutionRequest
 
             request = self.router.route(user_input, source="cartridge")
             routing_decision = {
@@ -335,9 +334,22 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                             params={"user_input": "status"},
                         )
                         if circuit_result.get("status") == "COMPLETED":
-                            # Extract rendered output from circuit
-                            details = circuit_result.get("details", {})
-                            rendered = details.get("rendered", {}).get("rendered", "")
+                            # FIX 4: Extract rendered output from correct path
+                            # Circuit returns: {phases_executed: [{phase_id: "render_output", result: {rendered: "..."}}]}
+                            rendered = ""
+                            phases = circuit_result.get("phases_executed", [])
+                            for phase in phases:
+                                if phase.get("phase_id") == "render_output":
+                                    result = phase.get("result", {})
+                                    rendered = result.get("rendered", "") if isinstance(result, dict) else ""
+                                    break
+                            # Fallback: check details.rendered for backwards compatibility
+                            if not rendered:
+                                details = circuit_result.get("details", {})
+                                if isinstance(details.get("rendered"), dict):
+                                    rendered = details.get("rendered", {}).get("rendered", "")
+                                elif isinstance(details.get("rendered"), str):
+                                    rendered = details.get("rendered", "")
                             if rendered:
                                 return {
                                     "status": "success",

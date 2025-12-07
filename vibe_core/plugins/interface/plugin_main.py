@@ -106,6 +106,22 @@ class InterfacePlugin(KernelPlugin):
         """
         pass
 
+    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: dict) -> None:
+        """
+        FIX 5: Trigger immediate ENVOY.md update when task completes.
+
+        This fixes the timing issue where ENVOY.md renders BEFORE task
+        execution (in on_tick_pre) and doesn't see the result.
+
+        By resetting the last render time for envoy, we force an
+        immediate render on the next tick without waiting for the
+        interval timer.
+        """
+        # Mark EnvoyRenderer for immediate render on next tick
+        if "envoy" in self._renderers:
+            self._last_render["envoy"] = 0  # Force next render
+            logger.debug(f"Task {task_id} completed - forcing ENVOY.md render")
+
     def _should_render(self, name: str) -> bool:
         """Check if renderer should run based on its interval."""
         if not self._interface_config:
