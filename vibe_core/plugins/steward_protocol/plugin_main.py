@@ -111,34 +111,30 @@ class StewardProtocolPlugin(KernelPlugin):
 
     def _persist_manifest(self, agent_id: str, manifest: Dict[str, Any]) -> None:
         """Persist manifest to ledger."""
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
-                event_type="MANIFEST_REGISTERED",
-                agent_id=agent_id,
-                details={"manifest": manifest}
+                event_type="MANIFEST_REGISTERED", agent_id=agent_id, details={"manifest": manifest}
             )
 
     def _persist_trust_score(self, agent_id: str, score: float, reason: str = "") -> None:
         """Persist trust score change to ledger."""
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
-                event_type="TRUST_SCORE_UPDATED",
-                agent_id=agent_id,
-                details={"score": score, "reason": reason}
+                event_type="TRUST_SCORE_UPDATED", agent_id=agent_id, details={"score": score, "reason": reason}
             )
 
     def _persist_attestation(self, agent_id: str, capability: str, attestation: Dict[str, Any]) -> None:
         """Persist attestation to ledger."""
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
                 event_type="ATTESTATION_CREATED",
                 agent_id=agent_id,
-                details={"capability": capability, "attestation": attestation}
+                details={"capability": capability, "attestation": attestation},
             )
 
     def _restore_from_ledger(self) -> None:
         """Restore protocol state from ledger on boot."""
-        if not self._kernel or not hasattr(self._kernel, 'ledger'):
+        if not self._kernel or not hasattr(self._kernel, "ledger"):
             return
 
         for event in self._kernel.ledger.get_all_events():
@@ -435,17 +431,19 @@ class StewardProtocolPlugin(KernelPlugin):
         }
 
         # Verify signature using ConstitutionalOath if oath exists in ledger
-        if self._kernel and hasattr(self._kernel, 'ledger'):
+        if self._kernel and hasattr(self._kernel, "ledger"):
             oath_events = [
-                e for e in self._kernel.ledger.get_all_events()
+                e
+                for e in self._kernel.ledger.get_all_events()
                 if e.get("event_type") == "OATH_TAKEN" and e.get("agent_id") == agent_id
             ]
             if oath_events:
                 from vibe_core.steward.constitution import ConstitutionalOath
+
                 latest_oath = oath_events[-1]
                 # Get identity_tool if available
                 identity_tool = None
-                if hasattr(self._kernel, 'tool_registry'):
+                if hasattr(self._kernel, "tool_registry"):
                     identity_tool = self._kernel.tool_registry.get_tool("identity")
                 is_valid, _ = ConstitutionalOath.verify_oath(latest_oath, identity_tool=identity_tool)
                 result["signature_valid"] = is_valid
