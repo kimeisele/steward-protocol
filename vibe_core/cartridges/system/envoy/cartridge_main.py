@@ -150,10 +150,22 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             logger.info(f"⚡ ENVOY processing task: {task.task_id}")
 
             # Extract the command from task payload
+            # Support multiple payload formats:
+            # 1. Direct command: {"command": "status", "args": {...}}
+            # 2. ENVOY.md request: {"type": "envoy_request", "request": "...", "route": "..."}
+            # 3. Input-based: {"input": "user query"}
             payload = task.payload or {}
             command = payload.get("command")
             args = payload.get("args", {})
-            user_input = payload.get("input", "") or command  # Fallback to command if input missing
+
+            # Handle ENVOY.md requests (from EnvoySync)
+            if payload.get("type") == "envoy_request":
+                user_input = payload.get("request", "")
+                # Use the pre-routed task if available
+                if payload.get("route"):
+                    command = payload.get("route")
+            else:
+                user_input = payload.get("input", "") or command  # Fallback to command if input missing
 
             if not command and not user_input:
                 return {
