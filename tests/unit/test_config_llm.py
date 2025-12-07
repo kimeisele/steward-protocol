@@ -1,6 +1,5 @@
 """Tests for llm configuration section."""
 
-import pytest
 from vibe_core.phoenix.sections.llm.section_main import LLMConfig, LocalLLMConfig, ProviderEntry
 
 

@@ -1,12 +1,11 @@
 """Tests for runtime configuration section."""
 
-import pytest
 from vibe_core.phoenix.sections.runtime.section_main import (
+    ActionDefaultsConfig,
+    CircuitRecoveryConfig,
+    LimitsConfig,
     RuntimeConfig,
     TimeoutsConfig,
-    LimitsConfig,
-    CircuitRecoveryConfig,
-    ActionDefaultsConfig,
 )
 
 
