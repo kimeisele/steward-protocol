@@ -56,11 +56,18 @@ class MonitorLoader:
         cls._monitors = {}
 
         # Get all plugins from kernel
-        if not hasattr(kernel, "plugin_manager"):
-            logger.warning("Kernel has no plugin_manager")
+        plugins = []
+        if hasattr(kernel, "plugin_manager"):
+            plugins = kernel.plugin_manager.plugins
+        elif hasattr(kernel, "plugins"):
+            plugins = kernel.plugins
+        elif hasattr(kernel, "_plugins"):
+            plugins = kernel._plugins
+        else:
+            logger.warning("Kernel has no plugin source (checked plugin_manager, plugins, _plugins)")
             return registry
 
-        for plugin in kernel.plugin_manager.plugins:
+        for plugin in plugins:
             try:
                 monitors = plugin.get_monitors()
                 for monitor in monitors:
