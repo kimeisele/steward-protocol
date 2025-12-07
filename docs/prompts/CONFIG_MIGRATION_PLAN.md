@@ -143,6 +143,12 @@ circuit_breaker:
 | `event_bus.py` | 116 | `max_history: int = 1000` | `config.runtime.event_history_size` |
 | `protocols/testable.py` | 103 | `timeout_ms: int = 5000` | `config.runtime.test_timeout_ms` |
 | `semantic_actions.py` | 97,119-120 | `timeout_seconds=300`, `retry_count=3` | `config.runtime.action_timeout`, `config.runtime.action_retry_count` |
+| `scripts/vibe_launcher.py` | 34 | `HEALTH_CHECK_INTERVAL = 2.0` | `config.runtime.orchestration.health_check_interval` |
+| `scripts/heartbeat.py` | 68-89 | HeartbeatEngine pulse cycle | `config.runtime.orchestration.heartbeat_*` (GitHub Actions cron) |
+| `vibe_core/cartridges/system/discoverer/agent.py` | 127 | `time.sleep(interval)` (param) | `config.runtime.orchestration.discovery_interval` |
+| `vibe_core/pulse.py` | 136 | `asyncio.sleep(sleep_duration)` | `config.runtime.orchestration.pulse_sleep` |
+| `vibe_core/file_operator.py` | 55 | `await asyncio.sleep(2)` | `config.runtime.orchestration.file_poll_interval` |
+| `gateway/api.py` | 230 | `interval=10.0` (monitoring) | `config.runtime.orchestration.monitoring_interval` |
 
 **Neue Section: `config/runtime.yaml`**:
 ```yaml
@@ -168,6 +174,20 @@ circuit_recovery:
 
 action_defaults:
   retry_count: 3
+
+# === ORCHESTRATION (User-Frage: "die ganze orchestration!") ===
+orchestration:
+  # Kernel tick coordination
+  health_check_interval: 2.0       # vibe_launcher supervisor loop
+  discovery_interval: 60.0         # Discoverer cartridge scan interval
+  pulse_sleep: 1.0                 # Pulse async sleep between updates
+  file_poll_interval: 2.0          # FileOperator polling delay
+  monitoring_interval: 10.0        # Gateway monitoring start interval
+
+  # Heartbeat engine (GitHub Actions cron = 15 min external trigger)
+  # Note: Actual cron is in .github/workflows - these are internal limits
+  heartbeat_max_tasks_per_pulse: 5  # Don't execute more than 5 tasks per heartbeat
+  heartbeat_commit_changes: true    # Auto-commit task progress
 ```
 
 ---
