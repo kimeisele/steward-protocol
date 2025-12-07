@@ -209,3 +209,151 @@ def pytest_sessionfinish(session, exitstatus):
 def quality_config():
     """Provide access to quality config in tests."""
     return _quality_config
+
+
+# =============================================================================
+# STANDARDIZED TEST FIXTURES (from test_orchestration)
+# =============================================================================
+# USE THESE instead of creating custom mocks or direct RealVibeKernel!
+# =============================================================================
+
+
+@pytest.fixture
+def test_kernel():
+    """
+    Minimal kernel for isolated unit tests.
+
+    USAGE:
+        def test_something(test_kernel):
+            test_kernel.register_agent(...)
+
+    This is the RECOMMENDED way to get a kernel in tests.
+    Uses in-memory ledger, no plugins.
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestKernel
+
+    return TestKernel.minimal()
+
+
+@pytest.fixture
+def permissive_kernel():
+    """
+    Kernel that allows all operations (no governance restrictions).
+
+    USAGE:
+        def test_feature_without_governance(permissive_kernel):
+            # No oath required, all tasks allowed
+            permissive_kernel.register_agent(agent)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestKernel
+
+    return TestKernel.permissive()
+
+
+@pytest.fixture
+def governance_kernel():
+    """
+    Kernel with full governance stack (StewardProtocol).
+
+    USAGE:
+        def test_governance_enforcement(governance_kernel):
+            # Only oath-sworn agents can register
+            governance_kernel.register_agent(compliant_agent)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestKernel
+
+    return TestKernel.with_governance()
+
+
+@pytest.fixture
+def recording_kernel():
+    """
+    Kernel with recording plugin for assertions.
+
+    USAGE:
+        def test_hooks_called(recording_kernel):
+            kernel, recorder = recording_kernel
+            kernel.register_agent(agent)
+            assert recorder.get_calls("on_agent_registered")
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestKernel
+
+    return TestKernel.with_recording()
+
+
+@pytest.fixture
+def compliant_agent():
+    """
+    Fully compliant agent with valid oath.
+
+    USAGE:
+        def test_with_agent(test_kernel, compliant_agent):
+            test_kernel.register_agent(compliant_agent)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestAgents
+
+    return TestAgents.compliant("test-agent")
+
+
+@pytest.fixture
+def no_oath_agent():
+    """
+    Agent WITHOUT oath (governance gate MUST reject).
+
+    USAGE:
+        def test_governance_rejection(governance_kernel, no_oath_agent):
+            with pytest.raises(GovernanceError):
+                governance_kernel.register_agent(no_oath_agent)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestAgents
+
+    return TestAgents.without_oath("test-no-oath")
+
+
+@pytest.fixture
+def false_oath_agent():
+    """
+    Agent with oath_sworn=False (governance gate MUST reject).
+
+    USAGE:
+        def test_unsworn_rejection(governance_kernel, false_oath_agent):
+            # Has attributes but hasn't sworn
+            assert not governance_kernel.register_agent(false_oath_agent)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestAgents
+
+    return TestAgents.with_false_oath("test-false-oath")
+
+
+@pytest.fixture
+def test_context():
+    """
+    Full test context with isolation and cleanup.
+
+    USAGE:
+        def test_with_context(test_context):
+            with test_context as ctx:
+                ctx.register_compliant_agent("my-agent")
+                ctx.kernel.boot()
+                assert ctx.recorder.get_calls("on_boot")
+            # Auto-cleanup after context exits
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestContext
+
+    return TestContext()
+
+
+@pytest.fixture
+def test_task():
+    """
+    Simple test task factory.
+
+    USAGE:
+        def test_task_submission(test_kernel, test_task, compliant_agent):
+            test_kernel.register_agent(compliant_agent)
+            task = test_task(compliant_agent.agent_id)
+            test_kernel.submit_task(task)
+    """
+    from vibe_core.plugins.test_orchestration.fixtures import TestTasks
+
+    return TestTasks.simple
