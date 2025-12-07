@@ -210,7 +210,6 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 logger.error("❌ UnifiedRouter not available - EnvoyPlugin not loaded?")
                 return {"status": "error", "error": "Router not initialized"}
 
-
             request = self.router.route(user_input, source="cartridge")
             routing_decision = {
                 "status": "routing" if request.gate_decision.value == "allow" else request.gate_decision.value,
