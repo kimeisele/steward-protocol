@@ -72,9 +72,8 @@ class EnvoyPlugin(KernelPlugin):
         self._unified_router = None
         self._unified_executor = None
 
-        # Legacy routers (kept for backwards compatibility, will be removed)
-        self._playbook_router = None
-        self._milk_ocean_router = None
+        # Legacy routers (OPUS Phase 2: REMOVED - use _unified_router instead)
+        # Properties below provide deprecation warnings for backwards compatibility
 
         # Circuit registry {circuit_id: circuit_data}
         self._circuits: Dict[str, Dict[str, Any]] = {}
@@ -117,11 +116,8 @@ class EnvoyPlugin(KernelPlugin):
         self._discover_playbooks()
 
         # Initialize UNIFIED ROUTER + EXECUTOR (OPUS Architecture)
-        # This replaces the legacy _init_routers() call
+        # OPUS Phase 2: Legacy routers removed - only UnifiedRouter exists
         self._init_unified_runtime()
-
-        # Legacy routers (for backwards compatibility during transition)
-        self._init_routers()
 
         # Register EnvoyCartridge as the actual agent
         # This connects ENVOY.md requests -> Task -> EnvoyCartridge.process()
@@ -159,8 +155,7 @@ class EnvoyPlugin(KernelPlugin):
         """
         Route user intent to a circuit or playbook.
 
-        This is the main entry point for the ENVOY shell.
-        Uses PlaybookRouter for pattern matching (no LLM).
+        OPUS Phase 2: Now uses UnifiedRouter instead of legacy PlaybookRouter.
 
         Args:
             user_input: The user's natural language request
@@ -169,7 +164,7 @@ class EnvoyPlugin(KernelPlugin):
         Returns:
             Route result with task, description, confidence, source
         """
-        if not self._playbook_router:
+        if not self._unified_router:
             return {
                 "error": "Router not initialized",
                 "task": "fallback",
@@ -177,15 +172,15 @@ class EnvoyPlugin(KernelPlugin):
                 "confidence": "none",
             }
 
-        ctx = context or self._build_default_context()
-
         try:
-            route = self._playbook_router.route(user_input, ctx)
+            # Use UnifiedRouter (OPUS Phase 2)
+            request = self._unified_router.route(user_input, source="envoy")
+
             return {
-                "task": route.task,
-                "description": route.description,
-                "confidence": route.confidence,
-                "source": route.source,
+                "task": request.target_id,
+                "description": f"{request.execution_path.value}: {request.target_id}",
+                "confidence": str(request.confidence),
+                "source": request.source,
             }
         except Exception as e:
             logger.error(f"📬 Routing failed: {e}")
@@ -268,13 +263,21 @@ class EnvoyPlugin(KernelPlugin):
         """
         List all available playbooks (routes).
 
+        OPUS Phase 2: Returns circuits as playbooks (circuits replace playbooks).
+
         Returns:
             List of playbook summaries
         """
-        if not self._playbook_router:
-            return []
-
-        return self._playbook_router.list_available_routes()
+        # OPUS Phase 2: Circuits are the new playbooks
+        # Return circuits in playbook format for backwards compatibility
+        return [
+            {
+                "name": cid,
+                "description": c.get("circuit", {}).get("description", ""),
+                "domain": c.get("circuit", {}).get("domain", "-"),
+            }
+            for cid, c in self._circuits.items()
+        ]
 
     def get_routes(self) -> List[Dict[str, str]]:
         """
@@ -362,15 +365,14 @@ class EnvoyPlugin(KernelPlugin):
         """
         return {
             "plugin_id": self.plugin_id,
-            "architecture": "OPUS" if self._unified_router else "legacy",
+            "architecture": "OPUS",  # OPUS Phase 2: Always OPUS now
             "routers": {
                 "unified_router": self._unified_router is not None,
                 "unified_executor": self._unified_executor is not None,
-                "playbook_router": self._playbook_router is not None,
-                "milk_ocean_router": self._milk_ocean_router is not None,
+                # OPUS Phase 2: Legacy routers removed
             },
             "circuits": len(self._circuits),
-            "playbooks": len(self._playbooks),
+            "playbooks": len(self._circuits),  # OPUS Phase 2: playbooks = circuits
             "pending_requests": len(self._pending_requests),
             "history_size": len(self._request_history),
             "config_loaded": self._config is not None,
@@ -422,6 +424,41 @@ class EnvoyPlugin(KernelPlugin):
             }
 
     # =========================================================================
+    # DEPRECATED LEGACY ROUTER PROPERTIES (OPUS Phase 2)
+    # =========================================================================
+
+    @property
+    def _playbook_router(self):
+        """
+        DEPRECATED: Legacy playbook router removed in OPUS Phase 2.
+        Use execute_unified() or _unified_router instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Legacy _playbook_router is deprecated. Use execute_unified() or _unified_router instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Return a wrapper that redirects to unified router
+        return self._unified_router if self._unified_router else None
+
+    @property
+    def _milk_ocean_router(self):
+        """
+        DEPRECATED: Legacy MilkOcean router removed in OPUS Phase 2.
+        Use _unified_router.check_gate() instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "Legacy _milk_ocean_router is deprecated. Use _unified_router.check_gate() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return None
+
+    # =========================================================================
     # PRIVATE METHODS
     # =========================================================================
 
@@ -464,26 +501,6 @@ class EnvoyPlugin(KernelPlugin):
             self._unified_router = None
             self._unified_executor = None
 
-    def _init_routers(self) -> None:
-        """Initialize legacy routing infrastructure (backwards compatibility)."""
-        # Initialize PlaybookRouter
-        try:
-            from vibe_core.runtime.playbook_router import PlaybookRouter
-
-            self._playbook_router = PlaybookRouter()
-            logger.debug("📬 PlaybookRouter initialized (legacy)")
-        except Exception as e:
-            logger.warning(f"📬 Could not init PlaybookRouter: {e}")
-
-        # Initialize MilkOceanRouter (optional, for Brahma Protocol)
-        try:
-            from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
-
-            self._milk_ocean_router = MilkOceanRouter()
-            logger.debug("📬 MilkOceanRouter initialized (legacy)")
-        except Exception as e:
-            logger.debug(f"📬 MilkOceanRouter not available: {e}")
-
     def _discover_circuits(self) -> None:
         """Discover circuits from YAML files."""
         import yaml
@@ -510,14 +527,16 @@ class EnvoyPlugin(KernelPlugin):
                 logger.warning(f"📬 Could not load circuit {yaml_file}: {e}")
 
     def _discover_playbooks(self) -> None:
-        """Discover playbooks from registry."""
-        if self._playbook_router:
-            # Playbooks are loaded by PlaybookRouter from _registry.yaml
-            routes = self._playbook_router.registry.get("routes", [])
-            for route in routes:
-                name = route.get("name", "")
-                if name:
-                    self._playbooks[name] = route
+        """
+        Discover playbooks from registry.
+
+        OPUS Phase 2: Playbooks are now circuits - this method is deprecated.
+        Circuits are discovered in _discover_circuits() instead.
+        """
+        # OPUS Phase 2: Circuits replace playbooks
+        # Legacy playbooks registry is no longer used
+        logger.debug("📬 Playbook discovery skipped (OPUS Phase 2: using circuits)")
+        pass
 
     def _build_default_context(self) -> Dict[str, Any]:
         """Build default context for routing."""
