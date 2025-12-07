@@ -26,7 +26,6 @@ from vibe_core.agents.context_aware_agent import ContextAwareAgent
 from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
 # GAD-5500: The Missing Link (Wiring)
-from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core.config import CityConfig
 
 # Constitutional Oath Mixin
@@ -104,9 +103,9 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
         logger.info("👁️  ENVOY (VibeAgent v3.1) is initializing...")
 
         # GAD-5500: Initialize The Brain (Router) and The Hand (Executor)
-        self.router = MilkOceanRouter()
+        # Router will be accessed from EnvoyPlugin via kernel
+        self._router = None  # Lazy - set when kernel available
         self.executor = DeterministicExecutor()
-        logger.info("🧠 MilkOcean Router initialized (Classifier)")
         logger.info("✋ Deterministic Executor initialized (Execution Engine)")
 
         # ALL TOOLS: Accessed via kernel (self.system.execute_tool)
@@ -133,6 +132,14 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             self._log_path.parent.mkdir(parents=True, exist_ok=True)
         return self._log_path
 
+    @property
+    def router(self):
+        """Get UnifiedRouter from EnvoyPlugin."""
+        if self._router is None and self.kernel:
+            if hasattr(self.kernel, 'envoy') and self.kernel.envoy:
+                self._router = self.kernel.envoy._unified_router
+        return self._router
+
     # NO set_kernel() override - tools accessed via self.system.execute_tool()
 
     async def process(self, task: Task) -> Dict[str, Any]:
@@ -149,11 +156,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
             dict: Result of the operation
         """
         try:
-            # P3.2: Inject kernel into router if not already set
-            if self.kernel and not self.router.kernel:
-                self.router.set_kernel(self.kernel)
-                logger.debug("🔗 Kernel injected into MilkOceanRouter")
-
+            # Router comes from EnvoyPlugin - no manual injection needed
             logger.info(f"⚡ ENVOY processing task: {task.task_id}")
 
             # Extract the command from task payload
@@ -201,9 +204,20 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 logger.info(f"✅ ENVOY internal command {task.task_id} completed: {result.get('status')}")
                 return result
 
-            # 2. Route via MilkOcean (Classification)
-            logger.info(f"🧠 Routing via MilkOcean: {user_input}")
-            routing_decision = self.router.process_prayer(user_input=user_input, agent_id="envoy", critical=False)
+            # 2. Route via UnifiedRouter (Classification)
+            logger.info(f"🧠 Routing via UnifiedRouter: {user_input}")
+            if not self.router:
+                logger.error("❌ UnifiedRouter not available - EnvoyPlugin not loaded?")
+                return {"status": "error", "error": "Router not initialized"}
+
+            from vibe_core.runtime.unified_execution import ExecutionRequest
+
+            request = self.router.route(user_input, source="cartridge")
+            routing_decision = {
+                "status": "routing" if request.gate_decision.value == "allow" else request.gate_decision.value,
+                "path": request.execution_path.value,
+                "details": {"confidence": request.confidence, "target": request.target_id},
+            }
 
             # 3. Handle Routing Decision
             status = routing_decision.get("status")
@@ -249,7 +263,7 @@ class EnvoyCartridge(ContextAwareAgent, OathMixin):
                 elif path == "lazy":
                     # Lazy processing - queue for background execution
                     logger.info("⏳ Lazy path - queuing for background processing")
-                    # Note: Actual queuing happens in MilkOcean router
+                    # Note: Actual queuing happens in UnifiedRouter
                     return {
                         "status": "queued",
                         "path": "lazy",
