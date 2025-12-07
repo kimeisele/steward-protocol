@@ -45,6 +45,16 @@ from vibe_core.semantic_syscalls import (
 logger = logging.getLogger("CIRCUIT_EXECUTOR")
 
 
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+        return get_config().runtime
+    except Exception:
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+        return RuntimeConfig()
+
+
 # ============================================================================
 # INVARIANT CHECKER - Runtime enforcement of circuit constraints
 # ============================================================================
@@ -503,7 +513,8 @@ class CognitiveCircuitExecutor:
         logger.info(f"🔄 Executing circuit: {circuit_id} (Depth: {recursion_depth})")
 
         # SAFETY: Check recursion depth
-        MAX_RECURSION_DEPTH = 5
+        runtime_config = _get_runtime_config()
+        MAX_RECURSION_DEPTH = runtime_config.limits.max_recursion_depth
         if recursion_depth > MAX_RECURSION_DEPTH:
             error_msg = f"MAX_RECURSION_DEPTH ({MAX_RECURSION_DEPTH}) exceeded in circuit {circuit_id}"
             logger.error(f"🚨 {error_msg}")
@@ -546,7 +557,7 @@ class CognitiveCircuitExecutor:
         )
 
         states = circuit_def.get("states", {})
-        max_transitions = 20  # Safety limit
+        max_transitions = runtime_config.limits.max_circuit_transitions
         syscall_count = 0
 
         # Clear any previous violations
@@ -1099,9 +1110,10 @@ class MetaCircuitManager:
         self.recovery_attempts: List[ErrorRecoveryAttempt] = []
 
         # Config from TASK_LEDGER_V1 circuit definition
-        self.reflection_interval_transitions = 3
-        self.stuck_threshold_same_state = 3
-        self.max_retry_attempts = 5
+        runtime_config = _get_runtime_config()
+        self.reflection_interval_transitions = runtime_config.circuit_recovery.reflection_interval
+        self.stuck_threshold_same_state = runtime_config.circuit_recovery.stuck_threshold
+        self.max_retry_attempts = runtime_config.circuit_recovery.max_retry_attempts
 
         # Execution counter for generating IDs
         self._execution_counter = 0
