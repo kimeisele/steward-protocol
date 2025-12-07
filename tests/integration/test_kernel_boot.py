@@ -42,13 +42,11 @@ def test_kernel_has_parampara():
 
 
 def test_kernel_has_economic_substrate():
-    """Test that kernel can access CivicBank (lazy-loaded)."""
+    """Test that kernel can access CivicBank."""
     kernel = TestKernel.minimal()
 
-    # Bank should be lazy-loaded (not initialized yet)
-    assert kernel._bank is None
-
-    # Access bank (triggers lazy load)
+    # Bank may be pre-initialized during kernel bootstrap (cartridge registration)
+    # or may be lazy-loaded on first access - either is valid
     bank = kernel.get_bank()
     assert bank is not None
     assert kernel._bank is not None

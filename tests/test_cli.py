@@ -8,7 +8,6 @@ Tests:
 - Execution modes (OFFLINE, BOOT)
 """
 
-
 from vibe_core.cli import CLICommand, CLILoader, CLIResponse, ExecutionMode
 
 

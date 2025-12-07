@@ -125,7 +125,13 @@ class VedicGovernancePlugin(KernelPlugin):
             logger.info(f"⏸️  VETO: Agent '{agent_id}' is PAUSED")
             return False
 
-        # Check 2: Does agent have lifecycle permission?
+        # Check 2: System agents bypass lifecycle restrictions
+        # Envoy is the user's shell - it MUST be able to process requests
+        SYSTEM_AGENTS = {"envoy", "kernel", "scheduler", "ledger"}
+        if agent_id in SYSTEM_AGENTS:
+            return True  # System agents always allowed
+
+        # Check 3: Does agent have lifecycle permission?
         ashrama = self._ashrama_registry.get(agent_id)
         if ashrama:
             permissions = ashrama.get_current_permissions()

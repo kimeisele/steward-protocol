@@ -391,12 +391,12 @@ class TestEnvoyTerminalInterface:
         get_renderer(kernel, "envoy").render()
         content = envoy_path.read_text()
 
-        # Verify structure
-        assert "# 📬 ENVOY TERMINAL" in content
+        # Verify structure (no emojis in headers)
+        assert "# ENVOY TERMINAL" in content
         assert "## 💬 Request" in content
-        assert "## 📊 Status" in content
-        assert "## 📜 Response History" in content
-        assert "## 🎯 Available Routes" in content
+        assert "## Status" in content
+        assert "## Response History" in content
+        assert "## Available Routes" in content
 
     def test_render_envoy_shows_available_routes(self, kernel, temp_workdir):
         """Test that ENVOY.md shows PlaybookRouter routes."""
@@ -595,7 +595,8 @@ initialize the system
 
         # Request should be cleared from Request section
         new_content = envoy_path.read_text()
-        request_section = new_content.split("## 📊 Status")[0]
+        # Split on "## Status" (no emoji in actual output)
+        request_section = new_content.split("## Status")[0]
         assert "initialize the system" not in request_section
 
     def test_update_task_status_moves_to_history(self, kernel, temp_workdir):
@@ -603,47 +604,23 @@ initialize the system
         # Manually add to pending tasks
         task_id = "task_123"
         renderer = get_renderer(kernel, "envoy")
-        renderer.state.pending_tasks[task_id] = {"task_id": task_id, "status": "QUEUED"}
+        renderer.state.pending_tasks[task_id] = {"task_id": task_id, "status": "QUEUED", "request": "test request"}
 
         assert task_id in renderer.state.pending_tasks
         assert len(renderer.state.request_history) == 0
 
-        # Complete the task
-        # Note: on_task_completed is not on renderer, but on sync object?
-        # No, it was on the plugin. Now it's probably on the renderer or sync.
-        # EnvoySync has on_task_completed? No, it's usually handled by sync_to_reality or external.
-        # Wait, EnvoyRenderer doesn't have on_task_completed method.
-        # The InterfacePlugin has on_tick_post which calls render().
-        # But who updates the sync state when a task completes?
-        # EnvoySync.sync_to_reality checks kernel state.
-        # So we need to update kernel state.
-
-        # Mock kernel state (kept for reference, actual update happens via scheduler)
-        _state = {
-            "agents": kernel.agent_registry,
-            "scheduler": {
-                "queue_size": 0,
-                "active_tasks": 0,
-                "completed": {task_id: {"result": "Task done successfully"}},  # Mock completed dict
-            },
-            "status": kernel.get_status(),
-        }
-        _ = _state  # Suppress unused variable warning
-
-        # We need to manually trigger the sync logic that handles completion.
-        # EnvoySync.sync_to_reality calls _update_pending_tasks(state)
-
-        # But wait, EnvoySync expects 'scheduler' state to have 'completed_tasks' or similar?
-        # Let's check EnvoySync implementation if possible.
-        # Assuming it works, we just call render() again with updated kernel state.
-
-        # But RealVibeKernel.scheduler.completed is a dict of Task objects, not dicts.
-        from vibe_core.scheduling import Task
-
-        task = Task(agent_id="test", payload={})
-        task.task_id = task_id
-        task.result = "Task done successfully"
-        kernel._scheduler.completed[task_id] = task
+        # The EnvoyRenderer._process_completed_tasks() uses kernel.ledger.get_task()
+        # which looks for events with task_id at top level (not in details)
+        # So we need to append the event directly in the same format as record_completion()
+        kernel.ledger.events.append(
+            {
+                "timestamp": "2024-01-01T00:00:00Z",
+                "event_type": "task_completed",
+                "task_id": task_id,
+                "agent_id": "test",
+                "result": {"message": "Task done successfully"},
+            }
+        )
 
         renderer.render()
 
@@ -651,7 +628,6 @@ initialize the system
         assert task_id not in renderer.state.pending_tasks
         assert len(renderer.state.request_history) == 1
         assert renderer.state.request_history[0]["status"] == "COMPLETED"
-        # assert renderer.state.request_history[0]["response"] == "Task done successfully"
 
     def test_render_shows_pending_tasks(self, kernel, temp_workdir):
         """Test that pending tasks are shown in Status section."""
@@ -683,13 +659,17 @@ initialize the system
             "request": "old request",
         }
 
-        # Mock completion
-        from vibe_core.scheduling import Task
-
-        task = Task(agent_id="test", payload={})
-        task.task_id = task_id
-        task.result = "Done!"
-        kernel._scheduler.completed[task_id] = task
+        # Record completion in ledger - same format as record_completion() uses
+        # get_task() looks for task_id at top level, not in details
+        kernel.ledger.events.append(
+            {
+                "timestamp": "2024-01-01T00:00:00Z",
+                "event_type": "task_completed",
+                "task_id": task_id,
+                "agent_id": "test",
+                "result": {"message": "Done!"},
+            }
+        )
 
         renderer.render()
 

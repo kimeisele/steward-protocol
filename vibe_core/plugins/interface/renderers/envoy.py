@@ -66,31 +66,57 @@ class EnvoyRenderer(BaseRenderer):
         happens in on_tick_pre via render(). This method only
         generates the output content for the KING to write.
         """
-        # Process any completed tasks first
-        self._process_completed_tasks()
-
-        # Process user input from ENVOY.md
+        # Process user input from ENVOY.md FIRST
+        # This may add new tasks to pending_tasks
         self._sync_from_file()
+
+        # THEN process completed tasks
+        # This moves completed tasks from pending to history
+        self._process_completed_tasks()
 
         # Return content for KING to write
         return self._generate_content()
 
     def _process_completed_tasks(self) -> None:
-        """Process completed tasks and update state."""
-        if hasattr(self.kernel, "scheduler") and hasattr(self.kernel.scheduler, "completed"):
-            completed_tasks = self.kernel.scheduler.completed
-            for task_id in list(self.state.pending_tasks.keys()):
-                if task_id in completed_tasks:
-                    task = completed_tasks[task_id]
-                    error = getattr(task, "error", None)
-                    result_val = getattr(task, "result", None)
+        """Process completed tasks and update state.
 
-                    status = "COMPLETED" if not error else "FAILED"
-                    response = str(result_val) if not error else str(error)
+        Uses the kernel ledger to check for task completion events,
+        since the kernel writes to ledger (not scheduler.completed).
+        """
+        if not hasattr(self.kernel, "ledger"):
+            return
 
-                    self.sync.update_task_status(
-                        task_id, status, response, self.state.pending_tasks, self.state.request_history
+        for task_id in list(self.state.pending_tasks.keys()):
+            # Query ledger for task status
+            event = self.kernel.ledger.get_task(task_id)
+            if not event:
+                continue
+
+            event_type = event.get("event_type", "")
+
+            if event_type == "task_completed":
+                result_val = event.get("result", {})
+                # Extract response from result dict - try common fields
+                if isinstance(result_val, dict):
+                    response = (
+                        result_val.get("message")
+                        or result_val.get("summary")
+                        or result_val.get("response")
+                        or result_val.get("status")
+                        or "Done"
                     )
+                else:
+                    response = str(result_val) if result_val else "Done"
+
+                self.sync.update_task_status(
+                    task_id, "COMPLETED", response, self.state.pending_tasks, self.state.request_history
+                )
+
+            elif event_type == "task_failed":
+                error = event.get("error", "Unknown error")
+                self.sync.update_task_status(
+                    task_id, "FAILED", str(error), self.state.pending_tasks, self.state.request_history
+                )
 
     def _sync_from_file(self) -> None:
         """Read and process user commands from ENVOY.md."""
@@ -135,12 +161,12 @@ class EnvoyRenderer(BaseRenderer):
         """Generate ENVOY.md content."""
         lines = ["# ENVOY TERMINAL", ""]
 
-        # Request Section
+        # Request Section - MUST match envoy_sync.py pattern "## 💬 Request"
         lines.extend(
             [
-                "## Request",
+                "## 💬 Request",
                 "",
-                "> Write your request here.",
+                "> Write your request here (one per line).",
                 "",
                 "_No pending request. Write your request above this line._",
                 "",
