@@ -499,8 +499,13 @@ class EnvoyPlugin(KernelPlugin):
         This replaces the legacy PlaybookRouter + MilkOceanRouter with a
         single unified routing and execution system.
 
+        Now uses LayeredRouter for intelligent 3-layer routing:
+        - Layer 1: Exact match (circuit.intent_patterns)
+        - Layer 2: Semantic match (semantic_grounding.intent_patterns)
+        - Layer 3: Context-aware (Ephemeral + Knowledge Graph)
+
         Fixes:
-        - BREAK 1: Dual Routing -> Single UnifiedRouter
+        - BREAK 1: Dual Routing -> Single UnifiedRouter (powered by LayeredRouter)
         - BREAK 2: Path Uncertainty -> Decision at routing time
         - BREAK 4: Lazy Init -> Eager initialization
         - BREAK 5: Result Mismatch -> Unified ExecutionResult
@@ -508,14 +513,18 @@ class EnvoyPlugin(KernelPlugin):
         try:
             from vibe_core.runtime.unified_execution import UnifiedExecutor, UnifiedRouter
 
-            # Create router with circuit knowledge
+            # Create router with kernel (LayeredRouter created internally)
             self._unified_router = UnifiedRouter(self._kernel)
+
+            # Inject kernel to initialize LayeredRouter with circuits and dependencies
+            self._unified_router.inject_kernel(self._kernel)
 
             # Create executor with eager initialization and ephemeral storage
             # (OPUS Phase 2: dependency injection, not global singleton)
             self._unified_executor = UnifiedExecutor(self._kernel, ephemeral=self._ephemeral)
 
             logger.info("📬 OPUS Runtime initialized (UnifiedRouter + UnifiedExecutor)")
+            logger.info("📬 LayeredRouter active (3-layer cascade: exact, semantic, context)")
         except Exception as e:
             logger.error(f"📬 Failed to init OPUS Runtime: {e}")
             self._unified_router = None
