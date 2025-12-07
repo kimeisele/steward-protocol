@@ -26,6 +26,19 @@ from typing import Any, Dict, List, Tuple
 logger = logging.getLogger("PROCESS_MANAGER")
 
 
+def _get_runtime_config():
+    """Get runtime config with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config().runtime
+    except Exception:
+        # Fallback for standalone/testing
+        from vibe_core.phoenix.sections.runtime.section_main import RuntimeConfig
+
+        return RuntimeConfig()
+
+
 class ProcessStatus(Enum):
     INIT = "init"
     RUNNING = "running"
@@ -34,8 +47,14 @@ class ProcessStatus(Enum):
     QUARANTINED = "quarantined"
 
 
-# SECURITY: Max message size to prevent pipe deadlock (1MB)
-MAX_MESSAGE_SIZE = 1 * 1024 * 1024
+# SECURITY: Max message size to prevent pipe deadlock (from config)
+def _get_max_message_size():
+    """Get max message size from config."""
+    runtime_config = _get_runtime_config()
+    return runtime_config.limits.max_message_size
+
+
+MAX_MESSAGE_SIZE = _get_max_message_size()
 
 
 @dataclass
@@ -217,10 +236,11 @@ class ProcessManager:
     - Restart crashed agents
     """
 
-    MAX_RESTARTS = 3
-
     def __init__(self):
         self.processes: Dict[str, AgentProcessInfo] = {}
+        # Get max restarts from config
+        runtime_config = _get_runtime_config()
+        self.MAX_RESTARTS = runtime_config.limits.max_agent_restarts
         multiprocessing.set_start_method("spawn", force=True)  # Safer for macOS/Linux
 
     def spawn_agent(
