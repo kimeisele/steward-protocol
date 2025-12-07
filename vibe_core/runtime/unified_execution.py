@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+from vibe_core.runtime.layered_router import LayeredRouter, RouteResult
+
 logger = logging.getLogger("UNIFIED_EXECUTION")
 
 
@@ -188,12 +190,18 @@ class UnifiedRouter:
     - PlaybookRouter (pattern matching)
     - MilkOceanRouter (gating)
 
+    Now powered by LayeredRouter for intelligent 3-layer routing.
     Decision is made ONCE at routing time, not during execution.
     """
 
     def __init__(self, kernel: Optional["RealVibeKernel"] = None):
         self._kernel = kernel
         self._circuits: Dict[str, Dict[str, Any]] = {}
+
+        # Initialize LayeredRouter
+        self._layered = LayeredRouter(kernel=kernel)
+
+        # Legacy fast commands (merged into Layer 1)
         self._fast_commands: Dict[str, str] = {
             "status": "SYSTEM_STATUS_V2",
             "help": "HELP_COMMAND",
@@ -212,47 +220,42 @@ class UnifiedRouter:
         if hasattr(kernel, "envoy"):
             self._circuits = getattr(kernel.envoy, "_circuits", {})
 
+        # Inject into LayeredRouter
+        self._layered.inject_kernel(kernel)
+
     def route(self, user_input: str, source: str = "envoy") -> ExecutionRequest:
         """
         Route user input to appropriate execution path.
 
-        Decision made ONCE here, not changed during execution.
+        Decision made ONCE here via LayeredRouter.
         """
+        # Use LayeredRouter for intelligent routing
+        route_result = self._layered.route(user_input)
+
+        # Convert RouteResult to ExecutionRequest
         request = ExecutionRequest(user_input=user_input, source=source)
 
-        # Normalize input
-        normalized = user_input.strip().lower()
+        # Map LayeredRouter layers to ExecutionPath
+        if route_result.layer in ("exact", "exact_prefix"):
+            request.mark_routed(ExecutionPath.FAST_COMMAND, route_result.circuit_id, route_result.confidence)
+            logger.info(
+                f"[ROUTER] {route_result.layer} match: {route_result.circuit_id} "
+                f"(confidence={route_result.confidence:.2f})"
+            )
+        elif route_result.layer in ("semantic", "context"):
+            request.mark_routed(ExecutionPath.CIRCUIT, route_result.circuit_id, route_result.confidence)
+            logger.info(
+                f"[ROUTER] {route_result.layer} match: {route_result.circuit_id} "
+                f"(confidence={route_result.confidence:.2f})"
+            )
+        else:
+            request.mark_routed(ExecutionPath.FALLBACK, route_result.circuit_id, route_result.confidence)
+            logger.info(f"[ROUTER] Fallback: {route_result.circuit_id}")
 
-        # 1. Check fast commands first
-        for cmd, circuit_id in self._fast_commands.items():
-            if normalized == cmd or normalized.startswith(f"{cmd} "):
-                request.mark_routed(ExecutionPath.FAST_COMMAND, circuit_id, confidence=1.0)
-                logger.info(f"[ROUTER] Fast command: {cmd} -> {circuit_id}")
-                return request
+        # Store extracted params for executor
+        request.phase_results["extracted_params"] = route_result.extracted_params
 
-        # 2. Check circuit intent patterns
-        circuit_match = self._match_circuit(normalized)
-        if circuit_match:
-            request.mark_routed(ExecutionPath.CIRCUIT, circuit_match, confidence=0.9)
-            logger.info(f"[ROUTER] Circuit match: {circuit_match}")
-            return request
-
-        # 3. Default to SYSTEM_STATUS for now (could add playbook matching later)
-        request.mark_routed(ExecutionPath.FALLBACK, "SIMPLE_QUERY", confidence=0.5)
-        logger.info("[ROUTER] Fallback: SIMPLE_QUERY")
         return request
-
-    def _match_circuit(self, normalized_input: str) -> Optional[str]:
-        """Match input against circuit intent patterns"""
-        for circuit_id, circuit_data in self._circuits.items():
-            circuit_def = circuit_data.get("circuit", {})
-            patterns = circuit_def.get("intent_patterns", [])
-
-            for pattern in patterns:
-                if pattern.lower() in normalized_input:
-                    return circuit_id
-
-        return None
 
     def check_gate(self, request: ExecutionRequest) -> MilkOceanGate:
         """
@@ -268,6 +271,11 @@ class UnifiedRouter:
 
         request.gate_decision = MilkOceanGate.ALLOW
         return MilkOceanGate.ALLOW
+
+    @property
+    def kernel(self) -> Optional["RealVibeKernel"]:
+        """Expose kernel for access by tests and other code."""
+        return self._kernel
 
 
 # =============================================================================
