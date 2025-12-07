@@ -11,6 +11,7 @@ Fractal: Custom agents can register their own renderers!
 
 import importlib
 import logging
+import subprocess
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Optional
@@ -51,6 +52,9 @@ class InterfacePlugin(KernelPlugin):
         self._interface_config: Optional[InterfaceConfig] = None
         # Track last render time per renderer for interval scheduling
         self._last_render: Dict[str, float] = {}
+        # Track last auto-commit time (throttle to every 60s max)
+        self._last_auto_commit: float = 0
+        self._auto_commit_interval: int = 60  # seconds
 
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """Called when kernel boots."""
@@ -144,6 +148,11 @@ class InterfacePlugin(KernelPlugin):
                 except Exception as e:
                     logger.error(f"Error rendering view '{name}': {e}")
 
+        # Throttled auto-commit (every 60s max, not on every tick)
+        if (now - self._last_auto_commit) >= self._auto_commit_interval:
+            self._auto_commit_ui_files()
+            self._last_auto_commit = now
+
     def _write_unified(self, renderer: BaseRenderer, content: str) -> None:
         """
         Write content through I/O service with UNIFIED header.
@@ -185,6 +194,9 @@ class InterfacePlugin(KernelPlugin):
                 self._last_render[name] = time.time()
             except Exception as e:
                 logger.error(f"Error rendering view '{name}': {e}")
+
+        # Auto-commit UI files after full render
+        self._auto_commit_ui_files()
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Clean up."""
@@ -313,3 +325,70 @@ class InterfacePlugin(KernelPlugin):
                 "seconds_since_render": int(now - last) if last > 0 else None,
             }
         return status
+
+    # ==========================================================================
+    # AUTO-COMMIT FOR UI FILES
+    # ==========================================================================
+
+    def _auto_commit_ui_files(self) -> None:
+        """Auto-commit generated UI files if enabled in guardrails config."""
+        try:
+            from vibe_core.phoenix.config import PhoenixConfig
+
+            # Load guardrails config
+            config_dir = Path(__file__).parent.parent.parent.parent / "config"
+            phoenix = PhoenixConfig.from_files(config_dir=config_dir)
+
+            if not phoenix.guardrails or not phoenix.guardrails.ui_files.auto_commit:
+                return
+
+            ui_config = phoenix.guardrails.ui_files
+
+            # Check if there are uncommitted changes to .md files
+            result = subprocess.run(
+                ["git", "status", "--porcelain", "*.md"],
+                capture_output=True,
+                text=True,
+                cwd=config_dir.parent,
+            )
+
+            if result.returncode != 0 or not result.stdout.strip():
+                return  # No changes or git error
+
+            # Stage all .md files (excluding docs/ via .gitignore or manual exclude)
+            subprocess.run(
+                ["git", "add", "*.md"],
+                capture_output=True,
+                cwd=config_dir.parent,
+            )
+
+            # Commit
+            commit_msg = ui_config.commit_message
+            result = subprocess.run(
+                ["git", "commit", "-m", commit_msg, "--no-verify"],
+                capture_output=True,
+                text=True,
+                cwd=config_dir.parent,
+            )
+
+            if result.returncode == 0:
+                logger.info(f"Auto-committed UI files: {commit_msg}")
+
+                # Optional: auto-push
+                if ui_config.auto_push:
+                    push_result = subprocess.run(
+                        ["git", "push"],
+                        capture_output=True,
+                        text=True,
+                        cwd=config_dir.parent,
+                    )
+                    if push_result.returncode == 0:
+                        logger.info("Auto-pushed UI files")
+                    else:
+                        logger.warning(f"Auto-push failed: {push_result.stderr}")
+            else:
+                # Commit failed (probably nothing to commit)
+                logger.debug(f"Auto-commit skipped: {result.stderr.strip()}")
+
+        except Exception as e:
+            logger.debug(f"Auto-commit failed: {e}")

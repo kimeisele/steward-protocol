@@ -12,7 +12,7 @@ Guard Hierarchy:
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 
 class GuardrailMode(str, Enum):
@@ -90,6 +90,33 @@ class EnvironmentGuardrails:
 
 
 @dataclass
+class UIFilesConfig:
+    """Auto-commit configuration for generated UI files."""
+
+    auto_commit: bool = True
+    auto_push: bool = False
+    commit_message: str = "auto: Update generated UI files"
+    patterns: List[str] = field(default_factory=lambda: ["*.md", "!docs/**"])
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "auto_commit": self.auto_commit,
+            "auto_push": self.auto_push,
+            "commit_message": self.commit_message,
+            "patterns": self.patterns,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "UIFilesConfig":
+        return cls(
+            auto_commit=data.get("auto_commit", True),
+            auto_push=data.get("auto_push", False),
+            commit_message=data.get("commit_message", "auto: Update generated UI files"),
+            patterns=data.get("patterns", ["*.md", "!docs/**"]),
+        )
+
+
+@dataclass
 class GuardrailsConfig:
     """
     Complete guardrails configuration.
@@ -109,12 +136,14 @@ class GuardrailsConfig:
     git: GitGuardrails = field(default_factory=GitGuardrails)
     tests: TestGuardrails = field(default_factory=TestGuardrails)
     environment: EnvironmentGuardrails = field(default_factory=EnvironmentGuardrails)
+    ui_files: UIFilesConfig = field(default_factory=UIFilesConfig)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "git": self.git.to_dict(),
             "tests": self.tests.to_dict(),
             "environment": self.environment.to_dict(),
+            "ui_files": self.ui_files.to_dict(),
         }
 
     @classmethod
@@ -123,4 +152,5 @@ class GuardrailsConfig:
             git=GitGuardrails.from_dict(data.get("git", {})),
             tests=TestGuardrails.from_dict(data.get("tests", {})),
             environment=EnvironmentGuardrails.from_dict(data.get("environment", {})),
+            ui_files=UIFilesConfig.from_dict(data.get("ui_files", {})),
         )
