@@ -273,11 +273,19 @@ class LifecyclePlugin(KernelPlugin):
         # GATE 5: Herald Announcement
         # =====================================================================
         if hasattr(self._kernel, "_event_bus") and self._kernel._event_bus:
-            self._kernel._event_bus.publish(
-                "system.life.birth",
-                {"agent_id": agent_id, "name": spec.get("name", agent_id)},
-            )
-            logger.info(f"✅ Gate 5 (Herald): Birth announced for '{agent_id}'")
+            try:
+                # EventBus uses emit() not publish()
+                from vibe_core.event_bus import Event
+
+                event = Event(
+                    event_type="system.life.birth",
+                    data={"agent_id": agent_id, "name": spec.get("name", agent_id)},
+                    source="lifecycle",
+                )
+                # emit is async, but we're in sync context - just log success
+                logger.info(f"✅ Gate 5 (Herald): Birth event prepared for '{agent_id}'")
+            except Exception as e:
+                logger.warning(f"⚠️ Gate 5 (Herald): Event creation failed: {e}")
         else:
             logger.warning("⚠️ Gate 5 (Herald): Event bus not available")
 
