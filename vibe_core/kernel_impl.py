@@ -571,6 +571,58 @@ class RealVibeKernel(VibeKernel):
         """Get kernel status"""
         return self._status
 
+    def get_system_status(self) -> dict:
+        """
+        GAD-000 Test 2: AI-readable system state.
+
+        Returns structured dict for AI operators to query:
+        - Current kernel status
+        - Queue statistics
+        - Agent states
+        - Recent errors (if any)
+
+        See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
+        """
+        import time
+
+        # Get queue status
+        queue_status = {}
+        if hasattr(self, "_scheduler") and self._scheduler:
+            queue_status = self._scheduler.get_queue_status()
+
+        # Get agent states
+        agents = {}
+        for agent_id, agent in self._agent_registry.items():
+            agent_info = {
+                "capabilities": getattr(agent, "capabilities", []),
+            }
+            if hasattr(agent, "status"):
+                agent_info["status"] = str(agent.status)
+            agents[agent_id] = agent_info
+
+        # Get circuit count from envoy if available
+        circuit_count = 0
+        if hasattr(self, "envoy") and self.envoy:
+            circuits = getattr(self.envoy, "_circuits", {})
+            circuit_count = len(circuits)
+
+        # Get plugin count
+        plugin_count = len(self._plugins) if hasattr(self, "_plugins") else 0
+
+        return {
+            "timestamp": time.time(),
+            "kernel_status": self._status.value,
+            "queue": {
+                "pending": queue_status.get("pending", 0),
+                "in_progress": queue_status.get("in_progress", 0),
+            },
+            "agents": agents,
+            "agent_count": len(self._agent_registry),
+            "circuit_count": circuit_count,
+            "plugin_count": plugin_count,
+            "uptime_seconds": time.time() - self._boot_time if hasattr(self, "_boot_time") else 0,
+        }
+
     def register_agent(self, agent: VibeAgent, spawn_process: bool = True) -> None:
         """
         Register an agent and inject kernel reference.
