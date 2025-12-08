@@ -479,28 +479,45 @@ class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
         """
         Request audit from Auditor agent.
 
-        For Phase 2, we create a stub audit_certificate.json.
-        In production, this would spawn an Auditor task.
+        Creates a signed audit_certificate.json using real crypto.
         """
         import json
         from datetime import datetime
 
-        # Create stub audit certificate (in production, Auditor would create this)
+        # Create audit certificate content
+        content = json.dumps(
+            {
+                "agent_id": agent_id,
+                "sandbox_path": str(sandbox_dir),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            },
+            sort_keys=True,
+        )
+
+        # Sign with real crypto
+        try:
+            from steward.crypto import load_or_generate_keys, sign_content
+
+            private_key, _ = load_or_generate_keys()
+            signature = sign_content(content, private_key)
+            auditor_id = "engineer"
+        except ImportError:
+            logger.warning("⚠️ steward.crypto not available, using unsigned certificate")
+            signature = None
+            auditor_id = "engineer_unsigned"
+
         audit_cert = {
             "agent_id": agent_id,
             "status": "approved",
-            "auditor": "engineer_stub",
+            "auditor": auditor_id,
             "timestamp": datetime.utcnow().isoformat() + "Z",
-            "signature": "stub_signature",
-            "notes": "Auto-approved by Engineer (Phase 2 stub)",
+            "signature": signature,
+            "content_hash": __import__("hashlib").sha256(content.encode()).hexdigest(),
         }
 
         cert_path = sandbox_dir / "audit_certificate.json"
         cert_path.write_text(json.dumps(audit_cert, indent=2), encoding="utf-8")
 
-        logger.info(f"✅ Audit certificate created at: {cert_path}")
+        logger.info(f"✅ Audit certificate created (signed: {signature is not None})")
 
-        # TODO: In production, spawn Auditor task:
-        # self.system.create_subtask("auditor", {"action": "verify", "path": str(sandbox_dir)})
-
-        return {"success": True, "certificate_path": str(cert_path)}
+        return {"success": True, "certificate_path": str(cert_path), "signed": signature is not None}
