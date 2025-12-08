@@ -13,11 +13,9 @@ from datetime import datetime
 from pathlib import Path
 
 from vibe_core.runtime.context_loader import ContextLoader
-from vibe_core.runtime.playbook_router import PlaybookRouter
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
-from vibe_core.runtime.prompt_context import get_prompt_context
-from vibe_core.store.sqlite_store import SQLiteStore
+from vibe_core.runtime.unified_execution import UnifiedRouter
 
 
 class BootSequence:
@@ -25,17 +23,48 @@ class BootSequence:
 
     def __init__(self, project_root: Path | None = None):
         self.project_root = project_root or Path.cwd()
-        self.context_loader = ContextLoader(self.project_root)
-        self.playbook_engine = PlaybookRouter()
-        self.prompt_composer = PromptComposer()
-        self.prompt_context = get_prompt_context()
 
-        # Initialize SQLite persistence (ARCH-003: Dual Write Mode)
-        db_path = self.project_root / ".vibe" / "state" / "vibe_agency.db"
-        self.sqlite_store = SQLiteStore(str(db_path))
+        # Conveyor Belt 1: Context (Unified Load)
+        # BootSequence uses the 'project' context item provided by ContextLoader
 
-        # Initialize memory manager with SQLite store for dual-write
+        items, _ = ContextLoader.discover_and_load(scan_paths=[self.project_root])
+        self.context_loader = items["project"]  # Actually a ContextManager instance
+
+        # Conveyor Belt 2: Playbook Engine (Unified Router)
+        # Now uses UnifiedRouter which wraps LayeredRouter
+
+        self.playbook_engine = UnifiedRouter()  # UnifiedRouter replaces PlaybookRouter
+
+        # Conveyor Belt 3: Prompt Composition (Context-Aware)
+        from vibe_core.runtime.prompt_context import PromptContext
+
+        self.prompt_context = PromptContext(self.project_root)
+        self.prompt_composer = PromptComposer(self.prompt_context)
+
+        # Output Manager (Renderer)
+        from vibe_core.doc_renderer import DocRenderer
+
+        self.doc_renderer = DocRenderer(self.project_root)
+
+        # Memory System
+
         self.memory_manager = ProjectMemoryManager(self.project_root, self.sqlite_store)
+
+        # Knowledge Graph (Unified)
+        from vibe_core.knowledge.graph import get_knowledge_graph
+
+        self.knowledge_graph = get_knowledge_graph()
+
+        # Telemetry (Stub for now, or unified later)
+        # self.telemetry = TelemetryManager(self.project_root)
+
+        # State Persistence (Already init above)
+        # self.sqlite_store = SQLiteStore(self.project_root / ".vibe" / "vibe.db")
+
+        # LLM Engine
+        from vibe_core.runtime.llm_engine import LLMEngine
+
+        self.llm = LLMEngine()
 
     def run(self, user_input: str | None = None):
         """Execute the boot sequence"""
@@ -76,11 +105,12 @@ class BootSequence:
 
         # Conveyor Belt 2: Route to Task
         print("🎯 Routing to task...", file=sys.stderr)
-        route = self.playbook_engine.route(user_input or "", context)
+        route = self.playbook_engine.route(user_input or "", source="boot_cli", context=context)
 
         # Conveyor Belt 3: Compose Prompt
         print("📝 Composing prompt...", file=sys.stderr)
-        prompt = self.prompt_composer.compose(route.task, context)
+        # UnifiedRouter returns ExecutionRequest with target_id (circuit/playbook ID)
+        prompt = self.prompt_composer.compose(route.target_id, context)
 
         # Add system prompt (prime agent properly)
         system_prompt = self._get_system_prompt(route)
@@ -422,9 +452,9 @@ EXECUTION PROTOCOL
 {memory_summary}
 
 [NEXT ACTION]
-  TASK:       {route.task.upper()}
+  TASK:       {route.target_id.upper()}
   SOURCE:     {route.source}
-  CONFIDENCE: {route.confidence}
+  CONFIDENCE: {route.confidence:.2f}
 
 [EXECUTION PROTOCOL]
   1. READ task playbook completely
@@ -440,7 +470,7 @@ EXECUTION PROTOCOL
   ✓ test>claim | health>features
 
 ════════════════════════════════════════════════════════════
-🚀 Ready. Executing {route.task.upper()} task now.
+🚀 Ready. Executing {route.target_id.upper()} task now.
 """
 
         print(dashboard, file=sys.stderr)

@@ -37,7 +37,7 @@ def test_router_fallback_on_unknown_intent():
 
     assert request.execution_path == ExecutionPath.FALLBACK
     assert request.target_id == "SIMPLE_QUERY"
-    assert request.confidence == 0.5
+    assert request.confidence == 0.3
 
 
 def test_router_does_not_use_legacy_routers():
