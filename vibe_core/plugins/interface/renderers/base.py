@@ -91,7 +91,13 @@ class BaseRenderer(ABC):
         """
         import hashlib
 
-        new_content = self.generate_content()
+        # Law 2 (Error Boundary) - Safety check at generating content
+        try:
+            new_content = self.generate_content()
+        except Exception as e:
+            logger.error(f"{self.name}: Failed to generate content: {e}")
+            raise  # Re-raise to be caught by plugin_main
+
         if new_content is None:
             return
 
@@ -103,8 +109,9 @@ class BaseRenderer(ABC):
             return
 
         # Content changed, merge and write
-        self.merge_and_write(new_content)
-        self._last_content_hash = new_hash
+        # This calls merge_and_write which handles Law 1 (Backup)
+        if self.merge_and_write(new_content):
+            self._last_content_hash = new_hash
 
     # =========================================================================
     # CONFIG ACCESS
