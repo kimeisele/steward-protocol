@@ -725,6 +725,27 @@ class RealVibeKernel(VibeKernel):
         agent.system = AgentSystemInterface(self, agent.agent_id)
         logger.info(f"🔌 {agent.agent_id} received system interface (sandbox: {agent.system.get_sandbox_path()})")
 
+        # OPUS-009: PRAKRITI - Load or create agent persona
+        # This gives the agent persistent identity and system prompt
+        persona = self.prakriti.personas.get(agent.agent_id)
+        if not persona:
+            # Create default persona from agent manifest
+            manifest = agent.get_manifest()
+            persona = self.prakriti.personas.create_default(
+                agent_id=agent.agent_id,
+                display_name=manifest.name,
+                dharma=manifest.description,
+            )
+            # Set varna from manifest if available
+            if hasattr(manifest, "varna"):
+                persona.varna = manifest.varna
+            logger.info(f"🧬 Created persona for {agent.agent_id}")
+        else:
+            logger.info(f"🧬 Loaded existing persona for {agent.agent_id}")
+
+        # Attach persona to agent for system prompt access
+        agent.persona = persona
+
         # Phase 2: Spawn Process (deferred if spawn_process=False)
         # LATE BINDING: Use cartridge_path/class_name instead of type(agent)
         if spawn_process:
