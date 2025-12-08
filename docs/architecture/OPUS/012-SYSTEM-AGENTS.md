@@ -6,30 +6,64 @@
 
 ---
 
-## Philosophy
+## The Fractal Pattern (System Devata)
 
-System Agents are the **BRAHMIN** class - they don't just process tasks, they **shape the system itself**.
-
-The fractal insight: A System Agent IS a Plugin IS a Persona IS a Protocol.
+A **System Devata** exists on **three planes simultaneously**:
 
 ```
-┌─────────────────────────────────────────────┐
-│           SYSTEM AGENT = PLUGIN             │
-├─────────────────────────────────────────────┤
-│  PERSONA  │  STATE    │  PROTOCOL           │
-│  (Who)    │  (What)   │  (How)              │
-│           │           │                     │
-│  Identity │  Runtime  │  Syscalls           │
-│  via      │  via      │  Circuits           │
-│  PRAKRITI │  Kernel   │                     │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                    SYSTEM DEVATA = 3 PLANES                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  PLANE 1: PLUGIN           PLANE 2: CARTRIDGE      PLANE 3: PASSPORT│
+│  (Kernel Governance)       (Task Processing)       (Identity)       │
+│                                                                     │
+│  • on_boot()               • process(task)         • steward.json   │
+│  • on_agent_registered()   • manifest_reality()    • constitution_  │
+│  • on_capability_check()   • action handlers         hash           │
+│  • on_task_submit()        • tools/                • capabilities   │
+│                                                                     │
+│  priority: 5-15            LOC: 200-600+           trust score      │
+│  hooks into kernel         executes work           governs identity │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### ENVOY Analysis (The System Shell)
 
-## Current System Agents (16 Cartridges)
+| Plane | Location | Size | Purpose |
+|-------|----------|------|---------|
+| Plugin | `plugins/envoy/plugin_main.py` | 660 LOC | Routes intent, manages unified executor |
+| Cartridge | `cartridges/system/envoy/` | 179KB | Executor, provider, action handlers |
+| Passport | `cartridges/system/envoy/steward.json` | Identity, constitution_hash |
 
-Location: `vibe_core/cartridges/system/`
+**Plugin hooks**: `on_boot`, `on_tick`, `on_shutdown`  
+**Priority**: 15 (after steward_protocol)  
+**Depends on**: `steward_protocol`, `tools`
+
+### STEWARD Analysis (The Protocol Layer)
+
+| Plane | Location | Size | Purpose |
+|-------|----------|------|---------|
+| Plugin | `plugins/steward_protocol/plugin_main.py` | 895 LOC | GATES all agents |
+| Cartridge | **NONE** | - | IS the protocol, not an agent |
+| Passport | **N/A** | - | Governs passports, doesn't need one |
+
+**Plugin hooks**: 7 hooks including `on_agent_pre_register`, `on_capability_check`  
+**Priority**: 5 (boots FIRST)  
+**The GATEKEEPER**: Blocks unregistered agents, verifies constitution oath
+
+### The Insight
+
+STEWARD has NO cartridge because **it is not an agent - it IS the protocol**.  
+ENVOY is BOTH plugin AND cartridge because **it routes AND executes**.
+
+A true **System Devata** like ENGINEER would need:
+- **Plugin**: `plugins/engineer/` for spawning governance hooks
+- **Cartridge**: `cartridges/system/engineer/` ✅ EXISTS (254 LOC)
+- **Passport**: `steward.json` ✅ EXISTS
+
+**ENGINEER is MISSING PLANE 1 (Plugin)**.
 
 | Agent | Purpose | Status |
 |-------|---------|--------|
