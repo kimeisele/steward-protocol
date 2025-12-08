@@ -49,4 +49,5 @@ __all__ = [
     "main",
     "cli_entry",
     "UnifiedCLI",
+    "StewardCLI",
 ]
