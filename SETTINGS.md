@@ -175,6 +175,7 @@ Quick Start: python -m vibe_core.cli boot
 
 
 
+
 > Add commands below (e.g. `- SET kernel.log_level=DEBUG`)
 
 _No pending commands. Add commands above this line._
