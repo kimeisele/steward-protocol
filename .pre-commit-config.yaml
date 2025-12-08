@@ -55,3 +55,20 @@ repos:
 #
 # Pre-commit runs the same checks with --fix where possible.
 # Result: If pre-commit passes, CI will pass.
+
+  # =========================================================================
+  # STEWARD PROTOCOL ENFORCEMENT
+  # =========================================================================
+  # SENIOR_TEST_STABILIZATION_PROTOCOL.md: Ban direct RealVibeKernel() in tests
+  # Must use TestKernel.minimal() or TestKernel.with_plugins() instead
+  - repo: local
+    hooks:
+      - id: no-real-kernel-in-tests
+        name: TestKernel Enforcement
+        entry: 'RealVibeKernel\(\)'
+        language: pygrep
+        files: ^tests/.*\.py$
+        types: [python]
+        # Exclude fixtures.py where TestKernel wraps RealVibeKernel
+        exclude: ^tests/conftest\.py$|fixtures\.py$
+
