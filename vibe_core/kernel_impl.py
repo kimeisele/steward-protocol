@@ -1273,6 +1273,15 @@ class RealVibeKernel(VibeKernel):
         """
         return self._event_bus.get_history(limit=limit, event_type=event_type)
 
+    def get_event_bus_status(self) -> Dict[str, Any]:
+        """
+        Get the current status of the EventBus.
+
+        Returns:
+            Dict containing event bus statistics (total events, subscribers, etc.)
+        """
+        return self._event_bus.get_status()
+
     def get_trace(self, trace_id: str) -> List[Dict[str, Any]]:
         """
         GAD-000 Test 2: Observability.
