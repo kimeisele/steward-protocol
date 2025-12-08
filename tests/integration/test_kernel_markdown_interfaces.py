@@ -96,13 +96,17 @@ def kernel():
     # Start with minimal kernel
     kernel = TestKernel.minimal()
 
-    # Load plugins (we need interface plugin)
+    # Load plugins
     loader = PluginLoader()
     plugins = loader.discover()
 
-    # Filter to only interface and governance plugins
-    wanted = {"interface", "governance"}
-    kernel._plugins = [p for p in plugins if p.plugin_id in wanted]
+    # Include envoy and tools plugins (required for ENVOY tests)
+    wanted = {"interface", "governance", "tools", "envoy"}
+    filtered = [p for p in plugins if p.plugin_id in wanted]
+
+    # Boot in correct order (tools before envoy)
+    boot_order = ["tools", "governance", "interface", "envoy"]
+    kernel._plugins = [p for pid in boot_order for p in filtered if p.plugin_id == pid]
 
     # Boot plugins
     for plugin in kernel._plugins:

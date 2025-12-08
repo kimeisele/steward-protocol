@@ -55,11 +55,17 @@ class OpusRenderer(BaseRenderer):
             self._panels = []
 
     def render(self) -> None:
-        """Render OPUS.md with all panels."""
-        content = self.generate_content()
-        output_path = Path("OPUS.md")
-        output_path.write_text(content)
-        logger.info(f"[OPUS] Rendered to {output_path}")
+        """
+        Render OPUS.md with all panels.
+
+        Uses render_with_dirty_tracking() to:
+        - Law 3: Skip writes if content hasn't changed (hash-based)
+        - Law 1: Create backups before writing
+        - Preserve AI/HUMAN sections via merge_and_write()
+        """
+        # Use helper that includes hash-based dirty tracking
+        self.render_with_dirty_tracking()
+        logger.info("[OPUS] Rendered with dirty tracking and section preservation")
 
     def generate_content(self) -> str:
         """Generate full OPUS.md content."""
