@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from vibe_core.runtime.layered_router import LayeredRouter, RouteResult
+from vibe_core.runtime.layered_router import LayeredRouter
 
 logger = logging.getLogger("UNIFIED_EXECUTION")
 
@@ -214,6 +214,10 @@ class UnifiedRouter:
         if kernel and hasattr(kernel, "envoy"):
             self._circuits = getattr(kernel.envoy, "_circuits", {})
 
+        # Inject fast commands into LayeredRouter's exact index (Layer 1)
+        for cmd, circuit_id in self._fast_commands.items():
+            self._layered._exact_index[cmd] = circuit_id
+
     def inject_kernel(self, kernel: "RealVibeKernel"):
         """Inject kernel (for lazy initialization)"""
         self._kernel = kernel
@@ -223,14 +227,14 @@ class UnifiedRouter:
         # Inject into LayeredRouter
         self._layered.inject_kernel(kernel)
 
-    def route(self, user_input: str, source: str = "envoy") -> ExecutionRequest:
+    def route(self, user_input: str, source: str = "envoy", context: Optional[Dict] = None) -> ExecutionRequest:
         """
         Route user input to appropriate execution path.
 
         Decision made ONCE here via LayeredRouter.
         """
         # Use LayeredRouter for intelligent routing
-        route_result = self._layered.route(user_input)
+        route_result = self._layered.route(user_input, context=context)
 
         # Convert RouteResult to ExecutionRequest
         request = ExecutionRequest(user_input=user_input, source=source)
@@ -276,6 +280,29 @@ class UnifiedRouter:
     def kernel(self) -> Optional["RealVibeKernel"]:
         """Expose kernel for access by tests and other code."""
         return self._kernel
+
+    def list_available_routes(self) -> list[Dict[str, str]]:
+        """
+        List all available routes (circuits).
+
+        GAD-000 Compliance: Allows discovery of system capabilities.
+        """
+        routes = []
+        for circuit_id, circuit_data in self._circuits.items():
+            circuit_def = circuit_data.get("circuit", {})
+            routes.append(
+                {
+                    "name": circuit_id,
+                    "description": circuit_def.get("purpose", "No description available"),
+                    "examples": circuit_def.get("intent_patterns", [])[:3],
+                }
+            )
+
+        # Add fast commands
+        for cmd, intent in self._fast_commands.items():
+            routes.append({"name": cmd, "description": f"Fast command: {intent}", "examples": [cmd]})
+
+        return routes
 
 
 # =============================================================================

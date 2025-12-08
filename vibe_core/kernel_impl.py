@@ -49,8 +49,8 @@ from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
-# ENVOY.md: PlaybookRouter for intent routing (no LLM, pattern matching only)
-from .runtime.playbook_router import PlaybookRouter
+# Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
+from .runtime.unified_execution import create_unified_runtime
 from .scheduling import Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
@@ -91,17 +91,6 @@ except ImportError as e:
 logger = logging.getLogger("VIBE_KERNEL")
 
 
-def _get_config():
-    """Get PhoenixConfig with fallback for standalone usage."""
-    try:
-        from vibe_core.phoenix.config import get_config
-
-        return get_config()
-    except Exception:
-        # Fallback for standalone/testing - return None to use defaults
-        return None
-
-
 # Helper classes: Extracted to reduce kernel size
 # Kernel Operations: Extracted isolated methods
 from .kernel_ops import (
@@ -124,6 +113,17 @@ from .kernel_ops import (
 )
 from .manifest_registry import InMemoryManifestRegistry
 from .scheduling import InMemoryScheduler
+
+
+def _get_config():
+    """Get PhoenixConfig with fallback for standalone usage."""
+    try:
+        from vibe_core.phoenix.config import get_config
+
+        return get_config()
+    except Exception:
+        # Fallback for standalone/testing - return None to use defaults
+        return None
 
 
 class RealVibeKernel(VibeKernel):
@@ -266,8 +266,10 @@ class RealVibeKernel(VibeKernel):
         self._event_bus = get_event_bus()
         logger.info("🎵 Event Bus initialized (pub/sub ready)")
 
-        # Playbook Router for Intent Routing (used by UI Manager)
-        self._playbook_router = PlaybookRouter()
+        # Unified Execution Runtime (Router + Executor)
+        # Replaces legacy PlaybookRouter and MilkOceanRouter
+        self._unified_router, self._unified_executor = create_unified_runtime(self)
+        self._playbook_router = self._unified_router  # Alias for backward compatibility (temporarily)
 
         # PLUGIN SYSTEM (The Avatars of Vishnu)
         # Phase 1: Load and boot all plugins
@@ -652,68 +654,6 @@ class RealVibeKernel(VibeKernel):
             if hasattr(self, "_playbook_router")
             else [],
             "plugins_loaded": [p.plugin_id for p in self._plugins],
-        }
-
-    def get_system_status(self) -> dict:
-        """
-        GAD-000 Test 2: AI-readable system state.
-
-        Returns structured dict for AI operators to query:
-        - Current kernel status
-        - Queue statistics
-        - Agent states
-        - Recent errors (if any)
-
-        See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
-        """
-        import time
-
-        # Get queue status
-        queue_status = {}
-        if hasattr(self, "_scheduler") and self._scheduler:
-            queue_status = self._scheduler.get_queue_status()
-
-        # Get agent states
-        agents = {}
-        for agent_id, agent in self._agent_registry.items():
-            agent_info = {
-                "capabilities": getattr(agent, "capabilities", []),
-            }
-            if hasattr(agent, "status"):
-                agent_info["status"] = str(agent.status)
-            agents[agent_id] = agent_info
-
-        # Get circuit count from envoy if available
-        circuit_count = 0
-        if hasattr(self, "envoy") and self.envoy:
-            circuits = getattr(self.envoy, "_circuits", {})
-            circuit_count = len(circuits)
-
-        # Get plugin count
-        plugin_count = len(self._plugins) if hasattr(self, "_plugins") else 0
-
-        # Calculate completed last minute
-        completed_last_minute = 0
-        if hasattr(self, "ledger"):
-            # This is an approximation as we'd need to query the ledger properly
-            # For now, we rely on scheduler cache if available, or 0
-            pass
-
-        return {
-            "timestamp": time.time(),
-            "kernel_status": self._status.value,
-            "queue": {
-                "pending": queue_status.get("pending", 0),
-                "in_progress": queue_status.get("in_progress", 0),
-                "completed": queue_status.get("completed", 0),
-                # "completed_last_minute": completed_last_minute, # TODO: Implement efficient ledger query
-            },
-            "agents": agents,
-            "agent_count": len(self._agent_registry),
-            "circuit_count": circuit_count,
-            "plugin_count": plugin_count,
-            "uptime_seconds": time.time() - self._boot_time if hasattr(self, "_boot_time") else 0,
-            "last_error": getattr(self, "_last_error", None),
         }
 
     def register_agent(self, agent: VibeAgent, spawn_process: bool = True) -> None:

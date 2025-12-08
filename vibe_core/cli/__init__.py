@@ -23,6 +23,7 @@ from .protocol import (
     ProgressUpdate,
 )
 from .renderer import CLIRenderer, get_renderer
+from .unified_cli import UnifiedCLI
 
 __all__ = [
     # Protocol
@@ -46,4 +47,5 @@ __all__ = [
     # Entry points
     "main",
     "cli_entry",
+    "UnifiedCLI",
 ]

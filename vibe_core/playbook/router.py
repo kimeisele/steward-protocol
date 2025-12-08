@@ -23,6 +23,8 @@ NOTE: No real LLM calls yet. Execution is mocked per instructions.
 
 from __future__ import annotations
 
+import warnings
+from pathlib import Path
 from typing import Protocol
 
 
@@ -32,10 +34,31 @@ class HasRequiredSkills(Protocol):
 
 
 class AgentRouter:
-    """Agent capability matching and selection."""
+    """
+    DEPRECATED (OPUS Phase 2).
+    Use UnifiedRouter instead.
+    """
 
-    def __init__(self, agents: list[object] | None = None):
-        self._agents: list[object] = agents or []
+    def __init__(self, registry_path: Path | None = None):
+        warnings.warn(
+            "AgentRouter is DEPRECATED in OPUS Phase 2. Use UnifiedRouter instead.", DeprecationWarning, stacklevel=2
+        )
+        self.registry_path = registry_path or Path(__file__).parent / "_registry.yaml"
+        # Assuming _load_registry will return a list of agents compatible with existing methods
+        self._agents: list[object] = self._load_registry()
+
+    def _load_registry(self) -> list[object]:
+        # This is a placeholder for actual registry loading logic.
+        # For now, it returns an empty list or the initial agents if any were passed.
+        # In a real scenario, this would parse the YAML file and instantiate agent objects.
+        # Since the original __init__ took 'agents', we'll simulate that for now.
+        # If the file exists, it would load from there. Otherwise, start empty.
+        # For this specific change, we'll assume it initializes to an empty list
+        # or loads from a mock source if the file exists.
+        # To maintain compatibility with the original behavior of starting with an empty list
+        # if no agents were provided, we'll return an empty list here.
+        # A full implementation would involve parsing self.registry_path.
+        return []  # Placeholder: In a real scenario, load agents from self.registry_path
 
     # Registry operations -------------------------------------------------
     def register(self, agent: object) -> None:

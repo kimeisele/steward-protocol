@@ -9,16 +9,27 @@ Loads project context from multiple sources:
 """
 
 import json
+import logging
 import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
+
+from vibe_core.loaders import ItemMeta, LoaderRegistry, UnifiedLoader
+
+logger = logging.getLogger("CONTEXT.LOADER")
 
 
-class ContextLoader:
-    """Loads project context from multiple sources"""
+class ContextManager:
+    """
+    Manages project context (formerly ContextLoader).
 
-    def __init__(self, project_root: Path | None = None):
+    Acts as the 'Item' loaded by the ContextLoader.
+    """
+
+    def __init__(self, project_root: Path | None = None, config: dict | None = None):
         self.project_root = project_root or Path.cwd()
+        self.config = config or {}
 
     def load(self) -> dict[str, Any]:
         """Load all context sources with robust error handling"""
@@ -315,5 +326,80 @@ class ContextLoader:
         failing = tests.get("failing_count", 0)
         if failing == 0:
             return "✅ All passing"
-        else:
-            return f"❌ {failing} test(s) failing"
+
+
+@dataclass
+class ContextMeta(ItemMeta):
+    """Metadata for context."""
+
+    timestamp: Optional[str] = None
+    sources: List[str] = field(default_factory=list)
+
+
+class ContextLoader(UnifiedLoader):
+    """
+    Unified Loader for Project Context.
+
+    Treats the entire Project as a single 'Context Item'.
+    """
+
+    # === UNIFIED LOADER CONFIG ===
+    item_type = "context"
+    scan_paths = []  # Dynamic, uses project root
+    entry_suffix = "project_manifest.json"
+
+    # === CLASS STATE ===
+    _context_instance: Optional[ContextManager] = None
+
+    @classmethod
+    def discover_and_load(
+        cls,
+        scan_paths: Optional[List[Path]] = None,
+        config: Optional[Dict[str, Any]] = None,
+        force_refresh: bool = False,
+    ) -> Tuple[Dict[str, ContextManager], Dict[str, ContextMeta]]:
+        """
+        Discover and load the Project Context.
+
+        Returns singleton dict: {"project": ContextManager}
+        """
+        if not force_refresh and cls._context_instance:
+            # Re-wrap existing instance
+            return {"project": cls._context_instance}, {}
+
+        project_root = Path.cwd()
+        if scan_paths and len(scan_paths) > 0:
+            project_root = scan_paths[0]
+
+        logger.info(f"[context] Loading context from {project_root}")
+
+        # Instantiate Manager (The 'Item')
+        manager = ContextManager(project_root=project_root, config=config)
+
+        # Load initial state to verify
+        try:
+            context_data = manager.load()
+            timestamp = context_data.get("kernel", {}).get("timestamp")
+
+            meta = ContextMeta(
+                item_id="project",
+                item_type="context",
+                manifest=context_data.get("manifest", {}),
+                manifest_path=project_root / "project_manifest.json",
+                entry_path=project_root,
+                entry_class=ContextManager,
+                loaded_successfully=True,
+                timestamp=timestamp,
+                sources=list(context_data.keys()),
+            )
+
+            cls._context_instance = manager
+            return {"project": manager}, {"project": meta}
+
+        except Exception as e:
+            logger.error(f"[context] Failed to load context: {e}")
+            return {}, {}
+
+
+# Register with LoaderRegistry
+LoaderRegistry.register("context", ContextLoader)

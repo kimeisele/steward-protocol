@@ -34,6 +34,11 @@ class PlaybookRouter:
     """
 
     def __init__(self, registry_path: Path | None = None, milk_ocean_router=None):
+        import warnings
+
+        warnings.warn(
+            "PlaybookRouter is DEPRECATED in OPUS-005. Use UnifiedRouter instead.", DeprecationWarning, stacklevel=2
+        )
         self.registry_path = registry_path or Path(__file__).parent.parent / "playbook" / "_registry.yaml"
         self.registry = self._load_registry()  # Keep original registry loading
         self.matrix_rules = self._load_matrix()  # Add matrix rules initialization
