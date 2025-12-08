@@ -123,6 +123,7 @@ markers = [
 filterwarnings = [
     "error::pytest.PytestReturnNotNoneWarning",  # Tests MUST assert, not return
     "ignore::DeprecationWarning:pydantic.*:",    # Ignore Pydantic deprecations
+    "ignore:.*_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET.*",  # Ignore pytest-asyncio 0.23 warning
 ]
 
 # Logging

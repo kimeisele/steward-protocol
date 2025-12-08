@@ -19,7 +19,7 @@ Quick Start: python -m vibe_core.cli boot
    (Core)  (Economy) (Apps)
      │        │        │
     ...      ...      ...
-    
+
   Total Active Nodes: 1
 ```
 
