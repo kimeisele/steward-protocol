@@ -149,6 +149,11 @@ class InterfacePlugin(KernelPlugin):
         - Renderers are SLAVES (content generators only)
         - All writes go through InterfacePlugin with UNIFIED headers
 
+        Law 2 (Error Boundaries):
+        - Each renderer wrapped in try/except
+        - One bad renderer doesn't kill the entire UI system
+        - Error placeholder written instead of crash
+
         Skipped in test mode to prevent file overwrites.
         """
         if self._is_test_mode():
@@ -168,12 +173,65 @@ class InterfacePlugin(KernelPlugin):
                         renderer.render()
                     self._last_render[name] = now
                 except Exception as e:
-                    logger.error(f"Error rendering view '{name}': {e}")
+                    logger.error(f"Renderer '{name}' failed: {e}")
+                    # Law 2: Write error placeholder instead of crashing
+                    self._render_error_placeholder(name, e)
+                    self._last_render[name] = now
+                    # Continue with other renderers!
 
         # Throttled auto-commit (every 60s max, not on every tick)
         if (now - self._last_auto_commit) >= self._auto_commit_interval:
             self._auto_commit_ui_files()
             self._last_auto_commit = now
+
+    def _render_error_placeholder(self, name: str, error: Exception) -> None:
+        """
+        Law 2: Write error placeholder instead of crashing.
+
+        When a renderer fails, write a human-readable error message
+        to the output file so the user knows what happened.
+        """
+        try:
+            from datetime import datetime
+
+            # Get output path from renderers (if available)
+            renderer = self._renderers.get(name)
+            if not renderer:
+                return
+
+            config = renderer.get_config()
+            if not config:
+                return
+
+            output_path = Path(config.output)
+            error_msg = str(error)[:200]  # Truncate long errors
+
+            error_content = f"""<!--
+UI ERROR: Renderer '{name}' failed
+Error: {error_msg}
+Time: {datetime.utcnow().isoformat()} UTC
+-->
+
+# {name.upper()}.md
+
+**Rendering Error** - System still operational.
+
+The `{name}` renderer encountered an error and could not generate content.
+
+**Error Details:**
+
+```
+{str(error)[:500]}
+```
+
+This is a temporary placeholder. The system will retry on the next render cycle.
+"""
+
+            output_path.write_text(error_content)
+            logger.warning(f"Error placeholder written to {output_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to write error placeholder for '{name}': {e}")
 
     def _write_unified(self, renderer: BaseRenderer, content: str) -> None:
         """
@@ -359,6 +417,84 @@ class InterfacePlugin(KernelPlugin):
                 "seconds_since_render": int(now - last) if last > 0 else None,
             }
         return status
+
+    # ==========================================================================
+    # GAD-000 COMPLIANCE: MACHINE DISCOVERABILITY API
+    # ==========================================================================
+
+    def get_registered_documents(self) -> list:
+        """
+        GAD-000 Test 1: Machine-discoverable document registry.
+
+        Returns list of all documents managed by renderers with their metadata.
+        Allows AI agents to discover what documents exist and their properties.
+        """
+        documents = []
+        for name, renderer in self._renderers.items():
+            config = renderer.get_config()
+            if not config:
+                continue
+
+            sections = []
+            if config.sections:
+                for section in config.sections:
+                    sections.append(
+                        {
+                            "id": section.id,
+                            "owner": section.owner,
+                            "element_type": section.element_type,
+                            "source": section.source,
+                        }
+                    )
+
+            documents.append(
+                {
+                    "id": name,
+                    "path": str(config.output),
+                    "mode": config.mode if hasattr(config, "mode") else "unidirectional",
+                    "interval": config.interval,
+                    "enabled": config.enabled,
+                    "sections": sections,
+                    "renderer_type": type(renderer).__name__,
+                }
+            )
+
+        return documents
+
+    def get_ui_schema(self) -> dict:
+        """
+        GAD-000 Schema: Machine-discoverable UI system configuration.
+
+        Returns the full UI schema including element types, layouts,
+        ownership types, and all registered documents.
+        """
+        element_types = {}
+        layouts = {}
+        ownership_types = {}
+
+        if self._interface_config:
+            element_types = {
+                name: {"settings": et.settings if hasattr(et, "settings") else {}}
+                for name, et in (self._interface_config.element_types or {}).items()
+            }
+            layouts = {
+                name: {"structure": str(layout)} for name, layout in (self._interface_config.layouts or {}).items()
+            }
+            ownership_types = {
+                name: {
+                    "marker_start": ot.marker_start if hasattr(ot, "marker_start") else "",
+                    "marker_end": ot.marker_end if hasattr(ot, "marker_end") else "",
+                }
+                for name, ot in (self._interface_config.ownership_types or {}).items()
+            }
+
+        return {
+            "element_types": element_types,
+            "layouts": layouts,
+            "ownership_types": ownership_types,
+            "renderers": self.get_registered_documents(),
+            "custom_renderers": list(self._interface_config.custom_renderers.keys()) if self._interface_config else [],
+        }
 
     # ==========================================================================
     # AUTO-COMMIT FOR UI FILES
