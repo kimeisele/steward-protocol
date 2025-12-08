@@ -288,3 +288,52 @@ The LayeredRouter fix (commit 6c171b7) resolved the last major wiring issue. The
 - Add explicit `depends_on` to plugin manifests
 - Add boot-time validation of plugin dependencies
 - Consider lazy initialization for expensive components
+
+---
+
+## HAIKU EXECUTION BLOCKS
+
+> **For AI Agent Execution**: Copy-paste these blocks to implement improvements.
+
+### TASK 1: Add depends_on to EnvoyPlugin manifest
+
+```
+FILE: vibe_core/plugins/envoy/manifest.json
+FIND: "priority": 15
+ADD_AFTER:
+    "depends_on": ["tools"],
+    "provides": ["kernel.envoy"],
+VERIFY: python3 -c "import json; m=json.load(open('vibe_core/plugins/envoy/manifest.json')); print('depends_on' in m)"
+```
+
+### TASK 2: Add depends_on to InterfacePlugin manifest
+
+```
+FILE: vibe_core/plugins/interface/manifest.json
+FIND: "priority": 100
+ADD_AFTER:
+    "depends_on": ["envoy"],
+    "provides": ["kernel.interface"],
+VERIFY: python3 -c "import json; m=json.load(open('vibe_core/plugins/interface/manifest.json')); print('depends_on' in m)"
+```
+
+### TASK 3: Add Boot Dependency Validation
+
+```
+FILE: vibe_core/loaders/plugin_loader.py
+LOCATION: In PluginLoader._boot_plugins() or similar method
+ADD_VALIDATION:
+    for manifest in sorted_manifests:
+        for dep in manifest.get("depends_on", []):
+            if dep not in booted_plugins and not hasattr(kernel, dep):
+                raise StructuredError(
+                    code=ErrorCode.E3003_BOOT_FAILED,
+                    message=f"Plugin '{manifest['id']}' requires '{dep}' to be loaded first",
+                    context={"plugin": manifest["id"], "missing_dep": dep}
+                )
+VERIFY: python -m pytest tests/integration/test_kernel_boot.py -v
+```
+
+---
+
+**Status**: HAIKU-READY

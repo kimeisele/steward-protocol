@@ -403,3 +403,223 @@ for dep in manifest.get("depends_on", []):
 - OPUS-002: Phoenix Config Extraction
 - OPUS-003: AOS Foundation Repair
 - OPUS-004: Boot Sequence Audit
+
+---
+
+## HAIKU EXECUTION BLOCKS
+
+> **For AI Agent Execution**: Copy-paste these blocks to implement each phase.
+
+### TASK 1: Phase 1 - CLI Unification
+
+```
+FILE: vibe_core/cli/unified_cli.py (NEW)
+CREATE:
+    """UnifiedCLI - Single entry point for all CLI operations."""
+    from vibe_core.cli.cli_loader import CLILoader
+    from vibe_core.cli.cli_executor import CLIExecutor
+
+    class UnifiedCLI:
+        """GAD-000 compliant CLI with JSON output support."""
+
+        def __init__(self):
+            self._loader = CLILoader()
+            self._executor = CLIExecutor()
+
+        def run(self, args: list[str]) -> dict:
+            """Execute CLI command, return structured result."""
+            command = self._loader.parse(args)
+            return self._executor.execute(command)
+
+        def get_capabilities(self) -> dict:
+            """GAD-000 Test 1: Machine-readable capability discovery."""
+            return {
+                "commands": self._loader.list_commands(),
+                "version": "1.0",
+                "json_output": True
+            }
+
+THEN:
+FILE: vibe_core/cli.py
+ADD_AT_TOP: import warnings
+FIND: class StewardCLI:
+ADD_BEFORE: @deprecated("Use UnifiedCLI instead")
+
+VERIFY: python -c "from vibe_core.cli.unified_cli import UnifiedCLI; print(UnifiedCLI().get_capabilities())"
+```
+
+### TASK 2: Phase 2 - Legacy Router Cleanup
+
+```
+FILE: vibe_core/playbook/router.py
+ADD_AT_TOP:
+    import warnings
+    warnings.warn("PlaybookRouter is deprecated, use UnifiedRouter", DeprecationWarning)
+
+FILE: vibe_core/runtime/playbook_router.py
+ADD_AT_TOP:
+    import warnings
+    warnings.warn("playbook_router is deprecated, use UnifiedRouter", DeprecationWarning)
+
+FILE: vibe_core/plugins/interface/renderers/envoy.py
+FIND: router_callback = self.kernel._playbook_router.route  # LEGACY
+REPLACE_WITH:
+    raise RuntimeError("Legacy PlaybookRouter no longer supported - use UnifiedRouter")
+
+VERIFY: python -c "from vibe_core.runtime.unified_execution import UnifiedRouter; print('UnifiedRouter OK')"
+```
+
+### TASK 3: Phase 3 - Loader Migration (PlaybookLoader)
+
+```
+FILE: vibe_core/playbook/loader.py
+FIND: class PlaybookLoader:
+REPLACE_WITH:
+    from vibe_core.loaders.base_loader import UnifiedLoader
+
+    class PlaybookLoader(UnifiedLoader):
+        """Playbook loader following VEDA-4 pattern."""
+
+        def _find_manifest(self, path: Path) -> Optional[dict]:
+            """SHABDA: Discovery - find playbook.yaml."""
+            manifest_path = path / "playbook.yaml"
+            if manifest_path.exists():
+                return yaml.safe_load(manifest_path.read_text())
+            return None
+
+        def _validate_manifest(self, manifest: dict) -> bool:
+            """ARTHA: Validation - check required fields."""
+            return "id" in manifest and "steps" in manifest
+
+VERIFY: python -c "from vibe_core.playbook.loader import PlaybookLoader; print('PlaybookLoader migrated')"
+```
+
+### TASK 4: Phase 5 - UnifiedTrace for Observability
+
+```
+FILE: vibe_core/runtime/unified_trace.py (NEW)
+CREATE:
+    \"\"\"UnifiedTrace - GAD-000 Test 2: AI-readable execution traces.\"\"\"
+    from dataclasses import dataclass, field
+    from typing import Dict, Any, List
+    import time
+    import uuid
+
+    @dataclass
+    class TraceEvent:
+        trace_id: str
+        timestamp: float
+        component: str
+        event_type: str
+        data: Dict[str, Any]
+
+    class UnifiedTrace:
+        \"\"\"Central nervous system for AI observability.\"\"\"
+
+        def __init__(self):
+            self._traces: Dict[str, List[TraceEvent]] = {}
+
+        def start(self, component: str, data: Dict[str, Any]) -> str:
+            trace_id = str(uuid.uuid4())[:8]
+            event = TraceEvent(
+                trace_id=trace_id,
+                timestamp=time.time(),
+                component=component,
+                event_type="start",
+                data=data
+            )
+            self._traces[trace_id] = [event]
+            return trace_id
+
+        def complete(self, trace_id: str, data: Dict[str, Any]) -> None:
+            if trace_id in self._traces:
+                self._traces[trace_id].append(TraceEvent(
+                    trace_id=trace_id,
+                    timestamp=time.time(),
+                    component="",
+                    event_type="complete",
+                    data=data
+                ))
+
+        def get_trace(self, trace_id: str) -> List[dict]:
+            events = self._traces.get(trace_id, [])
+            return [{"timestamp": e.timestamp, "type": e.event_type, "data": e.data} for e in events]
+
+VERIFY: python -c "from vibe_core.runtime.unified_trace import UnifiedTrace; t=UnifiedTrace(); id=t.start('test',{}); t.complete(id,{'ok':True}); print(t.get_trace(id))"
+```
+
+### TASK 5: Phase 6 - Burn Notice Script
+
+```
+FILE: scripts/verify_no_legacy_imports.py (NEW)
+CREATE:
+    #!/usr/bin/env python3
+    \"\"\"Verify no legacy imports remain before deletion.\"\"\"
+    import subprocess
+    import sys
+
+    LEGACY_FILES = [
+        "vibe_core/cli.py",  # Old StewardCLI
+        "vibe_core/playbook/router.py",  # Old PlaybookRouter
+        "vibe_core/runtime/playbook_router.py",  # Duplicate
+    ]
+
+    def check_imports(file_path: str) -> bool:
+        \"\"\"Check if file is imported anywhere.\"\"\"
+        module = file_path.replace("/", ".").replace(".py", "")
+        result = subprocess.run(
+            ["grep", "-r", f"from {module}", "vibe_core/", "tests/"],
+            capture_output=True, text=True
+        )
+        return len(result.stdout.strip()) > 0
+
+    def main():
+        for f in LEGACY_FILES:
+            if check_imports(f):
+                print(f"ERROR: {f} still imported!")
+                sys.exit(1)
+            else:
+                print(f"OK: {f} can be deleted")
+        print("All legacy files ready for deletion")
+
+    if __name__ == "__main__":
+        main()
+
+VERIFY: python scripts/verify_no_legacy_imports.py
+```
+
+### TASK 6: Phase 7 - Manifest Dependencies
+
+```
+FILE: vibe_core/loaders/plugin_loader.py
+FIND: def _sort_by_priority(self, manifests):
+REPLACE_WITH:
+    def _sort_by_dependencies(self, manifests: List[dict]) -> List[dict]:
+        \"\"\"Topological sort respecting depends_on + priority fallback.\"\"\"
+        # Build dependency graph
+        graph = {m["id"]: set(m.get("depends_on", [])) for m in manifests}
+        result = []
+        visited = set()
+
+        def visit(node_id):
+            if node_id in visited:
+                return
+            visited.add(node_id)
+            for dep in graph.get(node_id, []):
+                visit(dep)
+            manifest = next((m for m in manifests if m["id"] == node_id), None)
+            if manifest:
+                result.append(manifest)
+
+        # Sort by priority first, then resolve dependencies
+        for m in sorted(manifests, key=lambda x: x.get("priority", 999)):
+            visit(m["id"])
+
+        return result
+
+VERIFY: python -m pytest tests/integration/test_kernel_boot.py -v
+```
+
+---
+
+**Status**: HAIKU-READY
