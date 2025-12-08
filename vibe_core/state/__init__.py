@@ -13,12 +13,24 @@ Three Layers:
 - PURUSHA (Identity): Agent personas
 """
 
+from .ephemeral_state import EphemeralState, SessionContext, ThoughtEntry
 from .file_state import FileState
 from .git_state import GitState
+from .kernel_state import AgentSnapshot, KernelSnapshot, KernelState, QueueSnapshot
 from .prakriti import Prakriti
 
 __all__ = [
+    # Main engine
     "Prakriti",
+    # Layer 1: Physical
     "GitState",
     "FileState",
+    # Layer 2: Runtime
+    "KernelState",
+    "KernelSnapshot",
+    "AgentSnapshot",
+    "QueueSnapshot",
+    "EphemeralState",
+    "ThoughtEntry",
+    "SessionContext",
 ]
