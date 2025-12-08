@@ -136,11 +136,125 @@ Current ENGINEER doesn't use:
 
 ---
 
-## Implementation Priority
+## Critical Architectural Constraints
 
-1. **Phase 1**: ENGINEER (creates agents)
-2. **Phase 2**: HERALD (broadcasting)  
-3. **Phase 3**: CURATOR (knowledge)
+> **ALL System Devatas MUST exist on 3 planes.**
+
+### Constraint 1: Syscall Translation Layer
+
+The Circuit (`AGENT_BIRTH_V1`) ends with `EXECUTE_SYSCALL: SPAWN_COGNITION`.
+
+**Gap**: This symbolic syscall must map to concrete Python.
+
+**Solution**: Syscall Registry in `EnvoyPlugin`:
+```python
+SYSCALL_REGISTRY = {
+    "SPAWN_COGNITION": "kernel.plugins['lifecycle'].spawn_agent",
+    "QUERY_KNOWLEDGE": "kernel.plugins['curator'].query",
+}
+```
+
+### Constraint 2: Constitution Binding at Birth
+
+The `steward.json` passport requires `constitution_hash`.
+
+**This is NOT a random ID** - it MUST be SHA256 of the active `CONSTITUTION.md`.
+
+**Solution**: Engineer reads `kernel.steward.current_constitution_hash` at birth:
+```python
+oath_hash = self.kernel.steward.current_constitution_hash
+if not oath_hash:
+    raise GovernanceError("Cannot spawn: No active constitution")
+passport["governance"]["constitution_hash"] = oath_hash
+```
+
+**Consequence**: Agents without this hash are **Ronin** (oathless) and will be rejected by `StewardProtocol`.
+
+### Constraint 3: Sandbox → Live Atomic Move
+
+`manifest_reality` writes to `./workspaces/sandbox` (untrusted).
+
+**Gap**: No path from sandbox to `vibe_core/cartridges/` (trusted).
+
+**Solution**: Purification Pipeline
+1. **Engineer** writes to Sandbox
+2. **Auditor** scans (syntax, security, oath compliance)
+3. **LifecyclePlugin** (Kernel level) performs atomic move ONLY after Auditor signs off
+
+> ⚠️ **CRITICAL**: Do NOT let Engineer write directly to live cartridge directory.
+
+### Constraint 4: Separation of Powers (God Mode Prevention)
+
+**Risk**: If Engineer has raw kernel access, it could spawn infinite agents (cancer).
+
+**Solution**: Two-entity separation
+- **Engineer (Agent/Cartridge)**: *Proposes* life - writes DNA/code, requests birth
+- **LifecyclePlugin (Kernel)**: *Grants* life - executes spawn, subject to quotas
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  ENGINEER proposes → LIFECYCLE grants (with governance) │
+│                                                         │
+│  Engineer                    LifecyclePlugin            │
+│  ────────                    ───────────────            │
+│  write_cartridge()           on_spawn_request()         │
+│  generate_passport()         verify_constitution()      │
+│  request_spawn()   ────────→ register_if_approved()     │
+└─────────────────────────────────────────────────────────┘
+```
+
+> **Do NOT give the Agent the keys to the Kernel's process table.**
+
+### Constraint 5: CURATOR before HERALD
+
+**Correction**: Swap priority order.
+
+- **CURATOR** (Knowledge/Memory) needed for Engineer to know *what* to build
+- **HERALD** is noise if agents aren't smart enough to be announced
+
+---
+
+## Implementation Priority (Corrected)
+
+1. **Phase 1**: ENGINEER + LifecyclePlugin (spawning with governance)
+2. **Phase 2**: CURATOR (knowledge for intelligent spawning)
+3. **Phase 3**: HERALD (broadcasting after agents are worthy)
+
+---
+
+## The Spawn Protocol
+
+```python
+# vibe_core/plugins/lifecycle/plugin_main.py
+
+def on_spawn_request(self, spec: AgentSpec, oath_hash: str):
+    """
+    The Atomic 'Spark of Life'.
+    Called by Engineer (via syscall), executed by Kernel.
+    """
+    # 1. Constitution Gate
+    if oath_hash != self.kernel.steward.current_constitution_hash:
+        raise GovernanceError("Cannot spawn: Constitution Mismatch")
+
+    # 2. Auditor Gate (was sandbox scanned?)
+    if not self.kernel.plugins['auditor'].is_approved(spec.id):
+        raise GovernanceError("Cannot spawn: Auditor approval required")
+
+    # 3. Prakriti Registration (Identity)
+    persona = self.kernel.prakriti.personas.create_default(
+        agent_id=spec.id,
+        display_name=spec.name,
+        dharma=spec.purpose,
+    )
+    
+    # 4. Kernel Registration (Execution)
+    self.kernel.register_agent(spec.load_cartridge())
+    
+    # 5. Herald Announcement
+    self.kernel.bus.publish("system.life.birth", {"agent": spec.id})
+    
+    return {"status": "born", "agent_id": spec.id}
+```
 
 ---
 
@@ -154,17 +268,11 @@ System Agents MUST be:
 
 ---
 
-## Open Questions
-
-1. Should ENGINEER have constitutional limits on what agents it can spawn?
-2. Should spawned agents require AUDITOR approval before activation?
-3. How to handle agent versioning and upgrades?
-
----
-
 ## Next Steps
 
-- [ ] Implement ENGINEER as plugin in `vibe_core/plugins/engineer/`
-- [ ] Create AGENT_SPAWN_V1 circuit
-- [ ] Wire into existing AGENT_BIRTH_V1 playbook
-- [ ] Integration tests
+- [ ] Create `vibe_core/plugins/lifecycle/` plugin (separation of powers)
+- [ ] Add Syscall Registry to EnvoyPlugin
+- [ ] Wire constitution_hash verification in StewardProtocol
+- [ ] Create Sandbox→Auditor→Live pipeline
+- [ ] Update ENGINEER to use request_spawn() instead of direct register
+- [ ] Integration tests for full birth cycle
