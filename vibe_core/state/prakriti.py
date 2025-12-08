@@ -6,7 +6,7 @@ OPUS-009: "The Repository IS the Mind"
 Prakriti (Sanskrit: "Primordial Matter") unifies state across three layers:
 - STHULA (Layer 1): Git + Files (Physical)
 - PRANA (Layer 2): Kernel + Ephemeral (Runtime)
-- PURUSHA (Layer 3): Personas (Identity) - Phase 3
+- PURUSHA (Layer 3): Personas (Identity)
 
 GAD-000 Compliant:
 - All methods return dict/dataclass
@@ -25,6 +25,7 @@ from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
 from .kernel_state import KernelState
+from .persona import PersonaManager
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -41,7 +42,7 @@ class StateSnapshot:
     files: Dict[str, Any]
     kernel: Optional[Dict[str, Any]] = None
     ephemeral: Optional[Dict[str, Any]] = None
-    # Phase 3: personas: Dict[str, Any] = None
+    personas: Optional[Dict[str, Any]] = None
 
 
 class Prakriti:
@@ -56,7 +57,7 @@ class Prakriti:
     Layers:
     - Layer 1 (STHULA): Git + Files (Physical)
     - Layer 2 (PRANA): Kernel + Ephemeral (Runtime)
-    - Layer 3 (PURUSHA): Personas (Identity) - Phase 3
+    - Layer 3 (PURUSHA): Personas (Identity)
     """
 
     def __init__(self, workspace_path: Optional[Path] = None):
@@ -75,8 +76,8 @@ class Prakriti:
         self.kernel = KernelState()
         self.ephemeral = EphemeralState()
 
-        # Layer 3: Identity (PURUSHA) - Phase 3
-        # self.personas = {}
+        # Layer 3: Identity (PURUSHA)
+        self.personas = PersonaManager(self._workspace)
 
         logger.info(f"[PRAKRITI] Initialized at {self._workspace}")
 
@@ -103,8 +104,8 @@ class Prakriti:
     def get_capabilities(self) -> Dict[str, Any]:
         """GAD-000 Test 1: What can Prakriti do?"""
         return {
-            "version": "2.0.0-phase2",
-            "operations": ["snapshot", "verify", "diff", "status", "inject_kernel"],
+            "version": "3.0.0-complete",
+            "operations": ["snapshot", "verify", "diff", "status", "inject_kernel", "get_persona"],
             "layers": {
                 "sthula": {
                     "status": "active",
@@ -115,7 +116,7 @@ class Prakriti:
                     "components": ["kernel", "ephemeral"],
                 },
                 "purusha": {
-                    "status": "phase3",
+                    "status": "active",
                     "components": ["personas"],
                 },
             },
@@ -124,6 +125,7 @@ class Prakriti:
             "files": self.files.get_capabilities(),
             "kernel": self.kernel.get_capabilities(),
             "ephemeral": self.ephemeral.get_capabilities(),
+            "personas": self.personas.get_capabilities(),
         }
 
     # =========================================================================
@@ -139,7 +141,7 @@ class Prakriti:
             "files": self.files.status(),
             "kernel": self.kernel.status(),
             "ephemeral": self.ephemeral.status(),
-            # Phase 3: "personas": list(self.personas.keys()),
+            "personas": self.personas.status(),
         }
 
     # =========================================================================
@@ -158,6 +160,7 @@ class Prakriti:
             files=self.files.status(),
             kernel=self.kernel.status(),
             ephemeral=self.ephemeral.status(),
+            personas=self.personas.status(),
         )
 
     def inject_kernel(self, kernel: "RealVibeKernel") -> None:

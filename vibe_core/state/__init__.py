@@ -17,6 +17,7 @@ from .ephemeral_state import EphemeralState, SessionContext, ThoughtEntry
 from .file_state import FileState
 from .git_state import GitState
 from .kernel_state import AgentSnapshot, KernelSnapshot, KernelState, QueueSnapshot
+from .persona import AgentPersona, PersonaManager
 from .prakriti import Prakriti
 
 __all__ = [
@@ -33,4 +34,7 @@ __all__ = [
     "EphemeralState",
     "ThoughtEntry",
     "SessionContext",
+    # Layer 3: Identity
+    "PersonaManager",
+    "AgentPersona",
 ]
