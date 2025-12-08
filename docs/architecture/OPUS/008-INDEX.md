@@ -25,7 +25,7 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 | 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | HAIKU-READY | P0 | ✅ 5 tasks |
 | 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | HAIKU-READY | P0 | ✅ 4 tasks |
 | 008 | **This Index** | ACTIVE | - | - |
-| 009 | [Git Operations](009-GIT-OPERATIONS.md) | HAIKU-READY | P1 | ✅ 3 tasks |
+| 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | DESIGN DRAFT | P0 | Awaiting Review |
 
 ---
 
@@ -56,6 +56,15 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 5. **OPUS-005**: Unification Roadmap
    - Phase 1 (CLI) ready
    - Other phases can wait
+
+### Evolution (P0 - Design Phase)
+
+6. **OPUS-009**: PRAKRITI - Fractal State Engine
+   - **STATUS: AWAITING GEMINI REVIEW**
+   - Unified State Management (Git + Kernel + Identity)
+   - System Prompt at Runtime (Agent Persistence)
+   - Self-modifying Personas
+   - No implementation until design approved
 
 ---
 
