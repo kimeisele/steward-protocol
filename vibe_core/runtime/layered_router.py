@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.ephemeral import EphemeralStorage
+    from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.knowledge.graph import UnifiedKnowledgeGraph
 
 logger = logging.getLogger("LAYERED_ROUTER")
@@ -104,7 +104,8 @@ class LayeredRouter:
                 self._exact_index[pattern.lower()] = circuit_id
 
             # Layer 2: Semantic patterns
-            semantic = circuit_data.get("semantic_grounding", {})
+            # NOTE: semantic_grounding is INSIDE the circuit block, not a sibling
+            semantic = circuit_def.get("semantic_grounding", {})
             if semantic:
                 regex_patterns = semantic.get("intent_patterns", [])
                 compiled = []

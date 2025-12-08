@@ -6,12 +6,16 @@ Tests Layer 1 (exact), Layer 2 (semantic), Layer 3 (context), and fallback behav
 """
 
 import pytest
+
 from vibe_core.runtime.layered_router import LayeredRouter, RouteResult
 
 
 @pytest.fixture
 def router_with_circuits():
-    """Router with test circuits loaded."""
+    """Router with test circuits loaded.
+
+    NOTE: semantic_grounding is INSIDE the circuit block, matching real YAML structure.
+    """
     router = LayeredRouter()
     router._circuits = {
         "SYSTEM_STATUS_V2": {
@@ -21,30 +25,34 @@ def router_with_circuits():
             }
         },
         "FEATURE_IMPLEMENT_V2": {
-            "circuit": {"id": "FEATURE_IMPLEMENT_V2"},
-            "semantic_grounding": {
-                "syscall_type": "DISPATCH_TASK",
-                "target_agent": "engineer",
-                "intent_patterns": [
-                    r"implement\s+(?:a\s+)?(?:new\s+)?feature",
-                    r"add\s+(?:a\s+)?(?:new\s+)?(?:feature|functionality)",
-                ],
-                "param_extraction": {
-                    "feature_description": {
-                        "patterns": [r"implement\s+(.+)", r"add\s+(?:feature\s+)?(.+)"],
-                        "required": True,
-                    }
+            "circuit": {
+                "id": "FEATURE_IMPLEMENT_V2",
+                "semantic_grounding": {
+                    "syscall_type": "DISPATCH_TASK",
+                    "target_agent": "engineer",
+                    "intent_patterns": [
+                        r"implement\s+(?:a\s+)?(?:new\s+)?feature",
+                        r"add\s+(?:a\s+)?(?:new\s+)?(?:feature|functionality)",
+                    ],
+                    "param_extraction": {
+                        "feature_description": {
+                            "patterns": [r"implement\s+(.+)", r"add\s+(?:feature\s+)?(.+)"],
+                            "required": True,
+                        }
+                    },
                 },
-            },
+            }
         },
         "DEBUG_FIX_V2": {
-            "circuit": {"id": "DEBUG_FIX_V2"},
-            "semantic_grounding": {
-                "intent_patterns": [
-                    r"fix\s+(?:the\s+)?(?:bug|error|issue)",
-                    r"debug\s+(?:the\s+)?(?:error|failure)",
-                ],
-            },
+            "circuit": {
+                "id": "DEBUG_FIX_V2",
+                "semantic_grounding": {
+                    "intent_patterns": [
+                        r"fix\s+(?:the\s+)?(?:bug|error|issue)",
+                        r"debug\s+(?:the\s+)?(?:error|failure)",
+                    ],
+                },
+            }
         },
     }
     router._build_indexes()
@@ -150,6 +158,7 @@ class TestLayer3Context:
 
     def test_context_boost_recent(self, router_with_circuits):
         """Test confidence boost from recent circuit usage."""
+
         # Mock ephemeral storage
         class MockEphemeral:
             def __init__(self, data):
@@ -285,8 +294,11 @@ class TestLayerCascade:
         """Test that Layer 1 results are returned without checking Layer 2."""
         # Add a semantic pattern that would also match
         router_with_circuits._circuits["TEST_SEMANTIC"] = {
-            "semantic_grounding": {
-                "intent_patterns": [r"status.*"],
+            "circuit": {
+                "id": "TEST_SEMANTIC",
+                "semantic_grounding": {
+                    "intent_patterns": [r"status.*"],
+                },
             }
         }
         router_with_circuits._build_indexes()
@@ -317,12 +329,15 @@ class TestRegexPatterns:
         router = LayeredRouter()
         router._circuits = {
             "TEST_CIRCUIT": {
-                "semantic_grounding": {
-                    "intent_patterns": [
-                        r"valid\s+pattern",
-                        r"[invalid(regex",  # Invalid regex
-                        r"another\s+valid",
-                    ]
+                "circuit": {
+                    "id": "TEST_CIRCUIT",
+                    "semantic_grounding": {
+                        "intent_patterns": [
+                            r"valid\s+pattern",
+                            r"[invalid(regex",  # Invalid regex
+                            r"another\s+valid",
+                        ]
+                    },
                 }
             }
         }
@@ -363,24 +378,24 @@ class TestParamExtraction:
         params = result.extracted_params
         assert "feature_description" in params
         # Should extract "caching" or similar
-        assert any(
-            word in params["feature_description"].lower()
-            for word in ["caching", "feature"]
-        )
+        assert any(word in params["feature_description"].lower() for word in ["caching", "feature"])
 
     def test_multiple_param_extractors(self):
         """Test circuits with multiple param extractors."""
         router = LayeredRouter()
         router._circuits = {
             "TEST_CIRCUIT": {
-                "semantic_grounding": {
-                    "intent_patterns": [r"action\s+(.+)\s+on\s+(.+)"],
-                    "param_extraction": {
-                        "action_type": {
-                            "patterns": [r"action\s+(\w+)"],
-                        },
-                        "target": {
-                            "patterns": [r"on\s+(\w+)"],
+                "circuit": {
+                    "id": "TEST_CIRCUIT",
+                    "semantic_grounding": {
+                        "intent_patterns": [r"action\s+(.+)\s+on\s+(.+)"],
+                        "param_extraction": {
+                            "action_type": {
+                                "patterns": [r"action\s+(\w+)"],
+                            },
+                            "target": {
+                                "patterns": [r"on\s+(\w+)"],
+                            },
                         },
                     },
                 }
