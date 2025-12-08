@@ -1,274 +1,173 @@
-# OPUS-007: Unified UI Rendering System
+# OPUS-007: UI Rendering Hardening
 
 > **Status**: PLANNING
 > **Created**: 2025-12-08
-> **Scope**: Replace 17 hardcoded renderers with unified, manifest-driven Markdown UI system
+> **Scope**: Harden existing InterfacePlugin with production-grade safety
 > **GAD-000**: Mandatory compliance - structured output, machine-parseable sections
 
 ---
 
 ## Executive Summary
 
-The Steward Protocol uses Markdown files as its User Interface. Currently there are **17 separate hardcoded renderers**, each with different patterns, no unified template system, and no GAD-000 compliance. This plan creates a **UnifiedRenderer** system that:
+**REALITY CHECK**: We are NOT reinventing the wheel. The InterfacePlugin already exists and is config-driven. This plan HARDENS the existing system with:
 
-1. Uses manifests to register documents (not hardcoded)
-2. Supports bidirectional (ENVOY.md) and unidirectional (OPUS.md) modes
-3. Preserves user sections (`<!-- @AI:... -->`, `<!-- @HUMAN:... -->`)
-4. Enables agents to define their own UI via manifest
-5. Is GAD-000 compliant (structured output, machine-parseable)
+1. **Gemini's Three Laws of Rendering** (production safety)
+2. **GAD-000 compliance** (machine-parseable)
+3. **Bug fixes** (OPUS.md section preservation)
 
----
+**What ALREADY EXISTS:**
+- `InterfacePlugin` - Window Manager (config-driven from `config/interface.yaml`)
+- `BaseRenderer` - With LIVE/AI/HUMAN section support
+- 17 renderers - Each handling a specific Markdown file
+- `on_task_completed()` hook - For immediate UI updates
 
-## Current Problems
-
-### 1. Too Many Renderers (17!)
-
-```
-vibe_core/plugins/interface/renderers/
-├── agents.py      # AGENTS.md
-├── base.py        # BaseRenderer (485 LOC!)
-├── citymap.py     # CITYMAP.md
-├── dashboard.py   # Dashboard
-├── envoy.py       # ENVOY.md (bidirectional)
-├── ephemeral.py   # Ephemeral docs
-├── git.py         # GIT.md
-├── help.py        # HELP.md
-├── index.py       # INDEX.md
-├── matrix.py      # Matrix
-├── operations.py  # OPERATIONS.md
-├── proof.py       # PROOF.md
-├── rag.py         # RAG.md
-├── readme.py      # README.md
-├── settings.py    # SETTINGS.md
-├── tasks.py       # TASKS.md
-└── opus/          # OPUS.md (modular, but still hardcoded)
-    └── panels/    # 7 more files!
-```
-
-### 2. No Unified Section Handling
-
-Each renderer handles sections (`<!-- @LIVE:... -->`) differently:
-- Some preserve user content
-- Some delete everything
-- Some merge incorrectly
-- OPUS.md deletes user sections (BUG)
-
-### 3. No Template System
-
-Content is generated via Python string concatenation:
-```python
-# BAD - Current state
-lines = ["# OPUS TERMINAL", ""]
-lines.append(f"**Status**: {status}")
-lines.append("## Metrics")
-# ... 200 more lines of string building
-```
-
-### 4. No Manifest-Driven Registration
-
-Documents are hardcoded in `InterfacePlugin`:
-```python
-# BAD - Hardcoded
-self._renderers = {
-    "opus": OpusRenderer(kernel),
-    "envoy": EnvoyRenderer(kernel),
-    "agents": AgentsRenderer(kernel),
-    # ... 14 more
-}
-```
-
-### 5. Not GAD-000 Compliant
-
-- No `get_document_schema()` method
-- No structured error codes for render failures
-- No machine-parseable section markers
+**What's BROKEN:**
+- OPUS.md sections get deleted (bug in OpusRenderer)
+- No backup before write (data loss risk)
+- No error boundaries (one bad template kills all rendering)
+- Renders on every tick even if nothing changed (I/O waste)
 
 ---
 
-## Solution: UnifiedRenderer
+## Gemini's Three Laws of Rendering (Critical!)
 
-### Architecture
+> **These are non-negotiable for production:**
 
+### Law 1: Never Lose Data (Atomic Write with Backup)
+
+**Problem**: If regex parser has bug, user content is lost forever.
+
+**Solution**: Backup before write for bidirectional documents.
+
+```python
+# In BaseRenderer.merge_and_write()
+def merge_and_write(self, new_content: str) -> None:
+    """Safe write with backup for bidirectional docs."""
+    config = self.get_config()
+    if config and config.mode == "bidirectional":
+        self._create_backup()
+
+    # Write new content
+    self._write_content(new_content)
+
+    # Validate write (file size heuristic)
+    if self._file_suspiciously_smaller():
+        self._rollback_from_backup()
+        raise StructuredError(
+            code=ErrorCode.E3005_INTERNAL_ERROR,
+            message="Render produced suspiciously small output",
+            context={"document": self.name}
+        )
+
+    # Clean backup only on success
+    self._cleanup_backup()
+
+def _file_suspiciously_smaller(self) -> bool:
+    """Detect if file shrunk >50% (likely data loss)."""
+    backup_size = self._get_backup_size()
+    current_size = self._get_current_size()
+    if backup_size > 0 and current_size < backup_size * 0.5:
+        return True
+    return False
 ```
-                    ┌─────────────────────────────────────┐
-                    │         UnifiedRenderer             │
-                    │  - load_from_manifest()             │
-                    │  - render_document()                │
-                    │  - preserve_sections()              │
-                    │  - get_document_schema() [GAD-000]  │
-                    └──────────────┬──────────────────────┘
-                                   │
-           ┌───────────────────────┼───────────────────────┐
-           │                       │                       │
-    ┌──────▼──────┐        ┌──────▼──────┐        ┌──────▼──────┐
-    │ manifest.md │        │ manifest.md │        │ manifest.md │
-    │   OPUS.md   │        │  ENVOY.md   │        │  AGENT.md   │
-    │ unidirect.  │        │  bidirect.  │        │  custom     │
-    └─────────────┘        └─────────────┘        └─────────────┘
+
+**Location**: `vibe_core/plugins/interface/renderers/base.py`
+
+### Law 2: Never Crash Completely (Error Boundaries)
+
+**Problem**: One agent's bad template crashes the entire UI system.
+
+**Solution**: Wrap each renderer in error boundary.
+
+```python
+# In InterfacePlugin._render_scheduled()
+def _render_scheduled(self) -> None:
+    for name, renderer in self._renderers.items():
+        if self._should_render(name):
+            try:
+                renderer.render()
+                self._last_render[name] = time.time()
+            except Exception as e:
+                # Log but don't crash
+                logger.error(f"Renderer '{name}' failed: {e}")
+                self._render_error_placeholder(name, e)
+                # Continue with other renderers!
+
+def _render_error_placeholder(self, name: str, error: Exception) -> None:
+    """Write error placeholder instead of crashing."""
+    path = self._get_document_path(name)
+    error_content = f"""<!--
+UI ERROR: Renderer '{name}' failed
+Error: {str(error)[:200]}
+Time: {datetime.utcnow().isoformat()}
+-->
+
+# {name.upper()}.md
+
+**Rendering Error**
+
+The `{name}` renderer encountered an error.
+System is still operational. This is a temporary placeholder.
+
+Error: `{str(error)[:100]}`
+"""
+    path.write_text(error_content)
 ```
 
-### Document Manifest Schema
+**Location**: `vibe_core/plugins/interface/plugin_main.py`
 
-Each Markdown document is registered via a manifest:
+### Law 3: Never Work Unnecessarily (Render on Change)
 
-```yaml
-# documents/opus.yaml
-id: opus
-output_file: OPUS.md
-mode: unidirectional  # or "bidirectional"
-refresh_interval: 5.0  # seconds, optional
+**Problem**: 17 files rewritten every 2 seconds even if nothing changed.
 
-sections:
-  - id: status
-    type: live      # auto-updated by kernel
-    source: kernel.get_system_status()
+**Solution**: Hash-based dirty tracking.
 
-  - id: metrics
-    type: live
-    source: plugins.interface.get_metrics()
+```python
+# In BaseRenderer
+def __init__(self, kernel):
+    self._last_content_hash: Optional[str] = None
 
-  - id: architecture_plans
-    type: live
-    source: plugins.interface.get_architecture_plans()
+def render(self) -> None:
+    """Only write if content changed."""
+    new_content = self._generate_content()
+    new_hash = hashlib.md5(new_content.encode()).hexdigest()
 
-  - id: current_goal
-    type: ai        # AI can write, preserved on refresh
+    if new_hash == self._last_content_hash:
+        logger.debug(f"{self.name}: No changes, skipping write")
+        return
 
-  - id: next_actions
-    type: human     # User can write, always preserved
-
-template: |
-  <!--
-  AUTO-GENERATED by UnifiedRenderer
-  Last Updated: {{ timestamp }}
-  -->
-
-  # {{ title }}
-
-  {% for section in sections %}
-  <!-- @{{ section.type | upper }}:{{ section.id }} -->
-  {{ section.content }}
-  <!-- /@{{ section.type | upper }} -->
-  {% endfor %}
+    self.merge_and_write(new_content)
+    self._last_content_hash = new_hash
 ```
+
+**Location**: `vibe_core/plugins/interface/renderers/base.py`
 
 ---
 
-## Implementation Phases
+## OPUS.md Bug Fix (Priority 1)
 
-### Phase 1: UnifiedRenderer Base Class
+### Problem
 
-**Files to Create:**
-- `vibe_core/plugins/interface/unified_renderer.py`
+OPUS.md deletes `<!-- @AI:... -->` and `<!-- @HUMAN:... -->` sections on refresh.
 
-**Tasks:**
-1. Create `UnifiedRenderer` class
-2. Implement `load_from_manifest(path: str)`
-3. Implement `render_document() -> str`
-4. Implement `preserve_sections(old_content: str, new_content: str)`
-5. Implement `get_document_schema() -> dict` (GAD-000)
+**Root Cause**: OpusRenderer generates content from scratch without preserving existing sections.
 
-**GAD-000 DoD:**
-- `get_document_schema()` returns structured dict
-- Render errors are `StructuredError`
+### Solution
 
-**Verification:**
+1. OpusRenderer MUST call `merge_and_write()` instead of direct file write
+2. `merge_and_write()` preserves AI/HUMAN sections from existing file
+
 ```python
-renderer = UnifiedRenderer.from_manifest("documents/opus.yaml")
-schema = renderer.get_document_schema()
-assert "sections" in schema
-assert "mode" in schema
+# In opus/renderer.py - FIX
+def render(self) -> None:
+    # Generate LIVE sections
+    content = self._generate_panels()
+
+    # CRITICAL: Use merge_and_write to preserve AI/HUMAN sections
+    self.merge_and_write(content)  # NOT self._write_file(content)
 ```
 
-### Phase 2: Section Parser
-
-**Files to Create:**
-- `vibe_core/plugins/interface/section_parser.py`
-
-**Tasks:**
-1. Parse `<!-- @LIVE:section_id -->...<!-- /@LIVE -->` markers
-2. Parse `<!-- @AI:section_id -->` markers
-3. Parse `<!-- @HUMAN:section_id -->` markers
-4. Preserve AI/HUMAN sections during re-render
-5. Update LIVE sections with fresh data
-
-**Verification:**
-```python
-parser = SectionParser()
-sections = parser.parse(content)
-assert sections["current_goal"].type == "ai"
-assert sections["current_goal"].preserved == True
-```
-
-### Phase 3: Template Engine
-
-**Files to Create:**
-- `vibe_core/plugins/interface/template_engine.py`
-
-**Tasks:**
-1. Simple Jinja2-like template rendering (or use Jinja2)
-2. Support `{{ variable }}` substitution
-3. Support `{% for %}` loops
-4. Support `{% if %}` conditionals
-
-**Note:** Keep minimal. Don't over-engineer. Python string templates may suffice.
-
-### Phase 4: Manifest Registry
-
-**Files to Modify:**
-- `vibe_core/plugins/interface/plugin_main.py`
-
-**Tasks:**
-1. Scan `documents/*.yaml` for manifests
-2. Register documents dynamically
-3. Remove hardcoded renderer instantiation
-4. Add `get_registered_documents() -> List[dict]` (GAD-000)
-
-**Verification:**
-```python
-plugin = InterfacePlugin(kernel)
-docs = plugin.get_registered_documents()
-assert "opus" in [d["id"] for d in docs]
-```
-
-### Phase 5: Migrate Existing Renderers
-
-**Priority Order:**
-1. `opus.py` -> `documents/opus.yaml` (most complex)
-2. `envoy.py` -> `documents/envoy.yaml` (bidirectional)
-3. `agents.py`, `tasks.py` -> simple manifests
-4. Deprecate remaining renderers
-
-**For each migration:**
-1. Create manifest YAML
-2. Test render output matches original
-3. Mark old renderer `@deprecated`
-4. Delete after 2 weeks
-
-### Phase 6: Agent-Defined UIs
-
-**Files to Create:**
-- `vibe_core/plugins/interface/agent_ui.py`
-
-**Tasks:**
-1. Allow agents to register custom documents via manifest
-2. Example: `EngineerAgent` registers `ENGINEERING.md`
-3. Custom sections defined in cartridge manifest
-
-**Manifest Example:**
-```yaml
-# cartridges/engineer/manifest.json
-{
-  "id": "engineer",
-  "ui": {
-    "document": "ENGINEERING.md",
-    "sections": [
-      {"id": "current_task", "type": "live"},
-      {"id": "code_review", "type": "ai"}
-    ]
-  }
-}
-```
+**Location**: `vibe_core/plugins/interface/renderers/opus/renderer.py`
 
 ---
 
@@ -277,105 +176,194 @@ assert "opus" in [d["id"] for d in docs]
 ### Test 1: Discoverability
 
 ```python
-# API to discover available documents
-renderer = UnifiedRenderer()
-docs = renderer.get_available_documents()
-# Returns: [{"id": "opus", "path": "OPUS.md", "mode": "unidirectional"}, ...]
+# InterfacePlugin must expose this
+def get_registered_documents(self) -> List[dict]:
+    """GAD-000: Machine-discoverable document registry."""
+    return [
+        {
+            "id": name,
+            "path": str(renderer.get_output_path()),
+            "mode": renderer.get_config().mode if renderer.get_config() else "unidirectional",
+            "sections": self._get_section_schema(renderer)
+        }
+        for name, renderer in self._renderers.items()
+    ]
 ```
 
 ### Test 3: Parseability
 
 ```python
-# Render errors are StructuredError
+# All render errors are StructuredError
 try:
-    renderer.render_document("invalid")
+    plugin.render_all()
 except StructuredError as e:
-    assert e.code == ErrorCode.E2007_VALIDATION_FAILED
-    assert e.context["document_id"] == "invalid"
+    assert e.code in [ErrorCode.E2007_VALIDATION_FAILED, ErrorCode.E3005_INTERNAL_ERROR]
+    assert "document" in e.context
 ```
 
 ### Test 4: Composability
 
 ```python
-# Output is always dict, not string
-result = renderer.render_document("opus")
-assert isinstance(result, dict)
-assert "content" in result
-assert "sections" in result
-assert "metadata" in result
+# Section markers are machine-parseable
+# <!-- @LIVE:section_id --> content <!-- /@LIVE -->
+# <!-- @AI:section_id --> content <!-- /@AI -->
+# <!-- @HUMAN:section_id --> content <!-- /@HUMAN -->
 ```
 
 ---
 
-## Files to Modify/Create
+## Implementation Phases
 
-| File | Action | Description |
-|------|--------|-------------|
-| `unified_renderer.py` | CREATE | Main UnifiedRenderer class |
-| `section_parser.py` | CREATE | Parse/preserve sections |
-| `template_engine.py` | CREATE | Simple template rendering |
-| `documents/opus.yaml` | CREATE | OPUS.md manifest |
-| `documents/envoy.yaml` | CREATE | ENVOY.md manifest |
-| `plugin_main.py` | MODIFY | Load from manifests |
-| `renderers/opus.py` | DEPRECATE | Mark @deprecated |
-| `renderers/envoy.py` | DEPRECATE | Mark @deprecated |
+### Phase 1: Three Laws Implementation (CRITICAL)
+
+**Files to Modify:**
+- `vibe_core/plugins/interface/renderers/base.py`
+- `vibe_core/plugins/interface/plugin_main.py`
+
+**Tasks:**
+1. Add atomic write with backup (`_create_backup`, `_rollback_from_backup`)
+2. Add error boundaries in `_render_scheduled()`
+3. Add content hashing for dirty tracking
+
+**GAD-000 DoD:**
+- Render failures are `StructuredError`
+- Backup files created for bidirectional docs
+
+**Verification:**
+```bash
+# Test Law 1: Backup
+ls -la .ENVOY.md.bak  # Should exist after render
+
+# Test Law 2: Error boundary
+# Inject bad template, verify other renderers still work
+
+# Test Law 3: No unnecessary writes
+# Check file mtime after multiple renders with no data changes
+```
+
+### Phase 2: OPUS.md Fix
+
+**Files to Modify:**
+- `vibe_core/plugins/interface/renderers/opus/renderer.py`
+
+**Tasks:**
+1. Change direct file write to `merge_and_write()`
+2. Verify AI/HUMAN sections preserved
+
+**Verification:**
+```python
+# Write to AI section
+# Run render
+# AI section still exists
+```
+
+### Phase 3: GAD-000 API
+
+**Files to Modify:**
+- `vibe_core/plugins/interface/plugin_main.py`
+
+**Tasks:**
+1. Add `get_registered_documents()` method
+2. Document section schema
+
+---
+
+## Existing Architecture (DO NOT CHANGE)
+
+```
+vibe_core/plugins/interface/
+├── plugin_main.py          # InterfacePlugin (Window Manager) ← ADD error boundaries
+├── renderers/
+│   ├── base.py             # BaseRenderer (LIVE/AI/HUMAN support) ← ADD backup, hashing
+│   ├── envoy.py            # ENVOY.md (bidirectional)
+│   ├── opus/
+│   │   └── renderer.py     # OPUS.md ← FIX merge_and_write
+│   └── ... (15 other renderers)
+```
+
+**Config Location**: `config/interface.yaml`
+
+```yaml
+# Already config-driven!
+renderers:
+  envoy:
+    enabled: true
+    output: ENVOY.md
+    interval: 2
+    mode: bidirectional  # ← Uses this for backup decision
+```
+
+---
+
+## Files to Modify
+
+| File | Changes | Priority |
+|------|---------|----------|
+| `renderers/base.py` | Add backup, hashing, error handling | P0 |
+| `plugin_main.py` | Add error boundaries, GAD-000 API | P0 |
+| `renderers/opus/renderer.py` | Fix to use `merge_and_write()` | P0 |
 
 ---
 
 ## Verification Checklist
 
-### Phase 1:
-- [ ] UnifiedRenderer class exists
-- [ ] `load_from_manifest()` works
-- [ ] `get_document_schema()` returns dict (GAD-000)
+### Phase 1 (Three Laws):
+- [ ] Backup created before bidirectional write
+- [ ] Rollback works when file too small
+- [ ] Error boundary catches renderer failures
+- [ ] Error placeholder rendered instead of crash
+- [ ] Content hash prevents redundant writes
 
-### Phase 2:
-- [ ] SectionParser preserves AI sections
-- [ ] SectionParser preserves HUMAN sections
-- [ ] LIVE sections updated correctly
+### Phase 2 (OPUS.md Fix):
+- [ ] AI sections preserved after render
+- [ ] HUMAN sections preserved after render
+- [ ] LIVE sections update correctly
 
-### Phase 3:
-- [ ] Template variables substitute
-- [ ] Template loops work
-- [ ] Template conditionals work
-
-### Phase 4:
-- [ ] Documents loaded from `documents/*.yaml`
-- [ ] `get_registered_documents()` works (GAD-000)
-- [ ] No hardcoded renderers
-
-### Phase 5:
-- [ ] OPUS.md renders correctly from manifest
-- [ ] ENVOY.md bidirectional works
-- [ ] Old renderers marked @deprecated
-
-### Phase 6:
-- [ ] Agents can register custom documents
-- [ ] Custom sections work
+### Phase 3 (GAD-000):
+- [ ] `get_registered_documents()` returns list
+- [ ] Section schema documented
+- [ ] Errors are `StructuredError`
 
 ---
 
 ## Success Criteria
 
-1. **OPUS.md sections preserved** - AI/HUMAN sections not deleted
-2. **17 renderers -> 1 UnifiedRenderer** - Massive simplification
-3. **Manifest-driven** - No hardcoded document registration
-4. **GAD-000 compliant** - All 6 tests pass for UI layer
-5. **Agent UIs possible** - Any agent can define custom .md interface
+1. **No data loss** - Bidirectional docs backed up before write
+2. **Graceful degradation** - One bad renderer doesn't kill UI
+3. **Efficient I/O** - Only write when content actually changed
+4. **OPUS.md works** - AI/HUMAN sections preserved
+5. **GAD-000 compliant** - Structured errors, discoverable API
 
 ---
 
 ## Non-Goals
 
-- Full Jinja2 feature parity (keep simple)
-- Real-time WebSocket updates
-- HTML output (Markdown only)
-- Breaking existing document structure
+- Replacing existing renderers (they work fine)
+- Adding new Markdown files
+- Template engine rewrite (not needed)
+- Breaking config/interface.yaml format
 
 ---
 
 ## Related Documents
 
 - **OPUS-006**: GAD-000 Compliance Audit
-- **OPUS-005**: Unification Roadmap
+- **OPUS-005**: Unification Roadmap (Phase 4 = UI)
 - **OPUS-003**: AOS Foundation Repair (mentions renderer issues)
+
+---
+
+## Why EVOLUTION, not REVOLUTION
+
+The existing architecture is SOUND:
+- Config-driven ✅
+- Section ownership (LIVE/AI/HUMAN) ✅
+- Plugin-based ✅
+- Interval scheduling ✅
+
+What's missing is HARDENING:
+- Data safety (backups)
+- Fault tolerance (error boundaries)
+- Efficiency (dirty tracking)
+
+**We fix bugs and add safety. We don't rewrite working code.**
