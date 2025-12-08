@@ -58,14 +58,14 @@ class OpusRenderer(BaseRenderer):
         """
         Render OPUS.md with all panels.
 
-        CRITICAL FIX: Uses merge_and_write() to preserve AI/HUMAN sections
-        instead of direct file.write_text() which deletes them.
+        Uses render_with_dirty_tracking() to:
+        - Law 3: Skip writes if content hasn't changed (hash-based)
+        - Law 1: Create backups before writing
+        - Preserve AI/HUMAN sections via merge_and_write()
         """
-        content = self.generate_content()
-        if content:
-            # Use merge_and_write to preserve existing AI/HUMAN sections
-            self.merge_and_write(content)
-            logger.info(f"[OPUS] Rendered with section preservation")
+        # Use helper that includes hash-based dirty tracking
+        self.render_with_dirty_tracking()
+        logger.info(f"[OPUS] Rendered with dirty tracking and section preservation")
 
     def generate_content(self) -> str:
         """Generate full OPUS.md content."""
