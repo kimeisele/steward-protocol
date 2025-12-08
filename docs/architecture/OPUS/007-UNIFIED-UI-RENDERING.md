@@ -475,4 +475,79 @@ VERIFY: Add content to @AI section, render, verify section preserved
 
 ---
 
+## Phoenix Config Integration
+
+> **Key Insight**: The UI system is ALREADY fraktal - it follows the same pattern as PhoenixConfig.
+
+### Existing Fractal Architecture
+
+```
+PhoenixConfig Pattern              InterfaceConfig Pattern
+───────────────────────            ───────────────────────
+vibe_core/phoenix/sections/   ↔    config/interface.yaml
+SectionLoader.discover()      ↔    renderers: {...}
+config/{section_id}.yaml      ↔    custom_renderers: {...}
+__getattr__ dynamic access    ↔    _renderers dict
+```
+
+### What `config/interface.yaml` Already Provides (486 LOC!)
+
+| Category | Elements | Purpose |
+|----------|----------|---------|
+| `element_types` | table, status, list, terminal, metric, nav | Reusable UI atoms |
+| `layouts` | fullpage, dashboard, terminal, content_only | Document structures |
+| `ownership_types` | LIVE, AI, HUMAN | Section ownership markers |
+| `view_types` | docs, dashboard, terminal, workspace, workflow | Application contexts |
+| `renderers` | 17 built-in | System UI files |
+| `custom_renderers` | {} | **Agent extension point!** |
+
+### How Agents Extend UI (Already Works!)
+
+```yaml
+# config/interface.yaml - Agent adds custom renderer
+custom_renderers:
+  broker_btc:
+    enabled: true
+    output: BROKER_BTC.md
+    view_type: dashboard
+    interval: 18000  # 5 hours
+    sections:
+      - id: price
+        owner: live
+        source: broker.btc_price
+      - id: notes
+        owner: ai
+```
+
+### Scalability Path (Future)
+
+For extreme scale (100+ renderers), split into:
+```
+config/
+├── interface.yaml           # Core settings + system renderers
+└── interface/
+    └── agents/
+        ├── broker.yaml      # Broker agent UI
+        └── {agent_id}.yaml  # Auto-discovered
+```
+
+**Implementation**: Modify `InterfaceConfig.from_dict()` to glob `config/interface/agents/*.yaml` and merge into `custom_renderers`.
+
+### GAD-000: UI Discoverability API
+
+```python
+# InterfacePlugin must expose:
+def get_ui_schema(self) -> dict:
+    """GAD-000 Test 1: Machine-discoverable UI system."""
+    return {
+        "element_types": list(self._config.element_types.keys()),
+        "layouts": list(self._config.layouts.keys()),
+        "ownership_types": list(self._config.ownership_types.keys()),
+        "renderers": self.get_registered_documents(),
+        "custom_renderers": list(self._config.custom_renderers.keys()),
+    }
+```
+
+---
+
 **Status**: HAIKU-READY
