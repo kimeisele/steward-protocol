@@ -5,6 +5,13 @@
   "description": "System shell for Agent City - routes user intent to circuits and agents",
   "entry_point": "plugin_main.py",
   "priority": 15,
-  "dependencies": ["steward_protocol"],
+  "depends_on": [
+    "steward_protocol",
+    "tools"
+  ],
+  "dependencies": [
+    "steward_protocol",
+    "tools"
+  ],
   "provides_api": true
 }
