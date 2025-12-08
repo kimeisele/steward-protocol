@@ -1,12 +1,12 @@
 agent_id: curator
 ashrama: null
 constitutional_limits: []
-created_at: 1765226963.794595
-dharma: Knowledge curation and retrieval
+created_at: 1765229365.785238
+dharma: Knowledge
 display_name: curator
 learned_preferences: {}
 modification_count: 1
-modified_at: 1765226963.795
+modified_at: 1765229365.7854211
 personality:
   caution: 0.5
   creativity: 0.5
