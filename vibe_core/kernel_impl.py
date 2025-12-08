@@ -241,6 +241,11 @@ class RealVibeKernel(VibeKernel):
 
         self.trace = UnifiedTrace()
 
+        # OPUS-009: PRAKRITI Unified State Engine
+        from vibe_core.state import Prakriti
+
+        self.prakriti = Prakriti()
+
         # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry = CapabilityRegistry(ledger=self._ledger)
 
@@ -851,6 +856,9 @@ class RealVibeKernel(VibeKernel):
 
         self._status = KernelStatus.RUNNING
         logger.info("✅ KERNEL RUNNING")
+
+        # OPUS-009: Inject kernel reference into Prakriti for Layer 2 access
+        self.prakriti.inject_kernel(self)
 
         # PULSE: Write initial snapshot on boot
         self._pulse()
