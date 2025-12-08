@@ -1,4 +1,3 @@
-
 print("Step 1: Start", flush=True)
 
 try:
