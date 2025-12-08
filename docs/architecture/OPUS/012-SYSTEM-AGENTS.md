@@ -258,21 +258,112 @@ def on_spawn_request(self, spec: AgentSpec, oath_hash: str):
 
 ---
 
-## GAD-000 Compliance
+## Definition of Done (GAD-000 Compliance)
 
-System Agents MUST be:
-- **Discoverable**: `kernel.get_capabilities()` lists them
-- **Observable**: `kernel.get_system_status()` shows their state
-- **Parseable**: All outputs are structured
-- **Composable**: Can be chained via circuits
+### The 6-Test Turing Test for Agent Spawning
+
+Every spawned agent MUST pass these tests:
+
+#### 1. Discoverability Test ✅
+- [ ] `kernel.get_capabilities()` lists the spawned agent
+- [ ] Agent appears in `AGENTS.md` auto-generated interface
+- [ ] CLI command `vibe list agents` shows agent
+
+**Current Status:** ❌ INCOMPLETE - Agent not auto-registered in kernel (Gate 4 TODO)
+
+#### 2. Observability Test
+- [ ] `kernel.get_system_status()` shows agent state
+- [ ] Agent persona exists in `config/personas/{agent_id}.yaml`
+- [ ] Agent cartridge exists in sandbox or live directory
+
+**Current Status:** ⚠️ PARTIAL - Persona created ✅, cartridge in sandbox ✅, not in kernel registry ❌
+
+#### 3. Parseability Test
+- [ ] `steward.json` passport is valid JSON with schema
+- [ ] `audit_certificate.json` has machine-readable status
+- [ ] Spawn errors return structured `{status, error, reason}`
+
+**Current Status:** ✅ COMPLETE - All outputs are structured JSON
+
+#### 4. Composability Test
+- [ ] Spawn can be triggered via circuit (`AGENT_BIRTH_V1`)
+- [ ] Spawn can be triggered via syscall (`SPAWN_COGNITION`)
+- [ ] Spawn output can feed into next operation
+
+**Current Status:** ✅ COMPLETE - SPAWN_COGNITION syscall works
+
+#### 5. Idempotency Test
+- [ ] Spawning same agent twice returns "already exists"
+- [ ] Spawn can be safely retried after failure
+- [ ] State is atomic (no half-spawned agents)
+
+**Current Status:** ❌ INCOMPLETE - No duplicate detection
+
+#### 6. Identity Test (GAD-1000)
+- [ ] Spawned agent has `constitution_hash` in passport
+- [ ] Hash matches kernel's locked `CONSTITUTION.md` hash
+- [ ] Agent rejected if hash mismatches (Ronin prevention)
+
+**Current Status:** ✅ COMPLETE - Constitution gate verified
 
 ---
 
-## Next Steps
+## Implementation Status
 
-- [ ] Create `vibe_core/plugins/lifecycle/` plugin (separation of powers)
-- [ ] Add Syscall Registry to EnvoyPlugin
-- [ ] Wire constitution_hash verification in StewardProtocol
-- [ ] Create Sandbox→Auditor→Live pipeline
-- [ ] Update ENGINEER to use request_spawn() instead of direct register
-- [ ] Integration tests for full birth cycle
+### What Works NOW
+
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| LifecyclePlugin | ✅ | Boots, registers SPAWN_COGNITION syscall |
+| SyscallRegistry | ✅ | `vibe_core/runtime/syscalls.py` |
+| Engineer.spawn_agent | ✅ | Creates cartridge, passport, persona |
+| Gate 1 (Constitution) | ✅ | Hash verified against kernel |
+| Gate 2 (Auditor) | ⚠️ | STUB - engineer_stub signs |
+| Gate 3 (Prakriti) | ✅ | Persona created and saved |
+| Gate 4 (Kernel) | ❌ | TODO - dynamic cartridge loading |
+| Gate 5 (Herald) | ⚠️ | Event prepared, not published |
+
+### What's Missing
+
+1. **Gate 4 - Dynamic Cartridge Loading**
+   - Agent code stays in sandbox
+   - Not moved to `vibe_core/cartridges/`
+   - Not registered in kernel at runtime
+
+2. **Real Auditor Agent**
+   - Currently engineer signs its own work
+   - Need separate Auditor to scan sandbox
+   - Security audit before approval
+
+3. **CLI Integration**
+   - No `vibe spawn <agent>` command
+   - No `vibe list spawned` command
+   - Not visible via GAD-000 interfaces
+
+4. **Duplicate Prevention**
+   - Can spawn same agent twice
+   - Idempotency not enforced
+
+---
+
+## Files Created by Spawn
+
+```
+workspaces/sandbox/{agent_id}/
+├── cartridge_main.py    # Generated Python code
+├── steward.json         # Passport with constitution_hash
+└── audit_certificate.json  # STUB approval record
+
+config/personas/{agent_id}.yaml  # Prakriti identity
+```
+
+---
+
+## Next Steps (Priority Order)
+
+1. [ ] **Gate 4 Fix**: Move approved cartridge to live, register in kernel
+2. [ ] **Real Auditor**: Separate agent for code scanning
+3. [ ] **CLI Commands**: `vibe spawn`, `vibe list agents`
+4. [ ] **Duplicate Check**: Reject if agent_id already exists
+5. [ ] **Integration Test**: Full end-to-end spawn + use cycle
+
