@@ -102,8 +102,19 @@ class EnvoyPlugin(KernelPlugin):
         Register as THE envoy plugin on the kernel.
         Initialize unified router + executor (OPUS Architecture).
         Register EnvoyCartridge as the actual agent for task execution.
+
+        BOOT ORDER DEPENDENCY: ToolsPlugin (priority=5) MUST boot before EnvoyPlugin (priority=15).
+        See docs/architecture/OPUS/004-BOOT-SEQUENCE-AUDIT.md for boot order documentation.
         """
         self._kernel = kernel
+
+        # DEFENSIVE CHECK: Verify ToolsPlugin booted first (priority 5 < 15)
+        # This is a critical dependency - EnvoyPlugin needs tool_registry for circuit execution
+        if not hasattr(kernel, "tool_registry") or kernel.tool_registry is None:
+            raise RuntimeError(
+                "CRITICAL: ToolsPlugin (priority=5) must boot before EnvoyPlugin (priority=15)! "
+                "tool_registry not found on kernel. Check plugin priorities in manifest.json."
+            )
 
         # Register as kernel.envoy
         kernel.envoy = self
@@ -111,7 +122,12 @@ class EnvoyPlugin(KernelPlugin):
         # Load config
         self._load_config()
 
-        # Discover circuits and playbooks FIRST (needed by router)
+        # ═══════════════════════════════════════════════════════════════════════════
+        # CRITICAL: Circuit discovery MUST happen BEFORE router initialization!
+        # The UnifiedRouter reads self._circuits during inject_kernel().
+        # If we call _init_unified_runtime() first, router will have 0 circuits!
+        # See: docs/architecture/OPUS/004-BOOT-SEQUENCE-AUDIT.md (Circular Reference Risk)
+        # ═══════════════════════════════════════════════════════════════════════════
         self._discover_circuits()
         self._discover_playbooks()
 
