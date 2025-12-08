@@ -38,10 +38,27 @@ from .kernel import (
     VibeLedger,
     VibeScheduler,
 )
+from .kernel_ops import (
+    check_system_health as _check_system_health_impl,
+)
+from .kernel_ops import (
+    execute_playbook as _execute_playbook_impl,
+)
+from .kernel_ops import (
+    grant_repo_access as _grant_repo_access_impl,
+)
+from .kernel_ops import (
+    narasimha_destroy_agent as _narasimha_destroy_agent_impl,
+)
+from .kernel_ops import (
+    pulse as _pulse_impl,
+)
+from .kernel_ops import (
+    sync_resource_quotas as _sync_resource_quotas_impl,
+)
 from .ledger import InMemoryLedger, SQLiteLedger
 from .lineage import LineageChain, LineageEventType  # Phase 5: Parampara Blockchain
-
-# from .markdown_ui_manager import MarkdownUIManager  # DEPRECATED: UI Manager
+from .manifest_registry import InMemoryManifestRegistry
 from .narasimha import ThreatIndicator, get_narasimha  # Phase 7: Kill-Switch
 from .network_proxy import KernelNetworkProxy  # Phase 4: Network Isolation
 from .plugin_loader import PluginLoader  # Phase 1: Plugin System
@@ -51,17 +68,14 @@ from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
-from .scheduling import Task
+from .scheduling import InMemoryScheduler, Task
 
 # Sync modules: Extracted bidirectional markdown interfaces
 # NOTE: ToolRegistry and ToolDiscovery are now handled by ToolsPlugin (Phase 2 Extraction)
 
 # Import Auditor for immune system (optional)
 try:
-    from vibe_core.cartridges.system.auditor.tools.invariant_tool import (
-        InvariantSeverity,
-        get_judge,
-    )
+    from vibe_core.cartridges.system.auditor.tools.invariant_tool import get_judge
 
     AUDITOR_AVAILABLE = True
 except ImportError:
@@ -71,9 +85,15 @@ except ImportError:
 
 # Import Constitutional Oath verification (Governance Gate - SECURITY FIX: P0.3)
 try:
-    from vibe_core.bridge import ConstitutionalOath
+    # Check for availability without unused import
+    import importlib.util
 
-    OATH_ENFORCEMENT_AVAILABLE = True
+    if importlib.util.find_spec("vibe_core.bridge"):
+        from vibe_core.bridge import ConstitutionalOath  # noqa: F401
+
+        OATH_ENFORCEMENT_AVAILABLE = True
+    else:
+        raise ImportError("vibe_core.bridge not found")
 except ImportError as e:
     # PHOENIX VIMANA: Graceful degradation by default (STEWARD_REQUIRE_OATH=true for strict mode)
     import os
@@ -93,26 +113,6 @@ logger = logging.getLogger("VIBE_KERNEL")
 
 # Helper classes: Extracted to reduce kernel size
 # Kernel Operations: Extracted isolated methods
-from .kernel_ops import (
-    check_system_health as _check_system_health_impl,
-)
-from .kernel_ops import (
-    execute_playbook as _execute_playbook_impl,
-)
-from .kernel_ops import (
-    grant_repo_access as _grant_repo_access_impl,
-)
-from .kernel_ops import (
-    narasimha_destroy_agent as _narasimha_destroy_agent_impl,
-)
-from .kernel_ops import (
-    pulse as _pulse_impl,
-)
-from .kernel_ops import (
-    sync_resource_quotas as _sync_resource_quotas_impl,
-)
-from .manifest_registry import InMemoryManifestRegistry
-from .scheduling import InMemoryScheduler
 
 
 def _get_config():
@@ -236,7 +236,12 @@ class RealVibeKernel(VibeKernel):
 
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
-        # Records all changes to Parampara Ledger for audit trail
+        # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
+        from vibe_core.runtime.unified_trace import UnifiedTrace
+
+        self.trace = UnifiedTrace()
+
+        # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry = CapabilityRegistry(ledger=self._ledger)
 
         # I/O SERVICE: Central file operation controller
@@ -1269,8 +1274,21 @@ class RealVibeKernel(VibeKernel):
         return self._event_bus.get_history(limit=limit, event_type=event_type)
 
     def get_event_bus_status(self) -> Dict[str, Any]:
-        """Get EventBus status (total events, subscribers, etc.)"""
+        """
+        Get the current status of the EventBus.
+
+        Returns:
+            Dict containing event bus statistics (total events, subscribers, etc.)
+        """
         return self._event_bus.get_status()
+
+    def get_trace(self, trace_id: str) -> List[Dict[str, Any]]:
+        """
+        GAD-000 Test 2: Observability.
+
+        Get machine-readable execution history for a specific trace.
+        """
+        return self.trace.get_trace(trace_id)
 
     def _can_revoke_capability(self, revoker_id: str, target_id: str) -> bool:
         """

@@ -67,17 +67,17 @@ Instead of moving *everything* into `envoy/` (which would make Envoy hard to ref
 graph TD
     User[User Input] --> Gateway[Gateway / CLI]
     Gateway --> Envoy[Envoy Agent]
-    
+
     subgraph "Envoy (The Cortex Agent)"
         Envoy --> Semantic[Semantic Analysis]
         Envoy --> Routing[Intent Routing]
     end
-    
+
     subgraph "vibe_core.cortex (The Library)"
         Semantic -. uses .-> SemanticEngine[SemanticRouter Class]
         Routing -. uses .-> CircuitEngine[CircuitExecutor Class]
     end
-    
+
     Routing --> Target[Target Agent (e.g., Watchman)]
 ```
 

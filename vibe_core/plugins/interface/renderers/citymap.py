@@ -112,6 +112,6 @@ class CityMapRenderer(BaseRenderer):
    (Core)  (Economy) (Apps)
      │        │        │
     ...      ...      ...
-    
+
   Total Active Nodes: {total_agents}
 ```"""
