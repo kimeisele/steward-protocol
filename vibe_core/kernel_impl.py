@@ -623,6 +623,99 @@ class RealVibeKernel(VibeKernel):
             "uptime_seconds": time.time() - self._boot_time if hasattr(self, "_boot_time") else 0,
         }
 
+    def get_capabilities(self) -> dict:
+        """
+        GAD-000 Test 1: Machine-readable capability discovery.
+
+        Returns structured schema of what this kernel can do.
+        """
+        return {
+            "version": "1.0",
+            "kernel_status": self.status.value,
+            "available_methods": [
+                {
+                    "name": "submit_task",
+                    "purpose": "Queue a task for execution",
+                    "parameters": [
+                        {"name": "agent_id", "type": "string", "required": True},
+                        {"name": "payload", "type": "dict", "required": True},
+                        {"name": "idempotency_key", "type": "string", "required": False},
+                    ],
+                    "returns": {"success": "task_id", "failure": "StructuredError"},
+                },
+                {"name": "get_system_status", "purpose": "Get current system state"},
+                {"name": "get_capabilities", "purpose": "Get this schema"},
+                {"name": "register_agent", "purpose": "Register a new agent"},
+            ],
+            "registered_agents": list(self._agent_registry.keys()),
+            "available_circuits": [r["name"] for r in self._playbook_router.list_available_routes()]
+            if hasattr(self, "_playbook_router")
+            else [],
+            "plugins_loaded": [p.plugin_id for p in self._plugins],
+        }
+
+    def get_system_status(self) -> dict:
+        """
+        GAD-000 Test 2: AI-readable system state.
+
+        Returns structured dict for AI operators to query:
+        - Current kernel status
+        - Queue statistics
+        - Agent states
+        - Recent errors (if any)
+
+        See: docs/architecture/OPUS/006-GAD000-COMPLIANCE-AUDIT.md
+        """
+        import time
+
+        # Get queue status
+        queue_status = {}
+        if hasattr(self, "_scheduler") and self._scheduler:
+            queue_status = self._scheduler.get_queue_status()
+
+        # Get agent states
+        agents = {}
+        for agent_id, agent in self._agent_registry.items():
+            agent_info = {
+                "capabilities": getattr(agent, "capabilities", []),
+            }
+            if hasattr(agent, "status"):
+                agent_info["status"] = str(agent.status)
+            agents[agent_id] = agent_info
+
+        # Get circuit count from envoy if available
+        circuit_count = 0
+        if hasattr(self, "envoy") and self.envoy:
+            circuits = getattr(self.envoy, "_circuits", {})
+            circuit_count = len(circuits)
+
+        # Get plugin count
+        plugin_count = len(self._plugins) if hasattr(self, "_plugins") else 0
+
+        # Calculate completed last minute
+        completed_last_minute = 0
+        if hasattr(self, "ledger"):
+            # This is an approximation as we'd need to query the ledger properly
+            # For now, we rely on scheduler cache if available, or 0
+            pass
+
+        return {
+            "timestamp": time.time(),
+            "kernel_status": self._status.value,
+            "queue": {
+                "pending": queue_status.get("pending", 0),
+                "in_progress": queue_status.get("in_progress", 0),
+                "completed": queue_status.get("completed", 0),
+                # "completed_last_minute": completed_last_minute, # TODO: Implement efficient ledger query
+            },
+            "agents": agents,
+            "agent_count": len(self._agent_registry),
+            "circuit_count": circuit_count,
+            "plugin_count": plugin_count,
+            "uptime_seconds": time.time() - self._boot_time if hasattr(self, "_boot_time") else 0,
+            "last_error": getattr(self, "_last_error", None),
+        }
+
     def register_agent(self, agent: VibeAgent, spawn_process: bool = True) -> None:
         """
         Register an agent and inject kernel reference.
