@@ -260,12 +260,46 @@ class LifecyclePlugin(KernelPlugin):
         # =====================================================================
         # GATE 4: Kernel Registration (Execution)
         # =====================================================================
-        # Load the cartridge and register
         cartridge_path = spec.get("cartridge_path")
         if cartridge_path:
-            # TODO: Dynamically load cartridge from path
-            # For now, log the intent
-            logger.info(f"✅ Gate 4 (Kernel): Would register cartridge from {cartridge_path}")
+            try:
+                # Dynamically load cartridge from path
+                import importlib.util
+                from pathlib import Path
+
+                cartridge_file = Path(cartridge_path)
+                if not cartridge_file.exists():
+                    raise FileNotFoundError(f"Cartridge not found: {cartridge_path}")
+
+                # Load as module
+                module_name = f"spawned_agent_{agent_id}"
+                spec_loader = importlib.util.spec_from_file_location(module_name, cartridge_file)
+                if not spec_loader or not spec_loader.loader:
+                    raise ImportError(f"Cannot load module from {cartridge_path}")
+
+                module = importlib.util.module_from_spec(spec_loader)
+                spec_loader.loader.exec_module(module)
+
+                # Find the Cartridge class (ends with 'Cartridge')
+                cartridge_class = None
+                for name in dir(module):
+                    obj = getattr(module, name)
+                    if isinstance(obj, type) and name.endswith("Cartridge"):
+                        cartridge_class = obj
+                        break
+
+                if not cartridge_class:
+                    raise TypeError(f"No *Cartridge class found in {cartridge_path}")
+
+                # Instantiate and register
+                cartridge_instance = cartridge_class()
+                self._kernel.register_agent(cartridge_instance, spawn_process=False)
+
+                logger.info(f"✅ Gate 4 (Kernel): Registered '{agent_id}' from {cartridge_path}")
+
+            except Exception as e:
+                logger.error(f"❌ Gate 4 (Kernel): Failed to load cartridge: {e}")
+                raise
         else:
             logger.warning("⚠️ Gate 4 (Kernel): No cartridge_path in spec, deferred registration")
 
