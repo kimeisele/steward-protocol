@@ -426,6 +426,57 @@ python -m pytest tests/unit/test_knowledge_graph.py tests/unit/test_knowledge_re
 
 ---
 
+## HAIKU EXECUTION BLOCKS
+
+> **For AI Agent Execution**: Copy-paste these blocks to implement fixes.
+
+### TASK 1: Fix Result Path (cartridge_main.py)
+
+```
+FILE: vibe_core/cartridges/system/envoy/cartridge_main.py
+FIND: details = circuit_result.get("details", {})
+      rendered = details.get("rendered", {}).get("rendered", "")
+REPLACE_WITH:
+      # Extract rendered output from phases_executed
+      rendered = ""
+      phases = circuit_result.get("phases_executed", [])
+      for phase in phases:
+          if phase.get("phase_id") == "render_output":
+              rendered = phase.get("result", {}).get("rendered", "")
+              break
+VERIFY: python3 -c "from vibe_core.kernel_impl import RealVibeKernel; k=RealVibeKernel(ledger_path=':memory:'); k.boot(); print(k.envoy.execute_circuit('SYSTEM_STATUS_V2', params={'user_input':'status'}))"
+```
+
+### TASK 2: Add Task Completion Hook (plugin_main.py)
+
+```
+FILE: vibe_core/plugins/interface/plugin_main.py
+AFTER: def on_tick_post(self, kernel) -> None:
+ADD_METHOD:
+    def on_task_completed(self, kernel, task_id: str, result: dict) -> None:
+        """FIX 5: Trigger immediate ENVOY.md update when task completes."""
+        if "envoy" in self._renderers:
+            self._last_render["envoy"] = 0  # Force next render
+VERIFY: python -m pytest tests/integration/test_kernel_markdown_interfaces.py -v -k "envoy"
+```
+
+### TASK 3: Fix Result Format Extraction (envoy_sync.py)
+
+```
+FILE: vibe_core/envoy_sync.py
+FIND: result.get("message") or result.get("summary") or result.get("response") or "Done"
+REPLACE_WITH:
+      # Extract from circuit phases first
+      if "phases_executed" in result:
+          for phase in result["phases_executed"]:
+              if phase.get("phase_id") == "render_output":
+                  return phase.get("result", {}).get("rendered", "")
+      return result.get("response") or result.get("message") or result.get("output") or "Done"
+VERIFY: Write "status" to ENVOY.md, run kernel ticks, check Response History has actual output
+```
+
+---
+
 **Signed**: Opus 4.5
 **Date**: 2025-12-07
-**Status**: IMPLEMENTING
+**Status**: HAIKU-READY
