@@ -23,11 +23,32 @@ class TestMonitorLoader:
 
     def test_discover_monitors_with_plugin(self):
         """Should discover monitors from plugin."""
-        # This requires a plugin that actually exposes monitors.
-        # Since I can't create a real plugin easily without writing one, I will skip this
-        # or assume we need to use a real plugin from the system if testing integration.
-        # But this is unit.
-        pass
+        with TestContext() as ctx:
+            # 1. Define a Mock Plugin with monitors
+            class MockPlugin:
+                @property
+                def monitors(self):
+                    return {"test_monitor": lambda: "status_ok"}
+
+            # 2. Inject plugin into kernel (bypassing normal loader for unit test efficiency)
+            # The kernel stores plugins in a list or dict.
+            # RealVibeKernel uses _plugins list but plugins usually register via add_plugin or similar.
+            # For TestKernel (minimal), we might need to simulate it.
+
+            # Since TestKernel.minimal() might not have full plugin infrastructure,
+            # we rely on MonitorLoader looking at 'plugins' attribute or method.
+            # Let's verify how MonitorLoader works: typically iterates kernel.plugins.values() or similar.
+
+            # Checking MonitorLoader in previous turns suggested it looks for attributes.
+            # Let's monkeypatch the kernel's plugin registry for this test.
+            ctx.kernel.plugins = {"mock": MockPlugin()}
+
+            # 3. Discover
+            monitors = MonitorLoader.discover_monitors(ctx.kernel)
+
+            # 4. Assert
+            assert "test_monitor" in monitors
+            assert monitors["test_monitor"]() == "status_ok"
 
     def test_cache_behavior(self):
         """Should cache results."""

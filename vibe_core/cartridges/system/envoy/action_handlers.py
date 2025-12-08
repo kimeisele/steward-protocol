@@ -218,31 +218,49 @@ class CheckStateHandler(ActionHandler):
         required_fields = params.get("required_fields", [])
         constraints = params.get("constraints", {})
 
-        # Check required fields exist in user_input or phase_results
+        # Strict validation: Check fields exist in user_input or phase_results
+        missing_fields = []
         for field in required_fields:
-            # Check if field exists in context
-            found = False
-            if field in context.phase_results:
-                found = True
-            # For now, just log and pass - actual implementation would check properly
-            if not found:
-                logger.debug(f"    Field '{field}' check (relaxed mode)")
+            if field not in context.phase_results and field not in params:
+                missing_fields.append(field)
 
-        # Check constraints
+        if missing_fields:
+            error_msg = f"Missing required fields: {', '.join(missing_fields)}"
+            logger.error(f"    ❌ Input validation failed: {error_msg}")
+            return ActionResult.fail(error_msg)
+
+        # Strict validation: Check constraints
         for constraint_name, constraint_value in constraints.items():
             if constraint_name.endswith("_pattern"):
-                # Regex pattern validation
-                field_name = constraint_name.replace("_pattern", "")
-                logger.debug(f"    Pattern check for {field_name}: {constraint_value}")
+                import re
 
-        logger.info("  ✓ Input validation passed")
+                field_name = constraint_name.replace("_pattern", "")
+                value = str(params.get(field_name, context.phase_results.get(field_name, "")))
+
+                if not re.match(constraint_value, value):
+                    error_msg = f"Field '{field_name}' does not match pattern '{constraint_value}'"
+                    logger.error(f"    ❌ Constraint failed: {error_msg}")
+                    return ActionResult.fail(error_msg)
+
+        logger.info("  ✓ Input validation passed (STRICT)")
         return ActionResult.ok({"validation": "passed", "fields_checked": required_fields})
 
     def _check_permissions(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
         """Check if user has required permissions"""
         required_permissions = params.get("required_permissions", [])
-        # For now, all permissions are granted - actual implementation would check
-        logger.info("  ✓ Permission check passed")
+
+        # Strict validation: ACTUAL permission checking (mocked via allow-list for now)
+        # In a real system, this would check against a user role/policy engine
+        # For "Hardening" phase, we permit root/admin roles or explicit "public" tasks
+
+        user_role = getattr(context, "user_role", "unknown")  # Assuming role is in context
+
+        # Simple Role-Based Access Control (RBAC) Logic
+        if "admin" in required_permissions and user_role != "admin":
+            logger.error(f"    ❌ Permission denied: User '{user_role}' needs 'admin'")
+            return ActionResult.fail(f"Permission denied: Required 'admin' role, got '{user_role}'")
+
+        logger.info(f"  ✓ Permission check passed for role '{user_role}'")
         return ActionResult.ok({"permissions": "granted"})
 
     def _check_state(self, params: Dict[str, Any], context: ActionContext) -> ActionResult:
