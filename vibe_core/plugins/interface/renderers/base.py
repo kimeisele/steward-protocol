@@ -58,21 +58,39 @@ class BaseRenderer(ABC):
         """Unique name of the renderer (e.g. 'envoy', 'settings')."""
         pass
 
+    @abstractmethod
     def render(self) -> None:
+        """Perform rendering logic."""
+        pass
+
+    def generate_content(self) -> Optional[str]:
         """
-        Perform rendering logic with Law 3 (dirty tracking).
+        Generate content for this renderer (optional pattern).
 
-        Subclasses can override generate_content() to provide content,
-        or override render() for custom logic.
+        Override this method to provide content.
+        Return None if not using this pattern.
+        """
+        return None
 
-        Law 3: Only write if content changed (hash-based dirty tracking).
+    def render_with_dirty_tracking(self) -> None:
+        """
+        Helper: Render with Law 3 (hash-based dirty tracking).
+
+        Subclasses that use generate_content() can call this instead of
+        implementing render() directly. It handles the hashing.
+
+        Example:
+            class MyRenderer(BaseRenderer):
+                def render(self) -> None:
+                    self.render_with_dirty_tracking()
+
+                def generate_content(self) -> str:
+                    return "my content"
         """
         import hashlib
 
-        # Try to get content from generate_content() (preferred pattern)
         new_content = self.generate_content()
         if new_content is None:
-            # Fallback: no content to render
             return
 
         # Law 3: Check if content actually changed
@@ -85,15 +103,6 @@ class BaseRenderer(ABC):
         # Content changed, merge and write
         self.merge_and_write(new_content)
         self._last_content_hash = new_hash
-
-    def generate_content(self) -> Optional[str]:
-        """
-        Generate content for this renderer.
-
-        Override this method to provide content.
-        Return None if not using this pattern.
-        """
-        return None
 
     # =========================================================================
     # CONFIG ACCESS

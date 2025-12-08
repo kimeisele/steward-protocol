@@ -419,6 +419,86 @@ This is a temporary placeholder. The system will retry on the next render cycle.
         return status
 
     # ==========================================================================
+    # GAD-000 COMPLIANCE: MACHINE DISCOVERABILITY API
+    # ==========================================================================
+
+    def get_registered_documents(self) -> list:
+        """
+        GAD-000 Test 1: Machine-discoverable document registry.
+
+        Returns list of all documents managed by renderers with their metadata.
+        Allows AI agents to discover what documents exist and their properties.
+        """
+        documents = []
+        for name, renderer in self._renderers.items():
+            config = renderer.get_config()
+            if not config:
+                continue
+
+            interface_config = renderer.get_interface_config()
+            sections = []
+            if config.sections:
+                for section in config.sections:
+                    sections.append({
+                        "id": section.id,
+                        "owner": section.owner,
+                        "element_type": section.element_type,
+                        "source": section.source,
+                    })
+
+            documents.append({
+                "id": name,
+                "path": str(config.output),
+                "mode": config.mode if hasattr(config, "mode") else "unidirectional",
+                "interval": config.interval,
+                "enabled": config.enabled,
+                "sections": sections,
+                "renderer_type": type(renderer).__name__,
+            })
+
+        return documents
+
+    def get_ui_schema(self) -> dict:
+        """
+        GAD-000 Schema: Machine-discoverable UI system configuration.
+
+        Returns the full UI schema including element types, layouts,
+        ownership types, and all registered documents.
+        """
+        element_types = {}
+        layouts = {}
+        ownership_types = {}
+
+        if self._interface_config:
+            element_types = {
+                name: {
+                    "settings": et.settings if hasattr(et, "settings") else {}
+                }
+                for name, et in (self._interface_config.element_types or {}).items()
+            }
+            layouts = {
+                name: {
+                    "structure": str(layout)
+                }
+                for name, layout in (self._interface_config.layouts or {}).items()
+            }
+            ownership_types = {
+                name: {
+                    "marker_start": ot.marker_start if hasattr(ot, "marker_start") else "",
+                    "marker_end": ot.marker_end if hasattr(ot, "marker_end") else "",
+                }
+                for name, ot in (self._interface_config.ownership_types or {}).items()
+            }
+
+        return {
+            "element_types": element_types,
+            "layouts": layouts,
+            "ownership_types": ownership_types,
+            "renderers": self.get_registered_documents(),
+            "custom_renderers": list(self._interface_config.custom_renderers.keys()) if self._interface_config else [],
+        }
+
+    # ==========================================================================
     # AUTO-COMMIT FOR UI FILES
     # ==========================================================================
 
