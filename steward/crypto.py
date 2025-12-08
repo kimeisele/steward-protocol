@@ -115,3 +115,14 @@ def get_public_key_fingerprint(public_key_pem: str) -> str:
     # Normalize by stripping whitespace
     clean_key = public_key_pem.strip().encode()
     return hashlib.sha256(clean_key).hexdigest()[:16]
+
+
+def get_public_key_string() -> str:
+    """
+    Get the system's public key as a PEM string.
+
+    Used by verifier_tool.py for signature verification.
+    Loads or generates keys if they don't exist.
+    """
+    _, public_key = load_or_generate_keys()
+    return public_key
