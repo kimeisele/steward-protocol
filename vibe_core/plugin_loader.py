@@ -107,14 +107,84 @@ class PluginLoader(UnifiedLoader):
                     all_plugins.extend(old_plugins)
                     metadata.update(old_meta)
 
-        # Sort by priority
-        sorted_plugins = sorted(all_plugins, key=lambda p: p.priority)
+        # Sort by dependencies (Topological Sort)
+        sorted_plugins = cls._sort_plugins_by_dependency(all_plugins, metadata)
 
         # Build registry
         registry: PluginRegistry = {p.plugin_id: p for p in sorted_plugins}
 
         logger.info(f"[plugin] Total plugins loaded: {len(registry)}")
         return registry, metadata
+
+    @classmethod
+    def _sort_plugins_by_dependency(
+        cls,
+        plugins: List[KernelPlugin],
+        metadata: PluginMetadata,
+    ) -> List[KernelPlugin]:
+        """
+        Sort plugins by dependency order (Topological Sort).
+
+        Rules:
+        1. If A depends on B, B come before A.
+        2. If no dependency, use priority (lower number = earlier boot).
+        3. Stable sort for equal priorities.
+        """
+        # Map plugin_id -> plugin instance
+        plugin_map = {p.plugin_id: p for p in plugins}
+
+        # Build graph: plugin_id -> set of dependencies
+        graph: Dict[str, set] = {}
+        for p in plugins:
+            meta = metadata.get(p.plugin_id)
+            deps = []
+            if meta and meta.manifest:
+                deps = meta.manifest.get("depends_on", [])
+                # Also support 'dependencies' field (legacy/alternate name)
+                if not deps:
+                    deps = meta.manifest.get("dependencies", [])
+
+            # Filter deps that actually exist to avoid cycles/errors on missing optional deps
+            # (Strict validation typically happens elsewhere, here we just sort what we have)
+            valid_deps = {d for d in deps if d in plugin_map}
+            graph[p.plugin_id] = valid_deps
+
+        # Topological sort
+        result = []
+        visited = set()
+        temp_mark = set()  # For cycle detection
+
+        def visit(node_id):
+            if node_id in temp_mark:
+                logger.warning(f"Circular dependency detected involving {node_id}")
+                return
+            if node_id in visited:
+                return
+
+            temp_mark.add(node_id)
+
+            # Visit dependencies first
+            for dep_id in graph.get(node_id, []):
+                visit(dep_id)
+
+            temp_mark.remove(node_id)
+            visited.add(node_id)
+            if node_id in plugin_map:
+                result.append(plugin_map[node_id])
+
+        # Visit nodes in priority order (so independent nodes respect priority)
+        # Lower priority number = boot first (standard convention in this system?)
+        # Wait, manifest.json says "priority": 15 for Envoy.
+        # Tools is priority 5.
+        # So Lower "priority" value means EARLIER boot.
+        # sorted(plugins, key=lambda p: p.priority) ensures we visit high-priority (low number) first.
+
+        priority_sorted = sorted(plugins, key=lambda p: p.priority)
+
+        for p in priority_sorted:
+            visit(p.plugin_id)
+
+        return result
 
     @classmethod
     def _load_old_style_plugin(

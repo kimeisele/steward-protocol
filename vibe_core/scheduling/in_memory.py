@@ -41,9 +41,27 @@ class InMemoryScheduler:
         }
         self.executing: Optional[Task] = None
         self.completed: Dict[str, Task] = {}
+        # GAD-000 Test 5: Idempotency cache
+        self._idempotency_cache: Dict[str, Dict[str, Any]] = {}
 
-    def submit_task(self, task: Task) -> str:
-        """Submit task to priority queue, return task_id."""
+    def submit_task(self, task: Task, idempotency_key: Optional[str] = None) -> str:
+        """Submit task to priority queue, return task_id.
+
+        NOTE: Task validation (Sarga cycle, governance, etc.) is handled
+        by plugins via on_task_submit hook BEFORE this method is called.
+        This method is a pure queue operation.
+
+        GAD-000 Test 5: Idempotency support.
+        """
+        import time
+
+        # Check idempotency cache
+        if idempotency_key:
+            existing = self._idempotency_cache.get(idempotency_key)
+            if existing:
+                logger.info(f"Task skipped (idempotent): {idempotency_key} -> {existing['task_id']}")
+                return existing["task_id"]
+
         # Normalize priority (default to 2 if missing or invalid)
         priority = getattr(task, "priority", 2)
         if not isinstance(priority, int) or priority not in self.queues:
@@ -51,6 +69,10 @@ class InMemoryScheduler:
 
         self.queues[priority].append(task)
         logger.info(f"Task queued (P{priority}): {task.task_id} for {task.agent_id}")
+
+        # Store in idempotency cache
+        if idempotency_key:
+            self._idempotency_cache[idempotency_key] = {"task_id": task.task_id, "timestamp": time.time()}
         return task.task_id
 
     def next_task(self) -> Optional[Task]:
