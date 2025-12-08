@@ -5,6 +5,7 @@ GAD-000 Compliant: All handlers return data, CLI handles rendering.
 """
 
 from .executor import CLIExecutor
+from .legacy import StewardCLI
 from .loader import CLILoader
 from .main import cli_entry, main
 from .monitor_loader import MonitorLoader
