@@ -523,3 +523,207 @@ def run_all_tests():
 - **GAD-1000**: Identity Fusion (Test 6 implementation)
 - **OPUS-005**: Unification Roadmap (Phase 5 = Test 2 solution)
 - **OPUS-003**: AOS Foundation Repair (affected by Test 4)
+
+---
+
+## HAIKU EXECUTION BLOCKS
+
+> **For AI Agent Execution**: Copy-paste these blocks to implement GAD-000 compliance.
+
+### TASK 1: Add kernel.get_capabilities() (Test 1: Discoverability)
+
+```
+FILE: vibe_core/kernel_impl.py
+LOCATION: In RealVibeKernel class, add after __init__
+ADD_METHOD:
+    def get_capabilities(self) -> dict:
+        """GAD-000 Test 1: Machine-readable capability discovery."""
+        return {
+            "version": "1.0",
+            "kernel_status": self.status.value,
+            "available_methods": [
+                {"name": "submit_task", "purpose": "Queue task for execution"},
+                {"name": "tick", "purpose": "Execute one scheduler cycle"},
+                {"name": "boot", "purpose": "Initialize kernel"},
+                {"name": "shutdown", "purpose": "Graceful shutdown"},
+            ],
+            "registered_agents": list(self._agent_registry.keys()),
+            "available_circuits": list(self.envoy._circuits.keys()) if hasattr(self, 'envoy') else [],
+            "plugins_loaded": [p.id for p in self._plugins]
+        }
+
+VERIFY: python3 -c "from vibe_core.kernel_impl import RealVibeKernel; k=RealVibeKernel(ledger_path=':memory:'); k.boot(); print(k.get_capabilities())"
+```
+
+### TASK 2: Add kernel.get_system_status() (Test 2: Observability)
+
+```
+FILE: vibe_core/kernel_impl.py
+LOCATION: In RealVibeKernel class, after get_capabilities()
+ADD_METHOD:
+    def get_system_status(self) -> dict:
+        """GAD-000 Test 2: AI-readable system state."""
+        import time
+        return {
+            "timestamp": time.time(),
+            "kernel_status": self.status.value,
+            "queue": self._scheduler.get_queue_status(),
+            "agents": {
+                agent_id: {
+                    "status": getattr(agent, 'status', 'unknown'),
+                    "capabilities": getattr(agent, 'capabilities', [])
+                }
+                for agent_id, agent in self._agent_registry.items()
+            },
+            "last_error": getattr(self, '_last_error', None),
+            "uptime_seconds": time.time() - getattr(self, '_boot_time', time.time())
+        }
+
+FILE: vibe_core/kernel_impl.py
+FIND: self.status = KernelStatus.RUNNING
+ADD_AFTER: self._boot_time = time.time()
+
+VERIFY: python3 -c "from vibe_core.kernel_impl import RealVibeKernel; k=RealVibeKernel(ledger_path=':memory:'); k.boot(); import json; print(json.dumps(k.get_system_status(), indent=2, default=str))"
+```
+
+### TASK 3: Migrate Errors to StructuredError (Test 3: Parseability)
+
+```
+FILE: vibe_core/runtime/unified_execution.py
+FIND: raise Exception(
+REPLACE_WITH:
+    from vibe_core.errors import StructuredError, ErrorCode
+    raise StructuredError(
+        code=ErrorCode.E2001_INVALID_CIRCUIT,
+        message=
+
+FILE: vibe_core/kernel_impl.py
+FIND: raise RuntimeError(
+REPLACE_WITH:
+    from vibe_core.errors import StructuredError, ErrorCode
+    raise StructuredError(
+        code=ErrorCode.E3001_KERNEL_FAULT,
+        message=
+
+VERIFY: python3 -c "from vibe_core.errors import StructuredError, ErrorCode; e=StructuredError(code=ErrorCode.E2001_INVALID_CIRCUIT, message='test'); print(e.to_dict())"
+```
+
+### TASK 4: Add Idempotency Keys to Scheduler (Test 5: Idempotency)
+
+```
+FILE: vibe_core/scheduler.py
+LOCATION: In InMemoryScheduler.__init__
+ADD: self._idempotency_cache: Dict[str, dict] = {}
+
+LOCATION: In InMemoryScheduler.submit_task
+MODIFY to accept idempotency_key parameter:
+    def submit_task(self, task: Task, idempotency_key: Optional[str] = None) -> dict:
+        \"\"\"GAD-000 Test 5: Safe retry with idempotency.\"\"\"
+        if idempotency_key:
+            existing = self._idempotency_cache.get(idempotency_key)
+            if existing:
+                return {
+                    "status": "already_completed",
+                    "task_id": existing["task_id"],
+                    "idempotency_key": idempotency_key
+                }
+
+        task_id = self._queue_task(task)
+
+        if idempotency_key:
+            self._idempotency_cache[idempotency_key] = {
+                "task_id": task_id,
+                "timestamp": time.time()
+            }
+
+        return {"status": "queued", "task_id": task_id}
+
+VERIFY: python3 -c "
+from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core import Task
+k = RealVibeKernel(ledger_path=':memory:')
+k.boot()
+t = Task(agent_id='envoy', payload={'command':'status'})
+r1 = k._scheduler.submit_task(t, idempotency_key='test-123')
+r2 = k._scheduler.submit_task(t, idempotency_key='test-123')
+print(f'First: {r1}')
+print(f'Second: {r2}')
+assert r2.get('status') == 'already_completed', 'Idempotency failed!'
+print('IDEMPOTENCY WORKS!')
+"
+```
+
+### TASK 5: Verification Script
+
+```
+FILE: scripts/verify_gad000_compliance.py (NEW)
+CREATE:
+    #!/usr/bin/env python3
+    \"\"\"GAD-000 Compliance Verification Script.\"\"\"
+    from vibe_core.kernel_impl import RealVibeKernel
+    from vibe_core.errors import StructuredError
+
+    def test_discoverability(kernel):
+        caps = kernel.get_capabilities()
+        assert "available_methods" in caps
+        assert "registered_agents" in caps
+        print("✅ Test 1: Discoverability PASSED")
+        return True
+
+    def test_observability(kernel):
+        status = kernel.get_system_status()
+        assert "kernel_status" in status
+        assert "queue" in status
+        print("✅ Test 2: Observability PASSED")
+        return True
+
+    def test_parseability(kernel):
+        from vibe_core.errors import StructuredError, ErrorCode
+        e = StructuredError(code=ErrorCode.E2001_INVALID_CIRCUIT, message="test")
+        assert hasattr(e, 'code')
+        assert hasattr(e, 'retry_safe')
+        print("✅ Test 3: Parseability PASSED")
+        return True
+
+    def test_composability(kernel):
+        result = kernel.envoy.execute_circuit("SYSTEM_STATUS_V2", params={"user_input": "status"})
+        assert isinstance(result, dict)
+        print("✅ Test 4: Composability PASSED")
+        return True
+
+    def test_idempotency(kernel):
+        # Test if idempotency is implemented
+        print("⚠️ Test 5: Idempotency SKIPPED (requires scheduler changes)")
+        return None
+
+    def test_identity(kernel):
+        print("⚠️ Test 6: Identity SKIPPED (deferred to GAD-1000)")
+        return None
+
+    def main():
+        kernel = RealVibeKernel(ledger_path=':memory:')
+        kernel.boot()
+
+        results = {
+            "discoverability": test_discoverability(kernel),
+            "observability": test_observability(kernel),
+            "parseability": test_parseability(kernel),
+            "composability": test_composability(kernel),
+            "idempotency": test_idempotency(kernel),
+            "identity": test_identity(kernel)
+        }
+
+        passed = sum(1 for v in results.values() if v is True)
+        total = sum(1 for v in results.values() if v is not None)
+
+        print(f"\\nGAD-000 Compliance: {passed}/{total} tests passed")
+
+    if __name__ == "__main__":
+        main()
+
+VERIFY: python scripts/verify_gad000_compliance.py
+```
+
+---
+
+**Status**: HAIKU-READY

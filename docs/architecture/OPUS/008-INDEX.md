@@ -19,11 +19,11 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 |---|----------|--------|----------|-------------|
 | 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | SUPERSEDED | P2 | N/A |
 | 002 | [Phoenix Config](002-PHOENIX-CONFIG.md) | COMPLETE | P2 | N/A |
-| 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | HAIKU-READY | P0 | YES |
-| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | COMPLETE | P1 | YES |
-| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | IN PROGRESS | P1 | PARTIAL |
-| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | IN PROGRESS | P0 | YES |
-| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | HAIKU-READY | P0 | YES |
+| 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | HAIKU-READY | P0 | ✅ 3 tasks |
+| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | HAIKU-READY | P1 | ✅ 3 tasks |
+| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | HAIKU-READY | P1 | ✅ 6 tasks |
+| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | HAIKU-READY | P0 | ✅ 5 tasks |
+| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | HAIKU-READY | P0 | ✅ 4 tasks |
 | 008 | **This Index** | ACTIVE | - | - |
 
 ---
