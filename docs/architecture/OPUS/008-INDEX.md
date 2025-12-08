@@ -28,6 +28,7 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 | 010 | [Verification Protocol](010-VERIFICATION-PROTOCOL.md) | ✅ VERIFIED | P0 | ✅ Hardening done |
 | 011 | [Layered Router](011-LAYERED-ROUTER.md) | ✅ IMPLEMENTED | P2 | ✅ 334 LOC |
 | 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | ✅ IMPLEMENTED | P0 | ✅ 1320 LOC |
+| 012 | [System Agents](012-SYSTEM-AGENTS.md) | **NEXT** | P0 | ENGINEER first |
 
 ---
 
