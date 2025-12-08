@@ -62,6 +62,9 @@ class StewardCLI:
     """The Steward CLI - Control interface for the Agent OS"""
 
     def __init__(self):
+        import warnings
+
+        warnings.warn("StewardCLI is deprecated. Use UnifiedCLI instead.", DeprecationWarning, stacklevel=2)
         self.lineage_db = LINEAGE_DB
         self.operations_file = OPERATIONS_MD
         self.kernel_pid_file = KERNEL_PID_FILE
