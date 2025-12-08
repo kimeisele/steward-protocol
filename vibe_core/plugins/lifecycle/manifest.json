@@ -1,0 +1,25 @@
+{
+    "type": "plugin",
+    "id": "lifecycle",
+    "name": "Lifecycle Plugin",
+    "version": "1.0.0",
+    "description": "The Gatekeeper of Existence - grants life to new agents after governance verification",
+    "entry_point": "plugin_main.py",
+    "entry_class": "LifecyclePlugin",
+    "priority": 10,
+    "enabled": true,
+    "hooks": [
+        "on_boot",
+        "on_shutdown"
+    ],
+    "dependencies": [
+        "steward_protocol"
+    ],
+    "author": "OPUS-012",
+    "tags": [
+        "lifecycle",
+        "spawning",
+        "governance",
+        "birth"
+    ]
+}
