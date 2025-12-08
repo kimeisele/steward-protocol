@@ -156,6 +156,7 @@ class ExecutionResult:
     execution_path: ExecutionPath = ExecutionPath.FALLBACK
     target_id: str = ""
     request_id: str = ""
+    trace_id: str = ""  # GAD-000 Phase 5: Telemetry
 
     # Timing
     duration_seconds: float = 0.0
@@ -172,6 +173,7 @@ class ExecutionResult:
             "execution_path": self.execution_path.value,
             "target_id": self.target_id,
             "request_id": self.request_id,
+            "trace_id": self.trace_id,
             "duration_seconds": self.duration_seconds,
             "error": self.error,
         }
@@ -356,6 +358,20 @@ class UnifiedExecutor:
         """
         request.mark_executing()
 
+        # Telemetry: Start trace (GAD-000 Phase 5)
+        trace_id = ""
+        if hasattr(self._kernel, "trace"):
+            trace_id = self._kernel.trace.start(
+                component="executor",
+                event_type="execute_start",
+                data={
+                    "request_id": request.request_id,
+                    "execution_path": request.execution_path.value,
+                    "target_id": request.target_id,
+                    "user_input": request.user_input,
+                },
+            )
+
         try:
             if request.execution_path == ExecutionPath.FAST_COMMAND:
                 result = await self._execute_circuit(request)
@@ -369,6 +385,11 @@ class UnifiedExecutor:
             request.mark_completed(result.data)
             result.duration_seconds = request.duration or 0.0
             result.request_id = request.request_id
+            result.trace_id = trace_id
+
+            # Telemetry: Complete trace
+            if hasattr(self._kernel, "trace"):
+                self._kernel.trace.complete(trace_id, data={"result": result.to_dict()})
 
             return result
 
@@ -376,12 +397,17 @@ class UnifiedExecutor:
             request.mark_failed(str(e))
             logger.error(f"[EXECUTOR] Execution failed: {e}")
 
+            # Telemetry: Error trace
+            if hasattr(self._kernel, "trace"):
+                self._kernel.trace.error(trace_id, error=str(e))
+
             return ExecutionResult(
                 status="failed",
                 error=str(e),
                 execution_path=request.execution_path,
                 target_id=request.target_id,
                 request_id=request.request_id,
+                trace_id=trace_id,
             )
 
     async def _execute_circuit(self, request: ExecutionRequest) -> ExecutionResult:

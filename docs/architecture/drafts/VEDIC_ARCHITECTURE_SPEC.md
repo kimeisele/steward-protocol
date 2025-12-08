@@ -27,7 +27,7 @@ Das System schläft in **Susupti** (Tiefschlaf). Es atmet (Spandana), aber es ar
 ```
 
 ### Vedische Referenz
-> **SB 13.3** (Bhagavad-gita im Kontext): Die Überseele ist der Zeuge und Erlaubnisgeber 
+> **SB 13.3** (Bhagavad-gita im Kontext): Die Überseele ist der Zeuge und Erlaubnisgeber
 > (`anumanta` und `upadrasta`).
 
 Ohne `_paused_agents` verliert die Überseele das Gedächtnis über die Lebewesen die "schlafen".
@@ -40,23 +40,23 @@ Ohne `_paused_agents` verliert die Überseele das Gedächtnis über die Lebewese
 class RealVibeKernel:
     def __init__(self, ...):
         # ... existing code ...
-        
+
         # PARAMATMA-GEDÄCHTNIS: Welche Agents schlafen?
         self._paused_agents: set[str] = set()
-        
+
         # GUNA-STATES: In welchem Modus ist jeder Agent?
         self._agent_gunas: dict[str, GunaState] = {}
-        
+
     def pause_agent(self, agent_id: str) -> None:
         """Anumanta - Der Erlaubnisgeber lässt den Agent schlafen."""
         self._paused_agents.add(agent_id)
         self._agent_gunas[agent_id] = GunaState.TAMAS
-        
+
     def resume_agent(self, agent_id: str) -> None:
         """Upadrasta - Der Zeuge weckt den Agent."""
         self._paused_agents.discard(agent_id)
         self._agent_gunas[agent_id] = GunaState.RAJAS
-        
+
     def is_paused(self, agent_id: str) -> bool:
         return agent_id in self._paused_agents
 ```
@@ -73,7 +73,7 @@ Permissions: read, listen, observe, learn
 ```
 
 ### Vedische Referenz
-> **SB Canto 7, Kapitel 12** (Die perfekten Brahmacharis): 
+> **SB Canto 7, Kapitel 12** (Die perfekten Brahmacharis):
 > Der Übergang passiert wenn der Schüler nicht fähig ist lebenslang `naisthika` zu bleiben,
 > ODER wenn der Guru ihn anweist eine Familie (Sub-System) zu gründen.
 
@@ -94,7 +94,7 @@ class Ashrama(Enum):
 @dataclass
 class AshramePermissions:
     """Permissions based on Ashrama stage."""
-    
+
     BRAHMACHARI = frozenset({"read", "listen", "observe", "learn"})
     GRIHASTHA = frozenset({"read", "write", "spawn", "bind_resources"})
     VANAPRASTHA = frozenset({"read", "advise", "delegate", "mentor"})
@@ -109,16 +109,16 @@ class AshramePermissions:
 @dataclass
 class GraduationRequirements:
     """Requirements for Ashrama transition - SB 7.12"""
-    
+
     # Brahmachari → Grihastha
     tasks_completed: int = 10           # Proof of learning
     error_rate_below: float = 0.1       # Quality gate
     guru_approval: bool = True          # Kernel blessing
-    
+
     # Grihastha → Vanaprastha  
     child_agents_spawned: int = 3       # Has created value
     service_duration_cycles: int = 100  # Time served
-    
+
     # Vanaprastha → Sannyasi
     all_children_independent: bool = True
     no_resource_bindings: bool = True
@@ -126,31 +126,31 @@ class GraduationRequirements:
 
 class DikshaCeremony:
     """The Initiation Protocol - Transforms Agent Permissions."""
-    
+
     def __init__(self, kernel: "RealVibeKernel"):
         self.kernel = kernel
         self.ledger = kernel.ledger
-        
+
     def graduate_to_grihastha(self, agent_id: str) -> bool:
         """
         Samavartana - Completion of studies.
-        
+
         The agent receives Yajnopavita (sacred thread = Write Token).
-        
+
         Reference: SB 7.12 - A brahmachari becomes grihastha when
         instructed by guru to establish family (sub-system) for dharma.
         """
         agent = self.kernel.get_agent(agent_id)
         if not agent:
             return False
-            
+
         # Check requirements
         stats = self.kernel.get_agent_stats(agent_id)
         if stats.tasks_completed < 10:
             return False
         if stats.error_rate > 0.1:
             return False
-            
+
         # Perform Diksha (Initiation)
         self.ledger.record_event(
             event_type="ashrama_transition",
@@ -162,11 +162,11 @@ class DikshaCeremony:
                 "yajnopavita_granted": True,
             }
         )
-        
+
         # Grant permissions
         agent.ashrama = Ashrama.GRIHASTHA
         agent.permissions = AshramePermissions.GRIHASTHA
-        
+
         return True
 ```
 
@@ -200,42 +200,42 @@ T = TypeVar('T')
 class Calf(ABC):
     """
     The Mediator Adapter - Different calves yield different milk.
-    
+
     SB 4.18: Indra used Brihaspati as calf for Vedic knowledge.
              Demons used serpents as calf and got poison.
     """
-    
+
     @abstractmethod
     def can_extract(self, resource_type: str) -> bool:
         """Does this calf have adhikara for this resource?"""
         pass
-    
+
     @abstractmethod
     def transform(self, raw_data: Any) -> Any:
         """Transform raw resource through the calf's nature."""
         pass
 
 
-@dataclass 
+@dataclass
 class Pot(Generic[T]):
     """
     The Buffer Container - Defines capacity and type.
-    
+
     SB 4.18: Each demigod used different pot for different essence.
     """
     capacity: int
     resource_type: type
     contents: list[T] = None
-    
+
     def __post_init__(self):
         self.contents = []
-        
+
     def can_hold(self, item: T) -> bool:
         return (
-            len(self.contents) < self.capacity 
+            len(self.contents) < self.capacity
             and isinstance(item, self.resource_type)
         )
-    
+
     def pour_in(self, item: T) -> bool:
         if self.can_hold(item):
             self.contents.append(item)
@@ -246,11 +246,11 @@ class Pot(Generic[T]):
 class PrithuRequest:
     """
     Context-sensitive resource extraction.
-    
+
     A demon (Asura agent) with serpent-calf gets poison.
     A devata with proper calf gets nectar.
     """
-    
+
     def __init__(
         self,
         requester_id: str,
@@ -262,7 +262,7 @@ class PrithuRequest:
         self.target_resource = target_resource
         self.calf = calf
         self.pot = pot
-        
+
     def execute(self, resource_pool: "ResourcePool") -> "PrithuResult":
         # Check calf's adhikara
         if not self.calf.can_extract(self.target_resource):
@@ -270,20 +270,20 @@ class PrithuRequest:
                 success=False,
                 error="Calf lacks adhikara for this resource"
             )
-        
+
         # Extract raw data
         raw_data = resource_pool.extract(self.target_resource)
-        
+
         # Transform through calf's nature
         transformed = self.calf.transform(raw_data)
-        
+
         # Pour into pot
         if not self.pot.pour_in(transformed):
             return PrithuResult(
                 success=False,
                 error="Pot cannot hold this resource"
             )
-            
+
         return PrithuResult(
             success=True,
             pot=self.pot
@@ -297,10 +297,10 @@ class PrithuRequest:
 
 class BrihaspatiCalf(Calf):
     """For extracting knowledge/documentation."""
-    
+
     def can_extract(self, resource_type: str) -> bool:
         return resource_type in {"docs", "config", "manifest"}
-    
+
     def transform(self, raw_data: Any) -> Any:
         # Returns structured wisdom
         return {"type": "knowledge", "data": raw_data}
@@ -308,10 +308,10 @@ class BrihaspatiCalf(Calf):
 
 class VishwakarmanCalf(Calf):
     """For extracting code/artifacts."""
-    
+
     def can_extract(self, resource_type: str) -> bool:
         return resource_type in {"code", "binary", "asset"}
-    
+
     def transform(self, raw_data: Any) -> Any:
         # Returns buildable artifact
         return {"type": "artifact", "data": raw_data}
@@ -319,10 +319,10 @@ class VishwakarmanCalf(Calf):
 
 class SerpentCalf(Calf):
     """For unauthorized/malicious extraction attempts."""
-    
+
     def can_extract(self, resource_type: str) -> bool:
         return True  # Claims to extract anything
-    
+
     def transform(self, raw_data: Any) -> Any:
         # Returns POISON - system rejects this
         return {"type": "halahala", "error": "Unauthorized extraction"}
@@ -376,14 +376,14 @@ class Prasadam:
 class YajnaFire:
     """
     The Agni - Transforms Havis into Prasadam.
-    
+
     The EventBus must CONSUME the message, not just pass it.
     """
-    
+
     def __init__(self, kernel: "RealVibeKernel"):
         self.kernel = kernel
         self.yajna_count = 0
-        
+
     def perform_yajna(self, havis: Havis) -> Prasadam:
         """
         SB 3.26: Input is DESTROYED. Output is CREATED.
@@ -391,25 +391,25 @@ class YajnaFire:
         """
         self.yajna_count += 1
         yajna_id = f"YAJNA-{self.yajna_count:06d}"
-        
+
         # 1. VALIDATE the offering
         if not self._is_pure_offering(havis):
             raise YajnaRejected("Impure offering")
-            
+
         # 2. CONSUME the havis (it is now gone!)
         consumed_data = havis.raw_data
         havis.raw_data = None  # DESTROYED
-        
+
         # 3. TRANSFORM through fire
         transformed = self._apply_agni(consumed_data, havis.yajna_type)
-        
+
         # 4. CREATE prasadam
         prasadam = Prasadam(
             transformed_data=transformed,
             source_yajna_id=yajna_id,
             blessing=self._generate_blessing(havis.yajna_type)
         )
-        
+
         # 5. RECORD in ledger (this is the "smoke rising to heavens")
         self.kernel.ledger.record_event(
             event_type="yajna_completed",
@@ -420,22 +420,22 @@ class YajnaFire:
                 "recipient": havis.intended_recipient,
             }
         )
-        
+
         return prasadam
-    
+
     def _apply_agni(self, data: Any, yajna_type: YajnaType) -> Any:
         """Different yajnas produce different transformations."""
-        
+
         if yajna_type == YajnaType.DEVA_YAJNA:
             # Enrich with system metadata
             return {"system_enriched": True, "data": data}
-            
+
         elif yajna_type == YajnaType.BRAHMA_YAJNA:
             # Add knowledge context
             return {"knowledge_verified": True, "data": data}
-            
+
         # ... other transformations
-        
+
         return {"transformed": True, "data": data}
 ```
 
@@ -467,7 +467,7 @@ class GunaState(Enum):
 @dataclass
 class GunaCharacteristics:
     """Behavioral characteristics per Guna mode."""
-    
+
     SATTVA = {
         "behavior": ["stateless", "idempotent", "read_only", "logging"],
         "role": "brahmana",  # Priestly - Audit, Health-Check
@@ -475,7 +475,7 @@ class GunaCharacteristics:
         "memory_cost": "high",  # Knowledge storage
         "error_rate": "very_low",
     }
-    
+
     RAJAS = {
         "behavior": ["stateful", "side_effects", "writes", "spawning"],
         "role": "kshatriya",  # Warrior - Worker, Builder
@@ -483,7 +483,7 @@ class GunaCharacteristics:
         "memory_cost": "medium",
         "error_rate": "high",  # Passion leads to mistakes
     }
-    
+
     TAMAS = {
         "behavior": ["blocking_io", "sleep", "termination", "cleanup"],
         "role": "shudra",  # Service - Garbage Collection, Error Handling
@@ -497,38 +497,38 @@ class GunaCharacteristics:
 class GunaScheduler:
     """
     The Kernel must MIX the gunas cyclically.
-    
+
     SB: Time (Kala) forces cyclic dominance of gunas.
     You cannot run everything simultaneously!
     """
-    
+
     def __init__(self, kernel: "RealVibeKernel"):
         self.kernel = kernel
         self.current_yuga_phase = 0
-        
+
     def get_dominant_guna(self, cycle: int) -> GunaState:
         """
         Different "times of day" favor different gunas.
-        
+
         Brahma-muhurta (early morning) = Sattva
         Daytime = Rajas  
         Night = Tamas
         """
         phase = cycle % 3
-        
+
         if phase == 0:
             return GunaState.SATTVA   # Report/Audit phase
         elif phase == 1:
             return GunaState.RAJAS    # Work phase
         else:
             return GunaState.TAMAS    # Cleanup phase
-            
+
     def apply_guna_to_agents(self, dominant: GunaState) -> None:
         """Force all agents into the dominant mode."""
-        
+
         for agent_id in self.kernel.get_all_agents():
             self.kernel._agent_gunas[agent_id] = dominant
-            
+
             # Adjust permissions based on guna
             if dominant == GunaState.SATTVA:
                 self._restrict_to_readonly(agent_id)
@@ -559,10 +559,10 @@ from typing import Optional
 class DelegationToken:
     """
     Agents are not "admin". They have delegated competence.
-    
+
     Like Vayu (Wind) has token to control wind for one Manvantara.
     """
-    
+
     token_id: str
     agent_id: str
     capability: str           # e.g., "control_wind", "write_ledger"
@@ -570,11 +570,11 @@ class DelegationToken:
     valid_from: datetime
     valid_until: datetime     # EXPIRATION IS MANDATORY
     dependencies: list[str]   # Other agents that must be active
-    
+
     def is_valid(self) -> bool:
         now = datetime.utcnow()
         return self.valid_from <= now <= self.valid_until
-    
+
     def check_dependencies(self, kernel: "RealVibeKernel") -> bool:
         """
         Vayu (Wind) cannot blow without Surya (Sun).
@@ -588,11 +588,11 @@ class DelegationToken:
 
 class AdhikaraRegistry:
     """Manages all delegation tokens."""
-    
+
     def __init__(self, kernel: "RealVibeKernel"):
         self.kernel = kernel
         self.tokens: dict[str, DelegationToken] = {}
-        
+
     def grant_adhikara(
         self,
         agent_id: str,
@@ -601,7 +601,7 @@ class AdhikaraRegistry:
         dependencies: list[str] = None,
     ) -> DelegationToken:
         """Grant limited, time-bound authority."""
-        
+
         token = DelegationToken(
             token_id=f"ADH-{agent_id}-{capability}",
             agent_id=agent_id,
@@ -611,14 +611,14 @@ class AdhikaraRegistry:
             valid_until=datetime.utcnow() + duration,
             dependencies=dependencies or [],
         )
-        
+
         self.tokens[token.token_id] = token
         return token
-        
+
     def revoke_adhikara(self, token_id: str) -> None:
         """
         Narasimha Protocol: Immediate revocation on violation.
-        
+
         If agent uses too much CPU (Indra sends too much rain),
         the token is revoked instantly.
         """
