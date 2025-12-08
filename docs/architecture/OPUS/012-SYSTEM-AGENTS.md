@@ -20,79 +20,85 @@ The fractal insight: A System Agent IS a Plugin IS a Persona IS a Protocol.
 │  (Who)    │  (What)   │  (How)              │
 │           │           │                     │
 │  Identity │  Runtime  │  Syscalls           │
-│  via      │  via      │  via                │
-│  PRAKRITI │  Kernel   │  Circuits           │
+│  via      │  via      │  Circuits           │
+│  PRAKRITI │  Kernel   │                     │
 └─────────────────────────────────────────────┘
 ```
 
 ---
 
-## System Agent Registry
+## Current System Agents (16 Cartridges)
+
+Location: `vibe_core/cartridges/system/`
 
 | Agent | Purpose | Status |
 |-------|---------|--------|
-| **ENGINEER** | Spawns new agents, creates code | **NEXT** |
-| ENVOY | Circuit routing and execution | ✅ Exists |
-| STEWARD | Protocol governance | ✅ Exists |
-| AUDITOR | System verification | ✅ Exists |
-| WATCHMAN | Monitoring and health | ✅ Exists |
-| HERALD | Announcements and broadcasting | TODO |
-| CURATOR | Knowledge curation | TODO |
+| **engineer** | Code generation, agent scaffolding | ✅ EXISTS - Needs PRAKRITI |
+| **envoy** | Circuit routing and execution | ✅ EXISTS |
+| **auditor** | System verification | ✅ EXISTS |
+| **watchman** | Monitoring and health | ✅ EXISTS |
+| **herald** | Announcements | ✅ EXISTS |
+| **scribe** | Documentation | ✅ EXISTS |
+| **archivist** | Data archival | ✅ EXISTS |
+| **oracle** | Knowledge queries | ✅ EXISTS |
+| civic | Governance voting | ✅ EXISTS |
+| chronicle | History tracking | ✅ EXISTS |
+| discoverer | Agent discovery | ✅ EXISTS |
+| forum | Discussions | ✅ EXISTS |
+| ping | Health checks | ✅ EXISTS |
+| science | Research | ✅ EXISTS |
+| supreme_court | Constitutional enforcement | ✅ EXISTS |
 
 ---
 
-## ENGINEER Specification
+## ENGINEER Enhancement (Not Creation)
 
-### Purpose
-The ENGINEER creates new agents. It uses:
-- `kernel.prakriti.personas` to create identity
-- Plugin manifest system to register the agent
-- Cartridge pattern for the code
-
-### Capabilities
-```yaml
-capabilities:
-  - spawn_agent        # Create new agent from spec
-  - modify_cartridge   # Edit agent code
-  - fork_agent         # Clone with modifications
-  - retire_agent       # Mark agent deprecated
+### Current State
+```
+vibe_core/cartridges/system/engineer/
+├── cartridge_main.py    # 254 LOC - manifest_reality, create_agent_legacy
+├── cartridge.yaml       # capabilities: code_generation, scaffolding, automation
+├── steward.json         # Passport with constitution_hash
+└── tools/               # BuilderTool, etc.
 ```
 
-### Protocol (Circuits)
+### Current Capabilities
+- `manifest_reality`: Write code to sandbox
+- `create_agent_legacy`: Scaffold new agents (marked legacy)
 
-**AGENT_SPAWN_V1**:
-```
-INTAKE → DESIGN → IMPLEMENT → REGISTER → VERIFY → COMPLETE
-```
+### Missing: PRAKRITI Integration
+Current ENGINEER doesn't use:
+- `kernel.prakriti.personas` for agent identity
+- Persistent system prompts
+- Chain of Thought logging
 
-1. **INTAKE**: Receive agent specification
-2. **DESIGN**: Create persona + manifest
-3. **IMPLEMENT**: Generate cartridge code
-4. **REGISTER**: Wire into kernel
-5. **VERIFY**: Test the new agent
-6. **COMPLETE**: Record in lineage
+### Enhancement Tasks
 
-### Integration Points
+1. **Wire PRAKRITI into ENGINEER**:
+   ```python
+   # In manifest_reality or new spawn_agent method:
+   persona = self.kernel.prakriti.personas.create_default(
+       agent_id=new_agent_id,
+       display_name=spec.name,
+       dharma=spec.purpose,
+   )
+   self.kernel.prakriti.personas.save(persona)
+   ```
 
-```python
-# Engineer uses PRAKRITI for identity
-persona = kernel.prakriti.personas.create_default(
-    agent_id=spec.id,
-    display_name=spec.name,
-    dharma=spec.purpose,
-)
+2. **Add spawn_agent method** (replace create_agent_legacy):
+   - Create persona via PRAKRITI
+   - Generate cartridge code
+   - Create steward.json passport
+   - Register with kernel
 
-# Engineer creates plugin manifest
-manifest = {
-    "id": spec.id,
-    "version": "1.0.0",
-    "persona": persona.agent_id,
-    "cartridge": f"vibe_core/cartridges/{spec.id}",
-}
-
-# Engineer registers with kernel
-kernel.register_agent(new_agent)
-```
+3. **Add Chain of Thought**:
+   ```python
+   self.kernel.prakriti.ephemeral.add_thought(
+       agent_id='engineer',
+       thought=f'Spawning agent: {spec.name}',
+       context={'spec': spec}
+   )
+   ```
 
 ---
 
