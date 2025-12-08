@@ -5,7 +5,7 @@ OPUS-009: "The Repository IS the Mind"
 
 Prakriti (Sanskrit: "Primordial Matter") unifies state across three layers:
 - STHULA (Layer 1): Git + Files (Physical)
-- PRANA (Layer 2): Kernel + Ephemeral (Runtime) - Phase 2
+- PRANA (Layer 2): Kernel + Ephemeral (Runtime)
 - PURUSHA (Layer 3): Personas (Identity) - Phase 3
 
 GAD-000 Compliant:
@@ -19,10 +19,15 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
+from .kernel_state import KernelState
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("PRAKRITI")
 
@@ -34,8 +39,9 @@ class StateSnapshot:
     timestamp: float
     git: Dict[str, Any]
     files: Dict[str, Any]
-    # Phase 2: kernel: Dict[str, Any]
-    # Phase 3: personas: Dict[str, Any]
+    kernel: Optional[Dict[str, Any]] = None
+    ephemeral: Optional[Dict[str, Any]] = None
+    # Phase 3: personas: Dict[str, Any] = None
 
 
 class Prakriti:
@@ -47,10 +53,10 @@ class Prakriti:
     - Every Decision as a Branch
     - Every Learning as a Merge
 
-    Phase 1 Implementation:
-    - Layer 1 (STHULA): Git + Files
-    - Read-only operations
-    - Work verification via git diff
+    Layers:
+    - Layer 1 (STHULA): Git + Files (Physical)
+    - Layer 2 (PRANA): Kernel + Ephemeral (Runtime)
+    - Layer 3 (PURUSHA): Personas (Identity) - Phase 3
     """
 
     def __init__(self, workspace_path: Optional[Path] = None):
@@ -61,15 +67,15 @@ class Prakriti:
         """
         self._workspace = Path(workspace_path) if workspace_path else Path.cwd()
 
-        # Layer 1: Physical State
+        # Layer 1: Physical State (STHULA)
         self.git = GitState(self._workspace)
         self.files = FileState(self._workspace)
 
-        # Layer 2: Runtime State (Phase 2)
-        # self.kernel = None
-        # self.ephemeral = None
+        # Layer 2: Runtime State (PRANA)
+        self.kernel = KernelState()
+        self.ephemeral = EphemeralState()
 
-        # Layer 3: Identity (Phase 3)
+        # Layer 3: Identity (PURUSHA) - Phase 3
         # self.personas = {}
 
         logger.info(f"[PRAKRITI] Initialized at {self._workspace}")
@@ -97,15 +103,15 @@ class Prakriti:
     def get_capabilities(self) -> Dict[str, Any]:
         """GAD-000 Test 1: What can Prakriti do?"""
         return {
-            "version": "1.0.0-phase1",
-            "operations": ["snapshot", "verify", "diff", "status"],
+            "version": "2.0.0-phase2",
+            "operations": ["snapshot", "verify", "diff", "status", "inject_kernel"],
             "layers": {
                 "sthula": {
                     "status": "active",
                     "components": ["git", "files"],
                 },
                 "prana": {
-                    "status": "phase2",
+                    "status": "active",
                     "components": ["kernel", "ephemeral"],
                 },
                 "purusha": {
@@ -116,6 +122,8 @@ class Prakriti:
             "workspace": str(self._workspace),
             "git": self.git.get_capabilities(),
             "files": self.files.get_capabilities(),
+            "kernel": self.kernel.get_capabilities(),
+            "ephemeral": self.ephemeral.get_capabilities(),
         }
 
     # =========================================================================
@@ -129,7 +137,8 @@ class Prakriti:
             "workspace": str(self._workspace),
             "git": self.git.status(),
             "files": self.files.status(),
-            # Phase 2: "kernel": self.kernel.status() if self.kernel else None,
+            "kernel": self.kernel.status(),
+            "ephemeral": self.ephemeral.status(),
             # Phase 3: "personas": list(self.personas.keys()),
         }
 
@@ -147,7 +156,18 @@ class Prakriti:
             timestamp=time.time(),
             git=self.git.status(),
             files=self.files.status(),
+            kernel=self.kernel.status(),
+            ephemeral=self.ephemeral.status(),
         )
+
+    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+        """Inject kernel reference for Layer 2 state access.
+
+        Args:
+            kernel: The RealVibeKernel instance
+        """
+        self.kernel.inject_kernel(kernel)
+        logger.info("[PRAKRITI] Kernel injected into Layer 2")
 
     def verify(self) -> Dict[str, Any]:
         """Verify workspace consistency.
