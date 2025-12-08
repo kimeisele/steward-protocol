@@ -16,7 +16,7 @@ from vibe_core.cli.protocol import CLICommand
 # Suppress deprecation warning during import if we add it later
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    from vibe_core.cli import StewardCLI
+    from vibe_core.cli.legacy import StewardCLI
 
 logger = logging.getLogger("UNIFIED_CLI")
 

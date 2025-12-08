@@ -16,6 +16,7 @@ from vibe_core.runtime.context_loader import ContextLoader
 from vibe_core.runtime.project_memory import ProjectMemoryManager
 from vibe_core.runtime.prompt_composer import PromptComposer
 from vibe_core.runtime.unified_execution import UnifiedRouter
+from vibe_core.store.sqlite_store import SQLiteStore
 
 
 class BootSequence:
@@ -26,6 +27,10 @@ class BootSequence:
 
         # Conveyor Belt 1: Context (Unified Load)
         # BootSequence uses the 'project' context item provided by ContextLoader
+
+        # State Persistence (vibe.db)
+        # Initialize BEFORE ProjectMemoryManager which depends on it
+        self.sqlite_store = SQLiteStore(self.project_root / ".vibe" / "vibe.db")
 
         items, _ = ContextLoader.discover_and_load(scan_paths=[self.project_root])
         self.context_loader = items["project"]  # Actually a ContextManager instance
@@ -57,9 +62,6 @@ class BootSequence:
 
         # Telemetry (Stub for now, or unified later)
         # self.telemetry = TelemetryManager(self.project_root)
-
-        # State Persistence (Already init above)
-        # self.sqlite_store = SQLiteStore(self.project_root / ".vibe" / "vibe.db")
 
         # LLM Engine
         from vibe_core.runtime.llm_engine import LLMEngine

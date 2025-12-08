@@ -52,6 +52,7 @@ class KnowledgeLoader(UnifiedLoader):
         cls,
         scan_paths: Optional[List[Path]] = None,
         config: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         Custom discovery for file-based knowledge.

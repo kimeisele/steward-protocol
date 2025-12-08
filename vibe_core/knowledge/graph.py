@@ -120,6 +120,10 @@ class UnifiedKnowledgeGraph:
         edges_data = data.get("edges") or data.get("relations") or data.get("dependencies") or []
 
         for edge_data in edges_data:
+            if not isinstance(edge_data, dict):
+                # Skip invalid edge data (e.g. strings in dependencies list)
+                continue
+
             relation = RelationType(edge_data.get("relation", "depends_on"))
             edge = Edge(
                 source=edge_data["source"],
@@ -138,12 +142,16 @@ class UnifiedKnowledgeGraph:
         constraints_data = data.get("constraints") or data.get("rules") or []
 
         for c_data in constraints_data:
-            constraint_type = ConstraintType(c_data.get("type", "hard"))
+            if not isinstance(c_data, dict):
+                logger.debug(f"Skipping invalid constraint data: {c_data}")
+                continue
+
+            c_type = ConstraintType(c_data.get("type", "hard"))
             action = ConstraintAction(c_data.get("action", "block"))
 
             constraint = Constraint(
-                id=c_data["id"],
-                type=constraint_type,
+                id=c_data.get("id", f"constraint_{len(self.constraints)}"),
+                type=c_type,
                 condition=c_data.get("condition", ""),
                 action=action,
                 message=c_data.get("message", "Constraint violated"),
