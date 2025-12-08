@@ -222,7 +222,7 @@ class TestPhase3SchedulerSargaWiring:
         self.kernel.submit_task(maintenance_task)
 
         # Check queue has both tasks
-        assert len(self.kernel.scheduler.queue) == 2
+        assert self.kernel.scheduler.get_queue_status()["queue_length"] == 2
 
     def test_switch_cycles(self):
         """Test switching between cycles"""
@@ -286,7 +286,7 @@ class TestPhase3IntegrationFlow:
         assert task_id == scheduler_task.task_id
 
         # 4. Verify task is in queue
-        assert len(self.kernel.scheduler.queue) == 1
+        assert self.kernel.scheduler.get_queue_status()["queue_length"] == 1
 
     def test_blocked_task_prevents_scheduling(self):
         """Test that Narasimha-blocked tasks prevent scheduling"""
@@ -299,7 +299,7 @@ class TestPhase3IntegrationFlow:
             )
 
         # Verify queue remains empty
-        assert len(self.kernel.scheduler.queue) == 0
+        assert self.kernel.scheduler.get_queue_status()["queue_length"] == 0
 
     def test_night_cycle_prevents_feature_creation(self):
         """Test that night cycle prevents feature creation via SargaCyclePlugin"""
@@ -313,7 +313,7 @@ class TestPhase3IntegrationFlow:
         with pytest.raises(ValueError):
             self.kernel.submit_task(task)
 
-        assert len(self.kernel.scheduler.queue) == 0
+        assert self.kernel.scheduler.get_queue_status()["queue_length"] == 0
 
 
 if __name__ == "__main__":
