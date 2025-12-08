@@ -367,3 +367,112 @@ What's missing is HARDENING:
 - Efficiency (dirty tracking)
 
 **We fix bugs and add safety. We don't rewrite working code.**
+
+---
+
+## HAIKU EXECUTION BLOCKS
+
+> **For AI Agent Execution**: Copy-paste these blocks to implement the Three Laws.
+
+### TASK 1: Law 1 - Atomic Write with Backup (base.py)
+
+```
+FILE: vibe_core/plugins/interface/renderers/base.py
+LOCATION: In BaseRenderer class, add before merge_and_write()
+ADD_METHODS:
+    def _create_backup(self) -> None:
+        """Law 1: Create backup before writing bidirectional doc."""
+        path = self.get_output_path()
+        backup_path = path.with_suffix(path.suffix + '.bak')
+        if path.exists():
+            import shutil
+            shutil.copy2(path, backup_path)
+            self._backup_path = backup_path
+
+    def _rollback_from_backup(self) -> None:
+        """Law 1: Restore from backup on suspicious write."""
+        if hasattr(self, '_backup_path') and self._backup_path.exists():
+            import shutil
+            shutil.copy2(self._backup_path, self.get_output_path())
+
+    def _cleanup_backup(self) -> None:
+        """Law 1: Remove backup after successful write."""
+        if hasattr(self, '_backup_path') and self._backup_path.exists():
+            self._backup_path.unlink()
+
+VERIFY: ls -la *.bak after running kernel with bidirectional docs
+```
+
+### TASK 2: Law 2 - Error Boundaries (plugin_main.py)
+
+```
+FILE: vibe_core/plugins/interface/plugin_main.py
+FIND: def _render_scheduled(self) -> None:
+MODIFY: Wrap each renderer.render() in try/except:
+    def _render_scheduled(self) -> None:
+        for name, renderer in self._renderers.items():
+            if self._should_render(name):
+                try:
+                    renderer.render()
+                    self._last_render[name] = time.time()
+                except Exception as e:
+                    logger.error(f"Renderer '{name}' failed: {e}")
+                    self._render_error_placeholder(name, e)
+                    # Continue with other renderers!
+
+ADD_METHOD:
+    def _render_error_placeholder(self, name: str, error: Exception) -> None:
+        """Law 2: Write error placeholder instead of crashing."""
+        from datetime import datetime
+        path = self._get_document_path(name)
+        error_content = f'''<!--
+UI ERROR: Renderer '{name}' failed
+Error: {str(error)[:200]}
+Time: {datetime.utcnow().isoformat()}
+-->
+
+# {name.upper()}.md
+
+**Rendering Error** - System still operational.
+'''
+        path.write_text(error_content)
+
+VERIFY: Inject exception in one renderer, verify others still render
+```
+
+### TASK 3: Law 3 - Hash-based Dirty Tracking (base.py)
+
+```
+FILE: vibe_core/plugins/interface/renderers/base.py
+LOCATION: In BaseRenderer.__init__()
+ADD: self._last_content_hash: Optional[str] = None
+
+LOCATION: In BaseRenderer.render()
+MODIFY:
+    def render(self) -> None:
+        """Only write if content changed."""
+        import hashlib
+        new_content = self._generate_content()
+        new_hash = hashlib.md5(new_content.encode()).hexdigest()
+
+        if new_hash == self._last_content_hash:
+            return  # Skip write - no changes
+
+        self.merge_and_write(new_content)
+        self._last_content_hash = new_hash
+
+VERIFY: Check file mtime stays same after multiple renders with no data change
+```
+
+### TASK 4: OPUS.md Fix - Use merge_and_write
+
+```
+FILE: vibe_core/plugins/interface/renderers/opus/renderer.py
+FIND: self._write_file(content) OR direct file.write_text()
+REPLACE_WITH: self.merge_and_write(content)
+VERIFY: Add content to @AI section, render, verify section preserved
+```
+
+---
+
+**Status**: HAIKU-READY
