@@ -19,14 +19,15 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 |---|----------|--------|----------|-------------|
 | 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | SUPERSEDED | P2 | N/A |
 | 002 | [Phoenix Config](002-PHOENIX-CONFIG.md) | PLANNED | P2 | N/A |
-| 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | COMPLETE | P0 | ✅ 3 tasks |
-| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | COMPLETE | P1 | ✅ 3 tasks |
-| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | HAIKU-READY | P1 | ✅ 6 tasks |
-| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | HAIKU-READY | P0 | ✅ 5 tasks |
-| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | COMPLETE | P0 | ✅ 4 tasks |
+| 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | ✅ COMPLETE | P0 | ✅ 3 tasks |
+| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | ✅ COMPLETE | P1 | ✅ 3 tasks |
+| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | ✅ MERGED | P1 | ✅ 6 tasks |
+| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | ✅ MERGED | P0 | ✅ 5 tasks |
+| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | ✅ MERGED | P0 | ✅ 4 tasks |
 | 008 | **This Index** | ACTIVE | - | - |
-| 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | DESIGN DRAFT | P0 | Awaiting Review |
-| 011 | [Layered Router Audit](011-LAYERED-ROUTER.md) | COMPLETE | P2 | - |
+| 010 | [Verification Protocol](010-VERIFICATION-PROTOCOL.md) | ✅ VERIFIED | P0 | ✅ Hardening done |
+| 011 | [Layered Router](011-LAYERED-ROUTER.md) | ✅ IMPLEMENTED | P2 | ✅ 334 LOC |
+| 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | **NEXT** | P0 | Ready for impl |
 
 ---
 
@@ -44,9 +45,12 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
    - Fixes ENVOY.md data flow
    - Requires testing after each fix
 
-3. **OPUS-006**: GAD-000 Compliance
-   - StructuredError already implemented
-   - Remaining: get_capabilities(), get_system_status()
+3. **OPUS-006**: GAD-000 Compliance - ✅ **COMPLETE**
+   - StructuredError: IMPLEMENTED
+   - get_capabilities(): IMPLEMENTED
+   - get_system_status(): IMPLEMENTED
+   - UnifiedTrace: IMPLEMENTED
+   - Priority Scheduler: IMPLEMENTED
 
 ### Soon (P1)
 
@@ -60,12 +64,12 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 
 ### Evolution (P0 - Design Phase)
 
-6. **OPUS-009**: PRAKRITI - Fractal State Engine
-   - **STATUS: AWAITING GEMINI REVIEW**
+6. **OPUS-009**: PRAKRITI - Fractal State Engine - **NEXT OBJECTIVE**
+   - **STATUS: READY FOR IMPLEMENTATION**
    - Unified State Management (Git + Kernel + Identity)
    - System Prompt at Runtime (Agent Persistence)
    - Self-modifying Personas
-   - No implementation until design approved
+   - Predecessor hardening (OPUS-010) verified complete
 
 ---
 
@@ -96,12 +100,16 @@ All OPUS documents must satisfy:
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| StructuredError | `vibe_core/errors.py` | IMPLEMENTED |
-| LayeredRouter | `vibe_core/runtime/layered_router.py` | IMPLEMENTED |
-| UnifiedRouter | `vibe_core/runtime/unified_execution.py` | IMPLEMENTED |
-| InterfacePlugin | `vibe_core/plugins/interface/plugin_main.py` | EXISTS (needs hardening) |
-| BaseRenderer | `vibe_core/plugins/interface/renderers/base.py` | EXISTS (needs Three Laws) |
-| PhoenixConfig | `vibe_core/phoenix/config.py` | IMPLEMENTED |
+| StructuredError | `vibe_core/errors.py` | ✅ IMPLEMENTED |
+| get_capabilities() | `vibe_core/kernel_impl.py:633` | ✅ IMPLEMENTED |
+| get_system_status() | `vibe_core/kernel_impl.py:581` | ✅ IMPLEMENTED |
+| UnifiedTrace | `vibe_core/runtime/unified_trace.py` | ✅ IMPLEMENTED |
+| Priority Scheduler | `vibe_core/scheduling/in_memory.py` | ✅ IMPLEMENTED (P0-P3) |
+| LayeredRouter | `vibe_core/runtime/layered_router.py` | ✅ IMPLEMENTED |
+| UnifiedRouter | `vibe_core/runtime/unified_execution.py` | ✅ IMPLEMENTED |
+| InterfacePlugin | `vibe_core/plugins/interface/plugin_main.py` | ✅ Three Laws done |
+| BaseRenderer | `vibe_core/plugins/interface/renderers/base.py` | ✅ Hardened |
+| PhoenixConfig | `vibe_core/phoenix/config.py` | ✅ IMPLEMENTED |
 
 ---
 
@@ -132,6 +140,6 @@ All OPUS documents must satisfy:
 
 ---
 
-**Signed**: Opus 4.5
-**Date**: 2025-12-08
+**Last Verified**: 2025-12-08 by Gemini Senior Audit
 **Krishna's Blessing**: 8 = Infinity = Eternal Architecture
+**Next**: OPUS-009 PRAKRITI Implementation
