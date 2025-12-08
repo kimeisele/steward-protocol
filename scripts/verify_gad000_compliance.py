@@ -83,13 +83,13 @@ def test_composability(kernel):
 
     result = kernel.envoy.execute_circuit("SYSTEM_STATUS_V2", params={"user_input": "status"})
     assert isinstance(result, dict)
-    print("✅ Test 4: Composability PASSED")
+    print("✅ Test 4: Composability PASSED", flush=True)
     return True
 
 
 def test_idempotency(kernel):
     """Test 5: Can AI safely retry?"""
-    print("\n[Test 5] Idempotency (submit_task)")
+    print("\n[Test 5] Idempotency (submit_task)", flush=True)
 
     # We need to manually inject a task into scheduler because kernel.submit_task
     # might wrap it or do extra checks. We'll test scheduler directly for purity.
@@ -99,8 +99,9 @@ def test_idempotency(kernel):
     key = "test-idempotency-123"
 
     # First submission
+    print("Submitting first task...", flush=True)
     id1 = scheduler.submit_task(task, idempotency_key=key)
-    print(f"First submission: {id1}")
+    print(f"First submission: {id1}", flush=True)
 
     # Second submission (same key)
     # Note: InMemoryScheduler in previous step returns task_id (str), NOT a dict response yet.
@@ -114,28 +115,32 @@ def test_idempotency(kernel):
     # BUT, backward compatibility is crucial. Changing return type is dangerous.
     # Let's verify what happens.
 
+    print("Submitting second task...", flush=True)
     id2 = scheduler.submit_task(task, idempotency_key=key)
-    print(f"Second submission: {id2}")
+    print(f"Second submission: {id2}", flush=True)
 
     if id1 != id2:
-        print(f"❌ Task IDs do not match (idempotency failed): {id1} vs {id2}")
+        print(f"❌ Task IDs do not match (idempotency failed): {id1} vs {id2}", flush=True)
         return False
 
     # Check if queue has 1 or 2 items
-    q_len = len(scheduler.queue)
-    print(f"Queue length: {q_len} (expected 1)")
+    if hasattr(scheduler, "queues"):
+        q_len = sum(len(q) for q in scheduler.queues.values())
+    else:
+        q_len = len(scheduler.queue)
+
+    print(f"Queue length: {q_len} (expected 1)", flush=True)
 
     if q_len != 1:
-        print(f"❌ Queue has {q_len} items, expected 1 (deduplication failed)")
+        print(f"❌ Queue has {q_len} items, expected 1 (deduplication failed)", flush=True)
         return False
 
-    print("✅ Idempotency works (deduplicated)")
+    print("✅ Idempotency works (deduplicated)", flush=True)
     return True
 
 
 def test_identity(kernel):
     """Test 6: Identity (skipped)"""
-    print("\n[Test 6] Identity")
     print("⚠️ Skipped (deferred to GAD-1000)")
     return None
 
