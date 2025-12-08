@@ -23,7 +23,7 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 | 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | COMPLETE | P1 | ✅ 3 tasks |
 | 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | HAIKU-READY | P1 | ✅ 6 tasks |
 | 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | HAIKU-READY | P0 | ✅ 5 tasks |
-| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | HAIKU-READY | P0 | ✅ 4 tasks |
+| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | COMPLETE | P0 | ✅ 4 tasks |
 | 008 | **This Index** | ACTIVE | - | - |
 | 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | DESIGN DRAFT | P0 | Awaiting Review |
 | 011 | [Layered Router Audit](011-LAYERED-ROUTER.md) | COMPLETE | P2 | - |
