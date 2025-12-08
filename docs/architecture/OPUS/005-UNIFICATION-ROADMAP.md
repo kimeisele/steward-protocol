@@ -31,6 +31,9 @@ The Steward Protocol has made good progress on unification (UnifiedLoader, Unifi
 | PlaybookRouter | Exists in 2 locations | MEDIUM |
 | Remaining Loaders | 5 loaders not migrated | MEDIUM |
 | CircuitExecutor | 1394-line monolith | LOW |
+| **Telemetry** | No unified tracing (GAD-000 violation) | **CRITICAL** |
+| **Legacy Code** | @deprecated but not deleted | MEDIUM |
+| **Manifest deps** | Magic priority numbers | MEDIUM |
 
 ---
 
@@ -164,6 +167,144 @@ vibe_core/runtime/executors/
 
 ---
 
+## Phase 5: Unified Telemetry (GAD-000 CRITICAL)
+
+> **Added per Gemini review - GAD-000 Operator Inversion requires AI-readable state**
+
+### Problem
+
+GAD-000 (Operator Inversion Principle) requires:
+- "Can an AI see the current state?" (Observability Test)
+- "Can AI detect errors before they cascade?"
+
+Currently each component logs independently. AI cannot trace execution flow.
+
+### Solution: UnifiedTrace
+
+Central telemetry in `UnifiedExecutor` - the ONLY place where all execution passes through.
+
+```python
+# vibe_core/runtime/unified_trace.py
+@dataclass
+class TraceEvent:
+    trace_id: str
+    timestamp: float
+    component: str  # "router", "executor", "agent"
+    event_type: str  # "start", "complete", "error"
+    data: Dict[str, Any]
+
+class UnifiedTrace:
+    """Central nervous system for AI observability."""
+
+    def emit(self, event: TraceEvent) -> None:
+        """Emit trace event to all registered collectors."""
+        ...
+
+    def get_trace(self, trace_id: str) -> List[TraceEvent]:
+        """AI can query: what happened in this execution?"""
+        ...
+```
+
+### Integration Point
+
+```python
+# In UnifiedExecutor.execute():
+trace_id = self._trace.start("execute", {"circuit": circuit_id})
+try:
+    result = await self._execute_internal(...)
+    self._trace.complete(trace_id, {"result": result})
+except Exception as e:
+    self._trace.error(trace_id, {"error": str(e)})
+```
+
+### GAD-000 Compliance
+
+| GAD-000 Test | Before | After |
+|--------------|--------|-------|
+| Observability | Logs only | Structured traces |
+| Parseability | Human text | JSON events |
+| AI Self-Correct | Cannot | Query trace, retry |
+
+---
+
+## Phase 6: Dead Code Elimination ("Burn Notice")
+
+> **Added per Gemini review - @deprecated is not enough**
+
+### Problem
+
+Legacy code with `@deprecated` tends to stay forever "just in case".
+
+### Solution
+
+After Phase 4, run automated check:
+
+```bash
+# scripts/verify_no_legacy_imports.py
+LEGACY_FILES = [
+    "vibe_core/cli.py",  # Old StewardCLI
+    "vibe_core/playbook/router.py",  # Old PlaybookRouter
+    "vibe_core/runtime/playbook_router.py",  # Duplicate
+]
+
+for file in LEGACY_FILES:
+    if imported_anywhere(file):
+        fail(f"{file} still imported!")
+    else:
+        rm(file)  # Physical deletion
+```
+
+### Timeline
+
+- **Phase 4 complete** → Mark @deprecated
+- **2 weeks later** → Run burn script
+- **If no imports** → DELETE files
+
+---
+
+## Phase 7: Explicit Manifest Dependencies (OPUS-004 Upgrade)
+
+> **Already recommended in OPUS-004, promoted to roadmap**
+
+### Problem
+
+Plugin boot order relies on magic priority numbers (5, 10, 15).
+See OPUS-004 "Issue 3: Plugin Order Not Explicit".
+
+### Solution
+
+Extend `manifest.json`:
+
+```json
+{
+  "id": "envoy",
+  "priority": 15,
+  "depends_on": ["tools"],
+  "provides": ["kernel.envoy"]
+}
+```
+
+### UnifiedLoader Enhancement
+
+```python
+# In UnifiedLoader._sort_by_dependencies():
+def _sort_by_dependencies(self, manifests):
+    """Topological sort respecting depends_on."""
+    graph = {m["id"]: m.get("depends_on", []) for m in manifests}
+    return topological_sort(graph)
+```
+
+### Verification
+
+```python
+# In plugin boot:
+for dep in manifest.get("depends_on", []):
+    if not hasattr(kernel, dep):
+        raise BootError(f"{manifest['id']} requires {dep}")
+```
+
+---
+
 ## Non-Goals (Out of Scope)
 
 - Changing plugin architecture (backward compatibility)
@@ -195,6 +336,22 @@ vibe_core/runtime/executors/
 - [ ] CircuitExecutor split into modules
 - [ ] All executor tests pass
 - [ ] Clear documentation
+
+### Phase 5 (Telemetry - GAD-000):
+- [ ] UnifiedTrace class exists
+- [ ] UnifiedExecutor emits trace events
+- [ ] AI can query execution traces via structured API
+- [ ] GAD-000 Observability Test passes
+
+### Phase 6 (Burn Notice):
+- [ ] `scripts/verify_no_legacy_imports.py` exists
+- [ ] Script runs in CI
+- [ ] Legacy files physically deleted (not just deprecated)
+
+### Phase 7 (Manifest Dependencies):
+- [ ] `depends_on` supported in manifest.json
+- [ ] UnifiedLoader performs topological sort
+- [ ] Boot fails if dependency missing
 
 ---
 
