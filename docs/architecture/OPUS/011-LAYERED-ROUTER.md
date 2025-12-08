@@ -1,4 +1,4 @@
-# OPUS 004: LayeredRouter Architecture
+# OPUS-011: LayeredRouter Architecture
 
 > **Status**: SPECIFICATION
 > **Created**: 2025-12-07
