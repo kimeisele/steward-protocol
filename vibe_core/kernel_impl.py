@@ -236,7 +236,12 @@ class RealVibeKernel(VibeKernel):
 
         # SECURITY (ARCH-HARDENING): Capability Registry with Revocation
         # Stores agent capabilities with support for selective revocation
-        # Records all changes to Parampara Ledger for audit trail
+        # Telemetry: Unified Execution Trace (GAD-000 Phase 5)
+        from vibe_core.runtime.unified_trace import UnifiedTrace
+
+        self.trace = UnifiedTrace()
+
+        # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry = CapabilityRegistry(ledger=self._ledger)
 
         # I/O SERVICE: Central file operation controller
@@ -1268,9 +1273,13 @@ class RealVibeKernel(VibeKernel):
         """
         return self._event_bus.get_history(limit=limit, event_type=event_type)
 
-    def get_event_bus_status(self) -> Dict[str, Any]:
-        """Get EventBus status (total events, subscribers, etc.)"""
-        return self._event_bus.get_status()
+    def get_trace(self, trace_id: str) -> List[Dict[str, Any]]:
+        """
+        GAD-000 Test 2: Observability.
+
+        Get machine-readable execution history for a specific trace.
+        """
+        return self.trace.get_trace(trace_id)
 
     def _can_revoke_capability(self, revoker_id: str, target_id: str) -> bool:
         """

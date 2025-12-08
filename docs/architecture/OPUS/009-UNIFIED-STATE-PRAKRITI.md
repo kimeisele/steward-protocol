@@ -584,4 +584,3 @@ class Prakriti:
 
 > *"The Repository IS the Mind"*
 > *- Gemini's Insight*
-
