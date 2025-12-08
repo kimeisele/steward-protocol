@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Set
 
 from .schema import (
     Constraint,
+    ConstraintAction,
     ConstraintType,
     Edge,
     Metric,
@@ -55,17 +56,127 @@ class UnifiedKnowledgeGraph:
     # ═══════════════════════════════════════════════════════════════════
 
     def load(self, knowledge_dir: Path) -> None:
-        """Load all knowledge from YAML files."""
-        from .loader import KnowledgeLoader
+        """Load all knowledge from YAML files using Unified Loader strategy."""
+        from vibe_core.loaders.knowledge_loader import KnowledgeLoader
 
-        loader = KnowledgeLoader(self)
-        loader.load_all(knowledge_dir)
+        # In Unified Loader world, we scan the paths
+        # We can either use discover_and_load() or manually invoke if we want strict control
+
+        # Force a scan of the provided directory
+        items, metadata = KnowledgeLoader.discover_and_load(scan_paths=[knowledge_dir], force_refresh=True)
+
+        # Populate the graph from the loaded items
+        self._populate_from_items(items, metadata)
+
         self._loaded = True
         logger.info(
             f"Knowledge graph loaded: {len(self.nodes)} nodes, "
             f"{sum(len(e) for e in self.edges.values())} edges, "
             f"{len(self.constraints)} constraints"
         )
+
+    def _populate_from_items(self, items: Dict[str, Any], metadata: Dict[str, Any]) -> None:
+        """Populate graph structures from loaded raw items."""
+        for item_id, data in items.items():
+            meta = metadata.get(item_id)
+            domain = meta.domain if meta else "core"
+
+            # Delegate to specialized loaders (which we can keep as methods on the graph or helpers)
+            # Determine file type by content - logic moved from legacy loader
+            if "nodes" in data or "agents" in data or "features" in data:
+                self._load_nodes(data, domain)
+
+            if "edges" in data or "relations" in data or "dependencies" in data:
+                self._load_edges(data)
+
+            if "constraints" in data or "rules" in data:
+                self._load_constraints(data)
+
+            if "metrics" in data or "scores" in data or "authority" in data:
+                self._load_metrics(data)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # LEGACY LOAD HELPERS (Ported from legacy loader to live on Graph)
+    # ═══════════════════════════════════════════════════════════════════
+
+    def _load_nodes(self, data: dict, domain: str) -> None:
+        """Load nodes from data."""
+        nodes_data = data.get("nodes") or data.get("agents") or data.get("features") or []
+
+        for node_data in nodes_data:
+            node_type = NodeType(node_data.get("type", "concept"))
+            node = Node(
+                id=node_data["id"],
+                type=node_type,
+                name=node_data.get("name", node_data["id"]),
+                domain=node_data.get("domain", domain),
+                description=node_data.get("description", ""),
+                properties=node_data.get("properties", {}),
+            )
+            self.nodes[node.id] = node
+
+    def _load_edges(self, data: dict) -> None:
+        """Load edges from data."""
+        edges_data = data.get("edges") or data.get("relations") or data.get("dependencies") or []
+
+        for edge_data in edges_data:
+            if not isinstance(edge_data, dict):
+                # Skip invalid edge data (e.g. strings in dependencies list)
+                continue
+
+            relation = RelationType(edge_data.get("relation", "depends_on"))
+            edge = Edge(
+                source=edge_data["source"],
+                target=edge_data["target"],
+                relation=relation,
+                weight=edge_data.get("weight", 1.0),
+                properties=edge_data.get("properties", {}),
+            )
+
+            if edge.source not in self.edges:
+                self.edges[edge.source] = []
+            self.edges[edge.source].append(edge)
+
+    def _load_constraints(self, data: dict) -> None:
+        """Load constraints from data."""
+        constraints_data = data.get("constraints") or data.get("rules") or []
+
+        for c_data in constraints_data:
+            if not isinstance(c_data, dict):
+                logger.debug(f"Skipping invalid constraint data: {c_data}")
+                continue
+
+            c_type = ConstraintType(c_data.get("type", "hard"))
+            action = ConstraintAction(c_data.get("action", "block"))
+
+            constraint = Constraint(
+                id=c_data.get("id", f"constraint_{len(self.constraints)}"),
+                type=c_type,
+                condition=c_data.get("condition", ""),
+                action=action,
+                message=c_data.get("message", "Constraint violated"),
+                applies_to=c_data.get("applies_to", ["*"]),
+            )
+            self.constraints[constraint.id] = constraint
+
+    def _load_metrics(self, data: dict) -> None:
+        """Load metrics from data."""
+        metrics_data = data.get("metrics") or data.get("scores") or data.get("authority") or []
+
+        for m_data in metrics_data:
+            metric_type = MetricType(m_data.get("metric_type", "priority"))
+
+            metric = Metric(
+                node_id=m_data["node_id"],
+                metric_type=metric_type,
+                value=m_data.get("value", 0),
+                scale_min=m_data.get("scale_min", 0),
+                scale_max=m_data.get("scale_max", 10),
+            )
+
+            if metric.node_id not in self.metrics:
+                self.metrics[metric.node_id] = {}
+            self.metrics[metric.node_id][metric_type] = metric
 
     # ═══════════════════════════════════════════════════════════════════
     # DIMENSION 1: ONTOLOGY QUERIES (What exists)

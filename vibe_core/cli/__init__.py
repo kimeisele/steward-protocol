@@ -5,6 +5,7 @@ GAD-000 Compliant: All handlers return data, CLI handles rendering.
 """
 
 from .executor import CLIExecutor
+from .legacy import StewardCLI
 from .loader import CLILoader
 from .main import cli_entry, main
 from .monitor_loader import MonitorLoader
@@ -23,6 +24,7 @@ from .protocol import (
     ProgressUpdate,
 )
 from .renderer import CLIRenderer, get_renderer
+from .unified_cli import UnifiedCLI
 
 __all__ = [
     # Protocol
@@ -46,4 +48,6 @@ __all__ = [
     # Entry points
     "main",
     "cli_entry",
+    "UnifiedCLI",
+    "StewardCLI",
 ]
