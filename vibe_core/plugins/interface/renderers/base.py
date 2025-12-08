@@ -46,16 +46,54 @@ class BaseRenderer(ABC):
         # Data source registry - maps source paths to callables
         self._data_sources: Dict[str, Callable[[], Any]] = {}
 
+        # Law 3: Content hash for dirty tracking (skip writes if unchanged)
+        self._last_content_hash: Optional[str] = None
+
+        # Law 1: Backup tracking for rollback
+        self._backup_path: Optional[Path] = None
+
     @property
     @abstractmethod
     def name(self) -> str:
         """Unique name of the renderer (e.g. 'envoy', 'settings')."""
         pass
 
-    @abstractmethod
     def render(self) -> None:
-        """Perform rendering logic."""
-        pass
+        """
+        Perform rendering logic with Law 3 (dirty tracking).
+
+        Subclasses can override generate_content() to provide content,
+        or override render() for custom logic.
+
+        Law 3: Only write if content changed (hash-based dirty tracking).
+        """
+        import hashlib
+
+        # Try to get content from generate_content() (preferred pattern)
+        new_content = self.generate_content()
+        if new_content is None:
+            # Fallback: no content to render
+            return
+
+        # Law 3: Check if content actually changed
+        new_hash = hashlib.md5(new_content.encode()).hexdigest()
+
+        if new_hash == self._last_content_hash:
+            logger.debug(f"{self.name}: No changes, skipping write")
+            return
+
+        # Content changed, merge and write
+        self.merge_and_write(new_content)
+        self._last_content_hash = new_hash
+
+    def generate_content(self) -> Optional[str]:
+        """
+        Generate content for this renderer.
+
+        Override this method to provide content.
+        Return None if not using this pattern.
+        """
+        return None
 
     # =========================================================================
     # CONFIG ACCESS
@@ -429,6 +467,11 @@ class BaseRenderer(ABC):
         """
         Merge new content with existing document, preserving AI/HUMAN sections.
 
+        Law 1 (Atomic Write with Backup):
+        - Creates backup before write for bidirectional docs
+        - Detects data loss (file shrunk >50%)
+        - Rolls back on suspicious writes
+
         This is the recommended way to write for bidirectional documents.
         """
         config = self.get_config()
@@ -437,6 +480,10 @@ class BaseRenderer(ABC):
 
         output_path = Path(config.output)
 
+        # Law 1: Create backup before write if file exists
+        if output_path.exists():
+            self._create_backup()
+
         # If file doesn't exist, just write
         if not output_path.exists():
             return self.write_document(new_content)
@@ -444,7 +491,24 @@ class BaseRenderer(ABC):
         try:
             existing = output_path.read_text()
             merged = self._merge_content(existing, new_content)
-            return self.write_document(merged)
+            result = self.write_document(merged)
+
+            # Law 1: Check for data loss after write
+            if result and self._file_suspiciously_smaller():
+                logger.error(f"Data loss detected in {config.output} (file shrunk >50%)")
+                self._rollback_from_backup()
+                from vibe_core.errors import StructuredError, ErrorCode
+                raise StructuredError(
+                    code=ErrorCode.E3005_INTERNAL_ERROR,
+                    message="Render produced suspiciously small output",
+                    context={"document": self.name}
+                )
+
+            # Law 1: Clean up backup on success
+            if result:
+                self._cleanup_backup()
+
+            return result
         except Exception as e:
             logger.error(f"Failed to merge {config.output}: {e}")
             return False
@@ -483,3 +547,79 @@ class BaseRenderer(ABC):
                     result = result[: new_match.start()] + preserved + result[new_match.end() :]
 
         return result
+
+    # =========================================================================
+    # LAW 1: ATOMIC WRITE WITH BACKUP (Data Safety)
+    # =========================================================================
+
+    def _create_backup(self) -> None:
+        """Law 1: Create backup before writing bidirectional doc."""
+        config = self.get_config()
+        if not config:
+            return
+
+        path = Path(config.output)
+        if not path.exists():
+            return
+
+        backup_path = path.with_suffix(path.suffix + '.bak')
+        try:
+            import shutil
+            shutil.copy2(path, backup_path)
+            self._backup_path = backup_path
+            logger.debug(f"Backup created: {backup_path}")
+        except Exception as e:
+            logger.warning(f"Failed to create backup for {path}: {e}")
+
+    def _rollback_from_backup(self) -> None:
+        """Law 1: Restore from backup on suspicious write."""
+        if self._backup_path and self._backup_path.exists():
+            config = self.get_config()
+            if config:
+                try:
+                    import shutil
+                    shutil.copy2(self._backup_path, config.output)
+                    logger.warning(f"Rolled back to backup: {self._backup_path}")
+                except Exception as e:
+                    logger.error(f"Failed to rollback from backup: {e}")
+
+    def _cleanup_backup(self) -> None:
+        """Law 1: Remove backup after successful write."""
+        if self._backup_path and self._backup_path.exists():
+            try:
+                self._backup_path.unlink()
+                logger.debug(f"Backup cleaned up: {self._backup_path}")
+            except Exception as e:
+                logger.warning(f"Failed to cleanup backup: {e}")
+            finally:
+                self._backup_path = None
+
+    def _get_backup_size(self) -> int:
+        """Get size of backup file in bytes."""
+        if self._backup_path and self._backup_path.exists():
+            try:
+                return self._backup_path.stat().st_size
+            except Exception:
+                return 0
+        return 0
+
+    def _get_current_size(self) -> int:
+        """Get size of current file in bytes."""
+        config = self.get_config()
+        if not config:
+            return 0
+        try:
+            path = Path(config.output)
+            if path.exists():
+                return path.stat().st_size
+            return 0
+        except Exception:
+            return 0
+
+    def _file_suspiciously_smaller(self) -> bool:
+        """Detect if file shrunk >50% (likely data loss)."""
+        backup_size = self._get_backup_size()
+        current_size = self._get_current_size()
+        if backup_size > 0 and current_size < backup_size * 0.5:
+            return True
+        return False

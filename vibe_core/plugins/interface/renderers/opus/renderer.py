@@ -55,11 +55,17 @@ class OpusRenderer(BaseRenderer):
             self._panels = []
 
     def render(self) -> None:
-        """Render OPUS.md with all panels."""
+        """
+        Render OPUS.md with all panels.
+
+        CRITICAL FIX: Uses merge_and_write() to preserve AI/HUMAN sections
+        instead of direct file.write_text() which deletes them.
+        """
         content = self.generate_content()
-        output_path = Path("OPUS.md")
-        output_path.write_text(content)
-        logger.info(f"[OPUS] Rendered to {output_path}")
+        if content:
+            # Use merge_and_write to preserve existing AI/HUMAN sections
+            self.merge_and_write(content)
+            logger.info(f"[OPUS] Rendered with section preservation")
 
     def generate_content(self) -> str:
         """Generate full OPUS.md content."""

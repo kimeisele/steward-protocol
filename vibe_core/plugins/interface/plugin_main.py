@@ -149,6 +149,11 @@ class InterfacePlugin(KernelPlugin):
         - Renderers are SLAVES (content generators only)
         - All writes go through InterfacePlugin with UNIFIED headers
 
+        Law 2 (Error Boundaries):
+        - Each renderer wrapped in try/except
+        - One bad renderer doesn't kill the entire UI system
+        - Error placeholder written instead of crash
+
         Skipped in test mode to prevent file overwrites.
         """
         if self._is_test_mode():
@@ -168,12 +173,65 @@ class InterfacePlugin(KernelPlugin):
                         renderer.render()
                     self._last_render[name] = now
                 except Exception as e:
-                    logger.error(f"Error rendering view '{name}': {e}")
+                    logger.error(f"Renderer '{name}' failed: {e}")
+                    # Law 2: Write error placeholder instead of crashing
+                    self._render_error_placeholder(name, e)
+                    self._last_render[name] = now
+                    # Continue with other renderers!
 
         # Throttled auto-commit (every 60s max, not on every tick)
         if (now - self._last_auto_commit) >= self._auto_commit_interval:
             self._auto_commit_ui_files()
             self._last_auto_commit = now
+
+    def _render_error_placeholder(self, name: str, error: Exception) -> None:
+        """
+        Law 2: Write error placeholder instead of crashing.
+
+        When a renderer fails, write a human-readable error message
+        to the output file so the user knows what happened.
+        """
+        try:
+            from datetime import datetime
+
+            # Get output path from renderers (if available)
+            renderer = self._renderers.get(name)
+            if not renderer:
+                return
+
+            config = renderer.get_config()
+            if not config:
+                return
+
+            output_path = Path(config.output)
+            error_msg = str(error)[:200]  # Truncate long errors
+
+            error_content = f"""<!--
+UI ERROR: Renderer '{name}' failed
+Error: {error_msg}
+Time: {datetime.utcnow().isoformat()} UTC
+-->
+
+# {name.upper()}.md
+
+**Rendering Error** - System still operational.
+
+The `{name}` renderer encountered an error and could not generate content.
+
+**Error Details:**
+
+```
+{str(error)[:500]}
+```
+
+This is a temporary placeholder. The system will retry on the next render cycle.
+"""
+
+            output_path.write_text(error_content)
+            logger.warning(f"Error placeholder written to {output_path}")
+
+        except Exception as e:
+            logger.error(f"Failed to write error placeholder for '{name}': {e}")
 
     def _write_unified(self, renderer: BaseRenderer, content: str) -> None:
         """
