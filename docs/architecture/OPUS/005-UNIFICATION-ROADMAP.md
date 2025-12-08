@@ -3,12 +3,38 @@
 > **Status**: IN PROGRESS
 > **Created**: 2025-12-08
 > **Scope**: Consolidate duplicate components into unified patterns
+> **GAD-000**: All phases require GAD-000 compliance as Definition of Done
 
 ---
 
 ## Executive Summary
 
 The Steward Protocol has made good progress on unification (UnifiedLoader, UnifiedRouter, UnifiedExecutor) but several components remain fragmented. This document tracks what IS unified, what CLAIMS to be unified, and what NEEDS unification.
+
+---
+
+## GAD-000 Definition of Done (DoD)
+
+> **CRITICAL**: GAD-000 is not a phase - it's the acceptance criteria for ALL phases.
+> See: OPUS-006 GAD-000 Compliance Audit for detailed requirements.
+
+Every phase completion MUST pass these GAD-000 tests:
+
+| Test | Requirement | Verification |
+|------|-------------|--------------|
+| **Parseability** | All errors are `StructuredError` with error codes | `except StructuredError as e: assert e.code` |
+| **Discoverability** | Public APIs return structured capability schemas | `kernel.get_capabilities()` returns dict |
+| **Composability** | All outputs are dict/dataclass, never raw strings | `isinstance(result, dict)` |
+
+### Phase-Specific GAD-000 Requirements
+
+| Phase | Must Pass |
+|-------|-----------|
+| Phase 1 (CLI) | Discoverability: `--help --json` returns capability schema |
+| Phase 1 (CLI) | Parseability: CLI errors are `StructuredError` |
+| Phase 2 (Routers) | Composability: `RouteResult` is dataclass, not string |
+| Phase 3 (Loaders) | Parseability: Load failures return `ErrorCode.E2001_INVALID_*` |
+| Phase 4 (Executors) | All 3 tests: Structured errors, capability discovery, dict output |
 
 ---
 
@@ -167,16 +193,14 @@ vibe_core/runtime/executors/
 
 ---
 
-## Phase 5: Unified Telemetry (GAD-000 CRITICAL)
+## Phase 5: Unified Telemetry (Observability Infrastructure)
 
-> **Added per Gemini review - GAD-000 Operator Inversion requires AI-readable state**
+> **Implements GAD-000 Test 2 (Observability) infrastructure**
+> Note: GAD-000 compliance is now DoD for all phases, not a separate phase
 
 ### Problem
 
-GAD-000 (Operator Inversion Principle) requires:
-- "Can an AI see the current state?" (Observability Test)
-- "Can AI detect errors before they cascade?"
-
+GAD-000 Test 2 requires AI-readable system state.
 Currently each component logs independently. AI cannot trace execution flow.
 
 ### Solution: UnifiedTrace
@@ -320,28 +344,35 @@ for dep in manifest.get("depends_on", []):
 - [ ] `python -m vibe_core.cli` uses UnifiedCLI
 - [ ] All existing CLI tests pass
 - [ ] StewardCLI marked @deprecated
+- [ ] **GAD-000 DoD**: `--help --json` returns capability schema
+- [ ] **GAD-000 DoD**: CLI errors are `StructuredError`
 
 ### Phase 2 (Routers):
 - [ ] Legacy routers marked @deprecated
 - [ ] UnifiedRouter handles all routing cases
 - [ ] No code references legacy routers
+- [ ] **GAD-000 DoD**: `RouteResult` is dataclass (already ✅)
 
 ### Phase 3 (Loaders):
 - [ ] PlaybookLoader inherits UnifiedLoader
 - [ ] KnowledgeLoader inherits UnifiedLoader
 - [ ] ContextLoader inherits UnifiedLoader
 - [ ] All loader tests pass
+- [ ] **GAD-000 DoD**: Load failures return `StructuredError`
 
 ### Phase 4 (Executors):
 - [ ] CircuitExecutor split into modules
 - [ ] All executor tests pass
 - [ ] Clear documentation
+- [ ] **GAD-000 DoD**: Execution errors are `StructuredError`
+- [ ] **GAD-000 DoD**: `executor.get_capabilities()` returns dict
+- [ ] **GAD-000 DoD**: All outputs are dict/dataclass
 
-### Phase 5 (Telemetry - GAD-000):
+### Phase 5 (Telemetry):
 - [ ] UnifiedTrace class exists
 - [ ] UnifiedExecutor emits trace events
 - [ ] AI can query execution traces via structured API
-- [ ] GAD-000 Observability Test passes
+- [ ] **GAD-000 DoD**: `kernel.get_system_status()` returns dict
 
 ### Phase 6 (Burn Notice):
 - [ ] `scripts/verify_no_legacy_imports.py` exists
@@ -366,6 +397,8 @@ for dep in manifest.get("depends_on", []):
 
 ## Related Documents
 
+- **OPUS-006**: GAD-000 Compliance Audit (defines DoD tests)
+- **GAD-000**: Operator Inversion Principle (foundational law)
 - OPUS-001: Memory Migration
 - OPUS-002: Phoenix Config Extraction
 - OPUS-003: AOS Foundation Repair
