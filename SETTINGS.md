@@ -23,6 +23,7 @@ Quick Start: python -m vibe_core.cli boot
 
 ## ⚡ Pending Commands
 
+
 > **Instructions:** Uncomment and Fill the TOML block below to execute commands.
 
 ```toml
@@ -31,7 +32,6 @@ Quick Start: python -m vibe_core.cli boot
 # key = "kernel.log_level"
 # value = "DEBUG"
 ```
-
 ## 📡 Command Acknowledgments (Ack Channel)
 
 | Timestamp | Command | Status | Result/Reason |

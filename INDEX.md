@@ -51,6 +51,7 @@ Quick Start: python -m vibe_core.cli boot
 
 ## KARMA
 - **[OPERATIONS.md](OPERATIONS.md)** — System operations
+- **[SETTINGS.md](SETTINGS.md)** — Configuration options
 - **[AGENTS.md](AGENTS.md)** — Agent registry & tools
 
 **Deployment:**
