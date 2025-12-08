@@ -336,4 +336,4 @@ VERIFY: python -m pytest tests/integration/test_kernel_boot.py -v
 
 ---
 
-**Status**: HAIKU-READY
+**Status**: COMPLETE
