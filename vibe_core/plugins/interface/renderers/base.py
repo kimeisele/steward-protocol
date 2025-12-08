@@ -24,6 +24,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
+from vibe_core.errors import ErrorCode, StructuredError
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
     from vibe_core.phoenix.sections.interface import (
@@ -506,11 +508,10 @@ class BaseRenderer(ABC):
             if result and self._file_suspiciously_smaller():
                 logger.error(f"Data loss detected in {config.output} (file shrunk >50%)")
                 self._rollback_from_backup()
-                from vibe_core.errors import StructuredError, ErrorCode
                 raise StructuredError(
                     code=ErrorCode.E3005_INTERNAL_ERROR,
                     message="Render produced suspiciously small output",
-                    context={"document": self.name}
+                    context={"document": self.name},
                 )
 
             # Law 1: Clean up backup on success
@@ -571,9 +572,10 @@ class BaseRenderer(ABC):
         if not path.exists():
             return
 
-        backup_path = path.with_suffix(path.suffix + '.bak')
+        backup_path = path.with_suffix(path.suffix + ".bak")
         try:
             import shutil
+
             shutil.copy2(path, backup_path)
             self._backup_path = backup_path
             logger.debug(f"Backup created: {backup_path}")
@@ -587,6 +589,7 @@ class BaseRenderer(ABC):
             if config:
                 try:
                     import shutil
+
                     shutil.copy2(self._backup_path, config.output)
                     logger.warning(f"Rolled back to backup: {self._backup_path}")
                 except Exception as e:
