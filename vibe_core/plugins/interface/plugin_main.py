@@ -435,26 +435,29 @@ This is a temporary placeholder. The system will retry on the next render cycle.
             if not config:
                 continue
 
-            interface_config = renderer.get_interface_config()
             sections = []
             if config.sections:
                 for section in config.sections:
-                    sections.append({
-                        "id": section.id,
-                        "owner": section.owner,
-                        "element_type": section.element_type,
-                        "source": section.source,
-                    })
+                    sections.append(
+                        {
+                            "id": section.id,
+                            "owner": section.owner,
+                            "element_type": section.element_type,
+                            "source": section.source,
+                        }
+                    )
 
-            documents.append({
-                "id": name,
-                "path": str(config.output),
-                "mode": config.mode if hasattr(config, "mode") else "unidirectional",
-                "interval": config.interval,
-                "enabled": config.enabled,
-                "sections": sections,
-                "renderer_type": type(renderer).__name__,
-            })
+            documents.append(
+                {
+                    "id": name,
+                    "path": str(config.output),
+                    "mode": config.mode if hasattr(config, "mode") else "unidirectional",
+                    "interval": config.interval,
+                    "enabled": config.enabled,
+                    "sections": sections,
+                    "renderer_type": type(renderer).__name__,
+                }
+            )
 
         return documents
 
@@ -471,16 +474,11 @@ This is a temporary placeholder. The system will retry on the next render cycle.
 
         if self._interface_config:
             element_types = {
-                name: {
-                    "settings": et.settings if hasattr(et, "settings") else {}
-                }
+                name: {"settings": et.settings if hasattr(et, "settings") else {}}
                 for name, et in (self._interface_config.element_types or {}).items()
             }
             layouts = {
-                name: {
-                    "structure": str(layout)
-                }
-                for name, layout in (self._interface_config.layouts or {}).items()
+                name: {"structure": str(layout)} for name, layout in (self._interface_config.layouts or {}).items()
             }
             ownership_types = {
                 name: {

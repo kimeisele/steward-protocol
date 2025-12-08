@@ -65,7 +65,7 @@ class OpusRenderer(BaseRenderer):
         """
         # Use helper that includes hash-based dirty tracking
         self.render_with_dirty_tracking()
-        logger.info(f"[OPUS] Rendered with dirty tracking and section preservation")
+        logger.info("[OPUS] Rendered with dirty tracking and section preservation")
 
     def generate_content(self) -> str:
         """Generate full OPUS.md content."""
