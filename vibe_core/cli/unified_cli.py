@@ -1,9 +1,12 @@
 """
 UnifiedCLI - Single entry point for all CLI operations.
 Combines Fractal CLI (Plugin-based) with Legacy StewardCLI (System commands).
+
+WIRED TO PRAKRITI: Unified State Engine (OPUS-009)
 """
 
 import argparse
+import json
 import logging
 import warnings
 from typing import Any, Dict, List, Optional
@@ -11,6 +14,9 @@ from typing import Any, Dict, List, Optional
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
+
+# PRAKRITI WIRING - The Unified State Engine
+from vibe_core.state.prakriti import Prakriti
 
 # Import Legacy CLI for fallback/system commands
 # Suppress deprecation warning during import if we add it later
@@ -33,6 +39,9 @@ class UnifiedCLI:
         self._executor = CLIExecutor()
         self._legacy = StewardCLI()
 
+        # PRAKRITI WIRING - The Unified State Engine (OPUS-009)
+        self._prakriti = Prakriti.from_workspace(".")
+
         # Define legacy commands that are handled by StewardCLI
         self._legacy_map = {
             "status": self._legacy.cmd_status,
@@ -45,6 +54,13 @@ class UnifiedCLI:
             "discover": self._legacy.cmd_discover,
             "introspect": self._legacy.cmd_introspect,
             "delegate": None,  # TODO: Migrate to plugin
+        }
+
+        # PRAKRITI commands - wired to unified state
+        self._prakriti_cmds = {
+            "state": self.cmd_state,
+            "diff": self.cmd_diff,
+            "plugins": self.cmd_plugins,
         }
 
     def run(self, args: List[str]) -> int:
@@ -77,11 +93,14 @@ class UnifiedCLI:
             cmd_def = commands[command_name]
             return self._dispatch_plugin(cmd_def, remaining_args)
 
-        # 3. GAD-000 Introspection Commands
+        # 3. PRAKRITI Commands - Wired to Unified State
+        if command_name in self._prakriti_cmds:
+            handler = self._prakriti_cmds[command_name]
+            return handler(remaining_args)
+
+        # 4. GAD-000 Introspection Commands
         if command_name == "capabilities":
             caps = self.get_capabilities()
-            import json
-
             print(json.dumps(caps, indent=2))
             return 0
 
@@ -222,12 +241,111 @@ class UnifiedCLI:
         except SystemExit:
             return None
 
+    # =========================================================================
+    # PRAKRITI COMMANDS - Wired to Unified State Engine (OPUS-009)
+    # =========================================================================
+
+    def cmd_state(self, args: List[str]) -> int:
+        """
+        Show unified system state from Prakriti.
+        steward state
+        """
+        try:
+            status = self._prakriti.get_system_status()
+            print(json.dumps(status, indent=2, default=str))
+            return 0
+        except Exception as e:
+            print(f"❌ Error getting state: {e}")
+            return 1
+
+    def cmd_diff(self, args: List[str]) -> int:
+        """
+        Show git diff (Proof of Work).
+        steward diff [--main]
+        """
+        try:
+            if "--main" in args:
+                diff = self._prakriti.diff_main()
+            else:
+                diff = self._prakriti.diff("HEAD~1")
+
+            print("📊 Git Diff Stats")
+            print(f"   Files changed: {diff.files_changed}")
+            print(f"   Insertions:    +{diff.insertions}")
+            print(f"   Deletions:     -{diff.deletions}")
+            if diff.files:
+                print("\n   Changed files:")
+                for f in diff.files[:10]:  # Limit to 10
+                    print(f"     - {f}")
+                if len(diff.files) > 10:
+                    print(f"     ... and {len(diff.files) - 10} more")
+            return 0
+        except Exception as e:
+            print(f"❌ Error getting diff: {e}")
+            return 1
+
+    def cmd_plugins(self, args: List[str]) -> int:
+        """
+        List loaded plugins and their dependencies.
+        steward plugins
+        """
+        from pathlib import Path
+
+        plugins_dir = Path("vibe_core/plugins")
+        if not plugins_dir.exists():
+            print("❌ Plugins directory not found")
+            return 1
+
+        print("📦 LOADED PLUGINS")
+        print("================")
+
+        for plugin_dir in sorted(plugins_dir.iterdir()):
+            if not plugin_dir.is_dir() or plugin_dir.name.startswith("_"):
+                continue
+
+            manifest_path = plugin_dir / "manifest.json"
+            if manifest_path.exists():
+                try:
+                    manifest = json.loads(manifest_path.read_text())
+                    plugin_id = manifest.get("id", plugin_dir.name)
+                    version = manifest.get("version", "?")
+                    deps = manifest.get("depends_on", [])
+                    cli_cmds = []
+                    if "cli" in manifest:
+                        cli_cmds = [c.get("name") for c in manifest["cli"].get("commands", [])]
+
+                    print(f"\n  {plugin_id} v{version}")
+                    if deps:
+                        print(f"    depends_on: {', '.join(deps)}")
+                    if cli_cmds:
+                        print(f"    cli: {', '.join(cli_cmds)}")
+                except Exception as e:
+                    print(f"\n  {plugin_dir.name} (manifest error: {e})")
+            else:
+                print(f"\n  {plugin_dir.name} (no manifest)")
+
+        return 0
+
+    # =========================================================================
+    # HELP
+    # =========================================================================
+
     def _print_help(self, plugin_commands: Dict[str, CLICommand]):
         print("🎛️  STEWARD UNIFIED CLI")
         print("=======================")
+
         print("\nSYSTEM COMMANDS:")
         for name in sorted(self._legacy_map.keys()):
             print(f"  {name:<15} (System)")
+
+        print("\nPRAKRITI COMMANDS (Unified State):")
+        prakriti_help = {
+            "state": "Show unified system state",
+            "diff": "Git diff (Proof of Work) [--main]",
+            "plugins": "List plugins and dependencies",
+        }
+        for name, help_text in prakriti_help.items():
+            print(f"  {name:<15} {help_text}")
 
         print("\nPLUGIN COMMANDS:")
         for name, cmd in sorted(plugin_commands.items()):
