@@ -9,7 +9,10 @@ AMBASSADOR is the bridge between Steward Protocol and the community.
 - Community sentiment monitoring
 - Developer relations
 
-Inherits from VibeAgent + OathMixin for kernel integration.
+GOLDEN TEMPLATE COMPLIANT:
+- Inherits from VibeAgent + OathMixin
+- Tool access via self.system.execute_tool()
+- NO deprecated router imports
 """
 
 import logging
@@ -20,32 +23,6 @@ from vibe_core import Task, VibeAgent
 
 # Constitutional Oath Mixin
 from vibe_core.steward import OathMixin
-
-# Import Router and Playbook components for proper system integration
-try:
-    from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
-
-    MILK_OCEAN_AVAILABLE = True
-except ImportError:
-    MilkOceanRouter = None
-    MILK_OCEAN_AVAILABLE = False
-    logger = logging.getLogger("AMBASSADOR_MAIN")
-    logger.warning("⚠️  MilkOceanRouter not available - using fallback")
-
-try:
-    from vibe_core.playbook.executor import GraphExecutor, WorkflowEdge, WorkflowGraph, WorkflowNode
-    from vibe_core.playbook.router import AgentRouter
-
-    PLAYBOOK_AVAILABLE = True
-except ImportError:
-    GraphExecutor = None
-    WorkflowGraph = None
-    WorkflowNode = None
-    WorkflowEdge = None
-    AgentRouter = None
-    PLAYBOOK_AVAILABLE = False
-    logger = logging.getLogger("AMBASSADOR_MAIN")
-    logger.warning("⚠️  Playbook system not available - using fallback")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -98,27 +75,7 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
         self.oath_sworn = True
         logger.info("✅ AMBASSADOR has sworn the Constitutional Oath")
 
-        # Initialize Router and Playbook components for proper system integration
-        self.milk_ocean_router = None
-        self.graph_executor = None
-        self.agent_router = None
-
-        if MILK_OCEAN_AVAILABLE:
-            try:
-                self.milk_ocean_router = MilkOceanRouter()
-                logger.info("🌊 Milk Ocean Router initialized")
-            except Exception as e:
-                logger.warning(f"⚠️  Failed to initialize MilkOceanRouter: {e}")
-
-        if PLAYBOOK_AVAILABLE:
-            try:
-                self.graph_executor = GraphExecutor()
-                self.agent_router = AgentRouter()
-                logger.info("📊 Playbook Executor & AgentRouter initialized")
-            except Exception as e:
-                logger.warning(f"⚠️  Failed to initialize Playbook system: {e}")
-
-        # State tracking
+        # State tracking (NO deprecated routers)
         self.active_conversations: Dict[str, Dict] = {}
         self.onboarded_users: List[str] = []
         self.community_sentiment_score = 0.0
@@ -170,12 +127,11 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
 
     async def _answer_question(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Answer a community question using Router → Playbook → Execution pipeline.
+        Answer a community question using kernel tool execution.
 
-        This method respects the system architecture:
-        1. Route through MilkOceanRouter (Triage)
-        2. Create Playbook based on priority
-        3. Execute via GraphExecutor (Real agent dispatch)
+        GOLDEN TEMPLATE COMPLIANT:
+        - Uses self.system.execute_tool() for all tool calls
+        - No deprecated router imports
         """
         question = payload.get("question", "")
         user_id = payload.get("user_id", "anonymous")
@@ -190,65 +146,28 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
             "status": "processing",
         }
 
-        # ========== STEP 1: Route through Milk Ocean (Triage) ==========
-        if not self.milk_ocean_router:
-            logger.warning("⚠️  MilkOceanRouter not available - using simple fallback")
-            return self._simple_fallback_answer(question, user_id, conversation_id)
-
         try:
-            routing_decision = self.milk_ocean_router.process_prayer(question, agent_id="ambassador", critical=False)
+            # Use kernel tool execution for Q&A
+            if hasattr(self, "system") and self.system:
+                # Route via kernel's unified router
+                result = self.system.execute_tool("ambassador.qa", {"question": question, "user_id": user_id})
 
-            logger.info(f"🌊 Routing decision: {routing_decision.get('path', 'unknown')}")
-
-            # Handle different routing paths
-            if routing_decision.get("status") == "blocked":
-                return {
-                    "status": "blocked",
-                    "user_id": user_id,
-                    "question": question,
-                    "reason": routing_decision.get("reason"),
-                    "timestamp": datetime.utcnow().isoformat(),
-                }
-
-            elif routing_decision.get("status") == "queued":
-                # Lazy queue - return early
-                return {
-                    "status": "queued",
-                    "user_id": user_id,
-                    "question": question,
-                    "message": "Your question will be processed during off-peak hours",
-                    "request_id": routing_decision.get("request_id"),
-                    "timestamp": datetime.utcnow().isoformat(),
-                }
-
-            # ========== STEP 2: Create Playbook for Flash/Science ==========
-            priority = routing_decision.get("path", "flash")  # flash or science
-            playbook = self._create_qa_playbook(question, priority)
-
-            # ========== STEP 3: Execute Playbook ==========
-            if not self.graph_executor:
-                logger.warning("⚠️  GraphExecutor not available - using simple response")
+                if result.success:
+                    self.active_conversations[conversation_id]["status"] = "completed"
+                    return {
+                        "status": "answered",
+                        "user_id": user_id,
+                        "question": question,
+                        "answer": result.output.get("answer", str(result.output)),
+                        "method": "kernel_tool",
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                else:
+                    logger.warning(f"Tool execution failed: {result.error}")
+                    return self._simple_fallback_answer(question, user_id, conversation_id)
+            else:
+                logger.warning("⚠️ Kernel system not available - using fallback")
                 return self._simple_fallback_answer(question, user_id, conversation_id)
-
-            logger.info(f"📊 Executing Q&A playbook (priority: {priority})")
-            result = self.graph_executor.execute(playbook)
-
-            # Update conversation tracking
-            self.active_conversations[conversation_id]["status"] = "completed"
-            self.active_conversations[conversation_id]["result"] = result.get("status")
-
-            # Extract answer from workflow results
-            answer = self._extract_answer_from_results(result)
-
-            return {
-                "status": "answered",
-                "user_id": user_id,
-                "question": question,
-                "answer": answer,
-                "method": f"playbook_{priority}",
-                "workflow_id": result.get("workflow_id"),
-                "timestamp": datetime.utcnow().isoformat(),
-            }
 
         except Exception as e:
             logger.error(f"❌ Question answering failed: {e}")
@@ -263,55 +182,12 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
                 "timestamp": datetime.utcnow().isoformat(),
             }
 
-    def _create_qa_playbook(self, question: str, priority: str) -> "WorkflowGraph":
-        """
-        Create a workflow for answering community questions.
-
-        The playbook follows deterministic routing: classify → retrieve → generate
-        """
-        nodes = {
-            "generate_answer": WorkflowNode(
-                id="generate_answer",
-                action="answer_community_question",
-                description=f"Generate answer to: {question}",
-                required_skills=["knowledge_base", "content_generation", priority],
-            )
-        }
-
-        edges = []  # Single node for MVP
-
-        return WorkflowGraph(
-            id="ambassador_qa",
-            name="Community Q&A",
-            intent=question,
-            nodes=nodes,
-            edges=edges,
-            entry_point="generate_answer",
-            exit_points=["generate_answer"],
-        )
-
-    def _extract_answer_from_results(self, workflow_result: Dict[str, Any]) -> str:
-        """Extract the answer from workflow execution results."""
-        results = workflow_result.get("results", [])
-
-        if not results:
-            return "No answer generated (workflow returned empty results)"
-
-        # Get the last result (should be generate_answer node)
-        last_result = results[-1]
-        output = last_result.get("output", {})
-
-        if isinstance(output, dict):
-            return output.get("answer") or output.get("message") or str(output)
-        else:
-            return str(output)
-
     def _simple_fallback_answer(self, question: str, user_id: str, conversation_id: str) -> Dict[str, Any]:
-        """Simple fallback when Router/Playbook unavailable."""
+        """Simple fallback when kernel tools unavailable."""
         fallback_answer = (
             f"Hello! I'm AMBASSADOR, the community liaison for Steward Protocol.\n\n"
             f"Your question: '{question}'\n\n"
-            f"I'm currently running in fallback mode (Router/Playbook system not available). "
+            f"I'm currently running in standalone mode. "
             f"For full functionality, please ensure all system components are initialized.\n\n"
             f"You can find more information in our documentation:\n"
             f"- README.md for quick start\n"
@@ -327,7 +203,7 @@ class AmbassadorCartridge(VibeAgent, OathMixin):
             "question": question,
             "answer": fallback_answer,
             "method": "fallback",
-            "note": "Router/Playbook system not available",
+            "note": "Kernel tools not available",
             "timestamp": datetime.utcnow().isoformat(),
         }
 
