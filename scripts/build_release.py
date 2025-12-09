@@ -71,13 +71,15 @@ def main():
 
     print(f"📁 Creating: {release_dir}")
 
-    # 1. Copy binary (may be file or directory for app bundle)
+    # 1. Copy binary (Merge bundle into release root)
     print("  → Copying binary...")
     if binary_path.is_dir():
-        # macOS app bundle or --onedir output
-        shutil.copytree(binary_path, release_dir / "vibe")
-        # Make main executable runnable
-        main_exe = release_dir / "vibe" / "vibe"
+        # macOS app bundle or --onedir output: Copy CONTENTS to release_dir
+        # We use dirs_exist_ok=True to allow merging if dir exists
+        shutil.copytree(binary_path, release_dir, dirs_exist_ok=True)
+
+        # Ensure main executable is runnable
+        main_exe = release_dir / "vibe"
         if main_exe.exists():
             main_exe.chmod(0o755)
     else:
