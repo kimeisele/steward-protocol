@@ -76,6 +76,46 @@ class AgentLoader(UnifiedLoader):
         """
         paths = scan_paths or cls.scan_paths
 
+        # Runtime Separation (OPUS-016): Add library_path from config
+        # Runtime Separation (OPUS-016): Add library_path from config
+        if config:
+            lib_path_str = None
+
+            # 1. Try PhoenixConfig Object Access (Attribute access)
+            if hasattr(config, "paths"):
+                try:
+                    # config.paths.system.library_path
+                    # Need to handle if paths or system is missing/None
+                    paths_cfg = getattr(config, "paths", None)
+                    if paths_cfg:
+                        system_cfg = getattr(paths_cfg, "system", None)
+                        if system_cfg:
+                            lib_path_str = getattr(system_cfg, "library_path", None)
+                except Exception:
+                    pass
+
+            # 2. Try Dict Access (if not found yet)
+            if not lib_path_str and isinstance(config, dict):
+                try:
+                    lib_path_str = config.get("paths", {}).get("system", {}).get("library_path")
+                    # Fallback: check top level for simpler configs or passed args
+                    if not lib_path_str:
+                        lib_path_str = config.get("library_path")
+                except Exception:
+                    pass
+
+            if lib_path_str:
+                lib_path = Path(lib_path_str)
+                if lib_path.exists():
+                    logger.info(f"[loader] 📚 Adding Runtime Library: {lib_path}")
+                    # Prepend to prioritize Library over System?
+                    # User said: "Prioritize Library Containers over System Cartridges? (Yes, Library is User Space/Runtime)."
+                    if isinstance(paths, list):
+                        paths.insert(0, lib_path)
+                    else:
+                        # If it was a tuple or default? cls.scan_paths is list.
+                        paths = [lib_path] + list(paths)
+
         # Candidate tracking: agent_id -> (instance, metadata)
         candidates: Dict[str, Tuple[Any, ItemMeta]] = {}
 
@@ -202,6 +242,11 @@ class AgentLoader(UnifiedLoader):
         cartridge_entry = item_dir / "cartridge_main.py"
         if cartridge_entry.exists():
             return cartridge_entry
+
+        # Support GAD-000 content/ directory structure
+        cartridge_entry_content = item_dir / "content" / "cartridge_main.py"
+        if cartridge_entry_content.exists():
+            return cartridge_entry_content
 
         return None
 
