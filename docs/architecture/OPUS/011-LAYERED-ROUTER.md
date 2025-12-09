@@ -1,9 +1,11 @@
 # OPUS-011: LayeredRouter Architecture
 
-> **Status**: SPECIFICATION
+> **Status**: ✅ IMPLEMENTED
 > **Created**: 2025-12-07
-> **Replaces**: `UnifiedRouter._match_circuit()` (broken substring matching)
+> **Last Updated**: 2025-12-09
+> **Implementation**: `vibe_core/runtime/layered_router.py`
 > **Philosophy**: LLM is a crutch. Intelligence comes from architecture.
+
 
 ---
 
