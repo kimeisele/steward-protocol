@@ -40,9 +40,13 @@ async def test_genesis_flow():
     # STEP 2: Initialize UniversalProvider
     from vibe_core.cartridges.system.envoy.provider import UniversalProvider
 
-    provider = UniversalProvider(kernel=kernel)
+    # Disable semantic routing to avoid downloading models (SentenceTransformer) during test
+    provider = UniversalProvider(kernel=kernel, use_semantic=False)
+
     # UniversalProvider uses either semantic_router or router (deterministic fallback)
-    assert provider.router is not None or provider.semantic_router is not None
+    # With use_semantic=False, it MUST use router (DeterministicRouter)
+    assert provider.router is not None
+    assert provider.semantic_router is None
     assert provider.playbook_engine is not None
 
     # STEP 3: Test User Input

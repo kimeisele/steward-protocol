@@ -244,7 +244,14 @@ class RealVibeKernel(VibeKernel):
         # OPUS-009: PRAKRITI Unified State Engine
         from vibe_core.state import Prakriti
 
-        self.prakriti = Prakriti()
+        prakriti_db_path = None
+        if phoenix_config and hasattr(phoenix_config, "paths"):
+            try:
+                prakriti_db_path = phoenix_config.paths.data.resolve("vibe_ledger")
+            except Exception:
+                pass
+
+        self.prakriti = Prakriti(db_path=prakriti_db_path)
 
         # Phase 2: Capability Registry (Must be before plugins)
         self._capability_registry = CapabilityRegistry(ledger=self._ledger)
