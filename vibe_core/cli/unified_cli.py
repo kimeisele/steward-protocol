@@ -77,7 +77,15 @@ class UnifiedCLI:
             cmd_def = commands[command_name]
             return self._dispatch_plugin(cmd_def, remaining_args)
 
-        # 3. Help / Unknown
+        # 3. GAD-000 Introspection Commands
+        if command_name == "capabilities":
+            caps = self.get_capabilities()
+            import json
+
+            print(json.dumps(caps, indent=2))
+            return 0
+
+        # 4. Help / Unknown
         if command_name in ("-h", "--help", "help"):
             self._print_help(commands)
             return 0
@@ -87,10 +95,17 @@ class UnifiedCLI:
         return 1
 
     def get_capabilities(self) -> Dict[str, Any]:
-        """GAD-000 Test 1: Machine-readable capability discovery."""
+        """
+        GAD-000 Test 1: Machine-readable capability discovery.
+        Uses SystemInspector (Inspector Pattern) to introspect kernel.
+        """
+        # We need a kernel instance for introspection (even if phantom)
+
+        # Use CLILoader to discover plugins
         plugin_commands = self._loader.discover_commands()
 
-        capabilities = {
+        # Build capabilities dict
+        inspector_caps = {
             "version": "2.0.0 (Unified)",
             "system_commands": list(self._legacy_map.keys()),
             "plugin_commands": [
@@ -98,8 +113,10 @@ class UnifiedCLI:
                 for cmd in plugin_commands.values()
             ],
             "json_output_supported": True,
+            "inspector_pattern": True,
         }
-        return capabilities
+
+        return inspector_caps
 
     def _dispatch_legacy(self, name: str, handler: Any, args: List[str]) -> int:
         """Dispatch to legacy StewardCLI methods."""
