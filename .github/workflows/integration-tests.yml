@@ -27,6 +27,19 @@ jobs:
       - name: Install dependencies
         run: uv pip install -e ".[dev]" --system
 
+      # ====== BUILD HOLONS BEFORE TESTS ======
+      # Tests like test_genesis_boot and test_vedic_migration require .vibe artifacts
+      - name: Build Genesis Pack
+        run: |
+          mkdir -p knowledge
+          python3 scripts/pack_vibe.py knowledge/genesis -o knowledge/genesis.vibe || echo "Genesis source not found, skipping"
+
+      - name: Build System Agent Containers
+        run: |
+          mkdir -p library
+          python3 scripts/pack_vibe.py vibe_core/cartridges/system/herald -o library/herald.vibe
+          python3 scripts/pack_vibe.py vibe_core/cartridges/system/scribe -o library/scribe.vibe
+
       - name: Run Integration Tests
         run: |
           python -m pytest tests/integration/ -v --tb=short
