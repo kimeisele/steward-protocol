@@ -61,6 +61,7 @@ class UnifiedCLI:
             "state": self.cmd_state,
             "diff": self.cmd_diff,
             "plugins": self.cmd_plugins,
+            "update": self.cmd_update,
         }
 
     def run(self, args: List[str]) -> int:
@@ -330,6 +331,78 @@ class UnifiedCLI:
     # HELP
     # =========================================================================
 
+    def cmd_update(self, args: List[str]) -> int:
+        """
+        Update a plugin/agent container from dist/.
+        steward update <name>
+        """
+        import shutil
+        from pathlib import Path
+
+        try:
+            # Lazy imports to avoid circular deps during cli startup
+            from vibe_core.plugin_loader import PluginLoader
+            from vibe_core.steward import AgentLoader
+        except ImportError:
+            pass  # Should handle graceful fail if imports missing
+
+        if not args:
+            print("Usage: steward update <name>")
+            return 1
+
+        name = args[0]
+        # Check specific locations
+        dist_path = Path("dist") / f"{name}.vibe"
+
+        if not dist_path.exists():
+            # Try holons subfolder (Factory output)
+            dist_path = Path("dist/holons") / f"{name}.vibe"
+
+        if not dist_path.exists():
+            print(f"❌ Update artifact not found: {dist_path}")
+            print(f"   Run 'steward pack {name}' first.")
+            return 1
+
+        print(f"🔄 Updating {name} from {dist_path}...")
+
+        target_dir = None
+
+        # Check Agents
+        instances, meta = AgentLoader.discover_and_load(config={"enabled_only": False})
+        if name in meta:
+            target_path = meta[name].manifest_path
+            # If target_path is a file (e.g. .vibe), parent is the dir
+            target_dir = target_path.parent
+        else:
+            # Check Plugins
+            p_instances, p_meta = PluginLoader.discover_and_load(config={"enabled_only": False})
+            if name in p_meta:
+                target_path = p_meta[name].manifest_path
+                target_dir = target_path.parent
+
+        if not target_dir:
+            print(f"⚠️  {name} is not currently installed. Installing to vibe_core/cartridges/system/")
+            target_dir = Path("vibe_core/cartridges/system")
+            if not target_dir.exists():
+                target_dir.mkdir(parents=True, exist_ok=True)
+
+        # 2. Install (Copy)
+        dest_path = target_dir / f"{name}.vibe"
+
+        try:
+            shutil.copy2(dist_path, dest_path)
+            print(f"✅ Installed to {dest_path}")
+            print(f"   Size: {dest_path.stat().st_size} bytes")
+            print("   Restart kernel to apply changes.")
+            return 0
+        except Exception as e:
+            print(f"❌ Installation failed: {e}")
+            return 1
+
+    # =========================================================================
+    # HELP
+    # =========================================================================
+
     def _print_help(self, plugin_commands: Dict[str, CLICommand]):
         print("🎛️  STEWARD UNIFIED CLI")
         print("=======================")
@@ -343,6 +416,7 @@ class UnifiedCLI:
             "state": "Show unified system state",
             "diff": "Git diff (Proof of Work) [--main]",
             "plugins": "List plugins and dependencies",
+            "update": "Update plugin/agent from dist/ artifact",
         }
         for name, help_text in prakriti_help.items():
             print(f"  {name:<15} {help_text}")
