@@ -316,6 +316,7 @@ class SystemPathsConfig:
 
     # Phase 2 additions - missing system paths
     lineage_db: str = "{runtime_root}/kernel/lineage.db"
+    library_path: str = "library"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SystemPathsConfig":
@@ -327,6 +328,7 @@ class SystemPathsConfig:
             logs=data.get("logs", "{runtime_root}/logs"),
             # Phase 2 additions
             lineage_db=data.get("lineage_db", "{runtime_root}/kernel/lineage.db"),
+            library_path=data.get("library_path", "library"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -338,6 +340,7 @@ class SystemPathsConfig:
             "logs": self.logs,
             # Phase 2 additions
             "lineage_db": self.lineage_db,
+            "library_path": self.library_path,
         }
 
     def resolve(self, path_key: str) -> Path:
