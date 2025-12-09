@@ -54,6 +54,33 @@ class DoctorPlugin(KernelPlugin):
 
         report["checks"].append({"check": "python_version", "value": sys.version.split(" ")[0], "passed": True})
 
+        # 3. Legacy Rot Scan (Deep Diagnostic)
+        if deep:
+            deprecated_count = 0
+            scanned_count = 0
+            base_path = Path("vibe_core")
+            if base_path.exists():
+                for py_file in base_path.rglob("*.py"):
+                    scanned_count += 1
+                    try:
+                        content = py_file.read_text(errors="ignore")
+                        if "@deprecated" in content or "DeprecationWarning" in content:
+                            deprecated_count += 1
+                            report["issues"].append(f"Legacy code detected in: {py_file}")
+                    except Exception:
+                        pass
+
+            report["checks"].append(
+                {
+                    "check": "legacy_rot",
+                    "scanned": scanned_count,
+                    "deprecated_files": deprecated_count,
+                    "passed": deprecated_count == 0,
+                }
+            )
+            if deprecated_count > 0:
+                report["status"] = "ADVISORY"
+
         # 3. Kernel Introspection (if we can)
         # If execution_mode is offline, we don't have a running kernel passed in usually?
         # TODO: Clarify offline mode dependency injection.
