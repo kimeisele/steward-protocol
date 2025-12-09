@@ -1,7 +1,7 @@
 # 📋 Mission Control
 
-> **Auto-Generated Task Board** | Last Updated: 2025-12-09 12:51:54
-> **Status:** 🟢 Operational | **Active Tasks:** 1 | **Completed:** 45
+> **Auto-Generated Task Board** | Last Updated: 2025-12-09 16:18:15
+> **Status:** 🟢 Operational | **Active Tasks:** 0 | **Completed:** 45
 
 ---
 
@@ -23,28 +23,26 @@ Write your tasks here. The heartbeat will pick them up automatically.
 
 ## 🔄 Active Missions (In Progress)
 
-- [~] Integration test task @auto-routed
-  > *Status: RUNNING (ID: 3f87691f...)*
-  > **Priority:** 0 | **Started:** 12:51
+No active missions yet.
 
 ---
 
 ## ✅ Recently Completed
 
 - [x] Routine security patrol @watchman
-  > *Completed: 2025-12-09 12:51*
+  > *Completed: 2025-12-09 16:18*
 
 - [x] Update constitutional amendment @civic
-  > *Completed: 2025-12-09 12:51*
+  > *Completed: 2025-12-09 16:18*
 
 - [x] CRITICAL: System down emergency @auto-routed
-  > *Completed: 2025-12-09 12:51*
+  > *Completed: 2025-12-09 16:18*
 
 - [x] Content generation - HERALD @herald
-  > *Completed: 2025-12-09 12:51*
+  > *Completed: 2025-12-09 16:18*
 
 - [x] Security patrol - WATCHMAN @watchman
-  > *Completed: 2025-12-09 12:51*
+  > *Completed: 2025-12-09 16:18*
 
 ---
 
@@ -52,16 +50,16 @@ Write your tasks here. The heartbeat will pick them up automatically.
 
 | Metric | Value |
 |--------|-------|
-| Total Tasks | 80 |
-| Pending | 34 |
-| Running | 1 |
+| Total Tasks | 82 |
+| Pending | 35 |
+| Running | 0 |
 | Completed | 45 |
-| Blocked | 0 |
+| Blocked | 2 |
 
 ---
 
 **Heartbeat:** Operational  
-**Last Pulse:** 2025-12-09 12:51:54 UTC  
+**Last Pulse:** 2025-12-09 16:18:15 UTC  
 **Next Check:** ~15 minutes
 
 ---
@@ -76,7 +74,7 @@ Write your tasks here. The heartbeat will pick them up automatically.
 6. **Tasks execute** and update their status automatically
 7. **Results appear** in the Active/Completed sections
 
-**MilkOcean Router** handles unassigned tasks intelligently.
+**Unified Router** handles task intelligence.
 
 ---
 

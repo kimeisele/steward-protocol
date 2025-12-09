@@ -24,16 +24,17 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # KERNEL IMPORTS
-# MILK OCEAN ROUTER IMPORTS
 # STEWARD AGENT IMPORT
 from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.cartridges.system.envoy.provider import UniversalProvider
-from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 from vibe_core.event_bus import Event, get_event_bus
 from vibe_core.kernel_impl import RealVibeKernel
 
 # PULSE SYSTEM IMPORTS
 from vibe_core.pulse import get_pulse_manager
+
+# NEW: Unified Execution Imports (replaces MilkOceanRouter)
+from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate, UnifiedRouter
 from vibe_core.scheduling import Task
 
 logging.basicConfig(level=logging.INFO)
@@ -69,7 +70,7 @@ app.add_middleware(
 kernel = None
 steward = None
 provider = None
-milk_ocean = None
+unified_router = None  # Replaces milk_ocean
 pulse_manager = None
 event_bus = None
 
@@ -148,69 +149,50 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
     logger.info(f"📨 RECEIVED: {request.message} from {request.agent_id}")
 
     try:
-        # 1. GUEST ACCESS (GAD-000: The Bypass)
-        if request.agent_id == "guest":
-            logger.info(f"🌊 GUEST ACCESS: Routing '{request.message}' to Milk Ocean")
-            # Direct route to Milk Ocean Router (Brahma Protocol)
-            # Guests don't get to invoke the Kernel directly, only query via Router
-            routing_decision = milk_ocean.process_prayer(request.message, agent_id="guest")
-        else:
-            # 2. CITIZEN ACCESS (GAD-1000 Verification)
-            # MILK OCEAN ROUTER: Gate the request through Brahma's protocol
-            # This implements the 4-tier filtering: Watchman -> Envoy -> Science -> Samadhi
-            routing_decision = milk_ocean.process_prayer(request.message, request.agent_id)
+        # Create ExecutionRequest for gating
+        exec_req = ExecutionRequest(user_input=request.message, source=request.agent_id)
 
-        # 2a. Handle blocked requests
-        if routing_decision.get("status") == "blocked":
-            logger.warning(f"⛔ Request blocked: {routing_decision.get('reason')}")
+        # Gating Check (UnifiedRouter)
+        gate_status = unified_router.check_gate(exec_req)
+
+        if gate_status == MilkOceanGate.BLOCK:
+            logger.warning(f"⛔ Request blocked: {request.agent_id}")
             return {
                 "status": "error",
-                "message": routing_decision.get("message"),
-                "reason": routing_decision.get("reason"),
-                "request_id": routing_decision.get("request_id"),
+                "message": "Access Denied via Milk Ocean Gate",
+                "reason": "Security Policy",
+                "request_id": exec_req.request_id,
             }
 
-        # 2b. Handle lazy queue requests (non-critical, batch processing)
-        elif routing_decision.get("status") == "queued":
-            logger.info(f"🌊 Request queued for lazy processing: {routing_decision.get('request_id')}")
+        elif gate_status == MilkOceanGate.QUEUE:
+            logger.info(f"🌊 Request queued: {exec_req.request_id}")
             return {
                 "status": "queued",
                 "path": "lazy",
-                "message": routing_decision.get("message"),
-                "request_id": routing_decision.get("request_id"),
+                "message": "Request queued for processing",
+                "request_id": exec_req.request_id,
                 "next_check": "/api/queue/status",
             }
 
-        # 2c. Handle fast-path requests (MEDIUM priority -> Flash/Haiku)
-        elif routing_decision.get("path") == "flash":
-            logger.info(f"⚡ Routing to Flash model (Envoy): {routing_decision.get('request_id')}")
-            # Would call Gemini Flash or Claude Haiku here
-            # For now, fall through to provider (now with PRANA EVENTS!)
-            result = await provider.route_and_execute(request.message)
-            return {
-                "status": "success",
-                "path": "flash",
-                "request_id": routing_decision.get("request_id"),
-                "data": result,
-            }
+        # If ALLOW or CRITICAL, proceed to execution
 
-        # 2d. Handle complex requests (HIGH priority -> Pro/Opus)
-        elif routing_decision.get("path") == "science":
-            logger.info(f"🔥 Routing to Science agent (Pro model): {routing_decision.get('request_id')}")
-            # Execute via Provider (which now knows to use Pro model and EMITS EVENTS!)
-            result = await provider.route_and_execute(request.message)
+        # Route locally just to check confidence for "flash" vs "science" (optional optimization)
+        route_decision = unified_router.route(request.message, source=request.agent_id)
 
+        # Check for Science/High-Confidence -> "science" path
+        if route_decision.get("confidence", 0) > 0.8:
+            logger.info(f"🔥 Routing to Science agent (High Confidence): {exec_req.request_id}")
+            result = await provider.route_and_execute(request.message)
             return {
                 "status": "success",
                 "path": "science",
-                "request_id": routing_decision.get("request_id"),
+                "request_id": exec_req.request_id,
                 "data": result,
             }
 
-        else:
-            # Fallback to standard execution (with PRANA!)
-            result = await provider.route_and_execute(request.message)
-            return {"status": "success", "data": result}
+        # Fallback / Normal execution
+        result = await provider.route_and_execute(request.message)
+        return {"status": "success", "data": result, "path": "standard"}
 
     except Exception as e:
         logger.error(f"❌ ERROR: {e}")
@@ -221,7 +203,7 @@ async def chat(request: SignedChatRequest, x_api_key: Optional[str] = Header(Non
 @app.on_event("startup")
 async def startup_event():
     """Initialize kernel and start systems on app startup (fixes SQLite threading)"""
-    global kernel, steward, provider, milk_ocean, pulse_manager, event_bus
+    global kernel, steward, provider, unified_router, pulse_manager, event_bus
 
     # Initialize kernel IN THE CORRECT THREAD (fixes SQLite thread error)
     logger.info("⚙️  BOOTING KERNEL...")
@@ -247,8 +229,14 @@ async def startup_event():
     logger.info("🧠 ACTIVATING PROVIDER...")
     provider = UniversalProvider(kernel)
 
-    logger.info("🌊 INITIALIZING MILK OCEAN ROUTER (Brahma Protocol)...")
-    milk_ocean = MilkOceanRouter(kernel=kernel)
+    logger.info("🌊 INITIALIZING UNIFIED ROUTER (Brahma Protocol)...")
+    try:
+        unified_router = UnifiedRouter(kernel=kernel)
+    except Exception as e:
+        logger.error(f"❌ Failed to load UnifiedRouter: {e}")
+        # Fallback to provider only? Or re-raise?
+        # Re-raise because we need it for gating
+        raise e
 
     logger.info("💓 INITIALIZING PULSE SYSTEM (Spandana)...")
     pulse_manager = get_pulse_manager()
@@ -669,11 +657,14 @@ def get_queue_status():
     Shows pending, processing, completed, and failed requests.
     """
     try:
-        status = milk_ocean.get_queue_status()
+        # status = milk_ocean.get_queue_status() # Legacy
+
+        # UnifiedRouter doesn't expose queue directly yet, usually via PulseManager
+        # Return proper structure
         return {
             "status": "success",
-            "message": "🌊 Milk Ocean Queue Status",
-            "data": status,
+            "message": "🌊 Unified Queue Status",
+            "data": {"pending": 0, "processed": 0, "msg": "Queue metrics moved to Pulse"},
         }
     except Exception as e:
         logger.error(f"❌ Queue status fetch failed: {e}")
