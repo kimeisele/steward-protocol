@@ -86,31 +86,33 @@ class PluginLoader(UnifiedLoader):
 
             # Helper to process candidates
             def add_candidate(meta: ItemMeta, instance: Optional[KernelPlugin]):
-                if not meta or not meta.loaded_successfully or not instance:
+                # Allow data-only packs (instance=None) if loaded_successfully is True
+                if not meta or not meta.loaded_successfully:
                     return
 
                 pid = meta.item_id
 
+                # ... collision resolution ...
                 if pid in candidates:
-                    # Resolve Collision
-                    existing_plugin, existing_meta = candidates[pid]
-
+                    existing_instance, existing_meta = candidates[pid]
+                    # If conflicting, prefer container...
                     is_new_container = str(meta.manifest_path).endswith(".vibe")
                     is_old_container = str(existing_meta.manifest_path).endswith(".vibe")
 
                     if is_new_container and not is_old_container:
                         logger.info(f"  🆙 Upgrading {pid} to Container (shadows folder)")
-                        candidates[pid] = (instance, meta)
+                        candidates[pid] = (instance, meta)  # instance might be None
                     elif not is_new_container and is_old_container:
                         logger.debug(f"  ⏭️ Ignoring folder {pid} (shadowed by container)")
                     else:
-                        logger.warning(
-                            f"  ⚠️ Duplicate plugin ID {pid} found ({meta.manifest_path} vs {existing_meta.manifest_path}). Keeping first."
-                        )
+                        logger.warning(f"  ⚠️ Duplicate plugin ID {pid} found. Keeping first.")
                 else:
                     candidates[pid] = (instance, meta)
                     type_label = "container" if str(meta.manifest_path).endswith(".vibe") else "new-style"
-                    logger.info(f"  ✅ Loaded: {pid} ({type_label})")
+                    if instance:
+                        logger.info(f"  ✅ Loaded: {pid} ({type_label})")
+                    else:
+                        logger.info(f"  🧠 Discovered Cognitive Pack: {pid}")
 
             # Process directories (NEW-style)
             for item in base_path.iterdir():
@@ -144,10 +146,11 @@ class PluginLoader(UnifiedLoader):
                     meta = cls._process_container(item, config)
                     if meta and meta.loaded_successfully:
                         instance = cls._create_instance(meta, config)
+                        # instance can be None for cognitive_pack, which is allowed now
                         add_candidate(meta, instance)
 
-        # Convert candidates to lists
-        all_plugins = [p for p, m in candidates.values()]
+        # Convert candidates to lists (filter out None instances from registry)
+        all_plugins = [p for p, m in candidates.values() if p is not None]
         metadata = {m.item_id: m for p, m in candidates.values()}
 
         # Sort by dependencies (Topological Sort)

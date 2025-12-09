@@ -422,13 +422,13 @@ logger = logging.getLogger("{agent_id.upper()}_AGENT")
 class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
     """
     {name} Agent Cartridge.
-    
+
     Mission: {mission}
     """
 
     def __init__(self, config: Optional[CityConfig] = None):
         self.config = config or CityConfig()
-        
+
         super().__init__(
             agent_id="{agent_id}",
             name="{name.upper()}",
@@ -438,12 +438,12 @@ class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
             domain="CUSTOM",
             capabilities=[{caps_str}],
         )
-        
+
         # Constitutional Oath
         if OathMixin:
             self.oath_mixin_init(self.agent_id)
             self.oath_sworn = True
-        
+
         logger.info("✅ {name.upper()} is online")
 
     def get_manifest(self) -> AgentManifest:
@@ -461,7 +461,7 @@ class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
     async def process(self, task: Task) -> Dict[str, Any]:
         action = task.payload.get("action")
         logger.info(f"Processing: {{action}}")
-        
+
         # TODO: Implement agent-specific logic
         return {{"status": "processed", "action": action}}
 

@@ -246,13 +246,13 @@ def on_spawn_request(self, spec: AgentSpec, oath_hash: str):
         display_name=spec.name,
         dharma=spec.purpose,
     )
-    
+
     # 4. Kernel Registration (Execution)
     self.kernel.register_agent(spec.load_cartridge())
-    
+
     # 5. Herald Announcement
     self.kernel.bus.publish("system.life.birth", {"agent": spec.id})
-    
+
     return {"status": "born", "agent_id": spec.id}
 ```
 
@@ -366,4 +366,3 @@ config/personas/{agent_id}.yaml  # Prakriti identity
 3. [ ] **CLI Commands**: `vibe spawn`, `vibe list agents`
 4. [ ] **Duplicate Check**: Reject if agent_id already exists
 5. [ ] **Integration Test**: Full end-to-end spawn + use cycle
-

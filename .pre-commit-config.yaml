@@ -85,4 +85,3 @@ repos:
         entry: "KERNEL IS VISNU - ETERNAL. Create a plugin instead. Bypass: git commit --no-verify"
         language: fail
         files: ^vibe_core/kernel_impl\.py$
-
