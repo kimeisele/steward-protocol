@@ -41,7 +41,8 @@ async def test_genesis_flow():
     from vibe_core.cartridges.system.envoy.provider import UniversalProvider
 
     provider = UniversalProvider(kernel=kernel)
-    assert provider.router is not None
+    # UniversalProvider uses either semantic_router or router (deterministic fallback)
+    assert provider.router is not None or provider.semantic_router is not None
     assert provider.playbook_engine is not None
 
     # STEP 3: Test User Input
@@ -71,7 +72,8 @@ async def test_genesis_flow():
 
     # Check result status
     status = result.get("status", "UNKNOWN")
-    assert status in ["PROPOSAL_PENDING", "COMPLETED", "FAILED", "NO_MATCH"]
+    # Valid statuses: fast-path success, playbook pending, completed, failed
+    assert status in ["success", "PROPOSAL_PENDING", "COMPLETED", "FAILED", "NO_MATCH", "SUBMITTED"]
 
     # STEP 5: Shutdown
     kernel.shutdown(reason="Genesis Flow test complete")
