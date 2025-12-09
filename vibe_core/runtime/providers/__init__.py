@@ -11,15 +11,17 @@ Supported providers:
 - Local/Ollama (Future)
 
 Usage:
-    from providers import create_provider
+    from vibe_core.runtime.providers import create_provider
 
     provider = create_provider(provider_name="anthropic", api_key="...")
     response = provider.invoke(prompt="Hello", model="claude-3-5-sonnet")
 
-Version: 1.0 (GAD-511)
+NOTE: Individual providers (GoogleProvider, AnthropicProvider) are NOT
+exported here to avoid heavy import chains. Use create_provider() instead.
+
+Version: 1.1 (Lean Kernel)
 """
 
-from .anthropic import AnthropicProvider
 from .base import (
     LLMProvider,
     LLMProviderError,
@@ -30,11 +32,9 @@ from .base import (
     ProviderNotAvailableError,
 )
 from .factory import create_provider, get_default_provider
-from .google import GoogleProvider
 
 __all__ = [
-    "AnthropicProvider",
-    "GoogleProvider",
+    # Base classes (lightweight)
     "LLMProvider",
     "LLMProviderError",
     "LLMResponse",
@@ -42,6 +42,7 @@ __all__ = [
     "NoOpProvider",
     "ProviderInvocationError",
     "ProviderNotAvailableError",
+    # Factory functions (lazy load providers)
     "create_provider",
     "get_default_provider",
 ]
