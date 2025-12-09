@@ -53,6 +53,9 @@ class AgentLoader(UnifiedLoader):
     # === UNIFIED LOADER CONFIG ===
     item_type = "agent"
     scan_paths = [
+        # Runtime Separation (OPUS-016): Library containers have HIGHEST priority
+        Path("library"),
+        # Source folders (for development/fallback)
         Path("vibe_core/cartridges/system"),
         Path("vibe_core/cartridges/agent_city"),
     ]
