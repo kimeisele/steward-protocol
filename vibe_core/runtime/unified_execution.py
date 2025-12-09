@@ -269,12 +269,20 @@ class UnifiedRouter:
 
         Returns gate decision - whether to allow, queue, or block.
         """
-        # For now, always allow. In production:
-        # - Check rate limits
-        # - Check permissions
-        # - Check system load
-        # - Check for dangerous operations
+        # GAD-000: Security Checks
+        if "DROP TABLE" in request.user_input or "sudo" in request.user_input:
+            request.gate_decision = MilkOceanGate.BLOCK
+            return MilkOceanGate.BLOCK
 
+        # GAJENDRA PROTOCOL: Critical Request Handling
+        # If request is explicitly marked critical or contains critical keywords
+        is_critical = "CRITICAL" in request.user_input or "crit=True" in request.user_input
+
+        if is_critical:
+            request.gate_decision = MilkOceanGate.CRITICAL
+            return MilkOceanGate.CRITICAL
+
+        # For now, default to ALLOW (Queueing logic to be implemented in Phase 4)
         request.gate_decision = MilkOceanGate.ALLOW
         return MilkOceanGate.ALLOW
 
