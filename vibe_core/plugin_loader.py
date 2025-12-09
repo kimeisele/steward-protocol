@@ -149,6 +149,21 @@ class PluginLoader(UnifiedLoader):
                         # instance can be None for cognitive_pack, which is allowed now
                         add_candidate(meta, instance)
 
+                        # RECURSION (Phase 8: The Matrjoschka Test)
+                        # Check for "hollows" (internal plugins) inside the container
+                        if meta.entry_path:
+                            hollows_path = meta.entry_path / "hollows"
+                            if hollows_path.exists() and hollows_path.is_dir():
+                                logger.info(f"  🪆 Scanning hollows in {meta.item_id}...")
+                                # Recursive call to discover nested plugins
+                                nested_plugins, nested_meta = cls.discover_and_load(
+                                    scan_paths=[hollows_path], config=config
+                                )
+                                # Merge nested plugins into candidates
+                                for nid, nmeta in nested_meta.items():
+                                    ninstance = nested_plugins.get(nid)
+                                    add_candidate(nmeta, ninstance)
+
         # Convert candidates to lists (filter out None instances from registry)
         all_plugins = [p for p, m in candidates.values() if p is not None]
         metadata = {m.item_id: m for p, m in candidates.values()}
