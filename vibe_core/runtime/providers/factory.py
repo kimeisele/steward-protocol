@@ -18,9 +18,7 @@ import logging
 import os
 from typing import Any
 
-from .anthropic import AnthropicProvider
 from .base import LLMProvider, NoOpProvider, ProviderNotAvailableError
-from .google import GoogleProvider
 
 logger = logging.getLogger(__name__)
 
@@ -62,10 +60,14 @@ def create_provider(
 
     try:
         if provider_name == "anthropic":
+            from .anthropic import AnthropicProvider  # Lazy import
+
             logger.info(f"Creating Anthropic provider (model: {model_name or 'default'})")
             return AnthropicProvider(api_key=api_key, **kwargs)
 
         elif provider_name == "google":
+            from .google import GoogleProvider  # Lazy import
+
             logger.info(f"Creating Google Gemini provider (model: {model_name or 'gemini-2.5-flash-exp'})")
             return GoogleProvider(api_key=api_key, **kwargs)
 
