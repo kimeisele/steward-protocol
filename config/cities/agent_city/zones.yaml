@@ -1,0 +1,23 @@
+# Agent City Zone Configuration
+# ==============================
+# Defines zones where citizens can live and work
+
+general:
+  capacity: 20
+  description: "General purpose zone for all citizens"
+
+research:
+  capacity: 10
+  description: "Zone for research-focused citizens"
+
+engineering:
+  capacity: 10
+  description: "Zone for engineering and building"
+
+governance:
+  capacity: 5
+  description: "Zone for governance and decision-making"
+
+temporary:
+  capacity: 50
+  description: "Zone for ephemeral/short-lived citizens"
