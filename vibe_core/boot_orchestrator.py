@@ -30,9 +30,8 @@ import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
-from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.config import CityConfig
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.operator_adapter import (
@@ -79,7 +78,7 @@ class BootOrchestrator:
         self.project_root = project_root or Path.cwd()
         self.config = config  # BLOCKER #0: Phoenix Config integration
         self.kernel: Optional[RealVibeKernel] = None
-        self.discoverer: Optional[Discoverer] = None
+        self.discoverer: Optional[Any] = None  # Lazy: Discoverer loaded at runtime
 
         # Sarga phase components (initialized during boot)
         self.prompt_context = None  # VAYU phase
@@ -236,19 +235,29 @@ class BootOrchestrator:
                 f"      → Knowledge loaded: {len(graph.nodes)} nodes, {sum(len(e) for e in graph.edges.values())} edges"
             )
 
-            # Register Discoverer (Genesis Agent) - no separate process needed
-            self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
-            self.kernel.register_agent(self.discoverer, spawn_process=False)
-            logger.info("      → Discoverer (Genesis Agent) registered")
+            # Register Discoverer (Genesis Agent) - LAZY IMPORT for Runtime Separation
+            try:
+                from vibe_core.cartridges.system.discoverer.agent import Discoverer
+
+                self.discoverer = Discoverer(kernel=self.kernel, config=self.config)
+                self.kernel.register_agent(self.discoverer, spawn_process=False)
+                logger.info("      → Discoverer (Genesis Agent) registered")
+            except ImportError as e:
+                logger.warning(f"      ⚠️ Discoverer not available (container mode): {e}")
+                self.discoverer = None
 
             # Discover all agents (processes are deferred to avoid deadlock)
-            discovered_count = self.discoverer.discover_agents()
-            logger.info(f"      → Discovered {discovered_count} agents")
+            if self.discoverer:
+                discovered_count = self.discoverer.discover_agents()
+                logger.info(f"      → Discovered {discovered_count} agents")
 
-            # Spawn deferred processes now that discovery is complete
-            if discovered_count > 0:
-                spawned = self.kernel.spawn_deferred_agents()
-                logger.info(f"      → Spawned {spawned} agent processes")
+                # Spawn deferred processes now that discovery is complete
+                if discovered_count > 0:
+                    spawned = self.kernel.spawn_deferred_agents()
+                    logger.info(f"      → Spawned {spawned} agent processes")
+            else:
+                # Container-only mode: agents loaded via library/*.vibe
+                logger.info("      → Container mode: agents loaded from library/")
 
             return True
         except Exception as e:
@@ -293,7 +302,7 @@ class BootOrchestrator:
         """
         return self.kernel
 
-    def get_discoverer(self) -> Optional[Discoverer]:
+    def get_discoverer(self) -> Optional[Any]:
         """
         Get the Discoverer agent instance.
 
