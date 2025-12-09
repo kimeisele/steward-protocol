@@ -48,9 +48,21 @@ class DashboardRenderer(BaseRenderer):
                 f"**Time**: {status.get('timestamp', '')}",
                 f"**Agents**: {len(self.kernel.agent_registry)}",
                 f"**Tasks**: {queue_size}",
-                "",
-                "See [OPERATIONS.md](OPERATIONS.md) for detailed metrics.",
             ]
+
+            # Prakriti Usage
+            if hasattr(self.kernel, "prakriti") and hasattr(self.kernel.prakriti, "machine"):
+                usage = self.kernel.prakriti.machine.get_usage()
+                size_kb = usage.get("size_bytes", 0) / 1024
+                keys = usage.get("key_count", 0)
+                lines.append(f"**Memory**: {size_kb:.1f} KB ({keys} keys)")
+
+            lines.extend(
+                [
+                    "",
+                    "See [OPERATIONS.md](OPERATIONS.md) for detailed metrics.",
+                ]
+            )
             return "\n".join(lines)
         except Exception as e:
             logger.error(f"Error generating DASHBOARD content: {e}")

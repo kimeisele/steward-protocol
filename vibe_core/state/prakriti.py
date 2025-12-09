@@ -25,6 +25,7 @@ from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
 from .kernel_state import KernelState
+from .machine_state import MachineState
 from .persona import PersonaManager
 
 if TYPE_CHECKING:
@@ -60,17 +61,23 @@ class Prakriti:
     - Layer 3 (PURUSHA): Personas (Identity)
     """
 
-    def __init__(self, workspace_path: Optional[Path] = None):
+    def __init__(self, workspace_path: Optional[Path] = None, db_path: Optional[Path] = None):
         """Initialize Prakriti for a workspace.
 
         Args:
             workspace_path: Root of the workspace (default: cwd)
+            db_path: Path to SQLite ledger (default: workspace/data/vibe_ledger.db)
         """
         self._workspace = Path(workspace_path) if workspace_path else Path.cwd()
 
         # Layer 1: Physical State (STHULA)
         self.git = GitState(self._workspace)
         self.files = FileState(self._workspace)
+
+        # Layer 1.5: Persistent Machine State (SQLite)
+        if db_path is None:
+            db_path = self._workspace / "data" / "vibe_ledger.db"
+        self.machine = MachineState(Path(db_path))
 
         # Layer 2: Runtime State (PRANA)
         self.kernel = KernelState()
@@ -79,7 +86,7 @@ class Prakriti:
         # Layer 3: Identity (PURUSHA)
         self.personas = PersonaManager(self._workspace)
 
-        logger.info(f"[PRAKRITI] Initialized at {self._workspace}")
+        logger.info(f"[PRAKRITI] Initialized at {self._workspace} (DB: {db_path})")
 
     # =========================================================================
     # Factory Methods

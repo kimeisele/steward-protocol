@@ -8,8 +8,13 @@ WIRED TO PRAKRITI: Unified State Engine (OPUS-009)
 import argparse
 import json
 import logging
+import tempfile
 import warnings
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import requests
+from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn, TransferSpeedColumn
 
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
@@ -343,6 +348,7 @@ class UnifiedCLI:
         RUNTIME SEPARATION (OPUS-016):
         - Writes to library/ (Runtime Space), NOT cartridges/system/ (Source)
         - The Loader reads from library/, so updates take effect on restart
+        - NOW SUPPORTS (Phase 17): Remote URLs and Registry Aliases (@steward/name)
         """
         import shutil
         from pathlib import Path
@@ -355,27 +361,57 @@ class UnifiedCLI:
         if not args:
             print("Usage: steward update <name>")
             print("       steward install <path/to/file.vibe>")
+            print("       steward install https://example.com/file.vibe")
+            print("       steward install @steward/herald")
             return 1
 
         source_arg = args[0]
+        temp_file = None
 
-        # Determine source: direct path or name lookup
-        if source_arg.endswith(".vibe") and Path(source_arg).exists():
-            # Direct path provided
-            source_path = Path(source_arg)
-            name = source_path.stem
-        else:
-            # Name lookup - search in dist/
-            name = source_arg
-            source_path = Path("dist") / f"{name}.vibe"
+        # =====================================================================
+        # PHASE 17: TELEPATHY (Remote Installation & Discovery)
+        # =====================================================================
 
-            if not source_path.exists():
-                source_path = Path("dist/holons") / f"{name}.vibe"
+        # 1. Resolve Source (Mask Registry Aliases as URLs)
+        if source_arg.startswith("@"):
+            source_arg = self._resolve_registry_alias(source_arg)
+            print(f"📡 Resolved registry alias to: {source_arg}")
 
-            if not source_path.exists():
-                print(f"❌ Artifact not found: dist/{name}.vibe")
-                print(f"   Provide a direct path or run 'steward pack {name}' first.")
+        # 2. Check for Remote URL
+        is_remote = source_arg.startswith("http://") or source_arg.startswith("https://")
+
+        if is_remote:
+            print(f"⬇️  Downloading from {source_arg}...")
+            try:
+                temp_fd, temp_path = tempfile.mkstemp(suffix=".vibe")
+                temp_file = Path(temp_path)
+                self._download_file(source_arg, temp_file)
+                source_path = temp_file
+                # Infer name from URL if possible, otherwise prompt/default needed
+                # Ideally config inside .vibe has the name, but for now we rely on filename convention
+                name = Path(source_arg).stem
+                print("✅ Download complete.")
+            except Exception as e:
+                print(f"❌ Download failed: {e}")
+                if temp_file and temp_file.exists():
+                    temp_file.unlink()
                 return 1
+        else:
+            # Local File Logic (Legacy)
+            if source_arg.endswith(".vibe") and Path(source_arg).exists():
+                source_path = Path(source_arg)
+                name = source_path.stem
+            else:
+                # Name lookup in dist/
+                name = source_arg
+                source_path = Path("dist") / f"{name}.vibe"
+                if not source_path.exists():
+                    source_path = Path("dist/holons") / f"{name}.vibe"
+
+                if not source_path.exists():
+                    print(f"❌ Artifact not found: dist/{name}.vibe")
+                    print(f"   Provide a direct path, URL, or run 'steward pack {name}' first.")
+                    return 1
 
         print(f"📦 Installing {name} from {source_path}...")
 
@@ -408,10 +444,56 @@ class UnifiedCLI:
             print(f"✅ Installed to {dest_path}")
             print(f"   Size: {dest_path.stat().st_size:,} bytes")
             print("   🔄 Restart kernel to apply changes.")
+
+            # Cleanup temp file if used
+            if temp_file and temp_file.exists():
+                temp_file.unlink()
+
             return 0
         except Exception as e:
             print(f"❌ Installation failed: {e}")
+            if temp_file and temp_file.exists():
+                temp_file.unlink()
             return 1
+
+    def _resolve_registry_alias(self, alias: str) -> str:
+        """
+        Phase 17 Step 2: Registry Map
+        Maps @steward/<name> to GitHub Release URL.
+        """
+        # Simple static mapping for now, can be dynamic later
+        REGISTRY_BASE = "https://github.com/steward-protocol/registry/releases/download/v1.0"
+
+        if alias.startswith("@steward/"):
+            name = alias.split("/")[1]
+            return f"{REGISTRY_BASE}/{name}.vibe"
+
+        # Fallback
+        return alias
+
+    def _download_file(self, url: str, dest: Path):
+        """
+        Phase 17 Step 1: Network Core (Requests + Rich Progress)
+        """
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+
+        total_size = int(response.headers.get("content-length", 0))
+        block_size = 8192
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            DownloadColumn(),
+            TransferSpeedColumn(),
+        ) as progress:
+            task = progress.add_task("Downloading...", total=total_size)
+
+            with open(dest, "wb") as f:
+                for chunk in response.iter_content(chunk_size=block_size):
+                    f.write(chunk)
+                    progress.update(task, advance=len(chunk))
 
     def cmd_install(self, args: List[str]) -> int:
         """Alias for cmd_update - semantic clarity for new installations."""
