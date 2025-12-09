@@ -19,10 +19,10 @@ metadata:
 
 playbook_structure:
   name: string          # "PROJECT_SCAFFOLD", "CONTENT_GENERATION", etc.
-  intent_match: object  # Triggers that activate this playbook
-    - primary: string   # Main concept (e.g., "CMD_CREATE")
-    - secondary: [string]  # Optional domain (e.g., ["DOM_GOVERNANCE"])
-  description: string   # What does this playbook do?
+  intent_match:           # Triggers that activate this playbook
+    primary: string       # Main concept (e.g., "CMD_CREATE")
+    secondary: [string]   # Optional domain (e.g., ["DOM_GOVERNANCE"])
+  description: string     # What does this playbook do?
 
   phases: array
     - phase_id: string  # "phase_1", "phase_2", etc.
