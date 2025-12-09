@@ -44,18 +44,6 @@ class EphemeralRenderer(BaseRenderer):
             logger.error(f"Error generating EPHEMERAL content: {e}")
             return None
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="EPHEMERAL.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _generate_markdown(self) -> str:
         lines = ["# EPHEMERAL HYPERCUBE", ""]
 

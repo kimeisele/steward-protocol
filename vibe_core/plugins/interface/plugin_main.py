@@ -159,25 +159,45 @@ class InterfacePlugin(KernelPlugin):
         if self._is_test_mode():
             return
 
+        for name in self._renderers:
+            self.render_view(name)
+
+    def render_view(self, name: str, force: bool = False) -> None:
+        """
+        Render a specific view.
+
+        Args:
+            name: Name of the renderer to run
+            force: If True, bypass interval check and test mode check
+        """
+        # Skip if test mode (unless forced)
+        if self._is_test_mode() and not force:
+            return
+
+        # Skip if not due (unless forced)
+        if not force and not self._should_render(name):
+            return
+
+        renderer = self._renderers.get(name)
+        if not renderer:
+            logger.warning(f"Renderer '{name}' not found")
+            return
+
         now = time.time()
-        for name, renderer in self._renderers.items():
-            if self._should_render(name):
-                try:
-                    # NEW: Try unified approach first (generate_content)
-                    content = renderer.generate_content()
-                    if content is not None:
-                        # KING writes with unified header
-                        self._write_unified(renderer, content)
-                    else:
-                        # LEGACY: Fall back to direct render()
-                        renderer.render()
-                    self._last_render[name] = now
-                except Exception as e:
-                    logger.error(f"Renderer '{name}' failed: {e}")
-                    # Law 2: Write error placeholder instead of crashing
-                    self._render_error_placeholder(name, e)
-                    self._last_render[name] = now
-                    # Continue with other renderers!
+        try:
+            # NEW: Try unified approach first (generate_content)
+            content = renderer.generate_content()
+            if content is not None:
+                # KING writes with unified header
+                self._write_unified(renderer, content)
+
+            self._last_render[name] = now
+        except Exception as e:
+            logger.error(f"Renderer '{name}' failed: {e}")
+            # Law 2: Write error placeholder instead of crashing
+            self._render_error_placeholder(name, e)
+            self._last_render[name] = now
+            # Continue with other renderers!
 
         # Throttled auto-commit (every 60s max, not on every tick)
         if (now - self._last_auto_commit) >= self._auto_commit_interval:

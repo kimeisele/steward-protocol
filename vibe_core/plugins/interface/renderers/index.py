@@ -54,18 +54,6 @@ class IndexRenderer(BaseRenderer):
         self._scan_docs_directories()
         return self._generate_markdown()
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="INDEX.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _load_circuit(self) -> Dict[str, Any]:
         """Load circuit definition from YAML."""
         circuit_file = self.root_dir / CIRCUIT_PATH

@@ -161,21 +161,6 @@ class EnvoyRenderer(BaseRenderer):
         except Exception as e:
             logger.error(f"Error syncing ENVOY.md: {e}")
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED. Use generate_content()."""
-        # Process completed tasks
-        self._process_completed_tasks()
-
-        # Sync from file (read user commands)
-        self._sync_from_file()
-
-        # Generate and Write Document (legacy - sync writes directly)
-        try:
-            content = self._generate_content()
-            self.sync.render_document(content)
-        except Exception as e:
-            logger.error(f"Error generating ENVOY.md: {e}")
-
     def _generate_content(self) -> str:
         """Generate ENVOY.md content."""
         lines = ["# ENVOY TERMINAL", ""]

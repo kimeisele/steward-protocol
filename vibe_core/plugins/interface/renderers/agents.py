@@ -32,18 +32,6 @@ class AgentsRenderer(BaseRenderer):
         agents = self.kernel.agent_registry
         return self._generate_markdown(agents)
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="AGENTS.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _generate_markdown(self, agents: Dict[str, Any]) -> str:
         """Generate Markdown content."""
         lines = ["# 👥 AGENT REGISTRY", ""]

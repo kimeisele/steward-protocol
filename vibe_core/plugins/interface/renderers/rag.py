@@ -32,18 +32,6 @@ class RagRenderer(BaseRenderer):
         status = self.kernel.status.value if hasattr(self.kernel, "status") else "UNKNOWN"
         return self._generate_markdown(status)
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="RAG.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _generate_markdown(self, status: str) -> str:
         """Generate Markdown content."""
         lines = ["# 🧠 RAG (Realtime Architecture Guide)", ""]
