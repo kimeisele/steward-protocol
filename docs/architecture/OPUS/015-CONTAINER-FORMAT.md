@@ -58,7 +58,7 @@ We must extend `_process_container` to handle both recursion (Lazy Extraction) a
 
 class ContainerMounter:
     """Handles the physical reality of nested containers."""
-    
+
     CACHE_DIR = Path("/tmp/vibe_cache/containers")
 
     @classmethod
@@ -68,11 +68,11 @@ class ContainerMounter:
         """
         # 1. Mount physical files (Unzip/Cache) via Lazy Extraction
         mount_point = cls._mount_fs(container_path)
-        
+
         # 2. Read Shabda (Manifest)
         manifest = cls._read_manifest(mount_point)
         mode = manifest.get("execution", {}).get("mode", "thread")
-        
+
         if mode == "process":
             # STRATEGY A: Isolated Reality (ProcessManager)
             # The Kernel spawns a Sub-Process.
@@ -81,11 +81,11 @@ class ContainerMounter:
                 entry_point=mount_point / "content" / "plugin_main.py",
                 env_vars={"PYTHONPATH": str(mount_point / "content")}
             )
-            
+
         elif mode == "thread":
             # STRATEGY B: Shared Reality (Fast but Risky)
             # We use physical mounting but shared memory.
-            # RISK: Global namespace pollution. 
+            # RISK: Global namespace pollution.
             # REQUIRES: Strict adherence to Kernel pyproject.toml
             sys.path.insert(0, str(mount_point / "content"))
             try:
@@ -105,10 +105,10 @@ def inspect_container(path: Path) -> Dict:
     with zipfile.ZipFile(path) as z:
         # Read manifest directly from stream
         manifest_data = json.loads(z.read("manifest.json"))
-        
+
         # Verify if tests exist (Compliance Check)
         has_tests = any(f.startswith("tests/") for f in z.namelist())
-        
+
         return {
             "meta": manifest_data,
             "compliance": {

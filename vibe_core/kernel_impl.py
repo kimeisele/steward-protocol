@@ -283,8 +283,32 @@ class RealVibeKernel(VibeKernel):
 
         # PLUGIN SYSTEM (The Avatars of Vishnu)
         # Phase 1: Load and boot all plugins
+        # Phase 6: Load Cognitive Packs (Genesis)
+        self.genesis_path = None
+        self._plugin_metadata = {}
+
         if self._load_plugins:
-            self._plugins = PluginLoader.discover()
+            from pathlib import Path
+
+            # Scan both plugins and knowledge directories
+            scan_paths = [Path("vibe_core/plugins"), Path("knowledge")]
+
+            # Use discover_and_load to get metadata (needed for cognitive packs)
+            self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)
+            self._plugins = list(self._plugins_map.values())
+
+            # Check for Genesis Cognitive Pack
+            genesis_meta = self._plugin_metadata.get("genesis_knowledge")
+            if genesis_meta and genesis_meta.loaded_successfully:
+                self.genesis_path = genesis_meta.entry_path
+                logger.info(f"🧠 Genesis Knowledge Pack loaded at: {self.genesis_path}")
+                if genesis_meta.manifest.get("version"):
+                    logger.info(f"   Version: {genesis_meta.manifest.get('version')}")
+            else:
+                logger.warning(
+                    "⚠️ Genesis Knowledge Pack NOT found or failed to load - System running without base knowledge"
+                )
+
             for plugin in self._plugins:
                 plugin.on_boot(self)
         else:

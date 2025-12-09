@@ -563,10 +563,17 @@ class EnvoyPlugin(KernelPlugin):
         """Discover circuits from YAML files."""
         import yaml
 
-        circuits_path = self._project_root / "vibe_core" / "playbook" / "circuits"
+        # Phase 6: Load from Genesis Pack if available
+        if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
+            circuits_path = self._kernel.genesis_path / "content" / "circuits"
+            logger.info(f"📬 Loading circuits from Genesis Pack: {circuits_path}")
+        else:
+            # Fallback to legacy path
+            circuits_path = self._project_root / "vibe_core" / "playbook" / "circuits"
+            logger.warning(f"📬 Genesis not found - using legacy circuits: {circuits_path}")
 
         if not circuits_path.exists():
-            logger.warning("📬 Circuits directory not found")
+            logger.warning(f"📬 Circuits directory not found: {circuits_path}")
             return
 
         for yaml_file in circuits_path.glob("*.yaml"):
