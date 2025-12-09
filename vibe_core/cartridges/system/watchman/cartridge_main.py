@@ -463,6 +463,8 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                 return self.run_deep_inspection()
             elif action == "system_health":
                 return self.run_health_check()
+            elif action == "verify_signatures":
+                return self.verify_holon_signatures()
             else:
                 return {"status": "error", "error": f"Unknown action: {action}"}
         except Exception as e:
@@ -471,6 +473,93 @@ class WatchmanCartridge(VibeAgent, OathMixin):
 
             logger.error(traceback.format_exc())
             return {"status": "error", "error": str(e)}
+
+    def verify_holon_signatures(self) -> dict:
+        """
+        Scan and verify signatures of all .vibe containers.
+        Part of GAD-000 Holon Governance.
+        """
+        import zipfile
+
+        logger.info("\n" + "=" * 70)
+        logger.info("🔐 WATCHMAN HOLON VERIFICATION")
+        logger.info("=" * 70)
+
+        scan_paths = getattr(self, "scan_paths", [Path("vibe_core/plugins")])
+        violations = []
+        verified_count = 0
+
+        for base in scan_paths:
+            if not base.exists():
+                continue
+            for item in base.iterdir():
+                if item.suffix == ".vibe" and zipfile.is_zipfile(item):
+                    try:
+                        is_valid = self._verify_single_holon(item)
+                        if is_valid:
+                            logger.info(f"  ✅ Verified: {item.name}")
+                            verified_count += 1
+                        else:
+                            logger.critical(f"  ❌ TAMPERED: {item.name}")
+                            violations.append(
+                                {"file": str(item), "reason": "Invalid signature", "severity": "CRITICAL"}
+                            )
+                    except Exception as e:
+                        logger.error(f"  ⚠️ Error verifying {item.name}: {e}")
+                        violations.append({"file": str(item), "reason": f"Verification error: {e}", "severity": "High"})
+
+        status = "COMPLIANT" if not violations else "VIOLATIONS_DETECTED"
+        logger.info(f"\nStatus: {status} ({verified_count} verified, {len(violations)} violations)")
+        logger.info("=" * 70 + "\n")
+
+        return {"status": status, "verified": verified_count, "violations": violations}
+
+    def _verify_single_holon(self, file_path: Path) -> bool:
+        """Verify signature of a single .vibe file."""
+        import hashlib
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(file_path, "r") as z:
+                # 1. Read proper signature
+                if "SIGNATURE.sig" not in z.namelist():
+                    logger.warning(f"Signature missing in {file_path.name}")
+                    return False
+
+                stored_sig = z.read("SIGNATURE.sig").decode("utf-8").strip()
+
+                # 2. Recompute hash
+                hasher = hashlib.sha256()
+
+                # Hash Manifest first (Layer 0)
+                if "manifest.json" in z.namelist():
+                    hasher.update(z.read("manifest.json"))
+                else:
+                    return False  # Manifest mandatory
+
+                # Iterate content (excluding sig and manifest which we just did)
+                # Need to match deterministic order of packer?
+                # Packer used os.walk / iterdir which is not strictly ordered?
+                # Packer: "add_recursive(source_dir)". iterdir order is OS dependent!
+                # CRITICAL FLAW IN PACKER: Order matters for stream hashing if we hash linearly.
+                # BUT wait, packer output `z.write` writes to the zip stream.
+                # If we read the zip stream, we get entries in the order they were written.
+                # So we should iterate z.infolist() and hash content of relevant files in order!
+
+                for info in z.infolist():
+                    if info.filename == "manifest.json":
+                        continue  # Already hashed
+                    if info.filename == "SIGNATURE.sig":
+                        continue
+                    if info.filename.endswith("/"):
+                        continue  # Directory entry
+
+                    hasher.update(z.read(info.filename))
+
+                computed_sig = hasher.hexdigest()
+                return computed_sig == stored_sig
+        except Exception:
+            return False
 
     def get_manifest(self):
         """Return agent manifest for kernel registry."""

@@ -1,0 +1,8 @@
+
+circuit_id: golden_spiral
+type: fractal
+description: A recursive thought pattern stored within the Golden Holon.
+states:
+  - id: alpha
+    type: terminal
+    output: "The circle is complete."

@@ -72,8 +72,10 @@ class PluginLoader(UnifiedLoader):
             Tuple of (plugin_instances, metadata), sorted by priority
         """
         paths = scan_paths or cls.scan_paths
-        all_plugins: List[KernelPlugin] = []
-        metadata: PluginMetadata = {}
+
+        # Candidate tracking for Precedence Logic (Container > Folder)
+        # item_id -> (plugin_instance, metadata)
+        candidates: Dict[str, Tuple[KernelPlugin, ItemMeta]] = {}
 
         for base_path in paths:
             if not base_path.exists():
@@ -81,6 +83,34 @@ class PluginLoader(UnifiedLoader):
                 continue
 
             logger.info(f"[plugin] Scanning {base_path}...")
+
+            # Helper to process candidates
+            def add_candidate(meta: ItemMeta, instance: Optional[KernelPlugin]):
+                if not meta or not meta.loaded_successfully or not instance:
+                    return
+
+                pid = meta.item_id
+
+                if pid in candidates:
+                    # Resolve Collision
+                    existing_plugin, existing_meta = candidates[pid]
+
+                    is_new_container = str(meta.manifest_path).endswith(".vibe")
+                    is_old_container = str(existing_meta.manifest_path).endswith(".vibe")
+
+                    if is_new_container and not is_old_container:
+                        logger.info(f"  🆙 Upgrading {pid} to Container (shadows folder)")
+                        candidates[pid] = (instance, meta)
+                    elif not is_new_container and is_old_container:
+                        logger.debug(f"  ⏭️ Ignoring folder {pid} (shadowed by container)")
+                    else:
+                        logger.warning(
+                            f"  ⚠️ Duplicate plugin ID {pid} found ({meta.manifest_path} vs {existing_meta.manifest_path}). Keeping first."
+                        )
+                else:
+                    candidates[pid] = (instance, meta)
+                    type_label = "container" if str(meta.manifest_path).endswith(".vibe") else "new-style"
+                    logger.info(f"  ✅ Loaded: {pid} ({type_label})")
 
             # Process directories (NEW-style)
             for item in base_path.iterdir():
@@ -93,20 +123,20 @@ class PluginLoader(UnifiedLoader):
                     manifest_path = item / "manifest.json"
                     if manifest_path.exists():
                         meta = cls._process_item_directory(item, config)
+                        # Create instance if meta valid, even if loaded_successfully is False (though add_candidate checks it)
                         if meta and meta.loaded_successfully:
                             instance = cls._create_instance(meta, config)
-                            if instance:
-                                all_plugins.append(instance)
-                                metadata[meta.item_id] = meta
-                                logger.info(f"  ✅ Loaded: {meta.item_id} (new-style)")
+                            add_candidate(meta, instance)
                         elif meta:
-                            metadata[meta.item_id] = meta
+                            logger.warning(f"Failed to load folder {meta.item_id}: {meta.error}")
 
                 elif item.is_file() and item.suffix == ".py" and not item.name.startswith("_"):
                     # OLD-style: single .py file
-                    old_plugins, old_meta = cls._load_old_style_plugin(item, base_path)
-                    all_plugins.extend(old_plugins)
-                    metadata.update(old_meta)
+                    old_plugins_list, old_meta_dict = cls._load_old_style_plugin(item, base_path)
+                    for p in old_plugins_list:
+                        m = old_meta_dict.get(p.plugin_id)
+                        if m:
+                            add_candidate(m, p)
 
                 elif item.is_file() and item.suffix == ".vibe" and zipfile.is_zipfile(item):
                     # NEW: Container support
@@ -114,12 +144,11 @@ class PluginLoader(UnifiedLoader):
                     meta = cls._process_container(item, config)
                     if meta and meta.loaded_successfully:
                         instance = cls._create_instance(meta, config)
-                        if instance:
-                            all_plugins.append(instance)
-                            metadata[meta.item_id] = meta
-                            logger.info(f"  ✅ Loaded: {meta.item_id} (container)")
-                    elif meta:
-                        metadata[meta.item_id] = meta
+                        add_candidate(meta, instance)
+
+        # Convert candidates to lists
+        all_plugins = [p for p, m in candidates.values()]
+        metadata = {m.item_id: m for p, m in candidates.values()}
 
         # Sort by dependencies (Topological Sort)
         sorted_plugins = cls._sort_plugins_by_dependency(all_plugins, metadata)
