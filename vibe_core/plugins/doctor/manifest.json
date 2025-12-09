@@ -1,0 +1,27 @@
+{
+    "type": "plugin",
+    "id": "doctor",
+    "name": "System Doctor",
+    "version": "1.0.0",
+    "description": "GAD-000 Introspection and Health Checks",
+    "cli": {
+        "namespace": "system",
+        "commands": [
+            {
+                "name": "doctor",
+                "handler": "cmd_doctor",
+                "execution_mode": "offline",
+                "help": "Diagnose system health (GAD-000 Introspection)",
+                "args": [
+                    {
+                        "name": "deep",
+                        "type": "bool",
+                        "help": "Run deep diagnostics (slower)",
+                        "required": false,
+                        "default": false
+                    }
+                ]
+            }
+        ]
+    }
+}
