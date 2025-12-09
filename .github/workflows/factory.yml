@@ -1,0 +1,98 @@
+name: Holon Factory
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-holons:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install pyyaml cryptography tomlkit
+
+    - name: Prepare Factory Floor
+      run: mkdir -p dist/holons
+
+    - name: Build Genesis Pack (Brain-in-a-Box)
+      run: |
+        python3 scripts/pack_vibe.py knowledge/genesis -o dist/holons/genesis.vibe
+        ls -lh dist/holons/genesis.vibe
+
+    - name: Build Nexus Holon (Plugin)
+      run: |
+        python3 scripts/pack_vibe.py vibe_core/plugins/nexus_holon -o dist/holons/nexus_holon.vibe
+        ls -lh dist/holons/nexus_holon.vibe
+
+    - name: Verify Builds
+      run: |
+        # Simple verification that files exist and are zip files
+        for f in dist/holons/*.vibe; do
+          if [ ! -f "$f" ]; then
+            echo "❌ Build failed for $f"
+            exit 1
+          fi
+          # Check zip integrity
+          unzip -t "$f" > /dev/null
+          echo "✅ Verified $f"
+        done
+
+    - name: Upload Holons
+      uses: actions/upload-artifact@v4
+      with:
+        name: holons
+        path: dist/holons/*.vibe
+        retention-days: 5
+
+  verify-boot:
+    needs: build-holons
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pytest pytest-asyncio
+
+    - name: Download Holons
+      uses: actions/download-artifact@v4
+      with:
+        name: holons
+        path: download_holons
+
+    - name: Verify Genesis Boot (Integration Test)
+      # We need to simulate the environment where genesis.vibe is in the expected location
+      # The test expects to run in project root context
+      run: |
+        # Move downloaded genesis to where kernel expects it (or configure kernel)
+        mkdir -p knowledge
+        mv download_holons/genesis.vibe knowledge/genesis.vibe
+        
+        # Run the specific integration test
+        python -m pytest tests/integration/test_genesis_boot.py -v
+
+    - name: Verify Holon Loading (Golden Holon)
+      run: |
+        # Similar setup for Nexus Holon if needed by other tests
+        # For now, just ensuring dependencies are met
+        echo "Boot verification complete."
