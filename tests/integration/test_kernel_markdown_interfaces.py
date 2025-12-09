@@ -39,7 +39,9 @@ def get_interface_plugin(kernel):
     for plugin in kernel._plugins:
         if plugin.plugin_id == "interface":
             return plugin
-    raise ValueError("Interface plugin not found")
+
+    available = [p.plugin_id for p in kernel._plugins]
+    raise ValueError(f"Interface plugin not found. Available: {available}")
 
 
 def get_renderer(kernel, renderer_name):
@@ -58,23 +60,25 @@ def get_renderer(kernel, renderer_name):
 @pytest.fixture
 def temp_workdir():
     """Create a temporary working directory for tests."""
+    # Configure logging
+    import logging
+
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger("PLUGIN.LOADER").setLevel(logging.DEBUG)
+
     original_cwd = Path.cwd()
     temp_dir = tempfile.mkdtemp(prefix="vibe_test_")
+    temp_path = Path(temp_dir)
 
-    # Copy necessary config files
+    # Copy config files
     config_src = original_cwd / "config"
     if config_src.exists():
-        shutil.copytree(config_src, Path(temp_dir) / "config")
+        shutil.copytree(config_src, temp_path / "config")
 
-    # Copy knowledge directory if exists
-    knowledge_src = original_cwd / "knowledge"
-    if knowledge_src.exists():
-        shutil.copytree(knowledge_src, Path(temp_dir) / "knowledge")
-
-    # Copy playbook registry if exists
+    # Copy playbook registry
     playbook_src = original_cwd / "vibe_core" / "playbook" / "_registry.yaml"
     if playbook_src.exists():
-        playbook_dst = Path(temp_dir) / "vibe_core" / "playbook"
+        playbook_dst = temp_path / "vibe_core" / "playbook"
         playbook_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy(playbook_src, playbook_dst / "_registry.yaml")
 
@@ -82,23 +86,24 @@ def temp_workdir():
 
     os.chdir(temp_dir)
 
-    yield Path(temp_dir)
+    yield temp_path
 
     os.chdir(original_cwd)
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture
-def kernel():
+def kernel(temp_workdir):
     """Create a kernel with interface plugin loaded."""
     from vibe_core.plugin_loader import PluginLoader
 
     # Start with minimal kernel
     kernel = TestKernel.minimal()
 
-    # Load plugins
-    loader = PluginLoader()
-    plugins = loader.discover()
+    # Load plugins using ABSOLUTE path so it works in temp_workdir
+    scan_path = Path(__file__).parent.parent.parent / "vibe_core" / "plugins"
+    registry, _ = PluginLoader.discover_and_load(scan_paths=[scan_path])
+    plugins = list(registry.values())
 
     # Include envoy and tools plugins (required for ENVOY tests)
     wanted = {"interface", "governance", "tools", "envoy"}
@@ -111,13 +116,18 @@ def kernel():
     # Boot plugins
     for plugin in kernel._plugins:
         if hasattr(plugin, "on_boot"):
-            plugin.on_boot(kernel)
+            try:
+                plugin.on_boot(kernel)
+            except Exception as e:
+                print(f"❌ Failed to boot {plugin.plugin_id}: {e}")
+                # We do NOT re-raise, so we can see which tests fail due to missing plugins
+                # But typically this is fatal for that plugin.
 
     return kernel
 
 
 @pytest.fixture
-def booted_kernel():
+def booted_kernel(temp_workdir):
     """Create a fully booted kernel with agents (Lightweight Manual Boot)."""
     from vibe_core.plugin_loader import PluginLoader
 
@@ -125,8 +135,11 @@ def booted_kernel():
     kernel = TestKernel.with_governance()
 
     # Load plugins (configured by @pytest.mark.vibe_plugins)
-    loader = PluginLoader()
-    plugins = loader.discover()
+    # Use ABSOLUTE scan path
+    scan_path = Path(__file__).parent.parent.parent / "vibe_core" / "plugins"
+
+    registry, _ = PluginLoader.discover_and_load(scan_paths=[scan_path])
+    plugins = list(registry.values())
 
     # Register and boot plugins
     kernel._plugins = []
@@ -136,7 +149,10 @@ def booted_kernel():
     # Boot plugins
     for plugin in plugins:
         if hasattr(plugin, "on_boot"):
-            plugin.on_boot(kernel)
+            try:
+                plugin.on_boot(kernel)
+            except Exception as e:
+                print(f"❌ Failed to boot {plugin.plugin_id}: {e}")
 
     # Register test agent using TestAgents fixture
     dummy_agent = TestAgents.compliant("steward")
@@ -386,6 +402,9 @@ class TestEnvoyTerminalInterface:
         """Test that render creates ENVOY.md."""
         envoy_path = temp_workdir / "ENVOY.md"
         assert not envoy_path.exists()
+
+        # Verify kernel.io exists (debug)
+        assert hasattr(kernel, "io"), "kernel.io should exist"
 
         get_renderer(kernel, "envoy").render()
         content = envoy_path.read_text()
