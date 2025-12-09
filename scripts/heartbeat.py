@@ -31,14 +31,14 @@ sys.path.insert(0, str(project_root))
 from vibe_core.task_management.models import TaskStatus
 from vibe_core.task_management.task_manager import TaskManager
 
-# Import the MilkOcean Router for task execution
+# Import Unified Router for task execution/routing
 try:
-    from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
+    from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate, UnifiedRouter
 
-    MILK_OCEAN_AVAILABLE = True
+    UNIFIED_ROUTER_AVAILABLE = True
 except ImportError:
-    MilkOceanRouter = None
-    MILK_OCEAN_AVAILABLE = False
+    UnifiedRouter = None
+    UNIFIED_ROUTER_AVAILABLE = False
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("HEARTBEAT")
@@ -53,16 +53,17 @@ class HeartbeatEngine:
         self.inbox_dir = project_root / "data" / "inbox"
         self.task_manager = TaskManager(project_root)
 
-        # Initialize MilkOcean Router for intelligent task execution
+        # Initialize Unified Router for intelligent task execution
         self.router = None
-        if MILK_OCEAN_AVAILABLE:
+        if UNIFIED_ROUTER_AVAILABLE:
             try:
-                self.router = MilkOceanRouter()
-                logger.info("🌊 MilkOcean Router ready for task execution")
+                # Initialize without kernel (standalone mode)
+                self.router = UnifiedRouter(kernel=None)
+                logger.info("🌊 Unified Router ready for task routing")
             except Exception as e:
-                logger.warning(f"⚠️ MilkOcean Router unavailable: {e}")
+                logger.warning(f"⚠️ Unified Router unavailable: {e}")
         else:
-            logger.warning("⚠️ MilkOcean Router not available - tasks will queue but not execute")
+            logger.warning("⚠️ Unified Router not available - tasks will queue but not execute")
 
     def pulse(self):
         """Execute one heartbeat cycle."""
@@ -186,7 +187,7 @@ class HeartbeatEngine:
 
         try:
             if not self.router:
-                logger.warning("⚠️ No MilkOcean Router available - task queued but not executed")
+                logger.warning("⚠️ No Unified Router available - task queued but not executed")
                 logger.info(f"   📋 Task: {next_task.title}")
                 logger.info(f"   🎯 Agent: {next_task.assignee or 'auto-route'}")
                 logger.info(f"   ⚡ Priority: {next_task.priority}")
@@ -199,11 +200,31 @@ class HeartbeatEngine:
             else:
                 prompt = next_task.description
 
-            logger.info("   🔄 Routing task through MilkOcean...")
+            logger.info("   🔄 Routing task through UnifiedRouter...")
             logger.info(f"   📝 Prompt: {prompt[:100]}...")
 
-            # Execute via MilkOcean Router (handles agent selection, execution, etc.)
-            result = self.router.process_prayer(user_input=prompt, agent_id="HEARTBEAT_ENGINE", critical=False)
+            # --- UNIFIED EXECUTOR ADAPTATION ---
+            # Create request
+            req = ExecutionRequest(user_input=prompt, source="HEARTBEAT_ENGINE")
+
+            # 1. Check Gate
+            gate = self.router.check_gate(req)
+
+            result = {}  # Mock result dict for compatibility
+
+            if gate == MilkOceanGate.BLOCK:
+                result["status"] = "blocked"
+                result["reason"] = "Blocked by MilkOcean Gate"
+            elif gate == MilkOceanGate.QUEUE:
+                result["status"] = "queued"
+            elif gate == MilkOceanGate.CRITICAL:
+                result["status"] = "critical"
+            else:
+                # 2. Route (Dry Run - No Kernel/Executor)
+                route_res = self.router.route(prompt, source="HEARTBEAT_ENGINE")
+                result["status"] = "routing"
+                result["path"] = route_res.get("agent", "unknown")
+                result["route_info"] = route_res
 
             logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
 
@@ -247,7 +268,7 @@ class HeartbeatEngine:
                 # but did NOT actually execute the agent (no LLM configured).
                 # This is a SILENT FAILURE we need to catch!
                 logger.warning(f"   ⚠️  Task routed to '{result.get('path')}' but NOT executed")
-                logger.warning("   💡 Reason: No live execution (missing LLM API keys?)")
+                logger.warning("   💡 Reason: No live execution (Heartbeat runs in DRY RUN mode)")
                 logger.warning("   📋 This is a DRY RUN - task marked as PENDING for manual review")
                 # Keep task as PENDING, don't mark completed
                 self.task_manager.update_task(
@@ -383,7 +404,7 @@ Write your tasks here. The heartbeat will pick them up automatically.
 6. **Tasks execute** and update their status automatically
 7. **Results appear** in the Active/Completed sections
 
-**MilkOcean Router** handles unassigned tasks intelligently.
+**Unified Router** handles task intelligence.
 
 ---
 

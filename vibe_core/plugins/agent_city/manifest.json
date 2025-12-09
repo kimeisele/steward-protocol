@@ -1,0 +1,25 @@
+{
+    "type": "plugin",
+    "id": "agent_city",
+    "name": "Agent City",
+    "version": "1.0.0",
+    "description": "Managed space for dynamic citizen agents",
+    "depends_on": [
+        "lifecycle"
+    ],
+    "provides": [
+        "agent_city.manager"
+    ],
+    "execution_mode": "kernel",
+    "cli": {
+        "namespace": "city",
+        "commands": [
+            {
+                "name": "citizens",
+                "handler": "cmd_citizens",
+                "execution_mode": "offline",
+                "help": "List citizens in the city"
+            }
+        ]
+    }
+}
