@@ -17,7 +17,7 @@ OPUS (Optimized Protocol for Unified Systems) documents capture architectural de
 
 | # | Document | Status | Priority | Agent-Ready |
 |---|----------|--------|----------|-------------|
-| 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | SUPERSEDED | P2 | N/A |
+| 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | 🔒 LOCKED | - | ETERNAL |
 | 002 | [Phoenix Config](002-PHOENIX-CONFIG.md) | PLANNED | P2 | N/A |
 | 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | ✅ COMPLETE | P0 | ✅ 3 tasks |
 | 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | ✅ COMPLETE | P1 | ✅ 3 tasks |
