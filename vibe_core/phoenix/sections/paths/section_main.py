@@ -16,6 +16,7 @@ Each path category maps to actual code usage:
     - docs: OPERATIONS.md, SETTINGS.md, ENVOY.md
 """
 
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
@@ -42,8 +43,17 @@ class ProjectPathsConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ProjectPathsConfig":
+        # OPUS-017: Binary Distribution (Frozen Path)
+        # If frozen, workspace root is the executable's directory
+        is_frozen = getattr(sys, "frozen", False)
+        if is_frozen and hasattr(sys, "_MEIPASS"):
+            # When frozen, '.' is the temp dir. We want the executable dir.
+            default_root = str(Path(sys.executable).parent)
+        else:
+            default_root = "."
+
         return cls(
-            workspace_root=data.get("workspace_root", "."),
+            workspace_root=data.get("workspace_root", default_root),
             diplomatic_bag=data.get("diplomatic_bag", "diplomatic_bag"),
             intelligence=data.get("intelligence", "intelligence"),
             archive=data.get("archive", ".vibe/state/archive"),
