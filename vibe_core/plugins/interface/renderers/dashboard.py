@@ -55,13 +55,3 @@ class DashboardRenderer(BaseRenderer):
         except Exception as e:
             logger.error(f"Error generating DASHBOARD content: {e}")
             return None
-
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="DASHBOARD.md",
-                content=content,
-                writer_id="RENDERER_DASHBOARD",
-            )

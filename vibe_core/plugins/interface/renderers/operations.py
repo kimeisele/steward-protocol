@@ -44,18 +44,6 @@ class OperationsRenderer(BaseRenderer):
             logger.error(f"Error generating OPERATIONS content: {e}")
             return None
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="OPERATIONS.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _generate_markdown(self) -> str:
         """Generate markdown content from live kernel state."""
         lines = ["# OPERATIONS DASHBOARD", ""]

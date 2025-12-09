@@ -14,11 +14,11 @@ Tests the markdown-based control interfaces via the Unified Interface Plugin:
 2. ENVOY.md - Terminal Interface (Frontend Chat)
    - Renders terminal with Request/Status/History sections
    - Detects user requests via file change
-   - Routes via PlaybookRouter (NO LLM)
+   - Routes via UnifiedRouter (NO LLM)
    - Dispatches tasks async to scheduler
    - Updates status and history on completion
 
-NO MOCKS. Real kernel, real scheduler, real PlaybookRouter.
+NO MOCKS. Real kernel, real scheduler, real UnifiedRouter.
 """
 
 import shutil
@@ -160,7 +160,8 @@ class TestSettingsMarkdownInterface:
         assert not settings_path.exists()
 
         # Trigger render
-        get_renderer(kernel, "settings").render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("settings", force=True)
 
         assert settings_path.exists()
         content = settings_path.read_text()
@@ -183,7 +184,8 @@ class TestSettingsMarkdownInterface:
         herald.report_status.return_value = {"status": "IDLE", "tasks_completed": 0}
         kernel._agent_registry = {"steward": steward, "herald": herald}
 
-        get_renderer(kernel, "settings").render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("settings", force=True)
 
         content = (temp_workdir / "SETTINGS.md").read_text()
         assert "`steward`" in content
@@ -396,12 +398,12 @@ class TestEnvoyTerminalInterface:
         assert "## Available Routes" in content
 
     def test_render_envoy_shows_available_routes(self, kernel, temp_workdir):
-        """Test that ENVOY.md shows PlaybookRouter routes."""
+        """Test that ENVOY.md shows UnifiedRouter routes."""
         get_renderer(kernel, "envoy").render()
 
         content = (temp_workdir / "ENVOY.md").read_text()
 
-        # Should show some routes from PlaybookRouter
+        # Should show some routes from UnifiedRouter
         assert "Available Routes" in content
         # At minimum, should have bootstrap route
         assert "bootstrap" in content.lower() or "status" in content.lower()
@@ -518,7 +520,7 @@ show me the status
 
     @pytest.mark.skip(reason="kernel.envoy public API not implemented yet - OPUS Phase 2 TODO")
     def test_dispatch_request_routes_via_playbook(self, kernel, temp_workdir):
-        """Test that requests are routed via PlaybookRouter (NO LLM)."""
+        """Test that requests are routed via UnifiedRouter (NO LLM)."""
         # We test this via sync_to_reality since dispatch is internal to it now
         from vibe_core.envoy_sync import EnvoySyncState
         from vibe_core.scheduling import Task
@@ -553,10 +555,10 @@ show me the status
         envoy_path = temp_workdir / "ENVOY.md"
         envoy_path.write_text("# ENVOY\n## 💬 Request\n\ncheck project status")
 
-        # Sync via manager
+        # Sync via manager (using refactored flow)
         renderer = get_renderer(kernel, "envoy")
         renderer.state.last_modified = 0
-        renderer.render()
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         # Task should be in pending tasks
         assert len(renderer.state.pending_tasks) == 1
@@ -586,7 +588,8 @@ initialize the system
         renderer.last_modified = 0
 
         # Sync
-        renderer.render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         # Should have dispatched task
         assert len(renderer.state.pending_tasks) == 1
@@ -620,7 +623,8 @@ initialize the system
             }
         )
 
-        renderer.render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         # Should be in history, not pending
         assert task_id not in renderer.state.pending_tasks
@@ -638,7 +642,8 @@ initialize the system
             "request": "build new feature",
         }
 
-        renderer.render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         content = (temp_workdir / "ENVOY.md").read_text()
 
@@ -669,7 +674,8 @@ initialize the system
             }
         )
 
-        renderer.render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         content = (temp_workdir / "ENVOY.md").read_text()
 

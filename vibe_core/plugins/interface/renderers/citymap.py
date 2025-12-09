@@ -40,18 +40,6 @@ class CityMapRenderer(BaseRenderer):
 
         return self._generate_markdown(agents, domains, tools)
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="CITYMAP.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _generate_markdown(self, agents: Dict[str, Any], domains: Dict[str, List[Any]], tools: List[str]) -> str:
         """Generate Markdown content."""
         lines = ["# 🗺️ CITY MAP", ""]

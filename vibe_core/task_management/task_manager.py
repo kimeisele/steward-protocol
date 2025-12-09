@@ -32,13 +32,12 @@ logger = logging.getLogger("TASK_MANAGER")
 class TaskManager:
     """Main task management system."""
 
-    def __init__(self, project_root: Path, milk_ocean_router=None, io_service: Optional["KernelIOService"] = None):
+    def __init__(self, project_root: Path, io_service: Optional["KernelIOService"] = None):
         """
         Initialize task manager.
 
         Args:
             project_root: Root directory of the project
-            milk_ocean_router: Optional MilkOceanRouter instance for request routing
             io_service: Optional KernelIOService for centralized file writes
         """
         self.project_root = Path(project_root)
@@ -64,17 +63,6 @@ class TaskManager:
 
         db_path = self.project_root / "data" / "vibe_agency.db"
         self.sqlite_store = SQLiteStore(str(db_path))
-
-        # MilkOcean Router for task request routing (Gap 4.1 closure)
-        self.milk_ocean_router = milk_ocean_router
-        if not self.milk_ocean_router:
-            try:
-                from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
-
-                self.milk_ocean_router = MilkOceanRouter()
-            except ImportError:
-                # MilkOceanRouter not available, fall back to None
-                self.milk_ocean_router = None
 
         # Load data
         self.tasks: Dict[str, Task] = {}
@@ -349,37 +337,9 @@ class TaskManager:
             roadmap_id=final_roadmap_id,
         )
 
-        # NEW: MilkOcean 4-tier routing (Gap 4.1 closure - Part 2)
-        # Route task through MilkOcean Router for intelligent priority classification
+        # LEGACY ROUTER REMOVED (MilkOcean)
+        # TODO: Integrate with UnifiedRouter for dynamic prioritization
         milk_ocean_priority = 1  # Default MEDIUM
-        if self.milk_ocean_router:
-            try:
-                routing_result = self.milk_ocean_router.process_prayer(
-                    user_input=f"{title}\n{description}",
-                    agent_id=assigned_agent or "TASK_MANAGER",
-                    critical=False,
-                )
-
-                # Map MilkOcean priority to routing_priority (0-3)
-                priority_map = {
-                    "BLOCKED": -1,  # Will be caught by Narasimha above
-                    "CRITICAL": 3,  # Emergency tasks
-                    "HIGH": 2,  # Pro model needed
-                    "MEDIUM": 1,  # Flash model
-                    "LOW": 0,  # Lazy queue
-                }
-
-                milk_ocean_priority = priority_map.get(routing_result.get("priority", "MEDIUM"), 1)
-
-                # Auto-elevate priority for CRITICAL tasks
-                if milk_ocean_priority == 3 and priority < 90:
-                    priority = 95  # Boost to near-max
-                    task.priority = priority
-
-            except Exception as e:
-                # MilkOcean routing failed - fallback to default
-                logger.warning(f"⚠️  MilkOcean routing failed: {e}")
-                milk_ocean_priority = 1
 
         # Topology-aware routing (Gap 4.1 closure - Part 1)
         if assigned_agent:

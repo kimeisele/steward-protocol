@@ -60,10 +60,15 @@ class BaseRenderer(ABC):
         """Unique name of the renderer (e.g. 'envoy', 'settings')."""
         pass
 
-    @abstractmethod
     def render(self) -> None:
-        """Perform rendering logic."""
-        pass
+        """
+        Legacy render method - DEPRECATED.
+
+        Subclasses should implement generate_content() instead.
+        InterfacePlugin handles the actual writing.
+        """
+        if self.generate_content() is None:
+            raise NotImplementedError(f"Renderer '{self.name}' must implement generate_content() or render()")
 
     def generate_content(self) -> Optional[str]:
         """
