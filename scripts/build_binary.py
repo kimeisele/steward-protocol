@@ -48,6 +48,14 @@ def build_binary():
         "--exclude-module=onnxruntime",
         "--exclude-module=nltk",
         "--exclude-module=spacy",
+        # === LEAN BUILD: Exclude API Provider Bloat ===
+        "--exclude-module=google",
+        "--exclude-module=google.generativeai",
+        "--exclude-module=googleapiclient",
+        "--exclude-module=grpc",
+        "--exclude-module=httplib2",
+        "--exclude-module=anthropic",
+        "--exclude-module=openai",
         # Hooks path (if needed)
         # "--additional-hooks-dir=hooks",
     ]
