@@ -2,7 +2,7 @@
 
 > **Status**: ACTIVE
 > **Created**: 2025-12-08
-> **Last Updated**: 2025-12-09 (Full overhaul)
+> **Last Updated**: 2025-12-09 (Kernel LOCKED)
 > **Symbol**: 8 = Infinity Rotated = Krishna's Number
 > **Purpose**: Master index of all OPUS architecture documents
 
@@ -12,12 +12,12 @@
 
 | # | Document | Status | Notes |
 |---|----------|--------|-------|
-| 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | 🔄 IN PROGRESS | 1409 LOC (target: 1008) |
+| 001 | [Kernel Extraction](001-KERNEL-EXTRACTION.md) | 🔒 LOCKED | 1410 LOC ETERNAL |
 | 002 | [Phoenix Config](002-PHOENIX-CONFIG.md) | 📋 PLANNED | Config caching optimization |
 | 003 | [AOS Foundation Repair](003-AOS-FOUNDATION-REPAIR.md) | ✅ COMPLETE | 7 breaks fixed |
-| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | ✅ COMPLETE | Documented, depends_on TODO |
-| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | 🔄 MOSTLY DONE | 5/7 phases complete |
-| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | ✅ COMPLETE | 5/6 tests pass |
+| 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | ✅ COMPLETE | Documented |
+| 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | ✅ MOSTLY DONE | 5/7 phases complete |
+| 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | ✅ VERIFIED | 5/6 tests pass |
 | 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | ✅ IMPLEMENTED | Three Laws in code |
 | 008 | **This Index** | 📍 ACTIVE | You are here |
 | 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | ✅ IMPLEMENTED | state/prakriti.py |
@@ -28,7 +28,7 @@
 
 ---
 
-## ✅ What's DONE (Verified Implementations)
+## ✅ Verified Implementations
 
 | Component | Location | Verified |
 |-----------|----------|----------|
@@ -46,52 +46,35 @@
 
 ---
 
-## 🔧 Technical Debt (TODO)
+## 🔒 Kernel Protection
 
-### Priority 1: Kernel Reduction (OPUS-001)
-- **Current**: 1409 LOC
-- **Target**: 1008 LOC
-- **Delta**: -401 LOC to extract
-- **Next**: Extract EconomyPlugin, HealthPlugin, ProcessPlugin
+The kernel is now **ETERNAL** (1410 LOC, locked via pre-commit hook).
 
-### Priority 2: OPUS-005 Remaining Phases
-- [ ] PlaybookRouter cleanup (exists in 2 locations)
-- [ ] Remaining Loaders migration (5 loaders)
-- [ ] CircuitExecutor split (1394-line monolith)
-- [ ] Legacy code burn (@deprecated but not deleted)
-- [ ] Manifest depends_on validation
+**All new features must be plugins.** See OPUS-001 for details.
 
-### Priority 3: New Features (OPUS-014)
-- [ ] STATE.md renderer (Prakriti inspector)
-- [ ] ECONOMY.md renderer (token/credit meter)
-- [ ] MATRIX.md renderer (routing visualization)
+---
 
-### Priority 4: Test Coverage
-- [ ] Test gaps from OPUS-010 (DailyRitual, UniversalProvider)
-- [ ] Agent capability test harness
+## 🔧 Remaining Technical Debt
+
+### OPUS-005: Remaining Phases
+- [ ] PlaybookRouter cleanup
+- [ ] CircuitExecutor split
+- [ ] Legacy code burn
+
+### OPUS-014: New Renderers
+- [ ] STATE.md, ECONOMY.md, MATRIX.md
 
 ---
 
 ## 🚀 For Next Agent
 
-1. **Read this index first**
-2. Pick from Technical Debt above
-3. Check related OPUS doc for details
-4. Make changes on a feature branch
-5. Run `pytest tests/ -v` after changes
-6. Commit with conventional commit format
-
----
-
-## Foundational Laws
-
-### GAD-000: Operator Inversion
-All 5/6 tests pass. Test 6 (Identity) deferred to GAD-1000.
-
-### Three Laws of Rendering (OPUS-007)
-All 3 implemented in BaseRenderer/InterfacePlugin.
+1. Read this index first
+2. Check related OPUS doc
+3. Create feature branch
+4. Run `pytest tests/ -v`
+5. Push and create PR
 
 ---
 
 **Last Verified**: 2025-12-09
-**Next Priority**: OPUS-001 Kernel reduction OR OPUS-005 cleanup
+**Kernel**: 🔒 LOCKED (1410 LOC ETERNAL)
