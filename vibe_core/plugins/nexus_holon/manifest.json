@@ -1,0 +1,17 @@
+{
+    "id": "nexus_holon",
+    "name": "Nexus Holon",
+    "version": "1.0.0",
+    "type": "plugin",
+    "description": "The Golden Holon - Proving Fractal VEDA-4 (Code + Thoughts)",
+    "author": "Antigravity",
+    "license": "MIT",
+    "exports": {
+        "circuits": "./content/circuits"
+    },
+    "execution": {
+        "mode": "thread",
+        "isolation": "none"
+    },
+    "priority": 10
+}

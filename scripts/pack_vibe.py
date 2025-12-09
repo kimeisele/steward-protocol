@@ -50,6 +50,7 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
 
         # Calculate hash for signature
         hasher = hashlib.sha256()
+        hasher.update(manifest_path.read_bytes())
 
         # Helper to add files with structural enforcement
         def add_recursive(path: Path):

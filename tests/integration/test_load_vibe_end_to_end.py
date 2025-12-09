@@ -64,7 +64,7 @@ def test_loader_registry_discovers_vibe_container(mock_vibe_plugin, temp_plugins
     assert meta["container_plugin"].loaded_successfully is True
 
 
-@pytest.mark.skip(reason="Flaky test: folder plugin not detecting in mixed env. Pending investigation.")
+# @pytest.mark.skip(reason="Flaky test: folder plugin not detecting in mixed env. Pending investigation.")
 def test_mixed_environment(tmp_path, temp_plugins_dir, mock_vibe_plugin):
     """Test loading both folders and containers together."""
 
@@ -72,7 +72,7 @@ def test_mixed_environment(tmp_path, temp_plugins_dir, mock_vibe_plugin):
     folder_plugin = temp_plugins_dir / "folder_plugin"
     folder_plugin.mkdir()
     (folder_plugin / "manifest.json").write_text(json.dumps({"id": "folder_plugin", "type": "plugin", "priority": 5}))
-    (folder_plugin / "folder_main.py").write_text("""
+    (folder_plugin / "plugin_main.py").write_text("""
 from vibe_core.plugin_protocol import KernelPlugin
 class FolderPlugin(KernelPlugin):
     @property
@@ -82,7 +82,7 @@ class FolderPlugin(KernelPlugin):
 """)
 
     assert (folder_plugin / "manifest.json").exists()
-    assert (folder_plugin / "folder_main.py").exists()
+    assert (folder_plugin / "plugin_main.py").exists()
 
     # Load both
     registry, meta = PluginLoader.discover_and_load(scan_paths=[temp_plugins_dir])
