@@ -12,6 +12,7 @@ Specifics for Plugins:
 
 import importlib
 import logging
+import zipfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -106,6 +107,19 @@ class PluginLoader(UnifiedLoader):
                     old_plugins, old_meta = cls._load_old_style_plugin(item, base_path)
                     all_plugins.extend(old_plugins)
                     metadata.update(old_meta)
+
+                elif item.is_file() and item.suffix == ".vibe" and zipfile.is_zipfile(item):
+                    # NEW: Container support
+                    # Use base implementation for container processing
+                    meta = cls._process_container(item, config)
+                    if meta and meta.loaded_successfully:
+                        instance = cls._create_instance(meta, config)
+                        if instance:
+                            all_plugins.append(instance)
+                            metadata[meta.item_id] = meta
+                            logger.info(f"  ✅ Loaded: {meta.item_id} (container)")
+                    elif meta:
+                        metadata[meta.item_id] = meta
 
         # Sort by dependencies (Topological Sort)
         sorted_plugins = cls._sort_plugins_by_dependency(all_plugins, metadata)

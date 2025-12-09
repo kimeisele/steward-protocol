@@ -15,10 +15,13 @@ import inspect
 import json
 import logging
 import sys
+import zipfile
 from abc import ABC
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
+
+from vibe_core.loaders.container_loader import ContainerMounter
 
 logger = logging.getLogger("UNIFIED.LOADER")
 
@@ -161,18 +164,25 @@ class UnifiedLoader(ABC):
                 logger.debug(f"[{cls.item_type}] Scan path does not exist: {base_path}")
                 continue
 
-            logger.info(f"[{cls.item_type}] Scanning {base_path}...")
+            logger.debug(f"[{cls.item_type}] Scanning {base_path}...")
 
-            for item_dir in base_path.iterdir():
-                if not item_dir.is_dir():
+            for item in base_path.iterdir():
+                # 1. Existing: Directory support
+                if item.is_dir():
+                    # Skip hidden and __pycache__
+                    if item.name.startswith((".", "_")):
+                        continue
+
+                    # VEDA-4 LOOP
+                    meta = cls._process_item_directory(item, config)
+
+                # 2. NEW: Container support (.vibe files)
+                elif item.suffix == ".vibe" and zipfile.is_zipfile(item):
+                    meta = cls._process_container(item, config)
+
+                else:
                     continue
 
-                # Skip hidden and __pycache__
-                if item_dir.name.startswith((".", "_")):
-                    continue
-
-                # VEDA-4 LOOP
-                meta = cls._process_item_directory(item_dir, config)
                 if meta is None:
                     continue
 
@@ -242,6 +252,104 @@ class UnifiedLoader(ABC):
     # =========================================================================
     # VEDA-4 INTERNAL METHODS
     # =========================================================================
+
+    @classmethod
+    def _process_container(
+        cls,
+        container_path: Path,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Optional[ItemMeta]:
+        """
+        Process a .vibe container through VEDA-4 stages.
+        """
+        try:
+            # SHABDA: Inspect without mounting
+            inspection = ContainerMounter.inspect(container_path)
+            manifest = inspection["manifest"]
+            item_id = manifest.get("id", container_path.stem)
+
+            # ARTHA: Validate
+            errors = cls._validate_manifest(manifest)
+            if errors:
+                return ItemMeta(
+                    item_id=item_id,
+                    item_type=cls.item_type,
+                    manifest=manifest,
+                    manifest_path=container_path,
+                    entry_path=None,
+                    entry_class=None,
+                    loaded_successfully=False,
+                    error=f"Validation failed: {errors}",
+                )
+
+            # PRATYAYA: Mount & Load Config
+            # We mount now to access internal config if needed
+            mount_point = ContainerMounter.mount(container_path)
+
+            # Load config from mounted files if available
+            # (Reusing _load_config logic but pointing to mount_point)
+            item_config = cls._load_config(mount_point, manifest, config)
+
+            if not item_config.get("enabled", True):
+                return ItemMeta(
+                    item_id=item_id,
+                    item_type=cls.item_type,
+                    manifest=manifest,
+                    manifest_path=container_path,
+                    entry_path=None,
+                    entry_class=None,
+                    config=item_config,
+                    loaded_successfully=False,
+                    error="Disabled by config",
+                )
+
+            # KARMA: Execution Mode Logic
+            mode = manifest.get("execution", {}).get("mode", "thread")
+
+            entry_class = None
+            if mode == "thread":
+                # STRATEGY B: Shared Reality
+                # Insert mount content to path
+                content_path = mount_point / "content"
+                sys.path.insert(0, str(content_path))
+                try:
+                    entry_path = cls._find_entry_point(content_path, manifest)
+                    if entry_path:
+                        entry_class = cls._load_entry_class(entry_path, item_id, manifest)
+                finally:
+                    sys.path.pop(0)
+
+            elif mode == "process":
+                # STRATEGY A: Isolated Reality
+                # For now, we just log it as not fully implemented in this phase
+                # But we return metadata so it's "discovered"
+                logger.info(f"Container {item_id} requested PROCESS isolation (Pending Impl)")
+                return ItemMeta(
+                    item_id=item_id,
+                    item_type=cls.item_type,
+                    manifest=manifest,
+                    manifest_path=container_path,
+                    entry_path=None,  # Process mode handles entry differently
+                    entry_class=None,  # No class in this kernel
+                    config=item_config,
+                    loaded_successfully=True,  # It IS loaded as a concept
+                    error="Process mode not fully implemented yet",
+                )
+
+            return ItemMeta(
+                item_id=item_id,
+                item_type=cls.item_type,
+                manifest=manifest,
+                manifest_path=container_path,
+                entry_path=mount_point,
+                entry_class=entry_class,
+                config=item_config,
+                loaded_successfully=True if entry_class else False,
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to process container {container_path}: {e}")
+            return None
 
     @classmethod
     def _process_item_directory(
