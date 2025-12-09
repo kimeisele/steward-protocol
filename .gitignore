@@ -307,3 +307,4 @@ TRIGGER_NEW_RUN.txt
 server.log
 *.log
 __pycache__/
+*.vibe
