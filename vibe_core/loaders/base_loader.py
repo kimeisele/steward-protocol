@@ -303,6 +303,21 @@ class UnifiedLoader(ABC):
                     error="Disabled by config",
                 )
 
+            # COGNITIVE PACK: Data-Only Logic
+            # Phase 4: "Operation Cortex Injection"
+            if manifest.get("type") == "cognitive_pack":
+                logger.debug(f"Mounting Cognitive Pack: {item_id}")
+                return ItemMeta(
+                    item_id=item_id,
+                    item_type="cognitive_pack",  # Override item_type
+                    manifest=manifest,
+                    manifest_path=container_path,
+                    entry_path=mount_point,
+                    entry_class=None,  # No code execution
+                    config=item_config,
+                    loaded_successfully=True,  # Success by default for data packs
+                )
+
             # KARMA: Execution Mode Logic
             mode = manifest.get("execution", {}).get("mode", "thread")
 

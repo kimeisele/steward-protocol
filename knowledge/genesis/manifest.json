@@ -1,0 +1,10 @@
+{
+    "id": "genesis_knowledge",
+    "type": "cognitive_pack",
+    "version": "1.0.0",
+    "description": "Genesis Knowledge Pack containing core circuits and prompts",
+    "exports": {
+        "circuits": "./circuits",
+        "prompts": "./prompts"
+    }
+}
