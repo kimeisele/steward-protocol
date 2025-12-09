@@ -60,6 +60,7 @@ class InterfacePlugin(KernelPlugin):
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """Called when kernel boots."""
         self._kernel = kernel
+        self._project_root = Path.cwd()
 
         # Load interface config from Phoenix Config
         self._load_interface_config()
@@ -275,10 +276,13 @@ This is a temporary placeholder. The system will retry on the next render cycle.
                 writer_id=writer_id,
                 add_header=True,
             )
-            if not result.success:
-                logger.error(f"Failed to write {output_file}: {result.error}")
+            if result.error:
+                # logger.error(f"Failed to write {output_file}: {result.error}")
+                # For debugging purpose, we raise
+                raise RuntimeError(f"Failed to write {output_file}: {result.error}")
         else:
-            logger.warning(f"Cannot write {output_file}: kernel.io not available")
+            # logger.warning(f"Cannot write {output_file}: kernel.io not available")
+            raise RuntimeError(f"Cannot write {output_file}: kernel.io not available")
 
     def _is_test_mode(self) -> bool:
         """Check if running in pytest - skip file rendering in tests."""
