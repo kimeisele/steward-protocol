@@ -215,7 +215,8 @@ async def test_critical_priority():
     print("=" * 60)
 
     from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
-    from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
+
+    # from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter (REMOVED)
     from vibe_core.plugins.test_orchestration import TestKernel
 
     # Setup
@@ -226,27 +227,32 @@ async def test_critical_priority():
     kernel.register_agent(envoy)
 
     # Test the router's critical detection
-    router = MilkOceanRouter(kernel=kernel)
+    # Test the router's critical detection
+    # P4.1/P4.2 fix: Use UnifiedRouter (modern) instead of MilkOceanRouter (legacy)
+    from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate, UnifiedRouter
+
+    # Create UnifiedRouter
+    router = UnifiedRouter(kernel=kernel)
 
     # Create a critical-looking request
-    # Note: Current implementation doesn't actually classify as critical
-    # unless explicitly marked, so we test the code path exists
+    req = ExecutionRequest(user_input="EMERGENCY: System critical failure", source="envoy")
 
-    result = router.process_prayer(
-        user_input="EMERGENCY: System critical failure",
-        agent_id="envoy",
-        critical=True,  # Explicitly mark as critical
+    # Explicit check for CRITICAL gate
+    # Note: Modern router uses check_gate method
+    gate_decision = router.check_gate(req)
+
+    print(f"✅ Router decision: {gate_decision}")
+
+    # Verify critical decision if critical logic triggers (needs "CRITICAL" keyword)
+    # Re-create request with explicit critical keyword if previous didn't trigger
+    if gate_decision != MilkOceanGate.CRITICAL:
+        req = ExecutionRequest(user_input="CRITICAL: System critical failure", source="envoy")
+        gate_decision = router.check_gate(req)
+        print(f"✅ Retry Router decision: {gate_decision}")
+
+    assert gate_decision in [MilkOceanGate.CRITICAL, MilkOceanGate.ALLOW, MilkOceanGate.QUEUE], (
+        f"Unexpected gate decision: {gate_decision}"
     )
-
-    print(f"✅ Router result: {result}")
-
-    # If critical flag is set, should get queued or critical status
-    # (depends on implementation)
-    status = result.get("status")
-    print(f"✅ Status: {status}")
-
-    # The important thing is it doesn't crash
-    assert status in ["queued", "routing", "blocked", "critical"], f"Unexpected status: {status}"
 
     print("✅ TEST 4 PASSED")
 

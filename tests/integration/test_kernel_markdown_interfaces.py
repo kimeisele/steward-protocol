@@ -406,7 +406,8 @@ class TestEnvoyTerminalInterface:
         # Verify kernel.io exists (debug)
         assert hasattr(kernel, "io"), "kernel.io should exist"
 
-        get_renderer(kernel, "envoy").render()
+        # Trigger render via InterfacePlugin
+        get_interface_plugin(kernel).render_view("envoy", force=True)
         content = envoy_path.read_text()
 
         # Verify structure (no emojis in headers)
@@ -418,7 +419,7 @@ class TestEnvoyTerminalInterface:
 
     def test_render_envoy_shows_available_routes(self, kernel, temp_workdir):
         """Test that ENVOY.md shows UnifiedRouter routes."""
-        get_renderer(kernel, "envoy").render()
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         content = (temp_workdir / "ENVOY.md").read_text()
 
@@ -604,7 +605,7 @@ initialize the system
         envoy_path = temp_workdir / "ENVOY.md"
         envoy_path.write_text(envoy_content)
         renderer = get_renderer(kernel, "envoy")
-        renderer.last_modified = 0
+        renderer.state.last_modified = 0
 
         # Sync
         # Trigger render via InterfacePlugin
@@ -705,7 +706,7 @@ initialize the system
     def test_preserves_user_request_on_render(self, kernel, temp_workdir):
         """Test that user's request is preserved when re-rendering."""
         # First render
-        get_renderer(kernel, "envoy").render()
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         # User writes a request
         envoy_path = temp_workdir / "ENVOY.md"
@@ -716,7 +717,7 @@ initialize the system
         envoy_path.write_text(content)
 
         # Re-render (should preserve user request)
-        get_renderer(kernel, "envoy").render()
+        get_interface_plugin(kernel).render_view("envoy", force=True)
 
         new_content = envoy_path.read_text()
         assert "User's important request here" in new_content
