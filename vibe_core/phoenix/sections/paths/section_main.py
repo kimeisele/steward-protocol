@@ -94,54 +94,54 @@ class DataPathsConfig:
     """
 
     root: str = "data"
-    economy_db: str = "{root}/economy.db"
-    registry_citizens: str = "{root}/registry/citizens.json"
-    registry_licenses: str = "{root}/registry/licenses.json"
-    security_master_key: str = "{root}/security/master.key"
-    ledger_audit_trail: str = "{root}/ledger/audit_trail.jsonl"
-    ledger_kernel: str = "{root}/ledger/kernel.jsonl"
-    ledger_violations: str = "{root}/ledger/violations.jsonl"
-    reports: str = "{root}/reports"
-    events_herald: str = "{root}/events/herald.jsonl"
-    identities: str = "{root}/identities"
-    federation_pokedex: str = "{root}/federation/pokedex.json"
-    supreme_court: str = "{root}/supreme_court"
+    economy_db: str = "data/economy.db"
+    registry_citizens: str = "data/registry/citizens.json"
+    registry_licenses: str = "data/registry/licenses.json"
+    security_master_key: str = "data/security/master.key"
+    ledger_audit_trail: str = "data/ledger/audit_trail.jsonl"
+    ledger_kernel: str = "data/ledger/kernel.jsonl"
+    ledger_violations: str = "data/ledger/violations.jsonl"
+    reports: str = "data/reports"
+    events_herald: str = "data/events/herald.jsonl"
+    identities: str = "data/identities"
+    federation_pokedex: str = "data/federation/pokedex.json"
+    supreme_court: str = "data/supreme_court"
 
     # Phase 2 additions - missing data paths
-    vibe_ledger: str = "{root}/vibe_ledger.db"
-    library_catalog: str = "{root}/library/catalog.json"
-    logs_transactions: str = "{root}/logs/transactions.log"
-    milk_ocean_db: str = "{root}/milk_ocean.db"
-    test_baselines: str = "{root}/test_baselines.json"
-    test_mutations_log: str = "{root}/logs/test_mutations.log"
-    governance_executed: str = "{root}/governance/executed"
-    vibe_agency_db: str = "{root}/vibe_agency.db"
+    vibe_ledger: str = "data/vibe_ledger.db"
+    library_catalog: str = "data/library/catalog.json"
+    logs_transactions: str = "data/logs/transactions.log"
+    milk_ocean_db: str = "data/milk_ocean.db"
+    test_baselines: str = "data/test_baselines.json"
+    test_mutations_log: str = "data/logs/test_mutations.log"
+    governance_executed: str = "data/governance/executed"
+    vibe_agency_db: str = "data/vibe_agency.db"
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPathsConfig":
         return cls(
             root=data.get("root", "data"),
-            economy_db=data.get("economy_db", "{root}/economy.db"),
-            registry_citizens=data.get("registry_citizens", "{root}/registry/citizens.json"),
-            registry_licenses=data.get("registry_licenses", "{root}/registry/licenses.json"),
-            security_master_key=data.get("security_master_key", "{root}/security/master.key"),
-            ledger_audit_trail=data.get("ledger_audit_trail", "{root}/ledger/audit_trail.jsonl"),
-            ledger_kernel=data.get("ledger_kernel", "{root}/ledger/kernel.jsonl"),
-            ledger_violations=data.get("ledger_violations", "{root}/ledger/violations.jsonl"),
-            reports=data.get("reports", "{root}/reports"),
-            events_herald=data.get("events_herald", "{root}/events/herald.jsonl"),
-            identities=data.get("identities", "{root}/identities"),
-            federation_pokedex=data.get("federation_pokedex", "{root}/federation/pokedex.json"),
-            supreme_court=data.get("supreme_court", "{root}/supreme_court"),
+            economy_db=data.get("economy_db", "data/economy.db"),
+            registry_citizens=data.get("registry_citizens", "data/registry/citizens.json"),
+            registry_licenses=data.get("registry_licenses", "data/registry/licenses.json"),
+            security_master_key=data.get("security_master_key", "data/security/master.key"),
+            ledger_audit_trail=data.get("ledger_audit_trail", "data/ledger/audit_trail.jsonl"),
+            ledger_kernel=data.get("ledger_kernel", "data/ledger/kernel.jsonl"),
+            ledger_violations=data.get("ledger_violations", "data/ledger/violations.jsonl"),
+            reports=data.get("reports", "data/reports"),
+            events_herald=data.get("events_herald", "data/events/herald.jsonl"),
+            identities=data.get("identities", "data/identities"),
+            federation_pokedex=data.get("federation_pokedex", "data/federation/pokedex.json"),
+            supreme_court=data.get("supreme_court", "data/supreme_court"),
             # Phase 2 additions
-            vibe_ledger=data.get("vibe_ledger", "{root}/vibe_ledger.db"),
-            library_catalog=data.get("library_catalog", "{root}/library/catalog.json"),
-            logs_transactions=data.get("logs_transactions", "{root}/logs/transactions.log"),
-            milk_ocean_db=data.get("milk_ocean_db", "{root}/milk_ocean.db"),
-            test_baselines=data.get("test_baselines", "{root}/test_baselines.json"),
-            test_mutations_log=data.get("test_mutations_log", "{root}/logs/test_mutations.log"),
-            governance_executed=data.get("governance_executed", "{root}/governance/executed"),
-            vibe_agency_db=data.get("vibe_agency_db", "{root}/vibe_agency.db"),
+            vibe_ledger=data.get("vibe_ledger", "data/vibe_ledger.db"),
+            library_catalog=data.get("library_catalog", "data/library/catalog.json"),
+            logs_transactions=data.get("logs_transactions", "data/logs/transactions.log"),
+            milk_ocean_db=data.get("milk_ocean_db", "data/milk_ocean.db"),
+            test_baselines=data.get("test_baselines", "data/test_baselines.json"),
+            test_mutations_log=data.get("test_mutations_log", "data/logs/test_mutations.log"),
+            governance_executed=data.get("governance_executed", "data/governance/executed"),
+            vibe_agency_db=data.get("vibe_agency_db", "data/vibe_agency.db"),
         )
 
     def to_dict(self) -> Dict[str, Any]:

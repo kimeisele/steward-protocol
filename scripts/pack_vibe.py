@@ -28,9 +28,15 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
     if not source_dir.exists():
         raise FileNotFoundError(f"Source directory not found: {source_dir}")
 
+    # 1. Manifest Discovery (steward.json or manifest.json)
     manifest_path = source_dir / "manifest.json"
+    manifest_name = "manifest.json"
+
     if not manifest_path.exists():
-        raise FileNotFoundError(f"Manifest missing: {manifest_path}")
+        manifest_path = source_dir / "steward.json"
+        manifest_name = "steward.json"
+        if not manifest_path.exists():
+            raise FileNotFoundError(f"Manifest missing (checked manifest.json and steward.json) in {source_dir}")
 
     tests_dir = source_dir / "tests"
     if not tests_dir.exists():  # or not any(tests_dir.iterdir()):
@@ -45,20 +51,23 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
 
     with zipfile.ZipFile(output_path, "w", zipfile.ZIP_STORED) as z:
         # 1. GAD-000: Manifest FIRST (Stored, no compression for streaming)
-        logger.info("  📄 Adding manifest.json (Layer 0)")
+        # NORMALIZE: Always calls it manifest.json inside the container
+        logger.info(f"  📄 Adding {manifest_name} as manifest.json (Layer 0)")
         z.write(manifest_path, "manifest.json")
 
         # Calculate hash for signature
         hasher = hashlib.sha256()
         hasher.update(manifest_path.read_bytes())
 
-        # Helper to add files with structural enforcement
         def add_recursive(path: Path):
             for item in path.iterdir():
                 if item.name.startswith((".", "__pycache__")):
                     continue
-                if item.name == "manifest.json":
-                    continue  # Already added
+                if item.name == manifest_name:
+                    continue  # Already added as manifest.json
+                if item.name == "manifest.json" and manifest_name != "manifest.json":
+                    # Edge case: If both exist?
+                    continue
                 if item.name == "SIGNATURE.sig":
                     continue  # Generated file
 

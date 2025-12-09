@@ -10,7 +10,9 @@ Specifics for Agents:
 - Validates agents with is_valid_agent()
 """
 
+import importlib.util
 import logging
+import zipfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -59,6 +61,95 @@ class AgentLoader(UnifiedLoader):
     base_class = None  # We use is_valid_agent() instead
 
     # === AGENT-SPECIFIC OVERRIDES ===
+
+    @classmethod
+    def discover_and_load(
+        cls,
+        scan_paths: Optional[List[Path]] = None,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[AgentInstances, AgentMetadata]:
+        """
+        Discover and load all agents (folders + containers).
+
+        Supports precedence: Container (.vibe) > Folder.
+        Supports recursion: Scans 'hollows/' inside containers.
+        """
+        paths = scan_paths or cls.scan_paths
+
+        # Candidate tracking: agent_id -> (instance, metadata)
+        candidates: Dict[str, Tuple[Any, ItemMeta]] = {}
+
+        for base_path in paths:
+            if not base_path.exists():
+                continue
+
+            logger.info(f"[agent] Scanning {base_path}...")
+
+            # Helper to process candidates
+            def add_candidate(meta: ItemMeta, instance: Any):
+                if not meta or not meta.loaded_successfully:
+                    return
+
+                # Get ID (handle agent_id vs id)
+                aid = meta.manifest.get("agent_id") or meta.item_id
+
+                # Precedence Logic
+                if aid in candidates:
+                    existing_instance, existing_meta = candidates[aid]
+                    is_new_container = str(meta.manifest_path).endswith(".vibe")
+                    is_old_container = str(existing_meta.manifest_path).endswith(".vibe")
+
+                    if is_new_container and not is_old_container:
+                        logger.info(f"  🆙 Upgrading {aid} to Container (shadows folder)")
+                        candidates[aid] = (instance, meta)
+                    elif not is_new_container and is_old_container:
+                        logger.debug(f"  ⏭️ Ignoring folder {aid} (shadowed by container)")
+                    else:
+                        logger.warning(f"  ⚠️ Duplicate agent ID {aid}. Keeping first.")
+                else:
+                    candidates[aid] = (instance, meta)
+                    type_label = "container" if str(meta.manifest_path).endswith(".vibe") else "folder"
+                    logger.info(f"  ✅ Loaded: {aid} ({type_label})")
+
+            # Process items
+            for item in base_path.iterdir():
+                # 1. Folder Support
+                if item.is_dir():
+                    if item.name.startswith((".", "_")):
+                        continue
+
+                    # Check for manifest
+                    if cls._find_manifest(item):
+                        meta = cls._process_item_directory(item, config)
+                        if meta and meta.loaded_successfully:
+                            instance = cls._create_instance(meta, config)
+                            # Allow manifest-only loading (instance=None) for Generics
+                            add_candidate(meta, instance)
+
+                # 2. Container Support (.vibe)
+                elif item.suffix == ".vibe" and importlib.util.find_spec("zipfile") and zipfile.is_zipfile(item):
+                    meta = cls._process_container(item, config)
+                    if meta and meta.loaded_successfully:
+                        instance = cls._create_instance(meta, config)
+                        add_candidate(meta, instance)
+
+                        # RECURSION (Fractal Depth)
+                        if meta.entry_path:
+                            hollows_path = meta.entry_path / "hollows"
+                            if hollows_path.exists() and hollows_path.is_dir():
+                                logger.info(f"  🪆 Scanning hollows in {meta.item_id}...")
+                                nested_agents, nested_meta = cls.discover_and_load(
+                                    scan_paths=[hollows_path], config=config
+                                )
+                                for nid, nmeta in nested_meta.items():
+                                    ninstance = nested_agents.get(nid)
+                                    add_candidate(nmeta, ninstance)
+
+        # Build results
+        instances = {aid: inst for aid, (inst, _) in candidates.items() if inst is not None}
+        metadata = {aid: meta for aid, (_, meta) in candidates.items()}
+
+        return instances, metadata
 
     @classmethod
     def _validate_manifest(cls, manifest: Dict[str, Any]) -> List[str]:
