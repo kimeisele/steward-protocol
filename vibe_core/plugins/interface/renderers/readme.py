@@ -100,17 +100,6 @@ class ReadmeRenderer(BaseRenderer):
             logger.error(f"Failed to generate README content: {e}")
             return None
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED. Use generate_content()."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="README.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="RENDERER_README",
-            )
-
     def _get_system_agents(self) -> list:
         """Get list of system agents from registry."""
         system_agents = []

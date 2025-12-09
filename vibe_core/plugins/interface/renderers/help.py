@@ -33,18 +33,6 @@ class HelpRenderer(BaseRenderer):
         scripts = self._scan_scripts()
         return self._generate_markdown(scripts)
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        content = self.generate_content()
-        if content:
-            self.kernel.io.write_document(
-                name="HELP.md",
-                content=content,
-                doc_type=DocumentType.READONLY,
-                writer_id="interface_plugin",
-                add_header=True,
-            )
-
     def _scan_scripts(self) -> List[str]:
         """Scan scripts/ directory for entry points."""
         scripts_dir = Path("scripts")

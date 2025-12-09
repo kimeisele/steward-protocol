@@ -78,21 +78,6 @@ class SettingsRenderer(BaseRenderer):
         except Exception as e:
             logger.error(f"Error syncing from SETTINGS.md: {e}")
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED. Use generate_content()."""
-        # Update state from kernel
-        self._update_state_from_kernel()
-
-        # Sync from file (read user commands)
-        self._sync_from_file()
-
-        # Generate and Write Document (legacy - sync writes directly)
-        try:
-            content = self._generate_content()
-            self.sync.render_document(content)
-        except Exception as e:
-            logger.error(f"Error generating SETTINGS.md: {e}")
-
     def _generate_content(self) -> str:
         """Generate SETTINGS.md content."""
         lines = ["# ⚙️ SYSTEM SETTINGS", ""]
