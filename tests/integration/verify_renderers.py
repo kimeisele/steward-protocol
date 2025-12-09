@@ -37,29 +37,28 @@ def test_renderers():
     # Test AgentsRenderer
     print("  - Testing AgentsRenderer...")
     r_agents = AgentsRenderer(kernel)
-    r_agents.render()
-    kernel.io.write_document.assert_called()
-    args = kernel.io.write_document.call_args[1]
-    assert args["name"] == "AGENTS.md"
-    assert "TestAgent" in args["content"]
+    content = r_agents.generate_content()
+    assert content is not None
+    assert "AGENTS.md" == r_agents.output_file
+    assert "TestAgent" in content
     print("    ✅ AGENTS.md rendered")
 
     # Test CityMapRenderer
     print("  - Testing CityMapRenderer...")
     r_city = CityMapRenderer(kernel)
-    r_city.render()
-    args = kernel.io.write_document.call_args[1]
-    assert args["name"] == "CITYMAP.md"
-    assert "TEST" in args["content"]  # Domain
+    content = r_city.generate_content()
+    assert content is not None
+    assert "CITYMAP.md" == r_city.output_file
+    assert "TEST" in content  # Domain
     print("    ✅ CITYMAP.md rendered")
 
     # Test HelpRenderer
     print("  - Testing HelpRenderer...")
     r_help = HelpRenderer(kernel)
-    r_help.render()
-    args = kernel.io.write_document.call_args[1]
-    assert args["name"] == "HELP.md"
-    assert "System Diagnostics" in args["content"]
+    content = r_help.generate_content()
+    assert content is not None
+    assert "HELP.md" == r_help.output_file
+    assert "System Diagnostics" in content
     print("    ✅ HELP.md rendered")
 
     # Test IndexRenderer
@@ -67,19 +66,19 @@ def test_renderers():
     r_index = IndexRenderer(kernel)
     # Mock scan
     r_index._scan_docs_directories = MagicMock()
-    r_index.render()
-    args = kernel.io.write_document.call_args[1]
-    assert args["name"] == "INDEX.md"
-    assert "DOCUMENTATION INDEX" in args["content"]
+    content = r_index.generate_content()
+    assert content is not None
+    assert "INDEX.md" == r_index.output_file
+    assert "DOCUMENTATION INDEX" in content
     print("    ✅ INDEX.md rendered")
 
     # Test RagRenderer
     print("  - Testing RagRenderer...")
     r_rag = RagRenderer(kernel)
-    r_rag.render()
-    args = kernel.io.write_document.call_args[1]
-    assert args["name"] == "RAG.md"
-    assert "Realtime Architecture Guide" in args["content"]
+    content = r_rag.generate_content()
+    assert content is not None
+    assert "RAG.md" == r_rag.output_file
+    assert "Realtime Architecture Guide" in content
     print("    ✅ RAG.md rendered")
 
     print("🎉 All renderers verified successfully!")

@@ -741,49 +741,7 @@ class GitRenderer(BaseRenderer):
             logger.error(f"Git analysis failed: {e}")
             return None
 
-    def render(self) -> None:
-        """Legacy render - DEPRECATED."""
-        if self.disabled:
-            return
-
-        now = time.time()
-        if now - self.last_update < self.update_interval:
-            return
-
-        self.last_update = now
-        self._perform_analysis()
-
     def force_update(self) -> None:
-        """Force immediate update."""
-        logger.info("🔄 Force updating git analysis...")
-        self._perform_analysis()
-
-    def _perform_analysis(self) -> None:
-        """Run git analysis and render GIT.md through I/O Service."""
-        try:
-            commits = self.analyzer.get_commit_history(days=self.analysis_days)
-            analysis = self.analyzer.analyze_commits(commits, self.analysis_days)
-            self.last_analysis = analysis
-
-            # Render content
-            content = self.renderer.render_to_string(analysis)
-
-            # Write through I/O Service
-            if self.kernel:
-                result = self.kernel.io.write_document(
-                    name="GIT.md",
-                    content=content,
-                    doc_type=DocumentType.READONLY,
-                    writer_id="RENDERER_GIT",
-                )
-                if result.success:
-                    logger.info(
-                        f"📊 Git analysis complete: {analysis.meaningful_commits}/{analysis.total_commits} meaningful commits"
-                    )
-                else:
-                    logger.error(f"Failed to write GIT.md: {result.error}")
-            else:
-                logger.warning("⚠️  No kernel reference - cannot write GIT.md")
-
-        except Exception as e:
-            logger.error(f"Git analysis failed: {e}", exc_info=True)
+        """Force immediate update on next render cycle."""
+        logger.info("🔄 Scheduled forced git analysis update")
+        self.last_update = 0.0
