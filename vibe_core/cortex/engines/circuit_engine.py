@@ -31,10 +31,19 @@ import yaml
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
-from vibe_core.cartridges.system.envoy.blueprint_generator import (
-    BlueprintGenerator,
-    CompilationResult,
-)
+# Lazy import for Runtime Separation (OPUS-016)
+try:
+    from vibe_core.cartridges.system.envoy.blueprint_generator import (
+        BlueprintGenerator,
+        CompilationResult,
+    )
+
+    BLUEPRINT_AVAILABLE = True
+except ImportError:
+    BLUEPRINT_AVAILABLE = False
+    BlueprintGenerator = None
+    CompilationResult = None
+
 from vibe_core.semantic_syscalls import (
     SemanticSyscallExecutor,
     SyscallRequest,
