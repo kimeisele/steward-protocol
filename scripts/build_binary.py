@@ -18,7 +18,7 @@ def build_binary():
     args = [
         "boot.py",  # Entry point
         "--name=vibe",  # Output name
-        "--onefile",  # Single executable
+        "--onedir",  # Portable folder (no decompression delay)
         "--clean",  # Clean cache
         # Hidden Imports (Plugins & Dependencies)
         "--hidden-import=vibe_core.plugins",
@@ -33,6 +33,21 @@ def build_binary():
         # Exclude Source Code (Thin Kernel Philosophy)
         "--exclude-module=vibe_core.cartridges",
         "--exclude-module=knowledge",
+        # === LEAN BUILD: Exclude ML Bloat ===
+        "--exclude-module=torch",
+        "--exclude-module=transformers",
+        "--exclude-module=scipy",
+        "--exclude-module=pandas",
+        "--exclude-module=sklearn",
+        "--exclude-module=numpy",
+        "--exclude-module=tensorflow",
+        "--exclude-module=keras",
+        "--exclude-module=matplotlib",
+        "--exclude-module=PIL",
+        "--exclude-module=cv2",
+        "--exclude-module=onnxruntime",
+        "--exclude-module=nltk",
+        "--exclude-module=spacy",
         # Hooks path (if needed)
         # "--additional-hooks-dir=hooks",
     ]
