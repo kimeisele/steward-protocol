@@ -41,7 +41,8 @@ STATE COMMANDS:
   state             Show unified system state
   diff              Git diff (Proof of Work)
   plugins           List loaded plugins
-  update <name>     Update plugin/agent from artifact
+  update <name>     Update container to library/
+  install <path>    Install .vibe file to library/
 
 PLUGIN COMMANDS:
   Run 'vibe capabilities' for full plugin command list.

@@ -62,6 +62,7 @@ class UnifiedCLI:
             "diff": self.cmd_diff,
             "plugins": self.cmd_plugins,
             "update": self.cmd_update,
+            "install": self.cmd_install,  # Alias for update (semantic clarity)
         }
 
     def run(self, args: List[str]) -> int:
@@ -333,71 +334,88 @@ class UnifiedCLI:
 
     def cmd_update(self, args: List[str]) -> int:
         """
-        Update a plugin/agent container from dist/.
-        steward update <name>
+        Update/Install a plugin/agent container to the Runtime Library.
+
+        Usage:
+            steward update <name>           # From dist/<name>.vibe
+            steward install <path.vibe>     # Direct path to .vibe file
+
+        RUNTIME SEPARATION (OPUS-016):
+        - Writes to library/ (Runtime Space), NOT cartridges/system/ (Source)
+        - The Loader reads from library/, so updates take effect on restart
         """
         import shutil
         from pathlib import Path
 
         try:
-            # Lazy imports to avoid circular deps during cli startup
-            from vibe_core.plugin_loader import PluginLoader
-            from vibe_core.steward import AgentLoader
+            from vibe_core.phoenix.config import PhoenixConfig
         except ImportError:
-            pass  # Should handle graceful fail if imports missing
+            PhoenixConfig = None
 
         if not args:
             print("Usage: steward update <name>")
+            print("       steward install <path/to/file.vibe>")
             return 1
 
-        name = args[0]
-        # Check specific locations
-        dist_path = Path("dist") / f"{name}.vibe"
+        source_arg = args[0]
 
-        if not dist_path.exists():
-            # Try holons subfolder (Factory output)
-            dist_path = Path("dist/holons") / f"{name}.vibe"
-
-        if not dist_path.exists():
-            print(f"❌ Update artifact not found: {dist_path}")
-            print(f"   Run 'steward pack {name}' first.")
-            return 1
-
-        print(f"🔄 Updating {name} from {dist_path}...")
-
-        target_dir = None
-
-        # Check Agents
-        instances, meta = AgentLoader.discover_and_load(config={"enabled_only": False})
-        if name in meta:
-            target_path = meta[name].manifest_path
-            # If target_path is a file (e.g. .vibe), parent is the dir
-            target_dir = target_path.parent
+        # Determine source: direct path or name lookup
+        if source_arg.endswith(".vibe") and Path(source_arg).exists():
+            # Direct path provided
+            source_path = Path(source_arg)
+            name = source_path.stem
         else:
-            # Check Plugins
-            p_instances, p_meta = PluginLoader.discover_and_load(config={"enabled_only": False})
-            if name in p_meta:
-                target_path = p_meta[name].manifest_path
-                target_dir = target_path.parent
+            # Name lookup - search in dist/
+            name = source_arg
+            source_path = Path("dist") / f"{name}.vibe"
 
-        if not target_dir:
-            print(f"⚠️  {name} is not currently installed. Installing to vibe_core/cartridges/system/")
-            target_dir = Path("vibe_core/cartridges/system")
-            if not target_dir.exists():
-                target_dir.mkdir(parents=True, exist_ok=True)
+            if not source_path.exists():
+                source_path = Path("dist/holons") / f"{name}.vibe"
 
-        # 2. Install (Copy)
+            if not source_path.exists():
+                print(f"❌ Artifact not found: dist/{name}.vibe")
+                print(f"   Provide a direct path or run 'steward pack {name}' first.")
+                return 1
+
+        print(f"📦 Installing {name} from {source_path}...")
+
+        # =====================================================================
+        # RUNTIME SEPARATION: Target library/ (Runtime Space)
+        # =====================================================================
+        target_dir = Path("library")  # Default
+
+        # Try to get library_path from PhoenixConfig
+        if PhoenixConfig:
+            try:
+                config = PhoenixConfig.load()
+                if hasattr(config, "paths") and hasattr(config.paths, "system"):
+                    lib_path = getattr(config.paths.system, "library_path", None)
+                    if lib_path:
+                        target_dir = Path(lib_path)
+            except Exception:
+                pass  # Use default
+
+        # Ensure target exists
+        if not target_dir.exists():
+            target_dir.mkdir(parents=True, exist_ok=True)
+            print(f"📁 Created runtime library: {target_dir}")
+
+        # Install (Copy)
         dest_path = target_dir / f"{name}.vibe"
 
         try:
-            shutil.copy2(dist_path, dest_path)
+            shutil.copy2(source_path, dest_path)
             print(f"✅ Installed to {dest_path}")
-            print(f"   Size: {dest_path.stat().st_size} bytes")
-            print("   Restart kernel to apply changes.")
+            print(f"   Size: {dest_path.stat().st_size:,} bytes")
+            print("   🔄 Restart kernel to apply changes.")
             return 0
         except Exception as e:
             print(f"❌ Installation failed: {e}")
             return 1
+
+    def cmd_install(self, args: List[str]) -> int:
+        """Alias for cmd_update - semantic clarity for new installations."""
+        return self.cmd_update(args)
 
     # =========================================================================
     # HELP
@@ -416,7 +434,8 @@ class UnifiedCLI:
             "state": "Show unified system state",
             "diff": "Git diff (Proof of Work) [--main]",
             "plugins": "List plugins and dependencies",
-            "update": "Update plugin/agent from dist/ artifact",
+            "update": "Update container to library/ <name>",
+            "install": "Install .vibe file to library/ <path>",
         }
         for name, help_text in prakriti_help.items():
             print(f"  {name:<15} {help_text}")
