@@ -13,7 +13,7 @@ NO HARDCODED GARBAGE. Config-driven.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict
 
 import yaml
 
@@ -56,12 +56,14 @@ class OpusRenderer(BaseRenderer):
     @property
     def doc_type(self):
         from vibe_core.io_service import DocumentType
+
         return DocumentType.BIDIRECTIONAL
 
     def _discover_panels(self) -> None:
         """Auto-discover panels from panels/ directory."""
         try:
             from .panels import discover_panels
+
             self._panels = discover_panels(self.kernel)
             # Filter to only useful panels
             wanted = {"verification", "code_health"}
@@ -179,7 +181,10 @@ _Add notes here_
     def _extract_section(self, content: str, section_name: str) -> str:
         """Extract preserved section content."""
         import re
-        pattern = rf"<!-- @(?:AI|HUMAN):{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@(?:AI|HUMAN) -->"
+
+        pattern = (
+            rf"<!-- @(?:AI|HUMAN):{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@(?:AI|HUMAN) -->"
+        )
         match = re.search(pattern, content, re.DOTALL)
         if match:
             return match.group(1).strip()

@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_agent_city_plugin_imports():
     """Verify AgentCityPlugin can be imported."""
     from vibe_core.plugins.agent_city.plugin_main import AgentCityPlugin

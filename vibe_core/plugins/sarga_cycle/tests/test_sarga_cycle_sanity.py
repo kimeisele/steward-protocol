@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_sarga_cycle_plugin_imports():
     """Verify SargaCyclePlugin can be imported."""
     from vibe_core.plugins.sarga_cycle.plugin_main import SargaCyclePlugin

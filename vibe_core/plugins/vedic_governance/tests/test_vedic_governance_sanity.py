@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_vedic_governance_plugin_imports():
     """Verify VedicGovernancePlugin can be imported."""
     from vibe_core.plugins.vedic_governance.plugin_main import VedicGovernancePlugin

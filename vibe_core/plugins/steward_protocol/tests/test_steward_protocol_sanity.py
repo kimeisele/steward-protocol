@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_steward_protocol_plugin_imports():
     """Verify StewardProtocolPlugin can be imported."""
     from vibe_core.plugins.steward_protocol.plugin_main import StewardProtocolPlugin
