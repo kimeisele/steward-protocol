@@ -7,6 +7,53 @@
 > **Purpose**: Technical Debt Audit & Watertight Verification Standards
 > **Mandate**: "No implementation without verification."
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/cartridges/system/envoy/action_handlers.py
+    required: true
+  - path: steward/daily_ritual.py
+    required: true
+  - path: tests/unit/test_monitor_loader.py
+    required: true
+  - path: tests/unit/test_ledger.py
+    required: true
+  - path: vibe_core/cortex/engines/reflex_engine.py
+    required: true
+  - path: vibe_core/scheduling/in_memory.py
+    required: true
+  - path: vibe_core/cortex/engines/circuit_engine.py
+    required: true
+  - path: vibe_core/llm/google_adapter.py
+    required: true
+  - path: vibe_core/governance/invariants.py
+    required: true
+  - path: vibe_core/knowledge/graph.py
+    required: true
+  - path: vibe_core/ledger.py
+    required: true
+tests:
+  - tests/unit/test_monitor_loader.py
+  - tests/unit/test_ledger.py
+  - tests/integration/test_cognitive_circuit_loading.py
+wiring:
+  - pattern: "DailyRitual"
+    in: steward/daily_ritual.py
+  - pattern: "UniversalProvider"
+    in: vibe_core/cartridges/system/envoy
+  - pattern: "CircuitEngine"
+    in: vibe_core/cortex/engines/circuit_engine.py
+  - pattern: "InMemoryScheduler"
+    in: vibe_core/scheduling/in_memory.py
+absent:
+  - pattern: "TODO.*envoy"
+    in: vibe_core/cartridges/system/envoy/action_handlers.py
+  - pattern: "TODO.*scheduler"
+    in: vibe_core/scheduling/in_memory.py
+config:
+  - section: governance
+  - section: trust_metric
+-->
+
 ---
 
 ## Executive Summary
