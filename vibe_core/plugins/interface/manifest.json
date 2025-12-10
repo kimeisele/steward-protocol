@@ -22,7 +22,8 @@
             "dashboard",
             "agents",
             "citymap",
-            "ephemeral"
+            "ephemeral",
+            "opus"
         ]
     },
     "author": "STEWARD Protocol",

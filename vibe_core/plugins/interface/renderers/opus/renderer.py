@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 import yaml
 
-from ..base import BaseRenderer
+from vibe_core.plugins.interface.renderers.base import BaseRenderer
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -60,18 +60,34 @@ class OpusRenderer(BaseRenderer):
         return DocumentType.BIDIRECTIONAL
 
     def _discover_panels(self) -> None:
-        """Auto-discover panels from panels/ directory."""
-        try:
-            from .panels import discover_panels
+        """
+        Discover panels using PanelLoader - VEDA-4 compliant.
 
-            self._panels = discover_panels(self.kernel)
-            # Filter to only useful panels
-            wanted = {"verification", "code_health"}
-            self._panels = [p for p in self._panels if p.panel_id in wanted]
-            logger.info(f"[OPUS] Loaded {len(self._panels)} panels")
-        except Exception as e:
-            logger.warning(f"[OPUS] Panel discovery failed: {e}")
-            self._panels = []
+        Uses injected _root_path to find panels even in containers (Fractal).
+        """
+        from vibe_core.plugins.interface.panel_loader import PanelLoader
+
+        # Use injected root path if available, else fallback
+        # This fixes the "Relative Path Trap" for containers
+        base_dir = getattr(self, "_root_path", Path(__file__).parent)
+        panels_dir = base_dir / "panels"
+
+        logger.debug(f"Discovering panels in {panels_dir}")
+
+        panels, metadata = PanelLoader.discover_and_load(scan_paths=[panels_dir], kernel=self.kernel)
+
+        self._panels = []
+        for name, panel in panels.items():
+            meta = metadata.get(name)
+            if meta and meta.loaded_successfully:
+                self._panels.append(panel)
+            else:
+                # ERROR BOUNDARY: Log but don't crash the renderer
+                logger.error(f"Panel {name} failed to load: {meta.error if meta else 'unknown'}")
+                # We could add a broken panel placeholder here if desired
+        wanted = {"verification", "code_health"}
+        self._panels = [p for p in self._panels if p.panel_id in wanted]
+        logger.info(f"[OPUS] Loaded {len(self._panels)} panels")
 
     def render(self) -> None:
         """Render OPUS.md with dirty tracking."""
