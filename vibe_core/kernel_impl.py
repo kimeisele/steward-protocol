@@ -28,6 +28,7 @@ from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revoc
 
 # DocRenderer: Extracted markdown rendering logic
 from .event_bus import get_event_bus  # Phase 2: Event Bus
+from .gateway.api import NetworkGateway  # Phase 18: The Network (Sangha)
 
 # I/O Service: Central file operation controller (see docs/architecture/KERNEL_IO_ARCHITECTURE.md)
 from .io_service import KernelIOService
@@ -320,7 +321,14 @@ class RealVibeKernel(VibeKernel):
                 plugin.on_boot(self)
         else:
             self._plugins = []
+            self._plugins = []
             logger.info("🛡️ Vibe Kernel booted in Safe Mode (plugins disabled)")
+
+        # Phase 18: Network Gateway (Sangha)
+        # Using Async Sidecar pattern (Thread + Loop) to avoid blocking sync kernel
+        self.gateway = NetworkGateway(self.prakriti)
+        self._gateway_thread = None
+        self._gateway_loop = None
 
     # =========================================================================
     # 4D HYPERCUBE: Phoenix Config & Ephemeral Cities
@@ -915,6 +923,14 @@ class RealVibeKernel(VibeKernel):
         # PULSE: Write initial snapshot on boot
         self._pulse()
 
+        # Phase 18: Start Network Gateway (Async Sidecar)
+        if not self._gateway_thread or not self._gateway_thread.is_alive():
+            import threading
+
+            self._gateway_thread = threading.Thread(target=self._run_gateway_sidecar, name="VibeGateway", daemon=True)
+            self._gateway_thread.start()
+            logger.info("🌐 Network Gateway sidecar thread started")
+
     def tick(self) -> None:
         """Tick the kernel - process one task from the scheduler"""
         if self._status != KernelStatus.RUNNING:
@@ -1132,6 +1148,11 @@ class RealVibeKernel(VibeKernel):
 
         if isinstance(self._ledger, SQLiteLedger):
             self._ledger.close()
+
+        # Phase 18: Stop Gateway
+        if self._gateway_loop:
+            self._gateway_loop.call_soon_threadsafe(self._gateway_loop.stop)
+            logger.info("🌐 Gateway loop stop signal sent")
 
     def find_agents_by_capability(self, capability: str) -> List[VibeAgent]:
         """Find agents with a specific capability"""
@@ -1438,3 +1459,24 @@ class RealVibeKernel(VibeKernel):
     # 6. Scheduler executes task async (separate tick)
     # 7. Update ENVOY.md with result when complete
     # ========================================================================
+
+    def _run_gateway_sidecar(self):
+        """
+        Phase 18: Async Sidecar Entry Point.
+        Runs the NetworkGateway in a dedicated asyncio loop/thread.
+        """
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        self._gateway_loop = loop
+
+        try:
+            loop.run_until_complete(self.gateway.start())
+            loop.run_forever()
+        except Exception as e:
+            logger.error(f"🌐 Gateway Sidecar crashed: {e}")
+        finally:
+            loop.run_until_complete(self.gateway.stop())
+            loop.close()
+            logger.info("🌐 Gateway Sidecar shutdown complete")
