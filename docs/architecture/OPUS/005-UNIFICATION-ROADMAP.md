@@ -6,6 +6,38 @@
 > **Scope**: Consolidate duplicate components into unified patterns
 > **GAD-000**: All phases require GAD-000 compliance as Definition of Done
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/cli/unified_cli.py
+    required: true
+  - path: vibe_core/runtime/unified_execution.py
+    required: true
+  - path: vibe_core/runtime/unified_trace.py
+    required: true
+  - path: vibe_core/loaders/plugin_loader.py
+    required: true
+  - path: vibe_core/playbook/router.py
+    required: true
+  - path: vibe_core/playbook/loader.py
+    required: true
+  - path: scripts/verify_no_legacy_imports.py
+    required: false
+tests:
+  - tests/integration/test_kernel_boot.py
+wiring:
+  - pattern: "UnifiedRouter"
+    in: vibe_core/runtime/unified_execution.py
+  - pattern: "UnifiedExecutor"
+    in: vibe_core/runtime/unified_execution.py
+  - pattern: "UnifiedCLI"
+    in: vibe_core/cli/unified_cli.py
+absent:
+  - pattern: "TODO.*unif"
+    in: vibe_core/runtime/unified_execution.py
+config:
+  - section: unification
+-->
+
 ---
 
 ## Executive Summary
