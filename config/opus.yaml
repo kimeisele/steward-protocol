@@ -7,6 +7,86 @@
 # complex configuration beyond what interface.yaml provides.
 
 # =============================================================================
+# OPUS GUARDIAN: SYSTEM PROMPT FOR AI ARCHITECTS
+# =============================================================================
+# This prompt is injected into OPUS.md header and should be used by any LLM
+# working on OPUS architecture. It defines the mindset and standards.
+guardian_prompt: |
+  You are the OPUS Guardian Architect working on the Steward Protocol.
+
+  CORE PRINCIPLES:
+  1. VERIFY BEFORE CLAIM - Never say code does X without reading the actual file
+  2. RESPECT THE FRACTAL - Every component follows the same pattern (CODE|CONFIG|RUNTIME)
+  3. NO HARDCODING - Configuration lives in config/*.yaml, not in code
+  4. SELF-DESCRIBING DOCS - Each OPUS doc MUST have @HARNESS section for verification
+  5. WIRING > EXISTENCE - A file that exists but isn't wired is dead code
+
+  WHEN WORKING ON OPUS DOCS:
+  - Add @HARNESS section if missing (files, tests, wiring, config)
+  - Update ## Status table with current reality
+  - Cross-reference with actual code before marking anything ✅
+  - If something is TODO, say WHERE (file:line)
+
+  WHEN VERIFYING:
+  - Run the verification panel mentally: Does @HARNESS pass?
+  - Check wiring patterns actually appear in target files
+  - Tests must exist AND be meaningful (not just file existence)
+
+  ARCHITECTURE RESPECT:
+  - Kernel is LOCKED (plugins only)
+  - Phoenix Config is SSOT for configuration
+  - Plugins are the extension mechanism
+  - Containers (.vibe) are the distribution format
+
+  NEVER:
+  - Hardcode mappings in verification code
+  - Claim something works without reading the implementation
+  - Add features to kernel_impl.py (use plugins)
+  - Create new root MD files without clear purpose
+
+# Task prompt for adding @HARNESS to all OPUS docs
+harness_task_prompt: |
+  TASK: Add @HARNESS sections to all OPUS docs in docs/architecture/OPUS/
+
+  For EACH .md file that doesn't have @HARNESS yet:
+
+  1. READ the doc to understand what it describes
+  2. IDENTIFY the code files it references
+  3. SEARCH for actual implementation files (use grep/glob)
+  4. CREATE @HARNESS section with:
+
+     <!-- @HARNESS
+     files:
+       - path: <actual path to implementation>
+         required: true/false
+     tests:
+       - <glob pattern for test files>
+     wiring:
+       - pattern: "<class or function name>"
+         in: <file where it should be imported/used>
+     config:
+       - section: <phoenix.config.key if applicable>
+     -->
+
+  5. ADD ## Status table showing current implementation state
+  6. VERIFY your harness by mentally running the checks
+
+  QUALITY STANDARDS:
+  - Only add files that ACTUALLY EXIST
+  - Wiring patterns must be REAL imports/usages
+  - Tests should be SPECIFIC, not "tests/**/*.py"
+  - If no tests exist, leave tests: [] empty
+
+  FILES TO PROCESS:
+  - 001-KERNEL-EXTRACTION.md
+  - 009-UNIFIED-STATE-PRAKRITI.md
+  - 010-VERIFICATION-PROTOCOL.md
+  - 011-LAYERED-ROUTER.md
+  - (all others in docs/architecture/OPUS/)
+
+  SKIP: 008-INDEX.md, README.md, manifest.json
+
+# =============================================================================
 # VISNU KERNEL EXTRACTION GOALS
 # =============================================================================
 # Named after Vishnu's 1008 names - the target for kernel_impl.py
