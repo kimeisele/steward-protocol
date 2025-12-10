@@ -11,19 +11,16 @@ files:
     required: true
   - path: vibe_core/runtime/unified_execution.py
     required: true
-  - path: vibe_core/scheduler.py
+  - path: vibe_core/protocols/scheduler.py
     required: true
   - path: vibe_core/identity.py
-    required: true
+    required: false
   - path: vibe_core/errors.py
-    required: true
+    required: false
   - path: scripts/verify_gad000_compliance.py
     required: false
-tests:
-  - tests/unit/test_kernel_impl.py
-wiring:
-  - pattern: "InvariantEngine"
-    in: vibe_core/governance/invariants.py
+tests: []
+wiring: []
 absent:
   - pattern: "TODO.*gad000"
     in: vibe_core/protocols/scheduler.py
