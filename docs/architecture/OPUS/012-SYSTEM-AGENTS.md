@@ -4,6 +4,28 @@
 > **Created**: 2025-12-08
 > **Scope**: Define System Agents as first-class kernel plugins with persona + state + protocol
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/lifecycle/plugin_main.py
+    required: true
+  - path: vibe_core/runtime/syscalls.py
+    required: true
+  - path: vibe_core/kernel_impl.py
+    required: true
+tests:
+  - tests/unit/test_kernel_impl.py
+wiring:
+  - pattern: "SystemAgent"
+    in: vibe_core/plugins/lifecycle/plugin_main.py
+  - pattern: "register_agent"
+    in: vibe_core/kernel_impl.py
+absent:
+  - pattern: "TODO.*agent"
+    in: vibe_core/plugins/lifecycle/plugin_main.py
+config:
+  - section: system_agents
+-->
+
 ---
 
 ## The Fractal Pattern (System Devata)

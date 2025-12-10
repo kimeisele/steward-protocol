@@ -6,6 +6,47 @@
 > **Purpose**: Unified State & Identity Management for Agent OS
 > **GAD-000**: See compliance section below
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/runtime/unified_execution.py
+    required: true
+  - path: vibe_core/runtime/layered_router.py
+    required: true
+  - path: vibe_core/state/git_state.py
+    required: true
+  - path: vibe_core/state/kernel_state.py
+    required: true
+  - path: vibe_core/state/file_state.py
+    required: true
+  - path: vibe_core/state/ephemeral_state.py
+    required: true
+  - path: vibe_core/state/persona.py
+    required: true
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: vibe_core/state/prakriti.py
+    required: true
+tests:
+  - tests/unit/test_kernel_impl.py
+wiring:
+  - pattern: "Prakriti"
+    in: vibe_core/state/prakriti.py
+  - pattern: "AgentPersona"
+    in: vibe_core/state/persona.py
+  - pattern: "GitState"
+    in: vibe_core/state/git_state.py
+  - pattern: "KernelState"
+    in: vibe_core/state/kernel_state.py
+absent:
+  - pattern: "TODO.*persona"
+    in: vibe_core/state/persona.py
+  - pattern: "TODO.*prakriti"
+    in: vibe_core/state/prakriti.py
+config:
+  - section: state_management
+  - section: persona_storage
+-->
+
 ---
 
 ## Executive Summary

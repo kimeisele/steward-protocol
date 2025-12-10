@@ -5,6 +5,38 @@
 > **Last Updated**: 2025-12-09
 > **Scope**: Audit all kernel components against GAD-000 "Operator Inversion" tests
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: vibe_core/runtime/unified_execution.py
+    required: true
+  - path: vibe_core/scheduler.py
+    required: true
+  - path: vibe_core/identity.py
+    required: true
+  - path: vibe_core/errors.py
+    required: true
+  - path: scripts/verify_gad000_compliance.py
+    required: false
+tests:
+  - tests/unit/test_kernel_impl.py
+wiring:
+  - pattern: "get_capabilities"
+    in: vibe_core/kernel_impl.py
+  - pattern: "get_system_status"
+    in: vibe_core/kernel_impl.py
+  - pattern: "StructuredError"
+    in: vibe_core/errors.py
+  - pattern: "submit_task"
+    in: vibe_core/kernel_impl.py
+absent:
+  - pattern: "TODO.*gad"
+    in: vibe_core/kernel_impl.py
+config:
+  - section: gad000_compliance
+-->
+
 ---
 
 ## Executive Summary
