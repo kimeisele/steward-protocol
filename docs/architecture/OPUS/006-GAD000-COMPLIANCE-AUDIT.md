@@ -19,7 +19,8 @@ files:
     required: false
   - path: scripts/verify_gad000_compliance.py
     required: false
-tests: []
+tests:
+  - tests/unit/test_scheduler.py
 wiring: []
 absent:
   - pattern: "TODO.*gad000"
