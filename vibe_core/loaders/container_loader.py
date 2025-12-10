@@ -1,11 +1,31 @@
 import hashlib
 import json
 import logging
+import os
 import zipfile
 from pathlib import Path
 from typing import Any, Dict
 
 logger = logging.getLogger("CONTAINER.MOUNTER")
+
+
+def _get_cache_dir() -> Path:
+    """Get XDG-compliant user-private cache directory.
+
+    P2 SECURITY (OPUS-018): Replaced /tmp with user-private directory.
+    - Uses XDG_CACHE_HOME if set, else ~/.cache
+    - Creates with 0700 permissions (owner-only)
+    - Prevents symlink attacks, race conditions, and world-readable cache
+    """
+    xdg_cache = os.environ.get("XDG_CACHE_HOME")
+    if xdg_cache:
+        cache_base = Path(xdg_cache)
+    else:
+        cache_base = Path.home() / ".cache"
+
+    cache_dir = cache_base / "vibe" / "containers"
+    cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    return cache_dir
 
 
 class ContainerMounter:
@@ -14,8 +34,8 @@ class ContainerMounter:
     Implements Lazy Extraction and GAD-000 Inspection.
     """
 
-    # Default cache location - should be configured in Phoenix
-    CACHE_DIR = Path("/tmp/vibe_cache/containers")
+    # P2 SECURITY: XDG-compliant user-private cache (was /tmp/vibe_cache)
+    CACHE_DIR = _get_cache_dir()
 
     @classmethod
     def inspect(cls, container_path: Path) -> Dict[str, Any]:
