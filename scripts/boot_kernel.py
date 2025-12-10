@@ -71,6 +71,11 @@ def main():
         logger.info("Phase 3: Booting Kernel...")
         kernel.boot()
 
+        # Force re-generation of OPUS.md
+        for plugin in kernel._plugins:
+            if getattr(plugin, "plugin_id", "") == "interface":
+                plugin.render_all()
+
         # Phase 4: Wait for Interface Plugin (Critical for OPUS.md)
         # Interface plugin is auto-loaded by kernel.boot() if configured.
         # We need to ensure it gets a tick to verify.

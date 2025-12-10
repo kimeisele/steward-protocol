@@ -229,7 +229,7 @@ class VerificationPanel(BasePanel):
             "missing": missing,
         }
 
-    def _verify_tests(self, tests: List[str]) -> Dict[str, Any]:
+    def _verify_tests(self, tests: List[Any]) -> Dict[str, Any]:
         """Verify that test files exist."""
         if not tests:
             return {"passed": True, "details": "No tests specified"}
@@ -237,13 +237,25 @@ class VerificationPanel(BasePanel):
         missing = []
         found = []
 
-        for test_pattern in tests:
-            # Support glob patterns
-            matches = list(self._root.glob(test_pattern))
-            if matches:
-                found.extend([str(m.relative_to(self._root)) for m in matches])
-            else:
-                missing.append(test_pattern)
+        for test_item in tests:
+            # Handle both string patterns and dicts (if accidentally used like files)
+            test_pattern = test_item
+            if isinstance(test_item, dict):
+                test_pattern = test_item.get("path", "")
+
+            if not isinstance(test_pattern, str) or not test_pattern:
+                missing.append(f"Invalid test pattern: {test_item}")
+                continue
+
+            try:
+                # Support glob patterns
+                matches = list(self._root.glob(test_pattern))
+                if matches:
+                    found.extend([str(m.relative_to(self._root)) for m in matches])
+                else:
+                    missing.append(test_pattern)
+            except Exception as e:
+                missing.append(f"Error checking {test_pattern}: {e}")
 
         return {
             "passed": len(missing) == 0,
