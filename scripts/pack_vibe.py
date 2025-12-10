@@ -60,7 +60,9 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
         hasher.update(manifest_path.read_bytes())
 
         def add_recursive(path: Path):
-            for item in path.iterdir():
+            # SECURITY: Alphabetical sorting is MANDATORY for deterministic hashing
+            # Without this, hash differs between Linux/Mac/Windows = verification impossible
+            for item in sorted(path.iterdir()):
                 if item.name.startswith((".", "__pycache__")):
                     continue
                 if item.name == manifest_name:

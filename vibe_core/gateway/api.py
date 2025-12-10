@@ -161,13 +161,14 @@ class NetworkGateway:
             target_url = f"{peer['url'].rstrip('/')}{path}"
             logger.info(f"[FEDERATION] Forwarding {method} to {target_url}")
 
-            # TODO: Add SSL verification options for production
+            # SECURITY: SSL verification enabled by default (removed ssl=False)
+            # For local dev with self-signed certs, configure SSLContext explicitly
             async with aiohttp_client.ClientSession() as session:
                 if method == "GET":
-                    async with session.get(target_url, ssl=False) as resp:
+                    async with session.get(target_url) as resp:
                         result = await resp.json()
                 elif method == "POST":
-                    async with session.post(target_url, json=payload, ssl=False) as resp:
+                    async with session.post(target_url, json=payload) as resp:
                         result = await resp.json()
                 else:
                     return web.json_response({"error": f"Unsupported method: {method}"}, status=400)
