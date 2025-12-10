@@ -311,9 +311,9 @@ class VerificationPanel(BasePanel):
                 matches = list(re.finditer(pattern, content))
                 if matches:
                     # Find line numbers for violations
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for match in matches:
-                        line_num = content[:match.start()].count('\n') + 1
+                        line_num = content[: match.start()].count("\n") + 1
                         violations.append(f"{target_file}:{line_num} matches '{pattern}'")
                 else:
                     clean.append(f"{pattern} in {target_file}")
@@ -422,7 +422,9 @@ class VerificationPanel(BasePanel):
         with_harness = report.get("docs_with_harness", 0)
         without_harness = report.get("docs_without_harness", 0)
 
-        lines.append(f"**Trust Score: {badge} {total}%** ({with_harness} docs verified, {without_harness} without @HARNESS)")
+        lines.append(
+            f"**Trust Score: {badge} {total}%** ({with_harness} docs verified, {without_harness} without @HARNESS)"
+        )
         lines.append("")
 
         # Per-doc status
@@ -443,7 +445,9 @@ class VerificationPanel(BasePanel):
                 absent_ok = "✅" if checks.get("absent", {}).get("passed", True) else "🚨"
                 config_ok = "✅" if checks.get("config", {}).get("passed") else "❌"
 
-                lines.append(f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {absent_ok} | {config_ok} |")
+                lines.append(
+                    f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {absent_ok} | {config_ok} |"
+                )
             else:
                 lines.append(f"| {name} | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |")
 

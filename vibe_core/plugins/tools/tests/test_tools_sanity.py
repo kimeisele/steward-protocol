@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_tools_plugin_imports():
     """Verify ToolsPlugin can be imported."""
     from vibe_core.plugins.tools.plugin_main import ToolsPlugin

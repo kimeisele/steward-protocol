@@ -5,7 +5,6 @@ Minimal test for container packaging compliance (OPUS-020).
 """
 
 
-
 def test_envoy_plugin_imports():
     """Verify EnvoyPlugin can be imported."""
     from vibe_core.plugins.envoy.plugin_main import EnvoyPlugin
