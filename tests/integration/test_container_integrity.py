@@ -97,7 +97,15 @@ class TestHolonPlugin:
         # Read the original signature for later comparison
         with zipfile.ZipFile(container_path, "r") as z:
             original_sig = z.read("SIGNATURE.sig").decode()
-            assert len(original_sig) == 64  # SHA256 hex
+            # v2 format is JSON with ECDSA signature
+            if original_sig.startswith("{"):
+                import json
+
+                sig_data = json.loads(original_sig)
+                assert sig_data.get("version") == 2, "Expected v2 signature"
+                assert len(sig_data.get("hash", "")) == 64, "Hash should be 64 chars"
+            else:
+                assert len(original_sig) == 64  # Legacy v1: SHA256 hex
 
         # === STEP 2: Extract container ===
         extract_dir = tmp_path / "extracted"
