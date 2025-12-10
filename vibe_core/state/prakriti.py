@@ -144,11 +144,11 @@ class Prakriti:
         return {
             "timestamp": time.time(),
             "workspace": str(self._workspace),
-            "git": self.git.status(),
-            "files": self.files.status(),
+            # "git": self.git.status(),  # DEBUG: Disabled (Blocking IO)
+            # "files": self.files.status(), # DEBUG: Disabled (Blocking IO)
             "kernel": self.kernel.status(),
-            "ephemeral": self.ephemeral.status(),
-            "personas": self.personas.status(),
+            # "ephemeral": self.ephemeral.status(),
+            # "personas": self.personas.status(),
         }
 
     # =========================================================================
