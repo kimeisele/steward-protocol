@@ -4,7 +4,39 @@
 > **Architecture:** VEDA-4 Compliant
 > **Format:** `.vibe` (Holonic Container)
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/loaders/container_loader.py
+    required: true
+  - path: scripts/pack_vibe.py
+    required: true
+  - path: vibe_core/loaders/base_loader.py
+    required: false
+tests:
+  - tests/unit/test_container_loader.py
+  - tests/integration/test_container_integrity.py
+wiring:
+  - pattern: "ContainerMounter"
+    in: vibe_core/loaders/container_loader.py
+  - pattern: "inspect|mount"
+    in: vibe_core/loaders/container_loader.py
+config:
+  - section: opus.verification
+-->
+
 ---
+
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Loader | ✅ Implemented | `container_loader.py` |
+| Packer | ✅ Implemented | `scripts/pack_vibe.py` |
+| Hash Verification | ✅ Working | SHA256 content hash |
+| Signature (Ed25519) | ❌ TODO | `container_loader.py:87` |
+| Hollows Trust | ❌ TODO | No trust model yet |
+
+## Implementation
 
 ## 1. The Holonic Structure
 

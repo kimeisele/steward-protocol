@@ -83,3 +83,31 @@ extraction_detection:
     - "try:"
     - "except"
     - "with "
+
+# =============================================================================
+# OPUS-000: VERIFICATION HARNESS
+# =============================================================================
+# Configuration for the verification panel that cross-references OPUS docs
+# with code reality. Each OPUS doc can define its own @HARNESS section.
+verification:
+  enabled: true
+  docs_path: docs/architecture/OPUS
+  harness_marker: "@HARNESS"
+
+  # Trust score weights (must sum to 100)
+  weights:
+    files_exist: 30        # Required files exist
+    tests_exist: 25        # Test files exist
+    wiring_verified: 25    # Import patterns found
+    config_exists: 10      # Phoenix config sections exist
+    doc_complete: 10       # Doc has all required sections
+
+  # Minimum trust score to pass verification
+  thresholds:
+    pass: 80
+    warn: 60
+
+  # Required sections in each OPUS doc (besides @HARNESS)
+  required_sections:
+    - "## Status"
+    - "## Implementation"
