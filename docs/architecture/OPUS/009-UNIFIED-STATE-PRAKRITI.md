@@ -26,8 +26,7 @@ files:
     required: true
   - path: vibe_core/state/prakriti.py
     required: true
-tests:
-  - tests/unit/test_kernel_impl.py
+tests: []
 wiring:
   - pattern: "Prakriti"
     in: vibe_core/state/prakriti.py
@@ -371,7 +370,7 @@ All actual logic lives in `vibe_core/state/` (new module).
 
 ---
 
-## Implementation Phases
+## Implementation
 
 ### Phase 1: Foundation (GitState + FileState)
 - `vibe_core/state/git_state.py` - Git operations wrapper

@@ -39,8 +39,8 @@ wiring:
   - pattern: "DailyRitual"
     in: steward/daily_ritual.py
   - pattern: "UniversalProvider"
-    in: vibe_core/cartridges/system/envoy
-  - pattern: "CircuitEngine"
+    in: vibe_core/cartridges/system/envoy/provider.py
+  - pattern: "CognitiveCircuitExecutor"
     in: vibe_core/cortex/engines/circuit_engine.py
   - pattern: "InMemoryScheduler"
     in: vibe_core/scheduling/in_memory.py
@@ -116,7 +116,7 @@ We have verified the following gaps against the file system "Truth":
 
 ---
 
-## 2. The GAD-5000 Trust Metric (The Badge)
+## Status
 
 To answer the question *"How do I know this isn't spaghetti?"*, we track the **System Trust Score**.
 
@@ -161,7 +161,7 @@ Every "Major Component" (Brain, Heart, Gating) must have a dedicated test file:
 
 ---
 
-## 3. The Remediation Roadmap (Exodus Protocol)
+## Implementation
 
 We will exit the "Liquid State" and enter the "Solid State" in three phases.
 
