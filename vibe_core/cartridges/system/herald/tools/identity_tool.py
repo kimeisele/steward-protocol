@@ -4,7 +4,8 @@ HERALD Identity Tool - Cryptographic signing via Steward Protocol (Tool Protocol
 Provides agent identity verification and content signing capabilities.
 Integrates HERALD with the Steward Protocol for cryptographic integrity.
 
-Fallback: If Steward Protocol is unavailable, uses native HMAC-SHA256 signing.
+Fallback: If Steward Protocol client is unavailable, uses steward/crypto.py ECDSA directly.
+         SECURITY FIX (OPUS-018): Replaced HMAC-SHA256 with real asymmetric ECDSA.
 
 This tool implements the Tool Protocol for kernel-managed execution.
 
@@ -14,22 +15,32 @@ SECURITY NOTE: Private key writes intentionally bypass the I/O Service.
               See: docs/architecture/KERNEL_IO_ARCHITECTURE.md
 """
 
-import hashlib
-import hmac
 import logging
-import os
-import secrets
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from vibe_core.tools.tool_protocol import Tool, ToolResult
 
+# SECURITY FIX (OPUS-018): Always import steward/crypto.py for ECDSA signing
+# This replaces the insecure HMAC-SHA256 fallback
 try:
-    from steward import crypto
+    from steward.crypto import (
+        get_public_key_fingerprint,
+        load_or_generate_keys,
+        sign_content,
+    )
+
+    STEWARD_CRYPTO_AVAILABLE = True
+except ImportError:
+    STEWARD_CRYPTO_AVAILABLE = False
+    load_or_generate_keys = None
+    sign_content = None
+    get_public_key_fingerprint = None
+
+try:
     from steward.client import StewardClient
 except ImportError:
     StewardClient = None
-    crypto = None
 
 logger = logging.getLogger("HERALD_IDENTITY")
 
@@ -43,7 +54,8 @@ class IdentityTool(Tool):
     - assert_identity: Verify that HERALD has cryptographic credentials
     - get_public_key: Retrieve HERALD's public key for verification
 
-    Fallback: If Steward Protocol unavailable, uses native HMAC-SHA256 signing
+    Fallback: If Steward Protocol client unavailable, uses steward/crypto.py ECDSA directly.
+    SECURITY: ECDSA signatures are asymmetric - verification without secret key.
     """
 
     def __init__(self, identity_file: str = "herald/STEWARD.md", agent_id: str = "herald"):
@@ -61,8 +73,8 @@ class IdentityTool(Tool):
         self._private_key = None
         self._use_native = False
 
-        # Try Steward Protocol first
-        if StewardClient and crypto:
+        # Try Steward Protocol first (StewardClient for full integration)
+        if StewardClient and STEWARD_CRYPTO_AVAILABLE:
             try:
                 self.client = StewardClient(identity_file=str(self.identity_file))
                 logger.info(f"✅ Identity: Steward client initialized with {self.identity_file}")
@@ -70,46 +82,37 @@ class IdentityTool(Tool):
             except Exception as e:
                 logger.warning(f"⚠️  Identity: Failed to initialize Steward client: {e}")
 
-        # Fallback to native HMAC-SHA256 signing
-        logger.info("🔐 Identity: Using native HMAC-SHA256 signing (Steward unavailable)")
-        self._use_native = True
-        self._ensure_native_keys()
-
-    def _ensure_native_keys(self) -> None:
-        """Generate or load native HMAC-SHA256 keypair"""
-        keys_dir = Path("data/identities")
-        keys_dir.mkdir(parents=True, exist_ok=True)
-
-        private_key_file = keys_dir / f"{self.agent_id}_private.key"
-        public_key_file = keys_dir / f"{self.agent_id}_public.key"
-
-        if private_key_file.exists():
-            # Load existing key
-            try:
-                with open(private_key_file, "rb") as f:
-                    self._private_key = f.read()
-                with open(public_key_file, "r") as f:
-                    self.public_key = f.read().strip()
-                logger.info(f"🔐 Identity: Loaded native keys for {self.agent_id}")
-            except Exception as e:
-                logger.error(f"❌ Identity: Failed to load native keys: {e}")
+        # Fallback to steward/crypto.py ECDSA (SECURITY FIX: replaced HMAC)
+        if STEWARD_CRYPTO_AVAILABLE:
+            logger.info("🔐 Identity: Using steward/crypto.py ECDSA (StewardClient unavailable)")
+            self._use_native = True
+            self._ensure_ecdsa_keys()
         else:
-            # Generate new keypair
-            self._private_key = secrets.token_bytes(32)  # 256-bit key
-            self.public_key = hashlib.sha256(self._private_key).hexdigest()
+            logger.error("❌ Identity: NO CRYPTO AVAILABLE - steward/crypto.py not found!")
+            self._use_native = False
 
-            # Save private key (owner-only)
-            try:
-                with open(private_key_file, "wb") as f:
-                    f.write(self._private_key)
-                os.chmod(private_key_file, 0o600)
+    def _ensure_ecdsa_keys(self) -> None:
+        """
+        Load or generate ECDSA keypair using steward/crypto.py.
 
-                with open(public_key_file, "w") as f:
-                    f.write(self.public_key)
+        SECURITY FIX (OPUS-018): Replaced HMAC-SHA256 with real ECDSA.
+        Keys are stored at .steward/keys/ with proper permissions.
+        """
+        if not STEWARD_CRYPTO_AVAILABLE:
+            logger.error("❌ Identity: steward/crypto.py not available")
+            return
 
-                logger.info(f"🔐 Identity: Generated new native keypair for {self.agent_id}")
-            except Exception as e:
-                logger.error(f"❌ Identity: Failed to save native keys: {e}")
+        try:
+            # load_or_generate_keys() handles key storage at .steward/keys/
+            # Returns (private_key_pem, public_key_pem)
+            self._private_key, self.public_key = load_or_generate_keys()
+            logger.info(
+                f"🔐 Identity: ECDSA keys loaded for {self.agent_id} (fingerprint: {get_public_key_fingerprint(self.public_key)})"
+            )
+        except Exception as e:
+            logger.error(f"❌ Identity: Failed to load/generate ECDSA keys: {e}")
+            self._private_key = None
+            self.public_key = None
 
     @property
     def name(self) -> str:
@@ -117,7 +120,7 @@ class IdentityTool(Tool):
 
     @property
     def description(self) -> str:
-        return "Cryptographic identity verification and content signing (Steward Protocol or HMAC-SHA256)"
+        return "Cryptographic identity verification and content signing (Steward Protocol or ECDSA)"
 
     @property
     def parameters_schema(self) -> dict[str, Any]:
@@ -310,18 +313,15 @@ class IdentityTool(Tool):
             logger.error("❌ Identity: Cannot sign empty content")
             return None
 
-        # Use native HMAC-SHA256 if available
-        if self._use_native and self._private_key:
+        # Use ECDSA from steward/crypto.py (SECURITY FIX: replaced HMAC)
+        if self._use_native and self._private_key and STEWARD_CRYPTO_AVAILABLE:
             try:
-                message = content.strip().encode("utf-8")
-                signature = hmac.new(self._private_key, message, hashlib.sha256).digest()
-                signature_hex = signature.hex()
-                logger.info(
-                    f"✅ Identity: Content signed with native HMAC-SHA256 ({len(signature_hex)} char signature)"
-                )
-                return signature_hex
+                # sign_content returns base64-encoded ECDSA signature
+                signature = sign_content(content.strip(), self._private_key)
+                logger.info(f"✅ Identity: Content signed with ECDSA ({len(signature)} char signature)")
+                return signature
             except Exception as e:
-                logger.error(f"❌ Identity: Native signing failed: {e}")
+                logger.error(f"❌ Identity: ECDSA signing failed: {e}")
                 return None
 
         # Try Steward Protocol
@@ -350,26 +350,16 @@ class IdentityTool(Tool):
         if self.public_key:
             return self.public_key
 
-        # Try to load native public key
-        if self._use_native:
-            keys_dir = Path("data/identities")
-            public_key_file = keys_dir / f"{self.agent_id}_public.key"
-            if public_key_file.exists():
-                try:
-                    with open(public_key_file, "r") as f:
-                        self.public_key = f.read().strip()
-                    logger.debug(f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)")
-                    return self.public_key
-                except Exception as e:
-                    logger.warning(f"⚠️  Identity: Could not read native public key: {e}")
-            return None
+        # Return cached public key if available
+        # (set by _ensure_ecdsa_keys during init)
 
-        if not crypto:
-            logger.warning("⚠️  Identity: Crypto module not available")
+        # Use steward/crypto.py to get the public key
+        if not STEWARD_CRYPTO_AVAILABLE:
+            logger.warning("⚠️  Identity: steward/crypto.py not available")
             return None
 
         try:
-            self.public_key = crypto.get_public_key_string()
+            _, self.public_key = load_or_generate_keys()
             logger.debug(f"✅ Identity: Public key retrieved ({len(self.public_key)} chars)")
             return self.public_key
         except Exception as e:

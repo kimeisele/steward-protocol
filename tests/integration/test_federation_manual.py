@@ -12,7 +12,13 @@ def test_federation_peer_registration():
     Phase 19 Verification: Federation (Seed List)
     Tests peer registration via API.
     """
-    kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
+    import tempfile
+
+    # Use unique temp file to avoid test pollution
+    temp_ledger = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+    temp_ledger.close()
+
+    kernel = RealVibeKernel(ledger_path=temp_ledger.name, load_plugins=False)
 
     try:
         kernel.boot()
@@ -20,10 +26,19 @@ def test_federation_peer_registration():
 
         base_url = "http://127.0.0.1:8000"
 
-        # 1. List peers (should be empty)
+        # 0. Clean up any stale peers from previous runs
+        try:
+            stale_resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
+            if stale_resp.status_code == 200:
+                for peer in stale_resp.json().get("peers", []):
+                    requests.delete(f"{base_url}/api/v1/federation/peers/{peer['peer_id']}", timeout=5)
+        except Exception as e:
+            print(f"Warning: Cleanup failed: {e}")
+
+        # 1. List peers (should be empty now)
         resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
         assert resp.status_code == 200
-        assert resp.json()["peers"] == []
+        assert resp.json()["peers"] == [], f"Expected empty list, got: {resp.json()['peers']}"
 
         # 2. Add a peer
         resp = requests.post(

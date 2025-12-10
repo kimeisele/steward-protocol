@@ -79,13 +79,46 @@ class ContainerMounter:
         return sha256.hexdigest()
 
     @classmethod
-    def _verify_signature(cls, container_path: Path) -> None:
+    def _verify_signature(cls, container_path: Path) -> bool:
         """
-        Verify container integrity.
-        Currently a strict check for development: warns if missing.
+        Verify container integrity by recalculating hash and comparing to SIGNATURE.sig.
+
+        Returns True if valid, raises ValueError if tampered.
         """
-        # TODO: Implement real crypto verification
-        # For now, just check file existence as per TDD test
         with zipfile.ZipFile(container_path, "r") as z:
+            # 1. Check if signature exists
             if "SIGNATURE.sig" not in z.namelist():
-                logger.warning(f"Unsigned container: {container_path}")
+                logger.warning(f"⚠️ Unsigned container: {container_path}")
+                return False  # Allow but warn for development
+
+            # 2. Read stored signature
+            stored_signature = z.read("SIGNATURE.sig").decode("utf-8").strip()
+
+            # 3. Recalculate hash (same algorithm as pack_vibe.py)
+            hasher = hashlib.sha256()
+
+            # Manifest MUST be first and always exists
+            if "manifest.json" in z.namelist():
+                hasher.update(z.read("manifest.json"))
+
+            # Hash all other files in sorted order (deterministic)
+            for name in sorted(z.namelist()):
+                if name in ("manifest.json", "SIGNATURE.sig"):
+                    continue
+                if name.endswith("/"):  # Skip directories
+                    continue
+                hasher.update(z.read(name))
+
+            calculated_hash = hasher.hexdigest()
+
+            # 4. Compare
+            if calculated_hash != stored_signature:
+                logger.error(
+                    f"🔴 CONTAINER TAMPERED: {container_path}\n"
+                    f"   Expected: {stored_signature[:16]}...\n"
+                    f"   Got:      {calculated_hash[:16]}..."
+                )
+                raise ValueError(f"Container integrity check failed: {container_path}")
+
+            logger.info(f"✅ Container verified: {container_path.name} [{stored_signature[:8]}...]")
+            return True
