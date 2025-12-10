@@ -227,13 +227,32 @@ class PanelLoader(UnifiedLoader):
             # Find panel class
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (
-                    isinstance(attr, type)
-                    and issubclass(attr, base_cls)
-                    and attr is not base_cls
-                    and attr.__module__ == module.__name__
-                ):
-                    return attr
+                if isinstance(attr, type):
+                    # LOGGING: Check candidates
+                    if attr.__name__.endswith("Panel") and attr.__name__ != "BasePanel":
+                        is_sub = issubclass(attr, base_cls)
+                        try:
+                            # LOOSE CHECK: If strict check fails, check qualified name
+                            if not is_sub:
+                                logger.debug(
+                                    f"DEBUG: Strict check failed for {attr.__name__} (base: {base_cls.__name__})"
+                                )
+                                logger.debug(f"       Candidate Bases: {[b.__name__ for b in attr.__bases__]}")
+
+                                for base in attr.__bases__:
+                                    if base.__name__ == "BasePanel":
+                                        logger.debug(f"DEBUG: MATCH via name for {attr.__name__}")
+                                        is_sub = True
+                                        break
+                        except Exception as e:
+                            logger.debug(f"DEBUG: Error in loose check: {e}")
+
+                        if is_sub:
+                            # MATCH FOUND - Ignore module mismatch (Fractal Loader Issue)
+                            # Since we import by file path, module name is often just the filename
+                            # versus the full package path. We trust the class structure check.
+                            logger.debug(f"DEBUG: ACCEPTED {attr.__name__}")
+                            return attr
 
             return None
 
