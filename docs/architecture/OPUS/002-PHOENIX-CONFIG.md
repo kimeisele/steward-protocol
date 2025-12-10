@@ -5,6 +5,31 @@
 **Priority:** P0 (when config loading is slow)
 **Goal:** Reduce config loading from 4+ seconds to <100ms
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/phoenix/config.py
+    required: true
+  - path: vibe_core/config/
+    required: true
+  - path: config/steward.yaml
+    required: true
+wiring:
+  - pattern: "PhoenixConfig"
+    in: vibe_core/phoenix/config.py
+  - pattern: "SectionLoader"
+    in: vibe_core/phoenix/config.py
+  - pattern: "get_config"
+    in: vibe_core/phoenix/config.py
+  - pattern: "discover_circuits"
+    in: vibe_core/phoenix/config.py
+absent:
+  - pattern: "TODO.*cache"
+    in: vibe_core/phoenix/config.py
+  - pattern: "TODO.*lazy"
+    in: vibe_core/phoenix/config.py
+config:
+  - section: config_optimization
+-->
 
 ## The Problem
 
