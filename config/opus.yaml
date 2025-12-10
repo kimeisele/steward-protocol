@@ -7,6 +7,118 @@
 # complex configuration beyond what interface.yaml provides.
 
 # =============================================================================
+# OPUS GUARDIAN: ARCHITECTURAL PHILOSOPHY
+# =============================================================================
+# This is the philosophical foundation. Read CONSTITUTION.md for full context.
+
+philosophy: |
+  AGI = Artificial GOVERNED Intelligence (not General).
+
+  "Ein Agent, der verspricht nichts Böses zu tun, ist unsicher.
+   Ein Agent, der es nicht KANN, ist sicher."
+  - Constitution Art. III
+
+  THE FRACTAL TRINITY:
+  ┌─────────────┬─────────────┬─────────────┐
+  │   KERNEL    │   PHOENIX   │   STEWARD   │
+  │  (Vishnu)   │  (Config)   │ (Protocol)  │
+  │  Execution  │  Parameters │  Agent Meta │
+  └─────────────┴─────────────┴─────────────┘
+  Same pattern at EVERY level. Break the fractal, break the system.
+
+  VERIFICATION = TRUST:
+  A doc claiming "✅ implemented" without @HARNESS proof is FICTION.
+  Your job is to find RED Xs, not paint green checkmarks.
+  Every ✅ is a promise. Unverifiable promises are lies.
+
+# =============================================================================
+# @HARNESS SPECIFICATION (Semantic Verification)
+# =============================================================================
+# The harness is executable documentation - it PROVES what the doc claims.
+
+harness_spec:
+  format: "YAML inside <!-- @HARNESS ... -->"
+
+  # Available check types
+  checks:
+    files:
+      description: "Files that MUST exist"
+      example: |
+        files:
+          - path: vibe_core/x.py
+            required: true
+
+    tests:
+      description: "Test files (glob patterns)"
+      example: |
+        tests:
+          - tests/unit/test_x.py
+
+    wiring:
+      description: "Patterns that MUST be present"
+      example: |
+        wiring:
+          - pattern: "class ContainerMounter"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "from.*container_loader import"
+            in: vibe_core/kernel_impl.py
+
+    absent:
+      description: "Patterns that MUST NOT exist (catches lies)"
+      example: |
+        absent:
+          - pattern: "TODO.*implement"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "pass  # stub"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "raise NotImplementedError"
+            in: vibe_core/loaders/container_loader.py
+
+    config:
+      description: "Phoenix config sections that must exist"
+      example: |
+        config:
+          - section: opus.verification
+
+# =============================================================================
+# TASK: ADD @HARNESS TO OPUS DOCS
+# =============================================================================
+harness_task: |
+  For each OPUS doc in docs/architecture/OPUS/:
+
+  1. READ the entire doc
+  2. GREP for every file path mentioned - does it exist?
+  3. READ those files - are they real implementations or stubs?
+  4. GREP for TODO/FIXME/NotImplementedError in those files
+
+  5. WRITE @HARNESS:
+     <!-- @HARNESS
+     files:
+       - path: <verified existing path>
+         required: true
+     tests:
+       - <specific test file, not wildcards>
+     wiring:
+       - pattern: "<actual class/function name>"
+         in: <file where it's imported/used>
+     absent:
+       - pattern: "TODO.*<feature name>"
+         in: <implementation file>
+     -->
+
+  6. ADD ## Status table:
+     | Aspect | Status | Evidence |
+     |--------|--------|----------|
+     | X impl | ✅/❌/❓ | file:line |
+
+  7. Status rules:
+     - ✅ = Verified with grep, file:line reference
+     - ❌ = Missing or stub
+     - ❓ = Cannot verify (explain why)
+
+  SKIP: 008-INDEX.md, README.md, manifest.json
+
+# =============================================================================
 # VISNU KERNEL EXTRACTION GOALS
 # =============================================================================
 # Named after Vishnu's 1008 names - the target for kernel_impl.py
@@ -83,3 +195,31 @@ extraction_detection:
     - "try:"
     - "except"
     - "with "
+
+# =============================================================================
+# OPUS-000: VERIFICATION HARNESS
+# =============================================================================
+# Configuration for the verification panel that cross-references OPUS docs
+# with code reality. Each OPUS doc can define its own @HARNESS section.
+verification:
+  enabled: true
+  docs_path: docs/architecture/OPUS
+  harness_marker: "@HARNESS"
+
+  # Trust score weights (must sum to 100)
+  weights:
+    files_exist: 30        # Required files exist
+    tests_exist: 25        # Test files exist
+    wiring_verified: 25    # Import patterns found
+    config_exists: 10      # Phoenix config sections exist
+    doc_complete: 10       # Doc has all required sections
+
+  # Minimum trust score to pass verification
+  thresholds:
+    pass: 80
+    warn: 60
+
+  # Required sections in each OPUS doc (besides @HARNESS)
+  required_sections:
+    - "## Status"
+    - "## Implementation"
