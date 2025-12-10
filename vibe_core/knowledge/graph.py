@@ -138,12 +138,21 @@ class UnifiedKnowledgeGraph:
             self.edges[edge.source].append(edge)
 
     def _load_constraints(self, data: dict) -> None:
-        """Load constraints from data."""
-        constraints_data = data.get("constraints") or data.get("rules") or []
+        """Load constraints from data.
+
+        NOTE: Only load from 'constraints' key, NOT 'rules'.
+        'rules' are routing rules (different structure with 'triggers', 'agent', etc.)
+        """
+        constraints_data = data.get("constraints") or []
 
         for c_data in constraints_data:
             if not isinstance(c_data, dict):
                 logger.debug(f"Skipping invalid constraint data: {c_data}")
+                continue
+
+            # Validate required fields - skip malformed entries
+            if "condition" not in c_data:
+                logger.debug(f"Skipping constraint without condition: {c_data.get('id', 'unknown')}")
                 continue
 
             c_type = ConstraintType(c_data.get("type", "hard"))
