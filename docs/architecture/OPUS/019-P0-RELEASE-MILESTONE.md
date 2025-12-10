@@ -5,6 +5,32 @@
 > **Branch**: main @ 1b3eb29
 > **Author**: Antigravity
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/cartridges/system/herald/tools/identity_tool.py
+    required: true
+  - path: vibe_core/plugins/tools/plugin_main.py
+    required: true
+  - path: steward/crypto.py
+    required: true
+tests:
+  - tests/unit/test_crypto_verification.py
+wiring:
+  - pattern: "from steward.crypto import"
+    in: vibe_core/cartridges/system/herald/tools/identity_tool.py
+  - pattern: "InvariantChecker"
+    in: vibe_core/plugins/tools/plugin_main.py
+  - pattern: "STEWARD_CRYPTO_AVAILABLE"
+    in: vibe_core/cartridges/system/herald/tools/identity_tool.py
+absent:
+  - pattern: "hmac\\.new"
+    in: vibe_core/cartridges/system/herald/tools/identity_tool.py
+  - pattern: "sha256.*_private_key.*hexdigest"
+    in: vibe_core/cartridges/system/herald/tools/identity_tool.py
+config:
+  - section: opus.verification
+-->
+
 ---
 
 ## Release Summary
