@@ -78,6 +78,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "smoke: Quick sanity check tests")
     config.addinivalue_line("markers", "unit: Unit tests")
     config.addinivalue_line("markers", "e2e: End-to-end tests")
+    config.addinivalue_line("markers", "fractal: Fractal pattern tests")
 
     # Get selected profile
     profile_name = config.getoption("--test-profile")
@@ -99,6 +100,15 @@ def pytest_collection_modifyitems(config, items):
         # Auto-mark tests in integration/ directory
         if "integration" in str(item.fspath):
             item.add_marker(pytest.mark.integration)
+
+        # Auto-mark tests in fractal/ directory
+        if "fractal" in str(item.fspath):
+            item.add_marker(pytest.mark.fractal)
+
+        # Auto-mark tests in e2e/ directory
+        if "e2e" in str(item.fspath):
+            item.add_marker(pytest.mark.e2e)
+            item.add_marker(pytest.mark.slow)
 
         # Mark tests with "slow" or "stress" in name
         if "slow" in item.name.lower() or "stress" in item.name.lower():
