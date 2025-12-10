@@ -1,8 +1,8 @@
 # OPUS-014: Unified UI & Transparency Layer
 
-> **Status**: DRAFT
+> **Status**: DRAFT (Updated for VEDA-4)
 > **Created**: 2025-12-08
-> **Prereqs**: OPUS-007 (Hardening), OPUS-009 (Prakriti)
+> **Prereqs**: OPUS-023 (FRACTAL UI ARCHITECTURE), OPUS-009 (Prakriti)
 > **GAD-000**: "What is more transparent than bidirectional files that X-ray the system?"
 
 <!-- @HARNESS
@@ -54,24 +54,27 @@ config:
 │  INDEX.md                  │  Navigation Hub                │
 │  AGENTS.md                 │  Agent Registry                │
 │  CITYMAP.md                │  Architecture Overview         │
-│  ENVOY.md                  │  Command Interface             │
+│  ENVOY.md                  │  Command Interface(Container)  │
 │  SETTINGS.md               │  System Configuration          │
 │  STATE.md (NEW)            │  Prakriti State Inspector      │
 │  ECONOMY.md (NEW)          │  Token/Credit/Resource Meter   │
 │  MATRIX.md                 │  Routing/Circuit Visualization │
 │  TASKS.md                  │  Task Queue & History          │
-│  OPUS.md                   │  AI Workspace                  │
+│  OPUS.md                   │  AI Workspace (Container)      │
 │  GIT.md                    │  Repository State              │
+│  ...                       │  ...                           │
 └─────────────────────────────────────────────────────────────┘
-           ▲ render()              ▲ parse()
+           ▲ render() (aggregated) ▲ parse()
            │                       │
 ┌──────────┴───────────────────────┴──────────────────────────┐
 │                    RENDERER LAYER                           │
-│              (InterfacePlugin + Renderers)                  │
+│           (Fractal Containers + Panel Loaders)              │
 ├─────────────────────────────────────────────────────────────┤
-│  config/interface.yaml → Defines which renderers enabled    │
-│  vibe_core/plugins/interface/renderers/ → Render logic      │
-│  LIVE/AI/HUMAN sections → Bidirectional ownership           │
+│  InterfacePlugin           │  Window Manager                │
+│  RendererLoader            │  Loads Containers (Opus, etc)  │
+│  OpusRenderer (Container)  │  Loads Panels (Verification..) │
+│  PanelLoader               │  Discovers Sub-components      │
+│  manifest.json             │  Physics & Configuration       │
 └─────────────────────────────────────────────────────────────┘
            ▲ data source
            │
@@ -344,7 +347,7 @@ graph LR
 
 ## Related Documents
 
-- **OPUS-007**: UI Hardening (prereq)
+- **OPUS-023**: Fractal UI Architecture (The Foundation)
 - **OPUS-009**: Prakriti State (data source for STATE.md)
 - **GAD-000**: Operator Inversion
 - **config/interface.yaml**: Renderer definitions
