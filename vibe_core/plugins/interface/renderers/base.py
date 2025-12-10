@@ -44,6 +44,7 @@ class BaseRenderer(ABC):
         self.kernel = kernel
         self._config: Optional["RendererConfig"] = None
         self._interface_config: Optional["InterfaceConfig"] = None
+        self._root_path: Path = Path(__file__).parent  # Default fallback
 
         # Data source registry - maps source paths to callables
         self._data_sources: Dict[str, Callable[[], Any]] = {}
@@ -53,6 +54,10 @@ class BaseRenderer(ABC):
 
         # Law 1: Backup tracking for rollback
         self._backup_path: Optional[Path] = None
+
+    def set_root_path(self, path: Path) -> None:
+        """Called by loader to inject the true container root context."""
+        self._root_path = path
 
     @property
     @abstractmethod
