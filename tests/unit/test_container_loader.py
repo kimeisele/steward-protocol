@@ -87,7 +87,8 @@ class TestContainerMounter:
             z.writestr("manifest.json", manifest_bytes)
             z.writestr("content/plugin_main.py", evil_code)
             z.writestr("tests/test_basic.py", b"# test")
-            z.writestr("SIGNATURE.sig", "00000000000000000000000000000000")  # Fake sig
+            # 64 hex chars = valid v1 format but wrong hash → triggers "integrity check failed"
+            z.writestr("SIGNATURE.sig", "0" * 64)  # Valid v1 format, wrong hash
 
         with patch(
             "vibe_core.loaders.container_loader.ContainerMounter.CACHE_DIR",
