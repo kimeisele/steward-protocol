@@ -1,9 +1,9 @@
 {
   "name": "OPUS Architecture Plans",
   "description": "Claude Opus architectural analysis, remediation plans, and execution guides for Steward Protocol",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "created": "2025-12-06",
-  "updated": "2025-12-07",
+  "updated": "2025-12-10",
   "documents": [
     {
       "id": "sonnet-execution-plan",
@@ -44,6 +44,14 @@
       "status": "implemented",
       "priority": "P2",
       "description": "Config loading optimization - IMPLEMENTED"
+    },
+    {
+      "id": "022-kernel-scaling",
+      "title": "Kernel Scaling Architecture",
+      "file": "022-KERNEL-SCALING.md",
+      "status": "active",
+      "priority": "P0",
+      "description": "Verified kernel scaling architecture - ephemeral cities, scheduler, federation. Tests required."
     }
   ],
   "roadmap": {
