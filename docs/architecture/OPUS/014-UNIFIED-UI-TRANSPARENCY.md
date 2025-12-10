@@ -5,6 +5,26 @@
 > **Prereqs**: OPUS-007 (Hardening), OPUS-009 (Prakriti)
 > **GAD-000**: "What is more transparent than bidirectional files that X-ray the system?"
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/interface/plugin_main.py
+    required: true
+  - path: vibe_core/state/prakriti.py
+    required: true
+  - path: vibe_core/phoenix/config.py
+    required: true
+wiring:
+  - pattern: "InterfacePlugin"
+    in: vibe_core/plugins/interface/plugin_main.py
+  - pattern: "Prakriti"
+    in: vibe_core/state/prakriti.py
+absent:
+  - pattern: "TODO.*transparency"
+    in: vibe_core/plugins/interface/plugin_main.py
+config:
+  - section: ui_transparency
+-->
+
 ---
 
 ## Executive Summary

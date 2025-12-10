@@ -4,6 +4,28 @@
 > **Created**: 2025-12-08
 > **Scope**: Document kernel boot sequence, plugin order, coupling analysis
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: vibe_core/loaders/plugin_loader.py
+    required: true
+  - path: tests/integration/test_kernel_boot.py
+    required: true
+wiring:
+  - pattern: "PluginLoader"
+    in: vibe_core/loaders/plugin_loader.py
+  - pattern: "discover"
+    in: vibe_core/loaders/plugin_loader.py
+  - pattern: "on_boot"
+    in: vibe_core/kernel_impl.py
+absent:
+  - pattern: "TODO.*boot"
+    in: vibe_core/kernel_impl.py
+config:
+  - section: boot_sequence
+-->
+
 ---
 
 ## Executive Summary
