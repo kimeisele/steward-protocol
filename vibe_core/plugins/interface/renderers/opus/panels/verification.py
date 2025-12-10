@@ -164,6 +164,13 @@ class VerificationPanel(BasePanel):
         if wiring_check["passed"]:
             result["score"] += weights.get("wiring_verified", 25)
 
+        # Verify absent patterns (things that MUST NOT exist)
+        absent_check = self._verify_absent(harness.get("absent", []))
+        result["checks"]["absent"] = absent_check
+        if not absent_check["passed"]:
+            # Penalty for having forbidden patterns
+            result["score"] = max(0, result["score"] - 20)
+
         # Verify config sections
         config_check = self._verify_config(harness.get("config", []))
         result["checks"]["config"] = config_check
@@ -279,6 +286,46 @@ class VerificationPanel(BasePanel):
             "missing": missing,
         }
 
+    def _verify_absent(self, absents: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Verify that forbidden patterns are NOT present (catches lies/stubs)."""
+        if not absents:
+            return {"passed": True, "details": "No absent patterns specified"}
+
+        violations = []
+        clean = []
+
+        for absent in absents:
+            pattern = absent.get("pattern", "")
+            target_file = absent.get("in", "")
+
+            if not pattern or not target_file:
+                continue
+
+            target_path = self._root / target_file
+            if not target_path.exists():
+                clean.append(f"{pattern} in {target_file} (file not found)")
+                continue
+
+            try:
+                content = target_path.read_text()
+                matches = list(re.finditer(pattern, content))
+                if matches:
+                    # Find line numbers for violations
+                    lines = content.split('\n')
+                    for match in matches:
+                        line_num = content[:match.start()].count('\n') + 1
+                        violations.append(f"{target_file}:{line_num} matches '{pattern}'")
+                else:
+                    clean.append(f"{pattern} in {target_file}")
+            except Exception:
+                clean.append(f"{pattern} in {target_file} (read error)")
+
+        return {
+            "passed": len(violations) == 0,
+            "clean": clean,
+            "violations": violations,
+        }
+
     def _verify_config(self, configs: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Verify that Phoenix config sections exist."""
         if not configs:
@@ -381,8 +428,8 @@ class VerificationPanel(BasePanel):
         # Per-doc status
         lines.append("### OPUS Docs")
         lines.append("")
-        lines.append("| Doc | Score | Files | Tests | Wiring | Config |")
-        lines.append("|-----|-------|-------|-------|--------|--------|")
+        lines.append("| Doc | Score | Files | Tests | Wiring | Absent | Config |")
+        lines.append("|-----|-------|-------|-------|--------|--------|--------|")
 
         for doc in report.get("docs", []):
             name = doc["name"][:25]
@@ -393,28 +440,43 @@ class VerificationPanel(BasePanel):
                 files_ok = "✅" if checks.get("files", {}).get("passed") else "❌"
                 tests_ok = "✅" if checks.get("tests", {}).get("passed") else "❌"
                 wiring_ok = "✅" if checks.get("wiring", {}).get("passed") else "❌"
+                absent_ok = "✅" if checks.get("absent", {}).get("passed", True) else "🚨"
                 config_ok = "✅" if checks.get("config", {}).get("passed") else "❌"
 
-                lines.append(f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {config_ok} |")
+                lines.append(f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {absent_ok} | {config_ok} |")
             else:
-                lines.append(f"| {name} | - | ⚪ | ⚪ | ⚪ | ⚪ |")
+                lines.append(f"| {name} | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |")
 
         lines.append("")
 
-        # Show failures
+        # Show failures and violations
         failures = []
+        violations = []
         for doc in report.get("docs", []):
             if not doc.get("has_harness"):
                 continue
             for check_name, check_result in doc.get("checks", {}).items():
                 if not check_result.get("passed", True):
+                    # Missing items (files, tests, wiring)
                     for item in check_result.get("missing", []):
                         failures.append(f"**{doc['name']}** [{check_name}]: {item}")
+                    # Violations (absent patterns found)
+                    for item in check_result.get("violations", []):
+                        violations.append(f"**{doc['name']}** 🚨 {item}")
+
+        if violations:
+            lines.append("### 🚨 Violations (forbidden patterns found)")
+            lines.append("")
+            for v in violations[:10]:
+                lines.append(f"- {v}")
+            if len(violations) > 10:
+                lines.append(f"- _...and {len(violations) - 10} more_")
+            lines.append("")
 
         if failures:
-            lines.append("### Failures")
+            lines.append("### ❌ Failures")
             lines.append("")
-            for f in failures[:10]:  # Limit to 10
+            for f in failures[:10]:
                 lines.append(f"- {f}")
             if len(failures) > 10:
                 lines.append(f"- _...and {len(failures) - 10} more_")

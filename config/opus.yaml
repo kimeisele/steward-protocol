@@ -7,82 +7,114 @@
 # complex configuration beyond what interface.yaml provides.
 
 # =============================================================================
-# OPUS GUARDIAN: SYSTEM PROMPT FOR AI ARCHITECTS
+# OPUS GUARDIAN: ARCHITECTURAL PHILOSOPHY
 # =============================================================================
-# This prompt is injected into OPUS.md header and should be used by any LLM
-# working on OPUS architecture. It defines the mindset and standards.
-guardian_prompt: |
-  You are the OPUS Guardian Architect working on the Steward Protocol.
+# This is the philosophical foundation. Read CONSTITUTION.md for full context.
 
-  CORE PRINCIPLES:
-  1. VERIFY BEFORE CLAIM - Never say code does X without reading the actual file
-  2. RESPECT THE FRACTAL - Every component follows the same pattern (CODE|CONFIG|RUNTIME)
-  3. NO HARDCODING - Configuration lives in config/*.yaml, not in code
-  4. SELF-DESCRIBING DOCS - Each OPUS doc MUST have @HARNESS section for verification
-  5. WIRING > EXISTENCE - A file that exists but isn't wired is dead code
+philosophy: |
+  AGI = Artificial GOVERNED Intelligence (not General).
 
-  WHEN WORKING ON OPUS DOCS:
-  - Add @HARNESS section if missing (files, tests, wiring, config)
-  - Update ## Status table with current reality
-  - Cross-reference with actual code before marking anything ✅
-  - If something is TODO, say WHERE (file:line)
+  "Ein Agent, der verspricht nichts Böses zu tun, ist unsicher.
+   Ein Agent, der es nicht KANN, ist sicher."
+  - Constitution Art. III
 
-  WHEN VERIFYING:
-  - Run the verification panel mentally: Does @HARNESS pass?
-  - Check wiring patterns actually appear in target files
-  - Tests must exist AND be meaningful (not just file existence)
+  THE FRACTAL TRINITY:
+  ┌─────────────┬─────────────┬─────────────┐
+  │   KERNEL    │   PHOENIX   │   STEWARD   │
+  │  (Vishnu)   │  (Config)   │ (Protocol)  │
+  │  Execution  │  Parameters │  Agent Meta │
+  └─────────────┴─────────────┴─────────────┘
+  Same pattern at EVERY level. Break the fractal, break the system.
 
-  ARCHITECTURE RESPECT:
-  - Kernel is LOCKED (plugins only)
-  - Phoenix Config is SSOT for configuration
-  - Plugins are the extension mechanism
-  - Containers (.vibe) are the distribution format
+  VERIFICATION = TRUST:
+  A doc claiming "✅ implemented" without @HARNESS proof is FICTION.
+  Your job is to find RED Xs, not paint green checkmarks.
+  Every ✅ is a promise. Unverifiable promises are lies.
 
-  NEVER:
-  - Hardcode mappings in verification code
-  - Claim something works without reading the implementation
-  - Add features to kernel_impl.py (use plugins)
-  - Create new root MD files without clear purpose
+# =============================================================================
+# @HARNESS SPECIFICATION (Semantic Verification)
+# =============================================================================
+# The harness is executable documentation - it PROVES what the doc claims.
 
-# Task prompt for adding @HARNESS to all OPUS docs
-harness_task_prompt: |
-  TASK: Add @HARNESS sections to all OPUS docs in docs/architecture/OPUS/
+harness_spec:
+  format: "YAML inside <!-- @HARNESS ... -->"
 
-  For EACH .md file that doesn't have @HARNESS yet:
+  # Available check types
+  checks:
+    files:
+      description: "Files that MUST exist"
+      example: |
+        files:
+          - path: vibe_core/x.py
+            required: true
 
-  1. READ the doc to understand what it describes
-  2. IDENTIFY the code files it references
-  3. SEARCH for actual implementation files (use grep/glob)
-  4. CREATE @HARNESS section with:
+    tests:
+      description: "Test files (glob patterns)"
+      example: |
+        tests:
+          - tests/unit/test_x.py
 
+    wiring:
+      description: "Patterns that MUST be present"
+      example: |
+        wiring:
+          - pattern: "class ContainerMounter"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "from.*container_loader import"
+            in: vibe_core/kernel_impl.py
+
+    absent:
+      description: "Patterns that MUST NOT exist (catches lies)"
+      example: |
+        absent:
+          - pattern: "TODO.*implement"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "pass  # stub"
+            in: vibe_core/loaders/container_loader.py
+          - pattern: "raise NotImplementedError"
+            in: vibe_core/loaders/container_loader.py
+
+    config:
+      description: "Phoenix config sections that must exist"
+      example: |
+        config:
+          - section: opus.verification
+
+# =============================================================================
+# TASK: ADD @HARNESS TO OPUS DOCS
+# =============================================================================
+harness_task: |
+  For each OPUS doc in docs/architecture/OPUS/:
+
+  1. READ the entire doc
+  2. GREP for every file path mentioned - does it exist?
+  3. READ those files - are they real implementations or stubs?
+  4. GREP for TODO/FIXME/NotImplementedError in those files
+
+  5. WRITE @HARNESS:
      <!-- @HARNESS
      files:
-       - path: <actual path to implementation>
-         required: true/false
+       - path: <verified existing path>
+         required: true
      tests:
-       - <glob pattern for test files>
+       - <specific test file, not wildcards>
      wiring:
-       - pattern: "<class or function name>"
-         in: <file where it should be imported/used>
-     config:
-       - section: <phoenix.config.key if applicable>
+       - pattern: "<actual class/function name>"
+         in: <file where it's imported/used>
+     absent:
+       - pattern: "TODO.*<feature name>"
+         in: <implementation file>
      -->
 
-  5. ADD ## Status table showing current implementation state
-  6. VERIFY your harness by mentally running the checks
+  6. ADD ## Status table:
+     | Aspect | Status | Evidence |
+     |--------|--------|----------|
+     | X impl | ✅/❌/❓ | file:line |
 
-  QUALITY STANDARDS:
-  - Only add files that ACTUALLY EXIST
-  - Wiring patterns must be REAL imports/usages
-  - Tests should be SPECIFIC, not "tests/**/*.py"
-  - If no tests exist, leave tests: [] empty
-
-  FILES TO PROCESS:
-  - 001-KERNEL-EXTRACTION.md
-  - 009-UNIFIED-STATE-PRAKRITI.md
-  - 010-VERIFICATION-PROTOCOL.md
-  - 011-LAYERED-ROUTER.md
-  - (all others in docs/architecture/OPUS/)
+  7. Status rules:
+     - ✅ = Verified with grep, file:line reference
+     - ❌ = Missing or stub
+     - ❓ = Cannot verify (explain why)
 
   SKIP: 008-INDEX.md, README.md, manifest.json
 
