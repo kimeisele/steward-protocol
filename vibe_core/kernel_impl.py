@@ -296,10 +296,18 @@ class RealVibeKernel(VibeKernel):
         self._plugin_metadata = {}
 
         if self._load_plugins:
+            import os
             from pathlib import Path
 
-            # Scan both plugins and knowledge directories
-            scan_paths = [Path("vibe_core/plugins"), Path("knowledge")]
+            # OPUS-020 Phase 3: Support custom plugin paths via env var
+            # Usage: VIBE_PLUGIN_PATH=dist/plugins:custom/plugins python -m vibe_core.cli boot
+            custom_paths_env = os.environ.get("VIBE_PLUGIN_PATH", "")
+            if custom_paths_env:
+                scan_paths = [Path(p.strip()) for p in custom_paths_env.split(":") if p.strip()]
+                logger.info(f"🔌 Using custom plugin paths from VIBE_PLUGIN_PATH: {scan_paths}")
+            else:
+                # Default: Scan both plugins and knowledge directories
+                scan_paths = [Path("vibe_core/plugins"), Path("knowledge")]
 
             # Use discover_and_load to get metadata (needed for cognitive packs)
             self._plugins_map, self._plugin_metadata = PluginLoader.discover_and_load(scan_paths=scan_paths)

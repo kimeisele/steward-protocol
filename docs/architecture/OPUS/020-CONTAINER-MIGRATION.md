@@ -215,10 +215,10 @@ VIBE_PLUGIN_PATH=dist/plugins python -m vibe_core.cli boot
 ### Phase 2: Build Pipeline (DONE)
 - [x] Create `scripts/build_all_containers.sh`
 - [x] Add to Makefile: `make containers`
-- [ ] CI/CD: Build containers on merge to main
+- [x] CI/CD: Build containers on merge to main
 
-### Phase 3: Configuration (TODO - P3)
-- [ ] Add `VIBE_PLUGIN_PATH` env var support
+### Phase 3: Configuration (DONE)
+- [x] Add `VIBE_PLUGIN_PATH` env var support
 - [ ] Add `plugin_paths` to phoenix.yaml
 - [ ] Support both absolute and relative paths
 
