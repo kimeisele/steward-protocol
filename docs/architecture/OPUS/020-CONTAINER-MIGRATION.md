@@ -268,6 +268,121 @@ rm vibe_core/plugins/interface.vibe
 
 ---
 
+## Steward Protocol Integration
+
+### Key Identity Chain
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    SINGLE KEY IDENTITY                         │
+│                                                                │
+│   .steward/keys/                                               │
+│   ├── private.pem    ← Signs containers AND agent messages    │
+│   └── public.pem     ← Verifies containers AND agent identity │
+│                                                                │
+│   Container Signing (pack_vibe.py:130):                        │
+│   private_key, public_key = load_or_generate_keys()            │
+│                                                                │
+│   Agent Identity (identity_tool.py):                           │
+│   from steward.crypto import load_or_generate_keys             │
+│   → SAME KEYS                                                  │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Implication**: The entity that signs a container is the same identity that the agent inside uses.
+
+```
+Container signed by KEY_A
+    └── Agent inside uses KEY_A for identity
+        └── Ledger events signed by KEY_A
+            └── All traceable to same author
+```
+
+### Trust Model (Current: P2 PERMISSIVE)
+
+```python
+# container_loader.py:219-228
+# P2 PERMISSIVE: Accept ANY valid signature
+if not is_valid:
+    logger.warning(f"⚠️ Container signed by different key: {signer}")
+    return True  # Still loads!
+```
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| **P2 PERMISSIVE** (current) | Any valid ECDSA signature accepted | Development |
+| **P3 KEYRING** (future) | Only signatures from trusted keys | Multi-tenant |
+| **P3 STRICT** (future) | Reject unknown signers | Production |
+
+### Failure Modes
+
+| Scenario | Behavior | Log |
+|----------|----------|-----|
+| Hash mismatch | `ValueError`, rejected | `🔴 CONTAINER TAMPERED` |
+| Unknown signer | Warning, **loads** | `⚠️ signed by different key` |
+| No signature | Warning, **loads** | `⚠️ Unsigned container` |
+| v1 legacy hash | Warning, **loads** | `⚠️ v1 LEGACY` |
+
+### Connection to Ledger (P1)
+
+Same key signs everything:
+- Container SIGNATURE.sig
+- Constitutional Oath
+- Per-event ledger signatures
+
+**Audit Trail**: Container signer → Agent identity → Ledger events = full provenance.
+
+---
+
+## Full Steward Cycle
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. DEVELOP                                                      │
+│    Edit: vibe_core/plugins/my_agent/plugin_main.py              │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. BUILD + SIGN                                                 │
+│    $ python scripts/pack_vibe.py vibe_core/plugins/my_agent     │
+│    Uses: .steward/keys/private.pem                              │
+│    Output: my_agent.vibe with ECDSA signature                   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. DEPLOY                                                       │
+│    Place .vibe in scan_paths → shadows folder                   │
+│    ECDSA verified on mount                                      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. BOOT + OATH                                                  │
+│    PluginLoader finds .vibe → Agent boots                       │
+│    Constitutional Oath signed with SAME KEY                     │
+│    Trust score initialized                                      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. RUNTIME                                                      │
+│    Actions → Ledger events with per-event ECDSA (P1)            │
+│    Soul rules enforced by InvariantChecker (P0.2)               │
+│    Trust score updated                                          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. AUDIT                                                        │
+│    Container signer = Agent identity = Ledger signer            │
+│    Full non-repudiation chain                                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## Summary
 
 | Question | Answer |
@@ -278,5 +393,8 @@ rm vibe_core/plugins/interface.vibe
 | Is the container signed? | **Yes** - ECDSA (P2 complete) |
 | Can containers contain other containers? | **Yes** - hollows/ directory |
 | Can I configure plugin paths? | **Not yet** - P3 (env var support) |
+| Who signs containers? | **.steward/keys/** - same as agent identity |
+| What if signer is unknown? | **P2 PERMISSIVE**: Warning, still loads |
+| How does this connect to Ledger? | Same key signs container + all events |
 
 **The infrastructure is ready. Build scripts and workflow docs are the remaining work.**
