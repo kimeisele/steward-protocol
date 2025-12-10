@@ -69,10 +69,20 @@ class BasePanel(ABC):
         self._cache[key] = {"data": data, "ts": time.time()}
 
     def get_ephemeral(self):
-        """Get EphemeralStorage from kernel (OPUS Phase 2)."""
-        if hasattr(self.kernel, "envoy") and hasattr(self.kernel.envoy, "_ephemeral"):
-            return self.kernel.envoy._ephemeral
-        return None
+        """
+        Get EphemeralStorage from kernel (GAD-000 Safe).
+
+        Returns None if Envoy is not available.
+        """
+        # GAD-000: Safety Check - Don't assume Envoy exists
+        if not hasattr(self.kernel, "envoy"):
+            return None
+
+        envoy = getattr(self.kernel, "envoy", None)
+        if not envoy:
+            return None
+
+        return getattr(envoy, "_ephemeral", None)
 
     # Utility methods
     def _count_loc(self, path: str) -> int:

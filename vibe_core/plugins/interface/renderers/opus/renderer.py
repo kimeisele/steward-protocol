@@ -13,7 +13,7 @@ NO HARDCODED GARBAGE. Config-driven.
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List
 
 import yaml
 
@@ -30,10 +30,15 @@ class OpusRenderer(BaseRenderer):
 
     def __init__(self, kernel: "RealVibeKernel"):
         super().__init__(kernel)
-        self._root = Path(".")
-        self._config = self._load_config()
-        self._panels = []
-        self._discover_panels()
+        self.kernel = kernel
+        self._root = Path(".")  # Keep _root as it's used by _load_config and _render_work_sections
+        self._panels: List[Any] = []
+        self._panels_loaded = False
+        self._config: Dict[str, Any] = {}  # Initialize _config here
+
+        # NOTE: Do NOT call _discover_panels() here.
+        # Context (root path) is injected AFTER instantiation by InterfacePlugin.
+        # We must load panels lazily.
 
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from config/opus.yaml."""
@@ -72,7 +77,7 @@ class OpusRenderer(BaseRenderer):
         base_dir = getattr(self, "_root_path", Path(__file__).parent)
         panels_dir = base_dir / "panels"
 
-        logger.debug(f"Discovering panels in {panels_dir}")
+        logger.info(f"Discovering panels in {panels_dir} (exists: {panels_dir.exists()})")
 
         panels, metadata = PanelLoader.discover_and_load(scan_paths=[panels_dir], kernel=self.kernel)
 
@@ -85,8 +90,9 @@ class OpusRenderer(BaseRenderer):
                 # ERROR BOUNDARY: Log but don't crash the renderer
                 logger.error(f"Panel {name} failed to load: {meta.error if meta else 'unknown'}")
                 # We could add a broken panel placeholder here if desired
-        wanted = {"verification", "code_health"}
-        self._panels = [p for p in self._panels if p.panel_id in wanted]
+                # Error placeholder?
+                pass
+
         logger.info(f"[OPUS] Loaded {len(self._panels)} panels")
 
     def render(self) -> None:
@@ -95,6 +101,13 @@ class OpusRenderer(BaseRenderer):
 
     def generate_content(self) -> str:
         """Generate OPUS.md content - CLEAN and FOCUSED."""
+        if not self._panels_loaded:
+            # Lazy load: Ensure we have the injected root path
+            self._discover_panels()
+            self._panels_loaded = True
+            # Also reload config now that root might be set/changed
+            self._config = self._load_config()
+
         lines = []
 
         # 1. Header with philosophy + harness task
