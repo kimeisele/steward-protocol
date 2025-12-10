@@ -164,7 +164,19 @@ USER WRITES "status" IN ENVOY.md
     | - Response: "Done" (WRONG!)     |
     | - Actual output: MISSING        |
     +---------------------------------+
-```
+
+---
+
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| P3 Foundation | ✅ | `setup/setup_project.py` |
+| Dependencies | ✅ | `pyproject.toml` |
+
+## Implementation
+
+The `setup` directory contains all foundation repair scripts. `pyproject.toml` has been standardized to use `project.scripts` for CLI entry points.
 
 ---
 
