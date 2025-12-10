@@ -34,6 +34,20 @@ config:
 
 ---
 
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Kernel Locked | ✅ | `KERNEL_IS_LOCKED` constant in `kernel_impl.py` |
+| Pre-commit Hook | ✅ | `.pre-commit-config.yaml` rule |
+| No New Features | ✅ | Manual verification of recent commits |
+
+## Implementation
+
+The kernel is now strictly limited to core orchestration logic. All new features are implemented as plugins.
+
+---
+
 ## Protection Mechanism
 
 Pre-commit hook in `.pre-commit-config.yaml`:

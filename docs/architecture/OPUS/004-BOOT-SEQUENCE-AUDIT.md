@@ -8,15 +8,15 @@
 files:
   - path: vibe_core/kernel_impl.py
     required: true
-  - path: vibe_core/loaders/plugin_loader.py
+  - path: vibe_core/plugin_loader.py
     required: true
   - path: tests/integration/test_kernel_boot.py
     required: true
 wiring:
   - pattern: "PluginLoader"
-    in: vibe_core/loaders/plugin_loader.py
+    in: vibe_core/plugin_loader.py
   - pattern: "discover"
-    in: vibe_core/loaders/plugin_loader.py
+    in: vibe_core/plugin_loader.py
   - pattern: "on_boot"
     in: vibe_core/kernel_impl.py
 absent:
@@ -38,6 +38,20 @@ The Steward Protocol kernel uses a **plugin-first architecture** where most func
 4. **Kernel `boot()`**: Register manifests, start scheduler
 
 This is **clean architecture** but has some **hidden coupling** worth documenting.
+
+---
+
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Plugin Loading | ✅ | `vibe_core/plugin_loader.py` |
+| Boot Sequence | ✅ | `vibe_core/kernel_impl.py` |
+| Integration Tests | ✅ | `tests/integration/test_kernel_boot.py` |
+
+## Implementation
+
+The boot sequence is implemented in `RealVibeKernel.boot()` which orchestrates the loading of plugins via `PluginLoader`. This ensures a predictable, priority-based initialization order.
 
 ---
 
