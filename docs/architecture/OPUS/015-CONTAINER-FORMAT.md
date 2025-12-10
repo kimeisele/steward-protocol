@@ -16,9 +16,14 @@ tests:
   - tests/unit/test_container_loader.py
   - tests/integration/test_container_integrity.py
 wiring:
-  - pattern: "ContainerMounter"
+  - pattern: "class ContainerMounter"
     in: vibe_core/loaders/container_loader.py
-  - pattern: "inspect|mount"
+  - pattern: "def inspect|def mount"
+    in: vibe_core/loaders/container_loader.py
+absent:
+  - pattern: "TODO.*crypto"
+    in: vibe_core/loaders/container_loader.py
+  - pattern: "raise NotImplementedError"
     in: vibe_core/loaders/container_loader.py
 config:
   - section: opus.verification
