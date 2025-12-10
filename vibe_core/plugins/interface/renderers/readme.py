@@ -61,7 +61,8 @@ class ReadmeRenderer(BaseRenderer):
             if pyproject_path.exists():
                 with open(pyproject_path) as f:
                     data = tomlkit.load(f)
-                self._project_data = dict(data.get("project", {}))
+                # Recursively convert tomlkit objects to plain Python types
+                self._project_data = self._to_plain_dict(data.get("project", {}))
                 logger.debug(f"Loaded project data: {self._project_data.get('name')}")
             else:
                 logger.warning("pyproject.toml not found")
@@ -80,6 +81,16 @@ class ReadmeRenderer(BaseRenderer):
         except Exception as e:
             logger.error(f"Failed to load pyproject.toml: {e}")
             self._project_data = {}
+
+    def _to_plain_dict(self, obj: Any) -> Any:
+        """Recursively convert tomlkit objects to plain Python types."""
+        if isinstance(obj, dict):
+            return {k: self._to_plain_dict(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._to_plain_dict(item) for item in obj]
+        else:
+            # Convert tomlkit primitives (String, Integer, etc.) to Python types
+            return obj.unwrap() if hasattr(obj, "unwrap") else obj
 
     def generate_content(self) -> Optional[str]:
         """Generate README.md content (UNIFIED UI pattern)."""
