@@ -1,9 +1,39 @@
 # OPUS-018: Senior Security Audit - Verified Findings
 
-> **Status**: 📋 RESEARCH COMPLETE
+> **Status**: ✅ ADDRESSED (see OPUS-019)
 > **Date**: 2025-12-10
 > **Author**: Antigravity (Senior Architect Mode)
 > **Trigger**: OPUS senior feedback requiring code-level verification
+> **Resolution**: P0 items fixed in OPUS-019
+
+<!-- @HARNESS
+files:
+  - path: steward/crypto.py
+    required: true
+  - path: vibe_core/ledger.py
+    required: true
+  - path: vibe_core/loaders/container_loader.py
+    required: true
+  - path: vibe_core/governance/invariants.py
+    required: true
+tests:
+  - tests/integration/test_container_integrity.py
+  - tests/unit/test_crypto_verification.py
+wiring:
+  - pattern: "NIST256p"
+    in: steward/crypto.py
+  - pattern: "_verify_signature"
+    in: vibe_core/loaders/container_loader.py
+  - pattern: "verify_chain_integrity"
+    in: vibe_core/ledger.py
+  - pattern: "InvariantChecker"
+    in: vibe_core/plugins/tools/plugin_main.py
+absent:
+  - pattern: "hmac\\.new"
+    in: vibe_core/cartridges/system/herald/tools/identity_tool.py
+  - pattern: "ssl=False"
+    in: vibe_core/gateway/api.py
+-->
 
 ---
 
