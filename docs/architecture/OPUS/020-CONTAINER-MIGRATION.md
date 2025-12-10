@@ -83,7 +83,7 @@ if is_new_container and not is_old_container:
 │  │   └── ...                                                    │
 │  └── ...                                                        │
 │                                                                 │
-│  $ python -m vibe_core.cli boot                                 │
+│  $ python boot.py boot                                 │
 │  → Loads from folders directly (no build step)                  │
 └─────────────────────────────────────────────────────────────────┘
                             │
@@ -111,7 +111,7 @@ if is_new_container and not is_old_container:
 │  ├── tools.vibe          ← Container (LOADED) ✅                │
 │  └── ...                                                        │
 │                                                                 │
-│  $ python -m vibe_core.cli boot                                 │
+│  $ python boot.py boot                                 │
 │  → "🆙 Upgrading interface to Container (shadows folder)"       │
 │  → Loads from .vibe containers with ECDSA verification          │
 └─────────────────────────────────────────────────────────────────┘
@@ -198,7 +198,7 @@ This would enable:
 
 ```bash
 # Boot from dist/ containers only
-VIBE_PLUGIN_PATH=dist/plugins python -m vibe_core.cli boot
+VIBE_PLUGIN_PATH=dist/plugins python boot.py boot
 ```
 
 ---
@@ -259,7 +259,7 @@ unzip -p test.vibe SIGNATURE.sig | python -m json.tool
 
 # Test shadowing (place .vibe next to folder)
 cp test.vibe vibe_core/plugins/interface.vibe
-python -m vibe_core.cli boot
+python boot.py boot
 # Look for: "🆙 Upgrading interface to Container (shadows folder)"
 
 # Clean up
