@@ -35,6 +35,9 @@ class NetworkGateway:
         if static_dir.exists():
             self.app.router.add_static("/static", static_dir)
 
+        # Phase 19: Federation routes
+        self._setup_federation_routes()
+
     async def start(self):
         """Start the API server non-blocking."""
         try:
@@ -83,3 +86,97 @@ class NetworkGateway:
             return web.json_response(status, dumps=lambda x: json.dumps(x, default=str))
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
+
+    # =========================================================================
+    # Phase 19: Federation (Seed List API)
+    # =========================================================================
+
+    def _setup_federation_routes(self):
+        """Register federation API routes."""
+        self.app.router.add_get("/api/v1/federation/peers", self.handle_list_peers)
+        self.app.router.add_post("/api/v1/federation/peers", self.handle_add_peer)
+        self.app.router.add_delete("/api/v1/federation/peers/{peer_id}", self.handle_remove_peer)
+        self.app.router.add_post("/api/v1/federation/forward/{peer_id}", self.handle_forward)
+
+    async def handle_list_peers(self, request):
+        """GET /api/v1/federation/peers - List all registered peers."""
+        try:
+            peers = self.prakriti.machine.list_peers()
+            return web.json_response({"peers": peers})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_add_peer(self, request):
+        """POST /api/v1/federation/peers - Add a peer to seed list."""
+        try:
+            data = await request.json()
+            peer_id = data.get("peer_id")
+            url = data.get("url")
+            trust_level = data.get("trust_level", 1)
+
+            if not peer_id or not url:
+                return web.json_response({"error": "Missing peer_id or url"}, status=400)
+
+            success = self.prakriti.machine.add_peer(peer_id, url, trust_level)
+            if success:
+                return web.json_response({"status": "registered", "peer_id": peer_id, "url": url})
+            else:
+                return web.json_response({"error": "Failed to add peer"}, status=500)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_remove_peer(self, request):
+        """DELETE /api/v1/federation/peers/{peer_id} - Remove a peer."""
+        try:
+            peer_id = request.match_info.get("peer_id")
+            success = self.prakriti.machine.remove_peer(peer_id)
+            if success:
+                return web.json_response({"status": "removed", "peer_id": peer_id})
+            else:
+                return web.json_response({"error": "Failed to remove peer"}, status=500)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def handle_forward(self, request):
+        """
+        POST /api/v1/federation/forward/{peer_id}
+        Forward a request to a remote peer.
+
+        Body: {"path": "/api/v1/health", "method": "GET", "payload": {...}}
+        """
+        import aiohttp as aiohttp_client  # local import to avoid namespace collision
+
+        peer_id = request.match_info.get("peer_id")
+        peer = self.prakriti.machine.get_peer(peer_id)
+
+        if not peer:
+            return web.json_response({"error": f"Peer '{peer_id}' not found"}, status=404)
+
+        try:
+            data = await request.json()
+            path = data.get("path", "/api/v1/health")
+            method = data.get("method", "GET").upper()
+            payload = data.get("payload")
+
+            target_url = f"{peer['url'].rstrip('/')}{path}"
+            logger.info(f"[FEDERATION] Forwarding {method} to {target_url}")
+
+            # TODO: Add SSL verification options for production
+            async with aiohttp_client.ClientSession() as session:
+                if method == "GET":
+                    async with session.get(target_url, ssl=False) as resp:
+                        result = await resp.json()
+                elif method == "POST":
+                    async with session.post(target_url, json=payload, ssl=False) as resp:
+                        result = await resp.json()
+                else:
+                    return web.json_response({"error": f"Unsupported method: {method}"}, status=400)
+
+            # Update last_seen
+            self.prakriti.machine.update_peer_last_seen(peer_id)
+
+            return web.json_response({"peer_id": peer_id, "response": result})
+
+        except Exception as e:
+            logger.error(f"[FEDERATION] Forward failed: {e}")
+            return web.json_response({"error": str(e)}, status=502)
