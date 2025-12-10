@@ -6,6 +6,30 @@
 > **Scope**: Harden existing InterfacePlugin with production-grade safety
 > **GAD-000**: Mandatory compliance - structured output, machine-parseable sections
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/interface/plugin_main.py
+    required: true
+  - path: vibe_core/plugins/interface/renderers/base.py
+    required: true
+  - path: vibe_core/plugins/interface/renderers/opus/renderer.py
+    required: true
+tests:
+  - tests/unit/test_interface_plugin.py
+wiring:
+  - pattern: "InterfacePlugin"
+    in: vibe_core/plugins/interface/plugin_main.py
+  - pattern: "BaseRenderer"
+    in: vibe_core/plugins/interface/renderers/base.py
+  - pattern: "OpusRenderer"
+    in: vibe_core/plugins/interface/renderers/opus/renderer.py
+absent:
+  - pattern: "TODO.*render"
+    in: vibe_core/plugins/interface/plugin_main.py
+config:
+  - section: interface
+  - section: renderers
+-->
 
 ---
 
