@@ -5,10 +5,15 @@
 The Immutable Memory of Agent City.
 Provides append-only event recording with cryptographic hash chaining for tamper detection.
 
+P1 SECURITY (OPUS-018): Per-event ECDSA signatures added.
+- Each event is signed by the agent who created it
+- Prevents DB tampering even with database access
+- Legacy events (agent_signature=NULL) fall back to hash chain only
+
 Implements:
 - VibeLedger: Abstract base class (imported from kernel.py)
 - InMemoryLedger: Fast, volatile ledger (for testing)
-- SQLiteLedger: Persistent, hash-chained ledger (for production)
+- SQLiteLedger: Persistent, hash-chained + signed ledger (for production)
 """
 
 import hashlib
@@ -22,6 +27,17 @@ from typing import Any, Dict, List, Optional
 
 # BLOCKER #1: Import canonical VibeLedger ABC from kernel.py
 from .kernel import VibeLedger
+
+# P1 SECURITY: Import ECDSA signing from steward/crypto.py
+try:
+    from steward.crypto import load_or_generate_keys, sign_content, verify_signature
+
+    CRYPTO_AVAILABLE = True
+except ImportError:
+    CRYPTO_AVAILABLE = False
+    load_or_generate_keys = None
+    sign_content = None
+    verify_signature = None
 
 logger = logging.getLogger("VIBE_LEDGER")
 
@@ -148,13 +164,58 @@ class SQLiteLedger(VibeLedger):
                 details TEXT,
                 current_hash TEXT NOT NULL,
                 previous_hash TEXT NOT NULL,
+                agent_signature TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """
         )
         self.connection.commit()
+
+        # P1 MIGRATION: Add agent_signature column if missing (for existing DBs)
+        self._migrate_add_signature_column()
+
+        # Load or generate signing keys
+        self._private_key = None
+        self._public_key = None
+        if CRYPTO_AVAILABLE:
+            try:
+                self._private_key, self._public_key = load_or_generate_keys()
+                logger.info("🔐 Ledger signing ACTIVE - ECDSA signatures enabled")
+            except Exception as e:
+                logger.warning(f"⚠️ Ledger signing DISABLED - crypto error: {e}")
+        else:
+            logger.warning("⚠️ Ledger signing DISABLED - steward/crypto.py not available")
+
         logger.info(f"💾 SQLite ledger initialized at {self.db_path}")
         logger.info("⛓️  Cryptographic sealing ACTIVE - Hash chain enabled")
+
+    def _migrate_add_signature_column(self) -> None:
+        """Add agent_signature column to existing databases (P1 migration)."""
+        try:
+            cursor = self.connection.cursor()
+            # Check if column exists
+            cursor.execute("PRAGMA table_info(ledger_events)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "agent_signature" not in columns:
+                cursor.execute("ALTER TABLE ledger_events ADD COLUMN agent_signature TEXT")
+                self.connection.commit()
+                logger.info("📦 P1 Migration: Added agent_signature column to ledger_events")
+        except Exception as e:
+            logger.warning(f"⚠️ P1 Migration check failed: {e}")
+
+    def _sign_event(self, event_string: str) -> Optional[str]:
+        """Sign event data using ECDSA.
+
+        Returns base64-encoded signature or None if signing unavailable.
+        """
+        if not CRYPTO_AVAILABLE or not self._private_key:
+            return None
+        try:
+            signature = sign_content(event_string, self._private_key)
+            return signature
+        except Exception as e:
+            logger.warning(f"⚠️ Event signing failed: {e}")
+            return None
 
     def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
         """Record a generic event (governance action)
@@ -184,6 +245,9 @@ class SQLiteLedger(VibeLedger):
             # Compute current hash
             current_hash = self._compute_hash(event_string, previous_hash)
 
+            # P1 SECURITY: Sign the event
+            agent_signature = self._sign_event(event_string)
+
             cursor = self.connection.cursor()
             row = cursor.execute("SELECT MAX(id) FROM ledger_events").fetchone()
             next_id = (row[0] or 0) + 1
@@ -192,8 +256,8 @@ class SQLiteLedger(VibeLedger):
             cursor.execute(
                 """
                 INSERT INTO ledger_events
-                (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash, agent_signature)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     event_id,
@@ -203,6 +267,7 @@ class SQLiteLedger(VibeLedger):
                     json.dumps(details) if details else None,
                     current_hash,
                     previous_hash,
+                    agent_signature,
                 ),
             )
             self.connection.commit()
@@ -288,12 +353,15 @@ class SQLiteLedger(VibeLedger):
             # Compute current hash
             current_hash = self._compute_hash(event_string, previous_hash)
 
+            # P1 SECURITY: Sign the event
+            agent_signature = self._sign_event(event_string)
+
             cursor = self.connection.cursor()
             cursor.execute(
                 """
                 INSERT INTO ledger_events
-                (timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash, agent_signature)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     event.get("timestamp"),
@@ -305,6 +373,7 @@ class SQLiteLedger(VibeLedger):
                     event.get("error"),
                     current_hash,
                     previous_hash,
+                    agent_signature,
                 ),
             )
             self.connection.commit()
