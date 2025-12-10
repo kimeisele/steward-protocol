@@ -56,6 +56,8 @@ def build_binary():
         "--exclude-module=httplib2",
         "--exclude-module=anthropic",
         "--exclude-module=openai",
+        # === PHASE 20: Include Static Assets for Dashboard ===
+        "--add-data=vibe_core/gateway/static:vibe_core/gateway/static",
         # Hooks path (if needed)
         # "--additional-hooks-dir=hooks",
     ]
