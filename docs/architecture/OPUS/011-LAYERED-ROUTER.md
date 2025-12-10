@@ -6,6 +6,37 @@
 > **Implementation**: `vibe_core/runtime/layered_router.py`
 > **Philosophy**: LLM is a crutch. Intelligence comes from architecture.
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/runtime/layered_router.py
+    required: true
+  - path: vibe_core/runtime/unified_execution.py
+    required: true
+  - path: tests/unit/test_layered_router.py
+    required: true
+  - path: vibe_core/knowledge/graph.py
+    required: true
+  - path: vibe_core/playbook/ephemeral_storage.py
+    required: true
+tests:
+  - tests/unit/test_layered_router.py
+wiring:
+  - pattern: "LayeredRouter"
+    in: vibe_core/runtime/layered_router.py
+  - pattern: "RouteResult"
+    in: vibe_core/runtime/layered_router.py
+  - pattern: "UnifiedRouter"
+    in: vibe_core/runtime/unified_execution.py
+  - pattern: "layer1_exact"
+    in: vibe_core/runtime/layered_router.py
+  - pattern: "layer2_semantic"
+    in: vibe_core/runtime/layered_router.py
+absent:
+  - pattern: "TODO.*routing"
+    in: vibe_core/runtime/layered_router.py
+config:
+  - section: routing
+-->
 
 ---
 
