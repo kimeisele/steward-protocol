@@ -360,8 +360,12 @@ This is a temporary placeholder. The system will retry on the next render cycle.
                 # 3. Context Injection (The "Relative Path" Trap)
                 # Inject the root path so renderer knows where it lives (e.g. inside a zip)
                 if hasattr(renderer, "set_root_path") and meta.entry_path:
-                    # If entry_path is a file, use its parent. If dir, use it.
-                    root = meta.entry_path if meta.entry_path.is_dir() else meta.entry_path.parent
+                    # If entry_path is a file (e.g. .py), use its parent. If dir/container, use it directly.
+                    # Fix: is_dir() can be flaky or context-dependent. Use suffix check.
+                    root = meta.entry_path.parent if meta.entry_path.suffix == ".py" else meta.entry_path
+                    logger.info(
+                        f"DEBUG: Injecting root path for {name}: {root} (derived from source: {meta.entry_path})"
+                    )
                     renderer.set_root_path(root)
                     logger.debug(f"  Context injected for {name}: {root}")
 
