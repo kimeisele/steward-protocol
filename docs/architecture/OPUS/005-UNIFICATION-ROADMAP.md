@@ -14,9 +14,9 @@ files:
     required: true
   - path: vibe_core/runtime/unified_trace.py
     required: true
-  - path: vibe_core/loaders/plugin_loader.py
+  - path: vibe_core/plugin_loader.py
     required: true
-  - path: vibe_core/playbook/router.py
+  - path: vibe_core/runtime/layered_router.py
     required: true
   - path: vibe_core/playbook/loader.py
     required: true
@@ -84,7 +84,20 @@ Every phase completion MUST pass these GAD-000 tests:
 | **UnifiedCLI** | `cli/unified_cli.py` | Yes | ✅ COMPLETE |
 | **UnifiedTrace** | `runtime/unified_trace.py` | Yes | ✅ COMPLETE |
 
-### Remaining Work
+### Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Plugin Loader | ✅ | `vibe_core/plugin_loader.py` |
+| Router | ✅ | `vibe_core/runtime/layered_router.py` |
+
+## Implementation
+
+The unification roadmap has been largely achieved with the `vibe_core` consolidation and the removal of legacy `steward/` code.
+
+---
+
+## The Vision
 
 | Component | Problem | Priority | Status |
 |-----------|---------|----------|--------|
