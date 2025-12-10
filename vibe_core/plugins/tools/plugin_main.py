@@ -16,6 +16,12 @@ from vibe_core.plugin_protocol import HookResult, KernelPlugin
 from vibe_core.tool_discovery import ToolDiscovery
 from vibe_core.tools.tool_registry import ToolRegistry
 
+# SECURITY FIX (OPUS-018/P0.2): Import InvariantChecker for soul.yaml enforcement
+try:
+    from vibe_core.governance import InvariantChecker
+except ImportError:
+    InvariantChecker = None  # type: ignore
+
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
@@ -50,15 +56,24 @@ class ToolsPlugin(KernelPlugin):
     ) -> HookResult:
         """Initialize tool registry and discover tools."""
         try:
-            # Get auditor if available
-            auditor = getattr(kernel, "_auditor", None)
+            # SECURITY FIX (OPUS-018/P0.2): Create InvariantChecker for soul.yaml enforcement
+            invariant_checker = None
+            if InvariantChecker is not None:
+                soul_path = Path("config/soul.yaml")
+                if soul_path.exists():
+                    invariant_checker = InvariantChecker(str(soul_path))
+                    logger.info(f"🛡️ Soul Governance ACTIVE: {invariant_checker.rule_count} rules from {soul_path}")
+                else:
+                    logger.warning("⚠️ Soul Governance: config/soul.yaml not found (governance disabled)")
+            else:
+                logger.warning("⚠️ Soul Governance: InvariantChecker not available")
 
             # Get capability checker
             capability_checker = getattr(kernel, "_check_agent_capability", None)
 
-            # Create tool registry
+            # Create tool registry with InvariantChecker for soul.yaml enforcement
             self._registry = ToolRegistry(
-                invariant_checker=auditor,
+                invariant_checker=invariant_checker,
                 capability_checker=capability_checker,
                 kernel=kernel,
             )
