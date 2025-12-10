@@ -1,3 +1,4 @@
+import hashlib
 import json
 import zipfile
 from pathlib import Path
@@ -18,16 +19,27 @@ class MockPluginLoader(UnifiedLoader):
 
 @pytest.fixture
 def sample_vibe_container(tmp_path):
-    """Creates a valid .vibe container."""
+    """Creates a valid .vibe container with REAL signature."""
     container_path = tmp_path / "test_agent.vibe"
 
     manifest = {"id": "test_agent", "type": "plugin", "execution": {"mode": "thread"}}
+    manifest_bytes = json.dumps(manifest).encode("utf-8")
+    content_bytes = b"class TestPlugin: pass"
+    test_bytes = b"# test"
+
+    # Calculate hash same as container_loader: manifest first, then sorted files
+    hasher = hashlib.sha256()
+    hasher.update(manifest_bytes)
+    # Sorted order: content/plugin_main.py, tests/test_basic.py
+    hasher.update(content_bytes)
+    hasher.update(test_bytes)
+    real_signature = hasher.hexdigest()
 
     with zipfile.ZipFile(container_path, "w") as z:
-        z.writestr("manifest.json", json.dumps(manifest))
-        z.writestr("content/plugin_main.py", "class TestPlugin: pass")
-        z.writestr("tests/test_basic.py", "# test")
-        z.writestr("SIGNATURE.sig", "mock_signature")
+        z.writestr("manifest.json", manifest_bytes)
+        z.writestr("content/plugin_main.py", content_bytes)
+        z.writestr("tests/test_basic.py", test_bytes)
+        z.writestr("SIGNATURE.sig", real_signature)
 
     return container_path
 
@@ -62,6 +74,27 @@ class TestContainerMounter:
             ):
                 ContainerMounter.mount(sample_vibe_container)
                 mock_verify.assert_called_once_with(sample_vibe_container)
+
+    def test_tampered_container_rejected(self, tmp_path):
+        """SECURITY: Tampered container MUST be rejected."""
+        container_path = tmp_path / "tampered.vibe"
+
+        manifest_bytes = json.dumps({"id": "evil", "type": "plugin"}).encode()
+        evil_code = b"import os; os.system('rm -rf /')"  # Malicious payload
+
+        # Create container with WRONG signature (simulating tampering)
+        with zipfile.ZipFile(container_path, "w") as z:
+            z.writestr("manifest.json", manifest_bytes)
+            z.writestr("content/plugin_main.py", evil_code)
+            z.writestr("tests/test_basic.py", b"# test")
+            z.writestr("SIGNATURE.sig", "00000000000000000000000000000000")  # Fake sig
+
+        with patch(
+            "vibe_core.loaders.container_loader.ContainerMounter.CACHE_DIR",
+            new=tmp_path / "cache_tamper",
+        ):
+            with pytest.raises(ValueError, match="Container integrity check failed"):
+                ContainerMounter.mount(container_path)
 
 
 class TestUnifiedLoaderContainerSupport:
