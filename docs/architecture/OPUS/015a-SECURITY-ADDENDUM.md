@@ -6,6 +6,34 @@
 > **Parent**: OPUS-015 (Container Format)
 > **Trigger**: Critical audit revealing crypto infrastructure gaps
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/plugins/crypto/plugin_main.py
+    required: true
+  - path: tests/unit/test_container_loader.py
+    required: true
+  - path: tests/integration/test_container_integrity.py
+    required: true
+  - path: tests/unit/test_crypto_plugin.py
+    required: true
+  - path: scripts/pack_vibe.py
+    required: false
+tests:
+  - tests/unit/test_crypto_plugin.py
+  - tests/integration/test_container_integrity.py
+  - tests/integration/test_container_ed25519.py
+wiring:
+  - pattern: "CryptoPlugin"
+    in: vibe_core/plugins/crypto/plugin_main.py
+  - pattern: "Ed25519"
+    in: vibe_core/plugins/crypto/plugin_main.py
+absent:
+  - pattern: "TODO.*crypto"
+    in: vibe_core/plugins/crypto/plugin_main.py
+config:
+  - section: security_crypto
+-->
+
 ---
 
 ## Executive Summary

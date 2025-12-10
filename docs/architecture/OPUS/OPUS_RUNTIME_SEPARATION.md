@@ -4,6 +4,30 @@
 
 **CODE | CONFIG | RUNTIME sind nicht getrennt.**
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/cartridges/system/envoy/deterministic_executor.py
+    required: true
+  - path: vibe_core/envoy_sync.py
+    required: true
+  - path: vibe_core/runtime/playbook_router.py
+    required: true
+  - path: vibe_core/cartridges/system/envoy/cartridge_main.py
+    required: true
+tests:
+  - tests/integration/test_kernel_boot.py
+wiring:
+  - pattern: "DeterministicExecutor"
+    in: vibe_core/cartridges/system/envoy/deterministic_executor.py
+  - pattern: "EnvoySync"
+    in: vibe_core/envoy_sync.py
+absent:
+  - pattern: "TODO.*runtime"
+    in: vibe_core/cartridges/system/envoy/deterministic_executor.py
+config:
+  - section: runtime_separation
+-->
+
 ```
 AKTUELL (Spaghetti):
 ┌──────────────────────────────────────────────────────────────────┐
