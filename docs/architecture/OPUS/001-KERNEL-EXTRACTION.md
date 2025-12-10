@@ -8,6 +8,30 @@
 > **VISNU IS ETERNAL** - The kernel is complete.
 > All new features MUST be plugins. No exceptions.
 
+<!-- @HARNESS
+files:
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: .pre-commit-config.yaml
+    required: true
+wiring:
+  - pattern: "register_agent"
+    in: vibe_core/kernel_impl.py
+  - pattern: "submit_task"
+    in: vibe_core/kernel_impl.py
+  - pattern: "grant_capability"
+    in: vibe_core/kernel_impl.py
+  - pattern: "broadcast_event"
+    in: vibe_core/kernel_impl.py
+  - pattern: "get_capabilities"
+    in: vibe_core/kernel_impl.py
+absent:
+  - pattern: "TODO.*kernel"
+    in: vibe_core/kernel_impl.py
+config:
+  - section: kernel
+-->
+
 ---
 
 ## Protection Mechanism
