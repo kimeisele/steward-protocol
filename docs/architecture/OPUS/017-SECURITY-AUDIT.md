@@ -5,6 +5,27 @@
 > **Author**: Antigravity (Senior Audit Mode)
 > **Resolution**: OPERATION WATERTIGHT completed
 
+<!-- @HARNESS
+files:
+  - path: tests/unit/test_container_loader.py
+    required: true
+  - path: tests/integration/test_container_integrity.py
+    required: true
+tests:
+  - tests/unit/test_container_loader.py
+  - tests/integration/test_container_integrity.py
+wiring:
+  - pattern: "verify_container"
+    in: tests/unit/test_container_loader.py
+  - pattern: "ContainerLoader"
+    in: vibe_core/loaders/container_loader.py
+absent:
+  - pattern: "TODO.*security"
+    in: vibe_core/loaders/container_loader.py
+config:
+  - section: security
+-->
+
 ---
 
 ## ✅ RESOLVED: Container Integrity Verification
