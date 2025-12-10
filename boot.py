@@ -8,7 +8,11 @@ LAZY BOOT ARCHITECTURE:
 - Target: <0.5s for help display
 """
 
+# PyInstaller multiprocessing support (MUST be at top level)
+import multiprocessing
 import sys
+
+multiprocessing.freeze_support()
 
 # === LAZY CLI: Instant Response for Basic Commands ===
 QUICK_COMMANDS = {"--help", "-h", "help", "--version", "-V", "version"}

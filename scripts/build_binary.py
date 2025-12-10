@@ -30,6 +30,12 @@ def build_binary():
         "--hidden-import=vibe_core.plugins.monitor.plugin_main",
         "--hidden-import=sqlite3",
         "--hidden-import=yaml",
+        "--hidden-import=_yaml",  # C extension for PyYAML
+        # === FIX: Pydantic C extensions ===
+        "--hidden-import=pydantic",
+        "--hidden-import=pydantic_core",
+        "--hidden-import=pydantic_core.core_schema",
+        "--hidden-import=_decimal",
         # Exclude Source Code (Thin Kernel Philosophy)
         "--exclude-module=vibe_core.cartridges",
         "--exclude-module=knowledge",
@@ -58,6 +64,12 @@ def build_binary():
         "--exclude-module=openai",
         # === PHASE 20: Include Static Assets for Dashboard ===
         "--add-data=vibe_core/gateway/static:vibe_core/gateway/static",
+        # === BINARY FIX: Exclude dev-time bloat causing runtime crashes ===
+        "--exclude-module=setuptools",
+        "--exclude-module=pkg_resources",
+        "--exclude-module=distutils",
+        "--exclude-module=pip",
+        "--exclude-module=wheel",
         # Hooks path (if needed)
         # "--additional-hooks-dir=hooks",
     ]
