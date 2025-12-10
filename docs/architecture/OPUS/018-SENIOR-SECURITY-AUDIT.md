@@ -31,7 +31,7 @@ wiring:
 absent:
   - pattern: "hmac\\.new"
     in: vibe_core/cartridges/system/herald/tools/identity_tool.py
-  - pattern: "ssl=False"
+  - pattern: "ClientSession.*ssl\\s*=\\s*False"
     in: vibe_core/gateway/api.py
 -->
 

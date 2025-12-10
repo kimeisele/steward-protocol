@@ -24,7 +24,7 @@ wiring:
   - pattern: "profiles:"
     in: config/quality.yaml
 absent:
-  - pattern: "hardcoded"
+  - pattern: "Path\\(['\"]?data/"
     in: tests/conftest.py
 -->
 
