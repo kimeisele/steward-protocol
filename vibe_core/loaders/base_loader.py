@@ -47,6 +47,8 @@ class ItemMeta:
     config: Dict[str, Any] = field(default_factory=dict)
     loaded_successfully: bool = True
     error: Optional[str] = None
+    # OPUS-015/020: Execution mode for process isolation
+    execution_mode: str = "thread"  # "thread" | "process"
 
     def __repr__(self) -> str:
         status = "OK" if self.loaded_successfully else f"FAILED: {self.error}"
@@ -284,7 +286,9 @@ class UnifiedLoader(ABC):
 
             # PRATYAYA: Mount & Load Config
             # We mount now to access internal config if needed
-            mount_point = ContainerMounter.mount(container_path)
+            mount_result = ContainerMounter.mount(container_path)
+            # OPUS-015/020: MountResult provides execution_mode
+            mount_point = mount_result.mount_point
 
             # Load config from mounted files if available
             # (Reusing _load_config logic but pointing to mount_point)
@@ -336,19 +340,18 @@ class UnifiedLoader(ABC):
 
             elif mode == "process":
                 # STRATEGY A: Isolated Reality
-                # For now, we just log it as not fully implemented in this phase
-                # But we return metadata so it's "discovered"
-                logger.info(f"Container {item_id} requested PROCESS isolation (Pending Impl)")
+                # Mark for ProcessManager spawn at kernel level
+                logger.info(f"🔒 Container {item_id} requests PROCESS isolation")
                 return ItemMeta(
                     item_id=item_id,
                     item_type=cls.item_type,
                     manifest=manifest,
                     manifest_path=container_path,
-                    entry_path=None,  # Process mode handles entry differently
-                    entry_class=None,  # No class in this kernel
+                    entry_path=mount_point,  # ProcessManager will use this
+                    entry_class=None,  # No class - spawned in subprocess
                     config=item_config,
-                    loaded_successfully=True,  # It IS loaded as a concept
-                    error="Process mode not fully implemented yet",
+                    loaded_successfully=True,
+                    execution_mode="process",  # OPUS-015/020: Kernel reads this
                 )
 
             return ItemMeta(
@@ -360,6 +363,7 @@ class UnifiedLoader(ABC):
                 entry_class=entry_class,
                 config=item_config,
                 loaded_successfully=True if entry_class else False,
+                execution_mode=mode,  # OPUS-015/020: Usually "thread"
             )
 
         except Exception as e:

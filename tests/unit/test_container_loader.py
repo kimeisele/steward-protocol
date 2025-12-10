@@ -59,7 +59,8 @@ class TestContainerMounter:
         with patch(
             "vibe_core.loaders.container_loader.ContainerMounter.CACHE_DIR", new=sample_vibe_container.parent / "cache"
         ):
-            mount_path = ContainerMounter.mount(sample_vibe_container)
+            mount_result = ContainerMounter.mount(sample_vibe_container)
+            mount_path = mount_result.mount_point
 
             assert Path(mount_path).exists()
             assert (Path(mount_path) / "manifest.json").exists()

@@ -65,9 +65,9 @@ def test_packed_container_loads_with_mounter(mock_plugin_dir, tmp_path):
     assert meta["compliance"]["signed"] is True
 
     # Test Mounting
-    mount_point = ContainerMounter.mount(output_path)
-    assert mount_point.exists()
-    assert (mount_point / "content/plugin_main.py").exists()
+    mount_result = ContainerMounter.mount(output_path)
+    assert mount_result.mount_point.exists()
+    assert (mount_result.mount_point / "content/plugin_main.py").exists()
 
 
 def test_pack_vibe_rejects_missing_tests(mock_plugin_dir):
