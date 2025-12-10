@@ -11,9 +11,8 @@ Success criteria:
 3. No simulation mode warnings appear
 """
 
-import pytest
 
-from steward.crypto import ensure_keys_exist, sign_content
+from steward.crypto import ensure_keys_exist, load_or_generate_keys, sign_content
 from vibe_core.cartridges.system.archivist.tools.verifier_tool import VerifierTool
 
 
@@ -25,6 +24,9 @@ def test_real_crypto_verification():
 
     # Ensure keys exist
     ensure_keys_exist()
+
+    # Load keys for signing
+    private_key, public_key = load_or_generate_keys()
 
     # Initialize verifier
     verifier = VerifierTool()
@@ -38,7 +40,7 @@ def test_real_crypto_verification():
     print("-" * 40)
 
     content = "This is a test message from HERALD_Agent"
-    signature = sign_content(content)
+    signature = sign_content(content, private_key)
 
     print(f"Content: {content}")
     print(f"Signature: {signature[:50]}...")

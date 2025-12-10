@@ -27,7 +27,7 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 RELEASE_NAME = f"VibeOS_v{VERSION}"
 
 

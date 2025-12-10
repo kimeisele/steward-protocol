@@ -1,19 +1,306 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>VibeOS Gateway</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeOS Dashboard</title>
     <style>
-        body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
-        h1 { color: #fff; }
-        .status { border: 1px solid #333; padding: 10px; margin-top: 20px; }
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --border: #2a2a3a;
+            --accent: #00ff88;
+            --accent-dim: #00aa5580;
+            --text: #e0e0e0;
+            --text-dim: #888;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--accent);
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            margin-bottom: 24px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .card h2 {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+        }
+
+        .stat-value {
+            color: var(--text);
+            font-weight: bold;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-online {
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        .status-offline {
+            background: #ff4444;
+        }
+
+        .peer-list {
+            list-style: none;
+        }
+
+        .peer-list li {
+            padding: 8px;
+            margin: 4px 0;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .peer-list li .url {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+
+        .empty {
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .form-row input {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+        }
+
+        .form-row button {
+            padding: 8px 16px;
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .form-row button:hover {
+            background: #00dd77;
+        }
+
+        #error {
+            color: #ff6666;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
+
 <body>
-    <h1>VibeOS Gateway</h1>
-    <div class="status">
-        <p>System: ONLINE</p>
-        <p>Phase: 18 (Sangha)</p>
-        <p>API: /api/v1/health</p>
+    <h1>⚡ VibeOS Dashboard</h1>
+    <p class="subtitle">Phase 20: The Mirror</p>
+
+    <div class="grid">
+        <!-- Health Card -->
+        <div class="card">
+            <h2>🏥 System Health</h2>
+            <div class="stat">
+                <span class="stat-label">Status</span>
+                <span class="stat-value" id="health-status"><span class="status-dot"></span>Loading...</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Phase</span>
+                <span class="stat-value" id="health-phase">-</span>
+            </div>
+        </div>
+
+        <!-- Kernel State Card -->
+        <div class="card">
+            <h2>🧠 Kernel State</h2>
+            <div class="stat">
+                <span class="stat-label">Kernel</span>
+                <span class="stat-value" id="kernel-status">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Agents</span>
+                <span class="stat-value" id="kernel-agents">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Queue</span>
+                <span class="stat-value" id="kernel-queue">-</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Uptime</span>
+                <span class="stat-value" id="kernel-uptime">-</span>
+            </div>
+        </div>
+
+        <!-- Federation Card -->
+        <div class="card">
+            <h2>🌐 Federation Peers</h2>
+            <ul class="peer-list" id="peer-list">
+                <li class="empty">No peers registered</li>
+            </ul>
+            <div class="form-row">
+                <input type="text" id="peer-id" placeholder="Peer ID (e.g., node-beta)">
+                <input type="text" id="peer-url" placeholder="URL (e.g., http://192.168.1.5:8000)">
+                <button onclick="addPeer()">Add</button>
+            </div>
+            <div id="error"></div>
+        </div>
     </div>
+
+    <script>
+        const API = '';  // Same origin
+
+        async function fetchHealth() {
+            try {
+                const resp = await fetch(`${API}/api/v1/health`);
+                const data = await resp.json();
+                document.getElementById('health-status').innerHTML = 
+                    `<span class="status-dot status-online"></span>${data.status.toUpperCase()}`;
+                document.getElementById('health-phase').textContent = data.phase || '-';
+            } catch (e) {
+                document.getElementById('health-status').innerHTML = 
+                    `<span class="status-dot status-offline"></span>OFFLINE`;
+            }
+        }
+
+        async function fetchState() {
+            try {
+                const resp = await fetch(`${API}/api/v1/state`);
+                const data = await resp.json();
+                if (data.kernel) {
+                    document.getElementById('kernel-status').textContent = data.kernel.status || '-';
+                    document.getElementById('kernel-agents').textContent = data.kernel.agent_count ?? '-';
+                    document.getElementById('kernel-queue').textContent = data.kernel.queue_pending ?? '-';
+                    const uptime = data.kernel.uptime_seconds;
+                    document.getElementById('kernel-uptime').textContent = uptime ? `${Math.round(uptime)}s` : '-';
+                }
+            } catch (e) {
+                console.error('State fetch error:', e);
+            }
+        }
+
+        async function fetchPeers() {
+            try {
+                const resp = await fetch(`${API}/api/v1/federation/peers`);
+                const data = await resp.json();
+                const list = document.getElementById('peer-list');
+                if (data.peers && data.peers.length > 0) {
+                    list.innerHTML = data.peers.map(p => 
+                        `<li><strong>${p.peer_id}</strong><br><span class="url">${p.url}</span></li>`
+                    ).join('');
+                } else {
+                    list.innerHTML = '<li class="empty">No peers registered</li>';
+                }
+            } catch (e) {
+                console.error('Peers fetch error:', e);
+            }
+        }
+
+        async function addPeer() {
+            const peerId = document.getElementById('peer-id').value.trim();
+            const peerUrl = document.getElementById('peer-url').value.trim();
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '';
+
+            if (!peerId || !peerUrl) {
+                errorDiv.textContent = 'Both Peer ID and URL are required.';
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API}/api/v1/federation/peers`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({peer_id: peerId, url: peerUrl})
+                });
+                const data = await resp.json();
+                if (data.status === 'registered') {
+                    document.getElementById('peer-id').value = '';
+                    document.getElementById('peer-url').value = '';
+                    fetchPeers();
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to add peer.';
+                }
+            } catch (e) {
+                errorDiv.textContent = 'Network error: ' + e.message;
+            }
+        }
+
+        // Initial fetch
+        fetchHealth();
+        fetchState();
+        fetchPeers();
+
+        // Poll every 5 seconds
+        setInterval(fetchHealth, 5000);
+        setInterval(fetchState, 5000);
+        setInterval(fetchPeers, 10000);
+    </script>
 </body>
+
 </html>
