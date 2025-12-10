@@ -9,13 +9,18 @@ from typing import Any, Dict, Union
 
 # P2 SECURITY: Import ECDSA verification from steward/crypto.py
 try:
-    from steward.crypto import load_or_generate_keys, verify_signature
+    from steward.crypto import (
+        is_fingerprint_trusted,
+        load_or_generate_keys,
+        verify_signature,
+    )
 
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
     verify_signature = None
     load_or_generate_keys = None
+    is_fingerprint_trusted = None
 
 logger = logging.getLogger("CONTAINER.MOUNTER")
 
@@ -277,21 +282,36 @@ class ContainerMounter:
             # Load our public key to check if we're the signer
             _, our_public_key = load_or_generate_keys()
 
-            # P2 PERMISSIVE: Accept ANY valid signature (future: add keyring trust model)
-            # For now, just verify the signature is mathematically valid
-            is_valid = verify_signature(stored_hash, ecdsa_signature, our_public_key)
+            # Verify the signature is mathematically valid with our key
+            is_our_signature = verify_signature(stored_hash, ecdsa_signature, our_public_key)
 
-            if not is_valid:
-                # Signature doesn't match our key - could be from different author
-                # P2 PERMISSIVE: Log warning but accept (future: check keyring)
-                logger.warning(f"⚠️ Container signed by different key: {signer} (accepting in permissive mode)")
-                # TODO P3: Check signer against trusted keyring
+            if is_our_signature:
+                logger.info(f"✅ Container verified (signed by US): {container_path.name}")
                 return True
 
-            logger.info(f"✅ Container ECDSA verified: {container_path.name} signed by {signer}")
-            return True
+            # Not our signature - check if signer is in trusted keyring
+            # OPUS-015a: Keyring Trust Model
+            strict_mode = os.environ.get("STEWARD_STRICT_MODE", "false").lower() == "true"
 
+            if is_fingerprint_trusted and is_fingerprint_trusted(signer):
+                logger.info(f"✅ Container verified (trusted signer: {signer}): {container_path.name}")
+                return True
+
+            # Signer not trusted
+            if strict_mode:
+                logger.error(f"🔴 UNTRUSTED SIGNER: {signer} - Container rejected in strict mode")
+                raise ValueError(f"Container signed by UNTRUSTED key: {signer}")
+            else:
+                logger.warning(
+                    f"⚠️ Container signed by UNTRUSTED key: {signer} "
+                    f"(allowing in dev mode - set STEWARD_STRICT_MODE=true for production)"
+                )
+                return True
+
+        except ValueError:
+            # Re-raise ValueError (untrusted signer in strict mode)
+            raise
         except Exception as e:
             logger.warning(f"⚠️ ECDSA verification error: {e} - hash verified, signature check failed")
-            # P2 PERMISSIVE: Accept if hash matches even if signature check fails
+            # Allow if hash matches even if signature check fails (dev mode graceful degradation)
             return True
