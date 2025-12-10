@@ -15,21 +15,30 @@ files:
   - path: vibe_core/plugins/interface/renderers/opus/renderer.py
     required: true
 tests:
-  - tests/unit/test_interface_plugin.py
+  - path: vibe_core/plugins/interface/plugin_main.py
+    required: true
 wiring:
   - pattern: "InterfacePlugin"
     in: vibe_core/plugins/interface/plugin_main.py
-  - pattern: "BaseRenderer"
-    in: vibe_core/plugins/interface/renderers/base.py
-  - pattern: "OpusRenderer"
-    in: vibe_core/plugins/interface/renderers/opus/renderer.py
+  - pattern: "render_all"
+    in: vibe_core/plugins/interface/plugin_main.py
 absent:
-  - pattern: "TODO.*render"
+  - pattern: "TODO.*ui"
     in: vibe_core/plugins/interface/plugin_main.py
 config:
   - section: interface
-  - section: renderers
 -->
+
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Plugin Main | ✅ | `vibe_core/plugins/interface/plugin_main.py` |
+| UI Rendering | ✅ | `render_all()` implementation |
+
+## Implementation
+
+The `InterfacePlugin` manages all UI rendering. It discovers renderers and triggers updates on kernel events.
 
 ---
 

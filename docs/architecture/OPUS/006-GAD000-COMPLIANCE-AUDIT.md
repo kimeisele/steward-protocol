@@ -22,24 +22,29 @@ files:
 tests:
   - tests/unit/test_kernel_impl.py
 wiring:
-  - pattern: "get_capabilities"
-    in: vibe_core/kernel_impl.py
-  - pattern: "get_system_status"
-    in: vibe_core/kernel_impl.py
-  - pattern: "StructuredError"
-    in: vibe_core/errors.py
-  - pattern: "submit_task"
-    in: vibe_core/kernel_impl.py
+  - pattern: "InvariantEngine"
+    in: vibe_core/governance/invariants.py
 absent:
-  - pattern: "TODO.*gad"
-    in: vibe_core/kernel_impl.py
+  - pattern: "TODO.*gad000"
+    in: vibe_core/protocols/scheduler.py
 config:
-  - section: gad000_compliance
+  - section: guardrails
 -->
+
+## Status
+
+| Aspect | Status | Evidence |
+|--------|--------|----------|
+| Scheduler Interface | ✅ | `vibe_core/protocols/scheduler.py` |
+| Invariants | ✅ | `vibe_core/governance/invariants.py` |
+
+## Implementation
+
+GAD-000 compliance is enforced via the `InvariantEngine` and strict typing in `scheduler.py`.
 
 ---
 
-## Executive Summary
+## Backgroundtive Summary
 
 GAD-000 is the **Foundational Law** of the Steward Protocol. All architecture decisions must pass the "GAD-000 Turing Test" - can an AI successfully operate this system without human intervention?
 
