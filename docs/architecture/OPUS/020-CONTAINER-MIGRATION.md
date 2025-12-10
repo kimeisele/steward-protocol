@@ -212,9 +212,9 @@ VIBE_PLUGIN_PATH=dist/plugins python -m vibe_core.cli boot
 - [x] Shadowing logic works (container > folder)
 - [x] Signature verification on mount
 
-### Phase 2: Build Pipeline (TODO)
-- [ ] Create `scripts/build_all_containers.sh`
-- [ ] Add to Makefile: `make containers`
+### Phase 2: Build Pipeline (DONE)
+- [x] Create `scripts/build_all_containers.sh`
+- [x] Add to Makefile: `make containers`
 - [ ] CI/CD: Build containers on merge to main
 
 ### Phase 3: Configuration (TODO - P3)
