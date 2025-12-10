@@ -49,7 +49,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Project root
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # vibe_core/cli/legacy.py -> project root
 
 # Critical paths
 LINEAGE_DB = Path("/tmp/vibe_os/kernel/lineage.db")
@@ -515,7 +515,7 @@ class StewardCLI:
                 kernel_process = subprocess.Popen(
                     [
                         sys.executable,
-                        str(PROJECT_ROOT / "scripts" / "stress_test_city.py"),
+                        str(PROJECT_ROOT / "scripts" / "boot_kernel.py"),
                     ],
                     stdout=log_file,
                     stderr=subprocess.STDOUT,
