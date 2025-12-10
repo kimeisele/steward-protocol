@@ -1,15 +1,36 @@
 #!/usr/bin/env python3
 """
 Holon Builder - Pack Vibe Containers (.vibe)
+
+P2 SECURITY (OPUS-018): Real ECDSA signing added.
+- SIGNATURE.sig now contains JSON with hash + ECDSA signature
+- Requires .steward/keys/ for signing (or creates new keys)
+- Backward compatible: unsigned containers warn, signed containers verify
 """
 
 import argparse
 import hashlib
+import json
 import logging
 import sys
 import zipfile
 from pathlib import Path
 from typing import Optional
+
+# P2 SECURITY: Import ECDSA signing from steward/crypto.py
+try:
+    from steward.crypto import (
+        get_public_key_fingerprint,
+        load_or_generate_keys,
+        sign_content,
+    )
+
+    CRYPTO_AVAILABLE = True
+except ImportError:
+    CRYPTO_AVAILABLE = False
+    load_or_generate_keys = None
+    sign_content = None
+    get_public_key_fingerprint = None
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("PACKER")
@@ -100,10 +121,36 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
         # Add all files
         add_recursive(source_dir)
 
-        # 2. SIGNATURE
-        signature = hasher.hexdigest()
-        logger.info(f"  ✍️  Signing Holon: {signature[:8]}...")
-        z.writestr("SIGNATURE.sig", signature)
+        # 2. SIGNATURE - P2 SECURITY: Real ECDSA signing
+        content_hash = hasher.hexdigest()
+
+        if CRYPTO_AVAILABLE:
+            try:
+                # Load or generate signing keys
+                private_key, public_key = load_or_generate_keys()
+
+                # Sign the hash (not the raw content - hash is deterministic proof)
+                ecdsa_signature = sign_content(content_hash, private_key)
+                signer_fingerprint = get_public_key_fingerprint(public_key)
+
+                # Create structured signature
+                signature_data = {
+                    "version": 2,  # v2 = ECDSA signed
+                    "hash": content_hash,
+                    "signature": ecdsa_signature,
+                    "signer": signer_fingerprint,
+                }
+                signature_content = json.dumps(signature_data, indent=2)
+                logger.info(f"  🔐 ECDSA Signed: {content_hash[:8]}... by {signer_fingerprint}")
+            except Exception as e:
+                logger.warning(f"  ⚠️ ECDSA signing failed, using hash only: {e}")
+                signature_content = content_hash  # Fallback to v1 (hash only)
+        else:
+            # Fallback: unsigned (hash only, v1 format)
+            logger.warning("  ⚠️ No crypto available, container will be UNSIGNED (hash only)")
+            signature_content = content_hash
+
+        z.writestr("SIGNATURE.sig", signature_content)
 
     logger.info("✅ Holon successfully packed.")
     return output_path
