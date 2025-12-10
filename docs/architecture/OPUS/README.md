@@ -64,7 +64,7 @@ absent:
 | [015](015-CONTAINER-FORMAT.md) | Container Format | `.vibe` container spec |
 | [015a](015a-SECURITY-ADDENDUM.md) | Security Addendum | P0 security fixes |
 
-### Operations (016-021)
+### Operations (016-022)
 | Doc | Title | Focus |
 |-----|-------|-------|
 | [016](016-RUNTIME-SEPARATION.md) | Runtime Separation | CODE/CONFIG/RUNTIME |
@@ -73,6 +73,7 @@ absent:
 | [019](019-P0-RELEASE-MILESTONE.md) | P0 Release | Release checklist |
 | [020](020-CONTAINER-MIGRATION.md) | Container Migration | Full container strategy |
 | [021](021-TEST-ARCHITECTURE.md) | Test Architecture | Test system design |
+| [022](022-KERNEL-SCALING.md) | Kernel Scaling | Ephemeral cities, scheduler, federation |
 
 ---
 
