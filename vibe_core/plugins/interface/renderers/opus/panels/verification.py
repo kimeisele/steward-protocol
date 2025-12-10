@@ -310,8 +310,6 @@ class VerificationPanel(BasePanel):
                 content = target_path.read_text()
                 matches = list(re.finditer(pattern, content))
                 if matches:
-                    # Find line numbers for violations
-                    lines = content.split("\n")
                     for match in matches:
                         line_num = content[: match.start()].count("\n") + 1
                         violations.append(f"{target_file}:{line_num} matches '{pattern}'")
