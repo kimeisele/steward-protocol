@@ -9,7 +9,6 @@ Config-driven from config/interface.yaml (Phoenix Config).
 Fractal: Custom agents can register their own renderers!
 """
 
-import importlib
 import logging
 import os
 import subprocess
@@ -319,64 +318,55 @@ This is a temporary placeholder. The system will retry on the next render cycle.
         logger.info("InterfacePlugin shutting down")
 
     def _load_renderers(self) -> None:
-        """Dynamically load renderers from the renderers/ directory."""
-        renderers_pkg = "vibe_core.plugins.interface.renderers"
-        renderers_path = Path(__file__).parent / "renderers"
+        """
+        Load renderers using RendererLoader - VEDA-4 compliant.
 
-        if not renderers_path.exists():
-            logger.warning(f"Renderers directory not found: {renderers_path}")
-            return
+        Supports:
+        - Config Injection (Pratyaya)
+        - Context Injection (for Containers)
+        - Registry Metadata (GAD-000)
+        """
+        from vibe_core.plugins.interface.renderer_loader import RendererLoader
 
-        # Get enabled renderers from config
-        enabled_renderers = {}
-        if self._interface_config:
-            enabled_renderers = self._interface_config.get_enabled_renderers()
+        logger.info("Loading renderers via RendererLoader...")
 
-        # Find all renderer directories and modules
-        for item in renderers_path.iterdir():
-            if item.name.startswith("_") or item.name == "base.py":
-                continue
-
-            # Determine renderer name
-            if item.is_dir() and (item / "renderer.py").exists():
-                name = item.name
-                module_path = f"{renderers_pkg}.{name}.renderer"
-            elif item.is_file() and item.suffix == ".py":
-                name = item.stem
-                module_path = f"{renderers_pkg}.{name}"
-            else:
-                continue
-
-            # Check if enabled in config
-            if enabled_renderers and name not in enabled_renderers:
-                logger.debug(f"Skipping disabled renderer: {name}")
-                continue
-
-            try:
-                module = importlib.import_module(module_path)
-
-                # Find the renderer class DEFINED in this module (not imported)
-                renderer_class = None
-                for attr_name in dir(module):
-                    attr = getattr(module, attr_name)
-                    if (
-                        isinstance(attr, type)
-                        and issubclass(attr, BaseRenderer)
-                        and attr is not BaseRenderer
-                        and attr.__module__ == module.__name__  # Must be defined HERE
-                    ):
-                        renderer_class = attr
-                        break
-
-                if renderer_class:
-                    self._renderers[name] = renderer_class(self._kernel)
-                    self._last_render[name] = 0  # Initialize last render time
-                    logger.debug(f"Loaded renderer: {name}")
+        # 1. Config Injection: Pass only the renderers config section
+        renderer_config = {}
+        if self._interface_config and hasattr(self._interface_config, "renderers"):
+            # If Pydantic model, it behaves like dict access for renderers field potentially?
+            # InterfaceConfig.renderers is a Dict[str, RendererConfig]
+            # UnifiedLoader expects Dict[str, Any]
+            # Convert configs to dicts
+            for name, r_conf in self._interface_config.renderers.items():
+                if hasattr(r_conf, "dict"):
+                    renderer_config[name] = r_conf.dict()
+                elif hasattr(r_conf, "model_dump"):
+                    renderer_config[name] = r_conf.model_dump()
                 else:
-                    logger.warning(f"No BaseRenderer subclass found in {module_path}")
+                    renderer_config[name] = r_conf
 
-            except Exception as e:
-                logger.error(f"Failed to load renderer '{name}': {e}")
+        # 2. Discovery
+        renderers, metadata = RendererLoader.discover_and_load(config=renderer_config, kernel=self._kernel)
+
+        self._renderers = {}
+        self._renderer_metadata = {}  # NEW: Registry Pattern
+
+        for name, renderer in renderers.items():
+            meta = metadata.get(name)
+            if meta and meta.loaded_successfully:
+                self._renderers[name] = renderer
+                self._renderer_metadata[name] = meta
+
+                # 3. Context Injection (The "Relative Path" Trap)
+                # Inject the root path so renderer knows where it lives (e.g. inside a zip)
+                if hasattr(renderer, "set_root_path") and meta.entry_path:
+                    # If entry_path is a file, use its parent. If dir, use it.
+                    root = meta.entry_path if meta.entry_path.is_dir() else meta.entry_path.parent
+                    renderer.set_root_path(root)
+                    logger.debug(f"  Context injected for {name}: {root}")
+
+            else:
+                logger.error(f"Renderer {name} failed: {meta.error if meta else 'unknown'}")
 
     # ==========================================================================
     # FRACTAL API - Custom Renderers
