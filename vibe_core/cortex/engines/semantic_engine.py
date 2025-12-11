@@ -22,10 +22,15 @@ import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-import numpy as np
 import yaml
+
+# Lazy import numpy (excluded in binary build for thin kernel)
+if TYPE_CHECKING:
+    import numpy as np
+else:
+    np = None  # Will be imported lazily in get_embedding_model()
 
 logger = logging.getLogger("SEMANTIC_ROUTER")
 
@@ -36,11 +41,11 @@ _model_lock = asyncio.Lock()
 
 async def get_embedding_model():
     """
-    Lazy-load sentence-transformers model.
+    Lazy-load sentence-transformers model AND numpy.
     Downloads on first use and caches in data/models.
     Thread-safe using asyncio lock.
     """
-    global _model
+    global _model, np
     if _model is not None:
         return _model
 
@@ -52,7 +57,13 @@ async def get_embedding_model():
             # Specify cache directory to avoid re-downloads
             import os
 
+            # Lazy import numpy (excluded in binary build)
+            import numpy
+
             from sentence_transformers import SentenceTransformer
+
+            # Make numpy available globally for this module
+            np = numpy
 
             os.makedirs("data/models", exist_ok=True)
             os.environ["SENTENCE_TRANSFORMERS_HOME"] = "data/models"
@@ -110,7 +121,7 @@ class SemanticRouter:
         self.rules = self._load_yaml("intents/routing_rules.yaml").get("rules", [])
 
         # Embeddings cache: concept_name -> embedding vector
-        self.embedding_cache: Dict[str, np.ndarray] = {}
+        self.embedding_cache: Dict[str, Any] = {}  # np.ndarray (numpy imported lazily)
         self.loaded = False
 
         logger.info("🧠 Semantic Router initialized (awaiting model load)")
