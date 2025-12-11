@@ -1,10 +1,10 @@
 #!/bin/bash
-# VISNU KERNEL AUTO-RESTORE
-# =========================
-# Pre-commit hook that RESTORES kernel files instead of just blocking.
-# Agent changes to kernel files literally disappear.
+# VISNU KERNEL - NUCLEAR OPTION (TOTAL LOCKDOWN)
+# ==============================================
+# Dieses Skript setzt Security Ring 0 BRUTAL auf origin/main zurück.
+# Nicht HEAD (kann polluted sein), sondern die WAHRE QUELLE.
 #
-# SECURITY RING 0 - Life, Death, and Rights (3399 LOC total)
+# SECURITY RING 0 - Code + Watchers + Laws
 #
 # Core Orchestration:
 #   - vibe_core/kernel_impl.py (1505 LOC)
@@ -16,12 +16,19 @@
 #   - vibe_core/narasimha.py (414 LOC) - Kill-Switch
 #   - vibe_core/capability_registry.py (343 LOC) - Permissions
 #   - vibe_core/bridge.py (28 LOC) - Constitution Gate
+# Governance (The Watchers):
+#   - scripts/governance/restore_kernel.sh - THIS FILE
+#   - scripts/governance/verify_kernel.py - Hash verification
+#   - scripts/governance/kernel_hashes.json - Blessed hashes
+# Infrastructure (The Laws):
+#   - .github/workflows/steward-ci.yml - The Supreme Court
+#   - .pre-commit-config.yaml - The Local Police
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
 set -e
 
-KERNEL_FILES=(
+PROTECTED_FILES=(
     # Core Orchestration
     "vibe_core/kernel_impl.py"
     "vibe_core/kernel_ops.py"
@@ -32,33 +39,47 @@ KERNEL_FILES=(
     "vibe_core/narasimha.py"
     "vibe_core/capability_registry.py"
     "vibe_core/bridge.py"
+    # Governance (The Watchers watch themselves)
+    "scripts/governance/restore_kernel.sh"
+    "scripts/governance/verify_kernel.py"
+    "scripts/governance/kernel_hashes.json"
+    # Infrastructure (The Laws)
+    ".github/workflows/steward-ci.yml"
+    ".pre-commit-config.yaml"
 )
+
+# Fetch origin/main - die WAHRE QUELLE
+git fetch origin main --depth=1 2>/dev/null || true
 
 RESTORED=0
 
-for file in "${KERNEL_FILES[@]}"; do
-    # Check if file has staged changes
-    if git diff --cached --name-only | grep -q "^${file}$"; then
-        # Restore from HEAD
-        git checkout HEAD -- "$file"
+for file in "${PROTECTED_FILES[@]}"; do
+    # Prüfen ob die Datei von origin/main abweicht (staged oder unstaged)
+    if ! git diff --quiet origin/main -- "$file" 2>/dev/null; then
+        echo "🚨 ALARM: Unerlaubte Änderung an $file"
+
+        # NUCLEAR: Überschreiben mit origin/main (nicht HEAD!)
+        git checkout origin/main -- "$file"
         git add "$file"
+
+        echo "✅ RESTORED: $file → origin/main"
         RESTORED=1
-        echo "⚡ RESTORED: $file"
     fi
 done
 
 if [ $RESTORED -eq 1 ]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║  KERNEL IS VISNU - ETERNAL AND UNCHANGING                    ║"
+    echo "║  ☢️  NUCLEAR RESET EXECUTED (TOTAL LOCKDOWN)                  ║"
     echo "║                                                              ║"
-    echo "║  Your changes to kernel files have been DISCARDED.           ║"
-    echo "║  The kernel has been restored to its eternal state.          ║"
+    echo "║  Your changes to Security Ring 0 have been OBLITERATED.     ║"
+    echo "║  Files restored from origin/main (the TRUE source).         ║"
+    echo "║                                                              ║"
+    echo "║  Protected: Code + Watchers + Laws                          ║"
+    echo "║  The kernel is VISNU. Resistance is futile.                 ║"
     echo "║                                                              ║"
     echo "║  Create a PLUGIN instead:                                    ║"
     echo "║    vibe_core/plugins/your_feature/                           ║"
-    echo "║                                                              ║"
-    echo "║  See: docs/architecture/OPUS/001-KERNEL-EXTRACTION.md        ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
 fi
