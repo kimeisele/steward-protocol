@@ -1,9 +1,9 @@
 # VISNU KERNEL - LOCKED
 
 **Status:** ✅ LOCKED (ETERNAL)
-**Last Updated:** 2025-12-09
-**Final LOC:** 1410 (Kernel is complete)
-**Protection:** Pre-commit hook blocks all changes
+**Last Updated:** 2025-12-11
+**Final LOC:** 1505 (kernel_impl.py) + 402 (plugin_protocol.py) + 381 (plugin_loader.py) = 2288 total
+**Protection:** Pre-commit auto-restore + CI hash verification
 
 > **VISNU IS ETERNAL** - The kernel is complete.
 > All new features MUST be plugins. No exceptions.
@@ -50,16 +50,20 @@ The kernel is now strictly limited to core orchestration logic. All new features
 
 ## Protection Mechanism
 
-Pre-commit hook in `.pre-commit-config.yaml`:
+Pre-commit hook in `.pre-commit-config.yaml` **AUTO-RESTORES** kernel files:
 ```yaml
 - id: kernel-is-eternal
-  name: Kernel Protection (VISNU)
-  entry: "KERNEL IS VISNU - ETERNAL..."
-  language: fail
-  files: ^vibe_core/kernel_impl\.py$
+  name: Kernel Auto-Restore (VISNU)
+  entry: scripts/governance/restore_kernel.sh
+  language: script
+  files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader)\.py$
 ```
 
+CI also runs `verify_kernel.py --verify` as backup hash check.
+
 **To bypass (emergency only):** `git commit --no-verify`
+
+See: `docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md`
 
 ---
 
@@ -104,6 +108,7 @@ def on_boot(self, kernel):
 | 2025-12-06 | ToolsPlugin | 1662 | 1553 |
 | 2025-12-09 | Final audit | 1553 | 1410 |
 | 2025-12-09 | **LOCKED** | 1410 | **ETERNAL** |
+| 2025-12-11 | Protection audit | 1505 | 1505 (no change, LOC drift discovered) |
 
 ---
 
