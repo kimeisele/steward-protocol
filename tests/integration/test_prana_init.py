@@ -14,10 +14,10 @@ from pathlib import Path
 import pytest
 
 from vibe_core.steward.agent_metadata import get_metadata_registry
-from vibe_core.steward.ashrama import Ashrama, AshramaTransition
+from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition
 from vibe_core.steward.daily_ritual import CyclePhase, DailyRitual
 from vibe_core.steward.prana_init import PranaInitializer
-from vibe_core.steward.varna import Varna, categorize_agent_by_function
+from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_function
 
 logger = logging.getLogger(__name__)
 

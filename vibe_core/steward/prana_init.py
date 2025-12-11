@@ -142,7 +142,7 @@ class PranaInitializer:
 
         try:
             from vibe_core.steward.agent_metadata import get_metadata_registry
-            from vibe_core.steward.varna import Varna
+            from vibe_core.plugins.vedic_governance.varna import Varna
 
             registry = get_metadata_registry()
 
