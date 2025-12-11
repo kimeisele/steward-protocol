@@ -203,6 +203,7 @@ class RealVibeKernel(VibeKernel):
         # Phase 3: Resource Manager
         self.resource_manager = ResourceManager()
         self._last_quota_sync = 0  # Timestamp of last credit→quota sync
+        self._last_pulse_time = 0  # Timestamp of last heartbeat pulse
 
         # Markdown UI Manager (Centralized UI Coordination)
         # self._ui_manager = MarkdownUIManager(self)  # DEPRECATED: Handled by Plugins
@@ -960,7 +961,12 @@ class RealVibeKernel(VibeKernel):
 
         task = self._scheduler.next_task()
         if not task:
-            logger.debug("📭 No tasks in queue")
+            # No tasks - but still pulse heartbeat every 5 seconds
+            import time
+
+            if time.time() - self._last_pulse_time >= 5.0:
+                self._pulse()
+                self._last_pulse_time = time.time()
             return
 
         # Get the target agent
