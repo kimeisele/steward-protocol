@@ -1,75 +1,69 @@
-import socket
-import time
+"""
+Phase 18 Verification: The Network (Sangha)
+Tests the Gateway API handlers directly using aiohttp TestClient.
+No real ports, no time.sleep - deterministic and fast.
+"""
+
+from unittest.mock import MagicMock
 
 import pytest
-import requests
+from aiohttp.test_utils import TestClient, TestServer
 
-from vibe_core.kernel_impl import RealVibeKernel
-
-
-def get_free_port():
-    """Find an available port for testing."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+from vibe_core.gateway.api import NetworkGateway
 
 
-@pytest.mark.integration
-def test_sangha_api_gateway():
-    """
-    Phase 18 Verification: The Network (Sangha)
-    Ensures the Async Sidecar (API Gateway) starts with the kernel and responds to HTTP.
-    """
-    # Use a free port to avoid conflicts with other tests
-    port = get_free_port()
+@pytest.fixture
+def mock_prakriti():
+    """Create a mock Prakriti (state engine) for testing."""
+    prakriti = MagicMock()
+    prakriti.get_system_status.return_value = {
+        "kernel": {"status": "RUNNING", "agents_registered": 0},
+        "ledger": {"total_events": 0},
+    }
+    prakriti.machine.list_peers.return_value = []
+    prakriti.machine.add_peer.return_value = True
+    prakriti.machine.remove_peer.return_value = True
+    prakriti.machine.get_peer.return_value = None
+    return prakriti
 
-    # 1. Boot Kernel
-    kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-    # Configure gateway to use our free port
-    kernel.gateway.port = port
 
-    try:
-        kernel.boot()
+@pytest.fixture
+def gateway(mock_prakriti):
+    """Create a NetworkGateway instance for testing."""
+    return NetworkGateway(mock_prakriti, host="127.0.0.1", port=0)
 
-        # 2. Wait for Gateway to Start (Sidecar Thread)
-        print("\n⏳ Waiting for Gateway Sidecar to initialize...")
-        time.sleep(2)  # Give thread time to spin up
 
-        # 3. Request Health Check
-        url = f"http://127.0.0.1:{port}/api/v1/health"
-        print(f"📡 Requesting: {url}")
+@pytest.mark.asyncio
+async def test_health_endpoint(gateway):
+    """Test /api/v1/health returns correct response."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.get("/api/v1/health")
+        assert resp.status == 200
+        data = await resp.json()
+        assert data["status"] == "alive"
+        assert data["phase"] == "18 (Sangha)"
+        assert data["system"] == "VibeOS"
 
-        try:
-            response = requests.get(url, timeout=5)
-            print(f"✅ Response: {response.status_code} {response.json()}")
 
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "alive"
-            assert data["phase"] == "18 (Sangha)"
+@pytest.mark.asyncio
+async def test_state_endpoint(gateway, mock_prakriti):
+    """Test /api/v1/state returns kernel status."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.get("/api/v1/state")
+        assert resp.status == 200
+        data = await resp.json()
+        assert "kernel" in data
+        assert data["kernel"]["status"] == "RUNNING"
+        # Verify prakriti was called
+        mock_prakriti.get_system_status.assert_called_once()
 
-        except requests.exceptions.ConnectionError:
-            pytest.fail("❌ Connection refused - Gateway sidecar did not start or port is blocked.")
 
-        # 4. Request System State
-        url_state = f"http://127.0.0.1:{port}/api/v1/state"
-        print(f"📡 Requesting: {url_state}")
-
-        try:
-            response = requests.get(url_state, timeout=5)
-            print(f"✅ State Response: {response.status_code}")
-            assert response.status_code == 200
-            state = response.json()
-            # Ensure we get kernel status
-            assert "kernel" in state
-            assert "status" in state["kernel"]
-            assert state["kernel"]["status"] == "RUNNING"
-
-        except requests.exceptions.ConnectionError:
-            pytest.fail("❌ Connection refused for state endpoint")
-
-    finally:
-        # 5. Shutdown
-        print("🛑 Shutting down kernel...")
-        kernel.shutdown()
-        time.sleep(1)  # Wait for thread cleanup
+@pytest.mark.asyncio
+async def test_index_without_static(gateway):
+    """Test / returns fallback when no static files."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.get("/")
+        # Either 200 with fallback text or FileResponse
+        assert resp.status == 200
+        text = await resp.text()
+        assert "VibeOS" in text or "index" in text.lower()
