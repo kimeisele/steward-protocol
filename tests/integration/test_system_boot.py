@@ -8,7 +8,7 @@ This test PROVES that Agent City can boot and discover all agents.
 PASS CONDITIONS:
 - ✅ Kernel boots successfully
 - ✅ DiscovererAgent registers
-- ✅ Steward discovers at least 10 agents from steward.json manifests
+- ✅ Steward discovers at least 10 agents from vibe_core.steward.json manifests
 - ✅ All discovered agents pass Governance Gate (oath_sworn=True)
 - ✅ No import errors, no crashes
 

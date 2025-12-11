@@ -30,7 +30,7 @@ from .kernel import VibeLedger
 
 # P1 SECURITY: Import ECDSA signing from steward/crypto.py
 try:
-    from steward.crypto import load_or_generate_keys, sign_content, verify_signature
+    from vibe_core.steward.crypto import load_or_generate_keys, sign_content, verify_signature
 
     CRYPTO_AVAILABLE = True
 except ImportError:

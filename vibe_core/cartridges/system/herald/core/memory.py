@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 
 # Import crypto for signing events
 try:
-    from steward.crypto import sign_content
+    from vibe_core.steward.crypto import sign_content
 except ImportError:
     sign_content = None
 
@@ -73,10 +73,20 @@ class EventLog:
 
         Args:
             ledger_path: Path to the JSONL event ledger file.
-                        Defaults to data/events/herald.jsonl
+                        If None, uses config path or XDG fallback.
         """
         if ledger_path is None:
-            ledger_path = Path("data/events/herald.jsonl")
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                ledger_path = Path(config.paths.data.events) / "herald.jsonl"
+            except Exception:
+                # Fallback to XDG data dir
+                import os
+
+                data_home = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+                ledger_path = Path(data_home) / "vibe/events/herald.jsonl"
 
         self.ledger_path = Path(ledger_path)
         self.agent_id = "agent.steward.herald"

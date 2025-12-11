@@ -22,10 +22,11 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-# Vedic governance types
-from steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
-from steward.varna import Varna, categorize_agent_by_function, get_varna_description
 from vibe_core.plugin_protocol import KernelPlugin
+
+# Vedic governance types
+from vibe_core.steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+from vibe_core.steward.varna import Varna, categorize_agent_by_function, get_varna_description
 
 if TYPE_CHECKING:
     from vibe_core import Task

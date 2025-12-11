@@ -652,7 +652,7 @@ class StewardProtocolPlugin(KernelPlugin):
         logger.info(f"📜 Added sensitive capability: {capability}")
 
     def get_config(self) -> Optional[Any]:
-        """Get the Protocol configuration (from steward.yaml)."""
+        """Get the Protocol configuration (from vibe_core.steward.yaml)."""
         return self._config
 
     def get_user_context(self, user: Optional[str] = None) -> Dict[str, Any]:
@@ -744,7 +744,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
         # Connect StewardClient
         try:
-            from steward.client import StewardClient
+            from vibe_core.steward.client import StewardClient
 
             self._steward_client = StewardClient
             logger.debug("📜 StewardClient connected")
@@ -798,7 +798,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
     def _enforce_manifest_capabilities(self, kernel: "RealVibeKernel", agent_id: str, manifest: Dict[str, Any]) -> None:
         """
-        PROTOCOL ENFORCEMENT: Grant capabilities from steward.json manifest.
+        PROTOCOL ENFORCEMENT: Grant capabilities from vibe_core.steward.json manifest.
 
         The steward.json is the SSOT for agent capabilities.
         Cartridge hardcoded capabilities are WRONG - we override with manifest.
@@ -835,7 +835,7 @@ class StewardProtocolPlugin(KernelPlugin):
             agent_id=agent_id,
             capabilities=manifest_caps,
             granter_id="steward_protocol",
-            reason="Protocol enforcement: capabilities from steward.json (SSOT)",
+            reason="Protocol enforcement: capabilities from vibe_core.steward.json (SSOT)",
         )
 
         if result.get("granted"):
@@ -854,7 +854,7 @@ class StewardProtocolPlugin(KernelPlugin):
 
         Args:
             agent_id: Agent identifier
-            manifest: Manifest dict from steward.json
+            manifest: Manifest dict from vibe_core.steward.json
 
         Returns:
             True if valid, False if invalid, None if no signature present
@@ -877,7 +877,7 @@ class StewardProtocolPlugin(KernelPlugin):
             # Create canonical content to verify (manifest without signature block)
             import json
 
-            from steward.crypto import verify_signature
+            from vibe_core.steward.crypto import verify_signature
 
             manifest_copy = {k: v for k, v in manifest.items() if k != "signature"}
             canonical_content = json.dumps(manifest_copy, sort_keys=True, separators=(",", ":"))

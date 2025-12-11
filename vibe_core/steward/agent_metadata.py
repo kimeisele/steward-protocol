@@ -9,8 +9,8 @@ Maps each agent to its Varna (species) and current Ashrama (lifecycle stage).
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
-from steward.ashrama import Ashrama, AshramaTransition
-from steward.varna import Varna
+from vibe_core.steward.ashrama import Ashrama, AshramaTransition
+from vibe_core.steward.varna import Varna
 
 
 @dataclass

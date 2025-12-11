@@ -117,7 +117,7 @@ class PranaInitializer:
         logger.info("   🤝 Checking agent oaths...")
 
         try:
-            from steward.agent_metadata import get_metadata_registry
+            from vibe_core.steward.agent_metadata import get_metadata_registry
 
             registry = get_metadata_registry()
             agents = registry.get_all_agents()
@@ -141,8 +141,8 @@ class PranaInitializer:
         logger.info("   🌿 Initializing Varna taxonomy...")
 
         try:
-            from steward.agent_metadata import get_metadata_registry
-            from steward.varna import Varna
+            from vibe_core.steward.agent_metadata import get_metadata_registry
+            from vibe_core.steward.varna import Varna
 
             registry = get_metadata_registry()
 
@@ -177,7 +177,7 @@ class PranaInitializer:
         logger.info("   🕉️  Activating Daily Ritual...")
 
         try:
-            from steward.daily_ritual import DailyRitual
+            from vibe_core.steward.daily_ritual import DailyRitual
 
             if self.kernel:
                 self.kernel.daily_ritual = DailyRitual(self.kernel)

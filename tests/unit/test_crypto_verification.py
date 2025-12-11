@@ -11,9 +11,8 @@ Success criteria:
 3. No simulation mode warnings appear
 """
 
-
-from steward.crypto import ensure_keys_exist, load_or_generate_keys, sign_content
 from vibe_core.cartridges.system.archivist.tools.verifier_tool import VerifierTool
+from vibe_core.steward.crypto import ensure_keys_exist, load_or_generate_keys, sign_content
 
 
 def test_real_crypto_verification():
