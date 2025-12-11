@@ -732,6 +732,11 @@ class RealVibeKernel(VibeKernel):
                           import lock deadlocks). Processes are spawned later via
                           spawn_registered_agents().
         """
+        # OPUS-015/020: Check if agent requests process isolation
+        execution_mode = getattr(agent, "_execution_mode", "thread")
+        if execution_mode == "process":
+            spawn_process = True
+            logger.info(f"🔒 Agent '{agent.agent_id}' forcing PROCESS isolation (manifest.execution.mode=process)")
 
         # GOVERNANCE GATE: Let plugins decide (e.g., steward_protocol)
         for plugin in self._plugins:

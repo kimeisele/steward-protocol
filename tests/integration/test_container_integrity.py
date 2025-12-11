@@ -75,9 +75,9 @@ class TestHolonPlugin:
             "CACHE_DIR",
             new=tmp_path / "cache_valid",
         ):
-            mount_point = ContainerMounter.mount(container_path)
-            assert mount_point.exists()
-            assert (mount_point / "manifest.json").exists()
+            mount_result = ContainerMounter.mount(container_path)
+            assert mount_result.mount_point.exists()
+            assert (mount_result.mount_point / "manifest.json").exists()
 
     def test_tampered_container_rejected(self, valid_holon_source, tmp_path):
         """
@@ -152,8 +152,8 @@ class TestHolonPlugin:
             new=tmp_path / "cache_unsigned",
         ):
             # Should log warning but NOT raise (current dev behavior)
-            mount_point = ContainerMounter.mount(container)
-            assert mount_point.exists()
+            mount_result = ContainerMounter.mount(container)
+            assert mount_result.mount_point.exists()
 
     def test_hash_determinism(self, valid_holon_source, tmp_path):
         """
