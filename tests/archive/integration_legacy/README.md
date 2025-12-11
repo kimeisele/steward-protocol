@@ -1,31 +1,23 @@
-# Archived Integration Tests (Legacy)
+# Archived Integration Tests
 
-**Archived:** 2025-12-11
-**Reason:** Tests not updated after Container/Plugin system migration
+**Updated:** 2025-12-11
 
-## Tests Archived
+## Status
 
-| Test File | Issue |
-|-----------|-------|
-| test_kernel_markdown_interfaces.py | temp_workdir fixture doesn't copy phoenix/sections/, renderer lookup fails |
-| test_federation_manual.py | Federation/Sangha API tests - architecture changed |
-| test_fractal_ui.py | Test isolation issues - passes alone, fails in batch |
-| test_genesis_boot.py | Genesis holon loading - setup dependencies missing |
-| test_genesis_flow.py | Genesis flow - BootOrchestrator changes |
-| test_sangha_api.py | Sangha API gateway - network layer changes |
-| test_watchman_governance.py | Watchman signature governance - container format changes |
+**7 tests RESTORED** to `tests/integration/` - features still exist, tests should work.
 
-## To Revive
+## Remaining
 
-1. Fix `temp_workdir` fixture to copy ALL required paths (not just config/)
-2. Update tests to use new Container/Plugin architecture
-3. Update renderer lookups to match current interface plugin structure
-4. Run tests individually first, then in batch to catch isolation issues
+| Test File | Reason |
+|-----------|--------|
+| ../test_runtime_separation.py | `@pytest.mark.skip` - WIP, relative imports in containers need sys.path fix |
 
-## Priority
+## Revived Tests (moved back to tests/integration/)
 
-LOW - Core functionality is tested via:
-- `scripts/ci/test_kernel_boot.py` (kernel boots)
-- `scripts/ci/test_gateway_boot.py` (gateway boots)
-- `scripts/ci/test_governance_gate.py` (governance works)
-- Unit tests in `tests/unit/` (84 tests)
+- test_kernel_markdown_interfaces.py
+- test_federation_manual.py
+- test_fractal_ui.py
+- test_genesis_boot.py
+- test_genesis_flow.py
+- test_sangha_api.py
+- test_watchman_governance.py
