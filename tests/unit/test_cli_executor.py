@@ -25,13 +25,3 @@ class TestCLIExecutor:
 
         with pytest.raises(ImportError):
             executor._resolve_handler(cmd)
-
-    @pytest.mark.skip(reason="Requires running kernel or complex mocking")
-    def test_execute_boot_mode(self):
-        """Should boot kernel and execute."""
-        pass
-
-    @pytest.mark.skip(reason="Requires running gateway")
-    def test_execute_rpc_mode(self):
-        """Should forward to gateway."""
-        pass
