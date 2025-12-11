@@ -54,19 +54,31 @@ def test_genesis_boot_loading():
         print(f"Plugins loaded: {[p.plugin_id for p in kernel._plugins]}")
         print(f"Plugin metadata keys: {list(kernel._plugin_metadata.keys())}")
 
+        # CRITICAL DEBUG: Trace genesis_knowledge metadata
+        genesis_meta = kernel._plugin_metadata.get("genesis_knowledge")
+        print("=== GENESIS METADATA DEBUG ===")
+        print(f"genesis_meta exists: {genesis_meta is not None}")
+        if genesis_meta:
+            print(f"  item_id: {genesis_meta.item_id}")
+            print(f"  item_type: {genesis_meta.item_type}")
+            print(f"  loaded_successfully: {genesis_meta.loaded_successfully}")
+            print(f"  error: {genesis_meta.error}")
+            print(f"  manifest_path: {genesis_meta.manifest_path}")
+            print(f"  manifest_path type: {type(genesis_meta.manifest_path)}")
+            if genesis_meta.manifest_path:
+                print(f"  manifest_path.parent: {genesis_meta.manifest_path.parent}")
+                print(f"  manifest_path.name: {genesis_meta.manifest_path.name}")
+                print(f"  manifest_path exists: {genesis_meta.manifest_path.exists()}")
+            print(f"  manifest content: {genesis_meta.manifest}")
+        print("=== END GENESIS DEBUG ===")
+
         # Check Genesis Path
         assert hasattr(kernel, "genesis_path"), "Kernel missing genesis_path attribute"
         if kernel.genesis_path is None:
-            # Detailed failure info
-            genesis_meta = kernel._plugin_metadata.get("genesis_knowledge")
-            print(f"genesis_knowledge metadata: {genesis_meta}")
-            if genesis_meta:
-                print(f"  loaded_successfully: {genesis_meta.loaded_successfully}")
-                print(f"  error: {genesis_meta.error}")
-                print(f"  manifest_path: {genesis_meta.manifest_path}")
             pytest.fail("Kernel failed to load Genesis Pack (genesis_path is None)")
 
         print(f"Genesis Path: {kernel.genesis_path}")
+        print(f"Genesis Path type: {type(kernel.genesis_path)}")
 
         # Verify it points to a valid genesis pack (has circuits/)
         assert (kernel.genesis_path / "circuits").exists(), "Genesis path does not contain circuits/"
