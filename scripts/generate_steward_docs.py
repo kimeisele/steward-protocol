@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate STEWARD.md documentation from steward.json manifests.
+Generate STEWARD.md documentation from vibe_core.steward.json manifests.
 
 This script:
 1. Finds all steward.json files in system_agents/ and vibe_core/cartridges/agent_city/
@@ -71,7 +71,7 @@ SPECIALIZATION_MAP = {
 
 
 def generate_steward_md(agent_data: dict, agent_path: Path) -> str:
-    """Generate STEWARD.md content from steward.json data."""
+    """Generate STEWARD.md content from vibe_core.steward.json data."""
 
     agent = agent_data.get("agent", {})
     credentials = agent_data.get("credentials", {})

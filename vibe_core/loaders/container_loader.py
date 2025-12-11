@@ -9,7 +9,7 @@ from typing import Any, Dict, Union
 
 # P2 SECURITY: Import ECDSA verification from steward/crypto.py
 try:
-    from steward.crypto import (
+    from vibe_core.steward.crypto import (
         is_fingerprint_trusted,
         load_or_generate_keys,
         verify_signature,

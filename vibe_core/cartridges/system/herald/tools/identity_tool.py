@@ -24,7 +24,7 @@ from vibe_core.tools.tool_protocol import Tool, ToolResult
 # SECURITY FIX (OPUS-018): Always import steward/crypto.py for ECDSA signing
 # This replaces the insecure HMAC-SHA256 fallback
 try:
-    from steward.crypto import (
+    from vibe_core.steward.crypto import (
         get_public_key_fingerprint,
         load_or_generate_keys,
         sign_content,
@@ -38,7 +38,7 @@ except ImportError:
     get_public_key_fingerprint = None
 
 try:
-    from steward.client import StewardClient
+    from vibe_core.steward.client import StewardClient
 except ImportError:
     StewardClient = None
 

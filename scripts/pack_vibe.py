@@ -19,7 +19,7 @@ from typing import Optional
 
 # P2 SECURITY: Import ECDSA signing from steward/crypto.py
 try:
-    from steward.crypto import (
+    from vibe_core.steward.crypto import (
         get_public_key_fingerprint,
         load_or_generate_keys,
         sign_content,

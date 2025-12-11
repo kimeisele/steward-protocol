@@ -295,8 +295,8 @@ class SemanticSyscallExecutor:
             class_name = f"{role.replace(' ', '').title()}Cartridge"
 
             # Step 3: Create a minimal agent that can be registered
-            from steward.oath_mixin import OathMixin
             from vibe_core.protocols import AgentManifest, VibeAgent
+            from vibe_core.steward.oath_mixin import OathMixin
 
             # Dynamic agent class with oath
             class DynamicAgent(VibeAgent, OathMixin):
