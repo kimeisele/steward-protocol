@@ -354,3 +354,34 @@ This must be set via:
 
 **Gap**: If neither hooksPath nor pre-commit is configured, Layer 2 (CI) is the only defense.
 CI blocks merge but not commit - the bad commit exists until PR is closed.
+
+### SessionStart Hook Implementation
+
+Created `.claude/hooks/session-start.sh` that auto-configures `core.hooksPath` at session start.
+
+**Installation:**
+```bash
+cp .claude/hooks/session-start.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/session-start.sh
+```
+
+**GAD-000 Compliance:**
+- JSON output for AI parseability
+- Clear status codes (ok, configured, skip, error)
+- Solution guidance in structured format
+
+**GUARD 6 GAD-000 Output:**
+```json
+{
+  "guard": "VISNU_KERNEL_PROTECTION",
+  "status": "RESTORED",
+  "action": "auto_reverted_to_origin_main",
+  "protected_files_count": 21,
+  "restored_files": ["vibe_core/kernel_impl.py"],
+  "reason": "Security Ring 0 files are immutable",
+  "solution": "Create a plugin in vibe_core/plugins/your_feature/ instead",
+  "documentation": "docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md"
+}
+```
+
+This ensures AI agents understand WHY they are "rascals" and HOW to do it correctly.
