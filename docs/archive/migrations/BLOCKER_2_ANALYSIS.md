@@ -14,7 +14,7 @@
 ```python
 # Almost every agent does this:
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 

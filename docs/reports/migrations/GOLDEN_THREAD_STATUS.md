@@ -36,7 +36,7 @@ This is the **only bridge** between the two systems. Everything else is either:
 #### Tier 1: Core Infrastructure
 - **steward/oath_mixin.py** → Used by **15 cartridges**
   - agora, ambassador, artisan, civic, engineer, envoy, forum, herald, lens, market, oracle, pulse, science, temple, watchman
-  - Pattern: `from steward.oath_mixin import OathMixin`
+  - Pattern: `from vibe_core.steward.oath_mixin import OathMixin`
 
 - **steward/crypto.py** → Used by **5 files**
   - archivist/tools/audit_tool.py
@@ -146,7 +146,7 @@ from vibe_core.event_bus import get_event_bus, Event
 
 ```python
 # In vibe_core/kernel_impl.py:
-from steward.constitutional_oath import ConstitutionalOath
+from vibe_core.steward.constitutional_oath import ConstitutionalOath
 
 # This is used to initialize agents with their oath constraints
 ```
@@ -167,7 +167,7 @@ These 19 files are the **integration points** and **regression risks**:
 ### Pattern 1: Cartridge Standard (10 files)
 ```python
 from vibe_core import VibeAgent, Task
-from steward.oath_mixin import OathMixin
+from vibe_core.steward.oath_mixin import OathMixin
 ```
 
 **Files:**
@@ -191,8 +191,8 @@ from steward.oath_mixin import OathMixin
 
 **Uses:**
 - `from vibe_core import VibeAgent` (new)
-- `from steward.oath_mixin import OathMixin` (old)
-- `from steward.crypto import ...` (old)
+- `from vibe_core.steward.oath_mixin import OathMixin` (old)
+- `from vibe_core.steward.crypto import ...` (old)
 
 **Status:** ⚠️ Tight coupling to both systems
 
@@ -201,7 +201,7 @@ from steward.oath_mixin import OathMixin
 
 **Uses:**
 - `from vibe_core import Task` (new)
-- `from steward.constitutional_oath import ConstitutionalOath` (old)
+- `from vibe_core.steward.constitutional_oath import ConstitutionalOath` (old)
 
 **Status:** ⚠️ Direct dependency on oath constraints
 

@@ -24,9 +24,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from vibe_core.plugin_protocol import KernelPlugin
 
-# Vedic governance types
-from vibe_core.steward.ashrama import Ashrama, AshramaTransition, get_ashrama_description
-from vibe_core.steward.varna import Varna, categorize_agent_by_function, get_varna_description
+# Vedic governance types (co-located with plugin)
+from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_function, get_varna_description
 
 if TYPE_CHECKING:
     from vibe_core import Task

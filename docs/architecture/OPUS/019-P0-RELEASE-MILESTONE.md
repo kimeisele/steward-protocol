@@ -16,7 +16,7 @@ files:
 tests:
   - tests/unit/test_crypto_verification.py
 wiring:
-  - pattern: "from steward.crypto import"
+  - pattern: "from vibe_core.steward.crypto import"
     in: vibe_core/cartridges/system/herald/tools/identity_tool.py
   - pattern: "InvariantChecker"
     in: vibe_core/plugins/tools/plugin_main.py
@@ -75,7 +75,7 @@ This release addresses the critical security vulnerabilities identified in OPUS-
 
 ```bash
 # P0.1 - ECDSA signing works
-$ python -c "from steward.crypto import load_or_generate_keys, sign_content, verify_signature; \
+$ python -c "from vibe_core.steward.crypto import load_or_generate_keys, sign_content, verify_signature; \
   priv, pub = load_or_generate_keys(); \
   sig = sign_content('test', priv); \
   print(f'Valid: {verify_signature(\"test\", sig, pub)}')"

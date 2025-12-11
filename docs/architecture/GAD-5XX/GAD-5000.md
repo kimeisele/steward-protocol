@@ -342,7 +342,7 @@ except ImportError:
 
 # Action Handler Registry (GAD-5000 Registry Pattern)
 try:
-    from steward.system_agents.envoy.action_handlers import (
+    from vibe_core.cartridges.system.envoy.action_handlers import (
         ActionContext,
 ```
 

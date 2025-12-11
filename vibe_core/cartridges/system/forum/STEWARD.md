@@ -91,7 +91,7 @@ result = forum.process(task)
 
 ### Submit Proposal
 ```python
-from steward.system_agents.forum.tools.proposal_tool import ProposalTool
+from vibe_core.cartridges.system.forum.tools.proposal_tool import ProposalTool
 
 proposal_tool = ProposalTool(kernel=kernel)
 proposal = proposal_tool.submit_proposal(
@@ -103,7 +103,7 @@ proposal = proposal_tool.submit_proposal(
 
 ### Vote on Proposal
 ```python
-from steward.system_agents.forum.tools.voting_tool import VotingTool
+from vibe_core.cartridges.system.forum.tools.voting_tool import VotingTool
 
 voting_tool = VotingTool(kernel=kernel)
 voting_tool.cast_vote(

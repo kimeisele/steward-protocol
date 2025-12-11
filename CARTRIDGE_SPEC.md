@@ -136,7 +136,7 @@ The body. The actual Python code that makes the agent work.
 import logging
 from typing import Any, Dict, Optional
 
-from steward.oath_mixin import OathMixin
+from vibe_core.steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 from vibe_core.protocols import AgentManifest
 

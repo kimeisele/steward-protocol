@@ -305,7 +305,7 @@ When Constitution is amended:
 To add Oath to your agent:
 
 ```python
-from steward.oath_mixin import OathMixin
+from vibe_core.steward.oath_mixin import OathMixin
 
 class MyAgent(VibeAgent, OathMixin):
     def __init__(self):

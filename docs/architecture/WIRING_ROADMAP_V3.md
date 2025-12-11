@@ -58,7 +58,7 @@ async def execute_playbook(
     input_data: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Execute a playbook through the DeterministicExecutor."""
-    from steward.system_agents.envoy.deterministic_executor import DeterministicExecutor
+    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
 
     executor = DeterministicExecutor(kernel=self)
     return await executor.execute_playbook(playbook_path, input_data)

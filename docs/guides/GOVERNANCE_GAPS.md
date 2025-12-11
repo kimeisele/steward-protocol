@@ -173,7 +173,7 @@ def __init__(self, root_path: Path = Path(".")):
 **Import Required at top:**
 ```python
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 ```
@@ -296,7 +296,7 @@ def __init__(self, root_path: Path = Path(".")):
 **Import Required at top:**
 ```python
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 ```
@@ -319,7 +319,7 @@ from vibe_core.agent_protocol import VibeAgent, AgentManifest
 
 # Import OathMixin with graceful fallback
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 
@@ -426,7 +426,7 @@ After repairs, verify with these tests:
 ```bash
 # Test 1: Verify all agents can be instantiated
 python -c "
-from steward.system_agents.supreme_court.cartridge_main import SupremeCourtCartridge
+from vibe_core.cartridges.system.supreme_court.cartridge_main import SupremeCourtCartridge
 from agent_city.registry.mechanic.cartridge_main import MechanicCartridge
 from agent_city.registry.dhruva.cartridge_main import DhruvaAnchorCartridge
 
@@ -448,7 +448,7 @@ print('✅ All agents have valid oath_sworn attribute')
 # Test 2: Verify all agents can register with kernel
 python -c "
 from vibe_core.kernel_impl import RealVibeKernel
-from steward.system_agents.supreme_court.cartridge_main import SupremeCourtCartridge
+from vibe_core.cartridges.system.supreme_court.cartridge_main import SupremeCourtCartridge
 from agent_city.registry.mechanic.cartridge_main import MechanicCartridge
 from agent_city.registry.dhruva.cartridge_main import DhruvaAnchorCartridge
 

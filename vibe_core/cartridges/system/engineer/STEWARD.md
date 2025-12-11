@@ -109,7 +109,7 @@ result = engineer.process(task)
 
 ### Scaffold New Agent
 ```python
-from steward.system_agents.engineer.tools.builder_tool import BuilderTool
+from vibe_core.cartridges.system.engineer.tools.builder_tool import BuilderTool
 
 builder = BuilderTool()
 builder.create_agent(
