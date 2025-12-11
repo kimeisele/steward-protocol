@@ -233,20 +233,24 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
-### ✅ RESOLVED: Archived Tests Restored
+### 🟡 PENDING: Restored Tests Need CI Verification
 
 **7 tests moved back** from `tests/archive/` to `tests/integration/`:
-- test_kernel_markdown_interfaces.py
-- test_federation_manual.py
-- test_fractal_ui.py
-- test_genesis_boot.py
-- test_genesis_flow.py
-- test_sangha_api.py
-- test_watchman_governance.py
+| Test | Dependencies | Status |
+|------|--------------|--------|
+| test_kernel_markdown_interfaces.py | fresh_kernel, EphemeralRenderer | ❓ Needs CI |
+| test_federation_manual.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_fractal_ui.py | spawn_child_kernel | ❓ Needs CI |
+| test_genesis_boot.py | genesis_path, envoy plugin | ❓ Needs CI |
+| test_genesis_flow.py | BootOrchestrator, UniversalProvider | ❓ Needs CI |
+| test_sangha_api.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_watchman_governance.py | pack_vibe, verify_holon_signatures | ❓ Needs CI |
 
-**Analysis:** Features exist! Tests were archived without verifying code still works.
+**Why restored:** Features/classes exist in codebase. Tests should not have been archived.
 
-**Remaining:** `test_runtime_separation.py` - has `@pytest.mark.skip` (WIP)
+**Action needed:** Run CI, fix any failures.
+
+**Still archived:** `test_runtime_separation.py` - `@pytest.mark.skip` (WIP)
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
