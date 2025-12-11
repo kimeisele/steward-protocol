@@ -203,16 +203,16 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**TEST FIXES (2025-12-11 16:15 UTC)**
-- ✅ Fixed `test_concurrent_writes_integrity` timeout (50→20 threads, 100→50 events, +120s marker)
-- ✅ Fixed `test_keyring_trust.py` legacy module refs (`steward.crypto` → `vibe_core.steward.crypto`)
-- ✅ CI GREEN: ruff ✅, kernel boot ✅, 267 integration tests ✅
+**AI DOCS MAINTENANCE (2025-12-11 17:30 UTC)**
+- 🔄 Audited PANOPTICON+ exclusions - some tests already migrated
+- ✅ `test_system_boot.py` - uses TestAgents fixtures
+- ✅ `test_governance_security.py` - uses TestAgents fixtures
+- 📋 Updated blockers with accurate migration status
 
-**PREVIOUS (CI FIX)**
-- ✅ Fixed `verify_agents_manifest.py` scanning `__pycache__`
-- ✅ Fixed PANOPTICON+ blocking governance-testing tests
-- ⚠️ TEMPORARY: Excluded 7 tests from PANOPTICON+ (see Blockers)
-- ⚠️ TEMPORARY: Archived 7 legacy integration tests (see Blockers)
+**PREVIOUS (2025-12-11 16:15 UTC)**
+- ✅ Fixed `test_concurrent_writes_integrity` timeout
+- ✅ Fixed `test_keyring_trust.py` legacy module refs
+- ✅ CI GREEN: ruff ✅, kernel boot ✅, integration tests ✅
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
@@ -221,24 +221,27 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 <!-- AI: List any blockers -->
 ### 🔴 TECH DEBT: Tests brauchen TestAgents Migration
 
-**Problem:** 7 Tests von PANOPTICON+ excludiert weil sie `self.oath_sworn = True` setzen.
+**Problem:** 4 Test-Dateien setzen noch `self.oath_sworn = True` (PANOPTICON+ violation).
 **Fix:** Migrieren zu `TestAgents.compliant()` / `TestAgents.without_oath()` Fixtures.
 
-| Test | Problem | Migration |
-|------|---------|-----------|
-| `tests/integration/test_event_bus_integration.py` | MockAgent + oath | → TestAgents.compliant() |
-| `tests/integration/city_simulation.py` | oath x2 | → TestAgents.compliant() |
-| `tests/integration/test_system_boot.py` | oath x3 | → TestAgents fixture |
-| `tests/integration/test_capability_revocation.py` | CustomAgent + oath | → TestAgents.compliant() |
-| `tests/hardening/test_governance_security.py` | oath x2 | → TestAgents.without_oath() |
-| `tests/hardening/test_red_team_attacks.py` | CustomAgent x4, oath x6 | → TestAgents.without_oath() |
-| `tests/conftest.py` | fixture definitions | OK - exclude is correct |
+| Test | Problem | Status |
+|------|---------|--------|
+| `tests/integration/test_event_bus_integration.py` | oath x1 | ❌ Needs migration |
+| `tests/integration/city_simulation.py` | oath x2 (conditional) | ❌ Needs migration |
+| `tests/integration/test_capability_revocation.py` | oath x1 | ❌ Needs migration |
+| `tests/hardening/test_red_team_attacks.py` | oath x6 | ❌ Needs migration |
+
+**Already Migrated:**
+| Test | Status |
+|------|--------|
+| `tests/integration/test_system_boot.py` | ✅ Uses TestAgents |
+| `tests/hardening/test_governance_security.py` | ✅ Uses TestAgents |
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
 ### 🟡 TECH DEBT: Archived Integration Tests
 
-**Problem:** 7 Tests in `tests/archive/integration_legacy/` warten auf Container/Plugin Migration.
+**Problem:** 8 Tests in `tests/archive/` warten auf Container/Plugin Migration.
 **Fix:** temp_workdir fixture muss `phoenix/sections/` kopieren, Tests auf neue Architektur updaten.
 
 | Test | Issue |
@@ -250,6 +253,7 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 | test_genesis_flow.py | BootOrchestrator changes |
 | test_sangha_api.py | network layer changes |
 | test_watchman_governance.py | container format changes |
+| test_runtime_separation.py | runtime architecture changes |
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
