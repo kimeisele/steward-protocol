@@ -203,7 +203,12 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**CI FIX (2025-12-11)**
+**TEST FIXES (2025-12-11 16:15 UTC)**
+- ✅ Fixed `test_concurrent_writes_integrity` timeout (50→20 threads, 100→50 events, +120s marker)
+- ✅ Fixed `test_keyring_trust.py` legacy module refs (`steward.crypto` → `vibe_core.steward.crypto`)
+- ✅ CI GREEN: ruff ✅, kernel boot ✅, 267 integration tests ✅
+
+**PREVIOUS (CI FIX)**
 - ✅ Fixed `verify_agents_manifest.py` scanning `__pycache__`
 - ✅ Fixed PANOPTICON+ blocking governance-testing tests
 - ⚠️ TEMPORARY: Excluded 7 tests from PANOPTICON+ (see Blockers)
@@ -214,6 +219,33 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Blockers
 
 <!-- AI: List any blockers -->
+### 🔴 CRITICAL: Semantic Engine KAPUTT ohne numpy
+
+**Problem:** `SemanticRouter` crasht sofort mit `No module named 'numpy'`
+```
+❌ Semantic extensions not installed. Run: steward install-semantic
+FAIL: No module named 'numpy'
+```
+
+**Ursache:**
+- `pyproject.toml` hat numpy/sentence-transformers als OPTIONAL (`[semantic]`)
+- `build_binary.py` excludiert numpy, torch etc. explizit
+- `runtime_extensions.py` soll lazy-load aus `~/.steward/lib/` - ABER nur wenn installiert
+
+**Fix-Optionen:**
+1. `pip install steward-protocol[semantic]` - fügt numpy + sentence-transformers hinzu
+2. `steward install-semantic` - installiert nach `~/.steward/lib/`
+3. Binary: User muss extensions separat installieren
+
+**Betroffene Files:**
+- `vibe_core/cortex/engines/semantic_engine.py:69` - `import numpy` crasht
+- `scripts/build_binary.py:43-48` - excludiert numpy/torch
+- `vibe_core/runtime_extensions.py` - lazy-load Mechanismus
+
+**Status:** ARCHITEKTUR-ENTSCHEIDUNG NÖTIG - Wie soll offline-AI funktionieren?
+
+---
+
 ### 🔴 TECH DEBT: Tests brauchen TestAgents Migration
 
 **Problem:** 7 Tests von PANOPTICON+ excludiert weil sie `self.oath_sworn = True` setzen.
