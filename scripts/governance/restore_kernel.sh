@@ -1,10 +1,10 @@
 #!/bin/bash
-# VISNU KERNEL - NUCLEAR OPTION
-# =============================
+# VISNU KERNEL - NUCLEAR OPTION (TOTAL LOCKDOWN)
+# ==============================================
 # Dieses Skript setzt Security Ring 0 BRUTAL auf origin/main zurück.
 # Nicht HEAD (kann polluted sein), sondern die WAHRE QUELLE.
 #
-# SECURITY RING 0 - Life, Death, and Rights (3399 LOC + Governance)
+# SECURITY RING 0 - Code + Watchers + Laws
 #
 # Core Orchestration:
 #   - vibe_core/kernel_impl.py (1505 LOC)
@@ -20,6 +20,9 @@
 #   - scripts/governance/restore_kernel.sh - THIS FILE
 #   - scripts/governance/verify_kernel.py - Hash verification
 #   - scripts/governance/kernel_hashes.json - Blessed hashes
+# Infrastructure (The Laws):
+#   - .github/workflows/steward-ci.yml - The Supreme Court
+#   - .pre-commit-config.yaml - The Local Police
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
@@ -40,6 +43,9 @@ PROTECTED_FILES=(
     "scripts/governance/restore_kernel.sh"
     "scripts/governance/verify_kernel.py"
     "scripts/governance/kernel_hashes.json"
+    # Infrastructure (The Laws)
+    ".github/workflows/steward-ci.yml"
+    ".pre-commit-config.yaml"
 )
 
 # Fetch origin/main - die WAHRE QUELLE
@@ -64,11 +70,12 @@ done
 if [ $RESTORED -eq 1 ]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║  ☢️  NUCLEAR RESET EXECUTED                                   ║"
+    echo "║  ☢️  NUCLEAR RESET EXECUTED (TOTAL LOCKDOWN)                  ║"
     echo "║                                                              ║"
     echo "║  Your changes to Security Ring 0 have been OBLITERATED.     ║"
     echo "║  Files restored from origin/main (the TRUE source).         ║"
     echo "║                                                              ║"
+    echo "║  Protected: Code + Watchers + Laws                          ║"
     echo "║  The kernel is VISNU. Resistance is futile.                 ║"
     echo "║                                                              ║"
     echo "║  Create a PLUGIN instead:                                    ║"
