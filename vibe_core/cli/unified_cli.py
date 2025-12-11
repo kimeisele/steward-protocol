@@ -59,6 +59,10 @@ class UnifiedCLI:
             "discover": self._legacy.cmd_discover,
             "introspect": self._legacy.cmd_introspect,
             "delegate": None,  # TODO: Migrate to plugin
+            # Extension commands (runtime package management)
+            "install-llm": self._legacy.cmd_install_llm,
+            "install-semantic": self._legacy.cmd_install_semantic,
+            "extensions": self._legacy.cmd_extensions,
         }
 
         # PRAKRITI commands - wired to unified state
