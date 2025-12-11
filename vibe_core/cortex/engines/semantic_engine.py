@@ -57,7 +57,14 @@ async def get_embedding_model():
             # Specify cache directory to avoid re-downloads
             import os
 
-            # Lazy import numpy (excluded in binary build)
+            # Ensure runtime extensions are loaded (for binary builds)
+            try:
+                from vibe_core.runtime_extensions import extend_runtime
+                extend_runtime()
+            except ImportError:
+                pass  # Extensions module not available
+
+            # Lazy import numpy (excluded in binary build, loaded from ~/.steward/lib/)
             import numpy
 
             from sentence_transformers import SentenceTransformer
@@ -73,7 +80,7 @@ async def get_embedding_model():
             logger.info("✓ Semantic model loaded and cached")
             return _model
         except ImportError:
-            logger.error("❌ sentence-transformers not installed. Install with: pip install sentence-transformers")
+            logger.error("❌ Semantic extensions not installed. Run: steward install-semantic")
             raise
         except Exception as e:
             logger.error(f"❌ Failed to load semantic model: {e}")
