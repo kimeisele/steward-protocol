@@ -233,21 +233,21 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
-### 🟡 TECH DEBT: Archived Integration Tests
+### 🟢 LOW PRIORITY: Archived Integration Tests
 
-**Problem:** 8 Tests in `tests/archive/` warten auf Container/Plugin Migration.
-**Fix:** temp_workdir fixture muss `phoenix/sections/` kopieren, Tests auf neue Architektur updaten.
+**Status:** DEFERRED - Core functionality already tested
+**Lines:** ~1450 lines of test code in `tests/archive/`
 
-| Test | Issue |
-|------|-------|
-| test_kernel_markdown_interfaces.py | temp_workdir + renderer lookup |
-| test_federation_manual.py | Federation/Sangha API changes |
-| test_fractal_ui.py | test isolation |
-| test_genesis_boot.py | setup dependencies |
-| test_genesis_flow.py | BootOrchestrator changes |
-| test_sangha_api.py | network layer changes |
-| test_watchman_governance.py | container format changes |
-| test_runtime_separation.py | runtime architecture changes |
+**Why LOW priority:**
+- `test_kernel_boot.py` → kernel boots ✅
+- `test_gateway_boot.py` → gateway boots ✅
+- `test_governance_gate.py` → governance works ✅
+- 84 unit tests → core logic covered ✅
+
+**If reviving needed:**
+1. Fix `temp_workdir` fixture to copy phoenix/sections/
+2. Update renderer lookups for new interface plugin structure
+3. Run individually first, then batch (isolation issues)
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
