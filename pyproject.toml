@@ -144,7 +144,7 @@ packages = ["vibe_core"]
 # ==============================================================================
 [tool.ruff]
 line-length = 120
-target-version = "py38"  # Minimum supported version from pyproject.toml:23
+target-version = "py39"  # Minimum supported version from pyproject.toml:10
 exclude = [
     ".git",
     ".hg",
