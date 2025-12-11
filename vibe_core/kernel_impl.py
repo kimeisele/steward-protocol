@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 # Kernel has no governance types - access via kernel.governance
 
 from .capability_registry import CapabilityRegistry  # Phase 2: Capability Revocation
+from .errors import kernel_fault  # GAD-000 Compliance
 
 # DocRenderer: Extracted markdown rendering logic
 from .event_bus import get_event_bus  # Phase 2: Event Bus
@@ -66,7 +67,6 @@ from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
-from .errors import ErrorCode, StructuredError, kernel_fault  # GAD-000 Compliance
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
@@ -318,7 +318,8 @@ class RealVibeKernel(VibeKernel):
             # Check for Genesis Cognitive Pack
             genesis_meta = self._plugin_metadata.get("genesis_knowledge")
             if genesis_meta and genesis_meta.loaded_successfully:
-                self.genesis_path = genesis_meta.entry_path
+                # Use manifest parent dir (entry_path is None for data-only packs)
+                self.genesis_path = genesis_meta.manifest_path.parent if genesis_meta.manifest_path else None
                 logger.info(f"🧠 Genesis Knowledge Pack loaded at: {self.genesis_path}")
                 if genesis_meta.manifest.get("version"):
                     logger.info(f"   Version: {genesis_meta.manifest.get('version')}")

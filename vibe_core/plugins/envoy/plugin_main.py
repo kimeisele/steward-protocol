@@ -565,7 +565,7 @@ class EnvoyPlugin(KernelPlugin):
 
         # Phase 6: Load from Genesis Pack if available
         if hasattr(self._kernel, "genesis_path") and self._kernel.genesis_path:
-            circuits_path = self._kernel.genesis_path / "content" / "circuits"
+            circuits_path = self._kernel.genesis_path / "circuits"
             logger.info(f"📬 Loading circuits from Genesis Pack: {circuits_path}")
         else:
             # Fallback to legacy path
