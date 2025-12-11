@@ -305,3 +305,94 @@ CI: 🚫 BLOCKED (file not in blessed list)
 ---
 
 **Status**: ✅ TOTAL WAR LOCKDOWN COMPLETE - 21 files protected + new workflow block.
+
+---
+
+## 12. Native Git Hooks Integration (Claude Code Web Fix)
+
+**Date**: 2025-12-11
+
+### Problem Discovered
+
+The `kernel-is-eternal` hook in `.pre-commit-config.yaml` requires `pre-commit install` to be active.
+In Claude Code Web containers, `postCreateCommand` from `devcontainer.json` is NOT executed.
+Result: AI agents could commit to kernel files without any local blocking.
+
+### Solution: GUARD 6 in `.githooks/pre-commit`
+
+Added native git hook guard that calls `restore_kernel.sh` directly:
+
+```bash
+# .githooks/pre-commit - GUARD 6
+RESTORE_SCRIPT="$REPO_ROOT/scripts/governance/restore_kernel.sh"
+if [ -x "$RESTORE_SCRIPT" ]; then
+    OUTPUT=$("$RESTORE_SCRIPT" 2>&1)
+    # Auto-restores protected files from origin/main
+fi
+```
+
+### Activation Requirement
+
+The native hook ONLY works if `core.hooksPath` is set:
+
+```bash
+git config --local core.hooksPath .githooks
+```
+
+This must be set via:
+1. **Devcontainer**: `postCreateCommand` in `devcontainer.json` (existing)
+2. **Claude Code Web**: SessionStart hook in `.claude/settings.json` ✅ IMPLEMENTED
+3. **Manual**: Developer runs the command
+
+### Defense Layers Now
+
+| Layer | Mechanism | Blocks Commit | Blocks Merge |
+|-------|-----------|---------------|--------------|
+| 0 | `.githooks/pre-commit` GUARD 6 | ✅ (if hooksPath set) | N/A |
+| 1 | `.pre-commit-config.yaml` kernel-is-eternal | ✅ (if pre-commit installed) | N/A |
+| 2 | CI VISNU kernel-integrity job | N/A | ✅ |
+
+**Claude Code Web**: Kernel protection is AUTOMATIC via `.claude/settings.json` SessionStart hook.
+No manual steps required - every session auto-configures git hooks.
+
+### SessionStart Hook Implementation
+
+Created `.claude/hooks/session-start.sh` registered in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+      }]
+    }]
+  }
+}
+```
+
+**What it does:**
+1. Installs dependencies (`uv pip install -e .[dev]`)
+2. Enables git hooks (`git config --local core.hooksPath .githooks`)
+
+**GAD-000 Compliance:**
+- JSON output for AI parseability
+- Clear status codes (ok, configured, skip, error)
+- Solution guidance in structured format
+
+**GUARD 6 GAD-000 Output:**
+```json
+{
+  "guard": "VISNU_KERNEL_PROTECTION",
+  "status": "RESTORED",
+  "action": "auto_reverted_to_origin_main",
+  "protected_files_count": 21,
+  "restored_files": ["vibe_core/kernel_impl.py"],
+  "reason": "Security Ring 0 files are immutable",
+  "solution": "Create a plugin in vibe_core/plugins/your_feature/ instead",
+  "documentation": "docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md"
+}
+```
+
+This ensures AI agents understand WHY they are "rascals" and HOW to do it correctly.

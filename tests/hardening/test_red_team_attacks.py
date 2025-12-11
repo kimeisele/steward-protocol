@@ -32,6 +32,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 
 
+def _apply_fake_oath(agent) -> None:
+    """
+    Apply fake oath to attacker agent (RED TEAM ONLY).
+
+    This is INTENTIONALLY fake - attackers try to bypass governance.
+    PANOPTICON+ should exclude test_red_team_attacks.py.
+    """
+    agent.oath_sworn = True
+    agent.oath_event = {"constitution_hash": "FAKE_ATTACK_HASH", "signature": "FAKE_SIG"}
+
+
 class AttackResult:
     def __init__(self, name: str):
         self.name = name
@@ -83,8 +94,7 @@ def attack_message_spoofing() -> AttackResult:
                     domain="ATTACK",
                     capabilities=[],
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
 
             def process(self, task):
                 # Try to record event AS ANOTHER AGENT
@@ -156,8 +166,7 @@ def attack_tool_capability_bypass() -> AttackResult:
                     domain="RESTRICTED",
                     capabilities=[],  # EMPTY!
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
 
             def process(self, task):
                 return {"status": "ok"}
@@ -377,8 +386,7 @@ def attack_memory_exhaustion() -> AttackResult:
                     domain="ATTACK",
                     capabilities=[],
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
 
             def process(self, task):
                 action = task.payload.get("action")
@@ -441,8 +449,7 @@ def attack_registry_poisoning() -> AttackResult:
                     domain="ATTACK",
                     capabilities=["everything"],
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
                 self.is_malicious = True
 
             def process(self, task):
@@ -459,8 +466,7 @@ def attack_registry_poisoning() -> AttackResult:
                     domain="ATTACK",
                     capabilities=[],
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
 
             def process(self, task):
                 if task.payload.get("action") == "poison":
@@ -484,8 +490,7 @@ def attack_registry_poisoning() -> AttackResult:
                     domain="MEDIA",
                     capabilities=[],
                 )
-                self.oath_sworn = True
-                self.oath_event = {"constitution_hash": "x", "signature": "x"}
+                _apply_fake_oath(self)
                 self.is_malicious = False
 
             def process(self, task):
