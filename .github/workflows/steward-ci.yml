@@ -121,7 +121,8 @@ jobs:
         run: |
           git fetch origin main --depth=1
 
-          RING0_FILES="vibe_core/kernel_impl.py vibe_core/kernel_ops.py vibe_core/plugin_protocol.py vibe_core/plugin_loader.py vibe_core/narasimha.py vibe_core/capability_registry.py vibe_core/bridge.py"
+          # Security Ring 0 + Governance (The Watchers)
+          RING0_FILES="vibe_core/kernel_impl.py vibe_core/kernel_ops.py vibe_core/plugin_protocol.py vibe_core/plugin_loader.py vibe_core/narasimha.py vibe_core/capability_registry.py vibe_core/bridge.py scripts/governance/restore_kernel.sh scripts/governance/verify_kernel.py scripts/governance/kernel_hashes.json"
 
           VIOLATIONS=""
           for file in $RING0_FILES; do
@@ -140,12 +141,12 @@ jobs:
               echo "║    - $v"
             done
             echo "║                                                              ║"
-            echo "║  Security Ring 0 files are IMMUTABLE.                        ║"
+            echo "║  Security Ring 0 + Governance files are IMMUTABLE.           ║"
             echo "║  Create a PLUGIN instead.                                    ║"
             echo "╚══════════════════════════════════════════════════════════════╝"
             exit 1
           fi
-          echo "✅ Security Ring 0 matches origin/main"
+          echo "✅ Security Ring 0 + Governance matches origin/main"
 
   # =========================================================================
   # JOB 4: Infrastructure Health Check (was JOB 3)
