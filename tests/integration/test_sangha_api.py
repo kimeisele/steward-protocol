@@ -1,3 +1,4 @@
+import socket
 import time
 
 import pytest
@@ -6,17 +7,26 @@ import requests
 from vibe_core.kernel_impl import RealVibeKernel
 
 
+def get_free_port():
+    """Find an available port for testing."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
 @pytest.mark.integration
 def test_sangha_api_gateway():
     """
     Phase 18 Verification: The Network (Sangha)
     Ensures the Async Sidecar (API Gateway) starts with the kernel and responds to HTTP.
     """
+    # Use a free port to avoid conflicts with other tests
+    port = get_free_port()
+
     # 1. Boot Kernel
     kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-
-    # Force a unique port for testing (though logic supports 8000)
-    # Ideally config would handle this, but for now we test default
+    # Configure gateway to use our free port
+    kernel.gateway.port = port
 
     try:
         kernel.boot()
@@ -26,7 +36,7 @@ def test_sangha_api_gateway():
         time.sleep(2)  # Give thread time to spin up
 
         # 3. Request Health Check
-        url = "http://127.0.0.1:8000/api/v1/health"
+        url = f"http://127.0.0.1:{port}/api/v1/health"
         print(f"📡 Requesting: {url}")
 
         try:
@@ -42,7 +52,7 @@ def test_sangha_api_gateway():
             pytest.fail("❌ Connection refused - Gateway sidecar did not start or port is blocked.")
 
         # 4. Request System State
-        url_state = "http://127.0.0.1:8000/api/v1/state"
+        url_state = f"http://127.0.0.1:{port}/api/v1/state"
         print(f"📡 Requesting: {url_state}")
 
         try:
