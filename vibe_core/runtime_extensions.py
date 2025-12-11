@@ -105,7 +105,7 @@ def get_extension_status() -> dict:
         "steward_home": str(STEWARD_HOME),
         "steward_lib": str(STEWARD_LIB),
         "lib_exists": STEWARD_LIB.exists(),
-        "packages": {}
+        "packages": {},
     }
 
     for pkg in OPTIONAL_PACKAGES:
@@ -146,12 +146,7 @@ def install_semantic_extensions(target_dir: Optional[Path] = None) -> bool:
 
     try:
         result = subprocess.run(
-            [
-                sys.executable, "-m", "pip", "install",
-                "--target", str(target),
-                "--upgrade",
-                *packages
-            ],
+            [sys.executable, "-m", "pip", "install", "--target", str(target), "--upgrade", *packages],
             capture_output=True,
             text=True,
         )

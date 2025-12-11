@@ -30,7 +30,7 @@ The whole world is the customer base. Contracts are waiting. If we do not ship a
 4.  **Take Responsibility:** You are the Senior Engineer. I am non-technical. Do not ask me what to do—**TELL ME** the correct architectural path to fix this mess so we can ship.
 
 **If you betray my trust again or introduce more spaghetti code, this project is over. Get serious.**
-Hint: OPUS.md is auto generated. Your duty is to treat this as your "ai master crate". Any outdated roadmap information needs to be either updated OR created dynamically. Do not edit the file itself. It is auto generated. respect the fucking way of handling no ad hoc shit in this project anymore. 
+Hint: OPUS.md is auto generated. Your duty is to treat this as your "ai master crate". Any outdated roadmap information needs to be either updated OR created dynamically. Do not edit the file itself. It is auto generated. respect the fucking way of handling no ad hoc shit in this project anymore.
 
 ---
 
@@ -98,11 +98,49 @@ WENN UNKLAR: Analysiere ERST, dann handle. Nicht umgekehrt.
 ## 🧠 BEI UNSICHERHEIT
 
 **NICHT:** Raten und hoffen
-**STATTDESSEN:** 
+**STATTDESSEN:**
 1. Analysieren (grep, read, find)
 2. Fakten sammeln
 3. DANN Entscheidung treffen und erklären
 
 "Ich bin nicht sicher" = "Ich muss mehr analysieren"
+
+---
+
+## 🧹 LEGACY-FAKTEN (verifiziert 2025-12-11)
+
+**Tote Referenzen die NICHT existieren:**
+- `steward/` Verzeichnis - EXISTIERT NICHT. Nur `vibe_core/` ist das Package.
+- Wenn du `steward` irgendwo siehst (außer `steward_protocol` Plugin) → Legacy-Müll, entfernen.
+
+**Aktive Packages:**
+```
+pyproject.toml → packages = ["vibe_core"]
+```
+
+---
+
+## 🔌 DEPENDENCY-CHECK (vor jedem import)
+
+**BEVOR du einen import hinzufügst:**
+```bash
+grep "modulname" pyproject.toml  # Existiert die dependency?
+```
+
+**WENN NICHT:** Erst zu pyproject.toml hinzufügen, dann importieren.
+Fehlende dependencies = CI Collection Errors = 11 "failing checks" die grün aussehen.
+
+---
+
+## 🎯 CI vs PRE-COMMIT (Unterschied)
+
+**`pre-commit run --all-files`** triggert VISNU kernel protection (false positive wenn kernel nicht geändert).
+
+**Echte CI-Jobs (steward-ci.yml):**
+```bash
+ruff check vibe_core scripts --select=E9,F63,F7,F82
+python scripts/ci/test_kernel_boot.py
+python -m pytest tests/integration/ -v --tb=short
+```
 
 ---

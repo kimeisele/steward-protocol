@@ -28,17 +28,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Verify core imports (fail-fast on missing deps)
+        run: |
+          python -c "from vibe_core.kernel_impl import RealVibeKernel; print('✅ Core imports OK')"
+
       - name: Run ruff linter (critical errors)
         run: |
-          ruff check vibe_core steward scripts --select=E9,F63,F7,F82 --output-format=github
+          ruff check vibe_core scripts --select=E9,F63,F7,F82 --output-format=github
 
       - name: Run ruff linter (full check with stats)
         run: |
-          ruff check vibe_core steward scripts --output-format=github --statistics || true
+          ruff check vibe_core scripts --output-format=github --statistics || true
 
       - name: Check formatting
         run: |
-          ruff format --check --diff vibe_core steward scripts
+          ruff format --check --diff vibe_core scripts
 
   # =========================================================================
   # JOB 2: Agent Certification Verification
@@ -397,7 +401,22 @@ jobs:
           from pathlib import Path
           from vibe_core.plugins.test_orchestration import validate_test_files
 
-          test_files = list(Path('tests').glob('**/*.py'))
+          # Exclude from PANOPTICON+ validation:
+          # - archive/: Legacy tests awaiting migration
+          # - hardening/: Security tests with intentional governance violations
+          # - conftest.py: Fixture definitions, not tests
+          # - city_simulation.py: System-level test, needs full agent control
+          # - test_system_boot.py: Tests governance itself, needs agent control
+          # - test_event_bus_integration.py: Uses MockAgent for event testing
+          # - test_capability_revocation.py: Tests capability system
+          exclude_patterns = {
+              'archive', 'hardening', 'conftest.py', 'city_simulation.py',
+              'test_system_boot.py', 'test_event_bus_integration.py', 'test_capability_revocation.py'
+          }
+          test_files = [
+              f for f in Path('tests').glob('**/*.py')
+              if not any(p in str(f) for p in exclude_patterns)
+          ]
           results = validate_test_files([str(f) for f in test_files])
 
           blocked = [r for r in results if r['blocked']]

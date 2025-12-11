@@ -82,6 +82,12 @@ def temp_workdir():
         playbook_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy(playbook_src, playbook_dst / "_registry.yaml")
 
+    # Copy phoenix sections (required for PhoenixConfig to load paths)
+    sections_src = original_cwd / "vibe_core" / "phoenix" / "sections"
+    if sections_src.exists():
+        sections_dst = temp_path / "vibe_core" / "phoenix" / "sections"
+        shutil.copytree(sections_src, sections_dst)
+
     import os
 
     os.chdir(temp_dir)
