@@ -146,7 +146,7 @@ from vibe_core.event_bus import get_event_bus, Event
 
 ```python
 # In vibe_core/kernel_impl.py:
-from steward.constitutional_oath import ConstitutionalOath
+from vibe_core.steward.constitutional_oath import ConstitutionalOath
 
 # This is used to initialize agents with their oath constraints
 ```
@@ -201,7 +201,7 @@ from vibe_core.steward.oath_mixin import OathMixin
 
 **Uses:**
 - `from vibe_core import Task` (new)
-- `from steward.constitutional_oath import ConstitutionalOath` (old)
+- `from vibe_core.steward.constitutional_oath import ConstitutionalOath` (old)
 
 **Status:** ⚠️ Direct dependency on oath constraints
 
