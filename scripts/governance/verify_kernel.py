@@ -37,6 +37,7 @@ PROTECTED_FILES = [
     "vibe_core/kernel_impl.py",
     "vibe_core/plugin_protocol.py",
     "vibe_core/plugin_loader.py",
+    "vibe_core/kernel_ops.py",  # Kill-Switch + Immunsystem
 ]
 
 # Hash storage file
