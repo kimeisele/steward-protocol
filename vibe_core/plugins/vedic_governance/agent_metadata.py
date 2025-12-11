@@ -9,8 +9,11 @@ Maps each agent to its Varna (species) and current Ashrama (lifecycle stage).
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
-from vibe_core.steward.ashrama import Ashrama, AshramaTransition
-from vibe_core.steward.varna import Varna
+from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition
+from vibe_core.plugins.vedic_governance.varna import Varna
+
+# NOTE: This module was moved from steward/ to vedic_governance/
+# because it's Vedic-specific (uses Varna/Ashrama classification)
 
 
 @dataclass

@@ -168,7 +168,7 @@ grep -r "except ImportError" vibe_core/ steward/ provider/ --include="*.py" | \
 python -c "from vibe_core.protocols import *; print('All protocols imported')"
 
 # 3. Verify no circular imports
-python -c "from vibe_core import VibeAgent; from steward.system_agents.discoverer.agent import Discoverer; print('No circular imports')"
+python -c "from vibe_core import VibeAgent; from vibe_core.cartridges.system.discoverer.agent import Discoverer; print('No circular imports')"
 
 # 4. Verify Phoenix works
 python -c "from vibe_core.phoenix_config import get_phoenix_engine; e = get_phoenix_engine(); print(f'Phoenix loaded with {len(e.get_config().get(\"agents\", {}).get(\"system_agents\", []))} agents')"

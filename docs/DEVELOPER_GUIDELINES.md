@@ -182,7 +182,7 @@ agents:
 **Don't do this (hardcoded):**
 ```python
 # ❌ WRONG - Hardcoded import
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 
 discoverer = Discoverer()
 ```
@@ -236,7 +236,7 @@ def test_phoenix_config():
 ```python
 def test_no_circular_imports():
     from vibe_core.protocols import VibeAgent
-    from steward.system_agents.discoverer.agent import Discoverer
+    from vibe_core.cartridges.system.discoverer.agent import Discoverer
     assert issubclass(Discoverer, VibeAgent)
 ```
 

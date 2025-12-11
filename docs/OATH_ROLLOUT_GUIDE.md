@@ -13,7 +13,7 @@ This guide shows how to add the Constitutional Oath to each remaining agent.
 ```python
 # At top of your cartridge_main.py
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 ```
@@ -74,7 +74,7 @@ async def boot(self):
 ```python
 # Add import
 try:
-    from steward.oath_mixin import OathMixin
+    from vibe_core.steward.oath_mixin import OathMixin
 except ImportError:
     OathMixin = None
 

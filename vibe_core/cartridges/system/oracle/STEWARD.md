@@ -90,7 +90,7 @@ result = oracle.process(task)
 
 ### Agent Status Check
 ```python
-from steward.system_agents.oracle.tools.introspection_tool import IntrospectionTool
+from vibe_core.cartridges.system.oracle.tools.introspection_tool import IntrospectionTool
 
 introspection = IntrospectionTool(kernel=kernel)
 status = introspection.get_agent_status("herald")

@@ -101,7 +101,7 @@ task_management/
 3. Test manifest generation for one agent:
    ```python
    from vibe_core.identity import ManifestGenerator
-   from steward.system_agents.civic.cartridge_main import CivicCartridge
+   from vibe_core.cartridges.system.civic.cartridge_main import CivicCartridge
 
    civic = CivicCartridge()
    manifest = ManifestGenerator.generate(civic)
@@ -142,7 +142,7 @@ task_management/
 
    from vibe_core.task_management import TaskManager
    from vibe_core.kernel_impl import RealVibeKernel
-   from steward.system_agents.discoverer.agent import Discoverer
+   from vibe_core.cartridges.system.discoverer.agent import Discoverer
 
    def cmd_task_add(args):
        tm = TaskManager(PROJECT_ROOT)

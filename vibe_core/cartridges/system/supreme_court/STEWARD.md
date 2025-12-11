@@ -104,7 +104,7 @@ result = supreme_court.process(task)
 
 ### File Appeal
 ```python
-from steward.system_agents.supreme_court.tools.appeals_tool import AppealsTool
+from vibe_core.cartridges.system.supreme_court.tools.appeals_tool import AppealsTool
 
 appeals = AppealsTool(kernel=kernel)
 appeal = appeals.file_appeal(
@@ -116,7 +116,7 @@ appeal = appeals.file_appeal(
 
 ### Issue Verdict
 ```python
-from steward.system_agents.supreme_court.tools.verdict_tool import VerdictTool, VerdictType
+from vibe_core.cartridges.system.supreme_court.tools.verdict_tool import VerdictTool, VerdictType
 
 verdict_tool = VerdictTool(kernel=kernel)
 verdict = verdict_tool.issue_verdict(

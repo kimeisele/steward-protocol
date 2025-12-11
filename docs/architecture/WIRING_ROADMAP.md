@@ -314,7 +314,7 @@ Nach jedem Fix sollte getestet werden:
 # tests/integration/test_envoy_wiring.py
 
 import pytest
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
+from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 from vibe_core.scheduling.task import Task
 
 @pytest.mark.asyncio
@@ -379,7 +379,7 @@ def test_heartbeat_does_not_false_complete():
 
 Nach Abschluss aller Fixes:
 
-- [ ] `python -c "from steward.system_agents.envoy.cartridge_main import EnvoyCartridge; e = EnvoyCartridge(); print('OK')"` läuft ohne Error
+- [ ] `python -c "from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge; e = EnvoyCartridge(); print('OK')"` läuft ohne Error
 - [ ] `python scripts/heartbeat.py` führt Tasks aus (nicht nur klassifizieren)
 - [ ] Action Handlers erstellen echte Dateien/Ordner
 - [ ] Tasks werden erst COMPLETED wenn echte Arbeit getan wurde

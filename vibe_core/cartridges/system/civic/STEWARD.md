@@ -83,7 +83,7 @@ result = civic.process(task)
 
 ### Registry Validation
 ```python
-from steward.system_agents.civic.registry_agent import RegistryAgent
+from vibe_core.cartridges.system.civic.registry_agent import RegistryAgent
 
 registry = RegistryAgent(kernel=kernel)
 is_valid = registry.validate_agent("herald")
