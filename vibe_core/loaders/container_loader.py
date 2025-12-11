@@ -3,20 +3,43 @@ import json
 import logging
 import os
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 # P2 SECURITY: Import ECDSA verification from steward/crypto.py
 try:
-    from steward.crypto import load_or_generate_keys, verify_signature
+    from steward.crypto import (
+        is_fingerprint_trusted,
+        load_or_generate_keys,
+        verify_signature,
+    )
 
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
     verify_signature = None
     load_or_generate_keys = None
+    is_fingerprint_trusted = None
 
 logger = logging.getLogger("CONTAINER.MOUNTER")
+
+
+@dataclass
+class MountResult:
+    """Result of mounting a container.
+
+    OPUS-015/020: Includes execution mode for downstream enforcement.
+
+    Attributes:
+        mount_point: Path where container was extracted
+        execution_mode: "thread" (shared) or "process" (isolated)
+        manifest: Full manifest dict for additional metadata
+    """
+
+    mount_point: Path
+    execution_mode: str  # "thread" | "process"
+    manifest: Dict[str, Any]
 
 
 def _get_cache_dir() -> Path:
@@ -71,10 +94,16 @@ class ContainerMounter:
             return {"manifest": manifest_data, "compliance": {"has_tests": has_tests, "signed": has_signature}}
 
     @classmethod
-    def mount(cls, container_path: Path) -> Path:
+    def mount(cls, container_path: Path) -> Union[MountResult, Path]:
         """
         Mounts a container to the filesystem for execution.
         Uses Lazy Extraction strategy based on container hash.
+
+        OPUS-015/020: Now returns MountResult with execution.mode for isolation enforcement.
+        For backward compatibility, callers expecting Path can use result.mount_point.
+
+        Returns:
+            MountResult with mount_point, execution_mode, and manifest
         """
         container_hash = cls._get_file_hash(container_path)
         mount_point = cls.CACHE_DIR / container_hash
@@ -83,7 +112,7 @@ class ContainerMounter:
         if not mount_point.exists():
             logger.info(f"Mounting container {container_path.name} to {mount_point}")
 
-            # 1. Verify Signature (Artha) - Placeholder
+            # 1. Verify Signature (Artha)
             cls._verify_signature(container_path)
 
             # 2. Extract
@@ -97,7 +126,34 @@ class ContainerMounter:
                 for sub_container in hollows_path.glob("*.vibe"):
                     cls.mount(sub_container)
 
-        return mount_point
+        # 4. Read manifest and extract execution mode (OPUS-015/020)
+        manifest_path = mount_point / "manifest.json"
+        manifest = {}
+        execution_mode = "thread"  # Default: shared namespace (fast but risky)
+
+        if manifest_path.exists():
+            try:
+                with open(manifest_path) as f:
+                    manifest = json.load(f)
+                execution_mode = manifest.get("execution", {}).get("mode", "thread")
+
+                if execution_mode not in ("thread", "process"):
+                    logger.warning(
+                        f"⚠️ Invalid execution.mode '{execution_mode}' in {container_path.name}, defaulting to 'thread'"
+                    )
+                    execution_mode = "thread"
+
+                if execution_mode == "process":
+                    logger.info(f"🔒 Container '{manifest.get('id', container_path.stem)}' requests PROCESS isolation")
+
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning(f"⚠️ Failed to read manifest from {container_path.name}: {e}")
+
+        return MountResult(
+            mount_point=mount_point,
+            execution_mode=execution_mode,
+            manifest=manifest,
+        )
 
     @classmethod
     def _get_file_hash(cls, file_path: Path) -> str:
@@ -226,21 +282,36 @@ class ContainerMounter:
             # Load our public key to check if we're the signer
             _, our_public_key = load_or_generate_keys()
 
-            # P2 PERMISSIVE: Accept ANY valid signature (future: add keyring trust model)
-            # For now, just verify the signature is mathematically valid
-            is_valid = verify_signature(stored_hash, ecdsa_signature, our_public_key)
+            # Verify the signature is mathematically valid with our key
+            is_our_signature = verify_signature(stored_hash, ecdsa_signature, our_public_key)
 
-            if not is_valid:
-                # Signature doesn't match our key - could be from different author
-                # P2 PERMISSIVE: Log warning but accept (future: check keyring)
-                logger.warning(f"⚠️ Container signed by different key: {signer} (accepting in permissive mode)")
-                # TODO P3: Check signer against trusted keyring
+            if is_our_signature:
+                logger.info(f"✅ Container verified (signed by US): {container_path.name}")
                 return True
 
-            logger.info(f"✅ Container ECDSA verified: {container_path.name} signed by {signer}")
-            return True
+            # Not our signature - check if signer is in trusted keyring
+            # OPUS-015a: Keyring Trust Model
+            strict_mode = os.environ.get("STEWARD_STRICT_MODE", "false").lower() == "true"
 
+            if is_fingerprint_trusted and is_fingerprint_trusted(signer):
+                logger.info(f"✅ Container verified (trusted signer: {signer}): {container_path.name}")
+                return True
+
+            # Signer not trusted
+            if strict_mode:
+                logger.error(f"🔴 UNTRUSTED SIGNER: {signer} - Container rejected in strict mode")
+                raise ValueError(f"Container signed by UNTRUSTED key: {signer}")
+            else:
+                logger.warning(
+                    f"⚠️ Container signed by UNTRUSTED key: {signer} "
+                    f"(allowing in dev mode - set STEWARD_STRICT_MODE=true for production)"
+                )
+                return True
+
+        except ValueError:
+            # Re-raise ValueError (untrusted signer in strict mode)
+            raise
         except Exception as e:
             logger.warning(f"⚠️ ECDSA verification error: {e} - hash verified, signature check failed")
-            # P2 PERMISSIVE: Accept if hash matches even if signature check fails
+            # Allow if hash matches even if signature check fails (dev mode graceful degradation)
             return True

@@ -126,3 +126,88 @@ def get_public_key_string() -> str:
     """
     _, public_key = load_or_generate_keys()
     return public_key
+
+
+# =============================================================================
+# KEYRING TRUST MODEL (OPUS-015a)
+# =============================================================================
+
+TRUSTED_KEYS_DIR = Path(".steward/trusted_keys")
+
+
+def ensure_trusted_keys_dir() -> None:
+    """Ensure trusted_keys directory exists."""
+    if not TRUSTED_KEYS_DIR.exists():
+        TRUSTED_KEYS_DIR.mkdir(parents=True, exist_ok=True)
+        # Add README for users
+        readme = TRUSTED_KEYS_DIR / "README.md"
+        if not readme.exists():
+            readme.write_text(
+                "# Trusted Keys\n\n"
+                "Drop public key `.pem` files here to trust their signatures.\n"
+                "Your own key is automatically trusted.\n"
+            )
+
+
+def load_trusted_keys() -> dict:
+    """
+    Load all trusted public keys from .steward/trusted_keys/.
+
+    Returns:
+        Dict mapping fingerprint -> pem_string
+    """
+    ensure_trusted_keys_dir()
+    trusted = {}
+
+    # Always trust our own key
+    try:
+        _, our_pub = load_or_generate_keys()
+        our_fingerprint = get_public_key_fingerprint(our_pub)
+        trusted[our_fingerprint] = our_pub
+    except Exception as e:
+        logger.warning(f"Could not load own keys: {e}")
+
+    # Load additional trusted keys
+    for pem_file in TRUSTED_KEYS_DIR.glob("*.pem"):
+        try:
+            pem_content = pem_file.read_text()
+            fingerprint = get_public_key_fingerprint(pem_content)
+            trusted[fingerprint] = pem_content
+            logger.debug(f"Loaded trusted key: {pem_file.name} ({fingerprint})")
+        except Exception as e:
+            logger.warning(f"Failed to load trusted key {pem_file}: {e}")
+
+    return trusted
+
+
+def is_key_trusted(public_key_pem: str) -> bool:
+    """
+    Check if a public key is trusted.
+
+    A key is trusted if:
+    1. It's our own key, OR
+    2. It's in .steward/trusted_keys/
+
+    Args:
+        public_key_pem: The public key PEM string to check
+
+    Returns:
+        True if trusted, False otherwise
+    """
+    fingerprint = get_public_key_fingerprint(public_key_pem)
+    trusted = load_trusted_keys()
+    return fingerprint in trusted
+
+
+def is_fingerprint_trusted(fingerprint: str) -> bool:
+    """
+    Check if a key fingerprint is in the trusted keyring.
+
+    Args:
+        fingerprint: The 16-char hex fingerprint to check
+
+    Returns:
+        True if trusted, False otherwise
+    """
+    trusted = load_trusted_keys()
+    return fingerprint in trusted

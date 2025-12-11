@@ -352,6 +352,10 @@ class PluginLoader(UnifiedLoader):
                 logger.warning(f"{meta.entry_class.__name__} is not a KernelPlugin")
                 return None
 
+            # OPUS-015/020: Propagate execution_mode to instance
+            # Kernel reads this at register_agent() time
+            instance._execution_mode = meta.execution_mode
+
             return instance
 
         except Exception as e:
