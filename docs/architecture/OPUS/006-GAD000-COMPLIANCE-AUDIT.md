@@ -20,7 +20,7 @@ files:
   - path: scripts/verify_gad000_compliance.py
     required: false
 tests:
-  - tests/unit/test_scheduler.py
+  - tests/integration/test_kernel_boot.py
 wiring: []
 absent:
   - pattern: "TODO.*gad000"
