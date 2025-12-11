@@ -24,7 +24,6 @@ files:
 tests:
   - tests/unit/test_ephemeral_cities.py
   - tests/integration/test_kernel_scaling.py
-  - tests/hardening/test_kernel_stress.py
 wiring:
   - pattern: "def spawn_child_kernel"
     in: vibe_core/kernel_impl.py

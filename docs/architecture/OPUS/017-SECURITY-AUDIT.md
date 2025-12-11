@@ -17,7 +17,7 @@ tests:
 wiring:
   - pattern: "verify_container"
     in: tests/unit/test_container_loader.py
-  - pattern: "ContainerLoader"
+  - pattern: "ContainerMounter"
     in: vibe_core/loaders/container_loader.py
 absent:
   - pattern: "TODO.*security"

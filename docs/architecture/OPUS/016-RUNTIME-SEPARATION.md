@@ -11,7 +11,7 @@
 files:
   - path: vibe_core/kernel_impl.py
     required: true
-  - path: vibe_core/loaders/plugin_loader.py
+  - path: vibe_core/plugin_loader.py
     required: true
   - path: vibe_core/loaders/container_loader.py
     required: true
@@ -21,8 +21,8 @@ wiring:
   - pattern: "RealVibeKernel"
     in: vibe_core/kernel_impl.py
   - pattern: "PluginLoader"
-    in: vibe_core/loaders/plugin_loader.py
-  - pattern: "ContainerLoader"
+    in: vibe_core/plugin_loader.py
+  - pattern: "ContainerMounter"
     in: vibe_core/loaders/container_loader.py
 -->
 
