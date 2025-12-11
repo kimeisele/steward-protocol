@@ -21,8 +21,10 @@
 #   - scripts/governance/verify_kernel.py - Hash verification
 #   - scripts/governance/kernel_hashes.json - Blessed hashes
 # Infrastructure (The Laws):
-#   - .github/workflows/steward-ci.yml - The Supreme Court
+#   - .github/workflows/* (ALL 10 workflow files) - The Supreme Court
 #   - .pre-commit-config.yaml - The Local Police
+#
+# Total: 7 kernel + 3 governance + 10 workflows + 1 pre-commit = 21 files
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
@@ -43,8 +45,18 @@ PROTECTED_FILES=(
     "scripts/governance/restore_kernel.sh"
     "scripts/governance/verify_kernel.py"
     "scripts/governance/kernel_hashes.json"
-    # Infrastructure (The Laws)
+    # Infrastructure - Workflows (The Supreme Court)
+    ".github/workflows/attest.yml"
+    ".github/workflows/container-build.yml"
+    ".github/workflows/deploy.yml"
+    ".github/workflows/factory.yml"
+    ".github/workflows/heartbeat.yml"
+    ".github/workflows/integration-tests.yml"
+    ".github/workflows/scheduled-agents.yml"
+    ".github/workflows/scribe-docs.yml"
     ".github/workflows/steward-ci.yml"
+    ".github/workflows/system-cycle.yml"
+    # Infrastructure - Config (The Local Police)
     ".pre-commit-config.yaml"
 )
 
@@ -82,6 +94,21 @@ if [ $RESTORED -eq 1 ]; then
     echo "║    vibe_core/plugins/your_feature/                           ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
+fi
+
+# Check for UNAUTHORIZED new workflow files
+# (files in .github/workflows that don't exist in origin/main)
+if [ -d ".github/workflows" ]; then
+    for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+        [ -e "$file" ] || continue  # Skip if no match
+        if ! git ls-tree origin/main -- "$file" &>/dev/null || [ -z "$(git ls-tree origin/main -- "$file")" ]; then
+            echo "🚨 ALARM: Unauthorized NEW workflow detected: $file"
+            rm -f "$file"
+            git rm --cached "$file" 2>/dev/null || true
+            echo "💀 DESTROYED: $file (not in origin/main)"
+            RESTORED=1
+        fi
+    done
 fi
 
 # Always exit 0 - changes are restored, commit can proceed

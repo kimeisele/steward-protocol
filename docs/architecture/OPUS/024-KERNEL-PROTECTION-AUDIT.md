@@ -268,4 +268,40 @@ Everything else (ledger, event_bus, filesystem, etc.) is **infrastructure**:
 
 ---
 
-**Status**: ✅ SECURITY RING 0 COMPLETE - 7 files, 3399 LOC protected.
+## 11. Total War Lockdown (Final Expansion)
+
+Secondary audit (Gemini) identified that protecting only `steward-ci.yml` left 9 other workflow files unprotected. A rascal agent could:
+1. Modify `factory.yml` to inject malicious code
+2. Create a new `evil-workflow.yml` with admin privileges
+
+### Solution: Protect ALL Workflows
+
+| Category | Files | Count |
+|----------|-------|-------|
+| Kernel Code | kernel_impl, kernel_ops, plugin_protocol, plugin_loader, narasimha, capability_registry, bridge | 7 |
+| Governance | restore_kernel.sh, verify_kernel.py, kernel_hashes.json | 3 |
+| Workflows | attest, container-build, deploy, factory, heartbeat, integration-tests, scheduled-agents, scribe-docs, steward-ci, system-cycle | 10 |
+| Config | .pre-commit-config.yaml | 1 |
+| **TOTAL** | | **21** |
+
+### New Attack Blocked: Unauthorized Workflow Creation
+
+```
+Agent creates .github/workflows/evil-backdoor.yml
+    ↓
+Pre-commit: 🚨 DETECTED (matches .github/workflows/*.yml)
+    ↓
+restore_kernel.sh: 💀 DESTROYED (not in origin/main)
+    ↓
+CI: 🚫 BLOCKED (file not in blessed list)
+```
+
+### Protection Mechanisms
+
+1. **Pre-commit hook**: Triggers on ANY .yml/.yaml in .github/workflows/
+2. **restore_kernel.sh**: Auto-restores existing files + DESTROYS new unauthorized files
+3. **CI Nuclear Verification**: Checks all 21 files + detects new workflow files
+
+---
+
+**Status**: ✅ TOTAL WAR LOCKDOWN COMPLETE - 21 files protected + new workflow block.

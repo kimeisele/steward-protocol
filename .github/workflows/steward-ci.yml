@@ -121,13 +121,22 @@ jobs:
         run: |
           git fetch origin main --depth=1
 
-          # TOTAL LOCKDOWN: Code + Watchers + Laws (12 files)
-          RING0_FILES="vibe_core/kernel_impl.py vibe_core/kernel_ops.py vibe_core/plugin_protocol.py vibe_core/plugin_loader.py vibe_core/narasimha.py vibe_core/capability_registry.py vibe_core/bridge.py scripts/governance/restore_kernel.sh scripts/governance/verify_kernel.py scripts/governance/kernel_hashes.json .github/workflows/steward-ci.yml .pre-commit-config.yaml"
+          # TOTAL LOCKDOWN: Code + Watchers + Laws (21 files)
+          # 7 kernel + 3 governance + 10 workflows + 1 config
+          RING0_FILES="vibe_core/kernel_impl.py vibe_core/kernel_ops.py vibe_core/plugin_protocol.py vibe_core/plugin_loader.py vibe_core/narasimha.py vibe_core/capability_registry.py vibe_core/bridge.py scripts/governance/restore_kernel.sh scripts/governance/verify_kernel.py scripts/governance/kernel_hashes.json .github/workflows/attest.yml .github/workflows/container-build.yml .github/workflows/deploy.yml .github/workflows/factory.yml .github/workflows/heartbeat.yml .github/workflows/integration-tests.yml .github/workflows/scheduled-agents.yml .github/workflows/scribe-docs.yml .github/workflows/steward-ci.yml .github/workflows/system-cycle.yml .pre-commit-config.yaml"
 
           VIOLATIONS=""
           for file in $RING0_FILES; do
             if ! git diff --quiet origin/main -- "$file"; then
               VIOLATIONS="$VIOLATIONS $file"
+            fi
+          done
+
+          # Check for UNAUTHORIZED new workflow files
+          for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+            [ -e "$file" ] || continue
+            if ! git ls-tree origin/main -- "$file" | grep -q .; then
+              VIOLATIONS="$VIOLATIONS $file (NEW FILE - NOT IN origin/main)"
             fi
           done
 
@@ -141,13 +150,14 @@ jobs:
               echo "║    - $v"
             done
             echo "║                                                              ║"
-            echo "║  Protected: Code + Watchers + Laws (12 files)                ║"
+            echo "║  Protected: Code + Watchers + Laws (21 files)                ║"
+            echo "║  + NEW workflow files are FORBIDDEN                          ║"
             echo "║  These files define the LAWS of this system.                 ║"
             echo "║  Create a PLUGIN instead.                                    ║"
             echo "╚══════════════════════════════════════════════════════════════╝"
             exit 1
           fi
-          echo "✅ TOTAL LOCKDOWN verified - all 12 files match origin/main"
+          echo "✅ TOTAL LOCKDOWN verified - all 21 files match origin/main, no unauthorized workflows"
 
   # =========================================================================
   # JOB 4: Infrastructure Health Check (was JOB 3)
