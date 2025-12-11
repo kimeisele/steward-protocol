@@ -233,21 +233,20 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
-### 🟢 LOW PRIORITY: Archived Integration Tests
+### ✅ RESOLVED: Archived Tests Restored
 
-**Status:** DEFERRED - Core functionality already tested
-**Lines:** ~1450 lines of test code in `tests/archive/`
+**7 tests moved back** from `tests/archive/` to `tests/integration/`:
+- test_kernel_markdown_interfaces.py
+- test_federation_manual.py
+- test_fractal_ui.py
+- test_genesis_boot.py
+- test_genesis_flow.py
+- test_sangha_api.py
+- test_watchman_governance.py
 
-**Why LOW priority:**
-- `test_kernel_boot.py` → kernel boots ✅
-- `test_gateway_boot.py` → gateway boots ✅
-- `test_governance_gate.py` → governance works ✅
-- 84 unit tests → core logic covered ✅
+**Analysis:** Features exist! Tests were archived without verifying code still works.
 
-**If reviving needed:**
-1. Fix `temp_workdir` fixture to copy phoenix/sections/
-2. Update renderer lookups for new interface plugin structure
-3. Run individually first, then batch (isolation issues)
+**Remaining:** `test_runtime_separation.py` - has `@pytest.mark.skip` (WIP)
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
