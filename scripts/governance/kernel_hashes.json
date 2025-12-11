@@ -1,5 +1,5 @@
 {
-  "vibe_core/kernel_impl.py": "a80619757d684765c6449c5b31a5ee0e25e3ce23a1d4a58819e58f689338d9cb",
+  "vibe_core/kernel_impl.py": "e8eb4ffdef87c7a1abd084f427078c020abf57224d273c19626ce7388db40c07",
   "vibe_core/plugin_protocol.py": "302abd96bce27494bba376223086aea4c3d9739d33843c90ad58112f025aa52f",
-  "vibe_core/plugin_loader.py": "0d4de08022a208f6b1cf74cc937e262dbd53b05b11133fe017b3263005ccc068"
+  "vibe_core/plugin_loader.py": "e54629f366b9973e23b204bb1c17937ecfdc0387ac2e1c90a6ee5944714950db"
 }
