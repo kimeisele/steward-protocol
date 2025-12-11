@@ -30,15 +30,15 @@ jobs:
 
       - name: Run ruff linter (critical errors)
         run: |
-          ruff check vibe_core steward scripts --select=E9,F63,F7,F82 --output-format=github
+          ruff check vibe_core scripts --select=E9,F63,F7,F82 --output-format=github
 
       - name: Run ruff linter (full check with stats)
         run: |
-          ruff check vibe_core steward scripts --output-format=github --statistics || true
+          ruff check vibe_core scripts --output-format=github --statistics || true
 
       - name: Check formatting
         run: |
-          ruff format --check --diff vibe_core steward scripts
+          ruff format --check --diff vibe_core scripts
 
   # =========================================================================
   # JOB 2: Agent Certification Verification

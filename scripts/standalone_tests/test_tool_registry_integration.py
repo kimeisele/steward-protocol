@@ -83,9 +83,9 @@ def test_phase_2_core_tools_registered(kernel):
         print(f"✅ Tool '{tool_name}' is registered")
 
     # Check tool count
-    assert len(registered_tools) == len(
-        expected_tools
-    ), f"❌ Expected {len(expected_tools)} tools, got {len(registered_tools)}"
+    assert len(registered_tools) == len(expected_tools), (
+        f"❌ Expected {len(expected_tools)} tools, got {len(registered_tools)}"
+    )
     print(f"✅ All {len(expected_tools)} core tools registered")
 
 
