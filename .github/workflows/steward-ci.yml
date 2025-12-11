@@ -84,6 +84,29 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Block kernel_hashes.json modification (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Fetch base branch to compare
+          git fetch origin ${{ github.base_ref }} --depth=1
+
+          # Check if kernel_hashes.json was modified in this PR
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "scripts/governance/kernel_hashes.json"; then
+            echo ""
+            echo "╔══════════════════════════════════════════════════════════════╗"
+            echo "║  ❌ BLOCKED: kernel_hashes.json MODIFIED                     ║"
+            echo "║                                                              ║"
+            echo "║  The hash reference file cannot be changed in the same PR    ║"
+            echo "║  as kernel files. This prevents hash manipulation attacks.   ║"
+            echo "║                                                              ║"
+            echo "║  If kernel files legitimately need updating:                 ║"
+            echo "║  1. First PR: Update kernel_hashes.json ONLY (Senior Review) ║"
+            echo "║  2. Second PR: Update kernel files                           ║"
+            echo "╚══════════════════════════════════════════════════════════════╝"
+            exit 1
+          fi
+          echo "✅ kernel_hashes.json unchanged in this PR"
+
       - name: Verify kernel integrity
         run: |
           python scripts/governance/verify_kernel.py --verify

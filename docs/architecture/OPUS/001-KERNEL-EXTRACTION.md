@@ -2,7 +2,7 @@
 
 **Status:** ✅ LOCKED (ETERNAL)
 **Last Updated:** 2025-12-11
-**Final LOC:** 1505 (kernel_impl.py) + 402 (plugin_protocol.py) + 381 (plugin_loader.py) = 2288 total
+**Final LOC:** 1505 (kernel_impl.py) + 402 (plugin_protocol.py) + 381 (plugin_loader.py) + 326 (kernel_ops.py) = 2614 total
 **Protection:** Pre-commit auto-restore + CI hash verification
 
 > **VISNU IS ETERNAL** - The kernel is complete.
@@ -56,7 +56,7 @@ Pre-commit hook in `.pre-commit-config.yaml` **AUTO-RESTORES** kernel files:
   name: Kernel Auto-Restore (VISNU)
   entry: scripts/governance/restore_kernel.sh
   language: script
-  files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader)\.py$
+  files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader|kernel_ops)\.py$
 ```
 
 CI also runs `verify_kernel.py --verify` as backup hash check.

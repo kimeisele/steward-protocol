@@ -8,6 +8,7 @@
 #   - vibe_core/kernel_impl.py (1505 LOC)
 #   - vibe_core/plugin_protocol.py (402 LOC)
 #   - vibe_core/plugin_loader.py (381 LOC)
+#   - vibe_core/kernel_ops.py (326 LOC) - Kill-Switch + Immunsystem
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
@@ -17,6 +18,7 @@ KERNEL_FILES=(
     "vibe_core/kernel_impl.py"
     "vibe_core/plugin_protocol.py"
     "vibe_core/plugin_loader.py"
+    "vibe_core/kernel_ops.py"
 )
 
 RESTORED=0
