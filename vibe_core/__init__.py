@@ -10,10 +10,9 @@ This stub allows standalone development and type checking.
 
 from .event_bus import Event, EventBus, EventType, emit_event, get_event_bus
 
-# PROJECT JNANA: Semantic AI capabilities (lazy-loaded)
-# Usage: from vibe_core import semantic; semantic.embed("text")
+# PROJECT JNANA: Semantic AI capabilities
+# Usage: from vibe_core.cortex.engines.semantic_engine import SemanticRouter
 # Install: pip install steward-protocol[semantic]
-from . import semantic
 
 # BLOCKER #2: Import from canonical Layer 1 protocols location
 from .protocols import (
@@ -47,6 +46,4 @@ __all__ = [
     "Event",
     "EventType",
     "emit_event",
-    # PROJECT JNANA
-    "semantic",
 ]

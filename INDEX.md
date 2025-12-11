@@ -79,4 +79,3 @@ Quick Start: python -m vibe_core.cli boot
 - [docs/reports/GAP_ANALYSIS_V1.md](docs/reports/GAP_ANALYSIS_V1.md) — GAP ANALYSIS V1
 - [docs/reports/GEMINI_PLUGIN_MIGRATION.md](docs/reports/GEMINI_PLUGIN_MIGRATION.md) — GEMINI PLUGIN MIGRATION
 - [docs/reports/GEMINI_PRO_ANALYSE.md](docs/reports/GEMINI_PRO_ANALYSE.md) — GEMINI PRO ANALYSE
-
