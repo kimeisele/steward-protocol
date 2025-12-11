@@ -6,7 +6,7 @@ Quick Start: python -m vibe_core.cli boot
 --># 📊 Live Dashboard
 
 **Status**: STOPPED
-**Time**: 
+**Time**:
 **Agents**: 1
 **Tasks**: 0
 **Memory**: 12.0 KB (1 keys)

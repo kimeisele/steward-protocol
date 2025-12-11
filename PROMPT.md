@@ -181,4 +181,3 @@ NACH jeder Änderung an Dokumentation:
 INKONSISTENTE DOKUMENTATION IST SCHLIMMER ALS KEINE.
 
 ---
-
