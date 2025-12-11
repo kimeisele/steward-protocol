@@ -49,6 +49,7 @@ dependencies = [
     "uvicorn>=0.24.0",
     "requests>=2.31.0",
     "aiofiles>=23.2.1",
+    "aiohttp>=3.9.0",
     "beautifulsoup4>=4.12.0",
 
     # External APIs
@@ -134,7 +135,7 @@ log_cli_level = "WARNING"
 # addopts = "-n auto"  # Uncomment when pytest-xdist is installed
 
 [tool.hatch.build.targets.wheel]
-packages = ["steward", "vibe_core"]
+packages = ["vibe_core"]
 
 # ==============================================================================
 # RUFF: Unified Linting & Formatting (replaces black, flake8, isort)
@@ -177,7 +178,7 @@ max-complexity = 15
 
 # Known first-party modules for import sorting
 [tool.ruff.lint.isort]
-known-first-party = ["vibe_core", "steward", "agent_city"]
+known-first-party = ["vibe_core", "agent_city"]
 
 # Format settings (black-compatible)
 [tool.ruff.format]

@@ -219,11 +219,11 @@
             try {
                 const resp = await fetch(`${API}/api/v1/health`);
                 const data = await resp.json();
-                document.getElementById('health-status').innerHTML = 
+                document.getElementById('health-status').innerHTML =
                     `<span class="status-dot status-online"></span>${data.status.toUpperCase()}`;
                 document.getElementById('health-phase').textContent = data.phase || '-';
             } catch (e) {
-                document.getElementById('health-status').innerHTML = 
+                document.getElementById('health-status').innerHTML =
                     `<span class="status-dot status-offline"></span>OFFLINE`;
             }
         }
@@ -250,7 +250,7 @@
                 const data = await resp.json();
                 const list = document.getElementById('peer-list');
                 if (data.peers && data.peers.length > 0) {
-                    list.innerHTML = data.peers.map(p => 
+                    list.innerHTML = data.peers.map(p =>
                         `<li><strong>${p.peer_id}</strong><br><span class="url">${p.url}</span></li>`
                     ).join('');
                 } else {

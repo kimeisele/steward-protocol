@@ -45,7 +45,7 @@ def _verify_signature(cls, container_path: Path) -> bool:
     with zipfile.ZipFile(container_path, "r") as z:
         # 1. Read stored signature
         stored_signature = z.read("SIGNATURE.sig").decode("utf-8").strip()
-        
+
         # 2. Recalculate hash (manifest first, then sorted files)
         hasher = hashlib.sha256()
         hasher.update(z.read("manifest.json"))
@@ -53,7 +53,7 @@ def _verify_signature(cls, container_path: Path) -> bool:
             if name not in ("manifest.json", "SIGNATURE.sig"):
                 if not name.endswith("/"):
                     hasher.update(z.read(name))
-        
+
         # 3. COMPARE - REJECT IF TAMPERED
         if calculated_hash != stored_signature:
             raise ValueError(f"Container integrity check failed: {container_path}")
@@ -117,4 +117,3 @@ tests/unit/test_container_loader.py::test_tampered_container_rejected PASSED
 - Tampered containers are REJECTED with `ValueError`
 - Hash calculation is DETERMINISTIC across all platforms
 - The proof is in the tests
-
