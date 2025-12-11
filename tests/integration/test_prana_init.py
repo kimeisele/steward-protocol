@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from vibe_core.steward.agent_metadata import get_metadata_registry
+from vibe_core.plugins.vedic_governance.agent_metadata import get_metadata_registry
 from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition
 from vibe_core.steward.daily_ritual import CyclePhase, DailyRitual
 from vibe_core.steward.prana_init import PranaInitializer
