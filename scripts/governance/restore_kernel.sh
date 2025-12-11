@@ -4,21 +4,34 @@
 # Pre-commit hook that RESTORES kernel files instead of just blocking.
 # Agent changes to kernel files literally disappear.
 #
-# Protected files:
+# SECURITY RING 0 - Life, Death, and Rights (3399 LOC total)
+#
+# Core Orchestration:
 #   - vibe_core/kernel_impl.py (1505 LOC)
+#   - vibe_core/kernel_ops.py (326 LOC)
+# Plugin System:
 #   - vibe_core/plugin_protocol.py (402 LOC)
 #   - vibe_core/plugin_loader.py (381 LOC)
-#   - vibe_core/kernel_ops.py (326 LOC) - Kill-Switch + Immunsystem
+# Security (Sword, Shield, Gate):
+#   - vibe_core/narasimha.py (414 LOC) - Kill-Switch
+#   - vibe_core/capability_registry.py (343 LOC) - Permissions
+#   - vibe_core/bridge.py (28 LOC) - Constitution Gate
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
 set -e
 
 KERNEL_FILES=(
+    # Core Orchestration
     "vibe_core/kernel_impl.py"
+    "vibe_core/kernel_ops.py"
+    # Plugin System
     "vibe_core/plugin_protocol.py"
     "vibe_core/plugin_loader.py"
-    "vibe_core/kernel_ops.py"
+    # Security (Sword, Shield, Gate)
+    "vibe_core/narasimha.py"
+    "vibe_core/capability_registry.py"
+    "vibe_core/bridge.py"
 )
 
 RESTORED=0

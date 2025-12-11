@@ -2,10 +2,10 @@
 
 **Status:** ✅ LOCKED (ETERNAL)
 **Last Updated:** 2025-12-11
-**Final LOC:** 1505 (kernel_impl.py) + 402 (plugin_protocol.py) + 381 (plugin_loader.py) + 326 (kernel_ops.py) = 2614 total
+**Security Ring 0:** 3399 LOC (7 files)
 **Protection:** Pre-commit auto-restore + CI hash verification
 
-> **VISNU IS ETERNAL** - The kernel is complete.
+> **SECURITY RING 0** - Life, Death, and Rights are protected.
 > All new features MUST be plugins. No exceptions.
 
 <!-- @HARNESS
@@ -50,14 +50,27 @@ The kernel is now strictly limited to core orchestration logic. All new features
 
 ## Protection Mechanism
 
-Pre-commit hook in `.pre-commit-config.yaml` **AUTO-RESTORES** kernel files:
+Pre-commit hook in `.pre-commit-config.yaml` **AUTO-RESTORES** Ring 0 files:
 ```yaml
 - id: kernel-is-eternal
   name: Kernel Auto-Restore (VISNU)
   entry: scripts/governance/restore_kernel.sh
   language: script
-  files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader|kernel_ops)\.py$
+  files: ^vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py$
 ```
+
+### Security Ring 0 Files
+
+| Category | File | LOC | Purpose |
+|----------|------|-----|---------|
+| Core | `kernel_impl.py` | 1505 | Kernel orchestration |
+| Core | `kernel_ops.py` | 326 | Delegated operations |
+| Plugins | `plugin_protocol.py` | 402 | Plugin interface |
+| Plugins | `plugin_loader.py` | 381 | Plugin loading |
+| Security | `narasimha.py` | 414 | Kill-Switch (Sword) |
+| Security | `capability_registry.py` | 343 | Permissions (Shield) |
+| Security | `bridge.py` | 28 | Constitution (Gate) |
+| **TOTAL** | | **3399** | |
 
 CI also runs `verify_kernel.py --verify` as backup hash check.
 
@@ -108,7 +121,8 @@ def on_boot(self, kernel):
 | 2025-12-06 | ToolsPlugin | 1662 | 1553 |
 | 2025-12-09 | Final audit | 1553 | 1410 |
 | 2025-12-09 | **LOCKED** | 1410 | **ETERNAL** |
-| 2025-12-11 | Protection audit | 1505 | 1505 (no change, LOC drift discovered) |
+| 2025-12-11 | Protection audit | 2614 | 2614 (4 files) |
+| 2025-12-11 | **SECURITY RING 0** | 2614 | **3399 (7 files)** |
 
 ---
 
