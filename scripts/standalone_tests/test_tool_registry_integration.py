@@ -61,9 +61,9 @@ def test_phase_2_core_tools_registered(kernel):
         print(f"✅ Tool '{tool_name}' is registered")
 
     # Check tool count (at least core tools, plus auto-discovered)
-    assert len(registered_tools) >= len(
-        expected_tools
-    ), f"❌ Expected at least {len(expected_tools)} tools, got {len(registered_tools)}"
+    assert len(registered_tools) >= len(expected_tools), (
+        f"❌ Expected at least {len(expected_tools)} tools, got {len(registered_tools)}"
+    )
     print(f"✅ All {len(expected_tools)} core tools registered (total: {len(registered_tools)} with auto-discovery)")
 
 
@@ -104,9 +104,9 @@ def test_phase_4_tool_execution(agent):
     result = agent.system.execute_tool("read_file", {"path": "CONSTITUTION.md"})
 
     assert result.success, f"❌ read_file failed: {result.error}"
-    assert (
-        "CONSTITUTION" in result.output or "Article" in result.output
-    ), "❌ File content doesn't look like constitution"
+    assert "CONSTITUTION" in result.output or "Article" in result.output, (
+        "❌ File content doesn't look like constitution"
+    )
     print(f"✅ read_file succeeded: {len(result.output)} bytes")
 
     # Test 3: List available tools
