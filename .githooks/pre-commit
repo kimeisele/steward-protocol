@@ -205,6 +205,35 @@ else
 fi
 
 # ============================================================================
+# GUARD 6: VISNU Kernel Protection (TOTAL LOCKDOWN)
+# ============================================================================
+# Security Ring 0: 7 kernel + 3 governance + 10 workflows + 1 config = 21 files
+# See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
+# ============================================================================
+echo -n "  ☢️  VISNU Kernel Protection (21 files)... "
+
+RESTORE_SCRIPT="$REPO_ROOT/scripts/governance/restore_kernel.sh"
+
+if [ -x "$RESTORE_SCRIPT" ]; then
+    # Run restore script - it auto-restores any protected file changes
+    OUTPUT=$("$RESTORE_SCRIPT" 2>&1)
+
+    if echo "$OUTPUT" | grep -q "NUCLEAR RESET EXECUTED"; then
+        echo -e "${RED}RESTORED${NC}"
+        echo ""
+        echo "$OUTPUT"
+        echo ""
+        echo -e "${YELLOW}Your changes to protected files have been reverted to origin/main.${NC}"
+        echo -e "${YELLOW}Create a PLUGIN instead: vibe_core/plugins/your_feature/${NC}"
+        echo ""
+    else
+        echo -e "${GREEN}OK${NC}"
+    fi
+else
+    echo -e "${YELLOW}SKIP (restore_kernel.sh not found)${NC}"
+fi
+
+# ============================================================================
 # All guards passed
 # ============================================================================
 echo -e "${GREEN}✅ All pre-commit guards passed${NC}"

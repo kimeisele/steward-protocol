@@ -305,3 +305,52 @@ CI: 🚫 BLOCKED (file not in blessed list)
 ---
 
 **Status**: ✅ TOTAL WAR LOCKDOWN COMPLETE - 21 files protected + new workflow block.
+
+---
+
+## 12. Native Git Hooks Integration (Claude Code Web Fix)
+
+**Date**: 2025-12-11
+
+### Problem Discovered
+
+The `kernel-is-eternal` hook in `.pre-commit-config.yaml` requires `pre-commit install` to be active.
+In Claude Code Web containers, `postCreateCommand` from `devcontainer.json` is NOT executed.
+Result: AI agents could commit to kernel files without any local blocking.
+
+### Solution: GUARD 6 in `.githooks/pre-commit`
+
+Added native git hook guard that calls `restore_kernel.sh` directly:
+
+```bash
+# .githooks/pre-commit - GUARD 6
+RESTORE_SCRIPT="$REPO_ROOT/scripts/governance/restore_kernel.sh"
+if [ -x "$RESTORE_SCRIPT" ]; then
+    OUTPUT=$("$RESTORE_SCRIPT" 2>&1)
+    # Auto-restores protected files from origin/main
+fi
+```
+
+### Activation Requirement
+
+The native hook ONLY works if `core.hooksPath` is set:
+
+```bash
+git config --local core.hooksPath .githooks
+```
+
+This must be set via:
+1. **Devcontainer**: `postCreateCommand` in `devcontainer.json` (existing)
+2. **Claude Code Web**: SessionStart hook (TODO: needs implementation)
+3. **Manual**: Developer runs the command
+
+### Defense Layers Now
+
+| Layer | Mechanism | Blocks Commit | Blocks Merge |
+|-------|-----------|---------------|--------------|
+| 0 | `.githooks/pre-commit` GUARD 6 | ✅ (if hooksPath set) | N/A |
+| 1 | `.pre-commit-config.yaml` kernel-is-eternal | ✅ (if pre-commit installed) | N/A |
+| 2 | CI VISNU kernel-integrity job | N/A | ✅ |
+
+**Gap**: If neither hooksPath nor pre-commit is configured, Layer 2 (CI) is the only defense.
+CI blocks merge but not commit - the bad commit exists until PR is closed.
