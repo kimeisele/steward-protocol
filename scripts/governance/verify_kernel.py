@@ -3,9 +3,10 @@
 KERNEL INTEGRITY VERIFICATION (Phase 3: Hash-Verification)
 ============================================================
 
+KERNEL IS VISNU - ETERNAL AND UNCHANGING.
+
 This script verifies the integrity of core kernel files.
-Once the kernel is stable, these files should NEVER change without
-explicit Senior Review approval.
+The kernel is FROZEN. All new features MUST be plugins.
 
 Protected Files:
 - vibe_core/kernel_impl.py
@@ -13,14 +14,16 @@ Protected Files:
 - vibe_core/plugin_loader.py
 
 Usage:
-    # Generate hashes (run once when kernel is finalized)
-    python scripts/governance/verify_kernel.py --generate
-
     # Verify integrity (run in CI)
     python scripts/governance/verify_kernel.py --verify
 
     # Check for changes (run before commit)
     python scripts/governance/verify_kernel.py --check
+
+HASH UPDATES:
+    Hash file is MANUALLY edited only. No --generate option.
+    If CI fails, the kernel was changed when it shouldn't have been.
+    Create a plugin instead. No exceptions.
 """
 
 import argparse
@@ -49,28 +52,11 @@ def get_file_hash(file_path: str) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-def generate_hashes() -> dict:
-    """Generate hashes for all protected files."""
-    hashes = {}
-    for file in PROTECTED_FILES:
-        file_hash = get_file_hash(file)
-        hashes[file] = file_hash
-        print(f"  {file}: {file_hash[:16]}...")
-    return hashes
-
-
-def save_hashes(hashes: dict) -> None:
-    """Save hashes to file."""
-    HASH_FILE.parent.mkdir(parents=True, exist_ok=True)
-    HASH_FILE.write_text(json.dumps(hashes, indent=2))
-    print(f"\n Hashes saved to: {HASH_FILE}")
-
-
 def load_hashes() -> dict:
     """Load expected hashes from file."""
     if not HASH_FILE.exists():
         print(f" Hash file not found: {HASH_FILE}")
-        print("  Run with --generate first to create baseline hashes.")
+        print("  CRITICAL: Hash file must exist. This is a setup error.")
         return {}
     return json.loads(HASH_FILE.read_text())
 
@@ -112,26 +98,18 @@ def check_changes() -> list:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Kernel Integrity Verification",
+        description="Kernel Integrity Verification - KERNEL IS VISNU",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--generate", action="store_true", help="Generate baseline hashes")
+    # NO --generate option. Hash file is manually edited only.
     parser.add_argument("--verify", action="store_true", help="Verify integrity against baseline")
     parser.add_argument("--check", action="store_true", help="Check for changes (CI mode)")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
 
     args = parser.parse_args()
 
-    if args.generate:
-        print(" GENERATING KERNEL HASHES")
-        print("=" * 60)
-        hashes = generate_hashes()
-        save_hashes(hashes)
-        print("\n Baseline hashes generated. Commit kernel_hashes.json to lock them in.")
-        sys.exit(0)
-
-    elif args.verify:
+    if args.verify:
         print(" VERIFYING KERNEL INTEGRITY")
         print("=" * 60)
         if verify_hashes():
@@ -139,7 +117,9 @@ def main():
             sys.exit(0)
         else:
             print("\n KERNEL INTEGRITY COMPROMISED!")
-            print("  These files require SENIOR REVIEW if changes are intentional.")
+            print("  KERNEL IS VISNU - ETERNAL AND UNCHANGING.")
+            print("  All new features MUST be plugins. No exceptions.")
+            print("  Revert your kernel changes and create a plugin instead.")
             sys.exit(1)
 
     elif args.check:
@@ -150,7 +130,8 @@ def main():
             print(" PROTECTED FILES MODIFIED:")
             for f in changed:
                 print(f"  - {f}")
-            print("\n  These changes require SENIOR REVIEW approval.")
+            print("\n  KERNEL IS VISNU - No changes allowed.")
+            print("  Create a plugin instead. Revert these changes.")
             sys.exit(1)
         else:
             print(" No protected files modified.")
