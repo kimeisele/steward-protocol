@@ -4,7 +4,7 @@
 # Dieses Skript setzt Security Ring 0 BRUTAL auf origin/main zurück.
 # Nicht HEAD (kann polluted sein), sondern die WAHRE QUELLE.
 #
-# SECURITY RING 0 - Life, Death, and Rights (3399 LOC total)
+# SECURITY RING 0 - Life, Death, and Rights (3399 LOC + Governance)
 #
 # Core Orchestration:
 #   - vibe_core/kernel_impl.py (1505 LOC)
@@ -16,12 +16,16 @@
 #   - vibe_core/narasimha.py (414 LOC) - Kill-Switch
 #   - vibe_core/capability_registry.py (343 LOC) - Permissions
 #   - vibe_core/bridge.py (28 LOC) - Constitution Gate
+# Governance (The Watchers):
+#   - scripts/governance/restore_kernel.sh - THIS FILE
+#   - scripts/governance/verify_kernel.py - Hash verification
+#   - scripts/governance/kernel_hashes.json - Blessed hashes
 #
 # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
 
 set -e
 
-KERNEL_FILES=(
+PROTECTED_FILES=(
     # Core Orchestration
     "vibe_core/kernel_impl.py"
     "vibe_core/kernel_ops.py"
@@ -32,6 +36,10 @@ KERNEL_FILES=(
     "vibe_core/narasimha.py"
     "vibe_core/capability_registry.py"
     "vibe_core/bridge.py"
+    # Governance (The Watchers watch themselves)
+    "scripts/governance/restore_kernel.sh"
+    "scripts/governance/verify_kernel.py"
+    "scripts/governance/kernel_hashes.json"
 )
 
 # Fetch origin/main - die WAHRE QUELLE
@@ -39,7 +47,7 @@ git fetch origin main --depth=1 2>/dev/null || true
 
 RESTORED=0
 
-for file in "${KERNEL_FILES[@]}"; do
+for file in "${PROTECTED_FILES[@]}"; do
     # Prüfen ob die Datei von origin/main abweicht (staged oder unstaged)
     if ! git diff --quiet origin/main -- "$file" 2>/dev/null; then
         echo "🚨 ALARM: Unerlaubte Änderung an $file"

@@ -76,18 +76,18 @@ repos:
   # =========================================================================
   # VISNU KERNEL PROTECTION - ETERNAL AND UNCHANGING
   # =========================================================================
-  # SECURITY RING 0 - 3399 LOC total, eternal and unchanging.
+  # SECURITY RING 0 - Kernel + Governance (The Watchers watch themselves)
   # All new features MUST be plugins. No exceptions.
   #
-  # This hook AUTO-RESTORES kernel files instead of just blocking.
+  # This hook AUTO-RESTORES protected files from origin/main.
   # Agent changes literally disappear.
   #
   # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
   - repo: local
     hooks:
       - id: kernel-is-eternal
-        name: Kernel Auto-Restore (VISNU)
+        name: ☢️ Nuclear Auto-Restore (VISNU)
         entry: scripts/governance/restore_kernel.sh
         language: script
-        files: ^vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py$
+        files: ^(vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py|scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json))$
         stages: [commit]
