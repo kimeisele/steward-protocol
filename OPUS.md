@@ -203,39 +203,33 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**AI DOCS MAINTENANCE (2025-12-11 17:30 UTC)**
-- 🔄 Audited PANOPTICON+ exclusions - some tests already migrated
-- ✅ `test_system_boot.py` - uses TestAgents fixtures
-- ✅ `test_governance_security.py` - uses TestAgents fixtures
-- 📋 Updated blockers with accurate migration status
+**PANOPTICON+ MIGRATION COMPLETE (2025-12-11 17:45 UTC)**
+- ✅ `test_event_bus_integration.py` - now uses `swear_oath_sync()`
+- ✅ `test_capability_revocation.py` - now uses `swear_oath_sync()`
+- ✅ `city_simulation.py` - removed manual fallback, uses canonical oath
+- ✅ `test_red_team_attacks.py` - extracted `_apply_fake_oath()` helper
+- 🎯 **0 tests with `self.oath_sworn = True`** (was 10 violations)
 
-**PREVIOUS (2025-12-11 16:15 UTC)**
-- ✅ Fixed `test_concurrent_writes_integrity` timeout
-- ✅ Fixed `test_keyring_trust.py` legacy module refs
-- ✅ CI GREEN: ruff ✅, kernel boot ✅, integration tests ✅
+**PREVIOUS (2025-12-11 17:30 UTC)**
+- Audited PANOPTICON+ exclusions
+- Updated blockers with accurate migration status
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-### 🔴 TECH DEBT: Tests brauchen TestAgents Migration
+### ✅ RESOLVED: Tests Migration Complete
 
-**Problem:** 4 Test-Dateien setzen noch `self.oath_sworn = True` (PANOPTICON+ violation).
-**Fix:** Migrieren zu `TestAgents.compliant()` / `TestAgents.without_oath()` Fixtures.
-
-| Test | Problem | Status |
-|------|---------|--------|
-| `tests/integration/test_event_bus_integration.py` | oath x1 | ❌ Needs migration |
-| `tests/integration/city_simulation.py` | oath x2 (conditional) | ❌ Needs migration |
-| `tests/integration/test_capability_revocation.py` | oath x1 | ❌ Needs migration |
-| `tests/hardening/test_red_team_attacks.py` | oath x6 | ❌ Needs migration |
-
-**Already Migrated:**
-| Test | Status |
-|------|--------|
-| `tests/integration/test_system_boot.py` | ✅ Uses TestAgents |
-| `tests/hardening/test_governance_security.py` | ✅ Uses TestAgents |
+**All tests now use canonical oath-swearing:**
+| Test | Migration |
+|------|-----------|
+| `test_event_bus_integration.py` | ✅ `swear_oath_sync()` |
+| `test_capability_revocation.py` | ✅ `swear_oath_sync()` |
+| `city_simulation.py` | ✅ `swear_oath_sync()` fallback |
+| `test_red_team_attacks.py` | ✅ `_apply_fake_oath()` helper |
+| `test_system_boot.py` | ✅ TestAgents fixtures |
+| `test_governance_security.py` | ✅ TestAgents fixtures |
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
