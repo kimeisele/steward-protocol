@@ -59,9 +59,39 @@ class EphemeralRenderer(BaseRenderer):
                 )
 
         lines.append("")
-        lines.extend(["## Active Cities", "", "_No active cities detected_", ""])
+
+        # Active Cities (OPUS-023: Query live child kernels)
+        lines.extend(self._render_active_cities())
 
         return "\n".join(lines)
+
+    def _render_active_cities(self) -> List[str]:
+        """
+        Render active ephemeral cities from kernel._child_kernels.
+
+        OPUS-023: Fractal UI Architecture
+        Makes running child kernels visible in parent dashboard.
+        """
+        lines = ["## Active Cities", "", "| City ID | Status | Ledger Size |", "| :--- | :--- | :--- |"]
+
+        child_kernels = getattr(self.kernel, "_child_kernels", [])
+
+        if not child_kernels:
+            lines.append("| _No active cities_ | | |")
+        else:
+            for child in child_kernels:
+                city_id = str(id(child))[:8]
+                # Check if child is booted
+                status = "RUNNING" if getattr(child, "_booted", False) else "INIT"
+                # Get ledger event count
+                try:
+                    ledger_size = len(child._ledger.get_all_events()) if hasattr(child, "_ledger") else 0
+                except Exception:
+                    ledger_size = 0
+                lines.append(f"| {city_id} | {status} | {ledger_size} events |")
+
+        lines.append("")
+        return lines
 
     def record_merge(self, merge_record: Dict[str, Any]) -> None:
         """Record a merge event."""
