@@ -76,13 +76,18 @@ repos:
   # =========================================================================
   # VISNU KERNEL PROTECTION - ETERNAL AND UNCHANGING
   # =========================================================================
-  # The kernel is VISNU - 1410 LOC, complete and eternal.
+  # The kernel is VISNU - 2288 LOC total, complete and eternal.
   # All new features MUST be plugins. No exceptions.
-  # Bypass (emergency only): git commit --no-verify
+  #
+  # This hook AUTO-RESTORES kernel files instead of just blocking.
+  # Agent changes literally disappear.
+  #
+  # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
   - repo: local
     hooks:
       - id: kernel-is-eternal
-        name: Kernel Protection (VISNU)
-        entry: "KERNEL IS VISNU - ETERNAL. Create a plugin instead. Bypass: git commit --no-verify"
-        language: fail
-        files: ^vibe_core/kernel_impl\.py$
+        name: Kernel Auto-Restore (VISNU)
+        entry: scripts/governance/restore_kernel.sh
+        language: script
+        files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader)\.py$
+        stages: [commit]

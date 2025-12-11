@@ -1,6 +1,6 @@
 # OPUS-024: Kernel Protection Audit
 
-> **Status**: AUDIT COMPLETE - AWAITING DECISION
+> **Status**: ✅ DECISION: OPTION B (Auto-Restore)
 > **Date**: 2025-12-11
 > **Author**: Claude Opus (Audit by secondary agent)
 > **Depends On**: 001-KERNEL-EXTRACTION, 022-KERNEL-SCALING
@@ -145,15 +145,15 @@ If vulnerability: Audit all `--no-verify` usage.
 
 ---
 
-## 6. Decision Required
+## 6. Decision: Option B
 
-| Option | Detection | Prevention | Effort | Recommendation |
-|--------|-----------|------------|--------|----------------|
-| A: Wire Existing | ✅ | ❌ | 1h | Minimum viable |
-| B: Auto-Restore | ✅ | ✅ (partial) | 2-3h | Good balance |
-| C: Golden Copy | ✅ | ✅ (full) | 4-6h | Maximum security |
+| Option | Detection | Prevention | Effort | Decision |
+|--------|-----------|------------|--------|----------|
+| A: Wire Existing | ✅ | ❌ | 1h | ❌ Half-measure |
+| B: Auto-Restore | ✅ | ✅ (partial) | 2-3h | ✅ **SELECTED** |
+| C: Golden Copy | ✅ | ✅ (full) | 4-6h | Overkill for now |
 
-**My recommendation**: Option A immediately (fix the dead code), then Option B or C based on how often kernel changes slip through.
+**Rationale**: Option A only detects - that's theater. Option B actually PREVENTS changes by auto-restoring. Option C adds complexity we don't need yet.
 
 ---
 
@@ -167,12 +167,18 @@ These should be done NOW:
 
 ---
 
-## 8. Open Questions
+## 8. Implementation Plan (Option B)
 
-1. Which protection option to implement?
-2. Is `InterfacePlugin --no-verify` intentional?
-3. Should we audit ALL `--no-verify` usage in codebase?
-4. Who can update golden copies (if Option C)?
+1. **Create `scripts/governance/restore_kernel.sh`** - auto-restore script
+2. **Extend pre-commit** - protect all 3 files, use restore script instead of `language: fail`
+3. **Wire CI** - add `verify_kernel.py --verify` as backup check
+4. **Update hashes** - regenerate `kernel_hashes.json` with current state
+5. **Update docs** - fix LOC in `001-KERNEL-EXTRACTION.md`
+
+### Remaining Questions (P2)
+
+- `InterfacePlugin --no-verify`: Document as intentional exception for UI files
+- Full `--no-verify` audit: Defer unless issues arise
 
 ---
 
@@ -188,4 +194,4 @@ These should be done NOW:
 
 ---
 
-**Next Action**: AWAITING DECISION on which option to implement.
+**Next Action**: Implement Option B (see Section 8).
