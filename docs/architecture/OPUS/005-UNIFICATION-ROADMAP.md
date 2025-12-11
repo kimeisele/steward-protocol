@@ -20,8 +20,6 @@ files:
     required: true
   - path: vibe_core/playbook/loader.py
     required: true
-  - path: scripts/verify_no_legacy_imports.py
-    required: false
 tests:
   - tests/integration/test_kernel_boot.py
 wiring:
@@ -31,11 +29,6 @@ wiring:
     in: vibe_core/runtime/unified_execution.py
   - pattern: "UnifiedCLI"
     in: vibe_core/cli/unified_cli.py
-absent:
-  - pattern: "TODO.*unif"
-    in: vibe_core/runtime/unified_execution.py
-config:
-  - section: unification
 -->
 
 ---

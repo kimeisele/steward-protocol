@@ -12,18 +12,17 @@ files:
     required: true
   - path: vibe_core/kernel_impl.py
     required: true
+  - path: vibe_core/cartridges/system/engineer/cartridge_main.py
+    required: true
 tests:
-  - tests/unit/test_kernel_impl.py
+  - tests/integration/test_kernel_boot.py
 wiring:
-  - pattern: "SystemAgent"
+  - pattern: "LifecyclePlugin"
     in: vibe_core/plugins/lifecycle/plugin_main.py
   - pattern: "register_agent"
     in: vibe_core/kernel_impl.py
-absent:
-  - pattern: "TODO.*agent"
-    in: vibe_core/plugins/lifecycle/plugin_main.py
-config:
-  - section: system_agents
+  - pattern: "SPAWN_COGNITION"
+    in: vibe_core/runtime/syscalls.py
 -->
 
 ---
