@@ -341,7 +341,7 @@ git config --local core.hooksPath .githooks
 
 This must be set via:
 1. **Devcontainer**: `postCreateCommand` in `devcontainer.json` (existing)
-2. **Claude Code Web**: SessionStart hook (TODO: needs implementation)
+2. **Claude Code Web**: SessionStart hook in `.claude/settings.json` ✅ IMPLEMENTED
 3. **Manual**: Developer runs the command
 
 ### Defense Layers Now
@@ -352,18 +352,29 @@ This must be set via:
 | 1 | `.pre-commit-config.yaml` kernel-is-eternal | ✅ (if pre-commit installed) | N/A |
 | 2 | CI VISNU kernel-integrity job | N/A | ✅ |
 
-**Gap**: If neither hooksPath nor pre-commit is configured, Layer 2 (CI) is the only defense.
-CI blocks merge but not commit - the bad commit exists until PR is closed.
+**Claude Code Web**: Kernel protection is AUTOMATIC via `.claude/settings.json` SessionStart hook.
+No manual steps required - every session auto-configures git hooks.
 
 ### SessionStart Hook Implementation
 
-Created `.claude/hooks/session-start.sh` that auto-configures `core.hooksPath` at session start.
+Created `.claude/hooks/session-start.sh` registered in `.claude/settings.json`:
 
-**Installation:**
-```bash
-cp .claude/hooks/session-start.sh ~/.claude/hooks/
-chmod +x ~/.claude/hooks/session-start.sh
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+      }]
+    }]
+  }
+}
 ```
+
+**What it does:**
+1. Installs dependencies (`uv pip install -e .[dev]`)
+2. Enables git hooks (`git config --local core.hooksPath .githooks`)
 
 **GAD-000 Compliance:**
 - JSON output for AI parseability
