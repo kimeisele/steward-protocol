@@ -4,7 +4,7 @@
 ## Status
 - **Date**: 2025-12-11
 - **Author**: Antigravity
-- **Status**: ACTIVE (Binary/AI Paradox Documented)
+- **Status**: ACTIVE
 - **Preceded By**: OPUS-015 (Container Format)
 
 <!-- @HARNESS
@@ -85,82 +85,36 @@ Create a script that:
 - **Versioning**: How do we ensure Kernel v2.0 doesn't break Herald v1.0?
     - *Answer*: Semantic Versioning in `manifest.json`. Kernel checks `min_kernel_version`.
 
-## 6. The Binary/AI Paradox (RESOLVED)
+## 6. Semantic AI (PROJECT JNANA)
 
-### The Paradox
-The system needs offline AI intelligence (LLM inference, semantic search, embeddings) but also needs to be:
-1. **Fast to start** - No 30-second load times
-2. **Small to distribute** - Not a 2GB binary
-3. **Portable** - Works on any system without GPU/CUDA setup
+### Architecture
 
-Heavy dependencies like `torch`, `transformers`, `sentence-transformers` conflict with these goals.
+The semantic routing system is ALREADY IMPLEMENTED in `vibe_core/cortex/engines/semantic_engine.py`:
 
-### The Solution: Separation of Concerns
+| Component | Location | Status |
+|-----------|----------|--------|
+| SemanticRouter | `vibe_core/cortex/engines/semantic_engine.py` | ✅ Implemented |
+| Lazy Loading | `get_embedding_model()` with async lock | ✅ Implemented |
+| Optional Deps | `pyproject.toml [semantic]` | ✅ Available |
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                    THIN KERNEL (Binary)                      │
-│  - Fast boot (~2 seconds)                                    │
-│  - Small size (~50MB)                                        │
-│  - Core scheduling, routing, execution                       │
-│  - NO ML dependencies (torch, numpy excluded)                │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    FAT HOLONS (Containers)                   │
-│  - semantic.vibe     → Sentence Transformers + Embeddings   │
-│  - llm_local.vibe    → llama-cpp for local inference        │
-│  - vision.vibe       → Image understanding                  │
-│  - Each holon declares its own dependencies                  │
-└─────────────────────────────────────────────────────────────┘
+### Installation
+
+```bash
+# Base install (no semantic)
+pip install steward-protocol
+
+# With semantic AI
+pip install steward-protocol[semantic]
 ```
 
-### Implementation Status
+### Usage
 
-| Component | Location | Dependencies | Status |
-|-----------|----------|--------------|--------|
-| Kernel Binary | `scripts/build_binary.py` | Minimal (excludes ML) | ✅ Working |
-| Container Loader | `vibe_core/loaders/container_loader.py` | None | ✅ Working |
-| PROJECT JNANA | `pyproject.toml:43-45` | sentence-transformers (commented) | 📋 Deferred |
-| Local LLM | `[project.optional-dependencies]` | llama-cpp-python | 📋 Optional |
-
-### Why Dependencies Are Commented Out
-
-In `pyproject.toml`:
 ```python
-# Semantic AI (PROJECT JNANA) - Not yet implemented, commented out for now
-# "sentence-transformers>=2.2.0",
-# "numpy>=1.24.0",
-```
+from vibe_core.cortex.engines.semantic_engine import SemanticRouter
 
-**This is BY DESIGN, not a bug.**
-
-The kernel doesn't need these dependencies because:
-1. AI capabilities will be packaged in `.vibe` containers
-2. Users who need semantic search can install `semantic.vibe`
-3. Users who don't need it get a fast, lean kernel
-
-### How to Add AI Capabilities
-
-1. Create a `.vibe` container with the AI capability
-2. Include dependencies in the container's `manifest.json`
-3. Use `execution.mode: "process"` for isolation
-4. The kernel loads the container on-demand
-
-Example `semantic.vibe/manifest.json`:
-```json
-{
-  "id": "semantic",
-  "type": "plugin",
-  "execution": {
-    "mode": "process",
-    "runtime": "python3.11"
-  },
-  "dependencies": {
-    "sentence-transformers": ">=2.2.0",
-    "numpy": ">=1.24.0"
-  }
-}
+router = SemanticRouter()
+concepts = await router.analyze("debug test failures")
+route = await router.route("fix the build")
 ```
 
 ## 7. Next Steps
