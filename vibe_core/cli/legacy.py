@@ -863,6 +863,105 @@ class StewardCLI:
             return 1
 
     # =========================================================================
+    # COMMAND: steward install-semantic
+    # =========================================================================
+
+    def cmd_install_semantic(self) -> int:
+        """Install semantic intelligence extensions (numpy, sentence-transformers)."""
+        print("SEMANTIC INTELLIGENCE INSTALLATION")
+        print("=" * 70)
+        print()
+        print("This installs optional packages for neural semantic understanding.")
+        print()
+        print("Packages:")
+        print("  - numpy:                Vector operations")
+        print("  - sentence-transformers: Neural embeddings (includes torch)")
+        print()
+        print("Target: ~/.steward/lib/")
+        print()
+
+        try:
+            from vibe_core.runtime_extensions import (
+                get_extension_status,
+                install_semantic_extensions,
+            )
+
+            # Check current status
+            status = get_extension_status()
+            numpy_available = status["packages"].get("numpy", {}).get("available", False)
+            st_available = status["packages"].get("sentence_transformers", {}).get("available", False)
+
+            if numpy_available and st_available:
+                print("✅ Semantic extensions already installed!")
+                print()
+                print("Current status:")
+                for pkg, info in status["packages"].items():
+                    if info["available"]:
+                        print(f"  - {pkg}: {info['version']}")
+                return 0
+
+            print("Installing... (this may take a few minutes)")
+            print()
+
+            success = install_semantic_extensions()
+
+            if success:
+                print()
+                print("✅ Semantic intelligence installed!")
+                print()
+                print("Restart the kernel to enable neural semantic routing.")
+                print("The DeterministicRouter will be upgraded to SemanticRouter.")
+                return 0
+            else:
+                print()
+                print("❌ Installation failed. Check logs for details.")
+                return 1
+
+        except ImportError as e:
+            print(f"❌ Missing module: {e}")
+            return 1
+        except Exception as e:
+            print(f"❌ Installation error: {e}")
+            return 1
+
+    # =========================================================================
+    # COMMAND: steward extensions (show extension status)
+    # =========================================================================
+
+    def cmd_extensions(self) -> int:
+        """Show runtime extension status."""
+        print("RUNTIME EXTENSIONS STATUS")
+        print("=" * 70)
+        print()
+
+        try:
+            from vibe_core.runtime_extensions import get_extension_status
+
+            status = get_extension_status()
+
+            print(f"STEWARD_HOME: {status['steward_home']}")
+            print(f"STEWARD_LIB:  {status['steward_lib']}")
+            print(f"LIB EXISTS:   {'Yes' if status['lib_exists'] else 'No'}")
+            print()
+            print("OPTIONAL PACKAGES:")
+            print("-" * 40)
+
+            for pkg, info in status["packages"].items():
+                if info["available"]:
+                    print(f"  ✅ {pkg}: {info['version']}")
+                else:
+                    print(f"  ❌ {pkg}: not installed")
+
+            print()
+            print("To install semantic intelligence:")
+            print("  steward install-semantic")
+            return 0
+
+        except ImportError as e:
+            print(f"❌ Extensions module not available: {e}")
+            return 1
+
+    # =========================================================================
     # COMMAND: steward do (Natural Language Interface)
     # =========================================================================
 
@@ -1076,6 +1175,12 @@ def main():
     # steward install-llm
     subparsers.add_parser("install-llm", help="Download local LLM (~400MB)")
 
+    # steward install-semantic
+    subparsers.add_parser("install-semantic", help="Install semantic intelligence (numpy, torch)")
+
+    # steward extensions
+    subparsers.add_parser("extensions", help="Show runtime extension status")
+
     # steward delegate <agent_id> <task>
     delegate_parser = subparsers.add_parser("delegate", help="Submit task to agent")
     delegate_parser.add_argument("agent_id", help="Agent ID to delegate to")
@@ -1113,6 +1218,10 @@ def main():
         return cli.cmd_introspect()
     elif args.command == "install-llm":
         return cli.cmd_install_llm()
+    elif args.command == "install-semantic":
+        return cli.cmd_install_semantic()
+    elif args.command == "extensions":
+        return cli.cmd_extensions()
     elif args.command == "delegate":
         return cli.cmd_delegate(args.agent_id, args.task)
     elif args.command == "do":
