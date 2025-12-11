@@ -20,7 +20,9 @@ def verify_manifests():
         print(f"❌ Directory not found: {agents_dir}")
         return False
 
-    for agent_dir in [d for d in agents_dir.iterdir() if d.is_dir()]:
+    # Skip __pycache__ and other non-agent directories
+    skip_dirs = {"__pycache__", ".pytest_cache", "__init__"}
+    for agent_dir in [d for d in agents_dir.iterdir() if d.is_dir() and d.name not in skip_dirs]:
         agent_name = agent_dir.name
 
         # Check STEWARD.md
