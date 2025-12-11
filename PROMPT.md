@@ -144,3 +144,41 @@ python -m pytest tests/integration/ -v --tb=short
 ```
 
 ---
+
+Wenn ein Problem genannt wird:
+- LESEN der Architektur-Docs ist NICHT die Lösung
+- DOKUMENTIEREN ist NICHT die Lösung
+- "By design" ist KEINE ANTWORT
+- "Deferred" ohne Implementation ist VERBOTEN
+
+DIE LÖSUNG IST CODE DER FUNKTIONIERT.
+
+---
+
+BEVOR du Code schreibst:
+1. `find vibe_core -name "*<feature>*"` - Existiert es schon?
+2. `grep -r "<pattern>" vibe_core/` - Wo wird es verwendet?
+3. Lies existierenden Code KOMPLETT
+
+ERST VERSTEHEN, DANN HANDELN.
+
+---
+
+BEVOR du eine Datei erstellst:
+1. `find . -name "<filename>"` - Existiert sie schon?
+2. Wenn ja: NUTZE die existierende Datei
+3. Wenn nein: Frage dich WARUM sie nicht existiert
+
+NIEMALS Dateien erstellen ohne vorher zu suchen.
+
+---
+
+NACH jeder Änderung an Dokumentation:
+1. Lies die GANZE Datei
+2. Prüfe: Widerspricht Section X Section Y?
+3. Prüfe: Sagt "Status" etwas anderes als "Next Steps"?
+
+INKONSISTENTE DOKUMENTATION IST SCHLIMMER ALS KEINE.
+
+---
+
