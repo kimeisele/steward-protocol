@@ -8,7 +8,7 @@
 
 <!-- @HARNESS
 files:
-  - path: steward/crypto.py
+  - path: vibe_core/steward/crypto.py
     required: true
   - path: vibe_core/ledger.py
     required: true
@@ -21,7 +21,7 @@ tests:
   - tests/unit/test_crypto_verification.py
 wiring:
   - pattern: "NIST256p"
-    in: steward/crypto.py
+    in: vibe_core/steward/crypto.py
   - pattern: "_verify_signature"
     in: vibe_core/loaders/container_loader.py
   - pattern: "verify_chain_integrity"
@@ -71,13 +71,13 @@ grep -n "invariants" vibe_core/kernel_impl.py
 
 **Verification**:
 ```python
-# steward/crypto.py:38
+# vibe_core/steward/crypto.py:38
 from ecdsa import NIST256p, SigningKey
 sk = SigningKey.generate(curve=NIST256p)
 ```
 
 **Evidence**:
-- `steward/crypto.py:3` docstring: "Real ECDSA (Elliptic Curve Digital Signature Algorithm)"
+- `vibe_core/steward/crypto.py:3` docstring: "Real ECDSA (Elliptic Curve Digital Signature Algorithm)"
 - Uses `ecdsa` library with `NIST256p` curve
 - Key storage at `.steward/keys/` with PEM format
 
@@ -98,7 +98,7 @@ self.public_key = hashlib.sha256(self._private_key).hexdigest()
 **Evidence**:
 - Line 99 in `identity_tool.py` literally hashes the private key
 - This is the FALLBACK when Steward Protocol is unavailable
-- Real ECDSA keys exist in `steward/crypto.py` but identity_tool uses HMAC fallback
+- Real ECDSA keys exist in `vibe_core/steward/crypto.py` but identity_tool uses HMAC fallback
 
 **Impact**: 🔴 CRITICAL - HMAC fallback is symmetric crypto (forgeable)
 
@@ -145,7 +145,7 @@ CACHE_DIR = Path("/tmp/vibe_cache/containers")
 
 **Verification**:
 ```python
-# steward/crypto.py:17-19
+# vibe_core/steward/crypto.py:17-19
 KEY_DIR = Path(".steward/keys")
 PRIVATE_KEY_PATH = KEY_DIR / "private.pem"
 PUBLIC_KEY_PATH = KEY_DIR / "public.pem"
@@ -164,7 +164,7 @@ PUBLIC_KEY_PATH = KEY_DIR / "public.pem"
 | Container Hash Verification | ✅ REAL | `container_loader.py:81-124` |
 | Deterministic Hashing | ✅ FIXED | `pack_vibe.py:65` uses `sorted()` |
 | SSL Verification | ✅ FIXED | `gateway/api.py` - removed `ssl=False` |
-| ECDSA Crypto | ✅ REAL | `steward/crypto.py` - proper PEM keys |
+| ECDSA Crypto | ✅ REAL | `vibe_core/steward/crypto.py` - proper PEM keys |
 | Hash Chain Ledger | ✅ REAL | `ledger.py:354-429` - verify_chain_integrity() |
 | Governance Hooks | ✅ REAL | `kernel_impl.py:963-968` - on_task_pre_assign |
 | Constitutional Oath | ✅ REAL | `steward_protocol/plugin_main.py:191-258` |
@@ -179,7 +179,7 @@ PUBLIC_KEY_PATH = KEY_DIR / "public.pem"
 |----------|------|--------|-----|
 | P0 | Wire InvariantChecker into ToolsPlugin | Small | Soul rules are dead code |
 | P1 | Add per-event signatures to Ledger | Medium | Prevent DB tampering |
-| P1 | Fix identity_tool.py HMAC fallback | Medium | Use ECDSA from steward/crypto.py |
+| P1 | Fix identity_tool.py HMAC fallback | Medium | Use ECDSA from vibe_core/steward/crypto.py |
 | P2 | Secure cache directory | Small | Move from /tmp to XDG |
 | P2 | Document hollows trust model | Small | Define inheritance policy |
 | P3 | OPUS-018: Key Lifecycle Design | Large | Before any asymmetric crypto work |
@@ -230,7 +230,7 @@ PUBLIC_KEY_PATH = KEY_DIR / "public.pem"
 grep -rn "InvariantChecker" vibe_core/kernel_impl.py
 
 # Verify ECDSA usage
-grep -rn "NIST256p" steward/crypto.py
+grep -rn "NIST256p" vibe_core/steward/crypto.py
 
 # Verify no signatures in ledger
 grep -n "signature" vibe_core/ledger.py

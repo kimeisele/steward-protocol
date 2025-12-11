@@ -11,7 +11,7 @@ files:
     required: true
   - path: vibe_core/plugins/tools/plugin_main.py
     required: true
-  - path: steward/crypto.py
+  - path: vibe_core/steward/crypto.py
     required: true
 tests:
   - tests/unit/test_crypto_verification.py
