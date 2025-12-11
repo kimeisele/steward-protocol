@@ -120,4 +120,3 @@ route = await router.route("fix the build")
 ## 7. Next Steps
 1.  Modify `AgentLoader` / `PluginLoader` to accept a configurable `library_path`.
 2.  Verify booting from `library_path` ONLY (simulate by renaming source folders).
-3.  Implement PROJECT JNANA as a `.vibe` container (not kernel dependency).
