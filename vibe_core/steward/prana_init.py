@@ -117,7 +117,7 @@ class PranaInitializer:
         logger.info("   🤝 Checking agent oaths...")
 
         try:
-            from vibe_core.steward.agent_metadata import get_metadata_registry
+            from vibe_core.plugins.vedic_governance.agent_metadata import get_metadata_registry
 
             registry = get_metadata_registry()
             agents = registry.get_all_agents()
@@ -141,7 +141,7 @@ class PranaInitializer:
         logger.info("   🌿 Initializing Varna taxonomy...")
 
         try:
-            from vibe_core.steward.agent_metadata import get_metadata_registry
+            from vibe_core.plugins.vedic_governance.agent_metadata import get_metadata_registry
             from vibe_core.plugins.vedic_governance.varna import Varna
 
             registry = get_metadata_registry()
