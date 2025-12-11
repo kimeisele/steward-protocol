@@ -81,8 +81,9 @@ repos:
   #
   # This hook AUTO-RESTORES protected files from origin/main.
   # Agent changes literally disappear.
+  # NEW workflow files are DESTROYED (not in origin/main = not allowed).
   #
-  # Protected: 12 files (7 kernel + 3 governance + 2 infrastructure)
+  # Protected: 21 files (7 kernel + 3 governance + 10 workflows + 1 config)
   #
   # See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
   - repo: local
@@ -91,5 +92,5 @@ repos:
         name: ☢️ Nuclear Auto-Restore (TOTAL LOCKDOWN)
         entry: scripts/governance/restore_kernel.sh
         language: script
-        files: ^(vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py|scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json)|\.github/workflows/steward-ci\.yml|\.pre-commit-config\.yaml)$
+        files: ^(vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py|scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json)|\.github/workflows/.*\.ya?ml|\.pre-commit-config\.yaml)$
         stages: [commit]
