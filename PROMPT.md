@@ -106,3 +106,41 @@ WENN UNKLAR: Analysiere ERST, dann handle. Nicht umgekehrt.
 "Ich bin nicht sicher" = "Ich muss mehr analysieren"
 
 ---
+
+## 🧹 LEGACY-FAKTEN (verifiziert 2025-12-11)
+
+**Tote Referenzen die NICHT existieren:**
+- `steward/` Verzeichnis - EXISTIERT NICHT. Nur `vibe_core/` ist das Package.
+- Wenn du `steward` irgendwo siehst (außer `steward_protocol` Plugin) → Legacy-Müll, entfernen.
+
+**Aktive Packages:**
+```
+pyproject.toml → packages = ["vibe_core"]
+```
+
+---
+
+## 🔌 DEPENDENCY-CHECK (vor jedem import)
+
+**BEVOR du einen import hinzufügst:**
+```bash
+grep "modulname" pyproject.toml  # Existiert die dependency?
+```
+
+**WENN NICHT:** Erst zu pyproject.toml hinzufügen, dann importieren.
+Fehlende dependencies = CI Collection Errors = 11 "failing checks" die grün aussehen.
+
+---
+
+## 🎯 CI vs PRE-COMMIT (Unterschied)
+
+**`pre-commit run --all-files`** triggert VISNU kernel protection (false positive wenn kernel nicht geändert).
+
+**Echte CI-Jobs (steward-ci.yml):**
+```bash
+ruff check vibe_core scripts --select=E9,F63,F7,F82
+python scripts/ci/test_kernel_boot.py
+python -m pytest tests/integration/ -v --tb=short
+```
+
+---
