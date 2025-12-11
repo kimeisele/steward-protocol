@@ -2,9 +2,9 @@
 # OPUS-016: Runtime Separation (The Thin Kernel)
 
 ## Status
-- **Date**: 2025-12-09
+- **Date**: 2025-12-11
 - **Author**: Antigravity
-- **Status**: DRAFT
+- **Status**: ACTIVE
 - **Preceded By**: OPUS-015 (Container Format)
 
 <!-- @HARNESS
@@ -85,6 +85,38 @@ Create a script that:
 - **Versioning**: How do we ensure Kernel v2.0 doesn't break Herald v1.0?
     - *Answer*: Semantic Versioning in `manifest.json`. Kernel checks `min_kernel_version`.
 
-## 6. Next Steps
+## 6. Semantic AI (PROJECT JNANA)
+
+### Architecture
+
+The semantic routing system is ALREADY IMPLEMENTED in `vibe_core/cortex/engines/semantic_engine.py`:
+
+| Component | Location | Status |
+|-----------|----------|--------|
+| SemanticRouter | `vibe_core/cortex/engines/semantic_engine.py` | ✅ Implemented |
+| Lazy Loading | `get_embedding_model()` with async lock | ✅ Implemented |
+| Optional Deps | `pyproject.toml [semantic]` | ✅ Available |
+
+### Installation
+
+```bash
+# Base install (no semantic)
+pip install steward-protocol
+
+# With semantic AI
+pip install steward-protocol[semantic]
+```
+
+### Usage
+
+```python
+from vibe_core.cortex.engines.semantic_engine import SemanticRouter
+
+router = SemanticRouter()
+concepts = await router.analyze("debug test failures")
+route = await router.route("fix the build")
+```
+
+## 7. Next Steps
 1.  Modify `AgentLoader` / `PluginLoader` to accept a configurable `library_path`.
 2.  Verify booting from `library_path` ONLY (simulate by renaming source folders).
