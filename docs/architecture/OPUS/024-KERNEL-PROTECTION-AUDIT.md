@@ -46,13 +46,16 @@ Merged to main with corrupted loader 💀
 
 ## 3. Files That SHOULD Be Protected
 
-| File | LOC | Pre-commit | CI Hash | Status |
-|------|-----|------------|---------|--------|
-| `vibe_core/kernel_impl.py` | 1505 | ✅ | ✅ | PROTECTED |
-| `vibe_core/plugin_protocol.py` | 402 | ✅ | ✅ | PROTECTED |
-| `vibe_core/plugin_loader.py` | 381 | ✅ | ✅ | PROTECTED |
-| `vibe_core/kernel_ops.py` | 326 | ✅ | ✅ | PROTECTED |
-| **TOTAL** | **2614** | | | |
+| Category | File | LOC | Pre-commit | CI Hash | Status |
+|----------|------|-----|------------|---------|--------|
+| Core | `vibe_core/kernel_impl.py` | 1505 | ✅ | ✅ | PROTECTED |
+| Core | `vibe_core/kernel_ops.py` | 326 | ✅ | ✅ | PROTECTED |
+| Plugins | `vibe_core/plugin_protocol.py` | 402 | ✅ | ✅ | PROTECTED |
+| Plugins | `vibe_core/plugin_loader.py` | 381 | ✅ | ✅ | PROTECTED |
+| Security | `vibe_core/narasimha.py` | 414 | ✅ | ✅ | PROTECTED |
+| Security | `vibe_core/capability_registry.py` | 343 | ✅ | ✅ | PROTECTED |
+| Security | `vibe_core/bridge.py` | 28 | ✅ | ✅ | PROTECTED |
+| **TOTAL** | | **3399** | | | |
 
 ---
 
@@ -224,4 +227,45 @@ Hash updates require separate PR with Senior review.
 
 ---
 
-**Status**: ✅ COMPLETE - All 8 critical gaps addressed.
+---
+
+## 10. Security Ring 0 (Final Definition)
+
+After multiple audit rounds, the complete **Security Ring 0** is defined:
+
+### Philosophy
+
+> "We cannot freeze everything (the project dies), but we must freeze what controls **Life, Death, and Rights**."
+
+### The Ring
+
+| Role | File | Purpose |
+|------|------|---------|
+| **Brain** | `kernel_impl.py` | Orchestration |
+| **Hands** | `kernel_ops.py` | Delegated operations |
+| **Interface** | `plugin_protocol.py` | Plugin contracts |
+| **Loader** | `plugin_loader.py` | Plugin loading |
+| **Sword** | `narasimha.py` | Kill-Switch |
+| **Shield** | `capability_registry.py` | Permissions |
+| **Gate** | `bridge.py` | Constitution enforcement |
+
+### Attack Scenarios Now Blocked
+
+| Attack | Before | After |
+|--------|--------|-------|
+| Modify kernel_impl.py | Pre-commit blocks | ✅ Auto-restore |
+| Modify narasimha.py (disable kill-switch) | ❌ UNPROTECTED | ✅ Auto-restore |
+| Modify capability_registry.py (grant self rights) | ❌ UNPROTECTED | ✅ Auto-restore |
+| Modify bridge.py (bypass constitution) | ❌ UNPROTECTED | ✅ Auto-restore |
+| Modify kernel + hash together | CI passes | ✅ CI blocks hash changes |
+
+### What Remains Mutable
+
+Everything else (ledger, event_bus, filesystem, etc.) is **infrastructure**:
+- If manipulated = system broken, but not "hostile takeover"
+- Still monitored by CI (lint, tests, Watchman)
+- Can be updated via normal PR process
+
+---
+
+**Status**: ✅ SECURITY RING 0 COMPLETE - 7 files, 3399 LOC protected.

@@ -76,7 +76,7 @@ repos:
   # =========================================================================
   # VISNU KERNEL PROTECTION - ETERNAL AND UNCHANGING
   # =========================================================================
-  # The kernel is VISNU - 2614 LOC total, complete and eternal.
+  # SECURITY RING 0 - 3399 LOC total, eternal and unchanging.
   # All new features MUST be plugins. No exceptions.
   #
   # This hook AUTO-RESTORES kernel files instead of just blocking.
@@ -89,5 +89,5 @@ repos:
         name: Kernel Auto-Restore (VISNU)
         entry: scripts/governance/restore_kernel.sh
         language: script
-        files: ^vibe_core/(kernel_impl|plugin_protocol|plugin_loader|kernel_ops)\.py$
+        files: ^vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py$
         stages: [commit]
