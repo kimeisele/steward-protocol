@@ -69,7 +69,55 @@ jobs:
         run: python scripts/ci/verify_agents_manifest.py
 
   # =========================================================================
-  # JOB 3: Infrastructure Health Check
+  # JOB 3: Kernel Integrity Verification (VISNU)
+  # =========================================================================
+  kernel-integrity:
+    name: Kernel Integrity (VISNU)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Block kernel_hashes.json modification (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Fetch base branch to compare
+          git fetch origin ${{ github.base_ref }} --depth=1
+
+          # Check if kernel_hashes.json was modified in this PR
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q "scripts/governance/kernel_hashes.json"; then
+            echo ""
+            echo "╔══════════════════════════════════════════════════════════════╗"
+            echo "║  ❌ BLOCKED: kernel_hashes.json MODIFIED                     ║"
+            echo "║                                                              ║"
+            echo "║  The hash reference file cannot be changed in the same PR    ║"
+            echo "║  as kernel files. This prevents hash manipulation attacks.   ║"
+            echo "║                                                              ║"
+            echo "║  If kernel files legitimately need updating:                 ║"
+            echo "║  1. First PR: Update kernel_hashes.json ONLY (Senior Review) ║"
+            echo "║  2. Second PR: Update kernel files                           ║"
+            echo "╚══════════════════════════════════════════════════════════════╝"
+            exit 1
+          fi
+          echo "✅ kernel_hashes.json unchanged in this PR"
+
+      - name: Verify kernel integrity
+        run: |
+          python scripts/governance/verify_kernel.py --verify
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║  KERNEL IS VISNU - ETERNAL AND UNCHANGING                    ║"
+          echo "║  All protected files match their blessed hashes.             ║"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+
+  # =========================================================================
+  # JOB 4: Infrastructure Health Check (was JOB 3)
   # =========================================================================
   infrastructure-check:
     name: Infrastructure Health Check
@@ -519,7 +567,7 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [lint, verify-agents, infrastructure-check, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security, panopticon-validation]
+    needs: [lint, verify-agents, kernel-integrity, infrastructure-check, watchman-inspection, auditor-verdict, kernel-boot, cli-test, docs-check, security, panopticon-validation]
     if: always()
 
     steps:
