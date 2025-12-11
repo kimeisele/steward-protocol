@@ -142,12 +142,12 @@ class CryptoPlugin:
         """Generate Ed25519 keypair."""
         sk = SigningKey.generate()
         return sk.encode(HexEncoder).decode(), sk.verify_key.encode(HexEncoder).decode()
-    
+
     def sign(self, message: bytes, private_key_hex: str) -> str:
         """Sign message with Ed25519 private key."""
         sk = SigningKey(private_key_hex.encode(), HexEncoder)
         return sk.sign(message).signature.hex()
-    
+
     def verify(self, message: bytes, signature_hex: str, public_key_hex: str) -> bool:
         """Verify Ed25519 signature."""
         vk = VerifyKey(public_key_hex.encode(), HexEncoder)
@@ -177,7 +177,7 @@ class CryptoPlugin:
 def _verify_signature(cls, container_path: Path) -> bool:
     # Read SIGNATURE.sig
     sig_data = json.loads(z.read("SIGNATURE.sig"))
-    
+
     if sig_data.get("version") == 2:
         # Ed25519 verification
         content_hash = cls._calculate_content_hash(z)
@@ -216,7 +216,7 @@ pytest tests/integration/test_container_legacy.py -v
 # manifest.json extension
 {
   "trust": {
-    "hollows_policy": "independent",  # or "inherit" 
+    "hollows_policy": "independent",  # or "inherit"
     "allowed_signers": ["pubkey1...", "pubkey2..."]  # Optional allowlist
   }
 }
@@ -264,13 +264,13 @@ import certifi
 
 def _get_ssl_context(peer_config: dict) -> ssl.SSLContext:
     ctx = ssl.create_default_context(cafile=certifi.where())
-    
+
     # Optional: Cert pinning from peer config
     if "cert_fingerprint" in peer_config:
         # Verify against pinned cert
         ctx.check_hostname = True
         ctx.verify_mode = ssl.CERT_REQUIRED
-    
+
     return ctx
 
 async with session.get(target_url, ssl=ssl_context) as resp:

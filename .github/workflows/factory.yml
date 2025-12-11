@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -86,7 +86,7 @@ jobs:
         # Move downloaded genesis to where kernel expects it (or configure kernel)
         mkdir -p knowledge
         mv download_holons/genesis.vibe knowledge/genesis.vibe
-        
+
         # Run the specific integration test
         python -m pytest tests/integration/test_genesis_boot.py -v
 

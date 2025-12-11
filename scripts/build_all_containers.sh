@@ -58,12 +58,12 @@ FAILED=0
 # Find all plugin directories with manifest.json
 for plugin_dir in "$PLUGINS_DIR"/*/; do
     plugin_name=$(basename "$plugin_dir")
-    
+
     # Skip __pycache__ and hidden directories
     if [[ "$plugin_name" == __* ]] || [[ "$plugin_name" == .* ]]; then
         continue
     fi
-    
+
     # Check for manifest
     if [ -f "$plugin_dir/manifest.json" ]; then
         manifest_type="manifest.json"
@@ -74,21 +74,21 @@ for plugin_dir in "$PLUGINS_DIR"/*/; do
         ((SKIPPED++))
         continue
     fi
-    
+
     # Check for tests directory (OPUS-020: HARD FAIL without tests)
     if [ ! -d "$plugin_dir/tests" ]; then
         echo -e "  ${YELLOW}⏭️  $plugin_name${NC} - No tests/ directory, skipping"
         ((SKIPPED++))
         continue
     fi
-    
+
     # Determine output path
     if [ "$INPLACE" = true ]; then
         output_path="$PLUGINS_DIR/$plugin_name.vibe"
     else
         output_path="$OUTPUT_DIR/$plugin_name.vibe"
     fi
-    
+
     # Build container
     echo -e "  📦 Building ${GREEN}$plugin_name${NC}..."
     if python "$PACKER" "$plugin_dir" -o "$output_path" 2>&1 | sed 's/^/     /'; then

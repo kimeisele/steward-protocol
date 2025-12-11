@@ -35,7 +35,7 @@ graph TD
     K[Kernel] --> IP[InterfacePlugin]
     IP --> |RendererLoader| OR[OpusRenderer]
     IP --> |RendererLoader| ER[EnvoyRenderer]
-    
+
     subgraph "Container: OPUS"
         OR --> |PanelLoader| VP[VerificationPanel]
         OR --> |PanelLoader| AP[ArcPlansPanel]
@@ -68,7 +68,7 @@ renderer.set_root_path(meta.entry_path.parent) # Inject /renderers/opus
 
 # OpusRenderer.py
 # Uses injected root to find panels
-panels_dir = self._root / "panels" 
+panels_dir = self._root / "panels"
 ```
 
 ### 2. Manifest Physics (`manifest.json`)

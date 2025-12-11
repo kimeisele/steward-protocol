@@ -70,7 +70,8 @@ repos:
         files: ^tests/.*\.py$
         types: [python]
         # Exclude fixtures.py where TestKernel wraps RealVibeKernel
-        exclude: ^tests/conftest\.py$|fixtures\.py$
+        # Also exclude tests/archive/ (legacy/archived tests)
+        exclude: ^tests/conftest\.py$|fixtures\.py$|^tests/archive/
 
   # =========================================================================
   # VISNU KERNEL PROTECTION - ETERNAL AND UNCHANGING
