@@ -9,6 +9,6 @@ Quick Start: python -m vibe_core.cli boot
 **Time**: 
 **Agents**: 1
 **Tasks**: 0
-**Memory**: 932.0 KB (1 keys)
+**Memory**: 1040.0 KB (1 keys)
 
 See [OPERATIONS.md](OPERATIONS.md) for detailed metrics.
