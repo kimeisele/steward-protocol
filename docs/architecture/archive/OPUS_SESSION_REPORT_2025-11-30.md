@@ -63,7 +63,7 @@ if destructive_keywords:
 from vibe_core.routing.milk_ocean import MilkOceanRouter
 
 # NEU (korrekt)
-from steward.system_agents.envoy.tools.milk_ocean import MilkOceanRouter
+from vibe_core.cartridges.system.envoy.tools.milk_ocean import MilkOceanRouter
 ```
 
 ### 2.3 Task Persistence Bug
@@ -113,7 +113,7 @@ from vibe_core.protocols import VibeAgent
 
 | File | Problem | Fix |
 |------|---------|-----|
-| `provider/universal_provider.py:65` | DeterministicExecutor Import | `from steward.system_agents.envoy...` |
+| `provider/universal_provider.py:65` | DeterministicExecutor Import | `from vibe_core.cartridges.system.envoy...` |
 | `provider/universal_provider.py:208-211` | SemanticRouter Fallback | Added `elif use_semantic and not SemanticRouter` |
 | `provider/universal_provider.py:302` | emit_event undefined | Added `emit_event=None` parameter |
 | `agent_city/registry/dhruva/tools/reference_resolver.py:23` | Relative import | Absolute import |

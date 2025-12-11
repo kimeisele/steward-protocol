@@ -95,7 +95,7 @@ python -m steward.system_agents.scribe.cartridge_main .
 
 ### From Other Agents
 ```python
-from steward.system_agents.scribe.cartridge_main import ScribeCartridge
+from vibe_core.cartridges.system.scribe.cartridge_main import ScribeCartridge
 
 scribe = ScribeCartridge()
 scribe.generate_all()  # or individual methods

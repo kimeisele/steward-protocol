@@ -96,7 +96,7 @@ class YourAgentCartridge(VibeAgent, OathMixin):
 
 ```python
 # In run_server.py or kernel boot script
-from steward.system_agents.your_agent.cartridge_main import YourAgentCartridge
+from vibe_core.cartridges.system.your_agent.cartridge_main import YourAgentCartridge
 
 your_agent = YourAgentCartridge()
 kernel.register_agent(your_agent)
@@ -188,7 +188,7 @@ class YourAgent(VibeAgent, OathMixin):
 ```python
 # tests/test_your_agent.py
 import pytest
-from steward.system_agents.your_agent.cartridge_main import YourAgentCartridge
+from vibe_core.cartridges.system.your_agent.cartridge_main import YourAgentCartridge
 
 def test_agent_initialization():
     agent = YourAgentCartridge()

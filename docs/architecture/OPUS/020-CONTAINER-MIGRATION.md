@@ -284,7 +284,7 @@ rm vibe_core/plugins/interface.vibe
 │   private_key, public_key = load_or_generate_keys()            │
 │                                                                │
 │   Agent Identity (identity_tool.py):                           │
-│   from steward.crypto import load_or_generate_keys             │
+│   from vibe_core.steward.crypto import load_or_generate_keys             │
 │   → SAME KEYS                                                  │
 └────────────────────────────────────────────────────────────────┘
 ```

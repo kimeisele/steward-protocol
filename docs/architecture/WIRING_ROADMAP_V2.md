@@ -311,7 +311,7 @@ def execute(self, params, context):
 
 ```python
 # test_kernel_injection.py
-from steward.system_agents.envoy.cartridge_main import EnvoyCartridge
+from vibe_core.cartridges.system.envoy.cartridge_main import EnvoyCartridge
 from vibe_core.kernel_impl import RealVibeKernel
 
 kernel = RealVibeKernel()
