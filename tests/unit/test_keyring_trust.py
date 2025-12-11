@@ -17,8 +17,8 @@ class TestKeyringTrust:
     def test_own_key_always_trusted(self, tmp_path):
         """Our own key should always be trusted."""
         # Patch KEY_DIR to use temp
-        with patch("steward.crypto.KEY_DIR", tmp_path / "keys"):
-            with patch("steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
+        with patch("vibe_core.steward.crypto.KEY_DIR", tmp_path / "keys"):
+            with patch("vibe_core.steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
                 from vibe_core.steward.crypto import is_key_trusted, load_or_generate_keys
 
                 # Generate our keys
@@ -29,8 +29,8 @@ class TestKeyringTrust:
 
     def test_trusted_key_directory_created(self, tmp_path):
         """trusted_keys/ directory should be created with README."""
-        with patch("steward.crypto.KEY_DIR", tmp_path / "keys"):
-            with patch("steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
+        with patch("vibe_core.steward.crypto.KEY_DIR", tmp_path / "keys"):
+            with patch("vibe_core.steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
                 from vibe_core.steward.crypto import ensure_trusted_keys_dir
 
                 ensure_trusted_keys_dir()
@@ -40,9 +40,9 @@ class TestKeyringTrust:
 
     def test_key_in_trusted_dir_is_trusted(self, tmp_path):
         """Keys placed in trusted_keys/ should be trusted."""
-        with patch("steward.crypto.KEY_DIR", tmp_path / "keys"):
+        with patch("vibe_core.steward.crypto.KEY_DIR", tmp_path / "keys"):
             trusted_dir = tmp_path / "trusted_keys"
-            with patch("steward.crypto.TRUSTED_KEYS_DIR", trusted_dir):
+            with patch("vibe_core.steward.crypto.TRUSTED_KEYS_DIR", trusted_dir):
                 from vibe_core.steward.crypto import generate_keys, get_public_key_fingerprint, is_fingerprint_trusted
 
                 # Generate a "foreign" key
@@ -61,8 +61,8 @@ class TestKeyringTrust:
 
     def test_unknown_key_not_trusted(self, tmp_path):
         """Unknown keys should not be trusted."""
-        with patch("steward.crypto.KEY_DIR", tmp_path / "keys"):
-            with patch("steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
+        with patch("vibe_core.steward.crypto.KEY_DIR", tmp_path / "keys"):
+            with patch("vibe_core.steward.crypto.TRUSTED_KEYS_DIR", tmp_path / "trusted_keys"):
                 from vibe_core.steward.crypto import generate_keys, get_public_key_fingerprint, is_fingerprint_trusted
 
                 # Generate a random key (not our own, not in trusted)
