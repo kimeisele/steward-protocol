@@ -54,7 +54,8 @@ class RendererLoader(UnifiedLoader):
 
     # === UNIFIED LOADER CONFIG ===
     item_type = "renderer"
-    scan_paths = [Path("vibe_core/plugins/interface/renderers")]
+    # Use absolute path based on module location (fixes test cwd issues)
+    scan_paths = [Path(__file__).parent / "renderers"]
     manifest_filenames = ["manifest.json"]
     entry_suffix = ".py"
 
@@ -266,11 +267,18 @@ class RendererLoader(UnifiedLoader):
     ) -> Optional[Type]:
         """Load renderer class from a Python file."""
         try:
-            # Build module path
-            # Ensure we have absolute path relative to CWD
+            # Build module path - use vibe_core package structure (not cwd dependent)
             abs_path = file_path.resolve()
-            relative = abs_path.relative_to(Path.cwd())
-            module_path = str(relative.with_suffix("")).replace("/", ".")
+            # Find vibe_core in the path and build module path from there
+            parts = abs_path.parts
+            try:
+                vibe_idx = parts.index("vibe_core")
+                module_parts = parts[vibe_idx:]
+                module_path = ".".join(module_parts)[:-3]  # Remove .py suffix
+            except ValueError:
+                # Fallback: try relative to cwd if vibe_core not in path
+                relative = abs_path.relative_to(Path.cwd())
+                module_path = str(relative.with_suffix("")).replace("/", ".")
 
             module = importlib.import_module(module_path)
             base_cls = cls._get_base_class()

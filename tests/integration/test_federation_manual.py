@@ -1,114 +1,131 @@
-import time
+"""
+Phase 19 Verification: Federation (Seed List)
+Tests federation API handlers directly using aiohttp TestClient.
+No real ports, no time.sleep - deterministic and fast.
+"""
+
+from unittest.mock import MagicMock
 
 import pytest
-import requests
+from aiohttp.test_utils import TestClient, TestServer
 
-from vibe_core.kernel_impl import RealVibeKernel
+from vibe_core.gateway.api import NetworkGateway
 
 
-@pytest.mark.integration
-def test_federation_peer_registration():
-    """
-    Phase 19 Verification: Federation (Seed List)
-    Tests peer registration via API.
-    """
-    import tempfile
+@pytest.fixture
+def mock_prakriti():
+    """Create a mock Prakriti with federation support."""
+    prakriti = MagicMock()
+    prakriti.get_system_status.return_value = {"kernel": {"status": "RUNNING"}}
 
-    # Use unique temp file to avoid test pollution
-    temp_ledger = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_ledger.close()
+    # Federation state (mutable for testing)
+    peers = {}
 
-    kernel = RealVibeKernel(ledger_path=temp_ledger.name, load_plugins=False)
+    def list_peers():
+        return list(peers.values())
 
-    try:
-        kernel.boot()
-        time.sleep(2)  # Wait for gateway
+    def add_peer(peer_id, url, trust_level=1):
+        peers[peer_id] = {"peer_id": peer_id, "url": url, "trust_level": trust_level}
+        return True
 
-        base_url = "http://127.0.0.1:8000"
+    def remove_peer(peer_id):
+        if peer_id in peers:
+            del peers[peer_id]
+            return True
+        return False
 
-        # 0. Clean up any stale peers from previous runs
-        try:
-            stale_resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
-            if stale_resp.status_code == 200:
-                for peer in stale_resp.json().get("peers", []):
-                    requests.delete(f"{base_url}/api/v1/federation/peers/{peer['peer_id']}", timeout=5)
-        except Exception as e:
-            print(f"Warning: Cleanup failed: {e}")
+    def get_peer(peer_id):
+        return peers.get(peer_id)
 
-        # 1. List peers (should be empty now)
-        resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
-        assert resp.status_code == 200
-        assert resp.json()["peers"] == [], f"Expected empty list, got: {resp.json()['peers']}"
+    def update_peer_last_seen(peer_id):
+        if peer_id in peers:
+            peers[peer_id]["last_seen"] = "now"
 
-        # 2. Add a peer
-        resp = requests.post(
-            f"{base_url}/api/v1/federation/peers",
-            json={"peer_id": "node-alpha", "url": "http://localhost:9000"},
-            timeout=5,
+    prakriti.machine.list_peers = list_peers
+    prakriti.machine.add_peer = add_peer
+    prakriti.machine.remove_peer = remove_peer
+    prakriti.machine.get_peer = get_peer
+    prakriti.machine.update_peer_last_seen = update_peer_last_seen
+
+    return prakriti
+
+
+@pytest.fixture
+def gateway(mock_prakriti):
+    """Create a NetworkGateway instance for testing."""
+    return NetworkGateway(mock_prakriti, host="127.0.0.1", port=0)
+
+
+@pytest.mark.asyncio
+async def test_list_peers_empty(gateway):
+    """Test listing peers when none registered."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.get("/api/v1/federation/peers")
+        assert resp.status == 200
+        data = await resp.json()
+        assert data["peers"] == []
+
+
+@pytest.mark.asyncio
+async def test_add_peer(gateway):
+    """Test adding a peer to the federation."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.post(
+            "/api/v1/federation/peers", json={"peer_id": "node-alpha", "url": "http://peer1.example.com:8000"}
         )
-        assert resp.status_code == 200
-        assert resp.json()["status"] == "registered"
+        assert resp.status == 200
+        data = await resp.json()
+        assert data["status"] == "registered"
+        assert data["peer_id"] == "node-alpha"
 
-        # 3. List peers (should have one)
-        resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
-        assert resp.status_code == 200
-        peers = resp.json()["peers"]
+
+@pytest.mark.asyncio
+async def test_add_peer_missing_fields(gateway):
+    """Test adding peer with missing required fields."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.post(
+            "/api/v1/federation/peers",
+            json={"peer_id": "incomplete"},  # Missing url
+        )
+        assert resp.status == 400
+        data = await resp.json()
+        assert "error" in data
+
+
+@pytest.mark.asyncio
+async def test_peer_lifecycle(gateway):
+    """Test complete peer lifecycle: add, list, remove."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        # 1. Add peer
+        resp = await client.post("/api/v1/federation/peers", json={"peer_id": "test-node", "url": "http://test:9000"})
+        assert resp.status == 200
+
+        # 2. List peers - should have one
+        resp = await client.get("/api/v1/federation/peers")
+        assert resp.status == 200
+        peers = (await resp.json())["peers"]
         assert len(peers) == 1
-        assert peers[0]["peer_id"] == "node-alpha"
-        assert peers[0]["url"] == "http://localhost:9000"
+        assert peers[0]["peer_id"] == "test-node"
+        assert peers[0]["url"] == "http://test:9000"
 
-        # 4. Remove peer
-        resp = requests.delete(f"{base_url}/api/v1/federation/peers/node-alpha", timeout=5)
-        assert resp.status_code == 200
-        assert resp.json()["status"] == "removed"
+        # 3. Remove peer
+        resp = await client.delete("/api/v1/federation/peers/test-node")
+        assert resp.status == 200
+        assert (await resp.json())["status"] == "removed"
 
-        # 5. Verify removal
-        resp = requests.get(f"{base_url}/api/v1/federation/peers", timeout=5)
-        assert resp.status_code == 200
-        assert resp.json()["peers"] == []
-
-        print("✅ Federation peer registration test passed!")
-
-    finally:
-        kernel.shutdown()
-        time.sleep(1)
+        # 4. Verify removal
+        resp = await client.get("/api/v1/federation/peers")
+        assert resp.status == 200
+        assert (await resp.json())["peers"] == []
 
 
-@pytest.mark.integration
-def test_federation_forward_mock():
-    """
-    Phase 19 Verification: Federation Forward Logic.
-    Mocks aiohttp session to test forwarding without real network call.
-    """
-    kernel = RealVibeKernel(ledger_path=":memory:", load_plugins=False)
-
-    try:
-        kernel.boot()
-        time.sleep(2)
-
-        base_url = "http://127.0.0.1:8000"
-
-        # 1. Register a mock peer
-        resp = requests.post(
-            f"{base_url}/api/v1/federation/peers",
-            json={"peer_id": "mock-node", "url": "http://fake-peer:8000"},
-            timeout=5,
+@pytest.mark.asyncio
+async def test_forward_to_unknown_peer(gateway):
+    """Test forwarding to non-existent peer returns 404."""
+    async with TestClient(TestServer(gateway.app)) as client:
+        resp = await client.post(
+            "/api/v1/federation/forward/nonexistent", json={"path": "/api/v1/health", "method": "GET"}
         )
-        assert resp.status_code == 200
-
-        # 2. Try to forward (will fail because fake-peer doesn't exist)
-        #    But this proves the route exists and peer lookup works
-        resp = requests.post(
-            f"{base_url}/api/v1/federation/forward/mock-node",
-            json={"path": "/api/v1/health", "method": "GET"},
-            timeout=5,
-        )
-        # Expect 502 because fake-peer is unreachable
-        assert resp.status_code == 502
-        assert "error" in resp.json()
-
-        print("✅ Federation forward logic test passed (expected 502 for fake peer)!")
-
-    finally:
-        kernel.shutdown()
-        time.sleep(1)
+        assert resp.status == 404
+        data = await resp.json()
+        assert "not found" in data["error"].lower()

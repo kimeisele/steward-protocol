@@ -311,11 +311,13 @@ class UnifiedLoader(ABC):
             # Phase 4: "Operation Cortex Injection"
             if manifest.get("type") == "cognitive_pack":
                 logger.debug(f"Mounting Cognitive Pack: {item_id}")
+                # Use manifest path inside mount_point so .parent gives correct directory
+                # (kernel uses manifest_path.parent for genesis_path)
                 return ItemMeta(
                     item_id=item_id,
                     item_type="cognitive_pack",  # Override item_type
                     manifest=manifest,
-                    manifest_path=container_path,
+                    manifest_path=mount_point / "manifest.json",
                     entry_path=mount_point,
                     entry_class=None,  # No code execution
                     config=item_config,

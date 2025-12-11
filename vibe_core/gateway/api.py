@@ -1,4 +1,5 @@
 import asyncio
+import errno
 import json
 import logging
 from pathlib import Path
@@ -47,7 +48,7 @@ class NetworkGateway:
             await self.site.start()
             logger.info(f"🌐 Gateway listening at http://{self.host}:{self.port}")
         except OSError as e:
-            if e.errno == 48:  # Address already in use
+            if e.errno == errno.EADDRINUSE:  # Address already in use (works on Linux + macOS)
                 logger.warning(f"⚠️ Port {self.port} in use. Gateway disabled (Graceful Degradation).")
             else:
                 logger.error(f"❌ Gateway failed to start: {e}")

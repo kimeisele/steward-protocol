@@ -4,7 +4,6 @@ TEST: CLI Renderer
 Tests for GAD-000 compliant output rendering.
 """
 
-import pytest
 
 from vibe_core.cli.protocol import CLIResponse, ExecutionMode
 from vibe_core.cli.renderer import CLIRenderer, get_renderer
@@ -37,8 +36,3 @@ class TestCLIRenderer:
         data = json.loads(captured.out)
         assert data["success"] is True
         assert data["data"]["foo"] == "bar"
-
-    @pytest.mark.skip(reason="Requires detailed mock of Rich console")
-    def test_render_human_rich(self):
-        """Human output should use Rich."""
-        pass

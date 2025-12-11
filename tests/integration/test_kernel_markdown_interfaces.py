@@ -738,7 +738,9 @@ initialize the system
 class TestFullLifecycle:
     """End-to-end tests for the complete request lifecycle."""
 
-    @pytest.mark.skip(reason="Requires full environment with enabled_views config - CI/CD environment issue")
+    @pytest.mark.skip(
+        reason="Requires full environment setup in temp_workdir (CONSTITUTION.md, circuits, pyproject.toml)"
+    )
     def test_settings_command_lifecycle(self, booted_kernel, temp_workdir):
         """Test: Write command → tick → execute → history updated."""
         settings_path = temp_workdir / "SETTINGS.md"
@@ -772,7 +774,9 @@ class TestFullLifecycle:
         found = any(r.get("command", {}).get("value") == "ERROR" for r in renderer.state.execution_history)
         assert found, "Command not found in execution history"
 
-    @pytest.mark.skip(reason="Requires full environment with enabled_views config - CI/CD environment issue")
+    @pytest.mark.skip(
+        reason="Requires full environment setup in temp_workdir (CONSTITUTION.md, circuits, pyproject.toml)"
+    )
     def test_envoy_request_lifecycle(self, booted_kernel, temp_workdir):
         """Test: Write request → tick → dispatch → task queued."""
         envoy_path = temp_workdir / "ENVOY.md"
