@@ -182,6 +182,7 @@ Quick Start: python boot.py boot
 
         current_work = self._extract_section(existing, "current_work") or "_Define current task_"
         blockers = self._extract_section(existing, "blockers") or "_None_"
+        notes = self._extract_section(existing, "notes") or "_Add notes here_"
 
         return f"""---
 
@@ -203,7 +204,7 @@ Quick Start: python boot.py boot
 ## Notes
 
 <!-- Human can write here -->
-_Add notes here_
+{notes}
 <!-- /@HUMAN -->
 """
 
