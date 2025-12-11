@@ -5,7 +5,7 @@ Allows agents to sign their work and prove their identity.
 
 from pathlib import Path
 
-from steward import crypto
+from vibe_core.steward import crypto
 
 
 class StewardClient:
