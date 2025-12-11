@@ -557,6 +557,20 @@ class WatchmanCartridge(VibeAgent, OathMixin):
                     hasher.update(z.read(info.filename))
 
                 computed_sig = hasher.hexdigest()
+
+                # Handle v2 JSON signature format (ECDSA signed)
+                if stored_sig.startswith("{"):
+                    try:
+                        import json
+
+                        sig_data = json.loads(stored_sig)
+                        if sig_data.get("version") == 2:
+                            # v2: Compare hash field, signature verification optional
+                            return computed_sig == sig_data.get("hash")
+                    except json.JSONDecodeError:
+                        pass  # Fall through to direct comparison
+
+                # v1: Direct hash comparison
                 return computed_sig == stored_sig
         except Exception:
             return False
