@@ -8,6 +8,7 @@ import pytest
 
 from vibe_core.loaders.base_loader import UnifiedLoader
 from vibe_core.loaders.container_loader import ContainerMounter
+from vibe_core.plugin_loader import PluginLoader
 
 
 # Mock class for testing UnifiedLoader with containers
@@ -27,10 +28,10 @@ def sample_vibe_container(tmp_path):
     content_bytes = b"class TestPlugin: pass"
     test_bytes = b"# test"
 
-    # Calculate hash same as container_loader: manifest first, then sorted files
+    # Calculate hash same as container_loader: manifest first, then ZIP entry order
     hasher = hashlib.sha256()
     hasher.update(manifest_bytes)
-    # Sorted order: content/plugin_main.py, tests/test_basic.py
+    # ZIP entry order matches write order below: content/plugin_main.py, tests/test_basic.py
     hasher.update(content_bytes)
     hasher.update(test_bytes)
     real_signature = hasher.hexdigest()
@@ -97,6 +98,111 @@ class TestContainerMounter:
         ):
             with pytest.raises(ValueError, match="Container integrity check failed"):
                 ContainerMounter.mount(container_path)
+
+
+@pytest.fixture
+def cognitive_pack_container(tmp_path):
+    """Creates a cognitive_pack .vibe container (data-only, like genesis_knowledge)."""
+    container_path = tmp_path / "genesis_knowledge.vibe"
+
+    manifest = {
+        "id": "genesis_knowledge",
+        "type": "cognitive_pack",
+        "version": "1.0.0",
+    }
+    manifest_bytes = json.dumps(manifest).encode("utf-8")
+
+    # Cognitive packs have circuits/ directory instead of content/
+    circuit_bytes = b"# Sample circuit"
+    readme_bytes = b"# Genesis Knowledge Pack"
+
+    # Calculate signature: manifest first, then files in ZIP ENTRY ORDER (not sorted!)
+    # container_loader._calculate_content_hash uses z.namelist() order
+    hasher = hashlib.sha256()
+    hasher.update(manifest_bytes)
+    # ZIP entry order matches write order below: circuits/sample.md, README.md
+    hasher.update(circuit_bytes)
+    hasher.update(readme_bytes)
+    real_signature = hasher.hexdigest()
+
+    with zipfile.ZipFile(container_path, "w") as z:
+        z.writestr("manifest.json", manifest_bytes)
+        z.writestr("circuits/sample.md", circuit_bytes)
+        z.writestr("README.md", readme_bytes)
+        z.writestr("SIGNATURE.sig", real_signature)
+
+    return container_path
+
+
+class TestCognitivePack:
+    """
+    Tests for cognitive_pack containers (data-only packs like genesis_knowledge).
+
+    CRITICAL INVARIANT:
+        manifest_path.parent MUST equal entry_path
+
+    WHY: The kernel uses manifest_path.parent to derive genesis_path:
+        kernel_impl.py:322 → self.genesis_path = genesis_meta.manifest_path.parent
+
+    If manifest_path points to the original .vibe file instead of the mounted
+    manifest.json, genesis_path will be wrong and circuits/ won't be found.
+
+    This test was added as a regression test after fixing this bug.
+
+    NOTE: Uses real PluginLoader because it has relaxed type validation that
+    allows cognitive_pack type in manifest (unlike base UnifiedLoader).
+    """
+
+    def test_cognitive_pack_manifest_path_parent_equals_entry_path(self, cognitive_pack_container, tmp_path):
+        """
+        REGRESSION TEST: manifest_path.parent must equal entry_path for cognitive packs.
+
+        Before the fix:
+            manifest_path = container_path → .parent = wrong directory
+        After the fix:
+            manifest_path = mount_point/"manifest.json" → .parent = mount_point = entry_path
+        """
+        with patch(
+            "vibe_core.loaders.container_loader.ContainerMounter.CACHE_DIR",
+            new=tmp_path / "cache_cognitive",
+        ):
+            # Use real PluginLoader - it has relaxed validation for cognitive_pack type
+            meta = PluginLoader._process_container(cognitive_pack_container, config=None)
+
+            assert meta is not None, "Failed to process cognitive pack container"
+            assert meta.loaded_successfully, f"Cognitive pack failed to load: {meta.error}"
+            assert meta.item_type == "cognitive_pack", f"Wrong item_type: {meta.item_type}"
+
+            # THE CRITICAL INVARIANT
+            # kernel_impl.py uses: genesis_path = manifest_path.parent
+            # This MUST equal entry_path (where circuits/ lives)
+            assert meta.manifest_path is not None, "manifest_path should not be None"
+            assert meta.entry_path is not None, "entry_path should not be None"
+            assert meta.manifest_path.parent == meta.entry_path, (
+                f"INVARIANT VIOLATION: manifest_path.parent != entry_path\n"
+                f"  manifest_path.parent = {meta.manifest_path.parent}\n"
+                f"  entry_path = {meta.entry_path}\n"
+                f"This would cause kernel.genesis_path to point to the wrong directory!"
+            )
+
+    def test_cognitive_pack_circuits_accessible(self, cognitive_pack_container, tmp_path):
+        """Verify circuits/ directory is accessible from manifest_path.parent."""
+        with patch(
+            "vibe_core.loaders.container_loader.ContainerMounter.CACHE_DIR",
+            new=tmp_path / "cache_circuits",
+        ):
+            # Use real PluginLoader
+            meta = PluginLoader._process_container(cognitive_pack_container, config=None)
+
+            assert meta is not None and meta.loaded_successfully
+
+            # Simulate what the kernel does
+            genesis_path = meta.manifest_path.parent
+            circuits_path = genesis_path / "circuits"
+
+            assert circuits_path.exists(), (
+                f"circuits/ not found at {circuits_path}\nThis means genesis_path derivation is broken!"
+            )
 
 
 class TestUnifiedLoaderContainerSupport:
