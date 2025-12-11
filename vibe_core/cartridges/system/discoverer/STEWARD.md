@@ -99,7 +99,7 @@ result = discoverer.process(task)
 
 ### Manual Discovery
 ```python
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 
 discoverer = Discoverer(kernel=kernel)
 discoverer.discover_agents()  # Scan agent_city/ directory

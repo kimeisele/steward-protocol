@@ -166,12 +166,12 @@ The Phoenix Protocol (Phases 0-3, Phase 6) boots and operates successfully after
 ## CRITICAL BUGS FIXED
 
 ### Bug #1: Import Path Errors in run_server.py
-**Root Cause:** Cartridge imports used incomplete paths (e.g., `from herald.cartridge_main` instead of `from steward.system_agents.herald.cartridge_main`)
+**Root Cause:** Cartridge imports used incomplete paths (e.g., `from herald.cartridge_main` instead of `from vibe_core.cartridges.system.herald.cartridge_main`)
 
 **Fix Applied:**
 - Corrected all 12 cartridge imports in run_server.py
 - Changed from: `from herald.cartridge_main import HeraldCartridge`
-- Changed to: `from steward.system_agents.herald.cartridge_main import HeraldCartridge`
+- Changed to: `from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge`
 - Applied to all cartridges systemwide
 
 **Verification:** Server now successfully imports and loads all cartridges
@@ -451,7 +451,7 @@ The Phoenix Protocol (Phases 0-3, Phase 6) has been successfully verified and br
 **Problem:** "Constitutional Oath not available - governance gate disabled" warning during boot
 
 **Root Cause:** Missing `ecdsa` module dependency required by bridge.py for cryptographic operations
-- bridge.py imports: `from steward.crypto import sign_content, verify_signature`
+- bridge.py imports: `from vibe_core.steward.crypto import sign_content, verify_signature`
 - steward/crypto.py requires: `from ecdsa import SigningKey, VerifyingKey, NIST256p`
 - ecdsa was not installed in environment
 

@@ -48,7 +48,7 @@ grep -r "from abc import" vibe_core/ steward/ provider/ --include="*.py"
 **Command:**
 ```bash
 # For each ABC found:
-grep -r "from steward.agent import VibeAgent" --include="*.py"
+grep -r "from vibe_core.protocols.agent import VibeAgent" --include="*.py"
 grep -r "import VibeAgent" --include="*.py"
 # Repeat for each ABC
 ```
@@ -246,7 +246,7 @@ __all__ = [
 **Change pattern:**
 ```python
 # OLD:
-from steward.agent import VibeAgent
+from vibe_core.protocols.agent import VibeAgent
 
 # NEW:
 from vibe_core.protocols import VibeAgent
@@ -349,7 +349,7 @@ from vibe_core.protocols import VibeAgent
 **Change pattern:**
 ```python
 # OLD:
-from steward.agent import VibeAgent
+from vibe_core.protocols.agent import VibeAgent
 
 # NEW:
 from vibe_core.protocols import VibeAgent
@@ -699,7 +699,7 @@ def test_layer1_imports():
 def test_layer2_imports():
     """Layer 2 implementations should import cleanly"""
     from vibe_core.ledger import VibeLedger as ImplLedger
-    from steward.system_agents.discovery import DiscoveryAgent
+    from vibe_core.cartridges.system.discovery import DiscoveryAgent
     # ... all implementations
 
 def test_layer3_phoenix():

@@ -190,8 +190,8 @@ print("✅ All modules verified")
 
 **Check Agent City:**
 ```python
-from steward.system_agents.herald.cartridge_main import HeraldCartridge
-from steward.system_agents.forum.cartridge_main import ForumCartridge
+from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
+from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge
 print("✅ Agent City intact")
 ```
 
@@ -253,8 +253,8 @@ print('✅ All modules loaded')
 
 # Agent City still works
 python -c "
-from steward.system_agents.herald.cartridge_main import HeraldCartridge
-from steward.system_agents.forum.cartridge_main import ForumCartridge
+from vibe_core.cartridges.system.herald.cartridge_main import HeraldCartridge
+from vibe_core.cartridges.system.forum.cartridge_main import ForumCartridge
 h = HeraldCartridge()
 f = ForumCartridge()
 print(f'✅ {h.name} & {f.name} operational')

@@ -250,7 +250,7 @@ pytest tests/test_playbook_system.py
    ... (alle 14 city agents)
    ```
 4. Update `CartridgeLoader` Pfade
-5. Update ALLE imports (`from steward.system_agents...` → `from vibe_core.cartridges.system...`)
+5. Update ALLE imports (`from vibe_core.cartridges.system...` → `from vibe_core.cartridges.system...`)
 6. LÖSCHE `steward/system_agents/` und `agent_city/registry/`
 
 **Validierung:**

@@ -90,7 +90,7 @@ result = science.process(task)
 
 ### HERALD Integration
 ```python
-from steward.system_agents.science.tools.web_search_tool import WebSearchTool
+from vibe_core.cartridges.system.science.tools.web_search_tool import WebSearchTool
 
 search = WebSearchTool(api_key=config.tavily_api_key)
 results = search.search(

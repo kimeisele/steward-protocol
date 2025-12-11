@@ -341,7 +341,7 @@ Agent __init__
            """Kernel provides Bank on-demand (lazy + safe)"""
            if self._bank is None:
                try:
-                   from steward.system_agents.civic.tools.economy import CivicBank
+                   from vibe_core.cartridges.system.civic.tools.economy import CivicBank
                    self._bank = CivicBank(kernel=self)
                except Exception as e:
                    logger.warning(f"CivicBank unavailable: {e}")
@@ -352,7 +352,7 @@ Agent __init__
            """Kernel provides Vault on-demand"""
            if self._vault is None:
                try:
-                   from steward.system_agents.civic.tools.vault import CivicVault
+                   from vibe_core.cartridges.system.civic.tools.vault import CivicVault
                    bank = self.get_bank()
                    self._vault = CivicVault(bank.conn)
                except Exception as e:

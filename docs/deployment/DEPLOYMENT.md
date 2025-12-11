@@ -291,7 +291,7 @@ print(f"oath_sworn: {agent.oath_sworn}")  # Should print: True
 
 **Manual trigger:**
 ```python
-from steward.system_agents.discoverer.agent import Discoverer
+from vibe_core.cartridges.system.discoverer.agent import Discoverer
 from vibe_core.kernel_impl import RealVibeKernel
 
 kernel = RealVibeKernel()
