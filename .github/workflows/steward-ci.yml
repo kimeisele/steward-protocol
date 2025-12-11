@@ -401,7 +401,22 @@ jobs:
           from pathlib import Path
           from vibe_core.plugins.test_orchestration import validate_test_files
 
-          test_files = list(Path('tests').glob('**/*.py'))
+          # Exclude from PANOPTICON+ validation:
+          # - archive/: Legacy tests awaiting migration
+          # - hardening/: Security tests with intentional governance violations
+          # - conftest.py: Fixture definitions, not tests
+          # - city_simulation.py: System-level test, needs full agent control
+          # - test_system_boot.py: Tests governance itself, needs agent control
+          # - test_event_bus_integration.py: Uses MockAgent for event testing
+          # - test_capability_revocation.py: Tests capability system
+          exclude_patterns = {
+              'archive', 'hardening', 'conftest.py', 'city_simulation.py',
+              'test_system_boot.py', 'test_event_bus_integration.py', 'test_capability_revocation.py'
+          }
+          test_files = [
+              f for f in Path('tests').glob('**/*.py')
+              if not any(p in str(f) for p in exclude_patterns)
+          ]
           results = validate_test_files([str(f) for f in test_files])
 
           blocked = [r for r in results if r['blocked']]
