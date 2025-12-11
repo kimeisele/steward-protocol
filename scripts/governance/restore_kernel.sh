@@ -1,8 +1,8 @@
 #!/bin/bash
-# VISNU KERNEL AUTO-RESTORE
-# =========================
-# Pre-commit hook that RESTORES kernel files instead of just blocking.
-# Agent changes to kernel files literally disappear.
+# VISNU KERNEL - NUCLEAR OPTION
+# =============================
+# Dieses Skript setzt Security Ring 0 BRUTAL auf origin/main zurück.
+# Nicht HEAD (kann polluted sein), sondern die WAHRE QUELLE.
 #
 # SECURITY RING 0 - Life, Death, and Rights (3399 LOC total)
 #
@@ -34,31 +34,37 @@ KERNEL_FILES=(
     "vibe_core/bridge.py"
 )
 
+# Fetch origin/main - die WAHRE QUELLE
+git fetch origin main --depth=1 2>/dev/null || true
+
 RESTORED=0
 
 for file in "${KERNEL_FILES[@]}"; do
-    # Check if file has staged changes
-    if git diff --cached --name-only | grep -q "^${file}$"; then
-        # Restore from HEAD
-        git checkout HEAD -- "$file"
+    # Prüfen ob die Datei von origin/main abweicht (staged oder unstaged)
+    if ! git diff --quiet origin/main -- "$file" 2>/dev/null; then
+        echo "🚨 ALARM: Unerlaubte Änderung an $file"
+
+        # NUCLEAR: Überschreiben mit origin/main (nicht HEAD!)
+        git checkout origin/main -- "$file"
         git add "$file"
+
+        echo "✅ RESTORED: $file → origin/main"
         RESTORED=1
-        echo "⚡ RESTORED: $file"
     fi
 done
 
 if [ $RESTORED -eq 1 ]; then
     echo ""
     echo "╔══════════════════════════════════════════════════════════════╗"
-    echo "║  KERNEL IS VISNU - ETERNAL AND UNCHANGING                    ║"
+    echo "║  ☢️  NUCLEAR RESET EXECUTED                                   ║"
     echo "║                                                              ║"
-    echo "║  Your changes to kernel files have been DISCARDED.           ║"
-    echo "║  The kernel has been restored to its eternal state.          ║"
+    echo "║  Your changes to Security Ring 0 have been OBLITERATED.     ║"
+    echo "║  Files restored from origin/main (the TRUE source).         ║"
+    echo "║                                                              ║"
+    echo "║  The kernel is VISNU. Resistance is futile.                 ║"
     echo "║                                                              ║"
     echo "║  Create a PLUGIN instead:                                    ║"
     echo "║    vibe_core/plugins/your_feature/                           ║"
-    echo "║                                                              ║"
-    echo "║  See: docs/architecture/OPUS/001-KERNEL-EXTRACTION.md        ║"
     echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
 fi

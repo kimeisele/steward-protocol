@@ -116,6 +116,37 @@ jobs:
           echo "║  All protected files match their blessed hashes.             ║"
           echo "╚══════════════════════════════════════════════════════════════╝"
 
+      - name: ☢️ Nuclear Verification (origin/main diff)
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin main --depth=1
+
+          RING0_FILES="vibe_core/kernel_impl.py vibe_core/kernel_ops.py vibe_core/plugin_protocol.py vibe_core/plugin_loader.py vibe_core/narasimha.py vibe_core/capability_registry.py vibe_core/bridge.py"
+
+          VIOLATIONS=""
+          for file in $RING0_FILES; do
+            if ! git diff --quiet origin/main -- "$file"; then
+              VIOLATIONS="$VIOLATIONS $file"
+            fi
+          done
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo ""
+            echo "╔══════════════════════════════════════════════════════════════╗"
+            echo "║  ☢️  NUCLEAR ALERT: SECURITY RING 0 VIOLATED                  ║"
+            echo "║                                                              ║"
+            echo "║  The following files differ from origin/main:                ║"
+            for v in $VIOLATIONS; do
+              echo "║    - $v"
+            done
+            echo "║                                                              ║"
+            echo "║  Security Ring 0 files are IMMUTABLE.                        ║"
+            echo "║  Create a PLUGIN instead.                                    ║"
+            echo "╚══════════════════════════════════════════════════════════════╝"
+            exit 1
+          fi
+          echo "✅ Security Ring 0 matches origin/main"
+
   # =========================================================================
   # JOB 4: Infrastructure Health Check (was JOB 3)
   # =========================================================================
