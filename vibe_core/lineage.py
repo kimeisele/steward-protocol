@@ -121,7 +121,7 @@ class LineageChain:
         These are not optional. They are the bedrock.
         """
         # Calculate foundation hashes
-        gad_000_hash = self._hash_file("/home/user/steward-protocol/GAD-000.md")
+        gad_000_hash = self._hash_file("/home/user/steward-protocol/docs/architecture/GAD-0XX/GAD-000.md")
         constitution_hash = self._hash_file("/home/user/steward-protocol/CONSTITUTION.md")
 
         genesis = LineageBlock(
