@@ -205,6 +205,55 @@ else
 fi
 
 # ============================================================================
+# GUARD 6: VISNU Kernel Protection (TOTAL LOCKDOWN)
+# ============================================================================
+# Security Ring 0: 7 kernel + 3 governance + 10 workflows + 1 config = 21 files
+# See: docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md
+# GAD-000: Machine-parseable JSON output for AI operators
+# ============================================================================
+echo -n "  ☢️  VISNU Kernel Protection (21 files)... "
+
+RESTORE_SCRIPT="$REPO_ROOT/scripts/governance/restore_kernel.sh"
+
+if [ -x "$RESTORE_SCRIPT" ]; then
+    # Run restore script - it auto-restores any protected file changes
+    OUTPUT=$("$RESTORE_SCRIPT" 2>&1)
+
+    if echo "$OUTPUT" | grep -q "NUCLEAR RESET EXECUTED"; then
+        echo -e "${RED}RESTORED${NC}"
+        echo ""
+
+        # GAD-000: Extract restored files for machine-readable output
+        RESTORED_FILES=$(echo "$OUTPUT" | grep "RESTORED:" | sed 's/.*RESTORED: //' | sed 's/ →.*//' | tr '\n' ',' | sed 's/,$//')
+
+        # GAD-000 compliant JSON output for AI operators
+        echo "{"
+        echo "  \"guard\": \"VISNU_KERNEL_PROTECTION\","
+        echo "  \"status\": \"RESTORED\","
+        echo "  \"action\": \"auto_reverted_to_origin_main\","
+        echo "  \"protected_files_count\": 21,"
+        echo "  \"restored_files\": [\"${RESTORED_FILES//,/\", \"}\"],"
+        echo "  \"reason\": \"Security Ring 0 files are immutable\","
+        echo "  \"solution\": \"Create a plugin in vibe_core/plugins/your_feature/ instead\","
+        echo "  \"documentation\": \"docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md\""
+        echo "}"
+        echo ""
+
+        # Human-readable output
+        echo "$OUTPUT"
+        echo ""
+        echo -e "${YELLOW}AI AGENT: You attempted to modify protected kernel files.${NC}"
+        echo -e "${YELLOW}Your changes were AUTO-REVERTED. This is by design.${NC}"
+        echo -e "${YELLOW}To add functionality: Create a PLUGIN in vibe_core/plugins/${NC}"
+        echo ""
+    else
+        echo -e "${GREEN}OK${NC}"
+    fi
+else
+    echo -e "${YELLOW}SKIP (restore_kernel.sh not found)${NC}"
+fi
+
+# ============================================================================
 # All guards passed
 # ============================================================================
 echo -e "${GREEN}✅ All pre-commit guards passed${NC}"

@@ -24,13 +24,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from vibe_core.plugins.test_orchestration.fixtures import TestKernel
 from vibe_core.protocols import VibeAgent
 from vibe_core.scheduling import Task
-from vibe_core.steward import ConstitutionalOath, OathMixin
+from vibe_core.steward import OathMixin
 
 
 class MockAgent(VibeAgent, OathMixin):
     """Mock agent for capability testing with Constitutional Oath.
 
     Note: Named MockAgent (not TestAgent) to avoid pytest collection conflict.
+    Uses OathMixin.swear_oath_sync() - the canonical way to become compliant.
     """
 
     def __init__(self, agent_id: str, capabilities: list[str]):
@@ -39,16 +40,9 @@ class MockAgent(VibeAgent, OathMixin):
             name=f"Mock Agent {agent_id}",
             capabilities=capabilities,
         )
-        # Initialize OathMixin with REAL constitution hash
+        # Initialize OathMixin and swear oath properly (not manual oath_sworn=True)
         self.oath_mixin_init(agent_id)
-        self.oath_sworn = True
-        real_hash = ConstitutionalOath.compute_constitution_hash()
-        self.oath_event = {
-            "agent_id": agent_id,
-            "constitution_hash": real_hash,
-            "signature": f"TEST_SIG_{agent_id}_{real_hash[:8]}",
-            "timestamp": "2025-01-01T00:00:00Z",
-        }
+        self.swear_oath_sync()
 
     def process(self, task: Task) -> dict:
         return {"status": "completed", "message": "test"}

@@ -203,53 +203,54 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**TEST FIXES (2025-12-11 16:15 UTC)**
-- ✅ Fixed `test_concurrent_writes_integrity` timeout (50→20 threads, 100→50 events, +120s marker)
-- ✅ Fixed `test_keyring_trust.py` legacy module refs (`steward.crypto` → `vibe_core.steward.crypto`)
-- ✅ CI GREEN: ruff ✅, kernel boot ✅, 267 integration tests ✅
+**PANOPTICON+ MIGRATION COMPLETE (2025-12-11 17:45 UTC)**
+- ✅ `test_event_bus_integration.py` - now uses `swear_oath_sync()`
+- ✅ `test_capability_revocation.py` - now uses `swear_oath_sync()`
+- ✅ `city_simulation.py` - removed manual fallback, uses canonical oath
+- ✅ `test_red_team_attacks.py` - extracted `_apply_fake_oath()` helper
+- 🎯 **0 tests with `self.oath_sworn = True`** (was 10 violations)
 
-**PREVIOUS (CI FIX)**
-- ✅ Fixed `verify_agents_manifest.py` scanning `__pycache__`
-- ✅ Fixed PANOPTICON+ blocking governance-testing tests
-- ⚠️ TEMPORARY: Excluded 7 tests from PANOPTICON+ (see Blockers)
-- ⚠️ TEMPORARY: Archived 7 legacy integration tests (see Blockers)
+**PREVIOUS (2025-12-11 17:30 UTC)**
+- Audited PANOPTICON+ exclusions
+- Updated blockers with accurate migration status
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-### 🔴 TECH DEBT: Tests brauchen TestAgents Migration
+### ✅ RESOLVED: Tests Migration Complete
 
-**Problem:** 7 Tests von PANOPTICON+ excludiert weil sie `self.oath_sworn = True` setzen.
-**Fix:** Migrieren zu `TestAgents.compliant()` / `TestAgents.without_oath()` Fixtures.
-
-| Test | Problem | Migration |
-|------|---------|-----------|
-| `tests/integration/test_event_bus_integration.py` | MockAgent + oath | → TestAgents.compliant() |
-| `tests/integration/city_simulation.py` | oath x2 | → TestAgents.compliant() |
-| `tests/integration/test_system_boot.py` | oath x3 | → TestAgents fixture |
-| `tests/integration/test_capability_revocation.py` | CustomAgent + oath | → TestAgents.compliant() |
-| `tests/hardening/test_governance_security.py` | oath x2 | → TestAgents.without_oath() |
-| `tests/hardening/test_red_team_attacks.py` | CustomAgent x4, oath x6 | → TestAgents.without_oath() |
-| `tests/conftest.py` | fixture definitions | OK - exclude is correct |
+**All tests now use canonical oath-swearing:**
+| Test | Migration |
+|------|-----------|
+| `test_event_bus_integration.py` | ✅ `swear_oath_sync()` |
+| `test_capability_revocation.py` | ✅ `swear_oath_sync()` |
+| `city_simulation.py` | ✅ `swear_oath_sync()` fallback |
+| `test_red_team_attacks.py` | ✅ `_apply_fake_oath()` helper |
+| `test_system_boot.py` | ✅ TestAgents fixtures |
+| `test_governance_security.py` | ✅ TestAgents fixtures |
 
 **Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
 
-### 🟡 TECH DEBT: Archived Integration Tests
+### 🟡 PENDING: Restored Tests Need CI Verification
 
-**Problem:** 7 Tests in `tests/archive/integration_legacy/` warten auf Container/Plugin Migration.
-**Fix:** temp_workdir fixture muss `phoenix/sections/` kopieren, Tests auf neue Architektur updaten.
+**7 tests moved back** from `tests/archive/` to `tests/integration/`:
+| Test | Dependencies | Status |
+|------|--------------|--------|
+| test_kernel_markdown_interfaces.py | fresh_kernel, EphemeralRenderer | ❓ Needs CI |
+| test_federation_manual.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_fractal_ui.py | spawn_child_kernel | ❓ Needs CI |
+| test_genesis_boot.py | genesis_path, envoy plugin | ❓ Needs CI |
+| test_genesis_flow.py | BootOrchestrator, UniversalProvider | ❓ Needs CI |
+| test_sangha_api.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_watchman_governance.py | pack_vibe, verify_holon_signatures | ❓ Needs CI |
 
-| Test | Issue |
-|------|-------|
-| test_kernel_markdown_interfaces.py | temp_workdir + renderer lookup |
-| test_federation_manual.py | Federation/Sangha API changes |
-| test_fractal_ui.py | test isolation |
-| test_genesis_boot.py | setup dependencies |
-| test_genesis_flow.py | BootOrchestrator changes |
-| test_sangha_api.py | network layer changes |
-| test_watchman_governance.py | container format changes |
+**Why restored:** Features/classes exist in codebase. Tests should not have been archived.
+
+**Action needed:** Run CI, fix any failures.
+
+**Still archived:** `test_runtime_separation.py` - `@pytest.mark.skip` (WIP)
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
