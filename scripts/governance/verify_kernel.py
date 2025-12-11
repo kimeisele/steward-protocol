@@ -33,10 +33,18 @@ import sys
 from pathlib import Path
 
 # Files that are protected (should not change without Senior Review)
+# SECURITY RING 0 - Life, Death, and Rights
 PROTECTED_FILES = [
+    # Core Orchestration
     "vibe_core/kernel_impl.py",
+    "vibe_core/kernel_ops.py",  # Delegated kernel operations
+    # Plugin System
     "vibe_core/plugin_protocol.py",
     "vibe_core/plugin_loader.py",
+    # Security (Sword, Shield, Gate)
+    "vibe_core/narasimha.py",  # Kill-Switch (The Sword)
+    "vibe_core/capability_registry.py",  # Permissions (The Shield)
+    "vibe_core/bridge.py",  # Constitution Gate (The Gate)
 ]
 
 # Hash storage file
