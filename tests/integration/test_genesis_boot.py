@@ -27,58 +27,18 @@ def test_genesis_boot_loading():
     if not genesis_manifest.exists():
         pytest.skip(f"Genesis pack not found: {genesis_manifest}")
 
-    # Verify knowledge directory structure before creating kernel
-    knowledge_dir = PROJECT_ROOT / "knowledge"
-    genesis_dir = PROJECT_ROOT / "knowledge" / "genesis"
-    circuits_dir = genesis_dir / "circuits"
-
-    print(f"PROJECT_ROOT: {PROJECT_ROOT}")
-    print(f"knowledge_dir exists: {knowledge_dir.exists()}")
-    print(f"genesis_dir exists: {genesis_dir.exists()}")
-    print(f"circuits_dir exists: {circuits_dir.exists()}")
-
-    if circuits_dir.exists():
-        print(f"circuits: {list(circuits_dir.glob('*.yaml'))[:5]}")
-
     # Save and restore CWD to avoid affecting other tests
     original_cwd = Path.cwd()
     kernel = None
     try:
         os.chdir(PROJECT_ROOT)
-        print(f"CWD after chdir: {os.getcwd()}")
 
         # Create kernel with plugins but do NOT boot (no gateway)
         kernel = RealVibeKernel(load_plugins=True)
 
-        # Debug: Show what plugins were loaded
-        print(f"Plugins loaded: {[p.plugin_id for p in kernel._plugins]}")
-        print(f"Plugin metadata keys: {list(kernel._plugin_metadata.keys())}")
-
-        # CRITICAL DEBUG: Trace genesis_knowledge metadata
-        genesis_meta = kernel._plugin_metadata.get("genesis_knowledge")
-        print("=== GENESIS METADATA DEBUG ===")
-        print(f"genesis_meta exists: {genesis_meta is not None}")
-        if genesis_meta:
-            print(f"  item_id: {genesis_meta.item_id}")
-            print(f"  item_type: {genesis_meta.item_type}")
-            print(f"  loaded_successfully: {genesis_meta.loaded_successfully}")
-            print(f"  error: {genesis_meta.error}")
-            print(f"  manifest_path: {genesis_meta.manifest_path}")
-            print(f"  manifest_path type: {type(genesis_meta.manifest_path)}")
-            if genesis_meta.manifest_path:
-                print(f"  manifest_path.parent: {genesis_meta.manifest_path.parent}")
-                print(f"  manifest_path.name: {genesis_meta.manifest_path.name}")
-                print(f"  manifest_path exists: {genesis_meta.manifest_path.exists()}")
-            print(f"  manifest content: {genesis_meta.manifest}")
-        print("=== END GENESIS DEBUG ===")
-
         # Check Genesis Path
         assert hasattr(kernel, "genesis_path"), "Kernel missing genesis_path attribute"
-        if kernel.genesis_path is None:
-            pytest.fail("Kernel failed to load Genesis Pack (genesis_path is None)")
-
-        print(f"Genesis Path: {kernel.genesis_path}")
-        print(f"Genesis Path type: {type(kernel.genesis_path)}")
+        assert kernel.genesis_path is not None, "Kernel failed to load Genesis Pack (genesis_path is None)"
 
         # Verify it points to a valid genesis pack (has circuits/)
         assert (kernel.genesis_path / "circuits").exists(), "Genesis path does not contain circuits/"
@@ -91,12 +51,7 @@ def test_genesis_boot_loading():
         circuits = kernel.envoy._circuits
         assert len(circuits) > 0, f"Envoy failed to load any circuits. envoy._circuits={circuits}"
 
-        circuit_names = list(circuits.keys())
-        print(f"Available circuits: {circuit_names}")
-
-        print("Genesis Boot Verification Successful!")
     finally:
-        # Shutdown cleans up resources (no gateway was started since boot() wasn't called)
         if kernel:
             kernel.shutdown()
         os.chdir(original_cwd)
