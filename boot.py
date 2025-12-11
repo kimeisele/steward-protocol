@@ -4,8 +4,15 @@ VibeOS Binary Entry Point.
 
 LAZY BOOT ARCHITECTURE:
 - Check for quick commands (--help, -h, version) BEFORE heavy imports
+- Extend runtime with user extensions (~/.steward/lib/) BEFORE heavy imports
 - Only load UnifiedCLI when actually needed
 - Target: <0.5s for help display
+
+RUNTIME EXTENSION PHILOSOPHY:
+- Binary ships THIN (no numpy/torch bloat)
+- User installs extensions: `steward install-semantic`
+- Extensions load from ~/.steward/lib/ at runtime
+- No rebuild required - true OS behavior
 """
 
 # PyInstaller multiprocessing support (MUST be at top level)
@@ -13,6 +20,14 @@ import multiprocessing
 import sys
 
 multiprocessing.freeze_support()
+
+# === RUNTIME EXTENSION: Load user packages from ~/.steward/lib/ ===
+# This MUST happen before any optional imports (numpy, torch, etc.)
+try:
+    from vibe_core.runtime_extensions import extend_runtime
+    extend_runtime()
+except ImportError:
+    pass  # Extensions module not available (minimal install)
 
 # === LAZY CLI: Instant Response for Basic Commands ===
 QUICK_COMMANDS = {"--help", "-h", "help", "--version", "-V", "version"}
@@ -47,6 +62,11 @@ STATE COMMANDS:
   plugins           List loaded plugins
   update <name>     Update container to library/
   install <path>    Install .vibe file to library/
+
+EXTENSION COMMANDS:
+  install-llm       Download local LLM (~400MB)
+  install-semantic  Install neural intelligence (numpy, torch)
+  extensions        Show runtime extension status
 
 PLUGIN COMMANDS:
   Run 'vibe capabilities' for full plugin command list.

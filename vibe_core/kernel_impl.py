@@ -66,6 +66,7 @@ from .plugin_loader import PluginLoader  # Phase 1: Plugin System
 from .process_manager import ProcessManager  # Phase 2: Process Isolation
 from .protocols import AgentManifest, VibeAgent
 from .resource_manager import ResourceManager  # Phase 3: Resource Isolation
+from .errors import ErrorCode, StructuredError, kernel_fault  # GAD-000 Compliance
 
 # Unified Execution: Single source of truth for routing (replaces PlaybookRouter)
 from .runtime.unified_execution import create_unified_runtime
@@ -1002,8 +1003,9 @@ class RealVibeKernel(VibeKernel):
                 try:
                     self.process_manager.send_task(task.agent_id, task)
                 except ValueError as e:
-                    logger.error(f"❌ IPC Dispatch failed: {e}")
-                    self._ledger.record_failure(task, str(e))
+                    structured = kernel_fault("ipc_dispatch", str(e))
+                    logger.error(f"❌ IPC Dispatch failed: {structured}")
+                    self._ledger.record_failure(task, str(structured))
                     return
             else:
                 # Execute task directly in-process (GenericAgent or failed process spawn)
@@ -1022,12 +1024,13 @@ class RealVibeKernel(VibeKernel):
                     for plugin in self._plugins:
                         plugin.on_task_completed(self, task.task_id, result)
                 except Exception as e:
-                    logger.error(f"❌ In-process execution failed: {e}")
-                    self._ledger.record_failure(task, str(e))
+                    structured = kernel_fault("in_process_execution", str(e))
+                    logger.error(f"❌ In-process execution failed: {structured}")
+                    self._ledger.record_failure(task, str(structured))
 
                     # Plugin Hook: Task Failed
                     for plugin in self._plugins:
-                        plugin.on_task_failed(self, task.task_id, str(e))
+                        plugin.on_task_failed(self, task.task_id, str(structured))
                     return
 
             # Record completion (Optimistic for now, or move to callback)
@@ -1053,7 +1056,8 @@ class RealVibeKernel(VibeKernel):
                 plugin.on_tick_post(self)
 
         except Exception as e:
-            error = str(e)
+            structured = kernel_fault("task_tick", str(e))
+            error = str(structured)
             logger.exception(f"❌ Task {task.task_id} failed: {error}")
             self._ledger.record_failure(task, error)
 

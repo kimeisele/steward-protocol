@@ -203,7 +203,11 @@ SKIP: 008-INDEX.md, README.md, manifest.json
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+**ROOT CLEANUP (2025-12-11)**
+- ✅ Moved 29 legacy docs → `archive/docs/`
+- ✅ Moved 5 legacy scripts → `archive/scripts/`
+- ✅ Fixed GAD-000 violations in `kernel_impl.py:1000,1021,1027,1053`
+- Root now clean: README, OPUS, INDEX, CONSTITUTION, STEWARD only
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
