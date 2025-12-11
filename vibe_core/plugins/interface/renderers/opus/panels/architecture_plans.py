@@ -55,8 +55,10 @@ class ArchitecturePlansPanel(BasePanel):
             "planned": "📋",
             "implemented": "✓",
             "superseded": "📦",
+            "completed": "✅",
+            "in_progress": "🔄",
         }
-        return mapping.get(status.lower(), "•")
+        return mapping.get(status.lower(), "❓")
 
     def _priority_badge(self, priority: str) -> str:
         """Convert priority to badge."""
