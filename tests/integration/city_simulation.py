@@ -111,27 +111,24 @@ class CitySimulation:
             ]
 
             # Step 1: Swear Constitutional Oath for each agent
+            # All cartridges should have OathMixin - use canonical swear_oath_sync()
             logger.info("🕉️  GENESIS CEREMONY: Agents swearing Constitutional Oath...")
             for agent_id, agent in cartridges:
                 try:
-                    # Check if agent has swear_constitutional_oath method
+                    # Check if agent has swear_constitutional_oath method (async)
                     if hasattr(agent, "swear_constitutional_oath") and callable(
                         getattr(agent, "swear_constitutional_oath")
                     ):
                         await agent.swear_constitutional_oath()
-                        logger.info(f"   ✓ {agent_id.upper():12} oath sworn")
+                        logger.info(f"   ✓ {agent_id.upper():12} oath sworn (async)")
+                    # Fallback: use sync oath (canonical OathMixin method)
+                    elif hasattr(agent, "swear_oath_sync") and callable(getattr(agent, "swear_oath_sync")):
+                        agent.swear_oath_sync()
+                        logger.info(f"   ✓ {agent_id.upper():12} oath sworn (sync)")
                     else:
-                        # Fallback: manually set oath_sworn if available
-                        if hasattr(agent, "oath_sworn"):
-                            agent.oath_sworn = True
-                            logger.info(f"   ✓ {agent_id.upper():12} oath set (fallback)")
-                        else:
-                            logger.warning(f"   ⚠️  {agent_id.upper():12} has no oath mechanism")
+                        logger.warning(f"   ⚠️  {agent_id.upper():12} has no oath mechanism")
                 except Exception as e:
-                    logger.warning(f"   ⚠️  {agent_id.upper():12} oath ceremony: {e}")
-                    # Continue even if oath fails - try to proceed anyway
-                    if hasattr(agent, "oath_sworn"):
-                        agent.oath_sworn = True
+                    logger.warning(f"   ⚠️  {agent_id.upper():12} oath ceremony failed: {e}")
 
             # Step 2: Register agents with kernel
             logger.info("📝 Registering agents with kernel...")
