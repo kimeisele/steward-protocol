@@ -1,4 +1,4 @@
-"""Steward Configuration - Agent Protocol settings from steward.yaml.
+"""Steward Configuration - Agent Protocol settings from vibe_core.steward.yaml.
 
 FRACTAL PATTERN: Mirrors kernel.py, city.py, quality.py
 

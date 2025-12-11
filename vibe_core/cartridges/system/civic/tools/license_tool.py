@@ -29,7 +29,7 @@ logger = logging.getLogger("CIVIC_LICENSE")
 
 # Import constitutional oath verification
 try:
-    from steward.constitutional_oath import ConstitutionalOath
+    from vibe_core.steward.constitutional_oath import ConstitutionalOath
 except ImportError:
     ConstitutionalOath = None
 
@@ -140,15 +140,34 @@ class LicenseTool(Tool):
         """
         Initialize the License Tool (kernel-managed).
 
-        License database path is always data/registry/licenses.json.
+        License database path deferred to _ensure_db_path() for lazy loading.
         """
-        self.license_db_path = Path("data/registry/licenses.json")
-        self.license_db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._license_db_path = None
+        self.licenses: Dict[str, License] = {}
 
-        # Load existing licenses
-        self.licenses: Dict[str, License] = self._load_licenses()
+        # Defer loading until first use
+        logger.info("🎫 LicenseTool initialized (lazy loading)")
 
-        logger.info(f"🎫 License database loaded: {len(self.licenses)} licenses")
+    @property
+    def license_db_path(self) -> Path:
+        """Lazy load license database path from config."""
+        if self._license_db_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                self._license_db_path = Path(config.paths.data.registry) / "licenses.json"
+            except Exception:
+                # Fallback to XDG data dir
+                import os
+
+                data_home = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+                self._license_db_path = Path(data_home) / "vibe/registry/licenses.json"
+            self._license_db_path.parent.mkdir(parents=True, exist_ok=True)
+            # Load licenses on first access
+            self.licenses = self._load_licenses()
+            logger.info(f"🎫 License database loaded: {len(self.licenses)} licenses")
+        return self._license_db_path
 
     # ==================== TOOL PROTOCOL IMPLEMENTATION ====================
 

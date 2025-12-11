@@ -15,9 +15,9 @@ Architecture:
 """
 
 # Import Constitutional Oath verification (Governance Gate)
-from steward.constitutional_oath import ConstitutionalOath
-from steward.crypto import sign_content, verify_signature
-from steward.oath_mixin import OathMixin
+from vibe_core.steward.constitutional_oath import ConstitutionalOath
+from vibe_core.steward.crypto import sign_content, verify_signature
+from vibe_core.steward.oath_mixin import OathMixin
 
 # Export as canonical vibe_core identities
 __all__ = [
