@@ -41,8 +41,13 @@ chmod +x .git/hooks/pre-commit
    - Formats code to 120 char line length
    - Fixes import sorting automatically
    - Catches critical syntax errors (E9, F63, F7, F82)
+5. 🔍 PANOPTICON+ Test Validation - validates test files use proper fixtures
+6. ☢️  **VISNU Kernel Protection (TOTAL LOCKDOWN)** - protects 21 critical files
+   - Auto-restores any changes to Security Ring 0 files from `origin/main`
+   - 7 kernel + 3 governance + 10 workflows + 1 config
+   - See: `docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md`
 
-**Tools:** `ruff` (single unified tool - replaced black, flake8, isort)
+**Tools:** `ruff`, `restore_kernel.sh`
 
 **Example output:**
 
@@ -103,6 +108,27 @@ git commit --no-verify
 # NEVER use --no-verify to bypass architecture violations!
 # The CI/CD will still catch you (Watchman + Auditor)
 ```
+
+## Claude Code Web / Devcontainer Setup
+
+**CRITICAL:** The hooks only work if git knows where to find them!
+
+```bash
+# This MUST be run in every fresh environment
+git config --local core.hooksPath .githooks
+```
+
+**Devcontainer:** This is set automatically via `postCreateCommand` in `.devcontainer/devcontainer.json`.
+
+**Claude Code Web:** If hooks are NOT running, the SessionStart hook should set this. Check:
+```bash
+git config --get core.hooksPath
+# Should return: .githooks
+```
+
+If empty, hooks are NOT active and kernel protection is BYPASSED!
+
+---
 
 ## Defense in Depth
 
