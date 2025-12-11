@@ -61,25 +61,3 @@ class TestMonitorLoader:
             # Second call - should reuse same cache object ID or content
             MonitorLoader.discover_monitors(ctx.kernel)
             assert id(MonitorLoader._cache) == initial_cache_id
-
-
-class TestCLIBuiltinCommands:
-    """Test that CLI builtins use persistent DB."""
-
-    def test_get_default_db_path_finds_existing(self):
-        """Test DB path resolution - skipped: _get_default_db_path moved to kernel."""
-        # NOTE: _get_default_db_path was removed from cli.main.
-        # DB path is now managed by kernel initialization.
-        # See vibe_core/kernel_impl.py for current DB path logic.
-        import pytest
-
-        pytest.skip("_get_default_db_path moved to kernel initialization")
-
-    def test_status_reports_db_path(self):
-        from unittest.mock import MagicMock
-
-        args = MagicMock()  # CLI args are fine to mock
-        # This function hits the disk/real kernel? No, it uses internal logic.
-        # _execute_builtin instantiates things.
-        # This test might be integration but we'll leave it simple.
-        pass
