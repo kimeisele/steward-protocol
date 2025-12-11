@@ -72,7 +72,7 @@
       {
         "phase": "2",
         "name": "PERSISTENCE",
-        "status": "completed",
+        "status": "pending",
         "tasks": ["VedicGovernance ledger", "StewardProtocol ledger", "Boot restore"]
       },
       {
