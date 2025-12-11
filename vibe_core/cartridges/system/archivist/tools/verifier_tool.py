@@ -22,8 +22,8 @@ logger = logging.getLogger("ARCHIVIST_VERIFIER")
 
 # Import real crypto functions
 try:
-    from steward.crypto import get_public_key_string
-    from steward.crypto import verify_signature as crypto_verify_signature
+    from vibe_core.steward.crypto import get_public_key_string
+    from vibe_core.steward.crypto import verify_signature as crypto_verify_signature
 
     CRYPTO_AVAILABLE = True
 except ImportError:
@@ -52,7 +52,7 @@ class VerifierTool:
             self.logger.info("✅ Verifier Tool initialized with REAL CRYPTO VERIFICATION")
 
         # Agent Public Key Registry (MVP: in-memory, hardcoded)
-        # In production: Load from steward.json files or central registry
+        # In production: Load from vibe_core.steward.json files or central registry
         self._load_agent_public_keys()
 
     def _load_agent_public_keys(self):

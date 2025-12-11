@@ -67,6 +67,7 @@ class StewardCLI:
         warnings.warn("StewardCLI is deprecated. Use UnifiedCLI instead.", DeprecationWarning, stacklevel=2)
         self.lineage_db = LINEAGE_DB
         self.operations_file = OPERATIONS_MD
+        self.snapshot_file = PROJECT_ROOT / "vibe_snapshot.json"  # GAD-000: Model (Truth)
         self.kernel_pid_file = KERNEL_PID_FILE
 
     # =========================================================================
@@ -117,21 +118,22 @@ class StewardCLI:
 
     def _check_kernel_pulse(self) -> bool:
         """
-        Check if kernel is alive by validating OPERATIONS.md timestamp.
+        Check if kernel is alive by validating vibe_snapshot.json timestamp.
 
+        GAD-000 Compliance: Check the Model (JSON), not the View (Markdown).
         SAFEGUARD: File older than 10 seconds = kernel is dead/hung.
         """
-        if not self.operations_file.exists():
+        if not self.snapshot_file.exists():
             return False
 
         pulse_age = self._get_pulse_age()
         return pulse_age <= 10.0  # 10 second threshold
 
     def _get_pulse_age(self) -> float:
-        """Get age of OPERATIONS.md file in seconds"""
-        if not self.operations_file.exists():
+        """Get age of vibe_snapshot.json (heartbeat Model) in seconds"""
+        if not self.snapshot_file.exists():
             return float("inf")
-        return time.time() - self.operations_file.stat().st_mtime
+        return time.time() - self.snapshot_file.stat().st_mtime
 
     def _check_parampara(self) -> tuple:
         """

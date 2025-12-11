@@ -273,7 +273,7 @@ class BootOrchestrator:
             logger.info("      → Kernel booted, ledger active")
 
             # Initialize Daily Ritual (The Heartbeat / Time Dimension)
-            from steward.daily_ritual import DailyRitual
+            from vibe_core.steward.daily_ritual import DailyRitual
 
             self.kernel.daily_ritual = DailyRitual(self.kernel)
             logger.info("      → Daily Ritual attached (time dimension active)")

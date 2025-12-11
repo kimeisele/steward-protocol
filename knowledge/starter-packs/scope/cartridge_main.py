@@ -8,9 +8,9 @@ This is a STARTER PACK - copy this folder to create your own agent.
 import logging
 from typing import Any, Dict, Optional
 
-from steward.oath_mixin import OathMixin
 from vibe_core import Task, VibeAgent
 from vibe_core.protocols import AgentManifest
+from vibe_core.steward.oath_mixin import OathMixin
 
 logger = logging.getLogger("SCOPE")
 

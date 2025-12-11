@@ -38,7 +38,7 @@ class StatusBar:
         self.steward_json = vibe_root / "steward.json"
 
     def get_user_name(self) -> str:
-        """Get user name from steward.json or git config."""
+        """Get user name from vibe_core.steward.json or git config."""
         try:
             if self.steward_json.exists():
                 with open(self.steward_json) as f:
@@ -70,7 +70,7 @@ class StatusBar:
             return "User"
 
     def get_operator_tone(self) -> str:
-        """Get operator tone from steward.json or environment variable."""
+        """Get operator tone from vibe_core.steward.json or environment variable."""
         try:
             if self.steward_json.exists():
                 with open(self.steward_json) as f:

@@ -98,8 +98,8 @@ def test_agent_bank_isolation():
     logger.info("TEST: Agent Sandbox Path Helper")
     logger.info("=" * 70)
 
-    from steward.oath_mixin import OathMixin
     from vibe_core.protocols import VibeAgent
+    from vibe_core.steward.oath_mixin import OathMixin
 
     class TestAgent(VibeAgent, OathMixin):
         def __init__(self, config=None):

@@ -496,7 +496,7 @@ class {name.title().replace(" ", "")}Cartridge(VibeAgent, OathMixin):
 
         # Sign with real crypto
         try:
-            from steward.crypto import load_or_generate_keys, sign_content
+            from vibe_core.steward.crypto import load_or_generate_keys, sign_content
 
             private_key, _ = load_or_generate_keys()
             signature = sign_content(content, private_key)
