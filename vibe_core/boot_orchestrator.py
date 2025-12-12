@@ -70,11 +70,25 @@ class BootOrchestrator:
         Initialize the boot orchestrator.
 
         Args:
-            ledger_path: Path to SQLite ledger (default: data/vibe_ledger.db)
+            ledger_path: Path to SQLite ledger (default: from PhoenixConfig)
             project_root: Project root directory (default: auto-detected)
             config: CityConfig instance (REQUIRED: Phoenix Config for agents)
         """
-        self.ledger_path = ledger_path or "data/vibe_ledger.db"
+        # OPUS-025: Resolve ledger_path from config if not provided
+        if ledger_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                phoenix_config = get_config()
+                if phoenix_config and hasattr(phoenix_config, "paths"):
+                    ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
+            except Exception:
+                pass
+            # Final fallback only if config unavailable
+            if ledger_path is None:
+                ledger_path = "data/vibe_ledger.db"
+
+        self.ledger_path = ledger_path
         self.project_root = project_root or Path.cwd()
         self.config = config  # BLOCKER #0: Phoenix Config integration
         self.kernel: Optional[RealVibeKernel] = None
