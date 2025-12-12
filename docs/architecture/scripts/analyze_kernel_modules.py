@@ -27,7 +27,7 @@ def count_lines(filepath: Path) -> int:
     """Count non-empty, non-comment lines."""
     try:
         content = filepath.read_text()
-        lines = [l for l in content.split("\n") if l.strip() and not l.strip().startswith("#")]
+        lines = [ln for ln in content.split("\n") if ln.strip() and not ln.strip().startswith("#")]
         return len(lines)
     except Exception:
         return 0
