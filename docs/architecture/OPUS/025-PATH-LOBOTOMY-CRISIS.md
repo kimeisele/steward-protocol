@@ -4,18 +4,88 @@
 > **Created:** 2025-12-12
 > **Last Updated:** 2025-12-12
 > **Severity:** P0 - Architectural Foundation Broken
+> **Scope:** Audit all path handling against PhoenixConfig.paths
+
+<!-- @HARNESS
+files:
+  - path: config/paths.yaml
+    required: true
+  - path: vibe_core/phoenix/sections/paths/section_main.py
+    required: true
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: vibe_core/runtime/boot_sequence.py
+    required: true
+  - path: vibe_core/ledger.py
+    required: true
+  - path: vibe_core/boot_orchestrator.py
+    required: true
+tests:
+  - tests/unit/test_config_paths.py
+  - tests/integration/test_kernel_boot.py
+wiring:
+  - pattern: "paths.data.resolve"
+    in: vibe_core/kernel_impl.py
+  - pattern: "paths.system.resolve"
+    in: vibe_core/kernel_impl.py
+absent:
+  - pattern: 'paths\.data\.[a-z_]+[^(]'
+    in: vibe_core/kernel_impl.py
+  - pattern: 'Path\("data/'
+    in: vibe_core/ledger.py
+  - pattern: '"data/vibe_ledger.db"'
+    in: vibe_core/boot_orchestrator.py
+  - pattern: '"/tmp/vibe_os'
+    in: vibe_core/kernel_impl.py
+  - pattern: '\.vibe.*vibe\.db'
+    in: vibe_core/runtime/boot_sequence.py
+config:
+  - section: paths
+-->
+
+## Status
+
+| Aspekt | Status | Evidenz |
+|--------|--------|---------|
+| PathsConfig definiert | ✅ | `config/paths.yaml` |
+| Template-Variablen funktionieren | ✅ | `resolve()` Methode existiert |
+| Code benutzt resolve() konsistent | ❌ | 3+ Stellen ohne resolve() |
+| Hardcoded `data/` Pfade eliminiert | ❌ | 40+ Violations |
+| Hardcoded `/tmp/vibe_os` eliminiert | ❌ | 15+ Violations |
+| `.vibe` Schatten-Pfade in Config | ❌ | 6+ Violations |
+| Python Defaults = YAML Defaults | ❌ | Inkonsistente Defaults |
+| CI Gate aktiv | ❌ | Nicht implementiert |
+| Migration abgeschlossen | ❌ | 0% |
 
 ---
 
 ## Executive Summary
 
-Das System ist **LOBOTOMIERT**. Die Config-Architektur (PhoenixConfig.paths) existiert und ist vollstaendig, aber:
+Das System ist **LOBOTOMIERT**. Die Config-Architektur (PhoenixConfig.paths) existiert, aber:
 
 1. **Code benutzt Pfade OHNE `resolve()`** → erstellt buchstaeblich Ordner namens `{root}`
-2. **Code ignoriert PhoenixConfig komplett** → hardcoded `Path("data/...")` ueberall
-3. **Inkonsistente Nutzung** → manchmal richtig, manchmal falsch
+2. **Code ignoriert PhoenixConfig komplett** → hardcoded Pfade ueberall
+3. **Drei Schatten-Dateisysteme** existieren parallel:
+   - `data/` - Governance, Ledger, Registry
+   - `/tmp/vibe_os/` - Runtime, Agents, Lineage
+   - `.vibe/` - Boot State, Memory, Tasks
+4. **Python Defaults untergraben YAML** → False Safety
 
-**Symptom:** Ein Ordner namens `{root}` existiert im Projekt-Root mit `vibe_ledger.db` darin.
+---
+
+## GAD-000 Compliance
+
+Dieses Problem verletzt GAD-000 "Operator Inversion":
+
+| Test | Status | Problem |
+|------|--------|---------|
+| **Discoverability** | ❌ | Pfade sind nicht ueber Config entdeckbar - hardcoded im Code |
+| **Observability** | ❌ | Drei Schatten-Dateisysteme - AI kann nicht alle State-Locations finden |
+| **Parseability** | ⚠️ | Wenn `{root}` als Literal erscheint, ist Fehler schwer zu parsen |
+| **Composability** | ❌ | Pfade koennen nicht via Config komponiert werden |
+| **Idempotency** | ⚠️ | Daten an falschen Orten = unvorhersehbares Verhalten bei Retry |
+
+**Ein AI Operator kann dieses System nicht zuverlaessig steuern wenn Daten an unbekannten Orten landen.**
 
 ---
 
@@ -30,21 +100,9 @@ data:
   root: "data"
   vibe_ledger: "{root}/vibe_ledger.db"
   economy_db: "{root}/economy.db"
-  registry_citizens: "{root}/registry/citizens.json"
-  # ... alle mit {root}
 ```
 
-Die `resolve()` Methode sollte `{root}` durch `"data"` ersetzen:
-
-```python
-# DataPathsConfig.resolve()
-def resolve(self, path_key: str) -> Path:
-    value = getattr(self, path_key, None)
-    resolved = value.replace("{root}", self.root)  # "{root}" → "data"
-    return Path(resolved)
-```
-
-**ABER:** Der Code ruft oft `.vibe_ledger` direkt auf statt `.resolve("vibe_ledger")`:
+Die `resolve()` Methode sollte `{root}` durch `"data"` ersetzen. **ABER:** Der Code ruft oft direkt auf statt `resolve()`:
 
 ```python
 # FALSCH - kernel_impl.py:177
@@ -60,7 +118,7 @@ Wenn Code dann `Path("{root}/vibe_ledger.db").parent.mkdir()` macht, wird ein Or
 
 ---
 
-## Drei Kategorien von Bugs
+## Vier Kategorien von Bugs
 
 ### Kategorie 1: PhoenixConfig benutzt OHNE resolve()
 
@@ -72,18 +130,13 @@ Diese erstellen buchstaeblich Ordner/Dateien mit `{root}` im Namen:
 | `license_tool.py` | 159 | `paths.data.registry` | Erstellt `{root}/registry/...` |
 | `memory.py` | 83 | `paths.data.events` | Erstellt `{root}/events/...` |
 
-**Fix:** ALLE muessen `resolve()` benutzen.
-
-### Kategorie 2: PhoenixConfig komplett IGNORIERT
-
-Diese benutzen hardcoded Pfade und ignorieren die Config:
+### Kategorie 2: Hardcoded `data/` Pfade (40+ Stellen)
 
 | Datei | Zeile | Hardcoded Path |
 |-------|-------|----------------|
 | `ledger.py` | 132 | `"data/vibe_ledger.db"` |
 | `boot_orchestrator.py` | 77 | `"data/vibe_ledger.db"` |
 | `kernel_impl.py` | 179 | `"data/vibe_ledger.db"` (Fallback) |
-| `config/schema.py` | 219 | `"data/registry/"` |
 | `vault_tool.py` | 91 | `Path("data/security/master.key")` |
 | `vault.py` | 113 | `Path("data/security/master.key")` |
 | `economy.py` | 52, 65 | `Path("data/economy.db")` |
@@ -98,41 +151,81 @@ Diese benutzen hardcoded Pfade und ignorieren die Config:
 | `ledger_visualizer.py` | 32 | `Path("data/ledger/audit_trail.jsonl")` |
 | `local_llama_provider.py` | 21 | `Path("data/models")` |
 | `semantic_engine.py` | 76-80 | `"data/models"` |
+| `prakriti.py` | 79 | `"data/vibe_ledger.db"` |
+| `analyst/architecture_tool.py` | 192, 304 | `"data/vibe_ledger.db"` |
 | `doctor/plugin_main.py` | 42, 48 | `"data/vibe_ledger.db"` |
-| `interface/renderers/git.py` | 44 | `"data/registry/citizens.json"` |
-| `prakriti.py` | 79 | `"data" / "vibe_ledger.db"` |
-| `analyst/architecture_tool.py` | 192, 304 | `"data" / "vibe_ledger.db"` |
 
-**40+ Stellen** die PhoenixConfig ignorieren.
+### Kategorie 3: Hardcoded `/tmp/vibe_os` Pfade (15+ Stellen)
 
-**Fix:** ALLE muessen Config-Injection bekommen und `paths.data.resolve()` benutzen.
+Obwohl `SystemPathsConfig.runtime_root` existiert, wird es ignoriert:
 
-### Kategorie 3: UNBEKANNT - Was noch fehlt
+| Datei | Zeile | Hardcoded Path |
+|-------|-------|----------------|
+| `vfs.py` | 39 | `Path("/tmp/vibe_os/agents")` |
+| `kernel_impl.py` | 221 | `"/tmp/vibe_os/kernel/lineage.db"` (Fallback) |
+| `kernel_impl.py` | 488 | `Path("/tmp/vibe_os/kernel/economy.db")` |
+| `lineage.py` | 64 | `"/tmp/vibe_os/kernel/lineage.db"` (Default) |
+| `legacy.py` | 55 | `Path("/tmp/vibe_os/kernel/lineage.db")` |
+| `legacy.py` | 57 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
+| `legacy.py` | 507 | `Path("/tmp/vibe_os/logs")` |
+| `legacy.py` | 511 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
+| `legacy.py` | 573 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
+| `legacy.py` | 805 | `Path("/tmp/vibe_os/logs/kernel.log")` |
+| `legacy.py` | 1093 | `Path("/tmp/vibe_os/tasks")` |
+| `local_llama_provider.py` | 28 | `Path("/tmp/vibe_os/models")` |
+| `protocols/agent.py` | 363 | `Path("/tmp/vibe_os/agents/{agent_id}")` |
+| `kernel_spawn.py` | 54 | `Path("/tmp/vibe_os/agents")` |
+| `agent_interface.py` | 317 | `/tmp/vibe_os/agents/{agent_id}` |
 
-Ich habe noch NICHT vollstaendig analysiert:
+### Kategorie 4: `.vibe` Schatten-Dateisystem (NICHT in PathsConfig)
 
-- [ ] knowledge-Pfade (`{root}` in KnowledgePathsConfig)
-- [ ] system-Pfade (`{runtime_root}` in SystemPathsConfig)
-- [ ] Pfade in Tests
-- [ ] Pfade in Scripts
-- [ ] Pfade die zur Laufzeit dynamisch erstellt werden
-- [ ] Zirkulaere Abhaengigkeiten beim Config-Loading
+Diese Pfade existieren NICHT in `config/paths.yaml`:
 
-**Diese Liste ist NICHT vollstaendig.**
+| Datei | Zeile | Schatten-Pfad | Zweck |
+|-------|-------|---------------|-------|
+| `boot_sequence.py` | 33 | `.vibe/vibe.db` | Boot State DB |
+| `boot_sequence.py` | 506 | `.vibe/state/active_mission.json` | Legacy Migration |
+| `project_memory.py` | 28 | `.vibe/project_memory.json` | Semantic Memory |
+| `task_manager.py` | 44 | `.vibe/state` | Task State |
+| `task_manager.py` | 45 | `.vibe/config` | Task Config |
+| `task_manager.py` | 46 | `.vibe/history/mission_logs` | History |
+
+**Problem:** Das sind Produktions-Daten die komplett an PhoenixConfig vorbeigehen!
+
+---
+
+## Kategorie 5: False Safety Defaults (Senior Audit Finding)
+
+Die `from_dict` Methoden in `section_main.py` haben inkonsistente Defaults:
+
+```python
+# section_main.py:134
+economy_db=data.get("economy_db", "data/economy.db"),  # AUFGELOEST
+vibe_ledger=data.get("vibe_ledger", "data/vibe_ledger.db"),  # AUFGELOEST
+```
+
+**ABER** `config/paths.yaml` benutzt:
+```yaml
+economy_db: "{root}/economy.db"  # TEMPLATE
+vibe_ledger: "{root}/vibe_ledger.db"  # TEMPLATE
+```
+
+**Das Problem:**
+- Wenn YAML da: Bekommt `"{root}/economy.db"` → braucht resolve()
+- Wenn YAML fehlt: Bekommt `"data/economy.db"` → kein resolve() noetig
+
+**Das verdeckt Bugs!** Das System scheint zu funktionieren, aber benutzt unterschiedliche Pfad-Strategien je nach Config-Zustand.
 
 ---
 
 ## Die RICHTIGE Loesung
 
-### Prinzip: Dependency Injection + resolve()
+### Prinzip 1: Dependency Injection + resolve()
 
 ```python
 # VORHER (VERBOTEN):
 class SomeTool:
     DB_PATH = Path("data/economy.db")  # HARDCODED - VERBOTEN!
-
-    def __init__(self):
-        self.db_path = self.DB_PATH
 
 # NACHHER (RICHTIG):
 class SomeTool:
@@ -144,7 +237,7 @@ class SomeTool:
         return self._config.paths.data.resolve("economy_db")
 ```
 
-### Keine Fallbacks zu hardcoded Pfaden
+### Prinzip 2: Keine Fallbacks
 
 ```python
 # VORHER (VERBOTEN):
@@ -158,14 +251,28 @@ ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
 # Kein Fallback. Wenn Config kaputt ist, soll es LAUT SCHEITERN.
 ```
 
-### Config muss beim Boot validiert werden
+### Prinzip 3: Single Source of Truth
 
 ```python
-# Beim System-Start:
-config = PhoenixConfig.from_files()
-errors = config.paths.validate()
-if errors:
-    raise ConfigurationError(f"Invalid paths configuration: {errors}")
+# section_main.py - Defaults MUESSEN Template-Form haben:
+economy_db=data.get("economy_db", "{root}/economy.db"),  # Konsistent mit YAML!
+
+# ODER: Keine Defaults - wenn YAML fehlt, Exception werfen
+```
+
+### Prinzip 4: Alle Schatten-Pfade in PathsConfig
+
+`config/paths.yaml` muss erweitert werden:
+
+```yaml
+# NEU: Project-lokale State-Pfade
+project:
+  vibe_root: ".vibe"
+  state_db: "{vibe_root}/vibe.db"
+  memory_file: "{vibe_root}/project_memory.json"
+  tasks_dir: "{vibe_root}/state"
+  config_dir: "{vibe_root}/config"
+  history_dir: "{vibe_root}/history/mission_logs"
 ```
 
 ---
@@ -177,177 +284,138 @@ if errors:
 | Datei | Zeile | Aenderung |
 |-------|-------|-----------|
 | `kernel_impl.py` | 177 | `.vibe_ledger` → `.resolve("vibe_ledger")` |
-| `license_tool.py` | 159 | `.registry` → `.resolve("registry_citizens")` + Pfad-Anpassung |
+| `license_tool.py` | 159 | `.registry` → `.resolve("registry_citizens")` |
 | `memory.py` | 83 | `.events` → `.resolve("events_herald")` |
 
 ### Phase 2: Core System (P0)
 
-| Datei | Prioritaet |
-|-------|------------|
-| `ledger.py` | P0 |
-| `boot_orchestrator.py` | P0 |
-| `kernel_impl.py:179` (Fallback entfernen) | P0 |
+| Datei | Aenderung |
+|-------|-----------|
+| `ledger.py:132` | Config Injection statt Default |
+| `boot_orchestrator.py:77` | Config Injection, Fallback entfernen |
+| `kernel_impl.py:179` | Fallback entfernen |
+| `kernel_impl.py:221` | Fallback entfernen |
 
-### Phase 3: Governance/State (P1)
+### Phase 3: Schatten-Dateisysteme in Config (P0)
 
-| Datei | Prioritaet |
-|-------|------------|
-| `vault_tool.py`, `vault.py` | P1 |
-| `economy.py`, `bank_tool.py`, `ledger_tool.py` | P1 |
-| `registry_agent.py`, `lifecycle_manager.py` | P1 |
+| Aenderung |
+|-----------|
+| `.vibe/*` Pfade zu `config/paths.yaml` hinzufuegen |
+| `/tmp/vibe_os/*` durch `config.paths.system.resolve()` ersetzen |
+| `boot_sequence.py` auf Config umstellen |
+| `task_manager.py` auf Config umstellen |
 
-### Phase 4: Features (P2)
+### Phase 4: False Safety Defaults (P1)
 
-| Datei | Prioritaet |
-|-------|------------|
-| `watchdog_tool.py` | P2 |
-| `agency_director.py` | P2 |
-| `ledger_visualizer.py` | P2 |
-| `scout_tool_legacy.py` | P2 |
+| Datei | Aenderung |
+|-------|-----------|
+| `section_main.py` | Alle Defaults zu Template-Form aendern ODER entfernen |
 
-### Phase 5: AI/ML (P3)
+### Phase 5: Governance/State Tools (P1)
 
-| Datei | Prioritaet |
-|-------|------------|
-| `semantic_engine.py` | P3 |
-| `local_llama_provider.py` | P3 |
+| Datei |
+|-------|
+| `vault_tool.py`, `vault.py` |
+| `economy.py`, `bank_tool.py`, `ledger_tool.py` |
+| `registry_agent.py`, `lifecycle_manager.py` |
 
-### Phase 6: Plugins/Tools (P4)
+### Phase 6: Runtime/Legacy (P2)
 
-| Datei | Prioritaet |
-|-------|------------|
-| `doctor/plugin_main.py` | P4 |
-| `interface/renderers/git.py` | P4 |
-| Alle anderen | P4 |
+| Datei |
+|-------|
+| `legacy.py` (alle 8+ Stellen) |
+| `vfs.py` |
+| `lineage.py` |
+| `kernel_spawn.py` |
+| `agent_interface.py` |
 
-### Phase 7: Vollstaendige Analyse
+### Phase 7: Features/Plugins (P3)
 
-- [ ] knowledge-Pfade analysieren
-- [ ] system-Pfade analysieren
-- [ ] Tests analysieren
-- [ ] Scripts analysieren
-- [ ] Runtime-erstellte Pfade tracen
+| Datei |
+|-------|
+| `watchdog_tool.py` |
+| `agency_director.py` |
+| `ledger_visualizer.py` |
+| `semantic_engine.py` |
+| `local_llama_provider.py` |
+
+### Phase 8: Vollstaendige Analyse
+
+- [ ] Tests auf hardcoded Pfade pruefen
+- [ ] Scripts auf hardcoded Pfade pruefen
+- [ ] Runtime-generierte Pfade tracen
+- [ ] Config-Loading Race Conditions analysieren
 
 ---
 
 ## Enforcement
 
-### Pre-commit Hook erweitern
+### Pre-commit Hook
 
-```python
-# .pre-commit-config.yaml - Regel hinzufuegen:
-# Blockiert: paths.data.XYZ (ohne resolve)
-# Blockiert: Path("data/...")
-# Blockiert: "data/" in String-Literals
+```bash
+# .githooks/pre-commit muss erweitert werden:
+# 1. Blockiert: Path("data/...)
+# 2. Blockiert: paths.data.XYZ (ohne resolve)
+# 3. Blockiert: /tmp/vibe_os
+# 4. Blockiert: .vibe/ (ohne Config)
 ```
 
 ### CI Gate
 
 ```bash
-# Prueft auf neue Violations
-grep -r 'Path("data/' vibe_core/ && exit 1
-grep -r 'paths\.data\.[a-z_]+[^(]' vibe_core/ && exit 1
+grep -rE 'Path\("data/' vibe_core/ && exit 1
+grep -rE 'paths\.(data|system|knowledge)\.[a-z_]+[^(]' vibe_core/ && exit 1
+grep -rE '"/tmp/vibe_os' vibe_core/ && exit 1
 ```
 
 ### Watchman AST-Visitor aktivieren
 
-Der existiert bereits aber wird nicht enforced:
-```python
-# watchman/tools/standards_inspection.py:71
-class PathDataCallVisitor(ast.NodeVisitor):
-    """AST visitor to detect Path("data/...") calls."""
-```
+Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird nicht enforced.
 
 ---
 
-## Was ich NICHT weiss
+## Was noch NICHT analysiert wurde
 
-1. **Gibt es weitere Template-Variablen?** - Ich habe nur `{root}` und `{runtime_root}` gefunden
-2. **Werden Pfade zur Laufzeit dynamisch erstellt?** - Moeglicherweise durch String-Concatenation
-3. **Wie verhaelt sich das in Tests?** - Tests koennten andere Pfade benutzen
-4. **Gibt es Config-Loading Race Conditions?** - Was passiert wenn Pfade benutzt werden bevor Config geladen ist?
-5. **Wie verhaelt sich das bei Binary Distribution?** - PyInstaller aendert Pfade
+1. **Tests** - Hardcoded Pfade in test fixtures?
+2. **Scripts** - Build/CI Scripts mit falschen Pfaden?
+3. **String-Concatenation** - `f"data/{something}"` nicht mit grep findbar
+4. **Config-Loading Order** - Race Conditions beim Boot?
+5. **Binary Distribution** - PyInstaller aendert Pfade
+6. **Docker/Container** - Volume Mounts vs. Config?
+
+**Diese Analyse ist NICHT vollstaendig. Der Plan muss erweitert werden sobald weitere Violations gefunden werden.**
 
 ---
 
 ## Architektur-Entscheidung
 
-**ADR-025: Mandatory resolve() for Template Paths**
+**ADR-025: Mandatory resolve() and Config Injection for All Paths**
 
 **Status:** Proposed
 
 **Context:**
-- PhoenixConfig.paths benutzt Template-Variablen wie `{root}`
+- PhoenixConfig.paths benutzt Template-Variablen wie `{root}`, `{runtime_root}`
 - Code benutzt Pfade inkonsistent - manchmal mit, manchmal ohne resolve()
-- Das fuehrt zu buchstaeblichen `{root}` Ordnern im Dateisystem
+- Drei Schatten-Dateisysteme (`data/`, `/tmp/vibe_os/`, `.vibe/`) existieren parallel
+- Python Defaults in `from_dict()` sind inkonsistent mit YAML Templates
 
 **Decision:**
 1. ALLE Pfad-Zugriffe MUESSEN `resolve()` benutzen
 2. Direkte Attribut-Zugriffe wie `.vibe_ledger` sind VERBOTEN
-3. Hardcoded Pfade wie `Path("data/...")` sind VERBOTEN
+3. Hardcoded Pfade sind VERBOTEN
 4. Fallbacks zu hardcoded Pfaden sind VERBOTEN
-5. Config-Fehler muessen LAUT scheitern, nicht still fallbacken
+5. Config-Fehler muessen LAUT scheitern
+6. ALLE Schatten-Pfade muessen in `config/paths.yaml` definiert werden
+7. Python Defaults muessen Template-Form haben oder entfernt werden
 
 **Consequences:**
-- Alle 40+ Stellen muessen migriert werden
-- Dependency Injection muss implementiert werden
+- 60+ Stellen muessen migriert werden
+- Dependency Injection muss durchgaengig implementiert werden
 - CI muss neue Violations blockieren
 - Volle Flexibilitaet fuer verschiedene Deployment-Szenarien
-
----
-
-## @HARNESS
-
-```yaml
-files:
-  - path: config/paths.yaml
-    required: true
-  - path: vibe_core/phoenix/sections/paths/section_main.py
-    required: true
-tests:
-  - tests/unit/test_config_paths.py
-wiring:
-  - pattern: "paths.data.resolve"
-    in: vibe_core/kernel_impl.py
-absent:
-  - pattern: 'paths\.data\.[a-z_]+[^(]'
-    in: vibe_core/kernel_impl.py
-  - pattern: 'Path\("data/'
-    in: vibe_core/ledger.py
-  - pattern: '"data/vibe_ledger.db"'
-    in: vibe_core/boot_orchestrator.py
-```
-
----
-
-## Status
-
-| Aspekt | Status | Evidenz |
-|--------|--------|---------|
-| PathsConfig definiert | ✅ | config/paths.yaml |
-| Template-Variablen funktionieren | ✅ | resolve() Methode existiert |
-| Code benutzt resolve() konsistent | ❌ | 3 Stellen ohne resolve() gefunden |
-| Hardcoded Pfade eliminiert | ❌ | 40+ Violations |
-| {root} Ordner existiert | ❌ | Benutzer-Report |
-| CI Gate | ❌ | Nicht implementiert |
-| Migration abgeschlossen | ❌ | 0% |
-| Vollstaendige Analyse | ❌ | Unbekannte Bereiche bleiben |
-
----
-
-## WARNUNG
-
-**Diese Analyse ist NICHT vollstaendig.**
-
-Ich habe nur die offensichtlichsten Violations gefunden. Es gibt wahrscheinlich mehr:
-- In Tests
-- In Scripts
-- In dynamisch generiertem Code
-- In String-Concatenations die ich nicht mit grep gefunden habe
-- In Bereichen die ich noch nicht analysiert habe
-
-**Der Plan muss erweitert werden sobald weitere Violations gefunden werden.**
+- Single Source of Truth fuer alle Pfade
 
 ---
 
 *Erstellt: 2025-12-12 | Letzte Aktualisierung: 2025-12-12*
+*Senior Audit Contributions: Gemini (2025-12-12)*
