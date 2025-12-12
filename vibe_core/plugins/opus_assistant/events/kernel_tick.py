@@ -21,9 +21,9 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
-    from ..core.context_service import OpusContextService
-    from ..core.observation_logger import ObservationLogger
-    from ..plugin_main import OpusAssistantPlugin
+    from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
+    from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
+    from vibe_core.plugins.opus_assistant.plugin_main import OpusAssistantPlugin
 
 logger = logging.getLogger("OPUS_TICK")
 
@@ -70,7 +70,7 @@ class KernelTickHandler:
     def _init_context_service(self) -> None:
         """Initialize the OpusContextService for dynamic context synthesis."""
         try:
-            from ..core.context_service import OpusContextService
+            from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
 
             workspace = self._plugin._workspace
             if workspace:
@@ -82,7 +82,7 @@ class KernelTickHandler:
     def _init_observation_logger(self) -> None:
         """Initialize the ObservationLogger for journaling to OPUS.md."""
         try:
-            from ..core.observation_logger import ObservationLogger
+            from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
 
             workspace = self._plugin._workspace
             if workspace:

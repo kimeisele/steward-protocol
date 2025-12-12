@@ -5,7 +5,7 @@ Components:
 - KernelTickHandler: Heartbeat via EventBus (keeps plugin ALIVE)
 """
 
-from .kernel_tick import KernelTickHandler, SyncKernelTickHandler
+from vibe_core.plugins.opus_assistant.events.kernel_tick import KernelTickHandler, SyncKernelTickHandler
 
 __all__ = [
     "KernelTickHandler",

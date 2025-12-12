@@ -13,17 +13,21 @@ Components:
 - ObservationLogger: System journal for soft interaction (Phase 2.5)
 """
 
-from .config_loader import ConfigLoader, deep_merge
-from .context_service import OpusContext, OpusContextService, SystemHealth
-from .drift_detector import DriftDetector, DriftReport
-from .observation_logger import (
+from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader, deep_merge
+from vibe_core.plugins.opus_assistant.core.context_service import OpusContext, OpusContextService, SystemHealth
+from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector, DriftReport
+from vibe_core.plugins.opus_assistant.core.observation_logger import (
     Observation,
     ObservationJournal,
     ObservationLogger,
     ObservationSeverity,
 )
-from .opus_generator import OpusData, OpusGenerator
-from .verification_logic import HarnessResult, VerificationEngine, VerificationReport
+from vibe_core.plugins.opus_assistant.core.opus_generator import OpusData, OpusGenerator
+from vibe_core.plugins.opus_assistant.core.verification_logic import (
+    HarnessResult,
+    VerificationEngine,
+    VerificationReport,
+)
 
 __all__ = [
     # Verification
