@@ -123,7 +123,12 @@ class OpusAssistantPlugin(KernelPlugin):
             if not drift.get("healthy", True):
                 logger.warning(f"⚠️ OPUS drift: {len(drift.get('missing_files', []))} missing files")
 
-        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick)")
+        # OPUS-029 Phase 6: Register as PromptContext provider
+        # This is the SCALABLE pattern - plugins register their own resolvers
+        # WITHOUT modifying core files!
+        self._register_context_provider()
+
+        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + context provider)")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
@@ -166,6 +171,148 @@ class OpusAssistantPlugin(KernelPlugin):
             logger.debug("EventBus not available - tick handler disabled")
         except Exception as e:
             logger.debug(f"Could not setup kernel tick: {e}")
+
+    def _register_context_provider(self) -> None:
+        """
+        Register OPUS context with PromptContext (OPUS-029 Phase 6).
+
+        This is the SCALABLE pattern for plugin context injection:
+        1. Plugin implements a resolver function
+        2. Plugin registers the resolver with PromptContext
+        3. Core PromptComposer includes ALL resolved plugin contexts
+        4. NO modification to core files required!
+
+        The resolver returns formatted markdown that gets injected into
+        CLI prompts, giving LLM operators the "State of Mind" context.
+        """
+        try:
+            from vibe_core.runtime.prompt_context import get_prompt_context
+
+            prompt_context = get_prompt_context()
+
+            # Register our resolver - it returns formatted OPUS context
+            prompt_context.register("opus_context", self._resolve_opus_context)
+
+            logger.debug("Registered opus_context resolver with PromptContext")
+        except ImportError:
+            logger.debug("PromptContext not available - context provider disabled")
+        except Exception as e:
+            logger.debug(f"Could not register context provider: {e}")
+
+    def _resolve_opus_context(self) -> str:
+        """
+        Resolver function for PromptContext.
+
+        Synthesizes dynamic "State of Mind" from Prakriti layers.
+        This is what shapes agent cognition at boot - NOT a static file.
+
+        The prompt is a VARIABLE, not a constant. It evolves with the system.
+
+        Returns:
+            Synthesized state of mind from all Prakriti layers
+        """
+        return self._synthesize_state_of_mind()
+
+    def _synthesize_state_of_mind(self) -> str:
+        """
+        Synthesize dynamic 'State of Mind' from Prakriti layers.
+
+        OPUS-029: This is the core of cognitive bootstrapping.
+        The agent's consciousness is shaped by LIVE system state.
+
+        Layers:
+            1. Sthula (Physical): Git state, files, ledger
+            2. Prana (Runtime): Kernel, agents, session
+            3. Purusha (Identity): Ephemeral thoughts, persona
+
+        Plus: Available circuits, OPUS health, current focus.
+        """
+        import re
+
+        import yaml
+
+        workspace = self._workspace or Path.cwd()
+        sections = []
+
+        # === LAYER 1: STHULA (Physical Reality) ===
+        try:
+            from vibe_core.state.prakriti import Prakriti
+
+            p = Prakriti(workspace)
+            git_status = p.git.status()
+
+            layer1 = f"""**Layer 1 - Sthula (Physical):**
+- Branch: `{git_status.get("branch", "unknown")}`
+- HEAD: `{git_status.get("sha", "unknown")}`
+- Dirty: {"⚠️ Uncommitted changes" if git_status.get("dirty") else "✅ Clean"}"""
+            sections.append(layer1)
+        except Exception as e:
+            sections.append(f"**Layer 1 - Sthula:** ❌ {e}")
+
+        # === LAYER 2: PRANA (Runtime) ===
+        try:
+            kernel_status = p.kernel.status()
+            agents = p.kernel.agents()
+            layer2 = f"""**Layer 2 - Prana (Runtime):**
+- Kernel: {"🟢 Running" if kernel_status.get("available") else "⚪ Offline"}
+- Agents: {len(agents)} active
+- Session: {p.session or "Standalone"}"""
+            sections.append(layer2)
+        except Exception as e:
+            sections.append(f"**Layer 2 - Prana:** ❌ {e}")
+
+        # === LAYER 3: PURUSHA (Identity/Cognition) ===
+        try:
+            thoughts = p.ephemeral.get_thoughts()
+            thought_summary = f"{len(thoughts)} thoughts" if thoughts else "Fresh mind"
+            layer3 = f"""**Layer 3 - Purusha (Identity):**
+- Ephemeral: {thought_summary}"""
+            sections.append(layer3)
+        except Exception as e:
+            sections.append(f"**Layer 3 - Purusha:** ❌ {e}")
+
+        # === CIRCUITS (Cognitive Patterns Available) ===
+        try:
+            circuits_dir = workspace / "vibe_core/plugins/opus_assistant/circuits"
+            circuits = []
+            if circuits_dir.exists():
+                for cf in circuits_dir.glob("*.yaml"):
+                    with open(cf) as f:
+                        data = yaml.safe_load(f)
+                    c = data.get("circuit", {})
+                    circuits.append(c.get("id", cf.stem))
+
+            circuit_section = f"""**Cognitive Circuits:**
+- Available: {", ".join(circuits) if circuits else "None"}"""
+            sections.append(circuit_section)
+        except Exception as e:
+            sections.append(f"**Circuits:** ❌ {e}")
+
+        # === OPUS HEALTH (System Trust) ===
+        try:
+            opus_path = workspace / "OPUS.md"
+            if opus_path.exists():
+                with open(opus_path) as f:
+                    content = f.read(2000)
+
+                # Extract trust score
+                trust_match = re.search(r"Trust Score: [🟢🟡🔴⚪]\s*(\d+)%", content)
+                trust = trust_match.group(1) if trust_match else "?"
+
+                # Extract status
+                status_match = re.search(r"\*\*([⚪🟢🔴🟡])\s*(\w+)\*\*", content)
+                status = status_match.group(2) if status_match else "Unknown"
+
+                opus_section = f"""**OPUS Health:**
+- Status: {status}
+- Trust Score: {trust}%"""
+                sections.append(opus_section)
+        except Exception as e:
+            sections.append(f"**OPUS Health:** ❌ {e}")
+
+        # === SYNTHESIZE ===
+        header = "🧠 **STATE OF MIND** (Synthesized from Prakriti)"
+        return header + "\n\n" + "\n\n".join(sections)
 
     # =========================================================================
     # Public API - DATA ONLY, NO RENDERING!
@@ -279,6 +426,25 @@ class OpusAssistantPlugin(KernelPlugin):
         """Check if OPUS.md already exists in workspace root."""
         workspace = self._workspace or Path.cwd()
         return (workspace / "OPUS.md").exists()
+
+    def write_opus_md(self, quick: bool = False) -> Path:
+        """
+        Write OPUS.md directly.
+
+        OPUS-029 Migration: opus_assistant now writes its own OPUS.md.
+        Previously done by interface/renderers/opus/ (now deleted).
+
+        Args:
+            quick: Skip expensive semantic verification
+
+        Returns:
+            Path to written OPUS.md
+        """
+        from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
+
+        workspace = self._workspace or Path.cwd()
+        writer = OpusMdWriter(workspace, kernel=self._kernel)
+        return writer.write(quick=quick)
 
     def get_config(self, key: Optional[str] = None, default: Any = None) -> Any:
         """
@@ -549,6 +715,38 @@ class OpusAssistantPlugin(KernelPlugin):
 
         verification = self.verify(quick=quick)
         return format_verify_output(verification, json_mode=json)
+
+    def cmd_opus_refresh(self, quick: bool = True, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:refresh
+
+        Manually regenerate OPUS.md.
+
+        Args:
+            quick: If True, skip semantic checks (faster, default)
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Result dict with path and status
+        """
+        import time
+
+        start = time.time()
+        result_path = self.write_opus_md(quick=quick)
+        elapsed = time.time() - start
+
+        result = {
+            "status": "success",
+            "path": str(result_path),
+            "elapsed_ms": int(elapsed * 1000),
+            "quick_mode": quick,
+        }
+
+        if json:
+            return result
+
+        result["output"] = f"OPUS.md refreshed in {int(elapsed * 1000)}ms"
+        return result
 
     def get_observation_logger(self) -> Optional["ObservationLogger"]:
         """

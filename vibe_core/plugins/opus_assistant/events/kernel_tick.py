@@ -1,23 +1,22 @@
 """
-OPUS Assistant Kernel Tick - Constant heartbeat for plugin lifecycle.
+OPUS Assistant Kernel Tick - Circuit-Driven Event Handler.
 
-OPUS-029 Phase 2.5: Dynamic Context + Observation Journal
+OPUS-029 Phase 7: True Cognitive Circuit Execution
 
 The plugin doesn't just boot and die. It stays ALIVE via EventBus.
-More importantly, it ACTIVELY SYNTHESIZES, INJECTS, and JOURNALS.
+Now it executes REAL circuits from opus_assistant/circuits/*.yaml
 
-Kernel Tick Pattern:
+Circuit-Driven Pattern:
 1. Plugin subscribes to EventBus events (KERNEL_TICK, GIT_COMMIT, etc.)
-2. On each tick, OpusContextService synthesizes system state
-3. Context is INJECTED into runtime (EphemeralState)
-4. Every spawning agent knows the current reality
-5. ObservationLogger journals anomalies to OPUS.md (Phase 2.5)
+2. On event, find circuits with matching trigger
+3. Execute circuits via CognitiveCircuitExecutor
+4. Circuits define behavior - NOT hardcoded actions!
 
-This is the "constant prompt feed" - the carrot in front of the donkey.
-The "soft interaction" - the system talks to humans via OPUS.md journal.
+This is AUTONOMOUS COGNITION - circuits drive behavior.
 """
 
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
@@ -30,42 +29,74 @@ logger = logging.getLogger("OPUS_TICK")
 
 class KernelTickHandler:
     """
-    Handles kernel tick events for OPUS Assistant.
+    Circuit-driven event handler for OPUS Assistant.
 
-    Subscribes to EventBus and keeps plugin state fresh.
+    OPUS-029 Phase 7: Real circuit execution.
 
-    Architecture (Phase 2.5 - Dynamic Context + Journal):
-    - EventBus emits periodic KERNEL_TICK events
-    - OpusContextService synthesizes system state from all Prakriti layers
-    - Context is INJECTED into EphemeralState
-    - Every spawning agent gets the current "State of Mind"
-    - ObservationLogger journals anomalies to OPUS.md (the "diary")
-    - On GIT_COMMIT, we re-synthesize and log
-    - On FILE_CHANGED, we re-verify and log
+    Instead of hardcoded actions, this handler:
+    1. Loads circuits from opus_assistant/circuits/
+    2. Matches events to circuit triggers
+    3. Executes matching circuits via CognitiveCircuitExecutor
 
-    This is the "constant prompt feed" - active, not passive!
-    The system now "talks" to humans via the OPUS.md journal.
+    The circuits DEFINE behavior - this is just the runtime.
     """
 
     def __init__(self, plugin: "OpusAssistantPlugin"):
-        """
-        Initialize tick handler.
-
-        Args:
-            plugin: Reference to parent plugin
-        """
+        """Initialize tick handler with circuit loading."""
         self._plugin = plugin
         self._subscriptions: List[Callable] = []
         self._tick_count = 0
         self._last_state: Dict[str, Any] = {}
         self._context_service: Optional["OpusContextService"] = None
         self._observation_logger: Optional["ObservationLogger"] = None
-        self._last_health_status: Optional[str] = None  # Track health changes
-        self._consecutive_drift_ticks = 0  # Track persistent drift
+        self._last_health_status: Optional[str] = None
+        self._consecutive_drift_ticks = 0
+
+        # Circuit-driven execution
+        self._circuits: Dict[str, Dict[str, Any]] = {}
+        self._circuit_executor = None
+        self._subscribed = False
 
         # Initialize services
         self._init_context_service()
         self._init_observation_logger()
+        self._init_circuits()
+
+    def _init_circuits(self) -> None:
+        """Load circuits from opus_assistant/circuits/ directory."""
+        try:
+            from vibe_core.loaders.circuit_loader import CircuitLoader
+
+            workspace = self._plugin._workspace or Path.cwd()
+            circuits_dir = workspace / "vibe_core/plugins/opus_assistant/circuits"
+
+            if circuits_dir.exists():
+                self._circuits, _ = CircuitLoader.discover_and_load(scan_paths=[circuits_dir])
+                logger.info(f"🔄 Loaded {len(self._circuits)} circuits: {list(self._circuits.keys())}")
+            else:
+                logger.debug(f"No circuits directory at {circuits_dir}")
+        except Exception as e:
+            logger.debug(f"Could not load circuits: {e}")
+
+    def _get_circuits_for_trigger(self, event_type: str) -> List[Dict[str, Any]]:
+        """
+        Find circuits that have the given event as a trigger.
+
+        Args:
+            event_type: Event type string (e.g., "KERNEL_TICK", "GIT_COMMIT")
+
+        Returns:
+            List of circuit definitions that match
+        """
+        matching = []
+        for circuit_id, circuit_def in self._circuits.items():
+            triggers = circuit_def.get("triggers", [])
+            for trigger in triggers:
+                trigger_event = trigger.get("event", "")
+                if trigger_event == event_type:
+                    matching.append(circuit_def)
+                    break
+        return matching
 
     def _init_context_service(self) -> None:
         """Initialize the OpusContextService for dynamic context synthesis."""
@@ -92,31 +123,34 @@ class KernelTickHandler:
             logger.debug(f"Could not initialize observation logger: {e}")
 
     def subscribe(self) -> bool:
-        """
-        Subscribe to EventBus events.
-
-        Returns:
-            True if subscription successful, False otherwise
-        """
+        """Subscribe to EventBus events based on circuit triggers."""
         try:
             from vibe_core.event_bus import EventType, get_event_bus
 
             bus = get_event_bus()
 
-            # Subscribe to relevant events
-            config = self._plugin._config.get("kernel_tick", {})
-            events = config.get("subscribe_events", ["KERNEL_TICK", "GIT_COMMIT"])
+            # Collect ALL event types from circuit triggers
+            events_to_subscribe = set()
+            for circuit_def in self._circuits.values():
+                for trigger in circuit_def.get("triggers", []):
+                    event_name = trigger.get("event", "")
+                    if event_name:
+                        events_to_subscribe.add(event_name)
 
-            for event_name in events:
+            # Fallback if no circuits loaded
+            if not events_to_subscribe:
+                events_to_subscribe = {"KERNEL_TICK", "GIT_COMMIT"}
+
+            for event_name in events_to_subscribe:
                 try:
-                    # Try to get EventType enum, fallback to string
                     event_type = getattr(EventType, event_name, event_name)
                     bus.subscribe(self._on_event, event_type)
                     logger.debug(f"Subscribed to {event_name}")
                 except Exception as e:
                     logger.debug(f"Could not subscribe to {event_name}: {e}")
 
-            logger.info("🔄 Kernel tick handler subscribed")
+            self._subscribed = True
+            logger.info(f"🔄 Subscribed to {len(events_to_subscribe)} event types")
             return True
 
         except ImportError:
@@ -128,310 +162,406 @@ class KernelTickHandler:
 
     def unsubscribe(self) -> None:
         """Unsubscribe from all events."""
-        # EventBus handles cleanup on shutdown
         self._subscriptions.clear()
         logger.info("🔄 Kernel tick handler unsubscribed")
 
     async def _on_event(self, event: Any) -> None:
         """
-        Handle incoming events.
+        Handle incoming events - CIRCUIT DRIVEN.
 
-        Args:
-            event: Event from EventBus
+        Finds circuits with matching triggers and executes them.
         """
         self._tick_count += 1
         event_type = getattr(event, "event_type", str(event))
+        event_type_str = str(event_type).replace("EventType.", "")
 
         try:
-            if "KERNEL_TICK" in str(event_type):
-                await self._on_tick(event)
-            elif "GIT_COMMIT" in str(event_type):
-                await self._on_commit(event)
-            elif "FILE_CHANGED" in str(event_type):
-                await self._on_file_changed(event)
+            # Find and execute matching circuits
+            matching_circuits = self._get_circuits_for_trigger(event_type_str)
+
+            if matching_circuits:
+                logger.debug(f"🔄 Event {event_type_str} → {len(matching_circuits)} circuits")
+                for circuit_def in matching_circuits:
+                    await self._execute_circuit(circuit_def, event)
+            else:
+                # Fallback for events without circuits (backward compat)
+                await self._handle_event_fallback(event_type_str, event)
+
         except Exception as e:
             logger.debug(f"Error handling {event_type}: {e}")
 
-    async def _on_tick(self, event: Any) -> None:
+    async def _execute_circuit(self, circuit_def: Dict[str, Any], event: Any) -> None:
         """
-        Handle periodic tick.
+        Execute a circuit definition.
 
-        PHASE 2.5: Active context synthesis, injection, AND journaling.
-        This is NOT passive - we actively refresh and LOG the system's "State of Mind".
+        Maps circuit actions to plugin methods.
+
+        Args:
+            circuit_def: Circuit definition from YAML
+            event: The triggering event
         """
-        config = self._plugin._config.get("kernel_tick", {})
-        actions = config.get("on_tick", ["synthesize_context", "quick_drift_check"])
+        circuit_id = circuit_def.get("id", "unknown")
+        entry_state = circuit_def.get("entry_state", "")
+        states = circuit_def.get("states", {})
 
-        for action in actions:
-            if action == "synthesize_context":
-                # ACTIVE: Synthesize and inject context
-                await self._synthesize_and_inject_context()
+        logger.debug(f"⚡ Executing circuit {circuit_id} from state {entry_state}")
 
-            elif action == "quick_drift_check":
-                result = self._plugin.quick_drift_check()
-                is_healthy = result.get("healthy", True)
+        # Simple state machine execution
+        current_state = entry_state
+        visited = set()
 
-                if not is_healthy:
-                    self._consecutive_drift_ticks += 1
-                    logger.warning(f"⚠️ Drift detected on tick {self._tick_count}")
+        while current_state and current_state not in visited:
+            visited.add(current_state)
+            state_def = states.get(current_state, {})
 
-                    # PHASE 2.5: Log to journal if drift persists
-                    if self._consecutive_drift_ticks == 1:
-                        self._log_observation_warn(
-                            f"Drift detected: {len(result.get('missing_files', []))} missing files",
-                            source="drift_detector",
-                        )
-                    elif self._consecutive_drift_ticks >= 3:
-                        self._log_observation_alert(
-                            f"Persistent drift for {self._consecutive_drift_ticks} ticks! Code and docs diverging.",
-                            source="drift_detector",
-                        )
+            if not state_def:
+                break
+
+            # Execute state actions
+            actions = state_def.get("actions", [])
+            action_results = {}
+
+            for action in actions:
+                result = await self._execute_action(action, event, action_results)
+                action_results[action.get("action_type", "unknown")] = result
+
+            # Check if terminal
+            if state_def.get("terminal", False):
+                logger.debug(f"✅ Circuit {circuit_id} completed at {current_state}")
+                break
+
+            # Determine next state from transitions
+            transitions = state_def.get("transitions", [])
+            next_state = None
+
+            for transition in transitions:
+                condition = transition.get("condition", "true")
+                if self._evaluate_condition(condition, action_results):
+                    next_state = transition.get("target") or transition.get("to")
+                    break
+
+            # Also check on_success/on_failure shortcuts
+            if not next_state:
+                if action_results.get("success", True):
+                    next_state = state_def.get("on_success")
                 else:
-                    # Drift resolved?
-                    if self._consecutive_drift_ticks > 0:
-                        self._log_observation_info(
-                            f"Drift resolved after {self._consecutive_drift_ticks} ticks",
-                            source="drift_detector",
-                        )
-                    self._consecutive_drift_ticks = 0
+                    next_state = state_def.get("on_failure")
 
-                self._last_state["drift"] = result
+            current_state = next_state
 
-        # Periodically flush observations to OPUS.md
-        if self._tick_count % 10 == 0:
-            self._flush_observations()
-
-    async def _synthesize_and_inject_context(self) -> None:
+    async def _execute_action(self, action: Dict[str, Any], event: Any, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Synthesize system context and inject into runtime.
+        Execute a single circuit action.
 
-        This is the "Dynamic Bootstrapping" - every tick updates
-        the "State of Mind" that all agents can access.
+        Maps action targets to plugin methods.
 
-        PHASE 2.5: Also logs health status changes to journal.
-        """
-        if not self._context_service:
-            return
-
-        try:
-            # Synthesize from all Prakriti layers
-            context = self._context_service.synthesize()
-
-            # Inject into EphemeralState (sync)
-            self._context_service.inject(context)
-
-            # Broadcast via EventBus (async)
-            await self._context_service.broadcast(context)
-
-            # Store in handler state
-            self._last_state["context"] = context.to_dict()
-            self._last_state["context_hash"] = context.context_hash
-            self._last_state["system_health"] = context.health.status
-
-            # PHASE 2.5: Log health status changes to journal
-            current_health = context.health.status
-            if self._last_health_status and self._last_health_status != current_health:
-                if current_health in ["WARNING", "CRITICAL"]:
-                    self._log_observation_warn(
-                        f"System health changed: {self._last_health_status} → {current_health}",
-                        source="context_service",
-                    )
-                elif self._last_health_status in ["WARNING", "CRITICAL"]:
-                    self._log_observation_info(
-                        f"System health improved: {self._last_health_status} → {current_health}",
-                        source="context_service",
-                    )
-            self._last_health_status = current_health
-
-            # Log periodically (every 10 ticks)
-            if self._tick_count % 10 == 0:
-                logger.info(
-                    f"🎯 Context #{self._context_service.get_synthesis_count()}: "
-                    f"{context.health.status} | {context.git_branch}@{context.git_sha[:8]}"
-                )
-
-        except Exception as e:
-            logger.debug(f"Context synthesis failed: {e}")
-
-    async def _on_commit(self, event: Any) -> None:
-        """
-        Handle git commit event.
-
-        PHASE 2.5: Re-synthesize context after code changes and journal it.
-        Git state changed, so we need a fresh "State of Mind".
-        """
-        config = self._plugin._config.get("kernel_tick", {})
-        actions = config.get("on_commit", ["synthesize_context", "detect_drift"])
-
-        # Get commit info from event
-        details = getattr(event, "details", {})
-        commit_sha = details.get("sha", "unknown")[:8]
-
-        # PHASE 2.5: Log commit to journal
-        self._log_observation_info(
-            f"Git commit detected: {commit_sha}",
-            source="git_watcher",
-        )
-
-        for action in actions:
-            if action == "synthesize_context":
-                # IMPORTANT: Re-synthesize after commit
-                # The git SHA changed, agents need to know
-                await self._synthesize_and_inject_context()
-
-            elif action == "detect_drift":
-                result = self._plugin.detect_drift()
-                self._last_state["last_drift_check"] = result
-                health = result.get("health", 0)
-                logger.info(f"📊 Drift check after commit: health={health:.0%}")
-
-                # PHASE 2.5: Log drift status after commit
-                if health < 0.8:
-                    self._log_observation_warn(
-                        f"Drift health low after commit: {health:.0%}",
-                        source="drift_detector",
-                    )
-
-            elif action == "update_verification":
-                result = self._plugin.verify(quick=True)
-                self._last_state["last_verification"] = result
-                score = result.get("total_score", 0)
-                logger.info(f"🔍 Verification after commit: score={score}%")
-
-                # PHASE 2.5: Log verification warnings
-                if score < 80:
-                    self._log_observation_warn(
-                        f"Verification score dropped to {score}%",
-                        source="verification_engine",
-                    )
-
-        # Flush after commit events
-        self._flush_observations()
-
-    async def _on_file_changed(self, event: Any) -> None:
-        """
-        Handle file change event.
-
-        Re-verifies affected OPUS docs.
-        """
-        # Get changed file path from event
-        details = getattr(event, "details", {})
-        changed_file = details.get("path", "")
-
-        if not changed_file:
-            return
-
-        # Check if it's a tracked file
-        if changed_file.startswith("vibe_core/") or changed_file.startswith("docs/architecture/OPUS/"):
-            logger.debug(f"📝 Tracked file changed: {changed_file}")
-            # Could trigger partial re-verification here
-
-    def get_state(self) -> Dict[str, Any]:
-        """
-        Get current tick handler state.
+        Args:
+            action: Action definition from circuit
+            event: The triggering event
+            context: Accumulated context from previous actions
 
         Returns:
-            Dict with handler status and last results
+            Action result dict
         """
-        state = {
-            "tick_count": self._tick_count,
-            "subscribed": len(self._subscriptions) > 0,
-            "last_state": self._last_state,
+        action_type = action.get("action_type", "")
+        target = action.get("target", "")
+        params = action.get("params", {})
+
+        try:
+            if action_type == "EXECUTE_SCRIPT":
+                return await self._execute_script_action(target, params)
+            elif action_type == "EMIT_EVENT":
+                return await self._emit_event_action(target, params)
+            elif action_type == "CHECK_STATE":
+                return await self._check_state_action(target, params, context)
+            else:
+                logger.debug(f"Unknown action type: {action_type}")
+                return {"success": False, "error": f"Unknown action type: {action_type}"}
+        except Exception as e:
+            logger.debug(f"Action {action_type}:{target} failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _execute_script_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute a script action by mapping to plugin methods.
+
+        Target format: "opus.method_name" → self._plugin.method_name()
+        """
+        if not target.startswith("opus."):
+            return {"success": False, "error": f"Invalid target: {target}"}
+
+        method_name = target.replace("opus.", "")
+
+        # Map to plugin methods
+        method_map = {
+            "check_opus_freshness": self._check_opus_freshness,
+            "write_opus_md": self._write_opus_md,
+            "log_observation": self._log_observation_from_circuit,
+            "quick_drift_check": self._quick_drift_check,
+            "detect_drift": self._detect_drift,
+            "verify": self._verify,
+            "synthesize_context": self._synthesize_context,
         }
 
-        # Add context service info
+        method = method_map.get(method_name)
+        if method:
+            return await method(params)
+        else:
+            logger.debug(f"Unknown script target: {target}")
+            return {"success": False, "error": f"Unknown method: {method_name}"}
+
+    async def _emit_event_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Emit an event via EventBus."""
+        try:
+            from vibe_core.event_bus import get_event_bus
+
+            bus = get_event_bus()
+            await bus.emit(target, params)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _check_state_action(self, target: str, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Check a state value matches expected."""
+        expected = params.get("expected", True)
+
+        try:
+            parts = target.split(".")
+            value = context
+            for part in parts:
+                if isinstance(value, dict):
+                    value = value.get(part)
+                else:
+                    value = None
+                    break
+
+            matches = value == expected
+            return {"success": matches, "value": value, "expected": expected}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _evaluate_condition(self, condition: str, context: Dict[str, Any]) -> bool:
+        """Evaluate a transition condition."""
+        if condition == "true" or not condition:
+            return True
+
+        # Simple condition evaluation
+        try:
+            # Handle "result.is_stale" style conditions
+            if "." in condition:
+                parts = condition.split(".")
+                value = context
+                for part in parts:
+                    if isinstance(value, dict):
+                        value = value.get(part, False)
+                    else:
+                        return False
+                return bool(value)
+
+            # Handle "not X" conditions
+            if condition.startswith("not "):
+                inner = condition[4:].strip()
+                return not self._evaluate_condition(inner, context)
+
+            return context.get(condition, False)
+        except Exception:
+            return False
+
+    # =========================================================================
+    # Circuit Action Implementations
+    # =========================================================================
+
+    async def _check_opus_freshness(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Check if OPUS.md is stale."""
+        try:
+            workspace = self._plugin._workspace or Path.cwd()
+            opus_path = workspace / "OPUS.md"
+
+            if not opus_path.exists():
+                return {"success": True, "is_stale": True, "age_minutes": 9999}
+
+            import time
+
+            mtime = opus_path.stat().st_mtime
+            age_minutes = (time.time() - mtime) / 60
+            threshold = params.get("stale_threshold_minutes", 30)
+
+            return {
+                "success": True,
+                "is_stale": age_minutes > threshold,
+                "age_minutes": age_minutes,
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _write_opus_md(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Regenerate OPUS.md."""
+        try:
+            result = self._plugin.generate_opus()
+            return {"success": True, "result": result}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _log_observation_from_circuit(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Log observation from circuit."""
+        severity = params.get("severity", "INFO")
+        message = params.get("message", "")
+        source = params.get("source", "circuit")
+
+        if severity == "INFO":
+            self._log_observation_info(message, source)
+        elif severity == "WARN":
+            self._log_observation_warn(message, source)
+        elif severity == "ALERT":
+            self._log_observation_alert(message, source)
+
+        return {"success": True}
+
+    async def _quick_drift_check(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Run quick drift check."""
+        result = self._plugin.quick_drift_check()
+        is_healthy = result.get("healthy", True)
+
+        if not is_healthy:
+            self._consecutive_drift_ticks += 1
+        else:
+            self._consecutive_drift_ticks = 0
+
+        return {"success": True, "healthy": is_healthy, **result}
+
+    async def _detect_drift(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Run full drift detection."""
+        result = self._plugin.detect_drift()
+        return {"success": True, **result}
+
+    async def _verify(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Run OPUS verification."""
+        quick = params.get("quick", True)
+        result = self._plugin.verify(quick=quick)
+        return {"success": True, **result}
+
+    async def _synthesize_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Synthesize and inject context."""
+        if self._context_service:
+            try:
+                context = self._context_service.synthesize()
+                self._context_service.inject(context)
+                await self._context_service.broadcast(context)
+                return {"success": True, "health": context.health.status}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        return {"success": False, "error": "No context service"}
+
+    # =========================================================================
+    # Fallback for events without circuits
+    # =========================================================================
+
+    async def _handle_event_fallback(self, event_type: str, event: Any) -> None:
+        """Handle events that don't have circuits (backward compat)."""
+        if "KERNEL_TICK" in event_type:
+            # Minimal tick handling
+            if self._tick_count % 10 == 0:
+                self._flush_observations()
+
+    # =========================================================================
+    # Observation Logging (kept from original)
+    # =========================================================================
+
+    def _log_observation_info(self, message: str, source: str = "opus_assistant") -> None:
+        if self._observation_logger:
+            self._observation_logger.log_info(message, source)
+
+    def _log_observation_warn(self, message: str, source: str = "opus_assistant") -> None:
+        if self._observation_logger:
+            self._observation_logger.log_warn(message, source)
+
+    def _log_observation_alert(self, message: str, source: str = "opus_assistant") -> None:
+        if self._observation_logger:
+            self._observation_logger.log_alert(message, source)
+
+    def _log_observation_insight(self, message: str, source: str = "opus_assistant") -> None:
+        if self._observation_logger:
+            self._observation_logger.log_insight(message, source)
+
+    def _flush_observations(self) -> None:
+        if self._observation_logger:
+            self._observation_logger.flush_to_opus()
+
+    # =========================================================================
+    # State accessors (kept from original)
+    # =========================================================================
+
+    def get_state(self) -> Dict[str, Any]:
+        """Get current tick handler state."""
+        state = {
+            "tick_count": self._tick_count,
+            "subscribed": self._subscribed,
+            "circuits_loaded": len(self._circuits),
+            "circuit_ids": list(self._circuits.keys()),
+            "last_state": self._last_state,
+            "has_context_service": self._context_service is not None,
+        }
+
+        # Add context service info for backward compat
         if self._context_service:
             state["context_synthesis_count"] = self._context_service.get_synthesis_count()
-            state["has_context_service"] = True
             if "system_health" in self._last_state:
                 state["system_health"] = self._last_state["system_health"]
-        else:
-            state["has_context_service"] = False
 
         return state
 
+    # =========================================================================
+    # Backward Compatibility Methods (for tests)
+    # =========================================================================
+
+    async def _on_tick(self, event: Any) -> None:
+        """Backward compat: Handle tick via circuits."""
+        matching = self._get_circuits_for_trigger("KERNEL_TICK")
+        for circuit in matching:
+            await self._execute_circuit(circuit, event)
+        await self._handle_event_fallback("KERNEL_TICK", event)
+
+    async def _on_commit(self, event: Any) -> None:
+        """Backward compat: Handle commit via circuits."""
+        matching = self._get_circuits_for_trigger("GIT_COMMIT")
+        for circuit in matching:
+            await self._execute_circuit(circuit, event)
+
+    async def _on_file_changed(self, event: Any) -> None:
+        """Backward compat: Handle file change via circuits."""
+        matching = self._get_circuits_for_trigger("FILE_CHANGED")
+        for circuit in matching:
+            await self._execute_circuit(circuit, event)
+
     def get_context_service(self) -> Optional["OpusContextService"]:
-        """Get the OpusContextService instance."""
         return self._context_service
 
     def get_current_context(self) -> Optional[Dict[str, Any]]:
-        """
-        Get current synthesized context.
-
-        Returns:
-            Current context dict or None
-        """
         if self._context_service:
             return self._context_service.get_current_context()
         return self._last_state.get("context")
 
     def get_system_prompt_fragment(self) -> str:
-        """
-        Get current system prompt fragment.
-
-        This is what should be prepended to agent system prompts
-        so they know the current "State of Mind".
-
-        Returns:
-            System prompt fragment string
-        """
         if self._context_service:
             return self._context_service.get_system_prompt_fragment()
         return ""
 
     def get_observation_logger(self) -> Optional["ObservationLogger"]:
-        """Get the ObservationLogger instance."""
         return self._observation_logger
 
-    # =========================================================================
-    # Phase 2.5: Observation Logging Helpers
-    # =========================================================================
 
-    def _log_observation_info(self, message: str, source: str = "opus_assistant") -> None:
-        """Log INFO observation to journal."""
-        if self._observation_logger:
-            self._observation_logger.log_info(message, source)
-
-    def _log_observation_warn(self, message: str, source: str = "opus_assistant") -> None:
-        """Log WARN observation to journal."""
-        if self._observation_logger:
-            self._observation_logger.log_warn(message, source)
-
-    def _log_observation_alert(self, message: str, source: str = "opus_assistant") -> None:
-        """Log ALERT observation to journal."""
-        if self._observation_logger:
-            self._observation_logger.log_alert(message, source)
-
-    def _log_observation_insight(self, message: str, source: str = "opus_assistant") -> None:
-        """Log INSIGHT observation to journal."""
-        if self._observation_logger:
-            self._observation_logger.log_insight(message, source)
-
-    def _flush_observations(self) -> None:
-        """Flush pending observations to OPUS.md."""
-        if self._observation_logger:
-            self._observation_logger.flush_to_opus()
-
-
-# Synchronous wrapper for non-async contexts
+# Synchronous wrapper
 class SyncKernelTickHandler(KernelTickHandler):
-    """
-    Synchronous version of KernelTickHandler.
-
-    For use when async is not available.
-    """
+    """Synchronous version of KernelTickHandler."""
 
     def _on_event_sync(self, event: Any) -> None:
-        """Synchronous event handler."""
         import asyncio
 
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # Schedule for later
                 loop.create_task(self._on_event(event))
             else:
                 loop.run_until_complete(self._on_event(event))
         except RuntimeError:
-            # No event loop, create one
             asyncio.run(self._on_event(event))

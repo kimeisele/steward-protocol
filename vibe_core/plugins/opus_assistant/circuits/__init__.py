@@ -1,22 +1,30 @@
 """
 OPUS Assistant Circuits - Cognitive Self-Management.
 
-Phase 4: The system manages itself via declarative circuits.
+Phase 5: The system manages itself via declarative circuits.
 
 Circuits:
 - OPUS_AUTO_VERIFY: Triggered by GIT_COMMIT, detects drift
 - OPUS_AUTO_HEAL: Triggered by persistent drift, suggests fixes
+- OPUS_AUTO_REFRESH: Keeps OPUS.md always fresh (no stale docs!)
 
-These circuits make the system SELF-AWARE:
+These circuits make the system SELF-AWARE and SELF-MAINTAINING:
 1. GIT_COMMIT event → auto_verify circuit → drift detection
 2. Drift detected → log observation → update context
 3. Persistent drift → auto_heal circuit → suggest fix
+4. Schedule/Boot → auto_refresh circuit → OPUS.md always fresh
 
 Architecture:
     ┌─────────────────────────────────┐
-    │         EventBus                │  ← GIT_COMMIT, FILE_CHANGED
+    │         EventBus                │  ← GIT_COMMIT, KERNEL_TICK, BOOT
     └──────────────┬──────────────────┘
                    │ triggers
+                   ▼
+    ┌─────────────────────────────────┐
+    │      OPUS_AUTO_REFRESH          │  ← Keep docs fresh
+    │      (auto_refresh.yaml)        │
+    └──────────────┬──────────────────┘
+                   │
                    ▼
     ┌─────────────────────────────────┐
     │      OPUS_AUTO_VERIFY           │  ← Drift detection
@@ -37,11 +45,13 @@ from typing import Dict, List
 CIRCUITS_DIR = Path(__file__).parent
 AUTO_VERIFY_PATH = CIRCUITS_DIR / "auto_verify.yaml"
 AUTO_HEAL_PATH = CIRCUITS_DIR / "auto_heal.yaml"
+AUTO_REFRESH_PATH = CIRCUITS_DIR / "auto_refresh.yaml"
 
 # Circuit IDs for external reference
 CIRCUIT_IDS = [
     "OPUS_AUTO_VERIFY",
     "OPUS_AUTO_HEAL",
+    "OPUS_AUTO_REFRESH",
 ]
 
 
@@ -55,6 +65,7 @@ def get_circuit_paths() -> Dict[str, Path]:
     return {
         "OPUS_AUTO_VERIFY": AUTO_VERIFY_PATH,
         "OPUS_AUTO_HEAL": AUTO_HEAL_PATH,
+        "OPUS_AUTO_REFRESH": AUTO_REFRESH_PATH,
     }
 
 
@@ -73,6 +84,7 @@ __all__ = [
     "CIRCUITS_DIR",
     "AUTO_VERIFY_PATH",
     "AUTO_HEAL_PATH",
+    "AUTO_REFRESH_PATH",
     "get_circuit_paths",
     "list_circuits",
 ]

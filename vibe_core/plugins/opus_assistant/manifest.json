@@ -2,8 +2,8 @@
   "type": "plugin",
   "id": "opus_assistant",
   "name": "OPUS Assistant",
-  "version": "1.4.0",
-  "description": "OPUS.md management, verification, drift detection, and self-managing circuits",
+  "version": "1.5.0",
+  "description": "Self-maintaining OPUS.md with verification, drift detection, and auto-refresh circuits",
 
   "entry_point": "plugin_main.py",
   "entry_class": "OpusAssistantPlugin",
@@ -29,7 +29,8 @@
 
   "circuits": [
     "circuits/auto_verify.yaml",
-    "circuits/auto_heal.yaml"
+    "circuits/auto_heal.yaml",
+    "circuits/auto_refresh.yaml"
   ],
 
   "cli": {
@@ -84,6 +85,28 @@
             "help": "Skip semantic checks (faster)",
             "required": false,
             "default": false
+          },
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON for pipelines",
+            "required": false,
+            "default": false
+          }
+        ]
+      },
+      {
+        "name": "refresh",
+        "handler": "cmd_opus_refresh",
+        "execution_mode": "offline",
+        "help": "Regenerate OPUS.md (manual trigger)",
+        "args": [
+          {
+            "name": "quick",
+            "type": "bool",
+            "help": "Skip semantic checks (faster)",
+            "required": false,
+            "default": true
           },
           {
             "name": "json",

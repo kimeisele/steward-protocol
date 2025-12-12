@@ -122,6 +122,10 @@ Execute {task} task.
         # Build kernel state from resolved context
         kernel_context = self._format_kernel_context(resolved)
 
+        # OPUS-029: Auto-include plugin contexts (SCALABLE PATTERN)
+        # Any plugin can register "*_context" keys and they'll be included
+        plugin_contexts = self._format_plugin_contexts(resolved)
+
         return f"""---
 
 ## 📊 CURRENT CONTEXT
@@ -137,6 +141,8 @@ Execute {task} task.
 - Environment: {env_status}
 
 {kernel_context}
+
+{plugin_contexts}
 
 {semantic_context}
 
@@ -168,6 +174,43 @@ Execute {task} task.
 - Agents: {agents_count} ({agents})
 - Ledger Events: {ledger_events}
 - Inbox: {inbox_count} message(s)"""
+
+    def _format_plugin_contexts(self, resolved: dict) -> str:
+        """
+        Format plugin-provided contexts (OPUS-029 SCALABLE PATTERN).
+
+        Any plugin can register a PromptContext resolver with a key ending in
+        "_context" and it will be automatically included here. This allows
+        plugin context injection WITHOUT modifying core files.
+
+        Convention:
+        - Key pattern: *_context (e.g., opus_context, metrics_context)
+        - Value: Pre-formatted markdown string ready for injection
+        - Excluded: kernel_* keys (handled separately)
+
+        Args:
+            resolved: Dict of resolved PromptContext values
+
+        Returns:
+            Formatted markdown string with all plugin contexts
+        """
+        if not resolved:
+            return ""
+
+        # Collect plugin context keys (ending in _context, excluding kernel_*)
+        plugin_keys = [key for key in resolved.keys() if key.endswith("_context") and not key.startswith("kernel_")]
+
+        if not plugin_keys:
+            return ""
+
+        # Plugin contexts are already formatted - just concatenate
+        contexts = []
+        for key in sorted(plugin_keys):
+            value = resolved.get(key, "")
+            if value and value.strip():
+                contexts.append(value.strip())
+
+        return "\n\n".join(contexts)
 
     def _format_semantic_context(self, memory: dict) -> str:
         """Format semantic memory context for prompt injection"""
@@ -227,21 +270,9 @@ Execute {task} task.
         """
         Add STEWARD boot prompt wrapper.
 
-        NO HARDCODING - Template comes from config/steward.yaml
+        The task content is already enriched with context - just return it.
+        System prompt is handled separately in boot_sequence.py.
         """
-        from pathlib import Path
-
-        from vibe_core.phoenix.config import PhoenixConfig
-
-        # Load steward config from Phoenix
-        project_root = Path.cwd()  # TODO: Get from context if available
-        phoenix = PhoenixConfig.from_files(config_dir=project_root / "config")
-        steward_config = phoenix.steward
-
-        # Build context for template resolution
-        template_context = {
-            "task_content": enriched_task,
-        }
-
-        # Use template from config
-        return steward_config.resolve_template("boot_prompt", template_context)
+        # Task is already enriched with context - return as-is
+        # System prompt (behavior rules, user context) is handled by boot_sequence._get_system_prompt()
+        return enriched_task

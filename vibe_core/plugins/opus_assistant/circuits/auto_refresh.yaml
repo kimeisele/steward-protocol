@@ -1,0 +1,129 @@
+# OPUS_AUTO_REFRESH - Self-Maintaining OPUS.md
+# Phase 5: Proactive System Maintenance
+#
+# Triggered by: SCHEDULE (every N ticks) or KERNEL_BOOT
+# Flow: Check if OPUS.md stale → Regenerate → Log observation
+#
+# This circuit makes OPUS.md ALWAYS FRESH.
+# No more stale documentation. Ever.
+#
+circuit:
+  id: OPUS_AUTO_REFRESH
+  name: OPUS Auto-Refresh
+  description: Keep OPUS.md always up-to-date
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "check_freshness"
+
+  # Event triggers
+  triggers:
+    - event: KERNEL_BOOT
+      description: Refresh on every boot
+    - event: KERNEL_TICK
+      description: Check on tick
+      conditions:
+        # Only trigger every N ticks (configurable)
+        tick_modulo: 100  # ~every 100 ticks
+    - event: GIT_COMMIT
+      description: Refresh after commits (state changed)
+    - event: OPUS.MANUAL_REFRESH
+      description: Manual trigger via CLI
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+
+  # Configuration (can be overridden in config/opus.yaml)
+  config:
+    stale_threshold_minutes: 30
+    quick_mode: true  # Skip semantic checks for speed
+    auto_commit: false  # Don't auto-commit OPUS.md changes
+
+  states:
+    # Phase 1: Check if OPUS.md needs refresh
+    check_freshness:
+      name: "Check OPUS.md Freshness"
+      description: "Determine if OPUS.md is stale"
+      state_var: "freshness"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.check_opus_freshness"
+          params:
+            stale_threshold_minutes: "{{ config.stale_threshold_minutes }}"
+      transitions:
+        - condition: "freshness.is_stale"
+          target: regenerate_opus
+        - condition: "not freshness.is_stale"
+          target: SKIP
+
+    # Phase 2: Regenerate OPUS.md
+    regenerate_opus:
+      name: "Regenerate OPUS.md"
+      description: "Write fresh OPUS.md content"
+      state_var: "regeneration"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.write_opus_md"
+          params:
+            quick: "{{ config.quick_mode }}"
+        - action_type: EMIT_EVENT
+          target: "opus.refreshed"
+          params:
+            circuit: "OPUS_AUTO_REFRESH"
+            timestamp: "{{ now }}"
+      on_success: log_refresh
+      on_failure: log_error
+
+    # Phase 3: Log the refresh
+    log_refresh:
+      name: "Log Refresh"
+      description: "Record that OPUS.md was refreshed"
+      state_var: "logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "OPUS.md auto-refreshed"
+            source: "auto_refresh"
+            context:
+              previous_age_minutes: "{{ freshness.age_minutes }}"
+              quick_mode: "{{ config.quick_mode }}"
+      on_success: COMPLETE
+      on_failure: COMPLETE  # Don't fail on logging issues
+
+    # Success terminal state
+    COMPLETE:
+      name: "Refresh Complete"
+      description: "OPUS.md is fresh"
+      terminal: true
+      result:
+        status: "success"
+        refreshed: true
+        timestamp: "{{ now }}"
+
+    # Skip state (OPUS.md was fresh)
+    SKIP:
+      name: "Skip Refresh"
+      description: "OPUS.md was already fresh"
+      terminal: true
+      result:
+        status: "skipped"
+        refreshed: false
+        reason: "OPUS.md is fresh (age: {{ freshness.age_minutes }}m)"
+
+    # Error state
+    log_error:
+      name: "Refresh Error"
+      description: "An error occurred during refresh"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "OPUS.md auto-refresh failed: {{ error | default('Unknown') }}"
+            source: "auto_refresh"
+      result:
+        status: "failed"
+        error: "{{ error }}"
