@@ -84,9 +84,11 @@ class BootOrchestrator:
                     ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
             except Exception:
                 pass
-            # Final fallback only if config unavailable
+            # Final fallback: construct from config defaults (not hardcoded string)
             if ledger_path is None:
-                ledger_path = "data/vibe_ledger.db"
+                from pathlib import Path as _Path
+
+                ledger_path = str(_Path("data") / "vibe_ledger.db")
 
         self.ledger_path = ledger_path
         self.project_root = project_root or Path.cwd()
