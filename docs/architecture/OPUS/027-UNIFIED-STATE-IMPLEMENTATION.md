@@ -59,6 +59,15 @@ wiring:
     in: vibe_core/kernel_impl.py
   - pattern: "prakriti.sync_ledger_git"
     in: vibe_core/kernel_impl.py
+  # Implementation Guidelines (Final Polish)
+  - pattern: "Ledger-Head:"
+    in: vibe_core/state/prakriti.py
+  - pattern: "session.lock"
+    in: vibe_core/state/prakriti.py
+  - pattern: "_is_process_alive"
+    in: vibe_core/state/prakriti.py
+  - pattern: "get_current_head_hash"
+    in: vibe_core/state/ledger_state.py
 config:
   - section: state_management
   - section: session_boundaries
@@ -814,6 +823,71 @@ git log --oneline --since="1 hour ago" | wc -l
 - `begin_session()` on boot
 - `end_session()` on shutdown
 - Session metadata in commits
+
+---
+
+## Implementation Guidelines (Final Polish)
+
+These refinements make the difference between "works" and "unbreakable":
+
+### 1. Cryptographic Zipper (Bidirectional Interlock)
+
+**Problem**: Ledger stores `git_sha`. But if Git history is rewritten (force push), the commit doesn't know which Ledger state it belonged to.
+
+**Solution**: Every Git commit must include `Ledger-Head` in the commit body:
+
+```python
+# In Prakriti.commit_if_dirty()
+commit_body = f"""
+Session-ID: {self.session.session_id}
+Ledger-Head: {self.ledger.get_current_head_hash()}
+Source: Prakriti
+"""
+```
+
+**Why**: Code (Git) and Memory (Ledger) become **cryptographically inseparable**. You cannot checkout old code without knowing exactly which memory state belongs to it.
+
+### 2. Ghost Lock Cleanup (Stale Lock Detection)
+
+**Problem**: Hard crash (OOM, power loss) leaves `index.lock` or `session.lock` behind. Next boot fails with "System locked" even though nothing is running.
+
+**Solution**: In `begin_session()`, detect and clean stale locks:
+
+```python
+def begin_session(self) -> SessionContext:
+    # Check for stale locks
+    lock_file = self._workspace / ".prakriti" / "session.lock"
+    if lock_file.exists():
+        stored_pid = int(lock_file.read_text().strip())
+        if not self._is_process_alive(stored_pid):
+            logger.warning(f"Removed stale lock from dead session (PID {stored_pid})")
+            lock_file.unlink()
+        else:
+            raise RuntimeError(f"Session already running (PID {stored_pid})")
+
+    # Write our PID
+    lock_file.write_text(str(os.getpid()))
+    # ... rest of begin_session
+```
+
+### 3. Git Trailers (Machine Readability)
+
+**Problem**: Freeform commit messages are hard to parse programmatically.
+
+**Solution**: Use Git Trailer standard instead of freeform body:
+
+```
+chore(session): Session end
+
+Session-ID: abc-123-def
+Ledger-Head: 7f8a9b2c
+Crash-Recovery: false
+Commits-In-Session: 2
+```
+
+**Why**: Enables SQL-like queries: `git log --format='%(trailers:key=Session-ID)'`
+
+Agents can read their own history programmatically.
 
 ---
 
