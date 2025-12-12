@@ -30,6 +30,7 @@
 | 025 | [PATH Lobotomy Crisis](025-PATH-LOBOTOMY-CRISIS.md) | 🔴 CRITICAL | 75% remaining |
 | 027 | [Unified State Implementation](027-UNIFIED-STATE-IMPLEMENTATION.md) | ✅ IMPLEMENTED | Master plan for state |
 | 028 | [Prakriti Git Integration](028-PRAKRITI-GIT-INTEGRATION.md) | ✅ IMPLEMENTED | Phases 1-4 complete |
+| 029 | [OPUS Plugin Architecture](plugins/029-OPUS-PLUGIN-ARCHITECTURE.md) | 📋 PLANNING | Fractal verification plugin |
 
 ---
 
