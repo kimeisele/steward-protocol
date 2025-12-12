@@ -12,8 +12,8 @@
 # =============================================================================
 plugin:
   id: opus_assistant
-  version: "1.1.0"
-  phase: 1
+  version: "1.2.0"
+  phase: 2  # Dynamic Context Loop
 
 # =============================================================================
 # VERIFICATION ENGINE
@@ -101,7 +101,7 @@ preservation:
   auto_end: "<!-- @AUTO-GENERATED END -->"
 
 # =============================================================================
-# KERNEL TICK (Heartbeat)
+# KERNEL TICK (Heartbeat) - Phase 2: Dynamic Context
 # =============================================================================
 kernel_tick:
   # Enable periodic updates
@@ -113,14 +113,37 @@ kernel_tick:
     - "GIT_COMMIT"
     - "FILE_CHANGED"
 
-  # Actions on tick
+  # Actions on tick (PHASE 2: Active context synthesis)
   on_tick:
-    - quick_drift_check
+    - synthesize_context  # ACTIVE: Inject "State of Mind" into runtime
+    - quick_drift_check   # PASSIVE: Check for drift
 
-  # Actions on commit
+  # Actions on commit (PHASE 2: Re-synthesize after code changes)
   on_commit:
-    - detect_drift
-    - update_verification
+    - synthesize_context  # ACTIVE: Git SHA changed, refresh context
+    - detect_drift        # Check drift after commit
+    - update_verification # Update verification scores
+
+# =============================================================================
+# CONTEXT SYNTHESIS (Phase 2 - Dynamic Bootstrapping)
+# =============================================================================
+context:
+  # Enable context synthesis
+  enabled: true
+
+  # Synthesis frequency (every N ticks, 1 = every tick)
+  tick_frequency: 1
+
+  # Log context every N ticks (0 = never)
+  log_frequency: 10
+
+  # Include in system prompt generation
+  include_git: true
+  include_ledger: true
+  include_kernel: true
+  include_personas: true
+  include_health: true
+  include_focus: true
 
 # =============================================================================
 # GAD-000 COMPLIANCE

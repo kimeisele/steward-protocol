@@ -1,20 +1,26 @@
 """
 OPUS Assistant Kernel Tick - Constant heartbeat for plugin lifecycle.
 
-OPUS-029: The plugin doesn't just boot and die. It stays ALIVE via EventBus.
+OPUS-029 Phase 2: Dynamic Runtime Context Injection.
+
+The plugin doesn't just boot and die. It stays ALIVE via EventBus.
+More importantly, it ACTIVELY SYNTHESIZES and INJECTS context.
 
 Kernel Tick Pattern:
 1. Plugin subscribes to EventBus events (KERNEL_TICK, GIT_COMMIT, etc.)
-2. On each tick, plugin refreshes state from Prakriti
-3. Plugin can react to changes (drift, file changes, etc.)
+2. On each tick, OpusContextService synthesizes system state
+3. Context is INJECTED into runtime (EphemeralState)
+4. Every spawning agent knows the current reality
 
-This keeps the plugin "fed" with context - the carrot in front of the donkey.
+This is the "constant prompt feed" - the carrot in front of the donkey.
+Every agent wakes up knowing the "State of Mind" of the system.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
+    from ..core.context_service import OpusContextService
     from ..plugin_main import OpusAssistantPlugin
 
 logger = logging.getLogger("OPUS_TICK")
@@ -26,13 +32,15 @@ class KernelTickHandler:
 
     Subscribes to EventBus and keeps plugin state fresh.
 
-    Architecture:
+    Architecture (Phase 2 - Dynamic Context):
     - EventBus emits periodic KERNEL_TICK events
-    - We listen and refresh our understanding of the codebase
-    - On GIT_COMMIT, we check for drift
+    - OpusContextService synthesizes system state from all Prakriti layers
+    - Context is INJECTED into EphemeralState
+    - Every spawning agent gets the current "State of Mind"
+    - On GIT_COMMIT, we re-synthesize and broadcast
     - On FILE_CHANGED, we re-verify affected docs
 
-    This is the "constant prompt feed" that keeps the plugin context-aware.
+    This is the "constant prompt feed" - active, not passive!
     """
 
     def __init__(self, plugin: "OpusAssistantPlugin"):
@@ -46,6 +54,22 @@ class KernelTickHandler:
         self._subscriptions: List[Callable] = []
         self._tick_count = 0
         self._last_state: Dict[str, Any] = {}
+        self._context_service: Optional["OpusContextService"] = None
+
+        # Initialize context service
+        self._init_context_service()
+
+    def _init_context_service(self) -> None:
+        """Initialize the OpusContextService for dynamic context synthesis."""
+        try:
+            from ..core.context_service import OpusContextService
+
+            workspace = self._plugin._workspace
+            if workspace:
+                self._context_service = OpusContextService(workspace_root=workspace)
+                logger.debug("OpusContextService initialized")
+        except Exception as e:
+            logger.debug(f"Could not initialize context service: {e}")
 
     def subscribe(self) -> bool:
         """
@@ -112,29 +136,75 @@ class KernelTickHandler:
         """
         Handle periodic tick.
 
-        Refreshes plugin state and checks for issues.
+        PHASE 2: Active context synthesis and injection.
+        This is NOT passive - we actively refresh the system's "State of Mind".
         """
         config = self._plugin._config.get("kernel_tick", {})
-        actions = config.get("on_tick", ["quick_drift_check"])
+        actions = config.get("on_tick", ["synthesize_context", "quick_drift_check"])
 
         for action in actions:
-            if action == "quick_drift_check":
+            if action == "synthesize_context":
+                # ACTIVE: Synthesize and inject context
+                await self._synthesize_and_inject_context()
+
+            elif action == "quick_drift_check":
                 result = self._plugin.quick_drift_check()
                 if not result.get("healthy", True):
                     logger.warning(f"⚠️ Drift detected on tick {self._tick_count}")
                 self._last_state["drift"] = result
 
+    async def _synthesize_and_inject_context(self) -> None:
+        """
+        Synthesize system context and inject into runtime.
+
+        This is the "Dynamic Bootstrapping" - every tick updates
+        the "State of Mind" that all agents can access.
+        """
+        if not self._context_service:
+            return
+
+        try:
+            # Synthesize from all Prakriti layers
+            context = self._context_service.synthesize()
+
+            # Inject into EphemeralState (sync)
+            self._context_service.inject(context)
+
+            # Broadcast via EventBus (async)
+            await self._context_service.broadcast(context)
+
+            # Store in handler state
+            self._last_state["context"] = context.to_dict()
+            self._last_state["context_hash"] = context.context_hash
+            self._last_state["system_health"] = context.health.status
+
+            # Log periodically (every 10 ticks)
+            if self._tick_count % 10 == 0:
+                logger.info(
+                    f"🎯 Context #{self._context_service.get_synthesis_count()}: "
+                    f"{context.health.status} | {context.git_branch}@{context.git_sha[:8]}"
+                )
+
+        except Exception as e:
+            logger.debug(f"Context synthesis failed: {e}")
+
     async def _on_commit(self, event: Any) -> None:
         """
         Handle git commit event.
 
-        Checks for drift after code changes.
+        PHASE 2: Re-synthesize context after code changes.
+        Git state changed, so we need a fresh "State of Mind".
         """
         config = self._plugin._config.get("kernel_tick", {})
-        actions = config.get("on_commit", ["detect_drift"])
+        actions = config.get("on_commit", ["synthesize_context", "detect_drift"])
 
         for action in actions:
-            if action == "detect_drift":
+            if action == "synthesize_context":
+                # IMPORTANT: Re-synthesize after commit
+                # The git SHA changed, agents need to know
+                await self._synthesize_and_inject_context()
+
+            elif action == "detect_drift":
                 result = self._plugin.detect_drift()
                 self._last_state["last_drift_check"] = result
                 logger.info(f"📊 Drift check after commit: health={result.get('health', 0):.0%}")
@@ -169,11 +239,51 @@ class KernelTickHandler:
         Returns:
             Dict with handler status and last results
         """
-        return {
+        state = {
             "tick_count": self._tick_count,
             "subscribed": len(self._subscriptions) > 0,
             "last_state": self._last_state,
         }
+
+        # Add context service info
+        if self._context_service:
+            state["context_synthesis_count"] = self._context_service.get_synthesis_count()
+            state["has_context_service"] = True
+            if "system_health" in self._last_state:
+                state["system_health"] = self._last_state["system_health"]
+        else:
+            state["has_context_service"] = False
+
+        return state
+
+    def get_context_service(self) -> Optional["OpusContextService"]:
+        """Get the OpusContextService instance."""
+        return self._context_service
+
+    def get_current_context(self) -> Optional[Dict[str, Any]]:
+        """
+        Get current synthesized context.
+
+        Returns:
+            Current context dict or None
+        """
+        if self._context_service:
+            return self._context_service.get_current_context()
+        return self._last_state.get("context")
+
+    def get_system_prompt_fragment(self) -> str:
+        """
+        Get current system prompt fragment.
+
+        This is what should be prepended to agent system prompts
+        so they know the current "State of Mind".
+
+        Returns:
+            System prompt fragment string
+        """
+        if self._context_service:
+            return self._context_service.get_system_prompt_fragment()
+        return ""
 
 
 # Synchronous wrapper for non-async contexts

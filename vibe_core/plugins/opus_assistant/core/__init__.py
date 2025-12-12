@@ -9,9 +9,11 @@ Components:
 - DriftDetector: Code vs docs drift detection
 - OpusGenerator: OPUS.md data generation (with section preservation)
 - ConfigLoader: Fraktale config loading (defaults + system)
+- OpusContextService: Dynamic runtime context synthesis (Phase 2)
 """
 
 from .config_loader import ConfigLoader, deep_merge
+from .context_service import OpusContext, OpusContextService, SystemHealth
 from .drift_detector import DriftDetector, DriftReport
 from .opus_generator import OpusData, OpusGenerator
 from .verification_logic import HarnessResult, VerificationEngine, VerificationReport
@@ -30,4 +32,8 @@ __all__ = [
     # Config
     "ConfigLoader",
     "deep_merge",
+    # Context Service (Phase 2)
+    "OpusContextService",
+    "OpusContext",
+    "SystemHealth",
 ]
