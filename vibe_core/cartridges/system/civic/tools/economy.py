@@ -49,7 +49,7 @@ class CivicBank:
     - entries: Double-entry detail (DEBIT/CREDIT pairs)
     """
 
-    DB_PATH = Path("data/economy.db")
+    _DB_PATH_DEFAULT = "data/economy.db"  # Fallback only if config unavailable
 
     def __init__(self, db_path: Optional[str] = None):
         """
@@ -59,10 +59,20 @@ class CivicBank:
             db_path: Path to database file. If None, uses default data/economy.db
                      For VFS isolation, pass agent.get_sandbox_path() + "/economy.db"
         """
+        # OPUS-025: Resolve from config or use fallback
         if db_path:
             self.DB_PATH = Path(db_path)
         else:
-            self.DB_PATH = Path("data/economy.db")
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths"):
+                    self.DB_PATH = config.paths.data.resolve("economy_db")
+                else:
+                    self.DB_PATH = Path(self._DB_PATH_DEFAULT)
+            except Exception:
+                self.DB_PATH = Path(self._DB_PATH_DEFAULT)
 
         self.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.DB_PATH), check_same_thread=False)

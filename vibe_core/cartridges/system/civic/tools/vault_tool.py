@@ -88,7 +88,9 @@ class VaultTool(Tool):
     - lease_history: Get audit trail of leases
     """
 
-    MASTER_KEY_PATH = Path("data/security/master.key")
+    # OPUS-025: Template reference - actual path resolved from config or fallback
+    _MASTER_KEY_PATH_DEFAULT = "data/security/master.key"
+    MASTER_KEY_PATH = None  # Set dynamically in _ensure_master_key
     LEASE_COST = 5  # Credits per lease
 
     def __init__(self):
@@ -215,6 +217,19 @@ class VaultTool(Tool):
             Master Key (bytes, base64-encoded)
         """
         try:
+            # OPUS-025: Resolve path from config if not set
+            if self.MASTER_KEY_PATH is None:
+                try:
+                    from vibe_core.phoenix import get_config
+
+                    config = get_config()
+                    if config and hasattr(config, "paths"):
+                        self.MASTER_KEY_PATH = config.paths.data.resolve("security_master_key")
+                    else:
+                        self.MASTER_KEY_PATH = Path(self._MASTER_KEY_PATH_DEFAULT)
+                except Exception:
+                    self.MASTER_KEY_PATH = Path(self._MASTER_KEY_PATH_DEFAULT)
+
             self.MASTER_KEY_PATH.parent.mkdir(parents=True, exist_ok=True)
 
             if self.MASTER_KEY_PATH.exists():
