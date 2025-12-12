@@ -1,0 +1,3 @@
+"""
+OPUS Assistant Tests.
+"""

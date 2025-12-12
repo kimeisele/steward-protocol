@@ -1,0 +1,33 @@
+{
+  "type": "plugin",
+  "id": "opus_assistant",
+  "name": "OPUS Assistant",
+  "version": "1.0.0",
+  "description": "OPUS.md management, verification, drift detection, and assistant agents",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "OpusAssistantPlugin",
+
+  "priority": 50,
+  "enabled": true,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown"
+  ],
+
+  "dependencies": [],
+
+  "capabilities": [
+    "opus.verify",
+    "opus.drift_detect"
+  ],
+
+  "defaults": {
+    "auto_verify_on_boot": false,
+    "drift_detection_enabled": true
+  },
+
+  "author": "STEWARD Protocol",
+  "tags": ["opus", "verification", "assistant", "governance"]
+}
