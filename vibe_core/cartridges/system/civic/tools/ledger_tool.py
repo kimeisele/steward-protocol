@@ -61,7 +61,9 @@ class LedgerTool(Tool):
     Tool Protocol implementation - kernel-managed, zero external dependencies.
     """
 
-    DB_PATH = Path("data/economy.db")
+    # OPUS-025: Fallback only - resolved from config in _ensure_connection
+    _DB_PATH_DEFAULT = "data/economy.db"
+    DB_PATH = None
 
     def __init__(self):
         """Initialize the Ledger Tool (kernel-managed)."""
@@ -78,7 +80,21 @@ class LedgerTool(Tool):
     def _ensure_connection(self):
         """Ensure database connection is initialized."""
         if self._conn is None:
-            self._db_path = self.DB_PATH
+            # OPUS-025: Resolve path from config first
+            if self.DB_PATH is not None:
+                self._db_path = self.DB_PATH
+            else:
+                try:
+                    from vibe_core.phoenix import get_config
+
+                    config = get_config()
+                    if config and hasattr(config, "paths"):
+                        self._db_path = config.paths.data.resolve("economy_db")
+                    else:
+                        self._db_path = Path(self._DB_PATH_DEFAULT)
+                except Exception:
+                    self._db_path = Path(self._DB_PATH_DEFAULT)
+
             self._db_path.parent.mkdir(parents=True, exist_ok=True)
             self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
             self._conn.row_factory = sqlite3.Row
