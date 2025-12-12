@@ -79,6 +79,11 @@ absent:
 | [021](021-TEST-ARCHITECTURE.md) | Test Architecture | Test system design |
 | [022](022-KERNEL-SCALING.md) | Kernel Scaling | Ephemeral cities, scheduler, federation |
 
+### Plugins (plugins/)
+| Doc | Title | Focus |
+|-----|-------|-------|
+| [029](plugins/029-OPUS-PLUGIN-ARCHITECTURE.md) | OPUS Plugin | Fractal verification plugin |
+
 ---
 
 ## Naming Convention
