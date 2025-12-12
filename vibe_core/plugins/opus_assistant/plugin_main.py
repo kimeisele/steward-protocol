@@ -1,9 +1,7 @@
 """
 OPUS Assistant Plugin - Active manager for OPUS.md ecosystem.
 
-OPUS-029: Phase 1 - Drift Detection & OPUS.md Generation
-This plugin owns the verification LOGIC and data generation.
-The interface plugin handles ALL rendering - we only provide DATA.
+OPUS-029: Complete Plugin with Fraktale Config + Kernel Tick
 
 Architecture (GAD-000 Compliant):
     ┌─────────────────────────────────┐
@@ -15,15 +13,29 @@ Architecture (GAD-000 Compliant):
     ┌─────────────────────────────────┐
     │      opus_assistant Plugin      │  ← DATA ONLY (dicts, no rendering)
     │      (Backend)                  │
+    │                                 │
+    │  ┌─────────────────────────┐    │
+    │  │ ConfigLoader            │    │  ← Fraktale Config
+    │  │ defaults.yaml + opus.yaml│   │
+    │  └─────────────────────────┘    │
+    │                                 │
+    │  ┌─────────────────────────┐    │
+    │  │ KernelTickHandler       │    │  ← Heartbeat via EventBus
+    │  │ Stays ALIVE             │    │
+    │  └─────────────────────────┘    │
     └─────────────────────────────────┘
 
-Phase 0: Verification Engine (DONE)
-Phase 1: Drift Detection + OPUS.md Generation (CURRENT)
-Phase 2: CLI commands
-Phase 3: Event handlers
-Phase 4: Opus Assistant Agent
-Phase 5: Circuits & Playbooks
-Phase 6: Ephemeral Cities
+Config Hierarchy:
+1. defaults.yaml (shipped with plugin)
+2. config/opus.yaml (system overrides)
+3. Runtime overrides
+
+Kernel Tick:
+- Plugin subscribes to EventBus
+- Reacts to KERNEL_TICK, GIT_COMMIT, FILE_CHANGED
+- Keeps context fresh (the carrot in front of the donkey)
+
+OPUS-015: Container-ready (.vibe packable)
 """
 
 import logging
@@ -35,9 +47,11 @@ from vibe_core.plugin_protocol import KernelPlugin
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+    from .core.config_loader import ConfigLoader
     from .core.drift_detector import DriftDetector
     from .core.opus_generator import OpusGenerator
     from .core.verification_logic import VerificationEngine
+    from .events.kernel_tick import KernelTickHandler
 
 logger = logging.getLogger("OPUS_ASSISTANT")
 
@@ -55,6 +69,7 @@ class OpusAssistantPlugin(KernelPlugin):
     - opus.drift_detect: Compare code vs docs
     - opus.generate: Generate OPUS.md data
     - opus.preserve: Get preserved sections from existing OPUS.md
+    - opus.tick: Respond to kernel tick events
     """
 
     @property
@@ -70,40 +85,78 @@ class OpusAssistantPlugin(KernelPlugin):
         self._kernel: Optional["RealVibeKernel"] = None
         self._workspace: Optional[Path] = None
         self._config: Dict[str, Any] = {}
+        self._config_loader: Optional["ConfigLoader"] = None
+        self._tick_handler: Optional["KernelTickHandler"] = None
 
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """
         Initialize OPUS Assistant on kernel boot.
 
-        Note: We do NOT generate OPUS.md here!
-        The interface plugin decides when/if to render OPUS.md.
-        We only provide data when asked.
+        1. Get workspace path
+        2. Load fraktale config (defaults + opus.yaml)
+        3. Subscribe to kernel tick (EventBus)
+        4. Quick health check
         """
         self._kernel = kernel
 
         # Get workspace path
         self._workspace = getattr(kernel, "workspace_path", None) or Path.cwd()
 
-        # Load plugin config
-        self._config = self._load_plugin_config()
+        # Load fraktale config
+        self._load_fraktale_config()
 
-        # Quick drift check on boot (data only, no rendering)
-        if self._config.get("check_drift_on_boot", False):
+        # Subscribe to kernel tick
+        self._setup_kernel_tick()
+
+        # Quick health check on boot
+        if self._config.get("drift", {}).get("check_on_boot", False):
             drift = self.quick_drift_check()
             if not drift.get("healthy", True):
-                logger.warning(f"⚠️ OPUS drift detected: {len(drift.get('missing_files', []))} missing files")
+                logger.warning(f"⚠️ OPUS drift: {len(drift.get('missing_files', []))} missing files")
 
-        logger.info("🎯 OPUS Assistant online (Phase 1: Drift Detection)")
+        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick)")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
+        # Unsubscribe from events
+        if self._tick_handler:
+            self._tick_handler.unsubscribe()
+
         logger.info("🎯 OPUS Assistant shutdown")
 
-    def _load_plugin_config(self) -> Dict[str, Any]:
-        """Load plugin configuration."""
-        if self._kernel and hasattr(self._kernel, "get_plugin_config"):
-            return self._kernel.get_plugin_config("opus_assistant") or {}
-        return {}
+    def _load_fraktale_config(self) -> None:
+        """
+        Load config using fraktale pattern.
+
+        Merges: defaults.yaml (plugin) + opus.yaml (system)
+        """
+        from .core.config_loader import ConfigLoader
+
+        self._config_loader = ConfigLoader(workspace_root=self._workspace or Path.cwd())
+        self._config = self._config_loader.load()
+
+        logger.debug(f"Loaded config: {list(self._config.keys())}")
+
+    def _setup_kernel_tick(self) -> None:
+        """
+        Setup kernel tick handler.
+
+        Subscribes to EventBus for constant context feed.
+        """
+        if not self._config.get("kernel_tick", {}).get("enabled", True):
+            logger.debug("Kernel tick disabled in config")
+            return
+
+        try:
+            from .events.kernel_tick import KernelTickHandler
+
+            self._tick_handler = KernelTickHandler(self)
+            if self._tick_handler.subscribe():
+                logger.debug("Kernel tick handler active")
+        except ImportError:
+            logger.debug("EventBus not available - tick handler disabled")
+        except Exception as e:
+            logger.debug(f"Could not setup kernel tick: {e}")
 
     # =========================================================================
     # Public API - DATA ONLY, NO RENDERING!
@@ -124,17 +177,18 @@ class OpusAssistantPlugin(KernelPlugin):
         from .core.verification_logic import VerificationEngine
 
         workspace = self._workspace or Path.cwd()
-        engine = VerificationEngine(workspace_root=workspace)
+        config = self._config.get("verification", {})
+        engine = VerificationEngine(workspace_root=workspace, config=config)
         return engine.run_verification(quick=quick)
 
-    def detect_drift(self, since_commit: str = "HEAD~10") -> Dict[str, Any]:
+    def detect_drift(self, since_commit: Optional[str] = None) -> Dict[str, Any]:
         """
         Detect drift between code and documentation.
 
         Returns DATA (dict), not rendered output.
 
         Args:
-            since_commit: Git ref to compare against
+            since_commit: Git ref to compare against (default from config)
 
         Returns:
             Drift report dict
@@ -143,6 +197,11 @@ class OpusAssistantPlugin(KernelPlugin):
 
         workspace = self._workspace or Path.cwd()
         detector = DriftDetector(workspace_root=workspace)
+
+        # Use config default if not specified
+        if since_commit is None:
+            since_commit = self._config.get("drift", {}).get("default_since", "HEAD~10")
+
         report = detector.detect(since_commit=since_commit)
         return report.to_dict()
 
@@ -212,38 +271,58 @@ class OpusAssistantPlugin(KernelPlugin):
         workspace = self._workspace or Path.cwd()
         return (workspace / "OPUS.md").exists()
 
+    def get_config(self, key: Optional[str] = None, default: Any = None) -> Any:
+        """
+        Get plugin config value.
+
+        Args:
+            key: Dot-notation key (e.g., "verification.enabled")
+                 If None, returns entire config
+            default: Default value if key not found
+
+        Returns:
+            Config value or default
+        """
+        if key is None:
+            return self._config
+
+        if self._config_loader:
+            return self._config_loader.get(key, default)
+
+        return default
+
+    def reload_config(self) -> Dict[str, Any]:
+        """
+        Force reload config from files.
+
+        Returns:
+            New merged config
+        """
+        if self._config_loader:
+            self._config = self._config_loader.reload()
+        return self._config
+
     # =========================================================================
     # Engine Accessors (for interface plugin)
     # =========================================================================
 
     def get_verification_engine(self) -> "VerificationEngine":
-        """
-        Get a VerificationEngine instance.
-
-        For interface plugin to use directly.
-        """
+        """Get a VerificationEngine instance."""
         from .core.verification_logic import VerificationEngine
 
         workspace = self._workspace or Path.cwd()
-        return VerificationEngine(workspace_root=workspace)
+        config = self._config.get("verification", {})
+        return VerificationEngine(workspace_root=workspace, config=config)
 
     def get_drift_detector(self) -> "DriftDetector":
-        """
-        Get a DriftDetector instance.
-
-        For interface plugin to use directly.
-        """
+        """Get a DriftDetector instance."""
         from .core.drift_detector import DriftDetector
 
         workspace = self._workspace or Path.cwd()
         return DriftDetector(workspace_root=workspace)
 
     def get_opus_generator(self) -> "OpusGenerator":
-        """
-        Get an OpusGenerator instance.
-
-        For interface plugin to use directly.
-        """
+        """Get an OpusGenerator instance."""
         from .core.opus_generator import OpusGenerator
 
         workspace = self._workspace or Path.cwd()
@@ -260,8 +339,8 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns structured data about what this plugin can do.
         """
         return {
-            "version": "1.1.0",
-            "phase": "1 (Drift Detection)",
+            "version": self._config.get("plugin", {}).get("version", "1.1.0"),
+            "phase": self._config.get("plugin", {}).get("phase", 1),
             "operations": [
                 "verify",
                 "detect_drift",
@@ -269,17 +348,23 @@ class OpusAssistantPlugin(KernelPlugin):
                 "generate_opus_data",
                 "get_preserved_sections",
                 "has_existing_opus",
+                "get_config",
+                "reload_config",
             ],
             "capabilities": [
                 "opus.verify",
                 "opus.drift_detect",
                 "opus.generate",
                 "opus.preserve",
+                "opus.config",
+                "opus.tick",
             ],
             "architecture": {
                 "role": "backend",
                 "renders": False,
                 "provides": "data_only",
+                "config_pattern": "fraktale",
+                "kernel_tick": self._tick_handler is not None,
             },
             "workspace": str(self._workspace) if self._workspace else None,
         }
@@ -293,9 +378,12 @@ class OpusAssistantPlugin(KernelPlugin):
         status = {
             "plugin_id": "opus_assistant",
             "status": "active" if self._kernel else "inactive",
-            "phase": "1",
+            "version": self._config.get("plugin", {}).get("version", "1.1.0"),
+            "phase": self._config.get("plugin", {}).get("phase", 1),
             "workspace": str(self._workspace) if self._workspace else None,
             "has_opus_md": self.has_existing_opus() if self._workspace else False,
+            "config_loaded": self._config_loader is not None,
+            "kernel_tick_active": self._tick_handler is not None,
         }
 
         # Add quick health check if active
@@ -303,5 +391,9 @@ class OpusAssistantPlugin(KernelPlugin):
             quick = self.quick_drift_check()
             status["drift_health"] = quick.get("healthy", False)
             status["tracked_files"] = quick.get("total_tracked", 0)
+
+        # Add tick handler state if available
+        if self._tick_handler:
+            status["tick_state"] = self._tick_handler.get_state()
 
         return status

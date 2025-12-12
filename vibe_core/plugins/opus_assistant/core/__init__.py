@@ -8,8 +8,10 @@ Components:
 - VerificationEngine: @HARNESS verification logic
 - DriftDetector: Code vs docs drift detection
 - OpusGenerator: OPUS.md data generation (with section preservation)
+- ConfigLoader: Fraktale config loading (defaults + system)
 """
 
+from .config_loader import ConfigLoader, deep_merge
 from .drift_detector import DriftDetector, DriftReport
 from .opus_generator import OpusData, OpusGenerator
 from .verification_logic import HarnessResult, VerificationEngine, VerificationReport
@@ -25,4 +27,7 @@ __all__ = [
     # OPUS Generation
     "OpusGenerator",
     "OpusData",
+    # Config
+    "ConfigLoader",
+    "deep_merge",
 ]

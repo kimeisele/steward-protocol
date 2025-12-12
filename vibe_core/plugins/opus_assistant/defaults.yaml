@@ -1,0 +1,139 @@
+# OPUS Assistant Plugin - Default Configuration
+#
+# FRACTAL CONFIG PATTERN:
+# 1. This file = shipped defaults (in plugin)
+# 2. config/opus.yaml = system overrides (in project)
+# 3. Runtime = merged (system > defaults)
+#
+# OPUS-015: This file is part of the .vibe container
+
+# =============================================================================
+# PLUGIN METADATA
+# =============================================================================
+plugin:
+  id: opus_assistant
+  version: "1.1.0"
+  phase: 1
+
+# =============================================================================
+# VERIFICATION ENGINE
+# =============================================================================
+verification:
+  # Enable/disable verification
+  enabled: true
+
+  # Path to OPUS docs (relative to workspace)
+  docs_path: docs/architecture/OPUS
+
+  # Marker for @HARNESS sections
+  harness_marker: "@HARNESS"
+
+  # Trust score weights (must sum to 100)
+  weights:
+    files_exist: 20
+    tests_exist: 15
+    wiring_verified: 20
+    semantic_passes: 25
+    config_exists: 10
+    doc_complete: 10
+
+  # Thresholds
+  thresholds:
+    pass: 80
+    warn: 60
+
+  # Quick mode (skip semantic checks)
+  quick_mode_default: false
+
+# =============================================================================
+# DRIFT DETECTION
+# =============================================================================
+drift:
+  # Enable drift detection
+  enabled: true
+
+  # Check drift on boot (slows startup)
+  check_on_boot: false
+
+  # Default commit range for drift check
+  default_since: "HEAD~10"
+
+  # File patterns to track
+  trackable_patterns:
+    - "vibe_core/**/*.py"
+    - "config/**/*.yaml"
+
+  # Patterns to exclude
+  exclude_patterns:
+    - "**/tests/**"
+    - "**/__pycache__/**"
+    - "**/*.pyc"
+
+# =============================================================================
+# OPUS.MD GENERATION
+# =============================================================================
+generation:
+  # Auto-generate OPUS.md on boot
+  auto_generate: false
+
+  # Output path (relative to workspace)
+  output_path: "OPUS.md"
+
+  # Include verification results
+  include_verification: true
+
+  # Include drift report
+  include_drift: true
+
+  # Include plugin status
+  include_plugins: true
+
+# =============================================================================
+# SECTION PRESERVATION
+# =============================================================================
+preservation:
+  # Section markers (NEVER overwrite these)
+  human_start: "<!-- @HUMAN START -->"
+  human_end: "<!-- @HUMAN END -->"
+  ai_start: "<!-- @AI START -->"
+  ai_end: "<!-- @AI END -->"
+  auto_start: "<!-- @AUTO-GENERATED START -->"
+  auto_end: "<!-- @AUTO-GENERATED END -->"
+
+# =============================================================================
+# KERNEL TICK (Heartbeat)
+# =============================================================================
+kernel_tick:
+  # Enable periodic updates
+  enabled: true
+
+  # Event types to subscribe to
+  subscribe_events:
+    - "KERNEL_TICK"
+    - "GIT_COMMIT"
+    - "FILE_CHANGED"
+
+  # Actions on tick
+  on_tick:
+    - quick_drift_check
+
+  # Actions on commit
+  on_commit:
+    - detect_drift
+    - update_verification
+
+# =============================================================================
+# GAD-000 COMPLIANCE
+# =============================================================================
+gad_000:
+  # Discoverability
+  expose_capabilities: true
+
+  # Observability
+  expose_status: true
+
+  # Parseability (structured output)
+  structured_output: true
+
+  # No rendering (data only)
+  renders: false
