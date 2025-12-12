@@ -129,20 +129,24 @@ class PrakritiStatePanel(BasePanel):
     def _get_prana_status(self, prakriti: Any) -> Dict[str, str]:
         """Get Layer 2 (PRANA) status."""
         try:
-            if hasattr(self.kernel, "status"):
-                kernel_status = self.kernel.status()
-                state = kernel_status.get("state", "unknown")
-                agents = kernel_status.get("agents", {})
-                agent_count = len(agents) if isinstance(agents, dict) else 0
+            # kernel.status is a property returning KernelStatus enum
+            status = self.kernel.status
+            agents = getattr(self.kernel, "_agents", {})
+            agent_count = len(agents) if isinstance(agents, dict) else 0
 
-                if state == "running":
-                    return {"icon": "✅", "details": f"Running ({agent_count} agents)"}
-                elif state == "stopped":
-                    return {"icon": "⏹️", "details": "Stopped"}
-                else:
-                    return {"icon": "🟡", "details": f"State: {state}"}
+            # KernelStatus is an enum: STOPPED, BOOTING, RUNNING, HALTED
+            status_value = status.value if hasattr(status, "value") else str(status)
+
+            if status_value == "RUNNING":
+                return {"icon": "✅", "details": f"Running ({agent_count} agents)"}
+            elif status_value == "STOPPED":
+                return {"icon": "⏹️", "details": "Stopped"}
+            elif status_value == "BOOTING":
+                return {"icon": "🔄", "details": "Booting..."}
+            elif status_value == "HALTED":
+                return {"icon": "🛑", "details": "HALTED (Narasimha)"}
             else:
-                return {"icon": "⚪", "details": "Kernel status unavailable"}
+                return {"icon": "🟡", "details": f"State: {status_value}"}
         except Exception as e:
             return {"icon": "❌", "details": f"Error: {str(e)[:30]}"}
 
