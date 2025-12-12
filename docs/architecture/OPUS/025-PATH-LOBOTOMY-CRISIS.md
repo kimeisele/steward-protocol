@@ -390,10 +390,13 @@ if platform.system() == "Windows":
 # ================================================
 # GLOBAL SCOPE: Das Tool (steward CLI) - XDG
 # ================================================
+# HINWEIS: Shell-Syntax wie ${VAR:-default} funktioniert NICHT in Python!
+# XDG-Resolution muss in section_main.py's resolve() passieren, nicht im YAML.
 tool:
-  config_root: "${XDG_CONFIG_HOME:-$HOME/.config}/steward"
-  data_root: "${XDG_DATA_HOME:-$HOME/.local/share}/steward"
-  cache_root: "${XDG_CACHE_HOME:-$HOME/.cache}/steward"
+  # Diese Defaults werden von Python mit XDG-Env-Vars ueberschrieben
+  config_root: "~/.config/steward"      # XDG_CONFIG_HOME Override in Python
+  data_root: "~/.local/share/steward"   # XDG_DATA_HOME Override in Python
+  cache_root: "~/.cache/steward"        # XDG_CACHE_HOME Override in Python
 
   # Abgeleitete Pfade
   keys: "{config_root}/keys"
@@ -409,9 +412,35 @@ project:
   vibe_root: ".vibe"
   state_db: "{vibe_root}/vibe.db"
   runtime: "{vibe_root}/runtime"   # ERSETZT /tmp/vibe_os!
+  sandboxes: "{vibe_root}/sandboxes"  # ERSETZT workspaces/sandbox!
   logs: "{vibe_root}/logs"
   memory: "{vibe_root}/state/memory.json"
   tasks: "{vibe_root}/state/tasks"
+```
+
+**XDG-Resolution in Python (section_main.py):**
+
+```python
+def resolve_tool_path(self, key: str) -> Path:
+    """Resolve tool paths with XDG override."""
+    raw = getattr(self, key)
+
+    # XDG Override fuer root paths
+    if key == "config_root":
+        xdg = os.environ.get("XDG_CONFIG_HOME")
+        if xdg:
+            return Path(xdg) / "steward"
+    elif key == "data_root":
+        xdg = os.environ.get("XDG_DATA_HOME")
+        if xdg:
+            return Path(xdg) / "steward"
+    elif key == "cache_root":
+        xdg = os.environ.get("XDG_CACHE_HOME")
+        if xdg:
+            return Path(xdg) / "steward"
+
+    # Default: Expandiere ~ und resolve template vars
+    return Path(raw).expanduser()
 ```
 
 **VERBOT:** `~/.vibe/` ist ein Anti-Pattern! Globaler Vibe-State macht keinen Sinn.
@@ -480,6 +509,7 @@ os.environ["HF_HOME"] = str(config.paths.tool.resolve("cache") / "huggingface")
 - XDG-konforme `tool:` Section hinzufuegen
 - Bootstrap-Order in `boot_sequence.py` korrigieren
 - `~/.vibe/` Nutzung in `build_release.py` entfernen
+- **Logging Bootstrap Race fixen:** Boot-Logger nur `stderr`, File-Logging erst nach Config-Load
 
 ### Phase 3: Core System (P0)
 
@@ -495,7 +525,9 @@ Defaults zu Template-Form aendern.
 
 ### Phase 6: workspaces/sandbox Konsolidierung (P1)
 
-Entscheidung: Mit `.vibe/runtime/` mergen oder eigene Section?
+**ENTSCHIEDEN: MERGE** → `.vibe/sandboxes/{agent_id}/`
+
+`workspaces/sandbox/` ist nur Engineer-spezifisch und sollte nicht als eigene Top-Level-Location existieren. Konsolidierung unter `.vibe/sandboxes/` fuer alle Agent-Sandboxes.
 
 ### Phase 7: Governance/State Tools (P1)
 
@@ -565,6 +597,14 @@ grep -rE '"vibe_core/playbook/' vibe_core/ && exit 1
 grep -rE 'Path\(__file__\)\.parent\.parent\.parent' vibe_core/ && echo "WARNING: Deep __file__ traversal"
 grep -rE 'Path\.home\(\)' vibe_core/ | grep -v runtime_extensions && echo "WARNING: Unmanaged Path.home()"
 ```
+
+**HINWEIS zu manifest.json Dateien:**
+
+Die `"config_file": "config/..."` Eintraege in `manifest.json` Dateien werden NICHT blockiert weil:
+- Manifests sind die **Source-of-Truth** fuer Phoenix Sections
+- Sie definieren WO die Config-Datei liegt, nicht WIE der Pfad aufgeloest wird
+- Die Pfad-Aufloesung passiert in `SectionLoader`, nicht im Manifest selbst
+- Das ist analog zu wie `package.json` auf `"main": "index.js"` zeigt
 
 ---
 
