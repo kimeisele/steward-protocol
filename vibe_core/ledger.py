@@ -129,8 +129,14 @@ def _get_db_lock(db_path: str) -> threading.Lock:
 class SQLiteLedger(VibeLedger):
     """Persistent SQLite-backed Event Ledger - Append-only task record with persistence"""
 
-    def __init__(self, db_path: str = "data/vibe_ledger.db"):
-        """Initialize SQLite ledger with database file"""
+    def __init__(self, db_path: str):
+        """Initialize SQLite ledger with database file.
+
+        OPUS-025: db_path is REQUIRED. No default - callers must use
+        config.paths.data.resolve("vibe_ledger") or pass explicit path.
+        """
+        if not db_path:
+            raise ValueError("db_path is required - use config.paths.data.resolve('vibe_ledger')")
         self.db_path = db_path
         self.connection = None
         self._write_lock = _get_db_lock(db_path)
