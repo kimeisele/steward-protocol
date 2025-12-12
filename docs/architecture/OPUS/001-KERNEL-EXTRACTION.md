@@ -30,32 +30,8 @@ absent:
     in: vibe_core/kernel_impl.py
 config:
   - section: kernel
-semantic:
-  - type: method_exists
-    name: "register_agent_exists"
-    class: RealVibeKernel
-    method: register_agent
-    in: vibe_core/kernel_impl.py
-  - type: method_exists
-    name: "submit_task_exists"
-    class: RealVibeKernel
-    method: submit_task
-    in: vibe_core/kernel_impl.py
-  - type: method_exists
-    name: "grant_capability_exists"
-    class: RealVibeKernel
-    method: grant_capability
-    in: vibe_core/kernel_impl.py
-  - type: method_exists
-    name: "broadcast_event_exists"
-    class: RealVibeKernel
-    method: broadcast_event
-    in: vibe_core/kernel_impl.py
-  - type: method_exists
-    name: "get_capabilities_exists"
-    class: RealVibeKernel
-    method: get_capabilities
-    in: vibe_core/kernel_impl.py
+# semantic: Note - kernel_impl.py uses relative imports, cannot be loaded standalone
+# The wiring patterns above verify these methods exist via grep
 -->
 
 ---

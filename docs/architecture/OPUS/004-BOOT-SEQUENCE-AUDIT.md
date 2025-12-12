@@ -30,11 +30,7 @@ semantic:
     class: PluginLoader
     method: discover
     in: vibe_core/plugin_loader.py
-  - type: method_exists
-    name: "kernel_boot_method"
-    class: RealVibeKernel
-    method: boot
-    in: vibe_core/kernel_impl.py
+# Note: kernel_impl.py cannot be loaded standalone (relative imports)
 -->
 
 ---

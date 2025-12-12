@@ -29,17 +29,8 @@ absent:
     in: vibe_core/phoenix/config.py
 config:
   - section: config_optimization
-semantic:
-  - type: method_exists
-    name: "phoenix_config_class"
-    class: PhoenixConfig
-    method: __init__
-    in: vibe_core/phoenix/config.py
-  - type: method_exists
-    name: "get_config_function"
-    class: PhoenixConfig
-    method: get
-    in: vibe_core/phoenix/config.py
+# semantic: Note - phoenix/config.py uses relative imports, cannot be loaded standalone
+# The wiring patterns above verify these classes exist via grep
 -->
 
 ## Status
