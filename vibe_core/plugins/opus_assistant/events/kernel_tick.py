@@ -272,6 +272,8 @@ class KernelTickHandler:
                 return await self._execute_script_action(target, params)
             elif action_type == "EMIT_EVENT":
                 return await self._emit_event_action(target, params)
+            elif action_type == "CHECK_STATE":
+                return await self._check_state_action(target, params, context)
             else:
                 logger.debug(f"Unknown action type: {action_type}")
                 return {"success": False, "error": f"Unknown action type: {action_type}"}
@@ -316,6 +318,25 @@ class KernelTickHandler:
             bus = get_event_bus()
             await bus.emit(target, params)
             return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _check_state_action(self, target: str, params: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+        """Check a state value matches expected."""
+        expected = params.get("expected", True)
+
+        try:
+            parts = target.split(".")
+            value = context
+            for part in parts:
+                if isinstance(value, dict):
+                    value = value.get(part)
+                else:
+                    value = None
+                    break
+
+            matches = value == expected
+            return {"success": matches, "value": value, "expected": expected}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
