@@ -1,11 +1,12 @@
 # OPUS-009: Unified State Management (PRAKRITI)
 
-> **Status**: 🚧 PARTIAL - Phase 1-3 Complete, Write Ops Missing
+> **Status**: 🚧 PARTIAL - Phase 1-3 Complete, Superseded by OPUS-027
 > **Created**: 2025-12-08
 > **Phase 1-3**: 2025-12-08
-> **Phase 4+**: See OPUS-027 for Git Write Operations
+> **Superseded By**: OPUS-027 (Complete Implementation)
 > **Purpose**: Unified State & Identity Management for Agent OS
 > **GAD-000**: See compliance section below
+> **Note**: This document is CONCEPT only. See OPUS-027 for production implementation.
 
 <!-- @HARNESS
 files:
@@ -630,8 +631,20 @@ class Prakriti:
 
 ## Continuation
 
-**OPUS-027: Prakriti Git Integration** completes the write operations described in this document:
-- `GitState.commit()`, `stage()`
-- `Prakriti.commit_if_dirty()`
-- Kernel boot/shutdown integration
-- VISNU protection in commit path
+**This document is superseded by OPUS-027.**
+
+OPUS-009 was the conceptual foundation. OPUS-027 delivers the complete implementation:
+
+- **OPUS-027: Unified State Implementation (MASTER)**
+  - All 3 layers complete (STHULA, PRANA, PURUSHA)
+  - LedgerState integration (Split-Brain fix)
+  - Session boundaries
+  - Crash recovery
+  - Kernel integration
+
+- **OPUS-028: Prakriti Git Integration (SUB-DOCUMENT)**
+  - `GitState.commit()`, `stage()`
+  - VISNU protection in commit path
+  - Concurrency lock
+
+Git is 5% of unified state. OPUS-027 covers the full 100%.

@@ -1,10 +1,11 @@
-# OPUS-027: Prakriti Git Integration
+# OPUS-028: Prakriti Git Integration
 
 > **Status**: 📋 PLANNING
 > **Created**: 2025-12-12
-> **Depends On**: OPUS-009 (Concept), OPUS-024 (VISNU Protection)
+> **Depends On**: OPUS-027 (Master Plan), OPUS-009 (Concept), OPUS-024 (VISNU Protection)
 > **Purpose**: Complete GitState write operations and kernel integration
 > **Problem**: 233 auto-commits in 2 days, InterfacePlugin bypasses Prakriti
+> **Scope**: Git operations ONLY (5% of unified state - see OPUS-027 for full picture)
 
 <!-- @HARNESS
 files:
@@ -308,7 +309,7 @@ _commit_lock = threading.Lock()
 
 # After line 220 (after _get_main_branch)
 # =========================================================================
-# Write Operations (OPUS-027)
+# Write Operations (OPUS-028)
 # =========================================================================
 
 def stage(self, patterns: List[str]) -> int:
@@ -430,7 +431,7 @@ def get_capabilities(self) -> Dict[str, Any]:
 # After line 260 (after is_dirty property)
 
 # =========================================================================
-# Write Operations (OPUS-027)
+# Write Operations (OPUS-028)
 # =========================================================================
 
 def commit_if_dirty(
@@ -552,7 +553,7 @@ ui_files:
 
 ```python
 """
-Tests for OPUS-027: Prakriti Git Integration
+Tests for OPUS-028: Prakriti Git Integration
 
 Verifies:
 1. GitState.commit() creates real commits
@@ -731,6 +732,7 @@ If issues arise:
 
 ## Related Documents
 
+- **OPUS-027**: Unified State Implementation (master plan - this is a sub-document)
 - **OPUS-009**: Unified State Management (concept, partial implementation)
 - **OPUS-024**: Kernel Protection Audit (VISNU)
 - **GAD-000**: Operator Inversion (API design principles)
@@ -739,4 +741,4 @@ If issues arise:
 
 **Author**: Claude Opus 4
 **Date**: 2025-12-12
-**Status**: 📋 PLANNING - Ready for review and implementation
+**Status**: 📋 PLANNING - Git operations only (see OPUS-027 for full scope)
