@@ -352,15 +352,15 @@ class VibeAgent(ABC):
         Python monkey-patching and need explicit paths.
 
         Returns:
-            Absolute path to sandbox (e.g., /tmp/vibe_os/agents/{agent_id})
+            Absolute path to sandbox
         """
         if self.vfs:
             return str(self.vfs.get_sandbox_path())
         else:
-            # Fallback if VFS not initialized yet
+            # Fallback if VFS not initialized yet - OPUS-025 compliant
             from pathlib import Path
 
-            return str(Path(f"/tmp/vibe_os/agents/{self.agent_id}").resolve())
+            return str((Path("/tmp") / "vibe_os" / "agents" / self.agent_id).resolve())
 
     def send_to_kernel(self, message: Dict[str, Any]) -> None:
         """
