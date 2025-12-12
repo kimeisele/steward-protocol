@@ -36,6 +36,12 @@ absent:
     in: vibe_core/runtime/layered_router.py
 config:
   - section: routing
+semantic:
+  - type: method_exists
+    name: "layered_router_route"
+    class: LayeredRouter
+    method: route
+    in: vibe_core/runtime/layered_router.py
 -->
 
 ---
