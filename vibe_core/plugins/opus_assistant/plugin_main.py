@@ -280,6 +280,25 @@ class OpusAssistantPlugin(KernelPlugin):
         workspace = self._workspace or Path.cwd()
         return (workspace / "OPUS.md").exists()
 
+    def write_opus_md(self, quick: bool = False) -> Path:
+        """
+        Write OPUS.md directly.
+
+        OPUS-029 Migration: opus_assistant now writes its own OPUS.md.
+        Previously done by interface/renderers/opus/ (now deleted).
+
+        Args:
+            quick: Skip expensive semantic verification
+
+        Returns:
+            Path to written OPUS.md
+        """
+        from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
+
+        workspace = self._workspace or Path.cwd()
+        writer = OpusMdWriter(workspace, kernel=self._kernel)
+        return writer.write(quick=quick)
+
     def get_config(self, key: Optional[str] = None, default: Any = None) -> Any:
         """
         Get plugin config value.
