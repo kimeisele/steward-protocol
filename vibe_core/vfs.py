@@ -35,8 +35,29 @@ class VirtualFileSystem:
     Attempts to escape the sandbox raise PermissionError.
     """
 
-    # Base directory for all agent sandboxes
-    VFS_ROOT = Path("/tmp/vibe_os/agents")
+    # OPUS-025: VFS_ROOT resolved from config or fallback
+    _VFS_ROOT = None
+
+    @classmethod
+    def _get_vfs_root(cls) -> Path:
+        """Get VFS root from config or fallback."""
+        if cls._VFS_ROOT is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
+                    cls._VFS_ROOT = Path(config.paths.system.agents)
+                else:
+                    cls._VFS_ROOT = Path("/tmp") / "vibe_os" / "agents"
+            except Exception:
+                cls._VFS_ROOT = Path("/tmp") / "vibe_os" / "agents"
+        return cls._VFS_ROOT
+
+    # Legacy property for backward compatibility
+    @property
+    def VFS_ROOT(self) -> Path:
+        return self._get_vfs_root()
 
     def __init__(self, agent_id: str):
         """
@@ -46,7 +67,7 @@ class VirtualFileSystem:
             agent_id: Agent identifier
         """
         self.agent_id = agent_id
-        self.root = self.VFS_ROOT / agent_id
+        self.root = self._get_vfs_root() / agent_id
 
         # Create sandbox directory
         self.root.mkdir(parents=True, exist_ok=True)

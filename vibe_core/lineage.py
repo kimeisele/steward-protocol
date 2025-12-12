@@ -61,13 +61,26 @@ class LineageChain:
     This is how we build trust in a world of autonomous agents.
     """
 
-    def __init__(self, db_path: str = "/tmp/vibe_os/kernel/lineage.db"):
+    def __init__(self, db_path: str = None):
         """
         Initialize the Parampara chain.
 
         If this is the first time, the Genesis Block will be created.
         Otherwise, the existing chain will be loaded and verified.
         """
+        # OPUS-025: Resolve db_path from config if not provided
+        if db_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
+                    db_path = config.paths.system.lineage_db
+                else:
+                    db_path = "/tmp/vibe_os/kernel/lineage.db"
+            except Exception:
+                db_path = "/tmp/vibe_os/kernel/lineage.db"
+
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.db_path))
