@@ -1,7 +1,7 @@
 """
 OPUS Assistant Plugin - Active manager for OPUS.md ecosystem.
 
-OPUS-029: Complete Plugin with Fraktale Config + Kernel Tick
+OPUS-029 Phase 2: Dynamic Runtime Context Injection
 
 Architecture (GAD-000 Compliant):
     ┌─────────────────────────────────┐
@@ -20,8 +20,13 @@ Architecture (GAD-000 Compliant):
     │  └─────────────────────────┘    │
     │                                 │
     │  ┌─────────────────────────┐    │
+    │  │ OpusContextService      │    │  ← PHASE 2: Dynamic Bootstrapping
+    │  │ Synthesize + Inject     │    │     "State of Mind" for all agents
+    │  └─────────────────────────┘    │
+    │                                 │
+    │  ┌─────────────────────────┐    │
     │  │ KernelTickHandler       │    │  ← Heartbeat via EventBus
-    │  │ Stays ALIVE             │    │
+    │  │ Stays ALIVE             │    │     Triggers context synthesis
     │  └─────────────────────────┘    │
     └─────────────────────────────────┘
 
@@ -30,10 +35,11 @@ Config Hierarchy:
 2. config/opus.yaml (system overrides)
 3. Runtime overrides
 
-Kernel Tick:
-- Plugin subscribes to EventBus
-- Reacts to KERNEL_TICK, GIT_COMMIT, FILE_CHANGED
-- Keeps context fresh (the carrot in front of the donkey)
+Phase 2 - Dynamic Context:
+- On KERNEL_TICK: Synthesize system state from all Prakriti layers
+- Inject into EphemeralState as "State of Mind"
+- Every spawning agent knows the current reality
+- This is ACTIVE, not passive!
 
 OPUS-015: Container-ready (.vibe packable)
 """
@@ -48,6 +54,7 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
     from .core.config_loader import ConfigLoader
+    from .core.context_service import OpusContextService
     from .core.drift_detector import DriftDetector
     from .core.opus_generator import OpusGenerator
     from .core.verification_logic import VerificationEngine
@@ -64,12 +71,14 @@ class OpusAssistantPlugin(KernelPlugin):
     The interface plugin is the MASTER for rendering.
     We NEVER render markdown, rich panels, or any UI.
 
-    Capabilities:
+    Phase 2 Capabilities:
     - opus.verify: Run @HARNESS verification
     - opus.drift_detect: Compare code vs docs
     - opus.generate: Generate OPUS.md data
     - opus.preserve: Get preserved sections from existing OPUS.md
     - opus.tick: Respond to kernel tick events
+    - opus.context: Dynamic runtime context synthesis
+    - opus.prompt: Get system prompt fragment for agents
     """
 
     @property
@@ -328,6 +337,64 @@ class OpusAssistantPlugin(KernelPlugin):
         workspace = self._workspace or Path.cwd()
         return OpusGenerator(workspace_root=workspace)
 
+    def get_context_service(self) -> Optional["OpusContextService"]:
+        """
+        Get the OpusContextService instance.
+
+        Returns:
+            OpusContextService or None if tick handler not active
+        """
+        if self._tick_handler:
+            return self._tick_handler.get_context_service()
+        return None
+
+    # =========================================================================
+    # Phase 2: Context Service API
+    # =========================================================================
+
+    def get_current_context(self) -> Optional[Dict[str, Any]]:
+        """
+        Get current synthesized context.
+
+        This is the "State of Mind" - what every agent should know.
+
+        Returns:
+            Current context dict or None
+        """
+        if self._tick_handler:
+            return self._tick_handler.get_current_context()
+        return None
+
+    def get_system_prompt_fragment(self) -> str:
+        """
+        Get current system prompt fragment.
+
+        This should be prepended to agent system prompts so they
+        know the current "State of Mind" of the system.
+
+        Returns:
+            System prompt fragment string (markdown)
+        """
+        if self._tick_handler:
+            return self._tick_handler.get_system_prompt_fragment()
+        return ""
+
+    def synthesize_context(self) -> Optional[Dict[str, Any]]:
+        """
+        Force immediate context synthesis.
+
+        Useful for getting fresh context outside of tick cycle.
+
+        Returns:
+            Freshly synthesized context dict or None
+        """
+        context_service = self.get_context_service()
+        if context_service:
+            context = context_service.synthesize()
+            context_service.inject(context)
+            return context.to_dict()
+        return None
+
     # =========================================================================
     # GAD-000: Discoverability & Observability
     # =========================================================================
@@ -338,9 +405,11 @@ class OpusAssistantPlugin(KernelPlugin):
 
         Returns structured data about what this plugin can do.
         """
+        context_service = self.get_context_service()
+
         return {
-            "version": self._config.get("plugin", {}).get("version", "1.1.0"),
-            "phase": self._config.get("plugin", {}).get("phase", 1),
+            "version": self._config.get("plugin", {}).get("version", "1.2.0"),
+            "phase": self._config.get("plugin", {}).get("phase", 2),
             "operations": [
                 "verify",
                 "detect_drift",
@@ -350,6 +419,10 @@ class OpusAssistantPlugin(KernelPlugin):
                 "has_existing_opus",
                 "get_config",
                 "reload_config",
+                # Phase 2: Context
+                "get_current_context",
+                "get_system_prompt_fragment",
+                "synthesize_context",
             ],
             "capabilities": [
                 "opus.verify",
@@ -358,6 +431,9 @@ class OpusAssistantPlugin(KernelPlugin):
                 "opus.preserve",
                 "opus.config",
                 "opus.tick",
+                # Phase 2: Dynamic Context
+                "opus.context",
+                "opus.prompt",
             ],
             "architecture": {
                 "role": "backend",
@@ -365,6 +441,7 @@ class OpusAssistantPlugin(KernelPlugin):
                 "provides": "data_only",
                 "config_pattern": "fraktale",
                 "kernel_tick": self._tick_handler is not None,
+                "context_service": context_service is not None,
             },
             "workspace": str(self._workspace) if self._workspace else None,
         }
@@ -373,13 +450,13 @@ class OpusAssistantPlugin(KernelPlugin):
         """
         GAD-000 Test 2: Observability.
 
-        Returns current plugin status.
+        Returns current plugin status including Phase 2 context info.
         """
         status = {
             "plugin_id": "opus_assistant",
             "status": "active" if self._kernel else "inactive",
-            "version": self._config.get("plugin", {}).get("version", "1.1.0"),
-            "phase": self._config.get("plugin", {}).get("phase", 1),
+            "version": self._config.get("plugin", {}).get("version", "1.2.0"),
+            "phase": self._config.get("plugin", {}).get("phase", 2),
             "workspace": str(self._workspace) if self._workspace else None,
             "has_opus_md": self.has_existing_opus() if self._workspace else False,
             "config_loaded": self._config_loader is not None,
@@ -395,5 +472,17 @@ class OpusAssistantPlugin(KernelPlugin):
         # Add tick handler state if available
         if self._tick_handler:
             status["tick_state"] = self._tick_handler.get_state()
+
+        # Phase 2: Add context service status
+        context_service = self.get_context_service()
+        if context_service:
+            status["context_service_active"] = True
+            status["context_synthesis_count"] = context_service.get_synthesis_count()
+            current_context = self.get_current_context()
+            if current_context:
+                status["current_system_health"] = current_context.get("health", {}).get("status")
+                status["context_hash"] = current_context.get("context_hash", "")[:16]
+        else:
+            status["context_service_active"] = False
 
         return status
