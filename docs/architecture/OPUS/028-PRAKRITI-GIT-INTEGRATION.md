@@ -1,11 +1,13 @@
 # OPUS-028: Prakriti Git Integration
 
-> **Status**: 📋 PLANNING
+> **Status**: ✅ IMPLEMENTED (Phase 1-4 Complete, Phase 5-6 Pending)
 > **Created**: 2025-12-12
+> **Implemented**: 2025-12-12
 > **Depends On**: OPUS-027 (Master Plan), OPUS-009 (Concept), OPUS-024 (VISNU Protection)
 > **Purpose**: Complete GitState write operations and kernel integration
 > **Problem**: 233 auto-commits in 2 days, InterfacePlugin bypasses Prakriti
 > **Scope**: Git operations ONLY (5% of unified state - see OPUS-027 for full picture)
+> **Remaining**: Phase 5 (Config Extension) and Phase 6 (Tests)
 
 <!-- @HARNESS
 files:
@@ -709,14 +711,14 @@ git log --oneline --since="1 hour ago" | grep -E "chore\(|auto:" | wc -l
 
 ## Success Criteria
 
-- [ ] `prakriti.git.commit()` works
-- [ ] VISNU protected files are rejected
-- [ ] Kernel boot commits dirty state (crash recovery)
-- [ ] Kernel shutdown commits final state
-- [ ] InterfacePlugin no longer has `_auto_commit_ui_files()`
+- [x] `prakriti.git.commit()` works
+- [x] VISNU protected files are rejected
+- [x] Kernel boot commits dirty state (crash recovery)
+- [x] Kernel shutdown commits final state
+- [x] InterfacePlugin no longer has `_auto_commit_ui_files()`
 - [ ] Git history is clean (~2 commits per session)
-- [ ] All existing tests pass
-- [ ] New tests pass
+- [x] All existing tests pass
+- [ ] New tests pass (Phase 6)
 
 ---
 
@@ -741,4 +743,4 @@ If issues arise:
 
 **Author**: Claude Opus 4
 **Date**: 2025-12-12
-**Status**: 📋 PLANNING - Git operations only (see OPUS-027 for full scope)
+**Status**: ✅ IMPLEMENTED (Phase 1-4) - Git operations only (see OPUS-027 for full scope)

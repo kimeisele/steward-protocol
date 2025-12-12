@@ -2,13 +2,13 @@
 
 > **Status**: ACTIVE
 > **Created**: 2025-12-08
-> **Last Updated**: 2025-12-09 (Kernel LOCKED)
+> **Last Updated**: 2025-12-12 (OPUS-027/028 Implemented)
 > **Symbol**: 8 = Infinity Rotated = Krishna's Number
 > **Purpose**: Master index of all OPUS architecture documents
 
 ---
 
-## Document Registry (VERIFIED 2025-12-09)
+## Document Registry (VERIFIED 2025-12-12)
 
 | # | Document | Status | Notes |
 |---|----------|--------|-------|
@@ -20,11 +20,16 @@
 | 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | ✅ VERIFIED | 5/6 tests pass |
 | 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | ✅ IMPLEMENTED | Three Laws in code |
 | 008 | **This Index** | 📍 ACTIVE | You are here |
-| 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | ✅ IMPLEMENTED | state/prakriti.py |
+| 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | ✅ IMPLEMENTED | state/prakriti.py (concept) |
 | 010 | [Verification Protocol](010-VERIFICATION-PROTOCOL.md) | ✅ VERIFIED | Trust Score 100% |
 | 011 | [Layered Router](011-LAYERED-ROUTER.md) | ✅ IMPLEMENTED | layered_router.py |
 | 012 | [System Agents](012-SYSTEM-AGENTS.md) | 📋 PLANNING | BRAHMIN Architecture |
 | 014 | [Unified UI Transparency](014-UNIFIED-UI-TRANSPARENCY.md) | 📋 DRAFT | STATE.md, ECONOMY.md |
+| 020 | [Container Migration](020-CONTAINER-MIGRATION-READY.md) | 📋 READY | Not tested |
+| 024 | [Kernel Protection (VISNU)](024-KERNEL-PROTECTION-AUDIT.md) | ✅ IMPLEMENTED | 21 files protected |
+| 025 | [PATH Lobotomy Crisis](025-PATH-LOBOTOMY-CRISIS.md) | 🔴 CRITICAL | 75% remaining |
+| 027 | [Unified State Implementation](027-UNIFIED-STATE-IMPLEMENTATION.md) | ✅ IMPLEMENTED | Master plan for state |
+| 028 | [Prakriti Git Integration](028-PRAKRITI-GIT-INTEGRATION.md) | ✅ IMPLEMENTED | Phases 1-4 complete |
 
 ---
 
@@ -43,6 +48,11 @@
 | `_render_error_placeholder` (Law 2) | `plugin_main.py:178` | ✅ |
 | `_last_content_hash` (Law 3) | `renderers/base.py:52` | ✅ |
 | Idempotency keys | `scheduling/in_memory.py:47` | ✅ |
+| `LedgerState` | `state/ledger_state.py` | ✅ |
+| `GitState.commit()` | `state/git_state.py:313` | ✅ |
+| `VISNU_PROTECTED` | `state/git_state.py:25` | ✅ |
+| `Prakriti.begin_session()` | `state/prakriti.py` | ✅ |
+| `Prakriti.end_session()` | `state/prakriti.py` | ✅ |
 
 ---
 
@@ -56,6 +66,11 @@ The kernel is now **ETERNAL** (1410 LOC, locked via pre-commit hook).
 
 ## 🔧 Remaining Technical Debt
 
+### 🔴 CRITICAL: OPUS-025 PATH Lobotomy
+- [ ] 75% of path migrations still pending
+- [ ] Hardcoded paths need config/dynamic resolution
+- See docs/architecture/OPUS/025-PATH-LOBOTOMY-CRISIS.md
+
 ### OPUS-005: Remaining Phases
 - [ ] PlaybookRouter cleanup
 - [ ] CircuitExecutor split
@@ -63,6 +78,10 @@ The kernel is now **ETERNAL** (1410 LOC, locked via pre-commit hook).
 
 ### OPUS-014: New Renderers
 - [ ] STATE.md, ECONOMY.md, MATRIX.md
+
+### OPUS-027/028: Final Phases
+- [ ] Config extension (auto_commit_mode)
+- [ ] Test suite for state write ops
 
 ---
 
@@ -76,5 +95,6 @@ The kernel is now **ETERNAL** (1410 LOC, locked via pre-commit hook).
 
 ---
 
-**Last Verified**: 2025-12-09
+**Last Verified**: 2025-12-12
 **Kernel**: 🔒 LOCKED (1410 LOC ETERNAL)
+**State Management**: ✅ OPUS-027/028 Implemented
