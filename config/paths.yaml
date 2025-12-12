@@ -1,20 +1,53 @@
 # Paths Configuration
-# All system paths - eliminates 105 hardcoded Path() violations
+# All system paths - eliminates 250+ hardcoded Path() violations
+#
+# OPUS-025: Strict Scope Separation (ADR-025a, ADR-025b)
+# - tool:    GLOBAL SCOPE - XDG-compliant paths for steward CLI
+# - project: LOCAL SCOPE  - .vibe/ paths for vibe kernel instance
+# - data:    Project data directory
+# - system:  Runtime paths (DEPRECATED - migrating to project.runtime)
 #
 # Usage in code:
 #   path = config.paths.data.resolve("economy_db")
 #   path = config.paths.cartridges.resolve("system")
 #   path = config.paths.knowledge.resolve("circuits")
-#   path = config.paths.project.resolve("workspace_root")
+#   path = config.paths.project.resolve("state_db")
+#   path = config.paths.tool.resolve("lib")  # XDG with fallback
 
 # Phase 2: Extended with missing path keys (workspace, archive, intelligence, etc.)
 
+# ================================================
+# GLOBAL SCOPE: The Tool (steward CLI) - XDG Compliant
+# ================================================
+# NOTE: XDG environment variable resolution happens in Python's resolve() method.
+# These are defaults; XDG_CONFIG_HOME, XDG_DATA_HOME, XDG_CACHE_HOME override them.
+tool:
+  config_root: "~/.config/steward"
+  data_root: "~/.local/share/steward"
+  cache_root: "~/.cache/steward"
+  # Derived paths
+  keys: "{config_root}/keys"
+  profiles: "{config_root}/profiles"
+  lib: "{data_root}/lib"
+  models: "{data_root}/models"
+  library: "{data_root}/library"
+
+# ================================================
+# LOCAL SCOPE: The Instance (vibe kernel)
+# ================================================
 project:
+  vibe_root: ".vibe"
+  state_db: "{vibe_root}/vibe.db"
+  runtime: "{vibe_root}/runtime"
+  sandboxes: "{vibe_root}/sandboxes"
+  logs: "{vibe_root}/logs"
+  memory: "{vibe_root}/state/memory.json"
+  tasks: "{vibe_root}/state/tasks"
   workspace_root: "."
   diplomatic_bag: "diplomatic_bag"
   intelligence: "intelligence"
-  archive: ".vibe/state/archive"
-  migration: ".vibe/migrations"
+  archive: "{vibe_root}/state/archive"
+  migration: "{vibe_root}/migrations"
   starter_packs: "knowledge/starter_packs"
 
 data:

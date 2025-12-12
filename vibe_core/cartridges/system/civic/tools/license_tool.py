@@ -156,7 +156,8 @@ class LicenseTool(Tool):
                 from vibe_core.phoenix import get_config
 
                 config = get_config()
-                self._license_db_path = Path(config.paths.data.registry) / "licenses.json"
+                # OPUS-025: Must use resolve() to expand template variables
+                self._license_db_path = Path(config.paths.data.resolve("registry")) / "licenses.json"
             except Exception:
                 # Fallback to XDG data dir
                 import os

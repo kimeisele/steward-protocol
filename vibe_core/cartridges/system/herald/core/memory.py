@@ -80,7 +80,8 @@ class EventLog:
                 from vibe_core.phoenix import get_config
 
                 config = get_config()
-                ledger_path = Path(config.paths.data.events) / "herald.jsonl"
+                # OPUS-025: Must use resolve() to expand template variables
+                ledger_path = Path(config.paths.data.resolve("events")) / "herald.jsonl"
             except Exception:
                 # Fallback to XDG data dir
                 import os
