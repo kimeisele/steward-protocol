@@ -90,18 +90,29 @@ class BootSequence:
 
         # Resolve dynamic context from PromptContext resolvers
         print("🔌 Resolving dynamic context...", file=sys.stderr)
-        resolved = self.prompt_context.resolve(
-            [
-                "kernel_status",
-                "kernel_agents",
-                "kernel_agents_count",
-                "kernel_ledger_events",
-                "inbox_count",
-                "agenda_summary",
-                "git_sync_status",
-                "system_time",
-            ]
-        )
+        # Core keys (system-level context)
+        core_keys = [
+            "kernel_status",
+            "kernel_agents",
+            "kernel_agents_count",
+            "kernel_ledger_events",
+            "inbox_count",
+            "agenda_summary",
+            "git_sync_status",
+            "system_time",
+            # Core *_context keys (STEWARD Protocol Layer 1.5/1.6)
+            "user_context",
+            "team_context",
+        ]
+
+        # OPUS-029: Auto-discover PLUGIN context keys (SCALABLE PATTERN)
+        # Plugins can register "*_context" keys - they're auto-included!
+        # NO hardcoding of specific plugin keys here.
+        plugin_keys = [
+            key for key in self.prompt_context._resolvers.keys() if key.endswith("_context") and key not in core_keys
+        ]
+
+        resolved = self.prompt_context.resolve(core_keys + plugin_keys)
         context["resolved"] = resolved
 
         # Load project memory (semantic layer)

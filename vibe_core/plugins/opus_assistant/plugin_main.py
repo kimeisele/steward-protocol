@@ -123,7 +123,12 @@ class OpusAssistantPlugin(KernelPlugin):
             if not drift.get("healthy", True):
                 logger.warning(f"⚠️ OPUS drift: {len(drift.get('missing_files', []))} missing files")
 
-        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick)")
+        # OPUS-029 Phase 6: Register as PromptContext provider
+        # This is the SCALABLE pattern - plugins register their own resolvers
+        # WITHOUT modifying core files!
+        self._register_context_provider()
+
+        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + context provider)")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
@@ -166,6 +171,67 @@ class OpusAssistantPlugin(KernelPlugin):
             logger.debug("EventBus not available - tick handler disabled")
         except Exception as e:
             logger.debug(f"Could not setup kernel tick: {e}")
+
+    def _register_context_provider(self) -> None:
+        """
+        Register OPUS context with PromptContext (OPUS-029 Phase 6).
+
+        This is the SCALABLE pattern for plugin context injection:
+        1. Plugin implements a resolver function
+        2. Plugin registers the resolver with PromptContext
+        3. Core PromptComposer includes ALL resolved plugin contexts
+        4. NO modification to core files required!
+
+        The resolver returns formatted markdown that gets injected into
+        CLI prompts, giving LLM operators the "State of Mind" context.
+        """
+        try:
+            from vibe_core.runtime.prompt_context import get_prompt_context
+
+            prompt_context = get_prompt_context()
+
+            # Register our resolver - it returns formatted OPUS context
+            prompt_context.register("opus_context", self._resolve_opus_context)
+
+            logger.debug("Registered opus_context resolver with PromptContext")
+        except ImportError:
+            logger.debug("PromptContext not available - context provider disabled")
+        except Exception as e:
+            logger.debug(f"Could not register context provider: {e}")
+
+    def _resolve_opus_context(self) -> str:
+        """
+        Resolver function for PromptContext.
+
+        Returns formatted OPUS "State of Mind" context that gets
+        injected into CLI prompts for LLM operators.
+
+        Returns:
+            Formatted markdown string with current system state
+        """
+        # Try to get live context from tick handler first
+        if self._tick_handler:
+            fragment = self._tick_handler.get_system_prompt_fragment()
+            if fragment:
+                return fragment
+
+        # Fallback: Build minimal context from available data
+        try:
+            workspace = self._workspace or Path.cwd()
+            opus_exists = (workspace / "OPUS.md").exists()
+
+            # Quick verification if available
+            quick_check = self.quick_drift_check()
+            health = "✅ Healthy" if quick_check.get("healthy", True) else "⚠️ Drift detected"
+            tracked = quick_check.get("total_tracked", 0)
+
+            return f"""**🎯 OPUS State of Mind:**
+- OPUS.md: {"exists" if opus_exists else "not found"}
+- Health: {health}
+- Tracked files: {tracked}
+- Plugin: opus_assistant v{self._config.get("plugin", {}).get("version", "1.5.0")}"""
+        except Exception as e:
+            return f"**🎯 OPUS:** Context unavailable ({e})"
 
     # =========================================================================
     # Public API - DATA ONLY, NO RENDERING!
