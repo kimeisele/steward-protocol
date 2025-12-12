@@ -41,6 +41,11 @@ absent:
 
 ## Document Index
 
+### Master
+| Doc | Title | Focus |
+|-----|-------|-------|
+| [000](000-INDEX.md) | **Index** | Master navigation (start here) |
+
 ### Foundation (001-010)
 | Doc | Title | Focus |
 |-----|-------|-------|
@@ -50,8 +55,7 @@ absent:
 | [004](004-BOOT-SEQUENCE-AUDIT.md) | Boot Sequence | Kernel boot analysis |
 | [005](005-UNIFICATION-ROADMAP.md) | Unification | Consolidation plan |
 | [006](006-GAD000-COMPLIANCE-AUDIT.md) | GAD-000 Compliance | Read-without-execute audit |
-| [007](007-UNIFIED-UI-RENDERING.md) | Unified UI | Renderer architecture |
-| [008](008-INDEX.md) | Index | Doc navigation |
+| [008](008-PRAKRITI-PROTOTYPE.md) | Prakriti Prototype | Internal state workflow |
 | [009](009-UNIFIED-STATE-PRAKRITI.md) | Prakriti State | State management |
 | [010](010-VERIFICATION-PROTOCOL.md) | Verification | @HARNESS system |
 
@@ -74,6 +78,11 @@ absent:
 | [020](020-CONTAINER-MIGRATION.md) | Container Migration | Full container strategy |
 | [021](021-TEST-ARCHITECTURE.md) | Test Architecture | Test system design |
 | [022](022-KERNEL-SCALING.md) | Kernel Scaling | Ephemeral cities, scheduler, federation |
+
+### Plugins (plugins/)
+| Doc | Title | Focus |
+|-----|-------|-------|
+| [029](plugins/029-OPUS-PLUGIN-ARCHITECTURE.md) | OPUS Plugin | Fractal verification plugin |
 
 ---
 
