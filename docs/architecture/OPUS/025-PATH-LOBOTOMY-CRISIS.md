@@ -35,7 +35,7 @@ wiring:
   - pattern: "paths.system.resolve"
     in: vibe_core/kernel_impl.py
   - pattern: "XDG_CONFIG_HOME"
-    in: vibe_core/runtime_extensions.py
+    in: vibe_core/phoenix/sections/paths/section_main.py
 absent:
   # Phase 1 COMPLETE: kernel_impl.py now uses .resolve() consistently
   # Pattern 'paths\.data\.[a-z_]+[^(]' removed (false positive on .resolve())
