@@ -456,22 +456,6 @@ class VerificationPanel(BasePanel):
                 signal.alarm(0)
                 signal.signal(signal.SIGALRM, old_handler)
 
-        # Lazy kernel cache (boot once per verification run)
-        _kernel_cache: Dict[str, Any] = {}
-
-        def get_test_kernel():
-            """Get cached test kernel instance."""
-            if "kernel" not in _kernel_cache:
-                try:
-                    # Use RealVibeKernel with in-memory ledger for semantic checks
-                    from vibe_core.kernel_impl import RealVibeKernel
-
-                    _kernel_cache["kernel"] = RealVibeKernel(ledger_path=":memory:", load_plugins=True)
-                except Exception as e:
-                    _kernel_cache["kernel"] = None
-                    _kernel_cache["error"] = str(e)
-            return _kernel_cache.get("kernel")
-
         for check in semantics:
             check_type = check.get("type", "")
             check_name = check.get("name", check_type)
@@ -479,17 +463,39 @@ class VerificationPanel(BasePanel):
             try:
                 with timeout(TIMEOUT_SECONDS):
                     if check_type == "plugin_loaded":
-                        # Verify plugin exists in kernel
+                        # Verify plugin entry point is importable (no full kernel boot!)
+                        # This avoids infinite recursion: interface plugin -> OPUS verify -> kernel boot -> interface plugin...
                         plugin_name = check.get("plugin", "")
-                        kernel = get_test_kernel()
-                        if kernel is None:
-                            skipped.append(f"{check_name}: Kernel boot failed")
+                        plugin_dir = self._root / "vibe_core" / "plugins" / plugin_name
+
+                        if not plugin_dir.exists():
+                            failed.append(f"{check_name}: Plugin directory not found: {plugin_name}")
                             continue
 
-                        if hasattr(kernel, "_plugins_map") and plugin_name in kernel._plugins_map:
-                            passed.append(f"{check_name}: Plugin '{plugin_name}' loaded")
+                        manifest_json = plugin_dir / "manifest.json"
+                        plugin_main = plugin_dir / "plugin_main.py"
+
+                        if not manifest_json.exists():
+                            failed.append(f"{check_name}: manifest.json missing for '{plugin_name}'")
+                            continue
+
+                        if not plugin_main.exists():
+                            failed.append(f"{check_name}: plugin_main.py missing for '{plugin_name}'")
+                            continue
+
+                        # Try to import the plugin module (without full kernel)
+                        import importlib.util
+
+                        spec = importlib.util.spec_from_file_location(f"_plugin_{plugin_name}", plugin_main)
+                        if spec and spec.loader:
+                            try:
+                                module = importlib.util.module_from_spec(spec)
+                                spec.loader.exec_module(module)
+                                passed.append(f"{check_name}: Plugin '{plugin_name}' entry point valid")
+                            except Exception as e:
+                                failed.append(f"{check_name}: Plugin '{plugin_name}' import failed: {e}")
                         else:
-                            failed.append(f"{check_name}: Plugin '{plugin_name}' NOT loaded")
+                            failed.append(f"{check_name}: Could not load plugin module")
 
                     elif check_type == "method_exists":
                         # Verify method is callable via importlib
