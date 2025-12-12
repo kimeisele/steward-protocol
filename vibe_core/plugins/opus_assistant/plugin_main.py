@@ -569,6 +569,38 @@ class OpusAssistantPlugin(KernelPlugin):
         verification = self.verify(quick=quick)
         return format_verify_output(verification, json_mode=json)
 
+    def cmd_opus_refresh(self, quick: bool = True, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:refresh
+
+        Manually regenerate OPUS.md.
+
+        Args:
+            quick: If True, skip semantic checks (faster, default)
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Result dict with path and status
+        """
+        import time
+
+        start = time.time()
+        result_path = self.write_opus_md(quick=quick)
+        elapsed = time.time() - start
+
+        result = {
+            "status": "success",
+            "path": str(result_path),
+            "elapsed_ms": int(elapsed * 1000),
+            "quick_mode": quick,
+        }
+
+        if json:
+            return result
+
+        result["output"] = f"OPUS.md refreshed in {int(elapsed * 1000)}ms"
+        return result
+
     def get_observation_logger(self) -> Optional["ObservationLogger"]:
         """
         Get the ObservationLogger instance for direct logging.
