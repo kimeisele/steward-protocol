@@ -16,6 +16,7 @@ Each path category maps to actual code usage:
     - docs: OPERATIONS.md, SETTINGS.md, ENVOY.md
 """
 
+import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,22 +24,134 @@ from typing import Any, Dict, List
 
 
 @dataclass
+class ToolPathsConfig:
+    """
+    OPUS-025 ADR-025a: XDG-compliant global paths for steward CLI.
+
+    Global Scope: Keys, profiles, extensions, models, library.
+    These are user-level paths that persist across projects.
+
+    XDG Resolution:
+    - XDG_CONFIG_HOME override checked at resolve() time
+    - XDG_DATA_HOME override checked at resolve() time
+    - XDG_CACHE_HOME override checked at resolve() time
+    - Defaults to ~/.config/steward, ~/.local/share/steward, ~/.cache/steward
+    """
+
+    config_root: str = "~/.config/steward"
+    data_root: str = "~/.local/share/steward"
+    cache_root: str = "~/.cache/steward"
+    keys: str = "{config_root}/keys"
+    profiles: str = "{config_root}/profiles"
+    lib: str = "{data_root}/lib"
+    models: str = "{data_root}/models"
+    library: str = "{data_root}/library"
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ToolPathsConfig":
+        config_root = data.get("config_root", "~/.config/steward")
+        data_root = data.get("data_root", "~/.local/share/steward")
+        cache_root = data.get("cache_root", "~/.cache/steward")
+
+        def _resolve(key: str, default: str) -> str:
+            val = data.get(key, default)
+            val = val.replace("{config_root}", config_root)
+            val = val.replace("{data_root}", data_root)
+            val = val.replace("{cache_root}", cache_root)
+            return val
+
+        return cls(
+            config_root=config_root,
+            data_root=data_root,
+            cache_root=cache_root,
+            keys=_resolve("keys", "{config_root}/keys"),
+            profiles=_resolve("profiles", "{config_root}/profiles"),
+            lib=_resolve("lib", "{data_root}/lib"),
+            models=_resolve("models", "{data_root}/models"),
+            library=_resolve("library", "{data_root}/library"),
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "config_root": self.config_root,
+            "data_root": self.data_root,
+            "cache_root": self.cache_root,
+            "keys": self.keys,
+            "profiles": self.profiles,
+            "lib": self.lib,
+            "models": self.models,
+            "library": self.library,
+        }
+
+    def resolve(self, path_key: str) -> Path:
+        """
+        Resolve a tool path with XDG environment variable override.
+
+        ADR-025a: XDG environment variables take precedence:
+        - XDG_CONFIG_HOME overrides config_root
+        - XDG_DATA_HOME overrides data_root
+        - XDG_CACHE_HOME overrides cache_root
+        """
+        # Get XDG overrides
+        xdg_config = os.environ.get("XDG_CONFIG_HOME")
+        xdg_data = os.environ.get("XDG_DATA_HOME")
+        xdg_cache = os.environ.get("XDG_CACHE_HOME")
+
+        # Apply XDG overrides to root paths
+        config_root = f"{xdg_config}/steward" if xdg_config else self.config_root
+        data_root = f"{xdg_data}/steward" if xdg_data else self.data_root
+        cache_root = f"{xdg_cache}/steward" if xdg_cache else self.cache_root
+
+        # Handle root keys specially
+        if path_key == "config_root":
+            return Path(config_root).expanduser()
+        elif path_key == "data_root":
+            return Path(data_root).expanduser()
+        elif path_key == "cache_root":
+            return Path(cache_root).expanduser()
+
+        # Get the raw value
+        value = getattr(self, path_key, None)
+        if value is None:
+            raise KeyError(f"Unknown tool path: {path_key}")
+
+        # Resolve template variables with XDG-aware roots
+        resolved = value
+        resolved = resolved.replace("{config_root}", config_root)
+        resolved = resolved.replace("{data_root}", data_root)
+        resolved = resolved.replace("{cache_root}", cache_root)
+
+        return Path(resolved).expanduser()
+
+
+@dataclass
 class ProjectPathsConfig:
     """
-    Project-level workspace paths.
+    OPUS-025 ADR-025b: Local instance paths for vibe kernel.
+
+    Local Scope: Project-level .vibe/ paths for kernel state.
+    These are per-project paths that live inside the project directory.
 
     Maps to violations in:
-    - list_directory.py, search_file.py: workspace_root (Path.cwd())
-    - diplomacy_tool.py: diplomatic_bag
-    - curator_tool.py: intelligence
-    - task_manager.py: archive (.vibe/state/archive)
+    - boot_sequence.py: .vibe/vibe.db
+    - sqlite_store.py: .vibe/state/vibe_agency.db
+    - task_manager.py: .vibe/state, .vibe/config
+    - vfs.py, kernel_impl.py: /tmp/vibe_os (migrating to .vibe/runtime)
+    - engineer/cartridge_main.py: workspaces/sandbox (migrating to .vibe/sandboxes)
     """
 
+    vibe_root: str = ".vibe"
+    state_db: str = "{vibe_root}/vibe.db"
+    runtime: str = "{vibe_root}/runtime"
+    sandboxes: str = "{vibe_root}/sandboxes"
+    logs: str = "{vibe_root}/logs"
+    memory: str = "{vibe_root}/state/memory.json"
+    tasks: str = "{vibe_root}/state/tasks"
     workspace_root: str = "."
     diplomatic_bag: str = "diplomatic_bag"
     intelligence: str = "intelligence"
-    archive: str = ".vibe/state/archive"
-    migration: str = ".vibe/migrations"
+    archive: str = "{vibe_root}/state/archive"
+    migration: str = "{vibe_root}/migrations"
     starter_packs: str = "knowledge/starter_packs"
 
     @classmethod
@@ -52,17 +165,37 @@ class ProjectPathsConfig:
         else:
             default_root = "."
 
+        vibe_root = data.get("vibe_root", ".vibe")
+
+        def _resolve(key: str, default: str) -> str:
+            val = data.get(key, default)
+            return val.replace("{vibe_root}", vibe_root)
+
         return cls(
+            vibe_root=vibe_root,
+            state_db=_resolve("state_db", "{vibe_root}/vibe.db"),
+            runtime=_resolve("runtime", "{vibe_root}/runtime"),
+            sandboxes=_resolve("sandboxes", "{vibe_root}/sandboxes"),
+            logs=_resolve("logs", "{vibe_root}/logs"),
+            memory=_resolve("memory", "{vibe_root}/state/memory.json"),
+            tasks=_resolve("tasks", "{vibe_root}/state/tasks"),
             workspace_root=data.get("workspace_root", default_root),
             diplomatic_bag=data.get("diplomatic_bag", "diplomatic_bag"),
             intelligence=data.get("intelligence", "intelligence"),
-            archive=data.get("archive", ".vibe/state/archive"),
-            migration=data.get("migration", ".vibe/migrations"),
+            archive=_resolve("archive", "{vibe_root}/state/archive"),
+            migration=_resolve("migration", "{vibe_root}/migrations"),
             starter_packs=data.get("starter_packs", "knowledge/starter_packs"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "vibe_root": self.vibe_root,
+            "state_db": self.state_db,
+            "runtime": self.runtime,
+            "sandboxes": self.sandboxes,
+            "logs": self.logs,
+            "memory": self.memory,
+            "tasks": self.tasks,
             "workspace_root": self.workspace_root,
             "diplomatic_bag": self.diplomatic_bag,
             "intelligence": self.intelligence,
@@ -72,11 +205,12 @@ class ProjectPathsConfig:
         }
 
     def resolve(self, path_key: str) -> Path:
-        """Resolve a project path."""
+        """Resolve a project path with variable substitution."""
         value = getattr(self, path_key, None)
         if value is None:
             raise KeyError(f"Unknown project path: {path_key}")
-        return Path(value)
+        resolved = value.replace("{vibe_root}", self.vibe_root)
+        return Path(resolved)
 
 
 @dataclass
@@ -129,29 +263,35 @@ class DataPathsConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPathsConfig":
+        root = data.get("root", "data")
+
+        def _resolve(key: str, default: str) -> str:
+            val = data.get(key, default)
+            return val.replace("{root}", root)
+
         return cls(
-            root=data.get("root", "data"),
-            economy_db=data.get("economy_db", "data/economy.db"),
-            registry_citizens=data.get("registry_citizens", "data/registry/citizens.json"),
-            registry_licenses=data.get("registry_licenses", "data/registry/licenses.json"),
-            security_master_key=data.get("security_master_key", "data/security/master.key"),
-            ledger_audit_trail=data.get("ledger_audit_trail", "data/ledger/audit_trail.jsonl"),
-            ledger_kernel=data.get("ledger_kernel", "data/ledger/kernel.jsonl"),
-            ledger_violations=data.get("ledger_violations", "data/ledger/violations.jsonl"),
-            reports=data.get("reports", "data/reports"),
-            events_herald=data.get("events_herald", "data/events/herald.jsonl"),
-            identities=data.get("identities", "data/identities"),
-            federation_pokedex=data.get("federation_pokedex", "data/federation/pokedex.json"),
-            supreme_court=data.get("supreme_court", "data/supreme_court"),
+            root=root,
+            economy_db=_resolve("economy_db", "data/economy.db"),
+            registry_citizens=_resolve("registry_citizens", "data/registry/citizens.json"),
+            registry_licenses=_resolve("registry_licenses", "data/registry/licenses.json"),
+            security_master_key=_resolve("security_master_key", "data/security/master.key"),
+            ledger_audit_trail=_resolve("ledger_audit_trail", "data/ledger/audit_trail.jsonl"),
+            ledger_kernel=_resolve("ledger_kernel", "data/ledger/kernel.jsonl"),
+            ledger_violations=_resolve("ledger_violations", "data/ledger/violations.jsonl"),
+            reports=_resolve("reports", "data/reports"),
+            events_herald=_resolve("events_herald", "data/events/herald.jsonl"),
+            identities=_resolve("identities", "data/identities"),
+            federation_pokedex=_resolve("federation_pokedex", "data/federation/pokedex.json"),
+            supreme_court=_resolve("supreme_court", "data/supreme_court"),
             # Phase 2 additions
-            vibe_ledger=data.get("vibe_ledger", "data/vibe_ledger.db"),
-            library_catalog=data.get("library_catalog", "data/library/catalog.json"),
-            logs_transactions=data.get("logs_transactions", "data/logs/transactions.log"),
-            milk_ocean_db=data.get("milk_ocean_db", "data/milk_ocean.db"),
-            test_baselines=data.get("test_baselines", "data/test_baselines.json"),
-            test_mutations_log=data.get("test_mutations_log", "data/logs/test_mutations.log"),
-            governance_executed=data.get("governance_executed", "data/governance/executed"),
-            vibe_agency_db=data.get("vibe_agency_db", "data/vibe_agency.db"),
+            vibe_ledger=_resolve("vibe_ledger", "data/vibe_ledger.db"),
+            library_catalog=_resolve("library_catalog", "data/library/catalog.json"),
+            logs_transactions=_resolve("logs_transactions", "data/logs/transactions.log"),
+            milk_ocean_db=_resolve("milk_ocean_db", "data/milk_ocean.db"),
+            test_baselines=_resolve("test_baselines", "data/test_baselines.json"),
+            test_mutations_log=_resolve("test_mutations_log", "data/logs/test_mutations.log"),
+            governance_executed=_resolve("governance_executed", "data/governance/executed"),
+            vibe_agency_db=_resolve("vibe_agency_db", "data/vibe_agency.db"),
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -265,18 +405,24 @@ class KnowledgePathsConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "KnowledgePathsConfig":
+        root = data.get("root", "knowledge")
+
+        def _resolve(key: str, default: str) -> str:
+            val = data.get(key, default)
+            return val.replace("{root}", root)
+
         return cls(
-            root=data.get("root", "knowledge"),
-            circuits=data.get("circuits", "{root}/circuits"),
-            playbooks=data.get("playbooks", "{root}/playbooks"),
-            templates=data.get("templates", "{root}/templates"),
-            prompts=data.get("prompts", "{root}/prompts"),
+            root=root,
+            circuits=_resolve("circuits", "knowledge/circuits"),
+            playbooks=_resolve("playbooks", "knowledge/playbooks"),
+            templates=_resolve("templates", "knowledge/templates"),
+            prompts=_resolve("prompts", "knowledge/prompts"),
             config=data.get("config", "config"),
             matrix=data.get("matrix", "MATRIX.md"),
             legacy_circuits=data.get("legacy_circuits", "vibe_core/playbook/circuits"),
             legacy_playbooks=data.get("legacy_playbooks", "vibe_core/playbook/playbooks"),
             # Phase 2 additions
-            interface_templates=data.get("interface_templates", "{root}/interface/templates"),
+            interface_templates=_resolve("interface_templates", "knowledge/interface/templates"),
             soul=data.get("soul", "config/soul.yaml"),
         )
 
@@ -330,14 +476,20 @@ class SystemPathsConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SystemPathsConfig":
+        runtime_root = data.get("runtime_root", "/tmp/vibe_os")
+
+        def _resolve(key: str, default: str) -> str:
+            val = data.get(key, default)
+            return val.replace("{runtime_root}", runtime_root)
+
         return cls(
-            runtime_root=data.get("runtime_root", "/tmp/vibe_os"),
-            agents=data.get("agents", "{runtime_root}/agents"),
-            models=data.get("models", "{runtime_root}/models"),
-            cache=data.get("cache", "{runtime_root}/cache"),
-            logs=data.get("logs", "{runtime_root}/logs"),
+            runtime_root=runtime_root,
+            agents=_resolve("agents", "/tmp/vibe_os/agents"),
+            models=_resolve("models", "/tmp/vibe_os/models"),
+            cache=_resolve("cache", "/tmp/vibe_os/cache"),
+            logs=_resolve("logs", "/tmp/vibe_os/logs"),
             # Phase 2 additions
-            lineage_db=data.get("lineage_db", "{runtime_root}/kernel/lineage.db"),
+            lineage_db=_resolve("lineage_db", "/tmp/vibe_os/kernel/lineage.db"),
             library_path=data.get("library_path", "library"),
         )
 
@@ -446,6 +598,7 @@ class PathsConfig:
     section_id: str = "paths"
     source_file: str = "paths.yaml"
 
+    tool: ToolPathsConfig = field(default_factory=ToolPathsConfig)
     project: ProjectPathsConfig = field(default_factory=ProjectPathsConfig)
     data: DataPathsConfig = field(default_factory=DataPathsConfig)
     cartridges: CartridgePathsConfig = field(default_factory=CartridgePathsConfig)
@@ -457,6 +610,7 @@ class PathsConfig:
     def from_dict(cls, data: Dict[str, Any]) -> "PathsConfig":
         """Create PathsConfig from YAML dictionary."""
         return cls(
+            tool=ToolPathsConfig.from_dict(data.get("tool", {})),
             project=ProjectPathsConfig.from_dict(data.get("project", {})),
             data=DataPathsConfig.from_dict(data.get("data", {})),
             cartridges=CartridgePathsConfig.from_dict(data.get("cartridges", {})),
@@ -468,6 +622,7 @@ class PathsConfig:
     def to_dict(self) -> Dict[str, Any]:
         """Serialize to dictionary (for saving/export)."""
         return {
+            "tool": self.tool.to_dict(),
             "project": self.project.to_dict(),
             "data": self.data.to_dict(),
             "cartridges": self.cartridges.to_dict(),
