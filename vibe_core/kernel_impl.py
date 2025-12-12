@@ -945,6 +945,22 @@ class RealVibeKernel(VibeKernel):
         # OPUS-009: Inject kernel reference into Prakriti for Layer 2 access
         self.prakriti.inject_kernel(self)
 
+        # [OPUS-027] PRAKRITI ACTIVATION (The Awakening)
+        try:
+            # 1. Session Start (Ghost Lock Protocol)
+            self.prakriti.begin_session()
+
+            # 2. Consistency Check (Split-Brain Prevention)
+            self.prakriti.sync_ledger_git(strategy="git_wins")
+
+            # 3. Crash Recovery
+            if self.prakriti.is_dirty:
+                recovery = self.prakriti.recover_from_crash()
+                if recovery:
+                    logger.info(f"❤️‍🩹 Recovered state from previous crash: {recovery.git_sha[:7]}")
+        except Exception as e:
+            logger.error(f"❌ Prakriti Boot Failure: {e}")
+
         # PULSE: Write initial snapshot on boot
         self._pulse()
 
@@ -1167,6 +1183,16 @@ class RealVibeKernel(VibeKernel):
             )
             # Close lineage chain
             self.lineage.close()
+
+        # [OPUS-027] FINAL STATE PRESERVATION
+        try:
+            if hasattr(self, 'prakriti') and self.prakriti:
+                logger.info("💾 Preserving consciousness (Prakriti End Session)...")
+                result = self.prakriti.end_session()
+                if result:
+                    logger.info(f"✅ Final State Committed: {result.git_sha[:7]}")
+        except Exception as e:
+            logger.critical(f"❌ Failed to save final state: {e}")
 
         # Plugin Hook: Shutdown
         for plugin in self._plugins:
