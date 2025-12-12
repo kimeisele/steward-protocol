@@ -7,6 +7,59 @@
 
 ---
 
+<!-- @HARNESS
+files:
+  # Security Ring 0 - Core Orchestration
+  - path: vibe_core/kernel_impl.py
+    required: true
+  - path: vibe_core/kernel_ops.py
+    required: true
+  # Security Ring 0 - Plugin System
+  - path: vibe_core/plugin_protocol.py
+    required: true
+  - path: vibe_core/plugin_loader.py
+    required: true
+  # Security Ring 0 - Security (Sword, Shield, Gate)
+  - path: vibe_core/narasimha.py
+    required: true
+  - path: vibe_core/capability_registry.py
+    required: true
+  - path: vibe_core/bridge.py
+    required: true
+  # Governance Scripts
+  - path: scripts/governance/restore_kernel.sh
+    required: true
+  - path: scripts/governance/verify_kernel.py
+    required: true
+  - path: scripts/governance/kernel_hashes.json
+    required: true
+  # Pre-commit Hook Config
+  - path: .pre-commit-config.yaml
+    required: true
+  # Native Git Hook
+  - path: .githooks/pre-commit
+    required: true
+  # Claude Code SessionStart Hook
+  - path: .claude/hooks/session-start.sh
+    required: true
+tests:
+  - python scripts/governance/verify_kernel.py --verify
+wiring:
+  - pattern: "kernel-is-eternal"
+    in: .pre-commit-config.yaml
+  - pattern: "PROTECTED_FILES="
+    in: scripts/governance/restore_kernel.sh
+  - pattern: "kernel-integrity:"
+    in: .github/workflows/steward-ci.yml
+  - pattern: "core.hooksPath"
+    in: .claude/hooks/session-start.sh
+absent:
+  - pattern: "TODO.*kernel.*protection"
+    in: scripts/governance/restore_kernel.sh
+  - pattern: "FIXME.*VISNU"
+    in: vibe_core/kernel_impl.py
+-->
+
 ## Executive Summary
 
 Kernel protection is **THEATER**. Detection exists but is never called. Pre-commit only guards 1 of 3 files.

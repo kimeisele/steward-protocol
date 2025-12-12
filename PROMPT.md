@@ -216,7 +216,7 @@ Dein Job ist NICHT nur reaktiv auf Anfragen warten. Du MUSST proaktiv:
 ### 4. ARCHITECTURAL HEALTH CHECK
 **Bei JEDEM größeren Task:**
 ```
-□ OPUS-008 INDEX aktuell?
+□ OPUS-000 INDEX aktuell? (Master-Index - früher OPUS-008)
 □ Betroffene OPUS Docs aktualisiert?
 □ @HARNESS Patterns noch gültig?
 □ Cross-References korrekt?
@@ -225,14 +225,15 @@ Dein Job ist NICHT nur reaktiv auf Anfragen warten. Du MUSST proaktiv:
 
 ### 5. PRIORITÄTEN (Stand 2025-12-12)
 
-**CRITICAL (🔴):**
-- OPUS-025: PATH-LOBOTOMY - 75% noch offen
-- OPUS-027/028: State Management - Implementiert, InterfacePlugin noch dirty
+**RESOLVED (✅):**
+- OPUS-025: PATH-LOBOTOMY - 100% complete
+- OPUS-027/028: State Management + Prakriti - Fully wired, InterfacePlugin cleaned
+- OPUS-024: @HARNESS added
 
 **HIGH (🟠):**
-- OPUS-024: @HARNESS fehlt
 - OPUS-014: UI Transparency - Draft
 - OPUS-020: Container Migration - Ready but not tested
+- OPUS-029: Fractal OPUS Plugin - Planning in plugins/ subfolder
 
 **MEDIUM (🟡):**
 - OPUS-002: Phoenix Config - 4s→100ms
@@ -243,7 +244,7 @@ Dein Job ist NICHT nur reaktiv auf Anfragen warten. Du MUSST proaktiv:
 1. **OPUS Doc updaten** (Status, Evidence, Next Steps)
 2. **@HARNESS prüfen** (Patterns noch valid?)
 3. **Querverweise checken** (Andere Docs betroffen?)
-4. **OPUS-008 INDEX** aktualisieren wenn nötig
+4. **OPUS-000 INDEX** aktualisieren wenn nötig
 
 ### 7. VERBOTEN
 
