@@ -29,6 +29,17 @@ absent:
     in: vibe_core/phoenix/config.py
 config:
   - section: config_optimization
+semantic:
+  - type: method_exists
+    name: "phoenix_config_get"
+    class: PhoenixConfig
+    method: get
+    in: vibe_core/phoenix/config.py
+  - type: method_exists
+    name: "section_loader_discover"
+    class: SectionLoader
+    method: discover
+    in: vibe_core/phoenix/config.py
 -->
 
 ## Status

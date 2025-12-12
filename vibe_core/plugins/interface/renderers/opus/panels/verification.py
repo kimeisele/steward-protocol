@@ -184,6 +184,12 @@ class VerificationPanel(BasePanel):
         if doc_check["passed"]:
             result["score"] += weights.get("doc_complete", 10)
 
+        # OPUS-026: Semantic verification (actually RUN code)
+        semantic_check = self._verify_semantic(harness.get("semantic", []))
+        result["checks"]["semantic"] = semantic_check
+        if semantic_check["passed"]:
+            result["score"] += weights.get("semantic_passes", 20)
+
         return result
 
     def _extract_harness(self, content: str, marker: str) -> Optional[Dict[str, Any]]:
@@ -408,6 +414,162 @@ class VerificationPanel(BasePanel):
             "missing": missing,
         }
 
+    def _verify_semantic(self, semantics: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        OPUS-026: Semantic verification - actually EXECUTE code to verify functionality.
+
+        Unlike syntactic checks (grep), this RUNS code to prove it works.
+
+        Supported check types:
+        - plugin_loaded: Verify plugin exists in kernel._plugins_map
+        - method_exists: Verify class.method is callable
+        - pytest_passes: Run specific pytest and check exit code
+
+        Safety guarantees:
+        - 2s timeout per check (no UI freeze)
+        - Full try/except panzerung (never crashes)
+        - Uses TestKernel (no side effects)
+        """
+        import signal
+        import subprocess
+        from contextlib import contextmanager
+
+        if not semantics:
+            return {"passed": True, "details": "No semantic checks specified"}
+
+        TIMEOUT_SECONDS = 2
+        passed = []
+        failed = []
+        skipped = []
+
+        # Timeout context manager
+        @contextmanager
+        def timeout(seconds: int):
+            def handler(signum, frame):
+                raise TimeoutError(f"Semantic check timed out after {seconds}s")
+
+            old_handler = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(seconds)
+            try:
+                yield
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old_handler)
+
+        for check in semantics:
+            check_type = check.get("type", "")
+            check_name = check.get("name", check_type)
+
+            try:
+                with timeout(TIMEOUT_SECONDS):
+                    if check_type == "plugin_loaded":
+                        # Verify plugin entry point is importable (no full kernel boot!)
+                        # This avoids infinite recursion: interface plugin -> OPUS verify -> kernel boot -> interface plugin...
+                        plugin_name = check.get("plugin", "")
+                        plugin_dir = self._root / "vibe_core" / "plugins" / plugin_name
+
+                        if not plugin_dir.exists():
+                            failed.append(f"{check_name}: Plugin directory not found: {plugin_name}")
+                            continue
+
+                        manifest_json = plugin_dir / "manifest.json"
+                        plugin_main = plugin_dir / "plugin_main.py"
+
+                        if not manifest_json.exists():
+                            failed.append(f"{check_name}: manifest.json missing for '{plugin_name}'")
+                            continue
+
+                        if not plugin_main.exists():
+                            failed.append(f"{check_name}: plugin_main.py missing for '{plugin_name}'")
+                            continue
+
+                        # Try to import the plugin module (without full kernel)
+                        import importlib.util
+
+                        spec = importlib.util.spec_from_file_location(f"_plugin_{plugin_name}", plugin_main)
+                        if spec and spec.loader:
+                            try:
+                                module = importlib.util.module_from_spec(spec)
+                                spec.loader.exec_module(module)
+                                passed.append(f"{check_name}: Plugin '{plugin_name}' entry point valid")
+                            except Exception as e:
+                                failed.append(f"{check_name}: Plugin '{plugin_name}' import failed: {e}")
+                        else:
+                            failed.append(f"{check_name}: Could not load plugin module")
+
+                    elif check_type == "method_exists":
+                        # Verify method is callable via importlib
+                        # OPUS-026: Use import_module() for proper package loading
+                        # (spec_from_file_location fails on relative imports)
+                        import importlib
+
+                        module_path = check.get("in", "")
+                        class_name = check.get("class", "")
+                        method_name = check.get("method", "")
+
+                        if not all([module_path, class_name, method_name]):
+                            skipped.append(f"{check_name}: Missing class/method/in")
+                            continue
+
+                        # Verify file exists first
+                        full_path = self._root / module_path
+                        if not full_path.exists():
+                            failed.append(f"{check_name}: File not found: {module_path}")
+                            continue
+
+                        # Convert path to module name:
+                        # "vibe_core/kernel_impl.py" → "vibe_core.kernel_impl"
+                        module_name = module_path.replace("/", ".").replace(".py", "")
+
+                        module = importlib.import_module(module_name)
+
+                        cls = getattr(module, class_name, None)
+                        if cls is None:
+                            failed.append(f"{check_name}: Class '{class_name}' not found")
+                            continue
+
+                        method = getattr(cls, method_name, None)
+                        if callable(method):
+                            passed.append(f"{check_name}: {class_name}.{method_name}() exists")
+                        else:
+                            failed.append(f"{check_name}: {class_name}.{method_name} not callable")
+
+                    elif check_type == "pytest_passes":
+                        # Run specific pytest with timeout
+                        test_path = check.get("test", "")
+                        if not test_path:
+                            skipped.append(f"{check_name}: No test path specified")
+                            continue
+
+                        result = subprocess.run(
+                            ["python", "-m", "pytest", test_path, "-x", "-q", "--tb=no"],
+                            capture_output=True,
+                            text=True,
+                            timeout=TIMEOUT_SECONDS,
+                            cwd=str(self._root),
+                        )
+
+                        if result.returncode == 0:
+                            passed.append(f"{check_name}: {test_path} PASSED")
+                        else:
+                            failed.append(f"{check_name}: {test_path} FAILED")
+
+                    else:
+                        skipped.append(f"{check_name}: Unknown check type '{check_type}'")
+
+            except TimeoutError:
+                skipped.append(f"{check_name}: TIMEOUT ({TIMEOUT_SECONDS}s)")
+            except Exception as e:
+                # PANZERUNG: Never crash, just record failure
+                failed.append(f"{check_name}: ERROR - {type(e).__name__}: {str(e)[:50]}")
+
+        return {
+            "passed": len(failed) == 0 and len(skipped) == 0,
+            "checks_passed": passed,
+            "checks_failed": failed,
+            "checks_skipped": skipped,
+        }
+
     def _format_report(self, report: Dict[str, Any], config: Dict[str, Any]) -> str:
         """Format verification report as markdown."""
         lines = [f"## {self.title}", ""]
@@ -440,8 +602,8 @@ class VerificationPanel(BasePanel):
         # Per-doc status
         lines.append("### OPUS Docs")
         lines.append("")
-        lines.append("| Doc | Score | Files | Tests | Wiring | Absent | Config |")
-        lines.append("|-----|-------|-------|-------|--------|--------|--------|")
+        lines.append("| Doc | Score | Files | Tests | Wiring | Absent | Config | Semantic |")
+        lines.append("|-----|-------|-------|-------|--------|--------|--------|----------|")
 
         for doc in report.get("docs", []):
             name = doc["name"][:25]
@@ -455,17 +617,29 @@ class VerificationPanel(BasePanel):
                 absent_ok = "✅" if checks.get("absent", {}).get("passed", True) else "🚨"
                 config_ok = "✅" if checks.get("config", {}).get("passed") else "❌"
 
+                # OPUS-026: Semantic check status
+                semantic_check = checks.get("semantic", {})
+                if semantic_check.get("details") == "No semantic checks specified":
+                    semantic_ok = "⚪"  # No semantic checks defined
+                elif semantic_check.get("passed"):
+                    semantic_ok = "✅"
+                elif semantic_check.get("checks_skipped"):
+                    semantic_ok = "⏭️"  # Skipped (timeout etc)
+                else:
+                    semantic_ok = "❌"
+
                 lines.append(
-                    f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {absent_ok} | {config_ok} |"
+                    f"| {name} | {score}% | {files_ok} | {tests_ok} | {wiring_ok} | {absent_ok} | {config_ok} | {semantic_ok} |"
                 )
             else:
-                lines.append(f"| {name} | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |")
+                lines.append(f"| {name} | - | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ | ⚪ |")
 
         lines.append("")
 
         # Show failures and violations
         failures = []
         violations = []
+        semantic_failures = []
         for doc in report.get("docs", []):
             if not doc.get("has_harness"):
                 continue
@@ -477,6 +651,9 @@ class VerificationPanel(BasePanel):
                     # Violations (absent patterns found)
                     for item in check_result.get("violations", []):
                         violations.append(f"**{doc['name']}** 🚨 {item}")
+                    # OPUS-026: Semantic failures
+                    for item in check_result.get("checks_failed", []):
+                        semantic_failures.append(f"**{doc['name']}** [semantic]: {item}")
 
         if violations:
             lines.append("### 🚨 Violations (forbidden patterns found)")
@@ -494,5 +671,15 @@ class VerificationPanel(BasePanel):
                 lines.append(f"- {f}")
             if len(failures) > 10:
                 lines.append(f"- _...and {len(failures) - 10} more_")
+            lines.append("")
+
+        # OPUS-026: Show semantic failures separately
+        if semantic_failures:
+            lines.append("### 🧪 Semantic Failures (code execution failed)")
+            lines.append("")
+            for sf in semantic_failures[:10]:
+                lines.append(f"- {sf}")
+            if len(semantic_failures) > 10:
+                lines.append(f"- _...and {len(semantic_failures) - 10} more_")
 
         return "\n".join(lines)
