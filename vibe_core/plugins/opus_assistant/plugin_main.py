@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from .core.config_loader import ConfigLoader
     from .core.context_service import OpusContextService
     from .core.drift_detector import DriftDetector
+    from .core.observation_logger import ObservationLogger
     from .core.opus_generator import OpusGenerator
     from .core.verification_logic import VerificationEngine
     from .events.kernel_tick import KernelTickHandler
@@ -486,3 +487,74 @@ class OpusAssistantPlugin(KernelPlugin):
             status["context_service_active"] = False
 
         return status
+
+    # =========================================================================
+    # Phase 3: CLI Command Handlers
+    # =========================================================================
+
+    def cmd_opus_status(self, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:status
+
+        Shows the current "State of Mind" - live context from the system.
+
+        Args:
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Formatted status dict
+        """
+        from .cli.commands import format_status_output
+
+        context = self.get_current_context()
+        return format_status_output(context, json_mode=json)
+
+    def cmd_opus_log(self, limit: int = 20, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:log
+
+        Shows journal entries from OPUS.md (parsed observations).
+
+        Args:
+            limit: Max entries to show
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Formatted log dict
+        """
+        from .cli.commands import format_log_output, parse_journal_from_opus
+
+        workspace = self._workspace or Path.cwd()
+        opus_path = workspace / "OPUS.md"
+
+        observations = parse_journal_from_opus(opus_path)
+        return format_log_output(observations, limit=limit, json_mode=json)
+
+    def cmd_opus_verify(self, quick: bool = False, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:verify
+
+        Manual trigger for verification loop.
+
+        Args:
+            quick: If True, skip semantic checks (faster)
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Formatted verification dict
+        """
+        from .cli.commands import format_verify_output
+
+        verification = self.verify(quick=quick)
+        return format_verify_output(verification, json_mode=json)
+
+    def get_observation_logger(self) -> Optional["ObservationLogger"]:
+        """
+        Get the ObservationLogger instance for direct logging.
+
+        Returns:
+            ObservationLogger or None if tick handler not active
+        """
+        if self._tick_handler:
+            return self._tick_handler.get_observation_logger()
+        return None
