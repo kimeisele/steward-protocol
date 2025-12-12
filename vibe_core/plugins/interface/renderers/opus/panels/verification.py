@@ -499,7 +499,9 @@ class VerificationPanel(BasePanel):
 
                     elif check_type == "method_exists":
                         # Verify method is callable via importlib
-                        import importlib.util
+                        # OPUS-026: Use import_module() for proper package loading
+                        # (spec_from_file_location fails on relative imports)
+                        import importlib
 
                         module_path = check.get("in", "")
                         class_name = check.get("class", "")
@@ -509,29 +511,28 @@ class VerificationPanel(BasePanel):
                             skipped.append(f"{check_name}: Missing class/method/in")
                             continue
 
-                        # Convert path to module
+                        # Verify file exists first
                         full_path = self._root / module_path
                         if not full_path.exists():
                             failed.append(f"{check_name}: File not found: {module_path}")
                             continue
 
-                        spec = importlib.util.spec_from_file_location("_check_module", full_path)
-                        if spec and spec.loader:
-                            module = importlib.util.module_from_spec(spec)
-                            spec.loader.exec_module(module)
+                        # Convert path to module name:
+                        # "vibe_core/kernel_impl.py" → "vibe_core.kernel_impl"
+                        module_name = module_path.replace("/", ".").replace(".py", "")
 
-                            cls = getattr(module, class_name, None)
-                            if cls is None:
-                                failed.append(f"{check_name}: Class '{class_name}' not found")
-                                continue
+                        module = importlib.import_module(module_name)
 
-                            method = getattr(cls, method_name, None)
-                            if callable(method):
-                                passed.append(f"{check_name}: {class_name}.{method_name}() exists")
-                            else:
-                                failed.append(f"{check_name}: {class_name}.{method_name} not callable")
+                        cls = getattr(module, class_name, None)
+                        if cls is None:
+                            failed.append(f"{check_name}: Class '{class_name}' not found")
+                            continue
+
+                        method = getattr(cls, method_name, None)
+                        if callable(method):
+                            passed.append(f"{check_name}: {class_name}.{method_name}() exists")
                         else:
-                            failed.append(f"{check_name}: Could not load module")
+                            failed.append(f"{check_name}: {class_name}.{method_name} not callable")
 
                     elif check_type == "pytest_passes":
                         # Run specific pytest with timeout
