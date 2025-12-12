@@ -90,6 +90,9 @@ class OpusMdWriter:
         lines.append(self._render_header())
 
         # LIVE sections (generated dynamically)
+        lines.append(self._render_state_of_mind())  # NEW: The "soul" of the system
+        lines.append(self._render_system_journal())  # NEW: What the system observed
+        lines.append(self._render_circuit_status())  # NEW: Cognitive circuits
         lines.append(self._render_verification(quick=quick))
         lines.append(self._render_architecture_plans())
         lines.append(self._render_prakriti_state())
@@ -126,6 +129,273 @@ class OpusMdWriter:
 
 ---
 """
+
+    def _render_state_of_mind(self) -> str:
+        """
+        Render the 🧠 State of Mind section.
+
+        This is the "soul" of the system - what the agent is thinking.
+        Synthesized from all three Prakriti layers.
+        """
+        lines = [f"{self.LIVE_START}state_of_mind -->"]
+        lines.append("## 🧠 State of Mind")
+        lines.append("")
+        lines.append("*What the system knows right now (synthesized from Prakriti)*")
+        lines.append("")
+
+        try:
+            from vibe_core.state.prakriti import Prakriti
+
+            prakriti = Prakriti(self._root)
+
+            # Layer 1: Sthula (Physical)
+            lines.append("### Layer 1 - Sthula (Physical Reality)")
+            lines.append("")
+            try:
+                git_status = prakriti.git.status()
+                branch = git_status.get("branch", "unknown")
+                sha = git_status.get("sha", "unknown")[:8]
+                dirty = git_status.get("dirty", False)
+
+                status_icon = "⚠️ Uncommitted" if dirty else "✅ Clean"
+                lines.append(f"- **Branch:** `{branch}` @ `{sha}`")
+                lines.append(f"- **Working Tree:** {status_icon}")
+
+                # Show uncommitted files if dirty
+                if dirty:
+                    try:
+                        dirty_files = prakriti.git.dirty_files() if hasattr(prakriti.git, "dirty_files") else []
+                        if dirty_files:
+                            lines.append(f"- **Uncommitted:** {', '.join(dirty_files[:5])}")
+                            if len(dirty_files) > 5:
+                                lines.append(f"  _...and {len(dirty_files) - 5} more_")
+                    except Exception:
+                        pass
+            except Exception as e:
+                lines.append(f"- ❌ Git unavailable: {e}")
+            lines.append("")
+
+            # Layer 2: Prana (Runtime)
+            lines.append("### Layer 2 - Prana (Runtime Energy)")
+            lines.append("")
+            try:
+                if self._kernel:
+                    kernel_status = self._kernel.status.value
+                    agent_count = len(getattr(self._kernel, "_agents", {}))
+                    status_icon = "🟢 Running" if kernel_status == "RUNNING" else "⚪ Stopped"
+                    lines.append(f"- **Kernel:** {status_icon}")
+                    lines.append(f"- **Agents:** {agent_count} active")
+                else:
+                    lines.append("- **Kernel:** ⚪ Offline")
+                    lines.append("- **Agents:** 0 active")
+
+                # Session info
+                session = getattr(prakriti, "session", None)
+                if session:
+                    lines.append(f"- **Session:** `{session.session_id[:12]}...`")
+                else:
+                    lines.append("- **Session:** Standalone")
+            except Exception as e:
+                lines.append(f"- ❌ Runtime unavailable: {e}")
+            lines.append("")
+
+            # Layer 3: Purusha (Identity)
+            lines.append("### Layer 3 - Purusha (Cognitive Identity)")
+            lines.append("")
+            try:
+                # Ephemeral thoughts
+                thoughts = prakriti.ephemeral.get_thoughts() if hasattr(prakriti.ephemeral, "get_thoughts") else []
+                thought_count = len(thoughts) if thoughts else 0
+                lines.append(f"- **Ephemeral Thoughts:** {thought_count}")
+
+                # Active persona
+                try:
+                    personas = prakriti.personas
+                    active = personas.status().get("active_persona") if hasattr(personas, "status") else None
+                    if active:
+                        lines.append(f"- **Active Persona:** `{active}`")
+                    else:
+                        lines.append("- **Active Persona:** None")
+                except Exception:
+                    lines.append("- **Active Persona:** None")
+            except Exception as e:
+                lines.append(f"- ❌ Identity unavailable: {e}")
+            lines.append("")
+
+            # Focus Areas (what needs attention)
+            lines.append("### 🎯 Focus Areas")
+            lines.append("")
+            focus_areas = []
+
+            # Derive focus from state
+            try:
+                git_status = prakriti.git.status()
+                if git_status.get("dirty"):
+                    focus_areas.append("Commit pending changes")
+            except Exception:
+                pass
+
+            # Check drift
+            try:
+                from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
+
+                detector = DriftDetector(workspace_root=self._root)
+                quick = detector.quick_check()
+                if not quick.get("healthy", True):
+                    focus_areas.append("Documentation drift detected")
+            except Exception:
+                pass
+
+            if focus_areas:
+                for area in focus_areas:
+                    lines.append(f"- {area}")
+            else:
+                lines.append("- _System is healthy, no immediate focus needed_")
+
+        except Exception as e:
+            lines.append(f"_State of Mind synthesis failed: {e}_")
+
+        lines.append("")
+        lines.append(self.LIVE_END)
+        return "\n".join(lines)
+
+    def _render_system_journal(self) -> str:
+        """
+        Render the 📓 System Journal section.
+
+        The observation log - what the system has noticed.
+        Read from existing OPUS.md journal or ObservationLogger.
+        """
+        lines = [f"{self.LIVE_START}system_journal -->"]
+        lines.append("## 📓 System Journal")
+        lines.append("")
+        lines.append("*Recent observations and insights from the system*")
+        lines.append("")
+
+        # Try to get observations from the ObservationLogger
+        observations = []
+
+        try:
+
+            # If there's an existing OPUS.md, parse journal from it
+            if self._opus_path.exists():
+                content = self._opus_path.read_text()
+                # Parse existing journal entries
+                import re
+
+                journal_pattern = re.compile(
+                    r"- `(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})` ([^\s]+) \*\*\[([^\]]+)\]\*\* (.+)", re.MULTILINE
+                )
+                matches = journal_pattern.findall(content)
+                for ts, icon, source, message in matches[:20]:
+                    observations.append(
+                        {"timestamp": ts, "severity": icon, "source": source, "message": message.strip()}
+                    )
+        except Exception:
+            pass
+
+        if observations:
+            lines.append("| Time | Severity | Source | Message |")
+            lines.append("|------|----------|--------|---------|")
+            for obs in observations[:15]:  # Limit to 15 entries
+                ts = obs["timestamp"][-8:]  # Just time portion
+                lines.append(f"| `{ts}` | {obs['severity']} | {obs['source']} | {obs['message'][:50]} |")
+            if len(observations) > 15:
+                lines.append(f"| ... | ... | ... | _+{len(observations) - 15} more entries_ |")
+        else:
+            lines.append("_No observations recorded yet._")
+            lines.append("")
+            lines.append("The system will log observations here as it runs:")
+            lines.append("- ℹ️ INFO: Normal operational events")
+            lines.append("- ⚠️ WARN: Things to watch")
+            lines.append("- 🚨 ALERT: Needs attention")
+            lines.append("- 💡 INSIGHT: AI-generated insights")
+
+        lines.append("")
+        lines.append(self.LIVE_END)
+        return "\n".join(lines)
+
+    def _render_circuit_status(self) -> str:
+        """
+        Render the ⚡ Circuit Status section.
+
+        Shows available cognitive circuits and their status.
+        """
+        lines = [f"{self.LIVE_START}circuit_status -->"]
+        lines.append("## ⚡ Cognitive Circuits")
+        lines.append("")
+        lines.append("*Autonomous behavior patterns available to the system*")
+        lines.append("")
+
+        circuits = []
+        circuits_dir = self._root / "vibe_core/plugins/opus_assistant/circuits"
+
+        try:
+            if circuits_dir.exists():
+                for circuit_file in sorted(circuits_dir.glob("*.yaml")):
+                    try:
+                        content = circuit_file.read_text()
+                        data = yaml.safe_load(content)
+                        circuit = data.get("circuit", {})
+
+                        circuit_id = circuit.get("id", circuit_file.stem)
+                        name = circuit.get("name", circuit_id)
+                        description = circuit.get("description", "")[:60]
+                        triggers = circuit.get("triggers", [])
+
+                        # Extract trigger types
+                        trigger_events = []
+                        for t in triggers:
+                            event = t.get("event", "")
+                            if event:
+                                trigger_events.append(event)
+
+                        circuits.append(
+                            {
+                                "id": circuit_id,
+                                "name": name,
+                                "description": description,
+                                "triggers": trigger_events,
+                                "states": len(circuit.get("states", {})),
+                            }
+                        )
+                    except Exception:
+                        circuits.append(
+                            {
+                                "id": circuit_file.stem,
+                                "name": circuit_file.stem,
+                                "description": "⚠️ Parse error",
+                                "triggers": [],
+                                "states": 0,
+                            }
+                        )
+
+        except Exception as e:
+            lines.append(f"_Circuit discovery failed: {e}_")
+            lines.append(self.LIVE_END)
+            return "\n".join(lines)
+
+        if circuits:
+            lines.append("| Circuit | Triggers | States | Description |")
+            lines.append("|---------|----------|--------|-------------|")
+            for c in circuits:
+                triggers_str = ", ".join(c["triggers"][:3])
+                if len(c["triggers"]) > 3:
+                    triggers_str += "..."
+                lines.append(f"| **{c['id']}** | `{triggers_str}` | {c['states']} | {c['description']} |")
+            lines.append("")
+            lines.append(f"**{len(circuits)} circuits** ready for autonomous execution")
+        else:
+            lines.append("_No circuits defined yet._")
+            lines.append("")
+            lines.append("Circuits enable autonomous agent behavior:")
+            lines.append("- `OPUS_AUTO_VERIFY`: Triggered by GIT_COMMIT")
+            lines.append("- `OPUS_AUTO_REFRESH`: Keeps OPUS.md fresh")
+            lines.append("- `OPUS_AUTO_HEAL`: Self-healing on drift")
+
+        lines.append("")
+        lines.append(self.LIVE_END)
+        return "\n".join(lines)
 
     def _render_verification(self, quick: bool = False) -> str:
         """Render verification panel."""
