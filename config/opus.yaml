@@ -207,10 +207,12 @@ verification:
   harness_marker: "@HARNESS"
 
   # Trust score weights (must sum to 100)
+  # OPUS-026: Added semantic_passes for code execution verification
   weights:
-    files_exist: 30        # Required files exist
-    tests_exist: 25        # Test files exist
-    wiring_verified: 25    # Import patterns found
+    files_exist: 20        # Required files exist
+    tests_exist: 15        # Test files exist
+    wiring_verified: 20    # Import patterns found
+    semantic_passes: 25    # OPUS-026: Code actually RUNS correctly
     config_exists: 10      # Phoenix config sections exist
     doc_complete: 10       # Doc has all required sections
 
