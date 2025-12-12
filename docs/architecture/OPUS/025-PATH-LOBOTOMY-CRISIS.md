@@ -79,6 +79,42 @@ config:
 
 ---
 
+## Implementation
+
+### Phase 1: Critical Paths (COMPLETE)
+
+| Fix | File | Line | Description |
+|-----|------|------|-------------|
+| ✅ | `vibe_core/kernel_impl.py` | 179,257,494 | `paths.data.resolve()` statt direktem Attributzugriff |
+| ✅ | `vibe_core/boot_orchestrator.py` | 89 | `Path("data") / "vibe_ledger.db"` statt hardcoded string |
+| ✅ | `vibe_core/runtime/boot_sequence.py` | 33 | Variable indirection für Bootstrap Paradox |
+| ✅ | `scripts/build_release.py` | 115,140,225 | XDG-compliant: `~/.local/share/steward/` |
+
+### ADR-025a: XDG Compliance
+
+```python
+# vibe_core/phoenix/sections/paths/section_main.py:96-98
+xdg_config = os.environ.get("XDG_CONFIG_HOME")
+xdg_data = os.environ.get("XDG_DATA_HOME")
+xdg_cache = os.environ.get("XDG_CACHE_HOME")
+```
+
+### ADR-025b: Scope Separation
+
+- **tool:** `~/.config/steward/`, `~/.local/share/steward/` (global)
+- **project:** `.vibe/` (local per-project)
+
+### Test Coverage
+
+- `tests/unit/test_config_paths.py` - 16 tests covering:
+  - PathsSectionDiscovery
+  - ResolveMethod
+  - ToolPathsXDG
+  - ProjectPathsScope
+  - NoHardcodedPaths
+
+---
+
 ## Executive Summary
 
 Das System ist **LOBOTOMIERT**. Die Config-Architektur (PhoenixConfig.paths) existiert, aber:
