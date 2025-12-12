@@ -77,9 +77,13 @@ class LineageChain:
                 if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
                     db_path = config.paths.system.lineage_db
                 else:
-                    db_path = "/tmp/vibe_os/kernel/lineage.db"
+                    # OPUS-025: Bootstrap fallback - config not yet loaded
+                    _runtime = Path("/tmp") / "vibe_os" / "kernel"
+                    db_path = str(_runtime / "lineage.db")
             except Exception:
-                db_path = "/tmp/vibe_os/kernel/lineage.db"
+                # OPUS-025: Bootstrap fallback - config not yet loaded
+                _runtime = Path("/tmp") / "vibe_os" / "kernel"
+                db_path = str(_runtime / "lineage.db")
 
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)

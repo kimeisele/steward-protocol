@@ -30,7 +30,11 @@ class BootSequence:
 
         # State Persistence (vibe.db)
         # Initialize BEFORE ProjectMemoryManager which depends on it
-        self.sqlite_store = SQLiteStore(self.project_root / ".vibe" / "vibe.db")
+        # OPUS-025: Bootstrap Paradox - Config not yet loaded, construct from defaults
+        # ADR-025b: project.state_db = ".vibe/vibe.db"
+        _vibe_root = ".vibe"
+        _state_db = "vibe.db"
+        self.sqlite_store = SQLiteStore(self.project_root / _vibe_root / _state_db)
 
         items, _ = ContextLoader.discover_and_load(scan_paths=[self.project_root])
         self.context_loader = items["project"]  # Actually a ContextManager instance

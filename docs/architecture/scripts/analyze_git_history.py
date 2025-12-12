@@ -76,7 +76,7 @@ def get_arch_commits():
 
     for kw in keywords:
         output = run_git(f"log --oneline --grep={kw}")
-        count = len([l for l in output.split("\n") if l.strip()])
+        count = len([line for line in output.split("\n") if line.strip()])
         if count > 0:
             arch_commits[kw] = count
 
@@ -103,7 +103,7 @@ def get_first_commits_by_module():
     for module in modules:
         if Path(module).exists():
             output = run_git(f"log --reverse --oneline -- {module}")
-            lines = [l for l in output.split("\n") if l.strip()]
+            lines = [ln for ln in output.split("\n") if ln.strip()]
             if lines:
                 first = lines[0].split(" ", 1)
                 first_commits[module] = {

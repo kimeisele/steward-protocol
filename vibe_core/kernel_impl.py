@@ -222,6 +222,7 @@ class RealVibeKernel(VibeKernel):
         else:
             # OPUS-025: Fallback with Path pattern
             from pathlib import Path
+
             lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
         self.lineage = LineageChain(db_path=lineage_path)
         logger.info("⛓️  Parampara chain initialized")
