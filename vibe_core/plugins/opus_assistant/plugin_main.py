@@ -203,35 +203,116 @@ class OpusAssistantPlugin(KernelPlugin):
         """
         Resolver function for PromptContext.
 
-        Returns formatted OPUS "State of Mind" context that gets
-        injected into CLI prompts for LLM operators.
+        Synthesizes dynamic "State of Mind" from Prakriti layers.
+        This is what shapes agent cognition at boot - NOT a static file.
+
+        The prompt is a VARIABLE, not a constant. It evolves with the system.
 
         Returns:
-            Formatted markdown string with current system state
+            Synthesized state of mind from all Prakriti layers
         """
-        # Try to get live context from tick handler first
-        if self._tick_handler:
-            fragment = self._tick_handler.get_system_prompt_fragment()
-            if fragment:
-                return fragment
+        return self._synthesize_state_of_mind()
 
-        # Fallback: Build minimal context from available data
+    def _synthesize_state_of_mind(self) -> str:
+        """
+        Synthesize dynamic 'State of Mind' from Prakriti layers.
+
+        OPUS-029: This is the core of cognitive bootstrapping.
+        The agent's consciousness is shaped by LIVE system state.
+
+        Layers:
+            1. Sthula (Physical): Git state, files, ledger
+            2. Prana (Runtime): Kernel, agents, session
+            3. Purusha (Identity): Ephemeral thoughts, persona
+
+        Plus: Available circuits, OPUS health, current focus.
+        """
+        import re
+
+        import yaml
+
+        workspace = self._workspace or Path.cwd()
+        sections = []
+
+        # === LAYER 1: STHULA (Physical Reality) ===
         try:
-            workspace = self._workspace or Path.cwd()
-            opus_exists = (workspace / "OPUS.md").exists()
+            from vibe_core.state.prakriti import Prakriti
 
-            # Quick verification if available
-            quick_check = self.quick_drift_check()
-            health = "✅ Healthy" if quick_check.get("healthy", True) else "⚠️ Drift detected"
-            tracked = quick_check.get("total_tracked", 0)
+            p = Prakriti(workspace)
+            git_status = p.git.status()
 
-            return f"""**🎯 OPUS State of Mind:**
-- OPUS.md: {"exists" if opus_exists else "not found"}
-- Health: {health}
-- Tracked files: {tracked}
-- Plugin: opus_assistant v{self._config.get("plugin", {}).get("version", "1.5.0")}"""
+            layer1 = f"""**Layer 1 - Sthula (Physical):**
+- Branch: `{git_status.get("branch", "unknown")}`
+- HEAD: `{git_status.get("sha", "unknown")}`
+- Dirty: {"⚠️ Uncommitted changes" if git_status.get("dirty") else "✅ Clean"}"""
+            sections.append(layer1)
         except Exception as e:
-            return f"**🎯 OPUS:** Context unavailable ({e})"
+            sections.append(f"**Layer 1 - Sthula:** ❌ {e}")
+
+        # === LAYER 2: PRANA (Runtime) ===
+        try:
+            kernel_status = p.kernel.status()
+            agents = p.kernel.agents()
+            layer2 = f"""**Layer 2 - Prana (Runtime):**
+- Kernel: {"🟢 Running" if kernel_status.get("available") else "⚪ Offline"}
+- Agents: {len(agents)} active
+- Session: {p.session or "Standalone"}"""
+            sections.append(layer2)
+        except Exception as e:
+            sections.append(f"**Layer 2 - Prana:** ❌ {e}")
+
+        # === LAYER 3: PURUSHA (Identity/Cognition) ===
+        try:
+            thoughts = p.ephemeral.get_thoughts()
+            thought_summary = f"{len(thoughts)} thoughts" if thoughts else "Fresh mind"
+            layer3 = f"""**Layer 3 - Purusha (Identity):**
+- Ephemeral: {thought_summary}"""
+            sections.append(layer3)
+        except Exception as e:
+            sections.append(f"**Layer 3 - Purusha:** ❌ {e}")
+
+        # === CIRCUITS (Cognitive Patterns Available) ===
+        try:
+            circuits_dir = workspace / "vibe_core/plugins/opus_assistant/circuits"
+            circuits = []
+            if circuits_dir.exists():
+                for cf in circuits_dir.glob("*.yaml"):
+                    with open(cf) as f:
+                        data = yaml.safe_load(f)
+                    c = data.get("circuit", {})
+                    circuits.append(c.get("id", cf.stem))
+
+            circuit_section = f"""**Cognitive Circuits:**
+- Available: {", ".join(circuits) if circuits else "None"}"""
+            sections.append(circuit_section)
+        except Exception as e:
+            sections.append(f"**Circuits:** ❌ {e}")
+
+        # === OPUS HEALTH (System Trust) ===
+        try:
+            opus_path = workspace / "OPUS.md"
+            if opus_path.exists():
+                with open(opus_path) as f:
+                    content = f.read(2000)
+
+                # Extract trust score
+                trust_match = re.search(r"Trust Score: [🟢🟡🔴⚪]\s*(\d+)%", content)
+                trust = trust_match.group(1) if trust_match else "?"
+
+                # Extract status
+                status_match = re.search(r"\*\*([⚪🟢🔴🟡])\s*(\w+)\*\*", content)
+                status = status_match.group(2) if status_match else "Unknown"
+
+                opus_section = f"""**OPUS Health:**
+- Status: {status}
+- Trust Score: {trust}%"""
+                sections.append(opus_section)
+        except Exception as e:
+            sections.append(f"**OPUS Health:** ❌ {e}")
+
+        # === SYNTHESIZE ===
+        header = "🧠 **STATE OF MIND** (Synthesized from Prakriti)"
+        return header + "\n\n" + "\n\n".join(sections)
 
     # =========================================================================
     # Public API - DATA ONLY, NO RENDERING!
