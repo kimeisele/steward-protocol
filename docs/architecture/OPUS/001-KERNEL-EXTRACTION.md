@@ -30,8 +30,17 @@ absent:
     in: vibe_core/kernel_impl.py
 config:
   - section: kernel
-# semantic: Note - kernel_impl.py uses relative imports, cannot be loaded standalone
-# The wiring patterns above verify these methods exist via grep
+semantic:
+  - type: method_exists
+    name: "kernel_boot_method"
+    class: RealVibeKernel
+    method: boot
+    in: vibe_core/kernel_impl.py
+  - type: method_exists
+    name: "kernel_register_agent"
+    class: RealVibeKernel
+    method: register_agent
+    in: vibe_core/kernel_impl.py
 -->
 
 ---
