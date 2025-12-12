@@ -23,6 +23,15 @@ wiring:
     in: vibe_core/kernel_impl.py
   - pattern: "SPAWN_COGNITION"
     in: vibe_core/runtime/syscalls.py
+semantic:
+  - type: plugin_loaded
+    name: "lifecycle_plugin_loads"
+    plugin: lifecycle
+  - type: method_exists
+    name: "spawn_agent_method"
+    class: LifecyclePlugin
+    method: spawn_agent
+    in: vibe_core/plugins/lifecycle/plugin_main.py
 -->
 
 ---
