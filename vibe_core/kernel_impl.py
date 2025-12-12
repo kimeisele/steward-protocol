@@ -1186,7 +1186,7 @@ class RealVibeKernel(VibeKernel):
 
         # [OPUS-027] FINAL STATE PRESERVATION
         try:
-            if hasattr(self, 'prakriti') and self.prakriti:
+            if hasattr(self, "prakriti") and self.prakriti:
                 logger.info("💾 Preserving consciousness (Prakriti End Session)...")
                 result = self.prakriti.end_session()
                 if result:
