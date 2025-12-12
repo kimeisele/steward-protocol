@@ -51,10 +51,39 @@ from typing import Any, Dict, Optional
 # Project root
 PROJECT_ROOT = Path(__file__).parent.parent.parent  # vibe_core/cli/legacy.py -> project root
 
-# Critical paths
-LINEAGE_DB = Path("/tmp/vibe_os/kernel/lineage.db")
+
+# Critical paths - OPUS-025: Resolved from config or fallback
+def _get_lineage_db():
+    """Get lineage DB path from config or fallback."""
+    try:
+        from vibe_core.phoenix import get_config
+
+        config = get_config()
+        if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
+            return Path(config.paths.system.lineage_db)
+    except Exception:
+        pass
+    return Path("/tmp") / "vibe_os" / "kernel" / "lineage.db"
+
+
+def _get_kernel_pid_file():
+    """Get kernel PID file path from config or fallback."""
+    try:
+        from vibe_core.phoenix import get_config
+
+        config = get_config()
+        if config and hasattr(config, "paths") and hasattr(config.paths, "system"):
+            pid_dir = Path(config.paths.system.runtime_root) / "kernel"
+            return pid_dir / "kernel.pid"
+    except Exception:
+        pass
+    return Path("/tmp") / "vibe_os" / "kernel" / "kernel.pid"
+
+
+# Legacy constants for backward compatibility (now resolved lazily)
+LINEAGE_DB = None  # Use _get_lineage_db()
 OPERATIONS_MD = PROJECT_ROOT / "OPERATIONS.md"
-KERNEL_PID_FILE = Path("/tmp/vibe_os/kernel/kernel.pid")
+KERNEL_PID_FILE = None  # Use _get_kernel_pid_file()
 MANIFESTS_DIR = PROJECT_ROOT / "vibe_core/cartridges/system"
 
 
@@ -65,10 +94,10 @@ class StewardCLI:
         import warnings
 
         warnings.warn("StewardCLI is deprecated. Use UnifiedCLI instead.", DeprecationWarning, stacklevel=2)
-        self.lineage_db = LINEAGE_DB
+        self.lineage_db = _get_lineage_db()
         self.operations_file = OPERATIONS_MD
         self.snapshot_file = PROJECT_ROOT / "vibe_snapshot.json"  # GAD-000: Model (Truth)
-        self.kernel_pid_file = KERNEL_PID_FILE
+        self.kernel_pid_file = _get_kernel_pid_file()
 
     # =========================================================================
     # COMMAND: steward status
@@ -503,12 +532,12 @@ class StewardCLI:
             print(f"   Pulse age: {self._get_pulse_age():.1f}s")
             return 1
 
-        # Ensure log directory exists
-        log_dir = Path("/tmp/vibe_os/logs")
+        # Ensure log directory exists - OPUS-025
+        log_dir = Path("/tmp") / "vibe_os" / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
         kernel_log = log_dir / "kernel.log"
-        kernel_pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        kernel_pidfile = _get_kernel_pid_file()
         kernel_pidfile.parent.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -569,8 +598,8 @@ class StewardCLI:
             print("⚠️  Kernel is not running (pulse lost)")
             return 1
 
-        # Get PID from file
-        pidfile = Path("/tmp/vibe_os/kernel/kernel.pid")
+        # Get PID from file - OPUS-025
+        pidfile = _get_kernel_pid_file()
         if not pidfile.exists():
             print("⚠️  PID file not found")
             print("   Try: kill -TERM <pid> manually")
@@ -801,8 +830,8 @@ class StewardCLI:
         print("📋 KERNEL LOGS")
         print("=" * 70)
         print()
-
-        kernel_log = Path("/tmp/vibe_os/logs/kernel.log")
+        # OPUS-025: Use configured logs path
+        kernel_log = Path("/tmp") / "vibe_os" / "logs" / "kernel.log"
         if not kernel_log.exists():
             print("❌ Kernel log not found")
             print(f"   Expected: {kernel_log}")
@@ -1089,8 +1118,8 @@ class StewardCLI:
         print("=" * 70)
         print()
 
-        # Ensure task queue directory exists
-        task_dir = Path("/tmp/vibe_os/tasks")
+        # Ensure task queue directory exists - OPUS-025
+        task_dir = Path("/tmp") / "vibe_os" / "tasks"
         task_dir.mkdir(parents=True, exist_ok=True)
 
         # Generate unique task ID
