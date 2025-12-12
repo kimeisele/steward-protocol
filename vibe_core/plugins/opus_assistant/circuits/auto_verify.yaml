@@ -1,0 +1,139 @@
+# OPUS_AUTO_VERIFY - Automatic Drift Detection Circuit
+# Phase 4: Cognitive Circuits
+#
+# Triggered by: GIT_COMMIT events
+# Flow: Detect drift → Log observation → Update context
+#
+# This circuit makes the system SELF-AWARE of code changes.
+# It's the "watcher" that notices when code drifts from docs.
+#
+circuit:
+  id: OPUS_AUTO_VERIFY
+  name: OPUS Auto-Verify
+  description: Automatic drift detection triggered by git commits
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "detect_drift"
+
+  # Event triggers (what wakes this circuit)
+  triggers:
+    - event: GIT_COMMIT
+      description: Triggered when code is committed
+    - event: FILE_CHANGED
+      filter:
+        patterns:
+          - "*.py"
+          - "*.md"
+          - "*.yaml"
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+
+  states:
+    # Phase 1: Detect drift between code and docs
+    detect_drift:
+      name: "Detect Code-Doc Drift"
+      description: "Check for drift between tracked files and OPUS docs"
+      state_var: "drift_report"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "opus.circuit_started"
+          params:
+            circuit: "OPUS_AUTO_VERIFY"
+            trigger: "{{ trigger_event }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.detect_drift"
+          params:
+            since_commit: "{{ trigger_event.commit_sha | default('HEAD~1') }}"
+      on_success: check_drift_result
+      on_failure: log_error
+
+    # Phase 2: Check if drift was found
+    check_drift_result:
+      name: "Check Drift Result"
+      description: "Branch based on drift detection result"
+      state_var: "drift_check"
+      actions:
+        - action_type: CHECK_STATE
+          target: "drift_report.has_drift"
+          params:
+            expected: true
+      on_success: log_drift_observation
+      on_failure: log_no_drift  # No drift is not an error!
+
+    # Phase 3a: Log drift observation to OPUS.md
+    log_drift_observation:
+      name: "Log Drift to Journal"
+      description: "Record drift in OPUS.md observation journal"
+      state_var: "observation_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}"
+            source: "auto_verify"
+            context:
+              files: "{{ drift_report.files }}"
+              commit: "{{ trigger_event.commit_sha }}"
+      on_success: synthesize_context
+      on_failure: log_error
+
+    # Phase 3b: Log no-drift (clean commit)
+    log_no_drift:
+      name: "Log Clean Commit"
+      description: "Record that commit was clean"
+      state_var: "observation_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "Clean commit {{ trigger_event.commit_sha | default('unknown') }} - no drift detected"
+            source: "auto_verify"
+      on_success: synthesize_context
+      on_failure: log_error
+
+    # Phase 4: Re-synthesize system context
+    synthesize_context:
+      name: "Update System Context"
+      description: "Refresh the system's 'State of Mind'"
+      state_var: "context_updated"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.synthesize_context"
+          params: {}
+        - action_type: EMIT_EVENT
+          target: "opus.context_updated"
+          params:
+            trigger: "auto_verify"
+            has_drift: "{{ drift_report.has_drift | default(false) }}"
+      on_success: COMPLETE
+      on_failure: COMPLETE  # Context synthesis failure shouldn't fail the circuit
+
+    # Success terminal state
+    COMPLETE:
+      name: "Auto-Verify Complete"
+      description: "Verification circuit completed"
+      terminal: true
+      result:
+        status: "success"
+        drift_detected: "{{ drift_report.has_drift | default(false) }}"
+        files_affected: "{{ drift_report.files | length | default(0) }}"
+
+    # Error terminal state
+    log_error:
+      name: "Verification Error"
+      description: "An error occurred during verification"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ALERT"
+            message: "Auto-verify circuit failed: {{ error | default('Unknown error') }}"
+            source: "auto_verify"
+      result:
+        status: "failed"
+        error: "{{ error }}"

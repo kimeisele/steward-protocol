@@ -1,0 +1,107 @@
+{
+  "type": "plugin",
+  "id": "opus_assistant",
+  "name": "OPUS Assistant",
+  "version": "1.4.0",
+  "description": "OPUS.md management, verification, drift detection, and self-managing circuits",
+
+  "entry_point": "plugin_main.py",
+  "entry_class": "OpusAssistantPlugin",
+
+  "priority": 50,
+  "enabled": true,
+
+  "hooks": [
+    "on_boot",
+    "on_shutdown"
+  ],
+
+  "dependencies": [],
+
+  "capabilities": [
+    "opus.verify",
+    "opus.drift_detect",
+    "opus.context",
+    "opus.journal",
+    "opus.cli",
+    "opus.circuits"
+  ],
+
+  "circuits": [
+    "circuits/auto_verify.yaml",
+    "circuits/auto_heal.yaml"
+  ],
+
+  "cli": {
+    "namespace": "opus",
+    "commands": [
+      {
+        "name": "status",
+        "handler": "cmd_opus_status",
+        "execution_mode": "hybrid",
+        "help": "Show current system 'State of Mind' (live context)",
+        "args": [
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON for pipelines",
+            "required": false,
+            "default": false
+          }
+        ]
+      },
+      {
+        "name": "log",
+        "handler": "cmd_opus_log",
+        "execution_mode": "offline",
+        "help": "Show journal entries from OPUS.md",
+        "args": [
+          {
+            "name": "limit",
+            "type": "int",
+            "help": "Max entries to show",
+            "required": false,
+            "default": 20
+          },
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON for pipelines",
+            "required": false,
+            "default": false
+          }
+        ]
+      },
+      {
+        "name": "verify",
+        "handler": "cmd_opus_verify",
+        "execution_mode": "hybrid",
+        "help": "Run manual verification (check @HARNESS rules)",
+        "args": [
+          {
+            "name": "quick",
+            "type": "bool",
+            "help": "Skip semantic checks (faster)",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON for pipelines",
+            "required": false,
+            "default": false
+          }
+        ]
+      }
+    ]
+  },
+
+  "defaults": {
+    "auto_verify_on_boot": false,
+    "drift_detection_enabled": true
+  },
+
+  "author": "STEWARD Protocol",
+  "tags": ["opus", "verification", "assistant", "governance", "cli"]
+}

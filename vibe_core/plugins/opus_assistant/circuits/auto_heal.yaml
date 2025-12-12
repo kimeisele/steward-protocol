@@ -1,0 +1,178 @@
+# OPUS_AUTO_HEAL - Automatic Recovery Circuit (Draft)
+# Phase 4: Cognitive Circuits
+#
+# Triggered by: OPUS.DRIFT_DETECTED events
+# Flow: Analyze drift → Suggest fix → Log to OPUS.md
+#
+# This circuit is the "self-healing" mechanism.
+# When drift persists, it logs insights to help humans fix issues.
+#
+# NOTE: This is a DRAFT - actual file manipulation is deferred to
+# human approval (never auto-fix code without consent).
+#
+circuit:
+  id: OPUS_AUTO_HEAL
+  name: OPUS Auto-Heal (Draft)
+  description: Automatic recovery suggestions when drift persists
+  domain: OPUS
+  version: "1.0.0-draft"
+  entry_state: "analyze_drift"
+
+  # Event triggers
+  triggers:
+    - event: OPUS.DRIFT_PERSISTENT
+      description: Triggered when drift persists for 3+ ticks
+    - event: OPUS.HEALTH_CRITICAL
+      description: Triggered when system health drops to CRITICAL
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+    - "drift_report is defined"
+
+  states:
+    # Phase 1: Analyze drift patterns
+    analyze_drift:
+      name: "Analyze Drift Patterns"
+      description: "Determine what kind of drift occurred"
+      state_var: "analysis"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "opus.heal_started"
+          params:
+            circuit: "OPUS_AUTO_HEAL"
+            drift_files: "{{ drift_report.files }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.analyze_drift_pattern"
+          params:
+            drift_report: "{{ drift_report }}"
+      on_success: generate_suggestion
+      on_failure: log_analysis_failure
+
+    # Phase 2: Generate fix suggestion
+    generate_suggestion:
+      name: "Generate Fix Suggestion"
+      description: "Create human-readable suggestion for fixing drift"
+      state_var: "suggestion"
+      actions:
+        - action_type: CHECK_STATE
+          target: "analysis.pattern"
+          params:
+            expected_in:
+              - "missing_docs"
+              - "stale_docs"
+              - "config_mismatch"
+              - "test_gap"
+      on_success: log_insight
+      on_failure: log_unknown_pattern
+
+    # Phase 3a: Log insight for known pattern
+    log_insight:
+      name: "Log Healing Insight"
+      description: "Record actionable insight to OPUS.md"
+      state_var: "insight_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INSIGHT"
+            message: "{{ analysis.suggestion }}"
+            source: "auto_heal"
+            context:
+              pattern: "{{ analysis.pattern }}"
+              files: "{{ drift_report.files }}"
+              recommended_action: "{{ analysis.recommended_action }}"
+        - action_type: STORE_EPHEMERAL
+          target: "opus.pending_heal"
+          params:
+            value:
+              analysis: "{{ analysis }}"
+              suggestion: "{{ analysis.suggestion }}"
+              created_at: "{{ now }}"
+            ttl_seconds: 3600  # Keep for 1 hour
+            tags: ["opus", "heal", "pending"]
+      on_success: COMPLETE
+      on_failure: log_error
+
+    # Phase 3b: Log unknown pattern
+    log_unknown_pattern:
+      name: "Log Unknown Pattern"
+      description: "Record that drift pattern wasn't recognized"
+      state_var: "unknown_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Unrecognized drift pattern - manual review needed"
+            source: "auto_heal"
+            context:
+              files: "{{ drift_report.files }}"
+              analysis: "{{ analysis }}"
+      on_success: COMPLETE
+      on_failure: log_error
+
+    # Success terminal state
+    COMPLETE:
+      name: "Auto-Heal Complete"
+      description: "Healing analysis completed"
+      terminal: true
+      result:
+        status: "success"
+        pattern: "{{ analysis.pattern | default('unknown') }}"
+        suggestion: "{{ analysis.suggestion | default('Manual review required') }}"
+
+    # Error states
+    log_analysis_failure:
+      name: "Analysis Failed"
+      description: "Could not analyze drift pattern"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Auto-heal analysis failed: {{ error | default('Unknown error') }}"
+            source: "auto_heal"
+      result:
+        status: "partial"
+        error: "{{ error }}"
+
+    log_error:
+      name: "Heal Error"
+      description: "An error occurred during healing"
+      terminal: true
+      result:
+        status: "failed"
+        error: "{{ error }}"
+
+
+# Drift pattern definitions (for analysis)
+patterns:
+  missing_docs:
+    description: "Code exists but documentation is missing"
+    indicators:
+      - "new .py files without corresponding .md"
+      - "new functions without docstrings"
+    suggested_action: "Generate documentation for new code"
+
+  stale_docs:
+    description: "Documentation doesn't match current code"
+    indicators:
+      - "function signatures changed"
+      - "class structure modified"
+    suggested_action: "Update documentation to match code changes"
+
+  config_mismatch:
+    description: "Configuration files don't match expected schema"
+    indicators:
+      - "missing required keys"
+      - "deprecated keys still present"
+    suggested_action: "Update configuration to match schema"
+
+  test_gap:
+    description: "New code without corresponding tests"
+    indicators:
+      - "new functions without test coverage"
+      - "modified code with no test updates"
+    suggested_action: "Add tests for new/modified code"
