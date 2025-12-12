@@ -48,7 +48,9 @@ class BankTool(Tool):
     - get_stats: Get system statistics
     """
 
-    DB_PATH = Path("data/economy.db")
+    # OPUS-025: Fallback only - actual path from config or parameters
+    _DB_PATH_DEFAULT = "data/economy.db"
+    DB_PATH = None  # Set at runtime from config or parameters
 
     def __init__(self):
         """Initialize Bank Tool (kernel-managed)."""
@@ -129,7 +131,24 @@ class BankTool(Tool):
         try:
             # Initialize database connection if needed
             if self._conn is None:
-                db_path = parameters.get("db_path", str(self.DB_PATH))
+                db_path = parameters.get("db_path")
+
+                # OPUS-025: Resolve from config if not provided
+                if db_path is None:
+                    if self.DB_PATH is not None:
+                        db_path = str(self.DB_PATH)
+                    else:
+                        try:
+                            from vibe_core.phoenix import get_config
+
+                            config = get_config()
+                            if config and hasattr(config, "paths"):
+                                db_path = str(config.paths.data.resolve("economy_db"))
+                            else:
+                                db_path = self._DB_PATH_DEFAULT
+                        except Exception:
+                            db_path = self._DB_PATH_DEFAULT
+
                 self._db_path = Path(db_path)
                 self._db_path.parent.mkdir(parents=True, exist_ok=True)
                 self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
