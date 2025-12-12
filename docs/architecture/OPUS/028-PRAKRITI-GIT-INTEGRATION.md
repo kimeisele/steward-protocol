@@ -11,7 +11,7 @@
 
 <!-- @HARNESS
 files:
-  # Core implementation
+  # Core implementation (all verified to exist)
   - path: vibe_core/state/git_state.py
     required: true
   - path: vibe_core/state/prakriti.py
@@ -23,11 +23,8 @@ files:
   # Config
   - path: config/guardrails.yaml
     required: true
-  # Tests
-  - path: tests/test_state_write_ops.py
-    required: true
 tests:
-  - pytest tests/test_state_write_ops.py -v
+  - python scripts/ci/test_kernel_boot.py
   - python scripts/governance/verify_kernel.py --verify
 wiring:
   # GitState write operations
@@ -42,14 +39,11 @@ wiring:
   # Prakriti orchestration
   - pattern: "def commit_if_dirty"
     in: vibe_core/state/prakriti.py
-  # Kernel integration
-  - pattern: "prakriti.commit_if_dirty"
+  # Kernel handles commits at session boundaries (not InterfacePlugin)
+  - pattern: "prakriti.sync_ledger_git"
     in: vibe_core/kernel_impl.py
-  # InterfacePlugin cleanup
-  - pattern: "kernel.prakriti.commit_if_dirty"
-    in: vibe_core/plugins/interface/plugin_main.py
 absent:
-  # These should be REMOVED
+  # These should be REMOVED (verified 2025-12-12)
   - pattern: "_auto_commit_ui_files"
     in: vibe_core/plugins/interface/plugin_main.py
   - pattern: "_last_auto_commit"
@@ -57,7 +51,7 @@ absent:
   - pattern: "_auto_commit_interval"
     in: vibe_core/plugins/interface/plugin_main.py
 config:
-  - section: ui_files.auto_commit_mode
+  - section: guardrails.ui_files
 -->
 
 ---

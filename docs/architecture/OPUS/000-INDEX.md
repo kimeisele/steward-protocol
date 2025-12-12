@@ -1,9 +1,9 @@
-# OPUS-008: Architecture Index
+# OPUS-000: Architecture Index
 
 > **Status**: ACTIVE
 > **Created**: 2025-12-08
-> **Last Updated**: 2025-12-12 (OPUS-027/028 Implemented)
-> **Symbol**: 8 = Infinity Rotated = Krishna's Number
+> **Last Updated**: 2025-12-12 (Moved from OPUS-008)
+> **Symbol**: 0 = Origin = The Seed from which all OPUS grows
 > **Purpose**: Master index of all OPUS architecture documents
 
 ---
@@ -18,8 +18,8 @@
 | 004 | [Boot Sequence Audit](004-BOOT-SEQUENCE-AUDIT.md) | ✅ COMPLETE | Documented |
 | 005 | [Unification Roadmap](005-UNIFICATION-ROADMAP.md) | ✅ MOSTLY DONE | 5/7 phases complete |
 | 006 | [GAD-000 Compliance](006-GAD000-COMPLIANCE-AUDIT.md) | ✅ VERIFIED | 5/6 tests pass |
-| 007 | [UI Rendering Hardening](007-UNIFIED-UI-RENDERING.md) | ✅ IMPLEMENTED | Three Laws in code |
-| 008 | **This Index** | 📍 ACTIVE | You are here |
+| 000 | **This Index** | 📍 ACTIVE | You are here |
+| 008 | [Prakriti Prototype](008-PRAKRITI-PROTOTYPE.md) | 🚧 IN_PROGRESS | Internal state workflow |
 | 009 | [Unified State (PRAKRITI)](009-UNIFIED-STATE-PRAKRITI.md) | ✅ IMPLEMENTED | state/prakriti.py (concept) |
 | 010 | [Verification Protocol](010-VERIFICATION-PROTOCOL.md) | ✅ VERIFIED | Trust Score 100% |
 | 011 | [Layered Router](011-LAYERED-ROUTER.md) | ✅ IMPLEMENTED | layered_router.py |
