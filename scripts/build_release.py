@@ -112,7 +112,7 @@ def main():
 
 paths:
   library: "./library"
-  data: "~/.vibe/data"
+  data: "~/.local/share/steward/data"
 
 runtime:
   log_level: INFO
@@ -136,18 +136,19 @@ set -e
 
 echo "🌀 Installing Vibe OS..."
 
-# Create config directory
-VIBE_HOME="${HOME}/.vibe"
-mkdir -p "${VIBE_HOME}"
+# Create XDG-compliant directories (ADR-025a)
+STEWARD_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/steward"
+STEWARD_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/steward"
+mkdir -p "${STEWARD_DATA}" "${STEWARD_CONFIG}"
 
 # Copy library
 echo "  → Installing holons..."
-cp -r library/* "${VIBE_HOME}/"
+cp -r library/* "${STEWARD_DATA}/"
 
 # Copy config if not exists
-if [ ! -f "${VIBE_HOME}/phoenix.yaml" ]; then
+if [ ! -f "${STEWARD_CONFIG}/phoenix.yaml" ]; then
     echo "  → Creating default config..."
-    cp config/phoenix.yaml "${VIBE_HOME}/"
+    cp config/phoenix.yaml "${STEWARD_CONFIG}/"
 fi
 
 # Make binary available
@@ -174,18 +175,20 @@ REM Vibe OS Installer for Windows
 
 echo Installing Vibe OS...
 
-REM Create config directory
-set VIBE_HOME=%USERPROFILE%\\.vibe
-if not exist "%VIBE_HOME%" mkdir "%VIBE_HOME%"
+REM Create directories (Windows equivalent of XDG)
+set STEWARD_DATA=%LOCALAPPDATA%\\steward
+set STEWARD_CONFIG=%APPDATA%\\steward
+if not exist "%STEWARD_DATA%" mkdir "%STEWARD_DATA%"
+if not exist "%STEWARD_CONFIG%" mkdir "%STEWARD_CONFIG%"
 
 REM Copy library
 echo   Installing holons...
-xcopy /E /Y library\\* "%VIBE_HOME%\\"
+xcopy /E /Y library\\* "%STEWARD_DATA%\\"
 
 REM Copy config
-if not exist "%VIBE_HOME%\\phoenix.yaml" (
+if not exist "%STEWARD_CONFIG%\\phoenix.yaml" (
     echo   Creating default config...
-    copy config\\phoenix.yaml "%VIBE_HOME%\\"
+    copy config\\phoenix.yaml "%STEWARD_CONFIG%\\"
 )
 
 REM Copy binary to user path
@@ -222,8 +225,8 @@ vibe --help
 
 ## Manual Installation
 
-1. Copy `library/*.vibe` to `~/.vibe/`
-2. Copy `config/phoenix.yaml` to `~/.vibe/`
+1. Copy `library/*.vibe` to `~/.local/share/steward/`
+2. Copy `config/phoenix.yaml` to `~/.config/steward/`
 3. Add `vibe` binary to your PATH
 
 ## Contents
