@@ -33,7 +33,7 @@ semantic:
   - type: method_exists
     name: "phoenix_config_get"
     class: PhoenixConfig
-    method: get_config
+    method: get
     in: vibe_core/phoenix/config.py
   - type: method_exists
     name: "section_loader_discover"
