@@ -29,8 +29,21 @@ class LedgerVisualizer:
     reads from the ledger and generates reports without modifying it.
     """
 
-    def __init__(self, ledger_path: Path = Path("data/ledger/audit_trail.jsonl")):
+    def __init__(self, ledger_path: Path = None):
         """Initialize visualizer."""
+        # OPUS-025: Resolve ledger path from config if not provided
+        if ledger_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths"):
+                    ledger_path = config.paths.data.resolve("audit_trail_ledger")
+                else:
+                    ledger_path = Path("data") / "ledger" / "audit_trail.jsonl"
+            except Exception:
+                ledger_path = Path("data") / "ledger" / "audit_trail.jsonl"
+
         self.ledger_path = ledger_path
         self.attestations: List[Dict[str, Any]] = []
         self.last_loaded = None

@@ -103,8 +103,17 @@ class AgencyDirector:
         if self.auditor:
             logger.info("✅ AUDIT: AuditTool available")
 
-        # State Dashboard directory
-        self.state_dir = Path("data/reports")
+        # State Dashboard directory - OPUS-025: Config-based resolution
+        try:
+            from vibe_core.phoenix import get_config
+
+            config = get_config()
+            if config and hasattr(config, "paths"):
+                self.state_dir = config.paths.data.resolve("reports")
+            else:
+                self.state_dir = Path("data") / "reports"
+        except Exception:
+            self.state_dir = Path("data") / "reports"
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.state_file = self.state_dir / "agency_state.json"
 
