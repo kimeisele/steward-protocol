@@ -12,11 +12,39 @@ GAD-000 Compliant:
 
 import logging
 import subprocess
+import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("GIT_STATE")
+
+# VISNU Protected Files (OPUS-024)
+# These files cannot be committed via Prakriti - they require manual governance
+VISNU_PROTECTED = [
+    "vibe_core/kernel_impl.py",
+    "vibe_core/kernel_ops.py",
+    "vibe_core/plugin_protocol.py",
+    "vibe_core/plugin_loader.py",
+    "vibe_core/narasimha.py",
+    "vibe_core/capability_registry.py",
+    "vibe_core/bridge.py",
+    "scripts/governance/restore_kernel.sh",
+    "scripts/governance/verify_kernel.py",
+    "scripts/governance/kernel_hashes.json",
+    ".github/workflows/attest.yml",
+    ".github/workflows/container-build.yml",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/factory.yml",
+    ".github/workflows/heartbeat.yml",
+    ".github/workflows/integration-tests.yml",
+    ".github/workflows/scheduled-agents.yml",
+    ".github/workflows/scribe-docs.yml",
+    ".github/workflows/steward-ci.yml",
+    ".github/workflows/system-cycle.yml",
+    ".pre-commit-config.yaml",
+]
 
 
 @dataclass
@@ -50,6 +78,9 @@ class GitState:
     - merge = Learning (integrate knowledge)
     """
 
+    # Thread-safe commit lock (OPUS-028)
+    _commit_lock = threading.Lock()
+
     def __init__(self, workspace_path: Optional[Path] = None):
         self._workspace = workspace_path or Path.cwd()
         self._git_dir = self._workspace / ".git"
@@ -62,14 +93,19 @@ class GitState:
         """GAD-000 Test 1: Machine-readable capability discovery."""
         return {
             "operations": [
+                # Read operations
                 "current_branch",
                 "head_sha",
                 "is_dirty",
                 "diff",
                 "recent_commits",
                 "status",
+                # Write operations (OPUS-028)
+                "stage",
+                "commit",
             ],
-            "read_only": True,  # Phase 1 is read-only
+            "read_only": False,  # OPUS-028: Write ops enabled
+            "visnu_protected_count": len(VISNU_PROTECTED),
             "workspace": str(self._workspace),
         }
 
@@ -250,3 +286,113 @@ class GitState:
         if result and "main" in result:
             return "main"
         return "master"
+
+    # =========================================================================
+    # Write Operations (OPUS-028)
+    # =========================================================================
+
+    def stage(self, patterns: List[str]) -> int:
+        """Stage files matching patterns.
+
+        Args:
+            patterns: File patterns to stage (e.g., ["*.md", "docs/"])
+
+        Returns:
+            Number of patterns processed
+        """
+        if not self.is_git_repo():
+            return 0
+
+        total = 0
+        for pattern in patterns:
+            result = self._run_git(["add", pattern])
+            if result is not None:
+                total += 1
+        return total
+
+    def commit(
+        self,
+        message: str,
+        commit_type: str = "chore",
+        scope: str = "auto",
+        no_verify: bool = True,
+        trailers: Optional[Dict[str, str]] = None,
+    ) -> Optional[GitCommit]:
+        """Create a commit with VISNU protection.
+
+        Thread-safe via _commit_lock.
+
+        Args:
+            message: Commit message (subject line)
+            commit_type: Conventional commit type (chore, feat, fix, etc.)
+            scope: Commit scope
+            no_verify: Skip pre-commit hooks (True for auto-commits)
+            trailers: Git trailers for machine readability (e.g., {"Session-ID": "abc"})
+
+        Returns:
+            GitCommit if successful, None if nothing to commit
+
+        Raises:
+            GovernanceViolation: If VISNU protected files are staged
+        """
+        if not self.is_git_repo():
+            return None
+
+        with self._commit_lock:
+            # 1. Check if anything to commit
+            if not self.is_dirty():
+                return None
+
+            # 2. VISNU protection check
+            staged = self._get_staged_files()
+            protected = [f for f in staged if f in VISNU_PROTECTED]
+            if protected:
+                from vibe_core.exceptions import GovernanceViolation
+
+                raise GovernanceViolation(
+                    f"Cannot commit VISNU protected files via Prakriti: {protected}. "
+                    f"See docs/architecture/OPUS/024-KERNEL-PROTECTION-AUDIT.md"
+                )
+
+            # 3. Format message with trailers (OPUS-027 Implementation Guidelines)
+            formatted_msg = f"{commit_type}({scope}): {message}"
+            if trailers:
+                formatted_msg += "\n"
+                for key, value in trailers.items():
+                    formatted_msg += f"\n{key}: {value}"
+
+            # 4. Create commit
+            cmd = ["commit", "-m", formatted_msg]
+            if no_verify:
+                cmd.insert(1, "--no-verify")
+
+            result = self._run_git(cmd)
+            if result is None:
+                return None
+
+            # 5. Return commit info
+            return GitCommit(
+                sha=self.head_sha(),
+                short_sha=self.short_sha(),
+                author="prakriti",
+                message=formatted_msg,
+                timestamp=str(time.time()),
+            )
+
+    def _get_staged_files(self) -> List[str]:
+        """Get list of staged files."""
+        result = self._run_git(["diff", "--cached", "--name-only"])
+        if not result:
+            return []
+        return [f.strip() for f in result.strip().split("\n") if f.strip()]
+
+    def unstage_all(self) -> bool:
+        """Unstage all staged files.
+
+        Returns:
+            True if successful
+        """
+        if not self.is_git_repo():
+            return False
+        result = self._run_git(["reset", "HEAD"])
+        return result is not None
