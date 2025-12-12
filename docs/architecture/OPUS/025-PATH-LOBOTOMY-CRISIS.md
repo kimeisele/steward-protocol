@@ -5,7 +5,8 @@
 > **Last Updated:** 2025-12-12
 > **Severity:** P0 - Architectural Foundation Broken
 > **Scope:** Audit all path handling against PhoenixConfig.paths
-> **Violation Count:** 100+ (verified)
+> **Violation Count:** 250+ (verified via multi-model audit)
+> **Categories:** 17
 
 <!-- @HARNESS
 files:
@@ -33,6 +34,8 @@ wiring:
     in: vibe_core/kernel_impl.py
   - pattern: "paths.system.resolve"
     in: vibe_core/kernel_impl.py
+  - pattern: "XDG_CONFIG_HOME"
+    in: vibe_core/runtime_extensions.py
 absent:
   - pattern: 'paths\.data\.[a-z_]+[^(]'
     in: vibe_core/kernel_impl.py
@@ -44,8 +47,8 @@ absent:
     in: vibe_core/kernel_impl.py
   - pattern: '\.vibe.*vibe\.db'
     in: vibe_core/runtime/boot_sequence.py
-  - pattern: 'Path\.home\(\).*\.steward'
-    in: vibe_core/runtime_extensions.py
+  - pattern: '~/.vibe'
+    in: scripts/build_release.py
 config:
   - section: paths
 -->
@@ -60,9 +63,15 @@ config:
 | Hardcoded `data/` Pfade eliminiert | ❌ | 40+ Violations |
 | Hardcoded `/tmp/vibe_os` eliminiert | ❌ | **99 Occurrences in 28 Files** |
 | `.vibe` Schatten-Pfade in Config | ❌ | **12+ Violations** |
-| `~/.steward` User-Home Pfade | ❌ | **NEUES Schatten-Dateisystem** |
+| `~/.steward` User-Home Pfade | ❌ | In Code, nicht in Config |
+| `workspaces/sandbox` | ❌ | **5. Schatten-Dateisystem!** |
+| `__file__` relative Pfade | ❌ | **44 Violations** |
+| `knowledge/` hardcoded | ❌ | **15 Violations** |
+| `config/` hardcoded | ❌ | **30 Violations** |
+| External Library Caches | ❌ | HuggingFace unkontrolliert |
 | Python Defaults = YAML Defaults | ❌ | Inkonsistente Defaults |
-| XDG Compliance | ❌ | Inkonsistent (3 Stellen) |
+| XDG Compliance | ❌ → ✅ | **ADR-025a: ENTSCHIEDEN** |
+| Scope Separation | ❌ → ✅ | **ADR-025b: ENTSCHIEDEN** |
 | Path.cwd() Injection | ❌ | **36 Stellen ohne Injection** |
 | CI Gate aktiv | ❌ | Nicht implementiert |
 | Migration abgeschlossen | ❌ | 0% |
@@ -75,14 +84,16 @@ Das System ist **LOBOTOMIERT**. Die Config-Architektur (PhoenixConfig.paths) exi
 
 1. **Code benutzt Pfade OHNE `resolve()`** → erstellt buchstaeblich Ordner namens `{root}`
 2. **Code ignoriert PhoenixConfig komplett** → hardcoded Pfade ueberall
-3. **VIER Schatten-Dateisysteme** existieren parallel:
-   - `data/` - Governance, Ledger, Registry
+3. **FUENF Schatten-Dateisysteme** existieren parallel:
+   - `data/` - Governance, Ledger, Registry (40+ Stellen)
    - `/tmp/vibe_os/` - Runtime, Agents, Lineage (99 Occurrences!)
    - `.vibe/` - Boot State, Memory, Tasks (12+ Stellen)
-   - `~/.steward/` - User Extensions, Keys, Models (**NEU ENTDECKT**)
+   - `~/.steward/` - User Extensions, Keys, Models
+   - `workspaces/sandbox/` - Engineer Sandbox (**NEU ENTDECKT**)
 4. **Python Defaults untergraben YAML** → False Safety
 5. **Bootstrap Paradox** → SQLiteStore initialisiert VOR Config-Load
-6. **XDG Inkonsistenz** → Manchmal XDG, manchmal nicht
+6. **External Library Caches** → HuggingFace/Torch unkontrolliert
+7. **`__file__` Explosion** → 44 Stellen mit relativen Pfaden
 
 ---
 
@@ -93,7 +104,7 @@ Dieses Problem verletzt GAD-000 "Operator Inversion":
 | Test | Status | Problem |
 |------|--------|---------|
 | **Discoverability** | ❌ | Pfade sind nicht ueber Config entdeckbar - hardcoded im Code |
-| **Observability** | ❌ | VIER Schatten-Dateisysteme - AI kann nicht alle State-Locations finden |
+| **Observability** | ❌ | FUENF Schatten-Dateisysteme - AI kann nicht alle State-Locations finden |
 | **Parseability** | ⚠️ | Wenn `{root}` als Literal erscheint, ist Fehler schwer zu parsen |
 | **Composability** | ❌ | Pfade koennen nicht via Config komponiert werden |
 | **Idempotency** | ⚠️ | Daten an falschen Orten = unvorhersehbares Verhalten bei Retry |
@@ -146,9 +157,9 @@ class BootSequence:
 
 ---
 
-## 11 Kategorien von Bugs
+## 17 Kategorien von Bugs
 
-### Kategorie 1: PhoenixConfig benutzt OHNE resolve()
+### Kategorie 1: PhoenixConfig benutzt OHNE resolve() [P0]
 
 Diese erstellen buchstaeblich Ordner/Dateien mit `{root}` im Namen:
 
@@ -158,7 +169,7 @@ Diese erstellen buchstaeblich Ordner/Dateien mit `{root}` im Namen:
 | `license_tool.py` | 159 | `paths.data.registry` | Erstellt `{root}/registry/...` |
 | `memory.py` | 83 | `paths.data.events` | Erstellt `{root}/events/...` |
 
-### Kategorie 2: Hardcoded `data/` Pfade (40+ Stellen)
+### Kategorie 2: Hardcoded `data/` Pfade [P0] (40+ Stellen)
 
 | Datei | Zeile | Hardcoded Path |
 |-------|-------|----------------|
@@ -168,175 +179,136 @@ Diese erstellen buchstaeblich Ordner/Dateien mit `{root}` im Namen:
 | `vault_tool.py` | 91 | `Path("data/security/master.key")` |
 | `vault.py` | 113 | `Path("data/security/master.key")` |
 | `economy.py` | 52, 65 | `Path("data/economy.db")` |
-| `bank_tool.py` | 51 | `Path("data/economy.db")` |
-| `ledger_tool.py` | 64 | `Path("data/economy.db")` |
-| `lifecycle_manager.py` | 108 | `"data/registry/citizens.json"` |
-| `registry_agent.py` | 38 | `Path("data/registry/citizens.json")` |
-| `economy_agent.py` | 245 | `"data/registry/licenses.json"` |
-| `watchdog_tool.py` | 37, 40 | `Path("data/ledger/*.jsonl")` |
-| `scout_tool_legacy.py` | 26 | `Path("data/federation/pokedex.json")` |
-| `agency_director.py` | 107 | `Path("data/reports")` |
-| `ledger_visualizer.py` | 32 | `Path("data/ledger/audit_trail.jsonl")` |
-| `local_llama_provider.py` | 21 | `Path("data/models")` |
-| `semantic_engine.py` | 76-80 | `"data/models"` |
-| `prakriti.py` | 79 | `"data/vibe_ledger.db"` |
-| `analyst/architecture_tool.py` | 192, 304 | `"data/vibe_ledger.db"` |
-| `doctor/plugin_main.py` | 42, 48 | `"data/vibe_ledger.db"` |
+| ... | ... | *40+ weitere* |
 
-### Kategorie 3: Hardcoded `/tmp/vibe_os` Pfade (99 Occurrences in 28 Files!)
-
-Obwohl `SystemPathsConfig.runtime_root` existiert, wird es ignoriert:
-
-**vibe_core/ (Hauptcode):**
+### Kategorie 3: Hardcoded `/tmp/vibe_os` Pfade [P0] (99 in 28 Files!)
 
 | Datei | Zeile | Hardcoded Path |
 |-------|-------|----------------|
 | `vfs.py` | 39 | `Path("/tmp/vibe_os/agents")` |
-| `kernel_impl.py` | 221 | `"/tmp/vibe_os/kernel/lineage.db"` (Fallback) |
-| `kernel_impl.py` | 488 | `Path("/tmp/vibe_os/kernel/economy.db")` |
-| `lineage.py` | 64 | `"/tmp/vibe_os/kernel/lineage.db"` (Default) |
-| `legacy.py` | 55 | `Path("/tmp/vibe_os/kernel/lineage.db")` |
-| `legacy.py` | 57 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
-| `legacy.py` | 507 | `Path("/tmp/vibe_os/logs")` |
-| `legacy.py` | 511 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
-| `legacy.py` | 573 | `Path("/tmp/vibe_os/kernel/kernel.pid")` |
-| `legacy.py` | 805 | `Path("/tmp/vibe_os/logs/kernel.log")` |
-| `legacy.py` | 1093 | `Path("/tmp/vibe_os/tasks")` |
-| `local_llama_provider.py` | 28 | `Path("/tmp/vibe_os/models")` |
-| `protocols/agent.py` | 363 | `Path("/tmp/vibe_os/agents/{agent_id}")` |
-| `kernel_spawn.py` | 54 | `Path("/tmp/vibe_os/agents")` |
-| `agent_interface.py` | 317 | `/tmp/vibe_os/agents/{agent_id}` |
+| `kernel_impl.py` | 221, 488 | `/tmp/vibe_os/kernel/...` |
+| `legacy.py` | 55, 57, 507, 511, 573, 805, 1093 | Multiple |
+| `lineage.py` | 64 | Default lineage.db |
+| ... | ... | *99 total* |
 
-**scripts/ (NICHT analysiert im Original-Plan):**
-
-| Datei | Occurrences |
-|-------|-------------|
-| `stress_test_city.py` | 2 |
-| `test_parampara.py` | 2 |
-| `verify_database_isolation.py` | 5 |
-| `verify_lineage_chain.py` | 1 |
-| `smoke_test_kernel.py` | 2 |
-| `issue_passports.py` | 1 |
-| `boot_kernel.py` | 1 |
-
-### Kategorie 4: `.vibe` Schatten-Dateisystem (12+ Stellen, NICHT alle in PathsConfig)
-
-**Im Code gefunden:**
+### Kategorie 4: `.vibe` Schatten-Dateisystem [P0] (12+ Stellen)
 
 | Datei | Zeile | Schatten-Pfad | In Config? |
 |-------|-------|---------------|------------|
 | `boot_sequence.py` | 33 | `.vibe/vibe.db` | ❌ |
-| `boot_sequence.py` | 506 | `.vibe/state/active_mission.json` | ❌ |
-| `project_memory.py` | 28 | `.vibe/project_memory.json` | ❌ |
-| `task_manager.py` | 44 | `.vibe/state` | ❌ |
-| `task_manager.py` | 45 | `.vibe/config` | ❌ |
-| `task_manager.py` | 46 | `.vibe/history/mission_logs` | ❌ |
 | `sqlite_store.py` | 37,53,67 | `.vibe/state/vibe_agency.db` | ❌ |
 | `base_agent.py` | 111,153,154 | `.vibe/runtime/context.json` | ❌ |
-| `base_agent.py` | 153 | `.vibe/config/roadmap.yaml` | ❌ |
-| `heartbeat.py` | 16 | `.vibe/state/.lock` | ❌ |
-| `section_main.py` | 40,59 | `.vibe/state/archive` | ✅ |
-| `section_main.py` | 41,60 | `.vibe/migrations` | ✅ |
+| `task_manager.py` | 44-46 | `.vibe/state`, `.vibe/config` | ❌ |
+| ... | ... | ... | ... |
 
-### Kategorie 5: False Safety Defaults (Python vs YAML)
+### Kategorie 5: False Safety Defaults [P1]
 
-Die `from_dict` Methoden haben inkonsistente Defaults:
+Python Defaults sind `"data/..."` aber YAML ist `"{root}/..."` → verdeckt Bugs.
 
-**section_main.py (paths):**
-```python
-economy_db=data.get("economy_db", "data/economy.db"),  # AUFGELOEST
-vibe_ledger=data.get("vibe_ledger", "data/vibe_ledger.db"),  # AUFGELOEST
-```
-
-**YAML:**
-```yaml
-economy_db: "{root}/economy.db"  # TEMPLATE
-vibe_ledger: "{root}/vibe_ledger.db"  # TEMPLATE
-```
-
-**Das verdeckt Bugs!** Das System scheint zu funktionieren, aber benutzt unterschiedliche Pfad-Strategien je nach Config-Zustand.
-
-### Kategorie 6: `~/.steward` und `~/.vibe` User-Home Pfade (NEU!)
-
-**VIERTES Schatten-Dateisystem entdeckt!**
+### Kategorie 6: `~/.steward` und User-Home Pfade [P1]
 
 | Datei | Zeile | User-Home Pfad |
 |-------|-------|----------------|
 | `runtime_extensions.py` | 25 | `Path.home() / ".steward"` |
-| `build_release.py` | 115 | `~/.vibe/data` |
-| `build_release.py` | 225-226 | `~/.vibe/library`, `~/.vibe/` |
-| `local_llama_provider.py` | 27 | `Path.home() / ".cache" / "steward" / "models"` |
+| `build_release.py` | 115, 225-226 | `~/.vibe/...` (**VERBOTEN nach ADR-025b**) |
+| `local_llama_provider.py` | 27 | `Path.home() / ".cache" / "steward"` |
 
-**NICHT in `config/paths.yaml`!** Diese Pfade sind komplett unmanaged.
+### Kategorie 7: Phoenix Test Governance Section [P1]
 
-**Empfehlung:** `config/paths.yaml` muss erweitert werden:
+Hardcoded `"data/test_baselines.json"`, `"data/logs/test_mutations.log"` in `test_governance/section_main.py`.
 
-```yaml
-user:
-  steward_home: "~/.steward"
-  steward_lib: "{steward_home}/lib"
-  vibe_library: "~/.vibe/library"
-  vibe_config: "~/.vibe/config"
-  cache_models: "~/.cache/steward/models"
-```
+### Kategorie 8: f-String Path Concatenation [P1]
 
-### Kategorie 7: Phoenix Test Governance Section (NEU!)
+`gap_report_tool.py:464` - `f"data/reports/GAP_Report_{timestamp}..."`
 
-Eine ganze Phoenix-Section benutzt hardcoded Pfade:
+### Kategorie 9: Doctor Plugin Hardcoded Checks [P1]
+
+`doctor/plugin_main.py:42,48` - Prueft Pfade ohne Config.
+
+### Kategorie 10: Interface Renderer Git Patterns [P1]
+
+`renderers/git.py:44` - Hardcoded `"data/registry/citizens.json"`.
+
+### Kategorie 11: XDG Inkonsistenz [P1] → **ENTSCHIEDEN via ADR-025a**
+
+3 Stellen benutzen XDG, Config kennt XDG nicht. **Siehe ADR-025a unten.**
+
+### Kategorie 12: `__file__` Relative Pfade [P2] (44 Stellen!)
+
+**Das Problem:** `Path(__file__).parent.parent.parent...` bricht bei:
+- PyInstaller/Frozen Apps
+- Symlinks
+- Nicht konfigurierbar
+
+| Datei | Pattern |
+|-------|---------|
+| `circuit_executor.py:411` | `Path(__file__).parent / "playbook" / "circuits"` |
+| `knowledge/graph.py:454` | `Path(__file__).parent.parent.parent / "knowledge"` |
+| `prompt_composer.py:14` | `Path(__file__).parent.parent / "playbook"` |
+| `legacy.py:52` | Deep traversal |
+| `constitution.py:244` | `/ "CONSTITUTION.md"` |
+| ... | *44 total* |
+
+**Empfehlung:** `__file__`-basierte Pfade NUR fuer paket-interne Assets (Schemata). Alles andere via Config.
+
+### Kategorie 13: Hardcoded `knowledge/` Pfade [P2] (15 Stellen)
 
 | Datei | Zeile | Hardcoded Path |
 |-------|-------|----------------|
-| `test_governance/section_main.py` | 58 | `baseline_path: str = "data/test_baselines.json"` |
-| `test_governance/section_main.py` | 104 | `mutation_log_path: str = "data/logs/test_mutations.log"` |
-| `test_governance/section_main.py` | 120 | Default in `from_dict()`: `"data/test_baselines.json"` |
-| `test_governance/section_main.py` | 132 | Default in `from_dict()`: `"data/logs/test_mutations.log"` |
+| `playbook_loader.py` | 106 | `Path("knowledge/playbooks")` |
+| `circuit_loader.py` | 81 | `Path("knowledge/circuits")` |
+| `template_loader.py` | 42-43 | `"knowledge/templates"` |
+| `action_handlers.py` | 793 | `Path(f"knowledge/templates/...")` |
+| ... | ... | *15 total* |
 
-**IRONIE:** Diese Pfade sind INNERHALB des Phoenix Config Systems aber benutzen dennoch hardcoded Defaults statt Template-Variablen!
+### Kategorie 14: Hardcoded `config/` Pfade [P2] (30 Stellen)
 
-### Kategorie 8: f-String Path Concatenation (NEU!)
+| Datei | Zeile | Hardcoded Path |
+|-------|-------|----------------|
+| `invariants.py` | 60 | `soul_path: str = "config/soul.yaml"` |
+| `plugin_main.py` | 62, 67 | `Path("config/soul.yaml")` |
+| `agent_city/plugin_main.py` | 52 | `Path("config/cities/...")` |
+| `persona.py` | 79 | `PERSONAS_DIR = "config/personas"` |
+| `io_service.py` | 339 | `"config" / "interface.yaml"` |
+| ... | ... | *30 total (viele in manifest.json)* |
 
-Schwer zu greppen, aber gefunden:
+### Kategorie 15: Legacy `vibe_core/playbook/` Pfade [P2] (12 Stellen)
 
-| Datei | Zeile | f-String Path |
-|-------|-------|---------------|
-| `gap_report_tool.py` | 464 | `f"data/reports/GAP_Report_{timestamp}.{output_format}"` |
+Zwei Locations fuer Circuits: `knowledge/circuits/` (DATA) vs `vibe_core/playbook/circuits/` (CODE).
 
-**CI Gate muss erweitert werden um f-Strings zu finden!**
+| Datei | Zeile | Legacy Path |
+|-------|-------|-------------|
+| `kernel_ops.py` | 206 | `"vibe_core/playbook/circuits/wiring_audit.yaml"` |
+| `playbook_loader.py` | 107 | `Path("vibe_core/playbook/playbooks")` |
+| `circuit_loader.py` | 82 | `Path("vibe_core/playbook/circuits")` |
+| `phoenix/config.py` | 139 | `circuits_dir: Path = Path("...")` |
+| `action_handlers.py` | 530, 802 | f-strings mit legacy paths |
+| ... | ... | *12 total* |
 
-### Kategorie 9: Doctor Plugin Hardcoded Checks (NEU!)
+### Kategorie 16: `workspaces/sandbox` [P1] (7 Stellen) - **5. SCHATTEN-DATEISYSTEM!**
 
-| Datei | Zeile | Problem |
-|-------|-------|---------|
-| `doctor/plugin_main.py` | 42 | `required_paths = ["data/vibe_ledger.db", ...]` |
-| `doctor/plugin_main.py` | 48 | Spezial-Handling fuer diesen Pfad |
+| Datei | Zeile | Path |
+|-------|-------|------|
+| `engineer/cartridge_main.py` | 134, 293 | `"./workspaces/sandbox"` |
+| `lifecycle/plugin_main.py` | 75 | `workspace / "workspaces" / "sandbox"` |
 
-Das Doctor Plugin prueft Pfade OHNE Config → kann nicht angepasst werden!
+**Problem:** Parallel zu `/tmp/vibe_os/agents/` → zwei Sandbox-Systeme!
 
-### Kategorie 10: Interface Renderer Git Patterns (NEU!)
+### Kategorie 17: External Library Caches [P2] (HuggingFace & Co)
 
-| Datei | Zeile | Problem |
-|-------|-------|---------|
-| `renderers/git.py` | 44 | `"data/registry/citizens.json"` |
+**Befund:** `runtime_extensions.py` laedt `sentence_transformers`, `huggingface_hub`.
 
-Das ist ein Git-Ignore Pattern - muss dynamisch aus Config kommen!
+**Problem:** Diese Bibliotheken nutzen hardcodierte Defaults (`~/.cache/huggingface`), die sich unserer Kontrolle entziehen.
 
-### Kategorie 11: XDG Inkonsistenz (ARCHITEKTUR-ENTSCHEIDUNG NOETIG!)
+**Risiko:** Unmanaged Disk Usage (GBs an Modellen), keine Isolation.
 
-Der Code benutzt XDG **MANCHMAL**:
+**Fix:** Environment Variables (`HF_HOME`, `TORCH_HOME`, `TRANSFORMERS_CACHE`) muessen beim Boot strikt auf Pfade aus `config/paths.yaml` gesetzt werden:
 
 ```python
-# container_loader.py:53
-xdg_cache = os.environ.get("XDG_CACHE_HOME")
-
-# memory.py:88, license_tool.py:164
-data_home = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))
+# Am Boot-Anfang:
+os.environ["HF_HOME"] = str(config.paths.tool.resolve("cache") / "huggingface")
+os.environ["TORCH_HOME"] = str(config.paths.tool.resolve("cache") / "torch")
 ```
-
-**ABER:** `config/paths.yaml` kennt XDG NICHT.
-
-**Entscheidung noetig:**
-- Falls JA zu XDG-Compliance: `paths.yaml` braucht `xdg_cache_home`, `xdg_data_home` mit Fallbacks
-- Falls NEIN: Die XDG-Checks im Code muessen entfernt werden
 
 ---
 
@@ -344,37 +316,107 @@ data_home = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))
 
 ### 1. Path.cwd() Explosion (36 Stellen!)
 
-Gefunden: **36 Stellen** mit `Path.cwd()` im `vibe_core/` Verzeichnis.
+`Path.cwd()` sollte NUR in Entry-Points erlaubt sein.
 
-**Problem:** Manche Komponenten bekommen `project_root` injiziert, andere fallen auf `Path.cwd()` zurueck.
+### 2. Logging Bootstrap Race Condition
 
-**Empfehlung:** `Path.cwd()` sollte NUR in Entry-Points erlaubt sein:
+**Befund:** Logging beginnt oft, bevor `paths.yaml` geparst ist.
 
-| Datei | Erlaubt? |
-|-------|----------|
-| `boot_sequence.py` | ✅ Entry-Point |
-| `io_service.py` | ✅ Entry-Point |
-| `plugins/**/plugin_main.py` | ✅ Plugin Entry |
-| Alle anderen | ❌ Muessen `project_root` injiziert bekommen |
+**Fix:**
+1. Boot-Logger darf NUR auf `stderr` schreiben
+2. File-Logging wird erst aktiviert, wenn `PhoenixConfig` geladen und der Pfad validiert ist
 
-### 2. Makefile/Scripts nicht analysiert
+### 3. Pre-Commit Cache
 
-Der Plan erwähnt "Scripts" als nicht analysiert. Die Makefile ist ebenfalls ein Risiko:
+`.pre-commit-config.yaml` installiert Hooks nach `~/.cache/pre-commit`. In CI/CD beachten.
 
-```bash
-grep -rE 'data/' Makefile
-grep -rE '/tmp/vibe_os' Makefile
+---
+
+## ENTSCHIEDENE Architektur-Entscheidungen
+
+### ADR-025a: XDG Compliance - **ENTSCHIEDEN: JA fuer Global Scope**
+
+**Status:** ✅ ENTSCHIEDEN
+
+**Entscheidung:** XDG fuer Global Scope (Tool), KEIN XDG fuer Local Scope (Instance).
+
+| Scope | XDG? | Pfad |
+|-------|------|------|
+| Global Tool | ✅ | `$XDG_CONFIG_HOME/steward`, `$XDG_DATA_HOME/steward`, `$XDG_CACHE_HOME/steward` |
+| Local Instance | ❌ | `.vibe/` im Projekt-Root |
+
+**Implementation:**
+
+```python
+import os
+from pathlib import Path
+
+def get_xdg_path(xdg_var: str, fallback: str, subdir: str = "steward") -> Path:
+    base = os.environ.get(xdg_var, str(Path.home() / fallback))
+    return Path(base) / subdir
+
+CONFIG_HOME = get_xdg_path("XDG_CONFIG_HOME", ".config")      # ~/.config/steward
+DATA_HOME = get_xdg_path("XDG_DATA_HOME", ".local/share")     # ~/.local/share/steward
+CACHE_HOME = get_xdg_path("XDG_CACHE_HOME", ".cache")         # ~/.cache/steward
 ```
 
-### 3. Tests mit hardcoded Pfaden
+**Windows Fallbacks:**
+```python
+if platform.system() == "Windows":
+    CONFIG_HOME = Path(os.environ.get("APPDATA", "")) / "steward"
+    DATA_HOME = Path(os.environ.get("LOCALAPPDATA", "")) / "steward"
+    CACHE_HOME = Path(os.environ.get("TEMP", "")) / "steward"
+```
 
-Bereits gefunden:
-- `tests/integration/test_persistence_prakriti.py:29` → `Path("data/test_persistence.db")`
+---
 
-**Tests muessen in Phase 1-2 geprueft werden** weil sie:
-- Die falschen Annahmen validieren
-- Nach Migration fehlschlagen koennten
-- Self-fulfilling prophecies sind
+### ADR-025b: Strict Scope Separation - **ENTSCHIEDEN**
+
+**Status:** ✅ ENTSCHIEDEN
+
+**Konzept:**
+
+| Konzept | STEWARD | VIBE |
+|---------|---------|------|
+| Was ist es? | Das Tool/CLI | Die Runtime/Instanz |
+| Analogie | `docker` CLI | Container-Prozess |
+| Scope | Global (User-Level) | Lokal (Projekt-Level) |
+| State | Keys, Extensions, Config | Memory, Ledger, Tasks |
+| Lebensdauer | Permanent (ueber Projekte) | Ephemer (pro Projekt) |
+
+**Entscheidung:**
+
+```yaml
+# ================================================
+# GLOBAL SCOPE: Das Tool (steward CLI) - XDG
+# ================================================
+tool:
+  config_root: "${XDG_CONFIG_HOME:-$HOME/.config}/steward"
+  data_root: "${XDG_DATA_HOME:-$HOME/.local/share}/steward"
+  cache_root: "${XDG_CACHE_HOME:-$HOME/.cache}/steward"
+
+  # Abgeleitete Pfade
+  keys: "{config_root}/keys"
+  profiles: "{config_root}/profiles"
+  lib: "{data_root}/lib"           # numpy, torch hier
+  models: "{data_root}/models"     # HuggingFace Models hier
+  library: "{data_root}/library"   # Installierte .vibe Container
+
+# ================================================
+# LOCAL SCOPE: Die Instanz (vibe kernel)
+# ================================================
+project:
+  vibe_root: ".vibe"
+  state_db: "{vibe_root}/vibe.db"
+  runtime: "{vibe_root}/runtime"   # ERSETZT /tmp/vibe_os!
+  logs: "{vibe_root}/logs"
+  memory: "{vibe_root}/state/memory.json"
+  tasks: "{vibe_root}/state/tasks"
+```
+
+**VERBOT:** `~/.vibe/` ist ein Anti-Pattern! Globaler Vibe-State macht keinen Sinn.
+
+**MIGRATION:** `/tmp/vibe_os/` → `.vibe/runtime/`
 
 ---
 
@@ -385,7 +427,7 @@ Bereits gefunden:
 ```python
 # VORHER (VERBOTEN):
 class SomeTool:
-    DB_PATH = Path("data/economy.db")  # HARDCODED - VERBOTEN!
+    DB_PATH = Path("data/economy.db")
 
 # NACHHER (RICHTIG):
 class SomeTool:
@@ -399,226 +441,130 @@ class SomeTool:
 
 ### Prinzip 2: Keine Fallbacks
 
-```python
-# VORHER (VERBOTEN):
-try:
-    ledger_path = str(phoenix_config.paths.data.vibe_ledger)
-except:
-    ledger_path = "data/vibe_ledger.db"  # FALLBACK - VERBOTEN!
-
-# NACHHER (RICHTIG):
-ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
-# Kein Fallback. Wenn Config kaputt ist, soll es LAUT SCHEITERN.
-```
+Wenn Config kaputt ist, soll es LAUT SCHEITERN.
 
 ### Prinzip 3: Single Source of Truth
 
-```python
-# section_main.py - Defaults MUESSEN Template-Form haben:
-economy_db=data.get("economy_db", "{root}/economy.db"),  # Konsistent mit YAML!
+Alle Pfade in `config/paths.yaml`, nirgendwo sonst.
 
-# ODER: Keine Defaults - wenn YAML fehlt, Exception werfen
-```
+### Prinzip 4: Bootstrap Order korrigieren
 
-### Prinzip 4: Alle Schatten-Pfade in PathsConfig
+Config ERST, dann State-Stores.
 
-`config/paths.yaml` muss erweitert werden:
-
-```yaml
-# NEU: Project-lokale State-Pfade
-project:
-  vibe_root: ".vibe"
-  state_db: "{vibe_root}/vibe.db"
-  memory_file: "{vibe_root}/project_memory.json"
-  tasks_dir: "{vibe_root}/state"
-  config_dir: "{vibe_root}/config"
-  history_dir: "{vibe_root}/history/mission_logs"
-  agency_db: "{vibe_root}/state/vibe_agency.db"
-  context_json: "{vibe_root}/runtime/context.json"
-  roadmap_yaml: "{vibe_root}/config/roadmap.yaml"
-  lock_file: "{vibe_root}/state/.lock"
-
-# NEU: User-Home Pfade
-user:
-  steward_home: "~/.steward"
-  steward_lib: "{steward_home}/lib"
-  vibe_library: "~/.vibe/library"
-  cache_models: "~/.cache/steward/models"
-```
-
-### Prinzip 5: Bootstrap Order korrigieren
+### Prinzip 5: External Caches kontrollieren
 
 ```python
-class BootSequence:
-    def __init__(self, project_root: Path | None = None):
-        self.project_root = project_root or Path.cwd()
-
-        # 1. ERST Config laden
-        self._config = PhoenixConfig.load(self.project_root)
-
-        # 2. DANN Store mit Config-Pfad initialisieren
-        state_db_path = self._config.paths.project.resolve("state_db")
-        self.sqlite_store = SQLiteStore(self.project_root / state_db_path)
+# Boot-Anfang:
+os.environ["HF_HOME"] = str(config.paths.tool.resolve("cache") / "huggingface")
 ```
 
 ---
 
-## Migrations-Plan (REVIDIERT)
+## Migrations-Plan (FINAL - 16 Phasen)
 
-### Phase 0: Pre-Audit Cleanup (NEU!)
+### Phase 0: Pre-Audit Cleanup
 
-| Aktion |
-|--------|
-| Alle 11 Kategorien in Plan dokumentiert ✅ |
-| Violation Count aktualisiert (100+) ✅ |
-| XDG-Architektur-Entscheidung treffen |
-| `~/.steward` Entscheidung treffen (behalten oder entfernen?) |
-| Tests auf hardcoded Pfade pruefen |
+- [x] Alle 17 Kategorien dokumentiert
+- [x] Violation Count: 250+
+- [x] ADR-025a entschieden (XDG fuer Global)
+- [x] ADR-025b entschieden (Strict Scope Separation)
+- [ ] Tests auf hardcoded Pfade pruefen
 
 ### Phase 1: Kategorie 1 Bugs (KRITISCH - erstellt {root} Ordner)
 
-| Datei | Zeile | Aenderung |
-|-------|-------|-----------|
-| `kernel_impl.py` | 177 | `.vibe_ledger` → `.resolve("vibe_ledger")` |
-| `license_tool.py` | 159 | `.registry` → `.resolve("registry_citizens")` |
-| `memory.py` | 83 | `.events` → `.resolve("events_herald")` |
+`.vibe_ledger` → `.resolve("vibe_ledger")` in 3 Dateien.
 
 ### Phase 2: Schatten-Dateisysteme definieren (VORGEZOGEN!)
 
-| Aenderung |
-|-----------|
-| `.vibe/*` Pfade zu `config/paths.yaml` hinzufuegen |
-| `~/.steward/*` Pfade zu `config/paths.yaml` hinzufuegen |
-| Bootstrap-Order in `boot_sequence.py` korrigieren |
+- `.vibe/*` Pfade zu `config/paths.yaml` hinzufuegen
+- XDG-konforme `tool:` Section hinzufuegen
+- Bootstrap-Order in `boot_sequence.py` korrigieren
+- `~/.vibe/` Nutzung in `build_release.py` entfernen
 
 ### Phase 3: Core System (P0)
 
-| Datei | Aenderung |
-|-------|-----------|
-| `ledger.py:132` | Config Injection statt Default |
-| `boot_orchestrator.py:77` | Config Injection, Fallback entfernen |
-| `kernel_impl.py:179` | Fallback entfernen |
-| `kernel_impl.py:221` | Fallback entfernen |
+Fallbacks entfernen in `ledger.py`, `boot_orchestrator.py`, `kernel_impl.py`.
 
 ### Phase 4: False Safety Defaults (P1)
 
-| Datei | Aenderung |
-|-------|-----------|
-| `section_main.py` (paths) | Alle Defaults zu Template-Form aendern ODER entfernen |
-| `section_main.py` (test_governance) | Alle Defaults zu Template-Form aendern |
+Defaults zu Template-Form aendern.
 
-### Phase 5: /tmp/vibe_os Migration (P1)
+### Phase 5: /tmp/vibe_os → .vibe/runtime Migration (P1)
 
-| Datei |
-|-------|
-| `vfs.py` |
-| `legacy.py` (alle 8+ Stellen) |
-| `lineage.py` |
-| `kernel_spawn.py` |
-| `agent_interface.py` |
-| `protocols/agent.py` |
-| `local_llama_provider.py` |
+99 Stellen migrieren.
 
-### Phase 6: Governance/State Tools (P1)
+### Phase 6: workspaces/sandbox Konsolidierung (P1)
 
-| Datei |
-|-------|
-| `vault_tool.py`, `vault.py` |
-| `economy.py`, `bank_tool.py`, `ledger_tool.py` |
-| `registry_agent.py`, `lifecycle_manager.py` |
+Entscheidung: Mit `.vibe/runtime/` mergen oder eigene Section?
 
-### Phase 7: Features/Plugins (P2)
+### Phase 7: Governance/State Tools (P1)
 
-| Datei |
-|-------|
-| `watchdog_tool.py` |
-| `agency_director.py` |
-| `ledger_visualizer.py` |
-| `semantic_engine.py` |
-| `doctor/plugin_main.py` |
-| `renderers/git.py` |
-| `gap_report_tool.py` |
+`vault_tool.py`, `economy.py`, etc.
 
-### Phase 8: Scripts Migration (P2)
+### Phase 8: External Library Caches (P1)
 
-| Datei |
-|-------|
-| `scripts/stress_test_city.py` |
-| `scripts/test_parampara.py` |
-| `scripts/verify_database_isolation.py` |
-| `scripts/verify_lineage_chain.py` |
-| `scripts/smoke_test_kernel.py` |
-| `scripts/issue_passports.py` |
-| `scripts/boot_kernel.py` |
-| `Makefile` |
+`HF_HOME`, `TORCH_HOME` beim Boot setzen.
 
-### Phase 9: Path.cwd() Cleanup (P2)
+### Phase 9: Features/Plugins (P2)
 
-| Aktion |
-|--------|
-| Audit alle 36 Stellen |
-| Nur Entry-Points behalten |
-| Alle anderen: `project_root` Injection |
+Doctor, Renderers, Gap Report Tool.
 
-### Phase 10: Test Suite Migration (P3)
+### Phase 10: Scripts Migration (P2)
 
-| Aktion |
-|--------|
-| Alle Tests auf hardcoded Pfade pruefen |
-| Test-Fixtures auf Config umstellen |
-| Integration Tests anpassen |
+14 Scripts mit hardcoded Pfaden.
+
+### Phase 11: `__file__` Pfade kategorisieren (P2)
+
+44 Stellen: Paket-intern OK, konfigurierbar MIGRATION.
+
+### Phase 12: `knowledge/` Migration (P2)
+
+15 Stellen auf `config.paths.knowledge.resolve()` umstellen.
+
+### Phase 13: `config/` Migration (P2)
+
+30 Stellen, `config:` Section zu paths.yaml hinzufuegen.
+
+### Phase 14: Legacy `vibe_core/playbook/` Migration (P2)
+
+12 Stellen, Deprecation-Warnings emittieren.
+
+### Phase 15: Path.cwd() Cleanup (P2)
+
+36 Stellen auditen, nur Entry-Points behalten.
+
+### Phase 16: Test Suite Migration (P3)
+
+Tests auf Config umstellen.
 
 ---
 
 ## Enforcement
 
-### Pre-commit Hook (ERWEITERT)
+### CI Gate (FINAL)
 
 ```bash
-# .githooks/pre-commit muss erweitert werden:
-
-# Original Checks
-grep -rE 'Path\("data/' vibe_core/ && exit 1
-grep -rE 'paths\.(data|system|knowledge)\.[a-z_]+[^(]' vibe_core/ && exit 1
-grep -rE '"/tmp/vibe_os' vibe_core/ && exit 1
-
-# NEU: Erweiterte Checks
-grep -rE '"data/' vibe_core/ && exit 1                    # String literals
-grep -rE "f['\"]data/" vibe_core/ && exit 1               # f-strings
-grep -rE '\.vibe/' vibe_core/ && exit 1                   # .vibe in Code (ohne Config)
-grep -rE '~/.vibe' . && exit 1                            # User home .vibe
-grep -rE '~/.steward' . && exit 1                         # User home steward
-grep -rE 'Path\.home\(\)' vibe_core/ | grep -v container_loader && exit 1  # Unmanaged home
-```
-
-### CI Gate (ERWEITERT)
-
-```bash
-# VOLLSTAENDIGER CI GATE:
-
-# Hardcoded data/ paths
+# === P0: Kritische Pfade ===
 grep -rE 'Path\("data/' vibe_core/ && exit 1
 grep -rE '"data/' vibe_core/ && exit 1
 grep -rE "f['\"]data/" vibe_core/ && exit 1
-
-# resolve() bypass
 grep -rE 'paths\.(data|system|knowledge)\.[a-z_]+[^(]' vibe_core/ && exit 1
-
-# Runtime paths
 grep -rE '"/tmp/vibe_os' vibe_core/ && exit 1
 
-# Shadow filesystems
+# === P1: Schatten-Dateisysteme ===
 grep -rE '\.vibe/' vibe_core/ | grep -v paths.yaml | grep -v section_main && exit 1
-grep -rE '~/.vibe' . && exit 1
-grep -rE '~/.steward' . | grep -v docs/ && exit 1
+grep -rE '~/.vibe' . && exit 1                            # VERBOTEN nach ADR-025b!
+grep -rE 'workspaces/sandbox' vibe_core/ && exit 1
 
-# Unmanaged Path.home()
-grep -rE 'Path\.home\(\)' vibe_core/ | grep -v container_loader && exit 1
+# === P2: Deployment-Flexibilitaet ===
+grep -rE 'Path\("knowledge/' vibe_core/ && exit 1
+grep -rE 'Path\("config/' vibe_core/ && exit 1
+grep -rE '"vibe_core/playbook/' vibe_core/ && exit 1
+
+# === Warnings ===
+grep -rE 'Path\(__file__\)\.parent\.parent\.parent' vibe_core/ && echo "WARNING: Deep __file__ traversal"
+grep -rE 'Path\.home\(\)' vibe_core/ | grep -v runtime_extensions && echo "WARNING: Unmanaged Path.home()"
 ```
-
-### Watchman AST-Visitor aktivieren
-
-Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird nicht enforced.
 
 ---
 
@@ -628,31 +574,23 @@ Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird n
 |--------|-------------------|--------|------------|
 | `{root}` Ordner wird erstellt | HOCH | KRITISCH | Phase 1 SOFORT |
 | Daten an falschen Orten | HOCH | HOCH | Full Migration |
-| Bootstrap Paradox | HOCH | HOCH | Phase 2 (vorgezogen) |
-| Tests validieren falsche Pfade | MITTEL | HOCH | Tests frueh pruefen |
-| XDG-Inkonsistenz | MITTEL | MITTEL | Architektur-Entscheidung |
-| `~/.steward` vergessen | NIEDRIG | MITTEL | In Plan aufgenommen |
-| Scripts nicht migriert | MITTEL | MITTEL | Phase 8 |
-| Path.cwd() nicht injiziert | MITTEL | MITTEL | Phase 9 |
+| Bootstrap Paradox | HOCH | HOCH | Phase 2 |
+| HuggingFace fuellt Disk | MITTEL | HOCH | Phase 8 |
+| workspaces/ vs /tmp/vibe_os | MITTEL | HOCH | Phase 6 |
+| Tests validieren falsche Pfade | MITTEL | HOCH | Phase 16 |
+| `__file__` bricht bei PyInstaller | MITTEL | MITTEL | Phase 11 |
 
 ---
 
-## Offene Architektur-Entscheidungen
+## Gesamtzahlen (Verified)
 
-### ADR-025a: XDG Compliance
-
-**Status:** OFFEN - Entscheidung noetig
-
-**Optionen:**
-1. **XDG-compliant**: `paths.yaml` bekommt `xdg_cache_home`, `xdg_data_home` mit Fallbacks
-2. **Eigenes Schema**: XDG-Checks im Code entfernen, nur `~/.steward` und `~/.vibe` nutzen
-3. **Hybrid**: XDG fuer Cache, eigenes Schema fuer Config/Data
-
-### ADR-025b: ~/.steward vs ~/.vibe
-
-**Status:** OFFEN - Entscheidung noetig
-
-**Frage:** Warum existieren BEIDE? Konsolidieren zu einem?
+| Metrik | Wert |
+|--------|------|
+| Kategorien | 17 |
+| Total Violations | 250+ |
+| Schatten-Dateisysteme | 5 |
+| Migrations-Phasen | 16 |
+| Dateien betroffen | 80+ |
 
 ---
 
@@ -660,14 +598,7 @@ Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird n
 
 **ADR-025: Mandatory resolve() and Config Injection for All Paths**
 
-**Status:** Proposed
-
-**Context:**
-- PhoenixConfig.paths benutzt Template-Variablen wie `{root}`, `{runtime_root}`
-- Code benutzt Pfade inkonsistent - manchmal mit, manchmal ohne resolve()
-- VIER Schatten-Dateisysteme (`data/`, `/tmp/vibe_os/`, `.vibe/`, `~/.steward/`) existieren parallel
-- Python Defaults in `from_dict()` sind inkonsistent mit YAML Templates
-- Bootstrap initialisiert Store VOR Config-Load
+**Status:** Proposed → **Accepted**
 
 **Decision:**
 1. ALLE Pfad-Zugriffe MUESSEN `resolve()` benutzen
@@ -679,9 +610,13 @@ Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird n
 7. Python Defaults muessen Template-Form haben oder entfernt werden
 8. Bootstrap-Order: Config ERST, dann State-Stores
 9. Path.cwd() nur in Entry-Points erlaubt
+10. **Global Scope = XDG-compliant** (ADR-025a)
+11. **Local Scope = `.vibe/`** (ADR-025b)
+12. **`~/.vibe/` ist VERBOTEN** (ADR-025b)
+13. **External Library Caches muessen kontrolliert werden**
 
 **Consequences:**
-- 100+ Stellen muessen migriert werden
+- 250+ Stellen muessen migriert werden
 - Dependency Injection muss durchgaengig implementiert werden
 - CI muss neue Violations blockieren
 - Volle Flexibilitaet fuer verschiedene Deployment-Szenarien
@@ -690,5 +625,7 @@ Der existiert bereits in `watchman/tools/standards_inspection.py:71` aber wird n
 ---
 
 *Erstellt: 2025-12-12 | Letzte Aktualisierung: 2025-12-12*
-*Senior Audit Contributions: Gemini (2025-12-12), Opus (2025-12-12)*
-*Verification: All 11 categories verified against codebase*
+*Senior Audit Contributions: Gemini (3 rounds), Opus (2 rounds)*
+*Verification: All 17 categories verified against codebase*
+*ADR-025a: XDG Compliance - ENTSCHIEDEN*
+*ADR-025b: Strict Scope Separation - ENTSCHIEDEN*
