@@ -1,8 +1,9 @@
 # OPUS-009: Unified State Management (PRAKRITI)
 
-> **Status**: ✅ IMPLEMENTED
+> **Status**: 🚧 PARTIAL - Phase 1-3 Complete, Write Ops Missing
 > **Created**: 2025-12-08
-> **Implemented**: 2025-12-08d)
+> **Phase 1-3**: 2025-12-08
+> **Phase 4+**: See OPUS-027 for Git Write Operations
 > **Purpose**: Unified State & Identity Management for Agent OS
 > **GAD-000**: See compliance section below
 
@@ -620,7 +621,17 @@ class Prakriti:
 
 **Signed**: Opus 4.5
 **Date**: 2025-12-08
-**Status**: AWAITING REVIEW (No implementation until approved)
+**Status**: 🚧 PARTIAL - Read operations complete, Write operations in OPUS-027
 
 > *"The Repository IS the Mind"*
 > *- Gemini's Insight*
+
+---
+
+## Continuation
+
+**OPUS-027: Prakriti Git Integration** completes the write operations described in this document:
+- `GitState.commit()`, `stage()`
+- `Prakriti.commit_if_dirty()`
+- Kernel boot/shutdown integration
+- VISNU protection in commit path
