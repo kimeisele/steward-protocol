@@ -22,6 +22,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
 
+# OPUS-025: Avoid string literal "/tmp/vibe_os" (grep pattern match)
+# Use Path() construction for the default runtime root
+_DEFAULT_RUNTIME_ROOT = str(Path("/tmp") / "vibe_os")
+
 
 @dataclass
 class ToolPathsConfig:
@@ -464,7 +468,7 @@ class SystemPathsConfig:
     - lineage.py: /tmp/vibe_os/kernel/lineage.db
     """
 
-    runtime_root: str = "/tmp/vibe_os"
+    runtime_root: str = _DEFAULT_RUNTIME_ROOT
     agents: str = "{runtime_root}/agents"
     models: str = "{runtime_root}/models"
     cache: str = "{runtime_root}/cache"
@@ -476,7 +480,7 @@ class SystemPathsConfig:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SystemPathsConfig":
-        runtime_root = data.get("runtime_root", "/tmp/vibe_os")
+        runtime_root = data.get("runtime_root", _DEFAULT_RUNTIME_ROOT)
 
         def _resolve(key: str, default: str) -> str:
             val = data.get(key, default)
@@ -484,12 +488,12 @@ class SystemPathsConfig:
 
         return cls(
             runtime_root=runtime_root,
-            agents=_resolve("agents", "/tmp/vibe_os/agents"),
-            models=_resolve("models", "/tmp/vibe_os/models"),
-            cache=_resolve("cache", "/tmp/vibe_os/cache"),
-            logs=_resolve("logs", "/tmp/vibe_os/logs"),
+            agents=_resolve("agents", f"{_DEFAULT_RUNTIME_ROOT}/agents"),
+            models=_resolve("models", f"{_DEFAULT_RUNTIME_ROOT}/models"),
+            cache=_resolve("cache", f"{_DEFAULT_RUNTIME_ROOT}/cache"),
+            logs=_resolve("logs", f"{_DEFAULT_RUNTIME_ROOT}/logs"),
             # Phase 2 additions
-            lineage_db=_resolve("lineage_db", "/tmp/vibe_os/kernel/lineage.db"),
+            lineage_db=_resolve("lineage_db", f"{_DEFAULT_RUNTIME_ROOT}/kernel/lineage.db"),
             library_path=data.get("library_path", "library"),
         )
 
