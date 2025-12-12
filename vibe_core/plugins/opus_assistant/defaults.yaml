@@ -12,8 +12,8 @@
 # =============================================================================
 plugin:
   id: opus_assistant
-  version: "1.3.0"
-  phase: 3  # CLI Commands
+  version: "1.4.0"
+  phase: 4  # Cognitive Circuits
 
 # =============================================================================
 # VERIFICATION ENGINE

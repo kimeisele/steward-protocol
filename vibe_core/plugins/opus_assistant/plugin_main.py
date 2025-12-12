@@ -52,14 +52,13 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
-
-    from .core.config_loader import ConfigLoader
-    from .core.context_service import OpusContextService
-    from .core.drift_detector import DriftDetector
-    from .core.observation_logger import ObservationLogger
-    from .core.opus_generator import OpusGenerator
-    from .core.verification_logic import VerificationEngine
-    from .events.kernel_tick import KernelTickHandler
+    from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader
+    from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
+    from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
+    from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
+    from vibe_core.plugins.opus_assistant.core.opus_generator import OpusGenerator
+    from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
+    from vibe_core.plugins.opus_assistant.events.kernel_tick import KernelTickHandler
 
 logger = logging.getLogger("OPUS_ASSISTANT")
 
@@ -140,7 +139,7 @@ class OpusAssistantPlugin(KernelPlugin):
 
         Merges: defaults.yaml (plugin) + opus.yaml (system)
         """
-        from .core.config_loader import ConfigLoader
+        from vibe_core.plugins.opus_assistant.core.config_loader import ConfigLoader
 
         self._config_loader = ConfigLoader(workspace_root=self._workspace or Path.cwd())
         self._config = self._config_loader.load()
@@ -158,7 +157,7 @@ class OpusAssistantPlugin(KernelPlugin):
             return
 
         try:
-            from .events.kernel_tick import KernelTickHandler
+            from vibe_core.plugins.opus_assistant.events.kernel_tick import KernelTickHandler
 
             self._tick_handler = KernelTickHandler(self)
             if self._tick_handler.subscribe():
@@ -184,7 +183,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Verification report dict
         """
-        from .core.verification_logic import VerificationEngine
+        from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
 
         workspace = self._workspace or Path.cwd()
         config = self._config.get("verification", {})
@@ -203,7 +202,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Drift report dict
         """
-        from .core.drift_detector import DriftDetector
+        from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
 
         workspace = self._workspace or Path.cwd()
         detector = DriftDetector(workspace_root=workspace)
@@ -224,7 +223,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Quick check results dict
         """
-        from .core.drift_detector import DriftDetector
+        from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
 
         workspace = self._workspace or Path.cwd()
         detector = DriftDetector(workspace_root=workspace)
@@ -243,7 +242,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             OpusData as dict
         """
-        from .core.opus_generator import OpusGenerator
+        from vibe_core.plugins.opus_assistant.core.opus_generator import OpusGenerator
 
         workspace = self._workspace or Path.cwd()
         generator = OpusGenerator(workspace_root=workspace)
@@ -270,7 +269,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Dict mapping section name to content
         """
-        from .core.opus_generator import OpusGenerator
+        from vibe_core.plugins.opus_assistant.core.opus_generator import OpusGenerator
 
         workspace = self._workspace or Path.cwd()
         generator = OpusGenerator(workspace_root=workspace)
@@ -318,7 +317,7 @@ class OpusAssistantPlugin(KernelPlugin):
 
     def get_verification_engine(self) -> "VerificationEngine":
         """Get a VerificationEngine instance."""
-        from .core.verification_logic import VerificationEngine
+        from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
 
         workspace = self._workspace or Path.cwd()
         config = self._config.get("verification", {})
@@ -326,14 +325,14 @@ class OpusAssistantPlugin(KernelPlugin):
 
     def get_drift_detector(self) -> "DriftDetector":
         """Get a DriftDetector instance."""
-        from .core.drift_detector import DriftDetector
+        from vibe_core.plugins.opus_assistant.core.drift_detector import DriftDetector
 
         workspace = self._workspace or Path.cwd()
         return DriftDetector(workspace_root=workspace)
 
     def get_opus_generator(self) -> "OpusGenerator":
         """Get an OpusGenerator instance."""
-        from .core.opus_generator import OpusGenerator
+        from vibe_core.plugins.opus_assistant.core.opus_generator import OpusGenerator
 
         workspace = self._workspace or Path.cwd()
         return OpusGenerator(workspace_root=workspace)
@@ -504,9 +503,12 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Formatted status dict
         """
-        from .cli.commands import format_status_output
+        from vibe_core.plugins.opus_assistant.cli.commands import format_status_output
 
+        # Get current context, or synthesize fresh if not available
         context = self.get_current_context()
+        if context is None:
+            context = self.synthesize_context()
         return format_status_output(context, json_mode=json)
 
     def cmd_opus_log(self, limit: int = 20, json: bool = False) -> Dict[str, Any]:
@@ -522,7 +524,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Formatted log dict
         """
-        from .cli.commands import format_log_output, parse_journal_from_opus
+        from vibe_core.plugins.opus_assistant.cli.commands import format_log_output, parse_journal_from_opus
 
         workspace = self._workspace or Path.cwd()
         opus_path = workspace / "OPUS.md"
@@ -543,7 +545,7 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Formatted verification dict
         """
-        from .cli.commands import format_verify_output
+        from vibe_core.plugins.opus_assistant.cli.commands import format_verify_output
 
         verification = self.verify(quick=quick)
         return format_verify_output(verification, json_mode=json)
