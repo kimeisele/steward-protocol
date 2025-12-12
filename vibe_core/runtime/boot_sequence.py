@@ -45,10 +45,14 @@ class BootSequence:
         self.playbook_engine = UnifiedRouter()  # UnifiedRouter replaces PlaybookRouter
 
         # Conveyor Belt 3: Prompt Composition (Context-Aware)
-        from vibe_core.runtime.prompt_context import PromptContext
+        # Use SINGLETON to share with plugins that register context
+        from vibe_core.runtime.prompt_context import get_prompt_context
 
-        self.prompt_context = PromptContext(self.project_root)
+        self.prompt_context = get_prompt_context()
         self.prompt_composer = PromptComposer(self.prompt_context)
+
+        # Load plugins so they can register their context providers
+        self._load_plugin_contexts()
 
         # Output Manager (Renderer)
         from vibe_core.doc_renderer import DocRenderer
@@ -72,6 +76,31 @@ class BootSequence:
 
         self.llm = LLMEngine()
 
+    def _load_plugin_contexts(self) -> None:
+        """
+        Load plugins and let them register context providers.
+
+        SCALABLE PATTERN: Any plugin with a `register_context_provider` method
+        can inject context into prompts WITHOUT modifying core files.
+        """
+        try:
+            from vibe_core.plugin_loader import PluginLoader
+
+            plugins, _ = PluginLoader.discover_and_load()
+
+            for plugin_id, plugin in plugins.items():
+                # Check if plugin has a context registration method
+                if hasattr(plugin, "_register_context_provider"):
+                    try:
+                        plugin._workspace = self.project_root
+                        plugin._register_context_provider()
+                    except Exception:
+                        # Silent fail - not all plugins need context
+                        pass
+        except Exception:
+            # Plugin loading is optional for boot
+            pass
+
     def run(self, user_input: str | None = None):
         """Execute the boot sequence"""
 
@@ -90,18 +119,29 @@ class BootSequence:
 
         # Resolve dynamic context from PromptContext resolvers
         print("🔌 Resolving dynamic context...", file=sys.stderr)
-        resolved = self.prompt_context.resolve(
-            [
-                "kernel_status",
-                "kernel_agents",
-                "kernel_agents_count",
-                "kernel_ledger_events",
-                "inbox_count",
-                "agenda_summary",
-                "git_sync_status",
-                "system_time",
-            ]
-        )
+        # Core keys (system-level context)
+        core_keys = [
+            "kernel_status",
+            "kernel_agents",
+            "kernel_agents_count",
+            "kernel_ledger_events",
+            "inbox_count",
+            "agenda_summary",
+            "git_sync_status",
+            "system_time",
+            # Core *_context keys (STEWARD Protocol Layer 1.5/1.6)
+            "user_context",
+            "team_context",
+        ]
+
+        # OPUS-029: Auto-discover PLUGIN context keys (SCALABLE PATTERN)
+        # Plugins can register "*_context" keys - they're auto-included!
+        # NO hardcoding of specific plugin keys here.
+        plugin_keys = [
+            key for key in self.prompt_context._resolvers.keys() if key.endswith("_context") and key not in core_keys
+        ]
+
+        resolved = self.prompt_context.resolve(core_keys + plugin_keys)
         context["resolved"] = resolved
 
         # Load project memory (semantic layer)
@@ -309,12 +349,21 @@ ACTION REQUIRED:
         steward_config = phoenix.steward
 
         # Resolve dynamic context values
-        resolved = self.prompt_context.resolve(
-            [
-                "kernel_status",
-                "kernel_agents_count",
-            ]
-        )
+        # Core keys (always included)
+        core_keys = ["kernel_status", "kernel_agents_count"]
+
+        # Auto-discover plugin contexts (SCALABLE PATTERN)
+        # Any plugin can register "*_context" keys - they're auto-included!
+        plugin_keys = [key for key in self.prompt_context._resolvers.keys() if key.endswith("_context")]
+
+        resolved = self.prompt_context.resolve(core_keys + plugin_keys)
+
+        # Format plugin contexts for injection
+        plugin_context_section = ""
+        for key in sorted(plugin_keys):
+            value = resolved.get(key, "")
+            if value and str(value).strip():
+                plugin_context_section += str(value).strip() + "\n\n"
 
         # Build behavior rules from config
         behavior = steward_config.behavior
@@ -376,7 +425,7 @@ KERNEL STATE
 Status: {resolved.get("kernel_status", "unknown")}
 Agents: {resolved.get("kernel_agents_count", 0)}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{plugin_context_section}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EXECUTION PROTOCOL
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Execute the task following the workflow

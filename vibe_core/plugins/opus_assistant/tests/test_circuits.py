@@ -253,6 +253,18 @@ class TestManifestCircuitIntegration:
 
         assert "auto_heal.yaml" in circuit_names
 
+    def test_manifest_lists_auto_refresh(self):
+        """Manifest should list auto_refresh circuit."""
+        import json
+
+        manifest_path = Path("vibe_core/plugins/opus_assistant/manifest.json")
+        manifest = json.loads(manifest_path.read_text())
+
+        circuits = manifest.get("circuits", [])
+        circuit_names = [Path(c).name for c in circuits]
+
+        assert "auto_refresh.yaml" in circuit_names
+
     def test_manifest_has_circuits_capability(self):
         """Manifest should declare circuits capability."""
         import json
@@ -262,3 +274,66 @@ class TestManifestCircuitIntegration:
 
         capabilities = manifest.get("capabilities", [])
         assert "opus.circuits" in capabilities
+
+
+# =============================================================================
+# Auto-Refresh Circuit Tests
+# =============================================================================
+
+
+class TestAutoRefreshCircuit:
+    """Test OPUS_AUTO_REFRESH circuit definition."""
+
+    def test_circuit_file_exists(self):
+        """auto_refresh.yaml should exist."""
+        from vibe_core.plugins.opus_assistant.circuits import AUTO_REFRESH_PATH
+
+        assert AUTO_REFRESH_PATH.exists()
+
+    def test_circuit_valid_yaml(self):
+        """auto_refresh.yaml should be valid YAML."""
+        from vibe_core.plugins.opus_assistant.circuits import AUTO_REFRESH_PATH
+
+        with open(AUTO_REFRESH_PATH) as f:
+            data = yaml.safe_load(f)
+
+        assert data is not None
+        assert "circuit" in data
+
+    def test_circuit_has_id(self):
+        """Circuit should have correct ID."""
+        from vibe_core.plugins.opus_assistant.circuits import AUTO_REFRESH_PATH
+
+        with open(AUTO_REFRESH_PATH) as f:
+            data = yaml.safe_load(f)
+
+        assert data["circuit"]["id"] == "OPUS_AUTO_REFRESH"
+
+    def test_circuit_has_triggers(self):
+        """Circuit should define event triggers."""
+        from vibe_core.plugins.opus_assistant.circuits import AUTO_REFRESH_PATH
+
+        with open(AUTO_REFRESH_PATH) as f:
+            data = yaml.safe_load(f)
+
+        triggers = data["circuit"].get("triggers", [])
+        assert len(triggers) > 0
+
+        # Should trigger on KERNEL_BOOT
+        trigger_events = [t.get("event") for t in triggers]
+        assert "KERNEL_BOOT" in trigger_events
+
+    def test_circuit_has_states(self):
+        """Circuit should define states."""
+        from vibe_core.plugins.opus_assistant.circuits import AUTO_REFRESH_PATH
+
+        with open(AUTO_REFRESH_PATH) as f:
+            data = yaml.safe_load(f)
+
+        states = data["circuit"].get("states", {})
+        assert len(states) > 0
+
+        # Should have key states
+        assert "check_freshness" in states
+        assert "regenerate_opus" in states
+        assert "COMPLETE" in states

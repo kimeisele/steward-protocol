@@ -1,53 +1,39 @@
+"""
+Debug script for OPUS verification.
+
+Uses opus_assistant plugin (OPUS-029 migration).
+"""
+
 import sys
 from pathlib import Path
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.append(str(PROJECT_ROOT))
-
-
-class MockKernel:
-    project_root = PROJECT_ROOT
-
-
-from vibe_core.plugins.interface.renderers.opus.panels.verification import VerificationPanel
+sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def run():
-    print("DEBUG: Initializing VerificationPanel")
-    kernel = MockKernel()
+    """Run OPUS verification debug."""
+    from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
 
-    # Manually inject BasePanel dependency since we aren't using the full plugin loader
-    # VerificationPanel inherits BasePanel, which needs kernel.
-    # But wait, BasePanel is in .panels.__init__? No, it's imported from .base
-    # Let's just try instantiation.
+    print("DEBUG: Initializing VerificationEngine")
+    engine = VerificationEngine(workspace_root=PROJECT_ROOT)
 
-    # Monkeypatch to debug
-    original_verify_tests = VerificationPanel._verify_tests
-
-    def debug_verify_tests(self, tests):
-        print(f"DEBUG: Verifying tests: {tests}")
-        for t in tests:
-            print(f"DEBUG: Checking test pattern: {t!r} (type: {type(t)})")
-            try:
-                list(self._root.glob(t))
-            except Exception as e:
-                print(f"DEBUG: CRASH on pattern {t!r}: {e}")
-                # Don't re-raise, let original run to crash if it must, or just continue
-        return original_verify_tests(self, tests)
-
-    VerificationPanel._verify_tests = debug_verify_tests
-
-    panel = VerificationPanel(kernel)
-    print("DEBUG: Calling render()")
+    print("DEBUG: Running verification...")
     try:
-        content = panel.render()
-        print("DEBUG: Render result length:", len(content) if content else "None")
-        print("--- CONTENT START ---")
-        print(content)
-        print("--- CONTENT END ---")
+        report = engine.run_verification(quick=True)
+        print(f"DEBUG: Total score: {report.get('total_score', 0)}%")
+        print(f"DEBUG: Docs with harness: {report.get('docs_with_harness', 0)}")
+        print(f"DEBUG: Docs without harness: {report.get('docs_without_harness', 0)}")
+        print()
+        print("--- TOP 5 DOCS ---")
+        for doc in report.get("docs", [])[:5]:
+            if doc.get("has_harness"):
+                print(f"  {doc['name']}: {doc.get('score', 0)}%")
+            else:
+                print(f"  {doc['name']}: (no harness)")
     except Exception as e:
-        print(f"DEBUG: Render failed: {e}")
+        print(f"DEBUG: Verification failed: {e}")
         import traceback
 
         traceback.print_exc()
