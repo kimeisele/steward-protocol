@@ -15,16 +15,20 @@ GAD-000 Compliant:
 - get_system_status() for observability
 """
 
+import json
 import logging
+import os
 import time
-from dataclasses import dataclass
+import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .ephemeral_state import EphemeralState
 from .file_state import FileState
 from .git_state import GitDiff, GitState
 from .kernel_state import KernelState
+from .ledger_state import LedgerState
 from .machine_state import MachineState
 from .persona import PersonaManager
 
@@ -44,6 +48,56 @@ class StateSnapshot:
     kernel: Optional[Dict[str, Any]] = None
     ephemeral: Optional[Dict[str, Any]] = None
     personas: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class KernelSessionContext:
+    """Kernel-level session tracking (OPUS-027).
+
+    Different from per-agent SessionContext - this tracks
+    the entire kernel session from boot to shutdown.
+    """
+
+    session_id: str
+    boot_time: float
+    boot_commit: str
+    pid: int = field(default_factory=os.getpid)
+    last_commit: Optional[str] = None
+    commit_count: int = 0
+    crash_recovery: bool = False
+
+    def mark_commit(self, sha: str) -> None:
+        """Record a commit in this session."""
+        self.last_commit = sha
+        self.commit_count += 1
+
+    def to_trailers(self) -> Dict[str, str]:
+        """Generate Git trailers for commits."""
+        return {
+            "Session-ID": self.session_id,
+            "Crash-Recovery": str(self.crash_recovery).lower(),
+            "Commits-In-Session": str(self.commit_count + 1),
+        }
+
+
+@dataclass
+class CommitResult:
+    """Result of a commit operation."""
+
+    git_sha: str
+    ledger_event_id: Optional[str] = None
+    session_id: Optional[str] = None
+    files_committed: List[str] = field(default_factory=list)
+
+
+@dataclass
+class SyncResult:
+    """Result of a sync operation."""
+
+    action: str  # "none", "ledger_catchup", "git_reset", "error"
+    message: str
+    git_sha: Optional[str] = None
+    ledger_hash: Optional[str] = None
 
 
 class Prakriti:
@@ -74,9 +128,12 @@ class Prakriti:
         self.git = GitState(self._workspace)
         self.files = FileState(self._workspace)
 
-        # Layer 1.5: Persistent Machine State (SQLite)
+        # Layer 1: Ledger State (OPUS-027 - The Memory)
         if db_path is None:
             db_path = self._workspace / "data" / "vibe_ledger.db"
+        self.ledger = LedgerState(Path(db_path))
+
+        # Layer 1.5: Persistent Machine State (SQLite) - Legacy, use self.ledger
         self.machine = MachineState(Path(db_path))
 
         # Layer 2: Runtime State (PRANA)
@@ -86,7 +143,11 @@ class Prakriti:
         # Layer 3: Identity (PURUSHA)
         self.personas = PersonaManager(self._workspace)
 
-        logger.info(f"[PRAKRITI] Initialized at {self._workspace} (DB: {db_path})")
+        # Session tracking (OPUS-027)
+        self.session: Optional[KernelSessionContext] = None
+        self._prakriti_dir = self._workspace / ".prakriti"
+
+        logger.info(f"[PRAKRITI] Initialized at {self._workspace} (Ledger: {db_path})")
 
     # =========================================================================
     # Factory Methods
@@ -111,12 +172,24 @@ class Prakriti:
     def get_capabilities(self) -> Dict[str, Any]:
         """GAD-000 Test 1: What can Prakriti do?"""
         return {
-            "version": "3.0.0-complete",
-            "operations": ["snapshot", "verify", "diff", "status", "inject_kernel", "get_persona"],
+            "version": "3.1.0-opus027",
+            "operations": [
+                "snapshot",
+                "verify",
+                "diff",
+                "status",
+                "inject_kernel",
+                "get_persona",
+                # OPUS-027 additions (pending implementation)
+                "commit_if_dirty",
+                "sync_ledger_git",
+                "begin_session",
+                "end_session",
+            ],
             "layers": {
                 "sthula": {
                     "status": "active",
-                    "components": ["git", "files"],
+                    "components": ["git", "files", "ledger"],
                 },
                 "prana": {
                     "status": "active",
@@ -130,6 +203,7 @@ class Prakriti:
             "workspace": str(self._workspace),
             "git": self.git.get_capabilities(),
             "files": self.files.get_capabilities(),
+            "ledger": self.ledger.get_capabilities(),
             "kernel": self.kernel.get_capabilities(),
             "ephemeral": self.ephemeral.get_capabilities(),
             "personas": self.personas.get_capabilities(),
@@ -264,3 +338,332 @@ class Prakriti:
 
     def __repr__(self) -> str:
         return f"Prakriti(workspace={self._workspace}, branch={self.branch})"
+
+    # =========================================================================
+    # OPUS-027: Write Operations (Orchestration)
+    # =========================================================================
+
+    def commit_if_dirty(
+        self,
+        message: str = "Auto-commit",
+        commit_type: str = "chore",
+        scope: str = "state",
+        stage_patterns: Optional[List[str]] = None,
+        sync_ledger: bool = True,
+    ) -> Optional[CommitResult]:
+        """Commit current changes if workspace is dirty.
+
+        This is the main orchestration method that:
+        1. Stages files
+        2. Creates Git commit (with VISNU protection)
+        3. Syncs to Ledger (Cryptographic Zipper)
+        4. Updates session tracking
+
+        Args:
+            message: Commit message
+            commit_type: Conventional commit type (chore, feat, fix, etc.)
+            scope: Commit scope
+            stage_patterns: Patterns to stage (default: ["*.md"])
+            sync_ledger: Also record in Ledger (default: True)
+
+        Returns:
+            CommitResult if committed, None if nothing to commit
+        """
+        if not self.is_dirty:
+            logger.debug("[PRAKRITI] Nothing to commit (clean state)")
+            return None
+
+        # 1. Stage files
+        patterns = stage_patterns or ["*.md"]
+        self.git.stage(patterns)
+
+        # 2. Build trailers (OPUS-027 Implementation Guidelines)
+        trailers = {}
+        if self.session:
+            trailers = self.session.to_trailers()
+        # Cryptographic Zipper: Include Ledger head hash
+        ledger_head = self.ledger.get_current_head_hash()
+        if ledger_head:
+            trailers["Ledger-Head"] = ledger_head[:16]
+
+        # 3. Git commit
+        git_commit = self.git.commit(
+            message=message,
+            commit_type=commit_type,
+            scope=scope,
+            trailers=trailers if trailers else None,
+        )
+        if not git_commit:
+            return None
+
+        # 4. Ledger sync (Cryptographic Zipper - other direction)
+        ledger_event_id = None
+        if sync_ledger:
+            staged_files = self.git._get_staged_files()
+            ledger_event_id = self.ledger.record_sync(
+                git_sha=git_commit.sha,
+                files_committed=staged_files,
+            )
+
+        # 5. Session tracking
+        if self.session:
+            self.session.mark_commit(git_commit.sha)
+
+        logger.info(f"[PRAKRITI] Committed: {git_commit.short_sha} - {message}")
+
+        return CommitResult(
+            git_sha=git_commit.sha,
+            ledger_event_id=ledger_event_id,
+            session_id=self.session.session_id if self.session else None,
+            files_committed=staged_files if sync_ledger else [],
+        )
+
+    def sync_ledger_git(self, strategy: str = "git_wins") -> SyncResult:
+        """Reconcile Ledger and Git if they diverged.
+
+        Called on boot if consistency check fails.
+
+        Args:
+            strategy: Sync strategy
+                - "git_wins": Ledger records catch-up events to match Git
+                - "ledger_wins": Not implemented (dangerous)
+                - "manual": Raise error for human intervention
+
+        Returns:
+            SyncResult with actions taken
+        """
+        # Check current state
+        git_head = self.git.head_sha()
+        ledger_last = self.ledger.get_last_sync_commit()
+
+        if git_head == ledger_last:
+            return SyncResult(
+                action="none",
+                message="Already in sync",
+                git_sha=git_head,
+                ledger_hash=self.ledger.get_current_head_hash(),
+            )
+
+        if strategy == "git_wins":
+            # Ledger catches up - record the current Git state
+            event_id = self.ledger.record_sync(
+                git_sha=git_head,
+                files_committed=["SYNC_CATCHUP"],
+            )
+            logger.warning(f"[PRAKRITI] Ledger synced to Git: {git_head[:7]}")
+            return SyncResult(
+                action="ledger_catchup",
+                message=f"Ledger synced to Git {git_head[:7]}",
+                git_sha=git_head,
+                ledger_hash=self.ledger.get_current_head_hash(),
+            )
+
+        elif strategy == "ledger_wins":
+            # This is dangerous - not implementing for now
+            return SyncResult(
+                action="error",
+                message="ledger_wins strategy not implemented (too dangerous)",
+            )
+
+        else:
+            from vibe_core.exceptions import GovernanceViolation
+
+            raise GovernanceViolation(
+                f"Git ({git_head[:7]}) and Ledger ({ledger_last[:7] if ledger_last else 'empty'}) "
+                f"diverged. Manual intervention required."
+            )
+
+    # =========================================================================
+    # OPUS-027: Session Management
+    # =========================================================================
+
+    def begin_session(self) -> KernelSessionContext:
+        """Start a new session (called on kernel boot).
+
+        Implements Ghost Lock Protocol for stale lock detection.
+
+        Returns:
+            KernelSessionContext for this session
+        """
+        # Ensure .prakriti directory exists
+        self._prakriti_dir.mkdir(parents=True, exist_ok=True)
+
+        # Ghost Lock Protocol (OPUS-027 Implementation Guidelines)
+        lock_file = self._prakriti_dir / "session.lock"
+        if lock_file.exists():
+            try:
+                stored_pid = int(lock_file.read_text().strip())
+                if self._is_process_alive(stored_pid):
+                    raise RuntimeError(
+                        f"Session already running (PID {stored_pid}). If this is incorrect, delete {lock_file}"
+                    )
+                else:
+                    logger.warning(f"[PRAKRITI] Removed stale lock from dead session (PID {stored_pid})")
+                    lock_file.unlink()
+            except ValueError:
+                # Invalid PID in lock file, remove it
+                logger.warning("[PRAKRITI] Invalid lock file content, removing")
+                lock_file.unlink()
+
+        # Create new session
+        self.session = KernelSessionContext(
+            session_id=str(uuid.uuid4())[:8],
+            boot_time=time.time(),
+            boot_commit=self.git.head_sha(),
+        )
+
+        # Write lock file with our PID
+        lock_file.write_text(str(os.getpid()))
+
+        logger.info(f"[PRAKRITI] Session started: {self.session.session_id}")
+        return self.session
+
+    def end_session(self) -> Optional[CommitResult]:
+        """End session (called on kernel shutdown).
+
+        Returns:
+            CommitResult from final commit, None if clean
+        """
+        if not self.session:
+            logger.warning("[PRAKRITI] No active session to end")
+            return None
+
+        # 1. Save snapshot
+        snapshot_name = f"shutdown_{self.session.session_id}_{int(time.time())}"
+        self.save_snapshot(snapshot_name)
+
+        # 2. Final commit
+        result = self.commit_if_dirty(
+            message=f"Session end: {self.session.session_id}",
+            commit_type="chore",
+            scope="session",
+        )
+
+        # 3. Remove lock file
+        lock_file = self._prakriti_dir / "session.lock"
+        if lock_file.exists():
+            lock_file.unlink()
+
+        session_id = self.session.session_id
+        self.session = None
+
+        logger.info(f"[PRAKRITI] Session ended: {session_id}")
+        return result
+
+    def recover_from_crash(self) -> Optional[CommitResult]:
+        """Handle crash recovery on boot.
+
+        Called when boot detects dirty state from previous session.
+
+        Returns:
+            CommitResult if recovery commit made, None if clean
+        """
+        if not self.is_dirty:
+            return None
+
+        # Mark session as crash recovery
+        if self.session:
+            self.session.crash_recovery = True
+
+        # Commit with recovery marker
+        result = self.commit_if_dirty(
+            message="Crash recovery: uncommitted state from previous session",
+            commit_type="chore",
+            scope="recovery",
+        )
+
+        if result:
+            logger.warning(f"[PRAKRITI] Crash recovery committed: {result.git_sha[:7]}")
+
+        return result
+
+    # =========================================================================
+    # OPUS-027: Snapshot Operations
+    # =========================================================================
+
+    def save_snapshot(self, name: str) -> str:
+        """Save complete state snapshot to disk.
+
+        Args:
+            name: Snapshot name (e.g., "shutdown_abc123_1702400000")
+
+        Returns:
+            Path to snapshot file
+        """
+        snapshot = self.snapshot()
+        snapshots_dir = self._prakriti_dir / "snapshots"
+        snapshots_dir.mkdir(parents=True, exist_ok=True)
+
+        path = snapshots_dir / f"{name}.json"
+
+        # Convert snapshot to dict
+        snapshot_dict = {
+            "timestamp": snapshot.timestamp,
+            "git": snapshot.git,
+            "files": snapshot.files,
+            "kernel": snapshot.kernel,
+            "ephemeral": snapshot.ephemeral,
+            "personas": snapshot.personas,
+            "session": {
+                "session_id": self.session.session_id if self.session else None,
+                "boot_time": self.session.boot_time if self.session else None,
+                "commit_count": self.session.commit_count if self.session else 0,
+            },
+        }
+
+        path.write_text(json.dumps(snapshot_dict, indent=2, default=str))
+        logger.debug(f"[PRAKRITI] Snapshot saved: {path}")
+        return str(path)
+
+    def restore_snapshot(self, name: str) -> Dict[str, Any]:
+        """Restore state from snapshot.
+
+        Note: This restores runtime state only. Git and Ledger
+        are NOT modified (they are authoritative sources).
+
+        Args:
+            name: Snapshot name to restore
+
+        Returns:
+            The restored snapshot data
+        """
+        path = self._prakriti_dir / "snapshots" / f"{name}.json"
+        if not path.exists():
+            raise FileNotFoundError(f"Snapshot not found: {name}")
+
+        data = json.loads(path.read_text())
+        logger.info(f"[PRAKRITI] Snapshot loaded: {name}")
+        return data
+
+    def list_snapshots(self) -> List[str]:
+        """List available snapshots.
+
+        Returns:
+            List of snapshot names
+        """
+        snapshots_dir = self._prakriti_dir / "snapshots"
+        if not snapshots_dir.exists():
+            return []
+        return sorted([p.stem for p in snapshots_dir.glob("*.json")])
+
+    # =========================================================================
+    # Private Helpers
+    # =========================================================================
+
+    def _is_process_alive(self, pid: int) -> bool:
+        """Check if a process with given PID is still running.
+
+        Args:
+            pid: Process ID to check
+
+        Returns:
+            True if process is alive
+        """
+        try:
+            os.kill(pid, 0)  # Signal 0 = check existence only
+            return True
+        except ProcessLookupError:
+            return False
+        except PermissionError:
+            # Process exists but we don't have permission to signal it
+            return True
