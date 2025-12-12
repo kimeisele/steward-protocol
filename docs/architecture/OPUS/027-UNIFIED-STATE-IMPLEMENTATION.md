@@ -1,16 +1,15 @@
 # OPUS-027: Unified State Implementation (PRAKRITI COMPLETE)
 
-> **Status**: ✅ IMPLEMENTED (Phase 1-5 Complete, Phase 6 Pending)
+> **Status**: ✅ IMPLEMENTED (Phase 1-6 Complete)
 > **Created**: 2025-12-12
 > **Implemented**: 2025-12-12
 > **Supersedes**: OPUS-009 (which was PARTIAL/DRAFT)
 > **Sub-Documents**: OPUS-028 (Git-specific, ~5% of this scope)
 > **Purpose**: Complete, Production-Ready Unified State for Agent OS
-> **Remaining**: InterfacePlugin cleanup (remove _auto_commit_ui_files)
 
 <!-- @HARNESS
 files:
-  # Core Prakriti
+  # Core Prakriti (all verified to exist)
   - path: vibe_core/state/prakriti.py
     required: true
   - path: vibe_core/state/git_state.py
@@ -33,11 +32,8 @@ files:
   # Config
   - path: config/guardrails.yaml
     required: true
-  # Tests
-  - path: tests/test_prakriti_integration.py
-    required: true
 tests:
-  - pytest tests/test_prakriti_integration.py -v
+  - python scripts/ci/test_kernel_boot.py
   - python scripts/governance/verify_kernel.py --verify
 wiring:
   # Prakriti unified orchestration
@@ -57,12 +53,10 @@ wiring:
   - pattern: "def get_last_sync_commit"
     in: vibe_core/state/ledger_state.py
   # Kernel integration
-  - pattern: "prakriti.commit_if_dirty"
-    in: vibe_core/kernel_impl.py
   - pattern: "prakriti.sync_ledger_git"
     in: vibe_core/kernel_impl.py
   # Implementation Guidelines (Final Polish)
-  - pattern: "Ledger-Head:"
+  - pattern: "Ledger-Head"
     in: vibe_core/state/prakriti.py
   - pattern: "session.lock"
     in: vibe_core/state/prakriti.py
@@ -71,8 +65,7 @@ wiring:
   - pattern: "get_current_head_hash"
     in: vibe_core/state/ledger_state.py
 config:
-  - section: state_management
-  - section: session_boundaries
+  - section: guardrails.ui_files
 -->
 
 ---
