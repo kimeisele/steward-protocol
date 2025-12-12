@@ -17,16 +17,23 @@ from .ephemeral_state import EphemeralState, SessionContext, ThoughtEntry
 from .file_state import FileState
 from .git_state import GitState
 from .kernel_state import AgentSnapshot, KernelSnapshot, KernelState, QueueSnapshot
+from .ledger_state import LedgerHead, LedgerState, SyncEvent
 from .persona import AgentPersona, PersonaManager
-from .prakriti import Prakriti
+from .prakriti import CommitResult, KernelSessionContext, Prakriti, SyncResult
 
 __all__ = [
     # Main engine
     "Prakriti",
-    # Layer 1: Physical
+    "CommitResult",
+    "SyncResult",
+    "KernelSessionContext",
+    # Layer 1: Physical (STHULA)
     "GitState",
     "FileState",
-    # Layer 2: Runtime
+    "LedgerState",
+    "LedgerHead",
+    "SyncEvent",
+    # Layer 2: Runtime (PRANA)
     "KernelState",
     "KernelSnapshot",
     "AgentSnapshot",
@@ -34,7 +41,7 @@ __all__ = [
     "EphemeralState",
     "ThoughtEntry",
     "SessionContext",
-    # Layer 3: Identity
+    # Layer 3: Identity (PURUSHA)
     "PersonaManager",
     "AgentPersona",
 ]
