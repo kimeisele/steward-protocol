@@ -42,7 +42,7 @@ import logging
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -50,8 +50,19 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-# VFS root - same as vibe_core/vfs.py
-VFS_ROOT = Path("/tmp/vibe_os/agents")
+
+# VFS root - delegate to vibe_core/vfs.py for consistency
+def _get_vfs_root():
+    """Get VFS root from VirtualFileSystem (OPUS-025 compliant)."""
+    try:
+        from vibe_core.vfs import VirtualFileSystem
+
+        return VirtualFileSystem._get_vfs_root()
+    except Exception:
+        return Path("/tmp") / "vibe_os" / "agents"
+
+
+VFS_ROOT = None  # Resolved lazily via _get_vfs_root()
 
 
 @dataclass
@@ -129,7 +140,7 @@ def _harvest_artifacts(
 
         # Search each child agent's VFS for the artifact
         for agent_id in child_agent_ids:
-            vfs_path = VFS_ROOT / agent_id / artifact_path
+            vfs_path = _get_vfs_root() / agent_id / artifact_path
 
             if vfs_path.exists() and vfs_path.is_file():
                 try:
@@ -182,7 +193,6 @@ def _apply_config_overrides(
         overrides = {"city.governance.voting_threshold": 0}
         # Sets base_config.city.governance.voting_threshold = 0
     """
-    from dataclasses import replace
 
     # Deep copy via to_dict/from_dict
     config_dict = base_config.to_dict()
@@ -264,7 +274,6 @@ async def spawn_city(
                 if artifact.success:
                     print(f"Harvested: {artifact.destination_path}")
     """
-    from vibe_core.phoenix import get_config
 
     logger.info(f"🌀 spawn_city: Starting ephemeral city for task: {task[:50]}...")
 
