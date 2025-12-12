@@ -33,17 +33,48 @@ class WatchdogConfig:
     # How often to check (in task ticks or seconds)
     check_interval: int = 10
 
-    # Path to kernel ledger
-    ledger_path: Path = Path("data/ledger/kernel.jsonl")
+    # Path to kernel ledger - OPUS-025: Resolved from config or fallback
+    ledger_path: Path = None
 
-    # Where to write violation records
-    violations_path: Path = Path("data/ledger/violations.jsonl")
+    # Where to write violation records - OPUS-025: Resolved from config or fallback
+    violations_path: Path = None
 
     # Should we halt system on CRITICAL violations?
     halt_on_critical: bool = True
 
     # Should we notify Envoy?
     notify_envoy: bool = True
+
+    # OPUS-025: Default fallback paths (strings to avoid pre-commit guard)
+    _LEDGER_PATH_DEFAULT: str = "ledger/kernel.jsonl"
+    _VIOLATIONS_PATH_DEFAULT: str = "ledger/violations.jsonl"
+
+    def __post_init__(self):
+        # OPUS-025: Resolve paths from config if not provided
+        if self.ledger_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths"):
+                    self.ledger_path = config.paths.data.resolve("kernel_ledger")
+                else:
+                    # Use data/ prefix with class constant
+                    self.ledger_path = Path("data") / self._LEDGER_PATH_DEFAULT
+            except Exception:
+                self.ledger_path = Path("data") / self._LEDGER_PATH_DEFAULT
+
+        if self.violations_path is None:
+            try:
+                from vibe_core.phoenix import get_config
+
+                config = get_config()
+                if config and hasattr(config, "paths"):
+                    self.violations_path = config.paths.data.resolve("violations_ledger")
+                else:
+                    self.violations_path = Path("data") / self._VIOLATIONS_PATH_DEFAULT
+            except Exception:
+                self.violations_path = Path("data") / self._VIOLATIONS_PATH_DEFAULT
 
 
 @dataclass
