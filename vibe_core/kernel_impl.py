@@ -220,7 +220,9 @@ class RealVibeKernel(VibeKernel):
         if phoenix_config and hasattr(phoenix_config, "paths"):
             lineage_path = str(phoenix_config.paths.system.resolve("lineage_db"))
         else:
-            lineage_path = "/tmp/vibe_os/kernel/lineage.db"  # Fallback default
+            # OPUS-025: Fallback with Path pattern
+            from pathlib import Path
+            lineage_path = str(Path("/tmp") / "vibe_os" / "kernel" / "lineage.db")
         self.lineage = LineageChain(db_path=lineage_path)
         logger.info("⛓️  Parampara chain initialized")
 
@@ -486,8 +488,12 @@ class RealVibeKernel(VibeKernel):
 
             from vibe_core.cartridges.system.civic.tools.economy import CivicBank
 
-            # Phase 4c: Create bank with VFS-isolated database path
-            kernel_data_path = Path("/tmp/vibe_os/kernel/economy.db")
+            # OPUS-025: Config-based path resolution for bank DB
+            phoenix_config = _get_config()
+            if phoenix_config and hasattr(phoenix_config, "paths"):
+                kernel_data_path = phoenix_config.paths.data.resolve("economy_db")
+            else:
+                kernel_data_path = Path("/tmp") / "vibe_os" / "kernel" / "economy.db"
             kernel_data_path.parent.mkdir(parents=True, exist_ok=True)
 
             self._bank = CivicBank(db_path=str(kernel_data_path))
