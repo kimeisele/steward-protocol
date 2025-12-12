@@ -17,8 +17,12 @@ wiring:
     in: vibe_core/plugins/interface/renderers/opus/panels/verification.py
   - pattern: "semantic_passes"
     in: config/opus.yaml
-# semantic: Note - verification.py uses relative imports, cannot be loaded standalone
-# The wiring patterns above verify the method exists via grep
+semantic:
+  - type: method_exists
+    name: "verification_panel_semantic"
+    class: VerificationPanel
+    method: _verify_semantic
+    in: vibe_core/plugins/interface/renderers/opus/panels/verification.py
 -->
 
 ---
