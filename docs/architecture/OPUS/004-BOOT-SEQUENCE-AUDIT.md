@@ -24,6 +24,17 @@ absent:
     in: vibe_core/kernel_impl.py
 config:
   - section: boot_sequence
+semantic:
+  - type: method_exists
+    name: "plugin_loader_discover"
+    class: PluginLoader
+    method: discover
+    in: vibe_core/plugin_loader.py
+  - type: method_exists
+    name: "kernel_boot_method"
+    class: RealVibeKernel
+    method: boot
+    in: vibe_core/kernel_impl.py
 -->
 
 ---
