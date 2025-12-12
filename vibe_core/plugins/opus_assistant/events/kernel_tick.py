@@ -1,19 +1,20 @@
 """
 OPUS Assistant Kernel Tick - Constant heartbeat for plugin lifecycle.
 
-OPUS-029 Phase 2: Dynamic Runtime Context Injection.
+OPUS-029 Phase 2.5: Dynamic Context + Observation Journal
 
 The plugin doesn't just boot and die. It stays ALIVE via EventBus.
-More importantly, it ACTIVELY SYNTHESIZES and INJECTS context.
+More importantly, it ACTIVELY SYNTHESIZES, INJECTS, and JOURNALS.
 
 Kernel Tick Pattern:
 1. Plugin subscribes to EventBus events (KERNEL_TICK, GIT_COMMIT, etc.)
 2. On each tick, OpusContextService synthesizes system state
 3. Context is INJECTED into runtime (EphemeralState)
 4. Every spawning agent knows the current reality
+5. ObservationLogger journals anomalies to OPUS.md (Phase 2.5)
 
 This is the "constant prompt feed" - the carrot in front of the donkey.
-Every agent wakes up knowing the "State of Mind" of the system.
+The "soft interaction" - the system talks to humans via OPUS.md journal.
 """
 
 import logging
@@ -21,6 +22,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from ..core.context_service import OpusContextService
+    from ..core.observation_logger import ObservationLogger
     from ..plugin_main import OpusAssistantPlugin
 
 logger = logging.getLogger("OPUS_TICK")
@@ -32,15 +34,17 @@ class KernelTickHandler:
 
     Subscribes to EventBus and keeps plugin state fresh.
 
-    Architecture (Phase 2 - Dynamic Context):
+    Architecture (Phase 2.5 - Dynamic Context + Journal):
     - EventBus emits periodic KERNEL_TICK events
     - OpusContextService synthesizes system state from all Prakriti layers
     - Context is INJECTED into EphemeralState
     - Every spawning agent gets the current "State of Mind"
-    - On GIT_COMMIT, we re-synthesize and broadcast
-    - On FILE_CHANGED, we re-verify affected docs
+    - ObservationLogger journals anomalies to OPUS.md (the "diary")
+    - On GIT_COMMIT, we re-synthesize and log
+    - On FILE_CHANGED, we re-verify and log
 
     This is the "constant prompt feed" - active, not passive!
+    The system now "talks" to humans via the OPUS.md journal.
     """
 
     def __init__(self, plugin: "OpusAssistantPlugin"):
@@ -55,9 +59,13 @@ class KernelTickHandler:
         self._tick_count = 0
         self._last_state: Dict[str, Any] = {}
         self._context_service: Optional["OpusContextService"] = None
+        self._observation_logger: Optional["ObservationLogger"] = None
+        self._last_health_status: Optional[str] = None  # Track health changes
+        self._consecutive_drift_ticks = 0  # Track persistent drift
 
-        # Initialize context service
+        # Initialize services
         self._init_context_service()
+        self._init_observation_logger()
 
     def _init_context_service(self) -> None:
         """Initialize the OpusContextService for dynamic context synthesis."""
@@ -70,6 +78,18 @@ class KernelTickHandler:
                 logger.debug("OpusContextService initialized")
         except Exception as e:
             logger.debug(f"Could not initialize context service: {e}")
+
+    def _init_observation_logger(self) -> None:
+        """Initialize the ObservationLogger for journaling to OPUS.md."""
+        try:
+            from ..core.observation_logger import ObservationLogger
+
+            workspace = self._plugin._workspace
+            if workspace:
+                self._observation_logger = ObservationLogger(workspace_root=workspace)
+                logger.debug("ObservationLogger initialized")
+        except Exception as e:
+            logger.debug(f"Could not initialize observation logger: {e}")
 
     def subscribe(self) -> bool:
         """
@@ -136,8 +156,8 @@ class KernelTickHandler:
         """
         Handle periodic tick.
 
-        PHASE 2: Active context synthesis and injection.
-        This is NOT passive - we actively refresh the system's "State of Mind".
+        PHASE 2.5: Active context synthesis, injection, AND journaling.
+        This is NOT passive - we actively refresh and LOG the system's "State of Mind".
         """
         config = self._plugin._config.get("kernel_tick", {})
         actions = config.get("on_tick", ["synthesize_context", "quick_drift_check"])
@@ -149,9 +169,37 @@ class KernelTickHandler:
 
             elif action == "quick_drift_check":
                 result = self._plugin.quick_drift_check()
-                if not result.get("healthy", True):
+                is_healthy = result.get("healthy", True)
+
+                if not is_healthy:
+                    self._consecutive_drift_ticks += 1
                     logger.warning(f"⚠️ Drift detected on tick {self._tick_count}")
+
+                    # PHASE 2.5: Log to journal if drift persists
+                    if self._consecutive_drift_ticks == 1:
+                        self._log_observation_warn(
+                            f"Drift detected: {len(result.get('missing_files', []))} missing files",
+                            source="drift_detector",
+                        )
+                    elif self._consecutive_drift_ticks >= 3:
+                        self._log_observation_alert(
+                            f"Persistent drift for {self._consecutive_drift_ticks} ticks! Code and docs diverging.",
+                            source="drift_detector",
+                        )
+                else:
+                    # Drift resolved?
+                    if self._consecutive_drift_ticks > 0:
+                        self._log_observation_info(
+                            f"Drift resolved after {self._consecutive_drift_ticks} ticks",
+                            source="drift_detector",
+                        )
+                    self._consecutive_drift_ticks = 0
+
                 self._last_state["drift"] = result
+
+        # Periodically flush observations to OPUS.md
+        if self._tick_count % 10 == 0:
+            self._flush_observations()
 
     async def _synthesize_and_inject_context(self) -> None:
         """
@@ -159,6 +207,8 @@ class KernelTickHandler:
 
         This is the "Dynamic Bootstrapping" - every tick updates
         the "State of Mind" that all agents can access.
+
+        PHASE 2.5: Also logs health status changes to journal.
         """
         if not self._context_service:
             return
@@ -178,6 +228,21 @@ class KernelTickHandler:
             self._last_state["context_hash"] = context.context_hash
             self._last_state["system_health"] = context.health.status
 
+            # PHASE 2.5: Log health status changes to journal
+            current_health = context.health.status
+            if self._last_health_status and self._last_health_status != current_health:
+                if current_health in ["WARNING", "CRITICAL"]:
+                    self._log_observation_warn(
+                        f"System health changed: {self._last_health_status} → {current_health}",
+                        source="context_service",
+                    )
+                elif self._last_health_status in ["WARNING", "CRITICAL"]:
+                    self._log_observation_info(
+                        f"System health improved: {self._last_health_status} → {current_health}",
+                        source="context_service",
+                    )
+            self._last_health_status = current_health
+
             # Log periodically (every 10 ticks)
             if self._tick_count % 10 == 0:
                 logger.info(
@@ -192,11 +257,21 @@ class KernelTickHandler:
         """
         Handle git commit event.
 
-        PHASE 2: Re-synthesize context after code changes.
+        PHASE 2.5: Re-synthesize context after code changes and journal it.
         Git state changed, so we need a fresh "State of Mind".
         """
         config = self._plugin._config.get("kernel_tick", {})
         actions = config.get("on_commit", ["synthesize_context", "detect_drift"])
+
+        # Get commit info from event
+        details = getattr(event, "details", {})
+        commit_sha = details.get("sha", "unknown")[:8]
+
+        # PHASE 2.5: Log commit to journal
+        self._log_observation_info(
+            f"Git commit detected: {commit_sha}",
+            source="git_watcher",
+        )
 
         for action in actions:
             if action == "synthesize_context":
@@ -207,12 +282,31 @@ class KernelTickHandler:
             elif action == "detect_drift":
                 result = self._plugin.detect_drift()
                 self._last_state["last_drift_check"] = result
-                logger.info(f"📊 Drift check after commit: health={result.get('health', 0):.0%}")
+                health = result.get("health", 0)
+                logger.info(f"📊 Drift check after commit: health={health:.0%}")
+
+                # PHASE 2.5: Log drift status after commit
+                if health < 0.8:
+                    self._log_observation_warn(
+                        f"Drift health low after commit: {health:.0%}",
+                        source="drift_detector",
+                    )
 
             elif action == "update_verification":
                 result = self._plugin.verify(quick=True)
                 self._last_state["last_verification"] = result
-                logger.info(f"🔍 Verification after commit: score={result.get('total_score', 0)}%")
+                score = result.get("total_score", 0)
+                logger.info(f"🔍 Verification after commit: score={score}%")
+
+                # PHASE 2.5: Log verification warnings
+                if score < 80:
+                    self._log_observation_warn(
+                        f"Verification score dropped to {score}%",
+                        source="verification_engine",
+                    )
+
+        # Flush after commit events
+        self._flush_observations()
 
     async def _on_file_changed(self, event: Any) -> None:
         """
@@ -284,6 +378,39 @@ class KernelTickHandler:
         if self._context_service:
             return self._context_service.get_system_prompt_fragment()
         return ""
+
+    def get_observation_logger(self) -> Optional["ObservationLogger"]:
+        """Get the ObservationLogger instance."""
+        return self._observation_logger
+
+    # =========================================================================
+    # Phase 2.5: Observation Logging Helpers
+    # =========================================================================
+
+    def _log_observation_info(self, message: str, source: str = "opus_assistant") -> None:
+        """Log INFO observation to journal."""
+        if self._observation_logger:
+            self._observation_logger.log_info(message, source)
+
+    def _log_observation_warn(self, message: str, source: str = "opus_assistant") -> None:
+        """Log WARN observation to journal."""
+        if self._observation_logger:
+            self._observation_logger.log_warn(message, source)
+
+    def _log_observation_alert(self, message: str, source: str = "opus_assistant") -> None:
+        """Log ALERT observation to journal."""
+        if self._observation_logger:
+            self._observation_logger.log_alert(message, source)
+
+    def _log_observation_insight(self, message: str, source: str = "opus_assistant") -> None:
+        """Log INSIGHT observation to journal."""
+        if self._observation_logger:
+            self._observation_logger.log_insight(message, source)
+
+    def _flush_observations(self) -> None:
+        """Flush pending observations to OPUS.md."""
+        if self._observation_logger:
+            self._observation_logger.flush_to_opus()
 
 
 # Synchronous wrapper for non-async contexts
