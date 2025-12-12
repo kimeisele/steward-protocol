@@ -174,7 +174,9 @@ class RealVibeKernel(VibeKernel):
         if ledger_path is None:
             phoenix_config = _get_config()
             if phoenix_config and hasattr(phoenix_config, "paths"):
-                ledger_path = str(phoenix_config.paths.data.vibe_ledger)
+                # OPUS-025: Must use resolve() to expand template variables
+                # Direct attribute access returns literal "{root}/vibe_ledger.db"
+                ledger_path = str(phoenix_config.paths.data.resolve("vibe_ledger"))
             else:
                 ledger_path = "data/vibe_ledger.db"  # Fallback default
 
