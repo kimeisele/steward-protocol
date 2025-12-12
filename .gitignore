@@ -311,3 +311,4 @@ server.log
 *.log
 __pycache__/
 *.vibe
+.prakriti/
