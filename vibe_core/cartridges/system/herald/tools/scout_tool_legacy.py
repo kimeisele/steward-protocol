@@ -23,7 +23,17 @@ class ScoutTool:
     """
 
     def __init__(self):
-        self.pokedex_path = Path("data/federation/pokedex.json")
+        # OPUS-025: Resolve pokedex path from config
+        try:
+            from vibe_core.phoenix import get_config
+
+            config = get_config()
+            if config and hasattr(config, "paths"):
+                self.pokedex_path = config.paths.data.resolve("federation_pokedex")
+            else:
+                self.pokedex_path = Path("data") / "federation" / "pokedex.json"
+        except Exception:
+            self.pokedex_path = Path("data") / "federation" / "pokedex.json"
         self.known_agents = self._load_pokedex()
 
     def _load_pokedex(self) -> set:

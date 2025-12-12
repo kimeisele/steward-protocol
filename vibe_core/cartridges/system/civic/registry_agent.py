@@ -35,7 +35,17 @@ class RegistryAgent(VibeAgent):
             capabilities=["registry", "scanning", "validation"],
         )
 
-        self.registry_path = Path("data/registry/citizens.json")
+        # OPUS-025: Resolve registry path from config
+        try:
+            from vibe_core.phoenix import get_config
+
+            config = get_config()
+            if config and hasattr(config, "paths"):
+                self.registry_path = config.paths.data.resolve("registry_citizens")
+            else:
+                self.registry_path = Path("data") / "registry" / "citizens.json"
+        except Exception:
+            self.registry_path = Path("data") / "registry" / "citizens.json"
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.registry = self._load_registry()
