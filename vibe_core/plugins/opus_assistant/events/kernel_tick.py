@@ -701,7 +701,6 @@ class KernelTickHandler:
            1. SQLite Ledger (primary, more complete)
            2. audit_trail.jsonl (fallback, survives git resets - "untötbar")
         """
-        import json
         from datetime import datetime, timedelta
 
         lookback_hours = params.get("lookback_hours", 24)
@@ -720,31 +719,27 @@ class KernelTickHandler:
         except Exception as e:
             logger.warning(f"Could not read SQLite ledger: {e}")
 
-        # SOURCE 2: Git-tracked audit trail (fallback/"untötbar")
+        # SOURCE 2: Plugin-local state (Fractal Holon - "untötbar")
         try:
-            audit_path = Path("data/ledger/audit_trail.jsonl")
-            if audit_path.exists():
-                with open(audit_path, "r") as f:
-                    for line in f:
-                        line = line.strip()
-                        if line:
-                            try:
-                                entry = json.loads(line)
-                                # Convert audit entry to event format
-                                if entry.get("attestation_type") == "opus_observation":
-                                    all_events.append(
-                                        {
-                                            "timestamp": entry.get("timestamp", ""),
-                                            "event_type": entry.get("severity", "INFO"),
-                                            "details": {"severity": entry.get("severity", "INFO")},
-                                            "source": entry.get("source", "audit_trail"),
-                                        }
-                                    )
-                            except json.JSONDecodeError:
-                                continue
-                logger.debug("📜 Merged events from git-tracked audit trail")
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+            observations = state_mgr.get_recent_observations(hours=lookback_hours)
+
+            for obs in observations:
+                all_events.append(
+                    {
+                        "timestamp": obs.timestamp,
+                        "event_type": obs.severity,
+                        "details": {"severity": obs.severity},
+                        "source": obs.source,
+                    }
+                )
+
+            if observations:
+                logger.debug(f"📜 Merged {len(observations)} observations from plugin state")
         except Exception as e:
-            logger.warning(f"Could not read audit trail: {e}")
+            logger.warning(f"Could not read plugin state: {e}")
 
         # If no events from any source, assume clean
         if not all_events:
