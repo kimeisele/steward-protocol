@@ -137,6 +137,13 @@
             "default": 10
           },
           {
+            "name": "deep",
+            "type": "bool",
+            "help": "Deep mode: read files, analyze imports, prepare LLM synthesis task",
+            "required": false,
+            "default": false
+          },
+          {
             "name": "json",
             "type": "bool",
             "help": "Output as JSON for pipelines",
