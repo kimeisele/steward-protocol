@@ -105,6 +105,8 @@ class OpusAssistantPlugin(KernelPlugin):
         2. Load fraktale config (defaults + opus.yaml)
         3. Subscribe to kernel tick (EventBus)
         4. Quick health check
+        5. 🔌 WIRING: Save session state (Fractal Holon - "untötbar")
+        6. 🔌 WIRING: Trigger genesis check for karma-aware boot
         """
         self._kernel = kernel
 
@@ -128,15 +130,133 @@ class OpusAssistantPlugin(KernelPlugin):
         # WITHOUT modifying core files!
         self._register_context_provider()
 
-        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + context provider)")
+        # 🔌 WIRING: Save initial session state (Fractal Holon - "untötbar")
+        self._init_session_state()
+
+        # 🔌 WIRING: Trigger genesis check for karma-aware boot
+        self._trigger_genesis_check()
+
+        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + context provider + session state)")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
+        # 🔌 WIRING: Save final session state before shutdown
+        self._save_session_state()
+
         # Unsubscribe from events
         if self._tick_handler:
             self._tick_handler.unsubscribe()
 
-        logger.info("🎯 OPUS Assistant shutdown")
+        logger.info("🎯 OPUS Assistant shutdown (session state saved)")
+
+    def _init_session_state(self) -> None:
+        """
+        🔌 WIRING: Initialize and save session state on boot.
+
+        This makes the system "untötbar" - it remembers sessions.
+        Loads previous session karma to inform boot mode.
+        """
+        import uuid
+        from datetime import datetime
+
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                SessionState,
+                get_state_manager,
+            )
+
+            state_mgr = get_state_manager()
+
+            # Load previous karma to inform boot mode
+            last_karma = state_mgr.get_last_karma()
+
+            # Determine boot mode from last karma
+            boot_mode = "full_power"
+            if last_karma:
+                if last_karma.score < 40:
+                    boot_mode = "safe_mode"
+                elif last_karma.score < 70:
+                    boot_mode = "cautious_mode"
+
+            # Create new session
+            session = SessionState(
+                session_id=str(uuid.uuid4())[:8],
+                started_at=datetime.utcnow().isoformat(),
+                last_karma_score=last_karma.score if last_karma else 100,
+                observation_count=0,
+                boot_mode=boot_mode,
+            )
+
+            state_mgr.save_session(session)
+            logger.info(f"📍 Session {session.session_id} started (boot_mode: {boot_mode})")
+
+        except Exception as e:
+            logger.warning(f"Could not init session state: {e}")
+
+    def _save_session_state(self) -> None:
+        """
+        🔌 WIRING: Save session state on shutdown.
+
+        Updates observation count and karma before exit.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+
+            # Load current session
+            session = state_mgr.load_session()
+            if not session:
+                return
+
+            # Update with latest karma
+            last_karma = state_mgr.get_last_karma()
+            if last_karma:
+                session.last_karma_score = last_karma.score
+
+            # Update observation count
+            observations = state_mgr.get_observations()
+            session.observation_count = len(observations)
+
+            # Save updated session
+            state_mgr.save_session(session)
+            logger.debug(f"💾 Session {session.session_id} saved (karma: {session.last_karma_score})")
+
+        except Exception as e:
+            logger.warning(f"Could not save session state: {e}")
+
+    def _trigger_genesis_check(self) -> None:
+        """
+        🔌 WIRING: Trigger genesis check circuit on boot.
+
+        This makes the system karma-aware from the first moment.
+        """
+        try:
+            if self._tick_handler:
+                import asyncio
+
+                # Get the genesis check method
+                async def run_genesis():
+                    result = await self._tick_handler._check_session_karma({"lookback_hours": 24})
+                    if result.get("is_critical"):
+                        logger.warning(f"⚠️ GENESIS: Critical karma detected ({result.get('score')}/100)")
+                    elif result.get("has_warnings"):
+                        logger.info(f"🔶 GENESIS: Cautious boot ({result.get('score')}/100)")
+                    else:
+                        logger.info(f"🟢 GENESIS: Full power boot ({result.get('score')}/100)")
+
+                # Try to run the genesis check
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        loop.create_task(run_genesis())
+                    else:
+                        loop.run_until_complete(run_genesis())
+                except RuntimeError:
+                    asyncio.run(run_genesis())
+
+        except Exception as e:
+            logger.debug(f"Genesis check skipped: {e}")
 
     def _load_fraktale_config(self) -> None:
         """

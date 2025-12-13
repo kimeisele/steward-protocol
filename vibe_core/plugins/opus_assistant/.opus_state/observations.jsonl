@@ -1,0 +1,6 @@
+{"timestamp": "2025-12-13T02:11:18.068054", "severity": "WARN", "message": "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}", "source": "auto_verify", "context_hash": null}
+{"timestamp": "2025-12-13T02:11:18.113213", "severity": "WARN", "message": "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}", "source": "auto_verify", "context_hash": null}
+{"timestamp": "2025-12-13T02:11:18.165070", "severity": "WARN", "message": "Warning message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:11:18.166186", "severity": "ALERT", "message": "Alert message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:11:18.181692", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:11:18.186832", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
