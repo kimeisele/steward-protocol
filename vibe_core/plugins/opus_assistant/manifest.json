@@ -2,7 +2,7 @@
   "type": "plugin",
   "id": "opus_assistant",
   "name": "OPUS Assistant",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Self-maintaining OPUS.md with verification, drift detection, and auto-refresh circuits",
 
   "entry_point": "plugin_main.py",
@@ -25,7 +25,8 @@
     "opus.journal",
     "opus.cli",
     "opus.circuits",
-    "opus.state"
+    "opus.state",
+    "opus.bhakti"
   ],
 
   "state": {
@@ -45,7 +46,8 @@
     "circuits/auto_heal.yaml",
     "circuits/auto_refresh.yaml",
     "circuits/karma_consequence.yaml",
-    "circuits/genesis_check.yaml"
+    "circuits/genesis_check.yaml",
+    "circuits/bhakti_practice.yaml"
   ],
 
   "cli": {
