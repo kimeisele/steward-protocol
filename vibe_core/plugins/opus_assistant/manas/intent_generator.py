@@ -125,6 +125,9 @@ class IntentGenerator:
             self._analyze_test_health,
             self._analyze_documentation_drift,
             self._analyze_log_cleanup,
+            # OPUS-032: Self-Documentation Analyzers
+            self._analyze_readme_staleness,
+            self._analyze_self_documentation,
         ]
 
     def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
@@ -417,5 +420,177 @@ class IntentGenerator:
 
         except Exception as e:
             logger.debug(f"Log cleanup analysis failed: {e}")
+
+        return None
+
+    # =========================================================================
+    # OPUS-032: Self-Documentation Analyzers
+    # =========================================================================
+
+    def _analyze_readme_staleness(self, context: Dict[str, Any]) -> Optional[Intent]:
+        """
+        Check if README.md is stale (many commits since last update).
+
+        Risk: MEDIUM (modifying docs requires review)
+
+        The Auto-Biographer: Suggests updating README when it falls behind.
+        """
+        try:
+            readme_path = self._workspace / "README.md"
+            if not readme_path.exists():
+                return None
+
+            # Get commits since README was last modified
+            result = subprocess.run(
+                ["git", "log", "--oneline", "--", "README.md"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(self._workspace),
+            )
+
+            if result.returncode != 0:
+                return None
+
+            readme_commits = len([l for l in result.stdout.strip().split("\n") if l])
+
+            # Get total recent commits
+            result = subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(self._workspace),
+            )
+
+            if result.returncode != 0:
+                return None
+
+            total_commits = int(result.stdout.strip())
+
+            # Get last README commit
+            result = subprocess.run(
+                ["git", "log", "-1", "--format=%H", "--", "README.md"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(self._workspace),
+            )
+
+            if result.returncode != 0 or not result.stdout.strip():
+                return None
+
+            last_readme_sha = result.stdout.strip()
+
+            # Count commits since README was updated
+            result = subprocess.run(
+                ["git", "rev-list", "--count", f"{last_readme_sha}..HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                cwd=str(self._workspace),
+            )
+
+            if result.returncode != 0:
+                return None
+
+            commits_since_readme = int(result.stdout.strip())
+
+            # If more than 30 commits since README update, suggest refresh
+            if commits_since_readme >= 30:
+                return Intent(
+                    id=self._next_intent_id(),
+                    intent_type="update_readme",
+                    title=f"Update README.md ({commits_since_readme} commits behind)",
+                    description=f"README.md hasn't been updated in {commits_since_readme} commits. It may be out of sync with the current codebase.",
+                    reasoning="Documentation drift causes onboarding friction and confusion. Regular README updates keep the project accessible.",
+                    priority=IntentPriority.MEDIUM,
+                    risk=IntentRisk.MEDIUM,
+                    params={
+                        "commits_since_update": commits_since_readme,
+                        "total_commits": total_commits,
+                        "readme_commits": readme_commits,
+                    },
+                    auto_executable=False,  # Needs human review
+                )
+
+        except Exception as e:
+            logger.debug(f"README staleness analysis failed: {e}")
+
+        return None
+
+    def _analyze_self_documentation(self, context: Dict[str, Any]) -> Optional[Intent]:
+        """
+        Check if opus_assistant's own documentation needs updating.
+
+        Risk: LOW (self-documenting is safe)
+
+        The Self-Aware System: Knows when its own docs are stale.
+        """
+        try:
+            # Check OPUS.md age vs plugin changes
+            opus_md = self._workspace / "OPUS.md"
+            plugin_dir = self._workspace / "vibe_core" / "plugins" / "opus_assistant"
+
+            if not opus_md.exists() or not plugin_dir.exists():
+                return None
+
+            # Get OPUS.md last modified time
+            opus_mtime = opus_md.stat().st_mtime
+
+            # Find most recent plugin file modification
+            latest_plugin_mtime = 0
+            changed_files = []
+
+            for py_file in plugin_dir.glob("**/*.py"):
+                if "__pycache__" in str(py_file):
+                    continue
+                mtime = py_file.stat().st_mtime
+                if mtime > latest_plugin_mtime:
+                    latest_plugin_mtime = mtime
+                if mtime > opus_mtime:
+                    changed_files.append(py_file.name)
+
+            # If plugin files are newer than OPUS.md by more than 1 hour
+            time_diff_hours = (latest_plugin_mtime - opus_mtime) / 3600
+
+            if time_diff_hours > 1 and len(changed_files) >= 3:
+                return Intent(
+                    id=self._next_intent_id(),
+                    intent_type="update_opus_documentation",
+                    title=f"Update OPUS.md ({len(changed_files)} files changed)",
+                    description=f"OPUS.md may be outdated. {len(changed_files)} plugin files have been modified since last OPUS.md update.",
+                    reasoning="Self-documentation ensures the system's capabilities are accurately reflected in its dashboard.",
+                    priority=IntentPriority.LOW,
+                    risk=IntentRisk.SAFE,
+                    params={
+                        "changed_files": changed_files[:10],
+                        "hours_behind": round(time_diff_hours, 1),
+                    },
+                    auto_executable=False,
+                )
+
+            # Check if MANAS itself has new capabilities not in OPUS.md
+            manas_dir = plugin_dir / "manas"
+            if manas_dir.exists():
+                # Read OPUS.md content
+                opus_content = opus_md.read_text()
+
+                # Check if MANAS is mentioned
+                if "MANAS" not in opus_content and "manas" not in opus_content.lower():
+                    return Intent(
+                        id=self._next_intent_id(),
+                        intent_type="document_manas",
+                        title="Document MANAS cognitive kernel in OPUS.md",
+                        description="MANAS (the cognitive kernel) exists but is not documented in OPUS.md.",
+                        reasoning="New capabilities should be documented so users know they exist.",
+                        priority=IntentPriority.MEDIUM,
+                        risk=IntentRisk.SAFE,
+                        params={"feature": "MANAS", "location": "vibe_core/plugins/opus_assistant/manas/"},
+                        auto_executable=False,
+                    )
+
+        except Exception as e:
+            logger.debug(f"Self-documentation analysis failed: {e}")
 
         return None
