@@ -101,7 +101,29 @@ class DharmaCartridge(VibeAgent, OathMixin):
         self.karma_checks = 0
         self.total_credits_collected = 0
 
+        # Self-Correction Loop: Observer for proactive violation detection
+        self._observer = None
+        self._init_observer()
+
         logger.info("✅ DHARMA: Avatar ready to serve the City")
+
+    def _init_observer(self) -> None:
+        """
+        Initialize the DharmaObserver for proactive violation detection.
+
+        The Self-Correction Loop: DHARMA observes system events and
+        creates repair tasks when violations are detected.
+        """
+        try:
+            from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+            self._observer = DharmaObserver(cartridge=self)
+            if self._observer.subscribe():
+                logger.info("👁️ DHARMA Observer active - Self-Correction Loop enabled")
+        except ImportError:
+            logger.debug("DharmaObserver not available")
+        except Exception as e:
+            logger.debug(f"Could not init observer: {e}")
 
     def _get_opus_plugin(self) -> Optional[Any]:
         """
@@ -429,6 +451,7 @@ class DharmaCartridge(VibeAgent, OathMixin):
     def _status(self) -> Dict[str, Any]:
         """Return DHARMA status."""
         opus_connected = self._get_opus_plugin() is not None
+        observer_stats = self._observer.get_stats() if self._observer else {}
 
         return {
             "agent_id": self.agent_id,
@@ -443,6 +466,7 @@ class DharmaCartridge(VibeAgent, OathMixin):
             },
             "credits_collected": self.total_credits_collected,
             "oath_sworn": getattr(self, "oath_sworn", False),
+            "observer": observer_stats,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -452,6 +476,7 @@ class DharmaCartridge(VibeAgent, OathMixin):
 
     def report_status(self) -> Dict[str, Any]:
         """Report agent status for kernel health monitoring."""
+        observer_active = self._observer and self._observer._subscribed
         return {
             "agent_id": "dharma",
             "name": "DHARMA",
@@ -460,6 +485,8 @@ class DharmaCartridge(VibeAgent, OathMixin):
             "zone": "governance",
             "capabilities": self.capabilities,
             "opus_bridge": self._get_opus_plugin() is not None,
+            "observer_active": observer_active,
+            "self_correction_loop": "enabled" if observer_active else "disabled",
         }
 
 

@@ -512,6 +512,135 @@ class TestDharmaReportStatus:
         assert status["domain"] == "GOVERNANCE"
         assert status["zone"] == "governance"
         assert "opus_bridge" in status
+        assert "observer_active" in status
+        assert "self_correction_loop" in status
+
+
+class TestDharmaObserver:
+    """Tests for DharmaObserver (Self-Correction Loop)."""
+
+    def test_observer_importable(self):
+        """DharmaObserver can be imported."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        assert DharmaObserver is not None
+
+    def test_observer_instantiation(self):
+        """DharmaObserver can be instantiated."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+        assert observer is not None
+        assert observer._subscribed is False
+        assert observer._violations_detected == 0
+
+    def test_observer_violation_patterns(self):
+        """DharmaObserver has violation patterns defined."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        assert "himsa" in DharmaObserver.VIOLATION_PATTERNS
+        assert "asteya" in DharmaObserver.VIOLATION_PATTERNS
+        assert "aparigraha" in DharmaObserver.VIOLATION_PATTERNS
+        assert "asatya" in DharmaObserver.VIOLATION_PATTERNS
+
+    def test_observer_detect_force_violation(self):
+        """Observer detects force violations."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+
+        violations = observer._detect_violations(
+            syscall_type="git_push",
+            params={"flags": "--force"},
+            agent_id="bad_actor",
+        )
+
+        assert len(violations) > 0
+        # --force matches aparigraha pattern
+        principles = [v["principle"] for v in violations]
+        assert "aparigraha" in principles
+
+    def test_observer_detect_skip_tests_violation(self):
+        """Observer detects skip_tests violations."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+
+        violations = observer._detect_violations(
+            syscall_type="deploy",
+            params={"skip_tests": True},
+            agent_id="impatient_dev",
+        )
+
+        assert len(violations) > 0
+        assert violations[0]["principle"] == "asteya"
+
+    def test_observer_detect_bypass_violation(self):
+        """Observer detects bypass violations."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+
+        violations = observer._detect_violations(
+            syscall_type="governance_bypass",
+            params={},
+            agent_id="rogue_agent",
+        )
+
+        assert len(violations) > 0
+        assert violations[0]["principle"] == "himsa"
+
+    def test_observer_no_violation_for_clean_action(self):
+        """Observer returns empty list for clean actions."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+
+        violations = observer._detect_violations(
+            syscall_type="git_commit",
+            params={"message": "feat: add new feature"},
+            agent_id="good_agent",
+        )
+
+        assert len(violations) == 0
+
+    def test_observer_stats(self):
+        """Observer tracks statistics."""
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
+
+        observer = DharmaObserver()
+        stats = observer.get_stats()
+
+        assert "subscribed" in stats
+        assert "events_observed" in stats
+        assert "violations_detected" in stats
+        assert "repairs_created" in stats
+
+    def test_dharma_has_observer(self):
+        """DharmaCartridge initializes observer."""
+        from vibe_core.cartridges.agent_city.dharma.cartridge_main import DharmaCartridge
+
+        dharma = DharmaCartridge()
+
+        assert dharma._observer is not None
+
+    def test_status_includes_observer_stats(self):
+        """Status includes observer statistics."""
+        from vibe_core.cartridges.agent_city.dharma.cartridge_main import DharmaCartridge
+        from vibe_core.scheduling import Task
+
+        dharma = DharmaCartridge()
+
+        task = Task(
+            agent_id="dharma",
+            payload={"action": "status"},
+            task_id="observer_test",
+        )
+
+        result = asyncio.run(dharma.process(task))
+
+        assert "observer" in result
+        assert "events_observed" in result["observer"]
 
 
 if __name__ == "__main__":
