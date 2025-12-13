@@ -24,8 +24,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .
 
+      - name: Verify crypto available (fail-fast)
+        run: |
+          python -c "
+          from vibe_core.steward.crypto import load_or_generate_keys, sign_content
+          print('✅ Crypto dependencies verified: ecdsa is installed')
+          " || (echo '❌ FATAL: ecdsa not installed! Container signing will fail.' && exit 1)
+
       - name: Build all containers
         run: |
+          export PYTHONPATH=$PWD
           chmod +x scripts/build_all_containers.sh
           ./scripts/build_all_containers.sh
 

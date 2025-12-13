@@ -157,6 +157,20 @@ class IntentGenerator:
             except Exception as e:
                 logger.debug(f"Analyzer {analyzer.__name__} failed: {e}")
 
+        # BHAKTI ↔ MEMORY: Boost intents that have proven successful ("muscle memory")
+        if self._memory:
+            successful = self._memory.get_successful_patterns()
+            for intent in intents:
+                if intent.intent_type in successful and intent.priority != IntentPriority.CRITICAL:
+                    # Boost by one level - the system learns what works
+                    boosted = {
+                        IntentPriority.LOW: IntentPriority.MEDIUM,
+                        IntentPriority.MEDIUM: IntentPriority.HIGH,
+                        IntentPriority.HIGH: IntentPriority.CRITICAL,
+                    }
+                    intent.priority = boosted.get(intent.priority, intent.priority)
+                    logger.info(f"🧠 MUSCLE MEMORY: Boosted '{intent.intent_type}' (proven success)")
+
         # Sort by priority
         priority_order = {
             IntentPriority.CRITICAL: 0,
