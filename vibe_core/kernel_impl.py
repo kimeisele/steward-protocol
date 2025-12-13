@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 if TYPE_CHECKING:
     from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
+    from vibe_core.boot_mode import BootMode
 
 # Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
 # Kernel has no governance types - access via kernel.governance
@@ -909,10 +910,23 @@ class RealVibeKernel(VibeKernel):
         logger.info(f"✅ Spawned {spawned} deferred agent processes")
         return spawned
 
-    def boot(self) -> None:
-        """Boot the kernel - register all manifests and start scheduler"""
+    def boot(self, boot_mode: BootMode | None = None) -> None:
+        """
+        Boot the kernel - register all manifests and start scheduler.
+
+        OPUS-031 Layer 4: Supports BootMode for different execution contexts.
+
+        Args:
+            boot_mode: Optional BootMode (FULL, HEADLESS, MINIMAL).
+                       If None, defaults to FULL for backward compatibility.
+        """
+        from vibe_core.boot_mode import BootMode
+
+        if boot_mode is None:
+            boot_mode = BootMode.FULL
+
         self._status = KernelStatus.BOOTING
-        logger.info("⚙️  KERNEL BOOTING...")
+        logger.info(f"⚙️  KERNEL BOOTING... (mode: {boot_mode.value})")
 
         # Phase 5: Record Kernel Boot in Parampara
         self.lineage.add_block(
@@ -922,6 +936,7 @@ class RealVibeKernel(VibeKernel):
                 "version": "2.0.0",
                 "timestamp": datetime.utcnow().isoformat(),
                 "agents_registered": len(self._agent_registry),
+                "boot_mode": boot_mode.value,
             },
         )
 
@@ -965,7 +980,10 @@ class RealVibeKernel(VibeKernel):
         self._pulse()
 
         # Phase 18: Start Network Gateway (Async Sidecar)
-        if not self._gateway_thread or not self._gateway_thread.is_alive():
+        # OPUS-031 Layer 4: Skip gateway in headless mode for faster boot
+        if boot_mode.should_skip_gateway():
+            logger.info("🚫 Network Gateway SKIPPED (headless mode)")
+        elif not self._gateway_thread or not self._gateway_thread.is_alive():
             import threading
 
             self._gateway_thread = threading.Thread(target=self._run_gateway_sidecar, name="VibeGateway", daemon=True)
