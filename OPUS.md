@@ -6,9 +6,9 @@
 
 # OPUS - System State
 
-> 🟡 **NOTICE** - Trust Score 61% - Minor issues detected
+> 🟡 **NOTICE** - Trust Score 63% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2025-12-13 03:03:43 UTC | Kernel: STOPPED (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-13 07:41:52 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
@@ -20,8 +20,8 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `dc32a4c`
-- **Working Tree:** ✅ Clean
+- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `98d1600`
+- **Working Tree:** ⚠️ Uncommitted
 ### Layer 2 - Prana (Runtime Energy)
 
 - **Kernel:** ⚪ STOPPED- **Agents:** 0 active
@@ -30,8 +30,13 @@
 
 - **Ephemeral Thoughts:** 0
 - **Active Persona:** None
+### ⚖️ Karma State
+
+- **Score:** 🟢 **100%** (full_power)
+- **Trend:** ➡️ Stable
 ### 🎯 Focus Areas
 
+- Commit pending changes
 - Documentation drift detected
 
 <!-- /@LIVE -->
@@ -42,13 +47,24 @@
 
 *Recent observations and insights from the system*
 
-_No observations recorded yet._
-
-The system will log observations here as it runs:
-- ℹ️ INFO: Normal operational events
-- ⚠️ WARN: Things to watch
-- 🚨 ALERT: Needs attention
-- 💡 INSIGHT: AI-generated insights
+| Time | Severity | Source | Message |
+|------|----------|--------|---------|
+| `8.967857` | ⚠️ | opus_assistant | Second observation |
+| `8.963975` | ⚠️ | opus_assistant | New warning observation |
+| `8.949831` | 🚨 | opus_assistant | Alert message |
+| `8.948820` | ⚠️ | opus_assistant | Warning message |
+| `8.695413` | ⚠️ | auto_verify | Drift detected after commit {{ trigger_event.commi |
+| `8.421318` | ⚠️ | auto_verify | Drift detected after commit {{ trigger_event.commi |
+| `4.110395` | ⚠️ | opus_assistant | Second observation |
+| `4.106864` | ⚠️ | opus_assistant | New warning observation |
+| `4.094317` | 🚨 | opus_assistant | Alert message |
+| `4.093514` | ⚠️ | opus_assistant | Warning message |
+| `4.052010` | ⚠️ | auto_verify | Drift detected after commit {{ trigger_event.commi |
+| `4.014657` | ⚠️ | auto_verify | Drift detected after commit {{ trigger_event.commi |
+| `8.186832` | ⚠️ | opus_assistant | Second observation |
+| `8.181692` | ⚠️ | opus_assistant | New warning observation |
+| `8.166186` | 🚨 | opus_assistant | Alert message |
+| ... | ... | ... | _+3 more entries_ |
 
 <!-- /@LIVE -->
 
@@ -135,7 +151,7 @@ flowchart LR
 <!-- @LIVE:verification -->
 ## System Verification (OPUS-000)
 
-**Trust Score: **🟡 DEGRADED** 61%** (29 docs verified, 1 without @HARNESS)
+**Trust Score: **🟡 DEGRADED** 63%** (29 docs verified, 1 without @HARNESS)
 
 ### OPUS Docs
 
@@ -163,10 +179,10 @@ flowchart LR
 | 020-CONTAINER-MIGRATION.m | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 021-TEST-ARCHITECTURE.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 022-KERNEL-SCALING.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 023-FRACTAL-UI-ARCHITECTU | 25% | ❌ | ✅ | ❌ | ✅ | ✅ | ⚪ |
+| 023-FRACTAL-UI-ARCHITECTU | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 024-KERNEL-PROTECTION-AUD | 50% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 025-PATH-LOBOTOMY-CRISIS. | 75% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 026-SEMANTIC-VERIFICATION | 20% | ❌ | ❌ | ❌ | ✅ | ✅ | ⚪ |
+| 026-SEMANTIC-VERIFICATION | 40% | ✅ | ❌ | ❌ | ✅ | ✅ | ⚪ |
 | 027-UNIFIED-STATE-IMPLEME | 50% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 028-PRAKRITI-GIT-INTEGRAT | 50% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 029-OPUS-PLUGIN-ARCHITECT | 50% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
@@ -184,7 +200,7 @@ flowchart LR
 - **014-UNIFIED-UI-TRANSPARENCY.md** [doc]: ## Status
 - **015a-SECURITY-ADDENDUM.md** [doc]: ## Implementation
 - **016-RUNTIME-SEPARATION.md** [doc]: ## Implementation
-- _...and 33 more_
+- _...and 27 more_
 
 <!-- /@LIVE -->
 
@@ -245,7 +261,7 @@ flowchart LR
 | **loaders** | Unified Loader System - VEDA-4 Pattern for ALL Item Types. | 8 | ❌ | `vibe_core/loaders/` |
 | **phoenix** | Phoenix Configuration System - The config that never dies. | 36 | ❌ | `vibe_core/phoenix/` |
 | **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
-| **plugins** | Kernel Plugins Package | 99 | ✅ | `vibe_core/plugins/` |
+| **plugins** | Kernel Plugins Package | 108 | ✅ | `vibe_core/plugins/` |
 | **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 8 | ❌ | `vibe_core/protocols/` |
 | **runtime** | Runtime Components Package | 26 | ❌ | `vibe_core/runtime/` |
 | **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
@@ -266,16 +282,16 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 15 | feat(opus): OPUS-030 Cognitive Awakening |
-| `vibe_core/plugins/opus_assistant/plugin_main.py` | 14 | feat(opus): Complete Fractal Holon wirin |
-| `vibe_core/plugins/opus_assistant/core/__init__.py` | 6 | feat(opus): Phase 4 - Cognitive Circuits |
-| `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 4 | refactor(opus): Kill Spaghetti + Add Mer |
-| `vibe_core/plugins/opus_assistant/core/observation_logger.py` | 3 | feat(opus): Implement Fractal Holon stat |
-| `vibe_core/plugins/opus_assistant/cli/commands.py` | 3 | feat(opus): Add --deep flag for LLM-powe |
-| `vibe_core/runtime/boot_sequence.py` | 3 | feat(prompt): Wire plugin contexts into  |
-| `vibe_core/plugins/opus_assistant/circuits/__init__.py` | 3 | feat(opus): Phase 5 - Auto-Refresh + Cle |
-| `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 3 | refactor(opus): OPUS-029 Migration - sta |
-| `vibe_core/plugins/opus_assistant/events/__init__.py` | 3 | feat(opus): Phase 4 - Cognitive Circuits |
+| `vibe_core/plugins/opus_assistant/core/__init__.py` | 5 | feat(opus): Phase 2.5 - Observation Jour |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 4 | feat(opus): Phase 2 - Dynamic Context Lo |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 3 | feat(opus): Phase 2.5 - Observation Jour |
+| `vibe_core/plugins/opus_assistant/events/__init__.py` | 2 | feat(opus): Phase 1.5 - Fraktale Config  |
+| `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 2 | feat(opus): Phase 0 - The Split (OPUS-02 |
+| `vibe_core/plugins/opus_assistant/core/observation_logger.py` | 1 | feat(opus): Phase 2.5 - Observation Jour |
+| `vibe_core/plugins/opus_assistant/tests/test_observation_logger.py` | 1 | feat(opus): Phase 2.5 - Observation Jour |
+| `vibe_core/plugins/opus_assistant/core/context_service.py` | 1 | feat(opus): Phase 2 - Dynamic Context Lo |
+| `vibe_core/plugins/opus_assistant/tests/test_context_service.py` | 1 | feat(opus): Phase 2 - Dynamic Context Lo |
+| `vibe_core/plugins/opus_assistant/core/config_loader.py` | 1 | feat(opus): Phase 1.5 - Fraktale Config  |
 
 <!-- /@LIVE -->
 
@@ -291,7 +307,7 @@ _No active session (kernel may be stopped)_
 
 | Layer | Name | Status | Details |
 | --- | --- | --- | --- |
-| 1 | STHULA (Physical) | ✅ | Clean on `claude/review-prompt-architecture-lIfRE` |
+| 1 | STHULA (Physical) | 🟡 | Dirty on `claude/review-prompt-architecture-lIfRE` |
 | 2 | PRANA (Runtime) | ⏹️ | Stopped |
 | 3 | PURUSHA (Identity) | ⚪ | No personas defined |
 
@@ -299,8 +315,8 @@ _No active session (kernel may be stopped)_
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `dc32a4c` | ⚪ |
-| Ledger HEAD | `4cef525941e9` | ⚪ |
+| Git HEAD | `98d1600` | ⚪ |
+| Ledger HEAD | `empty` | ⚪ |
 
 <!-- /@LIVE -->
 
@@ -308,10 +324,10 @@ _No active session (kernel may be stopped)_
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
-**Total: 11** (TODO: 11, HACK: 0, FIXME: 0)
+**Total: 14** (TODO: 14, HACK: 0, FIXME: 0)
 
 <details>
-<summary>TODOs (11)</summary>
+<summary>TODOs (14)</summary>
 
 - `vibe_core/cartridges/system/archivist/tools/audit_tool.py:78` - # TODO: Implement real verification with public_key when HER
 - `vibe_core/cartridges/system/engineer/cartridge_main.py:465` - # TODO: Implement agent-specific logic
@@ -319,11 +335,14 @@ _No active session (kernel may be stopped)_
 - `vibe_core/cartridges/system/engineer/templates/agent/cartridge_main.py:106` - # TODO: Implement your capability
 - `vibe_core/cartridges/system/envoy/tools/wiring_audit_scripts.py:221` - "# TODO.*implement": "MEDIUM",
 - `vibe_core/cli/unified_cli.py:61` - "delegate": None,  # TODO: Migrate to plugin
-- `vibe_core/config/__init__.py:21` - # TODO: Remove in v2.0
 - `vibe_core/playbook/__init__.py:22` - # TODO: Remove in v2.0
 - `vibe_core/plugins/doctor/plugin_main.py:86` - # TODO: Clarify offline mode dependency injection.
 - `vibe_core/plugins/envoy/plugin_main.py:517` - # TODO: Create envoy.yaml config section
+- `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:58` - # TODOs (collapsible if many)
+- `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:65` - lines.append("### TODOs")
+- `vibe_core/runtime/prompt_composer.py:237` - project_root = Path.cwd()  # TODO: Get from context if avail
 - `vibe_core/task_management/task_manager.py:341` - # TODO: Integrate with UnifiedRouter for dynamic prioritizat
+- `vibe_core/config/__init__.py:21` - # TODO: Remove in v2.0
 
 </details>
 <!-- /@LIVE -->
@@ -334,13 +353,13 @@ _No active session (kernel may be stopped)_
 
 | Metric | Count | Status |
 | --- | --- | --- |
-| Active Tests | 83 | - |
+| Active Tests | 84 | - |
 | Archived (broken) | 1 | - |
-| Organized | 83/83 | - |
-| Unit Tests | 33 | - |
+| Organized | 84/84 | - |
+| Unit Tests | 34 | - |
 | Integration Tests | 44 | - |
 | Hardening Tests | 4 | - |
-| Using Fixtures | 9/12 (75%) | OK |
+| Using Fixtures | 9/11 (82%) | OK |
 
 **Debt:** 1 tests in `tests/archive/` need revival
 <!-- /@LIVE -->
@@ -352,14 +371,57 @@ _No active session (kernel may be stopped)_
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-_Define current task_
+**OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12 12:15 UTC)**
+- ✅ Eliminated all `"/tmp/vibe_os"` string literals in vibe_core/
+- ✅ `kernel_impl.py` - Path() construction pattern
+- ✅ `lineage.py` - Path() construction for bootstrap fallback
+- ✅ `section_main.py` - `_DEFAULT_RUNTIME_ROOT` constant
+- ✅ `vfs.py` - already compliant (Path() construction)
+- ✅ Created `tests/unit/test_config_paths.py` (16 tests, all passing)
+- ✅ Fixed E741 ruff errors in docs/architecture/scripts/
+- ✅ Fixed ruff format (blank line after import)
+- 🎯 **@HARNESS: 100%** | **VISNU: Verified** | **Kernel Boot: Passed**
+
+**PREVIOUS (2025-12-11 17:45 UTC)**
+- PANOPTICON+ Migration Complete
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-_None_
+### ✅ RESOLVED: Tests Migration Complete
+
+**All tests now use canonical oath-swearing:**
+| Test | Migration |
+|------|-----------|
+| `test_event_bus_integration.py` | ✅ `swear_oath_sync()` |
+| `test_capability_revocation.py` | ✅ `swear_oath_sync()` |
+| `city_simulation.py` | ✅ `swear_oath_sync()` fallback |
+| `test_red_team_attacks.py` | ✅ `_apply_fake_oath()` helper |
+| `test_system_boot.py` | ✅ TestAgents fixtures |
+| `test_governance_security.py` | ✅ TestAgents fixtures |
+
+**Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
+
+### 🟡 PENDING: Restored Tests Need CI Verification
+
+**7 tests moved back** from `tests/archive/` to `tests/integration/`:
+| Test | Dependencies | Status |
+|------|--------------|--------|
+| test_kernel_markdown_interfaces.py | fresh_kernel, EphemeralRenderer | ❓ Needs CI |
+| test_federation_manual.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_fractal_ui.py | spawn_child_kernel | ❓ Needs CI |
+| test_genesis_boot.py | genesis_path, envoy plugin | ❓ Needs CI |
+| test_genesis_flow.py | BootOrchestrator, UniversalProvider | ❓ Needs CI |
+| test_sangha_api.py | HTTP Gateway (port 8000) | ❓ Needs CI |
+| test_watchman_governance.py | pack_vibe, verify_holon_signatures | ❓ Needs CI |
+
+**Why restored:** Features/classes exist in codebase. Tests should not have been archived.
+
+**Action needed:** Run CI, fix any failures.
+
+**Still archived:** `test_runtime_separation.py` - `@pytest.mark.skip` (WIP)
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
@@ -370,4 +432,4 @@ _Add notes here_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-13 03:03:43 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-13 07:41:52 UTC*
