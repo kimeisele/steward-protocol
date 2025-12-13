@@ -1,0 +1,227 @@
+# KARMA_CONSEQUENCE - Trust Score → Governance Consequences
+# Phase 5: Neuro-Symbolic Wiring
+#
+# This circuit BRIDGES two systems:
+#   OPUS Trust Score (observation) → Vedic Governance (consequence)
+#
+# The Missing Link that makes the system LEARN from its mistakes.
+#
+# When trust drops critically:
+#   1. Agent gets DEMOTED (GRIHASTHA → BRAHMACHARI)
+#   2. Loses write permissions (can only observe)
+#   3. Must "graduate" again by completing tasks successfully
+#
+# When trust is consistently high:
+#   1. Agent gets PROMOTED faster
+#   2. Gains more autonomy
+#
+# This is REAL CONSEQUENCE - not just logging.
+#
+circuit:
+  id: KARMA_CONSEQUENCE
+  name: Karma Consequence Engine
+  description: Connect OPUS trust observations to Vedic governance actions
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "evaluate_trust"
+
+  # Event triggers
+  triggers:
+    - event: VERIFICATION_COMPLETED
+      description: After any verification run
+    - event: DRIFT_DETECTED
+      description: When code drifts from docs
+    - event: CONTEXT_SYNTHESIS
+      description: On every context synthesis (periodic check)
+
+  # Thresholds (configurable)
+  config:
+    critical_threshold: 40    # Below this = DEMOTE
+    warning_threshold: 60     # Below this = WARNING
+    promotion_threshold: 90   # Above this = PROMOTE faster
+    consecutive_failures: 3   # Failures before demotion
+
+  # Global invariants
+  invariants:
+    - "vedic_governance plugin is loaded"
+
+  states:
+    # Phase 1: Get current trust score
+    evaluate_trust:
+      name: "Evaluate Trust Score"
+      description: "Get current system trust score from OPUS"
+      state_var: "trust_data"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.get_trust_score"
+          params: {}
+      on_success: check_critical
+      on_failure: log_error
+
+    # Phase 2: Check for critical trust
+    check_critical:
+      name: "Check Critical Threshold"
+      description: "Is trust below critical threshold?"
+      state_var: "is_critical"
+      actions:
+        - action_type: CHECK_STATE
+          target: "trust_data.score"
+          params:
+            operator: "lt"
+            value: "{{ config.critical_threshold }}"
+      on_success: identify_responsible_agent
+      on_failure: check_warning
+
+    # Phase 2b: Check for warning level
+    check_warning:
+      name: "Check Warning Threshold"
+      description: "Is trust below warning threshold?"
+      state_var: "is_warning"
+      actions:
+        - action_type: CHECK_STATE
+          target: "trust_data.score"
+          params:
+            operator: "lt"
+            value: "{{ config.warning_threshold }}"
+      on_success: log_warning_observation
+      on_failure: check_promotion
+
+    # Phase 2c: Check for promotion eligibility
+    check_promotion:
+      name: "Check Promotion Threshold"
+      description: "Is trust above promotion threshold?"
+      state_var: "is_promotion"
+      actions:
+        - action_type: CHECK_STATE
+          target: "trust_data.score"
+          params:
+            operator: "gt"
+            value: "{{ config.promotion_threshold }}"
+      on_success: accelerate_graduation
+      on_failure: COMPLETE  # Normal operation, no action needed
+
+    # Phase 3: Identify who caused the trust drop
+    identify_responsible_agent:
+      name: "Identify Responsible Agent"
+      description: "Find the agent responsible for the trust drop"
+      state_var: "responsible_agent"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.get_last_actor"
+          params:
+            context: "{{ trigger_event }}"
+      on_success: demote_agent
+      on_failure: demote_fallback
+
+    # Phase 4a: DEMOTE the responsible agent
+    demote_agent:
+      name: "Demote Agent (Karma Consequence)"
+      description: "Agent loses lifecycle stage due to trust failure"
+      state_var: "demotion_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "karma.demotion_triggered"
+          params:
+            agent_id: "{{ responsible_agent.id }}"
+            trust_score: "{{ trust_data.score }}"
+            reason: "Trust dropped below critical threshold"
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.demote_agent"
+          params:
+            agent_id: "{{ responsible_agent.id }}"
+            reason: "KARMA: Trust score {{ trust_data.score }}% below threshold"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ALERT"
+            message: "🕉️ KARMA: Agent '{{ responsible_agent.id }}' DEMOTED (trust: {{ trust_data.score }}%)"
+            source: "karma_consequence"
+      on_success: COMPLETE_DEMOTED
+      on_failure: log_error
+
+    # Phase 4b: Fallback if no specific agent identified
+    demote_fallback:
+      name: "Log System-Wide Trust Issue"
+      description: "No specific agent, log system observation"
+      state_var: "fallback_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ALERT"
+            message: "🔴 KARMA: System trust critical ({{ trust_data.score }}%) - no specific agent identified"
+            source: "karma_consequence"
+      on_success: COMPLETE
+      on_failure: log_error
+
+    # Phase 4c: Warning observation
+    log_warning_observation:
+      name: "Log Warning"
+      description: "Trust is degraded but not critical"
+      state_var: "warning_logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "⚠️ KARMA: Trust degraded to {{ trust_data.score }}% - monitoring"
+            source: "karma_consequence"
+      on_success: COMPLETE
+      on_failure: COMPLETE
+
+    # Phase 4d: Accelerate graduation for high performers
+    accelerate_graduation:
+      name: "Accelerate Graduation"
+      description: "Trust consistently high - agents can graduate faster"
+      state_var: "promotion_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.check_promotions"
+          params:
+            accelerated: true
+            threshold_reduction: 1  # Reduce required tasks by 1
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🟢 KARMA: Trust excellent ({{ trust_data.score }}%) - graduation accelerated"
+            source: "karma_consequence"
+      on_success: COMPLETE
+      on_failure: COMPLETE
+
+    # Terminal: Demotion occurred
+    COMPLETE_DEMOTED:
+      name: "Karma Applied"
+      description: "Agent was demoted due to trust failure"
+      terminal: true
+      result:
+        status: "demoted"
+        agent_id: "{{ responsible_agent.id }}"
+        trust_score: "{{ trust_data.score }}"
+        consequence: "lifecycle_demotion"
+
+    # Terminal: Normal completion
+    COMPLETE:
+      name: "Karma Evaluated"
+      description: "Trust evaluated, appropriate action taken"
+      terminal: true
+      result:
+        status: "success"
+        trust_score: "{{ trust_data.score }}"
+        action_taken: "{{ 'warning' if is_warning else ('promotion' if is_promotion else 'none') }}"
+
+    # Terminal: Error
+    log_error:
+      name: "Karma Circuit Error"
+      description: "Error evaluating karma"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ALERT"
+            message: "Karma circuit failed: {{ error | default('Unknown error') }}"
+            source: "karma_consequence"
+      result:
+        status: "failed"
+        error: "{{ error }}"

@@ -300,30 +300,38 @@ class KernelTickHandler:
         """
         Execute a script action by mapping to plugin methods.
 
-        Target format: "opus.method_name" → self._plugin.method_name()
+        Target formats:
+        - "opus.method_name" → OPUS plugin methods
+        - "vedic.method_name" → Vedic Governance plugin methods (cross-plugin call)
         """
-        if not target.startswith("opus."):
-            return {"success": False, "error": f"Invalid target: {target}"}
+        # OPUS plugin methods
+        if target.startswith("opus."):
+            method_name = target.replace("opus.", "")
+            method_map = {
+                "check_opus_freshness": self._check_opus_freshness,
+                "write_opus_md": self._write_opus_md,
+                "log_observation": self._log_observation_from_circuit,
+                "quick_drift_check": self._quick_drift_check,
+                "detect_drift": self._detect_drift,
+                "verify": self._verify,
+                "synthesize_context": self._synthesize_context,
+                # Karma Circuit handlers
+                "get_trust_score": self._get_trust_score,
+                "get_last_actor": self._get_last_actor,
+            }
+            method = method_map.get(method_name)
+            if method:
+                return await method(params)
+            else:
+                logger.debug(f"Unknown opus method: {method_name}")
+                return {"success": False, "error": f"Unknown method: {method_name}"}
 
-        method_name = target.replace("opus.", "")
+        # Vedic Governance plugin methods (cross-plugin wiring!)
+        elif target.startswith("vedic."):
+            return await self._execute_vedic_action(target, params)
 
-        # Map to plugin methods
-        method_map = {
-            "check_opus_freshness": self._check_opus_freshness,
-            "write_opus_md": self._write_opus_md,
-            "log_observation": self._log_observation_from_circuit,
-            "quick_drift_check": self._quick_drift_check,
-            "detect_drift": self._detect_drift,
-            "verify": self._verify,
-            "synthesize_context": self._synthesize_context,
-        }
-
-        method = method_map.get(method_name)
-        if method:
-            return await method(params)
         else:
-            logger.debug(f"Unknown script target: {target}")
-            return {"success": False, "error": f"Unknown method: {method_name}"}
+            return {"success": False, "error": f"Invalid target prefix: {target}"}
 
     async def _emit_event_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Emit an event via EventBus."""
@@ -507,6 +515,173 @@ class KernelTickHandler:
             except Exception as e:
                 return {"success": False, "error": str(e)}
         return {"success": False, "error": "No context service"}
+
+    # =========================================================================
+    # Karma Circuit Handlers (OPUS ↔ Vedic Governance Wiring)
+    # =========================================================================
+
+    async def _get_trust_score(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get current trust score from OPUS verification.
+
+        This is the "observation" side of Karma - what is the system's trust level?
+        """
+        try:
+            # Run verification to get trust score
+            result = self._plugin.verify(quick=True)
+            score = result.get("total_score", 0)
+
+            return {
+                "success": True,
+                "score": score,
+                "passed": result.get("passed", False),
+                "checks_total": len(result.get("checks", [])),
+                "checks_failed": sum(1 for c in result.get("checks", []) if not c.get("passed", True)),
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e), "score": 0}
+
+    async def _get_last_actor(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get the last agent that performed an action.
+
+        Used by Karma circuit to identify who is "responsible" for trust changes.
+        """
+        try:
+            # Try to get from kernel's active agents
+            kernel = self._plugin._kernel
+            if kernel and hasattr(kernel, "agents"):
+                agents = kernel.agents
+                if agents:
+                    # Return the most recently active agent
+                    # In a real system, we'd track task completion timestamps
+                    last_agent = list(agents.keys())[-1] if agents else None
+                    if last_agent:
+                        return {"success": True, "id": last_agent, "type": "agent"}
+
+            # Fallback: return system as the actor
+            return {"success": True, "id": "system", "type": "system"}
+        except Exception as e:
+            return {"success": False, "error": str(e), "id": "unknown"}
+
+    async def _execute_vedic_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute actions on Vedic Governance plugin.
+
+        THIS IS THE CROSS-PLUGIN WIRING - OPUS talks to Vedic Governance!
+
+        Target format: "vedic.method_name"
+        """
+        method_name = target.replace("vedic.", "")
+
+        try:
+            # Get Vedic Governance plugin from kernel
+            kernel = self._plugin._kernel
+            if not kernel:
+                return {"success": False, "error": "No kernel available"}
+
+            governance = getattr(kernel, "governance", None)
+            if not governance:
+                return {"success": False, "error": "Vedic Governance plugin not loaded"}
+
+            # Map method names to governance methods
+            if method_name == "demote_agent":
+                return await self._vedic_demote_agent(governance, params)
+            elif method_name == "check_promotions":
+                return await self._vedic_check_promotions(governance, params)
+            else:
+                return {"success": False, "error": f"Unknown vedic method: {method_name}"}
+
+        except Exception as e:
+            logger.error(f"Vedic action failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _vedic_demote_agent(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Demote an agent via Vedic Governance.
+
+        This is the CONSEQUENCE - trust drop leads to lifecycle demotion.
+        """
+        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
+
+        agent_id = params.get("agent_id")
+        reason = params.get("reason", "Karma consequence")
+
+        if not agent_id:
+            return {"success": False, "error": "No agent_id provided"}
+
+        # Get current ashrama
+        current = governance.get_agent_ashrama(agent_id)
+        if not current:
+            return {"success": False, "error": f"Agent {agent_id} not found in governance"}
+
+        current_stage = current.current_ashrama
+
+        # Determine demotion target
+        # GRIHASTHA → BRAHMACHARI (back to student)
+        # VANAPRASTHA → GRIHASTHA (back to active but probation)
+        demotion_map = {
+            Ashrama.GRIHASTHA: Ashrama.BRAHMACHARI,
+            Ashrama.VANAPRASTHA: Ashrama.GRIHASTHA,
+            Ashrama.SANNYASA: Ashrama.VANAPRASTHA,
+        }
+
+        new_stage = demotion_map.get(current_stage)
+        if not new_stage:
+            # BRAHMACHARI can't be demoted further
+            return {
+                "success": True,
+                "demoted": False,
+                "reason": f"Agent {agent_id} is already at lowest stage (BRAHMACHARI)",
+            }
+
+        # Execute demotion
+        success = governance.transition_agent_ashrama(agent_id, new_stage, reason)
+
+        if success:
+            logger.warning(f"🕉️ KARMA: Agent '{agent_id}' demoted {current_stage.value} → {new_stage.value}")
+            return {
+                "success": True,
+                "demoted": True,
+                "agent_id": agent_id,
+                "from_stage": current_stage.value,
+                "to_stage": new_stage.value,
+                "reason": reason,
+            }
+        else:
+            return {"success": False, "error": "Demotion transition failed"}
+
+    async def _vedic_check_promotions(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check for agents eligible for accelerated promotion.
+
+        When trust is consistently high, agents can graduate faster.
+        """
+        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
+
+        accelerated = params.get("accelerated", False)
+        threshold_reduction = params.get("threshold_reduction", 0)
+
+        promoted = []
+
+        # Get all agents in BRAHMACHARI stage
+        ashrama_registry = governance.get_ashrama_registry()
+
+        for agent_id, transition in ashrama_registry.items():
+            if transition.current_ashrama == Ashrama.BRAHMACHARI:
+                # Check task completions
+                completions = governance._task_completions.get(agent_id, 0)
+                required = 3 - threshold_reduction if accelerated else 3
+
+                if completions >= required:
+                    success = governance.transition_agent_ashrama(
+                        agent_id, Ashrama.GRIHASTHA, reason="Accelerated graduation (trust bonus)"
+                    )
+                    if success:
+                        promoted.append(agent_id)
+                        logger.info(f"🕉️ KARMA: Agent '{agent_id}' graduated early (high trust)")
+
+        return {"success": True, "promoted": promoted, "count": len(promoted)}
 
     # =========================================================================
     # Fallback for events without circuits
