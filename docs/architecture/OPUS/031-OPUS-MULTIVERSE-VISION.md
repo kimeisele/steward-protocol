@@ -22,11 +22,11 @@ files:
       - "class OpusRenderer"
       - "generate_content"
 
-  # StateManager (Fractal Holon)
+  # StateManager (Fractal Holon) - NOTE: Class is OpusStateManager!
   - path: vibe_core/plugins/opus_assistant/core/state_manager.py
     required: true
     patterns:
-      - "class StateManager"
+      - "class OpusStateManager"
       - "append_observation"
 
   # Syscall Infrastructure (Layer 2 prerequisite)
@@ -69,7 +69,7 @@ This document defines the evolution from **Layer 1** (current) to **Layer 5** (m
 | Component | Status | Location |
 |-----------|--------|----------|
 | Jinja2 Templates | ✅ | `opus_assistant/templates/` |
-| Control Plane | ✅ | `view_preferences` in StateManager |
+| Control Plane | ✅ | `view_preferences` in OpusStateManager |
 | Karma System | ✅ | `karma_history.jsonl` |
 | Dependency Graph | ✅ | `_gather_dependency_graph()` |
 | Backend/Frontend Split | ✅ | OPUS-030 completed |
@@ -90,75 +90,116 @@ OPUS.md (PROJECTION)
 ### Goal
 Expose existing syscall infrastructure in OPUS.md as a command interface.
 
-### Prerequisites (Already Exist!)
-- `BlueprintGenerator.compile()` - NL → Syscall detection
-- `SemanticSyscallExecutor` - Syscall execution
-- `DeterministicExecutor` - Playbook execution
+### What EXISTS (Verified)
+| Component | Location | Status |
+|-----------|----------|--------|
+| `BlueprintGenerator.compile()` | `envoy/blueprint_generator.py:169` | ✅ Works |
+| `SemanticSyscallExecutor` | `semantic_syscalls.py` | ✅ Works |
+| `SYSCALL_INTENT_PATTERNS` | `blueprint_generator.py` | ✅ Regex patterns |
 
-### Implementation
+### What DOESN'T Exist (Must Build)
 
-**Phase 2.1: Add Syscall Panel to Template**
+> ⚠️ **HONEST ASSESSMENT**: Layer 2 requires NEW infrastructure
+
+| Component | Status | Action Required |
+|-----------|--------|-----------------|
+| `syscall_history.jsonl` | ❌ NOT EXISTS | Create storage format |
+| `SyscallEntry` dataclass | ❌ NOT EXISTS | Add to state_manager.py |
+| `record_syscall()` method | ❌ NOT EXISTS | Add to OpusStateManager |
+| Syscall Console panel | ❌ NOT EXISTS | Create template |
+
+### Implementation (Honest)
+
+**Phase 2.1: Add Syscall Storage to StateManager**
+
+File: `opus_assistant/core/state_manager.py`
+```python
+@dataclass
+class SyscallEntry:
+    """A single syscall execution record."""
+    timestamp: str
+    intent: str
+    syscall_type: str
+    result: str  # "success" | "failed" | "no_match"
+    confidence: float
+
+# Add to OpusStateManager:
+SYSCALL_HISTORY_FILE = "syscall_history.jsonl"
+
+def record_syscall(self, entry: SyscallEntry) -> bool:
+    """Record a syscall execution to history."""
+    # Similar pattern to append_observation()
+```
+
+**Phase 2.2: Add Syscall Panel to Template**
 
 File: `opus_assistant/templates/panels/syscall_console.md.j2`
 ```jinja2
 ## ⚡ Syscall Console
 
-{% if last_syscall %}
-| Intent | Result |
-|--------|--------|
-| `{{ last_syscall.intent }}` | {{ last_syscall.status }} |
+{% if syscall_history %}
+| Time | Intent | Result |
+|------|--------|--------|
+{% for s in syscall_history[:5] %}
+| {{ s.timestamp }} | `{{ s.intent[:40] }}` | {{ s.result }} |
+{% endfor %}
+{% else %}
+_No syscalls recorded yet_
 {% endif %}
 
-**Available:**
-- `spawn <role> agent` → SPAWN_COGNITION
-- `dispatch <task> to <agent>` → DISPATCH_TASK
+**CLI:** `python -m vibe_core.cli envoy "<intent>"`
 
-CLI: `python -m vibe_core.cli envoy "<intent>"`
-```
-
-**Phase 2.2: Add Gatherer**
-
-File: `opus_dashboard_renderer.py`
-```python
-def _gather_syscall_history(self) -> Dict[str, Any]:
-    """Gather recent syscall executions from StateManager."""
-    # Read from .opus_state/syscall_history.jsonl
-    pass
+**Limitations:**
+- Uses regex patterns, not LLM
+- Unmatched intents → confidence=0.5 playbook mode
 ```
 
 ### Success Criteria
 
 | Criterion | Verification |
 |-----------|--------------|
+| `SyscallEntry` dataclass exists | `grep "class SyscallEntry" state_manager.py` |
+| `syscall_history.jsonl` created on first syscall | Check `.opus_state/` |
 | Panel renders in OPUS.md | Visual check |
-| Last syscall shown | Execute syscall, verify display |
-| CLI link works | Click/copy, execute |
 
 ---
 
 ## Layer 3: 4D Hypercube State (P2)
 
 ### Goal
-Visualize the four dimensions of system state:
-1. **Time** - Session duration, commit history
-2. **Karma** - Trust score, trend, history
-3. **City** - Active agents, zones
-4. **Circuits** - Waiting, fired, next
+Visualize the four dimensions of system state.
+
+### What EXISTS (Verified)
+| Axis | Data Source | Status |
+|------|-------------|--------|
+| ⏱️ Time | `session.json` | ✅ Has `started_at` |
+| 🧬 Karma | `karma_history.jsonl` | ✅ Has scores |
+| 🏙️ City | `kernel.city` | ⚠️ Requires kernel access |
+| 🔮 Circuits | `_gather_circuits()` | ✅ Already gathered |
+
+### What DOESN'T Exist (Must Build)
+| Component | Status | Action Required |
+|-----------|--------|-----------------|
+| Hypercube panel | ❌ NOT EXISTS | Create template |
+| City data gatherer | ⚠️ PARTIAL | Need `_gather_city()` method |
+| Trend calculation | ❌ NOT EXISTS | Add to karma gatherer |
 
 ### Implementation
 
-**Phase 3.1: Hypercube Panel**
+**Phase 3.1: Add `_gather_city()` to Renderer**
 
-File: `opus_assistant/templates/panels/hypercube.md.j2`
-```jinja2
-## 🔮 4D Hypercube
+```python
+def _gather_city(self) -> Dict[str, Any]:
+    """Gather city/agent data from kernel."""
+    if not self._kernel:
+        return {"agent_count": 0, "zones": []}
 
-| Axis | State |
-|------|-------|
-| ⏱️ Time | Session: {{ session.duration }} \| Commits: {{ git.commit_count }} |
-| 🧬 Karma | {{ karma.current_score }}% ({{ karma.boot_mode }}) {{ karma.trend }} |
-| 🏙️ City | {{ city.agent_count }} agents \| Zones: {{ city.zones|join(', ') }} |
-| 🔮 Circuits | Waiting: {{ circuits.waiting }} \| Fired: {{ circuits.fired_count }} |
+    city = getattr(self._kernel, "city", None)
+    if not city:
+        return {"agent_count": 0, "zones": []}
+
+    # Extract agent info from city
+    # ...
 ```
 
 ### Success Criteria
@@ -166,40 +207,52 @@ File: `opus_assistant/templates/panels/hypercube.md.j2`
 | Criterion | Verification |
 |-----------|--------------|
 | All 4 axes render | Visual check |
-| Data is live | Change state, verify update |
-| Karma trend correct | Check history |
+| Karma trend shows direction | Check ↗/↘/→ indicator |
+| City shows agent count | Compare with kernel state |
 
 ---
 
 ## Layer 4: Autonomous Conductor (P3)
 
+> ⚠️ **STATUS: REQUIRES DESIGN PHASE**
+> This layer needs detailed specification before implementation.
+
 ### Goal
 OPUS runs as GitHub Action, autonomously monitoring and improving.
 
-### Implementation
+### Prerequisites (NOT YET SPECIFIED)
 
-**Phase 4.1: Conductor Module**
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Python version | ❓ | 3.11+ assumed |
+| Dependencies | ❓ | `requirements.txt` needed |
+| Headless kernel boot | ❓ | How to init without full boot? |
+| Conductor CLI contract | ❓ | What args? What output format? |
+| API keys handling | ❓ | Secrets injection |
 
-File: `opus_assistant/conductor.py`
-```python
-"""
-OPUS Conductor - Autonomous execution for GitHub Actions.
+### Proposed CLI Contract (DRAFT)
 
-Usage:
-  python -m vibe_core.plugins.opus_assistant.conductor \
-    --circuits=OPUS_AUTO_VERIFY,KARMA_CONSEQUENCE \
-    --output=OPUS.md
-"""
+```bash
+# Minimal conductor interface
+python -m vibe_core.plugins.opus_assistant.conductor \
+    --mode=autonomous \
+    --circuits=OPUS_AUTO_VERIFY \
+    --output=OPUS.md \
+    --dry-run  # Don't write, just print
+
+# Exit codes:
+# 0 = success, OPUS.md updated
+# 1 = error
+# 2 = no changes needed
 ```
 
-**Phase 4.2: GitHub Action Workflow**
+### GitHub Action (DRAFT)
 
-File: `.github/workflows/opus_conductor.yml`
 ```yaml
 name: OPUS Conductor
 on:
   schedule:
-    - cron: '0 8 * * *'  # Daily at 8am
+    - cron: '0 8 * * *'  # Daily at 8am UTC
   push:
     branches: [main]
 
@@ -208,31 +261,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          # Or: pip install -e .
+
       - name: OPUS Think Cycle
-        run: python -m vibe_core.plugins.opus_assistant.conductor
+        env:
+          # Optional: For future LLM enhancement
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          python -m vibe_core.plugins.opus_assistant.conductor \
+            --mode=autonomous \
+            --output=OPUS.md
+
       - name: Commit Insights
         run: |
-          git add OPUS.md
+          git config user.name "OPUS Conductor"
+          git config user.email "opus@steward.ai"
+          git add OPUS.md .opus_state/
           git diff --cached --quiet || git commit -m "🔮 OPUS: Autonomous insight"
           git push
 ```
 
-### Success Criteria
+### Open Design Questions
 
-| Criterion | Verification |
-|-----------|--------------|
-| Action runs on schedule | Check GitHub Actions |
-| OPUS.md updated | Check commit history |
-| Insights are meaningful | Human review |
+1. **Headless Boot**: Can kernel boot without full runtime? What's minimal init?
+2. **Circuit Selection**: Which circuits are safe for autonomous execution?
+3. **Error Handling**: What if conductor fails mid-execution?
+4. **Rate Limiting**: How often is too often?
 
 ---
 
-## Layer 5: Multiverse (P4 - Far Future)
+## Layer 5: Multiverse (P4)
 
-### Goal
-Per-branch OPUS instances with karma merging on PR merge.
+> 🔴 **STATUS: REQUIRES DESIGN PHASE**
+> This is vision/inspiration only. No technical spec exists.
 
-### Concept
+### Concept (Aspirational)
+
 ```
 OPUS PRIME (main)
     ├── CHILD OPUS (feature-a) → tracks karma for branch
@@ -240,43 +313,52 @@ OPUS PRIME (main)
     └── On merge: karma flows up (weighted by commits)
 ```
 
-### Open Questions
+### Open Design Questions (Unanswered)
 
-1. **Scope**: Per-branch or per-feature-flag?
-2. **Karma Merge**: Average? Minimum? Weighted by commits?
-3. **State Location**: `.opus_state/` per branch?
+| Question | Options | Decision |
+|----------|---------|----------|
+| Scope | Per-branch vs per-feature-flag | ❓ TBD |
+| State location | `.opus_state/` per branch? | ❓ TBD |
+| Karma merge rule | Average? Min? Weighted? | ❓ TBD |
+| Conflict resolution | Parent wins? Child wins? | ❓ TBD |
+| Git workflow | Merge commit? Squash? | ❓ TBD |
 
-### Success Criteria
+### Required Before Implementation
 
-| Criterion | Verification |
-|-----------|--------------|
-| Child OPUS tracks branch | Check `.opus_state/` on branch |
-| Karma merges on PR | Check parent karma after merge |
-| No split-brain | Verify single source of truth |
+- [ ] RFC document for multiverse architecture
+- [ ] Proof-of-concept on single branch
+- [ ] Karma merge algorithm specification
+- [ ] Git hook integration design
 
 ---
 
 ## Architectural Principles
 
-### 1. Backend/Frontend Separation (OPUS-030)
+### 1. Backend/Frontend Separation (OPUS-030) ✅
 - `opus_assistant` = BACKEND (data only)
 - `InterfacePlugin` = FRONTEND (writes via kernel.io)
 - **No exceptions.**
 
-### 2. State Inside State (Fractal Holon)
+### 2. State Inside State (Fractal Holon) ✅
 - Plugin owns `.opus_state/`
 - Survives git resets
 - Git-tracked for persistence
 
-### 3. No Legacy Rotz
+### 3. No Legacy Rotz ✅
 - `opus_md_writer.py` deleted
 - No fallback to old patterns
 - Single path for all operations
 
-### 4. Circuits Are YAML
+### 4. Circuits Are YAML (With Constraints)
 - New behavior = new `.yaml` file
-- No code changes for simple workflows
-- Composable and testable
+- **BUT**: Circuits need registered `action_type` handlers
+- Non-existent `action_type` will silently fail
+- Document all available `action_type` values
+
+### 5. BlueprintGenerator Limitations
+- Uses **regex patterns**, not LLM
+- Unmatched input → `confidence=0.5` playbook mode
+- Not magic NL understanding
 
 ---
 
@@ -285,20 +367,21 @@ OPUS PRIME (main)
 | Layer | Priority | Effort | Impact | Status |
 |-------|----------|--------|--------|--------|
 | 1. Living Dashboard | - | - | - | ✅ DONE |
-| 2. Syscall Console | P1 | Low | High | 📋 PLANNED |
+| 2. Syscall Console | P1 | Medium | High | 📋 NEEDS INFRA |
 | 3. 4D Hypercube | P2 | Medium | Medium | 📋 PLANNED |
-| 4. Autonomous Conductor | P3 | Medium | High | 📋 PLANNED |
-| 5. Multiverse | P4 | High | Very High | 💭 VISION |
+| 4. Autonomous Conductor | P3 | High | High | 🔴 NEEDS DESIGN |
+| 5. Multiverse | P4 | Very High | Very High | 🔴 NEEDS DESIGN |
 
 ---
 
 ## Next Actions
 
-1. [ ] Implement Layer 2: Syscall Console panel
-2. [ ] Test with `python -m vibe_core.cli envoy "spawn test agent"`
-3. [ ] Iterate on Layer 3 design
-4. [ ] Create conductor.py skeleton for Layer 4
+1. [ ] **Layer 2**: Add `SyscallEntry` + `record_syscall()` to OpusStateManager
+2. [ ] **Layer 2**: Create `syscall_console.md.j2` panel
+3. [ ] **Layer 3**: Add `_gather_city()` to renderer
+4. [ ] **Layer 4**: Write RFC for conductor design
+5. [ ] **Layer 5**: Write RFC for multiverse architecture
 
 ---
 
-*This document is a living plan. The architecture speaks - we listen.*
+*This document is honest about what exists vs what's aspirational. No spaghetti.*
