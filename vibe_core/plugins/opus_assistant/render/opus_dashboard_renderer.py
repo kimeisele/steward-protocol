@@ -119,7 +119,15 @@ class OpusDashboardRenderer:
 
     def write(self, quick: bool = False) -> Path:
         """
-        Render and write OPUS.md.
+        DEPRECATED: Direct file writes violate the architecture.
+
+        ⚠️ ARCHITECTURE VIOLATION:
+        - opus_assistant should be BACKEND only (data provider)
+        - InterfacePlugin is the FRONTEND (writes via kernel.io)
+        - All file writes should go through kernel.io
+
+        This method is kept for backwards compatibility but logs a warning.
+        Use InterfacePlugin.render_view("opus") instead.
 
         Args:
             quick: Skip expensive operations
@@ -127,6 +135,18 @@ class OpusDashboardRenderer:
         Returns:
             Path to written file
         """
+        import warnings
+
+        warnings.warn(
+            "OpusDashboardRenderer.write() is deprecated. "
+            "Use InterfacePlugin.render_view('opus') for proper kernel.io writes.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        logger.warning(
+            "⚠️ ARCHITECTURE: Direct write() bypasses kernel.io. Use InterfacePlugin for proper file management."
+        )
+
         # Preserve existing sections
         preserved = self._extract_preserved_sections()
 
@@ -136,7 +156,7 @@ class OpusDashboardRenderer:
         # Re-inject preserved sections (template has placeholders)
         content = self._inject_preserved_sections(content, preserved)
 
-        # Write file
+        # Write file (DEPRECATED - should go through kernel.io)
         self._opus_path.write_text(content)
 
         return self._opus_path
