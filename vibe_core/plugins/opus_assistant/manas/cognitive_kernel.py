@@ -49,6 +49,10 @@ class ManasConfig:
     # Intent expiry (hours)
     intent_expiry_hours: int = 24
 
+    # KARMA GATE: Threshold for earned autonomy (0-100)
+    # High karma (Bhakti + success) grants trust for LOW risk auto-execute
+    karma_auto_execute_threshold: int = 90
+
 
 @dataclass
 class IntentBufferEntry:
@@ -155,9 +159,13 @@ class CognitiveKernel:
                 self._intent_buffer.append(entry)
                 added.append(intent)
 
-                # Auto-execute if safe and enabled
-                if self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE:
-                    logger.info(f"MANAS: Auto-executing safe intent: {intent.title}")
+                # Auto-execute if safe OR if karma gate allows (earned autonomy)
+                is_safe = self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE
+                is_trusted = self._karma_allows_auto_execute(intent)
+
+                if is_safe or is_trusted:
+                    reason = "SAFE" if is_safe else f"KARMA GATE (>={self._config.karma_auto_execute_threshold})"
+                    logger.info(f"🙏 MANAS: Auto-executing [{reason}]: {intent.title}")
                     self._execute_intent(entry)
 
         # Trim buffer to max size
@@ -299,6 +307,35 @@ class CognitiveKernel:
 
         minutes_since_thought = (now - self._last_thought_time).total_seconds() / 60
         if minutes_since_thought >= self._config.thinking_interval_minutes:
+            return True
+
+        return False
+
+    def _karma_allows_auto_execute(self, intent: Intent) -> bool:
+        """
+        🙏 KARMA GATE: High karma earns trust for autonomous execution.
+
+        Bhakti (devotion) + consistent success → earned autonomy.
+        The system must PROVE itself worthy of self-governance.
+        """
+        if intent.risk not in (IntentRisk.LOW, IntentRisk.SAFE):
+            return False  # Only LOW/SAFE can be karma-gated
+
+        # Get karma from StateManager (where Bhakti circuit stores it)
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager(self._workspace)
+            last_karma = state_mgr.get_last_karma()
+        except Exception:
+            return False
+
+        if not last_karma:
+            return False
+
+        threshold = self._config.karma_auto_execute_threshold
+        if last_karma.score >= threshold:
+            logger.debug(f"🙏 KARMA GATE: {last_karma.score} >= {threshold}, trust granted")
             return True
 
         return False
