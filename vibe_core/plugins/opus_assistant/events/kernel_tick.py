@@ -2261,7 +2261,7 @@ def format_{name}(data: Dict[str, Any]) -> str:
         """
         from pathlib import Path
 
-        from vibe_core.plugin_loader import PluginLoader
+        from vibe_core.plugins.runtime_extensions.hot_loader import hot_load
 
         plugin_path = Path(params.get("plugin_path", ""))
 
@@ -2272,8 +2272,8 @@ def format_{name}(data: Dict[str, Any]) -> str:
             # Get kernel for registration
             kernel = getattr(self._plugin, "_kernel", None)
 
-            # Hot-load the plugin
-            plugin = PluginLoader.hot_load(plugin_path, kernel=kernel)
+            # Hot-load the plugin using runtime_extensions.hot_loader
+            plugin = hot_load(plugin_path, kernel=kernel)
 
             if plugin:
                 self._log_observation_info(
