@@ -497,9 +497,13 @@ class KernelTickHandler:
                 self._context_service.inject(context)
                 await self._context_service.broadcast(context)
 
-                # LOG: Health status changes
+                # 🔌 WIRING: Log ALL health status changes (including initial)
                 new_health = context.health.status
-                if self._last_health_status and new_health != self._last_health_status:
+                if self._last_health_status is None:
+                    # First synthesis - log initial health state
+                    self._log_observation_info(f"Initial health state: {new_health}", "context_service")
+                elif new_health != self._last_health_status:
+                    # Health changed - log transition
                     if new_health == "CRITICAL":
                         self._log_observation_alert(
                             f"Health degraded: {self._last_health_status} → {new_health}", "context_service"
@@ -873,11 +877,25 @@ class KernelTickHandler:
     # =========================================================================
 
     async def _handle_event_fallback(self, event_type: str, event: Any) -> None:
-        """Handle events that don't have circuits (backward compat)."""
+        """
+        Handle events that don't have circuits (backward compat).
+
+        🔌 WIRING: Adds heartbeat + regular flush for system liveness.
+        """
         if "KERNEL_TICK" in event_type:
-            # Minimal tick handling
-            if self._tick_count % 10 == 0:
+            # 🔌 WIRING: Flush observations every 50 ticks (~2.5 min at 3s ticks)
+            if self._tick_count % 50 == 0:
                 self._flush_observations()
+
+            # 🔌 WIRING: Heartbeat logging every 100 ticks (~5 min)
+            # Shows system is alive and gives humans visibility
+            if self._tick_count % 100 == 0 and self._tick_count > 0:
+                self._log_observation_info(
+                    f"System heartbeat: tick #{self._tick_count}, "
+                    f"circuits: {len(self._circuits)}, "
+                    f"drift_ticks: {self._consecutive_drift_ticks}",
+                    "heartbeat",
+                )
 
     # =========================================================================
     # Observation Logging (kept from original)
