@@ -1,0 +1,489 @@
+# CAPABILITY GENESIS CIRCUIT - The Ouroboros Protocol + VIDYA
+# =============================================================
+# OPUS-032: Level 3 Autonomie - Tool Synthesis
+# OPUS-033: VIDYA Integration - Knowledge Before Action
+#
+# Philosophy:
+#   "The serpent that consumes itself is reborn, ever-evolving."
+#   "Before building something new, seek wisdom." - VIDYA Principle
+#
+# This circuit enables MANAS to CREATE NEW TOOLS with KNOWLEDGE:
+# - Triggered when MANAS detects a missing capability
+# - Researches best practices via Science Cartridge (Jijnasa)
+# - Checks existing knowledge library (Smriti)
+# - Generates plugin code based on research (Nirmana)
+# - Validates code via VIDYA Critic (Pramana)
+# - Human approves the generated code via OPUS.md
+# - Tests in ephemeral sandbox before deployment
+# - Hot-loads to runtime_extensions/
+#
+# The Scientific Method (VIDYA Workflow):
+#   1. Jijnasa (Curiosity) - Research best practices
+#   2. Smriti (Memory) - Check existing knowledge
+#   3. Kalpana (Planning) - Design the blueprint
+#   4. Nirmana (Construction) - Generate code
+#   5. Pramana (Proof) - Validate and test
+#   6. Deployment - Hot-load to production
+#
+# Safety Gates (CRITICAL):
+#   1. Research-First: No code without understanding
+#   2. Library Check: Don't reinvent the wheel
+#   3. VIDYA Critique: Static analysis (AST-based)
+#   4. Human-in-the-Loop: ALL generated code requires approval
+#   5. Narasimha Check: Secondary security validation
+#   6. Sandbox Test: Ephemeral process isolation
+#   7. Reversible: Can be unloaded via hot_unload()
+#
+circuit:
+  id: CAPABILITY_GENESIS
+  name: "Capability Genesis - The Ouroboros Protocol + VIDYA"
+  description: "Generate new capabilities with knowledge-first approach"
+  domain: OPUS
+  version: "2.0.0"  # OPUS-033: VIDYA Integration
+  entry_state: "validate_request"
+
+  # Event triggers
+  triggers:
+    - event: CAPABILITY_MISSING
+      description: "MANAS detected a needed but unavailable capability"
+    - event: GENESIS_REQUEST
+      description: "Manual request to generate a capability"
+    - event: GENESIS_APPROVED
+      description: "Human approved a pending capability intent"
+
+  # Configuration
+  config:
+    output_dir: "vibe_core/plugins/runtime_extensions"
+    require_approval: true
+    require_research: true      # NEW: Require research phase
+    require_vidya_check: true   # NEW: Require VIDYA critique
+    require_sandbox: true       # NEW: Require sandbox test
+    max_pending_genesis: 3
+
+  # Global invariants
+  invariants:
+    - "output_dir exists and is writable"
+    - "capability_spec is well-formed"
+
+  states:
+    # =====================================================
+    # PHASE 0: VALIDATION
+    # =====================================================
+    validate_request:
+      name: "Validate Genesis Request"
+      description: "Verify the capability request is valid"
+      state_var: "validation_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_validate_request"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            capability_type: "{{ capability_spec.type }}"
+            description: "{{ capability_spec.description }}"
+      transitions:
+        - condition: "validation_result.valid == true"
+          to: check_pending_limit
+        - condition: "validation_result.valid == false"
+          to: reject_invalid
+
+    check_pending_limit:
+      name: "Check Pending Limit"
+      description: "Verify we haven't exceeded max pending capabilities"
+      state_var: "pending_count"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_get_pending_count"
+          params: {}
+      transitions:
+        - condition: "pending_count < config.max_pending_genesis"
+          to: jijnasa_research
+        - condition: "pending_count >= config.max_pending_genesis"
+          to: queue_full
+
+    # =====================================================
+    # PHASE 1: JIJNASA (Research/Curiosity) - VIDYA
+    # =====================================================
+    jijnasa_research:
+      name: "Jijnasa - Research Phase"
+      description: "Research best practices before building"
+      state_var: "research_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_research"
+          params:
+            query: "How to implement {{ capability_spec.description }} safely in Python"
+            capability_name: "{{ capability_spec.name }}"
+      transitions:
+        - condition: "research_result.success == true"
+          to: smriti_check_library
+        - condition: "research_result.success == false"
+          to: smriti_check_library  # Continue even if research fails
+
+    # =====================================================
+    # PHASE 2: SMRITI (Memory) - Check Existing Knowledge
+    # =====================================================
+    smriti_check_library:
+      name: "Smriti - Library Check"
+      description: "Check if capability already exists in knowledge base"
+      state_var: "library_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_check_library"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            tags: ["{{ capability_spec.type }}", "syscall"]
+      transitions:
+        - condition: "library_result.found == true"
+          to: reuse_existing
+        - condition: "library_result.found == false"
+          to: generate_code
+
+    reuse_existing:
+      name: "Reuse Existing Blueprint"
+      description: "Capability already exists - reuse it"
+      terminal: true
+      result:
+        status: "reused"
+        capability_name: "{{ capability_spec.name }}"
+        blueprint: "{{ library_result.blueprint }}"
+        message: "Found existing blueprint - no need to regenerate"
+
+    # =====================================================
+    # PHASE 3: NIRMANA (Construction) - Generate Code
+    # =====================================================
+    generate_code:
+      name: "Nirmana - Code Generation"
+      description: "Synthesize the plugin code based on spec and research"
+      state_var: "generated_code"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_generate_code"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            capability_type: "{{ capability_spec.type }}"
+            description: "{{ capability_spec.description }}"
+            syscall_name: "{{ capability_spec.syscall_name }}"
+            parameters: "{{ capability_spec.parameters }}"
+            research_insights: "{{ research_result.key_insights }}"
+      on_success: vidya_critique
+      on_failure: generation_failed
+
+    # =====================================================
+    # PHASE 4: PRAMANA (Proof) - VIDYA Critique
+    # =====================================================
+    vidya_critique:
+      name: "Pramana - VIDYA Critique"
+      description: "Static analysis via VIDYA Critic"
+      state_var: "critique_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_critique"
+          params:
+            code: "{{ generated_code }}"
+            capability_name: "{{ capability_spec.name }}"
+      transitions:
+        - condition: "critique_result.passed == true"
+          to: submit_to_intent_buffer
+        - condition: "critique_result.passed == false"
+          to: critique_failed
+
+    critique_failed:
+      name: "VIDYA Critique Failed"
+      description: "Code did not pass VIDYA static analysis"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_record_failure"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            code: "{{ generated_code }}"
+            error: "{{ critique_result.summary }}"
+            findings: "{{ critique_result.findings }}"
+      result:
+        status: "critique_failed"
+        reason: "{{ critique_result.summary }}"
+        findings: "{{ critique_result.findings }}"
+
+    # =====================================================
+    # PHASE 5: HUMAN APPROVAL
+    # =====================================================
+    submit_to_intent_buffer:
+      name: "Submit to Intent Buffer"
+      description: "Add generated capability to OPUS.md Intent Buffer"
+      state_var: "intent_submitted"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_submit_intent"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            generated_code: "{{ generated_code }}"
+            priority: "high"
+            risk: "high"
+            reasoning: "Generated capability (VIDYA validated)"
+            research_summary: "{{ research_result.summary }}"
+      on_success: await_approval
+      on_failure: submission_failed
+
+    await_approval:
+      name: "Awaiting Human Approval"
+      description: "Capability is in Intent Buffer - waiting for [x] Approve"
+      state_var: "approval_status"
+      async: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🐍 OUROBOROS: Capability {{ capability_spec.name }} awaiting approval (VIDYA validated)"
+            source: "genesis"
+      transitions:
+        - condition: "approval_status == 'approved'"
+          to: narasimha_check
+        - condition: "approval_status == 'rejected'"
+          to: approval_rejected
+
+    # =====================================================
+    # PHASE 6: SECURITY VALIDATION (Defense in Depth)
+    # =====================================================
+    narasimha_check:
+      name: "Narasimha Security Check"
+      description: "Secondary security validation (defense in depth)"
+      state_var: "security_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_narasimha_check"
+          params:
+            code: "{{ generated_code }}"
+      transitions:
+        - condition: "security_result.safe == true"
+          to: sandbox_test
+        - condition: "security_result.safe == false"
+          to: security_violation
+
+    # =====================================================
+    # PHASE 7: SANDBOX TEST (Ephemeral Execution)
+    # =====================================================
+    sandbox_test:
+      name: "Sandbox Test"
+      description: "Run tests in ephemeral sandbox (isolated process)"
+      state_var: "sandbox_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_sandbox_test"
+          params:
+            code: "{{ generated_code }}"
+            capability_name: "{{ capability_spec.name }}"
+            timeout_seconds: 30
+      transitions:
+        - condition: "sandbox_result.success == true"
+          to: write_to_nursery
+        - condition: "sandbox_result.success == false"
+          to: sandbox_failed
+
+    sandbox_failed:
+      name: "Sandbox Test Failed"
+      description: "Code failed sandbox tests"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_record_failure"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            code: "{{ generated_code }}"
+            error: "{{ sandbox_result.error }}"
+      result:
+        status: "test_failed"
+        reason: "{{ sandbox_result.error }}"
+        stdout: "{{ sandbox_result.stdout }}"
+        stderr: "{{ sandbox_result.stderr }}"
+
+    # =====================================================
+    # PHASE 8: DEPLOYMENT
+    # =====================================================
+    write_to_nursery:
+      name: "Write to The Nursery"
+      description: "Write approved code to runtime_extensions/"
+      state_var: "write_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_write_code"
+          params:
+            output_dir: "{{ config.output_dir }}"
+            capability_name: "{{ capability_spec.name }}"
+            generated_code: "{{ generated_code }}"
+      on_success: store_blueprint
+      on_failure: write_failed
+
+    store_blueprint:
+      name: "Store Blueprint"
+      description: "Store successful blueprint in knowledge library"
+      state_var: "store_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.vidya_store_blueprint"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            description: "{{ capability_spec.description }}"
+            code: "{{ generated_code }}"
+            tags: ["{{ capability_spec.type }}", "generated", "ouroboros"]
+      on_success: hot_load
+      on_failure: hot_load  # Continue even if storage fails
+
+    hot_load:
+      name: "Hot-Load Capability"
+      description: "Load the new plugin at runtime"
+      state_var: "load_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_hot_load"
+          params:
+            plugin_path: "{{ write_result.plugin_path }}"
+      on_success: genesis_complete
+      on_failure: load_failed
+
+    # =====================================================
+    # TERMINAL STATES
+    # =====================================================
+    genesis_complete:
+      name: "Genesis Complete"
+      description: "The Ouroboros has evolved - new capability available"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🐍 OUROBOROS COMPLETE: {{ capability_spec.name }} is now available as {{ capability_spec.syscall_name }}"
+            source: "genesis"
+      result:
+        status: "success"
+        capability_name: "{{ capability_spec.name }}"
+        syscall_name: "{{ capability_spec.syscall_name }}"
+        message: "The serpent has evolved. (VIDYA validated)"
+
+    # Terminal: Invalid request
+    reject_invalid:
+      name: "Invalid Request"
+      description: "Genesis request was malformed"
+      terminal: true
+      result:
+        status: "rejected"
+        reason: "{{ validation_result.error }}"
+
+    # Terminal: Queue full
+    queue_full:
+      name: "Queue Full"
+      description: "Too many capabilities awaiting approval"
+      terminal: true
+      result:
+        status: "deferred"
+        reason: "Max pending genesis reached ({{ config.max_pending_genesis }})"
+
+    # Terminal: Generation failed
+    generation_failed:
+      name: "Generation Failed"
+      description: "Could not generate capability code"
+      terminal: true
+      result:
+        status: "error"
+        reason: "Code generation failed"
+
+    # Terminal: Submission failed
+    submission_failed:
+      name: "Submission Failed"
+      description: "Could not submit to Intent Buffer"
+      terminal: true
+      result:
+        status: "error"
+        reason: "Intent submission failed"
+
+    # Terminal: Approval rejected
+    approval_rejected:
+      name: "Approval Rejected"
+      description: "Human rejected the generated capability"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.genesis_record_rejection"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+      result:
+        status: "rejected"
+        reason: "Human rejected via OPUS.md"
+
+    # Terminal: Security violation
+    security_violation:
+      name: "Security Violation"
+      description: "Narasimha detected unsafe code"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ERROR"
+            message: "🚨 NARASIMHA BLOCKED: {{ capability_spec.name }} failed security check"
+            source: "genesis"
+      result:
+        status: "blocked"
+        reason: "Security check failed: {{ security_result.violations }}"
+
+    # Terminal: Write failed
+    write_failed:
+      name: "Write Failed"
+      description: "Could not write to runtime_extensions/"
+      terminal: true
+      result:
+        status: "error"
+        reason: "File write failed"
+
+    # Terminal: Load failed
+    load_failed:
+      name: "Load Failed"
+      description: "Hot-load failed"
+      terminal: true
+      result:
+        status: "error"
+        reason: "Plugin hot-load failed"
+
+# Capability Types that can be generated
+capability_types:
+  syscall:
+    description: "A new kernel syscall"
+    template: "syscall_plugin.py.j2"
+    risk: "high"
+    requires_approval: true
+
+  analyzer:
+    description: "A new MANAS analyzer"
+    template: "analyzer.py.j2"
+    risk: "medium"
+    requires_approval: true
+
+  formatter:
+    description: "A new output formatter"
+    template: "formatter.py.j2"
+    risk: "low"
+    requires_approval: true
+
+# Example capability specs
+examples:
+  - name: "yaml_analyzer"
+    type: "analyzer"
+    description: "Analyze YAML files for schema violations"
+    syscall_name: "ANALYZE_YAML"
+    parameters:
+      - name: "file_path"
+        type: "str"
+        required: true
+      - name: "schema_path"
+        type: "str"
+        required: false
+
+  - name: "hello_world"
+    type: "syscall"
+    description: "Simple proof-of-concept: returns a greeting"
+    syscall_name: "HELLO_WORLD"
+    parameters:
+      - name: "name"
+        type: "str"
+        default: "World"

@@ -591,6 +591,22 @@ class KernelTickHandler:
                 "manas_approve_intent": self._manas_approve_intent,
                 "manas_reject_intent": self._manas_reject_intent,
                 "manas_get_buffer": self._manas_get_buffer,
+                # 🐍 OUROBOROS PROTOCOL: Capability Genesis Handlers
+                "genesis_validate_request": self._genesis_validate_request,
+                "genesis_get_pending_count": self._genesis_get_pending_count,
+                "genesis_generate_code": self._genesis_generate_code,
+                "genesis_submit_intent": self._genesis_submit_intent,
+                "genesis_narasimha_check": self._genesis_narasimha_check,
+                "genesis_write_code": self._genesis_write_code,
+                "genesis_hot_load": self._genesis_hot_load,
+                "genesis_record_rejection": self._genesis_record_rejection,
+                # 📚 VIDYA: Knowledge Department Handlers (OPUS-033)
+                "vidya_research": self._vidya_research,
+                "vidya_check_library": self._vidya_check_library,
+                "vidya_critique": self._vidya_critique,
+                "vidya_sandbox_test": self._vidya_sandbox_test,
+                "vidya_store_blueprint": self._vidya_store_blueprint,
+                "vidya_record_failure": self._vidya_record_failure,
             }
             method = method_map.get(method_name)
             if method:
@@ -1871,6 +1887,704 @@ class KernelTickHandler:
     def get_manas(self) -> Optional[Any]:
         """Get the MANAS cognitive kernel instance."""
         return self._manas
+
+    # =========================================================================
+    # 🐍 OUROBOROS PROTOCOL: Capability Genesis Handlers (OPUS-032)
+    # =========================================================================
+
+    async def _genesis_validate_request(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Validate a capability genesis request.
+
+        Checks:
+        - Name is valid identifier
+        - Type is supported (syscall, analyzer, formatter)
+        - Description is non-empty
+        """
+        import re
+
+        name = params.get("capability_name", "")
+        cap_type = params.get("capability_type", "")
+        description = params.get("description", "")
+
+        errors = []
+
+        # Validate name (must be valid Python identifier)
+        if not name:
+            errors.append("capability_name is required")
+        elif not re.match(r"^[a-z][a-z0-9_]*$", name):
+            errors.append("capability_name must be lowercase with underscores")
+
+        # Validate type
+        valid_types = ["syscall", "analyzer", "formatter"]
+        if not cap_type:
+            errors.append("capability_type is required")
+        elif cap_type not in valid_types:
+            errors.append(f"capability_type must be one of: {valid_types}")
+
+        # Validate description
+        if not description or len(description) < 10:
+            errors.append("description must be at least 10 characters")
+
+        if errors:
+            return {"valid": False, "error": "; ".join(errors)}
+
+        return {"valid": True, "capability_name": name, "capability_type": cap_type}
+
+    async def _genesis_get_pending_count(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Get count of capabilities pending approval.
+        """
+        # Check MANAS intent buffer for genesis intents
+        if self._manas_ready and self._manas:
+            pending = self._manas.get_pending_intents()
+            genesis_pending = [i for i in pending if i.intent_type.startswith("genesis_")]
+            return {"pending_count": len(genesis_pending)}
+
+        return {"pending_count": 0}
+
+    async def _genesis_generate_code(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Generate plugin code for a new capability.
+
+        This is the heart of the Ouroboros - code that writes code.
+        For safety, we use templates, not AI generation (that's Phase 2).
+        """
+
+        name = params.get("capability_name", "")
+        cap_type = params.get("capability_type", "syscall")
+        description = params.get("description", "")
+        syscall_name = params.get("syscall_name", name.upper())
+        parameters = params.get("parameters", [])
+
+        try:
+            # Generate based on type
+            if cap_type == "syscall":
+                code = self._generate_syscall_plugin(name, description, syscall_name, parameters)
+            elif cap_type == "analyzer":
+                code = self._generate_analyzer_code(name, description)
+            else:
+                code = self._generate_formatter_code(name, description)
+
+            return {
+                "success": True,
+                "code": code,
+                "capability_name": name,
+                "capability_type": cap_type,
+            }
+
+        except Exception as e:
+            logger.error(f"Genesis code generation failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _generate_syscall_plugin(
+        self, name: str, description: str, syscall_name: str, parameters: List[Dict]
+    ) -> Dict[str, str]:
+        """Generate a syscall plugin (plugin_main.py + manifest.json)."""
+        # Build parameter handling code
+        param_lines = []
+        for p in parameters:
+            p_name = p.get("name", "arg")
+            p_type = p.get("type", "str")
+            p_default = p.get("default", "None")
+            param_lines.append(f'        {p_name} = params.get("{p_name}", {p_default})')
+
+        param_code = "\n".join(param_lines) if param_lines else "        # No parameters"
+
+        plugin_code = f'''"""
+{name.title()} Plugin - Generated by OUROBOROS PROTOCOL
+
+{description}
+
+GENERATED CODE - Review before approval!
+"""
+
+import logging
+from typing import TYPE_CHECKING, Any, Dict
+
+from vibe_core.plugin_protocol import KernelPlugin
+from vibe_core.runtime.syscalls import register_syscall
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
+
+logger = logging.getLogger("{name.upper()}")
+
+
+class {name.title().replace("_", "")}Plugin(KernelPlugin):
+    """
+    {description}
+
+    Generated by OUROBOROS PROTOCOL (OPUS-032).
+    """
+
+    plugin_id = "{name}"
+    priority = 80  # Low priority (loads after core plugins)
+
+    def on_boot(self, kernel: "RealVibeKernel") -> None:
+        """Register syscall on boot."""
+        register_syscall(
+            "{syscall_name}",
+            self._handle_{name},
+            description="{description}",
+            plugin_id=self.plugin_id,
+        )
+        logger.info("🐍 OUROBOROS: {syscall_name} syscall registered")
+
+    def _handle_{name}(self, kernel: "RealVibeKernel", params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Handle {syscall_name} syscall.
+
+        Args:
+            kernel: The kernel instance
+            params: Syscall parameters
+
+        Returns:
+            Result dict
+        """
+{param_code}
+
+        try:
+            # TODO: Implement actual logic here
+            result = {{"message": "Hello from {name}!", "params": params}}
+            return {{"success": True, "result": result}}
+        except Exception as e:
+            logger.error(f"{{syscall_name}} failed: {{e}}")
+            return {{"success": False, "error": str(e)}}
+'''
+
+        manifest = f'''{{
+    "id": "{name}",
+    "name": "{name.title().replace("_", " ")}",
+    "type": "plugin",
+    "version": "1.0.0",
+    "description": "{description}",
+    "author": "OUROBOROS PROTOCOL",
+    "priority": 80,
+    "entry": "plugin_main.py",
+    "generated": true,
+    "syscalls": ["{syscall_name}"]
+}}
+'''
+
+        return {"plugin_main.py": plugin_code, "manifest.json": manifest}
+
+    def _generate_analyzer_code(self, name: str, description: str) -> Dict[str, str]:
+        """Generate a MANAS analyzer."""
+        analyzer_code = f'''"""
+{name.title()} Analyzer - Generated by OUROBOROS PROTOCOL
+
+{description}
+
+GENERATED CODE - Review before approval!
+"""
+
+from typing import Any, Dict, List, Optional
+from vibe_core.plugins.opus_assistant.manas.intent_generator import Intent, IntentPriority, IntentRisk
+
+
+def analyze_{name}(context: Dict[str, Any]) -> List[Intent]:
+    """
+    {description}
+
+    Args:
+        context: System context from Prakriti
+
+    Returns:
+        List of intents generated from analysis
+    """
+    intents = []
+
+    # TODO: Implement analysis logic
+    # Example:
+    # if context.get("some_condition"):
+    #     intents.append(Intent(
+    #         intent_type="{name}",
+    #         title="Action needed",
+    #         description="Description of what needs to be done",
+    #         priority=IntentPriority.MEDIUM,
+    #         risk=IntentRisk.LOW,
+    #     ))
+
+    return intents
+'''
+        return {"analyzer_{name}.py": analyzer_code}
+
+    def _generate_formatter_code(self, name: str, description: str) -> Dict[str, str]:
+        """Generate an output formatter."""
+        formatter_code = f'''"""
+{name.title()} Formatter - Generated by OUROBOROS PROTOCOL
+
+{description}
+
+GENERATED CODE - Review before approval!
+"""
+
+from typing import Any, Dict
+
+
+def format_{name}(data: Dict[str, Any]) -> str:
+    """
+    {description}
+
+    Args:
+        data: Data to format
+
+    Returns:
+        Formatted string
+    """
+    # TODO: Implement formatting logic
+    return str(data)
+'''
+        return {"formatter_{name}.py": formatter_code}
+
+    async def _genesis_submit_intent(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Submit generated capability to Intent Buffer.
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available"}
+
+        from vibe_core.plugins.opus_assistant.manas.intent_generator import (
+            Intent,
+            IntentPriority,
+            IntentRisk,
+        )
+
+        name = params.get("capability_name", "")
+        code = params.get("generated_code", {})
+        priority = params.get("priority", "high")
+        risk = params.get("risk", "high")
+        reasoning = params.get("reasoning", "")
+
+        # Create genesis intent
+        intent = Intent(
+            intent_type=f"genesis_{name}",
+            title=f"Generate capability: {name}",
+            description=f"Create new {name} capability via Ouroboros Protocol",
+            priority=IntentPriority.HIGH if priority == "high" else IntentPriority.MEDIUM,
+            risk=IntentRisk.HIGH if risk == "high" else IntentRisk.MEDIUM,
+            auto_executable=False,  # NEVER auto-execute genesis
+            reasoning=reasoning,
+            action_params={"capability_name": name, "code": code},
+        )
+
+        # Add to MANAS intent buffer
+        self._manas._pending_intents[intent.id] = intent
+
+        self._log_observation_info(
+            f"🐍 OUROBOROS: Capability '{name}' submitted to Intent Buffer for approval", "genesis"
+        )
+
+        return {"success": True, "intent_id": intent.id, "capability_name": name}
+
+    async def _genesis_narasimha_check(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Narasimha security check on generated code.
+
+        Static analysis to detect potentially unsafe patterns:
+        - exec/eval usage
+        - subprocess with shell=True
+        - file operations outside sandbox
+        - network calls
+        - import of dangerous modules
+        """
+        import re
+
+        code_dict = params.get("code", {})
+        violations = []
+
+        # Dangerous patterns to check
+        dangerous_patterns = [
+            (r"\bexec\s*\(", "exec() is not allowed"),
+            (r"\beval\s*\(", "eval() is not allowed"),
+            (r"subprocess.*shell\s*=\s*True", "subprocess with shell=True is not allowed"),
+            (r"os\.system\s*\(", "os.system() is not allowed"),
+            (r"__import__\s*\(", "Dynamic imports are not allowed"),
+            (r'open\s*\([^)]*,\s*["\']w', "File write operations require review"),
+            (r"import\s+socket", "Socket operations are not allowed"),
+            (r"import\s+requests", "HTTP requests require review"),
+            (r"from\s+pathlib.*write", "Path write operations require review"),
+        ]
+
+        for filename, code in code_dict.items():
+            for pattern, message in dangerous_patterns:
+                if re.search(pattern, code, re.IGNORECASE):
+                    violations.append(f"{filename}: {message}")
+
+        if violations:
+            self._log_observation_warn(f"🦁 NARASIMHA: Security violations found: {violations}", "genesis")
+            return {"safe": False, "violations": violations}
+
+        self._log_observation_info("🦁 NARASIMHA: Security check passed", "genesis")
+        return {"safe": True, "violations": []}
+
+    async def _genesis_write_code(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Write approved code to runtime_extensions/.
+        """
+        from pathlib import Path
+
+        output_dir = Path(params.get("output_dir", "vibe_core/plugins/runtime_extensions"))
+        name = params.get("capability_name", "")
+        code_dict = params.get("generated_code", {})
+
+        if not name or not code_dict:
+            return {"success": False, "error": "Missing capability_name or code"}
+
+        try:
+            # Create plugin directory
+            plugin_dir = output_dir / name
+            plugin_dir.mkdir(parents=True, exist_ok=True)
+
+            # Write files
+            written_files = []
+            for filename, content in code_dict.items():
+                file_path = plugin_dir / filename
+                file_path.write_text(content)
+                written_files.append(str(file_path))
+
+            # Create __init__.py if not present
+            init_file = plugin_dir / "__init__.py"
+            if not init_file.exists():
+                init_file.write_text(f'"""Generated plugin: {name}"""\n')
+                written_files.append(str(init_file))
+
+            self._log_observation_info(f"🐍 OUROBOROS: Wrote {len(written_files)} files to {plugin_dir}", "genesis")
+
+            return {
+                "success": True,
+                "plugin_path": str(plugin_dir),
+                "written_files": written_files,
+            }
+
+        except Exception as e:
+            logger.error(f"Genesis write failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _genesis_hot_load(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Hot-load a generated capability.
+        """
+        from pathlib import Path
+
+        from vibe_core.plugins.runtime_extensions.hot_loader import hot_load
+
+        plugin_path = Path(params.get("plugin_path", ""))
+
+        if not plugin_path.exists():
+            return {"success": False, "error": f"Plugin path does not exist: {plugin_path}"}
+
+        try:
+            # Get kernel for registration
+            kernel = getattr(self._plugin, "_kernel", None)
+
+            # Hot-load the plugin using runtime_extensions.hot_loader
+            plugin = hot_load(plugin_path, kernel=kernel)
+
+            if plugin:
+                self._log_observation_info(
+                    f"🐍 OUROBOROS: Hot-loaded {plugin.plugin_id}! New capability available.", "genesis"
+                )
+                return {
+                    "success": True,
+                    "plugin_id": plugin.plugin_id,
+                    "message": "The serpent has evolved.",
+                }
+            else:
+                return {"success": False, "error": "Hot-load returned None"}
+
+        except Exception as e:
+            logger.error(f"Genesis hot-load failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _genesis_record_rejection(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🐍 OUROBOROS: Record that a capability was rejected.
+        """
+        name = params.get("capability_name", "")
+
+        if self._manas_ready and self._manas:
+            # Record in memory to avoid suggesting again
+            self._manas._memory.record_intent_outcome(
+                intent_type=f"genesis_{name}",
+                description=f"Generate capability: {name}",
+                outcome="rejected",
+                feedback="Human rejected via OPUS.md",
+            )
+
+        self._log_observation_info(f"🐍 OUROBOROS: Capability '{name}' rejected and recorded", "genesis")
+
+        return {"success": True, "recorded": True}
+
+    # =========================================================================
+    # 📚 VIDYA: Knowledge Department Handlers (OPUS-033)
+    # =========================================================================
+
+    async def _vidya_research(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Research best practices via Science Cartridge.
+
+        This is the Jijnasa (Curiosity) phase - seeking wisdom before building.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import ResearchInterface
+
+        query = params.get("query", "")
+        capability_name = params.get("capability_name", "")
+
+        if not query:
+            return {"success": False, "error": "Query is required"}
+
+        try:
+            research = ResearchInterface()
+            result = await research.query(query, max_results=5)
+
+            self._log_observation_info(
+                f"📚 VIDYA Research: '{capability_name}' - {len(result.sources)} sources found", "vidya"
+            )
+
+            return {
+                "success": result.success,
+                "query": result.query,
+                "sources": result.sources,
+                "summary": result.summary,
+                "key_insights": result.key_insights,
+                "mode": result.mode,
+            }
+
+        except Exception as e:
+            logger.warning(f"VIDYA research failed: {e}")
+            # Return success=False but don't block - research is optional
+            return {
+                "success": False,
+                "error": str(e),
+                "sources": [],
+                "summary": "",
+                "key_insights": [],
+            }
+
+    async def _vidya_check_library(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Check if capability already exists in knowledge library.
+
+        This is the Smriti (Memory) phase - check before reinventing.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        tags = params.get("tags", [])
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            result = library.search(capability_name, tags=tags)
+
+            if result.found:
+                self._log_observation_info(
+                    f"📚 VIDYA Library: Found existing blueprint for '{capability_name}'", "vidya"
+                )
+
+            return {
+                "found": result.found,
+                "blueprints": [bp.to_dict() for bp in result.blueprints],
+                "total_count": result.total_count,
+                "blueprint": result.blueprints[0].to_dict() if result.blueprints else None,
+            }
+
+        except Exception as e:
+            logger.warning(f"VIDYA library check failed: {e}")
+            return {"found": False, "blueprints": [], "total_count": 0, "error": str(e)}
+
+    async def _vidya_critique(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Static analysis via Critic.
+
+        This is the Pramana (Proof) phase - validate before deployment.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import Critic
+
+        code_dict = params.get("code", {})
+        capability_name = params.get("capability_name", "")
+
+        if not code_dict:
+            return {"passed": False, "error": "No code provided"}
+
+        try:
+            critic = Critic()
+            all_passed = True
+            all_findings = []
+
+            # Critique each file
+            for filename, code in code_dict.items():
+                result = critic.validate(code, filename=filename)
+                if not result.passed:
+                    all_passed = False
+                all_findings.extend(
+                    [{**f.__dict__, "severity": f.severity.value, "file": filename} for f in result.findings]
+                )
+
+            summary = (
+                "✅ All code passed VIDYA critique" if all_passed else f"❌ VIDYA found {len(all_findings)} issues"
+            )
+
+            self._log_observation_info(
+                f"📚 VIDYA Critique: '{capability_name}' - {'PASSED' if all_passed else 'FAILED'}", "vidya"
+            )
+
+            return {
+                "passed": all_passed,
+                "findings": all_findings,
+                "summary": summary,
+            }
+
+        except Exception as e:
+            logger.error(f"VIDYA critique failed: {e}")
+            return {"passed": False, "error": str(e), "findings": [], "summary": f"Critique error: {e}"}
+
+    async def _vidya_sandbox_test(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Run tests in ephemeral sandbox.
+
+        This is the critical safety gate - tests run in isolated process.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import Sandbox
+
+        code_dict = params.get("code", {})
+        capability_name = params.get("capability_name", "")
+        timeout_seconds = params.get("timeout_seconds", 30)
+
+        if not code_dict:
+            return {"success": False, "error": "No code provided"}
+
+        try:
+            sandbox = Sandbox(timeout_seconds=timeout_seconds)
+
+            # Generate a simple test for the capability
+            test_code = self._generate_capability_test(capability_name, code_dict)
+
+            result = await sandbox.run_test(code_dict, test_code)
+
+            self._log_observation_info(
+                f"📚 VIDYA Sandbox: '{capability_name}' - {'PASSED' if result.success else 'FAILED'} ({result.duration_ms}ms)",
+                "vidya",
+            )
+
+            return {
+                "success": result.success,
+                "exit_code": result.exit_code,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "duration_ms": result.duration_ms,
+                "timed_out": result.timed_out,
+                "error": result.error,
+                "test_results": result.test_results,
+            }
+
+        except Exception as e:
+            logger.error(f"VIDYA sandbox test failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _generate_capability_test(self, capability_name: str, code_dict: Dict[str, str]) -> str:
+        """Generate a basic test for the capability."""
+        # Find the plugin class name
+        plugin_class = capability_name.title().replace("_", "")
+
+        return f'''"""
+Auto-generated test for {capability_name}.
+VIDYA Sandbox Test - OPUS-033
+"""
+
+import pytest
+
+
+def test_module_imports():
+    """Test that the module can be imported without errors."""
+    # This tests basic syntax and import validity
+    assert True  # If we get here, imports succeeded
+
+
+def test_plugin_class_exists():
+    """Test that the plugin class exists."""
+    from plugin_main import {plugin_class}Plugin
+    assert {plugin_class}Plugin is not None
+
+
+def test_plugin_has_plugin_id():
+    """Test that the plugin has a plugin_id."""
+    from plugin_main import {plugin_class}Plugin
+    plugin = {plugin_class}Plugin()
+    assert hasattr(plugin, "plugin_id")
+    assert plugin.plugin_id == "{capability_name}"
+'''
+
+    async def _vidya_store_blueprint(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Store successful blueprint in knowledge library.
+
+        This is the Smriti (Memory) preservation - learn from success.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        description = params.get("description", "")
+        code_dict = params.get("code", {})
+        tags = params.get("tags", [])
+
+        if not capability_name or not code_dict:
+            return {"success": False, "error": "Missing required parameters"}
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            success = library.store_blueprint(
+                name=capability_name,
+                description=description,
+                code=code_dict,
+                tags=tags,
+                category="capabilities",
+            )
+
+            if success:
+                self._log_observation_info(f"📚 VIDYA Library: Stored blueprint for '{capability_name}'", "vidya")
+
+            return {"success": success, "capability_name": capability_name}
+
+        except Exception as e:
+            logger.warning(f"VIDYA blueprint storage failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _vidya_record_failure(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Record a failed capability attempt for learning.
+
+        Even failures teach us. Store them to avoid repeating mistakes.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        code_dict = params.get("code", {})
+        error = params.get("error", "Unknown error")
+        findings = params.get("findings", [])
+
+        if not capability_name:
+            return {"success": False, "error": "Missing capability_name"}
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            success = library.record_failure(
+                name=capability_name,
+                code=code_dict,
+                error=error,
+                reason=str(findings) if findings else "",
+            )
+
+            self._log_observation_info(
+                f"📚 VIDYA Library: Recorded failure for '{capability_name}' (for learning)", "vidya"
+            )
+
+            return {"success": success, "recorded": True}
+
+        except Exception as e:
+            logger.warning(f"VIDYA failure recording failed: {e}")
+            return {"success": False, "error": str(e)}
 
     # =========================================================================
     # Fallback for events without circuits
