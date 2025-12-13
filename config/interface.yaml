@@ -356,8 +356,15 @@ renderers:
     interval: 60
 
   # OPUS - Master AI Dashboard (SSOT for kernel work)
+  # DISABLED: OPUS.md is now rendered by opus_assistant plugin
+  # The opus_assistant has richer features:
+  # - StateManager (persistent state in .opus_state/)
+  # - Control Plane (metamorphic UI with toggleable panels)
+  # - Karma system (trust tracking)
+  # - Jinja2 templates (easier to modify)
+  # See: vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py
   opus:
-    enabled: true
+    enabled: false  # OPUS Assistant is the master renderer
     output: OPUS.md
     view_type: workspace
     interval: 30
