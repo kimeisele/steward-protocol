@@ -526,6 +526,8 @@ class KernelTickHandler:
                 # Genesis Circuit handlers
                 "check_session_karma": self._check_session_karma,
                 "trigger_auto_heal": self._trigger_auto_heal,
+                # 🎛️ Control Plane handlers
+                "set_view": self._set_view_state,
             }
             method = method_map.get(method_name)
             if method:
@@ -626,10 +628,26 @@ class KernelTickHandler:
             return {"success": False, "error": str(e)}
 
     async def _write_opus_md(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Regenerate OPUS.md."""
+        """
+        Trigger OPUS.md regeneration through InterfacePlugin.
+
+        ARCHITECTURE: opus_assistant is BACKEND only - no direct file writes.
+        InterfacePlugin is FRONTEND - writes via kernel.io.
+        """
         try:
-            result = self._plugin.generate_opus()
-            return {"success": True, "result": result}
+            # Get InterfacePlugin and trigger opus render
+            if self._kernel:
+                interface_plugin = self._kernel.get_plugin("interface")
+                if interface_plugin and hasattr(interface_plugin, "render_view"):
+                    interface_plugin.render_view("opus", force=True)
+                    return {"success": True, "method": "interface_plugin"}
+
+            # Fallback: Log warning if InterfacePlugin not available
+            logger.warning(
+                "⚠️ Cannot render OPUS.md: InterfacePlugin not available. "
+                "opus_assistant is BACKEND only - requires InterfacePlugin for writes."
+            )
+            return {"success": False, "error": "InterfacePlugin not available"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -1093,6 +1111,72 @@ class KernelTickHandler:
             return {"success": False, "error": str(e)}
 
     # =========================================================================
+    # 🎛️ Control Plane Handlers (Metamorphic UI)
+    # =========================================================================
+
+    async def _set_view_state(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🎛️ CONTROL PLANE: Update view preferences & trigger instant re-render.
+
+        Target: opus.set_view
+
+        This is the "reflex" that makes OPUS.md a living control surface.
+        When a user clicks a toggle link, this handler:
+        1. Updates SessionState.view_preferences
+        2. Saves to .opus_state/session.json (persistent!)
+        3. Triggers immediate OPUS.md re-render
+
+        Params:
+            pane: str - Panel name (e.g., "tests", "debug", "code_health")
+            visible: bool/str - Show or hide the panel
+            OR
+            preferences: Dict[str, bool] - Bulk update multiple preferences
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                SessionState,
+                get_state_manager,
+            )
+
+            # 1. Load current session (or create new one)
+            state_mgr = get_state_manager()
+            session = state_mgr.load_session()
+            if not session:
+                # No session yet - create one with defaults
+                import uuid
+                from datetime import datetime
+
+                session = SessionState(
+                    session_id=str(uuid.uuid4())[:8],
+                    started_at=datetime.utcnow().isoformat(),
+                )
+
+            # 2. Update preferences
+            if "pane" in params:
+                # Single pane toggle: ?pane=tests&visible=true
+                pane_key = f"show_{params['pane']}"
+                # Handle string 'true'/'false' from URL params
+                is_visible = str(params.get("visible", "true")).lower() == "true"
+                session.view_preferences[pane_key] = is_visible
+                self._log_observation_info(f"🎛️ View toggle: {pane_key} → {is_visible}", "control_plane")
+            elif "preferences" in params:
+                # Bulk update: preferences={'show_tests': False, 'show_debug': True}
+                session.view_preferences.update(params["preferences"])
+                self._log_observation_info(f"🎛️ View bulk update: {params['preferences']}", "control_plane")
+
+            # 3. Save state (atomic write - crash safe)
+            state_mgr.save_session(session)
+
+            # 4. Trigger immediate re-render (the metamorphic magic!)
+            await self._write_opus_md({"quick": True})
+
+            return {"success": True, "view_preferences": session.view_preferences}
+
+        except Exception as e:
+            logger.warning(f"Failed to set view state: {e}")
+            return {"success": False, "error": str(e)}
+
+    # =========================================================================
     # Fallback for events without circuits
     # =========================================================================
 
@@ -1138,8 +1222,10 @@ class KernelTickHandler:
             self._observation_logger.log_insight(message, source)
 
     def _flush_observations(self) -> None:
-        if self._observation_logger:
-            self._observation_logger.flush_to_opus()
+        # NOTE: flush_to_opus() REMOVED - opus_assistant is BACKEND only
+        # Observations are persisted to StateManager automatically
+        # OPUS.md reads from StateManager when InterfacePlugin renders
+        pass
 
     # =========================================================================
     # State accessors (kept from original)

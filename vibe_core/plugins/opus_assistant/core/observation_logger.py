@@ -178,10 +178,11 @@ class ObservationLogger:
 
         logger.log(level, f"[{source}] {message}")
 
-        # 🔌 WIRING: Critical observations → plugin-local state (Fractal Holon)
+        # 🔌 WIRING: ALL observations → plugin-local state (Fractal Holon)
         # This makes the system "untötbar" - survives git resets
-        if severity in (ObservationSeverity.ALERT, ObservationSeverity.WARN):
-            self._persist_to_state(observation)
+        # NOTE: We persist ALL severities so OPUS.md can read from StateManager
+        # (opus_assistant is BACKEND only - no direct file writes)
+        self._persist_to_state(observation)
 
     def log_info(self, message: str, source: str = "opus_assistant") -> None:
         """Convenience: Log INFO observation."""
@@ -242,36 +243,26 @@ class ObservationLogger:
 
     def flush_to_opus(self) -> bool:
         """
-        Write pending observations to OPUS.md.
+        DEPRECATED: Direct file writes violate the architecture.
 
-        Appends to the journal section, creating it if needed.
+        ⚠️ ARCHITECTURE:
+        - opus_assistant is BACKEND only (data provider)
+        - Observations are now persisted to StateManager automatically
+        - OPUS.md reads from StateManager when InterfacePlugin renders
+        - InterfacePlugin writes via kernel.io
 
-        Returns:
-            True if successfully written, False otherwise
+        This method now does nothing and returns True for backwards compatibility.
         """
-        if not self._pending_flush:
-            return True
+        import warnings
 
-        try:
-            # Read existing OPUS.md or create new
-            if self._opus_path.exists():
-                content = self._opus_path.read_text()
-            else:
-                content = self._create_opus_template()
-
-            # Update journal section
-            new_content = self._update_journal_section(content)
-
-            # Write back
-            self._opus_path.write_text(new_content)
-            self._pending_flush = False
-
-            logger.debug(f"Flushed {len(self._journal.observations)} observations to OPUS.md")
-            return True
-
-        except Exception as e:
-            logger.warning(f"Failed to flush observations to OPUS.md: {e}")
-            return False
+        warnings.warn(
+            "ObservationLogger.flush_to_opus() is deprecated. "
+            "Observations are now persisted to StateManager automatically.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._pending_flush = False
+        return True
 
     def _update_journal_section(self, content: str) -> str:
         """Update or create journal section in OPUS.md content."""

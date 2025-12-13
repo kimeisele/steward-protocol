@@ -68,6 +68,12 @@
 ---
 
 {# ============================================================================
+   🎛️ CONTROL PLANE - Metamorphic UI Controls
+   ============================================================================ #}
+
+{% include 'panels/control_plane.md.j2' ignore missing %}
+
+{# ============================================================================
    STATE OF MIND - The Soul of the System
    ============================================================================ #}
 
@@ -321,6 +327,60 @@ _No git history available_
 <!-- /@LIVE -->
 
 {# ============================================================================
+   🎯 DEPENDENCY GRAPH - Senior AI Cockpit Feature
+   ============================================================================ #}
+
+<!-- @LIVE:dependency_graph -->
+## 🕸️ Module Dependencies
+
+*Which modules import which - understand the architecture at a glance*
+
+{% if dependency_graph and dependency_graph.nodes %}
+### Critical Modules (Most Imported)
+
+{% if dependency_graph.critical_modules %}
+{% for mod in dependency_graph.critical_modules %}
+- **{{ mod }}** - Heavily depended upon, changes here ripple!
+{% endfor %}
+{% else %}
+_No critical dependencies detected_
+{% endif %}
+
+### Dependency Flow (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Core["🔌 Core Modules"]
+{% for mod in dependency_graph.critical_modules %}
+        {{ mod }}[{{ mod }}]
+{% endfor %}
+    end
+
+    subgraph Edges["📦 Import Relations"]
+{% for e in dependency_graph.edges[:12] %}
+        {{ e.from }} -->|{{ e.weight }}| {{ e.to }}
+{% endfor %}
+    end
+
+{% for mod in dependency_graph.critical_modules %}
+    style {{ mod }} fill:#e8f5e9
+{% endfor %}
+```
+
+### Module Sizes
+
+| Module | Files | Critical? |
+|--------|-------|-----------|
+{% for n in dependency_graph.nodes|sort(attribute='size', reverse=true) %}
+| `{{ n.id }}` | {{ n.size }} | {{ '⭐' if n.id in dependency_graph.critical_modules else '' }} |
+{% endfor %}
+{% else %}
+_No dependency graph available_
+{% endif %}
+
+<!-- /@LIVE -->
+
+{# ============================================================================
    PRAKRITI STATE
    ============================================================================ #}
 
@@ -365,9 +425,11 @@ _No active session (kernel may be stopped)_
 <!-- /@LIVE -->
 
 {# ============================================================================
-   CODE HEALTH
+   CODE HEALTH - Toggleable via Control Plane
    ============================================================================ #}
 
+{% set show_code_health = session.view_preferences.show_code_health if session and session.view_preferences else true %}
+{% if show_code_health %}
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
@@ -392,11 +454,14 @@ _No active session (kernel may be stopped)_
 _No technical debt markers found_
 {% endif %}
 <!-- /@LIVE -->
+{% endif %}
 
 {# ============================================================================
-   TEST HEALTH
+   TEST HEALTH - Toggleable via Control Plane
    ============================================================================ #}
 
+{% set show_tests = session.view_preferences.show_tests if session and session.view_preferences else true %}
+{% if show_tests %}
 <!-- @LIVE:test_health -->
 ## Test Suite Health
 
@@ -418,6 +483,7 @@ _No technical debt markers found_
 **Debt:** {{ test_health.archived }} tests in `tests/archive/` need revival
 {% endif %}
 <!-- /@LIVE -->
+{% endif %}
 
 {# ============================================================================
    PRESERVED SECTIONS - Human/AI Editable

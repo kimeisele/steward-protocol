@@ -1,0 +1,35 @@
+{#
+  Control Plane Panel - The Metamorphic UI Controls
+
+  This panel provides toggle controls for OPUS.md sections.
+  Clicking a toggle updates SessionState.view_preferences and
+  triggers an immediate re-render.
+
+  Required context:
+    - session.view_preferences: Dict[str, bool]
+    - karma.current_score: float
+    - health_status: str
+#}
+
+## 🎛️ Control Plane
+
+{% set vp = session.view_preferences if session and session.view_preferences else {} %}
+
+**Status:** {{ session.boot_mode if session else 'unknown' }} | **Karma:** {{ karma.current_score|round(0) }}% | **Health:** {{ health_status }}
+
+**Panels:**
+{% set show_tests = vp.get('show_tests', true) %}
+{% set show_code_health = vp.get('show_code_health', true) %}
+{% set show_debug = vp.get('show_debug', false) %}
+
+- [{{ 'x' if show_tests else ' ' }}] Tests {% if not show_tests %}_(hidden)_{% endif %}
+- [{{ 'x' if show_code_health else ' ' }}] Code Health {% if not show_code_health %}_(hidden)_{% endif %}
+- [{{ 'x' if show_debug else ' ' }}] Debug {% if show_debug %}_(visible)_{% else %}_(hidden)_{% endif %}
+
+{# TODO: When command: links work with circuits, enable these:
+- [{{ 'x' if show_tests else ' ' }}] [Tests](command:opus.view.toggle?pane=tests&visible={{ 'false' if show_tests else 'true' }})
+- [{{ 'x' if show_code_health else ' ' }}] [Code Health](command:opus.view.toggle?pane=code_health&visible={{ 'false' if show_code_health else 'true' }})
+- [{{ 'x' if show_debug else ' ' }}] [Debug](command:opus.view.toggle?pane=debug&visible={{ 'false' if show_debug else 'true' }})
+#}
+
+---

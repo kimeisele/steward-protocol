@@ -8,10 +8,22 @@
 
 > 🟡 **NOTICE** - Trust Score 63% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2025-12-13 07:41:52 UTC | Kernel: STOPPED (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-13 08:44:12 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
+
+
+## 🎛️ Control Plane
+
+
+**Status:** full_power | **Karma:** 100% | **Health:** DEGRADED
+
+**Panels:**
+
+- [x] Tests - [x] Code Health - [ ] Debug _(hidden)_
+
+---
 
 <!-- @LIVE:state_of_mind -->
 ## 🧠 State of Mind
@@ -20,12 +32,12 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `98d1600`
-- **Working Tree:** ⚠️ Uncommitted
+- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `f0896b6`
+- **Working Tree:** ✅ Clean
 ### Layer 2 - Prana (Runtime Energy)
 
 - **Kernel:** ⚪ STOPPED- **Agents:** 0 active
-- **Session:** Standalone
+- **Session:** `control-test...`
 ### Layer 3 - Purusha (Cognitive Identity)
 
 - **Ephemeral Thoughts:** 0
@@ -36,7 +48,6 @@
 - **Trend:** ➡️ Stable
 ### 🎯 Focus Areas
 
-- Commit pending changes
 - Documentation drift detected
 
 <!-- /@LIVE -->
@@ -86,8 +97,10 @@
  | Check last session's karma before full b |
 | **KARMA_CONSEQUENCE** | `VERIFICATION_COMPLETED, DRIFT_DETECTED, CONTEXT_SYNTHESIS` | 12 | [⚡ Run](command:steward.circuit.run?id=KARMA_CONSEQUENCE)
  | Connect OPUS trust observations to Vedic |
+| **OPUS_VIEW_CONTROL** | `opus.view.toggle, opus.view.set, opus.view.reset` | 3 | [⚡ Run](command:steward.circuit.run?id=OPUS_VIEW_CONTROL)
+ | Handles UI toggle interactions from OPUS |
 
-**5 circuits** ready for autonomous execution
+**6 circuits** ready for autonomous execution
 
 ### Circuit Flow (Mermaid)
 
@@ -106,6 +119,7 @@ flowchart LR
         C3[OPUS_AUTO_VERIFY]
         C4[GENESIS_CHECK]
         C5[KARMA_CONSEQUENCE]
+        C6[OPUS_VIEW_CONTROL]
     end
 
     subgraph Actions["🔧 Actions"]
@@ -126,6 +140,7 @@ flowchart LR
     C3 --> A4
     C4 --> A4
     C5 --> A4
+    C6 --> A4
     C1 --> A3
     C2 --> A2
     C3 --> A1
@@ -139,6 +154,7 @@ flowchart LR
     style C3 fill:#fff3e0
     style C4 fill:#fff3e0
     style C5 fill:#fff3e0
+    style C6 fill:#fff3e0
     style A1 fill:#e8f5e9
     style A2 fill:#e8f5e9
     style A3 fill:#e8f5e9
@@ -282,16 +298,95 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/plugins/opus_assistant/core/__init__.py` | 5 | feat(opus): Phase 2.5 - Observation Jour |
-| `vibe_core/plugins/opus_assistant/plugin_main.py` | 4 | feat(opus): Phase 2 - Dynamic Context Lo |
-| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 3 | feat(opus): Phase 2.5 - Observation Jour |
-| `vibe_core/plugins/opus_assistant/events/__init__.py` | 2 | feat(opus): Phase 1.5 - Fraktale Config  |
-| `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 2 | feat(opus): Phase 0 - The Split (OPUS-02 |
-| `vibe_core/plugins/opus_assistant/core/observation_logger.py` | 1 | feat(opus): Phase 2.5 - Observation Jour |
-| `vibe_core/plugins/opus_assistant/tests/test_observation_logger.py` | 1 | feat(opus): Phase 2.5 - Observation Jour |
-| `vibe_core/plugins/opus_assistant/core/context_service.py` | 1 | feat(opus): Phase 2 - Dynamic Context Lo |
-| `vibe_core/plugins/opus_assistant/tests/test_context_service.py` | 1 | feat(opus): Phase 2 - Dynamic Context Lo |
-| `vibe_core/plugins/opus_assistant/core/config_loader.py` | 1 | feat(opus): Phase 1.5 - Fraktale Config  |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 16 | feat(opus): Control Plane infrastructure |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 14 | feat(opus): Complete Fractal Holon wirin |
+| `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` | 6 | fix(opus): Remove unused variable in dep |
+| `vibe_core/plugins/opus_assistant/core/__init__.py` | 6 | feat(opus): Phase 4 - Cognitive Circuits |
+| `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 4 | feat(interface): Add OPUS panel loader a |
+| `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 4 | refactor(opus): Kill Spaghetti + Add Mer |
+| `vibe_core/plugins/opus_assistant/core/state_manager.py` | 3 | feat(opus): Control Plane infrastructure |
+| `vibe_core/plugins/interface/panel_loader.py` | 3 | feat(interface): Add OPUS panel loader a |
+| `vibe_core/plugins/interface/renderers/opus/__init__.py` | 3 | feat(interface): Add OPUS panel loader a |
+| `vibe_core/plugins/interface/renderers/opus/panels/__init__.py` | 3 | feat(interface): Add OPUS panel loader a |
+
+<!-- /@LIVE -->
+
+
+<!-- @LIVE:dependency_graph -->
+## 🕸️ Module Dependencies
+
+*Which modules import which - understand the architecture at a glance*
+
+### Critical Modules (Most Imported)
+
+- **steward** - Heavily depended upon, changes here ripple!
+- **tools** - Heavily depended upon, changes here ripple!
+- **kernel_impl** - Heavily depended upon, changes here ripple!
+- **phoenix** - Heavily depended upon, changes here ripple!
+- **protocols** - Heavily depended upon, changes here ripple!
+
+### Dependency Flow (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Core["🔌 Core Modules"]
+        steward[steward]
+        tools[tools]
+        kernel_impl[kernel_impl]
+        phoenix[phoenix]
+        protocols[protocols]
+    end
+
+    subgraph Edges["📦 Import Relations"]
+        cartridges -->|43| tools
+        cartridges -->|36| steward
+        plugins -->|27| kernel_impl
+        cartridges -->|19| protocols
+        cartridges -->|18| scheduling
+        plugins -->|16| io_service
+        cartridges -->|15| config
+        plugins -->|15| plugin_protocol
+        cartridges -->|13| phoenix
+        plugins -->|10| state
+        plugins -->|10| steward
+        plugins -->|8| loaders
+    end
+
+    style steward fill:#e8f5e9
+    style tools fill:#e8f5e9
+    style kernel_impl fill:#e8f5e9
+    style phoenix fill:#e8f5e9
+    style protocols fill:#e8f5e9
+```
+
+### Module Sizes
+
+| Module | Files | Critical? |
+|--------|-------|-----------|
+| `cartridges` | 174 |  |
+| `plugins` | 108 |  |
+| `phoenix` | 36 | ⭐ |
+| `runtime` | 26 |  |
+| `cli` | 12 |  |
+| `steward` | 11 | ⭐ |
+| `task_management` | 10 |  |
+| `llm` | 9 |  |
+| `state` | 9 |  |
+| `tools` | 9 | ⭐ |
+| `loaders` | 8 |  |
+| `protocols` | 8 | ⭐ |
+| `playbook` | 7 |  |
+| `agents` | 6 |  |
+| `cortex` | 6 |  |
+| `settings` | 6 |  |
+| `knowledge` | 4 |  |
+| `specialists` | 4 |  |
+| `scheduling` | 3 |  |
+| `config` | 2 |  |
+| `gateway` | 2 |  |
+| `governance` | 2 |  |
+| `store` | 2 |  |
+| `scripts` | 1 |  |
 
 <!-- /@LIVE -->
 
@@ -301,13 +396,18 @@ flowchart LR
 
 ### 📍 Session
 
-_No active session (kernel may be stopped)_
+| Property | Value |
+| --- | --- |
+| Session ID | `control-test` |
+| Boot Commit | `unknown` |
+| Boot Mode | full_power |
+| Started | `2025-12-13T08:00:00` |
 
 ### 🔮 Three Layers
 
 | Layer | Name | Status | Details |
 | --- | --- | --- | --- |
-| 1 | STHULA (Physical) | 🟡 | Dirty on `claude/review-prompt-architecture-lIfRE` |
+| 1 | STHULA (Physical) | ✅ | Clean on `claude/review-prompt-architecture-lIfRE` |
 | 2 | PRANA (Runtime) | ⏹️ | Stopped |
 | 3 | PURUSHA (Identity) | ⚪ | No personas defined |
 
@@ -315,7 +415,7 @@ _No active session (kernel may be stopped)_
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `98d1600` | ⚪ |
+| Git HEAD | `f0896b6` | ⚪ |
 | Ledger HEAD | `empty` | ⚪ |
 
 <!-- /@LIVE -->
@@ -324,10 +424,10 @@ _No active session (kernel may be stopped)_
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
-**Total: 14** (TODO: 14, HACK: 0, FIXME: 0)
+**Total: 13** (TODO: 13, HACK: 0, FIXME: 0)
 
 <details>
-<summary>TODOs (14)</summary>
+<summary>TODOs (13)</summary>
 
 - `vibe_core/cartridges/system/archivist/tools/audit_tool.py:78` - # TODO: Implement real verification with public_key when HER
 - `vibe_core/cartridges/system/engineer/cartridge_main.py:465` - # TODO: Implement agent-specific logic
@@ -340,7 +440,6 @@ _No active session (kernel may be stopped)_
 - `vibe_core/plugins/envoy/plugin_main.py:517` - # TODO: Create envoy.yaml config section
 - `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:58` - # TODOs (collapsible if many)
 - `vibe_core/plugins/interface/renderers/opus/panels/code_health.py:65` - lines.append("### TODOs")
-- `vibe_core/runtime/prompt_composer.py:237` - project_root = Path.cwd()  # TODO: Get from context if avail
 - `vibe_core/task_management/task_manager.py:341` - # TODO: Integrate with UnifiedRouter for dynamic prioritizat
 - `vibe_core/config/__init__.py:21` - # TODO: Remove in v2.0
 
@@ -371,19 +470,39 @@ _No active session (kernel may be stopped)_
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12 12:15 UTC)**
-- ✅ Eliminated all `"/tmp/vibe_os"` string literals in vibe_core/
-- ✅ `kernel_impl.py` - Path() construction pattern
-- ✅ `lineage.py` - Path() construction for bootstrap fallback
-- ✅ `section_main.py` - `_DEFAULT_RUNTIME_ROOT` constant
-- ✅ `vfs.py` - already compliant (Path() construction)
-- ✅ Created `tests/unit/test_config_paths.py` (16 tests, all passing)
-- ✅ Fixed E741 ruff errors in docs/architecture/scripts/
-- ✅ Fixed ruff format (blank line after import)
-- 🎯 **@HARNESS: 100%** | **VISNU: Verified** | **Kernel Boot: Passed**
+**OPUS-030 ARCHITECTURE CLEAN SEPARATION (2025-12-13 09:30 UTC)**
 
-**PREVIOUS (2025-12-11 17:45 UTC)**
-- PANOPTICON+ Migration Complete
+### ✅ Completed: Frontend/Backend Separation
+- ✅ Interface Plugin's OpusRenderer now delegates to opus_assistant for content
+- ✅ opus_assistant.write() deprecated with warnings
+- ✅ All OPUS.md writes now go through kernel.io (single writer principle)
+- ✅ Senior AI Cockpit: Dependency Graph feature added
+
+### 🏗️ Architecture Pattern (CLEAN)
+```
+┌──────────────────────────────────────────────────────────┐
+│                    InterfacePlugin                       │
+│                    (FRONTEND)                            │
+│                                                          │
+│  OpusRenderer.generate_content()                         │
+│       │                                                  │
+│       ▼                                                  │
+│  opus_assistant.OpusDashboardRenderer.render()           │
+│       │                                                  │
+│       ▼                                                  │
+│  kernel.io.write_document() ← SINGLE WRITER              │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 📋 Architecture Roadmap
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1. Delegation | ✅ | OpusRenderer delegates to opus_assistant |
+| 2. Deprecation | ✅ | opus_assistant.write() deprecated |
+| 3. Event-Driven | ⏳ | opus_assistant emits events, InterfacePlugin listens |
+| 4. System Component | 📋 | Move InterfacePlugin to vibe_core/ui/ (not plugins/) |
+
+**PREVIOUS: OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12)**
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
@@ -432,4 +551,4 @@ _Add notes here_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-13 07:41:52 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-13 08:44:12 UTC*
