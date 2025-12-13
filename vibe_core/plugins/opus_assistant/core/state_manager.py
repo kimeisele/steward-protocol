@@ -32,7 +32,7 @@ import json
 import logging
 import os
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -104,6 +104,11 @@ class SessionState:
     last_karma_score: int = 100
     observation_count: int = 0
     boot_mode: str = "full_power"
+    # 🎛️ CONTROL PLANE: Persistent view preferences for OPUS.md
+    # Controls which panels are visible/hidden in the dashboard
+    view_preferences: Dict[str, bool] = field(
+        default_factory=lambda: {"show_tests": True, "show_debug": False, "show_code_health": True}
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -116,6 +121,10 @@ class SessionState:
             last_karma_score=data.get("last_karma_score", 100),
             observation_count=data.get("observation_count", 0),
             boot_mode=data.get("boot_mode", "full_power"),
+            # 🎛️ Load view preferences (with sensible defaults)
+            view_preferences=data.get(
+                "view_preferences", {"show_tests": True, "show_debug": False, "show_code_health": True}
+            ),
         )
 
 
