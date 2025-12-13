@@ -108,28 +108,58 @@ Expose existing syscall infrastructure in OPUS.md as a command interface.
 | `record_syscall()` method | ❌ NOT EXISTS | Add to OpusStateManager |
 | Syscall Console panel | ❌ NOT EXISTS | Create template |
 
-### Implementation (Honest)
+### Implementation (Singularity-Ready)
 
-**Phase 2.1: Add Syscall Storage to StateManager**
+> 🧠 **DESIGN DECISION 1**: SyscallEntry is NOT a log - it's an **Experience Replay Buffer**
+>
+> In a Neuro-Symbolic architecture, this is your training dataset.
+> The system must know: "I tried X, and it caused Y."
+
+**Phase 2.1: Add Experience Replay to StateManager**
 
 File: `opus_assistant/core/state_manager.py`
 ```python
 @dataclass
 class SyscallEntry:
-    """A single syscall execution record."""
+    """
+    Experience Replay: Links neural intent to symbolic action and outcome.
+
+    This enables future in-context learning without fine-tuning:
+    Feed the last 50 successful entries as few-shot examples.
+    """
     timestamp: str
-    intent: str
-    syscall_type: str
-    result: str  # "success" | "failed" | "no_match"
-    confidence: float
+
+    # 1. Neural Input (The trigger)
+    intent_raw: str          # e.g. "Create a monitoring agent"
+
+    # 2. Symbolic Action (The translation)
+    syscall: str             # e.g. "SPAWN_COGNITION"
+    params_hash: str         # Hash of params (for deduplication)
+
+    # 3. Reality Feedback (The outcome)
+    result: str              # "SUCCESS", "FAILURE", "REJECTED_BY_GATE"
+    error: Optional[str]     # If failed, why?
+
+    # 4. Learning Signal (For future in-context learning)
+    karma_impact: int        # Did this action improve the system? (0 = neutral)
 
 # Add to OpusStateManager:
 SYSCALL_HISTORY_FILE = "syscall_history.jsonl"
 
 def record_syscall(self, entry: SyscallEntry) -> bool:
-    """Record a syscall execution to history."""
+    """Record a syscall execution to history (Experience Replay)."""
     # Similar pattern to append_observation()
+
+def get_successful_syscalls(self, limit: int = 50) -> List[SyscallEntry]:
+    """Get recent successful syscalls for few-shot learning."""
+    all_entries = self.get_syscall_history()
+    return [e for e in all_entries if e.result == "SUCCESS"][:limit]
 ```
+
+**Why this matters:**
+- When `BlueprintGenerator` needs to be smarter, feed it successful `SyscallEntry`s as few-shot examples
+- **Self-learning without fine-tuning**
+- The `karma_impact` field tracks whether actions helped or hurt
 
 **Phase 2.2: Add Syscall Panel to Template**
 
@@ -138,10 +168,10 @@ File: `opus_assistant/templates/panels/syscall_console.md.j2`
 ## ⚡ Syscall Console
 
 {% if syscall_history %}
-| Time | Intent | Result |
-|------|--------|--------|
+| Time | Intent | Syscall | Result | Karma |
+|------|--------|---------|--------|-------|
 {% for s in syscall_history[:5] %}
-| {{ s.timestamp }} | `{{ s.intent[:40] }}` | {{ s.result }} |
+| {{ s.timestamp }} | `{{ s.intent_raw[:30] }}` | {{ s.syscall }} | {{ s.result }} | {{ s.karma_impact }} |
 {% endfor %}
 {% else %}
 _No syscalls recorded yet_
@@ -152,6 +182,7 @@ _No syscalls recorded yet_
 **Limitations:**
 - Uses regex patterns, not LLM
 - Unmatched intents → confidence=0.5 playbook mode
+- Future: Feed successful syscalls as few-shot examples
 ```
 
 ### Success Criteria
@@ -214,39 +245,146 @@ def _gather_city(self) -> Dict[str, Any]:
 
 ## Layer 4: Autonomous Conductor (P3)
 
-> ⚠️ **STATUS: REQUIRES DESIGN PHASE**
-> This layer needs detailed specification before implementation.
+> 🧠 **DESIGN DECISION 2**: The Conductor is NOT a script - it's a **Circuit**
+>
+> Don't build a specialized runner. Use the existing `CircuitEngine`.
+> The system must control itself through standard tools.
 
 ### Goal
-OPUS runs as GitHub Action, autonomously monitoring and improving.
+OPUS runs as GitHub Action using **existing infrastructure** (Circuits + CLI).
 
-### Prerequisites (NOT YET SPECIFIED)
+### Architecture Decision: No conductor.py!
 
-| Requirement | Status | Notes |
-|-------------|--------|-------|
-| Python version | ❓ | 3.11+ assumed |
-| Dependencies | ❓ | `requirements.txt` needed |
-| Headless kernel boot | ❓ | How to init without full boot? |
-| Conductor CLI contract | ❓ | What args? What output format? |
-| API keys handling | ❓ | Secrets injection |
-
-### Proposed CLI Contract (DRAFT)
-
+**❌ WRONG (Spaghetti):**
 ```bash
-# Minimal conductor interface
-python -m vibe_core.plugins.opus_assistant.conductor \
-    --mode=autonomous \
-    --circuits=OPUS_AUTO_VERIFY \
-    --output=OPUS.md \
-    --dry-run  # Don't write, just print
-
-# Exit codes:
-# 0 = success, OPUS.md updated
-# 1 = error
-# 2 = no changes needed
+python -m vibe_core.plugins.opus_assistant.conductor  # Specialized script
 ```
 
-### GitHub Action (DRAFT)
+**✅ RIGHT (Reusable):**
+```bash
+python -m vibe_core.cli execute \
+    --circuit knowledge/circuits/maintenance/opus_autonomy.yaml \
+    --headless \
+    --non-interactive
+```
+
+**Why:**
+1. **Reusability**: Tomorrow's "Security Scan Conductor" = just another YAML, not Python
+2. **Testing**: Test autonomy loop locally like any other circuit
+3. **Singularity**: System can invent new maintenance tasks by writing YAML (safe), not Python (dangerous)
+
+### Prerequisites
+
+| Requirement | Status | Action |
+|-------------|--------|--------|
+| Python 3.11+ | ✅ | Already in pyproject.toml |
+| `execute --circuit` CLI | ❌ | Add to unified_cli.py |
+| Headless Boot Mode | ❌ | Add to boot_sequence.py |
+| `opus_autonomy.yaml` | ❌ | Create circuit definition |
+
+> 🧠 **DESIGN DECISION 3**: Headless Boot must be MINIMAL
+>
+> GitHub Action can't wait 5 minutes for Docker + API servers.
+> Headless = Core logic + FileSystem + StateManager + LLM client. No Docker, no FastAPI.
+
+### Implementation
+
+**Phase 4.1: Add Headless Boot Mode**
+
+File: `vibe_core/runtime/boot_sequence.py`
+```python
+class BootMode(Enum):
+    FULL = "full"        # API Server, Agent Container, Event Bus, DB
+    HEADLESS = "headless"  # Core logic, FileSystem, StateManager, LLM client only
+
+def boot_kernel(mode: BootMode = BootMode.FULL) -> RealVibeKernel:
+    """Boot kernel with specified mode."""
+    kernel = RealVibeKernel()
+
+    if mode == BootMode.HEADLESS:
+        # Skip heavy subsystems
+        kernel.skip_docker = True
+        kernel.skip_api_server = True
+        kernel.skip_agent_containers = True
+        # Keep: FileSystem, StateManager, LLM clients, CircuitEngine
+    else:
+        # Full boot
+        kernel.start_api_server()
+        kernel.start_agent_containers()
+        # ...
+
+    return kernel
+```
+
+**Phase 4.2: Add `execute --circuit` to CLI**
+
+File: `vibe_core/cli/unified_cli.py`
+```python
+@cli.command()
+@click.option("--circuit", required=True, help="Path to circuit YAML")
+@click.option("--headless", is_flag=True, help="Boot in headless mode")
+@click.option("--non-interactive", is_flag=True, help="No prompts")
+def execute(circuit: str, headless: bool, non_interactive: bool):
+    """Execute a circuit in headless mode."""
+    from vibe_core.runtime.boot_sequence import boot_kernel, BootMode
+
+    mode = BootMode.HEADLESS if headless else BootMode.FULL
+    kernel = boot_kernel(mode)
+
+    # Load and execute circuit
+    circuit_engine = kernel.get_engine("circuit")
+    result = circuit_engine.execute_circuit(circuit)
+
+    sys.exit(0 if result.success else 1)
+```
+
+**Phase 4.3: Create OPUS Autonomy Circuit**
+
+File: `knowledge/circuits/maintenance/opus_autonomy.yaml`
+```yaml
+circuit:
+  id: OPUS_AUTONOMY
+  name: "OPUS Autonomous Maintenance"
+  description: "Self-improvement cycle for GitHub Actions"
+
+  triggers:
+    - event: MANUAL  # Triggered by CLI
+
+  entry_state: verify_health
+
+  states:
+    verify_health:
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.verify"
+      transitions:
+        - condition: "result.score >= 80"
+          next_state: update_opus
+        - condition: "result.score < 80"
+          next_state: log_degradation
+
+    log_degradation:
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: WARN
+            message: "Trust score degraded: {{ result.score }}%"
+      transitions:
+        - next_state: update_opus
+
+    update_opus:
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.write_opus_md"  # Triggers InterfacePlugin
+      transitions:
+        - next_state: complete
+
+    complete:
+      terminal: true
+```
+
+### GitHub Action (Final)
 
 ```yaml
 name: OPUS Conductor
@@ -268,20 +406,18 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
-          # Or: pip install -e .
+        run: pip install -e .
 
-      - name: OPUS Think Cycle
+      - name: OPUS Autonomy Cycle
         env:
-          # Optional: For future LLM enhancement
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          python -m vibe_core.plugins.opus_assistant.conductor \
-            --mode=autonomous \
-            --output=OPUS.md
+          python -m vibe_core.cli execute \
+            --circuit knowledge/circuits/maintenance/opus_autonomy.yaml \
+            --headless \
+            --non-interactive
 
-      - name: Commit Insights
+      - name: Commit Changes
         run: |
           git config user.name "OPUS Conductor"
           git config user.email "opus@steward.ai"
@@ -290,12 +426,21 @@ jobs:
           git push
 ```
 
-### Open Design Questions
+### Success Criteria
 
-1. **Headless Boot**: Can kernel boot without full runtime? What's minimal init?
-2. **Circuit Selection**: Which circuits are safe for autonomous execution?
-3. **Error Handling**: What if conductor fails mid-execution?
-4. **Rate Limiting**: How often is too often?
+| Criterion | Verification |
+|-----------|--------------|
+| `BootMode.HEADLESS` implemented | Unit test: boots in <5s, no Docker |
+| `execute --circuit` works | `python -m vibe_core.cli execute --help` |
+| `opus_autonomy.yaml` executes | Local test with --dry-run |
+| GitHub Action succeeds | Check Actions tab |
+
+### Why This Is Singularity-Ready
+
+1. **Self-Modifying**: System can write new YAML circuits (safe) to add behaviors
+2. **No Specialized Code**: Same CLI, same engine, different YAML
+3. **Testable**: Run autonomy loop locally before deploying to GitHub
+4. **Extensible**: Add `security_scan.yaml`, `dependency_update.yaml` with zero Python
 
 ---
 
@@ -360,6 +505,21 @@ OPUS PRIME (main)
 - Unmatched input → `confidence=0.5` playbook mode
 - Not magic NL understanding
 
+### 6. Experience Replay, Not Logs (NEW - Design Decision 1)
+- `SyscallEntry` = Training data, not just logs
+- Links: Intent → Action → Outcome → Karma Impact
+- Enables in-context learning without fine-tuning
+
+### 7. No Specialized Scripts (NEW - Design Decision 2)
+- Conductor = Circuit + CLI, not Python script
+- System controls itself through standard tools
+- New automation = new YAML, not new Python
+
+### 8. Headless Boot Mode (NEW - Design Decision 3)
+- GitHub Actions need fast boot (<5s)
+- Headless = Core + FileSystem + StateManager + LLM
+- No Docker, no FastAPI, no Agent Containers
+
 ---
 
 ## Priority Matrix
@@ -367,20 +527,47 @@ OPUS PRIME (main)
 | Layer | Priority | Effort | Impact | Status |
 |-------|----------|--------|--------|--------|
 | 1. Living Dashboard | - | - | - | ✅ DONE |
-| 2. Syscall Console | P1 | Medium | High | 📋 NEEDS INFRA |
+| 2. Syscall Console | P1 | Medium | High | 📋 READY (spec complete) |
 | 3. 4D Hypercube | P2 | Medium | Medium | 📋 PLANNED |
-| 4. Autonomous Conductor | P3 | High | High | 🔴 NEEDS DESIGN |
-| 5. Multiverse | P4 | Very High | Very High | 🔴 NEEDS DESIGN |
+| 4. Autonomous Conductor | P3 | Medium | High | 📋 READY (spec complete) |
+| 5. Multiverse | P4 | Very High | Very High | 🔴 NEEDS RFC |
+
+---
+
+## Summary of Design Decisions
+
+| # | Decision | Why |
+|---|----------|-----|
+| 1 | SyscallEntry = Experience Replay | Self-learning without fine-tuning |
+| 2 | No conductor.py | Reusable circuits, system self-controls |
+| 3 | Headless Boot Mode | Fast GitHub Actions (<5s boot) |
 
 ---
 
 ## Next Actions
 
-1. [ ] **Layer 2**: Add `SyscallEntry` + `record_syscall()` to OpusStateManager
-2. [ ] **Layer 2**: Create `syscall_console.md.j2` panel
-3. [ ] **Layer 3**: Add `_gather_city()` to renderer
-4. [ ] **Layer 4**: Write RFC for conductor design
-5. [ ] **Layer 5**: Write RFC for multiverse architecture
+### Layer 2: Syscall Console
+1. [ ] Add `SyscallEntry` dataclass to `state_manager.py`
+2. [ ] Add `record_syscall()` method to `OpusStateManager`
+3. [ ] Add `get_successful_syscalls()` for few-shot learning
+4. [ ] Create `syscall_console.md.j2` panel
+5. [ ] Wire envoy to record syscalls
+
+### Layer 3: 4D Hypercube
+1. [ ] Add `_gather_city()` to renderer
+2. [ ] Add karma trend calculation
+3. [ ] Create `hypercube.md.j2` panel
+
+### Layer 4: Autonomous Conductor
+1. [ ] Implement `BootMode.HEADLESS` in boot_sequence.py
+2. [ ] Add `execute --circuit` to unified_cli.py
+3. [ ] Create `opus_autonomy.yaml` circuit
+4. [ ] Test locally before GitHub Action
+
+### Layer 5: Multiverse
+1. [ ] Write RFC for multiverse architecture
+2. [ ] Define karma merge algorithm
+3. [ ] POC on single feature branch
 
 ---
 
