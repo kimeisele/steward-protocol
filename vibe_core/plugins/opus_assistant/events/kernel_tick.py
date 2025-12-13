@@ -50,6 +50,15 @@ except ImportError:
     CognitiveKernel = None
     ManasConfig = None
 
+# 💎 OPUS-037: DIAMOND PROTOCOL - TDD Enforcement Handlers
+try:
+    from vibe_core.plugins.opus_assistant.events.diamond_handlers import get_diamond_handlers
+
+    DIAMOND_AVAILABLE = True
+except ImportError:
+    DIAMOND_AVAILABLE = False
+    get_diamond_handlers = None
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
     from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
@@ -609,6 +618,10 @@ class KernelTickHandler:
                 "vidya_record_failure": self._vidya_record_failure,
                 # 🏛️ GREMIUM: AI Federation Decision Handler (OPUS-035)
                 "gremium_evaluate": self._gremium_evaluate,
+                # 💎 DIAMOND PROTOCOL: TDD Enforcement Handlers (OPUS-037)
+                "diamond_generate_test": self._diamond_generate_test,
+                "diamond_red_gate": self._diamond_red_gate,
+                "diamond_green_gate": self._diamond_green_gate,
             }
             method = method_map.get(method_name)
             if method:
@@ -2851,6 +2864,93 @@ def test_plugin_has_plugin_id():
                     "risk_check": "within_threshold" if within_threshold else "exceeds_threshold",
                 },
             }
+
+    # =========================================================================
+    # 💎 DIAMOND PROTOCOL: TDD Enforcement Handlers (OPUS-037)
+    # =========================================================================
+    # "RED before GREEN. Test before Code. No exceptions." - DIAMOND LAW
+
+    async def _diamond_generate_test(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        💎 Generate test BEFORE implementation (Diamond Protocol Phase 1).
+
+        This is the first step of TDD - the test defines the behavior
+        before any code exists. The generated test WILL fail initially.
+
+        Target: opus.diamond_generate_test
+        """
+        if not DIAMOND_AVAILABLE or get_diamond_handlers is None:
+            logger.warning("💎 Diamond handlers not available")
+            return {"success": False, "error": "Diamond handlers not available"}
+
+        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        return await handlers.generate_test(params)
+
+    async def _diamond_red_gate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        💎🔴 RED Gate - Test MUST fail (proves test is non-trivial).
+
+        The critical innovation: we WANT the test to fail here.
+        If it passes, the test is trivially true (bad) or feature exists.
+
+        Target: opus.diamond_red_gate
+
+        Returns:
+            test_failed: True = RED gate passed (test failed as expected)
+        """
+        if not DIAMOND_AVAILABLE or get_diamond_handlers is None:
+            logger.warning("💎 Diamond handlers not available")
+            return {"success": False, "error": "Diamond handlers not available"}
+
+        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        result = await handlers.red_gate(params)
+
+        # Log the RED gate result
+        if result.get("test_failed"):
+            self._log_observation_info(
+                f"💎✅ RED GATE PASSED: {params.get('capability_name', 'unknown')} - test failed as expected",
+                "diamond",
+            )
+        else:
+            self._log_observation_warn(
+                f"💎🚫 RED GATE VIOLATED: {params.get('capability_name', 'unknown')} - trivial test rejected",
+                "diamond",
+            )
+
+        return result
+
+    async def _diamond_green_gate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        💎🟢 GREEN Gate - Test MUST pass (proves implementation works).
+
+        The test that failed in RED phase must now pass.
+        Only then can the capability be deployed.
+
+        Target: opus.diamond_green_gate
+
+        Returns:
+            test_passed: True = GREEN gate passed (implementation works)
+        """
+        if not DIAMOND_AVAILABLE or get_diamond_handlers is None:
+            logger.warning("💎 Diamond handlers not available")
+            return {"success": False, "error": "Diamond handlers not available"}
+
+        handlers = get_diamond_handlers(workspace=self._plugin._workspace)
+        result = await handlers.green_gate(params)
+
+        # Log the GREEN gate result
+        if result.get("test_passed"):
+            self._log_observation_info(
+                f"💎✅ GREEN GATE PASSED: {params.get('capability_name', 'unknown')} - implementation verified",
+                "diamond",
+            )
+        else:
+            self._log_observation_alert(
+                f"💎❌ GREEN GATE FAILED: {params.get('capability_name', 'unknown')} - implementation broken",
+                "diamond",
+            )
+
+        return result
 
     # =========================================================================
     # Fallback for events without circuits
