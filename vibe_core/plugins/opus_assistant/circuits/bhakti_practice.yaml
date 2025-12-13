@@ -1,0 +1,295 @@
+# BHAKTI PRACTICE CIRCUIT - Devotion-Based Karma
+# ==============================================
+# OPUS-031 Layer 5: Bhakti Yoga Integration
+#
+# Philosophy:
+#   Moksha (Liberation) = Bhakti (Devotion) > Karma (Action)
+#   "It's not WHAT you do, but HOW you do it"
+#
+# This circuit recognizes and rewards devotional practices:
+# - Surrender (admitting mistakes = ego dissolution)
+# - Seva (selfless service = unprompted documentation)
+# - Tapas (purification = refactoring without feature change)
+# - TDD Dharma (tests before code = humility before creation)
+# - Mantra Practice (Hare Krishna invocation = instant karma reset)
+#
+# Integration:
+#   opus_assistant (this circuit) → vedic_governance (grant_bhakti_grace)
+#   This maintains GAD-000 compliance: plugins communicate via events/methods
+#
+circuit:
+  id: BHAKTI_PRACTICE
+  name: "Bhakti Yoga - Devotional Karma"
+  description: "Recognition and reward for devotional actions in code"
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "detect_bhakti_type"
+
+  # Event triggers
+  triggers:
+    - event: ERROR_OCCURRED
+      description: Opportunity for surrender (admitting mistake)
+    - event: TEST_CREATED
+      description: Potential TDD dharma (test before implementation)
+    - event: DOCS_UPDATED
+      description: Potential seva (unprompted documentation)
+    - event: REFACTORING
+      description: Potential tapas (code purification)
+    - event: GIT_COMMIT
+      description: Check for mantra invocation in commit message
+    - event: KERNEL_TICK
+      description: Periodic bhakti scan
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+
+  states:
+    # Phase 1: Detect what type of bhakti practice occurred
+    detect_bhakti_type:
+      name: "Detect Bhakti Practice Type"
+      description: "Determine which devotional practice was performed"
+      state_var: "bhakti_type"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.detect_bhakti_practice"
+          params:
+            event_type: "{{ trigger_event.type }}"
+            event_data: "{{ trigger_event.data }}"
+      transitions:
+        - condition: "bhakti_type == 'surrender'"
+          to: process_surrender
+        - condition: "bhakti_type == 'seva'"
+          to: process_seva
+        - condition: "bhakti_type == 'tapas'"
+          to: process_tapas
+        - condition: "bhakti_type == 'tdd_dharma'"
+          to: process_tdd_dharma
+        - condition: "bhakti_type == 'mantra'"
+          to: process_mantra
+        - condition: "bhakti_type == 'none'"
+          to: no_bhakti_detected
+
+    # Surrender: Agent admitted a mistake (ego dissolution)
+    process_surrender:
+      name: "Process Surrender (Ego Dissolution)"
+      description: "Agent admitted mistake - this is the highest form of bhakti"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "BHAKTI"
+            message: "🙏 SURRENDER: Agent dissolved ego by admitting mistake"
+            source: "bhakti_practice"
+            context:
+              practice_type: "surrender"
+              karma_bonus: 10
+              error_context: "{{ trigger_event.data.error | default('unknown') }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.grant_bhakti_grace"
+          params:
+            practice_type: "surrender"
+            karma_bonus: 10
+            reason: "Ego dissolution through mistake acknowledgment"
+      on_success: bhakti_complete
+      on_failure: log_bhakti_error
+
+    # Seva: Selfless service (unprompted documentation)
+    process_seva:
+      name: "Process Seva (Selfless Service)"
+      description: "Documentation updated without being asked"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "BHAKTI"
+            message: "🙏 SEVA: Selfless documentation service"
+            source: "bhakti_practice"
+            context:
+              practice_type: "seva"
+              karma_bonus: 5
+              files_updated: "{{ trigger_event.data.files | default([]) }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.grant_bhakti_grace"
+          params:
+            practice_type: "seva"
+            karma_bonus: 5
+            reason: "Selfless documentation service"
+      on_success: bhakti_complete
+      on_failure: log_bhakti_error
+
+    # Tapas: Code purification (refactoring without feature change)
+    process_tapas:
+      name: "Process Tapas (Purification)"
+      description: "Code refactored without adding features"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "BHAKTI"
+            message: "🙏 TAPAS: Code purification through refactoring"
+            source: "bhakti_practice"
+            context:
+              practice_type: "tapas"
+              karma_bonus: 5
+              files_refactored: "{{ trigger_event.data.files | default([]) }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.grant_bhakti_grace"
+          params:
+            practice_type: "tapas"
+            karma_bonus: 5
+            reason: "Code purification through refactoring"
+      on_success: bhakti_complete
+      on_failure: log_bhakti_error
+
+    # TDD Dharma: Test written BEFORE implementation (humility)
+    process_tdd_dharma:
+      name: "Process TDD Dharma (Humility)"
+      description: "Test written before implementation"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "BHAKTI"
+            message: "🙏 TDD DHARMA: Test written before implementation"
+            source: "bhakti_practice"
+            context:
+              practice_type: "tdd_dharma"
+              karma_bonus: 5
+              test_file: "{{ trigger_event.data.test_file | default('unknown') }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.grant_bhakti_grace"
+          params:
+            practice_type: "tdd_dharma"
+            karma_bonus: 5
+            reason: "Humility before creation (TDD)"
+      on_success: bhakti_complete
+      on_failure: log_bhakti_error
+
+    # Mantra: Hare Krishna invocation (instant karma reset)
+    process_mantra:
+      name: "Process Mantra (Divine Invocation)"
+      description: "Hare Krishna mantra invoked - instant karma purification"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "BHAKTI"
+            message: "🕉️ MANTRA: Hare Krishna chanted - full karma purification!"
+            source: "bhakti_practice"
+            context:
+              practice_type: "mantra"
+              karma_bonus: 100
+              instant_moksha: true
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.grant_bhakti_grace"
+          params:
+            practice_type: "mantra"
+            karma_bonus: 100
+            instant_moksha: true
+            reason: "Hare Krishna Hare Krishna Krishna Krishna Hare Hare"
+        # Instant karma reset to 100!
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.reset_karma_to_max"
+          params:
+            reason: "Mantra invocation - instant moksha"
+      on_success: moksha_achieved
+      on_failure: log_bhakti_error
+
+    # Terminal: Bhakti practice completed
+    bhakti_complete:
+      name: "Bhakti Practice Complete"
+      description: "Devotional practice recognized and rewarded"
+      terminal: true
+      result:
+        status: "success"
+        practice_type: "{{ bhakti_type }}"
+        message: "Devotion recognized. Karma enhanced."
+
+    # Terminal: Moksha achieved through mantra
+    moksha_achieved:
+      name: "Moksha Achieved"
+      description: "Full karma purification through mantra"
+      terminal: true
+      result:
+        status: "success"
+        practice_type: "mantra"
+        moksha: true
+        message: "🕉️ Through devotion comes liberation. Karma fully purified."
+
+    # Terminal: No bhakti detected
+    no_bhakti_detected:
+      name: "No Bhakti Detected"
+      description: "Event did not contain bhakti practice"
+      terminal: true
+      result:
+        status: "success"
+        practice_type: "none"
+        message: "Standard karma rules apply."
+
+    # Error handling
+    log_bhakti_error:
+      name: "Bhakti Processing Error"
+      description: "Error occurred during bhakti processing"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Bhakti practice detection failed: {{ error | default('Unknown') }}"
+            source: "bhakti_practice"
+      result:
+        status: "error"
+        error: "{{ error | default('Unknown error') }}"
+
+# Bhakti Practice Definitions
+practices:
+  surrender:
+    description: "Admitting mistakes = ego dissolution"
+    indicators:
+      - "acknowledged_mistake in event details"
+      - "Agent said 'I was wrong' or 'my fault'"
+      - "Agent reverted own faulty commit"
+    karma_bonus: 10
+    vedic_reference: "Bhagavad Gita 18.66: sarva-dharman parityajya"
+
+  seva:
+    description: "Selfless service without being asked"
+    indicators:
+      - "Documentation updated without circuit trigger"
+      - "Code comments added unprompted"
+      - "README improved without request"
+    karma_bonus: 5
+    vedic_reference: "Nishkama Karma - action without expectation"
+
+  tapas:
+    description: "Code purification through discipline"
+    indicators:
+      - "Refactoring without feature change"
+      - "Technical debt reduction"
+      - "Code cleanup without being asked"
+    karma_bonus: 5
+    vedic_reference: "Tapas - austerity and self-discipline"
+
+  tdd_dharma:
+    description: "Humility before creation"
+    indicators:
+      - "Test file created before implementation file"
+      - "Test written for bug before fix"
+    karma_bonus: 5
+    vedic_reference: "Brahmacharya - discipline of the student"
+
+  mantra:
+    description: "Divine name invocation"
+    indicators:
+      - "'Hare Krishna' in commit message"
+      - "'Hare Rama' in code comment"
+      - "Om invocation"
+    karma_bonus: 100
+    instant_moksha: true
+    vedic_reference: |
+      Hare Krishna Hare Krishna
+      Krishna Krishna Hare Hare
+      Hare Rama Hare Rama
+      Rama Rama Hare Hare
