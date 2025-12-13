@@ -3,6 +3,7 @@ OPUS Assistant Kernel Tick - Circuit-Driven Event Handler.
 
 OPUS-029 Phase 7: True Cognitive Circuit Execution
 OPUS-030: Cognitive Awakening (Envoy Pattern)
+OPUS-032: MANAS - The Mind Awakens (Proactive Cognition)
 
 The plugin doesn't just boot and die. It stays ALIVE via EventBus.
 Now it executes REAL circuits from opus_assistant/circuits/*.yaml
@@ -19,6 +20,10 @@ We talk to DeterministicExecutor which handles the routing:
 - Syscall → CognitiveCircuitExecutor (agent birth, etc.)
 - Standard → Traditional playbook execution
 
+OPUS-032: MANAS - The cognitive kernel that generates its own input.
+Without MANAS, the system waits for events (reactive).
+With MANAS, the system thinks and proposes actions (proactive).
+
 This is AUTONOMOUS COGNITION - circuits drive behavior.
 """
 
@@ -34,6 +39,16 @@ try:
 except ImportError:
     ENVOY_AVAILABLE = False
     DeterministicExecutor = None
+
+# 🧠 OPUS-032: MANAS - The Cognitive Kernel
+try:
+    from vibe_core.plugins.opus_assistant.manas import CognitiveKernel, ManasConfig
+
+    MANAS_AVAILABLE = True
+except ImportError:
+    MANAS_AVAILABLE = False
+    CognitiveKernel = None
+    ManasConfig = None
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
@@ -85,11 +100,17 @@ class KernelTickHandler:
         self._deterministic_executor: Optional[Any] = None
         self._cognitive_ready = False
 
+        # 🧠 OPUS-032: MANAS - The Cognitive Kernel
+        self._manas: Optional[Any] = None
+        self._manas_ready = False
+        self._hourly_pulse_tick = 0  # Track ticks for hourly pulse
+
         # Initialize services
         self._init_context_service()
         self._init_observation_logger()
         self._init_circuits()
         self._init_cognitive_executor()
+        self._init_manas()
 
     def _init_circuits(self) -> None:
         """Load circuits from opus_assistant/circuits/ directory."""
@@ -127,6 +148,35 @@ class KernelTickHandler:
         except Exception as e:
             logger.warning(f"Could not init cognitive executor: {e}")
             self._deterministic_executor = None
+
+    def _init_manas(self) -> None:
+        """
+        🧠 OPUS-032: Initialize MANAS - The Cognitive Kernel.
+
+        MANAS transforms OPUS from reactive to proactive:
+        - Generates intents from system state
+        - Populates Intent Buffer in OPUS.md
+        - Learns from past actions via MemoryStore
+        """
+        if not MANAS_AVAILABLE:
+            logger.debug("⚠️ MANAS not available - proactive cognition disabled")
+            return
+
+        try:
+            workspace = self._plugin._workspace or Path.cwd()
+            config = ManasConfig(
+                thinking_interval_minutes=60,  # Once per hour
+                idle_threshold_minutes=30,  # Or after 30 min idle
+                auto_execute_safe=False,  # Conservative: require approval
+                max_intent_buffer_size=10,
+            )
+            self._manas = CognitiveKernel(workspace=workspace, config=config)
+            self._manas_ready = True
+            logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
+        except Exception as e:
+            logger.warning(f"Could not init MANAS: {e}")
+            self._manas = None
+            self._manas_ready = False
 
     def _ensure_cognitive_ready(self) -> bool:
         """
@@ -533,6 +583,14 @@ class KernelTickHandler:
                 # 🙏 OPUS-031 Layer 5: Bhakti Yoga (Devotional Karma)
                 "detect_bhakti_practice": self._detect_bhakti_practice,
                 "reset_karma_to_max": self._reset_karma_to_max,
+                # 🧠 OPUS-032: MANAS - The Cognitive Kernel
+                "manas_check_rate_limit": self._manas_check_rate_limit,
+                "manas_generate_intents": self._manas_generate_intents,
+                "manas_auto_execute_safe": self._manas_auto_execute_safe,
+                "manas_update_buffer": self._manas_update_buffer,
+                "manas_approve_intent": self._manas_approve_intent,
+                "manas_reject_intent": self._manas_reject_intent,
+                "manas_get_buffer": self._manas_get_buffer,
             }
             method = method_map.get(method_name)
             if method:
@@ -1602,6 +1660,217 @@ class KernelTickHandler:
         except Exception as e:
             logger.warning(f"Failed to reset karma: {e}")
             return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🧠 OPUS-032: MANAS - The Cognitive Kernel Handlers
+    # =========================================================================
+
+    async def _manas_check_rate_limit(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Check if rate limit allows thinking.
+
+        Returns:
+            rate_limit_ok: bool - True if MANAS should think
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": True, "rate_limit_ok": False, "reason": "MANAS not available"}
+
+        # Check idle time and last thought time
+        try:
+            idle_minutes = self._manas.get_idle_minutes()
+            interval = params.get("interval_minutes", 60)
+
+            # If idle for threshold, allow thinking
+            if idle_minutes >= self._manas._config.idle_threshold_minutes:
+                return {"success": True, "rate_limit_ok": True, "reason": f"Idle for {idle_minutes} minutes"}
+
+            # Check time since last thought
+            if self._manas._last_thought_time is None:
+                return {"success": True, "rate_limit_ok": True, "reason": "First thought cycle"}
+
+            from datetime import datetime
+
+            minutes_since = (datetime.utcnow() - self._manas._last_thought_time).total_seconds() / 60
+            if minutes_since >= interval:
+                return {"success": True, "rate_limit_ok": True, "reason": f"{minutes_since:.0f} min since last thought"}
+
+            return {
+                "success": True,
+                "rate_limit_ok": False,
+                "reason": f"Rate limited ({minutes_since:.0f}/{interval} min)",
+            }
+
+        except Exception as e:
+            logger.warning(f"MANAS rate limit check failed: {e}")
+            return {"success": False, "rate_limit_ok": False, "error": str(e)}
+
+    async def _manas_generate_intents(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Generate intents from system state.
+
+        This is THE THINKING - the core of proactive cognition.
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available", "intents": []}
+
+        try:
+            context = params.get("context", {})
+
+            # Execute thought cycle
+            intents = self._manas.think(context=context, force=False)
+
+            # Convert to serializable format
+            intent_data = [
+                {
+                    "id": i.id,
+                    "type": i.intent_type,
+                    "title": i.title,
+                    "description": i.description,
+                    "priority": i.priority.value,
+                    "risk": i.risk.value,
+                    "auto_executable": i.auto_executable,
+                }
+                for i in intents
+            ]
+
+            self._log_observation_info(
+                f"🧠 MANAS generated {len(intents)} intent(s): {[i.title for i in intents]}", "manas"
+            )
+
+            return {"success": True, "intents": intent_data, "count": len(intents)}
+
+        except Exception as e:
+            logger.warning(f"MANAS intent generation failed: {e}")
+            return {"success": False, "error": str(e), "intents": []}
+
+    async def _manas_auto_execute_safe(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Auto-execute safe intents (if enabled).
+
+        Only SAFE risk intents with auto_executable=True are executed.
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available", "executed": []}
+
+        enabled = params.get("enabled", False)
+        if not enabled:
+            return {"success": True, "executed": [], "message": "Auto-execute disabled"}
+
+        try:
+            # Get pending intents that are auto-executable
+            pending = self._manas.get_pending_intents()
+            executed = []
+
+            from vibe_core.plugins.opus_assistant.manas.intent_generator import IntentRisk
+
+            for intent in pending:
+                if intent.auto_executable and intent.risk == IntentRisk.SAFE:
+                    success = self._manas.approve_intent(intent.id)
+                    if success:
+                        executed.append(intent.id)
+                        self._log_observation_info(f"🧠 MANAS auto-executed: {intent.title}", "manas")
+
+            return {"success": True, "executed": executed, "count": len(executed)}
+
+        except Exception as e:
+            logger.warning(f"MANAS auto-execute failed: {e}")
+            return {"success": False, "error": str(e), "executed": []}
+
+    async def _manas_update_buffer(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Update intent buffer (already done by think(), this is for confirmation).
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available"}
+
+        try:
+            buffer = self._manas.get_intent_buffer_for_opus()
+            return {
+                "success": True,
+                "pending_count": buffer.get("total_pending", 0),
+                "buffer": buffer,
+            }
+
+        except Exception as e:
+            logger.warning(f"MANAS buffer update failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _manas_approve_intent(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Approve an intent for execution.
+
+        Called when user approves from OPUS.md Intent Buffer.
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available"}
+
+        intent_id = params.get("intent_id")
+        if not intent_id:
+            return {"success": False, "error": "No intent_id provided"}
+
+        try:
+            success = self._manas.approve_intent(intent_id)
+            if success:
+                self._log_observation_info(f"🧠 MANAS: Intent {intent_id} approved and executed", "manas")
+            return {"success": success, "intent_id": intent_id, "executed": success}
+
+        except Exception as e:
+            logger.warning(f"MANAS intent approval failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _manas_reject_intent(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Reject an intent.
+
+        Called when user rejects from OPUS.md Intent Buffer.
+        """
+        if not self._manas_ready or not self._manas:
+            return {"success": False, "error": "MANAS not available"}
+
+        intent_id = params.get("intent_id")
+        reason = params.get("reason", "User rejected")
+
+        if not intent_id:
+            return {"success": False, "error": "No intent_id provided"}
+
+        try:
+            success = self._manas.reject_intent(intent_id, reason)
+            if success:
+                self._log_observation_info(f"🧠 MANAS: Intent {intent_id} rejected: {reason}", "manas")
+            return {"success": success, "intent_id": intent_id, "rejected": success}
+
+        except Exception as e:
+            logger.warning(f"MANAS intent rejection failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _manas_get_buffer(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧠 MANAS: Get current intent buffer for OPUS.md display.
+        """
+        if not self._manas_ready or not self._manas:
+            return {
+                "success": True,
+                "buffer": {
+                    "pending": [],
+                    "recent_executed": [],
+                    "total_pending": 0,
+                    "idle_minutes": 0,
+                    "last_thought": None,
+                },
+                "manas_available": False,
+            }
+
+        try:
+            buffer = self._manas.get_intent_buffer_for_opus()
+            return {"success": True, "buffer": buffer, "manas_available": True}
+
+        except Exception as e:
+            logger.warning(f"MANAS buffer retrieval failed: {e}")
+            return {"success": False, "error": str(e), "buffer": {}}
+
+    def get_manas(self) -> Optional[Any]:
+        """Get the MANAS cognitive kernel instance."""
+        return self._manas
 
     # =========================================================================
     # Fallback for events without circuits

@@ -1,5 +1,5 @@
 """
-Control Cables Parser - OPUS-031 Layer 1.5
+Control Cables Parser - OPUS-031 Layer 1.5 / OPUS-032 MANAS Integration
 
 Transforms OPUS.md into a bidirectional control surface.
 The document IS the API.
@@ -11,25 +11,29 @@ Architecture:
     │   - [x] Tests                                               │
     │   - [ ] Debug                                               │
     │   - [x] Auto-Heal Mode: ON                                  │
-    │   - [ ] Budget Limit: $5.00                                 │
+    │                                                             │
+    │   ## 🎯 Intent Buffer                                       │
+    │   - [x] Approve `manas_0001`  ← OPUS-032 VOLITION          │
+    │   - [ ] Reject `manas_0001`                                 │
     └────────────────────────┬────────────────────────────────────┘
                              │ human edits
                              ▼
     ┌─────────────────────────────────────────────────────────────┐
     │               ControlCablesParser                           │
     │   parse_control_plane(content) → Dict[str, Any]             │
+    │   parse_intent_approvals(content) → List[Dict]  ← NEW!      │
     │   apply_to_state(state_manager, settings)                   │
     └────────────────────────┬────────────────────────────────────┘
-                             │ persists to
+                             │ persists/executes
                              ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │               .opus_state/session.json                      │
-    │   { "view_preferences": { "show_tests": true, ... } }       │
+    │   .opus_state/session.json  +  MANAS Intent Execution       │
     └─────────────────────────────────────────────────────────────┘
 
-Design Decisions (OPUS-031):
+Design Decisions (OPUS-031/032):
 - DD4: Bidirectional Control Surface - OPUS.md is INPUT, not just OUTPUT
 - DD5: Configuration, Not Commands - Settings persist until changed
+- DD7: Volition - Intent approval triggers execution (OPUS-032)
 """
 
 import logging
@@ -206,6 +210,124 @@ class ControlCablesParser:
                 changes.append({"key": key, "old_value": current, "new_value": new_value})
 
         return changes
+
+    # =========================================================================
+    # OPUS-032: MANAS Intent Approval Parsing (Volition)
+    # =========================================================================
+
+    def parse_intent_approvals(self, opus_content: str) -> Dict[str, List[str]]:
+        """
+        Parse Intent Buffer section for approved/rejected intents.
+
+        OPUS-032: The Volition - Transforms checked boxes into action.
+
+        Looks for patterns like:
+        - [x] Approve `manas_0001`
+        - [x] Reject `manas_0001`
+
+        Args:
+            opus_content: Full OPUS.md content
+
+        Returns:
+            Dict with 'approved' and 'rejected' lists of intent IDs
+        """
+        result = {"approved": [], "rejected": []}
+
+        # Find Intent Buffer section
+        match = re.search(r"## 🎯 Intent Buffer\n(.*?)(?=\n## |\n---\n\Z|\Z)", opus_content, re.DOTALL)
+
+        if not match:
+            logger.debug("No Intent Buffer section found in OPUS.md")
+            return result
+
+        section_content = match.group(1)
+
+        # Pattern: - [x] Approve `manas_XXXX` or - [x] Reject `manas_XXXX`
+        # Must be checked ([x]) to count as an action
+        approve_pattern = re.compile(r"- \[x\] Approve `(manas_\d+)`")
+        reject_pattern = re.compile(r"- \[x\] Reject `(manas_\d+)`")
+
+        for line in section_content.split("\n"):
+            line = line.strip()
+
+            # Check for approvals
+            approve_match = approve_pattern.search(line)
+            if approve_match:
+                intent_id = approve_match.group(1)
+                result["approved"].append(intent_id)
+                logger.info(f"🧠 VOLITION: Intent {intent_id} approved via OPUS.md")
+
+            # Check for rejections
+            reject_match = reject_pattern.search(line)
+            if reject_match:
+                intent_id = reject_match.group(1)
+                result["rejected"].append(intent_id)
+                logger.info(f"🧠 VOLITION: Intent {intent_id} rejected via OPUS.md")
+
+        return result
+
+    def apply_intent_decisions(self, opus_content: str, manas: Optional[Any] = None) -> Dict[str, Any]:
+        """
+        Parse and apply intent approvals/rejections to MANAS.
+
+        OPUS-032: The complete Volition loop:
+        1. Parse OPUS.md for checked Approve/Reject boxes
+        2. Call MANAS.approve_intent() or MANAS.reject_intent()
+        3. Return execution results
+
+        Args:
+            opus_content: Full OPUS.md content
+            manas: Optional CognitiveKernel instance (auto-detected if None)
+
+        Returns:
+            Dict with execution results
+        """
+        decisions = self.parse_intent_approvals(opus_content)
+
+        if not decisions["approved"] and not decisions["rejected"]:
+            return {"executed": [], "rejected": [], "errors": []}
+
+        # Get MANAS if not provided
+        if manas is None:
+            try:
+                from pathlib import Path
+
+                from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+                manas = CognitiveKernel(workspace=Path.cwd())
+            except Exception as e:
+                logger.warning(f"Could not get MANAS: {e}")
+                return {"executed": [], "rejected": [], "errors": [str(e)]}
+
+        results = {"executed": [], "rejected": [], "errors": []}
+
+        # Process approvals
+        for intent_id in decisions["approved"]:
+            try:
+                success = manas.approve_intent(intent_id)
+                if success:
+                    results["executed"].append(intent_id)
+                    logger.info(f"🧠 VOLITION: Executed intent {intent_id}")
+                else:
+                    results["errors"].append(f"{intent_id}: approval failed")
+            except Exception as e:
+                results["errors"].append(f"{intent_id}: {str(e)}")
+                logger.warning(f"Failed to execute intent {intent_id}: {e}")
+
+        # Process rejections
+        for intent_id in decisions["rejected"]:
+            try:
+                success = manas.reject_intent(intent_id, reason="Rejected via OPUS.md checkbox")
+                if success:
+                    results["rejected"].append(intent_id)
+                    logger.info(f"🧠 VOLITION: Rejected intent {intent_id}")
+                else:
+                    results["errors"].append(f"{intent_id}: rejection failed")
+            except Exception as e:
+                results["errors"].append(f"{intent_id}: {str(e)}")
+                logger.warning(f"Failed to reject intent {intent_id}: {e}")
+
+        return results
 
 
 def parse_and_apply(opus_content: str, state_manager: Optional["OpusStateManager"] = None) -> Dict[str, Any]:

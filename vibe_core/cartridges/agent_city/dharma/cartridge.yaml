@@ -1,0 +1,38 @@
+meta:
+  id: "agent.steward.dharma"
+  name: "DHARMA Agent (System Intelligence Avatar)"
+  version: "1.0.0"
+  author: "Steward Protocol"
+  description: "The Avatar of Cosmic Order - Bridge between Kernel and City"
+
+agent:
+  domain: "GOVERNANCE"
+  capabilities:
+    - "protocol_interpretation"
+    - "karmic_accounting"
+    - "architectural_guidance"
+    - "dispute_mediation"
+    - "action_blessing"
+
+dependencies:
+  - "pyyaml"
+  - "python-dotenv"
+
+config:
+  governance:
+    level: "elevated"
+  monitoring:
+    enabled: true
+  zone: "governance"
+
+  # Avatar Bridge Configuration
+  bridge:
+    target_plugin: "opus_assistant"
+    fallback_mode: "detached"  # Can operate without plugin connection
+
+  # Service Pricing (in Credits)
+  pricing:
+    seek_guidance: 10
+    bless_action: 5
+    check_karma: 0  # Free - everyone deserves to know
+    mediate: 20

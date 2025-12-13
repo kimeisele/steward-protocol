@@ -1,0 +1,237 @@
+# MANAS AWAKENING CIRCUIT - The Mind Awakens
+# ==========================================
+# OPUS-032: Proactive Autonomous Cognition
+#
+# Philosophy:
+#   "Cogito, ergo sum" - I think, therefore I am
+#
+# This circuit transforms OPUS from a reactive system to a proactive agent:
+# - Activates on hourly pulse OR after system idle
+# - Analyzes system state via Prakriti
+# - Generates intents (proactive suggestions)
+# - Populates Intent Buffer in OPUS.md
+# - Optionally auto-executes safe tasks
+#
+# Rate Limiting (Senior Partner Constraint):
+#   - NOT triggered on every KERNEL_TICK
+#   - Only on HOURLY_PULSE or IDLE_DETECTED events
+#   - Prevents token burn and CPU waste
+#
+# Human-in-the-Loop:
+#   - Most intents require approval
+#   - Only SAFE risk intents can auto-execute
+#   - User approves via OPUS.md Intent Buffer
+#
+circuit:
+  id: MANAS_AWAKENING
+  name: "MANAS - The Mind Awakens"
+  description: "Proactive intent generation - transforms reaction into cognition"
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "check_rate_limit"
+
+  # Event triggers (RATE LIMITED - not every tick!)
+  triggers:
+    - event: HOURLY_PULSE
+      description: "Regular hourly awakening"
+    - event: IDLE_DETECTED
+      description: "System has been idle for threshold period"
+    - event: MANAS_FORCE_THINK
+      description: "Manual trigger for immediate thinking"
+    - event: KERNEL_BOOT
+      description: "Initial awakening on boot"
+
+  # Configuration
+  config:
+    thinking_interval_minutes: 60
+    idle_threshold_minutes: 30
+    auto_execute_safe: false  # Conservative default
+    max_intent_buffer_size: 10
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+    - "prakriti state is accessible"
+
+  states:
+    # Phase 0: Rate limit check (prevent excessive thinking)
+    check_rate_limit:
+      name: "Rate Limit Check"
+      description: "Verify we haven't thought too recently"
+      state_var: "rate_limit_ok"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.manas_check_rate_limit"
+          params:
+            interval_minutes: "{{ config.thinking_interval_minutes }}"
+      transitions:
+        - condition: "rate_limit_ok == true"
+          to: gather_context
+        - condition: "rate_limit_ok == false"
+          to: skip_thinking
+
+    # Phase 1: Gather context from Prakriti
+    gather_context:
+      name: "Gather System Context"
+      description: "Synthesize current state from Prakriti"
+      state_var: "system_context"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.synthesize_context"
+          params: {}
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🧠 MANAS awakening - gathering context"
+            source: "manas"
+      on_success: generate_intents
+      on_failure: log_manas_error
+
+    # Phase 2: Generate intents (THE THINKING!)
+    generate_intents:
+      name: "Generate Intents"
+      description: "Analyze context and generate proactive intents"
+      state_var: "generated_intents"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.manas_generate_intents"
+          params:
+            context: "{{ system_context }}"
+      on_success: check_auto_execute
+      on_failure: log_manas_error
+
+    # Phase 3: Check for auto-executable intents
+    check_auto_execute:
+      name: "Check Auto-Execute"
+      description: "Execute safe intents automatically if enabled"
+      state_var: "auto_executed"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.manas_auto_execute_safe"
+          params:
+            enabled: "{{ config.auto_execute_safe }}"
+            intents: "{{ generated_intents }}"
+      on_success: update_intent_buffer
+      on_failure: update_intent_buffer
+
+    # Phase 4: Update Intent Buffer for OPUS.md
+    update_intent_buffer:
+      name: "Update Intent Buffer"
+      description: "Persist intents to buffer for display"
+      state_var: "buffer_updated"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.manas_update_buffer"
+          params:
+            intents: "{{ generated_intents }}"
+      on_success: log_awakening_complete
+      on_failure: log_manas_error
+
+    # Phase 5: Log completion
+    log_awakening_complete:
+      name: "Log Awakening Complete"
+      description: "Record that MANAS has completed a thought cycle"
+      state_var: "logged"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🧠 MANAS thought cycle complete - {{ generated_intents | length }} intent(s) generated"
+            source: "manas"
+            context:
+              intents_generated: "{{ generated_intents | length }}"
+              auto_executed: "{{ auto_executed | length | default(0) }}"
+      on_success: COMPLETE
+      on_failure: COMPLETE
+
+    # Terminal: Rate limited (skip thinking)
+    skip_thinking:
+      name: "Skip Thinking"
+      description: "Rate limit not passed - skip this cycle"
+      terminal: true
+      result:
+        status: "skipped"
+        reason: "Rate limit active"
+
+    # Terminal: Success
+    COMPLETE:
+      name: "Thought Cycle Complete"
+      description: "MANAS has finished thinking"
+      terminal: true
+      result:
+        status: "success"
+        intents_generated: "{{ generated_intents | length | default(0) }}"
+        message: "The mind has awakened."
+
+    # Terminal: Error
+    log_manas_error:
+      name: "MANAS Error"
+      description: "Error during thought cycle"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "🧠 MANAS thought cycle failed: {{ error | default('Unknown') }}"
+            source: "manas"
+      result:
+        status: "error"
+        error: "{{ error | default('Unknown error') }}"
+
+# Intent Types that MANAS can generate
+intent_types:
+  housekeeping:
+    description: "Cleanup and organization tasks"
+    risk: "safe"
+    auto_executable: true
+    examples:
+      - "cleanup_old_logs"
+      - "cleanup_stale_branches"
+      - "archive_old_sessions"
+
+  optimization:
+    description: "Performance and code quality improvements"
+    risk: "low"
+    auto_executable: false
+    examples:
+      - "review_todos"
+      - "identify_dead_code"
+      - "suggest_refactoring"
+
+  repair:
+    description: "Fix detected issues"
+    risk: "medium"
+    auto_executable: false
+    examples:
+      - "fix_documentation_drift"
+      - "revive_archived_tests"
+      - "repair_broken_imports"
+
+  enhancement:
+    description: "New capabilities or features"
+    risk: "high"
+    auto_executable: false
+    examples:
+      - "suggest_new_test"
+      - "propose_architecture_change"
+
+# Memory patterns (what MANAS learns from)
+memory_patterns:
+  - pattern: "successful_housekeeping"
+    description: "Housekeeping tasks that completed successfully"
+    effect: "Increase confidence in similar tasks"
+
+  - pattern: "rejected_by_user"
+    description: "Intents that user rejected"
+    effect: "Cooldown period before suggesting again"
+
+  - pattern: "failed_execution"
+    description: "Intents that failed during execution"
+    effect: "Longer cooldown, reduced priority"
+
+  - pattern: "rapid_approval"
+    description: "Intents approved quickly by user"
+    effect: "Increase priority for similar intents"

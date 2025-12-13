@@ -1,0 +1,59 @@
+{
+  "agent_id": "dharma",
+  "type": "cartridge",
+  "version": "1.0.0",
+  "description": "The Avatar of Cosmic Order - Bridge between Kernel and City",
+
+  "zone": "governance",
+  "tier": "system",
+
+  "permissions": [
+    "read_constitution",
+    "access_ledger",
+    "query_karma",
+    "broadcast_guidance",
+    "mediate_disputes",
+    "connect_kernel_plugins"
+  ],
+
+  "capabilities": {
+    "seek_guidance": {
+      "description": "Consult the Opus wisdom for architectural/philosophical guidance",
+      "cost": 10,
+      "rate_limit": "10/minute"
+    },
+    "bless_action": {
+      "description": "Validate actions against Dharmic principles",
+      "cost": 5,
+      "rate_limit": "20/minute"
+    },
+    "check_karma": {
+      "description": "Query karmic standing of any citizen",
+      "cost": 0,
+      "rate_limit": "60/minute"
+    },
+    "mediate": {
+      "description": "Resolve disputes between agents using Vedic principles",
+      "cost": 20,
+      "rate_limit": "5/minute"
+    }
+  },
+
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "guidance_per_hour": 100,
+    "mediations_per_day": 50
+  },
+
+  "bridge": {
+    "kernel_plugin": "opus_assistant",
+    "connection_type": "lazy",
+    "fallback": "detached_mode"
+  },
+
+  "governance": {
+    "oath_required": true,
+    "constitution_bound": true,
+    "appeal_to": "supreme_court"
+  }
+}
