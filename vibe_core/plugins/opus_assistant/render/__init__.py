@@ -1,15 +1,17 @@
 """
-OPUS Render Module - Standalone OPUS.md generation.
+OPUS Render Module - BACKEND only (data provider).
 
-OPUS-029 Migration: Replaced interface/renderers/opus/ with this module.
+ARCHITECTURE:
+- OpusDashboardRenderer.render() → STRING (content only)
+- NO file writes - InterfacePlugin handles that via kernel.io
+
+Legacy opus_md_writer.py DELETED - no split-brain!
 """
 
-from vibe_core.plugins.opus_assistant.render.opus_md_writer import (
-    OpusMdWriter,
-    write_opus_md,
+from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+    OpusDashboardRenderer,
 )
 
 __all__ = [
-    "OpusMdWriter",
-    "write_opus_md",
+    "OpusDashboardRenderer",
 ]
