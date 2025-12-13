@@ -663,8 +663,10 @@ class CognitiveCircuitExecutor:
             # Check if terminal
             if current_state_def.get("terminal", False):
                 state.is_terminal = True
+                # BACKWARD COMPATIBILITY: Support both 'output' and 'result' fields
+                output_def = current_state_def.get("output") or current_state_def.get("result", {})
                 state.output = self._resolve_output(
-                    current_state_def.get("output", {}),
+                    output_def,
                     state.variables,
                 )
                 break
@@ -857,8 +859,21 @@ class CognitiveCircuitExecutor:
                     return result
 
             # Evaluate transitions
+            # BACKWARD COMPATIBILITY: Support old-style on_success/on_failure format
+            transitions = current_state_def.get("transitions", [])
+            if not transitions:
+                # Convert on_success/on_failure to transitions format
+                if "on_success" in current_state_def:
+                    transitions.append(
+                        {
+                            "condition": "true",  # Default: always transition
+                            "to": current_state_def["on_success"],
+                        }
+                    )
+                    logger.debug(f"   ⚙️ Converted on_success → {current_state_def['on_success']}")
+
             next_state = self._evaluate_transitions(
-                current_state_def.get("transitions", []),
+                transitions,
                 state.variables,
             )
 
@@ -905,7 +920,15 @@ class CognitiveCircuitExecutor:
 
         # Build final result
         final_state = state.current_state
+        # BACKWARD COMPATIBILITY: Accept multiple success indicators
+        # - Explicit "SUCCESS" state name
+        # - Terminal state with result.status == "success"
+        # - Terminal state without explicit failure markers
         success = final_state == "SUCCESS"
+        if not success and state.is_terminal and state.output:
+            # Check if terminal state indicates success via result field
+            result_status = state.output.get("status", "").lower()
+            success = result_status == "success"
 
         result = CircuitExecutionResult(
             success=success,
