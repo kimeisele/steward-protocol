@@ -63,6 +63,15 @@ files:
       - "class SemanticSyscallExecutor"
       - "_handle_spawn_cognition"
 
+  # Layer 2: Syscall Experience Replay Buffer (DONE!)
+  - path: vibe_core/plugins/opus_assistant/core/state_manager.py
+    required: true
+    patterns:
+      - "class SyscallEntry"
+      - "record_syscall"
+      - "get_successful_syscalls"
+      - "get_syscall_stats"
+
 absent:
   # No legacy writers
   - path: vibe_core/plugins/opus_assistant/render/opus_md_writer.py
@@ -79,12 +88,6 @@ future:
   - path: vibe_core/plugins/opus_assistant/templates/panels/syscall_console.md.j2
     patterns:
       - "syscall_history"
-
-  # Layer 2: SyscallEntry in StateManager (to be added)
-  - path: vibe_core/plugins/opus_assistant/core/state_manager.py
-    patterns:
-      - "class SyscallEntry"
-      - "record_syscall"
 -->
 
 ---
@@ -786,12 +789,13 @@ OPUS PRIME (main)
 7. [ ] Add heartbeat counter to session state
 8. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
 
-### Layer 2: Syscall Console
-1. [ ] Add `SyscallEntry` dataclass to `state_manager.py`
-2. [ ] Add `record_syscall()` method to `OpusStateManager`
-3. [ ] Add `get_successful_syscalls()` for few-shot learning
-4. [ ] Create `syscall_console.md.j2` panel
-5. [ ] Wire envoy to record syscalls
+### Layer 2: Syscall Console (P1 - 🟡 3/5 COMPLETE)
+1. [x] Add `SyscallEntry` dataclass to `state_manager.py`
+2. [x] Add `record_syscall()` method to `OpusStateManager`
+3. [x] Add `get_successful_syscalls()` for few-shot learning
+4. [x] Add `get_syscall_stats()` for dashboard display
+5. [ ] Create `syscall_console.md.j2` panel
+6. [ ] Wire envoy to record syscalls
 
 ### Layer 3: 4D Hypercube
 1. [ ] Add `_gather_city()` to renderer
