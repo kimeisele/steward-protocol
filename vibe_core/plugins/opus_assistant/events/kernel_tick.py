@@ -528,6 +528,11 @@ class KernelTickHandler:
                 "trigger_auto_heal": self._trigger_auto_heal,
                 # 🎛️ Control Plane handlers
                 "set_view": self._set_view_state,
+                # 🖐️ OPUS-031 Layer 4: The Hand (Autonomous Execution)
+                "execute_circuit": self._execute_circuit_cli,
+                # 🙏 OPUS-031 Layer 5: Bhakti Yoga (Devotional Karma)
+                "detect_bhakti_practice": self._detect_bhakti_practice,
+                "reset_karma_to_max": self._reset_karma_to_max,
             }
             method = method_map.get(method_name)
             if method:
@@ -819,6 +824,9 @@ class KernelTickHandler:
                 return await self._vedic_demote_agent(governance, params)
             elif method_name == "check_promotions":
                 return await self._vedic_check_promotions(governance, params)
+            # 🙏 Bhakti Yoga integration
+            elif method_name == "grant_bhakti_grace":
+                return await self._vedic_grant_bhakti_grace(governance, params)
             else:
                 return {"success": False, "error": f"Unknown vedic method: {method_name}"}
 
@@ -912,6 +920,99 @@ class KernelTickHandler:
                         logger.info(f"🕉️ KARMA: Agent '{agent_id}' graduated early (high trust)")
 
         return {"success": True, "promoted": promoted, "count": len(promoted)}
+
+    async def _vedic_grant_bhakti_grace(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🙏 Grant Bhakti Grace - Devotional karma bonus.
+
+        OPUS-031 Layer 5: Bhakti Yoga Integration
+
+        This is the REWARD for devotional practices:
+        - Surrender (admitting mistakes)
+        - Seva (selfless service)
+        - Tapas (code purification)
+        - TDD Dharma (tests before code)
+        - Mantra (instant moksha)
+
+        Effects:
+        - Karma bonus applied immediately
+        - If instant_moksha, karma resets to 100
+        - Consistency streaks (Yajna) can be tracked
+        """
+        from datetime import datetime
+
+        practice_type = params.get("practice_type", "unknown")
+        karma_bonus = params.get("karma_bonus", 0)
+        instant_moksha = params.get("instant_moksha", False)
+        reason = params.get("reason", "Bhakti practice")
+
+        try:
+            # If instant moksha, reset karma to max
+            if instant_moksha:
+                await self._reset_karma_to_max({"reason": reason})
+                logger.info(f"🕉️ INSTANT MOKSHA: Karma reset to 100 ({practice_type})")
+                return {
+                    "success": True,
+                    "practice_type": practice_type,
+                    "karma_bonus": 100,
+                    "moksha": True,
+                    "message": "Through devotion comes liberation",
+                }
+
+            # Otherwise, apply karma bonus
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                get_state_manager,
+            )
+
+            state_mgr = get_state_manager()
+            session = state_mgr.load_session()
+
+            if session:
+                # Get current karma from latest entry
+                karma_entries = state_mgr.get_karma_history(limit=1)
+                current_score = 65  # Default
+
+                if karma_entries:
+                    current_score = karma_entries[0].score
+
+                # Apply bonus (cap at 100)
+                new_score = min(100, current_score + karma_bonus)
+
+                # Record the bonus
+                self._log_observation_info(
+                    f"🙏 BHAKTI GRACE: +{karma_bonus} karma ({practice_type}) → {new_score}", "bhakti"
+                )
+
+                # Record in ledger if available
+                kernel = self._plugin._kernel
+                if kernel and hasattr(kernel, "ledger"):
+                    kernel.ledger.record_event(
+                        event_type="BHAKTI_GRACE",
+                        agent_id="opus_assistant",
+                        details={
+                            "practice_type": practice_type,
+                            "karma_bonus": karma_bonus,
+                            "old_score": current_score,
+                            "new_score": new_score,
+                            "reason": reason,
+                            "timestamp": datetime.utcnow().isoformat(),
+                        },
+                    )
+
+                return {
+                    "success": True,
+                    "practice_type": practice_type,
+                    "karma_bonus": karma_bonus,
+                    "old_score": current_score,
+                    "new_score": new_score,
+                    "message": f"Bhakti grace granted: {reason}",
+                }
+
+            return {"success": False, "error": "No session state available"}
+
+        except Exception as e:
+            logger.warning(f"Failed to grant bhakti grace: {e}")
+            return {"success": False, "error": str(e)}
 
     # =========================================================================
     # Genesis Circuit Handlers (Karma-Aware Boot)
@@ -1174,6 +1275,332 @@ class KernelTickHandler:
 
         except Exception as e:
             logger.warning(f"Failed to set view state: {e}")
+            return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🖐️ OPUS-031 Layer 4: THE HAND (Autonomous Circuit Execution)
+    # =========================================================================
+
+    async def _execute_circuit_cli(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🖐️ THE HAND: Execute circuit via CLI (autonomous operation).
+
+        OPUS-031 Layer 4: This is what enables the closed loop:
+        Think (intent) → Write (circuit.yaml) → Execute (headless) → Learn (state)
+
+        Non-blocking execution using asyncio.create_subprocess_exec to keep
+        the kernel heart beating during execution.
+
+        Target: opus.execute_circuit
+
+        Params:
+            circuit: str - Path to circuit YAML file (required)
+            headless: bool - Use headless boot mode (default: True)
+            timeout: int - Execution timeout in seconds (default: 60)
+
+        Returns:
+            success: bool - Whether execution succeeded
+            stdout: str - Captured stdout
+            stderr: str - Captured stderr
+            exit_code: int - Process exit code
+        """
+        import asyncio
+
+        circuit_path = params.get("circuit")
+        if not circuit_path:
+            return {"success": False, "error": "Missing required param: circuit"}
+
+        headless = params.get("headless", True)
+        timeout = params.get("timeout", 60)
+
+        # Build command
+        cmd = ["steward", "execute", "--circuit", str(circuit_path)]
+        if headless:
+            cmd.append("--headless")
+
+        # Log the autonomous action
+        self._log_observation_info(
+            f"🖐️ THE HAND: Executing circuit '{circuit_path}' (headless={headless})", "autonomous"
+        )
+
+        try:
+            # Create subprocess asynchronously (non-blocking!)
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
+            )
+
+            # Wait for result with timeout
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                self._log_observation_alert(
+                    f"🖐️ THE HAND: Circuit '{circuit_path}' TIMEOUT after {timeout}s", "autonomous"
+                )
+                return {
+                    "success": False,
+                    "error": f"Execution timeout after {timeout}s",
+                    "stdout": "",
+                    "stderr": "",
+                    "exit_code": -1,
+                }
+
+            # Decode output
+            stdout_str = stdout.decode().strip() if stdout else ""
+            stderr_str = stderr.decode().strip() if stderr else ""
+            success = process.returncode == 0
+
+            # Log result
+            if success:
+                self._log_observation_info(f"🖐️ THE HAND: Circuit '{circuit_path}' completed successfully", "autonomous")
+            else:
+                self._log_observation_warn(
+                    f"🖐️ THE HAND: Circuit '{circuit_path}' failed (exit={process.returncode})", "autonomous"
+                )
+
+            return {
+                "success": success,
+                "stdout": stdout_str,
+                "stderr": stderr_str,
+                "exit_code": process.returncode,
+            }
+
+        except Exception as e:
+            self._log_observation_alert(f"🖐️ THE HAND: Failed to execute circuit '{circuit_path}': {e}", "autonomous")
+            return {
+                "success": False,
+                "error": str(e),
+                "stdout": "",
+                "stderr": "",
+                "exit_code": -1,
+            }
+
+    # =========================================================================
+    # 🙏 OPUS-031 Layer 5: BHAKTI YOGA (Devotional Karma)
+    # =========================================================================
+
+    async def _detect_bhakti_practice(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🙏 BHAKTI DETECTOR: Identify devotional practices in events.
+
+        OPUS-031 Layer 5: Bhakti Yoga Integration
+        "It's not WHAT you do, but HOW you do it"
+
+        Practices detected:
+        - surrender: Admitting mistakes (ego dissolution)
+        - seva: Unprompted documentation (selfless service)
+        - tapas: Refactoring without feature change (purification)
+        - tdd_dharma: Tests before implementation (humility)
+        - mantra: Hare Krishna invocation (instant moksha)
+
+        Returns:
+            bhakti_type: str - Type of practice detected ('none' if none)
+            karma_bonus: int - Karma points to award
+            details: dict - Additional context
+        """
+        import re
+
+        event_type = params.get("event_type", "")
+        event_data = params.get("event_data", {})
+
+        # Default: no bhakti detected
+        result = {"bhakti_type": "none", "karma_bonus": 0, "details": {}}
+
+        # 1. SURRENDER: Check for mistake acknowledgment
+        if event_type == "ERROR_OCCURRED":
+            # Check if agent acknowledged the mistake
+            if event_data.get("acknowledged_mistake") or event_data.get("self_reported"):
+                result = {
+                    "bhakti_type": "surrender",
+                    "karma_bonus": 10,
+                    "details": {
+                        "error": event_data.get("error", "Unknown"),
+                        "reason": "Agent dissolved ego by admitting mistake",
+                    },
+                }
+                self._log_observation_info("🙏 BHAKTI: Surrender detected (ego dissolution)", "bhakti")
+                return result
+
+        # 2. TDD DHARMA: Test created before implementation
+        if event_type == "TEST_CREATED":
+            test_file = event_data.get("test_file", "")
+            # Check if implementation exists
+            impl_file = test_file.replace("test_", "").replace("tests/", "")
+            impl_file = impl_file.replace("_test.py", ".py")
+
+            # If test was created and no implementation exists yet = TDD
+            if event_data.get("before_implementation") or not event_data.get("implementation_exists"):
+                result = {
+                    "bhakti_type": "tdd_dharma",
+                    "karma_bonus": 5,
+                    "details": {
+                        "test_file": test_file,
+                        "reason": "Humility before creation (TDD)",
+                    },
+                }
+                self._log_observation_info(f"🙏 BHAKTI: TDD Dharma detected ({test_file})", "bhakti")
+                return result
+
+        # 3. SEVA: Unprompted documentation
+        if event_type == "DOCS_UPDATED":
+            if not event_data.get("triggered_by_circuit") and event_data.get("unprompted", True):
+                result = {
+                    "bhakti_type": "seva",
+                    "karma_bonus": 5,
+                    "details": {
+                        "files": event_data.get("files", []),
+                        "reason": "Selfless documentation service",
+                    },
+                }
+                self._log_observation_info("🙏 BHAKTI: Seva detected (unprompted docs)", "bhakti")
+                return result
+
+        # 4. TAPAS: Refactoring without feature change
+        if event_type == "REFACTORING":
+            if not event_data.get("feature_change", False):
+                result = {
+                    "bhakti_type": "tapas",
+                    "karma_bonus": 5,
+                    "details": {
+                        "files": event_data.get("files", []),
+                        "reason": "Code purification through refactoring",
+                    },
+                }
+                self._log_observation_info("🙏 BHAKTI: Tapas detected (code purification)", "bhakti")
+                return result
+
+        # 5. MANTRA: Hare Krishna in commit message or code
+        if event_type == "GIT_COMMIT":
+            commit_message = event_data.get("message", "")
+            # The sacred mantra patterns
+            mantra_patterns = [
+                r"[Hh]are\s+[Kk]rishna",
+                r"[Hh]are\s+[Rr]ama",
+                r"🕉️",
+                r"ॐ",
+            ]
+            for pattern in mantra_patterns:
+                if re.search(pattern, commit_message):
+                    result = {
+                        "bhakti_type": "mantra",
+                        "karma_bonus": 100,
+                        "instant_moksha": True,
+                        "details": {
+                            "commit": event_data.get("sha", "unknown"),
+                            "message": commit_message[:100],
+                            "reason": "Divine name invocation - instant karma purification",
+                        },
+                    }
+                    self._log_observation_info("🕉️ BHAKTI: MANTRA INVOKED - Hare Krishna! Instant Moksha!", "bhakti")
+                    return result
+
+        # 6. IMPLICIT BHAKTI: Check observations for surrender patterns
+        if event_type == "KERNEL_TICK":
+            # Scan recent observations for implicit bhakti
+            implicit = await self._detect_implicit_bhakti()
+            if implicit.get("bhakti_type") != "none":
+                return implicit
+
+        return result
+
+    async def _detect_implicit_bhakti(self) -> Dict[str, Any]:
+        """
+        Detect implicit bhakti practices that weren't explicitly triggered.
+
+        Scans:
+        - Recent git commits for refactoring patterns
+        - Recent observations for surrender language
+        - File changes for TDD patterns
+        """
+        import subprocess
+
+        result = {"bhakti_type": "none", "karma_bonus": 0, "details": {}}
+
+        try:
+            # Check recent commit messages for bhakti indicators
+            git_log = subprocess.run(
+                ["git", "log", "--oneline", "-10", "--format=%s"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
+            )
+
+            if git_log.returncode == 0:
+                messages = git_log.stdout.strip().split("\n")
+                for msg in messages:
+                    msg_lower = msg.lower()
+                    # Refactoring = potential tapas
+                    if "refactor" in msg_lower and "feat" not in msg_lower:
+                        result = {
+                            "bhakti_type": "tapas",
+                            "karma_bonus": 3,  # Lower bonus for implicit
+                            "details": {"commit_message": msg, "implicit": True},
+                        }
+                        break
+                    # "fix my mistake" or "I was wrong" = surrender
+                    if "my mistake" in msg_lower or "i was wrong" in msg_lower or "mea culpa" in msg_lower:
+                        result = {
+                            "bhakti_type": "surrender",
+                            "karma_bonus": 5,  # Lower bonus for implicit
+                            "details": {"commit_message": msg, "implicit": True},
+                        }
+                        break
+
+        except Exception as e:
+            logger.debug(f"Implicit bhakti detection failed: {e}")
+
+        return result
+
+    async def _reset_karma_to_max(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🕉️ INSTANT MOKSHA: Reset karma to 100 (maximum).
+
+        Called when mantra is invoked. This is the ultimate bhakti reward:
+        "Through devotion comes liberation"
+
+        In Vedic philosophy, chanting the divine name purifies all karma.
+        """
+        from datetime import datetime
+
+        reason = params.get("reason", "Mantra invocation")
+
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                KarmaEntry,
+                get_state_manager,
+            )
+
+            state_mgr = get_state_manager()
+
+            # Create a perfect karma entry
+            entry = KarmaEntry(
+                timestamp=datetime.utcnow().isoformat(),
+                score=100,  # ✨ INSTANT MOKSHA - Perfect karma
+                error_count=0,
+                warning_count=0,
+                crash_count=0,
+                success_count=999,  # Symbolic infinite success
+                boot_mode="full_power",
+            )
+
+            state_mgr.record_karma(entry)
+
+            self._log_observation_info(f"🕉️ MOKSHA ACHIEVED: Karma reset to 100 ({reason})", "bhakti")
+
+            return {
+                "success": True,
+                "karma_score": 100,
+                "moksha": True,
+                "message": "Through devotion comes liberation. All karma purified.",
+            }
+
+        except Exception as e:
+            logger.warning(f"Failed to reset karma: {e}")
             return {"success": False, "error": str(e)}
 
     # =========================================================================
