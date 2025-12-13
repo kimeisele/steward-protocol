@@ -607,6 +607,8 @@ class KernelTickHandler:
                 "vidya_sandbox_test": self._vidya_sandbox_test,
                 "vidya_store_blueprint": self._vidya_store_blueprint,
                 "vidya_record_failure": self._vidya_record_failure,
+                # 🏛️ GREMIUM: AI Federation Decision Handler (OPUS-035)
+                "gremium_evaluate": self._gremium_evaluate,
             }
             method = method_map.get(method_name)
             if method:
@@ -2585,6 +2587,97 @@ def test_plugin_has_plugin_id():
         except Exception as e:
             logger.warning(f"VIDYA failure recording failed: {e}")
             return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🏛️ GREMIUM: AI Federation Decision Handler (OPUS-035)
+    # =========================================================================
+
+    async def _gremium_evaluate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🏛️ GREMIUM: The AI Federation evaluates whether to auto-approve.
+
+        This is the core of autonomous decision-making:
+        - If all validators passed AND risk <= threshold → auto_approve
+        - Otherwise → escalate to human
+
+        The Gremium represents a council of validators speaking with one voice.
+        No single validator makes the decision - consensus does.
+
+        Risk Levels (ascending):
+        - low: formatters, analyzers - safe to auto-approve
+        - medium: syscalls, tools - auto-approve if all checks pass
+        - high: kernel modifications - always escalate
+
+        Args:
+            params:
+                capability_name: Name of the capability being evaluated
+                critique_result: VIDYA Critic's analysis result
+                risk_level: low/medium/high
+                auto_threshold: The max risk level for auto-approval
+
+        Returns:
+            decision: "auto_approve" or "escalate"
+            risk_level: The determined risk level
+            escalation_reason: Why escalation is needed (if any)
+        """
+        capability_name = params.get("capability_name", "unknown")
+        critique_result = params.get("critique_result", {})
+        risk_level = params.get("risk_level", "medium").lower()
+        auto_threshold = params.get("auto_threshold", "medium").lower()
+
+        logger.info(f"🏛️ GREMIUM evaluating: {capability_name} (risk={risk_level}, threshold={auto_threshold})")
+
+        # Risk hierarchy for comparison
+        risk_hierarchy = {"low": 1, "medium": 2, "high": 3}
+        risk_value = risk_hierarchy.get(risk_level, 2)
+        threshold_value = risk_hierarchy.get(auto_threshold, 2)
+
+        # Check 1: Did VIDYA Critique pass?
+        vidya_passed = critique_result.get("passed", False)
+        vidya_findings = critique_result.get("findings_count", 0)
+
+        # Check 2: Risk level within threshold?
+        within_threshold = risk_value <= threshold_value
+
+        # GREMIUM Decision Logic
+        if vidya_passed and within_threshold:
+            # All validators agree: AUTO-APPROVE
+            self._log_observation_info(
+                f"🏛️ GREMIUM AUTO-APPROVED: {capability_name} (VIDYA=✅, risk={risk_level}≤{auto_threshold})",
+                "gremium",
+            )
+            return {
+                "decision": "auto_approve",
+                "risk_level": risk_level,
+                "escalation_reason": None,
+                "validators": {
+                    "vidya_critique": "passed",
+                    "risk_check": "within_threshold",
+                },
+            }
+        else:
+            # Something needs human attention
+            reasons = []
+            if not vidya_passed:
+                reasons.append(f"VIDYA found {vidya_findings} issues")
+            if not within_threshold:
+                reasons.append(f"risk={risk_level} exceeds threshold={auto_threshold}")
+
+            escalation_reason = "; ".join(reasons)
+
+            self._log_observation_warn(
+                f"🏛️ GREMIUM ESCALATED: {capability_name} → human approval needed ({escalation_reason})",
+                "gremium",
+            )
+            return {
+                "decision": "escalate",
+                "risk_level": risk_level,
+                "escalation_reason": escalation_reason,
+                "validators": {
+                    "vidya_critique": "passed" if vidya_passed else "failed",
+                    "risk_check": "within_threshold" if within_threshold else "exceeds_threshold",
+                },
+            }
 
     # =========================================================================
     # Fallback for events without circuits
