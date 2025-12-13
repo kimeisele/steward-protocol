@@ -4,3 +4,9 @@
 {"timestamp": "2025-12-13T02:11:18.166186", "severity": "ALERT", "message": "Alert message", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T02:11:18.181692", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T02:11:18.186832", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.014657", "severity": "WARN", "message": "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}", "source": "auto_verify", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.052010", "severity": "WARN", "message": "Drift detected after commit {{ trigger_event.commit_sha | default('unknown') }}", "source": "auto_verify", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.093514", "severity": "WARN", "message": "Warning message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.094317", "severity": "ALERT", "message": "Alert message", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.106864", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T02:25:24.110395", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
