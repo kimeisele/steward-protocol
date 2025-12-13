@@ -155,14 +155,19 @@ class OpusDashboardRenderer:
     def _apply_control_cables(self) -> None:
         """
         LAYER 1.5: Parse existing OPUS.md and apply human edits to state.
+        LAYER 1.5+: OPUS-032 Volition - Execute approved intents.
 
         This is the "read before write" step that makes OPUS.md bidirectional.
         Human edits to checkboxes in the Control Plane section are persisted
         to StateManager before the next render cycle.
 
-        Design Decisions (OPUS-031):
+        OPUS-032 Addition: Intent approvals/rejections are also processed here,
+        triggering MANAS to execute or reject intents.
+
+        Design Decisions (OPUS-031/032):
         - DD4: Bidirectional Control Surface - OPUS.md is INPUT, not just OUTPUT
         - DD5: Configuration, Not Commands - Settings persist until changed
+        - DD7: Volition - Intent approval triggers execution
         """
         if not self._opus_path.exists():
             logger.debug("No existing OPUS.md - skipping control cables")
@@ -196,6 +201,31 @@ class OpusDashboardRenderer:
 
             # Apply to state (persists to .opus_state/session.json)
             parser.apply_to_state(state_manager, settings)
+
+            # ================================================================
+            # OPUS-032: VOLITION - Process Intent Approvals/Rejections
+            # ================================================================
+            try:
+                volition_results = parser.apply_intent_decisions(opus_content)
+
+                if volition_results["executed"]:
+                    logger.info(
+                        f"🧠 VOLITION: Executed {len(volition_results['executed'])} intent(s): "
+                        f"{', '.join(volition_results['executed'])}"
+                    )
+
+                if volition_results["rejected"]:
+                    logger.info(
+                        f"🧠 VOLITION: Rejected {len(volition_results['rejected'])} intent(s): "
+                        f"{', '.join(volition_results['rejected'])}"
+                    )
+
+                if volition_results["errors"]:
+                    for error in volition_results["errors"]:
+                        logger.warning(f"🧠 VOLITION error: {error}")
+
+            except Exception as e:
+                logger.debug(f"Volition processing failed: {e}")
 
         except ImportError as e:
             logger.debug(f"Control cables not available: {e}")
