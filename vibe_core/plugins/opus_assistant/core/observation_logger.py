@@ -42,9 +42,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 logger = logging.getLogger("OPUS_JOURNAL")
+
+if TYPE_CHECKING:
+    from vibe_core.plugins.opus_assistant.core.state_manager import OpusStateManager
 
 
 class ObservationSeverity(Enum):
@@ -119,18 +122,25 @@ class ObservationLogger:
     JOURNAL_END = "<!-- @JOURNAL END -->"
     SECTION_HEADER = "## 🧠 System Observations"
 
-    def __init__(self, workspace_root: Path, max_entries: int = 50):
+    def __init__(
+        self,
+        workspace_root: Path,
+        max_entries: int = 50,
+        state_manager: Optional["OpusStateManager"] = None,
+    ):
         """
         Initialize observation logger.
 
         Args:
             workspace_root: Workspace path
             max_entries: Max observations to keep (FIFO)
+            state_manager: Optional StateManager for persistence (Fractal Holon pattern)
         """
         self._workspace = workspace_root
         self._opus_path = workspace_root / "OPUS.md"
         self._journal = ObservationJournal(max_entries=max_entries)
         self._pending_flush = False
+        self._state_manager = state_manager
 
     def log_observation(
         self,
@@ -168,6 +178,11 @@ class ObservationLogger:
 
         logger.log(level, f"[{source}] {message}")
 
+        # 🔌 WIRING: Critical observations → plugin-local state (Fractal Holon)
+        # This makes the system "untötbar" - survives git resets
+        if severity in (ObservationSeverity.ALERT, ObservationSeverity.WARN):
+            self._persist_to_state(observation)
+
     def log_info(self, message: str, source: str = "opus_assistant") -> None:
         """Convenience: Log INFO observation."""
         self.log_observation(ObservationSeverity.INFO, message, source)
@@ -183,6 +198,47 @@ class ObservationLogger:
     def log_insight(self, message: str, source: str = "opus_assistant") -> None:
         """Convenience: Log INSIGHT observation."""
         self.log_observation(ObservationSeverity.INSIGHT, message, source)
+
+    def _persist_to_state(self, observation: Observation) -> None:
+        """
+        🔌 WIRING: Persist critical observations to plugin-local state.
+
+        This is the "untötbar" persistence layer (Fractal Holon pattern):
+        - Plugin owns its own state in .opus_state/
+        - Git-tracked, survives resets
+        - Clean isolation from system-wide resources
+
+        Only ALERT and WARN observations are persisted (to keep file small).
+        """
+        if self._state_manager is None:
+            # Lazy-load state manager if not provided
+            try:
+                from vibe_core.plugins.opus_assistant.core.state_manager import (
+                    ObservationEntry,
+                    get_state_manager,
+                )
+
+                self._state_manager = get_state_manager()
+            except ImportError:
+                logger.debug("StateManager not available - observation not persisted")
+                return
+
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import ObservationEntry
+
+            entry = ObservationEntry(
+                timestamp=observation.timestamp,
+                severity=observation.severity.name,
+                message=observation.message,
+                source=observation.source,
+                context_hash=observation.context_hash,
+            )
+            self._state_manager.append_observation(entry)
+            logger.debug(f"📝 Observation persisted to plugin state: {observation.severity.name}")
+
+        except Exception as e:
+            # Don't fail if state write fails - it's a secondary persistence
+            logger.warning(f"Failed to persist observation to plugin state: {e}")
 
     def flush_to_opus(self) -> bool:
         """
