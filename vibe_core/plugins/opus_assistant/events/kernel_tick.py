@@ -2,6 +2,7 @@
 OPUS Assistant Kernel Tick - Circuit-Driven Event Handler.
 
 OPUS-029 Phase 7: True Cognitive Circuit Execution
+OPUS-030: Cognitive Awakening (Envoy Pattern)
 
 The plugin doesn't just boot and die. It stays ALIVE via EventBus.
 Now it executes REAL circuits from opus_assistant/circuits/*.yaml
@@ -9,8 +10,14 @@ Now it executes REAL circuits from opus_assistant/circuits/*.yaml
 Circuit-Driven Pattern:
 1. Plugin subscribes to EventBus events (KERNEL_TICK, GIT_COMMIT, etc.)
 2. On event, find circuits with matching trigger
-3. Execute circuits via CognitiveCircuitExecutor
+3. Execute circuits via CognitiveCircuitExecutor (via Envoy)
 4. Circuits define behavior - NOT hardcoded actions!
+
+OPUS-030: Envoy Pattern - We don't talk directly to CognitiveCircuitExecutor.
+We talk to DeterministicExecutor which handles the routing:
+- Natural language → BlueprintGenerator → Syscall detection
+- Syscall → CognitiveCircuitExecutor (agent birth, etc.)
+- Standard → Traditional playbook execution
 
 This is AUTONOMOUS COGNITION - circuits drive behavior.
 """
@@ -18,6 +25,15 @@ This is AUTONOMOUS COGNITION - circuits drive behavior.
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
+# 🧠 OPUS-030: Envoy Pattern - Cognitive Executor Bridge
+try:
+    from vibe_core.cartridges.system.envoy.deterministic_executor import DeterministicExecutor
+
+    ENVOY_AVAILABLE = True
+except ImportError:
+    ENVOY_AVAILABLE = False
+    DeterministicExecutor = None
 
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
@@ -65,10 +81,15 @@ class KernelTickHandler:
         self._circuit_breaker_threshold = 3  # Failures before disable
         self._circuit_breaker_cooldown = 300.0  # 5 min cooldown
 
+        # 🧠 OPUS-030: Envoy Pattern - Cognitive Executor
+        self._deterministic_executor: Optional[Any] = None
+        self._cognitive_ready = False
+
         # Initialize services
         self._init_context_service()
         self._init_observation_logger()
         self._init_circuits()
+        self._init_cognitive_executor()
 
     def _init_circuits(self) -> None:
         """Load circuits from opus_assistant/circuits/ directory."""
@@ -85,6 +106,108 @@ class KernelTickHandler:
                 logger.debug(f"No circuits directory at {circuits_dir}")
         except Exception as e:
             logger.debug(f"Could not load circuits: {e}")
+
+    def _init_cognitive_executor(self) -> None:
+        """
+        🧠 OPUS-030: Initialize the DeterministicExecutor (Envoy Pattern).
+
+        This is the bridge to CognitiveCircuitExecutor via the Envoy layer.
+        The Envoy handles:
+        - BlueprintGenerator (semantic compilation)
+        - Syscall detection and routing
+        - Cognitive circuit execution (agent_birth, etc.)
+        """
+        if not ENVOY_AVAILABLE:
+            logger.debug("⚠️ Envoy not available - cognitive features disabled")
+            return
+
+        try:
+            self._deterministic_executor = DeterministicExecutor()
+            logger.info("🧠 OPUS-030: DeterministicExecutor initialized (Envoy Pattern)")
+        except Exception as e:
+            logger.warning(f"Could not init cognitive executor: {e}")
+            self._deterministic_executor = None
+
+    def _ensure_cognitive_ready(self) -> bool:
+        """
+        🧠 OPUS-030: Lazy-init the cognitive executor with kernel.
+
+        Returns True if cognitive features are ready to use.
+        """
+        if self._cognitive_ready:
+            return True
+
+        if not self._deterministic_executor:
+            return False
+
+        kernel = getattr(self._plugin, "_kernel", None)
+        if not kernel:
+            return False
+
+        try:
+            # Lazy-init the circuit executor with kernel
+            if self._deterministic_executor._ensure_circuit_executor(kernel):
+                self._cognitive_ready = True
+                logger.info("🧠 OPUS-030: Cognitive executor ready (with kernel)")
+                return True
+        except Exception as e:
+            logger.debug(f"Could not init cognitive executor with kernel: {e}")
+
+        return False
+
+    async def _execute_cognitive_task(self, intent: str) -> Dict[str, Any]:
+        """
+        🧠 OPUS-030: Execute a cognitive task via the Envoy pattern.
+
+        This is for high-level cognitive operations like:
+        - "spawn a monitoring agent"
+        - "analyze this drift and suggest fixes"
+        - "auto-heal the system"
+
+        The Envoy (DeterministicExecutor) handles the routing:
+        - If it compiles to a Syscall → CognitiveCircuitExecutor
+        - If it's a standard task → Traditional playbook
+
+        Args:
+            intent: Natural language intent (e.g., "spawn a monitoring agent")
+
+        Returns:
+            Execution result dict
+        """
+        if not self._ensure_cognitive_ready():
+            return {
+                "success": False,
+                "error": "Cognitive executor not available",
+                "mode": "fallback",
+            }
+
+        try:
+            kernel = self._plugin._kernel
+
+            # Log the cognitive task
+            self._log_observation_info(f"🧠 Cognitive task: {intent[:50]}...", "cognitive")
+
+            # Execute via Envoy - it handles syscall detection and routing
+            result = self._deterministic_executor.execute(
+                playbook_id="auto_detect",
+                user_input=intent,
+                intent_vector=None,
+                kernel=kernel,
+            )
+
+            # Log result
+            status = result.get("status", "UNKNOWN")
+            mode = result.get("execution_mode", "unknown")
+            if status == "COMPLETED":
+                self._log_observation_info(f"🧠 Cognitive task completed ({mode})", "cognitive")
+            else:
+                self._log_observation_warn(f"🧠 Cognitive task failed: {status}", "cognitive")
+
+            return result
+
+        except Exception as e:
+            logger.warning(f"Cognitive task failed: {e}")
+            return {"success": False, "error": str(e)}
 
     def _get_circuits_for_trigger(self, event_type: str) -> List[Dict[str, Any]]:
         """
