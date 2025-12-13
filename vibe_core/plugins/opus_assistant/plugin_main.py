@@ -771,3 +771,23 @@ class OpusAssistantPlugin(KernelPlugin):
         if self._tick_handler:
             return self._tick_handler.get_observation_logger()
         return None
+
+    def cmd_opus_explore(self, query: str, limit: int = 10, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:explore
+
+        Token-efficient codebase exploration - better than RAG.
+        Finds relevant files using name matching, content search, and hot path analysis.
+
+        Args:
+            query: What to explore (e.g., "authentication", "kernel", "plugins")
+            limit: Max files to return
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Exploration results dict
+        """
+        from vibe_core.plugins.opus_assistant.cli.commands import explore_codebase
+
+        workspace = self._workspace or Path.cwd()
+        return explore_codebase(query, workspace, limit=limit, json_mode=json)

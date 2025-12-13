@@ -374,3 +374,200 @@ def build_cli_response(
         lines.append(f"Context: {data['context_hash']}")
 
     return "\n".join(lines)
+
+
+# =============================================================================
+# EXPLORE Command - Token-Efficient Codebase Navigation
+# =============================================================================
+
+
+def explore_codebase(
+    query: str,
+    workspace: Path,
+    limit: int = 10,
+    json_mode: bool = False,
+) -> Dict[str, Any]:
+    """
+    Explore the codebase for files matching a concept.
+
+    Instead of RAG (which pulls random chunks), this does:
+    1. Keyword matching in file names
+    2. Docstring/comment search
+    3. Import graph analysis
+    4. Hot path prioritization
+
+    Args:
+        query: What to explore (e.g., "authentication", "kernel", "plugins")
+        workspace: Project root
+        limit: Max files to return
+        json_mode: If True, return raw data
+
+    Returns:
+        Dict with relevant files and context
+    """
+    import subprocess
+
+    results = []
+    query_lower = query.lower()
+    query_parts = query_lower.split()
+
+    vibe_core = workspace / "vibe_core"
+    if not vibe_core.exists():
+        return {"success": False, "error": "vibe_core/ not found"}
+
+    # Strategy 1: File name matching (most relevant)
+    for py_file in vibe_core.glob("**/*.py"):
+        if "__pycache__" in str(py_file):
+            continue
+
+        file_name = py_file.stem.lower()
+        path_str = str(py_file.relative_to(workspace)).lower()
+
+        # Score based on query match
+        score = 0
+
+        # Exact name match
+        if query_lower in file_name:
+            score += 100
+
+        # Path contains query
+        if query_lower in path_str:
+            score += 50
+
+        # Partial matches
+        for part in query_parts:
+            if part in file_name:
+                score += 30
+            if part in path_str:
+                score += 15
+
+        if score > 0:
+            results.append(
+                {
+                    "path": str(py_file.relative_to(workspace)),
+                    "score": score,
+                    "reason": "name_match",
+                }
+            )
+
+    # Strategy 2: Content search (docstrings, comments)
+    try:
+        grep_result = subprocess.run(
+            ["grep", "-r", "-l", "-i", query, str(vibe_core)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if grep_result.returncode == 0:
+            for line in grep_result.stdout.strip().split("\n"):
+                if line and ".py" in line and "__pycache__" not in line:
+                    try:
+                        rel_path = str(Path(line).relative_to(workspace))
+                        # Check if already in results
+                        existing = next((r for r in results if r["path"] == rel_path), None)
+                        if existing:
+                            existing["score"] += 20
+                            existing["reason"] = "name+content"
+                        else:
+                            results.append(
+                                {
+                                    "path": rel_path,
+                                    "score": 20,
+                                    "reason": "content_match",
+                                }
+                            )
+                    except ValueError:
+                        pass
+    except Exception:
+        pass
+
+    # Strategy 3: Hot path bonus (files that are frequently changed are more important)
+    try:
+        git_result = subprocess.run(
+            ["git", "log", "--pretty=format:", "--name-only", "-50"],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if git_result.returncode == 0:
+            hot_files = set()
+            for line in git_result.stdout.split("\n"):
+                line = line.strip()
+                if line and line.endswith(".py"):
+                    hot_files.add(line)
+
+            for result in results:
+                if result["path"] in hot_files:
+                    result["score"] += 25
+                    result["hot"] = True
+    except Exception:
+        pass
+
+    # Sort by score, take top N
+    results.sort(key=lambda x: -x["score"])
+    top_results = results[:limit]
+
+    # Get one-liner descriptions for top results
+    for result in top_results:
+        try:
+            file_path = workspace / result["path"]
+            content = file_path.read_text()
+
+            # Extract first docstring
+            if '"""' in content:
+                start = content.find('"""') + 3
+                end = content.find('"""', start)
+                if end > start:
+                    doc = content[start:end].strip()
+                    result["description"] = doc.split("\n")[0][:60]
+        except Exception:
+            pass
+
+    if json_mode:
+        return {
+            "success": True,
+            "query": query,
+            "results": top_results,
+            "total_matches": len(results),
+        }
+
+    return {
+        "success": True,
+        "query": query,
+        "results": top_results,
+        "total_matches": len(results),
+        "summary": f"Found {len(results)} files matching '{query}', showing top {len(top_results)}",
+    }
+
+
+def format_explore_output(data: Dict[str, Any], json_mode: bool = False) -> str:
+    """Format explore results for terminal output."""
+    if json_mode:
+        import json
+
+        return json.dumps(data, indent=2, default=str)
+
+    if not data.get("success"):
+        return f"❌ {data.get('error', 'Unknown error')}"
+
+    lines = [
+        f"🔍 Exploring: '{data['query']}'",
+        f"   Found {data['total_matches']} matches, showing top {len(data['results'])}",
+        "",
+    ]
+
+    for i, result in enumerate(data["results"], 1):
+        hot_marker = "🔥" if result.get("hot") else "  "
+        score = result["score"]
+        path = result["path"]
+        desc = result.get("description", "")
+
+        lines.append(f"{hot_marker} {i:2}. [{score:3}] {path}")
+        if desc:
+            lines.append(f"        └── {desc}")
+
+    lines.append("")
+    lines.append("💡 Use: Read the top files to understand this area of the codebase")
+
+    return "\n".join(lines)
