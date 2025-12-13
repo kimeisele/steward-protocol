@@ -16,10 +16,23 @@ This orchestrator now follows the Sarga (cosmic creation) sequence:
 
 The system creates itself from nothing. Sound becomes form.
 
+OPUS-031 Layer 4: BootMode Support
+----------------------------------
+Supports different boot modes for different execution contexts:
+- FULL: Complete boot with all components (default)
+- HEADLESS: Lightweight boot for autonomous execution (< 5 seconds)
+- MINIMAL: Bare kernel for testing
+
 USAGE:
     from vibe_core.boot_orchestrator import BootOrchestrator
+    from vibe_core.boot_mode import BootMode
 
+    # Full boot (default)
     orchestrator = BootOrchestrator()
+    kernel = orchestrator.boot()
+
+    # Headless boot (fast, for autonomous circuits)
+    orchestrator = BootOrchestrator(boot_mode=BootMode.HEADLESS)
     kernel = orchestrator.boot()
 
     # THE OPERATOR LOOP - This is where intelligence flows
@@ -32,6 +45,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
+from vibe_core.boot_mode import BootMode
 from vibe_core.config import CityConfig
 from vibe_core.kernel_impl import RealVibeKernel
 from vibe_core.operator_adapter import (
@@ -58,6 +72,8 @@ class BootOrchestrator:
     Unified boot orchestration for Agent City OS.
 
     Ensures consistent agent discovery and registration across all entry points.
+
+    OPUS-031 Layer 4: Supports BootMode for different execution contexts.
     """
 
     def __init__(
@@ -65,6 +81,7 @@ class BootOrchestrator:
         ledger_path: Optional[str] = None,
         project_root: Optional[Path] = None,
         config: Optional[CityConfig] = None,
+        boot_mode: BootMode = BootMode.FULL,
     ):
         """
         Initialize the boot orchestrator.
@@ -73,7 +90,11 @@ class BootOrchestrator:
             ledger_path: Path to SQLite ledger (default: from PhoenixConfig)
             project_root: Project root directory (default: auto-detected)
             config: CityConfig instance (REQUIRED: Phoenix Config for agents)
+            boot_mode: BootMode.FULL (default), HEADLESS, or MINIMAL
         """
+        # OPUS-031 Layer 4: Store boot mode for phase handlers
+        self.boot_mode = boot_mode
+
         # OPUS-025: Resolve ledger_path from config if not provided
         if ledger_path is None:
             try:
@@ -190,6 +211,7 @@ class BootOrchestrator:
         logger.info("      → Boot command received")
         logger.info(f"      → Project root: {self.project_root}")
         logger.info(f"      → Ledger path: {self.ledger_path}")
+        logger.info(f"      → Boot mode: {self.boot_mode.value.upper()}")
         return True
 
     def _phase_akasha(self) -> bool:
@@ -243,13 +265,18 @@ class BootOrchestrator:
     def _phase_jala(self) -> bool:
         """JALA: Water - Data streams flow (Knowledge Graph, discovery)."""
         try:
-            # Load Knowledge Graph
+            # Load Knowledge Graph (always needed for context)
             from vibe_core.knowledge.graph import get_knowledge_graph
 
             graph = get_knowledge_graph()
             logger.info(
                 f"      → Knowledge loaded: {len(graph.nodes)} nodes, {sum(len(e) for e in graph.edges.values())} edges"
             )
+
+            # OPUS-031 Layer 4: Skip agent discovery in headless mode
+            if self.boot_mode.should_skip_agents():
+                logger.info("      → Agent discovery SKIPPED (headless mode)")
+                return True
 
             # Register Discoverer (Genesis Agent) - LAZY IMPORT for Runtime Separation
             try:
@@ -285,17 +312,23 @@ class BootOrchestrator:
         try:
             # Boot the kernel (finalizes manifests, ledger, scheduler)
             # NOTE: kernel.boot() calls _pulse() which writes vibe_snapshot.json
-            self.kernel.boot()
+            # OPUS-031 Layer 4: Pass boot_mode to control gateway startup
+            self.kernel.boot(boot_mode=self.boot_mode)
             logger.info("      → Kernel booted, ledger active")
 
-            # Initialize Daily Ritual (The Heartbeat / Time Dimension)
-            from vibe_core.steward.daily_ritual import DailyRitual
+            # OPUS-031 Layer 4: Skip Daily Ritual in headless mode
+            if not self.boot_mode.should_skip_daily_ritual():
+                # Initialize Daily Ritual (The Heartbeat / Time Dimension)
+                from vibe_core.steward.daily_ritual import DailyRitual
 
-            self.kernel.daily_ritual = DailyRitual(self.kernel)
-            logger.info("      → Daily Ritual attached (time dimension active)")
+                self.kernel.daily_ritual = DailyRitual(self.kernel)
+                logger.info("      → Daily Ritual attached (time dimension active)")
+            else:
+                logger.info("      → Daily Ritual SKIPPED (headless mode)")
 
             # Initialize Conveyor Belt (BootSequence) for prompt generation
             # This connects kernel state → ContextLoader → PromptComposer
+            # Note: Even in headless, we need basic context loading
             self.boot_sequence = BootSequence(self.project_root)
             logger.info("      → Conveyor Belt initialized (prompt generation ready)")
 
