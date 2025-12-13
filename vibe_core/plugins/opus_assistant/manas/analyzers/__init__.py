@@ -18,5 +18,6 @@ The 50%/51% distinction:
 
 from .base import AnalyzerConfig, BaseAnalyzer
 from .contract_analyzer import ContractAnalyzer
+from .semantic_analyzer import SemanticAnalyzer
 
-__all__ = ["BaseAnalyzer", "AnalyzerConfig", "ContractAnalyzer"]
+__all__ = ["BaseAnalyzer", "AnalyzerConfig", "ContractAnalyzer", "SemanticAnalyzer"]
