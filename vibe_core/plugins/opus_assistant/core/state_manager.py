@@ -30,6 +30,8 @@ This is a HOLON - self-contained, self-similar, composable.
 
 import json
 import logging
+import os
+import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -339,11 +341,15 @@ class OpusStateManager:
     # =========================================================================
 
     def save_session(self, session: SessionState) -> bool:
-        """Save current session state."""
+        """
+        Save current session state.
+
+        ⚡ VAJRA: Uses atomic write to prevent corruption on crash.
+        """
         try:
             session_file = self._state_dir / self.SESSION_FILE
-            with open(session_file, "w") as f:
-                json.dump(session.to_dict(), f, indent=2)
+            content = json.dumps(session.to_dict(), indent=2)
+            self._atomic_write(session_file, content)
 
             logger.debug(f"💾 Session state saved: {session.session_id}")
             return True
@@ -369,8 +375,40 @@ class OpusStateManager:
     # Utility Methods
     # =========================================================================
 
+    def _atomic_write(self, file_path: Path, content: str) -> None:
+        """
+        ⚡ VAJRA: Atomic write to prevent corruption on crash.
+
+        Uses temp file + fsync + atomic rename pattern.
+        If kernel is kill -9'd during write, file stays intact.
+        """
+        # Write to temp file in same directory (for same-filesystem rename)
+        fd, tmp_path = tempfile.mkstemp(
+            dir=file_path.parent,
+            prefix=f".{file_path.name}.",
+            suffix=".tmp",
+        )
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.write(content)
+                f.flush()
+                os.fsync(f.fileno())  # Force write to disk
+
+            # Atomic rename (POSIX guarantees atomicity)
+            os.rename(tmp_path, file_path)
+            logger.debug(f"⚡ Atomic write: {file_path.name}")
+        except Exception:
+            # Clean up temp file on failure
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            raise
+
     def _trim_jsonl_file(self, file_path: Path, max_entries: int) -> None:
-        """Trim a JSONL file to max entries (keep newest)."""
+        """
+        Trim a JSONL file to max entries (keep newest).
+
+        ⚡ VAJRA: Uses atomic write for crash safety.
+        """
         if not file_path.exists():
             return
 
@@ -381,8 +419,8 @@ class OpusStateManager:
             if len(lines) > max_entries:
                 # Keep only the newest entries
                 lines = lines[-max_entries:]
-                with open(file_path, "w") as f:
-                    f.writelines(lines)
+                content = "".join(lines)
+                self._atomic_write(file_path, content)
                 logger.debug(f"Trimmed {file_path.name} to {max_entries} entries")
         except Exception as e:
             logger.warning(f"Failed to trim {file_path.name}: {e}")
