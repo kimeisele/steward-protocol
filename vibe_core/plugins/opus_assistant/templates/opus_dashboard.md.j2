@@ -264,6 +264,50 @@ Circuits enable autonomous agent behavior:
 <!-- /@LIVE -->
 
 {# ============================================================================
+   MODULE INDEX - Codebase Navigation
+   ============================================================================ #}
+
+<!-- @LIVE:module_index -->
+## 📦 Module Index
+
+*Quick navigation to understand the codebase structure*
+
+{% if module_index %}
+| Module | Description | Files | Tests | Path |
+|--------|-------------|-------|-------|------|
+{% for m in module_index %}
+| **{{ m.name }}** | {{ m.description }} | {{ m.files }} | {{ '✅' if m.has_tests else '❌' }} | `{{ m.path }}` |
+{% endfor %}
+
+**{{ module_index|length }} modules** in `vibe_core/`
+{% else %}
+_No modules found in vibe_core/_
+{% endif %}
+
+<!-- /@LIVE -->
+
+{# ============================================================================
+   HOT PATHS - Most Changed Files
+   ============================================================================ #}
+
+<!-- @LIVE:hot_paths -->
+## 🔥 Hot Paths
+
+*Most frequently changed files (last 100 commits) - start here to understand the project*
+
+{% if hot_paths %}
+| File | Commits | Last Change |
+|------|---------|-------------|
+{% for h in hot_paths %}
+| `{{ h.path }}` | {{ h.commits }} | {{ h.last_change }} |
+{% endfor %}
+{% else %}
+_No git history available_
+{% endif %}
+
+<!-- /@LIVE -->
+
+{# ============================================================================
    PRAKRITI STATE
    ============================================================================ #}
 

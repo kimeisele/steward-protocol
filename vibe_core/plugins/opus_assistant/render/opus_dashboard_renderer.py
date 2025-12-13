@@ -168,6 +168,8 @@ class OpusDashboardRenderer:
             "zipper": self._gather_zipper(),
             "code_health": self._gather_code_health(),
             "test_health": self._gather_test_health(),
+            "module_index": self._gather_module_index(),  # NEW: Codebase navigation
+            "hot_paths": self._gather_hot_paths(),  # NEW: Most changed files
             "preserved": {},  # Will be injected separately
         }
 
@@ -520,6 +522,122 @@ class OpusDashboardRenderer:
             }
         except Exception:
             return {"active": 0, "archived": 0, "organized": 0, "unit": 0, "integration": 0, "hardening": 0}
+
+    def _gather_module_index(self) -> List[Dict[str, Any]]:
+        """
+        Gather module index for codebase navigation.
+
+        Scans vibe_core/ for top-level modules and extracts:
+        - Module name
+        - One-line description (from docstring)
+        - File count
+        - Has tests?
+
+        This is the "what's in this codebase?" answer.
+        """
+        modules = []
+        vibe_core = self._root / "vibe_core"
+
+        if not vibe_core.exists():
+            return modules
+
+        # Scan top-level directories
+        for item in sorted(vibe_core.iterdir()):
+            if item.name.startswith(("_", ".")):
+                continue
+
+            if item.is_dir():
+                # Get description from __init__.py docstring
+                init_file = item / "__init__.py"
+                description = ""
+                if init_file.exists():
+                    try:
+                        content = init_file.read_text()
+                        # Extract first docstring
+                        if '"""' in content:
+                            start = content.find('"""') + 3
+                            end = content.find('"""', start)
+                            if end > start:
+                                doc = content[start:end].strip()
+                                # First line only
+                                description = doc.split("\n")[0][:60]
+                    except Exception:
+                        pass
+
+                # Count Python files
+                py_files = list(item.glob("**/*.py"))
+                file_count = len([f for f in py_files if "__pycache__" not in str(f)])
+
+                # Has tests?
+                has_tests = (item / "tests").exists() or any("test_" in f.name for f in py_files)
+
+                modules.append(
+                    {
+                        "name": item.name,
+                        "description": description or f"({file_count} files)",
+                        "files": file_count,
+                        "has_tests": has_tests,
+                        "path": f"vibe_core/{item.name}/",
+                    }
+                )
+
+        return modules[:20]  # Limit to top 20 modules
+
+    def _gather_hot_paths(self) -> List[Dict[str, Any]]:
+        """
+        Gather hot paths - most frequently changed files.
+
+        Uses git log to find files with most commits.
+        These are the entry points for understanding the codebase.
+        """
+        hot_paths = []
+
+        try:
+            import subprocess
+
+            # Get files with most commits (last 100 commits)
+            result = subprocess.run(
+                ["git", "log", "--pretty=format:", "--name-only", "-100"],
+                cwd=self._root,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+
+            if result.returncode == 0:
+                # Count file occurrences
+                file_counts: Dict[str, int] = {}
+                for line in result.stdout.split("\n"):
+                    line = line.strip()
+                    if line and line.endswith(".py") and "vibe_core" in line:
+                        file_counts[line] = file_counts.get(line, 0) + 1
+
+                # Sort by count, get top 10
+                sorted_files = sorted(file_counts.items(), key=lambda x: -x[1])[:10]
+
+                for file_path, count in sorted_files:
+                    # Get last commit message for this file
+                    msg_result = subprocess.run(
+                        ["git", "log", "-1", "--pretty=format:%s", "--", file_path],
+                        cwd=self._root,
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    last_msg = msg_result.stdout.strip()[:40] if msg_result.returncode == 0 else ""
+
+                    hot_paths.append(
+                        {
+                            "path": file_path,
+                            "commits": count,
+                            "last_change": last_msg,
+                        }
+                    )
+
+        except Exception:
+            pass
+
+        return hot_paths
 
     def _extract_preserved_sections(self) -> Dict[str, str]:
         """Extract @AI and @HUMAN sections from existing OPUS.md."""
