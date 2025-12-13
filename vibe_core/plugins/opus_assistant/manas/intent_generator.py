@@ -143,11 +143,11 @@ class IntentGenerator:
         These are the new-style analyzers that inherit from BaseAnalyzer.
         They provide better separation of concerns and are easier to test.
         """
-        from .analyzers import ContractAnalyzer
+        from .analyzers import ContractAnalyzer, SemanticAnalyzer
 
         return [
             ContractAnalyzer(workspace=self._workspace),
-            # TODO: Add SemanticAnalyzer for 51% (genesis impulse)
+            SemanticAnalyzer(workspace=self._workspace),  # 51% - The Genesis Impulse
         ]
 
     def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:

@@ -1726,6 +1726,9 @@ class KernelTickHandler:
         """
         🧠 MANAS: Generate intents from system state.
 
+        OPUS-032 Phase 3: THE PULSE - Live verification injection.
+        We don't read cached results. We FEEL the pain in real-time.
+
         This is THE THINKING - the core of proactive cognition.
         """
         if not self._manas_ready or not self._manas:
@@ -1734,7 +1737,16 @@ class KernelTickHandler:
         try:
             context = params.get("context", {})
 
-            # Execute thought cycle
+            # OPUS-032 Phase 3: Inject FRESH verification results
+            # This is "live pain" - not cached results
+            verification_results = self._run_live_verification()
+            if verification_results:
+                context["verification_results"] = verification_results
+                failure_count = len(verification_results.get("failures", []))
+                if failure_count > 0:
+                    logger.info(f"⚡ MANAS: Injected {failure_count} live failures into context")
+
+            # Execute thought cycle with enriched context
             intents = self._manas.think(context=context, force=False)
 
             # Convert to serializable format
@@ -1751,15 +1763,90 @@ class KernelTickHandler:
                 for i in intents
             ]
 
-            self._log_observation_info(
-                f"🧠 MANAS generated {len(intents)} intent(s): {[i.title for i in intents]}", "manas"
-            )
+            if intents:
+                self._log_observation_info(
+                    f"🧠 MANAS generated {len(intents)} intent(s): {[i.title for i in intents]}", "manas"
+                )
 
             return {"success": True, "intents": intent_data, "count": len(intents)}
 
         except Exception as e:
             logger.warning(f"MANAS intent generation failed: {e}")
             return {"success": False, "error": str(e), "intents": []}
+
+    def _run_live_verification(self) -> Dict[str, Any]:
+        """
+        OPUS-032 Phase 3: Run LIVE verification (not cached).
+
+        This is the PULSE - the system actively checks its health.
+        Returns failures in ContractFailure-compatible format.
+        """
+        try:
+            from vibe_core.governance import ContractFailureType
+            from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
+
+            workspace = self._plugin._workspace or Path.cwd()
+            engine = VerificationEngine(workspace_root=workspace)
+
+            # Run quick verification (fast, no semantic checks)
+            result = engine.run_verification(quick=True)
+
+            # Transform to ContractFailure format for MANAS analyzers
+            failures = []
+
+            for doc_result in result.get("docs", []):
+                if not doc_result.get("has_harness"):
+                    continue
+
+                checks = doc_result.get("checks", {})
+                doc_name = doc_result.get("name", "unknown")
+
+                # Check files
+                files_check = checks.get("files", {})
+                for missing_file in files_check.get("missing", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.FILE_MISSING.name,
+                            "path": missing_file,
+                            "message": f"Required by @HARNESS in {doc_name}",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+                # Check wiring
+                wiring_check = checks.get("wiring", {})
+                for missing_wire in wiring_check.get("missing", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.PATTERN_MISSING.name,
+                            "path": missing_wire,
+                            "message": "Wiring pattern not found",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+                # Check absent patterns (should NOT exist)
+                absent_check = checks.get("absent", {})
+                for violation in absent_check.get("violations", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.FILE_EXTRA.name,
+                            "path": violation,
+                            "message": "Forbidden pattern found",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+            return {
+                "failures": failures,
+                "score": result.get("total_score", 100),
+                "docs_checked": result.get("docs_with_harness", 0),
+                "source": "live_verification",
+            }
+
+        except Exception as e:
+            logger.debug(f"Live verification failed: {e}")
+            return {"failures": [], "score": 100, "source": "error"}
 
     async def _manas_auto_execute_safe(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
