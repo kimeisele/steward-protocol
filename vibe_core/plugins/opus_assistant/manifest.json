@@ -31,7 +31,8 @@
     "circuits/auto_verify.yaml",
     "circuits/auto_heal.yaml",
     "circuits/auto_refresh.yaml",
-    "circuits/karma_consequence.yaml"
+    "circuits/karma_consequence.yaml",
+    "circuits/genesis_check.yaml"
   ],
 
   "cli": {
