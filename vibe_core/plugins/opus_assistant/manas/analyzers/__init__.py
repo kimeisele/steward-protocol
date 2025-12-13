@@ -16,6 +16,7 @@ The 50%/51% distinction:
 - 51% analyzers create what's MISSING (genesis impulse)
 """
 
-from .base import BaseAnalyzer
+from .base import AnalyzerConfig, BaseAnalyzer
+from .contract_analyzer import ContractAnalyzer
 
-__all__ = ["BaseAnalyzer"]
+__all__ = ["BaseAnalyzer", "AnalyzerConfig", "ContractAnalyzer"]

@@ -112,6 +112,9 @@ class OpusContext:
     focus_areas: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
+    # OPUS-032: Verification results for MANAS analyzers
+    verification_results: Dict[str, Any] = field(default_factory=dict)
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dict for serialization."""
         return {
@@ -147,6 +150,8 @@ class OpusContext:
             },
             "focus_areas": self.focus_areas,
             "warnings": self.warnings,
+            # OPUS-032: Verification results for MANAS
+            "verification_results": self.verification_results,
         }
 
     def to_system_prompt_fragment(self) -> str:
@@ -263,6 +268,9 @@ class OpusContextService:
         # Focus areas (what needs attention)
         focus_areas, warnings = self._determine_focus(git_status, kernel_status, health)
 
+        # OPUS-032: Load verification results for MANAS analyzers
+        verification_results = self._get_verification_results()
+
         # Generate context hash
         context_data = f"{timestamp}:{git_status.get('sha', '')}:{ledger_status.get('head', '')}"
         context_hash = hashlib.sha256(context_data.encode()).hexdigest()
@@ -290,6 +298,8 @@ class OpusContextService:
             health=health,
             focus_areas=focus_areas,
             warnings=warnings,
+            # OPUS-032: Verification results
+            verification_results=verification_results,
         )
 
         self._last_context = context
@@ -469,6 +479,51 @@ class OpusContextService:
         except Exception as e:
             logger.debug(f"Personas unavailable: {e}")
             return []
+
+    def _get_verification_results(self) -> Dict[str, Any]:
+        """
+        OPUS-032: Get verification results for MANAS analyzers.
+
+        Loads from cached watchman_report.json or .opus_state/verification.json.
+        Full verification is expensive, so we prefer cached results.
+
+        Returns:
+            Dict with 'failures' list and 'score' if available
+        """
+        import json
+
+        # Try multiple possible sources for verification results
+        possible_paths = [
+            self._workspace / "watchman_report.json",
+            self._workspace / ".opus_state" / "verification.json",
+            self._workspace / ".opus_state" / "harness_results.json",
+        ]
+
+        for report_path in possible_paths:
+            try:
+                if report_path.exists():
+                    with open(report_path) as f:
+                        report = json.load(f)
+
+                    # Transform to expected format if needed
+                    result = {
+                        "failures": report.get("failures", []),
+                        "score": report.get("score", report.get("trust_score", 100)),
+                        "checks": report.get("checks", {}),
+                        "source": str(report_path.name),
+                    }
+
+                    logger.debug(f"Loaded verification from {report_path.name}: {len(result['failures'])} failures")
+                    return result
+
+            except json.JSONDecodeError as e:
+                logger.warning(f"Invalid JSON in {report_path}: {e}")
+            except Exception as e:
+                logger.debug(f"Could not load {report_path}: {e}")
+
+        # No cached results available
+        logger.debug("No verification results available (no cached report found)")
+        return {"failures": [], "score": 100, "checks": {}, "source": None}
 
     def _assess_health(
         self,
