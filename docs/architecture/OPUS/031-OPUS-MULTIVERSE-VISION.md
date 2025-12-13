@@ -151,6 +151,9 @@ StateManager → render() → OPUS.md ←→ Human edits → Parser → StateMan
 | Control Cables Parser | ✅ DONE | `core/control_cables.py` |
 | Treasury | ✅ DONE | `core/treasury.py` |
 | set_preference() | ✅ DONE | `core/state_manager.py` |
+| **Bidirectional Integration** | ✅ DONE | `render/opus_dashboard_renderer.py` |
+| Control Plane Template | ✅ DONE | `templates/panels/control_plane.md.j2` |
+| Treasury Context | ✅ DONE | `_gather_treasury()` in renderer |
 | Intent Buffer | ❌ NOT EXISTS | `templates/panels/intent_buffer.md.j2` |
 | Heartbeat Counter | ❌ NOT EXISTS | Needs integration into render cycle |
 | Schema Validation | ✅ DONE | Built into `ControlCablesParser.SCHEMA` |
@@ -740,7 +743,7 @@ OPUS PRIME (main)
 | Layer | Priority | Effort | Impact | Status |
 |-------|----------|--------|--------|--------|
 | 1. Living Dashboard | - | - | - | ✅ DONE |
-| **1.5. Interactive Dashboard** | **P0** | **Medium** | **Critical** | **🟡 IN PROGRESS (3/5 components)** |
+| **1.5. Interactive Dashboard** | **P0** | **Medium** | **Critical** | **🟡 IN PROGRESS (5/8 tasks)** |
 | 2. Syscall Console | P1 | Medium | High | 📋 READY (spec complete) |
 | 3. 4D Hypercube | P2 | Medium | Medium | 📋 PLANNED |
 | 4. Autonomous Conductor | P3 | Medium | High | 📋 READY (spec complete) |
@@ -750,6 +753,9 @@ OPUS PRIME (main)
 - ✅ `control_cables.py` - Parse OPUS.md Control Plane back to state
 - ✅ `treasury.py` - Track API costs with kill-switch
 - ✅ `set_preference()` - Added to StateManager
+- ✅ `_apply_control_cables()` - Bidirectional integration in render cycle
+- ✅ `_gather_treasury()` - Treasury context in renderer
+- ✅ `control_plane.md.j2` - Updated template with Layer 1.5 settings
 - ❌ `intent_buffer.md.j2` - Still needed
 - ❌ Heartbeat counter - Still needed
 
@@ -770,14 +776,15 @@ OPUS PRIME (main)
 
 ## Next Actions
 
-### Layer 1.5: Interactive Dashboard (P0 - IN PROGRESS)
+### Layer 1.5: Interactive Dashboard (P0 - 🟡 5/7 COMPLETE)
 1. [x] Create `control_cables.py` with `ControlCablesParser`
 2. [x] Add `parse_control_plane()` method
-3. [ ] Integrate parser into render cycle (read before write)
+3. [x] Integrate parser into render cycle (read before write) ← `_apply_control_cables()`
 4. [x] Create `treasury.py` with `Treasury` class
-5. [ ] Add `intent_buffer.md.j2` panel template
-6. [ ] Add heartbeat counter to session state
-7. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
+5. [x] Add treasury to render context (`_gather_treasury()`)
+6. [ ] Add `intent_buffer.md.j2` panel template
+7. [ ] Add heartbeat counter to session state
+8. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
 
 ### Layer 2: Syscall Console
 1. [ ] Add `SyscallEntry` dataclass to `state_manager.py`

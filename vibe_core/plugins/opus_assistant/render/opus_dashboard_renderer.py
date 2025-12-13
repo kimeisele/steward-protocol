@@ -2,6 +2,7 @@
 OPUS Dashboard Renderer - Template-Based UI Generation.
 
 OPUS-029 Phase 10: From String Spaghetti to Clean Templates
+OPUS-031 Layer 1.5: Bidirectional Control Surface
 
 This replaces 400+ lines of f-string concatenation with a single
 Jinja2 template that:
@@ -10,7 +11,27 @@ Jinja2 template that:
 3. Supports emotional UI (header changes based on trust)
 4. Has CLI action links for circuits
 
-Architecture:
+LAYER 1.5 BIDIRECTIONAL LOOP (OPUS-031):
+    ┌─────────────────────────────────────────┐
+    │         1. READ EXISTING OPUS.md        │
+    │         (Before rendering!)             │
+    └──────────────────┬──────────────────────┘
+                       │
+                       ▼
+    ┌─────────────────────────────────────────┐
+    │      2. PARSE CONTROL PLANE             │
+    │      ControlCablesParser extracts       │
+    │      human edits from checkboxes        │
+    └──────────────────┬──────────────────────┘
+                       │
+                       ▼
+    ┌─────────────────────────────────────────┐
+    │      3. APPLY TO STATE                  │
+    │      StateManager.set_preference()      │
+    │      persists to .opus_state/           │
+    └──────────────────┬──────────────────────┘
+                       │
+                       ▼
     ┌─────────────────────────────────────────┐
     │        OpusDashboardRenderer            │
     │        (Data Aggregator)                │
@@ -34,6 +55,7 @@ Architecture:
                        ▼
     ┌─────────────────────────────────────────┐
     │             OPUS.md                     │
+    │    (With human edits reflected)         │
     └─────────────────────────────────────────┘
 """
 
@@ -84,12 +106,25 @@ class OpusDashboardRenderer:
         """
         Render OPUS.md using template.
 
+        LAYER 1.5 BIDIRECTIONAL LOOP (OPUS-031):
+        1. Read existing OPUS.md (if exists)
+        2. Parse Control Plane for human edits
+        3. Apply to StateManager (persists changes)
+        4. Gather context (now reflects human edits)
+        5. Render template
+
         Args:
             quick: Skip expensive operations
 
         Returns:
             Rendered markdown content
         """
+        # ========================================
+        # LAYER 1.5: BIDIRECTIONAL CONTROL CABLES
+        # Read BEFORE Write - Extract human edits
+        # ========================================
+        self._apply_control_cables()
+
         try:
             from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -104,7 +139,7 @@ class OpusDashboardRenderer:
 
             template = env.get_template("opus_dashboard.md.j2")
 
-            # Gather all data
+            # Gather all data (now includes human edits from step 1)
             context = self._gather_context(quick=quick)
 
             # Render template
@@ -116,6 +151,56 @@ class OpusDashboardRenderer:
         except Exception as e:
             logger.error(f"Template render failed: {e}")
             return self._fallback_render(quick=quick)
+
+    def _apply_control_cables(self) -> None:
+        """
+        LAYER 1.5: Parse existing OPUS.md and apply human edits to state.
+
+        This is the "read before write" step that makes OPUS.md bidirectional.
+        Human edits to checkboxes in the Control Plane section are persisted
+        to StateManager before the next render cycle.
+
+        Design Decisions (OPUS-031):
+        - DD4: Bidirectional Control Surface - OPUS.md is INPUT, not just OUTPUT
+        - DD5: Configuration, Not Commands - Settings persist until changed
+        """
+        if not self._opus_path.exists():
+            logger.debug("No existing OPUS.md - skipping control cables")
+            return
+
+        try:
+            from vibe_core.plugins.opus_assistant.core.control_cables import (
+                ControlCablesParser,
+            )
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                get_state_manager,
+            )
+
+            # Read existing OPUS.md
+            opus_content = self._opus_path.read_text()
+
+            # Parse Control Plane section
+            parser = ControlCablesParser()
+            settings = parser.parse_control_plane(opus_content)
+
+            # Get state manager
+            state_manager = get_state_manager()
+
+            # Check what changed
+            changes = parser.get_changed_settings(state_manager, settings)
+
+            if changes:
+                logger.info(
+                    f"🔌 Control Cables: Detected {len(changes)} human edits: {', '.join(c['key'] for c in changes)}"
+                )
+
+            # Apply to state (persists to .opus_state/session.json)
+            parser.apply_to_state(state_manager, settings)
+
+        except ImportError as e:
+            logger.debug(f"Control cables not available: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to apply control cables: {e}")
 
     # NOTE: write() method REMOVED - opus_assistant is BACKEND only
     # All file writes go through InterfacePlugin -> kernel.io
@@ -135,6 +220,9 @@ class OpusDashboardRenderer:
         # 🔌 WIRING: Gather karma from OPUS StateManager
         karma = self._gather_karma()
 
+        # 💰 LAYER 1.5: Gather treasury for budget display
+        treasury = self._gather_treasury()
+
         return {
             "timestamp": timestamp,
             "trust_score": trust_score,
@@ -143,6 +231,7 @@ class OpusDashboardRenderer:
             "git": self._gather_git_state(),
             "session": self._gather_session(),
             "karma": karma,  # 🔌 WIRING: Karma score, history, trend
+            "treasury": treasury,  # 💰 LAYER 1.5: Budget tracking
             "layers": self._gather_prakriti_layers(),
             "focus_areas": self._gather_focus_areas(),
             "journal": self._gather_journal(),
@@ -411,6 +500,35 @@ class OpusDashboardRenderer:
             logger.debug(f"Failed to gather karma from StateManager: {e}")
 
         return karma_data
+
+    def _gather_treasury(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather treasury data for budget display.
+
+        💰 LAYER 1.5: Reads from .opus_state/treasury.json
+        Returns daily spend data for the Control Plane panel.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.treasury import get_treasury
+
+            treasury = get_treasury()
+            daily = treasury.get_daily_spend()
+
+            return {
+                "date": daily.date,
+                "tokens_input": daily.tokens_input,
+                "tokens_output": daily.tokens_output,
+                "estimated_cost": daily.estimated_cost,
+                "api_calls": daily.api_calls,
+                "budget_warnings": daily.budget_warnings,
+            }
+
+        except ImportError:
+            logger.debug("Treasury not available (not yet implemented)")
+            return None
+        except Exception as e:
+            logger.debug(f"Failed to gather treasury: {e}")
+            return None
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:
         """Gather circuit definitions."""
