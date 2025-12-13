@@ -470,19 +470,39 @@ flowchart LR
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12 12:15 UTC)**
-- ✅ Eliminated all `"/tmp/vibe_os"` string literals in vibe_core/
-- ✅ `kernel_impl.py` - Path() construction pattern
-- ✅ `lineage.py` - Path() construction for bootstrap fallback
-- ✅ `section_main.py` - `_DEFAULT_RUNTIME_ROOT` constant
-- ✅ `vfs.py` - already compliant (Path() construction)
-- ✅ Created `tests/unit/test_config_paths.py` (16 tests, all passing)
-- ✅ Fixed E741 ruff errors in docs/architecture/scripts/
-- ✅ Fixed ruff format (blank line after import)
-- 🎯 **@HARNESS: 100%** | **VISNU: Verified** | **Kernel Boot: Passed**
+**OPUS-030 ARCHITECTURE CLEAN SEPARATION (2025-12-13 09:30 UTC)**
 
-**PREVIOUS (2025-12-11 17:45 UTC)**
-- PANOPTICON+ Migration Complete
+### ✅ Completed: Frontend/Backend Separation
+- ✅ Interface Plugin's OpusRenderer now delegates to opus_assistant for content
+- ✅ opus_assistant.write() deprecated with warnings
+- ✅ All OPUS.md writes now go through kernel.io (single writer principle)
+- ✅ Senior AI Cockpit: Dependency Graph feature added
+
+### 🏗️ Architecture Pattern (CLEAN)
+```
+┌──────────────────────────────────────────────────────────┐
+│                    InterfacePlugin                       │
+│                    (FRONTEND)                            │
+│                                                          │
+│  OpusRenderer.generate_content()                         │
+│       │                                                  │
+│       ▼                                                  │
+│  opus_assistant.OpusDashboardRenderer.render()           │
+│       │                                                  │
+│       ▼                                                  │
+│  kernel.io.write_document() ← SINGLE WRITER              │
+└──────────────────────────────────────────────────────────┘
+```
+
+### 📋 Architecture Roadmap
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1. Delegation | ✅ | OpusRenderer delegates to opus_assistant |
+| 2. Deprecation | ✅ | opus_assistant.write() deprecated |
+| 3. Event-Driven | ⏳ | opus_assistant emits events, InterfacePlugin listens |
+| 4. System Component | 📋 | Move InterfacePlugin to vibe_core/ui/ (not plugins/) |
+
+**PREVIOUS: OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12)**
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
