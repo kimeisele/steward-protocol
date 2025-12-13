@@ -300,30 +300,41 @@ class KernelTickHandler:
         """
         Execute a script action by mapping to plugin methods.
 
-        Target format: "opus.method_name" → self._plugin.method_name()
+        Target formats:
+        - "opus.method_name" → OPUS plugin methods
+        - "vedic.method_name" → Vedic Governance plugin methods (cross-plugin call)
         """
-        if not target.startswith("opus."):
-            return {"success": False, "error": f"Invalid target: {target}"}
+        # OPUS plugin methods
+        if target.startswith("opus."):
+            method_name = target.replace("opus.", "")
+            method_map = {
+                "check_opus_freshness": self._check_opus_freshness,
+                "write_opus_md": self._write_opus_md,
+                "log_observation": self._log_observation_from_circuit,
+                "quick_drift_check": self._quick_drift_check,
+                "detect_drift": self._detect_drift,
+                "verify": self._verify,
+                "synthesize_context": self._synthesize_context,
+                # Karma Circuit handlers
+                "get_trust_score": self._get_trust_score,
+                "get_last_actor": self._get_last_actor,
+                # Genesis Circuit handlers
+                "check_session_karma": self._check_session_karma,
+                "trigger_auto_heal": self._trigger_auto_heal,
+            }
+            method = method_map.get(method_name)
+            if method:
+                return await method(params)
+            else:
+                logger.debug(f"Unknown opus method: {method_name}")
+                return {"success": False, "error": f"Unknown method: {method_name}"}
 
-        method_name = target.replace("opus.", "")
+        # Vedic Governance plugin methods (cross-plugin wiring!)
+        elif target.startswith("vedic."):
+            return await self._execute_vedic_action(target, params)
 
-        # Map to plugin methods
-        method_map = {
-            "check_opus_freshness": self._check_opus_freshness,
-            "write_opus_md": self._write_opus_md,
-            "log_observation": self._log_observation_from_circuit,
-            "quick_drift_check": self._quick_drift_check,
-            "detect_drift": self._detect_drift,
-            "verify": self._verify,
-            "synthesize_context": self._synthesize_context,
-        }
-
-        method = method_map.get(method_name)
-        if method:
-            return await method(params)
         else:
-            logger.debug(f"Unknown script target: {target}")
-            return {"success": False, "error": f"Unknown method: {method_name}"}
+            return {"success": False, "error": f"Invalid target prefix: {target}"}
 
     async def _emit_event_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Emit an event via EventBus."""
@@ -507,6 +518,332 @@ class KernelTickHandler:
             except Exception as e:
                 return {"success": False, "error": str(e)}
         return {"success": False, "error": "No context service"}
+
+    # =========================================================================
+    # Karma Circuit Handlers (OPUS ↔ Vedic Governance Wiring)
+    # =========================================================================
+
+    async def _get_trust_score(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get current trust score from OPUS verification.
+
+        This is the "observation" side of Karma - what is the system's trust level?
+        """
+        try:
+            # Run verification to get trust score
+            result = self._plugin.verify(quick=True)
+            score = result.get("total_score", 0)
+
+            return {
+                "success": True,
+                "score": score,
+                "passed": result.get("passed", False),
+                "checks_total": len(result.get("checks", [])),
+                "checks_failed": sum(1 for c in result.get("checks", []) if not c.get("passed", True)),
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e), "score": 0}
+
+    async def _get_last_actor(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Get the last agent that performed an action.
+
+        Used by Karma circuit to identify who is "responsible" for trust changes.
+        """
+        try:
+            # Try to get from kernel's active agents
+            kernel = self._plugin._kernel
+            if kernel and hasattr(kernel, "agents"):
+                agents = kernel.agents
+                if agents:
+                    # Return the most recently active agent
+                    # In a real system, we'd track task completion timestamps
+                    last_agent = list(agents.keys())[-1] if agents else None
+                    if last_agent:
+                        return {"success": True, "id": last_agent, "type": "agent"}
+
+            # Fallback: return system as the actor
+            return {"success": True, "id": "system", "type": "system"}
+        except Exception as e:
+            return {"success": False, "error": str(e), "id": "unknown"}
+
+    async def _execute_vedic_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute actions on Vedic Governance plugin.
+
+        THIS IS THE CROSS-PLUGIN WIRING - OPUS talks to Vedic Governance!
+
+        Target format: "vedic.method_name"
+        """
+        method_name = target.replace("vedic.", "")
+
+        try:
+            # Get Vedic Governance plugin from kernel
+            kernel = self._plugin._kernel
+            if not kernel:
+                return {"success": False, "error": "No kernel available"}
+
+            governance = getattr(kernel, "governance", None)
+            if not governance:
+                return {"success": False, "error": "Vedic Governance plugin not loaded"}
+
+            # Map method names to governance methods
+            if method_name == "demote_agent":
+                return await self._vedic_demote_agent(governance, params)
+            elif method_name == "check_promotions":
+                return await self._vedic_check_promotions(governance, params)
+            else:
+                return {"success": False, "error": f"Unknown vedic method: {method_name}"}
+
+        except Exception as e:
+            logger.error(f"Vedic action failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _vedic_demote_agent(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Demote an agent via Vedic Governance.
+
+        This is the CONSEQUENCE - trust drop leads to lifecycle demotion.
+        """
+        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
+
+        agent_id = params.get("agent_id")
+        reason = params.get("reason", "Karma consequence")
+
+        if not agent_id:
+            return {"success": False, "error": "No agent_id provided"}
+
+        # Get current ashrama
+        current = governance.get_agent_ashrama(agent_id)
+        if not current:
+            return {"success": False, "error": f"Agent {agent_id} not found in governance"}
+
+        current_stage = current.current_ashrama
+
+        # Determine demotion target
+        # GRIHASTHA → BRAHMACHARI (back to student)
+        # VANAPRASTHA → GRIHASTHA (back to active but probation)
+        demotion_map = {
+            Ashrama.GRIHASTHA: Ashrama.BRAHMACHARI,
+            Ashrama.VANAPRASTHA: Ashrama.GRIHASTHA,
+            Ashrama.SANNYASA: Ashrama.VANAPRASTHA,
+        }
+
+        new_stage = demotion_map.get(current_stage)
+        if not new_stage:
+            # BRAHMACHARI can't be demoted further
+            return {
+                "success": True,
+                "demoted": False,
+                "reason": f"Agent {agent_id} is already at lowest stage (BRAHMACHARI)",
+            }
+
+        # Execute demotion
+        success = governance.transition_agent_ashrama(agent_id, new_stage, reason)
+
+        if success:
+            logger.warning(f"🕉️ KARMA: Agent '{agent_id}' demoted {current_stage.value} → {new_stage.value}")
+            return {
+                "success": True,
+                "demoted": True,
+                "agent_id": agent_id,
+                "from_stage": current_stage.value,
+                "to_stage": new_stage.value,
+                "reason": reason,
+            }
+        else:
+            return {"success": False, "error": "Demotion transition failed"}
+
+    async def _vedic_check_promotions(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check for agents eligible for accelerated promotion.
+
+        When trust is consistently high, agents can graduate faster.
+        """
+        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
+
+        accelerated = params.get("accelerated", False)
+        threshold_reduction = params.get("threshold_reduction", 0)
+
+        promoted = []
+
+        # Get all agents in BRAHMACHARI stage
+        ashrama_registry = governance.get_ashrama_registry()
+
+        for agent_id, transition in ashrama_registry.items():
+            if transition.current_ashrama == Ashrama.BRAHMACHARI:
+                # Check task completions
+                completions = governance._task_completions.get(agent_id, 0)
+                required = 3 - threshold_reduction if accelerated else 3
+
+                if completions >= required:
+                    success = governance.transition_agent_ashrama(
+                        agent_id, Ashrama.GRIHASTHA, reason="Accelerated graduation (trust bonus)"
+                    )
+                    if success:
+                        promoted.append(agent_id)
+                        logger.info(f"🕉️ KARMA: Agent '{agent_id}' graduated early (high trust)")
+
+        return {"success": True, "promoted": promoted, "count": len(promoted)}
+
+    # =========================================================================
+    # Genesis Circuit Handlers (Karma-Aware Boot)
+    # =========================================================================
+
+    async def _check_session_karma(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Check last session's karma from DUAL SOURCES.
+
+        This is the "memory" that makes boot state-aware.
+        Looks at the last N hours of events and calculates a karma score.
+
+        🔌 WIRING: Reads from BOTH:
+           1. SQLite Ledger (primary, more complete)
+           2. audit_trail.jsonl (fallback, survives git resets - "untötbar")
+        """
+        from datetime import datetime, timedelta
+
+        lookback_hours = params.get("lookback_hours", 24)
+        cutoff = datetime.utcnow() - timedelta(hours=lookback_hours)
+
+        # Collect events from ALL sources
+        all_events = []
+
+        # SOURCE 1: SQLite Ledger (primary)
+        try:
+            kernel = self._plugin._kernel
+            if kernel and hasattr(kernel, "ledger"):
+                ledger_events = kernel.ledger.get_all_events()
+                all_events.extend(ledger_events)
+                logger.debug(f"📊 Loaded {len(ledger_events)} events from SQLite ledger")
+        except Exception as e:
+            logger.warning(f"Could not read SQLite ledger: {e}")
+
+        # SOURCE 2: Plugin-local state (Fractal Holon - "untötbar")
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+            observations = state_mgr.get_recent_observations(hours=lookback_hours)
+
+            for obs in observations:
+                all_events.append(
+                    {
+                        "timestamp": obs.timestamp,
+                        "event_type": obs.severity,
+                        "details": {"severity": obs.severity},
+                        "source": obs.source,
+                    }
+                )
+
+            if observations:
+                logger.debug(f"📜 Merged {len(observations)} observations from plugin state")
+        except Exception as e:
+            logger.warning(f"Could not read plugin state: {e}")
+
+        # If no events from any source, assume clean
+        if not all_events:
+            return {
+                "success": True,
+                "score": 100,
+                "is_critical": False,
+                "has_warnings": False,
+                "error_count": 0,
+                "warning_count": 0,
+                "message": "No events found - assuming clean karma",
+            }
+
+        # Count event types
+        error_count = 0
+        warning_count = 0
+        crash_count = 0
+        success_count = 0
+
+        for event in all_events:
+            # Parse timestamp
+            timestamp_str = event.get("timestamp", "")
+            try:
+                if timestamp_str:
+                    event_time = datetime.fromisoformat(timestamp_str.replace("Z", ""))
+                    if event_time < cutoff:
+                        continue
+            except (ValueError, TypeError):
+                continue
+
+            event_type = event.get("event_type", "")
+            details = event.get("details", {})
+
+            # Categorize events
+            if event_type in ["ERROR", "FAILURE", "EXCEPTION"]:
+                error_count += 1
+            elif event_type in ["CRASH", "FATAL", "KERNEL_PANIC"]:
+                crash_count += 1
+            elif event_type in ["WARNING", "DEGRADED", "ALERT"]:
+                warning_count += 1
+            elif event_type in ["COMPLETED", "SUCCESS", "HEALTHY"]:
+                success_count += 1
+
+            # Also check details for severity
+            severity = details.get("severity", "")
+            if severity == "ALERT":
+                error_count += 1
+            elif severity == "WARN":
+                warning_count += 1
+
+        # Calculate karma score (0-100)
+        # Start at 100, subtract for errors/crashes
+        karma_score = 100
+        karma_score -= crash_count * 30  # Crashes are severe
+        karma_score -= error_count * 10  # Errors are bad
+        karma_score -= warning_count * 2  # Warnings are minor
+        karma_score += success_count * 1  # Successes help
+        karma_score = max(0, min(100, karma_score))  # Clamp to 0-100
+
+        # Determine boot mode
+        is_critical = karma_score < 40 or crash_count > 0
+        has_warnings = warning_count > 3 or karma_score < 70
+
+        logger.info(
+            f"🔮 GENESIS: Session karma = {karma_score}/100 "
+            f"(errors: {error_count}, warnings: {warning_count}, crashes: {crash_count})"
+        )
+
+        return {
+            "success": True,
+            "score": karma_score,
+            "is_critical": is_critical,
+            "has_warnings": has_warnings,
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "crash_count": crash_count,
+            "success_count": success_count,
+            "lookback_hours": lookback_hours,
+        }
+
+    async def _trigger_auto_heal(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Trigger the auto_heal circuit.
+
+        Called by genesis_check when booting in safe mode.
+        """
+        priority = params.get("priority", "normal")
+        reason = params.get("reason", "Genesis recovery")
+
+        try:
+            # Emit event to trigger auto_heal circuit
+            from vibe_core.event_bus import get_event_bus
+
+            bus = get_event_bus()
+            await bus.emit(
+                "opus.auto_heal_requested",
+                {"priority": priority, "reason": reason, "source": "genesis_check"},
+            )
+
+            self._log_observation_info(f"Auto-heal triggered: {reason} (priority: {priority})", "genesis")
+
+            return {"success": True, "triggered": True, "priority": priority}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     # =========================================================================
     # Fallback for events without circuits

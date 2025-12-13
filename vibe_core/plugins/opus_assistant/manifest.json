@@ -24,13 +24,28 @@
     "opus.context",
     "opus.journal",
     "opus.cli",
-    "opus.circuits"
+    "opus.circuits",
+    "opus.state"
   ],
+
+  "state": {
+    "dir": ".opus_state",
+    "files": {
+      "observations": "observations.jsonl",
+      "karma_history": "karma_history.jsonl",
+      "session": "session.json"
+    },
+    "git_tracked": true,
+    "max_observations": 1000,
+    "max_karma_entries": 100
+  },
 
   "circuits": [
     "circuits/auto_verify.yaml",
     "circuits/auto_heal.yaml",
-    "circuits/auto_refresh.yaml"
+    "circuits/auto_refresh.yaml",
+    "circuits/karma_consequence.yaml",
+    "circuits/genesis_check.yaml"
   ],
 
   "cli": {

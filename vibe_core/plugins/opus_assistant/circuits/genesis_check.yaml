@@ -1,0 +1,184 @@
+# GENESIS_CHECK - Karma-Aware Boot Sequence
+# Phase 5: Neuro-Symbolic Wiring - The Awakening
+#
+# This circuit runs AT BOOT to check the system's Karma.
+# It answers: "How did the last session end?"
+#
+# If the last session crashed or had critical errors:
+#   → System boots in SAFE_MODE
+#   → Only core agents spawn
+#   → AUTO_HEAL circuit is triggered immediately
+#
+# If the last session was clean:
+#   → System boots in FULL_POWER mode
+#   → All agents spawn normally
+#
+# This is STATE-AWARE BOOTING - the system remembers its pain.
+#
+circuit:
+  id: GENESIS_CHECK
+  name: Genesis Karma Check
+  description: Check last session's karma before full boot
+  domain: OPUS
+  version: "1.0.0"
+  entry_state: "check_ledger"
+
+  # Event triggers
+  triggers:
+    - event: KERNEL_BOOT
+      description: At system boot, before agents spawn
+    - event: GENESIS
+      description: Alternative genesis event
+
+  # Thresholds
+  config:
+    error_threshold: 5      # Errors in last session that trigger safe mode
+    crash_threshold: 1      # Crashes trigger immediate safe mode
+    lookback_hours: 24      # How far back to check
+
+  states:
+    # Phase 1: Check the Ledger for last session's karma
+    check_ledger:
+      name: "Check Session Karma"
+      description: "Read last session's events from Ledger"
+      state_var: "karma_report"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.check_session_karma"
+          params:
+            lookback_hours: "{{ config.lookback_hours }}"
+      on_success: evaluate_karma
+      on_failure: assume_clean
+
+    # Phase 2: Evaluate karma score
+    evaluate_karma:
+      name: "Evaluate Karma"
+      description: "Decide boot mode based on karma"
+      state_var: "boot_decision"
+      actions:
+        - action_type: CHECK_STATE
+          target: "karma_report.is_critical"
+          params:
+            expected: true
+      on_success: trigger_safe_mode
+      on_failure: check_warnings
+
+    # Phase 2b: Check for warnings (not critical but concerning)
+    check_warnings:
+      name: "Check Warnings"
+      description: "Check if there were warnings in last session"
+      state_var: "has_warnings"
+      actions:
+        - action_type: CHECK_STATE
+          target: "karma_report.has_warnings"
+          params:
+            expected: true
+      on_success: trigger_cautious_mode
+      on_failure: trigger_full_power
+
+    # Phase 3a: SAFE MODE - System had critical issues
+    trigger_safe_mode:
+      name: "Boot Safe Mode"
+      description: "Restrict system due to bad karma"
+      state_var: "safe_mode_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "genesis.safe_mode"
+          params:
+            reason: "Last session had critical issues"
+            karma: "{{ karma_report }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ALERT"
+            message: "🛡️ GENESIS: Booting SAFE MODE - Last session karma was {{ karma_report.score }}/100"
+            source: "genesis_check"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.trigger_auto_heal"
+          params:
+            priority: "high"
+            reason: "Safe mode recovery"
+      on_success: COMPLETE_SAFE
+      on_failure: COMPLETE_SAFE
+
+    # Phase 3b: CAUTIOUS MODE - Warnings but not critical
+    trigger_cautious_mode:
+      name: "Boot Cautious Mode"
+      description: "Normal boot but with extra monitoring"
+      state_var: "cautious_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "genesis.cautious_mode"
+          params:
+            reason: "Last session had warnings"
+            karma: "{{ karma_report }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "⚠️ GENESIS: Booting CAUTIOUS MODE - Last session had {{ karma_report.warning_count }} warnings"
+            source: "genesis_check"
+      on_success: COMPLETE_CAUTIOUS
+      on_failure: COMPLETE_CAUTIOUS
+
+    # Phase 3c: FULL POWER - Clean last session
+    trigger_full_power:
+      name: "Boot Full Power"
+      description: "Clean karma, full system boot"
+      state_var: "full_power_result"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "genesis.full_power"
+          params:
+            karma: "{{ karma_report }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🚀 GENESIS: Booting FULL POWER - Last session karma clean ({{ karma_report.score }}/100)"
+            source: "genesis_check"
+      on_success: COMPLETE_FULL
+      on_failure: COMPLETE_FULL
+
+    # Fallback: Assume clean if ledger check fails
+    assume_clean:
+      name: "Assume Clean"
+      description: "No karma data, assume clean start"
+      state_var: "assume_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "INFO"
+            message: "🌅 GENESIS: First boot or no karma data - starting fresh"
+            source: "genesis_check"
+      on_success: trigger_full_power
+      on_failure: trigger_full_power
+
+    # Terminal states
+    COMPLETE_SAFE:
+      name: "Safe Mode Boot Complete"
+      description: "System booted in restricted safe mode"
+      terminal: true
+      result:
+        status: "safe_mode"
+        karma_score: "{{ karma_report.score }}"
+        restriction: "core_agents_only"
+
+    COMPLETE_CAUTIOUS:
+      name: "Cautious Mode Boot Complete"
+      description: "System booted with extra monitoring"
+      terminal: true
+      result:
+        status: "cautious_mode"
+        karma_score: "{{ karma_report.score }}"
+        monitoring: "enhanced"
+
+    COMPLETE_FULL:
+      name: "Full Power Boot Complete"
+      description: "System booted at full capacity"
+      terminal: true
+      result:
+        status: "full_power"
+        karma_score: "{{ karma_report.score | default(100) }}"
+        restriction: "none"
