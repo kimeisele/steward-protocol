@@ -628,10 +628,26 @@ class KernelTickHandler:
             return {"success": False, "error": str(e)}
 
     async def _write_opus_md(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Regenerate OPUS.md."""
+        """
+        Trigger OPUS.md regeneration through InterfacePlugin.
+
+        ARCHITECTURE: opus_assistant is BACKEND only - no direct file writes.
+        InterfacePlugin is FRONTEND - writes via kernel.io.
+        """
         try:
-            result = self._plugin.generate_opus()
-            return {"success": True, "result": result}
+            # Get InterfacePlugin and trigger opus render
+            if self._kernel:
+                interface_plugin = self._kernel.get_plugin("interface")
+                if interface_plugin and hasattr(interface_plugin, "render_view"):
+                    interface_plugin.render_view("opus", force=True)
+                    return {"success": True, "method": "interface_plugin"}
+
+            # Fallback: Log warning if InterfacePlugin not available
+            logger.warning(
+                "⚠️ Cannot render OPUS.md: InterfacePlugin not available. "
+                "opus_assistant is BACKEND only - requires InterfacePlugin for writes."
+            )
+            return {"success": False, "error": "InterfacePlugin not available"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -1206,8 +1222,10 @@ class KernelTickHandler:
             self._observation_logger.log_insight(message, source)
 
     def _flush_observations(self) -> None:
-        if self._observation_logger:
-            self._observation_logger.flush_to_opus()
+        # NOTE: flush_to_opus() REMOVED - opus_assistant is BACKEND only
+        # Observations are persisted to StateManager automatically
+        # OPUS.md reads from StateManager when InterfacePlugin renders
+        pass
 
     # =========================================================================
     # State accessors (kept from original)

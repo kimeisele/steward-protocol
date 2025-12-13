@@ -547,37 +547,10 @@ class OpusAssistantPlugin(KernelPlugin):
         workspace = self._workspace or Path.cwd()
         return (workspace / "OPUS.md").exists()
 
-    def write_opus_md(self, quick: bool = False) -> Path:
-        """
-        Write OPUS.md directly.
-
-        OPUS-029 Phase 10: Template-based rendering with emotional UI.
-        Uses Jinja2 template for clean separation of concerns.
-        Falls back to legacy renderer if Jinja2 unavailable.
-
-        Args:
-            quick: Skip expensive semantic verification
-
-        Returns:
-            Path to written OPUS.md
-        """
-        workspace = self._workspace or Path.cwd()
-
-        # Try new template-based renderer first
-        try:
-            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
-                OpusDashboardRenderer,
-            )
-
-            renderer = OpusDashboardRenderer(workspace, kernel=self._kernel)
-            return renderer.write(quick=quick)
-        except Exception as e:
-            # Fallback to legacy renderer
-            logger.debug(f"Template renderer failed, using legacy: {e}")
-            from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
-
-            writer = OpusMdWriter(workspace, kernel=self._kernel)
-            return writer.write(quick=quick)
+    # NOTE: write_opus_md() REMOVED - opus_assistant is BACKEND only
+    # All file writes go through InterfacePlugin -> kernel.io
+    # Use: kernel.get_plugin("interface").render_view("opus")
+    # See: vibe_core/plugins/interface/renderers/opus/renderer.py
 
     def get_config(self, key: Optional[str] = None, default: Any = None) -> Any:
         """
