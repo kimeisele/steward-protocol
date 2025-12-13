@@ -29,17 +29,28 @@ jobs:
         export PYTHONPATH=$PWD
         ./scripts/build_all_containers.sh
 
-    - name: Verify Signatures
+    - name: Verify Signatures (FAIL if unsigned)
       run: |
+        FAILED=0
         for f in dist/plugins/*.vibe; do
           echo "Checking $f..."
           sig=$(unzip -p "$f" SIGNATURE.sig 2>/dev/null || echo "MISSING")
           if echo "$sig" | grep -q '"version": 2'; then
             echo "✅ ECDSA signed"
           else
-            echo "⚠️ Not ECDSA signed"
+            echo "❌ NOT ECDSA signed - BUILD WILL FAIL"
+            FAILED=1
           fi
         done
+        if [ $FAILED -eq 1 ]; then
+          echo ""
+          echo "╔══════════════════════════════════════════════════════════════╗"
+          echo "║  ❌ FATAL: Some containers are UNSIGNED                       ║"
+          echo "║  This means ecdsa was not installed correctly.               ║"
+          echo "║  Check the 'Install Dependencies' step.                      ║"
+          echo "╚══════════════════════════════════════════════════════════════╝"
+          exit 1
+        fi
 
     - name: Upload Holons
       uses: actions/upload-artifact@v4
