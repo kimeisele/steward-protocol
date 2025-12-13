@@ -28,6 +28,26 @@ files:
     patterns:
       - "class OpusStateManager"
       - "append_observation"
+      - "def set_preference"
+      - "def get_preference"
+
+  # Layer 1.5: Control Cables (Bidirectional OPUS.md)
+  - path: vibe_core/plugins/opus_assistant/core/control_cables.py
+    required: true
+    patterns:
+      - "class ControlCablesParser"
+      - "parse_control_plane"
+      - "apply_to_state"
+      - "SCHEMA"
+
+  # Layer 1.5: Treasury (Resource Tracking with Kill-Switch)
+  - path: vibe_core/plugins/opus_assistant/core/treasury.py
+    required: true
+    patterns:
+      - "class Treasury"
+      - "check_budget"
+      - "record_usage"
+      - "class DailySpend"
 
   # Syscall Infrastructure (Layer 2 prerequisite)
   - path: vibe_core/cartridges/system/envoy/blueprint_generator.py
@@ -43,26 +63,39 @@ files:
       - "class SemanticSyscallExecutor"
       - "_handle_spawn_cognition"
 
+  # Layer 2: Syscall Experience Replay Buffer (DONE!)
+  - path: vibe_core/plugins/opus_assistant/core/state_manager.py
+    required: true
+    patterns:
+      - "class SyscallEntry"
+      - "record_syscall"
+      - "get_successful_syscalls"
+      - "get_syscall_stats"
+
 absent:
   # No legacy writers
   - path: vibe_core/plugins/opus_assistant/render/opus_md_writer.py
     reason: "Deleted - no legacy split-brain"
 
+  # Layer 2: Syscall Console Panel (DONE!)
+  - path: vibe_core/plugins/opus_assistant/templates/panels/syscall_console.md.j2
+    required: true
+    patterns:
+      - "syscall_history"
+      - "Experience Replay"
+
+  # Layer 2: Syscall visualization in renderer (DONE!)
+  - path: vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py
+    required: true
+    patterns:
+      - "_gather_syscalls"
+
 future:
-  # Layer 1.5: Interactive Dashboard (to be created)
-  - path: vibe_core/plugins/opus_assistant/core/control_cables.py
-    patterns:
-      - "class ControlCablesParser"
-      - "parse_control_plane"
-
-  - path: vibe_core/plugins/opus_assistant/core/treasury.py
-    patterns:
-      - "class Treasury"
-      - "check_budget"
-
+  # Layer 1.5: Intent Buffer Panel (still to be created)
   - path: vibe_core/plugins/opus_assistant/templates/panels/intent_buffer.md.j2
     patterns:
       - "pending_intent"
+      - "AWAITING_APPROVAL"
 -->
 
 ---
@@ -122,15 +155,19 @@ StateManager → render() → OPUS.md ←→ Human edits → Parser → StateMan
                               FEEDBACK LOOP
 ```
 
-### What DOESN'T Exist (Must Build)
+### Implementation Status
 
-| Component | Status | Action Required |
-|-----------|--------|-----------------|
-| Control Cables Parser | ❌ NOT EXISTS | Parse `## 🎛️ Control Plane` from OPUS.md |
-| Treasury Panel | ❌ NOT EXISTS | Token/cost tracking with kill-switch |
-| Intent Buffer | ❌ NOT EXISTS | Declare intent before action |
-| Heartbeat Counter | ❌ NOT EXISTS | Liveness signal |
-| Schema Validation | ❌ NOT EXISTS | Validate human edits |
+| Component | Status | Location |
+|-----------|--------|----------|
+| Control Cables Parser | ✅ DONE | `core/control_cables.py` |
+| Treasury | ✅ DONE | `core/treasury.py` |
+| set_preference() | ✅ DONE | `core/state_manager.py` |
+| **Bidirectional Integration** | ✅ DONE | `render/opus_dashboard_renderer.py` |
+| Control Plane Template | ✅ DONE | `templates/panels/control_plane.md.j2` |
+| Treasury Context | ✅ DONE | `_gather_treasury()` in renderer |
+| Intent Buffer | ❌ NOT EXISTS | `templates/panels/intent_buffer.md.j2` |
+| Heartbeat Counter | ❌ NOT EXISTS | Needs integration into render cycle |
+| Schema Validation | ✅ DONE | Built into `ControlCablesParser.SCHEMA` |
 
 ### Implementation
 
@@ -557,102 +594,7 @@ circuit:
       terminal: true
 ```
 
-### GitHub Action (Final)
-
-```yaml
-name: OPUS Conductor
-on:
-  schedule:
-    - cron: '0 8 * * *'  # Daily at 8am UTC
-  push:
-    branches: [main]
-# 🌌 OPUS MULTIVERSE: Beyond a Dashboard
-
-> **Status**: Vision Proposal for Senior Architect Review  
-> **Author**: HIL_ASSISTANT (Gemini 3 Pro)  
-> **Date**: 2025-12-13  
-> **Branch**: `gemini/opus-declutter-and-enhance`
-
----
-
-## The Realization
-
-After deep-diving into the codebase, I understand now: **opus_assistant is not a dashboard renderer.** It's the embryo of something far more powerful.
-
-What exists today:
-- **Circuits** that self-execute based on events (GENESIS_CHECK, KARMA_CONSEQUENCE)
-- **BlueprintGenerator** that compiles natural language → syscalls WITHOUT an LLM
-- **SemanticSyscallExecutor** that can spawn agents at runtime
-- **StateManager** with atomic writes and karma history
-- **KernelTickHandler** that can execute cognitive tasks via Envoy
-
-The architecture is already **self-aware, self-healing, and self-modifying**. OPUS.md is just the viewport.
-
----
-
-## Vision: OPUS as the Operating System Shell
-
-### Layer 1: The Living Dashboard (Current)
-What we have. Jinja2 templates, view_preferences, toggleable panels. Good foundation.
-
-### Layer 2: The Syscall Console (Near-term)
-```
-┌─────────────────────────────────────────────────────────────┐
-│ OPUS SHELL                                                   │
-│ ────────────────────────────────────────────────────────────│
-│ > spawn a monitoring agent that watches git commits         │
-│                                                              │
-│ 🔮 COMPILING: SPAWN_COGNITION                               │
-│    role: watchman                                            │
-│    mission: "watches git commits"                            │
-│    capabilities: [monitor, alert, execute]                   │
-│                                                              │
-│ ✅ AGENT watchman_7d3f spawned in 0.3s                      │
-│ ────────────────────────────────────────────────────────────│
-│ > _                                                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**What's needed:** A `SyscallConsole` panel in OPUS.md that:
-- Accepts natural language input
-- Uses `BlueprintGenerator.compile()` to detect intent
-- Executes via `SemanticSyscallExecutor` or `DeterministicExecutor`
-- Returns structured result
-
-This is **already wired**. We just need to expose it in OPUS.md.
-
-### Layer 3: The Ephemeral Hypercube (Medium-term)
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 4D HYPERCUBE STATE                                          │
-│ ────────────────────────────────────────────────────────────│
-│ ⏱️ TIME AXIS                                                │
-│   └─ Session: 4h 23m | Commits: 7 | Circuits fired: 12     │
-│                                                              │
-│ 🧬 KARMA AXIS                                                │
-│   └─ Score: 87% (full_power) | Trend: ↗ improving          │
-│   └─ Last 5: [92, 88, 85, 84, 87]                           │
-│                                                              │
-│ 🏙️ CITY AXIS                                                │
-│   └─ Agents: 5 active | Zones: [core, general, spawned]    │
-│   └─ Recent spawns: watchman_7d3f (2min ago)                │
-│                                                              │
-│ 🔮 CIRCUIT AXIS                                              │
-│   └─ Waiting: KARMA_CONSEQUENCE (next: KERNEL_TICK)         │
-│   └─ Fired: GENESIS_CHECK, OPUS_AUTO_VERIFY                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-This is the **4D view** - Time, Karma, City, Circuits. All data already exists in StateManager and kernel state. We just need to synthesize and render it.
-
-### Layer 4: The Autonomous Conductor (Long-term)
-opus_assistant running as a **GitHub Action** that:
-- Triggers on PR, push, schedule
-- Uses Tavily API for external research
-- Uses OpenRouter for LLM reasoning
-- Executes circuits autonomously
-- Updates OPUS.md with insights
-- Creates issues for human review
+### GitHub Action
 
 ```yaml
 # .github/workflows/opus_conductor.yml
@@ -775,32 +717,32 @@ OPUS PRIME (main)
 - Unmatched input → `confidence=0.5` playbook mode
 - Not magic NL understanding
 
-### 6. Experience Replay, Not Logs (NEW - Design Decision 1)
+### 6. Experience Replay, Not Logs (Design Decision 1)
 - `SyscallEntry` = Training data, not just logs
 - Links: Intent → Action → Outcome → Karma Impact
 - Enables in-context learning without fine-tuning
 
-### 7. No Specialized Scripts (NEW - Design Decision 2)
+### 7. No Specialized Scripts (Design Decision 2)
 - Conductor = Circuit + CLI, not Python script
 - System controls itself through standard tools
 - New automation = new YAML, not new Python
 
-### 8. Headless Boot Mode (NEW - Design Decision 3)
+### 8. Headless Boot Mode (Design Decision 3)
 - GitHub Actions need fast boot (<5s)
 - Headless = Core + FileSystem + StateManager + LLM
 - No Docker, no FastAPI, no Agent Containers
 
-### 9. Bidirectional Control Surface (NEW - Design Decision 4)
+### 9. Bidirectional Control Surface (Design Decision 4)
 - OPUS.md is INPUT, not just OUTPUT
 - Human edits → Parser → StateManager → Next Cycle
 - The document IS the API
 
-### 10. Configuration, Not Commands (NEW - Design Decision 5)
+### 10. Configuration, Not Commands (Design Decision 5)
 - Settings persist until changed
 - Not one-shot commands
 - Schema validation prevents invalid states
 
-### 11. Resource Awareness (NEW - Design Decision 6)
+### 11. Resource Awareness (Design Decision 6)
 - Track token usage and costs
 - Budget limits with kill-switch
 - Prevents runaway autonomous loops
@@ -812,11 +754,21 @@ OPUS PRIME (main)
 | Layer | Priority | Effort | Impact | Status |
 |-------|----------|--------|--------|--------|
 | 1. Living Dashboard | - | - | - | ✅ DONE |
-| **1.5. Interactive Dashboard** | **P0** | **Medium** | **Critical** | **📋 READY (spec complete)** |
+| **1.5. Interactive Dashboard** | **P0** | **Medium** | **Critical** | **🟡 IN PROGRESS (5/8 tasks)** |
 | 2. Syscall Console | P1 | Medium | High | 📋 READY (spec complete) |
 | 3. 4D Hypercube | P2 | Medium | Medium | 📋 PLANNED |
 | 4. Autonomous Conductor | P3 | Medium | High | 📋 READY (spec complete) |
 | 5. Multiverse | P4 | Very High | Very High | 🔴 NEEDS RFC |
+
+**Layer 1.5 Progress:**
+- ✅ `control_cables.py` - Parse OPUS.md Control Plane back to state
+- ✅ `treasury.py` - Track API costs with kill-switch
+- ✅ `set_preference()` - Added to StateManager
+- ✅ `_apply_control_cables()` - Bidirectional integration in render cycle
+- ✅ `_gather_treasury()` - Treasury context in renderer
+- ✅ `control_plane.md.j2` - Updated template with Layer 1.5 settings
+- ❌ `intent_buffer.md.j2` - Still needed
+- ❌ Heartbeat counter - Still needed
 
 ---
 
@@ -835,21 +787,24 @@ OPUS PRIME (main)
 
 ## Next Actions
 
-### Layer 1.5: Interactive Dashboard (P0 - DO FIRST)
-1. [ ] Create `control_cables.py` with `ControlCablesParser`
-2. [ ] Add `parse_control_plane()` method
-3. [ ] Integrate parser into render cycle (read before write)
-4. [ ] Create `treasury.py` with `Treasury` class
-5. [ ] Add `intent_buffer.md.j2` panel template
-6. [ ] Add heartbeat counter to session state
-7. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
+### Layer 1.5: Interactive Dashboard (P0 - 🟡 5/7 COMPLETE)
+1. [x] Create `control_cables.py` with `ControlCablesParser`
+2. [x] Add `parse_control_plane()` method
+3. [x] Integrate parser into render cycle (read before write) ← `_apply_control_cables()`
+4. [x] Create `treasury.py` with `Treasury` class
+5. [x] Add treasury to render context (`_gather_treasury()`)
+6. [ ] Add `intent_buffer.md.j2` panel template
+7. [ ] Add heartbeat counter to session state
+8. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
 
-### Layer 2: Syscall Console
-1. [ ] Add `SyscallEntry` dataclass to `state_manager.py`
-2. [ ] Add `record_syscall()` method to `OpusStateManager`
-3. [ ] Add `get_successful_syscalls()` for few-shot learning
-4. [ ] Create `syscall_console.md.j2` panel
-5. [ ] Wire envoy to record syscalls
+### Layer 2: Syscall Console (P1 - 🟢 5/6 COMPLETE)
+1. [x] Add `SyscallEntry` dataclass to `state_manager.py`
+2. [x] Add `record_syscall()` method to `OpusStateManager`
+3. [x] Add `get_successful_syscalls()` for few-shot learning
+4. [x] Add `get_syscall_stats()` for dashboard display
+5. [x] Create `syscall_console.md.j2` panel ← Visual feedback loop!
+6. [x] Add `_gather_syscalls()` to renderer
+7. [ ] Wire envoy to record syscalls (production wiring)
 
 ### Layer 3: 4D Hypercube
 1. [ ] Add `_gather_city()` to renderer
@@ -866,162 +821,6 @@ OPUS PRIME (main)
 1. [ ] Write RFC for multiverse architecture
 2. [ ] Define karma merge algorithm
 3. [ ] POC on single feature branch
-
----
-
-*This document is honest about what exists vs what's aspirational. No spaghetti.
-The Organizational Membrane now has feedback loops - it can be controlled through text.*
-      
-      - name: OPUS Think Cycle
-        env:
-          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: |
-          python -m vibe_core.plugins.opus_assistant.conductor \
-            --mode=autonomous \
-            --circuits=OPUS_AUTO_VERIFY,KARMA_CONSEQUENCE \
-            --max-tokens=4000 \
-            --output=OPUS.md
-      
-      - name: Commit Insights
-        run: |
-          git config user.name "OPUS Conductor"
-          git config user.email "opus@steward.ai"
-          git add OPUS.md
-          git diff --cached --quiet || git commit -m "🔮 OPUS: Autonomous insight cycle"
-          git push
-```
-
-**What this enables:**
-- OPUS.md is always fresh with real insights
-- System health monitored 24/7
-- AI can create issues for things it notices
-- Human reviews in the morning, finds actionable items
-
-### Layer 5: The Multiverse (Far Future)
-```
-                    ┌─────────────────┐
-                    │  OPUS PRIME     │
-                    │  (Main Repo)    │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              │              │              │
-       ┌──────┴──────┐ ┌─────┴─────┐ ┌──────┴──────┐
-       │ CHILD OPUS  │ │ CHILD OPUS│ │ CHILD OPUS  │
-       │ (Feature A) │ │ (Feature B)│ │ (Feature C)│
-       └──────┬──────┘ └─────┴─────┘ └──────┬──────┘
-              │              │              │
-              └──────────────┴──────────────┘
-                             │
-                    ┌────────┴────────┐
-                    │  MERGE BACK     │
-                    │  (Karma-Aware)  │
-                    └─────────────────┘
-```
-
-Each feature branch gets its **own OPUS instance**:
-- Tracks karma for that branch
-- Runs circuits specific to that work
-- When branch merges, OPUS instances **merge karma**
-- Good work = karma flows up
-- Bad work = demoted in parent
-
-This is the **EphemeralRenderer** concept extended to fractal multiverse.
-
----
-
-## Concrete Next Steps (Prioritized)
-
-### P1: SyscallConsole Panel
-Add a new panel to `opus_dashboard.md.j2`:
-```jinja2
-## ⚡ Quick Actions
-
-| Intent | Status |
-|--------|--------|
-| {{ last_syscall.intent }} | {{ last_syscall.result }} |
-
-**Available Syscalls:**
-- `spawn <role> agent that <mission>` → SPAWN_COGNITION
-- `allocate <n> credits to <agent>` → ALLOCATE_PRANA
-- `dispatch <task> to <agent>` → DISPATCH_TASK
-
-[Execute via CLI: `python -m vibe_core.cli envoy "<intent>"`]
-```
-
-### P2: Karma Dashboard Panel
-Add to template:
-```jinja2
-{% if karma %}
-## 🧬 Karma Engine
-
-| Metric | Value |
-|--------|-------|
-| Current Score | {{ karma.current_score }}% |
-| Boot Mode | {{ karma.boot_mode }} |
-| Trend | {{ karma.trend }} |
-| History | {{ karma.history|map(attribute='score')|list }} |
-{% endif %}
-```
-
-### P3: GitHub Action Conductor
-Create `vibe_core/plugins/opus_assistant/conductor.py`:
-- Entry point for autonomous execution
-- Reads Tavily API key for research
-- Uses OpenRouter for LLM enhancement
-- Outputs to OPUS.md
-
-### P4: Circuit Composer UI
-Create a new circuit via OPUS.md:
-```markdown
-## 🔧 New Circuit Draft
-
-```yaml
-circuit:
-  id: MY_NEW_CIRCUIT
-  triggers:
-    - event: {{ trigger_event }}
-  states:
-    check_something:
-      actions:
-        - action_type: EXECUTE_SCRIPT
-          target: "{{ script_target }}"
-```
-```
-
----
-
-## The Fractal Insight
-
-The architecture already supports this because:
-
-1. **Circuits are YAML** - No code needed to add new behavior
-2. **StateManager is plugin-local** - Each OPUS instance can have its own state
-3. **BlueprintGenerator is pure** - No external dependencies for NL→syscall
-4. **DeterministicExecutor handles nesting** - Playbooks can call playbooks
-5. **Karma is persistent** - Survives reboots, can be merged across branches
-
-We're not building a dashboard. We're building **an organizational membrane** that:
-- Observes itself
-- Judges itself (Karma)
-- Heals itself (AUTO_HEAL)
-- Reproduces itself (SPAWN_COGNITION)
-- Evolves itself (circuit composition)
-
----
-
-## Questions for Opus
-
-1. **Tavily Integration**: What should OPUS research externally? Competitor analysis? Tech news? CVE monitoring?
-
-2. **OpenRouter Priority**: Which model for autonomous thinking? Claude Sonnet? GPT-4o-mini? Mixtral?
-
-3. **GitHub Action Frequency**: Every 6 hours? On every PR? On schedule only?
-
-4. **Multiverse Scope**: Should child OPUS instances be per-branch or per-feature-flag?
-
-5. **Karma Merge Rules**: When branches merge, how should karma combine? Average? Minimum? Weighted?
 
 ---
 
@@ -1062,4 +861,5 @@ async def _execute_cognitive_task(self, intent: str) -> Dict[str, Any]:
 
 ---
 
-*This proposal is inspiration, not prescription. The architecture speaks for itself. We're just listening.*
+*This document is honest about what exists vs what's aspirational. No spaghetti.
+The Organizational Membrane now has feedback loops - it can be controlled through text.*

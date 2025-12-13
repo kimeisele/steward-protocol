@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.opus_generator import OpusGenerator
     from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
     from vibe_core.plugins.opus_assistant.events.kernel_tick import KernelTickHandler
+    from vibe_core.plugins.opus_assistant.events.syscall_listener import SyscallListener
 
 logger = logging.getLogger("OPUS_ASSISTANT")
 
@@ -96,6 +97,7 @@ class OpusAssistantPlugin(KernelPlugin):
         self._config: Dict[str, Any] = {}
         self._config_loader: Optional["ConfigLoader"] = None
         self._tick_handler: Optional["KernelTickHandler"] = None
+        self._syscall_listener: Optional["SyscallListener"] = None
 
     def on_boot(self, kernel: "RealVibeKernel") -> None:
         """
@@ -119,6 +121,9 @@ class OpusAssistantPlugin(KernelPlugin):
         # Subscribe to kernel tick
         self._setup_kernel_tick()
 
+        # OPUS-031 Layer 2: Subscribe to SYSCALL_EXECUTED events for Experience Replay
+        self._setup_syscall_listener()
+
         # Quick health check on boot
         if self._config.get("drift", {}).get("check_on_boot", False):
             drift = self.quick_drift_check()
@@ -136,7 +141,7 @@ class OpusAssistantPlugin(KernelPlugin):
         # 🔌 WIRING: Trigger genesis check for karma-aware boot
         self._trigger_genesis_check()
 
-        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + context provider + session state)")
+        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + syscall listener + context provider)")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
@@ -146,6 +151,8 @@ class OpusAssistantPlugin(KernelPlugin):
         # Unsubscribe from events
         if self._tick_handler:
             self._tick_handler.unsubscribe()
+        if self._syscall_listener:
+            self._syscall_listener.unsubscribe()
 
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
 
@@ -291,6 +298,28 @@ class OpusAssistantPlugin(KernelPlugin):
             logger.debug("EventBus not available - tick handler disabled")
         except Exception as e:
             logger.debug(f"Could not setup kernel tick: {e}")
+
+    def _setup_syscall_listener(self) -> None:
+        """
+        OPUS-031 Layer 2: Setup syscall listener for Experience Replay.
+
+        Subscribes to SYSCALL_EXECUTED events from EventBus.
+        This is the "synapse" that connects core syscall execution to
+        the plugin's long-term memory (Experience Replay Buffer).
+
+        ARCHITECTURE (GAD-000 Compliant):
+            Core emits SYSCALL_EXECUTED → Plugin subscribes → record_syscall()
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.events.syscall_listener import SyscallListener
+
+            self._syscall_listener = SyscallListener()
+            if self._syscall_listener.subscribe():
+                logger.debug("🧠 Syscall listener active (Experience Replay enabled)")
+        except ImportError:
+            logger.debug("EventBus not available - syscall listener disabled")
+        except Exception as e:
+            logger.debug(f"Could not setup syscall listener: {e}")
 
     def _register_context_provider(self) -> None:
         """

@@ -1,14 +1,23 @@
 {#
   Control Plane Panel - The Metamorphic UI Controls
 
+  OPUS-031 Layer 1.5: Bidirectional Control Surface
+
   This panel provides toggle controls for OPUS.md sections.
-  Clicking a toggle updates SessionState.view_preferences and
-  triggers an immediate re-render.
+  Human edits to checkboxes are parsed by ControlCablesParser
+  and persisted to StateManager before the next render.
+
+  THE DOCUMENT IS THE API.
 
   Required context:
-    - session.view_preferences: Dict[str, bool]
+    - session.view_preferences: Dict[str, Any]
     - karma.current_score: float
     - health_status: str
+    - treasury (optional): DailySpend data
+
+  Design Decisions (OPUS-031):
+    - DD4: Bidirectional Control Surface - OPUS.md is INPUT, not just OUTPUT
+    - DD5: Configuration, Not Commands - Settings persist until changed
 #}
 
 ## 🎛️ Control Plane
@@ -26,10 +35,21 @@
 - [{{ 'x' if show_code_health else ' ' }}] Code Health {% if not show_code_health %}_(hidden)_{% endif %}
 - [{{ 'x' if show_debug else ' ' }}] Debug {% if show_debug %}_(visible)_{% else %}_(hidden)_{% endif %}
 
-{# TODO: When command: links work with circuits, enable these:
-- [{{ 'x' if show_tests else ' ' }}] [Tests](command:opus.view.toggle?pane=tests&visible={{ 'false' if show_tests else 'true' }})
-- [{{ 'x' if show_code_health else ' ' }}] [Code Health](command:opus.view.toggle?pane=code_health&visible={{ 'false' if show_code_health else 'true' }})
-- [{{ 'x' if show_debug else ' ' }}] [Debug](command:opus.view.toggle?pane=debug&visible={{ 'false' if show_debug else 'true' }})
-#}
+{# Layer 1.5 Settings - Bidirectional Control Cables #}
+{% set auto_heal = vp.get('auto_heal', false) %}
+{% set simulation_mode = vp.get('simulation_mode', true) %}
+{% set aggressive_refactoring = vp.get('aggressive_refactoring', false) %}
+{% set budget_limit = vp.get('budget_limit', 5.0) %}
+
+**Layer 1.5 Settings:**
+- [{{ 'x' if auto_heal else ' ' }}] Auto-Heal Mode {% if auto_heal %}🔧{% endif %}
+- [{{ 'x' if simulation_mode else ' ' }}] Simulation Mode {% if simulation_mode %}_(safe)_{% else %}_(live!)_{% endif %}
+- [{{ 'x' if aggressive_refactoring else ' ' }}] Aggressive Refactoring {% if aggressive_refactoring %}⚠️{% endif %}
+- [{{ 'x' if budget_limit > 0 else ' ' }}] Budget Limit: ${{ "%.2f"|format(budget_limit) }}
+
+{# Treasury Status (if available) #}
+{% if treasury %}
+**💰 Treasury:** ${{ "%.4f"|format(treasury.estimated_cost) }} / ${{ "%.2f"|format(budget_limit) }} ({{ ((treasury.estimated_cost / budget_limit) * 100)|round(0) }}%)
+{% endif %}
 
 ---
