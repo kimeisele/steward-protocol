@@ -91,7 +91,8 @@ class ControlCablesParser:
 
         # Parse each line for checkboxes
         # Pattern: - [x] Label or - [ ] Label: Value
-        checkbox_pattern = re.compile(r"- \[(x| )\] ([^:\n]+)(?::\s*(.+))?")
+        # Note: Label may have trailing emoji/styling that we need to strip
+        checkbox_pattern = re.compile(r"- \[(x| )\] ([^:\n]+?)(?:\s*[🔧⚠️]*)?(?::\s*(.+))?$")
 
         for line in section_content.split("\n"):
             line = line.strip()
@@ -103,8 +104,12 @@ class ControlCablesParser:
                 continue
 
             is_checked = m.group(1) == "x"
-            label = m.group(2).strip()
+            # Strip trailing whitespace, underscores, and common markdown formatting
+            label = m.group(2).strip().rstrip("_").strip()
             value_str = m.group(3).strip() if m.group(3) else None
+
+            # Also try without trailing parenthetical hints like "_(hidden)_" or "_(live!)_"
+            label = re.sub(r"\s*_?\([^)]+\)_?$", "", label).strip()
 
             # Skip labels not in schema (e.g., section headers)
             if label not in self.SCHEMA:
