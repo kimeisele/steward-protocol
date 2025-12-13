@@ -128,6 +128,8 @@ class IntentGenerator:
             # OPUS-032: Self-Documentation Analyzers
             self._analyze_readme_staleness,
             self._analyze_self_documentation,
+            # OPUS-032: The Ouroboros Protocol
+            self._analyze_capability_gaps,
         ]
 
     def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
@@ -592,5 +594,95 @@ class IntentGenerator:
 
         except Exception as e:
             logger.debug(f"Self-documentation analysis failed: {e}")
+
+        return None
+
+    def _analyze_capability_gaps(self, context: Dict[str, Any]) -> Optional[Intent]:
+        """
+        🐍 OUROBOROS: Detect missing capabilities and propose generation.
+
+        Risk: HIGH (code generation requires human approval)
+
+        This is THE SINGULARITY - the system proposing to evolve itself.
+
+        Triggers:
+        - Context contains 'capability_missing' error
+        - Error logs mention 'unknown syscall'
+        - Recent failure patterns suggest missing tools
+        """
+        try:
+            # Check context for capability missing signals
+            errors = context.get("recent_errors", [])
+            missing_cap = None
+            missing_description = None
+
+            for error in errors:
+                error_msg = str(error.get("message", "")).lower()
+                error_type = error.get("type", "")
+
+                # Pattern 1: Unknown syscall
+                if "unknown syscall" in error_msg:
+                    import re
+
+                    match = re.search(r"unknown syscall[:\s]+['\"]?(\w+)['\"]?", error_msg, re.I)
+                    if match:
+                        missing_cap = match.group(1).lower()
+                        missing_description = f"Syscall '{missing_cap}' was requested but not found"
+                        break
+
+                # Pattern 2: Capability not found
+                if "capability not found" in error_msg or "no handler for" in error_msg:
+                    import re
+
+                    match = re.search(r"(?:capability|handler)[:\s]+['\"]?(\w+)['\"]?", error_msg, re.I)
+                    if match:
+                        missing_cap = match.group(1).lower()
+                        missing_description = f"Capability '{missing_cap}' was needed but unavailable"
+                        break
+
+                # Pattern 3: KeyError in syscall registry
+                if error_type == "KeyError" and "syscall" in error_msg:
+                    import re
+
+                    match = re.search(r"['\"](\w+)['\"]", error_msg)
+                    if match:
+                        missing_cap = match.group(1).lower()
+                        missing_description = f"Syscall '{missing_cap}' not in registry"
+                        break
+
+            if not missing_cap:
+                # Also check context for explicit capability request
+                missing_cap = context.get("requested_capability")
+                missing_description = context.get("capability_description", "User requested new capability")
+
+            if not missing_cap:
+                return None
+
+            # Check memory - have we recently been rejected for this?
+            if self._memory:
+                if self._memory.was_recently_rejected(f"genesis_{missing_cap}", hours=72):
+                    logger.debug(f"Skipping genesis_{missing_cap} - recently rejected")
+                    return None
+
+            return Intent(
+                id=self._next_intent_id(),
+                intent_type=f"genesis_{missing_cap}",
+                title=f"🐍 Generate capability: {missing_cap}",
+                description=f"The Ouroboros Protocol can generate this missing capability. {missing_description}",
+                reasoning="System evolution through capability synthesis. The serpent eats its tail to grow.",
+                priority=IntentPriority.HIGH,
+                risk=IntentRisk.HIGH,
+                params={
+                    "capability_name": missing_cap,
+                    "capability_type": "syscall",
+                    "description": missing_description,
+                    "syscall_name": missing_cap.upper(),
+                },
+                auto_executable=False,  # NEVER auto-execute code generation
+                circuit_to_execute="vibe_core/plugins/opus_assistant/circuits/capability_genesis.yaml",
+            )
+
+        except Exception as e:
+            logger.debug(f"Capability gap analysis failed: {e}")
 
         return None
