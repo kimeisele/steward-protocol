@@ -1,32 +1,45 @@
-# CAPABILITY GENESIS CIRCUIT - The Ouroboros Protocol + VIDYA + GREMIUM
-# ======================================================================
+# CAPABILITY GENESIS CIRCUIT - The Ouroboros Protocol + VIDYA + GREMIUM + DIAMOND
+# ================================================================================
 # OPUS-032: Level 3 Autonomie - Tool Synthesis
 # OPUS-033: VIDYA Integration - Knowledge Before Action
 # OPUS-035: GREMIUM - AI Federation for Autonomous Decisions
+# OPUS-036: DIAMOND PROTOCOL - TDD Law (Test-First Genesis)
 #
 # Philosophy:
 #   "The serpent that consumes itself is reborn, ever-evolving."
 #   "Before building something new, seek wisdom." - VIDYA Principle
 #   "The council of validators speaks with one voice." - GREMIUM Principle
+#   "RED before GREEN. Test before Code. No exceptions." - DIAMOND LAW
 #
 # This circuit enables MANAS to CREATE NEW TOOLS with KNOWLEDGE:
 # - Triggered when MANAS detects a missing capability
 # - Researches best practices via Science Cartridge (Jijnasa)
 # - Checks existing knowledge library (Smriti)
+# - DIAMOND: Generates TEST first (Pramana)
+# - DIAMOND: RED Gate - Test MUST fail (proves non-trivial)
 # - Generates plugin code based on research (Nirmana)
-# - Validates code via VIDYA Critic (Pramana)
+# - Validates code via VIDYA Critic
 # - GREMIUM evaluates: auto-approve or escalate to human
-# - Tests in ephemeral sandbox before deployment
+# - DIAMOND: GREEN Gate - Test MUST pass (proves implementation)
 # - Hot-loads to runtime_extensions/
 #
-# The Scientific Method (VIDYA Workflow):
+# The Scientific Method (VIDYA + DIAMOND Workflow):
 #   1. Jijnasa (Curiosity) - Research best practices
 #   2. Smriti (Memory) - Check existing knowledge
-#   3. Kalpana (Planning) - Design the blueprint
-#   4. Nirmana (Construction) - Generate code
-#   5. Pramana (Proof) - Validate and test
-#   6. GREMIUM - Federation votes on approval
-#   7. Deployment - Hot-load to production
+#   3. Pramana (Proof) - Generate TEST first [DIAMOND]
+#   4. RED Gate - Test MUST FAIL [DIAMOND]
+#   5. Nirmana (Construction) - Generate implementation
+#   6. VIDYA Critique - Static analysis
+#   7. GREMIUM - Federation votes on approval
+#   8. GREEN Gate - Test MUST PASS [DIAMOND]
+#   9. Deployment - Hot-load to production
+#
+# DIAMOND PROTOCOL (TDD Law):
+#   The Diamond is forged under pressure:
+#   1. Generate TEST before CODE (inversion of control)
+#   2. RED Gate: Test MUST fail - proves test isn't trivially true
+#   3. GREEN Gate: Test MUST pass - proves implementation works
+#   4. No hot-load until GREEN
 #
 # GREMIUM Decision Logic:
 #   IF all validators pass AND risk <= threshold:
@@ -37,18 +50,19 @@
 # Safety Gates (CRITICAL):
 #   1. Research-First: No code without understanding
 #   2. Library Check: Don't reinvent the wheel
-#   3. VIDYA Critique: Static analysis (AST-based)
-#   4. GREMIUM: AI Federation decides (auto-approve OR escalate)
-#   5. Narasimha Check: Secondary security validation
-#   6. Sandbox Test: Ephemeral process isolation
-#   7. Reversible: Can be unloaded via hot_unload()
+#   3. DIAMOND RED: Test generated first, must fail
+#   4. VIDYA Critique: Static analysis (AST-based)
+#   5. GREMIUM: AI Federation decides (auto-approve OR escalate)
+#   6. Narasimha Check: Secondary security validation
+#   7. DIAMOND GREEN: Test must pass (replaces sandbox)
+#   8. Reversible: Can be unloaded via hot_unload()
 #
 circuit:
   id: CAPABILITY_GENESIS
-  name: "Capability Genesis - The Ouroboros Protocol + VIDYA"
-  description: "Generate new capabilities with knowledge-first approach"
+  name: "Capability Genesis - The Ouroboros Protocol + VIDYA + DIAMOND"
+  description: "Generate new capabilities with TDD-first approach"
   domain: OPUS
-  version: "2.0.0"  # OPUS-033: VIDYA Integration
+  version: "3.0.0"  # OPUS-036: DIAMOND Protocol (TDD Law)
   entry_state: "validate_request"
 
   # Event triggers
@@ -67,15 +81,23 @@ circuit:
     auto_approve_threshold: "medium"  # NEW: auto-approve for low/medium risk
     require_research: true      # Require research phase
     require_vidya_check: true   # Require VIDYA critique
-    require_sandbox: true       # Require sandbox test
     max_pending_genesis: 3
+
+    # DIAMOND PROTOCOL CONFIG (TDD Law):
+    diamond_protocol:
+      enabled: true             # OPUS-036: TDD is mandatory
+      red_gate_required: true   # Test MUST fail before code
+      green_gate_required: true # Test MUST pass before deploy
+      test_timeout_seconds: 30  # Max time for test execution
+      fail_on_trivial_test: true  # Reject tests that pass without implementation
 
     # GREMIUM RULES (AI Federation):
     # If ALL of these pass → auto-approve:
-    #   1. VIDYA Critic (AST analysis) = passed
-    #   2. Sandbox Test = passed
-    #   3. Narasimha Security = safe
-    #   4. Risk Level <= auto_approve_threshold
+    #   1. DIAMOND RED Gate = test failed (as expected)
+    #   2. VIDYA Critic (AST analysis) = passed
+    #   3. DIAMOND GREEN Gate = test passed (implementation works)
+    #   4. Narasimha Security = safe
+    #   5. Risk Level <= auto_approve_threshold
     #
     # If ANY fail OR risk > threshold → escalate to human
 
@@ -155,7 +177,7 @@ circuit:
         - condition: "library_result.found == true"
           to: reuse_existing
         - condition: "library_result.found == false"
-          to: generate_code
+          to: generate_test  # DIAMOND: Test BEFORE code
 
     reuse_existing:
       name: "Reuse Existing Blueprint"
@@ -168,7 +190,75 @@ circuit:
         message: "Found existing blueprint - no need to regenerate"
 
     # =====================================================
-    # PHASE 3: NIRMANA (Construction) - Generate Code
+    # PHASE 3: PRAMANA (Proof) - DIAMOND: Generate Test FIRST
+    # =====================================================
+    # "RED before GREEN. Test before Code. No exceptions."
+    generate_test:
+      name: "Pramana - Generate Test (DIAMOND RED)"
+      description: "DIAMOND PROTOCOL: Generate test BEFORE implementation"
+      state_var: "generated_test"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.diamond_generate_test"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            capability_type: "{{ capability_spec.type }}"
+            description: "{{ capability_spec.description }}"
+            syscall_name: "{{ capability_spec.syscall_name }}"
+            parameters: "{{ capability_spec.parameters }}"
+            research_insights: "{{ research_result.key_insights }}"
+      on_success: red_gate
+      on_failure: test_generation_failed
+
+    # =====================================================
+    # PHASE 3.5: RED GATE - Test MUST Fail
+    # =====================================================
+    # The test MUST fail because implementation doesn't exist yet.
+    # If test passes → it's trivially true → REJECT
+    red_gate:
+      name: "RED Gate (DIAMOND Protocol)"
+      description: "Test MUST fail - proves test isn't trivially true"
+      state_var: "red_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.diamond_red_gate"
+          params:
+            test_code: "{{ generated_test }}"
+            capability_name: "{{ capability_spec.name }}"
+            timeout_seconds: "{{ config.diamond_protocol.test_timeout_seconds }}"
+      transitions:
+        - condition: "red_result.test_failed == true"
+          to: generate_code  # SUCCESS: Test failed as expected → now generate code
+        - condition: "red_result.test_failed == false"
+          to: red_gate_violated  # FAILURE: Test passed without implementation = BAD
+
+    red_gate_violated:
+      name: "RED Gate Violated"
+      description: "Test passed without implementation - trivially true test rejected"
+      terminal: true
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ERROR"
+            message: "💎🚫 DIAMOND RED VIOLATED: Test passed without implementation for {{ capability_spec.name }}"
+            source: "genesis.diamond"
+      result:
+        status: "diamond_red_violated"
+        reason: "Test passed without implementation - indicates trivially true test"
+        test_code: "{{ generated_test }}"
+        message: "The Diamond Law was broken: RED phase requires test failure"
+
+    test_generation_failed:
+      name: "Test Generation Failed"
+      description: "Could not generate test - DIAMOND blocks code generation"
+      terminal: true
+      result:
+        status: "error"
+        reason: "Test generation failed - cannot proceed without test (DIAMOND Law)"
+
+    # =====================================================
+    # PHASE 4: NIRMANA (Construction) - Generate Code
     # =====================================================
     generate_code:
       name: "Nirmana - Code Generation"
@@ -295,55 +385,67 @@ circuit:
           target: "opus.genesis_narasimha_check"
           params:
             code: "{{ generated_code }}"
+            test_code: "{{ generated_test }}"  # DIAMOND: Also check test code
       transitions:
         - condition: "security_result.safe == true"
-          to: sandbox_test
+          to: green_gate  # DIAMOND: Go to GREEN Gate, not sandbox
         - condition: "security_result.safe == false"
           to: security_violation
 
     # =====================================================
-    # PHASE 7: SANDBOX TEST (Ephemeral Execution)
+    # PHASE 7: GREEN GATE (DIAMOND Protocol)
     # =====================================================
-    sandbox_test:
-      name: "Sandbox Test"
-      description: "Run tests in ephemeral sandbox (isolated process)"
-      state_var: "sandbox_result"
+    # The test that FAILED in RED phase MUST now PASS.
+    # This proves the implementation actually works.
+    green_gate:
+      name: "GREEN Gate (DIAMOND Protocol)"
+      description: "Test MUST pass - proves implementation works"
+      state_var: "green_result"
       actions:
         - action_type: EXECUTE_SCRIPT
-          target: "opus.vidya_sandbox_test"
+          target: "opus.diamond_green_gate"
           params:
-            code: "{{ generated_code }}"
+            test_code: "{{ generated_test }}"
+            implementation_code: "{{ generated_code }}"
             capability_name: "{{ capability_spec.name }}"
-            timeout_seconds: 30
+            timeout_seconds: "{{ config.diamond_protocol.test_timeout_seconds }}"
       transitions:
-        - condition: "sandbox_result.success == true"
-          to: write_to_nursery
-        - condition: "sandbox_result.success == false"
-          to: sandbox_failed
+        - condition: "green_result.test_passed == true"
+          to: write_to_nursery  # SUCCESS: Test passed → deploy
+        - condition: "green_result.test_passed == false"
+          to: green_gate_failed  # FAILURE: Implementation doesn't work
 
-    sandbox_failed:
-      name: "Sandbox Test Failed"
-      description: "Code failed sandbox tests"
+    green_gate_failed:
+      name: "GREEN Gate Failed"
+      description: "Test failed after implementation - code doesn't work"
       terminal: true
       actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "ERROR"
+            message: "💎❌ DIAMOND GREEN FAILED: Test still fails after implementation for {{ capability_spec.name }}"
+            source: "genesis.diamond"
         - action_type: EXECUTE_SCRIPT
           target: "opus.vidya_record_failure"
           params:
             capability_name: "{{ capability_spec.name }}"
             code: "{{ generated_code }}"
-            error: "{{ sandbox_result.error }}"
+            test_code: "{{ generated_test }}"
+            error: "{{ green_result.error }}"
       result:
-        status: "test_failed"
-        reason: "{{ sandbox_result.error }}"
-        stdout: "{{ sandbox_result.stdout }}"
-        stderr: "{{ sandbox_result.stderr }}"
+        status: "diamond_green_failed"
+        reason: "{{ green_result.error }}"
+        stdout: "{{ green_result.stdout }}"
+        stderr: "{{ green_result.stderr }}"
+        message: "Implementation failed to make test pass - DIAMOND GREEN rejected"
 
     # =====================================================
     # PHASE 8: DEPLOYMENT
     # =====================================================
     write_to_nursery:
       name: "Write to The Nursery"
-      description: "Write approved code to runtime_extensions/"
+      description: "Write approved code AND test to runtime_extensions/"
       state_var: "write_result"
       actions:
         - action_type: EXECUTE_SCRIPT
@@ -352,6 +454,7 @@ circuit:
             output_dir: "{{ config.output_dir }}"
             capability_name: "{{ capability_spec.name }}"
             generated_code: "{{ generated_code }}"
+            generated_test: "{{ generated_test }}"  # DIAMOND: Write test file too
       on_success: store_blueprint
       on_failure: write_failed
 
@@ -366,7 +469,8 @@ circuit:
             capability_name: "{{ capability_spec.name }}"
             description: "{{ capability_spec.description }}"
             code: "{{ generated_code }}"
-            tags: ["{{ capability_spec.type }}", "generated", "ouroboros"]
+            test_code: "{{ generated_test }}"  # DIAMOND: Store test too
+            tags: ["{{ capability_spec.type }}", "generated", "ouroboros", "diamond-verified"]
       on_success: hot_load
       on_failure: hot_load  # Continue even if storage fails
 
@@ -394,13 +498,14 @@ circuit:
           target: "opus.log_observation"
           params:
             severity: "INFO"
-            message: "🐍 OUROBOROS COMPLETE: {{ capability_spec.name }} is now available as {{ capability_spec.syscall_name }}"
-            source: "genesis"
+            message: "🐍💎 OUROBOROS + DIAMOND COMPLETE: {{ capability_spec.name }} is now available as {{ capability_spec.syscall_name }}"
+            source: "genesis.diamond"
       result:
         status: "success"
         capability_name: "{{ capability_spec.name }}"
         syscall_name: "{{ capability_spec.syscall_name }}"
-        message: "The serpent has evolved. (VIDYA validated)"
+        diamond_verified: true
+        message: "The serpent has evolved. (DIAMOND: RED→GREEN verified)"
 
     # Terminal: Invalid request
     reject_invalid:
