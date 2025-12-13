@@ -43,6 +43,9 @@ class EventType(str, Enum):
     PRAYER_RECEIVED = "PRAYER_RECEIVED"  # Request received
     CRITICAL_INTERRUPT = "CRITICAL_INTERRUPT"  # Emergency bypass (Gajendra)
 
+    # Syscall events (OPUS-031 Layer 2)
+    SYSCALL_EXECUTED = "SYSCALL_EXECUTED"  # Syscall completed (for experience replay)
+
     # Agent-specific events
     BROADCAST = "BROADCAST"  # Content published
     PROPOSAL_CREATED = "PROPOSAL_CREATED"  # New proposal
@@ -74,6 +77,7 @@ EVENT_COLOR_MAP = {
     EventType.BROADCAST: EventColor.GREEN,
     EventType.COMPLETED: EventColor.WHITE,
     EventType.AUDIT_CHECK: EventColor.YELLOW,
+    EventType.SYSCALL_EXECUTED: EventColor.CYAN,  # OPUS-031: Experience Replay
 }
 
 
