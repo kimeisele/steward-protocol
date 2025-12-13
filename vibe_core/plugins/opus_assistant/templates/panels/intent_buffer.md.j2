@@ -2,35 +2,90 @@
   Intent Buffer Panel - The Frontallappen (Planning Center)
 
   OPUS-031 Layer 1.5: Shows what the system PLANS to do next.
+  OPUS-032 MANAS: Proactive intents from the Cognitive Kernel.
 
   This is the bridge between Intention and Action:
-  - AI proposes an intent (set_pending_intent)
-  - Human sees it in OPUS.md
-  - Human checks "Execute" checkbox to approve
-  - System executes the approved intent
+  - MANAS generates intents proactively (OPUS-032)
+  - Human sees them in OPUS.md
+  - Human can approve/reject each intent
+  - System executes approved intents
   - Result appears in Syscall Console
 
   THE COGNITIVE LOOP:
-  Intention (Buffer) -> Action (Syscall) -> Memory (Console) -> Reflection (Dashboard)
+  Thinking (MANAS) -> Intention (Buffer) -> Action (Syscall) -> Memory (Console)
 
   Required context:
-    - pending_intent: Dict with intent details or None
-      - intent: str (natural language description)
-      - syscall_type: str
-      - params: Dict
-      - requires_approval: bool
-      - approved: bool
-      - created_at: str (ISO timestamp)
+    - pending_intent: Dict with:
+      For MANAS (source="manas"):
+        - intents: List of { id, title, description, priority, risk, reasoning, auto_executable }
+        - total_pending: int
+        - idle_minutes: int
+        - last_thought: str or null
+        - recent_executed: List
+      For Legacy (source="legacy"):
+        - legacy_intent: Dict with old format
 
-  Design Decisions (OPUS-031):
+  Design Decisions (OPUS-031/032):
     - DD4: Bidirectional Control Surface
     - DD6: Intent before Action (human-in-the-loop)
+    - DD7: Proactive Cognition (MANAS generates its own input)
 #}
 
 ## 🎯 Intent Buffer
 
 {% if pending_intent %}
-{% set intent = pending_intent %}
+
+{% if pending_intent.source == 'manas' %}
+{# ============================================================================
+   MANAS Intents (OPUS-032) - Proactive Cognitive Suggestions
+   ============================================================================ #}
+
+🧠 **MANAS Active** | {{ pending_intent.total_pending }} pending | Idle: {{ pending_intent.idle_minutes }} min
+{% if pending_intent.last_thought %}| Last thought: `{{ pending_intent.last_thought[-19:] }}`{% endif %}
+
+{% if pending_intent.intents %}
+{% for intent in pending_intent.intents %}
+
+### {{ loop.index }}. {{ intent.title }}
+
+> {{ intent.description }}
+
+| Property | Value |
+|----------|-------|
+| **ID** | `{{ intent.id }}` |
+| **Priority** | {% if intent.priority == 'critical' %}🔴 CRITICAL{% elif intent.priority == 'high' %}🟠 HIGH{% elif intent.priority == 'medium' %}🟡 MEDIUM{% else %}🟢 LOW{% endif %} |
+| **Risk** | {% if intent.risk == 'safe' %}✅ SAFE{% elif intent.risk == 'low' %}🟢 LOW{% elif intent.risk == 'medium' %}🟡 MEDIUM{% else %}🔴 HIGH{% endif %} |
+{% if intent.auto_executable %}| **Auto-Execute** | ⚡ Yes (if enabled) |{% endif %}
+
+**Reasoning:** {{ intent.reasoning }}
+
+- [ ] Approve `{{ intent.id }}`
+- [ ] Reject `{{ intent.id }}`
+
+---
+{% endfor %}
+{% else %}
+_MANAS is thinking but has no suggestions yet._
+{% endif %}
+
+{% if pending_intent.recent_executed %}
+<details>
+<summary>📜 Recently Executed ({{ pending_intent.recent_executed|length }})</summary>
+
+| Intent | Status | Time |
+|--------|--------|------|
+{% for exec in pending_intent.recent_executed %}
+| {{ exec.title[:30] }} | {% if exec.success %}✅{% else %}❌{% endif %} | `{{ exec.executed_at[-8:] if exec.executed_at else '?' }}` |
+{% endfor %}
+
+</details>
+{% endif %}
+
+{% elif pending_intent.source == 'legacy' %}
+{# ============================================================================
+   Legacy Intent (pre-MANAS)
+   ============================================================================ #}
+{% set intent = pending_intent.legacy_intent %}
 
 **Pending Action:** {{ intent.syscall_type }}
 
@@ -54,10 +109,12 @@
 
 _Queued: {{ intent.created_at[-8:] if intent.created_at else 'unknown' }}_
 
+{% endif %}
+
 {% else %}
 _No pending intents. The system is idle._
 
-> 💡 **Tip:** When the AI proposes an action, it will appear here for approval.
+> 💡 **Tip:** MANAS will generate proactive suggestions after {{ 30 }} minutes of idle time or on the hourly pulse.
 {% endif %}
 
 ---
