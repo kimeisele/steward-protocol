@@ -327,24 +327,28 @@ class DharmaCartridge(VibeAgent, OathMixin):
         """
         Evaluate an action against Dharmic principles.
 
+        Uses shared VIOLATION_PATTERNS from DharmaObserver for consistency.
         Returns (is_dharmic, violations_list)
         """
-        violations = []
+        # Import violation patterns from observer (Single Source of Truth)
+        from vibe_core.cartridges.agent_city.dharma.observer import DharmaObserver
 
-        # Check for common violations
-        if "force" in action_type.lower() or "bypass" in action_type.lower():
-            violations.append("Himsa (violence) - forcing actions harms system integrity")
+        # Use observer's detection logic
+        raw_violations = DharmaObserver()._detect_violations(
+            syscall_type=action_type,
+            params=details,
+            agent_id="blessing_check",
+        )
 
-        if "delete" in action_type.lower() and "kernel" in str(details).lower():
-            violations.append("Asatya (untruth) - destroying kernel truth is forbidden")
+        # Format violations with human-readable principle explanations
+        principle_explanations = {
+            "himsa": "Himsa (violence) - forcing actions harms system integrity",
+            "asteya": "Asteya (non-stealing) - skipping tests steals quality from users",
+            "aparigraha": "Aparigraha (non-attachment) - bypassing verification shows attachment to speed over truth",
+            "asatya": "Asatya (untruth) - deception harms the protocol",
+        }
 
-        if "skip_tests" in str(details).lower():
-            violations.append("Asteya (non-stealing) - skipping tests steals quality from users")
-
-        if "--no-verify" in str(details).lower():
-            violations.append(
-                "Aparigraha (non-attachment) - bypassing verification shows attachment to speed over truth"
-            )
+        violations = [principle_explanations.get(v["principle"], f"{v['principle']} violation") for v in raw_violations]
 
         return (len(violations) == 0, violations)
 
