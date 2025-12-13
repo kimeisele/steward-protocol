@@ -232,6 +232,7 @@ class OpusDashboardRenderer:
             "session": self._gather_session(),
             "karma": karma,  # 🔌 WIRING: Karma score, history, trend
             "treasury": treasury,  # 💰 LAYER 1.5: Budget tracking
+            "syscalls": self._gather_syscalls(),  # ⚡ LAYER 2: Experience Replay
             "layers": self._gather_prakriti_layers(),
             "focus_areas": self._gather_focus_areas(),
             "journal": self._gather_journal(),
@@ -528,6 +529,45 @@ class OpusDashboardRenderer:
             return None
         except Exception as e:
             logger.debug(f"Failed to gather treasury: {e}")
+            return None
+
+    def _gather_syscalls(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather syscall data for the Syscall Console panel.
+
+        ⚡ LAYER 2: Experience Replay Buffer visualization.
+        Shows recent syscalls and statistics for few-shot learning.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+
+            # Get recent syscalls for display
+            all_syscalls = state_mgr.get_successful_syscalls(limit=20)
+
+            # Convert to dict format for template
+            history = [
+                {
+                    "timestamp": sc.timestamp,
+                    "intent": sc.intent,
+                    "syscall_type": sc.syscall_type,
+                    "result": sc.result,
+                    "execution_time_ms": sc.execution_time_ms,
+                }
+                for sc in all_syscalls
+            ]
+
+            # Get stats
+            stats = state_mgr.get_syscall_stats()
+
+            return {
+                "history": history,
+                "stats": stats,
+            }
+
+        except Exception as e:
+            logger.debug(f"Failed to gather syscalls: {e}")
             return None
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:

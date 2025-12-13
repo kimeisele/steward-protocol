@@ -77,17 +77,25 @@ absent:
   - path: vibe_core/plugins/opus_assistant/render/opus_md_writer.py
     reason: "Deleted - no legacy split-brain"
 
+  # Layer 2: Syscall Console Panel (DONE!)
+  - path: vibe_core/plugins/opus_assistant/templates/panels/syscall_console.md.j2
+    required: true
+    patterns:
+      - "syscall_history"
+      - "Experience Replay"
+
+  # Layer 2: Syscall visualization in renderer (DONE!)
+  - path: vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py
+    required: true
+    patterns:
+      - "_gather_syscalls"
+
 future:
   # Layer 1.5: Intent Buffer Panel (still to be created)
   - path: vibe_core/plugins/opus_assistant/templates/panels/intent_buffer.md.j2
     patterns:
       - "pending_intent"
       - "AWAITING_APPROVAL"
-
-  # Layer 2: Syscall Console Panel (to be created)
-  - path: vibe_core/plugins/opus_assistant/templates/panels/syscall_console.md.j2
-    patterns:
-      - "syscall_history"
 -->
 
 ---
@@ -789,13 +797,14 @@ OPUS PRIME (main)
 7. [ ] Add heartbeat counter to session state
 8. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
 
-### Layer 2: Syscall Console (P1 - 🟡 3/5 COMPLETE)
+### Layer 2: Syscall Console (P1 - 🟢 5/6 COMPLETE)
 1. [x] Add `SyscallEntry` dataclass to `state_manager.py`
 2. [x] Add `record_syscall()` method to `OpusStateManager`
 3. [x] Add `get_successful_syscalls()` for few-shot learning
 4. [x] Add `get_syscall_stats()` for dashboard display
-5. [ ] Create `syscall_console.md.j2` panel
-6. [ ] Wire envoy to record syscalls
+5. [x] Create `syscall_console.md.j2` panel ← Visual feedback loop!
+6. [x] Add `_gather_syscalls()` to renderer
+7. [ ] Wire envoy to record syscalls (production wiring)
 
 ### Layer 3: 4D Hypercube
 1. [ ] Add `_gather_city()` to renderer

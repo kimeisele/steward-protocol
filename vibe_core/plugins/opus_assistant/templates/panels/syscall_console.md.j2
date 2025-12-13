@@ -1,0 +1,46 @@
+{#
+  Syscall Console Panel - Experience Replay Buffer Visualization
+
+  OPUS-031 Layer 2: Makes the system's "thoughts" visible.
+
+  This is NOT a log viewer - it's a window into the system's
+  learning process. Successful syscalls become few-shot examples.
+
+  Required context:
+    - syscalls.history: List[Dict] - Recent syscall entries
+    - syscalls.stats: Dict - Aggregated statistics
+
+  Design Decisions (OPUS-031):
+    - DD1: SyscallEntry = Experience Replay (not logs)
+    - The system learns from its own successes
+#}
+
+## ⚡ Syscall Console
+
+{% if syscalls and syscalls.history %}
+{% set stats = syscalls.stats %}
+
+**Status:** {{ stats.success_rate }}% success rate | {{ stats.total }} total | {{ stats.successful }} learned
+
+{% if syscalls.history %}
+| Time | Intent | Type | Result |
+|------|--------|------|--------|
+{% for entry in syscalls.history[:5] %}
+| `{{ entry.timestamp[-8:] }}` | {{ entry.intent[:35] }}{% if entry.intent|length > 35 %}...{% endif %} | **{{ entry.syscall_type }}** | {{ "✅" if entry.result == "SUCCESS" else ("🟡" if entry.result == "PARTIAL" else "❌") }} |
+{% endfor %}
+{% endif %}
+
+{% if stats.by_type %}
+**By Type:**
+{% for stype, sdata in stats.by_type.items() %}
+- `{{ stype }}`: {{ sdata.successful }}/{{ sdata.total }} successful
+{% endfor %}
+{% endif %}
+
+> 🧠 **Experience Replay:** {{ syscalls.history|length }} entries available for few-shot learning
+
+{% else %}
+_No syscalls recorded yet. The system learns from successful executions._
+{% endif %}
+
+---
