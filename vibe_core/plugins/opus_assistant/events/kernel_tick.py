@@ -57,6 +57,14 @@ class KernelTickHandler:
         self._circuit_executor = None
         self._subscribed = False
 
+        # ⚡ VAJRA: Circuit breaker state (prevents zombie circuits)
+        self._circuit_failures: Dict[str, int] = {}  # circuit_id -> failure count
+        self._circuit_disabled_until: Dict[str, float] = {}  # circuit_id -> timestamp
+        self._circuit_timeout_seconds = 10.0  # Max time per circuit
+        self._action_timeout_seconds = 5.0  # Max time per action
+        self._circuit_breaker_threshold = 3  # Failures before disable
+        self._circuit_breaker_cooldown = 300.0  # 5 min cooldown
+
         # Initialize services
         self._init_context_service()
         self._init_observation_logger()
@@ -202,6 +210,8 @@ class KernelTickHandler:
         """
         Execute a circuit definition.
 
+        ⚡ VAJRA: Has circuit breaker + timeout protection.
+
         Maps circuit actions to plugin methods.
         LOGS observations about circuit execution to the journal!
 
@@ -209,15 +219,44 @@ class KernelTickHandler:
             circuit_def: Circuit definition from YAML
             event: The triggering event
         """
+        import asyncio
+
         circuit_id = circuit_def.get("id", "unknown")
         entry_state = circuit_def.get("entry_state", "")
         states = circuit_def.get("states", {})
+
+        # ⚡ VAJRA: Check circuit breaker
+        if self._is_circuit_disabled(circuit_id):
+            logger.debug(f"⚡ Circuit {circuit_id} is disabled (breaker tripped)")
+            return
 
         # LOG: Circuit starting
         self._log_observation_info(f"Circuit {circuit_id} triggered", "circuit")
 
         logger.debug(f"⚡ Executing circuit {circuit_id} from state {entry_state}")
 
+        try:
+            # ⚡ VAJRA: Wrap entire circuit in timeout
+            await asyncio.wait_for(
+                self._execute_circuit_inner(circuit_id, entry_state, states, event),
+                timeout=self._circuit_timeout_seconds,
+            )
+            # Success - reset failure count
+            self._circuit_failures[circuit_id] = 0
+
+        except asyncio.TimeoutError:
+            self._log_observation_alert(
+                f"Circuit {circuit_id} TIMEOUT after {self._circuit_timeout_seconds}s", "circuit_breaker"
+            )
+            self._record_circuit_failure(circuit_id)
+        except Exception as e:
+            self._log_observation_warn(f"Circuit {circuit_id} failed: {e}", "circuit_breaker")
+            self._record_circuit_failure(circuit_id)
+
+    async def _execute_circuit_inner(
+        self, circuit_id: str, entry_state: str, states: Dict[str, Any], event: Any
+    ) -> None:
+        """Inner circuit execution (wrapped by timeout)."""
         # Simple state machine execution
         current_state = entry_state
         visited = set()
@@ -264,9 +303,39 @@ class KernelTickHandler:
 
             current_state = next_state
 
+    def _is_circuit_disabled(self, circuit_id: str) -> bool:
+        """⚡ VAJRA: Check if circuit breaker has tripped."""
+        import time
+
+        disabled_until = self._circuit_disabled_until.get(circuit_id, 0)
+        if time.time() < disabled_until:
+            return True
+        # Cooldown expired - re-enable
+        if circuit_id in self._circuit_disabled_until:
+            del self._circuit_disabled_until[circuit_id]
+            self._circuit_failures[circuit_id] = 0
+            logger.info(f"⚡ Circuit {circuit_id} re-enabled after cooldown")
+        return False
+
+    def _record_circuit_failure(self, circuit_id: str) -> None:
+        """⚡ VAJRA: Record circuit failure and trip breaker if needed."""
+        import time
+
+        self._circuit_failures[circuit_id] = self._circuit_failures.get(circuit_id, 0) + 1
+        if self._circuit_failures[circuit_id] >= self._circuit_breaker_threshold:
+            self._circuit_disabled_until[circuit_id] = time.time() + self._circuit_breaker_cooldown
+            self._log_observation_alert(
+                f"Circuit {circuit_id} DISABLED for {self._circuit_breaker_cooldown}s "
+                f"({self._circuit_failures[circuit_id]} consecutive failures)",
+                "circuit_breaker",
+            )
+            logger.warning(f"⚡ Circuit breaker tripped for {circuit_id}")
+
     async def _execute_action(self, action: Dict[str, Any], event: Any, context: Dict[str, Any]) -> Dict[str, Any]:
         """
         Execute a single circuit action.
+
+        ⚡ VAJRA: Has per-action timeout protection.
 
         Maps action targets to plugin methods.
 
@@ -278,23 +347,36 @@ class KernelTickHandler:
         Returns:
             Action result dict
         """
+        import asyncio
+
         action_type = action.get("action_type", "")
         target = action.get("target", "")
         params = action.get("params", {})
 
         try:
-            if action_type == "EXECUTE_SCRIPT":
-                return await self._execute_script_action(target, params)
-            elif action_type == "EMIT_EVENT":
-                return await self._emit_event_action(target, params)
-            elif action_type == "CHECK_STATE":
-                return await self._check_state_action(target, params, context)
-            else:
-                logger.debug(f"Unknown action type: {action_type}")
-                return {"success": False, "error": f"Unknown action type: {action_type}"}
+            # ⚡ VAJRA: Wrap action in timeout
+            coro = self._execute_action_inner(action_type, target, params, context)
+            return await asyncio.wait_for(coro, timeout=self._action_timeout_seconds)
+        except asyncio.TimeoutError:
+            logger.warning(f"⚡ Action {action_type}:{target} TIMEOUT after {self._action_timeout_seconds}s")
+            return {"success": False, "error": f"Action timeout after {self._action_timeout_seconds}s"}
         except Exception as e:
             logger.debug(f"Action {action_type}:{target} failed: {e}")
             return {"success": False, "error": str(e)}
+
+    async def _execute_action_inner(
+        self, action_type: str, target: str, params: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Inner action execution (wrapped by timeout)."""
+        if action_type == "EXECUTE_SCRIPT":
+            return await self._execute_script_action(target, params)
+        elif action_type == "EMIT_EVENT":
+            return await self._emit_event_action(target, params)
+        elif action_type == "CHECK_STATE":
+            return await self._check_state_action(target, params, context)
+        else:
+            logger.debug(f"Unknown action type: {action_type}")
+            return {"success": False, "error": f"Unknown action type: {action_type}"}
 
     async def _execute_script_action(self, target: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -796,12 +878,27 @@ class KernelTickHandler:
 
         # Calculate karma score (0-100)
         # Start at 100, subtract for errors/crashes
-        karma_score = 100
-        karma_score -= crash_count * 30  # Crashes are severe
-        karma_score -= error_count * 10  # Errors are bad
-        karma_score -= warning_count * 2  # Warnings are minor
-        karma_score += success_count * 1  # Successes help
-        karma_score = max(0, min(100, karma_score))  # Clamp to 0-100
+        # ⚡ VAJRA: Logarithmic karma - hard to earn, easy to lose
+        # Old linear formula was too forgiving (90 successes = 3 crashes)
+        # New formula: exponential penalties, diminishing returns for recovery
+        import math
+
+        karma_score = 100.0
+
+        # Penalties compound exponentially (each crash hurts more than the last)
+        if crash_count > 0:
+            karma_score -= 30 * math.log2(crash_count + 1) * (1 + crash_count * 0.5)
+        if error_count > 0:
+            karma_score -= 10 * math.log2(error_count + 1) * (1 + error_count * 0.1)
+        if warning_count > 0:
+            karma_score -= 2 * math.log2(warning_count + 1)
+
+        # Recovery has diminishing returns (sqrt curve)
+        # 1 success = +1, 4 = +2, 9 = +3, 16 = +4, 100 = +10
+        if success_count > 0:
+            karma_score += math.sqrt(success_count)
+
+        karma_score = max(0, min(100, int(karma_score)))  # Clamp to 0-100
 
         # Determine boot mode
         is_critical = karma_score < 40 or crash_count > 0
