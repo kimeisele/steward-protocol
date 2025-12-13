@@ -1,8 +1,9 @@
 # OPUS-026: Semantic Verification Protocol
 
-> **Status**: IMPLEMENTED
+> **Status**: 🚧 PLANNED (NOT YET IMPLEMENTED)
 > **Created**: 2025-12-12
 > **Scope**: Extend @HARNESS from syntactic (grep) to semantic (code execution) verification
+> **Honesty Note**: This doc describes FUTURE functionality. `_verify_semantic()` does not exist yet.
 
 <!-- @HARNESS
 files:
