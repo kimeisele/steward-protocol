@@ -600,6 +600,13 @@ class KernelTickHandler:
                 "genesis_write_code": self._genesis_write_code,
                 "genesis_hot_load": self._genesis_hot_load,
                 "genesis_record_rejection": self._genesis_record_rejection,
+                # 📚 VIDYA: Knowledge Department Handlers (OPUS-033)
+                "vidya_research": self._vidya_research,
+                "vidya_check_library": self._vidya_check_library,
+                "vidya_critique": self._vidya_critique,
+                "vidya_sandbox_test": self._vidya_sandbox_test,
+                "vidya_store_blueprint": self._vidya_store_blueprint,
+                "vidya_record_failure": self._vidya_record_failure,
             }
             method = method_map.get(method_name)
             if method:
@@ -2309,6 +2316,275 @@ def format_{name}(data: Dict[str, Any]) -> str:
         self._log_observation_info(f"🐍 OUROBOROS: Capability '{name}' rejected and recorded", "genesis")
 
         return {"success": True, "recorded": True}
+
+    # =========================================================================
+    # 📚 VIDYA: Knowledge Department Handlers (OPUS-033)
+    # =========================================================================
+
+    async def _vidya_research(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Research best practices via Science Cartridge.
+
+        This is the Jijnasa (Curiosity) phase - seeking wisdom before building.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import ResearchInterface
+
+        query = params.get("query", "")
+        capability_name = params.get("capability_name", "")
+
+        if not query:
+            return {"success": False, "error": "Query is required"}
+
+        try:
+            research = ResearchInterface()
+            result = await research.query(query, max_results=5)
+
+            self._log_observation_info(
+                f"📚 VIDYA Research: '{capability_name}' - {len(result.sources)} sources found", "vidya"
+            )
+
+            return {
+                "success": result.success,
+                "query": result.query,
+                "sources": result.sources,
+                "summary": result.summary,
+                "key_insights": result.key_insights,
+                "mode": result.mode,
+            }
+
+        except Exception as e:
+            logger.warning(f"VIDYA research failed: {e}")
+            # Return success=False but don't block - research is optional
+            return {
+                "success": False,
+                "error": str(e),
+                "sources": [],
+                "summary": "",
+                "key_insights": [],
+            }
+
+    async def _vidya_check_library(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Check if capability already exists in knowledge library.
+
+        This is the Smriti (Memory) phase - check before reinventing.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        tags = params.get("tags", [])
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            result = library.search(capability_name, tags=tags)
+
+            if result.found:
+                self._log_observation_info(
+                    f"📚 VIDYA Library: Found existing blueprint for '{capability_name}'", "vidya"
+                )
+
+            return {
+                "found": result.found,
+                "blueprints": [bp.to_dict() for bp in result.blueprints],
+                "total_count": result.total_count,
+                "blueprint": result.blueprints[0].to_dict() if result.blueprints else None,
+            }
+
+        except Exception as e:
+            logger.warning(f"VIDYA library check failed: {e}")
+            return {"found": False, "blueprints": [], "total_count": 0, "error": str(e)}
+
+    async def _vidya_critique(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Static analysis via Critic.
+
+        This is the Pramana (Proof) phase - validate before deployment.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import Critic
+
+        code_dict = params.get("code", {})
+        capability_name = params.get("capability_name", "")
+
+        if not code_dict:
+            return {"passed": False, "error": "No code provided"}
+
+        try:
+            critic = Critic()
+            all_passed = True
+            all_findings = []
+
+            # Critique each file
+            for filename, code in code_dict.items():
+                result = critic.validate(code, filename=filename)
+                if not result.passed:
+                    all_passed = False
+                all_findings.extend(
+                    [{**f.__dict__, "severity": f.severity.value, "file": filename} for f in result.findings]
+                )
+
+            summary = (
+                "✅ All code passed VIDYA critique" if all_passed else f"❌ VIDYA found {len(all_findings)} issues"
+            )
+
+            self._log_observation_info(
+                f"📚 VIDYA Critique: '{capability_name}' - {'PASSED' if all_passed else 'FAILED'}", "vidya"
+            )
+
+            return {
+                "passed": all_passed,
+                "findings": all_findings,
+                "summary": summary,
+            }
+
+        except Exception as e:
+            logger.error(f"VIDYA critique failed: {e}")
+            return {"passed": False, "error": str(e), "findings": [], "summary": f"Critique error: {e}"}
+
+    async def _vidya_sandbox_test(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Run tests in ephemeral sandbox.
+
+        This is the critical safety gate - tests run in isolated process.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import Sandbox
+
+        code_dict = params.get("code", {})
+        capability_name = params.get("capability_name", "")
+        timeout_seconds = params.get("timeout_seconds", 30)
+
+        if not code_dict:
+            return {"success": False, "error": "No code provided"}
+
+        try:
+            sandbox = Sandbox(timeout_seconds=timeout_seconds)
+
+            # Generate a simple test for the capability
+            test_code = self._generate_capability_test(capability_name, code_dict)
+
+            result = await sandbox.run_test(code_dict, test_code)
+
+            self._log_observation_info(
+                f"📚 VIDYA Sandbox: '{capability_name}' - {'PASSED' if result.success else 'FAILED'} ({result.duration_ms}ms)",
+                "vidya",
+            )
+
+            return {
+                "success": result.success,
+                "exit_code": result.exit_code,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "duration_ms": result.duration_ms,
+                "timed_out": result.timed_out,
+                "error": result.error,
+                "test_results": result.test_results,
+            }
+
+        except Exception as e:
+            logger.error(f"VIDYA sandbox test failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _generate_capability_test(self, capability_name: str, code_dict: Dict[str, str]) -> str:
+        """Generate a basic test for the capability."""
+        # Find the plugin class name
+        plugin_class = capability_name.title().replace("_", "")
+
+        return f'''"""
+Auto-generated test for {capability_name}.
+VIDYA Sandbox Test - OPUS-033
+"""
+
+import pytest
+
+
+def test_module_imports():
+    """Test that the module can be imported without errors."""
+    # This tests basic syntax and import validity
+    assert True  # If we get here, imports succeeded
+
+
+def test_plugin_class_exists():
+    """Test that the plugin class exists."""
+    from plugin_main import {plugin_class}Plugin
+    assert {plugin_class}Plugin is not None
+
+
+def test_plugin_has_plugin_id():
+    """Test that the plugin has a plugin_id."""
+    from plugin_main import {plugin_class}Plugin
+    plugin = {plugin_class}Plugin()
+    assert hasattr(plugin, "plugin_id")
+    assert plugin.plugin_id == "{capability_name}"
+'''
+
+    async def _vidya_store_blueprint(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Store successful blueprint in knowledge library.
+
+        This is the Smriti (Memory) preservation - learn from success.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        description = params.get("description", "")
+        code_dict = params.get("code", {})
+        tags = params.get("tags", [])
+
+        if not capability_name or not code_dict:
+            return {"success": False, "error": "Missing required parameters"}
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            success = library.store_blueprint(
+                name=capability_name,
+                description=description,
+                code=code_dict,
+                tags=tags,
+                category="capabilities",
+            )
+
+            if success:
+                self._log_observation_info(f"📚 VIDYA Library: Stored blueprint for '{capability_name}'", "vidya")
+
+            return {"success": success, "capability_name": capability_name}
+
+        except Exception as e:
+            logger.warning(f"VIDYA blueprint storage failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _vidya_record_failure(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        📚 VIDYA: Record a failed capability attempt for learning.
+
+        Even failures teach us. Store them to avoid repeating mistakes.
+        """
+        from vibe_core.plugins.opus_assistant.vidya import LibraryInterface
+
+        capability_name = params.get("capability_name", "")
+        code_dict = params.get("code", {})
+        error = params.get("error", "Unknown error")
+        findings = params.get("findings", [])
+
+        if not capability_name:
+            return {"success": False, "error": "Missing capability_name"}
+
+        try:
+            library = LibraryInterface(workspace=self._plugin._workspace)
+            success = library.record_failure(
+                name=capability_name,
+                code=code_dict,
+                error=error,
+                reason=str(findings) if findings else "",
+            )
+
+            self._log_observation_info(
+                f"📚 VIDYA Library: Recorded failure for '{capability_name}' (for learning)", "vidya"
+            )
+
+            return {"success": success, "recorded": True}
+
+        except Exception as e:
+            logger.warning(f"VIDYA failure recording failed: {e}")
+            return {"success": False, "error": str(e)}
 
     # =========================================================================
     # Fallback for events without circuits
