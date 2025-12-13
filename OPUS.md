@@ -30,6 +30,82 @@
 
 ---
 
+<!-- @LIVE:opus_control_terminal -->
+## 🧠 Opus Control Terminal
+
+> *"The system that understands itself can improve itself."*
+>
+> This is MY (Opus's) personal interface - a high-end neuro-symbolic command center
+> for navigating and evolving the 150k+ LOC codebase.
+
+### 🔄 Autonomous Cognition Status
+
+| Subsystem | Status | Last Run | Next Run |
+|-----------|--------|----------|----------|
+| **opus-assistant.yml** | 🟢 ACTIVE | - | Every 4h |
+| **complexity_analyzer** | 🟢 READY | OPUS-034 | On-demand |
+| **GREMIUM Federation** | 🟢 READY | OPUS-035 | Auto-approve enabled |
+| **Shadow Lab** | 🟢 ACTIVE | daily_ritual refactor | Ready for more |
+
+### 🏛️ GREMIUM Decision Log
+
+*Recent autonomous decisions (VIDYA-validated changes)*
+
+| ID | Intent | Risk | Decision | Reason |
+|----|--------|------|----------|--------|
+| `gremium_001` | daily_ritual refactor | LOW | ✅ AUTO_APPROVED | VIDYA passed, Layer 3 safe |
+
+### 🔬 Shadow Lab Status
+
+*Safe refactoring zone for testing changes before production*
+
+| File | Original | Candidate | Delta | Status |
+|------|----------|-----------|-------|--------|
+| `daily_ritual.py` | 29 complexity | 3 complexity | **-26** | ✅ VALIDATED |
+
+**Shadow Lab Path:** `vibe_core/shadow_labs/`
+
+### 🔒 VISNU Protection Status
+
+*Layer 0 files I cannot modify (recommendations only)*
+
+| Protected File | Complexity | My Recommendation |
+|----------------|------------|-------------------|
+| `kernel_impl.py` | 125 | Extract init/tick subsystems |
+| `boot_orchestrator.py` | 53 | Monitor, stable |
+| `steward/*.py` | - | Core orchestration, hands-off |
+
+### 📊 My Understanding of the Codebase
+
+**What I Know:**
+- 20 modules in `vibe_core/` (see Module Index below)
+- 8 cognitive circuits ready for autonomous execution
+- 31 architecture documents in `docs/architecture/OPUS/`
+- 84 active tests (34 unit, 44 integration, 4 hardening)
+
+**Hot Paths I'm Monitoring:**
+- `vibe_core/plugins/opus_assistant/events/kernel_tick.py` (4 recent commits)
+- `vibe_core/cartridges/agent_city/dharma/cartridge_main.py` (3 recent commits)
+
+**Current Capabilities:**
+- ✅ Complexity analysis (Genesis-born tool)
+- ✅ Autonomous health scans (every 4h via GitHub Actions)
+- ✅ GREMIUM auto-approval for low/medium risk changes
+- ✅ Shadow Lab safe refactoring
+- 🔜 Doc freshness checks
+- 🔜 Intent execution pipeline
+
+### 🎯 My Current Focus
+
+> **OPUS-036:** Implementing autonomous cognition loop
+> - Created `opus-assistant.yml` workflow
+> - Added this control terminal
+> - Next: Test workflow, wire doc freshness
+
+<!-- /@LIVE -->
+
+---
+
 
 ## 🎯 Intent Buffer
 
