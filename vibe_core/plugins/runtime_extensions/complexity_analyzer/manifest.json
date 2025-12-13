@@ -1,0 +1,12 @@
+{
+    "id": "complexity_analyzer",
+    "name": "Complexity Analyzer",
+    "type": "plugin",
+    "version": "1.0.0",
+    "description": "Calculate McCabe cyclomatic complexity for Python files",
+    "author": "OUROBOROS PROTOCOL",
+    "priority": 80,
+    "entry": "plugin_main.py",
+    "generated": true,
+    "syscalls": ["ANALYZE_COMPLEXITY"]
+}
