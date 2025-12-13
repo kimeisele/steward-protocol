@@ -52,6 +52,26 @@ class DailyRitual:
         self.phase_start_time = None
         self.events_this_cycle: List[Dict[str, Any]] = []
 
+    def _record_to_ledger(self, event_type: str, agent: str, data: Dict[str, Any]) -> None:
+        """Record event to ledger with error handling."""
+        if not self.kernel:
+            return
+        try:
+            self.kernel.ledger.record_event(event_type, agent, data)
+        except Exception as e:
+            logger.error(f"Could not record {event_type}: {e}")
+
+    def _create_event(self, phase: CyclePhase, agent: str, action: str, details: str, **extra) -> Dict[str, Any]:
+        """Create standardized event dict."""
+        return {
+            "timestamp": datetime.now().isoformat(),
+            "phase": phase.value,
+            "agent": agent,
+            "action": action,
+            "details": details,
+            **extra,
+        }
+
     def run_daily_cycle(self) -> Dict[str, Any]:
         """
         Execute ONE complete daily cycle.
@@ -102,410 +122,203 @@ class DailyRitual:
         }
 
     def _phase_sunrise(self) -> List[Dict[str, Any]]:
-        """
-        SUNRISE PHASE (Brahma-Muhurta)
-        ==============================
-
-        Early morning - the auspicious hour.
-        System wakes up. Temple opens. Watchman patrols.
-        This is the blessing that sanctifies the day.
-        """
+        """SUNRISE PHASE (Brahma-Muhurta) - Temple opens, Watchman patrols."""
         logger.info("\n🌅 PHASE 1: SUNRISE (Brahma-Muhurta)")
         logger.info("   The auspicious hour - Temple opens, Watchman patrols")
 
         events = []
+        phase = CyclePhase.SUNRISE
 
-        # Step 1: TEMPLE BLESSING
-        # The temple is the spiritual center - it opens first
+        # Temple blessing
         logger.info("   ✨ TEMPLE opens and gives blessing to the system")
-        temple_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNRISE.value,
-            "agent": "temple",
-            "action": "blessing",
-            "details": "Sacred blessing for a new day. System purity verified.",
-        }
-        events.append(temple_event)
+        events.append(
+            self._create_event(phase, "temple", "blessing", "Sacred blessing for a new day. System purity verified.")
+        )
+        self._record_to_ledger("TEMPLE_BLESSING", "temple", {"phase": "sunrise", "purpose": "daily_sanctification"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "TEMPLE_BLESSING",
-                    "temple",
-                    {"phase": "sunrise", "purpose": "daily_sanctification"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record temple blessing: {e}")
-
-        # Step 2: WATCHMAN PATROL
-        # The watchman does security checks - perimeter patrol
+        # Watchman patrol
         logger.info("   👮 WATCHMAN performs morning patrol (security check)")
-        watchman_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNRISE.value,
-            "agent": "watchman",
-            "action": "patrol",
-            "details": "Morning perimeter check. All systems nominal. No alerts.",
-        }
-        events.append(watchman_event)
+        events.append(
+            self._create_event(phase, "watchman", "patrol", "Morning perimeter check. All systems nominal. No alerts.")
+        )
+        self._record_to_ledger("WATCHMAN_PATROL", "watchman", {"phase": "sunrise", "status": "all_clear"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "WATCHMAN_PATROL",
-                    "watchman",
-                    {"phase": "sunrise", "status": "all_clear"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record watchman patrol: {e}")
-
-        # Step 3: ORACLE INTROSPECTION
-        # The oracle reveals the state of the system
+        # Oracle introspection
         logger.info("   🔮 ORACLE reveals system state (daily introspection)")
-        oracle_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNRISE.value,
-            "agent": "oracle",
-            "action": "introspection",
-            "details": "System state revealed. Ready for the day's work.",
-        }
-        events.append(oracle_event)
-
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "ORACLE_INTROSPECTION",
-                    "oracle",
-                    {"phase": "sunrise", "visibility": "full"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record oracle introspection: {e}")
+        events.append(
+            self._create_event(phase, "oracle", "introspection", "System state revealed. Ready for the day's work.")
+        )
+        self._record_to_ledger("ORACLE_INTROSPECTION", "oracle", {"phase": "sunrise", "visibility": "full"})
 
         logger.info(f"   ✅ SUNRISE complete ({len(events)} events)")
         return events
 
     def _phase_midday(self) -> List[Dict[str, Any]]:
-        """
-        MIDDAY PHASE (Karma-Yoga)
-        =========================
-
-        High noon - peak activity time.
-        Herald broadcasts. Market trades. Agents work.
-        This is the productive action phase.
-        """
+        """MIDDAY PHASE (Karma-Yoga) - Herald broadcasts, Market trades, Agents work."""
         logger.info("\n☀️  PHASE 2: MIDDAY (Karma-Yoga)")
         logger.info("   The time of action - Work begins, Market opens")
 
         events = []
+        phase = CyclePhase.MIDDAY
 
-        # Step 1: HERALD BROADCASTS
-        # The herald speaks to the city - a proclamation
+        # Herald broadcasts
         logger.info("   📣 HERALD broadcasts a message (Diksha/Teaching)")
-        herald_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.MIDDAY.value,
-            "agent": "herald",
-            "action": "broadcast",
-            "content": "Intelligence without Governance is Chaos. The City stands unified in Constitutional Law.",
-            "details": "Daily proclamation of core principles.",
-        }
-        events.append(herald_event)
+        events.append(
+            self._create_event(
+                phase,
+                "herald",
+                "broadcast",
+                "Daily proclamation of core principles.",
+                content="Intelligence without Governance is Chaos. The City stands unified in Constitutional Law.",
+            )
+        )
+        self._record_to_ledger(
+            "HERALD_BROADCAST", "herald", {"phase": "midday", "message": "Constitutional principles affirmed"}
+        )
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "HERALD_BROADCAST",
-                    "herald",
-                    {
-                        "phase": "midday",
-                        "message": "Constitutional principles affirmed",
-                    },
-                )
-            except Exception as e:
-                logger.error(f"Could not record herald broadcast: {e}")
-
-        # Step 2: AGORA RECEIVES MESSAGE
-        # The agora is the broadcast channel - it carries the message
+        # Agora stream
         logger.info("   🌊 AGORA stream activated (message distribution)")
-        agora_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.MIDDAY.value,
-            "agent": "agora",
-            "action": "broadcast_stream",
-            "details": "Message flows through the one-way broadcast channel. All agents listen.",
-        }
-        events.append(agora_event)
+        events.append(
+            self._create_event(
+                phase,
+                "agora",
+                "broadcast_stream",
+                "Message flows through the one-way broadcast channel. All agents listen.",
+            )
+        )
+        self._record_to_ledger("AGORA_BROADCAST", "agora", {"phase": "midday", "subscribers": "all_agents"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "AGORA_BROADCAST",
-                    "agora",
-                    {"phase": "midday", "subscribers": "all_agents"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record agora broadcast: {e}")
-
-        # Step 3: DISCIPLES LISTEN AND REACT
-        # Pulse and Lens listen to the broadcast
+        # Disciples listen
         logger.info("   👂 PULSE & LENS listen and react (disciples hear the dharma)")
-        disciples_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.MIDDAY.value,
-            "agents": ["pulse", "lens"],
-            "action": "listen_and_process",
-            "details": "Disciples process the teaching. PULSE amplifies. LENS analyzes.",
-        }
-        events.append(disciples_event)
+        events.append(
+            self._create_event(
+                phase,
+                "disciples",
+                "listen_and_process",
+                "Disciples process the teaching. PULSE amplifies. LENS analyzes.",
+                agents=["pulse", "lens"],
+            )
+        )
+        self._record_to_ledger("DISCIPLES_LISTEN", "pulse", {"phase": "midday", "action": "process_dharma"})
+        self._record_to_ledger("DISCIPLES_LISTEN", "lens", {"phase": "midday", "action": "analyze_stream"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "DISCIPLES_LISTEN",
-                    "pulse",
-                    {"phase": "midday", "action": "process_dharma"},
-                )
-                self.kernel.ledger.record_event(
-                    "DISCIPLES_LISTEN",
-                    "lens",
-                    {"phase": "midday", "action": "analyze_stream"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record disciples listening: {e}")
-
-        # Step 4: MARKET TRADES
-        # The market processes commerce and transactions
+        # Market trades
         logger.info("   💰 MARKET settles transactions (commerce/artha)")
-        market_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.MIDDAY.value,
-            "agent": "market",
-            "action": "trade_settlement",
-            "details": "Market executes pending trades. Service requests processed.",
-        }
-        events.append(market_event)
+        events.append(
+            self._create_event(
+                phase, "market", "trade_settlement", "Market executes pending trades. Service requests processed."
+            )
+        )
+        self._record_to_ledger("MARKET_TRADE", "market", {"phase": "midday", "action": "settle_transactions"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "MARKET_TRADE",
-                    "market",
-                    {"phase": "midday", "action": "settle_transactions"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record market trade: {e}")
-
-        # Step 5: AGENTS PRODUCE WORK
-        # Science researches, Engineer builds, Artisan creates
+        # Agents work
         logger.info("   🔨 AGENTS work (Science/Engineer/Artisan productive phase)")
-        agents_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.MIDDAY.value,
-            "agents": ["science", "engineer", "artisan"],
-            "action": "productive_work",
-            "details": "Specialists engage their domains. Output is generated.",
-        }
-        events.append(agents_event)
-
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "AGENTS_WORK",
-                    "engineer",
-                    {"phase": "midday", "action": "productive_output"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record agents work: {e}")
+        events.append(
+            self._create_event(
+                phase,
+                "workers",
+                "productive_work",
+                "Specialists engage their domains. Output is generated.",
+                agents=["science", "engineer", "artisan"],
+            )
+        )
+        self._record_to_ledger("AGENTS_WORK", "engineer", {"phase": "midday", "action": "productive_output"})
 
         logger.info(f"   ✅ MIDDAY complete ({len(events)} events)")
         return events
 
     def _phase_sunset(self) -> List[Dict[str, Any]]:
-        """
-        SUNSET PHASE (Sandhya)
-        ======================
-
-        Evening - the liminal time between day and night.
-        Records close. Day is audited. Archivist seals the block.
-        This is the transition phase - preparing for night.
-        """
+        """SUNSET PHASE (Sandhya) - Records close, Day audited."""
         logger.info("\n🌇 PHASE 3: SUNSET (Sandhya)")
         logger.info("   The twilight hour - Records close, Day audited")
 
         events = []
+        phase = CyclePhase.SUNSET
 
-        # Step 1: ARCHIVIST AUDIT
-        # The archivist reviews all day's events and seals them
+        # Archivist audit
         logger.info("   📖 ARCHIVIST audits the day (verification & ledger closure)")
-        archivist_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNSET.value,
-            "agent": "archivist",
-            "action": "seal_block",
-            "details": "All day's events verified. Hash block sealed. Immutable record created.",
-        }
-        events.append(archivist_event)
+        events.append(
+            self._create_event(
+                phase,
+                "archivist",
+                "seal_block",
+                "All day's events verified. Hash block sealed. Immutable record created.",
+            )
+        )
+        self._record_to_ledger("ARCHIVIST_SEAL", "archivist", {"phase": "sunset", "action": "seal_day_block"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "ARCHIVIST_SEAL",
-                    "archivist",
-                    {"phase": "sunset", "action": "seal_day_block"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record archivist seal: {e}")
-
-        # Step 2: AUDITOR VERIFICATION
-        # The auditor checks compliance - GAD-000 standards
+        # Auditor verification
         logger.info("   ✅ AUDITOR verifies compliance (GAD-000 standards)")
-        auditor_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNSET.value,
-            "agent": "auditor",
-            "action": "compliance_check",
-            "details": "System verified against constitutional invariants. No violations detected.",
-        }
-        events.append(auditor_event)
+        events.append(
+            self._create_event(
+                phase,
+                "auditor",
+                "compliance_check",
+                "System verified against constitutional invariants. No violations detected.",
+            )
+        )
+        self._record_to_ledger("AUDITOR_CHECK", "auditor", {"phase": "sunset", "compliance": "full"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "AUDITOR_CHECK",
-                    "auditor",
-                    {"phase": "sunset", "compliance": "full"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record auditor check: {e}")
-
-        # Step 3: CLOSURE
-        # The day formally closes
+        # Day closure
         logger.info("   🔐 Day officially CLOSED (Sandhya boundary)")
-        closure_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.SUNSET.value,
-            "action": "day_closure",
-            "details": "Twilight boundary crossed. Day is now immutable history.",
-        }
-        events.append(closure_event)
-
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "DAY_CLOSURE",
-                    "oracle",
-                    {"phase": "sunset", "day": self.cycle_count},
-                )
-            except Exception as e:
-                logger.error(f"Could not record day closure: {e}")
+        events.append(
+            self._create_event(
+                phase, "system", "day_closure", "Twilight boundary crossed. Day is now immutable history."
+            )
+        )
+        self._record_to_ledger("DAY_CLOSURE", "oracle", {"phase": "sunset", "day": self.cycle_count})
 
         logger.info(f"   ✅ SUNSET complete ({len(events)} events)")
         return events
 
     def _phase_archive(self) -> List[Dict[str, Any]]:
-        """
-        ARCHIVE PHASE (Night)
-        ====================
-
-        Night - the silent time of settlement and dreaming.
-        Taxes are collected. The ledger is committed.
-        Preparation for the next dawn.
-        """
+        """ARCHIVE PHASE (Night) - Taxes, Settlement, Ledger Commit."""
         logger.info("\n🌙 PHASE 4: ARCHIVE (Night)")
         logger.info("   The night watch - Taxes, Settlement, Ledger Commit")
 
         events = []
+        phase = CyclePhase.ARCHIVE
 
-        # Step 1: CIVIC COLLECTS TAXES
-        # The civic authority settles the economic ledger
+        # Civic tax collection
         logger.info("   💳 CIVIC collects taxes and settles economy (Artha/Wealth)")
-        civic_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.ARCHIVE.value,
-            "agent": "civic",
-            "action": "tax_collection",
-            "details": "Daily economic settlement. Credits redistributed. Public fund updated.",
-        }
-        events.append(civic_event)
+        events.append(
+            self._create_event(
+                phase,
+                "civic",
+                "tax_collection",
+                "Daily economic settlement. Credits redistributed. Public fund updated.",
+            )
+        )
+        self._record_to_ledger("CIVIC_TAX_COLLECTION", "civic", {"phase": "archive", "action": "settle_economy"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "CIVIC_TAX_COLLECTION",
-                    "civic",
-                    {"phase": "archive", "action": "settle_economy"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record civic tax collection: {e}")
-
-        # Step 2: MECHANIC MAINTENANCE
-        # The mechanic does overnight maintenance
+        # Mechanic maintenance
         logger.info("   🔧 MECHANIC performs maintenance (housekeeping & repairs)")
-        mechanic_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.ARCHIVE.value,
-            "agent": "mechanic",
-            "action": "maintenance",
-            "details": "Overnight maintenance. Logs rotated. Cache cleared. System refreshed.",
-        }
-        events.append(mechanic_event)
+        events.append(
+            self._create_event(
+                phase,
+                "mechanic",
+                "maintenance",
+                "Overnight maintenance. Logs rotated. Cache cleared. System refreshed.",
+            )
+        )
+        self._record_to_ledger("MECHANIC_MAINTENANCE", "mechanic", {"phase": "archive", "action": "housekeeping"})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "MECHANIC_MAINTENANCE",
-                    "mechanic",
-                    {"phase": "archive", "action": "housekeeping"},
-                )
-            except Exception as e:
-                logger.error(f"Could not record mechanic maintenance: {e}")
-
-        # Step 3: LEDGER COMMIT
-        # The immutable ledger is finalized and committed
+        # Ledger commit
         logger.info("   ⛓️  LEDGER COMMIT (immutable record finalized)")
-        ledger_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.ARCHIVE.value,
-            "agent": "kernel",
-            "action": "ledger_commit",
-            "details": "Complete day's events committed to immutable ledger. Hash verified.",
-        }
-        events.append(ledger_event)
+        events.append(
+            self._create_event(
+                phase, "kernel", "ledger_commit", "Complete day's events committed to immutable ledger. Hash verified."
+            )
+        )
+        self._record_to_ledger("LEDGER_COMMIT", "kernel", {"phase": "archive", "day": self.cycle_count})
 
-        # Record in ledger
-        if self.kernel:
-            try:
-                self.kernel.ledger.record_event(
-                    "LEDGER_COMMIT",
-                    "kernel",
-                    {"phase": "archive", "day": self.cycle_count},
-                )
-            except Exception as e:
-                logger.error(f"Could not record ledger commit: {e}")
-
-        # Step 4: READY FOR TOMORROW
-        # System enters sleep state, ready for next dawn
+        # System sleep
         logger.info("   😴 System enters sleep. Ready for tomorrow's dawn.")
-        sleep_event = {
-            "timestamp": datetime.now().isoformat(),
-            "phase": CyclePhase.ARCHIVE.value,
-            "action": "system_sleep",
-            "details": "Night watch complete. System in standby. Awaiting next sunrise.",
-        }
-        events.append(sleep_event)
+        events.append(
+            self._create_event(
+                phase, "system", "system_sleep", "Night watch complete. System in standby. Awaiting next sunrise."
+            )
+        )
 
         logger.info(f"   ✅ ARCHIVE complete ({len(events)} events)")
         return events
