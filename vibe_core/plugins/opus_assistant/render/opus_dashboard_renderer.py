@@ -233,6 +233,7 @@ class OpusDashboardRenderer:
             "karma": karma,  # 🔌 WIRING: Karma score, history, trend
             "treasury": treasury,  # 💰 LAYER 1.5: Budget tracking
             "syscalls": self._gather_syscalls(),  # ⚡ LAYER 2: Experience Replay
+            "pending_intent": self._gather_pending_intent(),  # 🎯 LAYER 1.5: Intent Buffer
             "layers": self._gather_prakriti_layers(),
             "focus_areas": self._gather_focus_areas(),
             "journal": self._gather_journal(),
@@ -568,6 +569,23 @@ class OpusDashboardRenderer:
 
         except Exception as e:
             logger.debug(f"Failed to gather syscalls: {e}")
+            return None
+
+    def _gather_pending_intent(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather pending intent for the Intent Buffer panel.
+
+        🎯 LAYER 1.5: The "Frontallappen" - shows what system plans to do next.
+        Human can approve via checkbox in OPUS.md.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+            return state_mgr.get_pending_intent()
+
+        except Exception as e:
+            logger.debug(f"Failed to gather pending intent: {e}")
             return None
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:

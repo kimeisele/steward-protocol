@@ -10,7 +10,11 @@
     - health_status: HEALTHY|DEGRADED|WARNING|CRITICAL
     - kernel: { status, agent_count }
     - git: { branch, sha, dirty, uncommitted_files }
-    - session: { id } or null
+    - session: { id, boot_mode, view_preferences } or null
+    - karma: { current_score, boot_mode, history, trend }
+    - treasury: { date, tokens_input, estimated_cost, ... } or null
+    - syscalls: { history, stats } or null (Layer 2: Experience Replay)
+    - pending_intent: { intent, syscall_type, params, approved, ... } or null (Layer 1.5)
     - layers: { sthula, prana, purusha }
     - focus_areas: list of strings
     - journal: list of { timestamp, severity, source, message }
@@ -72,6 +76,12 @@
    ============================================================================ #}
 
 {% include 'panels/control_plane.md.j2' ignore missing %}
+
+{# ============================================================================
+   🎯 INTENT BUFFER - Pending Actions (Layer 1.5)
+   ============================================================================ #}
+
+{% include 'panels/intent_buffer.md.j2' ignore missing %}
 
 {# ============================================================================
    ⚡ SYSCALL CONSOLE - Experience Replay Buffer (Layer 2)
