@@ -7,13 +7,35 @@ mkdir -p dist/plugins
 echo "Building all plugin containers..."
 
 # Iterate over all directories in vibe_core/plugins/
-for plugin_dir in vibe_core/plugins/*/; do
-    plugin_name=$(basename "$plugin_dir")
+# Function to find plugin directories
+find_plugin_dirs() {
+    for dir in vibe_core/plugins/*/; do
+        [ -d "$dir" ] || continue
+        dirname=$(basename "$dir")
+        
+        # Skip exclusion list
+        if [ "$dirname" == "__pycache__" ] || [ "$dirname" == "_crypto_BACKUP" ] || [ "$dirname" == "plugin_template" ]; then
+            continue
+        fi
 
-    # Skip __pycache__, files, or backup directories
-    if [ ! -d "$plugin_dir" ] || [ "$plugin_name" == "__pycache__" ] || [ "$plugin_name" == "_crypto_BACKUP" ] || [ "$plugin_name" == "plugin_template" ]; then
-        continue
-    fi
+        # Logic: If manifest.json exists, it's a plugin.
+        # If NOT, check immediate subdirectories (namespace case).
+        if [ -f "${dir}manifest.json" ]; then
+            echo "$dir"
+        else
+            # Check subdirectories one level deep
+            for subdir in "${dir}"*/; do
+                if [ -d "$subdir" ] && [ -f "${subdir}manifest.json" ]; then
+                    echo "$subdir"
+                fi
+            done
+        fi
+    done
+}
+
+# Iterate over found plugins
+find_plugin_dirs | while read plugin_dir; do
+    plugin_name=$(basename "$plugin_dir")
 
     echo "----------------------------------------"
     echo "Building plugin: $plugin_name"
