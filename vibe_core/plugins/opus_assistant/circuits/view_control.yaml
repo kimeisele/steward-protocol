@@ -1,0 +1,66 @@
+# OPUS View Control Circuit
+#
+# 🎛️ CONTROL PLANE: Makes OPUS.md a living control surface
+#
+# This circuit handles UI toggle interactions from OPUS.md.
+# When a user clicks a toggle link like [x] Tests, this circuit:
+# 1. Receives the opus.view.toggle event
+# 2. Calls opus.set_view to update SessionState.view_preferences
+# 3. Triggers immediate re-render of OPUS.md
+#
+# The result: clicking a checkbox in OPUS.md physically rewrites
+# the file to match your intent. Metamorphic UI.
+
+circuit:
+  id: OPUS_VIEW_CONTROL
+  name: "View Control Loop"
+  description: "Handles UI toggle interactions from OPUS.md - the Metamorphic UI"
+  version: "1.0.0"
+
+  triggers:
+    - event: opus.view.toggle
+      description: "Toggle a single panel visibility"
+    - event: opus.view.set
+      description: "Set view mode or bulk preferences"
+    - event: opus.view.reset
+      description: "Reset all view preferences to defaults"
+
+  entry_state: update_view
+
+  states:
+    update_view:
+      description: "Update view preferences in SessionState"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: opus.set_view
+          params:
+            # Pass through all trigger parameters
+            # For toggle: pane=tests&visible=true
+            # For bulk: preferences={'show_tests': true}
+            pane: "{{ trigger_event.pane }}"
+            visible: "{{ trigger_event.visible }}"
+            preferences: "{{ trigger_event.preferences }}"
+      on_success: log_change
+      on_failure: log_error
+
+    log_change:
+      description: "Log the view change to journal"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: opus.log_observation
+          params:
+            severity: "INFO"
+            message: "View preference updated via Control Plane"
+            source: "view_control"
+      terminal: true
+
+    log_error:
+      description: "Log any errors"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: opus.log_observation
+          params:
+            severity: "WARN"
+            message: "View control action failed"
+            source: "view_control"
+      terminal: true

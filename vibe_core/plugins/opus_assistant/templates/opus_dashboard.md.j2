@@ -68,6 +68,12 @@
 ---
 
 {# ============================================================================
+   🎛️ CONTROL PLANE - Metamorphic UI Controls
+   ============================================================================ #}
+
+{% include 'panels/control_plane.md.j2' ignore missing %}
+
+{# ============================================================================
    STATE OF MIND - The Soul of the System
    ============================================================================ #}
 
@@ -365,9 +371,11 @@ _No active session (kernel may be stopped)_
 <!-- /@LIVE -->
 
 {# ============================================================================
-   CODE HEALTH
+   CODE HEALTH - Toggleable via Control Plane
    ============================================================================ #}
 
+{% set show_code_health = session.view_preferences.show_code_health if session and session.view_preferences else true %}
+{% if show_code_health %}
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
@@ -392,11 +400,14 @@ _No active session (kernel may be stopped)_
 _No technical debt markers found_
 {% endif %}
 <!-- /@LIVE -->
+{% endif %}
 
 {# ============================================================================
-   TEST HEALTH
+   TEST HEALTH - Toggleable via Control Plane
    ============================================================================ #}
 
+{% set show_tests = session.view_preferences.show_tests if session and session.view_preferences else true %}
+{% if show_tests %}
 <!-- @LIVE:test_health -->
 ## Test Suite Health
 
@@ -418,6 +429,7 @@ _No technical debt markers found_
 **Debt:** {{ test_health.archived }} tests in `tests/archive/` need revival
 {% endif %}
 <!-- /@LIVE -->
+{% endif %}
 
 {# ============================================================================
    PRESERVED SECTIONS - Human/AI Editable
