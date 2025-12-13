@@ -834,7 +834,6 @@ class OpusDashboardRenderer:
         sorted_by_imports = sorted(import_counts.items(), key=lambda x: -x[1])
         critical = [m for m, _ in sorted_by_imports[:5]]
 
-        all_targets = set(import_counts.keys())
         all_sources = set(edges.keys())
         leaf_modules = [n["id"] for n in nodes if n["id"] not in all_sources]
 
