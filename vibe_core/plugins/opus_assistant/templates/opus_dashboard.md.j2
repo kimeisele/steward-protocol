@@ -154,6 +154,56 @@ The system will log observations here as it runs:
 {% endfor %}
 
 **{{ circuits|length }} circuits** ready for autonomous execution
+
+### Circuit Flow (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Events["🎯 Triggers"]
+        E1[KERNEL_TICK]
+        E2[GIT_COMMIT]
+        E3[FILE_CHANGED]
+        E4[DRIFT_DETECTED]
+    end
+
+    subgraph Circuits["⚡ Circuits"]
+{% for c in circuits %}
+        C{{ loop.index }}[{{ c.id }}]
+{% endfor %}
+    end
+
+    subgraph Actions["🔧 Actions"]
+        A1[verify]
+        A2[refresh]
+        A3[heal]
+        A4[log]
+    end
+
+    E1 --> C2
+    E2 --> C1
+    E2 --> C3
+    E3 --> C3
+    E4 --> C1
+
+{% for c in circuits %}
+    C{{ loop.index }} --> A4
+{% endfor %}
+    C1 --> A3
+    C2 --> A2
+    C3 --> A1
+
+    style E1 fill:#e1f5fe
+    style E2 fill:#e1f5fe
+    style E3 fill:#e1f5fe
+    style E4 fill:#ffebee
+{% for c in circuits %}
+    style C{{ loop.index }} fill:#fff3e0
+{% endfor %}
+    style A1 fill:#e8f5e9
+    style A2 fill:#e8f5e9
+    style A3 fill:#e8f5e9
+    style A4 fill:#f3e5f5
+```
 {% else %}
 _No circuits defined yet._
 
