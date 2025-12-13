@@ -434,6 +434,53 @@ class OpusStateManager:
         except Exception as e:
             logger.warning(f"Failed to trim {file_path.name}: {e}")
 
+    # =========================================================================
+    # View Preferences (Control Cables - Layer 1.5)
+    # =========================================================================
+
+    def set_preference(self, key: str, value: Any) -> bool:
+        """
+        Set a view preference in the current session.
+
+        Layer 1.5 Control Cables: This allows OPUS.md to be bidirectional.
+        When a human edits a checkbox in the Control Plane section,
+        the ControlCablesParser calls this method to persist the change.
+
+        Args:
+            key: Preference key (e.g., "show_tests", "auto_heal", "budget_limit")
+            value: Value to set (bool, int, float, str)
+
+        Returns:
+            True if successfully saved
+        """
+        session = self.load_session()
+        if not session:
+            logger.warning(f"Cannot set preference '{key}': No active session")
+            return False
+
+        # Update preference
+        session.view_preferences[key] = value
+        logger.debug(f"🔌 Control Cable: {key} = {value}")
+
+        return self.save_session(session)
+
+    def get_preference(self, key: str, default: Any = None) -> Any:
+        """
+        Get a view preference from the current session.
+
+        Args:
+            key: Preference key
+            default: Default value if not found
+
+        Returns:
+            Preference value or default
+        """
+        session = self.load_session()
+        if not session:
+            return default
+
+        return session.view_preferences.get(key, default)
+
     def clear_all(self) -> None:
         """Clear all state (for testing)."""
         for file_name in [self.OBSERVATIONS_FILE, self.KARMA_FILE, self.SESSION_FILE]:
