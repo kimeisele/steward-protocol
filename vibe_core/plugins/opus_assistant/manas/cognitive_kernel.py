@@ -55,6 +55,92 @@ class ManasConfig:
 
 
 @dataclass
+class IntentConfidence:
+    """
+    OPUS-032: Confidence is not a guess - it's a computed vector.
+
+    Three components determine if we can auto-execute:
+    1. pattern_match: Have we seen this exact failure before?
+    2. karma_level: Does the system have enough "credit"?
+    3. rollback_safety: Can we easily undo this action?
+
+    Usage:
+        confidence = IntentConfidence.compute(intent, memory, karma_score=85)
+        if confidence.total_score >= 0.9:
+            # Safe to auto-execute
+    """
+
+    pattern_match: float = 0.0  # 0.0-1.0: How often have we fixed this before?
+    karma_level: float = 0.0  # 0.0-1.0: Current karma / 100
+    rollback_safety: float = 0.0  # 0.0-1.0: How easy to git revert?
+
+    @property
+    def total_score(self) -> float:
+        """
+        Compute total confidence.
+
+        CRITICAL: If rollback is unsafe, confidence is ZERO.
+        We never auto-execute irreversible actions.
+        """
+        if self.rollback_safety < 0.5:
+            return 0.0  # Safety first!
+
+        # Weighted: Karma matters more than pattern matching
+        return (self.pattern_match * 0.4) + (self.karma_level * 0.6)
+
+    @classmethod
+    def compute(
+        cls,
+        intent: "Intent",
+        memory: "MemoryStore",
+        karma_score: int,
+    ) -> "IntentConfidence":
+        """
+        Factory method to compute confidence for an intent.
+
+        Args:
+            intent: The intent to evaluate
+            memory: Memory store for pattern lookup
+            karma_score: Current karma score (0-100)
+
+        Returns:
+            IntentConfidence with computed values
+        """
+        # Pattern match: Have we successfully done this before?
+        success_rate = memory.get_success_rate(intent.intent_type)
+        pattern_match = success_rate if success_rate else 0.0
+
+        # Karma level: Normalize to 0-1
+        karma_level = karma_score / 100.0
+
+        # Rollback safety: Based on intent type
+        safe_types = {"contract_surrender", "doc_update", "test_create", "contract_doc_update"}
+        unsafe_types = {"capability_genesis", "refactor_major", "delete_file", "contract_import_fix"}
+
+        if intent.intent_type in safe_types:
+            rollback_safety = 1.0
+        elif intent.intent_type in unsafe_types:
+            rollback_safety = 0.3
+        else:
+            rollback_safety = 0.7  # Default: medium safety
+
+        return cls(
+            pattern_match=pattern_match,
+            karma_level=karma_level,
+            rollback_safety=rollback_safety,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for storage/display."""
+        return {
+            "pattern_match": self.pattern_match,
+            "karma_level": self.karma_level,
+            "rollback_safety": self.rollback_safety,
+            "total_score": self.total_score,
+        }
+
+
+@dataclass
 class IntentBufferEntry:
     """An entry in the intent buffer (for OPUS.md display)."""
 
