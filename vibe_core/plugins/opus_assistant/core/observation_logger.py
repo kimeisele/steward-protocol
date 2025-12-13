@@ -36,6 +36,7 @@ Architecture (Spaghetti Prevention):
 If you need analysis logic, put it in a SEPARATE AnomalyDetector!
 """
 
+import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -45,6 +46,9 @@ from pathlib import Path
 from typing import List, Optional
 
 logger = logging.getLogger("OPUS_JOURNAL")
+
+# Git-tracked audit trail for "untötbar" persistence
+AUDIT_TRAIL_PATH = Path("data/ledger/audit_trail.jsonl")
 
 
 class ObservationSeverity(Enum):
@@ -168,6 +172,11 @@ class ObservationLogger:
 
         logger.log(level, f"[{source}] {message}")
 
+        # 🔌 WIRING: Critical observations → git-tracked audit trail
+        # This makes the system "untötbar" - survives git resets
+        if severity in (ObservationSeverity.ALERT, ObservationSeverity.WARN):
+            self._append_to_audit_trail(observation)
+
     def log_info(self, message: str, source: str = "opus_assistant") -> None:
         """Convenience: Log INFO observation."""
         self.log_observation(ObservationSeverity.INFO, message, source)
@@ -183,6 +192,37 @@ class ObservationLogger:
     def log_insight(self, message: str, source: str = "opus_assistant") -> None:
         """Convenience: Log INSIGHT observation."""
         self.log_observation(ObservationSeverity.INSIGHT, message, source)
+
+    def _append_to_audit_trail(self, observation: Observation) -> None:
+        """
+        🔌 WIRING: Append critical observations to git-tracked audit trail.
+
+        This is the "untötbar" persistence layer - survives git resets,
+        branch switches, and context resets because it's git-committed.
+
+        Only ALERT and WARN observations are persisted (to keep file small).
+        """
+        try:
+            audit_path = self._workspace / AUDIT_TRAIL_PATH
+            audit_path.parent.mkdir(parents=True, exist_ok=True)
+
+            entry = {
+                "attestation_type": "opus_observation",
+                "timestamp": observation.timestamp,
+                "severity": observation.severity.name,
+                "message": observation.message,
+                "source": observation.source,
+                "context_hash": observation.context_hash,
+            }
+
+            with open(audit_path, "a") as f:
+                f.write(json.dumps(entry) + "\n")
+
+            logger.debug(f"📝 Observation persisted to audit trail: {observation.severity.name}")
+
+        except Exception as e:
+            # Don't fail if audit trail write fails - it's a secondary persistence
+            logger.warning(f"Failed to persist observation to audit trail: {e}")
 
     def flush_to_opus(self) -> bool:
         """
