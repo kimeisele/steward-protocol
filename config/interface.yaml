@@ -257,11 +257,12 @@ renderers:
         owner: live
         source: events.recent
 
-  dashboard:
-    enabled: true
-    output: DASHBOARD.md
-    view_type: dashboard
-    interval: 30
+  # DISABLED: Redundant with OPERATIONS.md (gemini/opus-declutter-and-enhance)
+  # dashboard:
+  #   enabled: true
+  #   output: DASHBOARD.md
+  #   view_type: dashboard
+  #   interval: 30
 
   # Bidirectional (user can write)
   # IMPORTANT: interval=0 so completions are detected immediately on every tick
@@ -296,12 +297,12 @@ renderers:
         owner: live
         source: config.current
 
-  # Knowledge/Context
-  rag:
-    enabled: true
-    output: RAG.md
-    view_type: docs
-    interval: 120
+  # DISABLED: Empty stub, pure noise (gemini/opus-declutter-and-enhance)
+  # rag:
+  #   enabled: true
+  #   output: RAG.md
+  #   view_type: docs
+  #   interval: 120
 
   # Git integration
   git:
