@@ -327,6 +327,60 @@ _No git history available_
 <!-- /@LIVE -->
 
 {# ============================================================================
+   🎯 DEPENDENCY GRAPH - Senior AI Cockpit Feature
+   ============================================================================ #}
+
+<!-- @LIVE:dependency_graph -->
+## 🕸️ Module Dependencies
+
+*Which modules import which - understand the architecture at a glance*
+
+{% if dependency_graph and dependency_graph.nodes %}
+### Critical Modules (Most Imported)
+
+{% if dependency_graph.critical_modules %}
+{% for mod in dependency_graph.critical_modules %}
+- **{{ mod }}** - Heavily depended upon, changes here ripple!
+{% endfor %}
+{% else %}
+_No critical dependencies detected_
+{% endif %}
+
+### Dependency Flow (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Core["🔌 Core Modules"]
+{% for mod in dependency_graph.critical_modules %}
+        {{ mod }}[{{ mod }}]
+{% endfor %}
+    end
+
+    subgraph Edges["📦 Import Relations"]
+{% for e in dependency_graph.edges[:12] %}
+        {{ e.from }} -->|{{ e.weight }}| {{ e.to }}
+{% endfor %}
+    end
+
+{% for mod in dependency_graph.critical_modules %}
+    style {{ mod }} fill:#e8f5e9
+{% endfor %}
+```
+
+### Module Sizes
+
+| Module | Files | Critical? |
+|--------|-------|-----------|
+{% for n in dependency_graph.nodes|sort(attribute='size', reverse=true) %}
+| `{{ n.id }}` | {{ n.size }} | {{ '⭐' if n.id in dependency_graph.critical_modules else '' }} |
+{% endfor %}
+{% else %}
+_No dependency graph available_
+{% endif %}
+
+<!-- /@LIVE -->
+
+{# ============================================================================
    PRAKRITI STATE
    ============================================================================ #}
 
