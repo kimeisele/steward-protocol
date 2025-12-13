@@ -116,6 +116,41 @@
             "default": false
           }
         ]
+      },
+      {
+        "name": "explore",
+        "handler": "cmd_opus_explore",
+        "execution_mode": "offline",
+        "help": "Token-efficient codebase exploration (better than RAG)",
+        "args": [
+          {
+            "name": "query",
+            "type": "str",
+            "help": "What to explore (e.g., 'authentication', 'kernel', 'plugins')",
+            "required": true
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "help": "Max files to return",
+            "required": false,
+            "default": 10
+          },
+          {
+            "name": "deep",
+            "type": "bool",
+            "help": "Deep mode: read files, analyze imports, prepare LLM synthesis task",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "json",
+            "type": "bool",
+            "help": "Output as JSON for pipelines",
+            "required": false,
+            "default": false
+          }
+        ]
       }
     ]
   },

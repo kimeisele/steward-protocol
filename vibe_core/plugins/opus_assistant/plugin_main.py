@@ -431,8 +431,9 @@ class OpusAssistantPlugin(KernelPlugin):
         """
         Write OPUS.md directly.
 
-        OPUS-029 Migration: opus_assistant now writes its own OPUS.md.
-        Previously done by interface/renderers/opus/ (now deleted).
+        OPUS-029 Phase 10: Template-based rendering with emotional UI.
+        Uses Jinja2 template for clean separation of concerns.
+        Falls back to legacy renderer if Jinja2 unavailable.
 
         Args:
             quick: Skip expensive semantic verification
@@ -440,11 +441,23 @@ class OpusAssistantPlugin(KernelPlugin):
         Returns:
             Path to written OPUS.md
         """
-        from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
-
         workspace = self._workspace or Path.cwd()
-        writer = OpusMdWriter(workspace, kernel=self._kernel)
-        return writer.write(quick=quick)
+
+        # Try new template-based renderer first
+        try:
+            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                OpusDashboardRenderer,
+            )
+
+            renderer = OpusDashboardRenderer(workspace, kernel=self._kernel)
+            return renderer.write(quick=quick)
+        except Exception as e:
+            # Fallback to legacy renderer
+            logger.debug(f"Template renderer failed, using legacy: {e}")
+            from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
+
+            writer = OpusMdWriter(workspace, kernel=self._kernel)
+            return writer.write(quick=quick)
 
     def get_config(self, key: Optional[str] = None, default: Any = None) -> Any:
         """
@@ -758,3 +771,34 @@ class OpusAssistantPlugin(KernelPlugin):
         if self._tick_handler:
             return self._tick_handler.get_observation_logger()
         return None
+
+    def cmd_opus_explore(self, query: str, limit: int = 10, deep: bool = False, json: bool = False) -> Dict[str, Any]:
+        """
+        CLI Handler: steward opus:explore
+
+        Token-efficient codebase exploration - better than RAG.
+
+        Normal mode: Finds relevant files using name matching, content search, and hot path analysis.
+        Deep mode (--deep): Reads file contents, analyzes imports, prepares LLM synthesis task.
+
+        Args:
+            query: What to explore (e.g., "authentication", "kernel", "plugins")
+            limit: Max files to return (default 10, or 5 for deep mode)
+            deep: If True, read files and prepare cognitive synthesis task
+            json: If True, return raw JSON-compatible data
+
+        Returns:
+            Exploration results dict (includes synthesis_prompt in deep mode)
+        """
+        from vibe_core.plugins.opus_assistant.cli.commands import deep_explore, explore_codebase
+
+        workspace = self._workspace or Path.cwd()
+
+        if deep:
+            # Deep mode: read files, analyze, prepare synthesis
+            # Use smaller limit for deep mode (more content per file)
+            deep_limit = min(limit, 5)
+            return deep_explore(query, workspace, limit=deep_limit)
+        else:
+            # Normal mode: deterministic search
+            return explore_codebase(query, workspace, limit=limit, json_mode=json)
