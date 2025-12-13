@@ -1,21 +1,24 @@
 """
 OPUS Renderer - AI Master Crate
 
-FOCUSED on:
-1. Philosophy from config/opus.yaml
-2. @HARNESS verification of docs/architecture/OPUS/
-3. Code health (TODOs)
-4. Current work tracking
+ARCHITECTURE (CLEAN SEPARATION):
+- This renderer is the FRONTEND - it writes OPUS.md through kernel.io
+- opus_assistant plugin is the BACKEND - provides DATA only
+- All file writes go through InterfacePlugin -> kernel.io
 
-NO HARDCODED GARBAGE. Config-driven.
+This renderer delegates content generation to opus_assistant's
+OpusDashboardRenderer, which has richer features:
+- StateManager (persistent state)
+- Control Plane (metamorphic UI)
+- Karma system (trust tracking)
+- Dependency Graph (codebase navigation)
+
+NO DIRECT FILE WRITES. All writes go through kernel.io.
 """
 
 import logging
-from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List
-
-import yaml
+from typing import TYPE_CHECKING, Any, Dict
 
 from vibe_core.plugins.interface.renderers.base import BaseRenderer
 
@@ -26,29 +29,23 @@ logger = logging.getLogger("OPUS_RENDERER")
 
 
 class OpusRenderer(BaseRenderer):
-    """Master AI Dashboard - Verification-focused."""
+    """
+    Master AI Dashboard - Delegates to opus_assistant for content.
+
+    ARCHITECTURE:
+    - generate_content() -> calls opus_assistant.OpusDashboardRenderer.render()
+    - render() -> calls render_with_dirty_tracking() -> InterfacePlugin writes via kernel.io
+
+    This ensures:
+    1. Single source of truth (opus_assistant for data)
+    2. Single writer (InterfacePlugin via kernel.io)
+    3. Clean separation of concerns
+    """
 
     def __init__(self, kernel: "RealVibeKernel"):
         super().__init__(kernel)
         self.kernel = kernel
-        self._root = Path(".")  # Keep _root as it's used by _load_config and _render_work_sections
-        self._panels: List[Any] = []
-        self._panels_loaded = False
-        self._config: Dict[str, Any] = {}  # Initialize _config here
-
-        # NOTE: Do NOT call _discover_panels() here.
-        # Context (root path) is injected AFTER instantiation by InterfacePlugin.
-        # We must load panels lazily.
-
-    def _load_config(self) -> Dict[str, Any]:
-        """Load configuration from config/opus.yaml."""
-        config_path = self._root / "config" / "opus.yaml"
-        try:
-            if config_path.exists():
-                return yaml.safe_load(config_path.read_text())
-        except Exception as e:
-            logger.warning(f"[OPUS] Failed to load config: {e}")
-        return {}
+        self._root = Path(".")
 
     @property
     def name(self) -> str:
@@ -64,165 +61,70 @@ class OpusRenderer(BaseRenderer):
 
         return DocumentType.BIDIRECTIONAL
 
-    def _discover_panels(self) -> None:
-        """
-        Discover panels using PanelLoader - VEDA-4 compliant.
-
-        Uses injected _root_path to find panels even in containers (Fractal).
-        """
-        from vibe_core.plugins.interface.panel_loader import PanelLoader
-
-        # Use injected root path if available, else fallback
-        # This fixes the "Relative Path Trap" for containers
-        base_dir = getattr(self, "_root_path", Path(__file__).parent)
-        panels_dir = base_dir / "panels"
-
-        logger.info(f"Discovering panels in {panels_dir} (exists: {panels_dir.exists()})")
-
-        panels, metadata = PanelLoader.discover_and_load(scan_paths=[panels_dir], kernel=self.kernel)
-
-        self._panels = []
-        for name, panel in panels.items():
-            meta = metadata.get(name)
-            if meta and meta.loaded_successfully:
-                self._panels.append(panel)
-            else:
-                # ERROR BOUNDARY: Log but don't crash the renderer
-                logger.error(f"Panel {name} failed to load: {meta.error if meta else 'unknown'}")
-                # We could add a broken panel placeholder here if desired
-                # Error placeholder?
-                pass
-
-        logger.info(f"[OPUS] Loaded {len(self._panels)} panels")
-
     def render(self) -> None:
-        """Render OPUS.md with dirty tracking."""
+        """Render OPUS.md with dirty tracking (writes through kernel.io)."""
         self.render_with_dirty_tracking()
 
     def generate_content(self) -> str:
-        """Generate OPUS.md content - CLEAN and FOCUSED."""
-        if not self._panels_loaded:
-            # Lazy load: Ensure we have the injected root path
-            self._discover_panels()
-            self._panels_loaded = True
-            # Also reload config now that root might be set/changed
-            self._config = self._load_config()
+        """
+        Generate OPUS.md content by delegating to opus_assistant.
 
-        lines = []
+        This is the CLEAN architecture:
+        - opus_assistant.OpusDashboardRenderer provides rich content
+        - This renderer just passes it through
+        - InterfacePlugin writes via kernel.io
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                OpusDashboardRenderer,
+            )
 
-        # 1. Header with philosophy + harness task
-        lines.append(self._render_header())
+            # Use the rich opus_assistant renderer for content
+            renderer = OpusDashboardRenderer(self._root, kernel=self.kernel)
+            return renderer.render(quick=False)
 
-        # 2. Dynamic panels (verification, code_health)
-        for panel in self._panels:
-            try:
-                panel_content = panel.render()
-                if panel_content:
-                    lines.append(f"<!-- @LIVE:{panel.panel_id} -->")
-                    lines.append(panel_content)
-                    lines.append("<!-- /@LIVE -->")
-            except Exception as e:
-                logger.warning(f"[OPUS] Panel {panel.panel_id} failed: {e}")
+        except Exception as e:
+            logger.error(f"[OPUS] Failed to get content from opus_assistant: {e}")
+            # Fallback to minimal content
+            return self._fallback_content(str(e))
 
-        # 3. AI work tracking (minimal)
-        lines.append(self._render_work_sections())
+    def _fallback_content(self, error: str) -> str:
+        """Minimal fallback content if opus_assistant fails."""
+        from datetime import datetime
 
-        # 4. Footer
-        lines.append(self._render_footer())
-
-        return "\n".join(lines)
-
-    def _render_header(self) -> str:
-        """Render header with philosophy from config."""
         timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        return f"""# OPUS - System State
 
-        philosophy = self._config.get("philosophy", "")
-        harness_task = self._config.get("harness_task", "")
+> ⚠️ **NOTICE** - opus_assistant unavailable
 
-        return f"""<!--
-AUTO-GENERATED by OpusRenderer
-Last Updated: {timestamp} UTC
-Quick Start: python boot.py boot
--->
-
-# OPUS - AI Master Crate
-
-> **Navigation:** [README](README.md) · [INDEX](INDEX.md) · [CONSTITUTION](CONSTITUTION.md) · [docs/architecture/OPUS/](docs/architecture/OPUS/)
+**Error:** {error[:200]}
 
 ---
-
-## Guardian Philosophy
-
-```
-{philosophy.strip() if philosophy else "See config/opus.yaml"}
-```
-
-<details>
-<summary>📋 @HARNESS Task Instructions</summary>
-
-```
-{harness_task.strip() if harness_task else "See config/opus.yaml"}
-```
-
-</details>
-
----
-"""
-
-    def _render_work_sections(self) -> str:
-        """Render minimal AI work tracking sections."""
-        # Preserve existing content from OPUS.md
-        opus_path = self._root / "OPUS.md"
-        existing = ""
-        if opus_path.exists():
-            try:
-                existing = opus_path.read_text()
-            except Exception:
-                pass
-
-        current_work = self._extract_section(existing, "current_work") or "_Define current task_"
-        blockers = self._extract_section(existing, "blockers") or "_None_"
-        notes = self._extract_section(existing, "notes") or "_Add notes here_"
-
-        return f"""---
 
 <!-- @AI:current_work -->
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-{current_work}
+_Define current task_
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-{blockers}
+_None_
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
 ## Notes
 
 <!-- Human can write here -->
-{notes}
+_Add notes here_
 <!-- /@HUMAN -->
+
+---
+*Generated by OpusRenderer (fallback) | {timestamp} UTC*
 """
-
-    def _extract_section(self, content: str, section_name: str) -> str:
-        """Extract preserved section content."""
-        import re
-
-        pattern = (
-            rf"<!-- @(?:AI|HUMAN):{section_name} -->\s*\n## [^\n]+\n\n<!-- [^>]* -->\n(.*?)<!-- /@(?:AI|HUMAN) -->"
-        )
-        match = re.search(pattern, content, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        return None
-
-    def _render_footer(self) -> str:
-        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        return f"\n---\n*Generated by OpusRenderer | {timestamp} UTC*"
 
 
 def create_renderer(kernel: "RealVibeKernel", config: Dict[str, Any]) -> OpusRenderer:

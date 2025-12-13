@@ -356,8 +356,12 @@ renderers:
     interval: 60
 
   # OPUS - Master AI Dashboard (SSOT for kernel work)
+  # ARCHITECTURE (CLEAN SEPARATION):
+  # - InterfacePlugin.OpusRenderer = FRONTEND (writes via kernel.io)
+  # - opus_assistant.OpusDashboardRenderer = BACKEND (provides DATA)
+  # - All writes go through kernel.io (single writer principle)
   opus:
-    enabled: true
+    enabled: true  # Interface Plugin is the MASTER renderer
     output: OPUS.md
     view_type: workspace
     interval: 30

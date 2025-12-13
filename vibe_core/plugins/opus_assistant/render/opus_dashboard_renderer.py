@@ -117,29 +117,9 @@ class OpusDashboardRenderer:
             logger.error(f"Template render failed: {e}")
             return self._fallback_render(quick=quick)
 
-    def write(self, quick: bool = False) -> Path:
-        """
-        Render and write OPUS.md.
-
-        Args:
-            quick: Skip expensive operations
-
-        Returns:
-            Path to written file
-        """
-        # Preserve existing sections
-        preserved = self._extract_preserved_sections()
-
-        # Render content
-        content = self.render(quick=quick)
-
-        # Re-inject preserved sections (template has placeholders)
-        content = self._inject_preserved_sections(content, preserved)
-
-        # Write file
-        self._opus_path.write_text(content)
-
-        return self._opus_path
+    # NOTE: write() method REMOVED - opus_assistant is BACKEND only
+    # All file writes go through InterfacePlugin -> kernel.io
+    # See: vibe_core/plugins/interface/renderers/opus/renderer.py
 
     def _gather_context(self, quick: bool = False) -> Dict[str, Any]:
         """Gather all data for template context."""
@@ -174,6 +154,7 @@ class OpusDashboardRenderer:
             "test_health": self._gather_test_health(),
             "module_index": self._gather_module_index(),  # NEW: Codebase navigation
             "hot_paths": self._gather_hot_paths(),  # NEW: Most changed files
+            "dependency_graph": self._gather_dependency_graph(),  # 🎯 SENIOR AI COCKPIT
             "preserved": {},  # Will be injected separately
         }
 
@@ -238,14 +219,16 @@ class OpusDashboardRenderer:
             from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
 
             state_mgr = get_state_manager()
-            opus_session = state_mgr.get_last_session()
+            opus_session = state_mgr.load_session()
             if opus_session:
                 session_data = {
                     "id": opus_session.session_id,
-                    "boot_commit": opus_session.boot_commit,
+                    "boot_commit": getattr(opus_session, "boot_commit", None),
                     "boot_mode": opus_session.boot_mode,
                     "started_at": opus_session.started_at,
-                    "tick_count": opus_session.tick_count,
+                    "tick_count": getattr(opus_session, "tick_count", None),
+                    # 🎛️ CONTROL PLANE: View preferences for metamorphic UI
+                    "view_preferences": opus_session.view_preferences,
                 }
         except Exception as e:
             logger.debug(f"OPUS session unavailable: {e}")
@@ -754,6 +737,92 @@ class OpusDashboardRenderer:
             pass
 
         return hot_paths
+
+    def _gather_dependency_graph(self) -> Dict[str, Any]:
+        """
+        Gather module dependency graph for codebase navigation.
+
+        🎯 SENIOR AI COCKPIT: This helps AI and humans understand
+        which modules import which, revealing the architecture.
+
+        Returns:
+            {
+                "nodes": [{"id": "plugins", "size": 108}, ...],
+                "edges": [{"from": "plugins", "to": "state", "weight": 5}, ...],
+                "critical_modules": ["state", "plugins"],  # Most imported
+                "leaf_modules": ["scripts"],  # No dependents
+            }
+        """
+        vibe_core = self._root / "vibe_core"
+        if not vibe_core.exists():
+            return {"nodes": [], "edges": [], "critical_modules": [], "leaf_modules": []}
+
+        # Build import graph by scanning files
+        import_counts: Dict[str, int] = {}  # module -> times imported
+        edges: Dict[str, Dict[str, int]] = {}  # from -> {to -> count}
+
+        for py_file in vibe_core.glob("**/*.py"):
+            if "__pycache__" in str(py_file) or "archive" in str(py_file):
+                continue
+
+            # Get source module
+            try:
+                rel_path = py_file.relative_to(vibe_core)
+                source_module = str(rel_path.parts[0]) if len(rel_path.parts) > 1 else None
+            except ValueError:
+                continue
+
+            if not source_module:
+                continue
+
+            # Scan for imports
+            try:
+                content = py_file.read_text()
+                for line in content.split("\n"):
+                    if "from vibe_core." in line or "import vibe_core." in line:
+                        # Extract target module
+                        if "from vibe_core." in line:
+                            target = line.split("from vibe_core.")[1].split(".")[0].split(" ")[0]
+                        else:
+                            target = line.split("import vibe_core.")[1].split(".")[0].split(" ")[0]
+
+                        if target and target != source_module:
+                            import_counts[target] = import_counts.get(target, 0) + 1
+
+                            if source_module not in edges:
+                                edges[source_module] = {}
+                            edges[source_module][target] = edges[source_module].get(target, 0) + 1
+            except Exception:
+                pass
+
+        # Build nodes with sizes (from module index)
+        nodes = []
+        for item in sorted(vibe_core.iterdir()):
+            if item.name.startswith(("_", ".")) or not item.is_dir():
+                continue
+            py_files = list(item.glob("**/*.py"))
+            file_count = len([f for f in py_files if "__pycache__" not in str(f)])
+            nodes.append({"id": item.name, "size": file_count})
+
+        # Convert edges to list format
+        edge_list = []
+        for source, targets in edges.items():
+            for target, weight in targets.items():
+                edge_list.append({"from": source, "to": target, "weight": weight})
+
+        # Sort to find most critical and least connected
+        sorted_by_imports = sorted(import_counts.items(), key=lambda x: -x[1])
+        critical = [m for m, _ in sorted_by_imports[:5]]
+
+        all_sources = set(edges.keys())
+        leaf_modules = [n["id"] for n in nodes if n["id"] not in all_sources]
+
+        return {
+            "nodes": nodes,
+            "edges": sorted(edge_list, key=lambda x: -x["weight"])[:20],  # Top 20 edges
+            "critical_modules": critical,
+            "leaf_modules": leaf_modules[:5],
+        }
 
     def _extract_preserved_sections(self) -> Dict[str, str]:
         """Extract @AI and @HUMAN sections from existing OPUS.md."""
