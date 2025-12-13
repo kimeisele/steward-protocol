@@ -573,20 +573,63 @@ class OpusDashboardRenderer:
 
     def _gather_pending_intent(self) -> Optional[Dict[str, Any]]:
         """
-        Gather pending intent for the Intent Buffer panel.
+        Gather pending intents for the Intent Buffer panel.
 
         🎯 LAYER 1.5: The "Frontallappen" - shows what system plans to do next.
+        🧠 OPUS-032: Now reads from MANAS cognitive kernel for proactive intents.
         Human can approve via checkbox in OPUS.md.
         """
+        # First try MANAS (OPUS-032)
+        try:
+            # Try to get MANAS from the kernel tick handler
+            if self._kernel:
+                opus_plugin = self._kernel.get_plugin("opus_assistant")
+                if opus_plugin and hasattr(opus_plugin, "_tick_handler"):
+                    manas = opus_plugin._tick_handler.get_manas()
+                    if manas:
+                        buffer = manas.get_intent_buffer_for_opus()
+                        if buffer.get("pending"):
+                            return {
+                                "source": "manas",
+                                "intents": buffer.get("pending", []),
+                                "total_pending": buffer.get("total_pending", 0),
+                                "idle_minutes": buffer.get("idle_minutes", 0),
+                                "last_thought": buffer.get("last_thought"),
+                                "recent_executed": buffer.get("recent_executed", []),
+                            }
+        except Exception as e:
+            logger.debug(f"Failed to get MANAS intents: {e}")
+
+        # Fallback to standalone MANAS
+        try:
+            from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+            manas = CognitiveKernel(workspace=self._root)
+            buffer = manas.get_intent_buffer_for_opus()
+            if buffer.get("pending"):
+                return {
+                    "source": "manas",
+                    "intents": buffer.get("pending", []),
+                    "total_pending": buffer.get("total_pending", 0),
+                    "idle_minutes": buffer.get("idle_minutes", 0),
+                    "last_thought": buffer.get("last_thought"),
+                    "recent_executed": buffer.get("recent_executed", []),
+                }
+        except Exception as e:
+            logger.debug(f"Failed to get standalone MANAS intents: {e}")
+
+        # Fallback to legacy StateManager intents
         try:
             from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
 
             state_mgr = get_state_manager()
-            return state_mgr.get_pending_intent()
-
+            legacy_intent = state_mgr.get_pending_intent()
+            if legacy_intent:
+                return {"source": "legacy", "legacy_intent": legacy_intent}
         except Exception as e:
-            logger.debug(f"Failed to gather pending intent: {e}")
-            return None
+            logger.debug(f"Failed to gather legacy pending intent: {e}")
+
+        return None
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:
         """Gather circuit definitions."""
