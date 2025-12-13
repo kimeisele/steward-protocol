@@ -808,6 +808,29 @@ class KernelTickHandler:
             f"(errors: {error_count}, warnings: {warning_count}, crashes: {crash_count})"
         )
 
+        # 🔌 WIRING: Record karma to plugin-local history (Fractal Holon - "untötbar")
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                KarmaEntry,
+                get_state_manager,
+            )
+
+            state_mgr = get_state_manager()
+            boot_mode = "safe_mode" if is_critical else ("cautious_mode" if has_warnings else "full_power")
+            entry = KarmaEntry(
+                timestamp=datetime.utcnow().isoformat(),
+                score=karma_score,
+                error_count=error_count,
+                warning_count=warning_count,
+                crash_count=crash_count,
+                success_count=success_count,
+                boot_mode=boot_mode,
+            )
+            state_mgr.record_karma(entry)
+            logger.debug(f"📊 Karma recorded to history: {karma_score}/100 ({boot_mode})")
+        except Exception as e:
+            logger.warning(f"Could not record karma to history: {e}")
+
         return {
             "success": True,
             "score": karma_score,
