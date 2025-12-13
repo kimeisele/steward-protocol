@@ -96,6 +96,59 @@ class KarmaEntry:
 
 
 @dataclass
+class SyscallEntry:
+    """
+    A single syscall execution record for experience replay.
+
+    OPUS-031 Layer 2: Syscall Console
+    This is NOT a log - it's an Experience Replay Buffer.
+    Successful syscalls become few-shot examples for future executions.
+
+    Example:
+        SyscallEntry(
+            timestamp="2025-12-13T14:30:00",
+            intent="Create a Python file with hello world",
+            syscall_type="WRITE_FILE",
+            parameters={"path": "hello.py", "content": "print('Hello')"},
+            result="SUCCESS",
+            output="File created: hello.py",
+            execution_time_ms=150
+        )
+    """
+
+    timestamp: str
+    intent: str  # Natural language intent from user/AI
+    syscall_type: str  # WRITE_FILE, RUN_COMMAND, SPAWN_AGENT, etc.
+    parameters: Dict[str, Any]  # The actual syscall parameters
+    result: str  # SUCCESS, FAILURE, PARTIAL, ROLLBACK
+    output: Optional[str] = None  # Output/error message
+    execution_time_ms: int = 0
+    context_hash: Optional[str] = None  # Git commit at time of execution
+    rollback_info: Optional[str] = None  # How to undo this syscall
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SyscallEntry":
+        return cls(
+            timestamp=data.get("timestamp", ""),
+            intent=data.get("intent", ""),
+            syscall_type=data.get("syscall_type", "UNKNOWN"),
+            parameters=data.get("parameters", {}),
+            result=data.get("result", "UNKNOWN"),
+            output=data.get("output"),
+            execution_time_ms=data.get("execution_time_ms", 0),
+            context_hash=data.get("context_hash"),
+            rollback_info=data.get("rollback_info"),
+        )
+
+    def is_successful(self) -> bool:
+        """Check if this syscall was successful (for experience replay)."""
+        return self.result in ("SUCCESS", "PARTIAL")
+
+
+@dataclass
 class SessionState:
     """Current session state."""
 
@@ -148,6 +201,7 @@ class OpusStateManager:
     OBSERVATIONS_FILE = "observations.jsonl"
     KARMA_FILE = "karma_history.jsonl"
     SESSION_FILE = "session.json"
+    SYSCALLS_FILE = "syscalls.jsonl"  # Layer 2: Experience Replay Buffer
 
     def __init__(
         self,
@@ -344,6 +398,135 @@ class OpusStateManager:
         """Get the most recent karma entry."""
         history = self.get_karma_history(limit=1)
         return history[0] if history else None
+
+    # =========================================================================
+    # Syscalls (JSONL - append-only) - LAYER 2: Experience Replay Buffer
+    # =========================================================================
+
+    def record_syscall(self, entry: SyscallEntry) -> bool:
+        """
+        Record a syscall execution for experience replay.
+
+        OPUS-031 Layer 2: The syscall history is NOT a log - it's training data.
+        Successful syscalls become few-shot examples for future executions.
+
+        Args:
+            entry: SyscallEntry with execution details
+
+        Returns:
+            True if successfully written
+        """
+        try:
+            syscalls_file = self._state_dir / self.SYSCALLS_FILE
+            with open(syscalls_file, "a") as f:
+                f.write(json.dumps(entry.to_dict()) + "\n")
+
+            result_emoji = "✅" if entry.is_successful() else "❌"
+            logger.debug(f"📟 Syscall recorded: {result_emoji} {entry.syscall_type}")
+
+            # Keep last 500 syscalls (generous buffer for few-shot learning)
+            self._trim_jsonl_file(syscalls_file, 500)
+
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to record syscall: {e}")
+            return False
+
+    def get_successful_syscalls(self, syscall_type: Optional[str] = None, limit: int = 10) -> List[SyscallEntry]:
+        """
+        Get successful syscalls for experience replay (few-shot learning).
+
+        This is the key to autonomous improvement:
+        - Find past successful executions of similar intents
+        - Use them as examples for the next execution
+        - The system learns from its own successes
+
+        Args:
+            syscall_type: Optional filter by type (e.g., "WRITE_FILE")
+            limit: Max number to return (default: 10 for few-shot)
+
+        Returns:
+            List of successful syscalls (newest first)
+        """
+        syscalls_file = self._state_dir / self.SYSCALLS_FILE
+        if not syscalls_file.exists():
+            return []
+
+        entries = []
+        try:
+            with open(syscalls_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            data = json.loads(line)
+                            entry = SyscallEntry.from_dict(data)
+                            # Only include successful syscalls
+                            if entry.is_successful():
+                                if syscall_type is None or entry.syscall_type == syscall_type:
+                                    entries.append(entry)
+                        except json.JSONDecodeError:
+                            continue
+
+            # Newest first (most recent successes are most relevant)
+            entries.reverse()
+
+            return entries[:limit]
+        except Exception as e:
+            logger.warning(f"Failed to read syscalls: {e}")
+            return []
+
+    def get_syscall_stats(self) -> Dict[str, Any]:
+        """
+        Get syscall execution statistics.
+
+        Useful for:
+        - Dashboard display (Layer 2 console)
+        - Karma calculation (success rate)
+        - Identifying patterns in failures
+        """
+        syscalls_file = self._state_dir / self.SYSCALLS_FILE
+        if not syscalls_file.exists():
+            return {"total": 0, "successful": 0, "failed": 0, "success_rate": 0.0, "by_type": {}}
+
+        stats = {"total": 0, "successful": 0, "failed": 0, "by_type": {}}
+
+        try:
+            with open(syscalls_file, "r") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            data = json.loads(line)
+                            entry = SyscallEntry.from_dict(data)
+                            stats["total"] += 1
+
+                            if entry.is_successful():
+                                stats["successful"] += 1
+                            else:
+                                stats["failed"] += 1
+
+                            # Count by type
+                            stype = entry.syscall_type
+                            if stype not in stats["by_type"]:
+                                stats["by_type"][stype] = {"total": 0, "successful": 0}
+                            stats["by_type"][stype]["total"] += 1
+                            if entry.is_successful():
+                                stats["by_type"][stype]["successful"] += 1
+
+                        except json.JSONDecodeError:
+                            continue
+
+            # Calculate success rate
+            if stats["total"] > 0:
+                stats["success_rate"] = round(stats["successful"] / stats["total"] * 100, 1)
+            else:
+                stats["success_rate"] = 0.0
+
+            return stats
+        except Exception as e:
+            logger.warning(f"Failed to calculate syscall stats: {e}")
+            return {"total": 0, "successful": 0, "failed": 0, "success_rate": 0.0, "by_type": {}}
 
     # =========================================================================
     # Session State (JSON - single file, overwritten)
