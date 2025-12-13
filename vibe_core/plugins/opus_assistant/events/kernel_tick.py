@@ -151,6 +151,14 @@ class KernelTickHandler:
 
             self._subscribed = True
             logger.info(f"🔄 Subscribed to {len(events_to_subscribe)} event types")
+
+            # LOG: System boot observation
+            self._log_observation_info(
+                f"OPUS Assistant online: {len(self._circuits)} circuits, {len(events_to_subscribe)} event subscriptions",
+                "kernel_tick",
+            )
+            self._flush_observations()
+
             return True
 
         except ImportError:
@@ -195,6 +203,7 @@ class KernelTickHandler:
         Execute a circuit definition.
 
         Maps circuit actions to plugin methods.
+        LOGS observations about circuit execution to the journal!
 
         Args:
             circuit_def: Circuit definition from YAML
@@ -203,6 +212,9 @@ class KernelTickHandler:
         circuit_id = circuit_def.get("id", "unknown")
         entry_state = circuit_def.get("entry_state", "")
         states = circuit_def.get("states", {})
+
+        # LOG: Circuit starting
+        self._log_observation_info(f"Circuit {circuit_id} triggered", "circuit")
 
         logger.debug(f"⚡ Executing circuit {circuit_id} from state {entry_state}")
 
@@ -228,6 +240,9 @@ class KernelTickHandler:
             # Check if terminal
             if state_def.get("terminal", False):
                 logger.debug(f"✅ Circuit {circuit_id} completed at {current_state}")
+                # LOG: Circuit completed
+                self._log_observation_info(f"Circuit {circuit_id} completed → {current_state}", "circuit")
+                self._flush_observations()  # Flush immediately on circuit completion
                 break
 
             # Determine next state from transitions
@@ -424,7 +439,20 @@ class KernelTickHandler:
 
         if not is_healthy:
             self._consecutive_drift_ticks += 1
+            missing = result.get("missing_files", [])
+            # LOG: Drift detected!
+            self._log_observation_warn(
+                f"Drift detected: {len(missing)} missing files (tick #{self._consecutive_drift_ticks})",
+                "drift_detector",
+            )
+            if self._consecutive_drift_ticks >= 3:
+                self._log_observation_alert(
+                    f"Persistent drift! {self._consecutive_drift_ticks} consecutive unhealthy checks", "drift_detector"
+                )
         else:
+            if self._consecutive_drift_ticks > 0:
+                # LOG: Drift resolved
+                self._log_observation_info("Drift resolved - system healthy", "drift_detector")
             self._consecutive_drift_ticks = 0
 
         return {"success": True, "healthy": is_healthy, **result}
@@ -438,6 +466,16 @@ class KernelTickHandler:
         """Run OPUS verification."""
         quick = params.get("quick", True)
         result = self._plugin.verify(quick=quick)
+
+        # LOG: Verification result
+        score = result.get("total_score", 0)
+        if score >= 80:
+            self._log_observation_info(f"Verification passed: {score}% trust score", "verifier")
+        elif score >= 60:
+            self._log_observation_warn(f"Verification degraded: {score}% trust score", "verifier")
+        else:
+            self._log_observation_alert(f"Verification critical: {score}% trust score", "verifier")
+
         return {"success": True, **result}
 
     async def _synthesize_context(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -447,6 +485,24 @@ class KernelTickHandler:
                 context = self._context_service.synthesize()
                 self._context_service.inject(context)
                 await self._context_service.broadcast(context)
+
+                # LOG: Health status changes
+                new_health = context.health.status
+                if self._last_health_status and new_health != self._last_health_status:
+                    if new_health == "CRITICAL":
+                        self._log_observation_alert(
+                            f"Health degraded: {self._last_health_status} → {new_health}", "context_service"
+                        )
+                    elif new_health == "HEALTHY" and self._last_health_status != "HEALTHY":
+                        self._log_observation_info(
+                            f"Health improved: {self._last_health_status} → {new_health}", "context_service"
+                        )
+                    else:
+                        self._log_observation_warn(
+                            f"Health changed: {self._last_health_status} → {new_health}", "context_service"
+                        )
+                self._last_health_status = new_health
+
                 return {"success": True, "health": context.health.status}
             except Exception as e:
                 return {"success": False, "error": str(e)}

@@ -1,8 +1,17 @@
+
+
+
+
+
+
 # OPUS - System State
 
-**⚪ OFFLINE** | Updated: 2025-12-12 23:30:59 UTC | Kernel: STOPPED (0 agents)
+> 🟡 **NOTICE** - Trust Score 61% - Minor issues detected
+
+**🟡 DEGRADED** | Updated: 2025-12-13 00:18:52 UTC | Kernel: STOPPED (0 agents)
 
 ---
+
 
 <!-- @LIVE:state_of_mind -->
 ## 🧠 State of Mind
@@ -11,26 +20,23 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `1b6cce9`
-- **Working Tree:** ⚠️ Uncommitted
-
+- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `054169d`
+- **Working Tree:** ✅ Clean
 ### Layer 2 - Prana (Runtime Energy)
 
-- **Kernel:** ⚪ Offline
-- **Agents:** 0 active
+- **Kernel:** ⚪ STOPPED- **Agents:** 0 active
 - **Session:** Standalone
-
 ### Layer 3 - Purusha (Cognitive Identity)
 
 - **Ephemeral Thoughts:** 0
 - **Active Persona:** None
-
 ### 🎯 Focus Areas
 
-- Commit pending changes
 - Documentation drift detected
 
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:system_journal -->
 ## 📓 System Journal
 
@@ -45,24 +51,81 @@ The system will log observations here as it runs:
 - 💡 INSIGHT: AI-generated insights
 
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:circuit_status -->
 ## ⚡ Cognitive Circuits
 
 *Autonomous behavior patterns available to the system*
 
-| Circuit | Triggers | States | Description |
-|---------|----------|--------|-------------|
-| **OPUS_AUTO_HEAL** | `OPUS.DRIFT_PERSISTENT, OPUS.HEALTH_CRITICAL` | 7 | Automatic recovery suggestions when drift persists |
-| **OPUS_AUTO_REFRESH** | `KERNEL_BOOT, KERNEL_TICK, GIT_COMMIT...` | 6 | Keep OPUS.md always up-to-date |
-| **OPUS_AUTO_VERIFY** | `GIT_COMMIT, FILE_CHANGED` | 7 | Automatic drift detection triggered by git commits |
+| Circuit | Triggers | States | Action | Description |
+|---------|----------|--------|--------|-------------|
+| **OPUS_AUTO_HEAL** | `OPUS.DRIFT_PERSISTENT, OPUS.HEALTH_CRITICAL` | 7 | [⚡ Run](command:steward.circuit.run?id=OPUS_AUTO_HEAL)
+ | Automatic recovery suggestions when drif |
+| **OPUS_AUTO_REFRESH** | `KERNEL_BOOT, KERNEL_TICK, GIT_COMMIT...` | 6 | [⚡ Run](command:steward.circuit.run?id=OPUS_AUTO_REFRESH)
+ | Keep OPUS.md always up-to-date |
+| **OPUS_AUTO_VERIFY** | `GIT_COMMIT, FILE_CHANGED` | 7 | [⚡ Run](command:steward.circuit.run?id=OPUS_AUTO_VERIFY)
+ | Automatic drift detection triggered by g |
 
 **3 circuits** ready for autonomous execution
 
+### Circuit Flow (Mermaid)
+
+```mermaid
+flowchart LR
+    subgraph Events["🎯 Triggers"]
+        E1[KERNEL_TICK]
+        E2[GIT_COMMIT]
+        E3[FILE_CHANGED]
+        E4[DRIFT_DETECTED]
+    end
+
+    subgraph Circuits["⚡ Circuits"]
+        C1[OPUS_AUTO_HEAL]
+        C2[OPUS_AUTO_REFRESH]
+        C3[OPUS_AUTO_VERIFY]
+    end
+
+    subgraph Actions["🔧 Actions"]
+        A1[verify]
+        A2[refresh]
+        A3[heal]
+        A4[log]
+    end
+
+    E1 --> C2
+    E2 --> C1
+    E2 --> C3
+    E3 --> C3
+    E4 --> C1
+
+    C1 --> A4
+    C2 --> A4
+    C3 --> A4
+    C1 --> A3
+    C2 --> A2
+    C3 --> A1
+
+    style E1 fill:#e1f5fe
+    style E2 fill:#e1f5fe
+    style E3 fill:#e1f5fe
+    style E4 fill:#ffebee
+    style C1 fill:#fff3e0
+    style C2 fill:#fff3e0
+    style C3 fill:#fff3e0
+    style A1 fill:#e8f5e9
+    style A2 fill:#e8f5e9
+    style A3 fill:#e8f5e9
+    style A4 fill:#f3e5f5
+```
+
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:verification -->
 ## System Verification (OPUS-000)
 
-**Trust Score: 🟡 61%** (29 docs verified, 1 without @HARNESS)
+**Trust Score: **🟡 DEGRADED** 61%** (29 docs verified, 1 without @HARNESS)
 
 ### OPUS Docs
 
@@ -114,6 +177,8 @@ The system will log observations here as it runs:
 - _...and 33 more_
 
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:architecture_plans -->
 ## Architecture Plans
 
@@ -149,6 +214,62 @@ The system will log observations here as it runs:
 - [028-PRAKRITI-GIT-INTEGRATION](docs/architecture/OPUS/028-PRAKRITI-GIT-INTEGRATION.md)
 - [029-OPUS-PLUGIN-ARCHITECTURE](docs/architecture/OPUS/029-OPUS-PLUGIN-ARCHITECTURE.md)
 <!-- /@LIVE -->
+
+
+<!-- @LIVE:module_index -->
+## 📦 Module Index
+
+*Quick navigation to understand the codebase structure*
+
+| Module | Description | Files | Tests | Path |
+|--------|-------------|-------|-------|------|
+| **agents** | Agent implementations for vibe-agency OS. | 6 | ❌ | `vibe_core/agents/` |
+| **cartridges** | Cartridges - ARCH-050 | 174 | ✅ | `vibe_core/cartridges/` |
+| **cli** | Fractal CLI System - Auto-discoverable, plugin-based command | 12 | ❌ | `vibe_core/cli/` |
+| **config** | THE DHARMA ENGINE: Configuration-Driven System Architecture | 2 | ❌ | `vibe_core/config/` |
+| **cortex** | CORTEX - The Cognitive Engine Layer | 6 | ❌ | `vibe_core/cortex/` |
+| **gateway** | (2 files) | 2 | ❌ | `vibe_core/gateway/` |
+| **governance** | Governance layer for Vibe Agency. | 2 | ❌ | `vibe_core/governance/` |
+| **knowledge** | Unified Knowledge Graph Module | 4 | ❌ | `vibe_core/knowledge/` |
+| **llm** | LLM integration for vibe-agency OS. | 9 | ❌ | `vibe_core/llm/` |
+| **loaders** | Unified Loader System - VEDA-4 Pattern for ALL Item Types. | 8 | ❌ | `vibe_core/loaders/` |
+| **phoenix** | Phoenix Configuration System - The config that never dies. | 36 | ❌ | `vibe_core/phoenix/` |
+| **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
+| **plugins** | Kernel Plugins Package | 97 | ✅ | `vibe_core/plugins/` |
+| **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 8 | ❌ | `vibe_core/protocols/` |
+| **runtime** | Runtime Components Package | 26 | ❌ | `vibe_core/runtime/` |
+| **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
+| **scripts** | (1 files) | 1 | ❌ | `vibe_core/scripts/` |
+| **settings** | Settings Section Plugin System | 6 | ❌ | `vibe_core/settings/` |
+| **specialists** | Specialist Agents - HAP Framework (Hierarchical Agent Patter | 4 | ❌ | `vibe_core/specialists/` |
+| **state** | vibe_core/state - Unified State Management (PRAKRITI) | 9 | ❌ | `vibe_core/state/` |
+
+**20 modules** in `vibe_core/`
+
+<!-- /@LIVE -->
+
+
+<!-- @LIVE:hot_paths -->
+## 🔥 Hot Paths
+
+*Most frequently changed files (last 100 commits) - start here to understand the project*
+
+| File | Commits | Last Change |
+|------|---------|-------------|
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 11 | feat(opus): Switch plugin to template-ba |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 7 | feat(opus): Wire ObservationLogger into  |
+| `vibe_core/plugins/opus_assistant/core/__init__.py` | 6 | feat(opus): Phase 4 - Cognitive Circuits |
+| `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 4 | refactor(opus): Kill Spaghetti + Add Mer |
+| `vibe_core/runtime/boot_sequence.py` | 3 | feat(prompt): Wire plugin contexts into  |
+| `vibe_core/plugins/opus_assistant/circuits/__init__.py` | 3 | feat(opus): Phase 5 - Auto-Refresh + Cle |
+| `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 3 | refactor(opus): OPUS-029 Migration - sta |
+| `vibe_core/plugins/opus_assistant/events/__init__.py` | 3 | feat(opus): Phase 4 - Cognitive Circuits |
+| `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` | 2 | feat(opus): Add Module Index + Hot Paths |
+| `vibe_core/plugins/opus_assistant/tests/test_kernel_tick.py` | 2 | feat(opus): Circuit-driven event handler |
+
+<!-- /@LIVE -->
+
+
 <!-- @LIVE:prakriti_state -->
 ## Prakriti State (OPUS-027)
 
@@ -168,17 +289,19 @@ _No active session (kernel may be stopped)_
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `1b6cce9d7248` | ⚪ |
+| Git HEAD | `054169d` | ⚪ |
 | Ledger HEAD | `4cef525941e9` | ⚪ |
 
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:code_health -->
 ## Code Health (TODO/HACK/FIXME)
 
-**Total: 12** (TODO: 12, HACK: 0, FIXME: 0)
+**Total: 11** (TODO: 11, HACK: 0, FIXME: 0)
 
 <details>
-<summary>TODOs (12)</summary>
+<summary>TODOs (11)</summary>
 
 - `vibe_core/cartridges/system/archivist/tools/audit_tool.py:78` - # TODO: Implement real verification with public_key when HER
 - `vibe_core/cartridges/system/engineer/cartridge_main.py:465` - # TODO: Implement agent-specific logic
@@ -190,11 +313,12 @@ _No active session (kernel may be stopped)_
 - `vibe_core/playbook/__init__.py:22` - # TODO: Remove in v2.0
 - `vibe_core/plugins/doctor/plugin_main.py:86` - # TODO: Clarify offline mode dependency injection.
 - `vibe_core/plugins/envoy/plugin_main.py:517` - # TODO: Create envoy.yaml config section
-- `vibe_core/plugins/opus_assistant/render/opus_md_writer.py:650` - # TODOs (collapsible)
 - `vibe_core/task_management/task_manager.py:341` - # TODO: Integrate with UnifiedRouter for dynamic prioritizat
 
 </details>
 <!-- /@LIVE -->
+
+
 <!-- @LIVE:test_health -->
 ## Test Suite Health
 
@@ -210,6 +334,8 @@ _No active session (kernel may be stopped)_
 
 **Debt:** 1 tests in `tests/archive/` need revival
 <!-- /@LIVE -->
+
+
 ---
 
 <!-- @AI:current_work -->
@@ -276,6 +402,5 @@ _No active session (kernel may be stopped)_
 _Add notes here_
 <!-- /@HUMAN -->
 
-
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-12 23:31:00 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-13 00:18:52 UTC*

@@ -374,3 +374,458 @@ def build_cli_response(
         lines.append(f"Context: {data['context_hash']}")
 
     return "\n".join(lines)
+
+
+# =============================================================================
+# EXPLORE Command - Token-Efficient Codebase Navigation
+# =============================================================================
+
+
+def explore_codebase(
+    query: str,
+    workspace: Path,
+    limit: int = 10,
+    json_mode: bool = False,
+) -> Dict[str, Any]:
+    """
+    Explore the codebase for files matching a concept.
+
+    Instead of RAG (which pulls random chunks), this does:
+    1. Keyword matching in file names
+    2. Docstring/comment search
+    3. Import graph analysis
+    4. Hot path prioritization
+
+    Args:
+        query: What to explore (e.g., "authentication", "kernel", "plugins")
+        workspace: Project root
+        limit: Max files to return
+        json_mode: If True, return raw data
+
+    Returns:
+        Dict with relevant files and context
+    """
+    import subprocess
+
+    results = []
+    query_lower = query.lower()
+    query_parts = query_lower.split()
+
+    vibe_core = workspace / "vibe_core"
+    if not vibe_core.exists():
+        return {"success": False, "error": "vibe_core/ not found"}
+
+    # Strategy 1: File name matching (most relevant)
+    for py_file in vibe_core.glob("**/*.py"):
+        if "__pycache__" in str(py_file):
+            continue
+
+        file_name = py_file.stem.lower()
+        path_str = str(py_file.relative_to(workspace)).lower()
+
+        # Score based on query match
+        score = 0
+
+        # Exact name match
+        if query_lower in file_name:
+            score += 100
+
+        # Path contains query
+        if query_lower in path_str:
+            score += 50
+
+        # Partial matches
+        for part in query_parts:
+            if part in file_name:
+                score += 30
+            if part in path_str:
+                score += 15
+
+        if score > 0:
+            results.append(
+                {
+                    "path": str(py_file.relative_to(workspace)),
+                    "score": score,
+                    "reason": "name_match",
+                }
+            )
+
+    # Strategy 2: Content search (docstrings, comments)
+    try:
+        grep_result = subprocess.run(
+            ["grep", "-r", "-l", "-i", query, str(vibe_core)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if grep_result.returncode == 0:
+            for line in grep_result.stdout.strip().split("\n"):
+                if line and ".py" in line and "__pycache__" not in line:
+                    try:
+                        rel_path = str(Path(line).relative_to(workspace))
+                        # Check if already in results
+                        existing = next((r for r in results if r["path"] == rel_path), None)
+                        if existing:
+                            existing["score"] += 20
+                            existing["reason"] = "name+content"
+                        else:
+                            results.append(
+                                {
+                                    "path": rel_path,
+                                    "score": 20,
+                                    "reason": "content_match",
+                                }
+                            )
+                    except ValueError:
+                        pass
+    except Exception:
+        pass
+
+    # Strategy 3: Hot path bonus (files that are frequently changed are more important)
+    try:
+        git_result = subprocess.run(
+            ["git", "log", "--pretty=format:", "--name-only", "-50"],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if git_result.returncode == 0:
+            hot_files = set()
+            for line in git_result.stdout.split("\n"):
+                line = line.strip()
+                if line and line.endswith(".py"):
+                    hot_files.add(line)
+
+            for result in results:
+                if result["path"] in hot_files:
+                    result["score"] += 25
+                    result["hot"] = True
+    except Exception:
+        pass
+
+    # Sort by score, take top N
+    results.sort(key=lambda x: -x["score"])
+    top_results = results[:limit]
+
+    # Get one-liner descriptions for top results
+    for result in top_results:
+        try:
+            file_path = workspace / result["path"]
+            content = file_path.read_text()
+
+            # Extract first docstring
+            if '"""' in content:
+                start = content.find('"""') + 3
+                end = content.find('"""', start)
+                if end > start:
+                    doc = content[start:end].strip()
+                    result["description"] = doc.split("\n")[0][:60]
+        except Exception:
+            pass
+
+    if json_mode:
+        return {
+            "success": True,
+            "query": query,
+            "results": top_results,
+            "total_matches": len(results),
+        }
+
+    return {
+        "success": True,
+        "query": query,
+        "results": top_results,
+        "total_matches": len(results),
+        "summary": f"Found {len(results)} files matching '{query}', showing top {len(top_results)}",
+    }
+
+
+def format_explore_output(data: Dict[str, Any], json_mode: bool = False) -> str:
+    """Format explore results for terminal output."""
+    if json_mode:
+        import json
+
+        return json.dumps(data, indent=2, default=str)
+
+    if not data.get("success"):
+        return f"❌ {data.get('error', 'Unknown error')}"
+
+    lines = [
+        f"🔍 Exploring: '{data['query']}'",
+        f"   Found {data['total_matches']} matches, showing top {len(data['results'])}",
+        "",
+    ]
+
+    for i, result in enumerate(data["results"], 1):
+        hot_marker = "🔥" if result.get("hot") else "  "
+        score = result["score"]
+        path = result["path"]
+        desc = result.get("description", "")
+
+        lines.append(f"{hot_marker} {i:2}. [{score:3}] {path}")
+        if desc:
+            lines.append(f"        └── {desc}")
+
+    lines.append("")
+    lines.append("💡 Use: Read the top files to understand this area of the codebase")
+
+    return "\n".join(lines)
+
+
+# =============================================================================
+# DEEP EXPLORE - LLM-Powered Codebase Understanding
+# =============================================================================
+
+
+def deep_explore(
+    query: str,
+    workspace: Path,
+    limit: int = 5,
+    depth: int = 2,
+) -> Dict[str, Any]:
+    """
+    Deep exploration with LLM synthesis preparation.
+
+    This is the "Verstehens-Maschine" - not just search, but understanding.
+
+    Strategy:
+    1. Scout: Find relevant files (deterministic)
+    2. Read: Load file contents into context
+    3. Analyze: Extract imports/dependencies
+    4. Synthesize: Prepare cognitive task for LLM
+    5. Recurse: Identify missing concepts for follow-up
+
+    Args:
+        query: What to explore
+        workspace: Project root
+        limit: Max files to analyze deeply
+        depth: Recursion depth for dependency analysis (1-3)
+
+    Returns:
+        Dict with files, contents, imports, and synthesis prompt
+    """
+    import re
+
+    # Phase 1: Scout (reuse deterministic search)
+    scout_result = explore_codebase(query, workspace, limit=limit)
+    if not scout_result.get("success"):
+        return scout_result
+
+    top_files = scout_result["results"][:limit]
+
+    # Phase 2: Read file contents
+    file_contents = {}
+    total_lines = 0
+
+    for file_info in top_files:
+        file_path = workspace / file_info["path"]
+        try:
+            content = file_path.read_text()
+            lines = content.split("\n")
+            total_lines += len(lines)
+
+            # Truncate very long files (keep first 200 lines for context)
+            if len(lines) > 200:
+                content = "\n".join(lines[:200]) + f"\n\n# ... truncated ({len(lines)} total lines)"
+
+            file_contents[file_info["path"]] = {
+                "content": content,
+                "lines": len(lines),
+                "description": file_info.get("description", ""),
+            }
+        except Exception as e:
+            file_contents[file_info["path"]] = {"error": str(e), "lines": 0}
+
+    # Phase 3: Analyze imports and dependencies
+    all_imports = set()
+    internal_refs = set()
+    external_deps = set()
+
+    import_patterns = [
+        r"^from\s+([\w.]+)\s+import",  # from x import y
+        r"^import\s+([\w.]+)",  # import x
+    ]
+
+    for path, info in file_contents.items():
+        content = info.get("content", "")
+        for pattern in import_patterns:
+            for match in re.finditer(pattern, content, re.MULTILINE):
+                module = match.group(1)
+                all_imports.add(module)
+
+                if module.startswith("vibe_core"):
+                    internal_refs.add(module)
+                elif not module.startswith(("typing", "pathlib", "datetime", "dataclass", "logging", "re", "json")):
+                    external_deps.add(module)
+
+    # Phase 4: Identify missing concepts (for recursion suggestion)
+    query_lower = query.lower()
+    missing_concepts = []
+
+    for ref in internal_refs:
+        # Check if this import is NOT in our analyzed files
+        ref_path = ref.replace(".", "/") + ".py"
+        if not any(ref_path in f["path"] for f in top_files):
+            # Extract concept name
+            concept = ref.split(".")[-1]
+            if concept.lower() != query_lower and concept not in ["__init__", "typing"]:
+                missing_concepts.append({"module": ref, "concept": concept})
+
+    # Limit missing concepts
+    missing_concepts = missing_concepts[:5]
+
+    # Phase 5: Build synthesis prompt
+    synthesis_prompt = _build_synthesis_prompt(
+        query=query,
+        files=file_contents,
+        imports=list(internal_refs),
+        missing=missing_concepts,
+    )
+
+    return {
+        "success": True,
+        "query": query,
+        "mode": "deep",
+        "files_analyzed": len(file_contents),
+        "total_lines": total_lines,
+        "files": file_contents,
+        "internal_imports": sorted(internal_refs),
+        "external_deps": sorted(external_deps),
+        "missing_concepts": missing_concepts,
+        "synthesis_prompt": synthesis_prompt,
+        "recursion_suggestions": [c["concept"] for c in missing_concepts],
+    }
+
+
+def _build_synthesis_prompt(
+    query: str,
+    files: Dict[str, Any],
+    imports: List[str],
+    missing: List[Dict[str, str]],
+) -> str:
+    """
+    Build a cognitive synthesis prompt for LLM analysis.
+
+    This is the "question" that turns data into understanding.
+    """
+    lines = [
+        f"# Codebase Analysis: '{query}'",
+        "",
+        "## Task",
+        f"Analyze these {len(files)} files and explain the architecture of '{query}'.",
+        "",
+        "## Questions to Answer",
+        "1. What is the **entry point** for this functionality?",
+        "2. How do these components **interact**?",
+        "3. What is the **data flow**?",
+        "4. Are there any **potential issues** or **architectural concerns**?",
+        "",
+        "## Files Analyzed",
+    ]
+
+    for path, info in files.items():
+        desc = info.get("description", "")
+        line_count = info.get("lines", 0)
+        lines.append(f"- `{path}` ({line_count} lines) - {desc}")
+
+    if imports:
+        lines.extend(
+            [
+                "",
+                "## Internal Dependencies",
+                "These vibe_core modules are imported:",
+            ]
+        )
+        for imp in imports[:10]:
+            lines.append(f"- `{imp}`")
+
+    if missing:
+        lines.extend(
+            [
+                "",
+                "## Missing Context (Consider exploring)",
+                "These modules are referenced but not in the analysis:",
+            ]
+        )
+        for m in missing:
+            lines.append(f"- `{m['module']}` (concept: **{m['concept']}**)")
+
+    lines.extend(
+        [
+            "",
+            "## File Contents",
+            "",
+        ]
+    )
+
+    for path, info in files.items():
+        content = info.get("content", info.get("error", ""))
+        lines.extend(
+            [
+                f"### {path}",
+                "```python",
+                content,
+                "```",
+                "",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
+def format_deep_explore_output(data: Dict[str, Any], json_mode: bool = False) -> str:
+    """Format deep explore results for terminal output."""
+    if json_mode:
+        import json
+
+        return json.dumps(data, indent=2, default=str)
+
+    if not data.get("success"):
+        return f"❌ {data.get('error', 'Unknown error')}"
+
+    lines = [
+        f"🧠 Deep Explore: '{data['query']}'",
+        "",
+        f"📁 Files Analyzed: {data['files_analyzed']}",
+        f"📊 Total Lines: {data['total_lines']}",
+        f"🔗 Internal Imports: {len(data.get('internal_imports', []))}",
+        "",
+    ]
+
+    # List files
+    lines.append("📖 **Files Read:**")
+    for path, info in data.get("files", {}).items():
+        desc = info.get("description", "")[:40]
+        lines.append(f"   • {path}")
+        if desc:
+            lines.append(f"     └── {desc}")
+
+    # Missing concepts (recursion suggestions)
+    missing = data.get("missing_concepts", [])
+    if missing:
+        lines.extend(
+            [
+                "",
+                "🔄 **Missing Context** (explore these next):",
+            ]
+        )
+        for m in missing:
+            lines.append(f"   → {m['concept']} (`{m['module']}`)")
+
+    # Synthesis ready indicator
+    lines.extend(
+        [
+            "",
+            "═" * 60,
+            "🤖 **SYNTHESIS TASK READY**",
+            "═" * 60,
+            "",
+            "The full analysis prompt is in `synthesis_prompt`.",
+            "Pass it to an LLM or read the files directly.",
+            "",
+            f"💡 Suggested follow-ups: {', '.join(data.get('recursion_suggestions', [])[:3]) or 'None'}",
+        ]
+    )
+
+    return "\n".join(lines)
