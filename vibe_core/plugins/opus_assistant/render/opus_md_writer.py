@@ -1,25 +1,26 @@
 """
-OPUS.md Writer - Thin wrapper for backward compatibility.
+OPUS.md Writer - DEPRECATED Legacy Wrapper.
 
-OPUS-029 Phase 10: All rendering now done via Jinja2 templates.
-This file exists ONLY for backward compatibility with old imports.
+⚠️ ARCHITECTURE:
+- opus_assistant is BACKEND only (data provider)
+- InterfacePlugin is FRONTEND (writes via kernel.io)
+- This file exists ONLY for backward compatibility
 
-The REAL renderer is: opus_dashboard_renderer.py
-
-DO NOT ADD f-strings here. If you need to change the output,
-edit the template: templates/opus_dashboard.md.j2
+DO NOT USE write() methods - they will raise errors.
+Use InterfacePlugin.render_view("opus") instead.
 """
 
+import warnings
 from pathlib import Path
 from typing import Any, Optional
 
 
 class OpusMdWriter:
     """
-    DEPRECATED: Use OpusDashboardRenderer instead.
+    DEPRECATED: Use InterfacePlugin.render_view("opus") instead.
 
     This class exists only for backward compatibility.
-    All methods delegate to the template-based renderer.
+    write() methods will raise errors - use render() for content only.
     """
 
     def __init__(self, workspace_root: Path, kernel: Optional[Any] = None):
@@ -31,29 +32,33 @@ class OpusMdWriter:
         self._renderer = OpusDashboardRenderer(workspace_root, kernel)
 
     def write(self, quick: bool = False) -> Path:
-        """Delegate to template renderer."""
-        return self._renderer.write(quick=quick)
+        """
+        REMOVED: Direct file writes violate architecture.
+
+        Use InterfacePlugin.render_view("opus") instead.
+        """
+        raise NotImplementedError(
+            "OpusMdWriter.write() removed - opus_assistant is BACKEND only. "
+            "Use InterfacePlugin.render_view('opus') for file writes."
+        )
 
     def _generate_content(self, quick: bool = False, preserved: Optional[dict] = None) -> str:
-        """Delegate to template renderer."""
+        """Generate content (for backward compatibility)."""
+        warnings.warn(
+            "OpusMdWriter._generate_content() is deprecated. Use OpusDashboardRenderer.render() directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._renderer.render(quick=quick)
 
 
 def write_opus_md(workspace_root: Path, kernel: Optional[Any] = None, quick: bool = False) -> Path:
     """
-    Convenience function - delegates to template renderer.
+    REMOVED: Direct file writes violate architecture.
 
-    Args:
-        workspace_root: Project root
-        kernel: Optional kernel for runtime data
-        quick: Skip expensive verification
-
-    Returns:
-        Path to OPUS.md
+    Use InterfacePlugin.render_view("opus") instead.
     """
-    from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
-        OpusDashboardRenderer,
+    raise NotImplementedError(
+        "write_opus_md() removed - opus_assistant is BACKEND only. "
+        "Use InterfacePlugin.render_view('opus') for file writes."
     )
-
-    renderer = OpusDashboardRenderer(workspace_root, kernel)
-    return renderer.write(quick=quick)
