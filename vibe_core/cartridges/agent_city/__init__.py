@@ -1,11 +1,12 @@
 """
 AGENT CITY CARTRIDGES - Community Agents
 
-The 12 agent_city agents (installable, sandboxed):
+The 13 agent_city agents (installable, sandboxed):
 - agora: Public forum
 - ambassador: Inter-system diplomacy
 - analyst: Data analysis
 - artisan: Creative work
+- dharma: Kernel-City bridge (opus_assistant avatar)
 - dhruva: Reference resolution
 - lens: Visual processing
 - librarian: Knowledge management
@@ -21,6 +22,7 @@ __all__ = [
     "ambassador",
     "analyst",
     "artisan",
+    "dharma",
     "dhruva",
     "lens",
     "librarian",
