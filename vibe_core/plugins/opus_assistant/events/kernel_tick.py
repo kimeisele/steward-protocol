@@ -692,108 +692,138 @@ class KernelTickHandler:
 
     async def _check_session_karma(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Check last session's karma from the Ledger.
+        Check last session's karma from DUAL SOURCES.
 
         This is the "memory" that makes boot state-aware.
         Looks at the last N hours of events and calculates a karma score.
+
+        🔌 WIRING: Reads from BOTH:
+           1. SQLite Ledger (primary, more complete)
+           2. audit_trail.jsonl (fallback, survives git resets - "untötbar")
         """
+        import json
         from datetime import datetime, timedelta
 
         lookback_hours = params.get("lookback_hours", 24)
+        cutoff = datetime.utcnow() - timedelta(hours=lookback_hours)
 
+        # Collect events from ALL sources
+        all_events = []
+
+        # SOURCE 1: SQLite Ledger (primary)
         try:
             kernel = self._plugin._kernel
-            if not kernel or not hasattr(kernel, "ledger"):
-                return {
-                    "success": True,
-                    "score": 100,
-                    "is_critical": False,
-                    "has_warnings": False,
-                    "error_count": 0,
-                    "warning_count": 0,
-                    "message": "No ledger available - assuming clean karma",
-                }
+            if kernel and hasattr(kernel, "ledger"):
+                ledger_events = kernel.ledger.get_all_events()
+                all_events.extend(ledger_events)
+                logger.debug(f"📊 Loaded {len(ledger_events)} events from SQLite ledger")
+        except Exception as e:
+            logger.warning(f"Could not read SQLite ledger: {e}")
 
-            # Get events from ledger
-            all_events = kernel.ledger.get_all_events()
-            cutoff = datetime.utcnow() - timedelta(hours=lookback_hours)
+        # SOURCE 2: Git-tracked audit trail (fallback/"untötbar")
+        try:
+            audit_path = Path("data/ledger/audit_trail.jsonl")
+            if audit_path.exists():
+                with open(audit_path, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                entry = json.loads(line)
+                                # Convert audit entry to event format
+                                if entry.get("attestation_type") == "opus_observation":
+                                    all_events.append(
+                                        {
+                                            "timestamp": entry.get("timestamp", ""),
+                                            "event_type": entry.get("severity", "INFO"),
+                                            "details": {"severity": entry.get("severity", "INFO")},
+                                            "source": entry.get("source", "audit_trail"),
+                                        }
+                                    )
+                            except json.JSONDecodeError:
+                                continue
+                logger.debug("📜 Merged events from git-tracked audit trail")
+        except Exception as e:
+            logger.warning(f"Could not read audit trail: {e}")
 
-            # Count event types
-            error_count = 0
-            warning_count = 0
-            crash_count = 0
-            success_count = 0
-
-            for event in all_events:
-                # Parse timestamp
-                timestamp_str = event.get("timestamp", "")
-                try:
-                    if timestamp_str:
-                        event_time = datetime.fromisoformat(timestamp_str.replace("Z", ""))
-                        if event_time < cutoff:
-                            continue
-                except (ValueError, TypeError):
-                    continue
-
-                event_type = event.get("event_type", "")
-                details = event.get("details", {})
-
-                # Categorize events
-                if event_type in ["ERROR", "FAILURE", "EXCEPTION"]:
-                    error_count += 1
-                elif event_type in ["CRASH", "FATAL", "KERNEL_PANIC"]:
-                    crash_count += 1
-                elif event_type in ["WARNING", "DEGRADED", "ALERT"]:
-                    warning_count += 1
-                elif event_type in ["COMPLETED", "SUCCESS", "HEALTHY"]:
-                    success_count += 1
-
-                # Also check details for severity
-                severity = details.get("severity", "")
-                if severity == "ALERT":
-                    error_count += 1
-                elif severity == "WARN":
-                    warning_count += 1
-
-            # Calculate karma score (0-100)
-            # Start at 100, subtract for errors/crashes
-            karma_score = 100
-            karma_score -= crash_count * 30  # Crashes are severe
-            karma_score -= error_count * 10  # Errors are bad
-            karma_score -= warning_count * 2  # Warnings are minor
-            karma_score += success_count * 1  # Successes help
-            karma_score = max(0, min(100, karma_score))  # Clamp to 0-100
-
-            # Determine boot mode
-            is_critical = karma_score < 40 or crash_count > 0
-            has_warnings = warning_count > 3 or karma_score < 70
-
-            logger.info(
-                f"🔮 GENESIS: Session karma = {karma_score}/100 "
-                f"(errors: {error_count}, warnings: {warning_count}, crashes: {crash_count})"
-            )
-
+        # If no events from any source, assume clean
+        if not all_events:
             return {
                 "success": True,
-                "score": karma_score,
-                "is_critical": is_critical,
-                "has_warnings": has_warnings,
-                "error_count": error_count,
-                "warning_count": warning_count,
-                "crash_count": crash_count,
-                "success_count": success_count,
-                "lookback_hours": lookback_hours,
+                "score": 100,
+                "is_critical": False,
+                "has_warnings": False,
+                "error_count": 0,
+                "warning_count": 0,
+                "message": "No events found - assuming clean karma",
             }
 
-        except Exception as e:
-            logger.error(f"Genesis karma check failed: {e}")
-            return {
-                "success": False,
-                "score": 50,
-                "is_critical": False,
-                "has_warnings": True,
-                "error": str(e),
-            }
+        # Count event types
+        error_count = 0
+        warning_count = 0
+        crash_count = 0
+        success_count = 0
+
+        for event in all_events:
+            # Parse timestamp
+            timestamp_str = event.get("timestamp", "")
+            try:
+                if timestamp_str:
+                    event_time = datetime.fromisoformat(timestamp_str.replace("Z", ""))
+                    if event_time < cutoff:
+                        continue
+            except (ValueError, TypeError):
+                continue
+
+            event_type = event.get("event_type", "")
+            details = event.get("details", {})
+
+            # Categorize events
+            if event_type in ["ERROR", "FAILURE", "EXCEPTION"]:
+                error_count += 1
+            elif event_type in ["CRASH", "FATAL", "KERNEL_PANIC"]:
+                crash_count += 1
+            elif event_type in ["WARNING", "DEGRADED", "ALERT"]:
+                warning_count += 1
+            elif event_type in ["COMPLETED", "SUCCESS", "HEALTHY"]:
+                success_count += 1
+
+            # Also check details for severity
+            severity = details.get("severity", "")
+            if severity == "ALERT":
+                error_count += 1
+            elif severity == "WARN":
+                warning_count += 1
+
+        # Calculate karma score (0-100)
+        # Start at 100, subtract for errors/crashes
+        karma_score = 100
+        karma_score -= crash_count * 30  # Crashes are severe
+        karma_score -= error_count * 10  # Errors are bad
+        karma_score -= warning_count * 2  # Warnings are minor
+        karma_score += success_count * 1  # Successes help
+        karma_score = max(0, min(100, karma_score))  # Clamp to 0-100
+
+        # Determine boot mode
+        is_critical = karma_score < 40 or crash_count > 0
+        has_warnings = warning_count > 3 or karma_score < 70
+
+        logger.info(
+            f"🔮 GENESIS: Session karma = {karma_score}/100 "
+            f"(errors: {error_count}, warnings: {warning_count}, crashes: {crash_count})"
+        )
+
+        return {
+            "success": True,
+            "score": karma_score,
+            "is_critical": is_critical,
+            "has_warnings": has_warnings,
+            "error_count": error_count,
+            "warning_count": warning_count,
+            "crash_count": crash_count,
+            "success_count": success_count,
+            "lookback_hours": lookback_hours,
+        }
 
     async def _trigger_auto_heal(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
