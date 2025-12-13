@@ -106,12 +106,16 @@ class VerificationEngine:
             pass
         return {}
 
-    def run_verification(self, quick: bool = False) -> Dict[str, Any]:
+    def run_verification(self, quick: bool = False, changed_files: Optional[List[str]] = None) -> Dict[str, Any]:
         """
-        Run verification for all OPUS docs with @HARNESS sections.
+        Run verification for OPUS docs with @HARNESS sections.
+
+        OPUS-035: Delta-Pulse - If changed_files is provided, only verify
+        docs that reference those files. This makes the heartbeat efficient.
 
         Args:
             quick: If True, skip semantic checks (faster)
+            changed_files: Optional list of changed file paths (delta mode)
 
         Returns:
             Dict with verification results (compatible with panel format)
@@ -125,15 +129,31 @@ class VerificationEngine:
             "total_score": 0,
             "docs_with_harness": 0,
             "docs_without_harness": 0,
+            "delta_mode": changed_files is not None,
+            "changed_files": changed_files or [],
         }
 
         if not docs_path.exists():
             results["error"] = f"OPUS docs path not found: {docs_path}"
             return results
 
+        # OPUS-035: Build file→doc index for delta mode
+        if changed_files:
+            relevant_docs = self._find_docs_for_files(docs_path, harness_marker, changed_files)
+            if not relevant_docs:
+                # No relevant docs - system is clean for these changes
+                results["delta_clean"] = True
+                return results
+        else:
+            relevant_docs = None  # Full scan
+
         # Process each OPUS markdown file
         for md_file in sorted(docs_path.glob("*.md")):
             if md_file.name.startswith("_"):
+                continue
+
+            # OPUS-035: Skip docs not affected by changes (delta mode)
+            if relevant_docs is not None and md_file.name not in relevant_docs:
                 continue
 
             doc_result = self._verify_doc(md_file, harness_marker, config, skip_semantic=quick)
@@ -150,6 +170,63 @@ class VerificationEngine:
             results["total_score"] = results["total_score"] // results["docs_with_harness"]
 
         return results
+
+    def _find_docs_for_files(self, docs_path: Path, harness_marker: str, changed_files: List[str]) -> set:
+        """
+        OPUS-035: Find which OPUS docs reference the changed files.
+
+        This is the heart of delta-pulse - we only verify docs that
+        could be affected by the changes.
+
+        Args:
+            docs_path: Path to OPUS docs
+            harness_marker: The @HARNESS marker string
+            changed_files: List of changed file paths
+
+        Returns:
+            Set of doc names that reference the changed files
+        """
+        relevant_docs = set()
+        changed_set = set(changed_files)
+
+        for md_file in docs_path.glob("*.md"):
+            if md_file.name.startswith("_"):
+                continue
+
+            try:
+                content = md_file.read_text()
+                harness = self._extract_harness(content, harness_marker)
+                if not harness:
+                    continue
+
+                # Check if any files in this harness are in changed_files
+                harness_files = set()
+
+                # Collect all files referenced in @HARNESS
+                for f in harness.get("files", []):
+                    if isinstance(f, str):
+                        harness_files.add(f)
+                    elif isinstance(f, dict):
+                        harness_files.add(f.get("path", ""))
+
+                for t in harness.get("tests", []):
+                    if isinstance(t, str):
+                        harness_files.add(t)
+                    elif isinstance(t, dict):
+                        harness_files.add(t.get("path", ""))
+
+                for w in harness.get("wiring", []):
+                    if isinstance(w, dict):
+                        harness_files.add(w.get("in", ""))
+
+                # Check intersection
+                if harness_files & changed_set:
+                    relevant_docs.add(md_file.name)
+
+            except Exception:
+                continue
+
+        return relevant_docs
 
     def _verify_doc(
         self,
