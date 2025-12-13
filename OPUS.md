@@ -8,7 +8,7 @@
 
 > 🟡 **NOTICE** - Trust Score 61% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2025-12-13 00:18:52 UTC | Kernel: STOPPED (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-13 03:03:43 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
@@ -20,7 +20,7 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `054169d`
+- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `dc32a4c`
 - **Working Tree:** ✅ Clean
 ### Layer 2 - Prana (Runtime Energy)
 
@@ -66,8 +66,12 @@ The system will log observations here as it runs:
  | Keep OPUS.md always up-to-date |
 | **OPUS_AUTO_VERIFY** | `GIT_COMMIT, FILE_CHANGED` | 7 | [⚡ Run](command:steward.circuit.run?id=OPUS_AUTO_VERIFY)
  | Automatic drift detection triggered by g |
+| **GENESIS_CHECK** | `KERNEL_BOOT, GENESIS` | 10 | [⚡ Run](command:steward.circuit.run?id=GENESIS_CHECK)
+ | Check last session's karma before full b |
+| **KARMA_CONSEQUENCE** | `VERIFICATION_COMPLETED, DRIFT_DETECTED, CONTEXT_SYNTHESIS` | 12 | [⚡ Run](command:steward.circuit.run?id=KARMA_CONSEQUENCE)
+ | Connect OPUS trust observations to Vedic |
 
-**3 circuits** ready for autonomous execution
+**5 circuits** ready for autonomous execution
 
 ### Circuit Flow (Mermaid)
 
@@ -84,6 +88,8 @@ flowchart LR
         C1[OPUS_AUTO_HEAL]
         C2[OPUS_AUTO_REFRESH]
         C3[OPUS_AUTO_VERIFY]
+        C4[GENESIS_CHECK]
+        C5[KARMA_CONSEQUENCE]
     end
 
     subgraph Actions["🔧 Actions"]
@@ -102,6 +108,8 @@ flowchart LR
     C1 --> A4
     C2 --> A4
     C3 --> A4
+    C4 --> A4
+    C5 --> A4
     C1 --> A3
     C2 --> A2
     C3 --> A1
@@ -113,6 +121,8 @@ flowchart LR
     style C1 fill:#fff3e0
     style C2 fill:#fff3e0
     style C3 fill:#fff3e0
+    style C4 fill:#fff3e0
+    style C5 fill:#fff3e0
     style A1 fill:#e8f5e9
     style A2 fill:#e8f5e9
     style A3 fill:#e8f5e9
@@ -235,7 +245,7 @@ flowchart LR
 | **loaders** | Unified Loader System - VEDA-4 Pattern for ALL Item Types. | 8 | ❌ | `vibe_core/loaders/` |
 | **phoenix** | Phoenix Configuration System - The config that never dies. | 36 | ❌ | `vibe_core/phoenix/` |
 | **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
-| **plugins** | Kernel Plugins Package | 97 | ✅ | `vibe_core/plugins/` |
+| **plugins** | Kernel Plugins Package | 99 | ✅ | `vibe_core/plugins/` |
 | **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 8 | ❌ | `vibe_core/protocols/` |
 | **runtime** | Runtime Components Package | 26 | ❌ | `vibe_core/runtime/` |
 | **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
@@ -256,16 +266,16 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/plugins/opus_assistant/plugin_main.py` | 11 | feat(opus): Switch plugin to template-ba |
-| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 7 | feat(opus): Wire ObservationLogger into  |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 15 | feat(opus): OPUS-030 Cognitive Awakening |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 14 | feat(opus): Complete Fractal Holon wirin |
 | `vibe_core/plugins/opus_assistant/core/__init__.py` | 6 | feat(opus): Phase 4 - Cognitive Circuits |
 | `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 4 | refactor(opus): Kill Spaghetti + Add Mer |
+| `vibe_core/plugins/opus_assistant/core/observation_logger.py` | 3 | feat(opus): Implement Fractal Holon stat |
+| `vibe_core/plugins/opus_assistant/cli/commands.py` | 3 | feat(opus): Add --deep flag for LLM-powe |
 | `vibe_core/runtime/boot_sequence.py` | 3 | feat(prompt): Wire plugin contexts into  |
 | `vibe_core/plugins/opus_assistant/circuits/__init__.py` | 3 | feat(opus): Phase 5 - Auto-Refresh + Cle |
 | `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 3 | refactor(opus): OPUS-029 Migration - sta |
 | `vibe_core/plugins/opus_assistant/events/__init__.py` | 3 | feat(opus): Phase 4 - Cognitive Circuits |
-| `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` | 2 | feat(opus): Add Module Index + Hot Paths |
-| `vibe_core/plugins/opus_assistant/tests/test_kernel_tick.py` | 2 | feat(opus): Circuit-driven event handler |
 
 <!-- /@LIVE -->
 
@@ -289,7 +299,7 @@ _No active session (kernel may be stopped)_
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `054169d` | ⚪ |
+| Git HEAD | `dc32a4c` | ⚪ |
 | Ledger HEAD | `4cef525941e9` | ⚪ |
 
 <!-- /@LIVE -->
@@ -342,57 +352,14 @@ _No active session (kernel may be stopped)_
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12 12:15 UTC)**
-- ✅ Eliminated all `"/tmp/vibe_os"` string literals in vibe_core/
-- ✅ `kernel_impl.py` - Path() construction pattern
-- ✅ `lineage.py` - Path() construction for bootstrap fallback
-- ✅ `section_main.py` - `_DEFAULT_RUNTIME_ROOT` constant
-- ✅ `vfs.py` - already compliant (Path() construction)
-- ✅ Created `tests/unit/test_config_paths.py` (16 tests, all passing)
-- ✅ Fixed E741 ruff errors in docs/architecture/scripts/
-- ✅ Fixed ruff format (blank line after import)
-- 🎯 **@HARNESS: 100%** | **VISNU: Verified** | **Kernel Boot: Passed**
-
-**PREVIOUS (2025-12-11 17:45 UTC)**
-- PANOPTICON+ Migration Complete
+_Define current task_
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-### ✅ RESOLVED: Tests Migration Complete
-
-**All tests now use canonical oath-swearing:**
-| Test | Migration |
-|------|-----------|
-| `test_event_bus_integration.py` | ✅ `swear_oath_sync()` |
-| `test_capability_revocation.py` | ✅ `swear_oath_sync()` |
-| `city_simulation.py` | ✅ `swear_oath_sync()` fallback |
-| `test_red_team_attacks.py` | ✅ `_apply_fake_oath()` helper |
-| `test_system_boot.py` | ✅ TestAgents fixtures |
-| `test_governance_security.py` | ✅ TestAgents fixtures |
-
-**Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
-
-### 🟡 PENDING: Restored Tests Need CI Verification
-
-**7 tests moved back** from `tests/archive/` to `tests/integration/`:
-| Test | Dependencies | Status |
-|------|--------------|--------|
-| test_kernel_markdown_interfaces.py | fresh_kernel, EphemeralRenderer | ❓ Needs CI |
-| test_federation_manual.py | HTTP Gateway (port 8000) | ❓ Needs CI |
-| test_fractal_ui.py | spawn_child_kernel | ❓ Needs CI |
-| test_genesis_boot.py | genesis_path, envoy plugin | ❓ Needs CI |
-| test_genesis_flow.py | BootOrchestrator, UniversalProvider | ❓ Needs CI |
-| test_sangha_api.py | HTTP Gateway (port 8000) | ❓ Needs CI |
-| test_watchman_governance.py | pack_vibe, verify_holon_signatures | ❓ Needs CI |
-
-**Why restored:** Features/classes exist in codebase. Tests should not have been archived.
-
-**Action needed:** Run CI, fix any failures.
-
-**Still archived:** `test_runtime_separation.py` - `@pytest.mark.skip` (WIP)
+_None_
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
@@ -403,4 +370,4 @@ _Add notes here_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-13 00:18:52 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-13 03:03:43 UTC*
