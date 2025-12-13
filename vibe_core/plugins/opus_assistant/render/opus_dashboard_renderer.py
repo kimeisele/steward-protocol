@@ -866,8 +866,25 @@ class OpusDashboardRenderer:
         return content
 
     def _fallback_render(self, quick: bool = False) -> str:
-        """Fallback to legacy renderer if Jinja2 unavailable."""
-        from vibe_core.plugins.opus_assistant.render.opus_md_writer import OpusMdWriter
+        """Fallback content if Jinja2 unavailable - NO LEGACY!"""
+        from datetime import datetime
 
-        writer = OpusMdWriter(self._root, self._kernel)
-        return writer._generate_content(quick=quick)
+        timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        return f"""# OPUS - System State
+
+> ⚠️ **ERROR** - Jinja2 template rendering failed
+
+Install Jinja2: `pip install jinja2`
+
+---
+
+<!-- @AI:current_work -->
+## Current Work
+
+<!-- AI: Update this with what you're working on -->
+_Jinja2 required for full rendering_
+<!-- /@AI -->
+
+---
+*Fallback render | {timestamp} UTC*
+"""
