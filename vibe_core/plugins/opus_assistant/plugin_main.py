@@ -826,7 +826,11 @@ class OpusAssistantPlugin(KernelPlugin):
         """
         CLI Handler: steward opus:refresh
 
-        Manually regenerate OPUS.md.
+        Manually regenerate OPUS.md via InterfacePlugin.
+
+        ARCHITECTURE:
+        - opus_assistant is BACKEND only (data provider)
+        - InterfacePlugin is FRONTEND (writes via kernel.io)
 
         Args:
             quick: If True, skip semantic checks (faster, default)
@@ -838,8 +842,23 @@ class OpusAssistantPlugin(KernelPlugin):
         import time
 
         start = time.time()
-        result_path = self.write_opus_md(quick=quick)
+
+        # Trigger InterfacePlugin to render OPUS.md
+        result_path = None
+        if self._kernel:
+            interface_plugin = self._kernel.get_plugin("interface")
+            if interface_plugin and hasattr(interface_plugin, "render_view"):
+                interface_plugin.render_view("opus", force=True)
+                result_path = self._workspace / "OPUS.md" if self._workspace else Path("OPUS.md")
+
         elapsed = time.time() - start
+
+        if result_path is None:
+            return {
+                "status": "error",
+                "error": "InterfacePlugin not available - opus_assistant is BACKEND only",
+                "elapsed_ms": int(elapsed * 1000),
+            }
 
         result = {
             "status": "success",

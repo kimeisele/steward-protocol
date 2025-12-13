@@ -8,7 +8,7 @@
 
 > 🟡 **NOTICE** - Trust Score 63% - Minor issues detected
 
-**🟡 DEGRADED** | Updated: 2025-12-13 08:44:12 UTC | Kernel: STOPPED (0 agents)
+**🟡 DEGRADED** | Updated: 2025-12-13 09:48:47 UTC | Kernel: STOPPED (0 agents)
 
 ---
 
@@ -32,8 +32,8 @@
 
 ### Layer 1 - Sthula (Physical Reality)
 
-- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `f0896b6`
-- **Working Tree:** ✅ Clean
+- **Branch:** `claude/review-prompt-architecture-lIfRE` @ `7e5e4f9`
+- **Working Tree:** ⚠️ Uncommitted
 ### Layer 2 - Prana (Runtime Energy)
 
 - **Kernel:** ⚪ STOPPED- **Agents:** 0 active
@@ -48,6 +48,7 @@
 - **Trend:** ➡️ Stable
 ### 🎯 Focus Areas
 
+- Commit pending changes
 - Documentation drift detected
 
 <!-- /@LIVE -->
@@ -60,6 +61,7 @@
 
 | Time | Severity | Source | Message |
 |------|----------|--------|---------|
+| `09:50:00` | ⚠️ | battle_test | This observation should survive OPUS.md deletion! |
 | `8.967857` | ⚠️ | opus_assistant | Second observation |
 | `8.963975` | ⚠️ | opus_assistant | New warning observation |
 | `8.949831` | 🚨 | opus_assistant | Alert message |
@@ -74,8 +76,7 @@
 | `4.014657` | ⚠️ | auto_verify | Drift detected after commit {{ trigger_event.commi |
 | `8.186832` | ⚠️ | opus_assistant | Second observation |
 | `8.181692` | ⚠️ | opus_assistant | New warning observation |
-| `8.166186` | 🚨 | opus_assistant | Alert message |
-| ... | ... | ... | _+3 more entries_ |
+| ... | ... | ... | _+4 more entries_ |
 
 <!-- /@LIVE -->
 
@@ -195,7 +196,7 @@ flowchart LR
 | 020-CONTAINER-MIGRATION.m | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 021-TEST-ARCHITECTURE.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 022-KERNEL-SCALING.md | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
-| 023-FRACTAL-UI-ARCHITECTU | 65% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
+| 023-FRACTAL-UI-ARCHITECTU | 45% | ✅ | ✅ | ❌ | ✅ | ✅ | ⚪ |
 | 024-KERNEL-PROTECTION-AUD | 50% | ✅ | ❌ | ✅ | ✅ | ✅ | ⚪ |
 | 025-PATH-LOBOTOMY-CRISIS. | 75% | ✅ | ✅ | ✅ | ✅ | ✅ | ⚪ |
 | 026-SEMANTIC-VERIFICATION | 40% | ✅ | ❌ | ❌ | ✅ | ✅ | ⚪ |
@@ -216,7 +217,7 @@ flowchart LR
 - **014-UNIFIED-UI-TRANSPARENCY.md** [doc]: ## Status
 - **015a-SECURITY-ADDENDUM.md** [doc]: ## Implementation
 - **016-RUNTIME-SEPARATION.md** [doc]: ## Implementation
-- _...and 27 more_
+- _...and 28 more_
 
 <!-- /@LIVE -->
 
@@ -277,7 +278,7 @@ flowchart LR
 | **loaders** | Unified Loader System - VEDA-4 Pattern for ALL Item Types. | 8 | ❌ | `vibe_core/loaders/` |
 | **phoenix** | Phoenix Configuration System - The config that never dies. | 36 | ❌ | `vibe_core/phoenix/` |
 | **playbook** | Playbook Package (OPERATION SEMANTIC MOTOR) | 7 | ❌ | `vibe_core/playbook/` |
-| **plugins** | Kernel Plugins Package | 108 | ✅ | `vibe_core/plugins/` |
+| **plugins** | Kernel Plugins Package | 107 | ✅ | `vibe_core/plugins/` |
 | **protocols** | VIBE_CORE PROTOCOLS - Layer 1: Interfaces Only | 8 | ❌ | `vibe_core/protocols/` |
 | **runtime** | Runtime Components Package | 26 | ❌ | `vibe_core/runtime/` |
 | **scheduling** | Task scheduling definitions for VibeOS | 3 | ❌ | `vibe_core/scheduling/` |
@@ -298,16 +299,16 @@ flowchart LR
 
 | File | Commits | Last Change |
 |------|---------|-------------|
-| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 16 | feat(opus): Control Plane infrastructure |
-| `vibe_core/plugins/opus_assistant/plugin_main.py` | 14 | feat(opus): Complete Fractal Holon wirin |
-| `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` | 6 | fix(opus): Remove unused variable in dep |
+| `vibe_core/plugins/opus_assistant/events/kernel_tick.py` | 17 | refactor(arch): opus_assistant is BACKEN |
+| `vibe_core/plugins/opus_assistant/plugin_main.py` | 16 | fix(opus): Complete architecture enforce |
+| `vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py` | 9 | refactor(opus): DELETE opus_md_writer.py |
+| `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 6 | refactor(opus): DELETE opus_md_writer.py |
 | `vibe_core/plugins/opus_assistant/core/__init__.py` | 6 | feat(opus): Phase 4 - Cognitive Circuits |
+| `vibe_core/plugins/opus_assistant/core/observation_logger.py` | 4 | refactor(arch): opus_assistant is BACKEN |
+| `vibe_core/plugins/interface/renderers/opus/renderer.py` | 4 | refactor(arch): Clean Frontend/Backend s |
 | `vibe_core/plugins/interface/renderers/opus/panels/verification.py` | 4 | feat(interface): Add OPUS panel loader a |
-| `vibe_core/plugins/opus_assistant/render/opus_md_writer.py` | 4 | refactor(opus): Kill Spaghetti + Add Mer |
 | `vibe_core/plugins/opus_assistant/core/state_manager.py` | 3 | feat(opus): Control Plane infrastructure |
 | `vibe_core/plugins/interface/panel_loader.py` | 3 | feat(interface): Add OPUS panel loader a |
-| `vibe_core/plugins/interface/renderers/opus/__init__.py` | 3 | feat(interface): Add OPUS panel loader a |
-| `vibe_core/plugins/interface/renderers/opus/panels/__init__.py` | 3 | feat(interface): Add OPUS panel loader a |
 
 <!-- /@LIVE -->
 
@@ -364,7 +365,7 @@ flowchart LR
 | Module | Files | Critical? |
 |--------|-------|-----------|
 | `cartridges` | 174 |  |
-| `plugins` | 108 |  |
+| `plugins` | 107 |  |
 | `phoenix` | 36 | ⭐ |
 | `runtime` | 26 |  |
 | `cli` | 12 |  |
@@ -407,7 +408,7 @@ flowchart LR
 
 | Layer | Name | Status | Details |
 | --- | --- | --- | --- |
-| 1 | STHULA (Physical) | ✅ | Clean on `claude/review-prompt-architecture-lIfRE` |
+| 1 | STHULA (Physical) | 🟡 | Dirty on `claude/review-prompt-architecture-lIfRE` |
 | 2 | PRANA (Runtime) | ⏹️ | Stopped |
 | 3 | PURUSHA (Identity) | ⚪ | No personas defined |
 
@@ -415,7 +416,7 @@ flowchart LR
 
 | Component | Hash | Synced |
 | --- | --- | --- |
-| Git HEAD | `f0896b6` | ⚪ |
+| Git HEAD | `7e5e4f9` | ⚪ |
 | Ledger HEAD | `empty` | ⚪ |
 
 <!-- /@LIVE -->
@@ -470,77 +471,14 @@ flowchart LR
 ## Current Work
 
 <!-- AI: Update this with what you're working on -->
-**OPUS-030 ARCHITECTURE CLEAN SEPARATION (2025-12-13 09:30 UTC)**
-
-### ✅ Completed: Frontend/Backend Separation
-- ✅ Interface Plugin's OpusRenderer now delegates to opus_assistant for content
-- ✅ opus_assistant.write() deprecated with warnings
-- ✅ All OPUS.md writes now go through kernel.io (single writer principle)
-- ✅ Senior AI Cockpit: Dependency Graph feature added
-
-### 🏗️ Architecture Pattern (CLEAN)
-```
-┌──────────────────────────────────────────────────────────┐
-│                    InterfacePlugin                       │
-│                    (FRONTEND)                            │
-│                                                          │
-│  OpusRenderer.generate_content()                         │
-│       │                                                  │
-│       ▼                                                  │
-│  opus_assistant.OpusDashboardRenderer.render()           │
-│       │                                                  │
-│       ▼                                                  │
-│  kernel.io.write_document() ← SINGLE WRITER              │
-└──────────────────────────────────────────────────────────┘
-```
-
-### 📋 Architecture Roadmap
-| Phase | Status | Description |
-|-------|--------|-------------|
-| 1. Delegation | ✅ | OpusRenderer delegates to opus_assistant |
-| 2. Deprecation | ✅ | opus_assistant.write() deprecated |
-| 3. Event-Driven | ⏳ | opus_assistant emits events, InterfacePlugin listens |
-| 4. System Component | 📋 | Move InterfacePlugin to vibe_core/ui/ (not plugins/) |
-
-**PREVIOUS: OPUS-025 PATH LOBOTOMY CRISIS - COMPLETE (2025-12-12)**
+_Define current task_
 <!-- /@AI -->
 
 <!-- @AI:blockers -->
 ## Blockers
 
 <!-- AI: List any blockers -->
-### ✅ RESOLVED: Tests Migration Complete
-
-**All tests now use canonical oath-swearing:**
-| Test | Migration |
-|------|-----------|
-| `test_event_bus_integration.py` | ✅ `swear_oath_sync()` |
-| `test_capability_revocation.py` | ✅ `swear_oath_sync()` |
-| `city_simulation.py` | ✅ `swear_oath_sync()` fallback |
-| `test_red_team_attacks.py` | ✅ `_apply_fake_oath()` helper |
-| `test_system_boot.py` | ✅ TestAgents fixtures |
-| `test_governance_security.py` | ✅ TestAgents fixtures |
-
-**Referenz:** `vibe_core/plugins/test_orchestration/fixtures.py`
-
-### 🟡 PENDING: Restored Tests Need CI Verification
-
-**7 tests moved back** from `tests/archive/` to `tests/integration/`:
-| Test | Dependencies | Status |
-|------|--------------|--------|
-| test_kernel_markdown_interfaces.py | fresh_kernel, EphemeralRenderer | ❓ Needs CI |
-| test_federation_manual.py | HTTP Gateway (port 8000) | ❓ Needs CI |
-| test_fractal_ui.py | spawn_child_kernel | ❓ Needs CI |
-| test_genesis_boot.py | genesis_path, envoy plugin | ❓ Needs CI |
-| test_genesis_flow.py | BootOrchestrator, UniversalProvider | ❓ Needs CI |
-| test_sangha_api.py | HTTP Gateway (port 8000) | ❓ Needs CI |
-| test_watchman_governance.py | pack_vibe, verify_holon_signatures | ❓ Needs CI |
-
-**Why restored:** Features/classes exist in codebase. Tests should not have been archived.
-
-**Action needed:** Run CI, fix any failures.
-
-**Still archived:** `test_runtime_separation.py` - `@pytest.mark.skip` (WIP)
+_None_
 <!-- /@AI -->
 
 <!-- @HUMAN:notes -->
@@ -551,4 +489,4 @@ _Add notes here_
 <!-- /@HUMAN -->
 
 ---
-*Generated by OPUS Assistant Plugin | 2025-12-13 08:44:12 UTC*
+*Generated by OPUS Assistant Plugin | 2025-12-13 09:48:47 UTC*

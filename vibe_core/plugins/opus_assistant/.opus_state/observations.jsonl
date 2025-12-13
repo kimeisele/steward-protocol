@@ -16,3 +16,4 @@
 {"timestamp": "2025-12-13T02:46:28.949831", "severity": "ALERT", "message": "Alert message", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T02:46:28.963975", "severity": "WARN", "message": "New warning observation", "source": "opus_assistant", "context_hash": null}
 {"timestamp": "2025-12-13T02:46:28.967857", "severity": "WARN", "message": "Second observation", "source": "opus_assistant", "context_hash": null}
+{"timestamp": "2025-12-13T09:50:00", "severity": "WARN", "message": "This observation should survive OPUS.md deletion!", "source": "battle_test", "context_hash": null}
