@@ -238,14 +238,16 @@ class OpusDashboardRenderer:
             from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
 
             state_mgr = get_state_manager()
-            opus_session = state_mgr.get_last_session()
+            opus_session = state_mgr.load_session()
             if opus_session:
                 session_data = {
                     "id": opus_session.session_id,
-                    "boot_commit": opus_session.boot_commit,
+                    "boot_commit": getattr(opus_session, "boot_commit", None),
                     "boot_mode": opus_session.boot_mode,
                     "started_at": opus_session.started_at,
-                    "tick_count": opus_session.tick_count,
+                    "tick_count": getattr(opus_session, "tick_count", None),
+                    # 🎛️ CONTROL PLANE: View preferences for metamorphic UI
+                    "view_preferences": opus_session.view_preferences,
                 }
         except Exception as e:
             logger.debug(f"OPUS session unavailable: {e}")

@@ -526,6 +526,8 @@ class KernelTickHandler:
                 # Genesis Circuit handlers
                 "check_session_karma": self._check_session_karma,
                 "trigger_auto_heal": self._trigger_auto_heal,
+                # 🎛️ Control Plane handlers
+                "set_view": self._set_view_state,
             }
             method = method_map.get(method_name)
             if method:
@@ -1090,6 +1092,72 @@ class KernelTickHandler:
 
             return {"success": True, "triggered": True, "priority": priority}
         except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🎛️ Control Plane Handlers (Metamorphic UI)
+    # =========================================================================
+
+    async def _set_view_state(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🎛️ CONTROL PLANE: Update view preferences & trigger instant re-render.
+
+        Target: opus.set_view
+
+        This is the "reflex" that makes OPUS.md a living control surface.
+        When a user clicks a toggle link, this handler:
+        1. Updates SessionState.view_preferences
+        2. Saves to .opus_state/session.json (persistent!)
+        3. Triggers immediate OPUS.md re-render
+
+        Params:
+            pane: str - Panel name (e.g., "tests", "debug", "code_health")
+            visible: bool/str - Show or hide the panel
+            OR
+            preferences: Dict[str, bool] - Bulk update multiple preferences
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import (
+                SessionState,
+                get_state_manager,
+            )
+
+            # 1. Load current session (or create new one)
+            state_mgr = get_state_manager()
+            session = state_mgr.load_session()
+            if not session:
+                # No session yet - create one with defaults
+                import uuid
+                from datetime import datetime
+
+                session = SessionState(
+                    session_id=str(uuid.uuid4())[:8],
+                    started_at=datetime.utcnow().isoformat(),
+                )
+
+            # 2. Update preferences
+            if "pane" in params:
+                # Single pane toggle: ?pane=tests&visible=true
+                pane_key = f"show_{params['pane']}"
+                # Handle string 'true'/'false' from URL params
+                is_visible = str(params.get("visible", "true")).lower() == "true"
+                session.view_preferences[pane_key] = is_visible
+                self._log_observation_info(f"🎛️ View toggle: {pane_key} → {is_visible}", "control_plane")
+            elif "preferences" in params:
+                # Bulk update: preferences={'show_tests': False, 'show_debug': True}
+                session.view_preferences.update(params["preferences"])
+                self._log_observation_info(f"🎛️ View bulk update: {params['preferences']}", "control_plane")
+
+            # 3. Save state (atomic write - crash safe)
+            state_mgr.save_session(session)
+
+            # 4. Trigger immediate re-render (the metamorphic magic!)
+            await self._write_opus_md({"quick": True})
+
+            return {"success": True, "view_preferences": session.view_preferences}
+
+        except Exception as e:
+            logger.warning(f"Failed to set view state: {e}")
             return {"success": False, "error": str(e)}
 
     # =========================================================================
