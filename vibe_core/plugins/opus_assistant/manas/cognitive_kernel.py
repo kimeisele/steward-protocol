@@ -53,6 +53,100 @@ class ManasConfig:
     # High karma (Bhakti + success) grants trust for LOW risk auto-execute
     karma_auto_execute_threshold: int = 90
 
+    # OPUS-035: Intent Throttling - Don't overwhelm the human
+    # Max intents to generate per tick (prioritize CRITICAL/HIGH over LOW)
+    max_intents_per_tick: int = 3
+
+    # OPUS-035: Prioritize survival over growth
+    # If True, CRITICAL/ERROR intents are processed before GENESIS intents
+    survival_first: bool = True
+
+
+@dataclass
+class IntentConfidence:
+    """
+    OPUS-032: Confidence is not a guess - it's a computed vector.
+
+    Three components determine if we can auto-execute:
+    1. pattern_match: Have we seen this exact failure before?
+    2. karma_level: Does the system have enough "credit"?
+    3. rollback_safety: Can we easily undo this action?
+
+    Usage:
+        confidence = IntentConfidence.compute(intent, memory, karma_score=85)
+        if confidence.total_score >= 0.9:
+            # Safe to auto-execute
+    """
+
+    pattern_match: float = 0.0  # 0.0-1.0: How often have we fixed this before?
+    karma_level: float = 0.0  # 0.0-1.0: Current karma / 100
+    rollback_safety: float = 0.0  # 0.0-1.0: How easy to git revert?
+
+    @property
+    def total_score(self) -> float:
+        """
+        Compute total confidence.
+
+        CRITICAL: If rollback is unsafe, confidence is ZERO.
+        We never auto-execute irreversible actions.
+        """
+        if self.rollback_safety < 0.5:
+            return 0.0  # Safety first!
+
+        # Weighted: Karma matters more than pattern matching
+        return (self.pattern_match * 0.4) + (self.karma_level * 0.6)
+
+    @classmethod
+    def compute(
+        cls,
+        intent: "Intent",
+        memory: "MemoryStore",
+        karma_score: int,
+    ) -> "IntentConfidence":
+        """
+        Factory method to compute confidence for an intent.
+
+        Args:
+            intent: The intent to evaluate
+            memory: Memory store for pattern lookup
+            karma_score: Current karma score (0-100)
+
+        Returns:
+            IntentConfidence with computed values
+        """
+        # Pattern match: Have we successfully done this before?
+        success_rate = memory.get_success_rate(intent.intent_type)
+        pattern_match = success_rate if success_rate else 0.0
+
+        # Karma level: Normalize to 0-1
+        karma_level = karma_score / 100.0
+
+        # Rollback safety: Based on intent type
+        safe_types = {"contract_surrender", "doc_update", "test_create", "contract_doc_update"}
+        unsafe_types = {"capability_genesis", "refactor_major", "delete_file", "contract_import_fix"}
+
+        if intent.intent_type in safe_types:
+            rollback_safety = 1.0
+        elif intent.intent_type in unsafe_types:
+            rollback_safety = 0.3
+        else:
+            rollback_safety = 0.7  # Default: medium safety
+
+        return cls(
+            pattern_match=pattern_match,
+            karma_level=karma_level,
+            rollback_safety=rollback_safety,
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize for storage/display."""
+        return {
+            "pattern_match": self.pattern_match,
+            "karma_level": self.karma_level,
+            "rollback_safety": self.rollback_safety,
+            "total_score": self.total_score,
+        }
+
 
 @dataclass
 class IntentBufferEntry:
@@ -150,6 +244,15 @@ class CognitiveKernel:
 
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
+
+        # OPUS-035: Throttling - Prioritize survival over growth
+        if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
+            new_intents = self._prioritize_survival(new_intents)
+
+        # OPUS-035: Throttle to max_intents_per_tick
+        if len(new_intents) > self._config.max_intents_per_tick:
+            logger.debug(f"⚡ MANAS: Throttling {len(new_intents)} → {self._config.max_intents_per_tick} intents")
+            new_intents = new_intents[: self._config.max_intents_per_tick]
 
         # Add to buffer (if not already present)
         added = []
@@ -310,6 +413,38 @@ class CognitiveKernel:
             return True
 
         return False
+
+    def _prioritize_survival(self, intents: List[Intent]) -> List[Intent]:
+        """
+        OPUS-035: Prioritize survival over growth.
+
+        Sort intents so that CRITICAL/HIGH priority (50% - repairs)
+        come before LOW priority (51% - genesis).
+
+        Philosophy: First survive, then thrive.
+
+        Args:
+            intents: List of intents to prioritize
+
+        Returns:
+            Sorted list with survival intents first
+        """
+        # Define priority order: CRITICAL > HIGH > MEDIUM > LOW
+        priority_order = {
+            IntentPriority.CRITICAL: 0,
+            IntentPriority.HIGH: 1,
+            IntentPriority.MEDIUM: 2,
+            IntentPriority.LOW: 3,
+        }
+
+        # Also prioritize contract violations (50%) over semantic gaps (51%)
+        def sort_key(intent: Intent) -> tuple:
+            pri = priority_order.get(intent.priority, 99)
+            # Contract intents (repairs) come before semantic (genesis)
+            is_repair = 0 if intent.intent_type.startswith("contract_") else 1
+            return (pri, is_repair, intent.created_at)
+
+        return sorted(intents, key=sort_key)
 
     def _karma_allows_auto_execute(self, intent: Intent) -> bool:
         """

@@ -1726,6 +1726,9 @@ class KernelTickHandler:
         """
         🧠 MANAS: Generate intents from system state.
 
+        OPUS-032 Phase 3: THE PULSE - Live verification injection.
+        We don't read cached results. We FEEL the pain in real-time.
+
         This is THE THINKING - the core of proactive cognition.
         """
         if not self._manas_ready or not self._manas:
@@ -1734,7 +1737,16 @@ class KernelTickHandler:
         try:
             context = params.get("context", {})
 
-            # Execute thought cycle
+            # OPUS-032 Phase 3: Inject FRESH verification results
+            # This is "live pain" - not cached results
+            verification_results = self._run_live_verification()
+            if verification_results:
+                context["verification_results"] = verification_results
+                failure_count = len(verification_results.get("failures", []))
+                if failure_count > 0:
+                    logger.info(f"⚡ MANAS: Injected {failure_count} live failures into context")
+
+            # Execute thought cycle with enriched context
             intents = self._manas.think(context=context, force=False)
 
             # Convert to serializable format
@@ -1751,15 +1763,176 @@ class KernelTickHandler:
                 for i in intents
             ]
 
-            self._log_observation_info(
-                f"🧠 MANAS generated {len(intents)} intent(s): {[i.title for i in intents]}", "manas"
-            )
+            if intents:
+                self._log_observation_info(
+                    f"🧠 MANAS generated {len(intents)} intent(s): {[i.title for i in intents]}", "manas"
+                )
 
             return {"success": True, "intents": intent_data, "count": len(intents)}
 
         except Exception as e:
             logger.warning(f"MANAS intent generation failed: {e}")
             return {"success": False, "error": str(e), "intents": []}
+
+    def _run_live_verification(self, force_full: bool = False) -> Dict[str, Any]:
+        """
+        OPUS-032 Phase 3: Run LIVE verification (not cached).
+        OPUS-035: Delta-Pulse - Only verify what changed.
+
+        This is the PULSE - the system actively checks its health.
+        Returns failures in ContractFailure-compatible format.
+
+        Args:
+            force_full: If True, skip delta mode and verify everything
+        """
+        try:
+            from vibe_core.governance import ContractFailureType
+            from vibe_core.plugins.opus_assistant.core.verification_logic import VerificationEngine
+
+            workspace = self._plugin._workspace or Path.cwd()
+            engine = VerificationEngine(workspace_root=workspace)
+
+            # OPUS-035: Delta-Pulse - Get changed files from git
+            changed_files = None if force_full else self._get_changed_files()
+
+            # Run quick verification (fast, no semantic checks)
+            # In delta mode, only verify docs that reference changed files
+            result = engine.run_verification(quick=True, changed_files=changed_files)
+
+            # If delta mode found no relevant docs, system is clean
+            if result.get("delta_clean"):
+                logger.debug("⚡ Delta-Pulse: No relevant changes, skipping verification")
+                return {"failures": [], "score": 100, "source": "delta_clean"}
+
+            # Transform to ContractFailure format for MANAS analyzers
+            failures = []
+
+            for doc_result in result.get("docs", []):
+                if not doc_result.get("has_harness"):
+                    continue
+
+                checks = doc_result.get("checks", {})
+                doc_name = doc_result.get("name", "unknown")
+
+                # Check files
+                files_check = checks.get("files", {})
+                for missing_file in files_check.get("missing", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.FILE_MISSING.name,
+                            "path": missing_file,
+                            "message": f"Required by @HARNESS in {doc_name}",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+                # Check wiring
+                wiring_check = checks.get("wiring", {})
+                for missing_wire in wiring_check.get("missing", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.PATTERN_MISSING.name,
+                            "path": missing_wire,
+                            "message": "Wiring pattern not found",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+                # Check absent patterns (should NOT exist)
+                absent_check = checks.get("absent", {})
+                for violation in absent_check.get("violations", []):
+                    failures.append(
+                        {
+                            "type": ContractFailureType.FILE_EXTRA.name,
+                            "path": violation,
+                            "message": "Forbidden pattern found",
+                            "harness_source": doc_name,
+                        }
+                    )
+
+            return {
+                "failures": failures,
+                "score": result.get("total_score", 100),
+                "docs_checked": result.get("docs_with_harness", 0),
+                "source": "live_verification",
+                "delta_mode": result.get("delta_mode", False),
+                "changed_files": result.get("changed_files", []),
+            }
+
+        except Exception as e:
+            logger.debug(f"Live verification failed: {e}")
+            return {"failures": [], "score": 100, "source": "error"}
+
+    def _get_changed_files(self) -> Optional[List[str]]:
+        """
+        OPUS-035: Get list of changed files from git.
+
+        Returns files that have been modified, added, or deleted
+        since the last commit. This enables delta verification.
+
+        Returns:
+            List of changed file paths, or None to force full verification
+        """
+        import subprocess
+
+        try:
+            workspace = self._plugin._workspace or Path.cwd()
+
+            # Get uncommitted changes (staged + unstaged)
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                cwd=str(workspace),
+                timeout=5,
+            )
+
+            if result.returncode != 0:
+                return None  # Git error - fall back to full verification
+
+            changed = []
+            for line in result.stdout.strip().split("\n"):
+                if not line:
+                    continue
+                # Format: "XY filename" where XY is status
+                # Examples: " M file.py", "A  file.py", "?? file.py"
+                if len(line) > 3:
+                    filename = line[3:].strip()
+                    # Handle renames: "R  old -> new"
+                    if " -> " in filename:
+                        filename = filename.split(" -> ")[1]
+                    changed.append(filename)
+
+            # Also check recent commits if no uncommitted changes
+            # This catches changes made since last verification
+            if not changed:
+                # Get files changed in last commit
+                result = subprocess.run(
+                    ["git", "diff", "--name-only", "HEAD~1", "HEAD"],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(workspace),
+                    timeout=5,
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.strip().split("\n"):
+                        if line:
+                            changed.append(line)
+
+            if changed:
+                logger.debug(f"⚡ Delta-Pulse: {len(changed)} changed files detected")
+                return changed
+
+            # No changes - but don't return None (that triggers full scan)
+            # Return empty list to skip verification entirely
+            return []
+
+        except subprocess.TimeoutExpired:
+            logger.debug("⚡ Delta-Pulse: Git timeout, falling back to full verification")
+            return None
+        except Exception as e:
+            logger.debug(f"⚡ Delta-Pulse: Could not get changed files: {e}")
+            return None
 
     async def _manas_auto_execute_safe(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
