@@ -53,6 +53,14 @@ class ManasConfig:
     # High karma (Bhakti + success) grants trust for LOW risk auto-execute
     karma_auto_execute_threshold: int = 90
 
+    # OPUS-035: Intent Throttling - Don't overwhelm the human
+    # Max intents to generate per tick (prioritize CRITICAL/HIGH over LOW)
+    max_intents_per_tick: int = 3
+
+    # OPUS-035: Prioritize survival over growth
+    # If True, CRITICAL/ERROR intents are processed before GENESIS intents
+    survival_first: bool = True
+
 
 @dataclass
 class IntentConfidence:
@@ -237,6 +245,15 @@ class CognitiveKernel:
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
 
+        # OPUS-035: Throttling - Prioritize survival over growth
+        if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
+            new_intents = self._prioritize_survival(new_intents)
+
+        # OPUS-035: Throttle to max_intents_per_tick
+        if len(new_intents) > self._config.max_intents_per_tick:
+            logger.debug(f"⚡ MANAS: Throttling {len(new_intents)} → {self._config.max_intents_per_tick} intents")
+            new_intents = new_intents[: self._config.max_intents_per_tick]
+
         # Add to buffer (if not already present)
         added = []
         for intent in new_intents:
@@ -396,6 +413,38 @@ class CognitiveKernel:
             return True
 
         return False
+
+    def _prioritize_survival(self, intents: List[Intent]) -> List[Intent]:
+        """
+        OPUS-035: Prioritize survival over growth.
+
+        Sort intents so that CRITICAL/HIGH priority (50% - repairs)
+        come before LOW priority (51% - genesis).
+
+        Philosophy: First survive, then thrive.
+
+        Args:
+            intents: List of intents to prioritize
+
+        Returns:
+            Sorted list with survival intents first
+        """
+        # Define priority order: CRITICAL > HIGH > MEDIUM > LOW
+        priority_order = {
+            IntentPriority.CRITICAL: 0,
+            IntentPriority.HIGH: 1,
+            IntentPriority.MEDIUM: 2,
+            IntentPriority.LOW: 3,
+        }
+
+        # Also prioritize contract violations (50%) over semantic gaps (51%)
+        def sort_key(intent: Intent) -> tuple:
+            pri = priority_order.get(intent.priority, 99)
+            # Contract intents (repairs) come before semantic (genesis)
+            is_repair = 0 if intent.intent_type.startswith("contract_") else 1
+            return (pri, is_repair, intent.created_at)
+
+        return sorted(intents, key=sort_key)
 
     def _karma_allows_auto_execute(self, intent: Intent) -> bool:
         """
