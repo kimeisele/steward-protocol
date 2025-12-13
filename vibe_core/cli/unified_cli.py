@@ -16,12 +16,11 @@ from typing import Any, Dict, List, Optional
 import requests
 from rich.progress import BarColumn, DownloadColumn, Progress, SpinnerColumn, TextColumn, TransferSpeedColumn
 
+from vibe_core.boot_mode import BootMode  # OPUS-031 Layer 4: Autonomous Conductor
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
-
-# PRAKRITI WIRING - The Unified State Engine
-from vibe_core.state.prakriti import Prakriti
+from vibe_core.state.prakriti import Prakriti  # PRAKRITI WIRING
 
 # Import Legacy CLI for fallback/system commands
 # Suppress deprecation warning during import if we add it later
@@ -74,6 +73,11 @@ class UnifiedCLI:
             "install": self.cmd_install,  # Alias for update (semantic clarity)
         }
 
+        # OPUS-031 Layer 4: Autonomous Conductor commands
+        self._conductor_cmds = {
+            "execute": self.cmd_execute,
+        }
+
     def run(self, args: List[str]) -> int:
         """
         Execute CLI command.
@@ -109,13 +113,18 @@ class UnifiedCLI:
             handler = self._prakriti_cmds[command_name]
             return handler(remaining_args)
 
-        # 4. GAD-000 Introspection Commands
+        # 4. OPUS-031 Layer 4: Autonomous Conductor Commands
+        if command_name in self._conductor_cmds:
+            handler = self._conductor_cmds[command_name]
+            return handler(remaining_args)
+
+        # 5. GAD-000 Introspection Commands
         if command_name == "capabilities":
             caps = self.get_capabilities()
             print(json.dumps(caps, indent=2))
             return 0
 
-        # 4. Help / Unknown
+        # 6. Help / Unknown
         if command_name in ("-h", "--help", "help"):
             self._print_help(commands)
             return 0
@@ -504,6 +513,157 @@ class UnifiedCLI:
         return self.cmd_update(args)
 
     # =========================================================================
+    # OPUS-031 Layer 4: AUTONOMOUS CONDUCTOR COMMANDS
+    # =========================================================================
+
+    def cmd_execute(self, args: List[str]) -> int:
+        """
+        Execute a circuit directly with optional headless boot.
+
+        OPUS-031 Layer 4: The Ignition Key for Autonomous Operation.
+
+        Usage:
+            steward execute --circuit <path>              # Full boot + execute
+            steward execute --circuit <path> --headless   # Fast headless boot
+
+        This command:
+        1. Boots the kernel in the appropriate mode (FULL or HEADLESS)
+        2. Loads the specified circuit YAML
+        3. Executes the circuit via CognitiveCircuitExecutor
+        4. Returns the result
+
+        Headless mode (< 5 seconds boot):
+        - NO agent discovery
+        - NO network gateway
+        - NO daily ritual
+        - Perfect for CI/CD, maintenance circuits, autonomous operation
+        """
+        from pathlib import Path
+
+        import yaml
+
+        # Parse arguments
+        circuit_path = None
+        headless = False
+        non_interactive = False
+
+        i = 0
+        while i < len(args):
+            arg = args[i]
+            if arg == "--circuit" and i + 1 < len(args):
+                circuit_path = args[i + 1]
+                i += 2
+            elif arg == "--headless":
+                headless = True
+                i += 1
+            elif arg == "--non-interactive":
+                non_interactive = True
+                i += 1
+            else:
+                i += 1
+
+        if not circuit_path:
+            print("❌ Missing required argument: --circuit <path>")
+            print("\nUsage:")
+            print("  steward execute --circuit <path>              # Full boot")
+            print("  steward execute --circuit <path> --headless   # Headless boot")
+            return 1
+
+        circuit_file = Path(circuit_path)
+        if not circuit_file.exists():
+            # Try relative to knowledge/circuits
+            alt_path = Path("knowledge/circuits") / circuit_path
+            if alt_path.exists():
+                circuit_file = alt_path
+            else:
+                print(f"❌ Circuit file not found: {circuit_path}")
+                return 1
+
+        # Determine boot mode
+        boot_mode = BootMode.HEADLESS if headless else BootMode.FULL
+
+        print("🚀 AUTONOMOUS CIRCUIT EXECUTION")
+        print("=" * 50)
+        print(f"   Circuit: {circuit_file}")
+        print(f"   Mode:    {boot_mode.value.upper()}")
+        if non_interactive:
+            print("   Prompts: DISABLED")
+        print()
+
+        try:
+            # Load circuit definition
+            with open(circuit_file) as f:
+                circuit_def = yaml.safe_load(f)
+
+            circuit_id = circuit_def.get("circuit", {}).get("id", "UNKNOWN")
+            print(f"📋 Loaded circuit: {circuit_id}")
+
+            # Boot kernel with appropriate mode
+            print(f"\n⚡ Booting kernel ({boot_mode.value})...")
+            from vibe_core.kernel_impl import RealVibeKernel
+
+            kernel = RealVibeKernel(ledger_path=Path("data/vibe_ledger.db"))
+            kernel.boot(boot_mode=boot_mode)
+            print("✅ Kernel online")
+
+            # Get or create circuit executor
+            print("\n🔄 Executing circuit...")
+            from vibe_core.cartridges.system.envoy.blueprint_generator import (
+                CompilationResult,
+            )
+            from vibe_core.cortex.engines.circuit_engine import (
+                CognitiveCircuitExecutor,
+            )
+
+            executor = CognitiveCircuitExecutor(kernel)
+
+            # Extract circuit definition (handle both nested and flat formats)
+            circuit_inner = circuit_def.get("circuit", circuit_def)
+
+            # Create a minimal compilation result for direct execution
+            compilation = CompilationResult(
+                is_syscall=False,
+                syscall_request=None,
+                playbook_vars={"circuit_id": circuit_id},
+                confidence=1.0,
+            )
+
+            # Execute circuit directly
+            result = executor._execute_circuit(
+                circuit_def=circuit_inner,
+                raw_input=f"CLI execute: {circuit_id}",
+                compilation=compilation,
+                requester_id="cli:execute",
+            )
+
+            # Display result
+            print()
+            print("=" * 50)
+            if result.success:
+                print(f"✅ Circuit completed: {result.final_state}")
+                print(f"   States visited: {len(result.state_history)}")
+                print(f"   Syscalls: {result.syscall_count}")
+            else:
+                print(f"❌ Circuit failed: {result.final_state}")
+                if result.error:
+                    print(f"   Error: {result.error}")
+
+            # Cleanup
+            try:
+                kernel.shutdown()
+            except Exception:
+                pass  # Best effort cleanup
+
+            return 0 if result.success else 1
+
+        except Exception as e:
+            print(f"❌ Execution failed: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return 1
+
+    # =========================================================================
     # HELP
     # =========================================================================
 
@@ -524,6 +684,13 @@ class UnifiedCLI:
             "install": "Install .vibe file to library/ <path>",
         }
         for name, help_text in prakriti_help.items():
+            print(f"  {name:<15} {help_text}")
+
+        print("\nCONDUCTOR COMMANDS (Autonomous Execution):")
+        conductor_help = {
+            "execute": "Execute circuit [--circuit <path>] [--headless]",
+        }
+        for name, help_text in conductor_help.items():
             print(f"  {name:<15} {help_text}")
 
         print("\nPLUGIN COMMANDS:")
