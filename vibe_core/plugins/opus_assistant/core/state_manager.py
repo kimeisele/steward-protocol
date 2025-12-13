@@ -162,6 +162,9 @@ class SessionState:
     view_preferences: Dict[str, bool] = field(
         default_factory=lambda: {"show_tests": True, "show_debug": False, "show_code_health": True}
     )
+    # 🎯 INTENT BUFFER: Current pending intent awaiting execution/approval
+    # Layer 1.5: The "Frontallappen" - what the system plans to do next
+    pending_intent: Optional[Dict[str, Any]] = field(default=None)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -178,6 +181,8 @@ class SessionState:
             view_preferences=data.get(
                 "view_preferences", {"show_tests": True, "show_debug": False, "show_code_health": True}
             ),
+            # 🎯 Load pending intent (if any)
+            pending_intent=data.get("pending_intent"),
         )
 
 
@@ -663,6 +668,94 @@ class OpusStateManager:
             return default
 
         return session.view_preferences.get(key, default)
+
+    # =========================================================================
+    # Intent Buffer (Layer 1.5 - The "Frontallappen")
+    # =========================================================================
+
+    def set_pending_intent(
+        self,
+        intent: str,
+        syscall_type: str,
+        params: Dict[str, Any],
+        requires_approval: bool = True,
+    ) -> bool:
+        """
+        Set a pending intent awaiting execution/approval.
+
+        Layer 1.5: This is the system's "thought" before action.
+        The Intent Buffer shows what the system PLANS to do next.
+
+        Args:
+            intent: Natural language description of what we plan to do
+            syscall_type: The syscall type that will be executed
+            params: Parameters for the syscall
+            requires_approval: Whether human approval is needed (checkbox in OPUS.md)
+
+        Returns:
+            True if successfully saved
+        """
+        session = self.load_session()
+        if not session:
+            logger.warning("Cannot set pending intent: No active session")
+            return False
+
+        session.pending_intent = {
+            "intent": intent,
+            "syscall_type": syscall_type,
+            "params": params,
+            "requires_approval": requires_approval,
+            "approved": False,
+            "created_at": datetime.now().isoformat(),
+        }
+        logger.debug(f"🎯 Intent buffered: {intent[:50]}...")
+
+        return self.save_session(session)
+
+    def get_pending_intent(self) -> Optional[Dict[str, Any]]:
+        """
+        Get the current pending intent (if any).
+
+        Returns:
+            Dict with intent details or None
+        """
+        session = self.load_session()
+        if not session:
+            return None
+        return session.pending_intent
+
+    def approve_pending_intent(self) -> bool:
+        """
+        Mark the pending intent as approved.
+
+        Called when human checks the "Execute" checkbox in OPUS.md.
+
+        Returns:
+            True if successfully approved
+        """
+        session = self.load_session()
+        if not session or not session.pending_intent:
+            logger.warning("Cannot approve: No pending intent")
+            return False
+
+        session.pending_intent["approved"] = True
+        logger.info(f"✅ Intent approved: {session.pending_intent['intent'][:50]}...")
+
+        return self.save_session(session)
+
+    def clear_pending_intent(self) -> bool:
+        """
+        Clear the pending intent (after execution or rejection).
+
+        Returns:
+            True if successfully cleared
+        """
+        session = self.load_session()
+        if not session:
+            return False
+
+        session.pending_intent = None
+        return self.save_session(session)
 
     def clear_all(self) -> None:
         """Clear all state (for testing)."""

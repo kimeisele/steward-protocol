@@ -1,0 +1,63 @@
+{#
+  Intent Buffer Panel - The Frontallappen (Planning Center)
+
+  OPUS-031 Layer 1.5: Shows what the system PLANS to do next.
+
+  This is the bridge between Intention and Action:
+  - AI proposes an intent (set_pending_intent)
+  - Human sees it in OPUS.md
+  - Human checks "Execute" checkbox to approve
+  - System executes the approved intent
+  - Result appears in Syscall Console
+
+  THE COGNITIVE LOOP:
+  Intention (Buffer) -> Action (Syscall) -> Memory (Console) -> Reflection (Dashboard)
+
+  Required context:
+    - pending_intent: Dict with intent details or None
+      - intent: str (natural language description)
+      - syscall_type: str
+      - params: Dict
+      - requires_approval: bool
+      - approved: bool
+      - created_at: str (ISO timestamp)
+
+  Design Decisions (OPUS-031):
+    - DD4: Bidirectional Control Surface
+    - DD6: Intent before Action (human-in-the-loop)
+#}
+
+## 🎯 Intent Buffer
+
+{% if pending_intent %}
+{% set intent = pending_intent %}
+
+**Pending Action:** {{ intent.syscall_type }}
+
+> {{ intent.intent }}
+
+{% if intent.params %}
+**Parameters:**
+{% for key, value in intent.params.items() %}
+- `{{ key }}`: {{ value }}
+{% endfor %}
+{% endif %}
+
+**Status:**
+{% if intent.approved %}
+- [x] Execute _(approved - executing...)_
+{% elif intent.requires_approval %}
+- [ ] Execute _(check to approve)_
+{% else %}
+- [x] Execute _(auto-approved)_
+{% endif %}
+
+_Queued: {{ intent.created_at[-8:] if intent.created_at else 'unknown' }}_
+
+{% else %}
+_No pending intents. The system is idle._
+
+> 💡 **Tip:** When the AI proposes an action, it will appear here for approval.
+{% endif %}
+
+---
