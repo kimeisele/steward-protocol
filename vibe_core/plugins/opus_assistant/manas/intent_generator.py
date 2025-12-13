@@ -101,6 +101,7 @@ class IntentGenerator:
     - Documentation drift
     - Test coverage gaps
     - Resource usage patterns
+    - Contract violations (OPUS-032: The Immune System)
     """
 
     def __init__(self, workspace: Optional[Path] = None, memory_store: Optional[Any] = None):
@@ -116,8 +117,11 @@ class IntentGenerator:
         self._intent_counter = 0
         self._analyzers = self._register_analyzers()
 
+        # OPUS-032: Modular class-based analyzers (the new way)
+        self._modular_analyzers = self._register_modular_analyzers()
+
     def _register_analyzers(self) -> List[callable]:
-        """Register all intent analyzers."""
+        """Register all intent analyzers (legacy method-based)."""
         return [
             self._analyze_stale_branches,
             self._analyze_uncommitted_changes,
@@ -130,6 +134,20 @@ class IntentGenerator:
             self._analyze_self_documentation,
             # OPUS-032: The Ouroboros Protocol
             self._analyze_capability_gaps,
+        ]
+
+    def _register_modular_analyzers(self) -> List[Any]:
+        """
+        Register modular class-based analyzers (OPUS-032).
+
+        These are the new-style analyzers that inherit from BaseAnalyzer.
+        They provide better separation of concerns and are easier to test.
+        """
+        from .analyzers import ContractAnalyzer
+
+        return [
+            ContractAnalyzer(workspace=self._workspace),
+            # TODO: Add SemanticAnalyzer for 51% (genesis impulse)
         ]
 
     def generate_intents(self, context: Optional[Dict[str, Any]] = None) -> List[Intent]:
@@ -145,6 +163,22 @@ class IntentGenerator:
         intents = []
         context = context or {}
 
+        # OPUS-032: Run modular class-based analyzers FIRST (the new way)
+        # These handle structured data like verification_results
+        for analyzer in self._modular_analyzers:
+            try:
+                if not analyzer.is_enabled:
+                    continue
+                new_intents = analyzer.analyze(context)
+                for intent in new_intents:
+                    if self._should_skip_intent(intent):
+                        logger.debug(f"Skipping intent {intent.intent_type} (memory/cooldown)")
+                        continue
+                    intents.append(intent)
+            except Exception as e:
+                logger.debug(f"Modular analyzer {analyzer.name} failed: {e}")
+
+        # Legacy method-based analyzers (still useful for git/file checks)
         for analyzer in self._analyzers:
             try:
                 intent = analyzer(context)
