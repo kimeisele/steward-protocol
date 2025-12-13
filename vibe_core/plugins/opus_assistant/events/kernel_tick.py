@@ -528,6 +528,8 @@ class KernelTickHandler:
                 "trigger_auto_heal": self._trigger_auto_heal,
                 # 🎛️ Control Plane handlers
                 "set_view": self._set_view_state,
+                # 🖐️ OPUS-031 Layer 4: The Hand (Autonomous Execution)
+                "execute_circuit": self._execute_circuit_cli,
             }
             method = method_map.get(method_name)
             if method:
@@ -1175,6 +1177,108 @@ class KernelTickHandler:
         except Exception as e:
             logger.warning(f"Failed to set view state: {e}")
             return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🖐️ OPUS-031 Layer 4: THE HAND (Autonomous Circuit Execution)
+    # =========================================================================
+
+    async def _execute_circuit_cli(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🖐️ THE HAND: Execute circuit via CLI (autonomous operation).
+
+        OPUS-031 Layer 4: This is what enables the closed loop:
+        Think (intent) → Write (circuit.yaml) → Execute (headless) → Learn (state)
+
+        Non-blocking execution using asyncio.create_subprocess_exec to keep
+        the kernel heart beating during execution.
+
+        Target: opus.execute_circuit
+
+        Params:
+            circuit: str - Path to circuit YAML file (required)
+            headless: bool - Use headless boot mode (default: True)
+            timeout: int - Execution timeout in seconds (default: 60)
+
+        Returns:
+            success: bool - Whether execution succeeded
+            stdout: str - Captured stdout
+            stderr: str - Captured stderr
+            exit_code: int - Process exit code
+        """
+        import asyncio
+
+        circuit_path = params.get("circuit")
+        if not circuit_path:
+            return {"success": False, "error": "Missing required param: circuit"}
+
+        headless = params.get("headless", True)
+        timeout = params.get("timeout", 60)
+
+        # Build command
+        cmd = ["steward", "execute", "--circuit", str(circuit_path)]
+        if headless:
+            cmd.append("--headless")
+
+        # Log the autonomous action
+        self._log_observation_info(
+            f"🖐️ THE HAND: Executing circuit '{circuit_path}' (headless={headless})", "autonomous"
+        )
+
+        try:
+            # Create subprocess asynchronously (non-blocking!)
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=str(self._plugin._workspace) if self._plugin._workspace else None,
+            )
+
+            # Wait for result with timeout
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                self._log_observation_alert(
+                    f"🖐️ THE HAND: Circuit '{circuit_path}' TIMEOUT after {timeout}s", "autonomous"
+                )
+                return {
+                    "success": False,
+                    "error": f"Execution timeout after {timeout}s",
+                    "stdout": "",
+                    "stderr": "",
+                    "exit_code": -1,
+                }
+
+            # Decode output
+            stdout_str = stdout.decode().strip() if stdout else ""
+            stderr_str = stderr.decode().strip() if stderr else ""
+            success = process.returncode == 0
+
+            # Log result
+            if success:
+                self._log_observation_info(f"🖐️ THE HAND: Circuit '{circuit_path}' completed successfully", "autonomous")
+            else:
+                self._log_observation_warn(
+                    f"🖐️ THE HAND: Circuit '{circuit_path}' failed (exit={process.returncode})", "autonomous"
+                )
+
+            return {
+                "success": success,
+                "stdout": stdout_str,
+                "stderr": stderr_str,
+                "exit_code": process.returncode,
+            }
+
+        except Exception as e:
+            self._log_observation_alert(f"🖐️ THE HAND: Failed to execute circuit '{circuit_path}': {e}", "autonomous")
+            return {
+                "success": False,
+                "error": str(e),
+                "stdout": "",
+                "stderr": "",
+                "exit_code": -1,
+            }
 
     # =========================================================================
     # Fallback for events without circuits
