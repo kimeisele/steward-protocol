@@ -207,6 +207,10 @@ class SemanticSyscallExecutor:
             if result.success:
                 self._record_karma(request, result)
 
+            # OPUS-031 Layer 2: Emit SYSCALL_EXECUTED event for Experience Replay
+            # Plugins can subscribe to learn from syscall history
+            self._emit_syscall_event(request, result)
+
             return result
 
         except Exception as e:
@@ -216,6 +220,55 @@ class SemanticSyscallExecutor:
     def handle(self, request: SyscallRequest) -> SyscallResult:
         """Alias for execute() - backwards compatibility."""
         return self.execute(request)
+
+    def _emit_syscall_event(self, request: SyscallRequest, result: SyscallResult) -> None:
+        """
+        OPUS-031 Layer 2: Emit SYSCALL_EXECUTED event for Experience Replay.
+
+        This allows plugins (like opus_assistant) to subscribe and record
+        syscall history for few-shot learning. The plugin transforms the event
+        into a SyscallEntry and stores it in the Experience Replay Buffer.
+
+        ARCHITECTURE (GAD-000 Compliant):
+        - Core emits event (no plugin imports!)
+        - Plugin subscribes and handles (plugin knows about core, not vice versa)
+        - Loose coupling via EventBus
+        """
+        try:
+            import asyncio
+
+            from vibe_core.event_bus import Event, EventType, get_event_bus
+
+            event = Event(
+                event_type=EventType.SYSCALL_EXECUTED.value,
+                agent_id=request.requester_id,
+                message=f"Syscall {request.syscall_type.value} {'succeeded' if result.success else 'failed'}",
+                details={
+                    "syscall_type": request.syscall_type.value,
+                    "params": request.params,
+                    "success": result.success,
+                    "output": result.output if hasattr(result, "output") else None,
+                    "error": result.error if hasattr(result, "error") else None,
+                },
+            )
+
+            bus = get_event_bus()
+
+            # Handle async emission from sync context
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an async context - schedule the emit
+                loop.create_task(bus.emit(event))
+            except RuntimeError:
+                # No running loop - fire and forget with a new loop
+                # This is safe because emit is quick and non-blocking
+                asyncio.run(bus.emit(event))
+
+            logger.debug(f"📡 SYSCALL_EXECUTED event emitted: {request.syscall_type.value}")
+
+        except Exception as e:
+            # Don't let event emission failure break syscall execution
+            logger.debug(f"Failed to emit SYSCALL_EXECUTED event: {e}")
 
     def _handle_spawn_cognition(self, request: SyscallRequest) -> SyscallResult:
         """
