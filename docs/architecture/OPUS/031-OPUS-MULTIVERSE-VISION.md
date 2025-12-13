@@ -47,6 +47,22 @@ absent:
   # No legacy writers
   - path: vibe_core/plugins/opus_assistant/render/opus_md_writer.py
     reason: "Deleted - no legacy split-brain"
+
+future:
+  # Layer 1.5: Interactive Dashboard (to be created)
+  - path: vibe_core/plugins/opus_assistant/core/control_cables.py
+    patterns:
+      - "class ControlCablesParser"
+      - "parse_control_plane"
+
+  - path: vibe_core/plugins/opus_assistant/core/treasury.py
+    patterns:
+      - "class Treasury"
+      - "check_budget"
+
+  - path: vibe_core/plugins/opus_assistant/templates/panels/intent_buffer.md.j2
+    patterns:
+      - "pending_intent"
 -->
 
 ---
@@ -82,6 +98,163 @@ InterfacePlugin (FRONTEND) → kernel.io.write_document()
         ↓
 OPUS.md (PROJECTION)
 ```
+
+---
+
+## Layer 1.5: Interactive Dashboard (P0 - Critical Upgrade)
+
+> 🧠 **DESIGN DECISION 4**: OPUS.md is NOT just output - it's a **Bidirectional Control Surface**
+>
+> The document becomes the API. Edit the markdown → System changes behavior.
+> No CLI needed. No REST calls. Just text.
+
+### The Missing Link
+
+Currently OPUS.md is **write-only** (system outputs). We need **read-write** (human inputs back).
+
+```
+CURRENT (One-Way):
+StateManager → render() → OPUS.md → Human reads
+
+REQUIRED (Bidirectional):
+StateManager → render() → OPUS.md ←→ Human edits → Parser → StateManager
+                                      ↑
+                              FEEDBACK LOOP
+```
+
+### What DOESN'T Exist (Must Build)
+
+| Component | Status | Action Required |
+|-----------|--------|-----------------|
+| Control Cables Parser | ❌ NOT EXISTS | Parse `## 🎛️ Control Plane` from OPUS.md |
+| Treasury Panel | ❌ NOT EXISTS | Token/cost tracking with kill-switch |
+| Intent Buffer | ❌ NOT EXISTS | Declare intent before action |
+| Heartbeat Counter | ❌ NOT EXISTS | Liveness signal |
+| Schema Validation | ❌ NOT EXISTS | Validate human edits |
+
+### Implementation
+
+**Phase 1.5.1: Control Cables Parser**
+
+> 🧠 **DESIGN DECISION 5**: Human edits are **Configuration**, not **Commands**
+>
+> When you edit `Auto-Heal Mode: ON` in OPUS.md, it persists until changed.
+> It's not a one-shot command - it's a setting.
+
+File: `opus_assistant/core/control_cables.py`
+```python
+class ControlCablesParser:
+    """
+    Parse Control Plane section from OPUS.md back into StateManager.
+
+    This closes the feedback loop:
+    OPUS.md (human edit) → Parser → StateManager → Next Render
+    """
+
+    VALID_SETTINGS = {
+        "auto_heal_mode": {"type": bool, "default": False},
+        "aggressive_refactoring": {"type": bool, "default": False},
+        "budget_limit_usd": {"type": float, "default": 5.0},
+        "simulation_mode": {"type": bool, "default": True},
+    }
+
+    def parse_control_plane(self, opus_content: str) -> Dict[str, Any]:
+        """Extract settings from ## 🎛️ Control Plane section."""
+        settings = {}
+
+        # Find Control Plane section
+        # Parse checkboxes: - [x] Setting: VALUE
+        # Validate against VALID_SETTINGS schema
+        # Return validated settings (invalid → fallback to default)
+
+        return settings
+
+    def apply_to_state(self, state_manager: OpusStateManager,
+                       settings: Dict[str, Any]) -> None:
+        """Apply parsed settings to StateManager."""
+        for key, value in settings.items():
+            state_manager.set_preference(key, value)
+```
+
+**Phase 1.5.2: Treasury Panel (Resource Awareness)**
+
+> 🧠 **DESIGN DECISION 6**: Autonomous systems MUST track their resource consumption
+>
+> An infinite loop burning $100/hour is a bug. The system must know its budget.
+
+File: `opus_assistant/core/treasury.py`
+```python
+@dataclass
+class TreasuryState:
+    """Track API costs and enforce budget limits."""
+
+    tokens_used_today: int = 0
+    estimated_cost_usd: float = 0.0
+    budget_limit_usd: float = 5.0
+    budget_exhausted: bool = False
+
+    # Cost estimates (OpenRouter)
+    COST_PER_1K_INPUT: float = 0.001
+    COST_PER_1K_OUTPUT: float = 0.002
+
+class Treasury:
+    """
+    Resource tracking with kill-switch.
+
+    If budget_exhausted=True, the Autonomous Conductor MUST stop.
+    """
+
+    def record_usage(self, input_tokens: int, output_tokens: int) -> None:
+        """Record token usage and update cost estimate."""
+
+    def check_budget(self) -> bool:
+        """Return False if budget exhausted (kill-switch)."""
+        return not self.state.budget_exhausted
+```
+
+**Phase 1.5.3: Intent Buffer (Explainable AI)**
+
+> Before acting, declare intent. This makes the system transparent.
+
+Template: `opus_assistant/templates/panels/intent_buffer.md.j2`
+```jinja2
+## 🎯 Pending Intent
+
+{% if pending_intent %}
+> **I intend to:** {{ pending_intent.action }}
+> **Because:** {{ pending_intent.reason }}
+> **Files affected:** {{ pending_intent.files | length }}
+> **Risk level:** {{ pending_intent.risk }}
+> **Status:** {{ pending_intent.status }}  {# AWAITING_APPROVAL | APPROVED | REJECTED #}
+{% else %}
+_No pending actions_
+{% endif %}
+```
+
+**Phase 1.5.4: Heartbeat (Liveness Signal)**
+
+```jinja2
+**Cycle:** #{{ cycle_count }} | **Last Beat:** {{ heartbeat_utc }} | **Health:** {{ health_emoji }}
+```
+
+### Merge Strategy for Concurrent Edits
+
+| Section Type | On Conflict |
+|--------------|-------------|
+| `@HUMAN:*` | NEVER overwrite - merge human content |
+| `@AI:*` | System overwrites (AI's workspace) |
+| `## 🎛️ Control Plane` | Parse and apply, then regenerate |
+| Other sections | System overwrites |
+
+### Success Criteria
+
+| Criterion | Verification |
+|-----------|--------------|
+| Control Cables Parser works | Edit checkbox → Next cycle reflects change |
+| Treasury tracks costs | Check `.opus_state/treasury.json` |
+| Intent Buffer renders | Visual check in OPUS.md |
+| Heartbeat updates | Timestamp changes each cycle |
+| Invalid settings fallback | Bad value → default, no crash |
 
 ---
 
@@ -520,6 +693,21 @@ OPUS PRIME (main)
 - Headless = Core + FileSystem + StateManager + LLM
 - No Docker, no FastAPI, no Agent Containers
 
+### 9. Bidirectional Control Surface (NEW - Design Decision 4)
+- OPUS.md is INPUT, not just OUTPUT
+- Human edits → Parser → StateManager → Next Cycle
+- The document IS the API
+
+### 10. Configuration, Not Commands (NEW - Design Decision 5)
+- Settings persist until changed
+- Not one-shot commands
+- Schema validation prevents invalid states
+
+### 11. Resource Awareness (NEW - Design Decision 6)
+- Track token usage and costs
+- Budget limits with kill-switch
+- Prevents runaway autonomous loops
+
 ---
 
 ## Priority Matrix
@@ -527,6 +715,7 @@ OPUS PRIME (main)
 | Layer | Priority | Effort | Impact | Status |
 |-------|----------|--------|--------|--------|
 | 1. Living Dashboard | - | - | - | ✅ DONE |
+| **1.5. Interactive Dashboard** | **P0** | **Medium** | **Critical** | **📋 READY (spec complete)** |
 | 2. Syscall Console | P1 | Medium | High | 📋 READY (spec complete) |
 | 3. 4D Hypercube | P2 | Medium | Medium | 📋 PLANNED |
 | 4. Autonomous Conductor | P3 | Medium | High | 📋 READY (spec complete) |
@@ -541,10 +730,22 @@ OPUS PRIME (main)
 | 1 | SyscallEntry = Experience Replay | Self-learning without fine-tuning |
 | 2 | No conductor.py | Reusable circuits, system self-controls |
 | 3 | Headless Boot Mode | Fast GitHub Actions (<5s boot) |
+| 4 | Bidirectional Control Surface | OPUS.md as API, not just report |
+| 5 | Configuration, Not Commands | Settings persist, schema-validated |
+| 6 | Resource Awareness | Budget limits prevent runaway costs |
 
 ---
 
 ## Next Actions
+
+### Layer 1.5: Interactive Dashboard (P0 - DO FIRST)
+1. [ ] Create `control_cables.py` with `ControlCablesParser`
+2. [ ] Add `parse_control_plane()` method
+3. [ ] Integrate parser into render cycle (read before write)
+4. [ ] Create `treasury.py` with `Treasury` class
+5. [ ] Add `intent_buffer.md.j2` panel template
+6. [ ] Add heartbeat counter to session state
+7. [ ] Test: Edit OPUS.md checkbox → Verify next cycle reflects change
 
 ### Layer 2: Syscall Console
 1. [ ] Add `SyscallEntry` dataclass to `state_manager.py`
@@ -571,4 +772,5 @@ OPUS PRIME (main)
 
 ---
 
-*This document is honest about what exists vs what's aspirational. No spaghetti.*
+*This document is honest about what exists vs what's aspirational. No spaghetti.
+The Organizational Membrane now has feedback loops - it can be controlled through text.*
