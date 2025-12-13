@@ -1,11 +1,13 @@
-# CAPABILITY GENESIS CIRCUIT - The Ouroboros Protocol + VIDYA
-# =============================================================
+# CAPABILITY GENESIS CIRCUIT - The Ouroboros Protocol + VIDYA + GREMIUM
+# ======================================================================
 # OPUS-032: Level 3 Autonomie - Tool Synthesis
 # OPUS-033: VIDYA Integration - Knowledge Before Action
+# OPUS-035: GREMIUM - AI Federation for Autonomous Decisions
 #
 # Philosophy:
 #   "The serpent that consumes itself is reborn, ever-evolving."
 #   "Before building something new, seek wisdom." - VIDYA Principle
+#   "The council of validators speaks with one voice." - GREMIUM Principle
 #
 # This circuit enables MANAS to CREATE NEW TOOLS with KNOWLEDGE:
 # - Triggered when MANAS detects a missing capability
@@ -13,7 +15,7 @@
 # - Checks existing knowledge library (Smriti)
 # - Generates plugin code based on research (Nirmana)
 # - Validates code via VIDYA Critic (Pramana)
-# - Human approves the generated code via OPUS.md
+# - GREMIUM evaluates: auto-approve or escalate to human
 # - Tests in ephemeral sandbox before deployment
 # - Hot-loads to runtime_extensions/
 #
@@ -23,13 +25,20 @@
 #   3. Kalpana (Planning) - Design the blueprint
 #   4. Nirmana (Construction) - Generate code
 #   5. Pramana (Proof) - Validate and test
-#   6. Deployment - Hot-load to production
+#   6. GREMIUM - Federation votes on approval
+#   7. Deployment - Hot-load to production
+#
+# GREMIUM Decision Logic:
+#   IF all validators pass AND risk <= threshold:
+#     → AUTO-APPROVE (no human needed)
+#   ELSE:
+#     → ESCALATE to human via Intent Buffer
 #
 # Safety Gates (CRITICAL):
 #   1. Research-First: No code without understanding
 #   2. Library Check: Don't reinvent the wheel
 #   3. VIDYA Critique: Static analysis (AST-based)
-#   4. Human-in-the-Loop: ALL generated code requires approval
+#   4. GREMIUM: AI Federation decides (auto-approve OR escalate)
 #   5. Narasimha Check: Secondary security validation
 #   6. Sandbox Test: Ephemeral process isolation
 #   7. Reversible: Can be unloaded via hot_unload()
@@ -54,11 +63,21 @@ circuit:
   # Configuration
   config:
     output_dir: "vibe_core/plugins/runtime_extensions"
-    require_approval: true
-    require_research: true      # NEW: Require research phase
-    require_vidya_check: true   # NEW: Require VIDYA critique
-    require_sandbox: true       # NEW: Require sandbox test
+    require_approval: false  # CHANGED: Auto-approve if all validators pass
+    auto_approve_threshold: "medium"  # NEW: auto-approve for low/medium risk
+    require_research: true      # Require research phase
+    require_vidya_check: true   # Require VIDYA critique
+    require_sandbox: true       # Require sandbox test
     max_pending_genesis: 3
+
+    # GREMIUM RULES (AI Federation):
+    # If ALL of these pass → auto-approve:
+    #   1. VIDYA Critic (AST analysis) = passed
+    #   2. Sandbox Test = passed
+    #   3. Narasimha Security = safe
+    #   4. Risk Level <= auto_approve_threshold
+    #
+    # If ANY fail OR risk > threshold → escalate to human
 
   # Global invariants
   invariants:
@@ -183,7 +202,7 @@ circuit:
             capability_name: "{{ capability_spec.name }}"
       transitions:
         - condition: "critique_result.passed == true"
-          to: submit_to_intent_buffer
+          to: gremium_decision  # CHANGED: Go to Gremium for decision
         - condition: "critique_result.passed == false"
           to: critique_failed
 
@@ -205,11 +224,33 @@ circuit:
         findings: "{{ critique_result.findings }}"
 
     # =====================================================
-    # PHASE 5: HUMAN APPROVAL
+    # PHASE 5: GREMIUM DECISION (AI Federation)
     # =====================================================
+    # The Gremium evaluates based on validation results.
+    # If all checks pass AND risk <= threshold → auto-approve
+    # Otherwise → escalate to human via Intent Buffer
+
+    gremium_decision:
+      name: "Gremium Decision"
+      description: "AI Federation evaluates: VIDYA passed, should we auto-approve?"
+      state_var: "gremium_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.gremium_evaluate"
+          params:
+            capability_name: "{{ capability_spec.name }}"
+            critique_result: "{{ critique_result }}"
+            risk_level: "{{ capability_spec.risk | default('medium') }}"
+            auto_threshold: "{{ config.auto_approve_threshold }}"
+      transitions:
+        - condition: "gremium_result.decision == 'auto_approve'"
+          to: narasimha_check
+        - condition: "gremium_result.decision == 'escalate'"
+          to: submit_to_intent_buffer
+
     submit_to_intent_buffer:
-      name: "Submit to Intent Buffer"
-      description: "Add generated capability to OPUS.md Intent Buffer"
+      name: "Escalate to Human"
+      description: "High-risk or failed validation - needs human approval"
       state_var: "intent_submitted"
       actions:
         - action_type: EXECUTE_SCRIPT
@@ -218,23 +259,23 @@ circuit:
             capability_name: "{{ capability_spec.name }}"
             generated_code: "{{ generated_code }}"
             priority: "high"
-            risk: "high"
-            reasoning: "Generated capability (VIDYA validated)"
+            risk: "{{ gremium_result.risk_level }}"
+            reasoning: "{{ gremium_result.escalation_reason }}"
             research_summary: "{{ research_result.summary }}"
       on_success: await_approval
       on_failure: submission_failed
 
     await_approval:
       name: "Awaiting Human Approval"
-      description: "Capability is in Intent Buffer - waiting for [x] Approve"
+      description: "Gremium escalated - waiting for human decision"
       state_var: "approval_status"
       async: true
       actions:
         - action_type: EXECUTE_SCRIPT
           target: "opus.log_observation"
           params:
-            severity: "INFO"
-            message: "🐍 OUROBOROS: Capability {{ capability_spec.name }} awaiting approval (VIDYA validated)"
+            severity: "WARN"
+            message: "⚠️ GREMIUM ESCALATED: {{ capability_spec.name }} needs human approval ({{ gremium_result.escalation_reason }})"
             source: "genesis"
       transitions:
         - condition: "approval_status == 'approved'"
