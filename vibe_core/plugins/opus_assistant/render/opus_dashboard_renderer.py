@@ -152,6 +152,9 @@ class OpusDashboardRenderer:
         # Health status
         health_status = self._compute_health_status(trust_score)
 
+        # 🔌 WIRING: Gather karma from OPUS StateManager
+        karma = self._gather_karma()
+
         return {
             "timestamp": timestamp,
             "trust_score": trust_score,
@@ -159,6 +162,7 @@ class OpusDashboardRenderer:
             "kernel": self._gather_kernel_state(),
             "git": self._gather_git_state(),
             "session": self._gather_session(),
+            "karma": karma,  # 🔌 WIRING: Karma score, history, trend
             "layers": self._gather_prakriti_layers(),
             "focus_areas": self._gather_focus_areas(),
             "journal": self._gather_journal(),
@@ -222,20 +226,46 @@ class OpusDashboardRenderer:
             return {"branch": "unknown", "sha": "unknown", "dirty": False, "uncommitted_files": []}
 
     def _gather_session(self) -> Optional[Dict[str, Any]]:
-        """Gather session info."""
-        try:
-            from vibe_core.state.prakriti import Prakriti
+        """
+        Gather session info from OPUS StateManager and Prakriti.
 
-            prakriti = Prakriti(self._root)
-            session = getattr(prakriti, "session", None)
-            if session:
-                return {
-                    "id": session.session_id,
-                    "boot_commit": getattr(session, "boot_commit", "unknown"),
+        🔌 WIRING: Combines Prakriti session with OPUS StateManager session.
+        """
+        session_data = {}
+
+        # Try OPUS StateManager first (has richer data)
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+            opus_session = state_mgr.get_last_session()
+            if opus_session:
+                session_data = {
+                    "id": opus_session.session_id,
+                    "boot_commit": opus_session.boot_commit,
+                    "boot_mode": opus_session.boot_mode,
+                    "started_at": opus_session.started_at,
+                    "tick_count": opus_session.tick_count,
                 }
-        except Exception:
-            pass
-        return None
+        except Exception as e:
+            logger.debug(f"OPUS session unavailable: {e}")
+
+        # Fallback/supplement with Prakriti session
+        if not session_data:
+            try:
+                from vibe_core.state.prakriti import Prakriti
+
+                prakriti = Prakriti(self._root)
+                session = getattr(prakriti, "session", None)
+                if session:
+                    session_data = {
+                        "id": session.session_id,
+                        "boot_commit": getattr(session, "boot_commit", "unknown"),
+                    }
+            except Exception:
+                pass
+
+        return session_data if session_data else None
 
     def _gather_prakriti_layers(self) -> Dict[str, Any]:
         """Gather Prakriti layer details."""
@@ -288,30 +318,116 @@ class OpusDashboardRenderer:
         return focus
 
     def _gather_journal(self) -> List[Dict[str, Any]]:
-        """Parse journal entries from existing OPUS.md."""
+        """
+        Gather journal entries from OPUS StateManager.
+
+        🔌 WIRING: This now reads from .opus_state/observations.jsonl
+        instead of parsing the existing OPUS.md file.
+        """
         observations = []
 
+        # Severity to emoji mapping
+        severity_icons = {
+            "ALERT": "🚨",
+            "WARN": "⚠️",
+            "INFO": "ℹ️",
+            "INSIGHT": "💡",
+        }
+
         try:
-            if self._opus_path.exists():
-                content = self._opus_path.read_text()
-                pattern = re.compile(
-                    r"- `(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})` ([^\s]+) \*\*\[([^\]]+)\]\*\* (.+)",
-                    re.MULTILINE,
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+            entries = state_mgr.get_observations(limit=20)
+
+            for entry in entries:
+                observations.append(
+                    {
+                        "timestamp": entry.timestamp,
+                        "severity_icon": severity_icons.get(entry.severity, "📝"),
+                        "source": entry.source,
+                        "message": entry.message,
+                    }
                 )
-                matches = pattern.findall(content)
-                for ts, icon, source, message in matches[:20]:
-                    observations.append(
-                        {
-                            "timestamp": ts,
-                            "severity_icon": icon,
-                            "source": source,
-                            "message": message.strip(),
-                        }
+        except Exception as e:
+            logger.debug(f"Failed to gather journal from StateManager: {e}")
+            # Fallback: try parsing existing OPUS.md (legacy support)
+            try:
+                if self._opus_path.exists():
+                    content = self._opus_path.read_text()
+                    pattern = re.compile(
+                        r"- `(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})` ([^\s]+) \*\*\[([^\]]+)\]\*\* (.+)",
+                        re.MULTILINE,
                     )
-        except Exception:
-            pass
+                    matches = pattern.findall(content)
+                    for ts, icon, source, message in matches[:20]:
+                        observations.append(
+                            {
+                                "timestamp": ts,
+                                "severity_icon": icon,
+                                "source": source,
+                                "message": message.strip(),
+                            }
+                        )
+            except Exception:
+                pass
 
         return observations
+
+    def _gather_karma(self) -> Dict[str, Any]:
+        """
+        Gather karma data from OPUS StateManager.
+
+        🔌 WIRING: Reads from .opus_state/karma_history.jsonl
+        Returns current karma score, history, and boot mode.
+        """
+        karma_data = {
+            "current_score": 100,
+            "boot_mode": "full_power",
+            "history": [],
+            "trend": "stable",
+        }
+
+        try:
+            from vibe_core.plugins.opus_assistant.core.state_manager import get_state_manager
+
+            state_mgr = get_state_manager()
+
+            # Get last karma entry (current score)
+            last_karma = state_mgr.get_last_karma()
+            if last_karma:
+                karma_data["current_score"] = last_karma.score
+                karma_data["boot_mode"] = last_karma.boot_mode
+
+            # Get karma history for trend calculation
+            history = state_mgr.get_karma_history(limit=10)
+            if history:
+                karma_data["history"] = [
+                    {
+                        "timestamp": entry.timestamp,
+                        "score": entry.score,
+                        "boot_mode": entry.boot_mode,
+                        "error_count": entry.error_count,
+                        "crash_count": entry.crash_count,
+                    }
+                    for entry in history
+                ]
+
+                # Calculate trend (improving, declining, stable)
+                if len(history) >= 2:
+                    recent = history[0].score
+                    older = history[-1].score
+                    if recent > older + 5:
+                        karma_data["trend"] = "improving"
+                    elif recent < older - 5:
+                        karma_data["trend"] = "declining"
+                    else:
+                        karma_data["trend"] = "stable"
+
+        except Exception as e:
+            logger.debug(f"Failed to gather karma from StateManager: {e}")
+
+        return karma_data
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:
         """Gather circuit definitions."""

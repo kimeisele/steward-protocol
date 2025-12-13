@@ -95,6 +95,19 @@
 - **Ephemeral Thoughts:** {{ layers.purusha.thought_count }}
 - **Active Persona:** {% if layers.purusha.persona %}`{{ layers.purusha.persona }}`{% else %}None{% endif %}
 
+### ⚖️ Karma State
+
+{% if karma %}
+- **Score:** {% if karma.current_score >= 80 %}🟢{% elif karma.current_score >= 60 %}🟡{% elif karma.current_score >= 40 %}🟠{% else %}🔴{% endif %} **{{ karma.current_score|round(1) }}%** ({{ karma.boot_mode }})
+- **Trend:** {% if karma.trend == 'improving' %}📈 Improving{% elif karma.trend == 'declining' %}📉 Declining{% else %}➡️ Stable{% endif %}
+{% if karma.history %}
+{% set last = karma.history[0] %}
+- **Last Update:** `{{ last.timestamp }}` (errors: {{ last.error_count }}, crashes: {{ last.crash_count }})
+{% endif %}
+{% else %}
+- _No karma history (fresh start)_
+{% endif %}
+
 ### 🎯 Focus Areas
 
 {% if focus_areas %}
@@ -320,7 +333,16 @@ _No git history available_
 | Property | Value |
 | --- | --- |
 | Session ID | `{{ session.id }}` |
-| Boot Commit | `{{ session.boot_commit[:7] }}` |
+| Boot Commit | `{{ session.boot_commit[:7] if session.boot_commit else 'unknown' }}` |
+{% if session.boot_mode %}
+| Boot Mode | {{ session.boot_mode }} |
+{% endif %}
+{% if session.started_at %}
+| Started | `{{ session.started_at }}` |
+{% endif %}
+{% if session.tick_count %}
+| Ticks | {{ session.tick_count }} |
+{% endif %}
 {% else %}
 _No active session (kernel may be stopped)_
 {% endif %}
