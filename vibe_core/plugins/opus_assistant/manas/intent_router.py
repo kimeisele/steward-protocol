@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 from .intent_generator import Intent
+from .validator import SrutiValidator
 
 logger = logging.getLogger("MANAS.IntentRouter")
 
@@ -71,12 +72,19 @@ class IntentRouter:
         self._workspace = workspace or Path.cwd()
         self._kernel: Optional["RealVibeKernel"] = None
         self._handlers: Dict[str, Callable[[Intent], Dict[str, Any]]] = {}
+        self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
         self._register_handlers()
 
     def inject_kernel(self, kernel: "RealVibeKernel") -> None:
-        """VAJRA: Inject kernel for ledger access."""
+        """
+        ⚡ VAJRA: Inject kernel for ledger access.
+
+        OPUS-069: Also injects into SrutiValidator for SRUTI validation.
+        """
         self._kernel = kernel
-        logger.info("⚡ IntentRouter: Kernel injected")
+        # OPUS-069: Wire validator to kernel for ledger access
+        self._validator.inject_kernel(kernel)
+        logger.info("⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)")
 
     def _register_handlers(self) -> None:
         """Register intent type → handler mappings."""
@@ -162,6 +170,16 @@ class IntentRouter:
 
         try:
             result = handler(intent)
+
+            # OPUS-069: Validate output against Sruti (Ledger)
+            validation = self._validator.validate_intent_output(result)
+            if not validation.valid:
+                logger.warning(f"⚠️ SRUTI VIOLATION: {validation.errors}")
+                result["sruti_validation"] = validation.to_dict()
+            elif validation.warnings:
+                logger.info(f"📝 SRUTI: {validation.warnings}")
+                result["sruti_validation"] = validation.to_dict()
+
             return RouteResult(
                 success=result.get("success", True),
                 handler=result.get("handler", "unknown"),

@@ -38,6 +38,26 @@ class StructureAnalysisTool(Tool):
             root_dir: Repository root directory
         """
         self.root_dir = Path(root_dir).resolve()
+        # ⚡ VAJRA: Core kernel reference for ledger binding
+        self._vibe_kernel = None
+
+    def inject_kernel(self, kernel) -> None:
+        """
+        ⚡ VAJRA: Inject the core VibeKernel for ledger access.
+
+        OPUS-070: Analyst tools MUST have kernel access for full context.
+        Without kernel injection, they operate in "file-only mode" (limited).
+        """
+        self._vibe_kernel = kernel
+        logger.info(f"⚡ {self.name}: Kernel injected - ledger binding ACTIVE")
+
+    def _get_ledger(self):
+        """Get kernel.ledger via VAJRA binding."""
+        if self._vibe_kernel is None:
+            return None
+        if not hasattr(self._vibe_kernel, "ledger"):
+            return None
+        return self._vibe_kernel.ledger
 
     @property
     def name(self) -> str:
