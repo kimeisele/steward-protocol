@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 
 # P2 SECURITY: Import ECDSA signing from steward/crypto.py
+# OPUS-039: FAIL-FAST - No silent fallback to unsigned containers!
 try:
     from vibe_core.steward.crypto import (
         get_public_key_fingerprint,
@@ -26,11 +27,25 @@ try:
     )
 
     CRYPTO_AVAILABLE = True
-except ImportError:
-    CRYPTO_AVAILABLE = False
-    load_or_generate_keys = None
-    sign_content = None
-    get_public_key_fingerprint = None
+except ImportError as e:
+    # OPUS-039: Don't silently degrade - this causes CI failures
+    # The old behavior was: CRYPTO_AVAILABLE = False (silent fallback)
+    # The new behavior is: FAIL FAST with clear error message
+    import sys
+
+    print("=" * 70, file=sys.stderr)
+    print("❌ FATAL: Cannot import crypto module for container signing!", file=sys.stderr)
+    print("=" * 70, file=sys.stderr)
+    print(f"   Import error: {e}", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("   This usually means:", file=sys.stderr)
+    print("   1. 'ecdsa' package is not installed (pip install ecdsa)", file=sys.stderr)
+    print("   2. There's an import error in vibe_core.steward.crypto", file=sys.stderr)
+    print("", file=sys.stderr)
+    print("   Without crypto, containers would be UNSIGNED and CI would fail.", file=sys.stderr)
+    print("   Refusing to build unsigned containers.", file=sys.stderr)
+    print("=" * 70, file=sys.stderr)
+    sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger("PACKER")
@@ -122,33 +137,25 @@ def build_container(source_dir: Path, output_path: Optional[Path] = None) -> Pat
         add_recursive(source_dir)
 
         # 2. SIGNATURE - P2 SECURITY: Real ECDSA signing
+        # OPUS-039: FAIL-FAST - No fallback to unsigned containers!
         content_hash = hasher.hexdigest()
 
-        if CRYPTO_AVAILABLE:
-            try:
-                # Load or generate signing keys
-                private_key, public_key = load_or_generate_keys()
+        # Load or generate signing keys
+        private_key, public_key = load_or_generate_keys()
 
-                # Sign the hash (not the raw content - hash is deterministic proof)
-                ecdsa_signature = sign_content(content_hash, private_key)
-                signer_fingerprint = get_public_key_fingerprint(public_key)
+        # Sign the hash (not the raw content - hash is deterministic proof)
+        ecdsa_signature = sign_content(content_hash, private_key)
+        signer_fingerprint = get_public_key_fingerprint(public_key)
 
-                # Create structured signature
-                signature_data = {
-                    "version": 2,  # v2 = ECDSA signed
-                    "hash": content_hash,
-                    "signature": ecdsa_signature,
-                    "signer": signer_fingerprint,
-                }
-                signature_content = json.dumps(signature_data, indent=2)
-                logger.info(f"  🔐 ECDSA Signed: {content_hash[:8]}... by {signer_fingerprint}")
-            except Exception as e:
-                logger.warning(f"  ⚠️ ECDSA signing failed, using hash only: {e}")
-                signature_content = content_hash  # Fallback to v1 (hash only)
-        else:
-            # Fallback: unsigned (hash only, v1 format)
-            logger.warning("  ⚠️ No crypto available, container will be UNSIGNED (hash only)")
-            signature_content = content_hash
+        # Create structured signature
+        signature_data = {
+            "version": 2,  # v2 = ECDSA signed
+            "hash": content_hash,
+            "signature": ecdsa_signature,
+            "signer": signer_fingerprint,
+        }
+        signature_content = json.dumps(signature_data, indent=2)
+        logger.info(f"  🔐 ECDSA Signed: {content_hash[:8]}... by {signer_fingerprint}")
 
         z.writestr("SIGNATURE.sig", signature_content)
 
