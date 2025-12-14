@@ -485,6 +485,9 @@ class OpusStateManager:
         """
         Get syscall execution statistics.
 
+        OPUS-072: Now distinguishes security denials from real failures!
+        Security denials (permission_denied) are CORRECT behavior, not bugs.
+
         Useful for:
         - Dashboard display (Layer 2 console)
         - Karma calculation (success rate)
@@ -492,9 +495,17 @@ class OpusStateManager:
         """
         syscalls_file = self._state_dir / self.SYSCALLS_FILE
         if not syscalls_file.exists():
-            return {"total": 0, "successful": 0, "failed": 0, "success_rate": 0.0, "by_type": {}}
+            return {
+                "total": 0,
+                "successful": 0,
+                "failed": 0,
+                "security_denials": 0,
+                "success_rate": 0.0,
+                "adjusted_success_rate": 0.0,
+                "by_type": {},
+            }
 
-        stats = {"total": 0, "successful": 0, "failed": 0, "by_type": {}}
+        stats = {"total": 0, "successful": 0, "failed": 0, "security_denials": 0, "by_type": {}}
 
         try:
             with open(syscalls_file, "r") as f:
@@ -510,28 +521,49 @@ class OpusStateManager:
                                 stats["successful"] += 1
                             else:
                                 stats["failed"] += 1
+                                # OPUS-072: Track security denials separately
+                                output_str = str(entry.output) if entry.output else ""
+                                if "Permission denied" in output_str or "cannot grant" in output_str:
+                                    stats["security_denials"] += 1
 
                             # Count by type
                             stype = entry.syscall_type
                             if stype not in stats["by_type"]:
-                                stats["by_type"][stype] = {"total": 0, "successful": 0}
+                                stats["by_type"][stype] = {"total": 0, "successful": 0, "security_denials": 0}
                             stats["by_type"][stype]["total"] += 1
                             if entry.is_successful():
                                 stats["by_type"][stype]["successful"] += 1
+                            elif "Permission denied" in str(entry.output):
+                                stats["by_type"][stype]["security_denials"] += 1
 
                         except json.JSONDecodeError:
                             continue
 
-            # Calculate success rate
+            # Calculate success rates
             if stats["total"] > 0:
                 stats["success_rate"] = round(stats["successful"] / stats["total"] * 100, 1)
+                # OPUS-072: Adjusted rate excludes security denials (they're correct behavior!)
+                real_attempts = stats["total"] - stats["security_denials"]
+                if real_attempts > 0:
+                    stats["adjusted_success_rate"] = round(stats["successful"] / real_attempts * 100, 1)
+                else:
+                    stats["adjusted_success_rate"] = 100.0  # All were security denials = system working
             else:
                 stats["success_rate"] = 0.0
+                stats["adjusted_success_rate"] = 0.0
 
             return stats
         except Exception as e:
             logger.warning(f"Failed to calculate syscall stats: {e}")
-            return {"total": 0, "successful": 0, "failed": 0, "success_rate": 0.0, "by_type": {}}
+            return {
+                "total": 0,
+                "successful": 0,
+                "failed": 0,
+                "security_denials": 0,
+                "success_rate": 0.0,
+                "adjusted_success_rate": 0.0,
+                "by_type": {},
+            }
 
     # =========================================================================
     # Session State (JSON - single file, overwritten)
