@@ -995,9 +995,9 @@ class KernelTickHandler:
         Demote an agent via Vedic Governance.
 
         This is the CONSEQUENCE - trust drop leads to lifecycle demotion.
-        """
-        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
 
+        OPUS-071: Uses string values for loose coupling (no enum import needed).
+        """
         agent_id = params.get("agent_id")
         reason = params.get("reason", "Karma consequence")
 
@@ -1009,15 +1009,16 @@ class KernelTickHandler:
         if not current:
             return {"success": False, "error": f"Agent {agent_id} not found in governance"}
 
-        current_stage = current.current_ashrama
+        # OPUS-071: Use string values for loose coupling
+        current_stage = current.current_ashrama.value  # Get string value
 
-        # Determine demotion target
+        # Determine demotion target (string-based for loose coupling)
         # GRIHASTHA → BRAHMACHARI (back to student)
         # VANAPRASTHA → GRIHASTHA (back to active but probation)
         demotion_map = {
-            Ashrama.GRIHASTHA: Ashrama.BRAHMACHARI,
-            Ashrama.VANAPRASTHA: Ashrama.GRIHASTHA,
-            Ashrama.SANNYASA: Ashrama.VANAPRASTHA,
+            "grihastha": "brahmachari",
+            "vanaprastha": "grihastha",
+            "sannyasa": "vanaprastha",
         }
 
         new_stage = demotion_map.get(current_stage)
@@ -1026,20 +1027,20 @@ class KernelTickHandler:
             return {
                 "success": True,
                 "demoted": False,
-                "reason": f"Agent {agent_id} is already at lowest stage (BRAHMACHARI)",
+                "reason": f"Agent {agent_id} is already at lowest stage (brahmachari)",
             }
 
-        # Execute demotion
+        # Execute demotion (governance now accepts strings - OPUS-071)
         success = governance.transition_agent_ashrama(agent_id, new_stage, reason)
 
         if success:
-            logger.warning(f"🕉️ KARMA: Agent '{agent_id}' demoted {current_stage.value} → {new_stage.value}")
+            logger.warning(f"🕉️ KARMA: Agent '{agent_id}' demoted {current_stage} → {new_stage}")
             return {
                 "success": True,
                 "demoted": True,
                 "agent_id": agent_id,
-                "from_stage": current_stage.value,
-                "to_stage": new_stage.value,
+                "from_stage": current_stage,
+                "to_stage": new_stage,
                 "reason": reason,
             }
         else:
@@ -1050,9 +1051,9 @@ class KernelTickHandler:
         Check for agents eligible for accelerated promotion.
 
         When trust is consistently high, agents can graduate faster.
-        """
-        from vibe_core.plugins.vedic_governance.ashrama import Ashrama
 
+        OPUS-071: Uses string values for loose coupling (no enum import needed).
+        """
         accelerated = params.get("accelerated", False)
         threshold_reduction = params.get("threshold_reduction", 0)
 
@@ -1062,14 +1063,16 @@ class KernelTickHandler:
         ashrama_registry = governance.get_ashrama_registry()
 
         for agent_id, transition in ashrama_registry.items():
-            if transition.current_ashrama == Ashrama.BRAHMACHARI:
+            # OPUS-071: Use string comparison for loose coupling
+            if transition.current_ashrama.value == "brahmachari":
                 # Check task completions
                 completions = governance._task_completions.get(agent_id, 0)
                 required = 3 - threshold_reduction if accelerated else 3
 
                 if completions >= required:
+                    # OPUS-071: Use string value (governance accepts strings now)
                     success = governance.transition_agent_ashrama(
-                        agent_id, Ashrama.GRIHASTHA, reason="Accelerated graduation (trust bonus)"
+                        agent_id, "grihastha", reason="Accelerated graduation (trust bonus)"
                     )
                     if success:
                         promoted.append(agent_id)

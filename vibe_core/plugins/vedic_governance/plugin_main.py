@@ -20,13 +20,14 @@ Philosophy:
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from vibe_core.plugin_protocol import KernelPlugin
 
 # Vedic governance types (co-located with plugin)
 from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition, get_ashrama_description
 from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_function, get_varna_description
+from vibe_core.plugins.vedic_governance.wallet import WalletGate, WalletStub
 
 if TYPE_CHECKING:
     from vibe_core import Task
@@ -48,6 +49,14 @@ class VedicGovernancePlugin(KernelPlugin):
     Priority: 10 (early - before most plugins, governance is foundational)
     """
 
+    # OPUS-071: Expose stage names for loose coupling (no enum import needed)
+    ASHRAMA_STAGES = {
+        "brahmachari": "Student / Learning stage",
+        "grihastha": "Householder / Active productive stage",
+        "vanaprastha": "Forest dweller / Retirement transition",
+        "sannyasa": "Renunciate / System daemon mode",
+    }
+
     @property
     def plugin_id(self) -> str:
         return "vedic_governance"
@@ -64,6 +73,9 @@ class VedicGovernancePlugin(KernelPlugin):
         # Varna = Classification (what kind of being)
         # Persisted to Ledger via _persist_varna(), restored on boot via _restore_from_ledger()
         self._varna_registry: Dict[str, Varna] = {}
+
+        # OPUS-071: Wallet system (economy-ready interface)
+        self._wallet_gate = WalletGate(WalletStub())
 
         # Ashrama = Lifecycle (student → active → retired → system)
         # Persisted to Ledger via _persist_ashrama(), restored on boot via _restore_from_ledger()
@@ -300,12 +312,23 @@ class VedicGovernancePlugin(KernelPlugin):
         permissions = self.get_agent_permissions(agent_id)
         return permission in permissions
 
-    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
+    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Union[Ashrama, str], reason: str = "") -> bool:
         """
         Transition an agent to a new Ashrama (lifecycle stage).
 
+        OPUS-071: Now accepts string values for loose coupling!
+        Consumers can use "grihastha" instead of importing Ashrama.GRIHASTHA.
+
         Returns True if transition succeeded, False otherwise.
         """
+        # OPUS-071: Accept string values for loose coupling
+        if isinstance(new_ashrama, str):
+            try:
+                new_ashrama = Ashrama(new_ashrama)
+            except ValueError:
+                logger.error(f"Invalid ashrama stage: '{new_ashrama}'")
+                return False
+
         ashrama_transition = self._ashrama_registry.get(agent_id)
         if not ashrama_transition:
             logger.error(f"Agent '{agent_id}' not found in Ashrama registry")
@@ -372,3 +395,48 @@ class VedicGovernancePlugin(KernelPlugin):
     def get_all_agents_status(self) -> Dict[str, Dict[str, Any]]:
         """Get governance status for all registered agents."""
         return {agent_id: self.get_governance_status(agent_id) for agent_id in self._varna_registry.keys()}
+
+    # =========================================================================
+    # OPUS-071: WALLET / ECONOMY API
+    # =========================================================================
+
+    @property
+    def wallet(self) -> WalletGate:
+        """
+        Get the wallet gate for economy operations.
+
+        Usage:
+            governance.wallet.reward(agent_id, 100, "Good work!")
+            governance.wallet.try_spend(agent_id, 50, "API call", ashrama)
+        """
+        return self._wallet_gate
+
+    def get_agent_balance(self, agent_id: str) -> int:
+        """Get credit balance for an agent."""
+        return self._wallet_gate.wallet.get_balance(agent_id)
+
+    def reward_agent(self, agent_id: str, amount: int, reason: str) -> bool:
+        """
+        Give credits to an agent (karma reward).
+
+        No permission check - rewards are always allowed.
+        """
+        return self._wallet_gate.reward(agent_id, amount, reason)
+
+    def agent_spend(self, agent_id: str, amount: int, reason: str) -> Dict[str, Any]:
+        """
+        Attempt to spend credits for an agent.
+
+        Checks Ashrama permissions - only GRIHASTHA can spend.
+        Returns: {"success": bool, "reason": str, "balance": int}
+        """
+        ashrama = self._ashrama_registry.get(agent_id)
+        return self._wallet_gate.try_spend(agent_id, amount, reason, ashrama)
+
+    def collect_tax(self, agent_id: str, amount: int, reason: str = "Governance tax") -> bool:
+        """
+        Collect tax from an agent (governance revenue).
+
+        Taxes bypass normal permission checks.
+        """
+        return self._wallet_gate.tax(agent_id, amount, reason)
