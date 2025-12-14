@@ -1,0 +1,72 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# PRANA - The Life Force Configuration
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# This file controls the heartbeat behavior WITHOUT touching VISNU-protected
+# workflow files. Change schedules and behavior here, not in .github/workflows.
+#
+# ARCHITECTURE:
+#   - Workflow files (.github/workflows/*.yml) = PROTECTED by VISNU
+#   - This config file = NOT PROTECTED, freely editable
+#   - Scripts read this config and adapt behavior accordingly
+#
+# ═══════════════════════════════════════════════════════════════════════════
+
+# SessionStart Hook Configuration
+session_start:
+  # Auto-boot kernel when Claude Code Web session starts
+  auto_boot_kernel: true
+
+  # Boot in background (non-blocking) - recommended for fast session start
+  background_boot: true
+
+  # Timeout for boot verification (seconds)
+  boot_timeout: 10
+
+# GitHub Actions Heartbeat Configuration
+heartbeat:
+  # Enable/disable heartbeat processing
+  enabled: true
+
+  # Skip execution if last run was within this many minutes
+  # (Prevents duplicate runs if workflow triggers overlap)
+  min_interval_minutes: 10
+
+  # Boot kernel before heartbeat tasks (for full functionality)
+  boot_kernel_first: true
+
+  # Execute tasks or just sync state
+  execute_tasks: true
+
+  # Max tasks to execute per pulse
+  max_tasks_per_pulse: 3
+
+# Kernel Configuration
+kernel:
+  # How long to wait for kernel to be ready (seconds)
+  ready_timeout: 30
+
+  # Log level for kernel (DEBUG, INFO, WARNING, ERROR)
+  log_level: INFO
+
+  # Keep-alive: restart kernel if it dies
+  auto_restart: true
+
+# OPUS Dashboard Configuration
+opus:
+  # Refresh interval for OPUS.md (seconds)
+  refresh_interval: 60
+
+  # Force refresh on heartbeat (even if not dirty)
+  force_refresh_on_heartbeat: false
+
+# Safety Limits
+limits:
+  # Max concurrent agents
+  max_agents: 5
+
+  # Budget per heartbeat pulse (USD)
+  budget_per_pulse: 1.00
+
+  # Circuit breaker: stop if this many failures in a row
+  failure_threshold: 3
