@@ -107,6 +107,12 @@ class IntentRouter:
         self._handlers["plan_strategy"] = self._handle_sankalpa
         self._handlers["review_todos"] = self._handle_sankalpa
 
+        # Research → VIDYA (Web Search via Tavily)
+        self._handlers["research_topic"] = self._handle_research
+        self._handlers["web_search"] = self._handle_research
+        self._handlers["get_best_practices"] = self._handle_research
+        self._handlers["find_implementation_guide"] = self._handle_research
+
         logger.info(f"IntentRouter: {len(self._handlers)} handlers registered")
 
     def route(self, intent: Intent) -> RouteResult:
@@ -313,6 +319,52 @@ class IntentRouter:
             }
         except Exception as e:
             return {"success": False, "handler": "SANKALPA", "error": str(e)}
+
+    def _handle_research(self, intent: Intent) -> Dict[str, Any]:
+        """Route to VIDYA for research/web search tasks."""
+        import asyncio
+
+        from vibe_core.plugins.opus_assistant.vidya.research_interface import ResearchInterface
+
+        logger.info(f"🔬 VIDYA handling: {intent.title}")
+
+        try:
+            research = ResearchInterface(kernel=self._kernel)
+
+            # Extract query from intent params or title
+            query = intent.params.get("query") or intent.params.get("topic") or intent.title
+
+            # Run async query in sync context
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            # Choose method based on intent type
+            if intent.intent_type == "get_best_practices":
+                topic = intent.params.get("topic", query)
+                result = loop.run_until_complete(research.get_best_practices(topic))
+            elif intent.intent_type == "find_implementation_guide":
+                task = intent.params.get("task", query)
+                result = loop.run_until_complete(research.get_implementation_guide(task))
+            else:
+                # Default research query
+                max_results = intent.params.get("max_results", 5)
+                result = loop.run_until_complete(research.query(query, max_results=max_results))
+
+            return {
+                "success": result.success,
+                "handler": "VIDYA",
+                "mode": result.mode,
+                "query": result.query,
+                "sources_count": len(result.sources),
+                "summary": result.summary[:500] if result.summary else "",
+                "key_insights": result.key_insights[:3] if result.key_insights else [],
+                "error": result.error,
+            }
+        except Exception as e:
+            return {"success": False, "handler": "VIDYA", "error": str(e)}
 
 
 def create_execution_callback(
