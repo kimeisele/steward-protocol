@@ -129,7 +129,7 @@ class KernelState:
         )
 
         # Snapshot plugins
-        plugins = [p.id for p in kernel._plugins]
+        plugins = [p.plugin_id for p in kernel._plugins]
 
         return KernelSnapshot(
             timestamp=time.time(),
