@@ -1,21 +1,73 @@
 """
 MANAS Cortex - The Sensory-Motor Interface.
 
-OPUS-041: VAK (The Voice)
-OPUS-042: SAMVADA (The Dialogue)
-OPUS-043: JNANA (The Conversation)
-OPUS-059: PRAMANA (The Valid Proof)
+OPUS-041: VAK (The Voice) - ShellCortex
+OPUS-042: SAMVADA (The Dialogue) - SamvadaListener/Client
+OPUS-043: JNANA (The Conversation) - JnanaHandler
+OPUS-050: VEDA (The Knowledge) - VedaPipeline
+OPUS-051: MANDALA (The Configuration) - ConfigWeaver
+OPUS-052: AKASHA (The Space) - AkashaQuery/Sync
+OPUS-053: SILPA (The Craft) - SilpaArchitect
+OPUS-054: SUTRA (The Thread) - SutraWeaver/Orchestrator
+OPUS-055: SANKALPA (The Will) - SankalpaOrchestrator
+OPUS-059: PRAMANA (The Valid Proof) - TestCortex
+
+Additional modules:
+- DHARMA: Architecture audit
+- KRIYA: Intent extraction
+- MUKHA: Identity/Interface generation
 
 The cortex modules provide MANAS with interfaces to the external world:
-- ShellCortex: Safe CLI command execution
-- SamvadaListener/Client: Real-time human-MANAS dialogue
-- JnanaHandler: Intelligent LLM-powered responses
-- TestCortex: Safe test execution interface
+- Processing, Configuration, Knowledge, Refactoring, Documentation
+- Strategy, Architecture, Intent, Identity
+- Shell, Dialogue, Conversation, Testing
 
 "The brain alone is not enough - it needs hands to act and ears to hear."
 """
 
+# OPUS-041: VAK (The Voice)
+# OPUS-052: AKASHA (The Cosmic Ether)
+from vibe_core.plugins.opus_assistant.manas.cortex.akasha import (
+    AkashaContext,
+    AkashaNode,
+    AkashaPort,
+    AkashaQuery,
+    AkashaSync,
+)
+
+# DHARMA (Architecture Audit)
+from vibe_core.plugins.opus_assistant.manas.cortex.dharma import (
+    ArchitecturalViolation,
+    DharmaAuditor,
+    DriftReport,
+)
+
+# OPUS-043: JNANA (The Conversation)
 from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
+
+# KRIYA (Intent Extraction)
+from vibe_core.plugins.opus_assistant.manas.cortex.kriya import (
+    ExtractedIntent,
+    KriyaBridge,
+    KriyaExtractor,
+)
+
+# OPUS-051: MANDALA (The Fractal Configuration)
+from vibe_core.plugins.opus_assistant.manas.cortex.mandala import (
+    CapabilitySpec,
+    ConfigWeaver,
+    FractalManifest,
+    ToolManifest,
+)
+
+# MUKHA (Identity/Interface)
+from vibe_core.plugins.opus_assistant.manas.cortex.mukha import (
+    AgentIdentity,
+    IdentityScanner,
+    MukhaGenerator,
+)
+
+# OPUS-042: SAMVADA (The Dialogue)
 from vibe_core.plugins.opus_assistant.manas.cortex.samvada import (
     SamvadaClient,
     SamvadaListener,
@@ -28,15 +80,52 @@ from vibe_core.plugins.opus_assistant.manas.cortex.samvada_handler import (
     SamvadaHandler,
     create_manas_handler,
 )
+
+# OPUS-055: SANKALPA (The Will)
+from vibe_core.plugins.opus_assistant.manas.cortex.sankalpa import (
+    SankalpaOrchestrator,
+)
 from vibe_core.plugins.opus_assistant.manas.cortex.shell import (
     CommandRisk,
     ShellCortex,
     ShellResult,
 )
+
+# OPUS-053: SILPA (The Self-Architect)
+from vibe_core.plugins.opus_assistant.manas.cortex.silpa import (
+    RefactorRisk,
+    RefactorType,
+    SilpaArchitect,
+    SilpaAuditor,
+    SilpaPlan,
+    SilpaTransformer,
+)
+
+# OPUS-054: SUTRA (The Thread)
+from vibe_core.plugins.opus_assistant.manas.cortex.sutra import (
+    SutraOrchestrator,
+    SutraWeaver,
+    WikiPage,
+    WikiPageType,
+    WikiSync,
+)
+
+# OPUS-059: PRAMANA (The Valid Proof)
 from vibe_core.plugins.opus_assistant.manas.cortex.test import (
     TestCortex,
     TestCortexResult,
     TestScope,
+)
+
+# OPUS-050: VEDA (The Four-Fold Knowledge)
+from vibe_core.plugins.opus_assistant.manas.cortex.veda import (
+    Artha,
+    Karma,
+    Pratyaya,
+    Shabda,
+    VedaContext,
+    VedaIntent,
+    VedaPipeline,
 )
 
 __all__ = [
@@ -55,8 +144,54 @@ __all__ = [
     "create_manas_handler",
     # OPUS-043: JNANA (The Conversation)
     "JnanaHandler",
+    # OPUS-050: VEDA (The Four-Fold Knowledge)
+    "VedaPipeline",
+    "VedaIntent",
+    "VedaContext",
+    "Shabda",
+    "Artha",
+    "Pratyaya",
+    "Karma",
+    # OPUS-051: MANDALA (The Fractal Configuration)
+    "ConfigWeaver",
+    "FractalManifest",
+    "CapabilitySpec",
+    "ToolManifest",
+    # OPUS-052: AKASHA (The Cosmic Ether)
+    "AkashaQuery",
+    "AkashaSync",
+    "AkashaContext",
+    "AkashaNode",
+    "AkashaPort",
+    # OPUS-053: SILPA (The Self-Architect)
+    "SilpaArchitect",
+    "SilpaTransformer",
+    "SilpaAuditor",
+    "SilpaPlan",
+    "RefactorRisk",
+    "RefactorType",
+    # OPUS-054: SUTRA (The Thread)
+    "SutraWeaver",
+    "SutraOrchestrator",
+    "WikiPage",
+    "WikiPageType",
+    "WikiSync",
+    # OPUS-055: SANKALPA (The Will)
+    "SankalpaOrchestrator",
     # OPUS-059: PRAMANA (The Valid Proof)
     "TestCortex",
     "TestCortexResult",
     "TestScope",
+    # DHARMA (Architecture Audit)
+    "DharmaAuditor",
+    "DriftReport",
+    "ArchitecturalViolation",
+    # KRIYA (Intent Extraction)
+    "KriyaExtractor",
+    "KriyaBridge",
+    "ExtractedIntent",
+    # MUKHA (Identity/Interface)
+    "MukhaGenerator",
+    "IdentityScanner",
+    "AgentIdentity",
 ]

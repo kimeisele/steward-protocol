@@ -75,6 +75,12 @@ def create_provider(
             logger.warning("OpenAI provider not yet implemented (GAD-511 Phase 2)")
             return NoOpProvider()
 
+        elif provider_name == "openrouter":
+            from .openrouter import OpenRouterProvider  # Lazy import
+
+            logger.info(f"Creating OpenRouter provider (model: {model_name or 'anthropic/claude-3.5-sonnet'})")
+            return OpenRouterProvider(api_key=api_key, **kwargs)
+
         elif provider_name == "local":
             logger.info("Creating Local LLM provider")
             try:
@@ -160,11 +166,14 @@ def _detect_provider() -> str:
     google_key = os.environ.get("GOOGLE_API_KEY")
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     openai_key = os.environ.get("OPENAI_API_KEY")
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
 
     if is_valid_key(google_key):
         return "google"
     elif is_valid_key(anthropic_key):
         return "anthropic"
+    elif is_valid_key(openrouter_key):
+        return "openrouter"
     elif is_valid_key(openai_key):
         return "openai"
     else:
@@ -186,6 +195,7 @@ def _get_api_key_for_provider(provider_name: str) -> str | None:
         "google": "GOOGLE_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
         "openai": "OPENAI_API_KEY",
+        "openrouter": "OPENROUTER_API_KEY",
         "local": None,  # Local models don't need API keys
         "noop": None,  # NoOp doesn't need API keys
     }

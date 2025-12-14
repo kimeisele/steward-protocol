@@ -32,8 +32,8 @@ PROVIDER_REGISTRY = {
         "class": "vibe_core.runtime.providers.openrouter:OpenRouterProvider",
         "display": "OpenRouter",
         "api_key_env": "OPENROUTER_API_KEY",
-        "pro_model": "anthropic/claude-3-sonnet",
-        "low_model": "anthropic/claude-3-haiku",
+        "pro_model": "anthropic/claude-opus-4",  # 2025: Premium reasoning
+        "low_model": "anthropic/claude-3.5-haiku",  # 2025: Fast & cheap
     },
 }
 
