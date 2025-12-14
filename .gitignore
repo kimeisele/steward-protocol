@@ -312,4 +312,7 @@ server.log
 __pycache__/
 *.vibe
 .prakriti/
-.opus_state/
+
+# OPUS-061 AMRITA: .opus_state/ is now TRACKED
+# The brain must persist. Git is consciousness.
+# Removed: .opus_state/

@@ -67,4 +67,33 @@ echo "}"
 echo ""
 echo "☢️ VISNU KERNEL PROTECTION ACTIVE"
 echo "   21 files protected (7 kernel + 3 governance + 10 workflows + 1 config)"
+
+# ------------------------------------------------------------------------------
+# Step 3: PRANA - Auto-boot Kernel (if configured)
+# ------------------------------------------------------------------------------
+PRANA_CONFIG="config/prana.yaml"
+AUTO_BOOT="false"
+
+if [ -f "$PRANA_CONFIG" ]; then
+    # Parse auto_boot_kernel from YAML (simple grep, no deps needed)
+    AUTO_BOOT=$(grep -A1 "session_start:" "$PRANA_CONFIG" | grep "auto_boot_kernel:" | awk '{print $2}' | tr -d ' ')
+fi
+
+if [ "$AUTO_BOOT" = "true" ]; then
+    echo ""
+    echo "💓 PRANA: Starting kernel in background..."
+
+    # Boot in background, non-blocking
+    python -m vibe_core.cli boot --background > /tmp/prana_boot.log 2>&1 &
+    BOOT_PID=$!
+
+    # Quick verification (don't wait too long)
+    sleep 2
+    if ps -p $BOOT_PID > /dev/null 2>&1 || pgrep -f "boot_kernel.py" > /dev/null 2>&1; then
+        echo "✅ Kernel started (background)"
+    else
+        echo "⚠️  Kernel boot initiated (check /tmp/prana_boot.log)"
+    fi
+fi
+
 echo ""
