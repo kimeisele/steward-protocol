@@ -9,7 +9,7 @@ Quick Start: python -m vibe_core.cli boot
 
 **Analysis Period**: 2025-12-14 to 2025-12-14 (7 days)
 
-**Last Updated**: 2025-12-14 14:30:18
+**Last Updated**: 2025-12-14 14:30:42
 
 **Overall Health**: 🟠 **HIGH**
 
@@ -17,25 +17,25 @@ Quick Start: python -m vibe_core.cli boot
 
 ## 🎯 Executive Summary
 
-**Meaningful Work Done**: 7 commits (0 auto-generated excluded)
+**Meaningful Work Done**: 8 commits (0 auto-generated excluded)
 
 **Key Metrics**:
-- **Velocity**: 1.0 commits/day (INCREASING trend)
-- **Net Code Change**: +438,000 lines
+- **Velocity**: 1.1 commits/day (STABLE trend)
+- **Net Code Change**: +437,778 lines
 - **Subsystems Affected**: 9
 
 **Work Breakdown**:
 - 🐛 Bug Fixes: 0 (0.0%)
-- ✨ Features: 6 (85.7%)
-- 🔧 Refactoring: 1 (14.3%)
-- 📝 Documentation: 1 (14.3%)
-- ✅ Tests: 6 (85.7%)
+- ✨ Features: 6 (75.0%)
+- 🔧 Refactoring: 1 (12.5%)
+- 📝 Documentation: 1 (12.5%)
+- ✅ Tests: 6 (75.0%)
 
 ---
 
 ## 🚨 Risk Assessment
 
-- 🟠 Many large commits (7/7) - scope creep risk
+- 🟠 Many large commits (8/8) - scope creep risk
 
 ---
 
@@ -50,13 +50,13 @@ Quick Start: python -m vibe_core.cli boot
 |-----------|---------|-----------|-------|--------|--------------|
 | `tests` | 7 | +438,000 | 1458 | 🟢 STABLE | 12-14 |
 | `plugins` | 7 | +438,000 | 1458 | 🟢 STABLE | 12-14 |
-| `system_agents` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
-| `scripts` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
-| `config` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
-| `kernel` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
-| `protocols` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
-| `docs` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
 | `citizen_agents` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `system_agents` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `docs` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `protocols` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `config` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `scripts` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
+| `kernel` | 1 | +428,045 | 1446 | 🟢 STABLE | 12-14 |
 
 ---
 
@@ -66,13 +66,13 @@ Quick Start: python -m vibe_core.cli boot
 
 | Metric | Value |
 |--------|-------|
-| Total Commits | 7 |
-| Meaningful Commits | 7 |
+| Total Commits | 8 |
+| Meaningful Commits | 8 |
 | Auto-Generated (Excluded) | 0 |
 | Files Changed | 1458 |
-| Lines Added | +438,052 |
-| Lines Removed | -52 |
-| Net Change | +438,000 |
+| Lines Added | +438,225 |
+| Lines Removed | -447 |
+| Net Change | +437,778 |
 
 ### Special Events
 
@@ -81,7 +81,7 @@ Quick Start: python -m vibe_core.cli boot
 | 🏗️ Architecture Changes | 1 |
 | ⚠️ Breaking Changes | 1 |
 | 📦 Plugin Additions | 0 |
-| 📏 Large Commits (>500 lines) | 7 |
+| 📏 Large Commits (>500 lines) | 8 |
 | 🔀 Merge Commits | 1 |
 
 ---
@@ -90,8 +90,8 @@ Quick Start: python -m vibe_core.cli boot
 
 | Author | Commits | % of Total |
 |--------|---------|-----------|
-| Claude | 6 | 85.7% |
-| kimeisele | 1 | 14.3% |
+| Claude | 7 | 87.5% |
+| kimeisele | 1 | 12.5% |
 
 ---
 
@@ -101,6 +101,9 @@ Quick Start: python -m vibe_core.cli boot
 |------|---------|-----------|
 | `vibe_core/plugins/opus_assistant/manas/cortex/jnana.py` | ███████ 7 | plugins |
 | `vibe_core/plugins/opus_assistant/manas/cortex/veda.py` | ██████ 6 | plugins |
+| `ARCHITECTURE.md` | ██ 2 | other |
+| `OPUS.md` | ██ 2 | other |
+| `README.md` | ██ 2 | other |
 | `tests/manas/test_kriya.py` | ██ 2 | tests |
 | `tests/manas/test_live_fire.py` | ██ 2 | tests |
 | `tests/manas/test_sankalpa.py` | █ 1 | tests |
@@ -111,9 +114,6 @@ Quick Start: python -m vibe_core.cli boot
 | `vibe_core/plugins/opus_assistant/manas/cortex/silpa.py` | █ 1 | plugins |
 | `tests/manas/test_akasha.py` | █ 1 | tests |
 | `vibe_core/plugins/opus_assistant/manas/cortex/akasha.py` | █ 1 | plugins |
-| `tests/manas/test_mandala.py` | █ 1 | tests |
-| `vibe_core/plugins/opus_assistant/manas/cortex/mandala.py` | █ 1 | plugins |
-| `tests/manas/test_veda.py` | █ 1 | tests |
 
 ---
 
@@ -121,6 +121,7 @@ Quick Start: python -m vibe_core.cli boot
 
 | Date | Author | Message | Changes | Risk |
 |------|--------|---------|---------|------|
+| 12-14 14:30 | Claude | chore(recovery): Crash recovery: uncommitted state... | +173/-395 | 🟡 |
 | 12-14 14:24 | Claude | feat(opus-055): SANKALPA (The Will) - Proactive St... | +1818/-0 | 🟠 |
 | 12-14 14:12 | Claude | feat(opus-054): SUTRA (The Thread) - Wiki Document... | +1840/-0 | 🟠 |
 | 12-14 13:58 | Claude | feat(opus-053): SILPA (The Self-Architect) - Safe ... | +1533/-0 | 🟠 |
