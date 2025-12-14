@@ -76,6 +76,9 @@ class VedaIntent(Enum):
     ARCHITECTURE = "architecture"
     COMPLIANCE = "compliance"
 
+    # MANDALA (Configuration)
+    MANDALA = "mandala"
+
     # KRIYA (Actions)
     ACTION = "action"
 
@@ -413,6 +416,15 @@ class Artha:
             "audit",
         },
         VedaIntent.COMPLIANCE: {"compliance", "score", "konformität", "dharma"},
+        VedaIntent.MANDALA: {
+            "mandala",
+            "config",
+            "konfiguration",
+            "configuration",
+            "agents",
+            "cartridges",
+            "capabilities",
+        },
         VedaIntent.ACTION: {
             # English action verbs (state-changing)
             "run",
@@ -448,6 +460,7 @@ class Artha:
         VedaIntent.DRIFT: "_handle_drift",
         VedaIntent.ARCHITECTURE: "_handle_drift",
         VedaIntent.COMPLIANCE: "_handle_drift",
+        VedaIntent.MANDALA: "_handle_mandala",
         VedaIntent.ACTION: "_handle_action",
         VedaIntent.CHAT: "_handle_chat_llm",
         VedaIntent.UNKNOWN: "_handle_chat_llm",

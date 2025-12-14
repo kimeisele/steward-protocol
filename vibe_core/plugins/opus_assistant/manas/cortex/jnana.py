@@ -41,6 +41,7 @@ from typing import Any, Dict, List, Optional
 
 from .dharma import check_drift_for_chat
 from .kriya import KriyaBridge, KriyaExtractor
+from .mandala import get_mandala_for_chat
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
 from .veda import VedaContext, VedaPipeline, VedaTrustLevel
@@ -181,6 +182,10 @@ class JnanaHandler:
             response = await self._handle_drift(msg)
             return response.content
 
+        # MANDALA (Configuration) handler
+        async def veda_mandala(ctx: VedaContext) -> str:
+            return get_mandala_for_chat(workspace=self._workspace)
+
         # Action handler
         async def veda_action(ctx: VedaContext) -> str:
             # Actions require LLM for intelligent processing
@@ -208,6 +213,7 @@ class JnanaHandler:
         self._veda.karma.register_handler("_handle_capabilities", veda_capabilities)
         self._veda.karma.register_handler("_handle_help", veda_help)
         self._veda.karma.register_handler("_handle_drift", veda_drift)
+        self._veda.karma.register_handler("_handle_mandala", veda_mandala)
         self._veda.karma.register_handler("_handle_action", veda_action)
         self._veda.karma.register_handler("_handle_chat_llm", veda_chat)
 
