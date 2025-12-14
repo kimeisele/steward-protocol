@@ -572,12 +572,117 @@ calls `on_tick_pre()` directly instead of emitting events.
 - **Medium term**: Wire the event system properly (OPUS-073)
 - **Long term**: True autonomous operation via Heartbeat + MANAS
 
-### Test Evidence
+### Verification Harness (OPUS-073)
 
-Run in workspace:
+<!-- HARNESS:START -->
+```yaml
+harness:
+  id: OPUS-073-EVENT-WIRING
+  version: 1.0.0
+  status: PENDING  # Will be PASS after Fix #1-#5 implemented
+
+  checks:
+    # Fix #1: KERNEL_TICK emission
+    - type: PATTERN
+      path: vibe_core/kernel_impl.py
+      pattern: "emit.*KERNEL_TICK|EventType\\.KERNEL_TICK"
+      required: true
+      description: "kernel.tick() must emit KERNEL_TICK to EventBus"
+
+    # Fix #2: GIT_COMMIT emission
+    - type: PATTERN
+      path: vibe_core/**/*.py
+      pattern: "emit.*GIT_COMMIT|EventType\\.GIT_COMMIT"
+      required: true
+      description: "GIT_COMMIT events must be emitted somewhere"
+
+    # Fix #3: HOURLY_PULSE timer
+    - type: PATTERN
+      path: vibe_core/kernel_impl.py
+      pattern: "HOURLY_PULSE|_last_hour"
+      required: true
+      description: "HOURLY_PULSE timer must exist in kernel"
+
+    # Fix #4: Heartbeat → MANAS connection
+    - type: PATTERN
+      path: scripts/heartbeat.py
+      pattern: "manas|cognitive_kernel|think\\("
+      required: true
+      description: "heartbeat.py must import and use MANAS"
+
+    # Fix #5: Live execution mode
+    - type: PATTERN
+      path: scripts/heartbeat.py
+      pattern: "--live|DRY.?RUN.*False|execute.*True"
+      required: true
+      description: "heartbeat.py must have live execution capability"
+
+    # Test coverage
+    - type: FILE
+      path: tests/integration/test_event_emission.py
+      required: true
+      description: "Integration tests for event emission must exist"
+
+  tests:
+    - path: tests/integration/test_event_emission.py
+      description: "Verify events are actually emitted"
+```
+<!-- HARNESS:END -->
+
+### Proposed Fix: kernel.tick() Event Emission
+
+```python
+# File: vibe_core/kernel_impl.py
+# Location: def tick(self) method, after line 1001
+
+# ADD AFTER: plugin.on_tick_pre(self)
+
+# OPUS-073: Emit KERNEL_TICK to EventBus (throttled)
+import asyncio
+if hasattr(self, '_tick_count'):
+    self._tick_count += 1
+else:
+    self._tick_count = 0
+
+# Emit every 30 ticks (~3 seconds at 100ms tick rate)
+if self._tick_count % 30 == 0:
+    try:
+        from vibe_core.event_bus import Event, EventType
+        event = Event(
+            event_type=EventType.KERNEL_TICK,
+            broadcaster_id="kernel",
+            message=f"Tick #{self._tick_count}",
+            details={"tick_count": self._tick_count}
+        )
+        # Fire-and-forget async emission
+        asyncio.create_task(self._event_bus.emit(event))
+    except Exception as e:
+        pass  # Don't crash kernel if event emission fails
+
+# HOURLY_PULSE (every 3600 seconds)
+import time
+if not hasattr(self, '_last_hourly_pulse'):
+    self._last_hourly_pulse = time.time()
+if time.time() - self._last_hourly_pulse >= 3600:
+    self._last_hourly_pulse = time.time()
+    try:
+        from vibe_core.event_bus import Event, EventType
+        event = Event(
+            event_type=EventType.HOURLY_PULSE,  # Need to add to EventType enum
+            broadcaster_id="kernel",
+            message="Hourly pulse",
+        )
+        asyncio.create_task(self._event_bus.emit(event))
+    except Exception:
+        pass
+```
+
+### Manual Test Evidence
+
+Run in workspace to verify gap still exists:
 ```bash
-grep -r "emit.*KERNEL_TICK" vibe_core/  # Returns nothing
-grep -r "emit.*GIT_COMMIT" vibe_core/   # Returns nothing
+grep -r "emit.*KERNEL_TICK" vibe_core/  # Returns nothing (EXPECTED TO FAIL)
+grep -r "emit.*GIT_COMMIT" vibe_core/   # Returns nothing (EXPECTED TO FAIL)
 ```
 
 *"Architektur ohne Ausführung = Treibsand."*
