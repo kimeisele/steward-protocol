@@ -92,6 +92,11 @@ class VedaIntent(Enum):
     SUTRA = "sutra"
     WIKI = "wiki"
 
+    # SANKALPA (Proactive Strategy)
+    SANKALPA = "sankalpa"
+    MISSIONS = "missions"
+    STRATEGY = "strategy"
+
     # KRIYA (Actions)
     ACTION = "action"
 
@@ -496,6 +501,29 @@ class Artha:
             "law",
             "map",
         },
+        VedaIntent.SANKALPA: {
+            "sankalpa",
+            "will",
+            "vow",
+            "goals",
+            "ziele",
+            "proactive",
+            "proaktiv",
+            "autonomous",
+            "autonom",
+        },
+        VedaIntent.MISSIONS: {
+            "missions",
+            "missionen",
+            "objectives",
+            "list missions",
+        },
+        VedaIntent.STRATEGY: {
+            "strategy",
+            "strategie",
+            "strategies",
+            "plan",
+        },
         VedaIntent.ACTION: {
             # English action verbs (state-changing)
             "run",
@@ -539,6 +567,9 @@ class Artha:
         VedaIntent.REFACTOR: "_handle_silpa",
         VedaIntent.SUTRA: "_handle_sutra",
         VedaIntent.WIKI: "_handle_sutra",
+        VedaIntent.SANKALPA: "_handle_sankalpa",
+        VedaIntent.MISSIONS: "_handle_sankalpa",
+        VedaIntent.STRATEGY: "_handle_sankalpa",
         VedaIntent.ACTION: "_handle_action",
         VedaIntent.CHAT: "_handle_chat_llm",
         VedaIntent.UNKNOWN: "_handle_chat_llm",
@@ -631,6 +662,8 @@ class Artha:
             hints.append("silpa_context_needed")
         if intent in {VedaIntent.SUTRA, VedaIntent.WIKI}:
             hints.append("sutra_context_needed")
+        if intent in {VedaIntent.SANKALPA, VedaIntent.MISSIONS, VedaIntent.STRATEGY}:
+            hints.append("sankalpa_context_needed")
 
         return hints
 
