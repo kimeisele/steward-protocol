@@ -434,18 +434,80 @@ def test_my_component(wired_kernel):
 6. **Wire VFS** - Integrate with `kernel.io_service`
 7. **Wire Librarian Tools** - Enable kernel registry access
 
-## 10. References
+## 11. OPUS-072 Tech Debt: MANAS Identity Proxy
+
+### The Oppenheimer Moment 🔴
+
+OPUS-072 gave MANAS the ability to act on behalf of the KERNEL for privileged syscalls.
+This is architecturally **necessary** but creates tight coupling.
+
+### The Coupling
+
+```python
+# vibe_core/circuit_executor.py:56
+try:
+    from vibe_core.cartridges.system.manas import ManasCartridge
+    MANAS_AVAILABLE = True
+except ImportError:
+    MANAS_AVAILABLE = False
+    ManasCartridge = None
+
+# vibe_core/circuit_executor.py:808
+if MANAS_AVAILABLE and ManasCartridge:
+    effective_requester = ManasCartridge.get_syscall_identity(syscall_type_str)
+```
+
+### Why This Works (For Now)
+
+1. **Soft Coupling**: `try/except ImportError` makes it optional
+2. **Controlled Access**: Only circuits can reach this code
+3. **Explicit Policy**: `PRIVILEGED_SYSCALLS = {"GRANT_MANDATE", "REVOKE_MANDATE"}`
+
+### The Problem (Future Risk)
+
+| Risk | Severity | Mitigation |
+|------|----------|------------|
+| Layer Violation | 🟡 Medium | Runtime shouldn't know about Cartridges |
+| Hardcoded Sudo | 🟠 Watchlist | No caller verification |
+| Tight Coupling | 🟢 Acceptable | Documented, soft coupling |
+
+### Future Refactoring: Abstract Identity Provider
+
+```python
+# PROPOSED: protocols/identity_provider.py
+class IdentityProvider(Protocol):
+    def get_syscall_identity(self, syscall_type: str) -> str:
+        """Get effective identity for syscall execution."""
+        ...
+
+# circuit_executor.py would then use:
+identity_provider: Optional[IdentityProvider] = None
+# Set during boot by whoever provides identity (MANAS, KERNEL, etc.)
+```
+
+### Decision Record
+
+- **Date**: 2025-12-14
+- **Decision**: Accept coupling for OPUS-072 breakthrough
+- **Rationale**: MANAS needs KERNEL identity to break Permission Denied deadlock
+- **Review**: Refactor when abstracting identity layer (P3)
+
+## 12. References
 
 | Document | Purpose |
 |----------|---------|
 | `OPUS-057-VAJRA.md` | Kernel injection pattern spec |
 | `OPUS-069-SRUTI-SMRITI.md` | Truth layer separation |
 | `OPUS-050-VEDA.md` | Four-fold processing pipeline |
+| `OPUS-072-MANAS-DEVATA.md` | MANAS identity proxy design |
 | `vibe_core/kernel_impl.py` | The Soul implementation |
 | `vibe_core/runtime/prompt_context.py` | Prompt infrastructure |
+| `vibe_core/cartridges/system/manas/` | MANAS Devata cartridge |
 
 ---
 
 *"The Kernel is the Soul. Everything surrenders to it. This is the TOTALER KRIEG."*
 
 *"Code ohne Test = Tote Materie. Docu ohne Beweis = Spekulation."*
+
+*"Der Geist hat Hände bekommen. Mal sehen, was er damit anfasst."* (OPUS-072)
