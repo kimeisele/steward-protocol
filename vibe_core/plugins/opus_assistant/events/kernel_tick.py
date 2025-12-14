@@ -59,6 +59,15 @@ except ImportError:
     DIAMOND_AVAILABLE = False
     get_diamond_handlers = None
 
+# 🧬 OPUS-038: MUTATION PROTOCOL - Legacy Code Testing
+try:
+    from vibe_core.plugins.opus_assistant.events.mutation_handlers import get_mutation_handlers
+
+    MUTATION_AVAILABLE = True
+except ImportError:
+    MUTATION_AVAILABLE = False
+    get_mutation_handlers = None
+
 if TYPE_CHECKING:
     from vibe_core.plugins.opus_assistant.core.context_service import OpusContextService
     from vibe_core.plugins.opus_assistant.core.observation_logger import ObservationLogger
@@ -622,6 +631,9 @@ class KernelTickHandler:
                 "diamond_generate_test": self._diamond_generate_test,
                 "diamond_red_gate": self._diamond_red_gate,
                 "diamond_green_gate": self._diamond_green_gate,
+                # 🧬 MUTATION PROTOCOL: Legacy Code Testing (OPUS-038)
+                "mutation_green_gate": self._mutation_green_gate,
+                "mutation_protocol": self._mutation_protocol,
             }
             method = method_map.get(method_name)
             if method:
@@ -2948,6 +2960,77 @@ def test_plugin_has_plugin_id():
             self._log_observation_alert(
                 f"💎❌ GREEN GATE FAILED: {params.get('capability_name', 'unknown')} - implementation broken",
                 "diamond",
+            )
+
+        return result
+
+    # =========================================================================
+    # 🧬 MUTATION PROTOCOL: Legacy Code Testing (OPUS-038)
+    # =========================================================================
+    # "A test that cannot detect errors is not a test. It is a lie."
+
+    async def _mutation_green_gate(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧬🟢 GREEN Gate for legacy code - Test MUST pass against original.
+
+        First step of mutation testing: verify the test works with
+        the current (unmutated) implementation.
+
+        Target: opus.mutation_green_gate
+        """
+        if not MUTATION_AVAILABLE or get_mutation_handlers is None:
+            logger.warning("🧬 Mutation handlers not available")
+            return {"success": False, "error": "Mutation handlers not available"}
+
+        handlers = get_mutation_handlers(workspace=self._plugin._workspace)
+        result = await handlers.green_gate_original(params)
+
+        if result.get("test_passed"):
+            self._log_observation_info(
+                f"🧬✅ GREEN GATE (Original): {params.get('module_name', 'unknown')} - test passes",
+                "mutation",
+            )
+        else:
+            self._log_observation_warn(
+                f"🧬❌ GREEN GATE (Original): {params.get('module_name', 'unknown')} - test broken",
+                "mutation",
+            )
+
+        return result
+
+    async def _mutation_protocol(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        🧬 Run full Mutation Protocol: GREEN → MUTATE → RED.
+
+        Validates that a test can actually detect bugs by:
+        1. GREEN: Test passes with original code
+        2. MUTATE: Generate mutated versions with injected bugs
+        3. RED: Test must FAIL against each mutant
+
+        Kill rate = mutants_killed / total_mutants >= 80%
+
+        Target: opus.mutation_protocol
+        """
+        if not MUTATION_AVAILABLE or get_mutation_handlers is None:
+            logger.warning("🧬 Mutation handlers not available")
+            return {"success": False, "error": "Mutation handlers not available"}
+
+        handlers = get_mutation_handlers(workspace=self._plugin._workspace)
+        result = await handlers.run_mutation_protocol(params)
+
+        kill_rate = result.get("kill_rate", 0)
+        survived = result.get("survived", 0)
+
+        if result.get("success"):
+            self._log_observation_info(
+                f"🧬✅ MUTATION PROTOCOL PASSED: {params.get('module_name', 'unknown')} - kill rate {kill_rate:.1%}",
+                "mutation",
+            )
+        else:
+            self._log_observation_warn(
+                f"🧬❌ MUTATION PROTOCOL FAILED: {params.get('module_name', 'unknown')} "
+                f"- {survived} mutants survived (kill rate {kill_rate:.1%})",
+                "mutation",
             )
 
         return result
