@@ -20,6 +20,7 @@ from vibe_core.boot_mode import BootMode  # OPUS-031 Layer 4: Autonomous Conduct
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
+from vibe_core.plugins.opus_assistant.manas.cortex.samvada import chat_sync  # OPUS-042: SAMVADA
 from vibe_core.state.prakriti import Prakriti  # PRAKRITI WIRING
 
 # Import Legacy CLI for fallback/system commands
@@ -71,6 +72,7 @@ class UnifiedCLI:
             "plugins": self.cmd_plugins,
             "update": self.cmd_update,
             "install": self.cmd_install,  # Alias for update (semantic clarity)
+            "chat": self.cmd_chat,  # OPUS-042: SAMVADA - Human-MANAS dialogue
         }
 
         # OPUS-031 Layer 4: Autonomous Conductor commands
@@ -511,6 +513,53 @@ class UnifiedCLI:
     def cmd_install(self, args: List[str]) -> int:
         """Alias for cmd_update - semantic clarity for new installations."""
         return self.cmd_update(args)
+
+    # =========================================================================
+    # OPUS-042: SAMVADA - Human-MANAS Real-Time Dialogue
+    # =========================================================================
+
+    def cmd_chat(self, args: List[str]) -> int:
+        """
+        Send a message to MANAS and get a response.
+
+        OPUS-042: SAMVADA (The Dialogue)
+
+        Usage:
+            steward chat "Status report"
+            steward chat Check the CI status
+            steward chat "What intents are pending?"
+
+        This command:
+        1. Connects to the MANAS listener socket
+        2. Sends the message to MANAS
+        3. Waits for and displays the response
+
+        Note: MANAS must be running (steward boot) for chat to work.
+        """
+        if not args:
+            print("Usage: steward chat <message>")
+            print('       steward chat "Status report"')
+            print("       steward chat Check the CI status")
+            print("\n❌ No message provided")
+            return 1
+
+        # Join all args into a single message (handles unquoted multi-word)
+        message = " ".join(args)
+
+        try:
+            response = chat_sync(message)
+
+            if response.success:
+                print(f"🗣️ MANAS: {response.content}")
+                return 0
+            else:
+                print(f"❌ Error: {response.error}")
+                return 1
+
+        except Exception as e:
+            print(f"❌ Chat failed: {e}")
+            print("\nMake sure MANAS is running: steward boot")
+            return 1
 
     # =========================================================================
     # OPUS-031 Layer 4: AUTONOMOUS CONDUCTOR COMMANDS
