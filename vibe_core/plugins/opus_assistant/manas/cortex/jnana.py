@@ -2,10 +2,12 @@
 OPUS-043: JNANA (The Conversation) - Intelligent Response Handler.
 OPUS-045: KRIYA (Action) - Chat to Intent Bridge Integration.
 OPUS-048: DHARMA (Das kosmische Gesetz) - Architectural Drift Integration.
+OPUS-050: VEDA (The Four-Fold Knowledge) - Pipeline Integration.
 
 Sanskrit: Jnana = Knowledge through dialogue/understanding.
 Sanskrit: Kriya = Completed Action / Sacred Deed.
 Sanskrit: Dharma = The cosmic law, duty, order that prevents chaos.
+Sanskrit: Veda = Sacred Knowledge, the four-fold processing wisdom.
 
 This handler makes MANAS truly intelligent by:
 1. Gathering system context (Prakriti state, git status, CI status)
@@ -14,24 +16,23 @@ This handler makes MANAS truly intelligent by:
 4. Calling the LLM for intelligent responses
 5. [KRIYA] Extracting action intents from responses
 
-Architecture:
-    Message → JnanaHandler
+OPUS-050 Architecture (VEDA-4 Pipeline):
+    Message → VedaPipeline
                   │
-                  ├── 1. get_context() → OpusContextService
+                  ├── 1. SHABDA (Das Wort)
+                  │       └── Tokenize, extract keywords, detect language
                   │
-                  ├── 2. get_recent_memories() → MemoryStore
+                  ├── 2. ARTHA (Die Bedeutung)
+                  │       └── Map tokens to intents, determine route
                   │
-                  ├── 3. build_prompt() → LLM message format
-                  │       └── [KRIYA] extend_prompt_for_action()
+                  ├── 3. PRATYAYA (Das Vertrauen)
+                  │       └── Check authorization, validate state
                   │
-                  ├── 4. LLM call → Intelligent response
-                  │
-                  ├── 5. [KRIYA] process_response() → Extract intents
-                  │       └── Push to CognitiveKernel
-                  │
-                  └── 6. SamvadaResponse
+                  └── 4. KARMA (Die Handlung)
+                          └── Execute handler → SamvadaResponse
 
-"Understanding comes before response. Response leads to action."
+"First the word is heard (Shabda), then its meaning understood (Artha),
+then trust is established (Pratyaya), and only then can action flow (Karma)."
 """
 
 import logging
@@ -42,8 +43,11 @@ from .dharma import check_drift_for_chat
 from .kriya import KriyaBridge, KriyaExtractor
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
+from .veda import VedaContext, VedaPipeline, VedaTrustLevel
 
 # OPUS-048: Keywords that trigger drift checking (German + English)
+# NOTE: These are now also defined in veda.py (Artha.INTENT_KEYWORDS)
+# Kept here for backwards compatibility during transition
 DRIFT_KEYWORDS = {
     # German
     "drift",
@@ -121,6 +125,10 @@ class JnanaHandler:
         # OPUS-045: KRIYA bridge for chat-to-action
         self._kriya = KriyaBridge(workspace=self._workspace)
 
+        # OPUS-050: VEDA Pipeline for four-fold processing
+        self._veda = VedaPipeline(default_trust=VedaTrustLevel.USER)
+        self._register_veda_handlers()
+
         # Context service (lazy loaded)
         self._context_service = None
 
@@ -129,6 +137,81 @@ class JnanaHandler:
 
         # LLM provider (optional - set externally or via configure())
         self._llm_provider = None
+
+    def _register_veda_handlers(self) -> None:
+        """
+        Register all KARMA handlers with the VEDA pipeline.
+
+        OPUS-050: Each handler is wrapped to work with VedaContext.
+        """
+
+        # Status handler
+        async def veda_status(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            response = await self._handle_status(msg)
+            return response.content
+
+        # Intents handler
+        async def veda_intents(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            response = await self._handle_intents(msg)
+            return response.content
+
+        # Capabilities handler
+        async def veda_capabilities(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            response = await self._handle_capabilities(msg)
+            return response.content
+
+        # Help handler
+        async def veda_help(ctx: VedaContext) -> str:
+            return (
+                "MANAS (Mind/Will) can help you with:\n\n"
+                "• 'status' - Check system status\n"
+                "• 'intents' - View pending MANAS intents\n"
+                "• 'capabilities' - List system capabilities\n"
+                "• 'drift' / 'architecture' - Check architectural compliance\n"
+                "• ACTION requests → Intent generation (with LLM)\n\n"
+                "With LLM: Ask 'Why is CI red?' or say 'Analysiere die Tests'"
+            )
+
+        # Drift/Architecture/Compliance handler (DHARMA)
+        async def veda_drift(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            response = await self._handle_drift(msg)
+            return response.content
+
+        # Action handler
+        async def veda_action(ctx: VedaContext) -> str:
+            # Actions require LLM for intelligent processing
+            msg = ctx.original_message
+            if self._llm_provider:
+                response = await self._handle_chat_with_llm(msg, is_action=True)
+                return response.content
+            else:
+                return (
+                    f'🎯 Aktionsanfrage erkannt: "{msg.content}"\n\n'
+                    f"MANAS ist im Basismodus (kein LLM konfiguriert).\n"
+                    f"Für intelligente Intent-Generierung bitte LLM-Provider konfigurieren.\n\n"
+                    f"Alternativ: Verwende 'steward intents' für manuelle Intent-Verwaltung."
+                )
+
+        # Chat/LLM handler
+        async def veda_chat(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            response = await self._handle_chat_with_llm(msg, is_action=False)
+            return response.content
+
+        # Register all handlers
+        self._veda.karma.register_handler("_handle_status", veda_status)
+        self._veda.karma.register_handler("_handle_intents", veda_intents)
+        self._veda.karma.register_handler("_handle_capabilities", veda_capabilities)
+        self._veda.karma.register_handler("_handle_help", veda_help)
+        self._veda.karma.register_handler("_handle_drift", veda_drift)
+        self._veda.karma.register_handler("_handle_action", veda_action)
+        self._veda.karma.register_handler("_handle_chat_llm", veda_chat)
+
+        logger.info("🕉️ VEDA handlers registered")
 
     @property
     def _get_context_service(self):
@@ -295,9 +378,10 @@ class JnanaHandler:
 
     async def handle(self, msg: SamvadaMessage) -> SamvadaResponse:
         """
-        Handle an incoming message intelligently.
+        Handle an incoming message through the VEDA four-fold pipeline.
 
-        Routes by message type and uses LLM for complex queries.
+        OPUS-050: All messages now flow through:
+            Shabda → Artha → Pratyaya → Karma
 
         Args:
             msg: The incoming message
@@ -305,10 +389,60 @@ class JnanaHandler:
         Returns:
             SamvadaResponse with intelligent reply
         """
-        logger.info(f"JNANA processing: {msg.content[:50]}...")
+        logger.info(f"JNANA processing via VEDA: {msg.content[:50]}...")
 
         try:
-            # Route by message type
+            # Special case: explicit msg_type routing (legacy support)
+            if msg.msg_type == "status":
+                return await self._handle_status(msg)
+            elif msg.msg_type == "intents":
+                return await self._handle_intents(msg)
+            elif msg.msg_type == "capabilities":
+                return await self._handle_capabilities(msg)
+
+            # OPUS-050: Process through VEDA pipeline
+            ctx = await self._veda.process(msg)
+
+            # Convert KarmaResult to SamvadaResponse
+            if ctx.karma and ctx.karma.success:
+                return SamvadaResponse(
+                    success=True,
+                    content=ctx.karma.content,
+                    msg_id=msg.msg_id,
+                )
+            elif ctx.karma:
+                return SamvadaResponse(
+                    success=False,
+                    content="",
+                    error=ctx.karma.error or "VEDA pipeline failed",
+                    msg_id=msg.msg_id,
+                )
+            else:
+                return SamvadaResponse(
+                    success=False,
+                    content="",
+                    error="VEDA pipeline did not produce result",
+                    msg_id=msg.msg_id,
+                )
+
+        except Exception as e:
+            logger.error(f"JNANA handler error: {e}")
+            return SamvadaResponse(
+                success=False,
+                content="",
+                error=f"Handler error: {e}",
+                msg_id=msg.msg_id,
+            )
+
+    async def handle_legacy(self, msg: SamvadaMessage) -> SamvadaResponse:
+        """
+        Legacy handle method (pre-OPUS-050) - kept for reference.
+
+        DEPRECATED: Use handle() which routes through VEDA pipeline.
+        """
+        logger.warning("Using legacy handle method - consider upgrading to VEDA pipeline")
+
+        try:
             if msg.msg_type == "status":
                 return await self._handle_status(msg)
             elif msg.msg_type == "intents":
@@ -316,7 +450,6 @@ class JnanaHandler:
             elif msg.msg_type == "capabilities":
                 return await self._handle_capabilities(msg)
             else:
-                # Chat - use LLM if available
                 return await self._handle_chat(msg)
 
         except Exception as e:
@@ -413,6 +546,81 @@ class JnanaHandler:
                 success=False,
                 content="",
                 error=f"DHARMA audit error: {e}",
+                msg_id=msg.msg_id,
+            )
+
+    async def _handle_chat_with_llm(self, msg: SamvadaMessage, is_action: bool = False) -> SamvadaResponse:
+        """
+        Handle chat with LLM integration.
+
+        OPUS-050: Extracted from _handle_chat for use in VEDA pipeline.
+        Called by KARMA phase handlers.
+
+        Args:
+            msg: The incoming message
+            is_action: Whether this is an action request (KRIYA)
+
+        Returns:
+            SamvadaResponse with LLM-generated or fallback content
+        """
+        # Use LLM if available
+        if self._llm_provider:
+            try:
+                prompt = self.build_prompt(msg)
+
+                # OPUS-045: Extend prompt with KRIYA instructions for action requests
+                if is_action:
+                    prompt = self._kriya.extend_prompt_for_action(prompt, msg.content)
+                    logger.debug("KRIYA: Extended prompt for action request")
+
+                response_text = self._llm_provider.chat(prompt)
+
+                # OPUS-045: Process response through KRIYA to extract intents
+                if is_action:
+                    response_text, intent = self._kriya.process_response(response_text, msg.content)
+                    if intent:
+                        logger.info(f"KRIYA: Created intent '{intent.id}' from chat")
+
+                return SamvadaResponse(
+                    success=True,
+                    content=response_text,
+                    msg_id=msg.msg_id,
+                )
+            except Exception as e:
+                logger.warning(f"LLM call failed: {e}")
+                # Fall through to fallback
+
+        # Fallback: context-aware but not LLM-powered
+        ctx = self.get_context()
+        health = ctx.get("health", {})
+        if isinstance(health, dict):
+            status = health.get("status", "unknown")
+        else:
+            status = str(health)
+
+        content_lower = msg.content.lower()
+
+        # Generate a helpful fallback response
+        if "why" in content_lower or "?" in content_lower:
+            return SamvadaResponse(
+                success=True,
+                content=(
+                    f"MANAS is in basic mode (no LLM configured).\n\n"
+                    f"Current system status: {status}\n\n"
+                    f"For intelligent responses to 'why' questions, "
+                    f"please configure an LLM provider.\n\n"
+                    f"Available commands: 'status', 'intents', 'capabilities'"
+                ),
+                msg_id=msg.msg_id,
+            )
+        else:
+            return SamvadaResponse(
+                success=True,
+                content=(
+                    f'MANAS acknowledges: "{msg.content}"\n\n'
+                    f"System: {status}\n\n"
+                    f"I'm in basic mode. Try 'status', 'intents', or 'help'."
+                ),
                 msg_id=msg.msg_id,
             )
 
