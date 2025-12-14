@@ -264,3 +264,99 @@ class TestSpecialQueries:
         # Should have called LLM for "why" questions
         if handler._llm_provider:
             mock_llm.chat.assert_called()
+
+
+# =============================================================================
+# SECTION 7: OPUS-048 DHARMA INTEGRATION TESTS
+# =============================================================================
+
+
+class TestDharmaIntegration:
+    """Tests for DHARMA (Drift Detection) integration in JNANA."""
+
+    @pytest.fixture
+    def handler(self, tmp_path):
+        """Create handler with temp workspace."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
+
+        return JnanaHandler(workspace=tmp_path)
+
+    @pytest.mark.asyncio
+    async def test_drift_keyword_triggers_dharma(self, handler):
+        """Mutation killer: 'drift' keyword should route to DHARMA."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="Check the architecture drift")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        # Should contain drift report indicators
+        assert "Compliance" in response.content or "✅" in response.content or "⚠️" in response.content
+
+    @pytest.mark.asyncio
+    async def test_architecture_keyword_triggers_dharma(self, handler):
+        """Mutation killer: 'architecture' keyword should route to DHARMA."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="What's the architecture status?")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        assert "Compliance" in response.content or "✅" in response.content or "⚠️" in response.content
+
+    @pytest.mark.asyncio
+    async def test_german_drift_keyword_triggers_dharma(self, handler):
+        """Mutation killer: German 'verstöße' keyword should route to DHARMA."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="Prüfe auf Verstöße")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        # German drift report
+        assert "Compliance" in response.content or "Verstöße" in response.content or "✅" in response.content
+
+    @pytest.mark.asyncio
+    async def test_dharma_keyword_triggers_dharma(self, handler):
+        """Mutation killer: 'dharma' keyword should route to DHARMA."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="Run dharma audit")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        assert "Compliance" in response.content or "Score" in response.content
+
+    @pytest.mark.asyncio
+    async def test_compliance_keyword_triggers_dharma(self, handler):
+        """Mutation killer: 'compliance' keyword should route to DHARMA."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="What's the compliance score?")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        assert "%" in response.content or "Score" in response.content or "Compliance" in response.content
+
+    @pytest.mark.asyncio
+    async def test_drift_response_contains_score(self, handler):
+        """Mutation killer: Drift response must contain compliance score."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="Check drift")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        # Must contain percentage or score
+        assert "%" in response.content
+
+    @pytest.mark.asyncio
+    async def test_help_mentions_drift(self, handler):
+        """Mutation killer: Help should mention drift/architecture."""
+        from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+        msg = SamvadaMessage(msg_type="chat", content="help")
+        response = await handler.handle(msg)
+
+        assert response.success is True
+        assert "drift" in response.content.lower() or "architecture" in response.content.lower()
