@@ -45,6 +45,28 @@ class ManasCartridge(ContextAwareAgent, OathMixin):
     # This is the identity used for syscalls
     MANAS_IDENTITY = "manas"
 
+    # OPUS-072: Privileged operations use KERNEL identity
+    # MANAS acts on behalf of the kernel for these operations
+    PRIVILEGED_SYSCALLS = {"GRANT_MANDATE", "REVOKE_MANDATE"}
+
+    @classmethod
+    def get_syscall_identity(cls, syscall_type: str) -> str:
+        """
+        Get the appropriate identity for a syscall.
+
+        MANAS acts on behalf of KERNEL for privileged operations.
+        This is architecturally correct - MANAS IS the kernel's mind.
+
+        Args:
+            syscall_type: The type of syscall being executed
+
+        Returns:
+            "KERNEL" for privileged syscalls, "manas" otherwise
+        """
+        if syscall_type in cls.PRIVILEGED_SYSCALLS:
+            return "KERNEL"
+        return cls.MANAS_IDENTITY
+
     def __init__(self):
         super().__init__(
             agent_id=self.MANAS_IDENTITY,
