@@ -2,15 +2,23 @@
 
 > "Everything must surrender to the Kernel. The Kernel is the Soul."
 
-## Status: ACTIVE HARNESS
+## Status: ⚡ ENFORCEMENT ACTIVE
 
 | Category | Count | Status | Evidence |
 |----------|-------|--------|----------|
-| **Wired Components** | 11 | ✅ | `inject_kernel()` verified |
-| **Partially Wired** | 3 | ⚠️ | Late binding patterns |
-| **Blind Spots** | 14+ | ❌ | Tools orphaned from kernel |
+| **Wired Components** | 18+ | ✅ | `inject_kernel()` verified |
+| **VAJRA Module** | 1 | ✅ | `vibe_core/vajra/` |
+| **Enforcement Tests** | 15 | ✅ | `tests/unit/test_vajra_wiring.py` |
+| **Pre-commit Hook** | 1 | ✅ | `.pre-commit-config.yaml` |
 | **Prompt Infrastructure** | 4 | ✅ | Runtime generation active |
-| **Duplicate Ledgers** | 1 | 🚨 | ARCHIVIST violation |
+
+### Victory Lap (Completed)
+
+| Task | Status | Commit |
+|------|--------|--------|
+| **P0: Kill the Traitor** | ✅ DONE | Archivist duplicate ledger removed |
+| **P1: Wire the Blind** | ✅ DONE | 6 Analyst tools wired |
+| **P2: Enforce the Law** | ✅ DONE | VAJRA enforcement system created |
 
 ## 1. The Core Axiom: TOTALER KRIEG
 
@@ -337,15 +345,84 @@ BLIND SPOTS:    14+ components   ░░░░░░░░░░░░░░░�
 GOAL: 100% kernel wiring = JET FUEL
 ```
 
-## 9. Action Items (Priority Order)
+## 9. ⚡ VAJRA Enforcement System
 
-### P0: Critical (Architectural Violations)
+### 9.1 The VAJRA Module (`vibe_core/vajra/`)
 
-1. **ARCHIVIST DUPLICATE LEDGER** - Remove `ledger_tool.py`'s separate JSON file
-   - File: `vibe_core/cartridges/system/archivist/tools/ledger_tool.py`
-   - Fix: Use `kernel.ledger` wrapper instead
+```
+vibe_core/vajra/
+├── __init__.py          # Public API
+├── protocol.py          # WiringProtocol definition
+├── enforcement.py       # @assert_wired, @require_wiring, WiringError
+├── auto_wire.py         # auto_wire(), wire_all(), deep_wire()
+├── scanner.py           # VAJRAScanner for static analysis
+└── pytest_plugin.py     # wired_kernel fixture, markers
+```
 
-### P1: High (Blind Spots)
+### 9.2 Usage Patterns
+
+```python
+# 1. Make a component wirable
+class MyComponent:
+    _vibe_kernel = None
+
+    def inject_kernel(self, kernel):
+        self._vibe_kernel = kernel
+
+    def _get_ledger(self):
+        if self._vibe_kernel is None:
+            return None
+        return self._vibe_kernel.ledger
+
+# 2. Auto-wire in tests
+from vibe_core.vajra import auto_wire, wire_all
+auto_wire(kernel, component)
+wire_all(kernel, c1, c2, c3)
+
+# 3. Enforce wiring at runtime
+from vibe_core.vajra import assert_wired, require_wiring
+
+@assert_wired  # Warns in shadow mode
+def execute(self): ...
+
+@require_wiring(strict=True)  # Raises WiringError
+def critical_operation(self): ...
+
+# 4. Scan for orphans
+from vibe_core.vajra import scan_for_orphans
+result = scan_for_orphans(fail_on_orphans=True)
+```
+
+### 9.3 Pre-commit Hook
+
+```bash
+# Run VAJRA scanner manually
+pre-commit run vajra-wiring-check --hook-stage manual
+
+# Or directly
+python -m vibe_core.vajra.scanner --strict
+```
+
+### 9.4 Test Fixtures
+
+```python
+# In tests, use wired_kernel fixture
+@pytest.mark.require_wiring
+def test_my_component(wired_kernel):
+    component = MyComponent()
+    component.inject_kernel(wired_kernel)
+    assert component._get_ledger() is wired_kernel.ledger
+```
+
+## 10. Historical: Completed Action Items
+
+### P0: Kill the Traitor ✅
+
+1. **ARCHIVIST DUPLICATE LEDGER** - DELETED `ledger_tool.py`
+   - `AuditLedger` now delegates to `kernel.ledger`
+   - Commit: `c00faba`
+
+### P1: Wire the Blind ✅
 
 2. **Wire Analyst Tools** - Add `inject_kernel()` to all 6 tools
 3. **Wire TaskManager** - Add kernel binding for event recording
