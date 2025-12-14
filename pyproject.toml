@@ -91,10 +91,20 @@ Leaderboard = "https://steward-protocol.io/leaderboard"
 pythonpath = ["."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 # ============================================================================
-# PROFESSIONAL TEST CONFIGURATION (Kernel-Grade)
+# OPUS-060 SATYA: TRUTH ENFORCEMENT (No Silent Failures)
 # ============================================================================
+#
+# "Satyam Eva Jayate" - Only the truth prevails.
+#
+# These settings ensure that tests CANNOT silently fail or skip.
+# If the test environment is broken, the entire suite MUST fail loudly.
+# ============================================================================
+
+# STRICT MODE: Unknown markers = IMMEDIATE FAILURE
+addopts = "--strict-markers"
 
 # Ignore patterns - exclude legacy/archived and broken tests
 norecursedirs = [
@@ -114,19 +124,23 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 # Markers for test categorization (use: pytest -m "fast" or pytest -m "not slow")
+# SATYA: ALL markers MUST be registered here. Unknown markers = build failure.
 markers = [
     "fast: Quick unit tests (<1s)",
     "slow: Slow tests (>5s) - run with -m slow",
     "integration: Integration tests requiring kernel boot",
     "hardening: Stress/chaos/security tests",
     "security: Security-focused tests (penetration, crypto)",
+    "asyncio: Async tests (handled by pytest-asyncio)",
+    "vibe_plugins: Tests requiring specific Vibe plugins to be loaded",
 ]
 
-# Warning filters - STRICT MODE (no hiding failures)
+# Warning filters - SATYA STRICT MODE (no hiding failures)
 filterwarnings = [
     "error::pytest.PytestReturnNotNoneWarning",  # Tests MUST assert, not return
+    "error::pytest.PytestUnknownMarkWarning",    # SATYA: Unknown markers = ERROR
     "ignore::DeprecationWarning:pydantic.*:",    # Ignore Pydantic deprecations
-    "ignore:.*_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET.*",  # Ignore pytest-asyncio 0.23 warning
+    "ignore:.*_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET.*",  # Ignore pytest-asyncio scope warning
 ]
 
 # Logging
@@ -191,7 +205,9 @@ line-ending = "auto"
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
     "pytest-cov>=7.0.0",
+    "pytest-timeout>=2.4.0",
 ]
 
 # ==============================================================================
