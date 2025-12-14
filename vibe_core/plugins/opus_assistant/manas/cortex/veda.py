@@ -76,6 +76,18 @@ class VedaIntent(Enum):
     ARCHITECTURE = "architecture"
     COMPLIANCE = "compliance"
 
+    # MANDALA (Configuration)
+    MANDALA = "mandala"
+
+    # AKASHA (Knowledge Graph)
+    AKASHA = "akasha"
+    KNOWLEDGE = "knowledge"
+    DEPENDENCIES = "dependencies"
+
+    # SILPA (Self-Refactoring)
+    SILPA = "silpa"
+    REFACTOR = "refactor"
+
     # KRIYA (Actions)
     ACTION = "action"
 
@@ -413,6 +425,55 @@ class Artha:
             "audit",
         },
         VedaIntent.COMPLIANCE: {"compliance", "score", "konformität", "dharma"},
+        VedaIntent.MANDALA: {
+            "mandala",
+            "config",
+            "konfiguration",
+            "configuration",
+            "agents",
+            "cartridges",
+            "capabilities",
+        },
+        VedaIntent.AKASHA: {
+            "akasha",
+            "knowledge",
+            "wissen",
+            "graph",
+            "dependencies",
+            "abhängigkeiten",
+            "depends",
+            "hängt",
+            "constraints",
+            "einschränkungen",
+        },
+        VedaIntent.KNOWLEDGE: {
+            "what is",
+            "was ist",
+            "describe",
+            "beschreibe",
+        },
+        VedaIntent.DEPENDENCIES: {
+            "depends on",
+            "abhängig von",
+            "what depends",
+            "was hängt ab",
+        },
+        VedaIntent.SILPA: {
+            "silpa",
+            "refactor",
+            "refaktorieren",
+            "umbau",
+            "docstring",
+            "rename",
+            "extract",
+            "consolidate",
+        },
+        VedaIntent.REFACTOR: {
+            "refactor",
+            "refaktoriere",
+            "update docstring",
+            "docstring aktualisieren",
+        },
         VedaIntent.ACTION: {
             # English action verbs (state-changing)
             "run",
@@ -448,6 +509,12 @@ class Artha:
         VedaIntent.DRIFT: "_handle_drift",
         VedaIntent.ARCHITECTURE: "_handle_drift",
         VedaIntent.COMPLIANCE: "_handle_drift",
+        VedaIntent.MANDALA: "_handle_mandala",
+        VedaIntent.AKASHA: "_handle_akasha",
+        VedaIntent.KNOWLEDGE: "_handle_akasha",
+        VedaIntent.DEPENDENCIES: "_handle_akasha",
+        VedaIntent.SILPA: "_handle_silpa",
+        VedaIntent.REFACTOR: "_handle_silpa",
         VedaIntent.ACTION: "_handle_action",
         VedaIntent.CHAT: "_handle_chat_llm",
         VedaIntent.UNKNOWN: "_handle_chat_llm",
@@ -534,6 +601,10 @@ class Artha:
             hints.append("respond_in_german")
         if intent in {VedaIntent.DRIFT, VedaIntent.ARCHITECTURE, VedaIntent.COMPLIANCE}:
             hints.append("dharma_context_needed")
+        if intent in {VedaIntent.AKASHA, VedaIntent.KNOWLEDGE, VedaIntent.DEPENDENCIES}:
+            hints.append("akasha_context_needed")
+        if intent in {VedaIntent.SILPA, VedaIntent.REFACTOR}:
+            hints.append("silpa_context_needed")
 
         return hints
 

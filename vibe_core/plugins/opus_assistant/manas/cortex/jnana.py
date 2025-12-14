@@ -3,11 +3,15 @@ OPUS-043: JNANA (The Conversation) - Intelligent Response Handler.
 OPUS-045: KRIYA (Action) - Chat to Intent Bridge Integration.
 OPUS-048: DHARMA (Das kosmische Gesetz) - Architectural Drift Integration.
 OPUS-050: VEDA (The Four-Fold Knowledge) - Pipeline Integration.
+OPUS-052: AKASHA (The Cosmic Ether) - Knowledge Graph Integration.
+OPUS-053: SILPA (The Self-Architect) - Safe Code Refactoring Integration.
 
 Sanskrit: Jnana = Knowledge through dialogue/understanding.
 Sanskrit: Kriya = Completed Action / Sacred Deed.
 Sanskrit: Dharma = The cosmic law, duty, order that prevents chaos.
 Sanskrit: Veda = Sacred Knowledge, the four-fold processing wisdom.
+Sanskrit: Akasha = Ether/Space, the element that contains all knowledge.
+Sanskrit: Silpa = Art, Craft, Architecture - the ability to reshape.
 
 This handler makes MANAS truly intelligent by:
 1. Gathering system context (Prakriti state, git status, CI status)
@@ -39,10 +43,13 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .akasha import handle_akasha_query
 from .dharma import check_drift_for_chat
 from .kriya import KriyaBridge, KriyaExtractor
+from .mandala import get_mandala_for_chat
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
+from .silpa import handle_silpa_query
 from .veda import VedaContext, VedaPipeline, VedaTrustLevel
 
 # OPUS-048: Keywords that trigger drift checking (German + English)
@@ -171,6 +178,12 @@ class JnanaHandler:
                 "• 'intents' - View pending MANAS intents\n"
                 "• 'capabilities' - List system capabilities\n"
                 "• 'drift' / 'architecture' - Check architectural compliance\n"
+                "• 'mandala' - View agent configuration\n"
+                "• 'knowledge' / 'akasha' - Query knowledge graph\n"
+                "  - 'What depends on X?'\n"
+                "  - 'What is X?'\n"
+                "• 'silpa' / 'refactor' - Safe code refactoring\n"
+                "  - Platinum Protocol (test-guarded)\n"
                 "• ACTION requests → Intent generation (with LLM)\n\n"
                 "With LLM: Ask 'Why is CI red?' or say 'Analysiere die Tests'"
             )
@@ -180,6 +193,22 @@ class JnanaHandler:
             msg = ctx.original_message
             response = await self._handle_drift(msg)
             return response.content
+
+        # MANDALA (Configuration) handler
+        async def veda_mandala(ctx: VedaContext) -> str:
+            return get_mandala_for_chat(workspace=self._workspace)
+
+        # AKASHA (Knowledge Graph) handler
+        async def veda_akasha(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            content = msg.content if hasattr(msg, "content") else str(msg)
+            return handle_akasha_query(content, workspace=self._workspace)
+
+        # SILPA (Self-Refactoring) handler
+        async def veda_silpa(ctx: VedaContext) -> str:
+            msg = ctx.original_message
+            content = msg.content if hasattr(msg, "content") else str(msg)
+            return handle_silpa_query(content, workspace=self._workspace)
 
         # Action handler
         async def veda_action(ctx: VedaContext) -> str:
@@ -208,6 +237,9 @@ class JnanaHandler:
         self._veda.karma.register_handler("_handle_capabilities", veda_capabilities)
         self._veda.karma.register_handler("_handle_help", veda_help)
         self._veda.karma.register_handler("_handle_drift", veda_drift)
+        self._veda.karma.register_handler("_handle_mandala", veda_mandala)
+        self._veda.karma.register_handler("_handle_akasha", veda_akasha)
+        self._veda.karma.register_handler("_handle_silpa", veda_silpa)
         self._veda.karma.register_handler("_handle_action", veda_action)
         self._veda.karma.register_handler("_handle_chat_llm", veda_chat)
 
