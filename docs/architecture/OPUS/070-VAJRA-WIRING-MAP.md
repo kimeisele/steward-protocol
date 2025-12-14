@@ -127,27 +127,28 @@ class SrutiValidator:
         logger.info("⚡ SRUTI: Kernel injected")
 ```
 
-## 5. BLIND SPOTS (❌ Orphaned from Kernel)
+## 5. BLIND SPOTS STATUS
 
-### 5.1 Analyst Tools (6 tools - ALL ORPHANED)
+### 5.1 Analyst Tools (6 tools - ✅ WIRED)
 
-| Tool | File | Current Init | Should Access |
-|------|------|--------------|---------------|
-| **ArchitectureAnalysisTool** | `analyst/tools/architecture_tool.py:36` | `(root_dir: str)` | `kernel.ledger`, agent registry |
-| **CodeAnalysisTool** | `analyst/tools/code_tool.py:32` | `(root_dir: str)` | Type stubs, agent definitions |
-| **DependencyAnalysisTool** | `analyst/tools/deps_tool.py:32` | `(root_dir: str)` | Runtime dependency graph |
-| **DocsAnalysisTool** | `analyst/tools/docs_tool.py` | `(root_dir: str)` | Ledger event correlation |
-| **GitAnalysisTool** | `analyst/tools/git_tool.py:35` | `(root_dir: str)` | Commit signature verification |
-| **StructureAnalysisTool** | `analyst/tools/structure_tool.py:33` | `(root_dir: str)` | Agent graph from registry |
+| Tool | File | Status | Pattern |
+|------|------|--------|---------|
+| **ArchitectureAnalysisTool** | `analyst/tools/architecture_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
+| **CodeAnalysisTool** | `analyst/tools/code_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
+| **DependencyAnalysisTool** | `analyst/tools/deps_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
+| **DocsAnalysisTool** | `analyst/tools/docs_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
+| **GitAnalysisTool** | `analyst/tools/git_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
+| **StructureAnalysisTool** | `analyst/tools/structure_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
 
-### 5.2 Archivist Tools (CRITICAL: DUPLICATE LEDGER!)
+### 5.2 Archivist Tools (✅ FIXED)
 
-| Tool | File | Issue | Fix Required |
-|------|------|-------|--------------|
-| **LedgerTool** | `archivist/tools/ledger_tool.py:18` | 🚨 **MAINTAINS SEPARATE JSON LEDGER** | Must use `kernel.ledger` |
-| **AuditTool** | `archivist/tools/audit_tool.py` | No kernel wiring | Add `inject_kernel()` |
-| **ObserverTool** | `archivist/tools/observer_tool.py` | Reads files, not kernel | Wire to kernel state |
-| **VerifierTool** | `archivist/tools/verifier_tool.py` | No kernel wiring | Use `kernel.ledger.verify_chain_integrity()` |
+| Tool | File | Status | Notes |
+|------|------|--------|-------|
+| **LedgerTool** | `archivist/tools/ledger_tool.py` | 🗑️ DELETED | Dead code - was duplicate ledger |
+| **AuditLedger** | `archivist/tools/ledger.py` | ✅ REFACTORED | Now delegates to `kernel.ledger` |
+| **AuditTool** | `archivist/tools/audit_tool.py` | ⏳ | Needs `inject_kernel()` |
+| **ObserverTool** | `archivist/tools/observer_tool.py` | ⏳ | Needs kernel wiring |
+| **VerifierTool** | `archivist/tools/verifier_tool.py` | ⏳ | Needs kernel wiring |
 
 ### 5.3 Other Orphaned Components
 
