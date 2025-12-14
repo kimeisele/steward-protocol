@@ -1,7 +1,7 @@
 """
 SYSTEM CARTRIDGES - Core Agents
 
-The 15 system agents that ship with the kernel:
+The 16 system agents that ship with the kernel:
 - envoy: User-facing interface
 - herald: Content publishing
 - civic: Governance operations
@@ -17,6 +17,7 @@ The 15 system agents that ship with the kernel:
 - archivist: Archive management
 - ping: Health checks
 - supreme_court: Constitutional enforcement
+- manas: Cognitive mind (OPUS-072)
 """
 
 __all__ = [
@@ -35,4 +36,5 @@ __all__ = [
     "archivist",
     "ping",
     "supreme_court",
+    "manas",
 ]
