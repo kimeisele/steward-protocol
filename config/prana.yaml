@@ -30,7 +30,9 @@ heartbeat:
 
   # Skip execution if last run was within this many minutes
   # (Prevents duplicate runs if workflow triggers overlap)
-  min_interval_minutes: 10
+  # NOTE: Workflow runs every 15 min, but we skip if <60 min since last pulse
+  # Result: Effective hourly execution without touching VISNU-protected workflow
+  min_interval_minutes: 60
 
   # Boot kernel before heartbeat tasks (for full functionality)
   boot_kernel_first: true
