@@ -636,6 +636,8 @@ class WikiSync:
     GitHub wikis are separate git repos: <repo>.wiki.git
     This class handles clone, write, commit, push.
 
+    OPUS-071: Now supports GITHUB_TOKEN authentication!
+
     "The sync is the bridge between thought and manifestation."
     """
 
@@ -646,8 +648,43 @@ class WikiSync:
         Args:
             workspace: Workspace path (for detecting repo URL)
         """
+        import os
+
         self._workspace = workspace or Path.cwd()
         self._wiki_dir: Optional[Path] = None
+        # OPUS-071: Load GitHub token for authentication
+        self._github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+
+    def _get_authenticated_url(self, url: str) -> str:
+        """
+        Transform URL to include authentication token.
+
+        OPUS-071: Enables wiki push without manual git credential setup.
+
+        Args:
+            url: Original git URL
+
+        Returns:
+            URL with embedded token (if available) or original URL
+        """
+        if not self._github_token:
+            logger.warning("SUTRA WikiSync: No GITHUB_TOKEN set - push may fail")
+            return url
+
+        # Transform git@github.com:user/repo.wiki.git -> https://token@github.com/user/repo.wiki.git
+        if url.startswith("git@github.com:"):
+            repo_path = url.replace("git@github.com:", "")
+            return f"https://{self._github_token}@github.com/{repo_path}"
+
+        # Transform https://github.com/user/repo.wiki.git -> https://token@github.com/user/repo.wiki.git
+        if url.startswith("https://github.com/"):
+            return url.replace("https://github.com/", f"https://{self._github_token}@github.com/")
+
+        return url
+
+    def has_credentials(self) -> bool:
+        """Check if GitHub credentials are available."""
+        return self._github_token is not None
 
     def get_wiki_url(self) -> Optional[str]:
         """
@@ -680,6 +717,8 @@ class WikiSync:
         """
         Clone the wiki repository.
 
+        OPUS-071: Uses authenticated URL when GITHUB_TOKEN is available.
+
         Args:
             temp_dir: Optional temp directory (created if None)
 
@@ -690,12 +729,15 @@ class WikiSync:
         if not wiki_url:
             return None
 
+        # OPUS-071: Use authenticated URL for clone
+        auth_url = self._get_authenticated_url(wiki_url)
+
         if temp_dir is None:
             temp_dir = Path(tempfile.mkdtemp(prefix="sutra_wiki_"))
 
         try:
             subprocess.run(
-                ["git", "clone", wiki_url, str(temp_dir)],
+                ["git", "clone", auth_url, str(temp_dir)],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -707,9 +749,16 @@ class WikiSync:
         except subprocess.CalledProcessError as e:
             # Wiki might not exist yet - initialize it
             if "not found" in e.stderr.lower() or "empty repository" in e.stderr.lower():
-                logger.info("SUTRA WikiSync: Wiki repo does not exist, will create")
+                logger.info("SUTRA WikiSync: Wiki repo does not exist, will initialize")
                 self._wiki_dir = temp_dir
                 subprocess.run(["git", "init"], cwd=temp_dir, check=True)
+                # Set remote for push
+                if auth_url:
+                    subprocess.run(
+                        ["git", "remote", "add", "origin", auth_url],
+                        cwd=temp_dir,
+                        check=False,  # May fail if remote exists
+                    )
                 return temp_dir
             logger.error(f"SUTRA WikiSync: Clone failed: {e.stderr}")
             return None
@@ -746,6 +795,8 @@ class WikiSync:
         """
         Commit and push wiki changes.
 
+        OPUS-071: Uses authenticated push with GITHUB_TOKEN.
+
         Args:
             message: Commit message
 
@@ -757,6 +808,18 @@ class WikiSync:
             return False
 
         try:
+            # Configure git user for this repo (SUTRA is the author)
+            subprocess.run(
+                ["git", "config", "user.email", "sutra@manas.steward"],
+                cwd=self._wiki_dir,
+                check=False,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "SUTRA (MANAS Cortex)"],
+                cwd=self._wiki_dir,
+                check=False,
+            )
+
             # Add all changes
             subprocess.run(["git", "add", "-A"], cwd=self._wiki_dir, check=True)
 
@@ -775,15 +838,22 @@ class WikiSync:
             # Commit
             subprocess.run(["git", "commit", "-m", message], cwd=self._wiki_dir, check=True)
 
-            # Push
+            # Push with authenticated URL
             wiki_url = self.get_wiki_url()
             if wiki_url:
+                auth_url = self._get_authenticated_url(wiki_url)
+                # Set push URL with auth
+                subprocess.run(
+                    ["git", "remote", "set-url", "origin", auth_url],
+                    cwd=self._wiki_dir,
+                    check=False,
+                )
                 subprocess.run(
                     ["git", "push", "-u", "origin", "master"],
                     cwd=self._wiki_dir,
                     check=True,
                 )
-                logger.info("SUTRA WikiSync: Pushed wiki changes")
+                logger.info("📜 SUTRA WikiSync: Pushed wiki changes to GitHub!")
 
             return True
 
