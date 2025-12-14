@@ -117,6 +117,15 @@ class IntentRouter:
         self._handlers["audit_wiring"] = self._handle_wiring
         self._handlers["find_blind_spots"] = self._handle_wiring
 
+        # Mutation testing → OPUS-038 MutationHandlers
+        self._handlers["run_mutation_tests"] = self._handle_mutation
+        self._handlers["mutation_protocol"] = self._handle_mutation
+
+        # Knowledge graph → UnifiedKnowledgeGraph
+        self._handlers["knowledge_query"] = self._handle_knowledge
+        self._handlers["search_knowledge"] = self._handle_knowledge
+        self._handlers["get_context"] = self._handle_knowledge
+
         logger.info(f"IntentRouter: {len(self._handlers)} handlers registered")
 
     def route(self, intent: Intent) -> RouteResult:
@@ -392,6 +401,92 @@ class IntentRouter:
             }
         except Exception as e:
             return {"success": False, "handler": "VIDYA", "error": str(e)}
+
+    def _handle_mutation(self, intent: Intent) -> Dict[str, Any]:
+        """Route to MutationHandlers for mutation testing."""
+        import asyncio
+
+        from vibe_core.plugins.opus_assistant.events.mutation_handlers import get_mutation_handlers
+
+        logger.info(f"🧬 MutationHandlers handling: {intent.title}")
+
+        try:
+            handlers = get_mutation_handlers(workspace=self._workspace)
+
+            # Extract params
+            source_code = intent.params.get("source_code", "")
+            test_code = intent.params.get("test_code", "")
+            module_name = intent.params.get("module_name", "legacy_module")
+
+            if not source_code or not test_code:
+                return {
+                    "success": False,
+                    "handler": "MutationHandlers",
+                    "error": "Missing source_code or test_code parameters",
+                }
+
+            # Run async mutation protocol in sync context
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+
+            result = loop.run_until_complete(
+                handlers.run_mutation_protocol(
+                    {
+                        "source_code": source_code,
+                        "test_code": test_code,
+                        "module_name": module_name,
+                    }
+                )
+            )
+
+            return {
+                "success": result.get("success", False),
+                "handler": "MutationHandlers",
+                "kill_rate": result.get("kill_rate", 0.0),
+                "total_mutants": result.get("total_mutants", 0),
+                "killed": result.get("killed", 0),
+                "survived": result.get("survived", 0),
+                "message": f"Mutation test: {result.get('kill_rate', 0):.1%} kill rate",
+            }
+        except Exception as e:
+            return {"success": False, "handler": "MutationHandlers", "error": str(e)}
+
+    def _handle_knowledge(self, intent: Intent) -> Dict[str, Any]:
+        """Route to UnifiedKnowledgeGraph for knowledge queries."""
+        from vibe_core.knowledge.graph import get_knowledge_graph
+
+        logger.info(f"📚 KnowledgeGraph handling: {intent.title}")
+
+        try:
+            graph = get_knowledge_graph()
+
+            # Determine query type
+            query = intent.params.get("query") or intent.params.get("concept") or intent.title
+
+            if intent.intent_type == "get_context":
+                # Return compiled prompt context
+                context = graph.compile_prompt_context(query)
+                return {
+                    "success": True,
+                    "handler": "KnowledgeGraph",
+                    "context": context[:2000] if context else "",
+                    "message": f"Context compiled for: {query}",
+                }
+            else:
+                # Search nodes
+                nodes = graph.search_nodes(query)
+                return {
+                    "success": True,
+                    "handler": "KnowledgeGraph",
+                    "nodes_found": len(nodes),
+                    "nodes": [{"id": n.id, "name": n.name, "type": n.type.value} for n in nodes[:10]],
+                    "message": f"Found {len(nodes)} nodes for: {query}",
+                }
+        except Exception as e:
+            return {"success": False, "handler": "KnowledgeGraph", "error": str(e)}
 
 
 def create_execution_callback(

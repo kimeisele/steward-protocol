@@ -90,9 +90,12 @@ class WiringMap:
         "plan_strategy",
         "research_topic",
         "web_search",
-        # BLIND SPOT: These exist but aren't wired!
-        "run_mutation_tests",  # mutation_handlers.py exists
-        "knowledge_query",  # UnifiedKnowledgeGraph exists
+        # OPUS-067: Previously blind, now wired!
+        "run_mutation_tests",  # mutation_handlers.py → IntentRouter
+        "mutation_protocol",  # mutation_handlers.py → IntentRouter
+        "knowledge_query",  # UnifiedKnowledgeGraph → IntentRouter
+        "search_knowledge",  # UnifiedKnowledgeGraph → IntentRouter
+        "get_context",  # UnifiedKnowledgeGraph → IntentRouter
     ]
 
     EXPECTED_CORTEX_MODULES = [
@@ -109,6 +112,8 @@ class WiringMap:
         "TestCortex",
         "JnanaHandler",
         "SamvadaClient",
+        # Note: MutationHandlers and KnowledgeGraph are tracked as capabilities
+        # (they live outside cortex/ but are wired via IntentRouter)
     ]
 
     def __init__(self, workspace: Optional[Path] = None):
