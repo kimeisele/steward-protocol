@@ -94,3 +94,19 @@ repos:
         language: script
         files: ^(vibe_core/(kernel_impl|kernel_ops|plugin_protocol|plugin_loader|narasimha|capability_registry|bridge)\.py|scripts/governance/(restore_kernel\.sh|verify_kernel\.py|kernel_hashes\.json)|\.github/workflows/.*\.ya?ml|\.pre-commit-config\.yaml)$
         stages: [commit]
+
+  # =========================================================================
+  # VAJRA WIRING ENFORCEMENT - OPUS-070
+  # =========================================================================
+  # Detects orphan components that bypass kernel injection.
+  # All analyst tools MUST be wired via inject_kernel().
+  # See: docs/architecture/OPUS/070-VAJRA-WIRING-MAP.md
+  - repo: local
+    hooks:
+      - id: vajra-orphan-detector
+        name: ⚡ VAJRA Orphan Detector
+        entry: python -m vibe_core.vajra.scanner --strict
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
