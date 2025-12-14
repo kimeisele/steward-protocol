@@ -1,0 +1,41 @@
+{
+  "capabilities": {
+    "operations": [
+      {
+        "description": "General cognitive operations and reasoning",
+        "name": "manas.cognition"
+      },
+      {
+        "description": "Create new cognitive agents dynamically",
+        "name": "manas.spawn_agent"
+      },
+      {
+        "description": "Grant capabilities to spawned agents",
+        "name": "manas.grant_capability"
+      },
+      {
+        "description": "Execute semantic syscalls on behalf of OPUS",
+        "name": "manas.syscall"
+      },
+      {
+        "description": "Proactive intent generation from system state",
+        "name": "manas.intent_generation"
+      }
+    ]
+  },
+  "governance": {
+    "compliance_level": 3,
+    "constitution_hash": "df4bf7b77c3676432442e3fa21fe392389dd43f57527feded615131856347309",
+    "issued_at": "2025-12-14T23:00:00.000000Z",
+    "issuer": "opus_assistant"
+  },
+  "identity": {
+    "agent_id": "manas",
+    "name": "MANAS"
+  },
+  "specs": {
+    "description": "The Cognitive Mind - Proactive Intent Generation and Syscall Execution",
+    "domain": "SYSTEM",
+    "version": "1.0.0"
+  }
+}
