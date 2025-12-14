@@ -20,7 +20,7 @@ Philosophy:
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from vibe_core.plugin_protocol import KernelPlugin
 
@@ -47,6 +47,14 @@ class VedicGovernancePlugin(KernelPlugin):
 
     Priority: 10 (early - before most plugins, governance is foundational)
     """
+
+    # OPUS-071: Expose stage names for loose coupling (no enum import needed)
+    ASHRAMA_STAGES = {
+        "brahmachari": "Student / Learning stage",
+        "grihastha": "Householder / Active productive stage",
+        "vanaprastha": "Forest dweller / Retirement transition",
+        "sannyasa": "Renunciate / System daemon mode",
+    }
 
     @property
     def plugin_id(self) -> str:
@@ -300,12 +308,23 @@ class VedicGovernancePlugin(KernelPlugin):
         permissions = self.get_agent_permissions(agent_id)
         return permission in permissions
 
-    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Ashrama, reason: str = "") -> bool:
+    def transition_agent_ashrama(self, agent_id: str, new_ashrama: Union[Ashrama, str], reason: str = "") -> bool:
         """
         Transition an agent to a new Ashrama (lifecycle stage).
 
+        OPUS-071: Now accepts string values for loose coupling!
+        Consumers can use "grihastha" instead of importing Ashrama.GRIHASTHA.
+
         Returns True if transition succeeded, False otherwise.
         """
+        # OPUS-071: Accept string values for loose coupling
+        if isinstance(new_ashrama, str):
+            try:
+                new_ashrama = Ashrama(new_ashrama)
+            except ValueError:
+                logger.error(f"Invalid ashrama stage: '{new_ashrama}'")
+                return False
+
         ashrama_transition = self._ashrama_registry.get(agent_id)
         if not ashrama_transition:
             logger.error(f"Agent '{agent_id}' not found in Ashrama registry")
