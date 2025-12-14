@@ -1,13 +1,16 @@
 """
 OPUS-043: JNANA (The Conversation) - Intelligent Response Handler.
+OPUS-045: KRIYA (Action) - Chat to Intent Bridge Integration.
 
 Sanskrit: Jnana = Knowledge through dialogue/understanding.
+Sanskrit: Kriya = Completed Action / Sacred Deed.
 
 This handler makes MANAS truly intelligent by:
 1. Gathering system context (Prakriti state, git status, CI status)
 2. Loading memories (what we did last)
 3. Building an LLM prompt with full context
 4. Calling the LLM for intelligent responses
+5. [KRIYA] Extracting action intents from responses
 
 Architecture:
     Message → JnanaHandler
@@ -17,18 +20,23 @@ Architecture:
                   ├── 2. get_recent_memories() → MemoryStore
                   │
                   ├── 3. build_prompt() → LLM message format
+                  │       └── [KRIYA] extend_prompt_for_action()
                   │
                   ├── 4. LLM call → Intelligent response
                   │
-                  └── 5. SamvadaResponse
+                  ├── 5. [KRIYA] process_response() → Extract intents
+                  │       └── Push to CognitiveKernel
+                  │
+                  └── 6. SamvadaResponse
 
-"Understanding comes before response."
+"Understanding comes before response. Response leads to action."
 """
 
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .kriya import KriyaBridge, KriyaExtractor
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
 
@@ -87,6 +95,9 @@ class JnanaHandler:
 
         # Initialize components
         self._shell = ShellCortex(workspace=self._workspace)
+
+        # OPUS-045: KRIYA bridge for chat-to-action
+        self._kriya = KriyaBridge(workspace=self._workspace)
 
         # Context service (lazy loaded)
         self._context_service = None
@@ -365,6 +376,7 @@ class JnanaHandler:
         """
         Handle general chat with LLM integration.
 
+        OPUS-045: Now includes KRIYA for action-to-intent bridging.
         Falls back to simple responses if no LLM is configured.
         """
         content_lower = msg.content.lower()
@@ -377,11 +389,26 @@ class JnanaHandler:
         if "capabilit" in content_lower:
             return await self._handle_capabilities(msg)
 
+        # OPUS-045: Check if this is an action request
+        is_action = KriyaExtractor.is_action_request(msg.content)
+
         # Use LLM if available
         if self._llm_provider:
             try:
                 prompt = self.build_prompt(msg)
+
+                # OPUS-045: Extend prompt with KRIYA instructions for action requests
+                if is_action:
+                    prompt = self._kriya.extend_prompt_for_action(prompt, msg.content)
+                    logger.debug("KRIYA: Extended prompt for action request")
+
                 response_text = self._llm_provider.chat(prompt)
+
+                # OPUS-045: Process response through KRIYA to extract intents
+                if is_action:
+                    response_text, intent = self._kriya.process_response(response_text, msg.content)
+                    if intent:
+                        logger.info(f"KRIYA: Created intent '{intent.id}' from chat")
 
                 return SamvadaResponse(
                     success=True,
@@ -399,6 +426,19 @@ class JnanaHandler:
             status = health.get("status", "unknown")
         else:
             status = str(health)
+
+        # OPUS-045: Fallback for action requests without LLM
+        if is_action:
+            return SamvadaResponse(
+                success=True,
+                content=(
+                    f'🎯 Aktionsanfrage erkannt: "{msg.content}"\n\n'
+                    f"MANAS ist im Basismodus (kein LLM konfiguriert).\n"
+                    f"Für intelligente Intent-Generierung bitte LLM-Provider konfigurieren.\n\n"
+                    f"Alternativ: Verwende 'steward intents' für manuelle Intent-Verwaltung."
+                ),
+                msg_id=msg.msg_id,
+            )
 
         # Generate a helpful fallback response
         if "why" in content_lower or "?" in content_lower:
@@ -420,8 +460,9 @@ class JnanaHandler:
                     "MANAS (Mind/Will) can help you with:\n\n"
                     "• 'status' - Check system status\n"
                     "• 'intents' - View pending MANAS intents\n"
-                    "• 'capabilities' - List system capabilities\n\n"
-                    "With LLM: Ask 'Why is CI red?' or 'What changed recently?'"
+                    "• 'capabilities' - List system capabilities\n"
+                    "• ACTION requests → Intent generation (with LLM)\n\n"
+                    "With LLM: Ask 'Why is CI red?' or say 'Analysiere die Tests'"
                 ),
                 msg_id=msg.msg_id,
             )
