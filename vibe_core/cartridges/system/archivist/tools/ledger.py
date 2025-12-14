@@ -1,205 +1,218 @@
 """
-ARCHIVIST Audit Ledger - Immutable record of all attestations.
+ARCHIVIST Audit Ledger - Wrapper over Kernel Ledger (OPUS-070 VAJRA)
 
-The ledger is append-only and stores all verification results.
+REFACTORED: No longer maintains separate JSONL file.
+Delegates ALL operations to kernel.ledger (SRUTI - Single Source of Truth).
+
+Architecture:
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    KERNEL (The Soul)                        │
+    │  ┌───────────────────────────────────────────────────────┐  │
+    │  │  kernel.ledger = SRUTI (SQLiteLedger)                 │  │
+    │  │  - Hash-chained, ECDSA signed                         │  │
+    │  │  - Single Source of Truth for ALL events              │  │
+    │  └───────────────────────────────────────────────────────┘  │
+    └─────────────────────────────────────────────────────────────┘
+                                │
+                        READS/WRITES (via kernel)
+                                │
+                                ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    AuditLedger (VIEW)                       │
+    │                                                             │
+    │  - Filters kernel.ledger for attestation events             │
+    │  - Provides ARCHIVIST-specific query methods                │
+    │  - NO separate storage (delegated to kernel)                │
+    └─────────────────────────────────────────────────────────────┘
 """
 
-import json
 import logging
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-# BLOCKER #1: Import canonical VibeLedger ABC
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
-from vibe_core.protocols import VibeLedger
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("ARCHIVIST_LEDGER")
 
+# Event type prefix for ARCHIVIST attestations
+ARCHIVIST_EVENT_PREFIX = "archivist_"
 
-class AuditLedger(VibeLedger):
+
+class AuditLedger:
     """
-    Append-only ledger for audit attestations.
+    ARCHIVIST Audit Ledger - VIEW over kernel.ledger.
 
-    All attestations are written to a JSONL file for immutability.
+    OPUS-070 VAJRA: Delegates to kernel.ledger instead of maintaining
+    separate storage. This ensures Single Source of Truth.
+
+    Usage:
+        ledger = AuditLedger()
+        ledger.inject_kernel(kernel)  # ⚡ VAJRA binding
+
+        # Write attestation (goes to kernel.ledger)
+        event_id = ledger.record_attestation(...)
+
+        # Read attestations (filters kernel.ledger)
+        attestations = ledger.get_attestations()
     """
 
-    def __init__(self, ledger_path: Path):
+    def __init__(self):
+        """Initialize AuditLedger (kernel injected later via VAJRA)."""
+        # ⚡ VAJRA: Core kernel reference for ledger binding
+        self._vibe_kernel: Optional["RealVibeKernel"] = None
+        self._attestation_count = 0
+        logger.info("📖 AuditLedger initialized (waiting for kernel injection)")
+
+    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
         """
-        Initialize the audit ledger.
+        ⚡ VAJRA: Inject the core VibeKernel for ledger access.
+
+        OPUS-070: AuditLedger MUST delegate to kernel.ledger.
+        Without kernel injection, it operates in "shadow mode" (no persistence).
 
         Args:
-            ledger_path: Path to the ledger file (JSONL format)
+            kernel: The RealVibeKernel instance with ledger access
         """
-        self.ledger_path = ledger_path
-        self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        self._vibe_kernel = kernel
+        logger.info("⚡ ARCHIVIST: Kernel injected - ledger binding ACTIVE")
 
-        # Create file if it doesn't exist
-        if not self.ledger_path.exists():
-            self.ledger_path.touch()
-            logger.info(f"📖 Ledger created: {ledger_path}")
-        else:
-            logger.info(f"📖 Ledger opened: {ledger_path}")
+    def _get_ledger(self):
+        """Get kernel.ledger via VAJRA binding."""
+        if self._vibe_kernel is None:
+            logger.debug("⚠️ ARCHIVIST: No kernel - shadow mode")
+            return None
 
-        self.entries_written = 0
+        if not hasattr(self._vibe_kernel, "ledger"):
+            logger.warning("⚠️ ARCHIVIST: Kernel has no ledger attribute")
+            return None
 
-    def append(self, attestation: Dict[str, Any]) -> bool:
+        return self._vibe_kernel.ledger
+
+    # ==================== ATTESTATION OPERATIONS ====================
+
+    def record_attestation(
+        self,
+        target_event: Dict[str, Any],
+        verification_result: Dict[str, Any],
+        status: str = "VERIFIED",
+    ) -> Optional[str]:
         """
-        Append an attestation to the ledger.
+        Record an attestation to kernel.ledger.
 
         Args:
-            attestation: Attestation record to append
+            target_event: The event being attested (from another agent)
+            verification_result: Verification proof details
+            status: "VERIFIED" or "FAILED"
 
         Returns:
-            bool: True if written successfully
+            Event ID if recorded, None if shadow mode
         """
-        try:
-            with open(self.ledger_path, "a") as f:
-                json.dump(attestation, f)
-                f.write("\n")
+        ledger = self._get_ledger()
+        if ledger is None:
+            logger.warning("⚠️ ARCHIVIST: Cannot record attestation - shadow mode")
+            return None
 
-            self.entries_written += 1
-            logger.info(
-                f"✅ Attestation written to ledger: {attestation.get('status')} (entry #{self.entries_written})"
-            )
-            return True
+        details = {
+            "target_event": target_event,
+            "verification_result": verification_result,
+            "attestation_status": status,
+        }
 
-        except Exception as e:
-            logger.error(f"❌ Failed to write to ledger: {e}")
-            return False
+        event_id = ledger.record_event(
+            event_type=f"{ARCHIVIST_EVENT_PREFIX}attestation",
+            agent_id="archivist",
+            details=details,
+        )
 
-    def read_all(self) -> List[Dict[str, Any]]:
+        self._attestation_count += 1
+        logger.info(f"✅ ARCHIVIST: Attestation recorded → {event_id}")
+        return event_id
+
+    def get_attestations(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
-        Read all attestations from the ledger.
+        Get all attestation events from kernel.ledger.
+
+        Args:
+            limit: Maximum number of attestations to return
 
         Returns:
-            list: All attestation records
+            List of attestation events (filtered from kernel.ledger)
         """
-        attestations = []
-
-        if not self.ledger_path.exists():
-            return attestations
-
-        try:
-            with open(self.ledger_path, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        attestations.append(json.loads(line))
-
-            logger.info(f"📖 Read {len(attestations)} attestations from ledger")
-            return attestations
-
-        except Exception as e:
-            logger.error(f"❌ Failed to read ledger: {e}")
+        ledger = self._get_ledger()
+        if ledger is None:
             return []
 
-    def read_latest(self, count: int = 10) -> List[Dict[str, Any]]:
-        """
-        Read the latest N attestations.
+        all_events = ledger.get_all_events()
+        attestations = [e for e in all_events if e.get("event_type", "").startswith(ARCHIVIST_EVENT_PREFIX)]
 
-        Args:
-            count: Number of recent attestations to read
-
-        Returns:
-            list: Latest attestation records
-        """
-        all_attestations = self.read_all()
-        return all_attestations[-count:] if all_attestations else []
+        return attestations[-limit:] if len(attestations) > limit else attestations
 
     def get_attestations_for_agent(self, agent_id: str) -> List[Dict[str, Any]]:
         """
-        Get all attestations for a specific agent.
+        Get all attestations targeting a specific agent.
 
         Args:
             agent_id: Agent identifier to filter by
 
         Returns:
-            list: Attestations for that agent
+            List of attestations for that agent
         """
-        all_attestations = self.read_all()
-        return [a for a in all_attestations if a.get("target_event", {}).get("agent_id") == agent_id]
+        attestations = self.get_attestations(limit=1000)
+        return [a for a in attestations if a.get("details", {}).get("target_event", {}).get("agent_id") == agent_id]
 
     def get_statistics(self) -> Dict[str, Any]:
         """
-        Get ledger statistics.
+        Get attestation statistics.
 
         Returns:
-            dict: Statistics about the ledger
+            Statistics dict with counts and status
         """
-        attestations = self.read_all()
-        verified_count = sum(1 for a in attestations if a.get("status") == "VERIFIED")
-        failed_count = sum(1 for a in attestations if a.get("status") == "FAILED")
+        attestations = self.get_attestations(limit=10000)
+        verified_count = sum(1 for a in attestations if a.get("details", {}).get("attestation_status") == "VERIFIED")
+        failed_count = sum(1 for a in attestations if a.get("details", {}).get("attestation_status") == "FAILED")
 
         return {
             "total_attestations": len(attestations),
             "verified": verified_count,
             "failed": failed_count,
-            "ledger_path": str(self.ledger_path),
-            "entries_written_this_session": self.entries_written,
+            "session_count": self._attestation_count,
+            "source": "kernel.ledger (SRUTI)",
+            "wired": self._vibe_kernel is not None,
         }
 
-    # ==================== VibeLedger Interface Implementation ====================
-    # BLOCKER #1: Implement VibeLedger ABC interface to satisfy inheritance contract
+    # ==================== LEGACY COMPATIBILITY ====================
+    # These methods maintain backward compatibility with old code
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
-        """Record a generic event (VibeLedger ABC interface)"""
-        attestation = {
-            "event_type": event_type,
-            "agent_id": agent_id,
-            "details": details,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "RECORDED",
-        }
-        self.append(attestation)
-        return f"EVT-{self.entries_written}"
+    def append(self, attestation: Dict[str, Any]) -> bool:
+        """
+        Legacy method: Append attestation.
 
-    def record_start(self, task) -> None:
-        """Record task start (VibeLedger interface)"""
-        attestation = {
-            "event_type": "TASK_START",
-            "target_event": {
-                "task_id": getattr(task, "task_id", None),
-                "agent_id": getattr(task, "agent_id", "unknown"),
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "STARTED",
-        }
-        self.append(attestation)
+        DEPRECATED: Use record_attestation() instead.
+        """
+        logger.warning("⚠️ AuditLedger.append() is deprecated - use record_attestation()")
+        event_id = self.record_attestation(
+            target_event=attestation.get("target_event", {}),
+            verification_result=attestation,
+            status=attestation.get("status", "RECORDED"),
+        )
+        return event_id is not None
 
-    def record_completion(self, task, result: Any) -> None:
-        """Record task completion (VibeLedger interface)"""
-        attestation = {
-            "event_type": "TASK_COMPLETED",
-            "target_event": {
-                "task_id": getattr(task, "task_id", None),
-                "agent_id": getattr(task, "agent_id", "unknown"),
-            },
-            "result": result,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "VERIFIED",
-        }
-        self.append(attestation)
+    def read_all(self) -> List[Dict[str, Any]]:
+        """
+        Legacy method: Read all attestations.
 
-    def record_failure(self, task, error: str) -> None:
-        """Record task failure (VibeLedger interface)"""
-        attestation = {
-            "event_type": "TASK_FAILED",
-            "target_event": {
-                "task_id": getattr(task, "task_id", None),
-                "agent_id": getattr(task, "agent_id", "unknown"),
-            },
-            "error": error,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "status": "FAILED",
-        }
-        self.append(attestation)
+        DEPRECATED: Use get_attestations() instead.
+        """
+        return self.get_attestations(limit=10000)
 
-    def get_task(self, task_id: str) -> Optional[Dict[str, Any]]:
-        """Query task result (VibeLedger interface)"""
-        attestations = self.read_all()
-        for attestation in reversed(attestations):
-            if attestation.get("target_event", {}).get("task_id") == task_id:
-                return attestation
-        return None
+    def read_latest(self, count: int = 10) -> List[Dict[str, Any]]:
+        """
+        Legacy method: Read latest N attestations.
+        """
+        return self.get_attestations(limit=count)
+
+
+# Factory function
+def get_audit_ledger() -> AuditLedger:
+    """Get an AuditLedger instance (requires kernel injection)."""
+    return AuditLedger()
