@@ -52,6 +52,10 @@ class EventType(str, Enum):
     VOTE_CAST = "VOTE_CAST"  # Vote recorded
     AUDIT_CHECK = "AUDIT_CHECK"  # Invariant verified
 
+    # OPUS-073: Kernel heartbeat events (VAJRA-WIRING-MAP)
+    KERNEL_TICK = "KERNEL_TICK"  # Throttled kernel tick event
+    HOURLY_PULSE = "HOURLY_PULSE"  # Hourly heartbeat pulse
+
 
 class EventColor(str, Enum):
     """ANSI color codes for terminal visualization"""
