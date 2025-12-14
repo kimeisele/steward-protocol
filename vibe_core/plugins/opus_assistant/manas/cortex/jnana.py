@@ -1,9 +1,11 @@
 """
 OPUS-043: JNANA (The Conversation) - Intelligent Response Handler.
 OPUS-045: KRIYA (Action) - Chat to Intent Bridge Integration.
+OPUS-048: DHARMA (Das kosmische Gesetz) - Architectural Drift Integration.
 
 Sanskrit: Jnana = Knowledge through dialogue/understanding.
 Sanskrit: Kriya = Completed Action / Sacred Deed.
+Sanskrit: Dharma = The cosmic law, duty, order that prevents chaos.
 
 This handler makes MANAS truly intelligent by:
 1. Gathering system context (Prakriti state, git status, CI status)
@@ -36,9 +38,29 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .dharma import check_drift_for_chat
 from .kriya import KriyaBridge, KriyaExtractor
 from .samvada import SamvadaMessage, SamvadaResponse
 from .shell import ShellCortex
+
+# OPUS-048: Keywords that trigger drift checking (German + English)
+DRIFT_KEYWORDS = {
+    # German
+    "drift",
+    "verstöße",
+    "verstoße",
+    "architektur-drift",
+    "compliance",
+    "dharma",
+    "architektur prüfen",
+    "architektur audit",
+    # English
+    "architecture",
+    "violations",
+    "architectural drift",
+    "architecture check",
+    "audit architecture",
+}
 
 logger = logging.getLogger("MANAS.Cortex.Jnana")
 
@@ -372,6 +394,28 @@ class JnanaHandler:
             msg_id=msg.msg_id,
         )
 
+    async def _handle_drift(self, msg: SamvadaMessage) -> SamvadaResponse:
+        """
+        Handle drift/architecture queries via DHARMA.
+
+        OPUS-048: The Constitutional Court of Code.
+        """
+        try:
+            result = check_drift_for_chat()
+            return SamvadaResponse(
+                success=True,
+                content=result,
+                msg_id=msg.msg_id,
+            )
+        except Exception as e:
+            logger.error(f"DHARMA audit failed: {e}")
+            return SamvadaResponse(
+                success=False,
+                content="",
+                error=f"DHARMA audit error: {e}",
+                msg_id=msg.msg_id,
+            )
+
     async def _handle_chat(self, msg: SamvadaMessage) -> SamvadaResponse:
         """
         Handle general chat with LLM integration.
@@ -388,6 +432,10 @@ class JnanaHandler:
             return await self._handle_intents(msg)
         if "capabilit" in content_lower:
             return await self._handle_capabilities(msg)
+
+        # OPUS-048: Check for drift/architecture queries
+        if any(kw in content_lower for kw in DRIFT_KEYWORDS):
+            return await self._handle_drift(msg)
 
         # OPUS-045: Check if this is an action request
         is_action = KriyaExtractor.is_action_request(msg.content)
@@ -461,6 +509,7 @@ class JnanaHandler:
                     "• 'status' - Check system status\n"
                     "• 'intents' - View pending MANAS intents\n"
                     "• 'capabilities' - List system capabilities\n"
+                    "• 'drift' / 'architecture' - Check architectural compliance\n"
                     "• ACTION requests → Intent generation (with LLM)\n\n"
                     "With LLM: Ask 'Why is CI red?' or say 'Analysiere die Tests'"
                 ),
