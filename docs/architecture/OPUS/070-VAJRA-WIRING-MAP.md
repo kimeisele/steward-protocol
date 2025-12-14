@@ -492,7 +492,99 @@ identity_provider: Optional[IdentityProvider] = None
 - **Rationale**: MANAS needs KERNEL identity to break Permission Denied deadlock
 - **Review**: Refactor when abstracting identity layer (P3)
 
-## 12. References
+## 12. TREIBSAND Discovery - Event System Gap (OPUS-073)
+
+**Discovery Date**: 2025-12-14
+**Severity**: 🔴 Critical (Architecture doesn't execute)
+**Status**: ⚠️ DOCUMENTED - NOT YET FIXED
+
+### The Problem
+
+The MANAS cognitive architecture is beautifully designed but **NOT WIRED**:
+
+| Event Type | Defined In | Emitted? | Problem |
+|------------|-----------|----------|---------|
+| `KERNEL_TICK` | circuits/*.yaml | ❌ NO | kernel.tick() calls on_tick_pre() directly, not via EventBus |
+| `GIT_COMMIT` | circuits/*.yaml | ❌ NO | No git hooks emit this event |
+| `HOURLY_PULSE` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
+| `IDLE_DETECTED` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
+| `MANAS_FORCE_THINK` | manas_awakening.yaml | ❌ NO | Only callable interactively |
+
+### Impact
+
+```
+MANAS.think() → Generates intents
+       ↓
+.opus_state/manas_intents.json → Stored
+       ↓
+WHO CONSUMES THEM? → ❌ NOBODY (automatically)
+
+Heartbeat Workflow:
+  - Runs every 15 mins (GitHub Actions cron)
+  - Uses TaskManager + UnifiedRouter
+  - Runs in DRY RUN mode
+  - ❌ DISCONNECTED from MANAS entirely
+```
+
+### Root Cause
+
+`kernel.tick()` in `kernel_impl.py:993`:
+```python
+def tick(self) -> None:
+    # Plugin Hook: Pre-Tick (Direct call - NOT via EventBus!)
+    for plugin in self._plugins:
+        plugin.on_tick_pre(self)  # ← Direct invocation
+    # No event emission here!
+```
+
+The KernelTickHandler subscribes to EventBus events, but `kernel.tick()`
+calls `on_tick_pre()` directly instead of emitting events.
+
+### Required Fixes
+
+1. **Emit KERNEL_TICK events** from `kernel.tick()`:
+   ```python
+   def tick(self) -> None:
+       # Emit event to EventBus (every N ticks to avoid spam)
+       if self._tick_count % 30 == 0:  # ~3 seconds at 100ms ticks
+           asyncio.create_task(
+               self._event_bus.emit(Event(EventType.KERNEL_TICK, ...))
+           )
+   ```
+
+2. **Emit GIT_COMMIT events** via post-commit hook or watcher
+
+3. **Implement HOURLY_PULSE** in kernel tick loop:
+   ```python
+   if time.time() - self._last_hour >= 3600:
+       asyncio.create_task(self._event_bus.emit(HOURLY_PULSE))
+   ```
+
+4. **Connect Heartbeat to MANAS**:
+   - Have `heartbeat.py` import and call `manas.think()`
+   - Process safe auto-executable intents
+
+5. **Enable live execution in Heartbeat** (or add separate execution mode)
+
+### Architecture Decision
+
+- **Short term**: Document the gap, continue interactive usage
+- **Medium term**: Wire the event system properly (OPUS-073)
+- **Long term**: True autonomous operation via Heartbeat + MANAS
+
+### Test Evidence
+
+Run in workspace:
+```bash
+grep -r "emit.*KERNEL_TICK" vibe_core/  # Returns nothing
+grep -r "emit.*GIT_COMMIT" vibe_core/   # Returns nothing
+```
+
+*"Architektur ohne Ausführung = Treibsand."*
+
+---
+
+## 13. References
 
 | Document | Purpose |
 |----------|---------|
