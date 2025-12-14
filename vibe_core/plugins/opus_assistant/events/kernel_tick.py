@@ -59,6 +59,15 @@ except ImportError:
     TEST_CORTEX_AVAILABLE = False
     TestCortex = None
 
+# 🔀 OPUS-065: DHARMA-JNANA - IntentRouter for execution
+try:
+    from vibe_core.plugins.opus_assistant.manas.intent_router import create_execution_callback
+
+    INTENT_ROUTER_AVAILABLE = True
+except ImportError:
+    INTENT_ROUTER_AVAILABLE = False
+    create_execution_callback = None
+
 # 💎 OPUS-037: DIAMOND PROTOCOL - TDD Enforcement Handlers
 try:
     from vibe_core.plugins.opus_assistant.events.diamond_handlers import get_diamond_handlers
@@ -215,6 +224,12 @@ class KernelTickHandler:
                 self._test_cortex = TestCortex(workspace=workspace)
                 self._test_cortex.inject_kernel(kernel)
                 logger.info("⚡ PRAMANA: TestCortex initialized for self-testing")
+
+            # 🔀 OPUS-065: DHARMA-JNANA - Wire IntentRouter as execution callback
+            if INTENT_ROUTER_AVAILABLE:
+                execution_callback = create_execution_callback(workspace=workspace, kernel=kernel)
+                self._manas.set_execution_callback(execution_callback)
+                logger.info("🔀 DHARMA-JNANA: IntentRouter connected to MANAS")
 
             self._manas_ready = True
             logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
