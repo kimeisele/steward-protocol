@@ -51,6 +51,15 @@ from vibe_core.semantic_syscalls import (
     SyscallType,
 )
 
+# OPUS-072: MANAS identity for syscalls
+try:
+    from vibe_core.cartridges.system.manas import ManasCartridge
+
+    MANAS_AVAILABLE = True
+except ImportError:
+    MANAS_AVAILABLE = False
+    ManasCartridge = None
+
 logger = logging.getLogger("CIRCUIT_EXECUTOR")
 
 
@@ -794,10 +803,15 @@ class CognitiveCircuitExecutor:
                             state.variables,
                         )
 
+                        # OPUS-072: Use MANAS identity for privileged syscalls
+                        effective_requester = requester_id
+                        if MANAS_AVAILABLE and ManasCartridge:
+                            effective_requester = ManasCartridge.get_syscall_identity(syscall_type_str)
+
                         request = SyscallRequest(
                             syscall_type=syscall_type,
                             params=params,
-                            requester_id=requester_id,
+                            requester_id=effective_requester,
                         )
 
                     result = self.syscall_executor.execute(request)

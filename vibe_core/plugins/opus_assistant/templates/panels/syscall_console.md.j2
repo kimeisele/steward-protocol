@@ -20,20 +20,24 @@
 {% if syscalls and syscalls.history %}
 {% set stats = syscalls.stats %}
 
-**Status:** {{ stats.success_rate }}% success rate | {{ stats.total }} total | {{ stats.successful }} learned
+**Status:** {{ stats.adjusted_success_rate|default(stats.success_rate) }}% real success | {{ stats.total }} total | {{ stats.successful }} learned
+{% if stats.security_denials|default(0) > 0 %}
+> 🔒 **Security System Active:** {{ stats.security_denials }} permission denials (correct behavior, not failures!)
+{% endif %}
 
 {% if syscalls.history %}
 | Time | Intent | Type | Result |
 |------|--------|------|--------|
 {% for entry in syscalls.history[:5] %}
-| `{{ entry.timestamp[-8:] }}` | {{ entry.intent[:35] }}{% if entry.intent|length > 35 %}...{% endif %} | **{{ entry.syscall_type }}** | {{ "✅" if entry.result == "SUCCESS" else ("🟡" if entry.result == "PARTIAL" else "❌") }} |
+| `{{ entry.timestamp[-8:] }}` | {{ entry.intent[:35] }}{% if entry.intent|length > 35 %}...{% endif %} | **{{ entry.syscall_type }}** | {{ "✅" if entry.result == "SUCCESS" else ("🔒" if "Permission denied" in (entry.output|string) else "❌") }} |
 {% endfor %}
 {% endif %}
 
 {% if stats.by_type %}
 **By Type:**
 {% for stype, sdata in stats.by_type.items() %}
-- `{{ stype }}`: {{ sdata.successful }}/{{ sdata.total }} successful
+- `{{ stype }}`: {{ sdata.successful }}/{{ sdata.total }} successful{% if sdata.security_denials|default(0) > 0 %} (🔒 {{ sdata.security_denials }} security blocks){% endif %}
+
 {% endfor %}
 {% endif %}
 
