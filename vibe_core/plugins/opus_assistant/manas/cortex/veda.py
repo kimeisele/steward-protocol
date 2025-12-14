@@ -79,6 +79,11 @@ class VedaIntent(Enum):
     # MANDALA (Configuration)
     MANDALA = "mandala"
 
+    # AKASHA (Knowledge Graph)
+    AKASHA = "akasha"
+    KNOWLEDGE = "knowledge"
+    DEPENDENCIES = "dependencies"
+
     # KRIYA (Actions)
     ACTION = "action"
 
@@ -425,6 +430,30 @@ class Artha:
             "cartridges",
             "capabilities",
         },
+        VedaIntent.AKASHA: {
+            "akasha",
+            "knowledge",
+            "wissen",
+            "graph",
+            "dependencies",
+            "abhängigkeiten",
+            "depends",
+            "hängt",
+            "constraints",
+            "einschränkungen",
+        },
+        VedaIntent.KNOWLEDGE: {
+            "what is",
+            "was ist",
+            "describe",
+            "beschreibe",
+        },
+        VedaIntent.DEPENDENCIES: {
+            "depends on",
+            "abhängig von",
+            "what depends",
+            "was hängt ab",
+        },
         VedaIntent.ACTION: {
             # English action verbs (state-changing)
             "run",
@@ -461,6 +490,9 @@ class Artha:
         VedaIntent.ARCHITECTURE: "_handle_drift",
         VedaIntent.COMPLIANCE: "_handle_drift",
         VedaIntent.MANDALA: "_handle_mandala",
+        VedaIntent.AKASHA: "_handle_akasha",
+        VedaIntent.KNOWLEDGE: "_handle_akasha",
+        VedaIntent.DEPENDENCIES: "_handle_akasha",
         VedaIntent.ACTION: "_handle_action",
         VedaIntent.CHAT: "_handle_chat_llm",
         VedaIntent.UNKNOWN: "_handle_chat_llm",
@@ -547,6 +579,8 @@ class Artha:
             hints.append("respond_in_german")
         if intent in {VedaIntent.DRIFT, VedaIntent.ARCHITECTURE, VedaIntent.COMPLIANCE}:
             hints.append("dharma_context_needed")
+        if intent in {VedaIntent.AKASHA, VedaIntent.KNOWLEDGE, VedaIntent.DEPENDENCIES}:
+            hints.append("akasha_context_needed")
 
         return hints
 
