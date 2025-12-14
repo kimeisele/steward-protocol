@@ -43,6 +43,24 @@ except ImportError:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("HEARTBEAT")
 
+# PRANA integration - config-driven behavior
+# Allows changing heartbeat behavior via config/prana.yaml WITHOUT touching
+# the VISNU-protected workflow files in .github/workflows/
+try:
+    from vibe_core.prana import (
+        ensure_kernel_running,
+        get_last_heartbeat,
+        record_heartbeat,
+    )
+    from vibe_core.prana import (
+        load_config as load_prana_config,
+    )
+
+    PRANA_AVAILABLE = True
+except ImportError:
+    PRANA_AVAILABLE = False
+    load_prana_config = None
+
 
 class HeartbeatEngine:
     """The Autonomous Task Orchestrator."""
@@ -443,7 +461,55 @@ Write your tasks here. The heartbeat will pick them up automatically.
 
 
 def main():
-    """Main entry point."""
+    """
+    Main entry point.
+
+    PRANA Integration:
+    - Checks config/prana.yaml for settings
+    - Respects min_interval_minutes to prevent duplicate runs
+    - Optionally boots kernel before processing tasks
+    - Records heartbeat timestamp for tracking
+
+    This allows changing behavior WITHOUT modifying VISNU-protected workflows.
+    """
+    # PRANA: Config-driven behavior
+    if PRANA_AVAILABLE:
+        config = load_prana_config()
+
+        # Check if heartbeat is enabled
+        if not config.heartbeat.enabled:
+            logger.info("💓 PRANA: Heartbeat disabled in config. Exiting.")
+            return
+
+        # Check minimum interval (prevent duplicate runs)
+        last_pulse = get_last_heartbeat()
+        if last_pulse:
+            from datetime import datetime, timedelta
+
+            try:
+                last_dt = datetime.fromisoformat(last_pulse)
+                min_interval = timedelta(minutes=config.heartbeat.min_interval_minutes)
+                if datetime.utcnow() - last_dt < min_interval:
+                    logger.info(
+                        f"💓 PRANA: Skipping - last pulse was {last_pulse} (interval: {config.heartbeat.min_interval_minutes}min)"
+                    )
+                    return
+            except Exception as e:
+                logger.warning(f"⚠️ Could not parse last heartbeat: {e}")
+
+        # Boot kernel if configured
+        if config.heartbeat.boot_kernel_first:
+            logger.info("💓 PRANA: Ensuring kernel is running...")
+            ensure_kernel_running(config)
+
+        # Record this heartbeat
+        record_heartbeat()
+
+        logger.info(f"💓 PRANA: Config loaded - max_tasks={config.heartbeat.max_tasks_per_pulse}")
+    else:
+        logger.warning("⚠️ PRANA not available - running with defaults")
+
+    # Run the heartbeat
     engine = HeartbeatEngine(project_root)
     engine.pulse()
 
