@@ -9,7 +9,8 @@
 | SrutiValidator | ✅ | `manas/validator.py` |
 | No Plugin Databases | ✅ | Verified - only JSON state |
 | Ledger Integration | ✅ | `vibe_core/ledger.py` |
-| IntentRouter Hook | ⏳ | Pending |
+| IntentRouter Hook | ✅ | `manas/intent_router.py:86` |
+| VAJRA Kernel Injection | ✅ | `inject_kernel()` pattern |
 
 ## 1. The Core Axiom
 
@@ -153,20 +154,54 @@ SAME PATTERN. DIFFERENT DOMAIN. FRACTAL LASAGNA.
 
 ## 6. Integration Points
 
-### IntentRouter Hook (Pending)
+### IntentRouter Hook (IMPLEMENTED ✅)
 
 ```python
 # In intent_router.py
-def route(self, intent: Intent) -> Dict[str, Any]:
-    result = self._execute_intent(intent)
 
-    # OPUS-069: Validate output before returning
-    validation = self._validator.validate_intent_output(result)
-    if not validation.valid:
-        logger.warning(f"⚠️ SRUTI: {validation.errors}")
+class IntentRouter:
+    def __init__(self, workspace: Optional[Path] = None):
+        self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
 
-    return result
+    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+        """⚡ VAJRA: Inject kernel for ledger access."""
+        self._kernel = kernel
+        # OPUS-069: Wire validator to kernel for ledger access
+        self._validator.inject_kernel(kernel)
+
+    def route(self, intent: Intent) -> RouteResult:
+        result = handler(intent)
+
+        # OPUS-069: Validate output against Sruti (Ledger)
+        validation = self._validator.validate_intent_output(result)
+        if not validation.valid:
+            logger.warning(f"⚠️ SRUTI VIOLATION: {validation.errors}")
+            result["sruti_validation"] = validation.to_dict()
+
+        return RouteResult(...)
 ```
+
+### VAJRA Binding Pattern
+
+All MANAS components receive ledger access via the VAJRA kernel injection pattern:
+
+```python
+class SrutiValidator:
+    def inject_kernel(self, kernel) -> None:
+        """⚡ VAJRA: Inject kernel for ledger access."""
+        self._vibe_kernel = kernel
+
+    def _get_ledger(self):
+        """Get ledger via VAJRA kernel binding (not via file discovery)."""
+        if self._vibe_kernel is None:
+            return None  # Permissive mode
+        return self._vibe_kernel.ledger
+```
+
+**Why VAJRA?** The kernel owns the ledger. Plugins don't discover it on disk - they receive it through injection. This ensures:
+1. Single source of truth
+2. Thread-safe access
+3. Proper initialization order
 
 ### MANAS Prompt Update
 
