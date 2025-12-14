@@ -289,8 +289,9 @@ class IntentRouter:
                 "success": True,
                 "handler": "DHARMA",
                 "violations_found": len(report.violations),
-                "drift_detected": report.has_drift,
-                "message": f"DHARMA audit complete: {len(report.violations)} violations",
+                "drift_detected": report.total_violations > 0,
+                "compliance_score": report.compliance_score,
+                "message": f"DHARMA audit complete: {len(report.violations)} violations, {report.compliance_score:.1f}% compliant",
             }
         except Exception as e:
             return {"success": False, "handler": "DHARMA", "error": str(e)}
