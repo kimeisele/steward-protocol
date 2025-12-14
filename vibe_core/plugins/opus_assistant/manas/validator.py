@@ -161,29 +161,33 @@ class SrutiValidator:
     def __init__(self, workspace: Optional[Path] = None):
         """Initialize SrutiValidator with workspace context."""
         self._workspace = workspace or Path.cwd()
-        self._ledger = None
+        # ⚡ VAJRA: Core kernel reference for ledger binding
+        self._vibe_kernel = None
+
+    def inject_kernel(self, kernel) -> None:
+        """
+        ⚡ VAJRA: Inject the core VibeKernel for ledger access.
+
+        OPUS-069 SRUTI: The validator MUST read from the core ledger.
+        Without kernel injection, it operates in "permissive mode" (no validation).
+
+        Args:
+            kernel: The RealVibeKernel instance with ledger access
+        """
+        self._vibe_kernel = kernel
+        logger.info("⚡ SRUTI: Kernel injected - ledger binding ACTIVE")
 
     def _get_ledger(self):
-        """Lazy load ledger connection."""
-        if self._ledger is None:
-            try:
-                from vibe_core.ledger import SQLiteLedger
+        """Get ledger via VAJRA kernel binding (not via file discovery)."""
+        if self._vibe_kernel is None:
+            logger.debug("⚠️ SRUTI: No kernel - operating in permissive mode")
+            return None
 
-                ledger_path = self._workspace / "data" / "ledger.db"
-                if ledger_path.exists():
-                    self._ledger = SQLiteLedger(str(ledger_path))
-                    logger.info("✅ SrutiValidator: Connected to Ledger (SRUTI)")
-                else:
-                    # Fall back to in-memory for testing
-                    from vibe_core.ledger import InMemoryLedger
+        if not hasattr(self._vibe_kernel, "ledger"):
+            logger.warning("⚠️ SRUTI: Kernel has no ledger attribute")
+            return None
 
-                    self._ledger = InMemoryLedger()
-                    logger.warning("⚠️ SrutiValidator: Using InMemoryLedger (no persistence)")
-            except ImportError as e:
-                logger.error(f"❌ SrutiValidator: Cannot import Ledger: {e}")
-                self._ledger = None
-
-        return self._ledger
+        return self._vibe_kernel.ledger
 
     def validate_claim(
         self,
@@ -265,24 +269,38 @@ class SrutiValidator:
             )
 
     def _verify_ledger_ref(self, ref: str) -> bool:
-        """Verify a Ledger reference exists."""
+        """
+        Verify a Ledger reference exists.
+
+        Uses the correct Ledger API:
+        - SQLiteLedger: get_all_events() returns List[Dict]
+        - InMemoryLedger: events attribute (List[Dict])
+
+        Both return events with 'event_id' key.
+        """
         ledger = self._get_ledger()
         if ledger is None:
-            logger.warning(f"⚠️ Cannot verify ref {ref} - no Ledger connection")
-            return True  # Permissive fallback
+            logger.debug(f"⚠️ SRUTI: Cannot verify ref {ref} - no ledger (permissive mode)")
+            return True  # Permissive fallback when no kernel
 
         try:
-            # Try to find event by ID
-            if hasattr(ledger, "get_event"):
-                event = ledger.get_event(ref)
-                return event is not None
+            # SQLiteLedger and InMemoryLedger both support get_all_events()
+            if hasattr(ledger, "get_all_events"):
+                events = ledger.get_all_events()
+                found = any(e.get("event_id") == ref for e in events)
+                if found:
+                    logger.debug(f"✅ SRUTI: Verified ref {ref}")
+                else:
+                    logger.warning(f"⚠️ SRUTI: Ref {ref} not found in ledger ({len(events)} events)")
+                return found
             elif hasattr(ledger, "events"):
-                # InMemoryLedger
+                # Direct access for InMemoryLedger
                 return any(e.get("event_id") == ref for e in ledger.events)
             else:
+                logger.warning("⚠️ SRUTI: Unknown ledger type - permissive fallback")
                 return True  # Permissive fallback
         except Exception as e:
-            logger.error(f"❌ Error verifying ref {ref}: {e}")
+            logger.error(f"❌ SRUTI: Error verifying ref {ref}: {e}")
             return True  # Permissive fallback
 
     def validate_intent_output(

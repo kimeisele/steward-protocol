@@ -76,9 +76,15 @@ class IntentRouter:
         self._register_handlers()
 
     def inject_kernel(self, kernel: "RealVibeKernel") -> None:
-        """VAJRA: Inject kernel for ledger access."""
+        """
+        ⚡ VAJRA: Inject kernel for ledger access.
+
+        OPUS-069: Also injects into SrutiValidator for SRUTI validation.
+        """
         self._kernel = kernel
-        logger.info("⚡ IntentRouter: Kernel injected")
+        # OPUS-069: Wire validator to kernel for ledger access
+        self._validator.inject_kernel(kernel)
+        logger.info("⚡ IntentRouter: Kernel injected (+ SrutiValidator bound)")
 
     def _register_handlers(self) -> None:
         """Register intent type → handler mappings."""
