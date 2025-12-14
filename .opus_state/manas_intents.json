@@ -1,0 +1,60 @@
+{
+  "intents": [
+    {
+      "intent": {
+        "id": "ci_status_d372619b",
+        "intent_type": "ci_status_failure",
+        "title": "System Status Check Failed",
+        "description": "The 'status' command returned exit code 1. Stderr: none",
+        "reasoning": "MANAS detected that the system status check failed. This could indicate kernel issues or configuration problems.",
+        "priority": "high",
+        "risk": "safe",
+        "created_at": "2025-12-14T16:54:51.439040",
+        "circuit_to_execute": null,
+        "params": {
+          "exit_code": 1,
+          "stdout": "======================================================================\n\ud83c\udf9b\ufe0f  STEWARD PROTOCOL - SYSTEM STATUS\n======================================================================\n\n\ud83d\udcca SYSTEM HEALTH:\n   Kernel:     \u274c OFFLINE\n   Pulse:      \u274c LOST (dashboard stale)\n   Parampara:  \u2705 VERIFIED (4193 blocks)\n   Agents:     15 certified\n\n\u26a0\ufe0f  WARNING: Kernel pulse lost or kernel not running\n   Try: steward boot\n",
+          "stderr": ""
+        },
+        "auto_executable": false,
+        "expires_at": null
+      },
+      "status": "pending",
+      "added_at": "2025-12-14T16:54:52.769105",
+      "executed_at": null,
+      "execution_result": null
+    },
+    {
+      "intent": {
+        "id": "genesis_0002",
+        "intent_type": "semantic_gap_test",
+        "title": "Create tests for MANAS cognitive kernel",
+        "description": "The brain of OPUS needs tests: cognitive_kernel.py, intent_generator.py, memory_store.py, analyzers/ci_monitor_analyzer.py, analyzers/contract_analyzer.py, analyzers/semantic_analyzer.py",
+        "reasoning": "MANAS is the cognitive core. Tests ensure the mind stays sharp.",
+        "priority": "medium",
+        "risk": "safe",
+        "created_at": "2025-12-14T16:54:50.371448",
+        "circuit_to_execute": null,
+        "params": {
+          "plugin": "opus_assistant",
+          "untested_files": [
+            "cognitive_kernel.py",
+            "intent_generator.py",
+            "memory_store.py",
+            "analyzers/ci_monitor_analyzer.py",
+            "analyzers/contract_analyzer.py",
+            "analyzers/semantic_analyzer.py"
+          ],
+          "type": "manas"
+        },
+        "auto_executable": true,
+        "expires_at": null
+      },
+      "status": "pending",
+      "added_at": "2025-12-14T16:54:52.785130",
+      "executed_at": null,
+      "execution_result": null
+    }
+  ],
+  "updated_at": "2025-12-14T16:54:52.785525"
+}
