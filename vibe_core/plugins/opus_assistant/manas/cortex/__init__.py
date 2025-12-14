@@ -4,11 +4,13 @@ MANAS Cortex - The Sensory-Motor Interface.
 OPUS-041: VAK (The Voice)
 OPUS-042: SAMVADA (The Dialogue)
 OPUS-043: JNANA (The Conversation)
+OPUS-059: PRAMANA (The Valid Proof)
 
 The cortex modules provide MANAS with interfaces to the external world:
 - ShellCortex: Safe CLI command execution
 - SamvadaListener/Client: Real-time human-MANAS dialogue
 - JnanaHandler: Intelligent LLM-powered responses
+- TestCortex: Safe test execution interface
 
 "The brain alone is not enough - it needs hands to act and ears to hear."
 """
@@ -31,6 +33,11 @@ from vibe_core.plugins.opus_assistant.manas.cortex.shell import (
     ShellCortex,
     ShellResult,
 )
+from vibe_core.plugins.opus_assistant.manas.cortex.test import (
+    TestCortex,
+    TestCortexResult,
+    TestScope,
+)
 
 __all__ = [
     # OPUS-041: VAK (The Voice)
@@ -48,4 +55,8 @@ __all__ = [
     "create_manas_handler",
     # OPUS-043: JNANA (The Conversation)
     "JnanaHandler",
+    # OPUS-059: PRAMANA (The Valid Proof)
+    "TestCortex",
+    "TestCortexResult",
+    "TestScope",
 ]
