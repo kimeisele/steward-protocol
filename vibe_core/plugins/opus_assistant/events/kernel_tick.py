@@ -50,6 +50,15 @@ except ImportError:
     CognitiveKernel = None
     ManasConfig = None
 
+# ⚡ OPUS-059: PRAMANA - TestCortex for MANAS self-testing
+try:
+    from vibe_core.plugins.opus_assistant.manas.cortex.test import TestCortex
+
+    TEST_CORTEX_AVAILABLE = True
+except ImportError:
+    TEST_CORTEX_AVAILABLE = False
+    TestCortex = None
+
 # 💎 OPUS-037: DIAMOND PROTOCOL - TDD Enforcement Handlers
 try:
     from vibe_core.plugins.opus_assistant.events.diamond_handlers import get_diamond_handlers
@@ -123,6 +132,9 @@ class KernelTickHandler:
         self._manas_ready = False
         self._hourly_pulse_tick = 0  # Track ticks for hourly pulse
 
+        # ⚡ OPUS-059: PRAMANA - TestCortex for self-testing
+        self._test_cortex: Optional[Any] = None
+
         # Initialize services
         self._init_context_service()
         self._init_observation_logger()
@@ -170,11 +182,13 @@ class KernelTickHandler:
     def _init_manas(self) -> None:
         """
         🧠 OPUS-032: Initialize MANAS - The Cognitive Kernel.
+        ⚡ OPUS-059: Initialize TestCortex for self-testing.
 
         MANAS transforms OPUS from reactive to proactive:
         - Generates intents from system state
         - Populates Intent Buffer in OPUS.md
         - Learns from past actions via MemoryStore
+        - Can run smoke tests to verify its own environment
         """
         if not MANAS_AVAILABLE:
             logger.debug("⚠️ MANAS not available - proactive cognition disabled")
@@ -195,6 +209,12 @@ class KernelTickHandler:
             if kernel:
                 self._manas.inject_kernel(kernel)
                 logger.info("⚡ VAJRA: MANAS bound to core ledger")
+
+            # ⚡ PRAMANA: Initialize TestCortex for self-testing
+            if TEST_CORTEX_AVAILABLE and kernel:
+                self._test_cortex = TestCortex(workspace=workspace)
+                self._test_cortex.inject_kernel(kernel)
+                logger.info("⚡ PRAMANA: TestCortex initialized for self-testing")
 
             self._manas_ready = True
             logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
@@ -229,6 +249,13 @@ class KernelTickHandler:
                 if self._manas and not getattr(self._manas, "_vibe_kernel", None):
                     self._manas.inject_kernel(kernel)
                     logger.info("⚡ VAJRA: MANAS late-bound to core ledger")
+
+                # ⚡ PRAMANA: Late kernel injection for TestCortex
+                if TEST_CORTEX_AVAILABLE and not self._test_cortex:
+                    workspace = self._plugin._workspace or Path.cwd()
+                    self._test_cortex = TestCortex(workspace=workspace)
+                    self._test_cortex.inject_kernel(kernel)
+                    logger.info("⚡ PRAMANA: TestCortex late-bound to core kernel")
 
                 return True
         except Exception as e:
