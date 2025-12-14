@@ -188,6 +188,12 @@ quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+]
+
 # ==============================================================================
 # LEGACY: Black configuration (kept for reference, replaced by ruff)
 # ==============================================================================

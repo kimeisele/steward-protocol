@@ -1,5 +1,6 @@
 """
 Deterministic Playbook Executor - PANOPTICON+ Layer 3.
+OPUS-059 PRAMANA: VAJRA Ledger Integration
 
 Executes multi-stage playbooks using deterministic handlers instead of LLM agents.
 This enables automated test suite generation and validation workflows.
@@ -10,6 +11,7 @@ Key Features:
 - Loop support (max_iterations)
 - Quality gate enforcement
 - Audit trail generation
+- ⚡ VAJRA: All playbook executions recorded to core ledger
 
 Usage:
     from vibe_core.plugins.test_orchestration import DeterministicPlaybookExecutor
@@ -18,14 +20,18 @@ Usage:
     result = executor.execute("comprehensive_test_suite", {"component_path": "vibe_core/plugins/foo"})
 """
 
+import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from vibe_core.loaders import PlaybookLoader, PlaybookMeta, PlaybookStage
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("PLAYBOOK.EXECUTOR")
 
@@ -74,6 +80,9 @@ class DeterministicPlaybookExecutor:
     """
     Executes playbooks using deterministic handlers.
 
+    OPUS-059 PRAMANA: Now with VAJRA ledger integration.
+    All playbook executions are recorded for audit trail.
+
     Instead of LLM agents, this executor uses registered handler functions
     that perform deterministic operations (AST parsing, pattern matching, etc.).
 
@@ -86,10 +95,73 @@ class DeterministicPlaybookExecutor:
             return {"analysis": {...}}
     """
 
-    def __init__(self):
+    def __init__(self, kernel: Optional["RealVibeKernel"] = None):
         self.handlers: Dict[str, HandlerFunc] = {}
         self.playbooks: Dict[str, PlaybookMeta] = {}
+        self._kernel: Optional["RealVibeKernel"] = kernel
         self._register_default_handlers()
+
+    # =========================================================================
+    # ⚡ VAJRA: KERNEL INJECTION (OPUS-059)
+    # =========================================================================
+
+    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+        """
+        Inject the core VibeKernel for ledger access.
+
+        OPUS-059 PRAMANA: Every playbook execution MUST be recorded.
+        Without kernel injection, executor operates in "shadow mode".
+
+        Args:
+            kernel: The RealVibeKernel instance
+        """
+        self._kernel = kernel
+        logger.info("⚡ PRAMANA: PlaybookExecutor bound to core kernel")
+
+    def _record_to_ledger(
+        self,
+        event_type: str,
+        playbook_id: str,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """
+        Record a playbook event to the core ledger.
+
+        OPUS-059 PRAMANA: Audit trail for all playbook actions.
+
+        Args:
+            event_type: Type of event (PLAYBOOK_STARTED, PLAYBOOK_COMPLETED, etc.)
+            playbook_id: The playbook being executed
+            details: Optional additional details
+
+        Returns:
+            Event ID if recorded, None if no kernel available
+        """
+        if not self._kernel:
+            logger.debug("⚠️ PRAMANA: No kernel - playbook not ledgered (shadow mode)")
+            return None
+
+        # Build playbook hash for integrity
+        pb_hash = hashlib.sha256(playbook_id.encode()).hexdigest()[:16]
+
+        event_details = {
+            "playbook_id": playbook_id,
+            "playbook_hash": pb_hash,
+        }
+        if details:
+            event_details.update(details)
+
+        try:
+            event_id = self._kernel.ledger.record_event(
+                event_type=event_type,
+                agent_id="playbook_executor",
+                details=event_details,
+            )
+            logger.debug(f"⚡ PRAMANA: {event_type} recorded → {event_id}")
+            return event_id
+        except Exception as e:
+            logger.error(f"⚡ PRAMANA: Failed to record {event_type}: {e}")
+            return None
 
     def _register_default_handlers(self):
         """Register default handlers for common actions."""
@@ -234,6 +306,8 @@ class DeterministicPlaybookExecutor:
         """
         Execute a playbook with given inputs.
 
+        OPUS-059 PRAMANA: All executions recorded to ledger.
+
         Args:
             playbook_id: ID of the playbook to execute
             inputs: Input values for the playbook
@@ -260,6 +334,17 @@ class DeterministicPlaybookExecutor:
             )
 
         logger.info(f"Executing playbook: {playbook_id} ({len(playbook.stages)} stages)")
+
+        # ⚡ PRAMANA: Record playbook start
+        self._record_to_ledger(
+            "PLAYBOOK_STARTED",
+            playbook_id,
+            {
+                "stages": len(playbook.stages),
+                "dry_run": dry_run,
+                "inputs_keys": list(inputs.keys()),
+            },
+        )
 
         # Get execution order
         execution_order = PlaybookLoader.get_execution_order(playbook)
@@ -307,7 +392,7 @@ class DeterministicPlaybookExecutor:
         # SUCCESS or LOOP_BACK both count as successful execution
         success = all(r.status in (StageStatus.SUCCESS, StageStatus.LOOP_BACK) for r in stage_results) and gate_passed
 
-        return PlaybookResult(
+        result = PlaybookResult(
             playbook_id=playbook_id,
             success=success,
             stages=stage_results,
@@ -316,6 +401,22 @@ class DeterministicPlaybookExecutor:
             quality_gate_failures=gate_failures,
             total_duration_ms=total_duration,
         )
+
+        # ⚡ PRAMANA: Record playbook completion
+        self._record_to_ledger(
+            "PLAYBOOK_COMPLETED" if success else "PLAYBOOK_FAILED",
+            playbook_id,
+            {
+                "success": success,
+                "stages_executed": len(stage_results),
+                "stages_passed": sum(1 for r in stage_results if r.status == StageStatus.SUCCESS),
+                "stages_failed": sum(1 for r in stage_results if r.status == StageStatus.FAILED),
+                "quality_gates_passed": gate_passed,
+                "duration_ms": total_duration,
+            },
+        )
+
+        return result
 
     def _execute_stage(
         self,
@@ -447,14 +548,19 @@ def execute_playbook(
     playbook_id: str,
     inputs: Dict[str, Any],
     dry_run: bool = False,
+    kernel: Optional["RealVibeKernel"] = None,
 ) -> PlaybookResult:
     """
     Convenience function to execute a playbook.
 
+    OPUS-059 PRAMANA: Pass kernel for ledger integration.
+
     Usage:
         result = execute_playbook("comprehensive_test_suite", {"component_path": "path/to/plugin"})
+        # With ledger:
+        result = execute_playbook("...", {...}, kernel=kernel)
     """
-    executor = DeterministicPlaybookExecutor()
+    executor = DeterministicPlaybookExecutor(kernel=kernel)
     return executor.execute(playbook_id, inputs, dry_run)
 
 
