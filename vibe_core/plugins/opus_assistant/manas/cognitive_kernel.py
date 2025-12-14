@@ -17,15 +17,19 @@ The Cognitive Kernel transforms OPUS from a reactive system
 to a proactive autonomous agent.
 """
 
+import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
 from .memory_store import MemoryStore
+
+if TYPE_CHECKING:
+    from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("MANAS.Kernel")
 
@@ -212,7 +216,83 @@ class CognitiveKernel:
         # Callbacks for execution
         self._execution_callback: Optional[Callable[[Intent], Dict[str, Any]]] = None
 
+        # ⚡ VAJRA: Core kernel reference for ledger binding
+        self._vibe_kernel: Optional["RealVibeKernel"] = None
+
         logger.info("MANAS Cognitive Kernel initialized")
+
+    # =========================================================================
+    # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
+    # =========================================================================
+
+    def inject_kernel(self, kernel: "RealVibeKernel") -> None:
+        """
+        Inject the core VibeKernel for ledger access.
+
+        OPUS-057 VAJRA: Every intent MUST be recorded in the ledger.
+        Without kernel injection, MANAS operates in "shadow mode" (no ledger).
+
+        Args:
+            kernel: The RealVibeKernel instance
+        """
+        self._vibe_kernel = kernel
+        logger.info("⚡ VAJRA: Kernel injected - ledger binding ACTIVE")
+
+    def _record_to_ledger(
+        self,
+        event_type: str,
+        intent: Intent,
+        extra_data: Optional[Dict[str, Any]] = None,
+    ) -> Optional[str]:
+        """
+        Record an intent event to the core ledger.
+
+        OPUS-057 VAJRA: Cryptographic binding of all MANAS actions.
+
+        Args:
+            event_type: Type of event (INTENT_PROPOSED, INTENT_EXECUTED, etc.)
+            intent: The intent being recorded
+            extra_data: Additional data to include
+
+        Returns:
+            Event ID if recorded, None if no kernel available
+        """
+        if not self._vibe_kernel:
+            logger.debug("⚠️ VAJRA: No kernel - intent not ledgered (shadow mode)")
+            return None
+
+        # Build intent hash for integrity
+        intent_data = {
+            "id": intent.id,
+            "type": intent.intent_type,
+            "title": intent.title,
+            "risk": intent.risk.value,
+            "priority": intent.priority.value,
+            "params": intent.params,
+        }
+        intent_hash = hashlib.sha256(json.dumps(intent_data, sort_keys=True).encode()).hexdigest()[:16]
+
+        details = {
+            "intent_id": intent.id,
+            "intent_type": intent.intent_type,
+            "intent_title": intent.title,
+            "intent_risk": intent.risk.value,
+            "intent_priority": intent.priority.value,
+            "intent_hash": intent_hash,
+            **(extra_data or {}),
+        }
+
+        try:
+            event_id = self._vibe_kernel.ledger.record_event(
+                event_type=event_type,
+                agent_id="manas",
+                details=details,
+            )
+            logger.debug(f"⚡ VAJRA: {event_type} recorded → {event_id}")
+            return event_id
+        except Exception as e:
+            logger.error(f"⚡ VAJRA: Failed to record {event_type}: {e}")
+            return None
 
     # =========================================================================
     # CORE API
@@ -262,6 +342,16 @@ class CognitiveKernel:
                 self._intent_buffer.append(entry)
                 added.append(intent)
 
+                # ⚡ VAJRA: Record intent proposal to ledger
+                self._record_to_ledger(
+                    event_type="MANAS_INTENT_PROPOSED",
+                    intent=intent,
+                    extra_data={
+                        "proposed_at": datetime.utcnow().isoformat(),
+                        "auto_executable": intent.auto_executable,
+                    },
+                )
+
                 # Auto-execute if safe OR if karma gate allows (earned autonomy)
                 is_safe = self._config.auto_execute_safe and intent.auto_executable and intent.risk == IntentRisk.SAFE
                 is_trusted = self._karma_allows_auto_execute(intent)
@@ -298,6 +388,8 @@ class CognitiveKernel:
         """
         Approve an intent for execution.
 
+        OPUS-057 VAJRA: Approvals are recorded to the ledger.
+
         Args:
             intent_id: ID of the intent to approve
 
@@ -314,11 +406,21 @@ class CognitiveKernel:
             return False
 
         entry.status = "approved"
+
+        # ⚡ VAJRA: Record approval to ledger
+        self._record_to_ledger(
+            event_type="MANAS_INTENT_APPROVED",
+            intent=entry.intent,
+            extra_data={"approved_at": datetime.utcnow().isoformat()},
+        )
+
         return self._execute_intent(entry)
 
     def reject_intent(self, intent_id: str, reason: Optional[str] = None) -> bool:
         """
         Reject an intent.
+
+        OPUS-057 VAJRA: Rejections are recorded to the ledger.
 
         Args:
             intent_id: ID of the intent to reject
@@ -333,6 +435,16 @@ class CognitiveKernel:
             return False
 
         entry.status = "rejected"
+
+        # ⚡ VAJRA: Record rejection to ledger
+        self._record_to_ledger(
+            event_type="MANAS_INTENT_REJECTED",
+            intent=entry.intent,
+            extra_data={
+                "rejected_at": datetime.utcnow().isoformat(),
+                "reason": reason,
+            },
+        )
 
         # Record in memory (so we don't suggest it again soon)
         self._memory.record_intent_outcome(
@@ -493,6 +605,8 @@ class CognitiveKernel:
         """
         Execute an approved intent.
 
+        OPUS-057 VAJRA: All executions are recorded to the ledger.
+
         Args:
             entry: The intent buffer entry to execute
 
@@ -505,6 +619,13 @@ class CognitiveKernel:
         start_time = datetime.utcnow()
         success = False
         result = {}
+
+        # ⚡ VAJRA: Record INTENT_EXECUTING to ledger BEFORE execution
+        self._record_to_ledger(
+            event_type="MANAS_INTENT_EXECUTING",
+            intent=intent,
+            extra_data={"timestamp": start_time.isoformat()},
+        )
 
         try:
             if self._execution_callback:
@@ -530,8 +651,21 @@ class CognitiveKernel:
         entry.executed_at = datetime.utcnow().isoformat()
         entry.execution_result = result
 
-        # Record in memory
+        # Calculate execution time
         execution_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+
+        # ⚡ VAJRA: Record INTENT_EXECUTED or INTENT_FAILED to ledger AFTER execution
+        self._record_to_ledger(
+            event_type="MANAS_INTENT_EXECUTED" if success else "MANAS_INTENT_FAILED",
+            intent=intent,
+            extra_data={
+                "execution_time_ms": execution_time,
+                "result": result,
+                "outcome": "success" if success else "failed",
+            },
+        )
+
+        # Record in memory (MANAS internal)
         self._memory.record_intent_outcome(
             intent_type=intent.intent_type,
             description=intent.title,
