@@ -44,12 +44,14 @@ class OpenRouterProvider(LLMProvider):
 
     # Approximate pricing table (USD per million tokens)
     # See: https://openrouter.ai/models for current pricing
+    # Updated: 2025-12-14
     PRICING = {
-        # Anthropic models via OpenRouter
-        "anthropic/claude-3.5-sonnet": {"input": 3.0, "output": 15.0},
-        "anthropic/claude-3-sonnet": {"input": 3.0, "output": 15.0},
-        "anthropic/claude-3-haiku": {"input": 0.25, "output": 1.25},
-        "anthropic/claude-3-opus": {"input": 15.0, "output": 75.0},
+        # Anthropic models via OpenRouter (2025)
+        "anthropic/claude-opus-4": {"input": 15.0, "output": 75.0},  # Premium reasoning
+        "anthropic/claude-sonnet-4": {"input": 3.0, "output": 15.0},  # Balanced
+        "anthropic/claude-3.5-sonnet": {"input": 3.0, "output": 15.0},  # Legacy
+        "anthropic/claude-3.5-haiku": {"input": 0.80, "output": 4.0},  # Fast & cheap
+        "anthropic/claude-3-haiku": {"input": 0.25, "output": 1.25},  # Legacy
         # OpenAI models via OpenRouter
         "openai/gpt-4-turbo": {"input": 10.0, "output": 30.0},
         "openai/gpt-4o": {"input": 5.0, "output": 15.0},

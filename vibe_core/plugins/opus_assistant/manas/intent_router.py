@@ -113,6 +113,10 @@ class IntentRouter:
         self._handlers["get_best_practices"] = self._handle_research
         self._handlers["find_implementation_guide"] = self._handle_research
 
+        # Wiring audit → OPUS-066 WiringMap
+        self._handlers["audit_wiring"] = self._handle_wiring
+        self._handlers["find_blind_spots"] = self._handle_wiring
+
         logger.info(f"IntentRouter: {len(self._handlers)} handlers registered")
 
     def route(self, intent: Intent) -> RouteResult:
@@ -319,6 +323,29 @@ class IntentRouter:
             }
         except Exception as e:
             return {"success": False, "handler": "SANKALPA", "error": str(e)}
+
+    def _handle_wiring(self, intent: Intent) -> Dict[str, Any]:
+        """Route to WiringMap for blind spot detection."""
+        from .cortex.wiring_map import WiringMap
+
+        logger.info(f"🔌 WiringMap handling: {intent.title}")
+
+        try:
+            wmap = WiringMap(workspace=self._workspace)
+            report = wmap.audit()
+
+            return {
+                "success": True,
+                "handler": "WiringMap",
+                "total_nodes": report.total_nodes,
+                "connected": report.connected_nodes,
+                "disconnected": report.disconnected_nodes,
+                "health_score": f"{report.health_score:.1f}%",
+                "blind_spots": report.blind_spots[:10],  # Top 10
+                "message": f"Wiring audit: {report.health_score:.1f}% healthy, {len(report.blind_spots)} blind spots",
+            }
+        except Exception as e:
+            return {"success": False, "handler": "WiringMap", "error": str(e)}
 
     def _handle_research(self, intent: Intent) -> Dict[str, Any]:
         """Route to VIDYA for research/web search tasks."""
