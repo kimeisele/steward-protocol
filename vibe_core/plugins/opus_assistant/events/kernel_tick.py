@@ -189,6 +189,13 @@ class KernelTickHandler:
                 max_intent_buffer_size=10,
             )
             self._manas = CognitiveKernel(workspace=workspace, config=config)
+
+            # ⚡ VAJRA: Inject kernel for ledger binding
+            kernel = getattr(self._plugin, "_kernel", None)
+            if kernel:
+                self._manas.inject_kernel(kernel)
+                logger.info("⚡ VAJRA: MANAS bound to core ledger")
+
             self._manas_ready = True
             logger.info("🧠 OPUS-032: MANAS initialized (The Mind Awakens)")
         except Exception as e:
@@ -217,6 +224,12 @@ class KernelTickHandler:
             if self._deterministic_executor._ensure_circuit_executor(kernel):
                 self._cognitive_ready = True
                 logger.info("🧠 OPUS-030: Cognitive executor ready (with kernel)")
+
+                # ⚡ VAJRA: Late kernel injection for MANAS if not already done
+                if self._manas and not getattr(self._manas, "_vibe_kernel", None):
+                    self._manas.inject_kernel(kernel)
+                    logger.info("⚡ VAJRA: MANAS late-bound to core ledger")
+
                 return True
         except Exception as e:
             logger.debug(f"Could not init cognitive executor with kernel: {e}")
