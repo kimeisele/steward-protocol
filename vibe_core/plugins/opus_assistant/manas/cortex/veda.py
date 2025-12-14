@@ -88,6 +88,10 @@ class VedaIntent(Enum):
     SILPA = "silpa"
     REFACTOR = "refactor"
 
+    # SUTRA (Wiki Documentation)
+    SUTRA = "sutra"
+    WIKI = "wiki"
+
     # KRIYA (Actions)
     ACTION = "action"
 
@@ -474,6 +478,24 @@ class Artha:
             "update docstring",
             "docstring aktualisieren",
         },
+        VedaIntent.SUTRA: {
+            "sutra",
+            "wiki",
+            "documentation",
+            "dokumentation",
+            "docs",
+            "generate wiki",
+            "update wiki",
+            "sync wiki",
+        },
+        VedaIntent.WIKI: {
+            "wiki",
+            "preview wiki",
+            "generate documentation",
+            "pantheon",
+            "law",
+            "map",
+        },
         VedaIntent.ACTION: {
             # English action verbs (state-changing)
             "run",
@@ -515,6 +537,8 @@ class Artha:
         VedaIntent.DEPENDENCIES: "_handle_akasha",
         VedaIntent.SILPA: "_handle_silpa",
         VedaIntent.REFACTOR: "_handle_silpa",
+        VedaIntent.SUTRA: "_handle_sutra",
+        VedaIntent.WIKI: "_handle_sutra",
         VedaIntent.ACTION: "_handle_action",
         VedaIntent.CHAT: "_handle_chat_llm",
         VedaIntent.UNKNOWN: "_handle_chat_llm",
@@ -605,6 +629,8 @@ class Artha:
             hints.append("akasha_context_needed")
         if intent in {VedaIntent.SILPA, VedaIntent.REFACTOR}:
             hints.append("silpa_context_needed")
+        if intent in {VedaIntent.SUTRA, VedaIntent.WIKI}:
+            hints.append("sutra_context_needed")
 
         return hints
 
