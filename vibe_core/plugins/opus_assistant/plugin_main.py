@@ -45,6 +45,7 @@ OPUS-015: Container-ready (.vibe packable)
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -160,6 +161,10 @@ class OpusAssistantPlugin(KernelPlugin):
             self._syscall_listener.unsubscribe()
 
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
+
+    def _is_test_mode(self) -> bool:
+        """Check if running in pytest - skip some operations in tests."""
+        return bool(os.environ.get("PYTEST_CURRENT_TEST"))
 
     def _init_session_state(self) -> None:
         """
