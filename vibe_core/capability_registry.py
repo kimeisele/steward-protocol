@@ -191,7 +191,8 @@ class CapabilityRegistry:
         if not_found:
             message += f" ({len(not_found)} not found)"
 
-        return {"success": len(revoked) > 0, "revoked": revoked, "not_found": not_found, "message": message}
+        none_have_caps = all(cap not in agent_caps for cap in capabilities)
+        return {"success": none_have_caps, "revoked": revoked, "not_found": not_found, "message": message}
 
     def grant(
         self, agent_id: str, capabilities: List[str], granter_id: str, reason: Optional[str] = None
@@ -258,7 +259,8 @@ class CapabilityRegistry:
         if already_had:
             message += f" ({len(already_had)} already had)"
 
-        return {"success": len(granted) > 0, "granted": granted, "already_had": already_had, "message": message}
+        all_caps_present = all(cap in agent_caps for cap in capabilities)
+        return {"success": all_caps_present, "granted": granted, "already_had": already_had, "message": message}
 
     def get_capabilities(self, agent_id: str) -> FrozenSet[str]:
         """
