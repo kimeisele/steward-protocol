@@ -549,6 +549,35 @@ class UnifiedCLI:
             from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
 
             handler = JnanaHandler(workspace=Path.cwd())
+
+            # OPUS-080: Wire up LLM provider for intelligent responses
+            # JnanaHandler expects .chat(prompt) -> str, but providers have .invoke() -> LLMResponse
+            # Create adapter to bridge the interface gap
+            try:
+                from vibe_core.runtime.providers.factory import get_default_provider
+
+                provider = get_default_provider()
+                if hasattr(provider, "invoke") and provider.__class__.__name__ != "NoOpProvider":
+                    # Create adapter: chat(prompt) -> invoke(prompt).content
+                    class LLMAdapter:
+                        def __init__(self, provider):
+                            self._provider = provider
+
+                        def chat(self, prompt):
+                            # Use haiku for fast, cheap chat responses
+                            response = self._provider.invoke(
+                                prompt=prompt if isinstance(prompt, str) else str(prompt),
+                                model="anthropic/claude-3.5-haiku",  # Fast & cheap
+                                max_tokens=1024,
+                                temperature=0.7,
+                            )
+                            return response.content
+
+                    handler.configure_llm(LLMAdapter(provider))
+                    logger.info("MANAS: LLM provider configured (OpenRouter)")
+            except Exception as e:
+                logger.debug(f"LLM provider not available: {e} - using basic mode")
+
             msg = SamvadaMessage(content=message, msg_type="chat")
             response = asyncio.run(handler.handle(msg))
 
