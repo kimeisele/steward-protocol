@@ -1,27 +1,13 @@
 # OPUS-075: MANAS FORTRESS HARNESS
 
-**Status:** ✅ OPERATIONAL - Batch + CLI Working
-**Author:** Steward Protocol
-**Date:** 2025-12-15
 **Scope:** Complete MANAS Reliability Gate
+**Philosophy:** The harness IS the truth. No manual status. Dynamic verification.
 
 ---
 
-## STATUS
+## The Harness
 
-| Mode | Status | How |
-|------|--------|-----|
-| **Batch (heartbeat.py)** | ✅ WORKS | Direct CognitiveKernel, headless |
-| **GitHub Actions** | ✅ WORKS | Runs every 15min |
-| **VAJRA Ledger** | ✅ WORKS | 315+ signed events |
-| **CLI (steward chat)** | ✅ FIXED | JnanaHandler headless mode |
-| **Operator Access** | ✅ WORKS | No daemon needed |
-
-**Fix Applied:** `unified_cli.py:cmd_chat()` now uses `JnanaHandler` directly instead of socket.
-
----
-
-## Verification Harness
+This document contains NO manual status reporting. The `@HARNESS` below is the ONLY source of truth. Run it to know the state.
 
 <!-- @HARNESS
 files:
@@ -34,7 +20,7 @@ files:
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/intent_router.py
     required: true
-  # === CORTEX MODULES ===
+  # === CORTEX MODULES (all 11) ===
   - path: vibe_core/plugins/opus_assistant/manas/cortex/jnana.py
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/cortex/dharma.py
@@ -71,30 +57,43 @@ files:
     required: true
 
 wiring:
-  # Heartbeat → MANAS (BATCH MODE - WORKS)
+  # === BATCH MODE ===
+  # Heartbeat instantiates CognitiveKernel directly
+  - pattern: "CognitiveKernel\\("
+    in: scripts/heartbeat.py
+  # Heartbeat calls manas.think()
   - pattern: "self\\.manas\\.think"
     in: scripts/heartbeat.py
-  # VAJRA Ledger Binding
+  # VAJRA Ledger injected
   - pattern: "inject_ledger"
     in: scripts/heartbeat.py
   - pattern: "def inject_ledger"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-  # Memory Feedback Loop
-  - pattern: "RECENT FAILURES"
-    in: vibe_core/plugins/opus_assistant/manas/cortex/jnana.py
-  # Cartridge Delegation
-  - pattern: "_delegate_think"
-    in: vibe_core/cartridges/system/manas/cartridge_main.py
-  # VEDA Pipeline
-  - pattern: "VedaPipeline"
-    in: vibe_core/plugins/opus_assistant/manas/cortex/veda.py
-  # Intent Routing
-  - pattern: "def route"
-    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
-  # CLI Chat (FIXED - uses JnanaHandler headless)
+
+  # === CLI MODE (headless) ===
+  # CLI uses JnanaHandler directly (NOT socket!)
   - pattern: "JnanaHandler"
     in: vibe_core/cli/unified_cli.py
-  # GitHub Actions Schedule
+  # CLI does NOT use chat_sync (socket-based - BROKEN)
+  # If this pattern is found, CLI is still broken!
+
+  # === MEMORY FEEDBACK ===
+  - pattern: "RECENT FAILURES"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/jnana.py
+
+  # === CARTRIDGE DELEGATION ===
+  - pattern: "_delegate_think"
+    in: vibe_core/cartridges/system/manas/cartridge_main.py
+
+  # === VEDA PIPELINE ===
+  - pattern: "VedaPipeline"
+    in: vibe_core/plugins/opus_assistant/manas/cortex/veda.py
+
+  # === INTENT ROUTING ===
+  - pattern: "def route"
+    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
+
+  # === GITHUB ACTIONS ===
   - pattern: "cron.*15"
     in: .github/workflows/heartbeat.yml
 
@@ -122,7 +121,7 @@ tests:
   - tests/manas/test_semantic_analyzer.py
 
 semantic:
-  # API Exports
+  # === API EXPORTS ===
   - type: module_exports
     name: manas_public_api
     module: vibe_core.plugins.opus_assistant.manas
@@ -134,104 +133,87 @@ semantic:
       - MemoryStore
       - MemoryEntry
       - IntentPriority
-  # Core Methods
+
+  # === CORE METHODS ===
   - type: method_exists
     name: cognitive_kernel_think
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
     class: CognitiveKernel
     method: think
+
   - type: method_exists
     name: jnana_handler
     in: vibe_core/plugins/opus_assistant/manas/cortex/jnana.py
     class: JnanaHandler
     method: handle
+
   - type: method_exists
     name: intent_generator_generate
     in: vibe_core/plugins/opus_assistant/manas/intent_generator.py
     class: IntentGenerator
     method: generate_intents
+
   - type: method_exists
     name: memory_store_get
     in: vibe_core/plugins/opus_assistant/manas/memory_store.py
     class: MemoryStore
     method: get_success_rate
+
   - type: method_exists
     name: intent_router_route
     in: vibe_core/plugins/opus_assistant/manas/intent_router.py
     class: IntentRouter
     method: route
+
+  # === HOLISTIC RUNTIME CHECKS ===
+  - type: execution_mode
+    name: not_in_simulation
+    expected: live_fire
+    rationale: "MANAS must be in live_fire mode to actually DO work"
+
+  - type: file_writable
+    name: manas_can_write
+    path: .vibe/state/
+    rationale: "MANAS needs write access to persist state"
+
+  - type: ledger_healthy
+    name: vajra_ledger_intact
+    min_events: 100
+    rationale: "VAJRA should have significant history"
 -->
 
 ---
 
-## Fixed Issues
-
-### ✅ CLI Chat - FIXED
-
-**File:** `vibe_core/cli/unified_cli.py:cmd_chat()`
-**Was:** Used `chat_sync()` → needed socket daemon
-**Now:** Uses `JnanaHandler` directly → headless mode, no daemon
-
-**Proof:**
-```bash
-$ steward chat "status"
-🗣️ MANAS: System Status: ...
-```
-
----
-
-## What Works (Proven)
-
-### ✅ Batch Mode (heartbeat.py)
-```
-python scripts/heartbeat.py
-→ MANAS thinks
-→ Generates intents
-→ Ledger signed
-```
-
-### ✅ GitHub Actions
-```yaml
-# .github/workflows/heartbeat.yml
-schedule:
-  - cron: '*/15 * * * *'  # Every 15 min
-```
-
-### ✅ VAJRA Ledger
-```
-315+ events
-Hash chain: intact
-Signatures: ECDSA
-```
-
----
-
-## Implementation
-
-This harness is HONEST. It shows what works.
-
-**All Systems Operational:**
-- ✅ 20 test suites
-- ✅ Batch processing (heartbeat.py)
-- ✅ GitHub Actions automation (every 15min)
-- ✅ VAJRA Ledger integrity (315+ events)
-- ✅ CLI operator access (`steward chat`) - FIXED 2025-12-15
-
----
-
-## Fire Command
+## Fire Commands
 
 ```bash
-# BATCH MODE
-python scripts/heartbeat.py
+# Verify harness (the ONLY truth)
+steward verify 075
 
-# CLI MODE (headless - no daemon needed!)
-steward chat "status"
-
-# Tests
+# Run all MANAS tests
 python -m pytest tests/manas/ -v --tb=short
+
+# Batch mode pulse
+python scripts/heartbeat.py
+
+# CLI mode (headless)
+steward chat "status"
 ```
 
 ---
 
-*"A fortress built on lies is a tomb. Truth is the foundation."*
+## Architecture Notes
+
+**Why Headless?**
+- Socket daemon (`samvada.sock`) requires a running process
+- Headless mode instantiates `JnanaHandler` directly
+- Both batch (`heartbeat.py`) and CLI (`steward chat`) use headless
+
+**Why No Manual Status?**
+- Manual status lies the moment code changes
+- The harness verifies dynamically
+- If harness passes, system works. Period.
+
+---
+
+*"The map is not the territory. The harness is."*
