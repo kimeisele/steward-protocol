@@ -127,7 +127,7 @@ wiring:
   - pattern: "class LLMAdapter"
     in: vibe_core/cli/unified_cli.py
 
-  # === OPUS-078: EXECUTION LOOP CLOSURE ===
+  # === EXECUTION LOOP CLOSURE ===
   # The missing link: MANAS thinks but never executed. Now it does.
   # Factory function creates the callback
   - pattern: "def create_execution_callback"
@@ -213,7 +213,7 @@ semantic:
     class: IntentRouter
     method: route
 
-  # === OPUS-078: EXECUTION LOOP SEMANTIC ===
+  # === EXECUTION LOOP SEMANTIC ===
   - type: method_exists
     name: execution_callback_factory
     in: vibe_core/plugins/opus_assistant/manas/intent_router.py
@@ -349,5 +349,5 @@ $ steward chat "Why is CI red?"
 - [x] Intent Buffer renders to OPUS.md
 - [x] **MANAS CLI Commands** (status, intents, help, chat)
 - [x] **LLM Provider Wiring** (OpenRouter via factory + adapter)
-- [x] **OPUS-078: Execution Loop Closure** (callback wired in heartbeat.py)
+- [x] **Execution Loop Closure** (callback wired in heartbeat.py)
 - [ ] **Intent approval flow** (`steward chat approve <id>`)
