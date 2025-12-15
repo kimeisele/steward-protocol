@@ -1,7 +1,8 @@
-# OPUS-075: MANAS FORTRESS HARNESS
+# OPUS-075: MANAS 6D FORTRESS HARNESS
 
-**Scope:** Complete MANAS Reliability Gate
+**Scope:** Complete MANAS Reliability Gate - The Mind Must Have Voice
 **Philosophy:** The harness IS the truth. No manual status. Dynamic verification.
+**Goal:** Singularity 51% - MANAS becomes the authority. Any LLM can follow MANAS.
 
 ---
 
@@ -96,6 +97,31 @@ wiring:
   # === GITHUB ACTIONS ===
   - pattern: "cron.*15"
     in: .github/workflows/heartbeat.yml
+
+  # === 6D FORTRESS ADDITIONS (2025-12-15) ===
+
+  # OPUS-079: OpusAssistantPlugin must have _is_test_mode
+  # BUG: Kernel boot crashed without this method!
+  - pattern: "def _is_test_mode"
+    in: vibe_core/plugins/opus_assistant/plugin_main.py
+
+  # MANAS Intent Buffer must render to OPUS.md
+  - pattern: "Intent Buffer"
+    in: vibe_core/plugins/opus_assistant/templates/panels/intent_buffer.md.j2
+
+  # MANAS must be wired to EventBus for KERNEL_BOOT
+  - pattern: "KERNEL_BOOT"
+    in: vibe_core/plugins/opus_assistant/events/kernel_tick.py
+
+  # === MANAS CLI VOICE (TODO: Implement!) ===
+  # These patterns are REQUIRED for Singularity 51%
+  # Currently FAILING - MANAS has no CLI voice!
+  # - pattern: "manas:think"
+  #   in: vibe_core/cli/unified_cli.py
+  # - pattern: "manas:approve"
+  #   in: vibe_core/cli/unified_cli.py
+  # - pattern: "manas:status"
+  #   in: vibe_core/cli/unified_cli.py
 
 tests:
   # === ALL 20 MANAS TEST SUITES ===
@@ -223,3 +249,47 @@ steward chat "status"
 ---
 
 *"The map is not the territory. The harness is."*
+
+---
+
+## Singularity 51% Roadmap
+
+**Current State:** MANAS generates intents, but has NO VOICE in CLI!
+
+**What's Missing for MANAS Authority:**
+
+| Feature | Status | Blocker |
+|---------|--------|---------|
+| `manas:think` CLI | ❌ | No CLI command |
+| `manas:approve <id>` CLI | ❌ | No CLI command |
+| `manas:status` CLI | ❌ | No CLI command |
+| Intent auto-execution | ⚠️ | Needs approval flow |
+| Haiku-compatible interface | ❌ | Needs simple commands |
+
+**The Vision:**
+```
+$ steward manas:status
+🧠 MANAS Active | 3 pending intents
+
+$ steward manas:think --force
+Generated 2 new intents
+
+$ steward manas:approve genesis_0002
+✅ Approved: Create tests for MANAS cognitive kernel
+Executing...
+```
+
+**When this works:** Any LLM (even Haiku) can operate the system by following MANAS.
+
+---
+
+## 6D Fortress Checklist (2025-12-15)
+
+- [x] Core MANAS files exist
+- [x] All 11 Cortex modules exist
+- [x] Heartbeat wiring
+- [x] OpusAssistantPlugin `_is_test_mode` (OPUS-079 fix)
+- [x] Intent Buffer renders to OPUS.md
+- [ ] **MANAS CLI Namespace** ← CRITICAL BLOCKER
+- [ ] **Intent approval flow**
+- [ ] **Auto-execution for SAFE intents**
