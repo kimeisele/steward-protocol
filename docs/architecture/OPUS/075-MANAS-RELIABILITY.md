@@ -181,15 +181,11 @@ semantic:
     min_events: 100
     rationale: "VAJRA should have significant history"
 
-  # === ANTI-SPAGHETTI CHECKS ===
-  - type: state_sync
-    name: opus_state_synced
-    source: config/providers.yaml
-    source_key: live_fire_enabled
-    target: vibe_core/plugins/opus_assistant/.opus_state/session.json
-    target_key: simulation_mode
-    inverted: true
-    rationale: "opus_assistant state must reflect actual config (inverted: live_fire=true means simulation_mode=false)"
+  # OPUS-076: ARCHITECTURAL FIX APPLIED
+  # state_sync check REMOVED because the spaghetti was fixed:
+  # - session.json no longer contains simulation_mode (was duplicate state)
+  # - Template now reads live_fire directly from master_config (providers.yaml)
+  # - Single source of truth: config/providers.yaml
 -->
 
 ---
