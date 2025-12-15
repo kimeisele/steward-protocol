@@ -10,6 +10,15 @@
 
 This document contains NO manual status reporting. The `@HARNESS` below is the ONLY source of truth. Run it to know the state.
 
+## 0. The Trinity (Trimurti) Architecture
+Das System folgt dem kosmischen Zyklus (integriert aus OPUS-082):
+
+1.  **BRAHMA (Genesis)**: `IntentGenerator` erzeugt neue Absichten (Intents) basierend auf Beobachtungen.
+2.  **VISHNU (Steward)**: `CognitiveKernel` (MANAS) hält die Intents im Buffer und priorisiert sie.
+3.  **SHIVA (Dissolution)**: `ShivaLifecycleManager` prüft die Realität (`Git is Truth`). Wenn ein Intent in der Realität bereits erfüllt ist (z.B. Datei existiert), löst Shiva den Intent auf.
+
+The harness verifies this entire loop.
+
 <!-- @HARNESS
 files:
   # === CORE MANAS ===
@@ -19,7 +28,11 @@ files:
     required: true
   - path: vibe_core/plugins/opus_assistant/manas/intent_generator.py
     required: true
+  - path: vibe_core/plugins/opus_assistant/manas/intent_generator.py
+    required: true
   - path: vibe_core/plugins/opus_assistant/manas/intent_router.py
+    required: true
+  - path: vibe_core/plugins/opus_assistant/manas/shiva.py
     required: true
   # === CORTEX MODULES (all 11) ===
   - path: vibe_core/plugins/opus_assistant/manas/cortex/jnana.py
@@ -149,8 +162,21 @@ wiring:
   # Narasimha is Shiva's avatar - destroys bad intents before they execute
   - pattern: "CortexNarasimha"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  # === SHIVA (NARASIMHA) - Intent Judgment Before Execution ===
+  # Narasimha is Shiva's avatar - destroys bad intents before they execute
+  - pattern: "CortexNarasimha"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
   - pattern: "_narasimha\\.judge_intent"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
+  # === SHIVA (LIFECYCLE) - Intent Cleanup (OPUS-082) ===
+  # Shiva destroys illusions (stale intents) before Brahma creates
+  - pattern: "ShivaLifecycleManager"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "sweep_and_archive"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "set_execution_callback"
+    in: scripts/heartbeat.py
 
 tests:
   # === ALL 20 MANAS TEST SUITES ===
