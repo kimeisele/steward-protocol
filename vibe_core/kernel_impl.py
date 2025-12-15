@@ -1000,6 +1000,20 @@ class RealVibeKernel(VibeKernel):
         for plugin in self._plugins:
             plugin.on_tick_pre(self)
 
+        # OPUS-073: Emit KERNEL_TICK to EventBus (throttled every 30 ticks)
+        self._tick_count = getattr(self, "_tick_count", 0) + 1
+        if self._tick_count % 30 == 0:
+            import asyncio
+            from .event_bus import Event, EventType
+            asyncio.create_task(self._event_bus.emit(
+                Event(
+                    event_type=EventType.KERNEL_TICK.value,
+                    agent_id="kernel",
+                    message=f"Kernel tick #{self._tick_count}",
+                    details={"tick_count": self._tick_count},
+                )
+            ))
+
         # Phase 2.5: UI Synchronization (Delegated to MarkdownUIManager)
         # Handles SETTINGS.md (Command Queue) and ENVOY.md (Terminal Interface)
         # self._ui_manager.sync_all()  # DEPRECATED: Handled by Plugins
