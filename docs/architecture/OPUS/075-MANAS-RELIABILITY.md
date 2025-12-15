@@ -91,8 +91,8 @@ wiring:
   # Intent Routing
   - pattern: "def route"
     in: vibe_core/plugins/opus_assistant/manas/intent_router.py
-  # CLI Chat (BROKEN - uses socket)
-  - pattern: "chat_sync"
+  # CLI Chat (FIXED - uses JnanaHandler headless)
+  - pattern: "JnanaHandler"
     in: vibe_core/cli/unified_cli.py
   # GitHub Actions Schedule
   - pattern: "cron.*15"
@@ -208,28 +208,25 @@ Signatures: ECDSA
 
 ## Implementation
 
-This harness is HONEST. It shows what works and what doesn't.
+This harness is HONEST. It shows what works.
 
-**Working:**
-- 20 test suites
-- Batch processing
-- GitHub Actions automation
-- Ledger integrity
-
-**Broken:**
-- CLI operator access (`steward chat`)
-- Requires socket daemon that doesn't run
+**All Systems Operational:**
+- ✅ 20 test suites
+- ✅ Batch processing (heartbeat.py)
+- ✅ GitHub Actions automation (every 15min)
+- ✅ VAJRA Ledger integrity (315+ events)
+- ✅ CLI operator access (`steward chat`) - FIXED 2025-12-15
 
 ---
 
 ## Fire Command
 
 ```bash
-# BATCH MODE (works)
+# BATCH MODE
 python scripts/heartbeat.py
 
-# CLI MODE (broken until fixed)
-steward chat "status"  # ❌ socket not found
+# CLI MODE (headless - no daemon needed!)
+steward chat "status"
 
 # Tests
 python -m pytest tests/manas/ -v --tb=short
