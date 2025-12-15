@@ -69,9 +69,18 @@ flowchart TD
 | 4. Parse | AttackResult | ✅ Exists | `test_red_team_attacks.py:L46-66` |
 | 5. **Reflex** | PratyayaAnalyzer | ❌ NEW | `manas/analyzers/pratyaya_analyzer.py` |
 
----
-
-## Step 5: The Reflex (The Missing Piece)
+## Status
+ 
+ | Aspect | Status | Evidence |
+ |--------|--------|----------|
+ | PratyayaAnalyzer | ✅ | [pratyaya_analyzer.py](vibe_core/plugins/opus_assistant/manas/analyzers/pratyaya_analyzer.py) |
+ | Red Team Tests | ✅ | [test_red_team_attacks.py](tests/hardening/test_red_team_attacks.py) |
+ | Reflex Tests | ✅ | [test_pratyaya_analyzer.py](vibe_core/plugins/opus_assistant/manas/tests/test_pratyaya_analyzer.py) |
+ | CLI Command | ❌ | Phase 2 |
+ 
+ ---
+ 
+ ## Implementation (The Reflex)
 
 ```python
 # vibe_core/plugins/opus_assistant/manas/analyzers/pratyaya_analyzer.py
@@ -197,19 +206,20 @@ tests:
   - tests/hardening/test_red_team_attacks.py
   
   # NEW: Pratyaya integration test (WILL BE RED)
-  - tests/pratyaya/test_pratyaya_analyzer.py
+  - vibe_core/plugins/opus_assistant/manas/tests/test_pratyaya_analyzer.py
 
 semantic:
-  - type: method_exists
+  - type: module_exports
     name: run_red_team_runner
-    in: tests/hardening/test_red_team_attacks.py
-    class: null
-    method: run_red_team
-    
-  - type: class_exists
+    module: tests.hardening.test_red_team_attacks
+    exports:
+      - run_red_team
+
+  - type: module_exports
     name: pratyaya_analyzer_class
-    in: vibe_core/plugins/opus_assistant/manas/analyzers/pratyaya_analyzer.py
-    class: PratyayaAnalyzer
+    module: vibe_core.plugins.opus_assistant.manas.analyzers.pratyaya_analyzer
+    exports:
+      - PratyayaAnalyzer
 -->
 
 ---
