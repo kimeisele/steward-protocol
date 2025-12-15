@@ -50,28 +50,10 @@
         "auto_executable": true,
         "expires_at": null
       },
-      "status": "fulfilled_externally",
+      "status": "pending",
       "added_at": "2025-12-14T16:54:52.785130",
       "executed_at": null,
-      "execution_result": {
-        "shiva_fulfilled": true,
-        "reason": "test_file_exists",
-        "details": {
-          "tests_found": [
-            "tests/manas/test_cognitive_kernel.py",
-            "tests/manas/test_intent_generator.py",
-            "tests/manas/test_memory_store.py"
-          ],
-          "checked_files": [
-            "cognitive_kernel.py",
-            "intent_generator.py",
-            "memory_store.py",
-            "analyzers/ci_monitor_analyzer.py",
-            "analyzers/contract_analyzer.py",
-            "analyzers/semantic_analyzer.py"
-          ]
-        }
-      }
+      "execution_result": null
     },
     {
       "intent": {
@@ -90,17 +72,11 @@
         "auto_executable": false,
         "expires_at": null
       },
-      "status": "fulfilled_externally",
+      "status": "pending",
       "added_at": "2025-12-15T14:37:56.368349",
       "executed_at": null,
-      "execution_result": {
-        "shiva_fulfilled": true,
-        "reason": "git_clean",
-        "details": {
-          "status": "no_changes"
-        }
-      }
+      "execution_result": null
     }
   ],
-  "updated_at": "2025-12-15T20:47:03.364208"
+  "updated_at": "2025-12-15T14:37:56.368587"
 }

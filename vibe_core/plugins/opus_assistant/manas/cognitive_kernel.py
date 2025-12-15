@@ -224,12 +224,6 @@ class CognitiveKernel:
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
-        # 🕉️ SHIVA: The Lifecycle Manager (OPUS-082)
-        from .shiva import ShivaLifecycleManager
-
-        self._shiva = ShivaLifecycleManager(workspace=self._workspace)
-        self._shiva.inject_kernel(self)
-
         logger.info("MANAS Cognitive Kernel initialized")
 
     # =========================================================================

@@ -151,8 +151,12 @@ class InterfacePlugin(KernelPlugin):
         - Error placeholder written instead of crash
 
         Skipped in test mode to prevent file overwrites.
+        Skipped during git operations to prevent conflicts.
         """
         if self._is_test_mode():
+            return
+
+        if self._is_git_in_progress():
             return
 
         for name in self._renderers:
@@ -278,14 +282,50 @@ This is a temporary placeholder. The system will retry on the next render cycle.
         """Check if running in pytest - skip file rendering in tests."""
         return bool(os.environ.get("PYTEST_CURRENT_TEST"))
 
+    def _is_git_in_progress(self) -> bool:
+        """
+        Check if git is in the middle of a merge, cherry-pick, or rebase.
+
+        During these operations, the kernel should NOT auto-generate files
+        as it will cause merge conflicts and dirty working trees.
+
+        Returns:
+            True if git operation is in progress, False otherwise
+        """
+        git_dir = Path(".git")
+
+        # Check for merge state
+        if (git_dir / "MERGE_HEAD").exists():
+            logger.warning("⚠️ Git merge in progress - skipping render to avoid conflicts")
+            return True
+
+        # Check for cherry-pick state
+        if (git_dir / "CHERRY_PICK_HEAD").exists():
+            logger.warning("⚠️ Git cherry-pick in progress - skipping render to avoid conflicts")
+            return True
+
+        # Check for rebase state
+        if (git_dir / "rebase-merge").exists() or (git_dir / "rebase-apply").exists():
+            logger.warning("⚠️ Git rebase in progress - skipping render to avoid conflicts")
+            return True
+
+        return False
+
     def render_all(self) -> None:
         """Force render all views (ignores intervals).
 
         IMPORTANT: Skipped in test mode to prevent test kernels from
         overwriting real interface files (OPUS.md, ENVOY.md, etc.).
+
+        CRITICAL: Also skipped during git operations (merge/cherry-pick/rebase)
+        to prevent conflicts and dirty working trees.
         """
         if self._is_test_mode():
             logger.debug("InterfacePlugin: Skipping render in test mode")
+            return
+
+        if self._is_git_in_progress():
+            logger.warning("InterfacePlugin: Skipping render during git operation")
             return
 
         for name, renderer in self._renderers.items():

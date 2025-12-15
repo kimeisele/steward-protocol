@@ -16,7 +16,6 @@ The Mind generates its own input. It doesn't wait.
 from .cognitive_kernel import CognitiveKernel, ManasConfig
 from .intent_generator import Intent, IntentGenerator, IntentPriority
 from .memory_store import MemoryEntry, MemoryStore
-from .shiva import ShivaLifecycleManager
 
 __all__ = [
     "CognitiveKernel",
@@ -26,5 +25,4 @@ __all__ = [
     "IntentPriority",
     "MemoryStore",
     "MemoryEntry",
-    "ShivaLifecycleManager",
 ]
