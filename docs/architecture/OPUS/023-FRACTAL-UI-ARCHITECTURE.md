@@ -9,19 +9,15 @@
 files:
   - path: vibe_core/plugins/interface/renderer_loader.py
     required: true
-  - path: vibe_core/plugins/interface/panel_loader.py
-    required: true
-  - path: vibe_core/plugins/interface/renderers/opus/manifest.json
-    required: true
   - path: vibe_core/plugins/interface/renderers/opus/renderer.py
     required: true
-  - path: vibe_core/plugins/interface/renderers/opus/panels/manifest.json
+  - path: vibe_core/plugins/opus_assistant/render/opus_dashboard_renderer.py
     required: true
 wiring:
-  - pattern: "PanelLoader"
-    in: vibe_core/plugins/interface/renderers/opus/renderer.py
   - pattern: "RendererLoader"
     in: vibe_core/plugins/interface/plugin_main.py
+  - pattern: "OpusDashboardRenderer"
+    in: vibe_core/plugins/interface/renderers/opus/renderer.py
 -->
 
 ## Executive Summary
