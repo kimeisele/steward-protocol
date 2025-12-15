@@ -1,6 +1,6 @@
 # OPUS-074: JNANA - Kognitive Architektur
 
-**Status:** IMPLEMENTED + WIRING TODO
+**Status:** IMPLEMENTED ✅
 **Author:** Claude (Architect) + Gemini (Review)
 **Date:** 2025-12-15
 **Scope:** Complete Cognitive System Documentation + Wiring Plan
@@ -472,110 +472,37 @@ harness:
 
 ---
 
-## 9. WIRING TODO (Missing Links)
+## 9. WIRING (Completed)
 
-**Status:** 99% der Komponenten existieren. Nur Verkabelung fehlt.
+**Status:** ✅ ALL WIRING COMPLETE (2025-12-15)
 
-### WIRING 1: VAJRA für Heartbeat (KRITISCH)
+### WIRING 1: VAJRA für Heartbeat ✅ DONE
 
-**Problem:** Heartbeat läuft im "Shadow Mode" - keine Ledger-Einträge für autonome Aktionen.
+**Implementiert in:** `scripts/heartbeat.py:105-131`
+- SQLiteLedger wird initialisiert
+- inject_ledger() wird aufgerufen
 
-**Lösung:** `SQLiteLedger` existiert bereits (`vibe_core/ledger.py`). Muss in `heartbeat.py` verkabelt werden.
+### WIRING 2: CognitiveKernel inject_ledger() ✅ DONE
 
-```python
-# scripts/heartbeat.py - HINZUFÜGEN:
-from vibe_core.ledger import SQLiteLedger
+**Implementiert in:** `vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py:241-314`
+- `inject_ledger()` Methode existiert
+- `_record_to_ledger()` priorisiert standalone Ledger
 
-class HeartbeatEngine:
-    def __init__(self, project_root: Path):
-        # 1. Init Ledger (Lite Mode, kein Kernel nötig!)
-        ledger_path = project_root / "data" / "vibe_ledger.db"
-        self.ledger = SQLiteLedger(str(ledger_path))
+### WIRING 3: Memory Feedback Loop ✅ DONE
 
-        # 2. VAJRA BINDING
-        if hasattr(self.manas, "inject_ledger"):
-            self.manas.inject_ledger(self.ledger)
-```
+**Implementiert in:** `vibe_core/plugins/opus_assistant/manas/cortex/jnana.py:424-465`
+- Failures werden herausgefiltert und prominent im Prompt platziert
+- "RECENT FAILURES (avoid these patterns)" erscheint zuerst
 
-**Dateien:**
-- `scripts/heartbeat.py` - SQLiteLedger importieren & injizieren
-- `vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py` - `inject_ledger()` Methode hinzufügen
+### Summary
 
----
+| # | Task | Status |
+|---|------|--------|
+| 1 | VAJRA Heartbeat | ✅ DONE |
+| 2 | inject_ledger() | ✅ DONE |
+| 3 | Memory Feedback | ✅ DONE |
 
-### WIRING 2: CognitiveKernel inject_ledger()
-
-**Problem:** `CognitiveKernel` akzeptiert nur vollen Kernel via `inject_kernel()`. Für Heartbeat brauchen wir Ledger-only.
-
-**Lösung:** Neue Methode `inject_ledger()` und `_record_to_ledger()` anpassen.
-
-```python
-# cognitive_kernel.py - HINZUFÜGEN:
-
-def inject_ledger(self, ledger: Any) -> None:
-    """
-    VAJRA: Standalone Ledger für Autonomous Mode.
-    Erlaubt Ledger-Binding ohne vollen Kernel Boot.
-    """
-    self._ledger = ledger
-    logger.info("⚡ VAJRA: Standalone Ledger injected into MANAS")
-
-def _record_to_ledger(self, event_type: str, intent: Intent, extra_data: Dict = None):
-    # Priorisiere standalone Ledger, fallback auf Kernel.ledger
-    ledger = getattr(self, "_ledger", None) or (
-        self._vibe_kernel.ledger if self._vibe_kernel else None
-    )
-
-    if not ledger:
-        logger.debug("⚠️ VAJRA: No ledger - shadow mode")
-        return None
-
-    # Rest wie bisher...
-```
-
----
-
-### WIRING 3: Memory Feedback Loop
-
-**Problem:** `MemoryStore.get_last_attempt()` existiert, wird aber nicht für Prompt-Injection genutzt.
-
-**Lösung:** In `IntentGenerator` oder LLM-Aufruf: Vergangene Fehler in Kontext injizieren.
-
-```python
-# intent_generator.py oder jnana.py - HINZUFÜGEN:
-
-last_attempt = self.memory.get_last_attempt(intent_type)
-
-memory_context = ""
-if last_attempt and last_attempt.outcome == "failed":
-    memory_context = (
-        f"\n\n🛑 PREVIOUS FAILURE:\n"
-        f"Last attempt for '{intent_type}' FAILED.\n"
-        f"Error: {last_attempt.feedback}\n"
-        f"DO NOT repeat the same mistake."
-    )
-elif last_attempt and last_attempt.outcome == "success":
-    memory_context = (
-        f"\n\n✅ SUCCESS PATTERN:\n"
-        f"This worked before: {last_attempt.context}\n"
-        f"Stick to this pattern."
-    )
-
-# An System-Prompt anhängen
-system_prompt += memory_context
-```
-
----
-
-### WIRING Priority
-
-| # | Task | Kritikalität | Aufwand |
-|---|------|--------------|---------|
-| 1 | VAJRA Heartbeat | 🔴 KRITISCH | ~20 LOC |
-| 2 | inject_ledger() | 🔴 KRITISCH | ~15 LOC |
-| 3 | Memory Feedback | 🟡 WICHTIG | ~10 LOC |
-
-**Gesamtaufwand:** ~45 LOC für vollständige Wiring.
+**All ~45 LOC wiring completed 2025-12-15.**
 
 ---
 
