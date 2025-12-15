@@ -139,9 +139,14 @@ class OpusAssistantPlugin(KernelPlugin):
         self._init_session_state()
 
         # 🔌 WIRING: Trigger genesis check for karma-aware boot
-        self._trigger_genesis_check()
+        if not self._is_test_mode():
+            self._setup_kernel_tick()
+            self._setup_syscall_listener()
 
-        logger.info("🎯 OPUS Assistant online (fraktale config + kernel tick + syscall listener + context provider)")
+            # Synthesize initial state
+            self.synthesize_context()
+
+        logger.info(f"🎯 OPUS Assistant online (Workspace: {self._workspace})")
 
     def on_shutdown(self, kernel: "RealVibeKernel") -> None:
         """Cleanup on kernel shutdown."""
