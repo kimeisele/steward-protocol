@@ -236,8 +236,13 @@ def test_revoke_nonexistent_capability():
         agent_id="test_agent_9", capabilities=["cap_b", "cap_c"], revoker_id="KERNEL", reason="Test nonexistent"
     )
 
-    # Should fail (nothing to revoke)
-    assert result["success"] is False
+    # OPUS-075: Idempotent syscalls - goal achieved means success
+    # TEST EXPECTS: success=True (agent doesn't have these caps = goal achieved)
+    # FIX REQUIRED: vibe_core/capability_registry.py:194
+    #   Change: return {"success": len(revoked) > 0, ...}
+    #   To:     none_have = all(c not in agent_caps for c in capabilities)
+    #           return {"success": none_have, ...}
+    assert result["success"] is True  # CI FAILS until Ring-0 fix applied
     assert len(result["revoked"]) == 0
     assert len(result["not_found"]) == 2
 
@@ -351,6 +356,38 @@ def test_core_capabilities_not_revocable():
     assert kernel._check_agent_capability("test_agent_13", "read_file")
     assert kernel._check_agent_capability("test_agent_13", "write_file")
     assert kernel._check_agent_capability("test_agent_13", "list_tasks")
+
+
+def test_grant_already_had_is_idempotent():
+    """
+    OPUS-075: Test that granting capabilities agent already has is idempotent SUCCESS.
+
+    Idempotent operations should return success if the desired end state is achieved,
+    regardless of whether any action was taken. This fixes GRANT_MANDATE 0/153 metric.
+    """
+    kernel = TestKernel.minimal()
+
+    # Register agent with some capabilities
+    agent = MockAgent("test_agent_14", ["cap_a", "cap_b"])
+    kernel.register_agent(agent, spawn_process=False)
+
+    # Try to grant capabilities agent already has
+    result = kernel.grant_capability(
+        agent_id="test_agent_14",
+        capabilities=["cap_a", "cap_b"],  # Already has these
+        granter_id="KERNEL",
+        reason="Test idempotent grant",
+    )
+
+    # OPUS-075: Idempotent success - goal achieved (agent has all requested caps)
+    # TEST EXPECTS: success=True (even though nothing new was granted)
+    # FIX REQUIRED: vibe_core/capability_registry.py:261
+    #   Change: return {"success": len(granted) > 0, ...}
+    #   To:     all_have = all(c in agent_caps for c in capabilities)
+    #           return {"success": all_have, ...}
+    assert result["success"] is True  # CI FAILS until Ring-0 fix applied
+    assert len(result["granted"]) == 0
+    assert len(result["already_had"]) == 2
 
 
 if __name__ == "__main__":
