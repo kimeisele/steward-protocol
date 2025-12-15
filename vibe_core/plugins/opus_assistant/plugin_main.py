@@ -639,6 +639,50 @@ class OpusAssistantPlugin(KernelPlugin):
 
         return cmd_karma(self, **kwargs)
 
+    # =========================================================================
+    # OPUS-077: THE WATCHMAN SENSOR
+    # =========================================================================
+
+    def on_tool_executed(
+        self,
+        kernel: "RealVibeKernel",
+        agent_id: str,
+        tool_name: str,
+        params: Dict[str, Any],
+        result: Any,
+        success: bool,
+    ) -> None:
+        """
+        Global Immune System Hook.
+
+        Monitors tool execution for damage.
+        If Envoy writes broken code, Pratyaya (The Reflex) reverts it.
+        """
+        if tool_name == "write_file" and success:
+            path = params.get("path")
+            if path and path.endswith(".py"):
+                # Call Pratyaya Reflex
+                # FIX: Use absolute import to avoid "relative import with no known parent package"
+                from vibe_core.plugins.opus_assistant.manas.analyzers.pratyaya_analyzer import PratyayaAnalyzer
+
+                # Instantiate ad-hoc for speed (stateless reflex)
+                pratyaya = PratyayaAnalyzer()
+
+                # Check syntax immediately
+                if not pratyaya.verify_syntax(path):
+                    import logging
+
+                    logger = logging.getLogger("OPUS.Reflex")
+                    logger.error(f"🧬 IMMUNE RESPONSE: Syntax Error detected in {path}")
+
+                    # TRIGGER REFLEX: AUTO-ROLLBACK
+                    restored = pratyaya.reflex_rollback(path)
+
+                    if restored:
+                        logger.info(f"🧬 IMMUNE RESPONSE: Damage reverted for {path}")
+                    else:
+                        logger.critical(f"🧬 IMMUNE RESPONSE FAILED: Could not revert {path}")
+
     def reload_config(self) -> Dict[str, Any]:
         """
         Force reload config from files.
