@@ -1,0 +1,136 @@
+# OPUS-078: Maintenance Pulse Circuit
+# The autonomous self-healing cycle of the system
+#
+# This is the "heartbeat within the heartbeat" - a unified maintenance
+# circuit that orchestrates all self-healing activities.
+#
+# Triggered by: HOURLY_PULSE (from heartbeat.py), MANAS_WAKE_UP
+# Flow: Diagnose → Heal → Refresh → Complete
+#
+# Philosophy: Layer 0 (Workflows) stays immutable. All intelligence
+# lives in Layer 2+ (Circuits). The heartbeat is just a carrier wave.
+#
+circuit:
+  id: maintenance_pulse
+  name: "Maintenance Pulse"
+  description: "The autonomous self-healing cycle of OPUS"
+  domain: OPUS
+  version: "1.0.0"
+  author: "MANAS"
+  entry_state: "diagnose_health"
+
+  # Event triggers - This circuit wakes up on the heartbeat
+  triggers:
+    - event: HOURLY_PULSE
+      description: "Emitted by scripts/heartbeat.py on each pulse"
+    - event: MANAS_WAKE_UP
+      description: "Emitted when MANAS cognitive kernel boots"
+    - event: KERNEL_TICK
+      condition: "tick_count % 100 == 0"
+      description: "Every 100th kernel tick as backup"
+
+  # Global invariants
+  invariants:
+    - "workspace is defined"
+
+  states:
+    # Phase 1: Health Diagnosis
+    diagnose_health:
+      name: "Diagnose System Health"
+      description: "Assess system vitals - Code, Docs, Tests alignment"
+      state_var: "diagnosis"
+      actions:
+        - action_type: EMIT_EVENT
+          target: "opus.maintenance_started"
+          params:
+            circuit: "maintenance_pulse"
+            timestamp: "{{ now }}"
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.quick_drift_check"
+          params:
+            mode: "quick"  # Fast check, no deep analysis
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.check_opus_freshness"
+          params:
+            stale_threshold_minutes: 60
+      transitions:
+        - condition: "diagnosis.drift_detected == true"
+          to: "heal_drift"
+        - condition: "diagnosis.opus_stale == true"
+          to: "refresh_opus"
+        - condition: "true"
+          to: "terminal_healthy"
+
+    # Phase 2: Drift Healing (Log Only - Safety First)
+    heal_drift:
+      name: "Log Drift Detection"
+      description: "Record drift for human review (no auto-fix)"
+      state_var: "heal_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "Drift detected during maintenance pulse"
+            source: "maintenance_circuit"
+            context:
+              drift_files: "{{ diagnosis.drift_files | default([]) }}"
+              timestamp: "{{ now }}"
+        - action_type: EMIT_EVENT
+          target: "opus.drift_logged"
+          params:
+            files: "{{ diagnosis.drift_files }}"
+      transitions:
+        - to: "refresh_opus"
+
+    # Phase 3: OPUS.md Refresh
+    refresh_opus:
+      name: "Refresh OPUS.md"
+      description: "Regenerate OPUS.md to reflect current system state"
+      state_var: "refresh_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.write_opus_md"
+          params:
+            force: true
+            reason: "maintenance_pulse"
+        - action_type: EMIT_EVENT
+          target: "opus.refreshed"
+          params:
+            reason: "maintenance_pulse"
+      transitions:
+        - to: "terminal_healthy"
+
+    # Terminal State: Success
+    terminal_healthy:
+      name: "Maintenance Complete"
+      description: "System is healthy. Cycle complete."
+      terminal: true
+      actions:
+        - action_type: EMIT_EVENT
+          target: "opus.maintenance_completed"
+          params:
+            status: "healthy"
+            duration_ms: "{{ elapsed_ms }}"
+      result:
+        status: "success"
+        healthy: true
+        actions_taken: "{{ actions_log | default([]) }}"
+
+
+# Maintenance checklist (for documentation)
+checklist:
+  - name: "Drift Check"
+    description: "Verify code and docs are aligned"
+    frequency: "Every pulse"
+    auto_fix: false
+
+  - name: "OPUS Freshness"
+    description: "Ensure OPUS.md reflects current state"
+    frequency: "Every pulse"
+    auto_fix: true
+
+  - name: "Intent Buffer"
+    description: "Review pending MANAS intents"
+    frequency: "Every pulse"
+    auto_fix: false
