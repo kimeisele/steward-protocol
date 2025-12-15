@@ -528,77 +528,74 @@ class UnifiedCLI:
 
     def cmd_chat(self, args: List[str]) -> int:
         """
-        Direct Neural Link to MANAS.
-
-        This treats the user input as a 'Pulse' that forces a cognitive cycle.
-        No filters. Direct Intent generation.
+        Send a message to MANAS and get a response.
 
         OPUS-042: SAMVADA (The Dialogue)
-        OPUS-082: Direct neural link - User is the heartbeat
+        OPUS-075: Now uses headless mode (JnanaHandler direct) - no daemon needed!
 
         Usage:
-            steward chat "Fix the broken tests"
-            steward chat "Clean up stale intents"
             steward chat "Status report"
+            steward chat Check the CI status
+            steward chat "What intents are pending?"
         """
         if not args:
             print("Usage: steward chat <message>")
-            print('       steward chat "Fix the broken tests"')
-            print("       steward chat Clean up stale intents")
+            print('       steward chat "Status report"')
+            print("       steward chat Check the CI status")
             print("\n❌ No message provided")
             return 1
 
-        user_input = " ".join(args)
+        # Join all args into a single message (handles unquoted multi-word)
+        message = " ".join(args)
 
         try:
+            # OPUS-075 FIX: Use headless mode instead of socket
+            # This works without daemon - direct JnanaHandler invocation
+            import asyncio
+            from pathlib import Path
 
-            # 1. Get the Cortex (Opus Assistant)
-            opus = self._executor._kernel.get_plugin("opus_assistant")
-            if not opus:
-                # Fallback: Boot kernel if not running
-                from vibe_core.kernel_impl import RealVibeKernel
+            from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
+            from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
 
-                kernel = RealVibeKernel(ledger_path=":memory:")
-                kernel.boot()
-                opus = kernel.get_plugin("opus_assistant")
+            handler = JnanaHandler(workspace=Path.cwd())
 
-            if not opus:
-                print("❌ Kortex (Opus Assistant) could not be loaded.")
-                return 1
+            # OPUS-080: Wire up LLM provider for intelligent responses
+            # JnanaHandler expects .chat(prompt) -> str, but providers have .invoke() -> LLMResponse
+            # Create adapter to bridge the interface gap
+            try:
+                from vibe_core.runtime.providers.factory import get_default_provider
 
-            print(f"🧠 MANAS is thinking about: '{user_input}'...")
+                provider = get_default_provider()
+                if hasattr(provider, "invoke") and provider.__class__.__name__ != "NoOpProvider":
+                    # Create adapter: chat(prompt) -> invoke(prompt).content
+                    class LLMAdapter:
+                        def __init__(self, provider):
+                            self._provider = provider
 
-            # 2. Synthesize Context (State of Mind)
-            context = opus.synthesize_context()
-            context["user_query"] = user_input  # Inject user's Sankalpa (Will)
+                        def chat(self, prompt):
+                            # Use haiku for fast, cheap chat responses
+                            response = self._provider.invoke(
+                                prompt=prompt if isinstance(prompt, str) else str(prompt),
+                                model="anthropic/claude-3.5-haiku",  # Fast & cheap
+                                max_tokens=1024,
+                                temperature=0.7,
+                            )
+                            return response.content
 
-            # 3. Force Think Cycle
-            # Direct access to MANAS - User is the heartbeat
-            manas = opus.get_context_service()._manas
+                    handler.configure_llm(LLMAdapter(provider))
+                    logger.info("MANAS: LLM provider configured (OpenRouter)")
+            except Exception as e:
+                logger.debug(f"LLM provider not available: {e} - using basic mode")
 
-            # JETZT PASSIERT ES: Der User ist der Herzschlag
-            intents = manas.think(context=context, force=True)
+            msg = SamvadaMessage(content=message, msg_type="chat")
+            response = asyncio.run(handler.handle(msg))
 
-            # 4. Render Reality
-            if not intents:
-                print("😶 MANAS: No intents generated. (Silence)")
+            if response.success:
+                print(f"🗣️ MANAS: {response.content}")
                 return 0
-
-            print("\n⚡ MANAS Generated Intents:")
-            for intent in intents:
-                risk_emoji = {"safe": "🟢", "low": "🔵", "medium": "🟡", "high": "🟠", "critical": "🔴"}.get(
-                    intent.risk.value, "⚪"
-                )
-
-                print(f"\n{risk_emoji} **{intent.title}**")
-                print(f"   Reasoning: {intent.reasoning}")
-
-                if intent.auto_executable:
-                    print(f"   🚀 AUTO-EXECUTED: {intent.title}")
-                else:
-                    print(f"   📝 Buffered (Requires Approval): ID {intent.id}")
-
-            return 0
+            else:
+                print(f"❌ Error: {response.error}")
+                return 1
 
         except Exception as e:
             print(f"❌ Chat failed: {e}")
