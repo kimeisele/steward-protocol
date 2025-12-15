@@ -75,6 +75,29 @@ class IntentRouter:
         self._validator = SrutiValidator(workspace=self._workspace)  # OPUS-069
         self._register_handlers()
 
+        # OPUS-075: Load MANAS fortress config
+        self._manas_config = self._load_manas_config()
+        self._autonomous_steps = 0  # Track steps for safety limit
+
+    def _load_manas_config(self) -> Dict[str, Any]:
+        """Load MANAS config from config/opus.yaml."""
+        import yaml
+
+        config_path = self._workspace / "config" / "opus.yaml"
+        if config_path.exists():
+            try:
+                with open(config_path) as f:
+                    data = yaml.safe_load(f)
+                    return data.get("manas", {})
+            except Exception as e:
+                logger.warning(f"Failed to load MANAS config: {e}")
+        return {
+            "mode": "manual",
+            "auto_execute_threshold": 0.85,
+            "protected_zones": [],
+            "max_autonomous_steps": 10,
+        }
+
     def inject_kernel(self, kernel: "RealVibeKernel") -> None:
         """
         ⚡ VAJRA: Inject kernel for ledger access.
@@ -135,6 +158,57 @@ class IntentRouter:
         self._handlers["get_context"] = self._handle_knowledge
 
         logger.info(f"IntentRouter: {len(self._handlers)} handlers registered")
+
+    # =========================================================================
+    # OPUS-075: MANAS 6D FORTRESS - Prefrontal Cortex
+    # =========================================================================
+
+    def gate(self, intent: Intent) -> Dict[str, Any]:
+        """
+        OPUS-075: The Prefrontal Cortex - decides whether to execute or ask.
+
+        Returns:
+            {"status": "execute"} - OK to auto-execute
+            {"status": "ask_user", "reason": ...} - Need human approval
+            {"status": "blocked", "reason": ...} - Denied (protected zone)
+        """
+        mode = self._manas_config.get("mode", "manual")
+        threshold = self._manas_config.get("auto_execute_threshold", 0.85)
+        protected_zones = self._manas_config.get("protected_zones", [])
+        max_steps = self._manas_config.get("max_autonomous_steps", 10)
+
+        # Get confidence from intent (default 0.5 if not set)
+        confidence = getattr(intent, "confidence", 0.5)
+        targets = getattr(intent, "targets", [])
+
+        # 1. Protected Zone Check (Nuclear Safety)
+        for target in targets:
+            for zone in protected_zones:
+                if zone in str(target):
+                    logger.warning(f"🛡️ BLOCKED: Target {target} is Protected Zone")
+                    return {"status": "blocked", "reason": "protected_zone", "target": str(target)}
+
+        # 2. Mode Check
+        if mode == "manual":
+            return {"status": "ask_user", "reason": "manual_mode"}
+
+        # 3. Step Limit Check
+        if self._autonomous_steps >= max_steps:
+            logger.warning(f"✋ LIMIT: {self._autonomous_steps} autonomous steps reached")
+            return {"status": "ask_user", "reason": "step_limit_reached"}
+
+        # 4. Confidence Check (The Singularity Gate)
+        if confidence >= threshold:
+            logger.info(f"⚡ AUTO-EXECUTE: Confidence {confidence:.2f} >= {threshold}")
+            self._autonomous_steps += 1
+            return {"status": "execute", "confidence": confidence}
+        else:
+            logger.info(f"✋ HESITATION: Confidence {confidence:.2f} < {threshold}")
+            return {"status": "ask_user", "reason": "low_confidence", "confidence": confidence}
+
+    def reset_autonomous_steps(self) -> None:
+        """Reset the autonomous step counter (call on session start)."""
+        self._autonomous_steps = 0
 
     def route(self, intent: Intent) -> RouteResult:
         """
