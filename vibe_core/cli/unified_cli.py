@@ -20,7 +20,6 @@ from vibe_core.boot_mode import BootMode  # OPUS-031 Layer 4: Autonomous Conduct
 from vibe_core.cli.executor import CLIExecutor
 from vibe_core.cli.loader import CLILoader
 from vibe_core.cli.protocol import CLICommand
-from vibe_core.plugins.opus_assistant.manas.cortex.samvada import chat_sync  # OPUS-042: SAMVADA
 from vibe_core.state.prakriti import Prakriti  # PRAKRITI WIRING
 
 # Import Legacy CLI for fallback/system commands
@@ -523,18 +522,12 @@ class UnifiedCLI:
         Send a message to MANAS and get a response.
 
         OPUS-042: SAMVADA (The Dialogue)
+        OPUS-075: Now uses headless mode (JnanaHandler direct) - no daemon needed!
 
         Usage:
             steward chat "Status report"
             steward chat Check the CI status
             steward chat "What intents are pending?"
-
-        This command:
-        1. Connects to the MANAS listener socket
-        2. Sends the message to MANAS
-        3. Waits for and displays the response
-
-        Note: MANAS must be running (steward boot) for chat to work.
         """
         if not args:
             print("Usage: steward chat <message>")
@@ -547,7 +540,17 @@ class UnifiedCLI:
         message = " ".join(args)
 
         try:
-            response = chat_sync(message)
+            # OPUS-075 FIX: Use headless mode instead of socket
+            # This works without daemon - direct JnanaHandler invocation
+            import asyncio
+            from pathlib import Path
+
+            from vibe_core.plugins.opus_assistant.manas.cortex.jnana import JnanaHandler
+            from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+
+            handler = JnanaHandler(workspace=Path.cwd())
+            msg = SamvadaMessage(content=message, msg_type="chat")
+            response = asyncio.run(handler.handle(msg))
 
             if response.success:
                 print(f"🗣️ MANAS: {response.content}")
@@ -558,7 +561,9 @@ class UnifiedCLI:
 
         except Exception as e:
             print(f"❌ Chat failed: {e}")
-            print("\nMake sure MANAS is running: steward boot")
+            import traceback
+
+            traceback.print_exc()
             return 1
 
     # =========================================================================
