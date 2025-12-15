@@ -180,6 +180,16 @@ semantic:
     name: vajra_ledger_intact
     min_events: 100
     rationale: "VAJRA should have significant history"
+
+  # === ANTI-SPAGHETTI CHECKS ===
+  - type: state_sync
+    name: opus_state_synced
+    source: config/providers.yaml
+    source_key: live_fire_enabled
+    target: vibe_core/plugins/opus_assistant/.opus_state/session.json
+    target_key: simulation_mode
+    inverted: true
+    rationale: "opus_assistant state must reflect actual config (inverted: live_fire=true means simulation_mode=false)"
 -->
 
 ---
