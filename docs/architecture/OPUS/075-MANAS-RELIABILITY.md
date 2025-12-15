@@ -152,6 +152,18 @@ wiring:
   - pattern: "_narasimha\\.judge_intent"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
 
+  # === SHIVA LIFECYCLE MANAGER (OPUS-082) ===
+  # Shiva manages intent lifecycle - destroys illusions (stale intents)
+  - pattern: "class ShivaLifecycleManager"
+    in: vibe_core/plugins/opus_assistant/manas/shiva.py
+  - pattern: "def check_external_fulfillment"
+    in: vibe_core/plugins/opus_assistant/manas/shiva.py
+  - pattern: "def sweep_stale_intents"
+    in: vibe_core/plugins/opus_assistant/manas/shiva.py
+  # Kernel has Shiva wired
+  - pattern: "self\\._shiva = ShivaLifecycleManager"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
 tests:
   # === ALL 20 MANAS TEST SUITES ===
   - tests/manas/test_cognitive_kernel.py
@@ -174,6 +186,8 @@ tests:
   - tests/manas/test_ci_monitor_analyzer.py
   - tests/manas/test_contract_analyzer.py
   - tests/manas/test_semantic_analyzer.py
+  - tests/manas/test_execution_loop.py
+  - tests/manas/test_shiva_lifecycle.py
 
 semantic:
   # === API EXPORTS ===
@@ -357,4 +371,5 @@ $ steward chat "Why is CI red?"
 - [x] **MANAS CLI Commands** (status, intents, help, chat)
 - [x] **LLM Provider Wiring** (OpenRouter via factory + adapter)
 - [x] **Execution Loop Closure** (callback wired in heartbeat.py)
+- [x] **Shiva Lifecycle Manager** (destroys stale/fulfilled intents)
 - [ ] **Intent approval flow** (`steward chat approve <id>`)
