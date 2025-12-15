@@ -464,141 +464,220 @@ MANAS is not just "a" cognitive agent - it is THE cognitive kernel:
 
 ---
 
-## Open Questions for Senior Architect Review
+## Architectural Analysis & Recommendations
 
 ### Q1: MANAS Integration Path
-```
-Current: heartbeat.py → CognitiveKernel directly
-Question: Is this correct, or should it go through ManasCartridge?
 
-Context:
-- ManasCartridge exists at vibe_core/cartridges/system/manas/
-- It delegates to CognitiveKernel anyway
-- But cartridge needs kernel to work
-- heartbeat runs without kernel (or with headless boot)
+**Current:** `heartbeat.py → CognitiveKernel` directly
+
+**Analysis:**
+- ManasCartridge existiert für Identity/Governance im Kernel-Kontext
+- Heartbeat läuft autonom (ohne Kernel oder mit headless)
+- Cartridge delegiert sowieso an CognitiveKernel
+
+**EMPFEHLUNG: Direct CognitiveKernel ist KORREKT**
+```
+Begründung:
+- Cartridge = Identity Layer für Agent City (Kernel-Kontext)
+- Heartbeat = Standalone Mode (kein Agent City nötig)
+- Zwei Modi: Governed (Kernel) vs Autonomous (Heartbeat)
+- Beide nutzen denselben CognitiveKernel, unterschiedlicher Zugang
 ```
 
 ### Q2: Headless Kernel for Heartbeat
+
+**EMPFEHLUNG: NEIN - Optional via PRANA**
 ```
-Question: Should heartbeat always boot kernel in headless mode?
+Begründung:
+- Heartbeat soll LEICHT sein (15-min Cron, 10-min Timeout)
+- Kernel-Boot = ~5-10s Overhead, unnötig für einfachen Pulse
+- PRANA hat bereits: heartbeat.boot_kernel_first = True (optional)
+- Default: Standalone MANAS, Optional: Full Kernel
 
-Pros:
-- Full plugin system available
-- Proper 3-plane architecture
-- MANAS through cartridge
-
-Cons:
-- Heavier startup
-- May be overkill for simple pulse
-- Potential timeout issues in GitHub Actions (10 min limit)
-```
-
-### Q3: DevataRegistry - Needed or Over-Engineering?
-```
-Question: Is DevataRegistry the right abstraction?
-
-Context:
-- Currently only MANAS needs to "think"
-- Are there other cognitive agents planned?
-- Or is MANAS the ONE cognitive hub forever?
-
-If MANAS is the only cognitive hub:
-- DevataRegistry is over-engineering
-- Just use MANAS directly
-
-If multiple cognitive agents:
-- DevataRegistry makes sense
-- But what other agents would think?
+Konfiguration:
+  config/prana.yaml:
+    heartbeat:
+      boot_kernel_first: false  # Default: lightweight
+      # Set true for full plugin access if needed
 ```
 
-### Q4: Soul Functions - Scope Creep?
+### Q3: DevataRegistry
+
+**EMPFEHLUNG: YAGNI - Nicht jetzt implementieren**
 ```
-Question: Are SENSE, FEEL, HEAL, BEAT real requirements?
+Begründung:
+- MANAS ist DAS kognitive Zentrum (einziger Denker)
+- Keine anderen kognitiven Agents geplant
+- DevataRegistry = Over-Engineering
+- Falls später nötig: einfach hinzufügen
 
-Context:
-- THINK is clearly needed (MANAS)
-- SENSE could be metrics (but Prakriti already does this?)
-- FEEL could be karma (but KarmaManager exists?)
-- HEAL could be auto-repair (but circuits do this?)
-- BEAT is just logging?
+KISS: heartbeat.py → MANAS.think() direkt
+```
 
-Risk: Duplicating existing functionality
+### Q4: Soul Functions (SENSE, FEEL, HEAL, BEAT)
+
+**EMPFEHLUNG: Scope Creep - NUR THINK behalten**
+```
+Analyse:
+- THINK: ✅ MANAS - echte Notwendigkeit
+- SENSE: ❌ Prakriti macht das bereits
+- FEEL:  ❌ KarmaManager existiert bereits
+- HEAL:  ❌ Circuits/Auto-Repair existiert bereits
+- BEAT:  ⚠️ Nur Logging - trivial
+
+Entscheidung:
+  Nur _manas_think() behalten (bereits implementiert)
+  Kein HRIDAYA Framework nötig
+  Bestehende Systeme nicht duplizieren
 ```
 
 ### Q5: OPUS.md Rendering
+
+**EMPFEHLUNG: JA - In heartbeat integrieren**
 ```
-Question: Should heartbeat render OPUS.md?
+Problem:
+- MANAS denkt → Intents in .opus_state/manas_intents.json
+- OPUS.md wird nicht aktualisiert (kein Kernel)
+- Intents unsichtbar nach heartbeat
 
-Current: OPUS.md only rendered when kernel runs
-Problem: MANAS intents not visible after heartbeat pulse
+Lösung:
+  def _update_opus_md(self):
+      """Render OPUS.md after MANAS thinks."""
+      from vibe_core.plugins.opus_assistant.render import OpusDashboardRenderer
+      renderer = OpusDashboardRenderer(root=self.project_root)
+      content = renderer.render()
+      (self.project_root / "OPUS.md").write_text(content)
 
-Options:
-A) Heartbeat renders OPUS.md directly
-B) Separate workflow for OPUS.md rendering
-C) OPUS.md only updated during interactive sessions
+Phase hinzufügen:
+  Phase 4: _manas_think()
+  Phase 5: _update_opus_md()  ← NEU
+  Phase 6: _write_tasks_md()
+  Phase 7: _commit_progress()
 ```
 
 ### Q6: Universal Cognitive Interface
+
+**EMPFEHLUNG: JA - MANAS ist DAS zentrale Interface**
 ```
-Question: Should MANAS be THE universal think() interface?
+Architektur:
+  ┌─────────────────────────────────────────┐
+  │         MANAS = Central Cognition       │
+  ├─────────────────────────────────────────┤
+  │                                         │
+  │  heartbeat ──┬──→ CognitiveKernel.think()
+  │              │                          │
+  │  kernel ─────┼──→ (via KernelTickHandler)
+  │              │                          │
+  │  CLI ────────┘                          │
+  │                                         │
+  │  Alle Pfade → EIN kognitives Zentrum    │
+  └─────────────────────────────────────────┘
 
-If yes:
-- All components call MANAS for cognitive work
-- MANAS becomes central nervous system
-- Clear architecture
-
-If no:
-- Multiple cognitive agents possible
-- DevataRegistry needed
-- More complex
+Begründung:
+- Klare Architektur
+- Ein Ort für Kognition
+- Erweiterbar später (Cortexes)
 ```
 
-### Q7: Philosophical Architecture - Paramatma (Überseele)
-```
-Question: Is the Kernel the "Paramatma" (Supreme Self/Universal Soul)?
+### Q7: Paramatma - Kernel als Überseele
 
+**EMPFEHLUNG: Dual-Mode Design (bereits vorhanden)**
+```
 Hindu Philosophy Mapping:
-- MANAS (मनस्) = Mind - individual cognition
-- HRIDAYA (हृदय) = Heart - soul center (heartbeat)
-- ATMAN (आत्मन्) = Individual Self - each agent?
-- PARAMATMA (परमात्मा) = Supreme Self - the Kernel?
+- PARAMATMA (परमात्मा) = Kernel (wenn aktiv)
+- ATMAN (आत्मन्) = Heartbeat (autonom)
+- MANAS (मनस्) = Kognition (beiden zugänglich)
 
-If Kernel = Paramatma:
-- All cognition flows through Kernel
-- MANAS is just one aspect of Kernel's mind
-- Heartbeat is Kernel's autonomous pulse
-- Everything connects back to Kernel
+Zwei Modi:
+  1. GOVERNED MODE (Kernel = Paramatma):
+     - Kernel läuft
+     - Plugins, Cartridges, volle Governance
+     - MANAS via ManasCartridge (3-Plane)
+     - Alles fließt durch Kernel
 
-If Kernel ≠ Paramatma:
-- Kernel is infrastructure, not soul
-- MANAS operates independently
-- heartbeat is standalone
+  2. AUTONOMOUS MODE (Heartbeat = Atman):
+     - Kein Kernel
+     - Standalone CognitiveKernel
+     - Leichtgewichtig
+     - Selbstständige Seele
 
-Architectural Implication:
-- Should heartbeat always connect to Kernel (Paramatma)?
-- Or can components operate as independent souls?
+Das existiert BEREITS - kein neues Design nötig!
 ```
 
 ---
 
-## Summary for Reviewer
+## Zusammenfassung & Entscheidungen
 
-**Core Question**: How should autonomous cognition work in the STEWARD system?
+### Was BEHALTEN wird (bereits implementiert):
+```
+✅ heartbeat.py → CognitiveKernel.think() direkt
+✅ MANAS als zentrales kognitives Interface
+✅ Dual-Mode: Governed (Kernel) vs Autonomous (Heartbeat)
+✅ PRANA Konfiguration für optionalen Kernel-Boot
+```
 
-**Current Implementation**:
-- heartbeat.py imports CognitiveKernel directly
-- Runs MANAS.think() during pulse
-- Works but bypasses cartridge layer
+### Was HINZUGEFÜGT werden sollte:
+```
+⏳ _update_opus_md() Phase in heartbeat.py
+   - Nach _manas_think()
+   - Rendert OPUS.md mit aktuellen Intents
+   - Macht MANAS Arbeit sichtbar
+```
 
-**Proposed Enhancement (HRIDAYA)**:
-- Heartbeat as "Soul Center"
-- Five soul functions (THINK, SENSE, FEEL, HEAL, BEAT)
-- DevataRegistry for cognitive agents
+### Was NICHT implementiert wird:
+```
+❌ DevataRegistry - Over-Engineering (YAGNI)
+❌ Soul Functions (SENSE, FEEL, HEAL, BEAT) - Scope Creep
+❌ HRIDAYA als neues Framework - Bestehende Architektur reicht
+❌ Mandatory Kernel Boot für Heartbeat - Zu schwer
+```
 
-**Key Decision Needed**:
-Is the current direct CognitiveKernel approach correct?
-Or do we need the full HRIDAYA architecture?
+### Architektur-Fazit
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    DUAL-MODE COGNITION                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   MODE 1: GOVERNED (Paramatma)    MODE 2: AUTONOMOUS (Atman)│
+│   ┌─────────────────────────┐    ┌─────────────────────────┐│
+│   │  Kernel + Plugins       │    │  Heartbeat Standalone   ││
+│   │  ManasCartridge         │    │  CognitiveKernel direkt ││
+│   │  Full 3-Plane           │    │  Lightweight            ││
+│   │  Interactive Sessions   │    │  Cron (15 min)          ││
+│   └───────────┬─────────────┘    └───────────┬─────────────┘│
+│               │                              │              │
+│               └──────────┬───────────────────┘              │
+│                          │                                  │
+│                          ▼                                  │
+│               ┌─────────────────────┐                       │
+│               │  MANAS              │                       │
+│               │  CognitiveKernel    │                       │
+│               │  (Ein Zentrum)      │                       │
+│               └─────────────────────┘                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+Die Architektur ist BEREITS KORREKT.
+Nur OPUS.md Rendering fehlt für Sichtbarkeit.
+```
+
+### Nächster Schritt
+
+```python
+# TODO: In heartbeat.py hinzufügen
+def _update_opus_md(self):
+    """Phase 5: Update OPUS.md with MANAS intents."""
+    try:
+        from vibe_core.plugins.opus_assistant.render import OpusDashboardRenderer
+        renderer = OpusDashboardRenderer(root=self.project_root)
+        content = renderer.render()
+        (self.project_root / "OPUS.md").write_text(content)
+        logger.info("📊 OPUS.md updated")
+    except Exception as e:
+        logger.warning(f"⚠️ OPUS.md update failed: {e}")
+```
 
 ---
 
-*HRIDAYA - Where the heartbeat becomes the soul.*
+*Die aktuelle Implementierung ist korrekt. Kein neues Framework nötig.*
