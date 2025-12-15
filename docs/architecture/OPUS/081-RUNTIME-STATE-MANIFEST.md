@@ -1,7 +1,7 @@
 # OPUS-081: RUNTIME STATE MANIFEST
 
 **Scope:** GitState unterscheidet SOURCE CODE von RUNTIME STATE
-**Philosophy:** Git ist kognitives Logging. Runtime state ist Gedächtnis, nicht Code.
+**Status:** ✅ IMPLEMENTED
 
 ---
 
@@ -21,21 +21,19 @@ INFINITE LOOP
 
 ## Die Lösung
 
-GitState bekommt neue Methoden:
-- `is_source_dirty()` - nur source code changes
-- `is_runtime_dirty()` - nur runtime state changes
-- `get_runtime_state_files()` - aus plugin manifests aggregiert
-
 ```
 ┌─────────────────────────────────────────────────────┐
-│  STOP HOOK / TOOLS                                  │
-│  → git_state.is_source_dirty()                      │
+│  scripts/git_gatekeeper.py                          │
+│  → Exit 0 if clean, Exit 1 if source dirty          │
 ├─────────────────────────────────────────────────────┤
-│  GitState (vibe_core/state/git_state.py)            │
-│  → get_runtime_state_files() aggregiert manifests   │
+│  GitState.is_source_dirty()                         │
+│  → Excludes runtime state from dirty check          │
+├─────────────────────────────────────────────────────┤
+│  GitState._get_runtime_state_patterns()             │
+│  → Scans plugin manifests for generated_outputs     │
 ├─────────────────────────────────────────────────────┤
 │  Plugin Manifests                                   │
-│  → "generated_outputs": [...]                       │
+│  → "generated_outputs": { "files": [...] }          │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -45,36 +43,38 @@ GitState bekommt neue Methoden:
 
 <!-- @HARNESS
 files:
-  # === PLUGIN MANIFESTS ===
   - path: vibe_core/plugins/interface/manifest.json
     required: true
   - path: vibe_core/plugins/opus_assistant/manifest.json
     required: true
-
-  # === GIT STATE ===
   - path: vibe_core/state/git_state.py
+    required: true
+  - path: scripts/git_gatekeeper.py
     required: true
 
 wiring:
-  # === PHASE 1: Plugin Declarations (DONE) ===
+  # === PHASE 1: Plugin Declarations ===
   - pattern: "generated_outputs"
     in: vibe_core/plugins/interface/manifest.json
   - pattern: "generated_outputs"
     in: vibe_core/plugins/opus_assistant/manifest.json
 
-  # === PHASE 2: GitState Aggregation (TODO) ===
-  # Uncomment when implemented:
-  # - pattern: "def get_runtime_state_files"
-  #   in: vibe_core/state/git_state.py
-  # - pattern: "def is_source_dirty"
-  #   in: vibe_core/state/git_state.py
-  # - pattern: "def is_runtime_dirty"
-  #   in: vibe_core/state/git_state.py
-
-  # === EXISTING FOUNDATIONS ===
-  - pattern: "VISNU_PROTECTED"
+  # === PHASE 2: GitState Aggregation ===
+  - pattern: "_get_runtime_state_patterns"
     in: vibe_core/state/git_state.py
-  - pattern: "def is_dirty"
+  - pattern: "def is_source_dirty"
+    in: vibe_core/state/git_state.py
+  - pattern: "get_dirty_source_files"
+    in: vibe_core/state/git_state.py
+
+  # === PHASE 3: Gatekeeper ===
+  - pattern: "is_source_dirty"
+    in: scripts/git_gatekeeper.py
+  - pattern: "get_dirty_source_files"
+    in: scripts/git_gatekeeper.py
+
+  # === FOUNDATIONS ===
+  - pattern: "VISNU_PROTECTED"
     in: vibe_core/state/git_state.py
   - pattern: "cognitive logging"
     in: vibe_core/state/git_state.py
@@ -86,48 +86,18 @@ tests:
 
 ---
 
-## Implementation
-
-### Phase 1: Plugin Manifests ✅ DONE
-
-```json
-// vibe_core/plugins/interface/manifest.json
-{
-  "generated_outputs": {
-    "dashboard_files": ["OPUS.md", "ENVOY.md", ...]
-  }
-}
-```
-
-### Phase 2: GitState Extension (TODO)
-
-```python
-# vibe_core/state/git_state.py
-
-# Nach VISNU_PROTECTED hinzufügen:
-def get_runtime_state_files(self) -> List[str]:
-    """Aggregate generated_outputs from all plugin manifests."""
-    ...
-
-def is_source_dirty(self) -> bool:
-    """Check if SOURCE CODE changed (excludes runtime state)."""
-    ...
-
-def is_runtime_dirty(self) -> bool:
-    """Check if only RUNTIME STATE changed."""
-    ...
-```
-
-### Phase 3: Tool Integration (TODO)
-
-Stop hooks und CI nutzen `is_source_dirty()` statt `is_dirty()`.
-
----
-
-## Fire Commands
+## Usage
 
 ```bash
-steward verify 081
+# Test gatekeeper directly
+python scripts/git_gatekeeper.py
+
+# Stop hook delegation (in ~/.claude/stop-hook-git-check.sh)
+GATEKEEPER="$REPO_ROOT/scripts/git_gatekeeper.py"
+if [[ -f "$GATEKEEPER" ]]; then
+    python3 "$GATEKEEPER"
+    exit $?
+fi
 ```
 
 ---
