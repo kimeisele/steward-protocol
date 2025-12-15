@@ -80,9 +80,8 @@ class TestHeartbeatManasConnection:
     This is the RIGHT place for MANAS triggering - not the kernel.
     """
 
-    @pytest.mark.xfail(reason="OPUS-073: Heartbeat not connected to MANAS yet")
     def test_heartbeat_imports_manas(self):
-        """Verify heartbeat.py uses MANAS."""
+        """Verify heartbeat.py uses MANAS. STATUS: PASSING (OPUS-073)"""
         heartbeat_path = Path(__file__).parent.parent.parent / "scripts" / "heartbeat.py"
         content = heartbeat_path.read_text()
 
