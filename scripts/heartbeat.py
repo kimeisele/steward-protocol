@@ -40,6 +40,16 @@ except ImportError:
     UnifiedRouter = None
     UNIFIED_ROUTER_AVAILABLE = False
 
+# OPUS-073: MANAS Cognitive Kernel - Proactive System Intelligence
+try:
+    from vibe_core.plugins.opus_assistant.manas import CognitiveKernel, ManasConfig
+
+    MANAS_AVAILABLE = True
+except ImportError:
+    CognitiveKernel = None
+    ManasConfig = None
+    MANAS_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("HEARTBEAT")
 
@@ -83,6 +93,21 @@ class HeartbeatEngine:
         else:
             logger.warning("⚠️ Unified Router not available - tasks will queue but not execute")
 
+        # OPUS-073: Initialize MANAS Cognitive Kernel
+        self.manas = None
+        if MANAS_AVAILABLE:
+            try:
+                config = ManasConfig(
+                    thinking_interval_minutes=15,  # Match heartbeat interval
+                    auto_execute_safe=True,  # Execute SAFE intents automatically
+                )
+                self.manas = CognitiveKernel(workspace=project_root, config=config)
+                logger.info("🧠 MANAS Cognitive Kernel ready")
+            except Exception as e:
+                logger.warning(f"⚠️ MANAS unavailable: {e}")
+        else:
+            logger.warning("⚠️ MANAS not available - no proactive cognition")
+
     def pulse(self):
         """Execute one heartbeat cycle."""
         logger.info("💓 HEARTBEAT PULSE STARTED")
@@ -97,10 +122,13 @@ class HeartbeatEngine:
             # Phase 3: Execute pending tasks
             self._execute_tasks()
 
-            # Phase 4: Sync TaskManager → TASKS.md (write results)
+            # Phase 4: MANAS thinks (OPUS-073)
+            self._manas_think()
+
+            # Phase 5: Sync TaskManager → TASKS.md (write results)
             self._write_tasks_md()
 
-            # Phase 5: Commit progress
+            # Phase 6: Commit progress
             self._commit_progress()
 
             logger.info("✅ HEARTBEAT PULSE COMPLETED")
@@ -338,6 +366,31 @@ class HeartbeatEngine:
                     "failed_at": datetime.now().isoformat(),
                 },
             )
+
+    def _manas_think(self):
+        """OPUS-073: Invoke MANAS cognitive cycle."""
+        if not self.manas:
+            logger.info("🧠 MANAS not available - skipping cognitive cycle")
+            return
+
+        logger.info("🧠 MANAS: Starting cognitive cycle...")
+
+        try:
+            # Force=True because heartbeat runs on schedule (not rate-limited)
+            intents = self.manas.think(force=True)
+
+            if intents:
+                logger.info(f"🧠 MANAS generated {len(intents)} intent(s):")
+                for intent in intents:
+                    logger.info(f"   • [{intent.risk.value}] {intent.title}")
+                    if intent.auto_executable:
+                        logger.info(f"     → Auto-executable: {intent.action}")
+            else:
+                logger.info("🧠 MANAS: No new intents generated")
+
+        except Exception as e:
+            logger.warning(f"⚠️ MANAS cognitive cycle failed: {e}")
+            # Don't raise - MANAS failure shouldn't stop heartbeat
 
     def _write_tasks_md(self):
         """Write TaskManager state back to TASKS.md."""
