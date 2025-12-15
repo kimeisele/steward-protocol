@@ -422,17 +422,47 @@ class JnanaHandler:
         return "\n".join(lines)
 
     def _format_memories(self, memories: List[Dict[str, Any]]) -> str:
-        """Format memories for prompt."""
+        """
+        Format memories for prompt.
+
+        OPUS-074 WIRING: Memory Feedback Loop - failures are highlighted
+        so MANAS learns from past mistakes and avoids repeating them.
+        """
         if not memories:
             return "No recent memories."
 
         lines = []
-        for m in memories[:3]:
+        failures = []
+
+        for m in memories[:5]:
             outcome = m.get("outcome", "unknown")
             desc = m.get("description", "")[:50]
-            lines.append(f"- [{outcome}] {desc}")
+            intent_type = m.get("intent_type", "")
+            feedback = m.get("feedback", "")
 
-        return "\n".join(lines)
+            if outcome == "failed":
+                # OPUS-074: Highlight failures with feedback for learning
+                failure_info = f"🛑 FAILED: {desc}"
+                if feedback:
+                    failure_info += f"\n   Error: {feedback[:100]}"
+                failures.append(failure_info)
+            elif outcome == "rejected":
+                failures.append(f"❌ REJECTED: {desc}")
+            else:
+                lines.append(f"- [{outcome}] {desc}")
+
+        # OPUS-074: Put failures FIRST for prominence (learning from mistakes)
+        result_parts = []
+        if failures:
+            result_parts.append("⚠️ RECENT FAILURES (avoid these patterns):")
+            result_parts.extend(failures)
+            result_parts.append("")  # blank line
+
+        if lines:
+            result_parts.append("Recent successes:")
+            result_parts.extend(lines)
+
+        return "\n".join(result_parts) if result_parts else "No recent memories."
 
     async def handle(self, msg: SamvadaMessage) -> SamvadaResponse:
         """
