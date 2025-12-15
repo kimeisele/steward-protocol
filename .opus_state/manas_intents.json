@@ -90,11 +90,17 @@
         "auto_executable": false,
         "expires_at": null
       },
-      "status": "pending",
+      "status": "fulfilled_externally",
       "added_at": "2025-12-15T14:37:56.368349",
       "executed_at": null,
-      "execution_result": null
+      "execution_result": {
+        "shiva_fulfilled": true,
+        "reason": "git_clean",
+        "details": {
+          "status": "no_changes"
+        }
+      }
     }
   ],
-  "updated_at": "2025-12-15T20:39:01.114153"
+  "updated_at": "2025-12-15T20:47:03.364208"
 }
