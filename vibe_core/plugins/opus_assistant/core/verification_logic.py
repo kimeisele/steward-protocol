@@ -687,19 +687,34 @@ class VerificationEngine:
                             failed.append(f"{check_name}: {test_path} FAILED")
 
                     elif check_type == "execution_mode":
-                        # OPUS-075: Verify system is NOT in simulation mode
+                        # OPUS-075/076: Verify system is NOT in simulation mode
+                        # Check BOTH config/providers.yaml (source of truth) AND SETTINGS.md
                         expected = check.get("expected", "live_fire")
-                        settings_file = self._root / "SETTINGS.md"
 
+                        # Primary source: config/providers.yaml (YAML config)
+                        providers_file = self._root / "config" / "providers.yaml"
+                        if providers_file.exists():
+                            providers_content = providers_file.read_text()
+                            if "live_fire_enabled: true" in providers_content:
+                                if expected == "live_fire":
+                                    passed.append(f"{check_name}: live_fire mode confirmed (providers.yaml)")
+                                else:
+                                    failed.append(f"{check_name}: expected simulation but providers.yaml has live_fire")
+                                continue
+                            elif "live_fire_enabled: false" in providers_content:
+                                if expected == "live_fire":
+                                    failed.append(f"{check_name}: SIMULATION MODE in providers.yaml!")
+                                else:
+                                    passed.append(f"{check_name}: simulation mode confirmed (providers.yaml)")
+                                continue
+
+                        # Fallback: SETTINGS.md (auto-generated, may be stale)
+                        settings_file = self._root / "SETTINGS.md"
                         if not settings_file.exists():
-                            skipped.append(f"{check_name}: SETTINGS.md not found")
+                            skipped.append(f"{check_name}: Neither providers.yaml nor SETTINGS.md found")
                             continue
 
                         content = settings_file.read_text()
-                        # Check for simulation mode markers (multiple formats)
-                        # Format 1: [x] Simulation Mode
-                        # Format 2: | `mode` | `simulation` |
-                        # Format 3: mode=simulation
                         import re
 
                         in_simulation = (
@@ -715,14 +730,14 @@ class VerificationEngine:
 
                         if expected == "live_fire":
                             if in_live_fire and not in_simulation:
-                                passed.append(f"{check_name}: live_fire mode confirmed")
+                                passed.append(f"{check_name}: live_fire mode confirmed (SETTINGS.md)")
                             elif in_simulation:
-                                failed.append(f"{check_name}: SIMULATION MODE ACTIVE - system won't do real work!")
+                                failed.append(f"{check_name}: SIMULATION MODE in SETTINGS.md (may be stale)")
                             else:
                                 skipped.append(f"{check_name}: mode unclear from SETTINGS.md")
                         else:
                             if in_simulation:
-                                passed.append(f"{check_name}: simulation mode confirmed")
+                                passed.append(f"{check_name}: simulation mode confirmed (SETTINGS.md)")
                             else:
                                 failed.append(f"{check_name}: expected simulation but found live_fire")
 

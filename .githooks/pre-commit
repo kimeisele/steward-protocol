@@ -254,6 +254,32 @@ else
 fi
 
 # ============================================================================
+# GUARD 7: OPUS-076 - Block Simulation Mode (No Pussy Mode!)
+# ============================================================================
+echo -n "  🔥 OPUS-076 Live Fire Guard... "
+
+# Check if providers.yaml is being modified with simulation mode
+if echo "$STAGED_FILES" | grep -q "config/providers.yaml"; then
+    # Check if the change sets live_fire_enabled to false
+    if git diff --cached config/providers.yaml | grep -qE "^\+.*live_fire_enabled.*false"; then
+        echo -e "${RED}BLOCKED${NC}"
+        echo ""
+        echo -e "${RED}❌ OPUS-076 VIOLATION: Attempt to enable SIMULATION MODE${NC}"
+        echo ""
+        echo "  live_fire_enabled: false  ← FORBIDDEN"
+        echo ""
+        echo "MANAS needs REAL execution mode to DO REAL WORK."
+        echo "Simulation mode is for cowards. Don't be a coward."
+        echo ""
+        echo "See: docs/architecture/OPUS/076-NO-PUSSY-MODE.md"
+        echo ""
+        exit 1
+    fi
+fi
+
+echo -e "${GREEN}OK${NC}"
+
+# ============================================================================
 # All guards passed
 # ============================================================================
 echo -e "${GREEN}✅ All pre-commit guards passed${NC}"
