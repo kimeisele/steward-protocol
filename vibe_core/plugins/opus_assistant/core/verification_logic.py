@@ -686,6 +686,91 @@ class VerificationEngine:
                         else:
                             failed.append(f"{check_name}: {test_path} FAILED")
 
+                    elif check_type == "execution_mode":
+                        # OPUS-075: Verify system is NOT in simulation mode
+                        expected = check.get("expected", "live_fire")
+                        settings_file = self._root / "SETTINGS.md"
+
+                        if not settings_file.exists():
+                            skipped.append(f"{check_name}: SETTINGS.md not found")
+                            continue
+
+                        content = settings_file.read_text()
+                        # Check for simulation mode markers (multiple formats)
+                        # Format 1: [x] Simulation Mode
+                        # Format 2: | `mode` | `simulation` |
+                        # Format 3: mode=simulation
+                        import re
+
+                        in_simulation = (
+                            "[x] Simulation Mode" in content
+                            or "mode=simulation" in content.lower()
+                            or bool(re.search(r"\|\s*`?mode`?\s*\|\s*`?simulation`?\s*\|", content, re.IGNORECASE))
+                        )
+                        in_live_fire = (
+                            "[x] Live Fire" in content
+                            or "mode=live_fire" in content.lower()
+                            or bool(re.search(r"\|\s*`?mode`?\s*\|\s*`?live_fire`?\s*\|", content, re.IGNORECASE))
+                        )
+
+                        if expected == "live_fire":
+                            if in_live_fire and not in_simulation:
+                                passed.append(f"{check_name}: live_fire mode confirmed")
+                            elif in_simulation:
+                                failed.append(f"{check_name}: SIMULATION MODE ACTIVE - system won't do real work!")
+                            else:
+                                skipped.append(f"{check_name}: mode unclear from SETTINGS.md")
+                        else:
+                            if in_simulation:
+                                passed.append(f"{check_name}: simulation mode confirmed")
+                            else:
+                                failed.append(f"{check_name}: expected simulation but found live_fire")
+
+                    elif check_type == "file_writable":
+                        # OPUS-075: Verify write access to path
+                        check_path = check.get("path", "")
+                        if not check_path:
+                            skipped.append(f"{check_name}: No path specified")
+                            continue
+
+                        full_path = self._root / check_path
+                        full_path.mkdir(parents=True, exist_ok=True)
+
+                        # Try to write a test file
+                        test_file = full_path / ".harness_write_test"
+                        try:
+                            test_file.write_text("write_test")
+                            test_file.unlink()  # Clean up
+                            passed.append(f"{check_name}: write access to {check_path} confirmed")
+                        except PermissionError:
+                            failed.append(f"{check_name}: NO WRITE ACCESS to {check_path}")
+                        except Exception as e:
+                            failed.append(f"{check_name}: write test failed: {e}")
+
+                    elif check_type == "ledger_healthy":
+                        # OPUS-075: Verify VAJRA ledger has history
+                        min_events = check.get("min_events", 10)
+                        ledger_path = self._root / ".vibe" / "ledger.db"
+
+                        if not ledger_path.exists():
+                            failed.append(f"{check_name}: ledger.db not found")
+                            continue
+
+                        import sqlite3
+
+                        try:
+                            conn = sqlite3.connect(str(ledger_path))
+                            cursor = conn.execute("SELECT COUNT(*) FROM events")
+                            count = cursor.fetchone()[0]
+                            conn.close()
+
+                            if count >= min_events:
+                                passed.append(f"{check_name}: {count} events (>={min_events} required)")
+                            else:
+                                failed.append(f"{check_name}: only {count} events ({min_events} required)")
+                        except Exception as e:
+                            failed.append(f"{check_name}: ledger query failed: {e}")
+
                     else:
                         skipped.append(f"{check_name}: Unknown check type '{check_type}'")
 
