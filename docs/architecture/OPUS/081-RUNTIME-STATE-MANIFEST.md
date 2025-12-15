@@ -1,46 +1,41 @@
 # OPUS-081: RUNTIME STATE MANIFEST
 
-**Scope:** Declare what files are auto-generated vs source code
-**Philosophy:** Plugins DECLARE their outputs. Kernel AGGREGATES. Tools QUERY.
-**Problem:** Git pollution loop - dashboard files regenerate constantly, stop hooks block
+**Scope:** GitState unterscheidet SOURCE CODE von RUNTIME STATE
+**Philosophy:** Git ist kognitives Logging. Runtime state ist Gedächtnis, nicht Code.
 
 ---
 
-## The Problem
+## Das Problem
 
 ```
-KERNEL TICK → renders OPUS.md, ENVOY.md, etc.
-     ↓
-STOP HOOK → "uncommitted changes!" → blocks exit
-     ↓
-COMMIT → changes pushed
-     ↓
-KERNEL TICK → regenerates files (timestamps change)
-     ↓
-INFINITE LOOP 🔄
+KERNEL TICK → renders OPUS.md
+STOP HOOK → is_dirty() = true → blocks exit
+INFINITE LOOP
 ```
 
-**Root Cause:** No declaration of what's RUNTIME STATE vs SOURCE CODE.
+**Root Cause:** `GitState.is_dirty()` unterscheidet nicht zwischen:
+- **SOURCE CODE** (menschlich geschrieben, muss committed werden)
+- **RUNTIME STATE** (kernel-generiert, ändert sich ständig)
 
 ---
 
-## The Solution: LASAGNA Architecture (Not Spaghetti!)
+## Die Lösung
+
+GitState bekommt neue Methoden:
+- `is_source_dirty()` - nur source code changes
+- `is_runtime_dirty()` - nur runtime state changes
+- `get_runtime_state_files()` - aus plugin manifests aggregiert
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  LAYER 4: TOOLS (stop hooks, CI, etc.)              │
-│  → Query: "is this file runtime state?"             │
+│  STOP HOOK / TOOLS                                  │
+│  → git_state.is_source_dirty()                      │
 ├─────────────────────────────────────────────────────┤
-│  LAYER 3: KERNEL AGGREGATION                        │
-│  → Collects all plugin declarations                 │
-│  → Exposes unified runtime_state API                │
+│  GitState (vibe_core/state/git_state.py)            │
+│  → get_runtime_state_files() aggregiert manifests   │
 ├─────────────────────────────────────────────────────┤
-│  LAYER 2: PLUGIN MANIFESTS                          │
-│  → Each plugin declares: generated_outputs          │
-│  → InterfacePlugin: OPUS.md, ENVOY.md, etc.        │
-├─────────────────────────────────────────────────────┤
-│  LAYER 1: FILE SYSTEM                               │
-│  → Actual files on disk                             │
+│  Plugin Manifests                                   │
+│  → "generated_outputs": [...]                       │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -50,123 +45,91 @@ INFINITE LOOP 🔄
 
 <!-- @HARNESS
 files:
-  # === PLUGIN MANIFESTS WITH generated_outputs ===
+  # === PLUGIN MANIFESTS ===
   - path: vibe_core/plugins/interface/manifest.json
     required: true
   - path: vibe_core/plugins/opus_assistant/manifest.json
     required: true
 
-  # === KERNEL RUNTIME STATE AGGREGATOR ===
-  - path: vibe_core/kernel/runtime_state.py
-    required: false  # TODO: Implement
-
-  # === CONFIG ===
-  - path: config/runtime_state.yaml
-    required: false  # TODO: Implement
+  # === GIT STATE ===
+  - path: vibe_core/state/git_state.py
+    required: true
 
 wiring:
-  # === PLUGIN DECLARES OUTPUTS ===
-  # InterfacePlugin must declare what it generates
+  # === PHASE 1: Plugin Declarations (DONE) ===
   - pattern: "generated_outputs"
     in: vibe_core/plugins/interface/manifest.json
-
-  # OpusAssistant must declare what it generates
   - pattern: "generated_outputs"
     in: vibe_core/plugins/opus_assistant/manifest.json
 
-  # === KERNEL AGGREGATION (TODO) ===
+  # === PHASE 2: GitState Aggregation (TODO) ===
+  # Uncomment when implemented:
   # - pattern: "def get_runtime_state_files"
-  #   in: vibe_core/kernel/runtime_state.py
+  #   in: vibe_core/state/git_state.py
+  # - pattern: "def is_source_dirty"
+  #   in: vibe_core/state/git_state.py
+  # - pattern: "def is_runtime_dirty"
+  #   in: vibe_core/state/git_state.py
 
-semantic:
-  # === MANIFEST SCHEMA ===
-  - type: json_schema
-    name: plugin_manifest_has_outputs
-    in: vibe_core/plugins/interface/manifest.json
-    required_fields:
-      - generated_outputs
+  # === EXISTING FOUNDATIONS ===
+  - pattern: "VISNU_PROTECTED"
+    in: vibe_core/state/git_state.py
+  - pattern: "def is_dirty"
+    in: vibe_core/state/git_state.py
+  - pattern: "cognitive logging"
+    in: vibe_core/state/git_state.py
+
+tests:
+  - tests/state/test_git_state.py
 
 -->
 
 ---
 
-## Implementation Plan
+## Implementation
 
-### Phase 1: Plugin Manifests (NOW)
-
-Add `generated_outputs` to plugin manifests:
+### Phase 1: Plugin Manifests ✅ DONE
 
 ```json
 // vibe_core/plugins/interface/manifest.json
 {
-  "name": "interface",
-  "generated_outputs": [
-    "OPUS.md",
-    "ENVOY.md",
-    "AGENTS.md",
-    "ARCHITECTURE.md",
-    "CITYMAP.md",
-    "EPHEMERAL.md",
-    "GIT.md",
-    "HELP.md",
-    "INDEX.md",
-    "MATRIX.md",
-    "OPERATIONS.md",
-    "README.md",
-    "SETTINGS.md",
-    "TASKS.md"
-  ]
+  "generated_outputs": {
+    "dashboard_files": ["OPUS.md", "ENVOY.md", ...]
+  }
 }
 ```
 
-### Phase 2: Kernel Aggregation (LATER)
+### Phase 2: GitState Extension (TODO)
 
 ```python
-# vibe_core/kernel/runtime_state.py
-class RuntimeStateRegistry:
-    def get_all_generated_files(self) -> List[str]:
-        """Aggregate from all plugin manifests."""
-        ...
+# vibe_core/state/git_state.py
 
-    def is_runtime_state(self, path: str) -> bool:
-        """Check if file is auto-generated."""
-        ...
+# Nach VISNU_PROTECTED hinzufügen:
+def get_runtime_state_files(self) -> List[str]:
+    """Aggregate generated_outputs from all plugin manifests."""
+    ...
+
+def is_source_dirty(self) -> bool:
+    """Check if SOURCE CODE changed (excludes runtime state)."""
+    ...
+
+def is_runtime_dirty(self) -> bool:
+    """Check if only RUNTIME STATE changed."""
+    ...
 ```
 
-### Phase 3: Tool Integration (LATER)
+### Phase 3: Tool Integration (TODO)
 
-Stop hooks, CI, etc. query the kernel:
-```bash
-steward runtime-state --check OPUS.md
-# Output: RUNTIME_STATE (generated by: interface)
-```
+Stop hooks und CI nutzen `is_source_dirty()` statt `is_dirty()`.
 
 ---
 
 ## Fire Commands
 
 ```bash
-# Verify harness
 steward verify 081
-
-# Check if file is runtime state (TODO)
-steward runtime-state --check OPUS.md
-
-# List all runtime state files (TODO)
-steward runtime-state --list
 ```
 
 ---
 
-## Files to Modify
-
-| File | Change | Status |
-|------|--------|--------|
-| `vibe_core/plugins/interface/manifest.json` | Add `generated_outputs` | TODO |
-| `vibe_core/plugins/opus_assistant/manifest.json` | Add `generated_outputs` | TODO |
-| `vibe_core/kernel/runtime_state.py` | Create aggregator | LATER |
-| `config/runtime_state.yaml` | Central config | LATER |
-
----
-
-*"The plugin declares. The kernel aggregates. The tool queries. LASAGNA, not spaghetti."*
+*"Git ist kognitives Logging. Runtime state ist Gedächtnis, Source code ist DNA."*
