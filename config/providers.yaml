@@ -13,9 +13,10 @@ playbook:
   fallback_agent: "vibe_core.agents.specialist_agent:SpecialistAgent"
 
 # Feature Flags
+# OPUS-076: LIVE_FIRE ENABLED - No more pussy mode!
 features:
   oauth_enforcement: true
-  live_fire_enabled: false
+  live_fire_enabled: true   # ← THE SWITCH IS ON
   performance_metrics: true
   debug_mode: false
 
