@@ -6,24 +6,22 @@
 > **Honesty Note**: This doc describes FUTURE functionality. `_verify_semantic()` does not exist yet.
 
 <!-- @HARNESS
+# NOTE: This doc describes PLANNED functionality.
+# The harness validates prerequisites only, not the implementation.
 files:
   - path: vibe_core/plugins/interface/renderers/opus/panels/verification.py
     required: true
   - path: config/opus.yaml
     required: true
-tests:
-  - tests/unit/test_verification_panel.py
+config:
+  - section: opus.verification.weights.semantic_passes
 wiring:
-  - pattern: "_verify_semantic"
-    in: vibe_core/plugins/interface/renderers/opus/panels/verification.py
   - pattern: "semantic_passes"
     in: config/opus.yaml
-semantic:
-  - type: method_exists
-    name: "verification_panel_semantic"
-    class: VerificationPanel
-    method: _verify_semantic
-    in: vibe_core/plugins/interface/renderers/opus/panels/verification.py
+# PLANNED: These checks will pass once implemented
+# wiring:
+#   - pattern: "_verify_semantic"
+#     in: vibe_core/plugins/interface/renderers/opus/panels/verification.py
 -->
 
 ---
@@ -150,11 +148,11 @@ Legend:
 
 | Aspect | Status | Evidence |
 |--------|--------|----------|
-| `_verify_semantic()` | ✅ | verification.py:411-561 |
-| Timeout (2s) | ✅ | signal.SIGALRM handler |
-| Panzerung | ✅ | try/except around all checks |
-| Config weights | ✅ | opus.yaml:215 |
-| Table column | ✅ | _format_report() updated |
+| `_verify_semantic()` | ❌ PLANNED | Not yet implemented |
+| Timeout (2s) | ❌ PLANNED | Requires `_verify_semantic()` |
+| Panzerung | ❌ PLANNED | Requires `_verify_semantic()` |
+| Config weights | ✅ | opus.yaml:215 (`semantic_passes: 25`) |
+| Table column | ⚪ | Semantic column shown but always ⚪ |
 
 ---
 
