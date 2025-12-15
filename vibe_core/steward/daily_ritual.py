@@ -388,7 +388,32 @@ class DailyRitual:
             except Exception as e:
                 logger.error(f"Could not record auditor check: {e}")
 
-        # Step 3: CLOSURE
+        # Step 3: OPUS DASHBOARD UPDATE (OPUS-076)
+        # Update OPUS.md to reflect the day's state - the city bulletin board
+        logger.info("   📋 OPUS.md updated (city bulletin board refreshed)")
+        opus_event = {
+            "timestamp": datetime.now().isoformat(),
+            "phase": CyclePhase.SUNSET.value,
+            "action": "opus_render",
+            "details": "OPUS.md dashboard rendered. System state visible to operators.",
+        }
+        events.append(opus_event)
+
+        # Trigger render via interface plugin (or headless renderer)
+        render_success = self._render_opus_dashboard()
+
+        # Record in ledger
+        if self.kernel:
+            try:
+                self.kernel.ledger.record_event(
+                    "OPUS_RENDER",
+                    "interface",
+                    {"phase": "sunset", "success": render_success},
+                )
+            except Exception as e:
+                logger.error(f"Could not record OPUS render: {e}")
+
+        # Step 4: CLOSURE
         # The day formally closes
         logger.info("   🔐 Day officially CLOSED (Sandhya boundary)")
         closure_event = {
@@ -518,3 +543,46 @@ class DailyRitual:
             "timestamp": datetime.now().isoformat(),
             "events": self.events_this_cycle,
         }
+
+    def _render_opus_dashboard(self) -> bool:
+        """
+        OPUS-076: Render OPUS.md dashboard.
+
+        Tries in order:
+        1. If kernel running: Use interface plugin (proper channel)
+        2. Fallback: Use opus_dashboard_renderer directly (headless)
+
+        Returns:
+            True if render succeeded
+        """
+        # Try interface plugin first (proper architecture)
+        if self.kernel:
+            try:
+                interface_plugin = self.kernel.get_plugin("interface")
+                if interface_plugin and hasattr(interface_plugin, "render_view"):
+                    interface_plugin.render_view("opus", force=True)
+                    logger.info("   ✅ OPUS.md rendered via interface plugin")
+                    return True
+            except Exception as e:
+                logger.warning(f"Interface plugin render failed: {e}")
+
+        # Fallback: headless renderer (for CI/headless mode)
+        try:
+            from pathlib import Path
+
+            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                OpusDashboardRenderer,
+            )
+
+            renderer = OpusDashboardRenderer(Path("."), kernel=self.kernel)
+            content = renderer.render(quick=False)
+
+            # Write directly (headless mode - no kernel.io)
+            opus_path = Path("OPUS.md")
+            opus_path.write_text(content)
+            logger.info("   ✅ OPUS.md rendered via headless renderer")
+            return True
+
+        except Exception as e:
+            logger.error(f"OPUS.md render failed: {e}")
+            return False
