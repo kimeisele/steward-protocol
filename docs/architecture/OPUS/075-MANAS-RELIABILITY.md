@@ -127,43 +127,6 @@ wiring:
   - pattern: "class LLMAdapter"
     in: vibe_core/cli/unified_cli.py
 
-  # === EXECUTION LOOP CLOSURE ===
-  # The missing link: MANAS thinks but never executed. Now it does.
-  # Factory function creates the callback
-  - pattern: "def create_execution_callback"
-    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
-  # Heartbeat imports the factory
-  - pattern: "from vibe_core.plugins.opus_assistant.manas.intent_router import create_execution_callback"
-    in: scripts/heartbeat.py
-  # Heartbeat wires the callback to MANAS
-  - pattern: "set_execution_callback\\(callback\\)"
-    in: scripts/heartbeat.py
-  # CognitiveKernel has the hook
-  - pattern: "def set_execution_callback"
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-  # CognitiveKernel calls the callback
-  - pattern: "_execution_callback\\(intent\\)"
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-
-  # === SHIVA (NARASIMHA) - Intent Judgment Before Execution ===
-  # Narasimha is Shiva's avatar - destroys bad intents before they execute
-  - pattern: "CortexNarasimha"
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-  - pattern: "_narasimha\\.judge_intent"
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-
-  # === SHIVA LIFECYCLE MANAGER (OPUS-082) ===
-  # Shiva manages intent lifecycle - destroys illusions (stale intents)
-  - pattern: "class ShivaLifecycleManager"
-    in: vibe_core/plugins/opus_assistant/manas/shiva.py
-  - pattern: "def check_external_fulfillment"
-    in: vibe_core/plugins/opus_assistant/manas/shiva.py
-  - pattern: "def sweep_stale_intents"
-    in: vibe_core/plugins/opus_assistant/manas/shiva.py
-  # Kernel has Shiva wired
-  - pattern: "self\\._shiva = ShivaLifecycleManager"
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-
 tests:
   # === ALL 20 MANAS TEST SUITES ===
   - tests/manas/test_cognitive_kernel.py
@@ -186,8 +149,6 @@ tests:
   - tests/manas/test_ci_monitor_analyzer.py
   - tests/manas/test_contract_analyzer.py
   - tests/manas/test_semantic_analyzer.py
-  - tests/manas/test_execution_loop.py
-  - tests/manas/test_shiva_lifecycle.py
 
 semantic:
   # === API EXPORTS ===
@@ -233,20 +194,6 @@ semantic:
     in: vibe_core/plugins/opus_assistant/manas/intent_router.py
     class: IntentRouter
     method: route
-
-  # === EXECUTION LOOP SEMANTIC ===
-  - type: method_exists
-    name: execution_callback_factory
-    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
-    method: create_execution_callback
-    rationale: "Factory must exist to create execution callbacks"
-
-  - type: method_exists
-    name: cognitive_kernel_set_callback
-    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
-    class: CognitiveKernel
-    method: set_execution_callback
-    rationale: "MANAS must accept execution callback injection"
 
   # === HOLISTIC RUNTIME CHECKS ===
   - type: execution_mode
@@ -370,6 +317,5 @@ $ steward chat "Why is CI red?"
 - [x] Intent Buffer renders to OPUS.md
 - [x] **MANAS CLI Commands** (status, intents, help, chat)
 - [x] **LLM Provider Wiring** (OpenRouter via factory + adapter)
-- [x] **Execution Loop Closure** (callback wired in heartbeat.py)
-- [x] **Shiva Lifecycle Manager** (destroys stale/fulfilled intents)
 - [ ] **Intent approval flow** (`steward chat approve <id>`)
+- [ ] **Auto-execution for SAFE intents**
