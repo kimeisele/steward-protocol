@@ -5,15 +5,15 @@ OPUS-073: Event Emission Integration Tests
 
 These tests verify that the kernel actually emits events to the EventBus.
 
-CURRENT STATUS: EXPECTED TO FAIL
-These tests document the "Treibsand" (quicksand) discovery - the event
-system is beautifully designed but the kernel doesn't emit events.
-
-Once the fix in kernel_impl.py is applied (see 070-VAJRA-WIRING-MAP.md
-Section 12), these tests should PASS.
+STATUS UPDATE (2025-12-15):
+- Fix #1 COMPLETE: kernel.tick() now emits KERNEL_TICK ✅
+- Fix #2 PENDING: GIT_COMMIT not emitted yet
+- Fix #3 PENDING: HOURLY_PULSE timer not implemented yet
+- Fix #4 PENDING: Heartbeat not connected to MANAS
+- Fix #5 PENDING: Heartbeat DRY RUN only
 
 Discovery: 2025-12-14
-Status: PENDING FIX
+Admin Fix: 2025-12-15 (d3d16f8)
 """
 
 import sys
@@ -29,18 +29,15 @@ class TestKernelTickEmission:
     """
     Tests that kernel.tick() emits KERNEL_TICK events.
 
-    CURRENT STATUS: EXPECTED TO FAIL
-    The kernel calls plugin.on_tick_pre() directly instead of
-    emitting events to the EventBus.
+    STATUS: FIX #1 COMPLETE ✅
+    Admin fix d3d16f8 added KERNEL_TICK emission to kernel.tick()
     """
 
-    @pytest.mark.xfail(reason="OPUS-073: kernel.tick() doesn't emit events yet")
     def test_kernel_tick_emits_event_to_eventbus(self):
         """
         OPUS-073 Fix #1: Verify kernel.tick() emits KERNEL_TICK.
 
-        This test SHOULD PASS after applying the kernel fix.
-        Currently EXPECTED TO FAIL - documenting the gap.
+        STATUS: PASSING ✅ (Admin fix d3d16f8)
         """
         # This is a pattern check - verify the code exists
         kernel_impl = Path(__file__).parent.parent.parent / "vibe_core" / "kernel_impl.py"
@@ -148,11 +145,13 @@ class TestHeartbeatManasConnection:
 class TestEventTypeExists:
     """
     Tests that required EventType enum values exist.
+
+    STATUS: FIX #1 COMPLETE ✅
+    Admin fix d3d16f8 added KERNEL_TICK and HOURLY_PULSE to EventType enum.
     """
 
-    @pytest.mark.xfail(reason="OPUS-073: KERNEL_TICK not in EventType enum yet")
     def test_kernel_tick_event_type_exists(self):
-        """Verify KERNEL_TICK exists in EventType enum."""
+        """Verify KERNEL_TICK exists in EventType enum. STATUS: PASSING ✅"""
         try:
             from vibe_core.event_bus import EventType
 

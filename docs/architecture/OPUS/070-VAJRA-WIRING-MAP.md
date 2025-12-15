@@ -578,15 +578,16 @@ calls `on_tick_pre()` directly instead of emitting events.
 ```yaml
 harness:
   id: OPUS-073-EVENT-WIRING
-  version: 1.0.0
-  status: PENDING  # Will be PASS after Fix #1-#5 implemented
+  version: 1.1.0
+  status: PARTIAL  # Fix #1 COMPLETE, #2-#5 PENDING
 
   checks:
-    # Fix #1: KERNEL_TICK emission
+    # Fix #1: KERNEL_TICK emission ✅ COMPLETE (d3d16f8)
     - type: PATTERN
       path: vibe_core/kernel_impl.py
       pattern: "emit.*KERNEL_TICK|EventType\\.KERNEL_TICK"
       required: true
+      status: PASS  # Admin fix 2025-12-15
       description: "kernel.tick() must emit KERNEL_TICK to EventBus"
 
     # Fix #2: GIT_COMMIT emission
