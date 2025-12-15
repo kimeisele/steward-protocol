@@ -610,6 +610,28 @@ class VerificationEngine:
                         else:
                             failed.append(f"{check_name}: Could not load plugin module")
 
+                    elif check_type == "module_exports":
+                        # OPUS-075: Verify module exports specific symbols
+                        import importlib
+
+                        module_name = check.get("module", "")
+                        exports = check.get("exports", [])
+
+                        if not module_name:
+                            skipped.append(f"{check_name}: No module specified")
+                            continue
+
+                        try:
+                            module = importlib.import_module(module_name)
+                            missing = [e for e in exports if not hasattr(module, e)]
+
+                            if not missing:
+                                passed.append(f"{check_name}: all exports present")
+                            else:
+                                failed.append(f"{check_name}: missing exports {missing}")
+                        except ImportError as e:
+                            failed.append(f"{check_name}: cannot import {module_name} ({e})")
+
                     elif check_type == "method_exists":
                         # Verify method is callable via importlib
                         import importlib
