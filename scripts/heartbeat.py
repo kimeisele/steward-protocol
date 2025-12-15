@@ -43,13 +43,11 @@ except ImportError:
 # OPUS-073: MANAS Cognitive Kernel - Proactive System Intelligence
 try:
     from vibe_core.plugins.opus_assistant.manas import CognitiveKernel, ManasConfig
-    from vibe_core.plugins.opus_assistant.manas.intent_router import create_execution_callback
 
     MANAS_AVAILABLE = True
 except ImportError:
     CognitiveKernel = None
     ManasConfig = None
-    create_execution_callback = None
     MANAS_AVAILABLE = False
 
 # OPUS-074 WIRING: SQLiteLedger for VAJRA binding in headless mode
@@ -131,13 +129,6 @@ class HeartbeatEngine:
                 if self.ledger and hasattr(self.manas, "inject_ledger"):
                     self.manas.inject_ledger(self.ledger)
                     logger.info("⚡ VAJRA: Ledger bound to MANAS")
-
-                # OPUS-078 WIRING: Connect Intent Execution Loop
-                # This closes the MANAS think→execute→learn cycle
-                if create_execution_callback:
-                    callback = create_execution_callback(workspace=project_root)
-                    self.manas.set_execution_callback(callback)
-                    logger.info("🔗 MANAS: Execution callback wired (IntentRouter)")
 
                 logger.info("🧠 MANAS Cognitive Kernel ready")
             except Exception as e:
