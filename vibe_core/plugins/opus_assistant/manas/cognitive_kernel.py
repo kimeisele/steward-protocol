@@ -238,6 +238,19 @@ class CognitiveKernel:
         self._vibe_kernel = kernel
         logger.info("⚡ VAJRA: Kernel injected - ledger binding ACTIVE")
 
+    def inject_ledger(self, ledger: Any) -> None:
+        """
+        Inject a standalone ledger for autonomous mode (heartbeat).
+
+        OPUS-074 WIRING: Allows VAJRA binding without full Kernel boot.
+        Used by heartbeat.py for headless/autonomous operation.
+
+        Args:
+            ledger: SQLiteLedger or compatible ledger instance
+        """
+        self._ledger = ledger
+        logger.info("⚡ VAJRA: Standalone Ledger injected into MANAS (headless mode)")
+
     def _record_to_ledger(
         self,
         event_type: str,
@@ -248,6 +261,7 @@ class CognitiveKernel:
         Record an intent event to the core ledger.
 
         OPUS-057 VAJRA: Cryptographic binding of all MANAS actions.
+        OPUS-074 WIRING: Supports standalone ledger for headless mode.
 
         Args:
             event_type: Type of event (INTENT_PROPOSED, INTENT_EXECUTED, etc.)
@@ -255,10 +269,15 @@ class CognitiveKernel:
             extra_data: Additional data to include
 
         Returns:
-            Event ID if recorded, None if no kernel available
+            Event ID if recorded, None if no ledger available
         """
-        if not self._vibe_kernel:
-            logger.debug("⚠️ VAJRA: No kernel - intent not ledgered (shadow mode)")
+        # OPUS-074: Prioritize standalone ledger, fallback to kernel.ledger
+        ledger = getattr(self, "_ledger", None)
+        if not ledger and self._vibe_kernel:
+            ledger = self._vibe_kernel.ledger
+
+        if not ledger:
+            logger.debug("⚠️ VAJRA: No ledger - intent not ledgered (shadow mode)")
             return None
 
         # Build intent hash for integrity
@@ -283,7 +302,7 @@ class CognitiveKernel:
         }
 
         try:
-            event_id = self._vibe_kernel.ledger.record_event(
+            event_id = ledger.record_event(
                 event_type=event_type,
                 agent_id="manas",
                 details=details,
