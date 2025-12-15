@@ -1,831 +1,126 @@
 """
-OPUS CLI Commands - The "Remote Control" for OPUS Assistant.
+OPUS Assistant CLI Commands.
 
-Phase 3: Command-Line Interface
-
-Commands:
-    steward opus:status  → Live "State of Mind" (context)
-    steward opus:log     → Journal entries from OPUS.md
-    steward opus:verify  → Manual verification trigger
-
-Architecture (GAD-000 Compliant):
-    ┌─────────────────────────────────┐
-    │         CLI Layer               │  ← NO LOGIC! Thin wrapper.
-    │  (Format output, --json flag)   │
-    └──────────────┬──────────────────┘
-                   │ calls
-                   ▼
-    ┌─────────────────────────────────┐
-    │      plugin_main.py APIs        │  ← ALL logic lives here
-    │  verify(), get_current_context()│
-    └─────────────────────────────────┘
-
-The CLI is a "remote control" - it NEVER does its own thinking.
-Every icon must represent a REAL system state.
+Clean Architecture:
+- Dispatched by UnifiedCLI (Layer 1) via manifest.json
+- Executed here (Layer 2)
+- Delegates to IntentRouter (Manas/Brain)
 """
 
-import re
+import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-# =============================================================================
-# Output Formatters (Human-Readable with Visual Anchors)
-# =============================================================================
+# Lazy import to avoid circular dependencies if possible,
+# but IntentRouter is a relatively standalone logic component.
+from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
+
+logger = logging.getLogger("OPUS_CLI")
 
 
-def format_status_output(context: Optional[Dict[str, Any]], json_mode: bool = False) -> Dict[str, Any]:
+def cmd_approve(plugin: Any, intent_id: Optional[str] = None, all: bool = False, **kwargs) -> Dict[str, Any]:
     """
-    Format context for human-readable output.
-
-    Uses Visual Anchors (GAD-000 approved):
-    - 🟢 HEALTHY / NOMINAL
-    - 🟡 WARNING / DEGRADED
-    - 🔴 CRITICAL / DRIFTED
+    Approve and execute a pending intent.
 
     Args:
-        context: OpusContext dict from get_current_context()
-        json_mode: If True, return raw dict for JSON output
-
-    Returns:
-        Dict with formatted output
+        plugin: The OpusAssistantPlugin instance (injected by adapter)
+        intent_id: ID of the intent to approve
+        all: Whether to approve all pending intents
     """
-    if context is None:
+    router = IntentRouter(workspace=plugin._kernel.workspace_path if plugin._kernel else Path.cwd())
+    if plugin._kernel:
+        router.inject_kernel(plugin._kernel)
+
+    if all:
+        pending = router.list_pending_intents()
+        if not pending:
+            return {"success": True, "message": "📭 No pending intents to approve"}
+
+        print(f"⚡ Approving {len(pending)} intents...")
+        successes = 0
+        details = []
+        for intent in pending:
+            result = router.approve_intent(intent["id"])
+            details.append({"id": intent["id"], "success": result.success, "error": result.error})
+            if result.success:
+                print(f"  ✅ {intent['id']}: {intent['title']}")
+                successes += 1
+            else:
+                print(f"  ❌ {intent['id']}: {result.error}")
+
         return {
-            "success": False,
-            "error": "No context available. Is OPUS Assistant active?",
-            "status_icon": "🔴",
+            "success": successes == len(pending),
+            "approved_count": successes,
+            "total_count": len(pending),
+            "details": details,
         }
 
-    if json_mode:
-        return {"success": True, "data": context}
+    if not intent_id:
+        return {"success": False, "error": "Usage: steward approve <intent_id>"}
 
-    # Extract key info
-    health = context.get("health", {})
-    health_status = health.get("status", "UNKNOWN")
-    health_score = health.get("overall", 0.0)
-    drift = context.get("drift", {})
-    has_drift = drift.get("has_drift", False)
-    context_hash = context.get("context_hash", "")[:12]
+    result = router.approve_intent(intent_id)
 
-    # Determine status icon based on REAL state
-    if health_status in ("HEALTHY", "NOMINAL") and not has_drift:
-        status_icon = "🟢"
-    elif health_status in ("DEGRADED", "WARNING") or has_drift:
-        status_icon = "🟡"
+    if result.success:
+        print(f"✅ Intent approved and executed: {intent_id}")
+        return {"success": True, "result": result.result, "handler": result.handler}
     else:
-        status_icon = "🔴"
+        print(f"❌ Failed to approve: {result.error}")
+        return {"success": False, "error": result.error}
 
-    # Format human-readable output
-    formatted = {
-        "success": True,
-        "status_icon": status_icon,
-        "status": health_status,
-        "health_score": f"{health_score:.0%}",
-        "drift_detected": has_drift,
-        "context_hash": context_hash,
-        "summary": f"{status_icon} System Status: {health_status} ({health_score:.0%} health)",
-    }
 
-    # Add details
-    if has_drift:
-        drift_files = drift.get("files", [])
-        formatted["drift_summary"] = f"⚠️ Drift detected in {len(drift_files)} file(s)"
-        formatted["drift_files"] = drift_files[:5]  # Limit to 5
+def cmd_reject(plugin: Any, intent_id: Optional[str] = None, reason: str = "", **kwargs) -> Dict[str, Any]:
+    """Reject a pending intent."""
+    if not intent_id:
+        return {"success": False, "error": "Usage: steward reject <intent_id>"}
 
-    # Add health breakdown
-    formatted["health_breakdown"] = {
-        "opus_exists": "🟢" if health.get("opus_exists", False) else "🔴",
-        "harness_valid": "🟢" if health.get("harness_valid", False) else "🔴",
-        "no_drift": "🟢" if not has_drift else "🟡",
-        "kernel_active": "🟢" if health.get("kernel_active", False) else "⚪",
-    }
+    router = IntentRouter(workspace=plugin._kernel.workspace_path if plugin._kernel else Path.cwd())
+    if plugin._kernel:
+        router.inject_kernel(plugin._kernel)
 
-    return formatted
+    success = router.reject_intent(intent_id, reason)
 
+    if success:
+        print(f"❌ Intent rejected: {intent_id}")
+        return {"success": True, "rejected_id": intent_id}
+    else:
+        return {"success": False, "error": f"Intent not found: {intent_id}"}
 
-def format_log_output(
-    observations: List[Dict[str, Any]],
-    limit: int = 20,
-    json_mode: bool = False,
-) -> Dict[str, Any]:
-    """
-    Format journal observations for output.
 
-    Args:
-        observations: List of observation dicts
-        limit: Max observations to show
-        json_mode: If True, return raw dict
+def cmd_pending(plugin: Any, json_output: bool = False, **kwargs) -> Dict[str, Any]:
+    """List pending intents."""
+    router = IntentRouter(workspace=plugin._kernel.workspace_path if plugin._kernel else Path.cwd())
+    pending = router.list_pending_intents()
 
-    Returns:
-        Dict with formatted output
-    """
-    if json_mode:
-        return {"success": True, "data": observations[:limit], "total": len(observations)}
+    # If CLIExecutor handles return values by printing JSON, we just return dict.
+    # But for 'human' output, we might want to print here or rely on renderer.
+    # The clean CLI pattern suggests returning data and letting Layer 1 render,
+    # OR rendering logic here if it's specific.
+    # UnifiedCLI `_dispatch_plugin` prints `response.data`.
 
-    if not observations:
-        return {
-            "success": True,
-            "message": "_No observations recorded yet._",
-            "observations": [],
-        }
+    if not pending and not json_output:
+        print("📭 No pending intents")
+        return {"count": 0, "intents": []}
 
-    # Format observations with visual severity anchors
-    formatted_obs = []
-    for obs in observations[:limit]:
-        severity = obs.get("severity", "INFO")
-        icon = {
-            "INFO": "ℹ️",
-            "WARN": "⚠️",
-            "ALERT": "🚨",
-            "INSIGHT": "💡",
-        }.get(severity, "📝")
+    if not json_output:
+        print("📬 PENDING INTENTS (awaiting approval)")
+        print("=" * 60)
+        for intent in pending:
+            print(f"\n🆔 {intent['id']}")
+            print(f"   Type:       {intent['intent_type']}")
+            print(f"   Title:      {intent['title']}")
+            print(f"   Confidence: {intent.get('confidence', 0.5):.2f}")
 
-        formatted_obs.append(
-            {
-                "icon": icon,
-                "timestamp": obs.get("timestamp", "")[:19],  # Trim to seconds
-                "source": obs.get("source", "unknown"),
-                "message": obs.get("message", ""),
-                "severity": severity,
-            }
-        )
+    return {"count": len(pending), "intents": pending}
 
-    return {
-        "success": True,
-        "observations": formatted_obs,
-        "total": len(observations),
-        "showing": min(limit, len(observations)),
-    }
 
+def cmd_karma(plugin: Any, **kwargs) -> Dict[str, Any]:
+    """Show MANAS karma."""
+    router = IntentRouter(workspace=plugin._kernel.workspace_path if plugin._kernel else Path.cwd())
+    summary = router.get_karma_summary()
 
-def format_verify_output(
-    verification: Dict[str, Any],
-    json_mode: bool = False,
-) -> Dict[str, Any]:
-    """
-    Format verification results for output.
+    print("🔮 MANAS KARMA SUMMARY")
+    print("=" * 40)
+    print(f"   Total Karma:  {summary['total_karma']:.1f}")
+    print(f"   Success Rate: {summary['success_rate']:.1f}%")
 
-    Args:
-        verification: Verification report dict from verify()
-        json_mode: If True, return raw dict
-
-    Returns:
-        Dict with formatted output
-    """
-    if json_mode:
-        return {"success": True, "data": verification}
-
-    passed = verification.get("passed", False)
-    checks = verification.get("checks", [])
-    harness = verification.get("harness", {})
-
-    # Overall status icon
-    status_icon = "🟢" if passed else "🔴"
-
-    # Count results
-    passed_count = sum(1 for c in checks if c.get("passed", False))
-    failed_count = len(checks) - passed_count
-
-    formatted = {
-        "success": True,
-        "status_icon": status_icon,
-        "passed": passed,
-        "summary": f"{status_icon} Verification {'PASSED' if passed else 'FAILED'}",
-        "stats": {
-            "passed": passed_count,
-            "failed": failed_count,
-            "total": len(checks),
-        },
-    }
-
-    # Add harness info
-    if harness:
-        formatted["harness"] = {
-            "files_tracked": len(harness.get("files", [])),
-            "rules": len(harness.get("rules", [])),
-        }
-
-    # Add failed checks (if any)
-    if failed_count > 0:
-        failed_checks = [c for c in checks if not c.get("passed", False)]
-        formatted["failures"] = [
-            {"check": c.get("name", "unknown"), "reason": c.get("reason", "No details")} for c in failed_checks[:10]
-        ]
-
-    return formatted
-
-
-# =============================================================================
-# Journal Parser (Extracts observations from OPUS.md)
-# =============================================================================
-
-
-def parse_journal_from_opus(opus_path: Path) -> List[Dict[str, Any]]:
-    """
-    Parse observations from OPUS.md journal section.
-
-    Looks for content between @JOURNAL START and @JOURNAL END markers.
-
-    Args:
-        opus_path: Path to OPUS.md
-
-    Returns:
-        List of observation dicts
-    """
-    if not opus_path.exists():
-        return []
-
-    content = opus_path.read_text()
-
-    # Find journal section
-    pattern = re.compile(
-        r"<!-- @JOURNAL START -->\s*(.*?)\s*<!-- @JOURNAL END -->",
-        re.DOTALL,
-    )
-
-    match = pattern.search(content)
-    if not match:
-        return []
-
-    journal_content = match.group(1).strip()
-    if journal_content == "_No observations yet._":
-        return []
-
-    # Icon to severity mapping (Unicode-safe)
-    icon_to_severity = {
-        "ℹ️": "INFO",
-        "⚠️": "WARN",
-        "🚨": "ALERT",
-        "💡": "INSIGHT",
-    }
-
-    # Parse observations line by line for better Unicode handling
-    # Format: - `timestamp` ICON **[source]** message
-    observations = []
-
-    for line in journal_content.split("\n"):
-        line = line.strip()
-        if not line.startswith("- `"):
-            continue
-
-        # Extract timestamp
-        ts_match = re.match(r"^- `(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})`\s+", line)
-        if not ts_match:
-            continue
-
-        timestamp = ts_match.group(1)
-        rest = line[ts_match.end() :]
-
-        # Find severity icon at start of rest
-        severity = "INFO"
-        for icon, sev in icon_to_severity.items():
-            if rest.startswith(icon):
-                severity = sev
-                rest = rest[len(icon) :].lstrip()
-                break
-
-        # Extract source: **[source]**
-        source_match = re.match(r"\*\*\[([^\]]+)\]\*\*\s*", rest)
-        if source_match:
-            source = source_match.group(1)
-            message = rest[source_match.end() :].strip()
-        else:
-            source = "unknown"
-            message = rest.strip()
-
-        observations.append(
-            {
-                "timestamp": timestamp,
-                "severity": severity,
-                "source": source,
-                "message": message,
-            }
-        )
-
-    return observations
-
-
-# =============================================================================
-# CLI Response Builder
-# =============================================================================
-
-
-def build_cli_response(
-    data: Dict[str, Any],
-    json_mode: bool = False,
-) -> str:
-    """
-    Build final CLI response string.
-
-    Args:
-        data: Formatted data dict
-        json_mode: If True, return JSON string
-
-    Returns:
-        Formatted string for terminal output
-    """
-    if json_mode:
-        import json
-
-        return json.dumps(data, indent=2, default=str)
-
-    # Build human-readable output
-    lines = []
-
-    # Header with status
-    if "summary" in data:
-        lines.append(data["summary"])
-        lines.append("")
-
-    # Status details
-    if "health_breakdown" in data:
-        lines.append("Health Breakdown:")
-        for key, icon in data["health_breakdown"].items():
-            label = key.replace("_", " ").title()
-            lines.append(f"  {icon} {label}")
-        lines.append("")
-
-    # Drift info
-    if "drift_summary" in data:
-        lines.append(data["drift_summary"])
-        if data.get("drift_files"):
-            for f in data["drift_files"]:
-                lines.append(f"    - {f}")
-        lines.append("")
-
-    # Observations (for log command)
-    if "observations" in data and data["observations"]:
-        lines.append(f"Journal ({data.get('showing', 0)}/{data.get('total', 0)} entries):")
-        for obs in data["observations"]:
-            lines.append(f"  {obs['icon']} [{obs['timestamp']}] {obs['message']}")
-        lines.append("")
-
-    # Verification results
-    if "stats" in data:
-        stats = data["stats"]
-        lines.append(f"Checks: {stats['passed']}/{stats['total']} passed")
-        if data.get("failures"):
-            lines.append("Failures:")
-            for f in data["failures"]:
-                lines.append(f"  🔴 {f['check']}: {f['reason']}")
-
-    # Context hash footer
-    if "context_hash" in data:
-        lines.append(f"Context: {data['context_hash']}")
-
-    return "\n".join(lines)
-
-
-# =============================================================================
-# EXPLORE Command - Token-Efficient Codebase Navigation
-# =============================================================================
-
-
-def explore_codebase(
-    query: str,
-    workspace: Path,
-    limit: int = 10,
-    json_mode: bool = False,
-) -> Dict[str, Any]:
-    """
-    Explore the codebase for files matching a concept.
-
-    Instead of RAG (which pulls random chunks), this does:
-    1. Keyword matching in file names
-    2. Docstring/comment search
-    3. Import graph analysis
-    4. Hot path prioritization
-
-    Args:
-        query: What to explore (e.g., "authentication", "kernel", "plugins")
-        workspace: Project root
-        limit: Max files to return
-        json_mode: If True, return raw data
-
-    Returns:
-        Dict with relevant files and context
-    """
-    import subprocess
-
-    results = []
-    query_lower = query.lower()
-    query_parts = query_lower.split()
-
-    vibe_core = workspace / "vibe_core"
-    if not vibe_core.exists():
-        return {"success": False, "error": "vibe_core/ not found"}
-
-    # Strategy 1: File name matching (most relevant)
-    for py_file in vibe_core.glob("**/*.py"):
-        if "__pycache__" in str(py_file):
-            continue
-
-        file_name = py_file.stem.lower()
-        path_str = str(py_file.relative_to(workspace)).lower()
-
-        # Score based on query match
-        score = 0
-
-        # Exact name match
-        if query_lower in file_name:
-            score += 100
-
-        # Path contains query
-        if query_lower in path_str:
-            score += 50
-
-        # Partial matches
-        for part in query_parts:
-            if part in file_name:
-                score += 30
-            if part in path_str:
-                score += 15
-
-        if score > 0:
-            results.append(
-                {
-                    "path": str(py_file.relative_to(workspace)),
-                    "score": score,
-                    "reason": "name_match",
-                }
-            )
-
-    # Strategy 2: Content search (docstrings, comments)
-    try:
-        grep_result = subprocess.run(
-            ["grep", "-r", "-l", "-i", query, str(vibe_core)],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if grep_result.returncode == 0:
-            for line in grep_result.stdout.strip().split("\n"):
-                if line and ".py" in line and "__pycache__" not in line:
-                    try:
-                        rel_path = str(Path(line).relative_to(workspace))
-                        # Check if already in results
-                        existing = next((r for r in results if r["path"] == rel_path), None)
-                        if existing:
-                            existing["score"] += 20
-                            existing["reason"] = "name+content"
-                        else:
-                            results.append(
-                                {
-                                    "path": rel_path,
-                                    "score": 20,
-                                    "reason": "content_match",
-                                }
-                            )
-                    except ValueError:
-                        pass
-    except Exception:
-        pass
-
-    # Strategy 3: Hot path bonus (files that are frequently changed are more important)
-    try:
-        git_result = subprocess.run(
-            ["git", "log", "--pretty=format:", "--name-only", "-50"],
-            cwd=workspace,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        if git_result.returncode == 0:
-            hot_files = set()
-            for line in git_result.stdout.split("\n"):
-                line = line.strip()
-                if line and line.endswith(".py"):
-                    hot_files.add(line)
-
-            for result in results:
-                if result["path"] in hot_files:
-                    result["score"] += 25
-                    result["hot"] = True
-    except Exception:
-        pass
-
-    # Sort by score, take top N
-    results.sort(key=lambda x: -x["score"])
-    top_results = results[:limit]
-
-    # Get one-liner descriptions for top results
-    for result in top_results:
-        try:
-            file_path = workspace / result["path"]
-            content = file_path.read_text()
-
-            # Extract first docstring
-            if '"""' in content:
-                start = content.find('"""') + 3
-                end = content.find('"""', start)
-                if end > start:
-                    doc = content[start:end].strip()
-                    result["description"] = doc.split("\n")[0][:60]
-        except Exception:
-            pass
-
-    if json_mode:
-        return {
-            "success": True,
-            "query": query,
-            "results": top_results,
-            "total_matches": len(results),
-        }
-
-    return {
-        "success": True,
-        "query": query,
-        "results": top_results,
-        "total_matches": len(results),
-        "summary": f"Found {len(results)} files matching '{query}', showing top {len(top_results)}",
-    }
-
-
-def format_explore_output(data: Dict[str, Any], json_mode: bool = False) -> str:
-    """Format explore results for terminal output."""
-    if json_mode:
-        import json
-
-        return json.dumps(data, indent=2, default=str)
-
-    if not data.get("success"):
-        return f"❌ {data.get('error', 'Unknown error')}"
-
-    lines = [
-        f"🔍 Exploring: '{data['query']}'",
-        f"   Found {data['total_matches']} matches, showing top {len(data['results'])}",
-        "",
-    ]
-
-    for i, result in enumerate(data["results"], 1):
-        hot_marker = "🔥" if result.get("hot") else "  "
-        score = result["score"]
-        path = result["path"]
-        desc = result.get("description", "")
-
-        lines.append(f"{hot_marker} {i:2}. [{score:3}] {path}")
-        if desc:
-            lines.append(f"        └── {desc}")
-
-    lines.append("")
-    lines.append("💡 Use: Read the top files to understand this area of the codebase")
-
-    return "\n".join(lines)
-
-
-# =============================================================================
-# DEEP EXPLORE - LLM-Powered Codebase Understanding
-# =============================================================================
-
-
-def deep_explore(
-    query: str,
-    workspace: Path,
-    limit: int = 5,
-    depth: int = 2,
-) -> Dict[str, Any]:
-    """
-    Deep exploration with LLM synthesis preparation.
-
-    This is the "Verstehens-Maschine" - not just search, but understanding.
-
-    Strategy:
-    1. Scout: Find relevant files (deterministic)
-    2. Read: Load file contents into context
-    3. Analyze: Extract imports/dependencies
-    4. Synthesize: Prepare cognitive task for LLM
-    5. Recurse: Identify missing concepts for follow-up
-
-    Args:
-        query: What to explore
-        workspace: Project root
-        limit: Max files to analyze deeply
-        depth: Recursion depth for dependency analysis (1-3)
-
-    Returns:
-        Dict with files, contents, imports, and synthesis prompt
-    """
-    import re
-
-    # Phase 1: Scout (reuse deterministic search)
-    scout_result = explore_codebase(query, workspace, limit=limit)
-    if not scout_result.get("success"):
-        return scout_result
-
-    top_files = scout_result["results"][:limit]
-
-    # Phase 2: Read file contents
-    file_contents = {}
-    total_lines = 0
-
-    for file_info in top_files:
-        file_path = workspace / file_info["path"]
-        try:
-            content = file_path.read_text()
-            lines = content.split("\n")
-            total_lines += len(lines)
-
-            # Truncate very long files (keep first 200 lines for context)
-            if len(lines) > 200:
-                content = "\n".join(lines[:200]) + f"\n\n# ... truncated ({len(lines)} total lines)"
-
-            file_contents[file_info["path"]] = {
-                "content": content,
-                "lines": len(lines),
-                "description": file_info.get("description", ""),
-            }
-        except Exception as e:
-            file_contents[file_info["path"]] = {"error": str(e), "lines": 0}
-
-    # Phase 3: Analyze imports and dependencies
-    all_imports = set()
-    internal_refs = set()
-    external_deps = set()
-
-    import_patterns = [
-        r"^from\s+([\w.]+)\s+import",  # from x import y
-        r"^import\s+([\w.]+)",  # import x
-    ]
-
-    for path, info in file_contents.items():
-        content = info.get("content", "")
-        for pattern in import_patterns:
-            for match in re.finditer(pattern, content, re.MULTILINE):
-                module = match.group(1)
-                all_imports.add(module)
-
-                if module.startswith("vibe_core"):
-                    internal_refs.add(module)
-                elif not module.startswith(("typing", "pathlib", "datetime", "dataclass", "logging", "re", "json")):
-                    external_deps.add(module)
-
-    # Phase 4: Identify missing concepts (for recursion suggestion)
-    query_lower = query.lower()
-    missing_concepts = []
-
-    for ref in internal_refs:
-        # Check if this import is NOT in our analyzed files
-        ref_path = ref.replace(".", "/") + ".py"
-        if not any(ref_path in f["path"] for f in top_files):
-            # Extract concept name
-            concept = ref.split(".")[-1]
-            if concept.lower() != query_lower and concept not in ["__init__", "typing"]:
-                missing_concepts.append({"module": ref, "concept": concept})
-
-    # Limit missing concepts
-    missing_concepts = missing_concepts[:5]
-
-    # Phase 5: Build synthesis prompt
-    synthesis_prompt = _build_synthesis_prompt(
-        query=query,
-        files=file_contents,
-        imports=list(internal_refs),
-        missing=missing_concepts,
-    )
-
-    return {
-        "success": True,
-        "query": query,
-        "mode": "deep",
-        "files_analyzed": len(file_contents),
-        "total_lines": total_lines,
-        "files": file_contents,
-        "internal_imports": sorted(internal_refs),
-        "external_deps": sorted(external_deps),
-        "missing_concepts": missing_concepts,
-        "synthesis_prompt": synthesis_prompt,
-        "recursion_suggestions": [c["concept"] for c in missing_concepts],
-    }
-
-
-def _build_synthesis_prompt(
-    query: str,
-    files: Dict[str, Any],
-    imports: List[str],
-    missing: List[Dict[str, str]],
-) -> str:
-    """
-    Build a cognitive synthesis prompt for LLM analysis.
-
-    This is the "question" that turns data into understanding.
-    """
-    lines = [
-        f"# Codebase Analysis: '{query}'",
-        "",
-        "## Task",
-        f"Analyze these {len(files)} files and explain the architecture of '{query}'.",
-        "",
-        "## Questions to Answer",
-        "1. What is the **entry point** for this functionality?",
-        "2. How do these components **interact**?",
-        "3. What is the **data flow**?",
-        "4. Are there any **potential issues** or **architectural concerns**?",
-        "",
-        "## Files Analyzed",
-    ]
-
-    for path, info in files.items():
-        desc = info.get("description", "")
-        line_count = info.get("lines", 0)
-        lines.append(f"- `{path}` ({line_count} lines) - {desc}")
-
-    if imports:
-        lines.extend(
-            [
-                "",
-                "## Internal Dependencies",
-                "These vibe_core modules are imported:",
-            ]
-        )
-        for imp in imports[:10]:
-            lines.append(f"- `{imp}`")
-
-    if missing:
-        lines.extend(
-            [
-                "",
-                "## Missing Context (Consider exploring)",
-                "These modules are referenced but not in the analysis:",
-            ]
-        )
-        for m in missing:
-            lines.append(f"- `{m['module']}` (concept: **{m['concept']}**)")
-
-    lines.extend(
-        [
-            "",
-            "## File Contents",
-            "",
-        ]
-    )
-
-    for path, info in files.items():
-        content = info.get("content", info.get("error", ""))
-        lines.extend(
-            [
-                f"### {path}",
-                "```python",
-                content,
-                "```",
-                "",
-            ]
-        )
-
-    return "\n".join(lines)
-
-
-def format_deep_explore_output(data: Dict[str, Any], json_mode: bool = False) -> str:
-    """Format deep explore results for terminal output."""
-    if json_mode:
-        import json
-
-        return json.dumps(data, indent=2, default=str)
-
-    if not data.get("success"):
-        return f"❌ {data.get('error', 'Unknown error')}"
-
-    lines = [
-        f"🧠 Deep Explore: '{data['query']}'",
-        "",
-        f"📁 Files Analyzed: {data['files_analyzed']}",
-        f"📊 Total Lines: {data['total_lines']}",
-        f"🔗 Internal Imports: {len(data.get('internal_imports', []))}",
-        "",
-    ]
-
-    # List files
-    lines.append("📖 **Files Read:**")
-    for path, info in data.get("files", {}).items():
-        desc = info.get("description", "")[:40]
-        lines.append(f"   • {path}")
-        if desc:
-            lines.append(f"     └── {desc}")
-
-    # Missing concepts (recursion suggestions)
-    missing = data.get("missing_concepts", [])
-    if missing:
-        lines.extend(
-            [
-                "",
-                "🔄 **Missing Context** (explore these next):",
-            ]
-        )
-        for m in missing:
-            lines.append(f"   → {m['concept']} (`{m['module']}`)")
-
-    # Synthesis ready indicator
-    lines.extend(
-        [
-            "",
-            "═" * 60,
-            "🤖 **SYNTHESIS TASK READY**",
-            "═" * 60,
-            "",
-            "The full analysis prompt is in `synthesis_prompt`.",
-            "Pass it to an LLM or read the files directly.",
-            "",
-            f"💡 Suggested follow-ups: {', '.join(data.get('recursion_suggestions', [])[:3]) or 'None'}",
-        ]
-    )
-
-    return "\n".join(lines)
+    return summary

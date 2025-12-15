@@ -333,8 +333,23 @@ class IntentRouter:
 
         logger.info(f"✅ Approving intent: {intent_id} ({intent.title})")
 
-        # Execute via route()
-        result = self.route(intent)
+        # Execute via Envoy (The Hand)
+        # OPUS-078: Clean Architecture - Gehirn (Manas) delegates to Hände (Envoy)
+        if self._kernel and hasattr(self._kernel, "envoy"):
+            logger.info("🕵️ Delegating to Envoy for execution...")
+            envoy_result = self._kernel.envoy.execute_mission(intent)
+
+            # Map Envoy result to RouteResult
+            result = RouteResult(
+                success=envoy_result.get("status") == "success",
+                handler=envoy_result.get("executed_by", "Envoy"),
+                result=envoy_result,
+                error=envoy_result.get("error"),
+            )
+        else:
+            # Fallback if kernel/envoy isn't ready (shouldn't happen in full boot)
+            logger.warning("⚠️ Envoy not found on kernel - falling back to direct routing")
+            result = self.route(intent)
 
         # Update status and record karma
         intent_data["status"] = "approved"
