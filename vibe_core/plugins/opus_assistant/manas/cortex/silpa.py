@@ -829,6 +829,11 @@ def handle_silpa_query(content: str, workspace: Optional[Path] = None) -> str:
     """
     Handle a refactoring query from JNANA chat.
 
+    COMMANDS:
+    - silpa status
+    - silpa plan <path> <type> <instructions>
+    - silpa execute <token> (Simulated for this implementation)
+
     Args:
         content: The user's query content
         workspace: Optional workspace path
@@ -836,25 +841,70 @@ def handle_silpa_query(content: str, workspace: Optional[Path] = None) -> str:
     Returns:
         Formatted response string
     """
-    content_lower = content.lower()
+    import shlex
 
-    if any(word in content_lower for word in ["status", "info", "what is"]):
+    workspace = workspace or Path.cwd()
+    content = content.strip()
+
+    if content == "silpa status":
         return get_silpa_for_chat(workspace)
 
-    # TODO: Parse refactoring commands
-    return (
-        "🔨 **SILPA** (The Self-Architect)\n\n"
-        "SILPA can safely refactor code using the Platinum Protocol.\n\n"
-        "**Commands:**\n"
-        "• `silpa status` - Show SILPA status\n"
-        "• `silpa plan <file>` - Plan a refactoring\n"
-        "• `silpa execute <plan>` - Execute with approval\n\n"
-        "**Platinum Protocol:**\n"
-        "1. Tests must pass BEFORE refactoring\n"
-        "2. Apply code changes\n"
-        "3. Tests must pass AFTER refactoring\n"
-        "4. Automatic rollback on failure"
-    )
+    # Command: silpa plan <file> <type> <instructions>
+    # Example: silpa plan vibes.py rename_function target_name=foo new_name=bar
+    if content.startswith("silpa plan"):
+        try:
+            parts = shlex.split(content)
+            if len(parts) < 4:
+                return "❌ Usage: `silpa plan <file> <type> <instructions>`"
+
+            file_path = parts[2]
+            refactor_type_str = parts[3]
+            instructions_text = " ".join(parts[4:])
+
+            # Map string to Enum
+            try:
+                r_type = RefactorType(refactor_type_str)
+            except ValueError:
+                valid_types = [t.value for t in RefactorType]
+                return f"❌ Invalid refactor type: `{refactor_type_str}`. Valid types: {valid_types}"
+
+            # Create Request
+            refactoring = SilpaRefactoring(
+                target_file=Path(file_path),
+                refactor_type=r_type,
+                description=f"Chat request: {instructions_text}",
+                instructions=instructions_text,
+            )
+
+            # Plan
+            architect = SilpaArchitect(workspace)
+            try:
+                plan = architect.plan(refactoring)
+            except Exception as e:
+                return f"❌ Planning Failed: {e}"
+
+            # Render Plan
+            risk_emoji = {
+                RefactorRisk.SAFE: "🟢",
+                RefactorRisk.MODERATE: "🟡",
+                RefactorRisk.HIGH: "🟠",
+                RefactorRisk.FORBIDDEN: "🔴",
+            }[plan.risk_level]
+
+            return (
+                f"📋 **Refactoring Plan Created**\n"
+                f"**File:** `{plan.refactoring.target_file}`\n"
+                f"**Type:** `{plan.refactoring.refactor_type.value}`\n"
+                f"**Risk:** {risk_emoji} {plan.risk_level.value.upper()}\n"
+                f"**Impact:** {plan.estimated_impact}\n\n"
+                f"**Validation:** Platinum Protocol (Pre-Test + Post-Test)\n"
+                f"To execute, normally we would need an approval token."
+            )
+
+        except Exception as e:
+            return f"❌ System Error: {str(e)}"
+
+    return get_silpa_for_chat(workspace)
 
 
 def get_silpa_for_chat(workspace: Optional[Path] = None) -> str:
