@@ -107,3 +107,72 @@ class PratyayaAnalyzer(BaseAnalyzer):
             logger.error(f"PRATYAYA: Dream state error: {e}")
 
         return intents
+
+    # =========================================================================
+    # OPUS-077: THE REFLEX (Active Defense)
+    # =========================================================================
+
+    def verify_syntax(self, file_path: str) -> bool:
+        """
+        REFLEX: Check if a file has valid Python syntax.
+
+        Args:
+            file_path: Path to the file to check
+
+        Returns:
+            True if syntax is valid or not checkable, False if invalid
+        """
+        if not file_path.endswith(".py"):
+            return True
+
+        try:
+            import ast
+
+            with open(file_path, "r") as f:
+                source = f.read()
+            ast.parse(source)
+            return True
+        except SyntaxError as e:
+            logger.error(f"🔥 REFLEX: Syntax Error detected in {file_path}: {e}")
+            return False
+        except Exception as e:
+            logger.warning(f"Could not verify syntax for {file_path}: {e}")
+            return True  # Assume valid if read fails (don't block)
+
+    def reflex_rollback(self, file_path: str) -> bool:
+        """
+        REFLEX: Immediate rollback of substantial damage.
+
+        If a file is broken, we revert it to HEAD.
+        If it's a new file, we delete it.
+        """
+        import os
+        import subprocess
+
+        try:
+            logger.warning(f"🚑 REFLEX: Initiating rollback for {file_path}...")
+
+            # Check if file is tracked
+            is_tracked = (
+                subprocess.call(
+                    ["git", "ls-files", "--error-unmatch", file_path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                == 0
+            )
+
+            if is_tracked:
+                # Revert to HEAD
+                subprocess.check_call(["git", "checkout", "HEAD", "--", file_path])
+                logger.info(f"✅ REFLEX: {file_path} restored to HEAD state.")
+            else:
+                # Untracked (new) file -> Delete
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"✅ REFLEX: {file_path} deleted (was new/untracked).")
+
+            return True
+        except Exception as e:
+            logger.error(f"❌ REFLEX FAILED: Could not rollback {file_path}: {e}")
+            return False
