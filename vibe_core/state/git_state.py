@@ -396,3 +396,94 @@ class GitState:
             return False
         result = self._run_git(["reset", "HEAD"])
         return result is not None
+
+    # =========================================================================
+    # OPUS-081: Runtime State Awareness (The "Lasagna" Logic)
+    # =========================================================================
+
+    def _get_runtime_state_patterns(self) -> List[str]:
+        """
+        Scans all plugin manifests to discover declared generated_outputs.
+        Returns a list of file patterns that are RUNTIME STATE (not source code).
+        """
+        import glob
+        import json
+
+        patterns: List[str] = []
+
+        # Scan Plugin Manifests: vibe_core/plugins/*/manifest.json
+        manifest_glob = self._workspace / "vibe_core" / "plugins" / "*" / "manifest.json"
+
+        for manifest_path in glob.glob(str(manifest_glob)):
+            try:
+                with open(manifest_path) as f:
+                    data = json.load(f)
+
+                outputs = data.get("generated_outputs", {})
+
+                # Support dict format: {"dashboard_files": [...], "state_files": [...]}
+                if isinstance(outputs, dict):
+                    for key, val in outputs.items():
+                        if key.startswith("_"):  # Skip _comment etc
+                            continue
+                        if isinstance(val, list):
+                            patterns.extend(val)
+                # Support list format: [...]
+                elif isinstance(outputs, list):
+                    patterns.extend(outputs)
+
+            except Exception as e:
+                logger.debug(f"Failed to read manifest {manifest_path}: {e}")
+                continue
+
+        return list(set(patterns))  # Unique patterns
+
+    def is_source_dirty(self) -> bool:
+        """
+        OPUS-081: Check if SOURCE CODE changed (excludes runtime state).
+        This is what Stop Hooks should call.
+        """
+        if not self.is_git_repo():
+            return False
+
+        # Get runtime state patterns from plugin manifests
+        ignore_patterns = self._get_runtime_state_patterns()
+
+        # Build git diff command with exclusions
+        # git diff --name-only HEAD -- . ':!OPUS.md' ':!ENVOY.md' ...
+        args = ["diff", "--name-only", "HEAD", "--", "."]
+        for pattern in ignore_patterns:
+            args.append(f":!{pattern}")
+
+        # Check unstaged changes
+        unstaged = self._run_git(args)
+
+        # Check staged changes
+        args_cached = ["diff", "--name-only", "--cached", "HEAD", "--", "."]
+        for pattern in ignore_patterns:
+            args_cached.append(f":!{pattern}")
+        staged = self._run_git(args_cached)
+
+        has_unstaged = bool(unstaged and unstaged.strip())
+        has_staged = bool(staged and staged.strip())
+
+        return has_unstaged or has_staged
+
+    def get_dirty_source_files(self) -> List[str]:
+        """
+        OPUS-081: Get list of dirty SOURCE CODE files (excludes runtime state).
+        """
+        if not self.is_git_repo():
+            return []
+
+        ignore_patterns = self._get_runtime_state_patterns()
+
+        args = ["diff", "--name-only", "HEAD", "--", "."]
+        for pattern in ignore_patterns:
+            args.append(f":!{pattern}")
+
+        result = self._run_git(args)
+        if not result:
+            return []
+
+        return [f.strip() for f in result.strip().split("\n") if f.strip()]
