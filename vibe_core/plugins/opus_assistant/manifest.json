@@ -46,7 +46,9 @@
     "state_files": [
       ".opus_state/observations.jsonl",
       ".opus_state/karma_history.jsonl",
-      ".opus_state/session.json"
+      ".opus_state/session.json",
+      ".opus_state/pending_intents.json",
+      ".opus_state/karma_log.json"
     ]
   },
 
