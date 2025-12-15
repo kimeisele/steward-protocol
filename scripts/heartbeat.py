@@ -297,8 +297,13 @@ class HeartbeatEngine:
                 # 2. Route (Dry Run - No Kernel/Executor)
                 route_res = self.router.route(prompt, source="HEARTBEAT_ENGINE")
                 result["status"] = "routing"
-                result["path"] = route_res.get("agent", "unknown")
-                result["route_info"] = route_res
+                # ExecutionRequest is a dataclass, not dict - use attributes
+                result["path"] = route_res.target_id or route_res.execution_path.value
+                result["route_info"] = {
+                    "execution_path": route_res.execution_path.value,
+                    "target_id": route_res.target_id,
+                    "confidence": route_res.confidence,
+                }
 
             logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
 
