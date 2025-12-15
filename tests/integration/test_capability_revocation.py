@@ -236,8 +236,9 @@ def test_revoke_nonexistent_capability():
         agent_id="test_agent_9", capabilities=["cap_b", "cap_c"], revoker_id="KERNEL", reason="Test nonexistent"
     )
 
-    # Should fail (nothing to revoke)
-    assert result["success"] is False
+    # OPUS-074: Idempotent success - goal achieved (caps not present)
+    # The agent does not have these capabilities, which is the desired end state
+    assert result["success"] is True
     assert len(result["revoked"]) == 0
     assert len(result["not_found"]) == 2
 
