@@ -28,10 +28,12 @@ VAJRA Compliance:
     - Unknown intents are safely queued for manual handling
 """
 
+import json
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -40,6 +42,11 @@ from .intent_generator import Intent
 from .validator import SrutiValidator
 
 logger = logging.getLogger("MANAS.IntentRouter")
+
+# OPUS-075: HIL Bridge state directory
+HIL_STATE_DIR = ".opus_state"
+PENDING_INTENTS_FILE = "pending_intents.json"
+KARMA_LOG_FILE = "karma_log.json"
 
 
 @dataclass
@@ -209,6 +216,246 @@ class IntentRouter:
     def reset_autonomous_steps(self) -> None:
         """Reset the autonomous step counter (call on session start)."""
         self._autonomous_steps = 0
+
+    # =========================================================================
+    # OPUS-075: HIL BRIDGE - Human-In-The-Loop Persistence
+    # =========================================================================
+
+    def _get_state_dir(self) -> Path:
+        """Get or create the HIL state directory."""
+        state_dir = self._workspace / HIL_STATE_DIR
+        state_dir.mkdir(parents=True, exist_ok=True)
+        return state_dir
+
+    def _load_pending_intents(self) -> Dict[str, Dict[str, Any]]:
+        """Load pending intents from JSON file."""
+        pending_file = self._get_state_dir() / PENDING_INTENTS_FILE
+        if pending_file.exists():
+            try:
+                return json.loads(pending_file.read_text())
+            except Exception as e:
+                logger.warning(f"Failed to load pending intents: {e}")
+        return {}
+
+    def _save_pending_intents(self, pending: Dict[str, Dict[str, Any]]) -> None:
+        """Save pending intents to JSON file."""
+        pending_file = self._get_state_dir() / PENDING_INTENTS_FILE
+        try:
+            pending_file.write_text(json.dumps(pending, indent=2, default=str))
+        except Exception as e:
+            logger.error(f"Failed to save pending intents: {e}")
+
+    def queue_intent(self, intent: Intent, gate_result: Dict[str, Any]) -> str:
+        """
+        OPUS-075: Queue an intent for human approval.
+
+        Called when gate() returns ask_user - stores the intent for later approval.
+
+        Returns:
+            The intent ID (for reference in approve command)
+        """
+        pending = self._load_pending_intents()
+
+        # Serialize intent for storage
+        intent_data = {
+            "id": intent.id,
+            "intent_type": intent.intent_type,
+            "title": intent.title,
+            "params": intent.params,
+            "confidence": getattr(intent, "confidence", 0.5),
+            "targets": getattr(intent, "targets", []),
+            "gate_reason": gate_result.get("reason", "unknown"),
+            "queued_at": datetime.now().isoformat(),
+            "status": "pending",
+        }
+
+        pending[intent.id] = intent_data
+        self._save_pending_intents(pending)
+
+        logger.info(f"📥 Intent queued for approval: {intent.id} ({intent.title})")
+        return intent.id
+
+    def list_pending_intents(self) -> List[Dict[str, Any]]:
+        """
+        OPUS-075: List all pending intents awaiting approval.
+
+        Returns:
+            List of pending intent dictionaries
+        """
+        pending = self._load_pending_intents()
+        return [v for v in pending.values() if v.get("status") == "pending"]
+
+    def approve_intent(self, intent_id: str) -> RouteResult:
+        """
+        OPUS-075: Approve and execute a pending intent.
+
+        Args:
+            intent_id: The ID of the intent to approve
+
+        Returns:
+            RouteResult from executing the intent
+        """
+        pending = self._load_pending_intents()
+
+        if intent_id not in pending:
+            logger.warning(f"Intent not found: {intent_id}")
+            return RouteResult(
+                success=False,
+                handler="HIL_BRIDGE",
+                result={},
+                error=f"Intent not found: {intent_id}",
+            )
+
+        intent_data = pending[intent_id]
+
+        if intent_data.get("status") != "pending":
+            return RouteResult(
+                success=False,
+                handler="HIL_BRIDGE",
+                result={},
+                error=f"Intent already processed: {intent_data.get('status')}",
+            )
+
+        # Reconstruct Intent object
+        intent = Intent(
+            id=intent_data["id"],
+            intent_type=intent_data["intent_type"],
+            title=intent_data["title"],
+            description=intent_data.get("description", intent_data["title"]),
+            reasoning=intent_data.get("reasoning", "Approved via HIL Bridge"),
+            params=intent_data.get("params", {}),
+        )
+        # Restore optional attributes
+        if "confidence" in intent_data:
+            intent.confidence = intent_data["confidence"]
+        if "targets" in intent_data:
+            intent.targets = intent_data["targets"]
+
+        logger.info(f"✅ Approving intent: {intent_id} ({intent.title})")
+
+        # Execute via route()
+        result = self.route(intent)
+
+        # Update status and record karma
+        intent_data["status"] = "approved"
+        intent_data["approved_at"] = datetime.now().isoformat()
+        intent_data["result_success"] = result.success
+        pending[intent_id] = intent_data
+        self._save_pending_intents(pending)
+
+        # Record karma feedback
+        self._record_karma(intent, result.success)
+
+        return result
+
+    def reject_intent(self, intent_id: str, reason: str = "") -> bool:
+        """
+        OPUS-075: Reject a pending intent.
+
+        Args:
+            intent_id: The ID of the intent to reject
+            reason: Optional reason for rejection
+
+        Returns:
+            True if rejected successfully
+        """
+        pending = self._load_pending_intents()
+
+        if intent_id not in pending:
+            logger.warning(f"Intent not found: {intent_id}")
+            return False
+
+        intent_data = pending[intent_id]
+        intent_data["status"] = "rejected"
+        intent_data["rejected_at"] = datetime.now().isoformat()
+        intent_data["rejection_reason"] = reason
+        pending[intent_id] = intent_data
+        self._save_pending_intents(pending)
+
+        # Record negative karma
+        intent = Intent(
+            id=intent_data["id"],
+            intent_type=intent_data["intent_type"],
+            title=intent_data["title"],
+            description=intent_data.get("description", intent_data["title"]),
+            reasoning=intent_data.get("reasoning", "Rejected via HIL Bridge"),
+            params=intent_data.get("params", {}),
+        )
+        self._record_karma(intent, success=False, rejected=True)
+
+        logger.info(f"❌ Rejected intent: {intent_id}")
+        return True
+
+    def _record_karma(self, intent: Intent, success: bool, rejected: bool = False) -> None:
+        """
+        OPUS-075: Record karma feedback for learning.
+
+        Karma is used to adjust future confidence thresholds and improve
+        MANAS's judgment over time.
+        """
+        karma_config = self._manas_config.get("karma", {})
+        if not karma_config.get("enabled", True):
+            return
+
+        karma_file = self._get_state_dir() / KARMA_LOG_FILE
+        karma_log = []
+        if karma_file.exists():
+            try:
+                karma_log = json.loads(karma_file.read_text())
+            except Exception:
+                karma_log = []
+
+        # Calculate karma score
+        if rejected:
+            score = -karma_config.get("failure_weight", 2.0)
+        elif success:
+            score = karma_config.get("success_weight", 1.0)
+        else:
+            score = -karma_config.get("failure_weight", 2.0)
+
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "intent_id": intent.id,
+            "intent_type": intent.intent_type,
+            "confidence": getattr(intent, "confidence", 0.5),
+            "outcome": "rejected" if rejected else ("success" if success else "failure"),
+            "karma_score": score,
+        }
+        karma_log.append(entry)
+
+        # Keep only last 100 entries
+        karma_log = karma_log[-100:]
+
+        try:
+            karma_file.write_text(json.dumps(karma_log, indent=2))
+        except Exception as e:
+            logger.warning(f"Failed to save karma log: {e}")
+
+    def get_karma_summary(self) -> Dict[str, Any]:
+        """
+        OPUS-075: Get karma summary for dashboard display.
+
+        Returns:
+            Dictionary with karma statistics
+        """
+        karma_file = self._get_state_dir() / KARMA_LOG_FILE
+        if not karma_file.exists():
+            return {"total_karma": 0, "entries": 0, "success_rate": 0.0}
+
+        try:
+            karma_log = json.loads(karma_file.read_text())
+            total_karma = sum(e.get("karma_score", 0) for e in karma_log)
+            successes = sum(1 for e in karma_log if e.get("outcome") == "success")
+            total = len(karma_log)
+
+            return {
+                "total_karma": total_karma,
+                "entries": total,
+                "success_rate": (successes / total * 100) if total > 0 else 0.0,
+                "recent": karma_log[-5:] if karma_log else [],
+            }
+        except Exception:
+            return {"total_karma": 0, "entries": 0, "success_rate": 0.0}
 
     def route(self, intent: Intent) -> RouteResult:
         """
