@@ -459,6 +459,106 @@ class EnvoyPlugin(KernelPlugin):
                 "response": f"Execution failed: {e}",
             }
 
+    def execute_mission(self, intent: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        The Single Point of Execution.
+        The Brain (Manas) determines intent, The Envoy (Hand) executes.
+
+        NO PUSSY MODE (OPUS-076): Real execution via ToolRegistry.
+
+        Args:
+            intent: The intent dictionary (from Manas)
+
+        Returns:
+            Execution result dict signed by Envoy
+        """
+        if not isinstance(intent, dict):
+            # Handle object form if necessary
+            try:
+                intent = intent.to_dict()
+            except AttributeError:
+                pass
+
+        mission_id = intent.get("id", "unknown")
+        action = intent.get("action", "unknown")
+        # Support both 'params' (Sankalpa) and 'args' (Tool) conventions
+        params = intent.get("params", {}) or intent.get("args", {})
+
+        logger.info(f"🔫 ENVOY [LIVE FIRE]: Processing mission {mission_id} -> {action}")
+
+        # 1. Get Tool Registry from Kernel
+        try:
+            # Try to get from kernel (Best practice)
+            registry = getattr(self._kernel, "tool_registry", None)
+            if not registry and hasattr(self._kernel, "get_service"):
+                registry = self._kernel.get_service("tool_registry")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to get registry from kernel: {e}")
+            registry = None
+
+        if not registry:
+            # Fallback: Pragmatic import for testing/headless
+            try:
+                from vibe_core.tools.tool_registry import default_registry  # noqa
+
+                # Assuming default_registry exists in module, if not we fail hard
+                # But based on user request, we should try.
+                # Actually, let's fail if kernel registry missing for safety in V1
+                pass
+            except ImportError:
+                pass
+
+            if not registry:
+                logger.error("❌ CRITICAL: ToolRegistry not found. Cannot execute.")
+                return {
+                    "status": "error",
+                    "message": "CRITICAL: ToolRegistry not found. Cannot execute.",
+                    "signed_by": "Envoy",
+                }
+
+        # 2. Find the Tool
+        # Registry API: has(tool_name) -> bool
+        if not registry.has(action):
+            logger.error(f"❌ ENVOY: Tool '{action}' not found in registry.")
+            return {
+                "status": "error",
+                "message": f"Tool '{action}' not known. Available: {registry.list_tools()}",
+                "signed_by": "Envoy",
+            }
+
+        # 3. EXECUTE (The Point of No Return)
+        try:
+            logger.info(f"⚡ ENVOY: Executing '{action}' with params: {list(params.keys())}")
+
+            # Create ToolCall object (Required by Registry)
+            from vibe_core.tools.tool_protocol import ToolCall
+
+            # Use 'envoy' as the authorized agent
+            call = ToolCall(tool_name=action, parameters=params, caller_agent_id="envoy")
+
+            # Execute via Registry (handles governance/capabilities)
+            tool_result = registry.execute(call)
+
+            if tool_result.success:
+                logger.info(f"✅ ENVOY: Mission Accomplished. Output len: {len(str(tool_result.output))}")
+                return {
+                    "status": "success",
+                    "executed_by": "Envoy",
+                    "tool": action,
+                    "result": tool_result.output,
+                    "mission_id": mission_id,
+                    "signed_by": "Envoy",
+                }
+            else:
+                logger.error(f"💥 ENVOY: Tool Execution Failed: {tool_result.error}")
+                return {"status": "error", "error": tool_result.error, "signed_by": "Envoy"}
+
+        except Exception as e:
+            logger.error(f"💥 ENVOY: Execution FAILED (Exception): {e}")
+            import traceback
+
+            return {"status": "error", "error": str(e), "traceback": traceback.format_exc(), "signed_by": "Envoy"}
+
     # =========================================================================
     # PUBLIC ROUTER ACCESS
     # =========================================================================

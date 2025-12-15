@@ -611,6 +611,34 @@ class OpusAssistantPlugin(KernelPlugin):
 
         return default
 
+    # =========================================================================
+    # CLI Command Handlers (Delegated to Layer 2 / commands.py)
+    # =========================================================================
+
+    def cmd_approve(self, **kwargs) -> Dict[str, Any]:
+        """Delegate approve command to commands.py."""
+        from .cli.commands import cmd_approve
+
+        return cmd_approve(self, **kwargs)
+
+    def cmd_reject(self, **kwargs) -> Dict[str, Any]:
+        """Delegate reject command to commands.py."""
+        from .cli.commands import cmd_reject
+
+        return cmd_reject(self, **kwargs)
+
+    def cmd_pending(self, **kwargs) -> Dict[str, Any]:
+        """Delegate pending command to commands.py."""
+        from .cli.commands import cmd_pending
+
+        return cmd_pending(self, **kwargs)
+
+    def cmd_karma(self, **kwargs) -> Dict[str, Any]:
+        """Delegate karma command to commands.py."""
+        from .cli.commands import cmd_karma
+
+        return cmd_karma(self, **kwargs)
+
     def reload_config(self) -> Dict[str, Any]:
         """
         Force reload config from files.

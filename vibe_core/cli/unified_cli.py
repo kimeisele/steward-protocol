@@ -75,12 +75,8 @@ class UnifiedCLI:
         }
 
         # OPUS-075: MANAS HIL Bridge commands
-        self._manas_cmds = {
-            "approve": self.cmd_approve,
-            "reject": self.cmd_reject,
-            "pending": self.cmd_pending,
-            "karma": self.cmd_karma,
-        }
+        # MOVED to 'opus_assistant' plugin via manifest.json
+        self._manas_cmds = {}
 
         # OPUS-031 Layer 4: Autonomous Conductor commands
         self._conductor_cmds = {
@@ -647,137 +643,24 @@ class UnifiedCLI:
             print(f"   Confidence: {intent.get('confidence', 0.5):.2f}")
             print(f"   Reason:     {intent.get('gate_reason', 'unknown')}")
             print(f"   Queued:     {intent.get('queued_at', 'unknown')}")
-            if intent.get("targets"):
-                print(f"   Targets:    {', '.join(intent['targets'][:3])}")
-
-        print("\n💡 Use 'steward approve <id>' to approve")
-        print("   Use 'steward reject <id>' to reject")
-        return 0
+        """List pending - Moved to plugin."""
+        print("❌ Moved to plugin 'opus_assistant'")
+        return 1
 
     def cmd_approve(self, args: List[str]) -> int:
-        """
-        Approve and execute a pending intent.
-
-        Usage:
-            steward approve <intent_id>
-            steward approve --all
-        """
-        from pathlib import Path
-
-        from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
-
-        if not args:
-            print("Usage: steward approve <intent_id>")
-            print("       steward approve --all")
-            return 1
-
-        router = IntentRouter(workspace=Path.cwd())
-
-        if args[0] == "--all":
-            pending = router.list_pending_intents()
-            if not pending:
-                print("📭 No pending intents to approve")
-                return 0
-
-            print(f"⚡ Approving {len(pending)} intents...")
-            successes = 0
-            for intent in pending:
-                result = router.approve_intent(intent["id"])
-                if result.success:
-                    print(f"  ✅ {intent['id']}: {intent['title']}")
-                    successes += 1
-                else:
-                    print(f"  ❌ {intent['id']}: {result.error}")
-
-            print(f"\n✅ Approved: {successes}/{len(pending)}")
-            return 0 if successes == len(pending) else 1
-
-        intent_id = args[0]
-        result = router.approve_intent(intent_id)
-
-        if result.success:
-            print(f"✅ Intent approved and executed: {intent_id}")
-            print(f"   Handler: {result.handler}")
-            if result.result:
-                print(f"   Result: {json.dumps(result.result, indent=2, default=str)[:500]}")
-            return 0
-        else:
-            print(f"❌ Failed to approve: {result.error}")
-            return 1
+        """Approve intent - Moved to plugin."""
+        print("❌ Moved to plugin 'opus_assistant'")
+        return 1
 
     def cmd_reject(self, args: List[str]) -> int:
-        """
-        Reject a pending intent.
-
-        Usage:
-            steward reject <intent_id>
-            steward reject <intent_id> --reason "Too risky"
-        """
-        from pathlib import Path
-
-        from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
-
-        if not args:
-            print("Usage: steward reject <intent_id>")
-            print('       steward reject <intent_id> --reason "explanation"')
-            return 1
-
-        intent_id = args[0]
-        reason = ""
-
-        if "--reason" in args:
-            try:
-                idx = args.index("--reason")
-                reason = args[idx + 1] if idx + 1 < len(args) else ""
-            except (ValueError, IndexError):
-                pass
-
-        router = IntentRouter(workspace=Path.cwd())
-        success = router.reject_intent(intent_id, reason)
-
-        if success:
-            print(f"❌ Intent rejected: {intent_id}")
-            if reason:
-                print(f"   Reason: {reason}")
-            return 0
-        else:
-            print(f"❌ Intent not found: {intent_id}")
-            return 1
+        """Reject intent - Moved to plugin."""
+        print("❌ Moved to plugin 'opus_assistant'")
+        return 1
 
     def cmd_karma(self, args: List[str]) -> int:
-        """
-        Show MANAS karma statistics.
-
-        Usage:
-            steward karma
-            steward karma --json
-        """
-        from pathlib import Path
-
-        from vibe_core.plugins.opus_assistant.manas.intent_router import IntentRouter
-
-        router = IntentRouter(workspace=Path.cwd())
-        summary = router.get_karma_summary()
-
-        json_output = "--json" in args
-
-        if json_output:
-            print(json.dumps(summary, indent=2, default=str))
-            return 0
-
-        print("🔮 MANAS KARMA SUMMARY")
-        print("=" * 40)
-        print(f"   Total Karma:  {summary['total_karma']:.1f}")
-        print(f"   Entries:      {summary['entries']}")
-        print(f"   Success Rate: {summary['success_rate']:.1f}%")
-
-        if summary.get("recent"):
-            print("\n📜 Recent Karma Events:")
-            for entry in summary["recent"]:
-                icon = "✅" if entry["outcome"] == "success" else "❌"
-                print(f"   {icon} {entry['intent_type']} ({entry['karma_score']:+.1f})")
-
-        return 0
+        """Show karma - Moved to plugin."""
+        print("❌ Moved to plugin 'opus_assistant'")
+        return 1
 
     # =========================================================================
     # OPUS-031 Layer 4: AUTONOMOUS CONDUCTOR COMMANDS
