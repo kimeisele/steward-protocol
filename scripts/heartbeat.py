@@ -50,6 +50,15 @@ except ImportError:
     ManasConfig = None
     MANAS_AVAILABLE = False
 
+# OPUS-074 WIRING: SQLiteLedger for VAJRA binding in headless mode
+try:
+    from vibe_core.ledger import SQLiteLedger
+
+    LEDGER_AVAILABLE = True
+except ImportError:
+    SQLiteLedger = None
+    LEDGER_AVAILABLE = False
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 logger = logging.getLogger("HEARTBEAT")
 
@@ -93,6 +102,19 @@ class HeartbeatEngine:
         else:
             logger.warning("⚠️ Unified Router not available - tasks will queue but not execute")
 
+        # OPUS-074 WIRING: Initialize SQLiteLedger for VAJRA (headless mode)
+        self.ledger = None
+        if LEDGER_AVAILABLE:
+            try:
+                ledger_path = project_root / "data" / "vibe_ledger.db"
+                ledger_path.parent.mkdir(parents=True, exist_ok=True)
+                self.ledger = SQLiteLedger(str(ledger_path))
+                logger.info("⚡ VAJRA: SQLiteLedger ready (headless mode)")
+            except Exception as e:
+                logger.warning(f"⚠️ VAJRA: Ledger unavailable: {e}")
+        else:
+            logger.warning("⚠️ VAJRA: SQLiteLedger not available - running in shadow mode")
+
         # OPUS-073: Initialize MANAS Cognitive Kernel
         self.manas = None
         if MANAS_AVAILABLE:
@@ -102,6 +124,12 @@ class HeartbeatEngine:
                     auto_execute_safe=True,  # Execute SAFE intents automatically
                 )
                 self.manas = CognitiveKernel(workspace=project_root, config=config)
+
+                # OPUS-074 WIRING: Inject Ledger for VAJRA binding
+                if self.ledger and hasattr(self.manas, "inject_ledger"):
+                    self.manas.inject_ledger(self.ledger)
+                    logger.info("⚡ VAJRA: Ledger bound to MANAS")
+
                 logger.info("🧠 MANAS Cognitive Kernel ready")
             except Exception as e:
                 logger.warning(f"⚠️ MANAS unavailable: {e}")
