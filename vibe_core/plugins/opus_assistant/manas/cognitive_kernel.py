@@ -221,7 +221,13 @@ class CognitiveKernel:
 
         # 🦁 NARASIMHA: The Cognitive Guardian (Conscience)
         from ..narasimha.guardian import CortexNarasimha
+
         self._narasimha = CortexNarasimha(workspace=self._workspace)
+
+        # 🔱 SHIVA: The Destroyer (Lifecycle Manager)
+        from .shiva import ShivaLifecycleManager
+
+        self.shiva = ShivaLifecycleManager(project_root=self._workspace)
 
         logger.info("MANAS Cognitive Kernel initialized")
 
@@ -342,6 +348,15 @@ class CognitiveKernel:
         logger.info("MANAS: Beginning thought cycle...")
         self._last_thought_time = datetime.utcnow()
 
+        # 🔱 SHIVA SWEEP: Clean up illusions before thinking new thoughts
+        try:
+            cleaned = self.shiva.sweep_and_archive(self._intent_buffer)
+            if cleaned > 0:
+                logger.info(f"🔱 SHIVA: Archived {cleaned} stale intents")
+                self._save_intent_buffer()
+        except Exception as e:
+            logger.error(f"🔱 SHIVA: Failed to sweep: {e}")
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
@@ -362,15 +377,18 @@ class CognitiveKernel:
         for intent in new_intents:
             if not self._is_intent_duplicate(intent):
                 entry = IntentBufferEntry(intent=intent)
-                
+
                 # 🦁 NARASIMHA JUDGMENT: Judge before buffering
                 verdict = self._narasimha.judge_intent(intent)
                 if verdict.status == "GUILTY":
                     logger.critical(f"🦁 NARASIMHA BLOCKED INTENT: {intent.title} - {verdict.reason}")
-                    entry.status = "blocked" # New status for sinful intents
-                    entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}", "verdict": str(verdict)}
+                    entry.status = "blocked"  # New status for sinful intents
+                    entry.execution_result = {
+                        "error": f"BLOCKED BY NARASIMHA: {verdict.reason}",
+                        "verdict": str(verdict),
+                    }
                     # We still buffer it as a record of sin, but it can never run
-                
+
                 self._intent_buffer.append(entry)
                 added.append(intent)
 
@@ -450,10 +468,10 @@ class CognitiveKernel:
         # Even if human approved, we double check (e.g. if context changed)
         verdict = self._narasimha.judge_intent(entry.intent)
         if verdict.status == "GUILTY":
-             logger.critical(f"🦁 NARASIMHA BLOCKED EXECUTION: {entry.intent.title}")
-             entry.status = "blocked"
-             entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}"}
-             return False
+            logger.critical(f"🦁 NARASIMHA BLOCKED EXECUTION: {entry.intent.title}")
+            entry.status = "blocked"
+            entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}"}
+            return False
 
         return self._execute_intent(entry)
 
