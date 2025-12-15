@@ -225,3 +225,54 @@ verification:
   required_sections:
     - "## Status"
     - "## Implementation"
+
+# =============================================================================
+# OPUS-075: MANAS 6D FORTRESS (Prefrontal Cortex)
+# =============================================================================
+# Impulse control for autonomous operation. This is what separates a script
+# from an AI co-worker.
+
+manas:
+  # Operating Mode
+  # - manual: All intents require human approval
+  # - hybrid: High-confidence intents auto-execute, low-confidence ask
+  # - autonomous: Full autopilot (use with caution)
+  mode: "hybrid"
+
+  # Confidence threshold for auto-execution
+  # Intents with confidence >= this value execute without asking
+  auto_execute_threshold: 0.85
+
+  # Safety limit: max autonomous actions per session
+  max_autonomous_steps: 10
+
+  # Protected Zones (Nuclear Keys)
+  # Files/patterns that ALWAYS require human approval
+  protected_zones:
+    # Kernel core
+    - "vibe_core/kernel_impl.py"
+    - "vibe_core/kernel_ops.py"
+    - "vibe_core/state/git_state.py"
+    # Governance
+    - "config/soul.yaml"
+    - "config/guardrails.yaml"
+    # CI/CD
+    - ".github/workflows/"
+    # Security
+    - "vibe_core/narasimha.py"
+    - "scripts/governance/"
+
+  # Category-specific confidence requirements
+  category_thresholds:
+    documentation: 0.7
+    testing: 0.75
+    git_operations: 0.85
+    code_generation: 0.9
+    system_config: 0.95
+
+# Karma feedback settings
+karma:
+  enabled: true
+  success_weight: 1.0
+  failure_weight: 2.0
+  decay_rate: 0.95
