@@ -104,4 +104,38 @@ If someone tries to sneak simulation mode back in:
 
 ---
 
+## @HARNESS
+
+<!-- @HARNESS
+files:
+  - path: config/providers.yaml
+    required: true
+  - path: config/prana.yaml
+    required: true
+  - path: .githooks/pre-commit
+    required: true
+
+wiring:
+  # Live fire must be enabled
+  - pattern: "live_fire_enabled: true"
+    in: config/providers.yaml
+
+  # Force refresh must be enabled (no stale OPUS.md)
+  - pattern: "force_refresh_on_heartbeat: true"
+    in: config/prana.yaml
+
+  # Pre-commit guard exists
+  - pattern: "OPUS-076.*Live Fire Guard"
+    in: .githooks/pre-commit
+
+semantic:
+  # Live fire mode check (from 075)
+  - type: execution_mode
+    name: live_fire_active
+    expected: live_fire
+    rationale: "System must be in live_fire mode"
+-->
+
+---
+
 *"Simulation is masturbation. Live Fire is sex. Build systems that fuck."*
