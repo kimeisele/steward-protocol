@@ -1,9 +1,16 @@
 # OPUS-074: HRIDAYA - The Heartbeat as Soul Center
 
-**Status:** PLANNING
+**Status:** PLANNING (DRAFT - needs review)
 **Author:** Claude (Senior Architect) + Human Admin
 **Date:** 2025-12-15
 **Scope:** Autonomous Execution Architecture - The Heart of the System
+
+---
+
+## ⚠️ DRAFT NOTICE
+
+This document was created quickly and needs review. Key questions remain open.
+The architecture must be validated against existing patterns before implementation.
 
 ---
 
@@ -34,6 +41,89 @@ alongside interactive kernel sessions.
 │   └─────────────────────┘           └─────────────────────┘     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## MANAS - The Existing 3-Plane Architecture (FACTS)
+
+**MANAS already exists as a complete System Devata:**
+
+### PLANE 1: Plugin Logic
+```
+vibe_core/plugins/opus_assistant/manas/
+├── cognitive_kernel.py   # CognitiveKernel class - actual cognition
+├── intent_generator.py   # Intent generation
+├── memory_store.py       # Learning/memory
+└── cortex/               # Specialized cognitive modules
+    ├── jnana.py          # Knowledge
+    ├── kriya.py          # Action
+    ├── sankalpa.py       # Planning
+    └── ...
+```
+
+### PLANE 2: Cartridge Identity
+```
+vibe_core/cartridges/system/manas/
+├── cartridge_main.py     # ManasCartridge class
+├── steward.json          # Passport
+└── STEWARD.md            # Documentation
+
+# Key insight from cartridge_main.py:
+# "This cartridge is the IDENTITY layer. The actual cognition lives in
+# opus_assistant/manas/ - this is just the passport to Agent City."
+```
+
+### PLANE 3: Passport (steward.json)
+```json
+{
+  "identity": { "agent_id": "manas", "name": "MANAS" },
+  "capabilities": {
+    "operations": [
+      { "name": "manas.cognition" },
+      { "name": "manas.spawn_agent" },
+      { "name": "manas.syscall" },
+      { "name": "manas.intent_generation" }
+    ]
+  },
+  "governance": {
+    "constitution_hash": "df4bf7b77c...",
+    "issuer": "opus_assistant"
+  }
+}
+```
+
+### Current heartbeat.py Integration
+
+```python
+# CURRENT (Plane 1 only - bypasses cartridge):
+from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+self.manas = CognitiveKernel(workspace=project_root)
+intents = self.manas.think(force=True)
+
+# QUESTION: Should this go through ManasCartridge instead?
+# ManasCartridge.process({"action": "think"}) → _delegate_think() → CognitiveKernel
+```
+
+### The Architectural Question
+
+```
+OPTION A: Direct CognitiveKernel (current)
+  heartbeat.py → CognitiveKernel.think()
+  - PRO: Works without kernel
+  - CON: Bypasses cartridge identity layer
+
+OPTION B: Through ManasCartridge
+  heartbeat.py → ManasCartridge.process() → CognitiveKernel.think()
+  - PRO: Uses proper 3-plane architecture
+  - CON: Requires kernel running (cartridge needs kernel)
+
+OPTION C: Kernel boot first
+  heartbeat.py → PRANA.ensure_kernel_running() → ManasCartridge
+  - PRO: Full system capabilities
+  - CON: Heavier, may not be needed for simple pulse
+
+DECISION NEEDED: Which option is correct?
 ```
 
 ---
