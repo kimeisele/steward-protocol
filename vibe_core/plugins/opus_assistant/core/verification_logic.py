@@ -687,19 +687,34 @@ class VerificationEngine:
                             failed.append(f"{check_name}: {test_path} FAILED")
 
                     elif check_type == "execution_mode":
-                        # OPUS-075: Verify system is NOT in simulation mode
+                        # OPUS-075/076: Verify system is NOT in simulation mode
+                        # Check BOTH config/providers.yaml (source of truth) AND SETTINGS.md
                         expected = check.get("expected", "live_fire")
-                        settings_file = self._root / "SETTINGS.md"
 
+                        # Primary source: config/providers.yaml (YAML config)
+                        providers_file = self._root / "config" / "providers.yaml"
+                        if providers_file.exists():
+                            providers_content = providers_file.read_text()
+                            if "live_fire_enabled: true" in providers_content:
+                                if expected == "live_fire":
+                                    passed.append(f"{check_name}: live_fire mode confirmed (providers.yaml)")
+                                else:
+                                    failed.append(f"{check_name}: expected simulation but providers.yaml has live_fire")
+                                continue
+                            elif "live_fire_enabled: false" in providers_content:
+                                if expected == "live_fire":
+                                    failed.append(f"{check_name}: SIMULATION MODE in providers.yaml!")
+                                else:
+                                    passed.append(f"{check_name}: simulation mode confirmed (providers.yaml)")
+                                continue
+
+                        # Fallback: SETTINGS.md (auto-generated, may be stale)
+                        settings_file = self._root / "SETTINGS.md"
                         if not settings_file.exists():
-                            skipped.append(f"{check_name}: SETTINGS.md not found")
+                            skipped.append(f"{check_name}: Neither providers.yaml nor SETTINGS.md found")
                             continue
 
                         content = settings_file.read_text()
-                        # Check for simulation mode markers (multiple formats)
-                        # Format 1: [x] Simulation Mode
-                        # Format 2: | `mode` | `simulation` |
-                        # Format 3: mode=simulation
                         import re
 
                         in_simulation = (
@@ -715,14 +730,14 @@ class VerificationEngine:
 
                         if expected == "live_fire":
                             if in_live_fire and not in_simulation:
-                                passed.append(f"{check_name}: live_fire mode confirmed")
+                                passed.append(f"{check_name}: live_fire mode confirmed (SETTINGS.md)")
                             elif in_simulation:
-                                failed.append(f"{check_name}: SIMULATION MODE ACTIVE - system won't do real work!")
+                                failed.append(f"{check_name}: SIMULATION MODE in SETTINGS.md (may be stale)")
                             else:
                                 skipped.append(f"{check_name}: mode unclear from SETTINGS.md")
                         else:
                             if in_simulation:
-                                passed.append(f"{check_name}: simulation mode confirmed")
+                                passed.append(f"{check_name}: simulation mode confirmed (SETTINGS.md)")
                             else:
                                 failed.append(f"{check_name}: expected simulation but found live_fire")
 
@@ -770,6 +785,57 @@ class VerificationEngine:
                                 failed.append(f"{check_name}: only {count} events ({min_events} required)")
                         except Exception as e:
                             failed.append(f"{check_name}: ledger query failed: {e}")
+
+                    elif check_type == "state_sync":
+                        # OPUS-075: Anti-spaghetti - verify two config sources are in sync
+                        import json
+
+                        source_path = self._root / check.get("source", "")
+                        source_key = check.get("source_key", "")
+                        target_path = self._root / check.get("target", "")
+                        target_key = check.get("target_key", "")
+                        inverted = check.get("inverted", False)
+
+                        if not source_path.exists():
+                            failed.append(f"{check_name}: source {source_path} not found")
+                            continue
+                        if not target_path.exists():
+                            failed.append(f"{check_name}: target {target_path} not found")
+                            continue
+
+                        try:
+                            # Read source (YAML)
+                            source_content = source_path.read_text()
+                            source_value = None
+                            if f"{source_key}: true" in source_content:
+                                source_value = True
+                            elif f"{source_key}: false" in source_content:
+                                source_value = False
+
+                            # Read target (JSON)
+                            target_data = json.loads(target_path.read_text())
+                            # Handle nested keys - check view_preferences first
+                            target_value = target_data.get("view_preferences", {}).get(target_key)
+                            if target_value is None:
+                                target_value = target_data.get(target_key)
+
+                            if source_value is None:
+                                skipped.append(f"{check_name}: couldn't parse {source_key} from source")
+                                continue
+
+                            # Check sync (with optional inversion)
+                            expected_target = not source_value if inverted else source_value
+
+                            if target_value == expected_target:
+                                passed.append(
+                                    f"{check_name}: synced ({source_key}={source_value} ↔ {target_key}={target_value})"
+                                )
+                            else:
+                                failed.append(
+                                    f"{check_name}: SPAGHETTI DETECTED! {source_key}={source_value} but {target_key}={target_value}"
+                                )
+                        except Exception as e:
+                            failed.append(f"{check_name}: sync check failed: {e}")
 
                     else:
                         skipped.append(f"{check_name}: Unknown check type '{check_type}'")
