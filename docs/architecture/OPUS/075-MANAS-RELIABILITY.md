@@ -145,6 +145,13 @@ wiring:
   - pattern: "_execution_callback\\(intent\\)"
     in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
 
+  # === SHIVA (NARASIMHA) - Intent Judgment Before Execution ===
+  # Narasimha is Shiva's avatar - destroys bad intents before they execute
+  - pattern: "CortexNarasimha"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "_narasimha\\.judge_intent"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
 tests:
   # === ALL 20 MANAS TEST SUITES ===
   - tests/manas/test_cognitive_kernel.py
