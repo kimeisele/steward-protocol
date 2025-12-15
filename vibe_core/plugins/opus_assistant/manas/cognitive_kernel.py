@@ -219,6 +219,10 @@ class CognitiveKernel:
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel: Optional["RealVibeKernel"] = None
 
+        # 🦁 NARASIMHA: The Cognitive Guardian (Conscience)
+        from ..narasimha.guardian import CortexNarasimha
+        self._narasimha = CortexNarasimha(workspace=self._workspace)
+
         logger.info("MANAS Cognitive Kernel initialized")
 
     # =========================================================================
@@ -358,6 +362,15 @@ class CognitiveKernel:
         for intent in new_intents:
             if not self._is_intent_duplicate(intent):
                 entry = IntentBufferEntry(intent=intent)
+                
+                # 🦁 NARASIMHA JUDGMENT: Judge before buffering
+                verdict = self._narasimha.judge_intent(intent)
+                if verdict.status == "GUILTY":
+                    logger.critical(f"🦁 NARASIMHA BLOCKED INTENT: {intent.title} - {verdict.reason}")
+                    entry.status = "blocked" # New status for sinful intents
+                    entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}", "verdict": str(verdict)}
+                    # We still buffer it as a record of sin, but it can never run
+                
                 self._intent_buffer.append(entry)
                 added.append(intent)
 
@@ -432,6 +445,15 @@ class CognitiveKernel:
             intent=entry.intent,
             extra_data={"approved_at": datetime.utcnow().isoformat()},
         )
+
+        # 🦁 NARASIMHA JUDGMENT: Final check before execution
+        # Even if human approved, we double check (e.g. if context changed)
+        verdict = self._narasimha.judge_intent(entry.intent)
+        if verdict.status == "GUILTY":
+             logger.critical(f"🦁 NARASIMHA BLOCKED EXECUTION: {entry.intent.title}")
+             entry.status = "blocked"
+             entry.execution_result = {"error": f"BLOCKED BY NARASIMHA: {verdict.reason}"}
+             return False
 
         return self._execute_intent(entry)
 
