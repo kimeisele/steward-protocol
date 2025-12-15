@@ -40,20 +40,38 @@ class VerifierTool:
 
     REAL CRYPTOGRAPHIC VERIFICATION ENABLED.
     Signatures are verified using ECDSA P-256 against agent public keys.
+
+    VAJRA Wiring:
+    - inject_kernel() for kernel binding
+    - _get_ledger() for ledger access
     """
+
+    # VAJRA: Kernel binding slot
+    _vibe_kernel = None
 
     def __init__(self):
         self.logger = logger
         self.simulation_mode = not (CRYPTO_ENABLED and CRYPTO_AVAILABLE)
 
         if self.simulation_mode:
-            self.logger.warning("⚠️  Verifier Tool running in SIMULATION MODE - crypto module unavailable")
+            self.logger.warning("Verifier Tool running in SIMULATION MODE - crypto module unavailable")
         else:
-            self.logger.info("✅ Verifier Tool initialized with REAL CRYPTO VERIFICATION")
+            self.logger.info("Verifier Tool initialized with REAL CRYPTO VERIFICATION")
 
         # Agent Public Key Registry (MVP: in-memory, hardcoded)
         # In production: Load from vibe_core.steward.json files or central registry
         self._load_agent_public_keys()
+
+    def inject_kernel(self, kernel) -> None:
+        """VAJRA: Inject kernel for ledger access."""
+        self._vibe_kernel = kernel
+        self.logger.info("VerifierTool: Kernel injected")
+
+    def _get_ledger(self):
+        """VAJRA: Get ledger from kernel (safe access)."""
+        if self._vibe_kernel is None:
+            return None
+        return self._vibe_kernel.ledger
 
     def _load_agent_public_keys(self):
         """

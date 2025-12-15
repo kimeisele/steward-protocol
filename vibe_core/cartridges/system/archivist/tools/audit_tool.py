@@ -19,7 +19,14 @@ class AuditTool:
     - Read events from other agents' event logs
     - Verify cryptographic signatures
     - Create attestation records
+
+    VAJRA Wiring:
+    - inject_kernel() for kernel binding
+    - _get_ledger() for ledger access
     """
+
+    # VAJRA: Kernel binding slot
+    _vibe_kernel = None
 
     def __init__(self, agent_name: str = "archivist"):
         """
@@ -32,7 +39,18 @@ class AuditTool:
         self.verified_count = 0
         self.failed_count = 0
 
-        logger.info(f"🔍 AuditTool initialized: {agent_name}")
+        logger.info(f"AuditTool initialized: {agent_name}")
+
+    def inject_kernel(self, kernel) -> None:
+        """VAJRA: Inject kernel for ledger access."""
+        self._vibe_kernel = kernel
+        logger.info("AuditTool: Kernel injected")
+
+    def _get_ledger(self):
+        """VAJRA: Get ledger from kernel (safe access)."""
+        if self._vibe_kernel is None:
+            return None
+        return self._vibe_kernel.ledger
 
     def verify_event_signature(self, event: Dict[str, Any], public_key: Optional[str] = None) -> Dict[str, Any]:
         """

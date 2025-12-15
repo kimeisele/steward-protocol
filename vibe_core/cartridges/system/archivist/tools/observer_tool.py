@@ -11,11 +11,31 @@ logger = logging.getLogger("ARCHIVIST_OBSERVER")
 
 
 class ObserverTool:
-    """Observes and collects HERALD broadcasts from Twitter"""
+    """
+    Observes and collects HERALD broadcasts from Twitter.
+
+    VAJRA Wiring:
+    - inject_kernel() for kernel binding
+    - _get_ledger() for ledger access
+    """
+
+    # VAJRA: Kernel binding slot
+    _vibe_kernel = None
 
     def __init__(self):
         self.logger = logger
-        self.logger.info("🔍 Observer Tool initialized")
+        self.logger.info("Observer Tool initialized")
+
+    def inject_kernel(self, kernel) -> None:
+        """VAJRA: Inject kernel for ledger access."""
+        self._vibe_kernel = kernel
+        self.logger.info("ObserverTool: Kernel injected")
+
+    def _get_ledger(self):
+        """VAJRA: Get ledger from kernel (safe access)."""
+        if self._vibe_kernel is None:
+            return None
+        return self._vibe_kernel.ledger
 
     def fetch_tweets(self, timeline_source: str = "simulated") -> List[Dict[str, Any]]:
         """
