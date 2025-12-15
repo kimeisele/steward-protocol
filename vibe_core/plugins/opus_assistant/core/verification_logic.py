@@ -786,6 +786,57 @@ class VerificationEngine:
                         except Exception as e:
                             failed.append(f"{check_name}: ledger query failed: {e}")
 
+                    elif check_type == "state_sync":
+                        # OPUS-075: Anti-spaghetti - verify two config sources are in sync
+                        import json
+
+                        source_path = self._root / check.get("source", "")
+                        source_key = check.get("source_key", "")
+                        target_path = self._root / check.get("target", "")
+                        target_key = check.get("target_key", "")
+                        inverted = check.get("inverted", False)
+
+                        if not source_path.exists():
+                            failed.append(f"{check_name}: source {source_path} not found")
+                            continue
+                        if not target_path.exists():
+                            failed.append(f"{check_name}: target {target_path} not found")
+                            continue
+
+                        try:
+                            # Read source (YAML)
+                            source_content = source_path.read_text()
+                            source_value = None
+                            if f"{source_key}: true" in source_content:
+                                source_value = True
+                            elif f"{source_key}: false" in source_content:
+                                source_value = False
+
+                            # Read target (JSON)
+                            target_data = json.loads(target_path.read_text())
+                            # Handle nested keys - check view_preferences first
+                            target_value = target_data.get("view_preferences", {}).get(target_key)
+                            if target_value is None:
+                                target_value = target_data.get(target_key)
+
+                            if source_value is None:
+                                skipped.append(f"{check_name}: couldn't parse {source_key} from source")
+                                continue
+
+                            # Check sync (with optional inversion)
+                            expected_target = not source_value if inverted else source_value
+
+                            if target_value == expected_target:
+                                passed.append(
+                                    f"{check_name}: synced ({source_key}={source_value} ↔ {target_key}={target_value})"
+                                )
+                            else:
+                                failed.append(
+                                    f"{check_name}: SPAGHETTI DETECTED! {source_key}={source_value} but {target_key}={target_value}"
+                                )
+                        except Exception as e:
+                            failed.append(f"{check_name}: sync check failed: {e}")
+
                     else:
                         skipped.append(f"{check_name}: Unknown check type '{check_type}'")
 
