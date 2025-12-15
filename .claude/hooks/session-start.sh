@@ -12,6 +12,7 @@ set -euo pipefail
 
 # Only run in Claude Code Web (remote environment)
 if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+    echo "⏭️ Skipping (not remote)"
     exit 0
 fi
 
