@@ -56,14 +56,17 @@ class ControlCablesParser:
 
     # Schema: Maps markdown label → (state_key, type, default)
     # Label is what appears in OPUS.md, key is stored in view_preferences
+    #
+    # OPUS-076: "Live Fire Mode" is NOT in this schema!
+    # It's controlled by config/providers.yaml (master config), not session.json.
+    # Users cannot toggle it via OPUS.md checkboxes.
     SCHEMA = {
         # Panel toggles (existing from control_plane.md.j2)
         "Tests": {"key": "show_tests", "type": bool, "default": True},
         "Code Health": {"key": "show_code_health", "type": bool, "default": True},
         "Debug": {"key": "show_debug", "type": bool, "default": False},
-        # Layer 1.5 Settings (new)
+        # Layer 1.5 Settings (user preferences only - NOT system config!)
         "Auto-Heal Mode": {"key": "auto_heal", "type": bool, "default": False},
-        "Simulation Mode": {"key": "simulation_mode", "type": bool, "default": True},
         "Aggressive Refactoring": {"key": "aggressive_refactoring", "type": bool, "default": False},
         "Budget Limit": {"key": "budget_limit", "type": float, "default": 5.0},
     }

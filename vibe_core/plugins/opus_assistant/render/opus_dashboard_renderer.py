@@ -260,6 +260,7 @@ class OpusDashboardRenderer:
             "kernel": self._gather_kernel_state(),
             "git": self._gather_git_state(),
             "session": self._gather_session(),
+            "master_config": self._gather_master_config(),  # OPUS-076: System-wide config (NOT session)
             "karma": karma,  # 🔌 WIRING: Karma score, history, trend
             "treasury": treasury,  # 💰 LAYER 1.5: Budget tracking
             "syscalls": self._gather_syscalls(),  # ⚡ LAYER 2: Experience Replay
@@ -370,6 +371,34 @@ class OpusDashboardRenderer:
                 pass
 
         return session_data if session_data else None
+
+    def _gather_master_config(self) -> Dict[str, Any]:
+        """
+        OPUS-076: Read system-wide config from config/providers.yaml.
+
+        FRACTAL ARCHITECTURE:
+        - Master config (providers.yaml) → System-wide truth (live_fire, etc.)
+        - Opus state (session.json) → Plugin-specific state (view prefs, karma)
+
+        These are SEPARATE. Do not duplicate master config in session.json!
+        """
+        master_config = {
+            "live_fire_enabled": False,  # Safe default
+        }
+
+        providers_path = self._root / "config" / "providers.yaml"
+        if providers_path.exists():
+            try:
+                content = providers_path.read_text()
+                # Simple parsing - we just need live_fire_enabled
+                if "live_fire_enabled: true" in content:
+                    master_config["live_fire_enabled"] = True
+                elif "live_fire_enabled: false" in content:
+                    master_config["live_fire_enabled"] = False
+            except Exception as e:
+                logger.debug(f"Failed to read master config: {e}")
+
+        return master_config
 
     def _gather_prakriti_layers(self) -> Dict[str, Any]:
         """Gather Prakriti layer details."""
