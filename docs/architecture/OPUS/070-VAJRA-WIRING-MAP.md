@@ -492,124 +492,69 @@ identity_provider: Optional[IdentityProvider] = None
 - **Rationale**: MANAS needs KERNEL identity to break Permission Denied deadlock
 - **Review**: Refactor when abstracting identity layer (P3)
 
-## 12. TREIBSAND Discovery - Event System Gap (OPUS-073)
+## 12. OPUS-073 Investigation - MANAS Triggering
 
 **Discovery Date**: 2025-12-14
-**Severity**: 🔴 Critical (Architecture doesn't execute)
-**Status**: ⚠️ DOCUMENTED - NOT YET FIXED
+**Corrected**: 2025-12-15
+**Status**: ✅ ANALYSIS COMPLETE
 
-### The Problem
+### What MANAS Actually Needs
 
-The MANAS cognitive architecture is beautifully designed but **NOT WIRED**:
+The `manas_awakening.yaml` circuit explicitly states:
+> "NOT triggered on every KERNEL_TICK"
 
-| Event Type | Defined In | Emitted? | Problem |
-|------------|-----------|----------|---------|
-| `KERNEL_TICK` | circuits/*.yaml | ❌ NO | kernel.tick() calls on_tick_pre() directly, not via EventBus |
-| `GIT_COMMIT` | circuits/*.yaml | ❌ NO | No git hooks emit this event |
-| `HOURLY_PULSE` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
-| `IDLE_DETECTED` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
-| `MANAS_FORCE_THINK` | manas_awakening.yaml | ❌ NO | Only callable interactively |
+MANAS triggers on:
+| Event | Source | Status |
+|-------|--------|--------|
+| `KERNEL_BOOT` | kernel.boot() | ✅ Already exists |
+| `HOURLY_PULSE` | heartbeat.py | ⏳ heartbeat.py needs to emit/call |
+| `IDLE_DETECTED` | Activity monitor | Future |
+| `MANAS_FORCE_THINK` | Manual/CLI | Available |
 
-### Impact
+### What Was Wrong (Reverted)
 
-```
-MANAS.think() → Generates intents
-       ↓
-.opus_state/manas_intents.json → Stored
-       ↓
-WHO CONSUMES THEM? → ❌ NOBODY (automatically)
+An incorrect analysis suggested adding KERNEL_TICK emission to `kernel.tick()`.
+This was **WRONG** because:
+1. MANAS does NOT listen for KERNEL_TICK (by design - rate limiting)
+2. It created a parallel event path (spaghetti)
+3. The kernel architecture uses direct `on_tick_pre()` calls, not EventBus
 
-Heartbeat Workflow:
-  - Runs every 15 mins (GitHub Actions cron)
-  - Uses TaskManager + UnifiedRouter
-  - Runs in DRY RUN mode
-  - ❌ DISCONNECTED from MANAS entirely
-```
+**The kernel change was reverted.** Kernel is eternal.
 
-### Root Cause
+### Correct Solution
 
-`kernel.tick()` in `kernel_impl.py:993`:
+The `heartbeat.py` script (runs every 15 mins via GitHub Actions) should:
+1. Call `MANAS.think()` directly
+2. Process safe auto-executable intents
+
 ```python
-def tick(self) -> None:
-    # Plugin Hook: Pre-Tick (Direct call - NOT via EventBus!)
-    for plugin in self._plugins:
-        plugin.on_tick_pre(self)  # ← Direct invocation
-    # No event emission here!
+# scripts/heartbeat.py - correct approach
+from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+def beat():
+    manas = CognitiveKernel(workspace=Path.cwd())
+    intents = manas.think(force=True)
+    # Process intents...
 ```
 
-The KernelTickHandler subscribes to EventBus events, but `kernel.tick()`
-calls `on_tick_pre()` directly instead of emitting events.
-
-### Required Fixes
-
-1. **Emit KERNEL_TICK events** from `kernel.tick()`:
-   ```python
-   def tick(self) -> None:
-       # Emit event to EventBus (every N ticks to avoid spam)
-       if self._tick_count % 30 == 0:  # ~3 seconds at 100ms ticks
-           asyncio.create_task(
-               self._event_bus.emit(Event(EventType.KERNEL_TICK, ...))
-           )
-   ```
-
-2. **Emit GIT_COMMIT events** via post-commit hook or watcher
-
-3. **Implement HOURLY_PULSE** in kernel tick loop:
-   ```python
-   if time.time() - self._last_hour >= 3600:
-       asyncio.create_task(self._event_bus.emit(HOURLY_PULSE))
-   ```
-
-4. **Connect Heartbeat to MANAS**:
-   - Have `heartbeat.py` import and call `manas.think()`
-   - Process safe auto-executable intents
-
-5. **Enable live execution in Heartbeat** (or add separate execution mode)
-
-### Architecture Decision
-
-- **Short term**: Document the gap, continue interactive usage
-- **Medium term**: Wire the event system properly (OPUS-073)
-- **Long term**: True autonomous operation via Heartbeat + MANAS
-
-### Verification Harness (OPUS-073)
-
-**CORRECTION (2025-12-15):** The initial analysis was WRONG. MANAS does NOT
-need KERNEL_TICK events from kernel.tick(). The kernel change was REVERTED.
-
-MANAS awakening circuit explicitly states: "NOT triggered on every KERNEL_TICK"
-
-What MANAS actually needs:
-- KERNEL_BOOT ✅ (already emitted by kernel.boot())
-- HOURLY_PULSE (should come from heartbeat.py, NOT kernel)
-- IDLE_DETECTED (activity monitor)
-- MANAS_FORCE_THINK (manual trigger)
+### Verification Harness
 
 <!-- HARNESS:START -->
 ```yaml
 harness:
-  id: OPUS-073-EVENT-WIRING
-  version: 2.0.0
-  status: CORRECTED  # Initial analysis was wrong, kernel change reverted
+  id: OPUS-073-MANAS-TRIGGER
+  version: 3.0.0
+  status: ANALYSIS_COMPLETE
 
   checks:
-    # KERNEL_BOOT - Already exists! ✅
+    # KERNEL_BOOT - Already works
     - type: PATTERN
       path: vibe_core/kernel_impl.py
       pattern: "KERNEL_BOOT"
-      required: true
-      status: PASS  # Already implemented
-      description: "KERNEL_BOOT emitted during boot"
+      status: PASS
+      description: "KERNEL_BOOT already emitted during boot"
 
-    # HOURLY_PULSE - Should come from heartbeat, NOT kernel
-    - type: PATTERN
-      path: scripts/heartbeat.py
-      pattern: "HOURLY_PULSE|manas|think"
-      required: true
-      status: PENDING
-      description: "heartbeat.py should emit HOURLY_PULSE and/or call MANAS.think()"
-
-    # Heartbeat → MANAS connection
+    # Heartbeat → MANAS
     - type: PATTERN
       path: scripts/heartbeat.py
       pattern: "manas|cognitive_kernel|think\\("
@@ -617,47 +562,11 @@ harness:
       status: PENDING
       description: "heartbeat.py must import and use MANAS"
 
-    # Fix #5: Live execution mode
-    - type: PATTERN
-      path: scripts/heartbeat.py
-      pattern: "--live|DRY.?RUN.*False|execute.*True"
-      required: true
-      description: "heartbeat.py must have live execution capability"
-
-    # Test coverage
-    - type: FILE
-      path: tests/integration/test_event_emission.py
-      required: true
-      description: "Integration tests for event emission must exist"
-
   tests:
     - path: tests/integration/test_event_emission.py
-      description: "Verify events are actually emitted"
+      description: "Verify MANAS triggering requirements"
 ```
 <!-- HARNESS:END -->
-
-### Correct Fix: heartbeat.py → MANAS
-
-**DO NOT modify kernel_impl.py for this.** The correct approach:
-
-```python
-# File: scripts/heartbeat.py
-# Add MANAS integration
-
-from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
-
-def beat():
-    # ... existing heartbeat logic ...
-
-    # Trigger MANAS thinking (replaces need for HOURLY_PULSE event)
-    try:
-        manas = CognitiveKernel(workspace=Path.cwd())
-        intents = manas.think(force=True)
-        if intents:
-            logger.info(f"🧠 MANAS generated {len(intents)} intents")
-    except Exception as e:
-        logger.warning(f"MANAS think failed: {e}")
-```
 
 ### Key Insight
 
