@@ -141,6 +141,7 @@ class KernelIOService:
                         "preserved_sections": preserved_keys,
                         "write_number": self._write_count,
                     },
+                    result="success",  # GAD-000: Always fill result field
                 )
                 logger.debug(f"📝 Audit: IO_WRITE #{self._write_count} - {name} by {writer_id}")
         except Exception as e:

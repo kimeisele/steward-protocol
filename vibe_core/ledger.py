@@ -223,10 +223,26 @@ class SQLiteLedger(VibeLedger):
             logger.warning(f"⚠️ Event signing failed: {e}")
             return None
 
-    def record_event(self, event_type: str, agent_id: str, details: Dict[str, Any]) -> str:
+    def record_event(
+        self,
+        event_type: str,
+        agent_id: str,
+        details: Dict[str, Any],
+        result: str = None,
+        task_id: str = None,
+        error: str = None,
+    ) -> str:
         """Record a generic event (governance action)
 
         Thread-safe: Uses lock to ensure hash chain integrity under concurrent writes.
+
+        Args:
+            event_type: Type of event (IO_WRITE, SYSCALL, etc.)
+            agent_id: ID of agent performing action
+            details: Event payload/details
+            result: Result of the action (success/failure/etc.) - GAD-000 compliance
+            task_id: Associated task ID if applicable - GAD-000 compliance
+            error: Error message if action failed - GAD-000 compliance
         """
         # CRITICAL: Lock entire read-compute-write cycle for hash chain integrity
         with self._write_lock:
@@ -239,11 +255,11 @@ class SQLiteLedger(VibeLedger):
                 {
                     "timestamp": timestamp,
                     "event_type": event_type,
-                    "task_id": None,
+                    "task_id": task_id,
                     "agent_id": agent_id,
                     "payload": json.dumps(details) if details else None,
-                    "result": None,
-                    "error": None,
+                    "result": result,
+                    "error": error,
                 },
                 sort_keys=True,
             )
@@ -262,15 +278,18 @@ class SQLiteLedger(VibeLedger):
             cursor.execute(
                 """
                 INSERT INTO ledger_events
-                (event_id, timestamp, event_type, agent_id, payload, current_hash, previous_hash, agent_signature)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (event_id, timestamp, event_type, task_id, agent_id, payload, result, error, current_hash, previous_hash, agent_signature)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     event_id,
                     timestamp,
                     event_type,
+                    task_id,
                     agent_id,
                     json.dumps(details) if details else None,
+                    result,
+                    error,
                     current_hash,
                     previous_hash,
                     agent_signature,
