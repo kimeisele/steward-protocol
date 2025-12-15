@@ -148,15 +148,15 @@ class SrutiValidator:
 | **GitAnalysisTool** | `analyst/tools/git_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
 | **StructureAnalysisTool** | `analyst/tools/structure_tool.py` | ✅ | `inject_kernel()` + `_get_ledger()` |
 
-### 5.2 Archivist Tools (✅ FIXED)
+### 5.2 Archivist Tools (✅ FULLY WIRED)
 
 | Tool | File | Status | Notes |
 |------|------|--------|-------|
 | **LedgerTool** | `archivist/tools/ledger_tool.py` | 🗑️ DELETED | Dead code - was duplicate ledger |
 | **AuditLedger** | `archivist/tools/ledger.py` | ✅ REFACTORED | Now delegates to `kernel.ledger` |
-| **AuditTool** | `archivist/tools/audit_tool.py` | ⏳ | Needs `inject_kernel()` |
-| **ObserverTool** | `archivist/tools/observer_tool.py` | ⏳ | Needs kernel wiring |
-| **VerifierTool** | `archivist/tools/verifier_tool.py` | ⏳ | Needs kernel wiring |
+| **AuditTool** | `archivist/tools/audit_tool.py` | ✅ WIRED | `inject_kernel()` + `_get_ledger()` |
+| **ObserverTool** | `archivist/tools/observer_tool.py` | ✅ WIRED | `inject_kernel()` + `_get_ledger()` |
+| **VerifierTool** | `archivist/tools/verifier_tool.py` | ✅ WIRED | `inject_kernel()` + `_get_ledger()` |
 
 ### 5.3 Other Orphaned Components
 
@@ -338,12 +338,15 @@ harness:
 ### Wiring Coverage Score
 
 ```
-WIRED:          11 components    ████████████░░░░░░░░  44%
+WIRED:          14 components    ███████████████░░░░░  56%
 PARTIAL:         3 components    █░░░░░░░░░░░░░░░░░░░  12%
-BLIND SPOTS:    14+ components   ░░░░░░░░░░░░░░░░░░░░  44%
+BLIND SPOTS:    11+ components   ░░░░░░░░░░░░░░░░░░░░  32%
 
 GOAL: 100% kernel wiring = JET FUEL
 ```
+
+**Recent Progress (2025-12-15):**
+- ✅ AuditTool, ObserverTool, VerifierTool now wired
 
 ## 9. ⚡ VAJRA Enforcement System
 
