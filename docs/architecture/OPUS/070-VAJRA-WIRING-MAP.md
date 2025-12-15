@@ -492,200 +492,92 @@ identity_provider: Optional[IdentityProvider] = None
 - **Rationale**: MANAS needs KERNEL identity to break Permission Denied deadlock
 - **Review**: Refactor when abstracting identity layer (P3)
 
-## 12. TREIBSAND Discovery - Event System Gap (OPUS-073)
+## 12. OPUS-073 Investigation - MANAS Triggering
 
 **Discovery Date**: 2025-12-14
-**Severity**: 🔴 Critical (Architecture doesn't execute)
-**Status**: ⚠️ DOCUMENTED - NOT YET FIXED
+**Corrected**: 2025-12-15
+**Status**: ✅ ANALYSIS COMPLETE
 
-### The Problem
+### What MANAS Actually Needs
 
-The MANAS cognitive architecture is beautifully designed but **NOT WIRED**:
+The `manas_awakening.yaml` circuit explicitly states:
+> "NOT triggered on every KERNEL_TICK"
 
-| Event Type | Defined In | Emitted? | Problem |
-|------------|-----------|----------|---------|
-| `KERNEL_TICK` | circuits/*.yaml | ❌ NO | kernel.tick() calls on_tick_pre() directly, not via EventBus |
-| `GIT_COMMIT` | circuits/*.yaml | ❌ NO | No git hooks emit this event |
-| `HOURLY_PULSE` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
-| `IDLE_DETECTED` | manas_awakening.yaml | ❌ NO | Not implemented anywhere |
-| `MANAS_FORCE_THINK` | manas_awakening.yaml | ❌ NO | Only callable interactively |
+MANAS triggers on:
+| Event | Source | Status |
+|-------|--------|--------|
+| `KERNEL_BOOT` | kernel.boot() | ✅ Already exists |
+| `HOURLY_PULSE` | heartbeat.py | ⏳ heartbeat.py needs to emit/call |
+| `IDLE_DETECTED` | Activity monitor | Future |
+| `MANAS_FORCE_THINK` | Manual/CLI | Available |
 
-### Impact
+### What Was Wrong (Reverted)
 
-```
-MANAS.think() → Generates intents
-       ↓
-.opus_state/manas_intents.json → Stored
-       ↓
-WHO CONSUMES THEM? → ❌ NOBODY (automatically)
+An incorrect analysis suggested adding KERNEL_TICK emission to `kernel.tick()`.
+This was **WRONG** because:
+1. MANAS does NOT listen for KERNEL_TICK (by design - rate limiting)
+2. It created a parallel event path (spaghetti)
+3. The kernel architecture uses direct `on_tick_pre()` calls, not EventBus
 
-Heartbeat Workflow:
-  - Runs every 15 mins (GitHub Actions cron)
-  - Uses TaskManager + UnifiedRouter
-  - Runs in DRY RUN mode
-  - ❌ DISCONNECTED from MANAS entirely
-```
+**The kernel change was reverted.** Kernel is eternal.
 
-### Root Cause
+### Correct Solution
 
-`kernel.tick()` in `kernel_impl.py:993`:
+The `heartbeat.py` script (runs every 15 mins via GitHub Actions) should:
+1. Call `MANAS.think()` directly
+2. Process safe auto-executable intents
+
 ```python
-def tick(self) -> None:
-    # Plugin Hook: Pre-Tick (Direct call - NOT via EventBus!)
-    for plugin in self._plugins:
-        plugin.on_tick_pre(self)  # ← Direct invocation
-    # No event emission here!
+# scripts/heartbeat.py - correct approach
+from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
+
+def beat():
+    manas = CognitiveKernel(workspace=Path.cwd())
+    intents = manas.think(force=True)
+    # Process intents...
 ```
 
-The KernelTickHandler subscribes to EventBus events, but `kernel.tick()`
-calls `on_tick_pre()` directly instead of emitting events.
-
-### Required Fixes
-
-1. **Emit KERNEL_TICK events** from `kernel.tick()`:
-   ```python
-   def tick(self) -> None:
-       # Emit event to EventBus (every N ticks to avoid spam)
-       if self._tick_count % 30 == 0:  # ~3 seconds at 100ms ticks
-           asyncio.create_task(
-               self._event_bus.emit(Event(EventType.KERNEL_TICK, ...))
-           )
-   ```
-
-2. **Emit GIT_COMMIT events** via post-commit hook or watcher
-
-3. **Implement HOURLY_PULSE** in kernel tick loop:
-   ```python
-   if time.time() - self._last_hour >= 3600:
-       asyncio.create_task(self._event_bus.emit(HOURLY_PULSE))
-   ```
-
-4. **Connect Heartbeat to MANAS**:
-   - Have `heartbeat.py` import and call `manas.think()`
-   - Process safe auto-executable intents
-
-5. **Enable live execution in Heartbeat** (or add separate execution mode)
-
-### Architecture Decision
-
-- **Short term**: Document the gap, continue interactive usage
-- **Medium term**: Wire the event system properly (OPUS-073)
-- **Long term**: True autonomous operation via Heartbeat + MANAS
-
-### Verification Harness (OPUS-073)
+### Verification Harness
 
 <!-- HARNESS:START -->
 ```yaml
 harness:
-  id: OPUS-073-EVENT-WIRING
-  version: 1.0.0
-  status: PENDING  # Will be PASS after Fix #1-#5 implemented
+  id: OPUS-073-MANAS-TRIGGER
+  version: 3.0.0
+  status: ANALYSIS_COMPLETE
 
   checks:
-    # Fix #1: KERNEL_TICK emission
+    # KERNEL_BOOT - Already works
     - type: PATTERN
       path: vibe_core/kernel_impl.py
-      pattern: "emit.*KERNEL_TICK|EventType\\.KERNEL_TICK"
-      required: true
-      description: "kernel.tick() must emit KERNEL_TICK to EventBus"
+      pattern: "KERNEL_BOOT"
+      status: PASS
+      description: "KERNEL_BOOT already emitted during boot"
 
-    # Fix #2: GIT_COMMIT emission
-    - type: PATTERN
-      path: vibe_core/**/*.py
-      pattern: "emit.*GIT_COMMIT|EventType\\.GIT_COMMIT"
-      required: true
-      description: "GIT_COMMIT events must be emitted somewhere"
-
-    # Fix #3: HOURLY_PULSE timer
-    - type: PATTERN
-      path: vibe_core/kernel_impl.py
-      pattern: "HOURLY_PULSE|_last_hour"
-      required: true
-      description: "HOURLY_PULSE timer must exist in kernel"
-
-    # Fix #4: Heartbeat → MANAS connection
+    # Heartbeat → MANAS
     - type: PATTERN
       path: scripts/heartbeat.py
       pattern: "manas|cognitive_kernel|think\\("
       required: true
+      status: PENDING
       description: "heartbeat.py must import and use MANAS"
-
-    # Fix #5: Live execution mode
-    - type: PATTERN
-      path: scripts/heartbeat.py
-      pattern: "--live|DRY.?RUN.*False|execute.*True"
-      required: true
-      description: "heartbeat.py must have live execution capability"
-
-    # Test coverage
-    - type: FILE
-      path: tests/integration/test_event_emission.py
-      required: true
-      description: "Integration tests for event emission must exist"
 
   tests:
     - path: tests/integration/test_event_emission.py
-      description: "Verify events are actually emitted"
+      description: "Verify MANAS triggering requirements"
 ```
 <!-- HARNESS:END -->
 
-### Proposed Fix: kernel.tick() Event Emission
+### Key Insight
 
-```python
-# File: vibe_core/kernel_impl.py
-# Location: def tick(self) method, after line 1001
+The kernel already emits KERNEL_BOOT during boot. MANAS awakening circuit
+triggers on KERNEL_BOOT. The "missing" piece is:
+1. HOURLY_PULSE should come from heartbeat.py (external cron)
+2. OR heartbeat.py directly calls MANAS.think()
 
-# ADD AFTER: plugin.on_tick_pre(self)
+**Kernel is eternal. Don't touch it for event wiring.**
 
-# OPUS-073: Emit KERNEL_TICK to EventBus (throttled)
-import asyncio
-if hasattr(self, '_tick_count'):
-    self._tick_count += 1
-else:
-    self._tick_count = 0
-
-# Emit every 30 ticks (~3 seconds at 100ms tick rate)
-if self._tick_count % 30 == 0:
-    try:
-        from vibe_core.event_bus import Event, EventType
-        event = Event(
-            event_type=EventType.KERNEL_TICK,
-            broadcaster_id="kernel",
-            message=f"Tick #{self._tick_count}",
-            details={"tick_count": self._tick_count}
-        )
-        # Fire-and-forget async emission
-        asyncio.create_task(self._event_bus.emit(event))
-    except Exception as e:
-        pass  # Don't crash kernel if event emission fails
-
-# HOURLY_PULSE (every 3600 seconds)
-import time
-if not hasattr(self, '_last_hourly_pulse'):
-    self._last_hourly_pulse = time.time()
-if time.time() - self._last_hourly_pulse >= 3600:
-    self._last_hourly_pulse = time.time()
-    try:
-        from vibe_core.event_bus import Event, EventType
-        event = Event(
-            event_type=EventType.HOURLY_PULSE,  # Need to add to EventType enum
-            broadcaster_id="kernel",
-            message="Hourly pulse",
-        )
-        asyncio.create_task(self._event_bus.emit(event))
-    except Exception:
-        pass
-```
-
-### Manual Test Evidence
-
-Run in workspace to verify gap still exists:
-```bash
-grep -r "emit.*KERNEL_TICK" vibe_core/  # Returns nothing (EXPECTED TO FAIL)
-grep -r "emit.*GIT_COMMIT" vibe_core/   # Returns nothing (EXPECTED TO FAIL)
-```
-
-*"Architektur ohne Ausführung = Treibsand."*
+*"Architektur ohne Ausführung = Treibsand. Aber Spaghetti ist schlimmer."*
 
 ---
 

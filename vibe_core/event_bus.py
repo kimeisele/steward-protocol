@@ -52,9 +52,9 @@ class EventType(str, Enum):
     VOTE_CAST = "VOTE_CAST"  # Vote recorded
     AUDIT_CHECK = "AUDIT_CHECK"  # Invariant verified
 
-    # OPUS-073: Kernel heartbeat events (VAJRA-WIRING-MAP)
-    KERNEL_TICK = "KERNEL_TICK"  # Throttled kernel tick event
-    HOURLY_PULSE = "HOURLY_PULSE"  # Hourly heartbeat pulse
+    # Circuit trigger events (NOT emitted from kernel - see OPUS-073)
+    KERNEL_TICK = "KERNEL_TICK"  # For circuits, emitted by plugins if needed
+    HOURLY_PULSE = "HOURLY_PULSE"  # For MANAS, emitted by heartbeat.py
 
 
 class EventColor(str, Enum):
