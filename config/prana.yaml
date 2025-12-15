@@ -55,12 +55,14 @@ kernel:
   auto_restart: true
 
 # OPUS Dashboard Configuration
+# OPUS-076: Force refresh ensures OPUS.md reflects actual system state
 opus:
   # Refresh interval for OPUS.md (seconds)
   refresh_interval: 60
 
-  # Force refresh on heartbeat (even if not dirty)
-  force_refresh_on_heartbeat: false
+  # Force refresh on heartbeat - REQUIRED for live_fire mode!
+  # If false, OPUS.md may show stale data (pussy mode symptom)
+  force_refresh_on_heartbeat: true
 
 # Safety Limits
 limits:

@@ -9,7 +9,6 @@
     "show_debug": false,
     "show_code_health": true,
     "auto_heal": false,
-    "simulation_mode": true,
     "aggressive_refactoring": false,
     "budget_limit": 5.0
   },

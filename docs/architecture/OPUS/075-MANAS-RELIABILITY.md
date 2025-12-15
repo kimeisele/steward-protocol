@@ -180,6 +180,12 @@ semantic:
     name: vajra_ledger_intact
     min_events: 100
     rationale: "VAJRA should have significant history"
+
+  # OPUS-076: ARCHITECTURAL FIX APPLIED
+  # state_sync check REMOVED because the spaghetti was fixed:
+  # - session.json no longer contains simulation_mode (was duplicate state)
+  # - Template now reads live_fire directly from master_config (providers.yaml)
+  # - Single source of truth: config/providers.yaml
 -->
 
 ---

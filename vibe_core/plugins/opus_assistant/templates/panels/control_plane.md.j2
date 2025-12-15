@@ -37,13 +37,14 @@
 
 {# Layer 1.5 Settings - Bidirectional Control Cables #}
 {% set auto_heal = vp.get('auto_heal', false) %}
-{% set simulation_mode = vp.get('simulation_mode', true) %}
+{# OPUS-076: live_fire comes from MASTER CONFIG, not session.json! #}
+{% set live_fire = master_config.live_fire_enabled if master_config else false %}
 {% set aggressive_refactoring = vp.get('aggressive_refactoring', false) %}
 {% set budget_limit = vp.get('budget_limit', 5.0) %}
 
 **Layer 1.5 Settings:**
 - [{{ 'x' if auto_heal else ' ' }}] Auto-Heal Mode {% if auto_heal %}🔧{% endif %}
-- [{{ 'x' if simulation_mode else ' ' }}] Simulation Mode {% if simulation_mode %}_(safe)_{% else %}_(live!)_{% endif %}
+- [{{ 'x' if live_fire else ' ' }}] Live Fire Mode {% if live_fire %}🔥_(active!)_{% else %}_(simulation)_{% endif %}
 - [{{ 'x' if aggressive_refactoring else ' ' }}] Aggressive Refactoring {% if aggressive_refactoring %}⚠️{% endif %}
 - [{{ 'x' if budget_limit > 0 else ' ' }}] Budget Limit: ${{ "%.2f"|format(budget_limit) }}
 
