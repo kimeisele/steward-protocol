@@ -574,41 +574,47 @@ calls `on_tick_pre()` directly instead of emitting events.
 
 ### Verification Harness (OPUS-073)
 
+**CORRECTION (2025-12-15):** The initial analysis was WRONG. MANAS does NOT
+need KERNEL_TICK events from kernel.tick(). The kernel change was REVERTED.
+
+MANAS awakening circuit explicitly states: "NOT triggered on every KERNEL_TICK"
+
+What MANAS actually needs:
+- KERNEL_BOOT ✅ (already emitted by kernel.boot())
+- HOURLY_PULSE (should come from heartbeat.py, NOT kernel)
+- IDLE_DETECTED (activity monitor)
+- MANAS_FORCE_THINK (manual trigger)
+
 <!-- HARNESS:START -->
 ```yaml
 harness:
   id: OPUS-073-EVENT-WIRING
-  version: 1.1.0
-  status: PARTIAL  # Fix #1 COMPLETE, #2-#5 PENDING
+  version: 2.0.0
+  status: CORRECTED  # Initial analysis was wrong, kernel change reverted
 
   checks:
-    # Fix #1: KERNEL_TICK emission ✅ COMPLETE (d3d16f8)
+    # KERNEL_BOOT - Already exists! ✅
     - type: PATTERN
       path: vibe_core/kernel_impl.py
-      pattern: "emit.*KERNEL_TICK|EventType\\.KERNEL_TICK"
+      pattern: "KERNEL_BOOT"
       required: true
-      status: PASS  # Admin fix 2025-12-15
-      description: "kernel.tick() must emit KERNEL_TICK to EventBus"
+      status: PASS  # Already implemented
+      description: "KERNEL_BOOT emitted during boot"
 
-    # Fix #2: GIT_COMMIT emission
+    # HOURLY_PULSE - Should come from heartbeat, NOT kernel
     - type: PATTERN
-      path: vibe_core/**/*.py
-      pattern: "emit.*GIT_COMMIT|EventType\\.GIT_COMMIT"
+      path: scripts/heartbeat.py
+      pattern: "HOURLY_PULSE|manas|think"
       required: true
-      description: "GIT_COMMIT events must be emitted somewhere"
+      status: PENDING
+      description: "heartbeat.py should emit HOURLY_PULSE and/or call MANAS.think()"
 
-    # Fix #3: HOURLY_PULSE timer
-    - type: PATTERN
-      path: vibe_core/kernel_impl.py
-      pattern: "HOURLY_PULSE|_last_hour"
-      required: true
-      description: "HOURLY_PULSE timer must exist in kernel"
-
-    # Fix #4: Heartbeat → MANAS connection
+    # Heartbeat → MANAS connection
     - type: PATTERN
       path: scripts/heartbeat.py
       pattern: "manas|cognitive_kernel|think\\("
       required: true
+      status: PENDING
       description: "heartbeat.py must import and use MANAS"
 
     # Fix #5: Live execution mode
@@ -630,63 +636,39 @@ harness:
 ```
 <!-- HARNESS:END -->
 
-### Proposed Fix: kernel.tick() Event Emission
+### Correct Fix: heartbeat.py → MANAS
+
+**DO NOT modify kernel_impl.py for this.** The correct approach:
 
 ```python
-# File: vibe_core/kernel_impl.py
-# Location: def tick(self) method, after line 1001
+# File: scripts/heartbeat.py
+# Add MANAS integration
 
-# ADD AFTER: plugin.on_tick_pre(self)
+from vibe_core.plugins.opus_assistant.manas import CognitiveKernel
 
-# OPUS-073: Emit KERNEL_TICK to EventBus (throttled)
-import asyncio
-if hasattr(self, '_tick_count'):
-    self._tick_count += 1
-else:
-    self._tick_count = 0
+def beat():
+    # ... existing heartbeat logic ...
 
-# Emit every 30 ticks (~3 seconds at 100ms tick rate)
-if self._tick_count % 30 == 0:
+    # Trigger MANAS thinking (replaces need for HOURLY_PULSE event)
     try:
-        from vibe_core.event_bus import Event, EventType
-        event = Event(
-            event_type=EventType.KERNEL_TICK,
-            broadcaster_id="kernel",
-            message=f"Tick #{self._tick_count}",
-            details={"tick_count": self._tick_count}
-        )
-        # Fire-and-forget async emission
-        asyncio.create_task(self._event_bus.emit(event))
+        manas = CognitiveKernel(workspace=Path.cwd())
+        intents = manas.think(force=True)
+        if intents:
+            logger.info(f"🧠 MANAS generated {len(intents)} intents")
     except Exception as e:
-        pass  # Don't crash kernel if event emission fails
-
-# HOURLY_PULSE (every 3600 seconds)
-import time
-if not hasattr(self, '_last_hourly_pulse'):
-    self._last_hourly_pulse = time.time()
-if time.time() - self._last_hourly_pulse >= 3600:
-    self._last_hourly_pulse = time.time()
-    try:
-        from vibe_core.event_bus import Event, EventType
-        event = Event(
-            event_type=EventType.HOURLY_PULSE,  # Need to add to EventType enum
-            broadcaster_id="kernel",
-            message="Hourly pulse",
-        )
-        asyncio.create_task(self._event_bus.emit(event))
-    except Exception:
-        pass
+        logger.warning(f"MANAS think failed: {e}")
 ```
 
-### Manual Test Evidence
+### Key Insight
 
-Run in workspace to verify gap still exists:
-```bash
-grep -r "emit.*KERNEL_TICK" vibe_core/  # Returns nothing (EXPECTED TO FAIL)
-grep -r "emit.*GIT_COMMIT" vibe_core/   # Returns nothing (EXPECTED TO FAIL)
-```
+The kernel already emits KERNEL_BOOT during boot. MANAS awakening circuit
+triggers on KERNEL_BOOT. The "missing" piece is:
+1. HOURLY_PULSE should come from heartbeat.py (external cron)
+2. OR heartbeat.py directly calls MANAS.think()
 
-*"Architektur ohne Ausführung = Treibsand."*
+**Kernel is eternal. Don't touch it for event wiring.**
+
+*"Architektur ohne Ausführung = Treibsand. Aber Spaghetti ist schlimmer."*
 
 ---
 
