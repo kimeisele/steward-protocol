@@ -224,7 +224,15 @@ class CognitiveKernel:
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
+        # 🕉️ SHIVA: The Lifecycle Manager (OPUS-082)
+        from .shiva import ShivaLifecycleManager
+
+        self._shiva = ShivaLifecycleManager(workspace=self._workspace)
+        self._shiva.inject_kernel(self)
+        self._shiva.inject_guardian(self._narasimha)  # <--- THE DIVINE LINK
+
         logger.info("MANAS Cognitive Kernel initialized")
+        logger.info("🕉️ Divine Separation ACTIVE: Shiva bound to Narasimha")
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)

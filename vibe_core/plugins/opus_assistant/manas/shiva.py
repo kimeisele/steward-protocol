@@ -32,6 +32,7 @@ Philosophy:
 """
 
 import logging
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,6 +41,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from .intent_generator import Intent
 
 if TYPE_CHECKING:
+    from ..narasimha.guardian import CortexNarasimha
     from .cognitive_kernel import CognitiveKernel
 
 logger = logging.getLogger("MANAS.SHIVA")
@@ -71,12 +73,23 @@ class ShivaLifecycleManager:
     def __init__(self, workspace: Path):
         self._workspace = workspace
         self._kernel: Optional["CognitiveKernel"] = None
+        self._guardian: Optional["CortexNarasimha"] = None
         logger.info("🕉️ Shiva: Lifecycle Manager initialized")
 
     def inject_kernel(self, kernel: "CognitiveKernel") -> None:
         """Inject the CognitiveKernel for access to intent buffer."""
         self._kernel = kernel
         logger.debug("Shiva: Kernel injected")
+
+    def inject_guardian(self, guardian: "CortexNarasimha") -> None:
+        """
+        Inject Narasimha (The Guardian).
+
+        Shiva cannot destroy without Narasimha's permission.
+        This is the Divine Separation: Destroyer and Guardian are separate.
+        """
+        self._guardian = guardian
+        logger.info("🦁 Shiva: Guardian (Narasimha) injected - Divine Separation ACTIVE")
 
     def check_external_fulfillment(self, intent: Intent) -> FulfillmentResult:
         """
@@ -224,3 +237,53 @@ class ShivaLifecycleManager:
             logger.info(f"🕉️ Shiva: Swept {archived} fulfilled intents")
 
         return archived
+
+    def attempt_destruction(self, target_path: str) -> Dict[str, Any]:
+        """
+        ⚡ SHIVA'S DANCE: Attempt to destroy/clean a target.
+
+        MUST consult Narasimha first. This is the implementation of
+        the 'Divine Separation' verified by tests.
+
+        Args:
+            target_path: Path to destroy (relative to workspace)
+
+        Returns:
+            Dict with success status and details
+        """
+        full_path = self._workspace / target_path
+
+        # 1. Consult the Guardian (Narasimha)
+        if not self._guardian:
+            logger.critical("⛔ Shiva: Cannot destroy - Guardian not present!")
+            return {"success": False, "error": "Guardian missing"}
+
+        # Simulate an intent for the judge
+        class DestructionIntent:
+            intent_type = "destruction"
+            params = {"path": str(full_path), "action": "delete"}
+
+        verdict = self._guardian.judge_intent(DestructionIntent())
+
+        # 2. The Verdict (Sankalpa)
+        if verdict.status == "GUILTY":
+            logger.critical(f"🦁 NARASIMHA BLOCKED DESTRUCTION: {target_path} - {verdict.reason}")
+            return {"success": False, "error": f"BLOCKED BY NARASIMHA: {verdict.reason}", "verdict": str(verdict)}
+
+        # 3. The Dance (Execution)
+        try:
+            if full_path.is_file():
+                full_path.unlink()
+                action = "deleted file"
+            elif full_path.is_dir():
+                shutil.rmtree(full_path)
+                action = "deleted directory"
+            else:
+                return {"success": False, "error": "Target does not exist"}
+
+            logger.info(f"🔥 Shiva: {action} {target_path} (Sanctioned by Narasimha)")
+            return {"success": True, "message": f"Target {target_path} returned to Akasha."}
+
+        except Exception as e:
+            logger.error(f"❌ Shiva: Destruction failed: {e}")
+            return {"success": False, "error": str(e)}
