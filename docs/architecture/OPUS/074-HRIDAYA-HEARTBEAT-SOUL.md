@@ -414,12 +414,164 @@ harness:
 
 ---
 
-## Open Questions for Review
+## Additional Context (for Review)
 
-1. **Location**: Should DevataRegistry live in `vibe_core/hridaya/` (new) or `vibe_core/runtime/`?
-2. **PRANA Config**: How granular should soul function control be?
-3. **OPUS.md**: Direct write or separate workflow?
-4. **Kernel Boot**: Should heartbeat optionally boot kernel for full plugin access?
+### Headless Boot Mode
+
+The kernel has a **headless boot mode** that allows lightweight autonomous operation:
+```python
+# PRANA config can enable this:
+heartbeat.boot_kernel_first = True  # Optional kernel boot before pulse
+```
+
+This means we have OPTIONS for how heartbeat integrates with the kernel:
+- **No kernel**: Direct CognitiveKernel (current implementation)
+- **Headless kernel**: Boot kernel in headless mode, use full plugin system
+- **Full kernel**: Interactive session (not applicable for cron)
+
+### MANAS as THE Cognitive Integration Point
+
+MANAS is not just "a" cognitive agent - it is THE cognitive kernel:
+- All cognition should route through MANAS
+- Other agents/components that need "thinking" should use MANAS
+- MANAS becomes the universal cognitive interface
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              MANAS = Central Cognitive Hub              │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│   heartbeat.py ──┐                                      │
+│                  │                                      │
+│   kernel tick ───┼──→ MANAS.think() ──→ Intents        │
+│                  │                                      │
+│   CLI command ───┘                                      │
+│                                                         │
+│   (All paths converge on MANAS for cognition)          │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Current State (What Exists)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| heartbeat.py | ✅ Has MANAS | Direct CognitiveKernel import |
+| CognitiveKernel | ✅ Works | In opus_assistant/manas/ |
+| ManasCartridge | ✅ Exists | Delegates to CognitiveKernel |
+| Headless boot | ✅ Exists | Via PRANA config |
+| DevataRegistry | ❌ Proposed | Not implemented |
+| Soul Functions | ❌ Proposed | Only THINK exists |
+
+---
+
+## Open Questions for Senior Architect Review
+
+### Q1: MANAS Integration Path
+```
+Current: heartbeat.py → CognitiveKernel directly
+Question: Is this correct, or should it go through ManasCartridge?
+
+Context:
+- ManasCartridge exists at vibe_core/cartridges/system/manas/
+- It delegates to CognitiveKernel anyway
+- But cartridge needs kernel to work
+- heartbeat runs without kernel (or with headless boot)
+```
+
+### Q2: Headless Kernel for Heartbeat
+```
+Question: Should heartbeat always boot kernel in headless mode?
+
+Pros:
+- Full plugin system available
+- Proper 3-plane architecture
+- MANAS through cartridge
+
+Cons:
+- Heavier startup
+- May be overkill for simple pulse
+- Potential timeout issues in GitHub Actions (10 min limit)
+```
+
+### Q3: DevataRegistry - Needed or Over-Engineering?
+```
+Question: Is DevataRegistry the right abstraction?
+
+Context:
+- Currently only MANAS needs to "think"
+- Are there other cognitive agents planned?
+- Or is MANAS the ONE cognitive hub forever?
+
+If MANAS is the only cognitive hub:
+- DevataRegistry is over-engineering
+- Just use MANAS directly
+
+If multiple cognitive agents:
+- DevataRegistry makes sense
+- But what other agents would think?
+```
+
+### Q4: Soul Functions - Scope Creep?
+```
+Question: Are SENSE, FEEL, HEAL, BEAT real requirements?
+
+Context:
+- THINK is clearly needed (MANAS)
+- SENSE could be metrics (but Prakriti already does this?)
+- FEEL could be karma (but KarmaManager exists?)
+- HEAL could be auto-repair (but circuits do this?)
+- BEAT is just logging?
+
+Risk: Duplicating existing functionality
+```
+
+### Q5: OPUS.md Rendering
+```
+Question: Should heartbeat render OPUS.md?
+
+Current: OPUS.md only rendered when kernel runs
+Problem: MANAS intents not visible after heartbeat pulse
+
+Options:
+A) Heartbeat renders OPUS.md directly
+B) Separate workflow for OPUS.md rendering
+C) OPUS.md only updated during interactive sessions
+```
+
+### Q6: Universal Cognitive Interface
+```
+Question: Should MANAS be THE universal think() interface?
+
+If yes:
+- All components call MANAS for cognitive work
+- MANAS becomes central nervous system
+- Clear architecture
+
+If no:
+- Multiple cognitive agents possible
+- DevataRegistry needed
+- More complex
+```
+
+---
+
+## Summary for Reviewer
+
+**Core Question**: How should autonomous cognition work in the STEWARD system?
+
+**Current Implementation**:
+- heartbeat.py imports CognitiveKernel directly
+- Runs MANAS.think() during pulse
+- Works but bypasses cartridge layer
+
+**Proposed Enhancement (HRIDAYA)**:
+- Heartbeat as "Soul Center"
+- Five soul functions (THINK, SENSE, FEEL, HEAL, BEAT)
+- DevataRegistry for cognitive agents
+
+**Key Decision Needed**:
+Is the current direct CognitiveKernel approach correct?
+Or do we need the full HRIDAYA architecture?
 
 ---
 
