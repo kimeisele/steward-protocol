@@ -49,6 +49,15 @@ except ImportError:
     MANAS_ORACLE_AVAILABLE = False
     logger.debug("MANAS Oracle not available - no pre/post task analysis")
 
+# OPUS-009 Wire 2: PrakritiSense Gate
+try:
+    from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
+
+    PRAKRITI_SENSE_AVAILABLE = True
+except ImportError:
+    PRAKRITI_SENSE_AVAILABLE = False
+    logger.debug("PrakritiSense not available - no Tamas gate check")
+
 
 class TaskManagerPlugin(KernelPlugin):
     """
@@ -150,6 +159,29 @@ class TaskManagerPlugin(KernelPlugin):
                 return HookResult.ok(data={"executed": 0, "phase": "actuators"})
 
             logger.info(f"🚀 Executing task: {next_task.title}")
+
+            # OPUS-009 Wire 2: Tamas Gate - Block if system state is broken
+            if PRAKRITI_SENSE_AVAILABLE:
+                try:
+                    sense = PrakritiSense(project_root)
+                    guna = sense.perceive_state()
+                    if guna.needs_attention:
+                        logger.warning(f"🔮 TAMAS GATE: {guna.tamas_count} paths in Tamas - blocking execution")
+                        logger.info("   💊 Attempting auto-heal before task execution...")
+                        # Try to heal
+                        for plugin_id, paths in sense._discovered_paths.items():
+                            for path_info in paths:
+                                if sense.diagnose(path_info.path).value == "tamas":
+                                    sense.heal(path_info.path)
+                        # Re-check
+                        guna = sense.perceive_state(refresh=True)
+                        if guna.needs_attention:
+                            logger.error(f"❌ TAMAS GATE: Still {guna.tamas_count} paths in Tamas after heal")
+                            task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                            return HookResult.ok(data={"executed": 0, "blocked_by": "tamas_gate", "phase": "actuators"})
+                        logger.info("   ✅ Healed to Sattva - proceeding with task")
+                except Exception as e:
+                    logger.warning(f"⚠️ PrakritiSense check failed: {e}")
 
             # Update status to IN_PROGRESS
             task_manager.update_status(next_task.id, TaskStatus.IN_PROGRESS)

@@ -31,6 +31,8 @@ from .memory_store import MemoryStore
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+    from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+
 logger = logging.getLogger("MANAS.Kernel")
 
 # ⚡ PHOENIX INJECTION: Import ManasConfig from Phoenix section (Dharma)
@@ -233,6 +235,9 @@ class CognitiveKernel:
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
+        # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
+        self._prakriti_sense: Optional["PrakritiSense"] = None
+
         logger.info("MANAS Cognitive Kernel initialized")
 
     # =========================================================================
@@ -264,6 +269,153 @@ class CognitiveKernel:
         """
         self._ledger = ledger
         logger.info("⚡ VAJRA: Standalone Ledger injected into MANAS (headless mode)")
+
+    # =========================================================================
+    # 👁️ PRAKRITI SENSE: THE SIXTH JNANENDRIYA (OPUS-009)
+    # =========================================================================
+
+    def inject_prakriti_sense(self, sense: "PrakritiSense") -> None:
+        """
+        Inject the sixth sense for unified state awareness.
+
+        OPUS-009: MANAS (Mind) needs Jnanendriyas (sense organs) to perceive
+        Prakriti (state). This IS that sixth sense.
+
+        With this injected, MANAS can:
+        - Perceive system state health (Sattva/Rajas/Tamas)
+        - Detect lobotomy (.gitignore violations)
+        - Generate healing intents automatically
+
+        Args:
+            sense: PrakritiSense instance
+        """
+        self._prakriti_sense = sense
+        logger.info("👁️ PRAKRITI SENSE: Sixth Jnanendriya injected - MANAS can now perceive state")
+
+    def _perceive_and_generate_healing_intents(self) -> List[Intent]:
+        """
+        Use PrakritiSense to perceive state and generate healing intents.
+
+        Called at the start of think() to ensure MANAS is aware of
+        system state health before generating other intents.
+
+        Returns:
+            List of healing intents (if any state needs attention)
+        """
+        if not self._prakriti_sense:
+            return []
+
+        healing_intents = []
+
+        try:
+            # Perceive state
+            summary = self._prakriti_sense.on_manas_tick()
+
+            if summary and summary.needs_attention:
+                logger.info(
+                    f"👁️ PRAKRITI SENSE: State needs attention - "
+                    f"Tamas: {summary.tamas_count}, Rajas: {summary.rajas_count}"
+                )
+
+                # Generate healing intent for Tamas paths
+                if summary.tamas_count > 0:
+                    tamas_paths = self._prakriti_sense.get_tamas_paths()
+                    path_names = [str(p.path.name) for p in tamas_paths[:3]]
+
+                    intent = Intent(
+                        id=f"heal_state_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                        intent_type="heal_system_state",
+                        title=f"Heal {summary.tamas_count} Tamas state paths",
+                        description=(
+                            f"System state health check detected {summary.tamas_count} paths in Tamas (stale/broken). "
+                            f"Paths: {', '.join(path_names)}{'...' if len(tamas_paths) > 3 else ''}. "
+                            f"Healing will push state Tamas → Rajas → Sattva."
+                        ),
+                        reasoning="PRAKRITI SENSE detected unhealthy state that needs healing.",
+                        priority=IntentPriority.HIGH,  # State health is important
+                        risk=IntentRisk.SAFE,  # Healing is always safe
+                        params={
+                            "tamas_count": summary.tamas_count,
+                            "rajas_count": summary.rajas_count,
+                            "paths": [str(p.path) for p in tamas_paths],
+                        },
+                        auto_executable=True,  # Healing can auto-execute
+                    )
+                    healing_intents.append(intent)
+
+            # Check for lobotomy
+            lobotomy = self._prakriti_sense.sense_lobotomy()
+            if lobotomy.has_lobotomy:
+                logger.critical(f"👁️ PRAKRITI SENSE: LOBOTOMY DETECTED! {len(lobotomy.violations)} violations")
+
+                intent = Intent(
+                    id=f"fix_lobotomy_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                    intent_type="fix_lobotomy",
+                    title=f"Fix LOBOTOMY: {len(lobotomy.violations)} state files in .gitignore",
+                    description=(
+                        f"CRITICAL: State files are being ignored by git! "
+                        f"This causes memory loss (lobotomy). "
+                        f"Affected plugins: {', '.join(lobotomy.affected_plugins)}. "
+                        f"Must remove these paths from .gitignore."
+                    ),
+                    reasoning="State files in .gitignore = Lobotomy. The system is losing its memory.",
+                    priority=IntentPriority.CRITICAL,  # Lobotomy is critical!
+                    risk=IntentRisk.MEDIUM,  # Modifying .gitignore needs care
+                    params={
+                        "violations": lobotomy.violations,
+                        "affected_plugins": lobotomy.affected_plugins,
+                    },
+                    auto_executable=False,  # Human should review .gitignore changes
+                )
+                healing_intents.append(intent)
+
+        except Exception as e:
+            logger.warning(f"👁️ PRAKRITI SENSE: Perception failed: {e}")
+
+        return healing_intents
+
+    def _execute_healing(self, intent: Intent) -> Dict[str, Any]:
+        """
+        Execute a healing intent via PrakritiSense.
+
+        Args:
+            intent: The healing intent to execute
+
+        Returns:
+            Execution result
+        """
+        if not self._prakriti_sense:
+            return {"success": False, "error": "PrakritiSense not available"}
+
+        try:
+            if intent.intent_type == "heal_system_state":
+                paths = intent.params.get("paths", [])
+                healed = 0
+                for path_str in paths:
+                    path = Path(path_str)
+                    new_guna = self._prakriti_sense.heal(path)
+                    if new_guna.value in ("sattva", "rajas"):
+                        healed += 1
+
+                return {
+                    "success": True,
+                    "healed_count": healed,
+                    "total_paths": len(paths),
+                }
+
+            elif intent.intent_type == "fix_lobotomy":
+                # Lobotomy fix is more complex - for now just report
+                return {
+                    "success": False,
+                    "error": "Lobotomy fix requires manual .gitignore edit",
+                    "violations": intent.params.get("violations", []),
+                }
+
+            else:
+                return {"success": False, "error": f"Unknown healing intent type: {intent.intent_type}"}
+
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
     def _record_to_ledger(
         self,
@@ -352,11 +504,19 @@ class CognitiveKernel:
         logger.info("MANAS: Beginning thought cycle...")
         self._last_thought_time = datetime.utcnow()
 
+        # 👁️ PRAKRITI SENSE: Perceive state FIRST (OPUS-009)
+        # Before generating other intents, check system state health
+        healing_intents = self._perceive_and_generate_healing_intents()
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
+
+        # Prepend healing intents (survival first!)
+        if healing_intents:
+            new_intents = healing_intents + new_intents
 
         # OPUS-035: Throttling - Prioritize survival over growth
         if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
@@ -682,7 +842,11 @@ class CognitiveKernel:
         )
 
         try:
-            if self._execution_callback:
+            # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
+            if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
+                result = self._execute_healing(intent)
+                success = result.get("success", False)
+            elif self._execution_callback:
                 result = self._execution_callback(intent)
                 success = result.get("success", False)
             elif intent.circuit_to_execute:
