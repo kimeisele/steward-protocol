@@ -140,6 +140,19 @@ class HeartbeatEngine:
                     self.manas.inject_ledger(self.ledger)
                     logger.info("⚡ VAJRA: Ledger bound to MANAS")
 
+                # OPUS-SILPA: Wire execution callback - GIVE MANAS HANDS!
+                # Without this, MANAS can think but cannot act.
+                try:
+                    from vibe_core.plugins.opus_assistant.manas.intent_router import (
+                        create_execution_callback,
+                    )
+
+                    execution_callback = create_execution_callback(workspace=project_root)
+                    self.manas.set_execution_callback(execution_callback)
+                    logger.info("🤲 SILPA: Execution callback wired - MANAS has hands!")
+                except Exception as wire_err:
+                    logger.warning(f"⚠️ SILPA: Could not wire execution: {wire_err}")
+
                 logger.info("🧠 MANAS Cognitive Kernel ready")
             except Exception as e:
                 logger.warning(f"⚠️ MANAS unavailable: {e}")
