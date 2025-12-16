@@ -1,0 +1,66 @@
+# OPUS-083: Auto-Generate Harness Circuit
+#
+# This circuit auto-generates @HARNESS sections for OPUS documentation files.
+# Used by DocHarnessAnalyzer when it detects Sanskrit module docs (050-060)
+# that are missing their harness.
+#
+# The Karma Loop:
+#   DocHarnessAnalyzer → Intent(harness_auto_generate) → This Circuit → OPUS file updated
+#
+# Parameters (from Intent):
+#   opus_file: Path to the OPUS markdown file
+#   module_name: Name of the cortex module (e.g., "veda", "mandala")
+
+circuit:
+  id: generate_harness
+  name: "Auto-Generate Harness"
+  description: "Generates @HARNESS for OPUS docs based on code structure"
+  entry_state: "validate_input"
+
+  states:
+    validate_input:
+      name: "Validate Input"
+      state_var: "validation"
+      actions:
+        - action_type: LOG
+          message: "Validating harness generation request..."
+      transitions:
+        - to: "generate_harness"
+
+    generate_harness:
+      name: "Generate Harness Content"
+      state_var: "harness_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.generate_harness"
+          params:
+            opus_file: "{{ opus_file }}"
+            module_name: "{{ module_name }}"
+      transitions:
+        - to: "report_success"
+          condition: "{{ harness_result.success }}"
+        - to: "report_failure"
+
+    report_success:
+      name: "Success"
+      terminal: true
+      actions:
+        - action_type: LOG
+          message: "✅ Harness generated successfully. Karma +1."
+        - action_type: EMIT_EVENT
+          target: "manas.karma.positive"
+          params:
+            reason: "harness_auto_generated"
+            file: "{{ opus_file }}"
+
+    report_failure:
+      name: "Failure"
+      terminal: true
+      actions:
+        - action_type: LOG
+          message: "❌ Harness generation failed. Karma -1."
+        - action_type: EMIT_EVENT
+          target: "manas.karma.negative"
+          params:
+            reason: "harness_generation_failed"
+            file: "{{ opus_file }}"

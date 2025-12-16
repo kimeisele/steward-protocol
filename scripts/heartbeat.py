@@ -153,6 +153,9 @@ class HeartbeatEngine:
             # Phase 4: MANAS thinks (OPUS-073)
             self._manas_think()
 
+            # Phase 4.5: Refresh OPUS.md via Circuit Executor (OPUS-083)
+            self._execute_maintenance_circuit()
+
             # Phase 5: Sync TaskManager → TASKS.md (write results)
             self._write_tasks_md()
 
@@ -424,6 +427,60 @@ class HeartbeatEngine:
         except Exception as e:
             logger.warning(f"⚠️ MANAS cognitive cycle failed: {e}")
             # Don't raise - MANAS failure shouldn't stop heartbeat
+
+    def _execute_maintenance_circuit(self):
+        """
+        OPUS-083: Execute maintenance_pulse circuit via CognitiveCircuitExecutor.
+
+        This is THE FIX for the "parallel structures" problem.
+        The heartbeat now refreshes OPUS.md through the proper circuit architecture.
+
+        Fallback: If circuit not found, refresh OPUS.md directly.
+        """
+        logger.info("⚡ Executing maintenance circuit...")
+
+        try:
+            from vibe_core.plugins.opus_assistant.manas.circuit_executor import (
+                CognitiveCircuitExecutor,
+            )
+
+            executor = CognitiveCircuitExecutor(self.project_root)
+            result = executor.execute_circuit("maintenance_pulse")
+
+            if result.get("success"):
+                logger.info(f"⚡ Maintenance circuit completed: {result.get('states_executed', 0)} states")
+            else:
+                # Circuit not found or failed - fallback to direct refresh
+                logger.warning(f"⚠️ Circuit failed, using direct refresh: {result.get('error')}")
+                self._direct_opus_refresh()
+
+        except ImportError as e:
+            logger.warning(f"⚠️ CognitiveCircuitExecutor not available: {e}")
+            self._direct_opus_refresh()
+        except Exception as e:
+            logger.warning(f"⚠️ Maintenance circuit failed: {e}")
+            self._direct_opus_refresh()
+
+    def _direct_opus_refresh(self):
+        """
+        Fallback: Refresh OPUS.md directly via OpusDashboardRenderer.
+
+        Used when circuit executor is not available or circuit not found.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                OpusDashboardRenderer,
+            )
+
+            renderer = OpusDashboardRenderer(self.project_root, kernel=None)
+            content = renderer.render(quick=True)
+
+            opus_path = self.project_root / "OPUS.md"
+            opus_path.write_text(content)
+            logger.info("📋 OPUS.md refreshed (direct fallback)")
+
+        except Exception as e:
+            logger.warning(f"⚠️ Direct OPUS refresh failed: {e}")
 
     def _write_tasks_md(self):
         """Write TaskManager state back to TASKS.md."""
