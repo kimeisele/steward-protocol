@@ -161,7 +161,11 @@ class HeartbeatEngine:
 
                     logger.info("🔌 PRANA: dynamically loading plugins for headless pulse...")
                     # Scan plugins directory relative to current working directory (root)
-                    plugins_map, _ = PluginLoader.discover_and_load(scan_paths=[Path("vibe_core/plugins")])
+                    scan_paths = [
+                        Path("vibe_core/plugins"),
+                        Path("vibe_core/plugins/runtime_extensions"),
+                    ]
+                    plugins_map, _ = PluginLoader.discover_and_load(scan_paths=scan_paths)
 
                     count = 0
                     for plugin in plugins_map.values():
