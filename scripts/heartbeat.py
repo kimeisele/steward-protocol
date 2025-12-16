@@ -254,8 +254,8 @@ class HeartbeatEngine:
             # Phase 5: Sync TaskManager → TASKS.md (write results)
             self._write_tasks_md()
 
-            # Phase 6: Commit progress
-            self._commit_progress()
+            # Phase 6: Commit progress → delegated to SystemChroniclePlugin (PRANA pulse)
+            # (Removes line 258 call - now handled by CLEANUP phase plugin)
 
             logger.info("✅ HEARTBEAT PULSE COMPLETED")
         except Exception as e:
@@ -697,33 +697,6 @@ Write your tasks here. The heartbeat will pick them up automatically.
 
         self.tasks_md.write_text(content)
         logger.info("📝 Updated TASKS.md with current state")
-
-    def _commit_progress(self):
-        """Commit changes to Git."""
-        try:
-            # Stage changes
-            subprocess.run(
-                ["git", "add", "TASKS.md", "data/vibe_agency.db"],
-                cwd=self.project_root,
-                check=True,
-                capture_output=True,
-            )
-
-            # Check if there are changes to commit
-            result = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=self.project_root, capture_output=True)
-
-            if result.returncode == 0:
-                logger.info("📝 No changes to commit")
-                return
-
-            # Commit
-            commit_msg = f"🫀 Heartbeat pulse: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            subprocess.run(["git", "commit", "-m", commit_msg], cwd=self.project_root, check=True, capture_output=True)
-
-            logger.info("✅ Changes committed to Git")
-
-        except subprocess.CalledProcessError as e:
-            logger.warning(f"⚠️  Git commit failed: {e}")
 
 
 def main():
