@@ -231,6 +231,23 @@ class VedicGovernancePlugin(KernelPlugin):
                 logger.info(f"🚫 VETO: Agent '{agent_id}' is SANNYASA (system daemon) - no user tasks")
                 return False
 
+            # OPUS-086: Guna-based dynamic restrictions
+            guna = self.determine_guna(agent_id)
+            action = getattr(task, "action", "write")
+
+            if guna == "tamas":
+                # Tamasic agents can only do simple self-check tasks
+                if action not in ["read", "observe", "self_check", "ping"]:
+                    logger.info(f"🔮 VETO: Agent '{agent_id}' is TAMASIC - cannot perform '{action}'")
+                    return False
+
+            elif guna == "rajas":
+                # Rajasic agents cannot write to critical paths
+                is_critical = getattr(task, "is_critical", False) or "kernel" in str(getattr(task, "payload", {}))
+                if action == "write" and is_critical:
+                    logger.info(f"🔮 VETO: Agent '{agent_id}' is RAJASIC - cannot write to critical paths")
+                    return False
+
         return True  # Allow task
 
     def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: Any) -> None:
@@ -625,3 +642,145 @@ class VedicGovernancePlugin(KernelPlugin):
             logger.debug(f"🕉️ BHAKTI DECAY: {decay_percent}% entropy applied to {len(results)} agents")
 
         return results
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # OPUS-086: TRIGUNA - Agent Health Classification
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def determine_guna(self, agent_id: str) -> str:
+        """
+        Classify agent's current state by Guna (Mode of Material Nature).
+
+        The Three Gunas (Bhagavad Gita, Chapter 14):
+        - Tamas (Darkness/Inertia): Stagnation, errors, idle
+        - Rajas (Passion/Overaction): Churn, CPU burn, hyperactivity
+        - Sattva (Virtue/Clarity): Flow, stability, clean operation
+
+        Returns: "tamas", "rajas", or "sattva"
+        """
+        # Check Tamas first (worst state)
+        if self._is_tamasic(agent_id):
+            return "tamas"
+
+        # Check Rajas (overactive state)
+        if self._is_rajasic(agent_id):
+            return "rajas"
+
+        # Default: Sattva (balanced/virtuous)
+        return "sattva"
+
+    def _is_tamasic(self, agent_id: str) -> bool:
+        """
+        Check if agent is in Tamasic state (stagnation/errors).
+
+        Symptoms:
+        - > 50% error rate in recent tasks
+        - Long idle time without production
+        - Multiple silent failures
+
+        Returns: True if agent is Tamasic
+        """
+        # Check task completion vs failure ratio
+        completions = self._task_completions.get(agent_id, 0)
+
+        # Query ledger for recent failures
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            recent_events = self._kernel.ledger.get_all_events()[-20:]
+            agent_events = [e for e in recent_events if e.get("agent_id") == agent_id]
+
+            if agent_events:
+                failures = sum(1 for e in agent_events if e.get("event_type") == "task_failed")
+                total = len(agent_events)
+
+                # > 50% failure rate = Tamasic
+                if total >= 3 and failures / total > 0.5:
+                    logger.warning(f"🔮 GUNA: Agent '{agent_id}' is TAMASIC (error rate: {failures}/{total})")
+                    return True
+
+        # Low activity with no completions = Tamasic
+        if completions == 0:
+            ashrama = self._ashrama_registry.get(agent_id)
+            if ashrama and ashrama.time_in_current_stage().total_seconds() > 300:  # 5 min idle
+                logger.debug(f"🔮 GUNA: Agent '{agent_id}' may be TAMASIC (idle)")
+                return True
+
+        return False
+
+    def _is_rajasic(self, agent_id: str) -> bool:
+        """
+        Check if agent is in Rajasic state (overaction/churn).
+
+        Symptoms:
+        - High task rate (> 10 tasks/minute)
+        - Rapid context switches
+        - Many writes without tests
+
+        Returns: True if agent is Rajasic
+        """
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            recent_events = self._kernel.ledger.get_all_events()[-50:]
+            agent_events = [e for e in recent_events if e.get("agent_id") == agent_id]
+
+            # Check for rapid-fire task submissions
+            if len(agent_events) >= 10:
+                # Get timestamps and check frequency
+                timestamps = []
+                for e in agent_events:
+                    ts = e.get("timestamp")
+                    if ts:
+                        try:
+                            from datetime import datetime as dt
+
+                            parsed = dt.fromisoformat(ts.replace("Z", "+00:00"))
+                            timestamps.append(parsed)
+                        except (ValueError, AttributeError):
+                            pass
+
+                if len(timestamps) >= 10:
+                    timestamps.sort()
+                    time_span = (timestamps[-1] - timestamps[0]).total_seconds()
+                    if time_span > 0:
+                        rate = len(timestamps) / (time_span / 60)  # tasks per minute
+                        if rate > 10:
+                            logger.warning(f"🔮 GUNA: Agent '{agent_id}' is RAJASIC (rate: {rate:.1f}/min)")
+                            return True
+
+        return False
+
+    def get_agent_guna(self, agent_id: str) -> Dict[str, Any]:
+        """
+        Get detailed Guna analysis for an agent.
+
+        Returns:
+            {
+                "agent_id": str,
+                "guna": str,  # "tamas", "rajas", or "sattva"
+                "description": str,
+                "restrictions": list
+            }
+        """
+        guna = self.determine_guna(agent_id)
+
+        guna_details = {
+            "tamas": {
+                "description": "Stagnation/Inertia - Agent needs stimulation",
+                "restrictions": ["No complex tasks", "Self-check only"],
+            },
+            "rajas": {
+                "description": "Overaction/Churn - Agent needs cooldown",
+                "restrictions": ["No critical writes", "Require tests"],
+            },
+            "sattva": {
+                "description": "Virtue/Clarity - Agent in flow state",
+                "restrictions": [],  # Full access
+            },
+        }
+
+        details = guna_details.get(guna, guna_details["sattva"])
+
+        return {
+            "agent_id": agent_id,
+            "guna": guna,
+            "description": details["description"],
+            "restrictions": details["restrictions"],
+        }
