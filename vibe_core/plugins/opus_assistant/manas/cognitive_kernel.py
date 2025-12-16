@@ -219,12 +219,23 @@ class CognitiveKernel:
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel: Optional["RealVibeKernel"] = None
 
-        # 🦁 NARASIMHA: The Cognitive Guardian (Conscience)
+        # --- ARCHITECTURE WIRING (LASAGNA LAYER 2) ---
+
+        # 1. 🦁 NARASIMHA: The Conscience
         from ..narasimha.guardian import CortexNarasimha
 
         self._narasimha = CortexNarasimha(workspace=self._workspace)
 
-        logger.info("MANAS Cognitive Kernel initialized")
+        # 2. 🕉️ SHIVA: The Hand
+        from .shiva import ShivaLifecycleManager
+
+        self._shiva = ShivaLifecycleManager(workspace=self._workspace)
+
+        # 3. 🔗 THE LINK: Inject Conscience into Hand
+        self._shiva.inject_kernel(self)
+        self._shiva.inject_guardian(self._narasimha)  # <--- HIER FLIESST DAS GESETZ
+
+        logger.info("MANAS Cognitive Kernel initialized (Shiva-Narasimha Linked)")
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
