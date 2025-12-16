@@ -67,8 +67,8 @@ def test_trivial():
         print(f"success: {result.get('success')}")
 
         # RED gate should FAIL (success=False) because test passed
-        assert result.get("test_failed") == False, "Trivial test should PASS (which means RED gate should detect it)"
-        assert result.get("success") == False, "RED gate should FAIL when trivial test passes"
+        assert not result.get("test_failed"), "Trivial test should PASS (which means RED gate should detect it)"
+        assert not result.get("success"), "RED gate should FAIL when trivial test passes"
 
         print("✅ RED GATE CORRECTLY REJECTED TRIVIAL TEST!")
 
@@ -115,8 +115,8 @@ def test_import_nonexistent_module():
         print(f"success: {result.get('success')}")
 
         # RED gate should PASS (success=True) because test failed
-        assert result.get("test_failed") == True, "Valid test should FAIL (module doesn't exist)"
-        assert result.get("success") == True, "RED gate should PASS when valid test fails"
+        assert result.get("test_failed"), "Valid test should FAIL (module doesn't exist)"
+        assert result.get("success"), "RED gate should PASS when valid test fails"
 
         print("✅ RED GATE CORRECTLY ACCEPTED VALID TEST!")
 
@@ -153,8 +153,8 @@ def test_assertion_failure():
         print(f"success: {result.get('success')}")
 
         # RED gate should PASS because test failed
-        assert result.get("test_failed") == True, "Test with assertion failure should FAIL"
-        assert result.get("success") == True, "RED gate should PASS when assertion fails"
+        assert result.get("test_failed"), "Test with assertion failure should FAIL"
+        assert result.get("success"), "RED gate should PASS when assertion fails"
 
         print("✅ RED GATE CORRECTLY ACCEPTED ASSERTION FAILURE!")
 
@@ -214,8 +214,8 @@ def greet(name: str) -> str:
         print(f"success: {result.get('success')}")
 
         # GREEN gate should PASS because test passed
-        assert result.get("test_passed") == True, "Test should PASS with correct implementation"
-        assert result.get("success") == True, "GREEN gate should PASS when implementation works"
+        assert result.get("test_passed"), "Test should PASS with correct implementation"
+        assert result.get("success"), "GREEN gate should PASS when implementation works"
 
         print("✅ GREEN GATE CORRECTLY ACCEPTED WORKING IMPLEMENTATION!")
 
@@ -264,8 +264,8 @@ def greet(name: str) -> str:
         print(f"success: {result.get('success')}")
 
         # GREEN gate should FAIL because test failed
-        assert result.get("test_passed") == False, "Test should FAIL with broken implementation"
-        assert result.get("success") == False, "GREEN gate should FAIL when implementation is broken"
+        assert not result.get("test_passed"), "Test should FAIL with broken implementation"
+        assert not result.get("success"), "GREEN gate should FAIL when implementation is broken"
 
         print("✅ GREEN GATE CORRECTLY REJECTED BROKEN IMPLEMENTATION!")
 
@@ -295,7 +295,7 @@ def test_trivial():
         )
 
         print(f"Test 1 (Trivial): test_failed={result1.get('test_failed')}, success={result1.get('success')}")
-        if result1.get("success") == False:
+        if not result1.get("success"):
             print("   ✅ RED GATE REJECTED TRIVIAL TEST (CORRECT!)")
         else:
             print("   ❌ RED GATE ACCEPTED TRIVIAL TEST (BUG!)")
@@ -315,13 +315,13 @@ def test_import():
         )
 
         print(f"Test 2 (Valid): test_failed={result2.get('test_failed')}, success={result2.get('success')}")
-        if result2.get("success") == True:
+        if result2.get("success"):
             print("   ✅ RED GATE ACCEPTED VALID TEST (CORRECT!)")
         else:
             print("   ❌ RED GATE REJECTED VALID TEST (BUG!)")
 
         print("\n" + "=" * 70)
-        if result1.get("success") == False and result2.get("success") == True:
+        if not result1.get("success") and result2.get("success"):
             print("🎉 BREAK TEST 2.0: ALL TESTS PASSED!")
             print("   The Iron Grip is VERIFIED.")
         else:
