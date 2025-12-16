@@ -91,8 +91,30 @@ circuit:
               created_at: "{{ now }}"
             ttl_seconds: 3600  # Keep for 1 hour
             tags: ["opus", "heal", "pending"]
-      on_success: COMPLETE
+      on_success: persist_changes
       on_failure: log_error
+
+    # Phase 4: Commit changes to Git (GAD-5500: Seal of Action)
+    persist_changes:
+      name: "Persist Healing Changes"
+      description: "Commit healed files to git - MANAS signs its work"
+      state_var: "commit_result"
+      actions:
+        - action_type: GIT_COMMIT
+          target: "chore(manas): Auto-healed drift in OPUS docs"
+          params:
+            files:
+              - "docs/architecture/OPUS/*.md"
+              - "OPUS.md"
+            message: "chore(manas): Auto-healed {{ analysis.pattern | default('drift') }} - {{ drift_report.files | length }} files"
+            allow_empty: true  # Don't fail if nothing changed
+        - action_type: EMIT_EVENT
+          target: "opus.changes_persisted"
+          params:
+            circuit: "OPUS_AUTO_HEAL"
+            commit_result: "{{ commit_result }}"
+      on_success: COMPLETE
+      on_failure: COMPLETE  # Don't fail the circuit if commit fails
 
     # Phase 3b: Log unknown pattern
     log_unknown_pattern:
