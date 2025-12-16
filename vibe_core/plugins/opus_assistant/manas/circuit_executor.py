@@ -246,6 +246,7 @@ class CognitiveCircuitExecutor:
             "opus.quick_drift_check": self._script_quick_drift_check,
             "opus.log_observation": self._script_log_observation,
             "opus.detect_drift": self._script_detect_drift,
+            "opus.generate_harness": self._script_generate_harness,
         }
 
         handler = script_handlers.get(target)
@@ -342,3 +343,181 @@ class CognitiveCircuitExecutor:
         """Detect drift between code and docs."""
         # Placeholder - full implementation would analyze code/doc alignment
         return {"success": True, "drift_detected": False, "note": "Full drift detection TBD"}
+
+    def _script_generate_harness(self, params: Dict) -> Dict[str, Any]:
+        """
+        Auto-generate @HARNESS for OPUS documentation files.
+
+        This is the SELF-HEALING capability of MANAS.
+        Given an OPUS file and module name, generates a proper harness
+        based on the actual code structure.
+
+        Args:
+            params:
+                opus_file: Path to the OPUS markdown file
+                module_name: Name of the cortex module (e.g., "veda")
+
+        Returns:
+            Result dict with success status and details
+        """
+        opus_file = params.get("opus_file")
+        module_name = params.get("module_name")
+
+        if not opus_file or not module_name:
+            return {"success": False, "error": "Missing opus_file or module_name"}
+
+        opus_path = Path(opus_file) if not isinstance(opus_file, Path) else opus_file
+        if not opus_path.is_absolute():
+            opus_path = self._workspace / opus_file
+
+        if not opus_path.exists():
+            return {"success": False, "error": f"OPUS file not found: {opus_path}"}
+
+        try:
+            # Find the module file
+            cortex_dir = self._workspace / "vibe_core" / "plugins" / "opus_assistant" / "manas" / "cortex"
+            module_path = cortex_dir / f"{module_name}.py"
+
+            if not module_path.exists():
+                return {"success": False, "error": f"Module not found: {module_path}"}
+
+            # Find test file if exists
+            test_path = self._workspace / "tests" / "manas" / f"test_{module_name}.py"
+            has_test = test_path.exists()
+
+            # Analyze module for key patterns
+            module_content = module_path.read_text()
+            classes = self._extract_classes(module_content)
+            key_methods = self._extract_key_methods(module_content)
+
+            # Generate harness content
+            harness = self._build_harness(
+                module_name=module_name,
+                module_rel_path=str(module_path.relative_to(self._workspace)),
+                test_rel_path=str(test_path.relative_to(self._workspace)) if has_test else None,
+                classes=classes,
+                methods=key_methods,
+            )
+
+            # Read existing content and inject harness
+            existing_content = opus_path.read_text()
+
+            # Check if already has harness
+            if "<!-- @HARNESS" in existing_content:
+                return {"success": False, "error": "File already has @HARNESS", "skipped": True}
+
+            # Find insertion point (after first header or at end)
+            lines = existing_content.split("\n")
+            insert_idx = len(lines)
+
+            for i, line in enumerate(lines):
+                if line.startswith("# ") and i > 0:
+                    # Insert before second header
+                    insert_idx = i
+                    break
+                elif line.startswith("---") and i > 2:
+                    # Insert before first horizontal rule (after intro)
+                    insert_idx = i
+                    break
+
+            # Insert harness
+            lines.insert(insert_idx, "\n" + harness + "\n")
+            new_content = "\n".join(lines)
+
+            # Write back
+            opus_path.write_text(new_content)
+
+            logger.info(f"✅ Generated harness for {opus_path.name}")
+            return {
+                "success": True,
+                "file": str(opus_path),
+                "module": module_name,
+                "classes_found": len(classes),
+                "methods_found": len(key_methods),
+                "has_test": has_test,
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to generate harness: {e}")
+            return {"success": False, "error": str(e)}
+
+    def _extract_classes(self, content: str) -> List[str]:
+        """Extract class names from Python module."""
+        import re
+
+        matches = re.findall(r"^class\s+(\w+)", content, re.MULTILINE)
+        return matches
+
+    def _extract_key_methods(self, content: str) -> List[str]:
+        """Extract key public method names (not private/dunder)."""
+        import re
+
+        matches = re.findall(r"^\s+def\s+([a-z][a-z0-9_]*)\s*\(", content, re.MULTILINE)
+        # Filter out private methods
+        return [m for m in matches if not m.startswith("_")][:10]  # Limit to 10
+
+    def _build_harness(
+        self,
+        module_name: str,
+        module_rel_path: str,
+        test_rel_path: Optional[str],
+        classes: List[str],
+        methods: List[str],
+    ) -> str:
+        """Build the @HARNESS block content."""
+        harness_lines = [
+            "<!-- @HARNESS",
+            "files:",
+            f"  - path: {module_rel_path}",
+            "    required: true",
+        ]
+
+        if test_rel_path:
+            harness_lines.extend(
+                [
+                    "",
+                    "tests:",
+                    f"  - {test_rel_path}",
+                ]
+            )
+
+        if classes:
+            harness_lines.extend(
+                [
+                    "",
+                    "semantic:",
+                ]
+            )
+            for cls in classes[:3]:  # Max 3 classes
+                harness_lines.extend(
+                    [
+                        "  - type: class_exists",
+                        f"    name: {module_name}_{cls.lower()}",
+                        f"    in: {module_rel_path}",
+                        f"    class: {cls}",
+                    ]
+                )
+
+        if methods:
+            if not classes:
+                harness_lines.extend(
+                    [
+                        "",
+                        "wiring:",
+                    ]
+                )
+            else:
+                harness_lines.append("")
+                harness_lines.append("wiring:")
+
+            for method in methods[:5]:  # Max 5 methods
+                harness_lines.extend(
+                    [
+                        f'  - pattern: "def {method}"',
+                        f"    in: {module_rel_path}",
+                    ]
+                )
+
+        harness_lines.append("-->")
+
+        return "\n".join(harness_lines)
