@@ -1,0 +1,17 @@
+{
+  "memories": [
+    {
+      "intent_type": "ci_capabilities_failure",
+      "intent_description": "Capabilities Check Failed",
+      "timestamp": "2025-12-16T15:55:16.307663",
+      "outcome": "failed",
+      "context": {
+        "exit_code": 1,
+        "error": "Traceback (most recent call last):\n  File \"/usr/local/bin/steward\", line 3, in <module>\n    from steward.cli import main\nModuleNotFoundError: No module named 'steward'\n"
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 4
+    }
+  ],
+  "updated_at": "2025-12-16T15:55:16.308129"
+}

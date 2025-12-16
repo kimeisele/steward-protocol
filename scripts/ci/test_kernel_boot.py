@@ -16,6 +16,10 @@ sys.path.insert(0, os.getcwd())
 def test_kernel_import():
     """Test that kernel modules can be imported"""
     try:
+        from vibe_core.kernel_impl import RealVibeKernel
+        from vibe_core.plugin_loader import PluginLoader
+        from vibe_core.protocols import VibeKernel
+
         print("✅ All kernel modules imported successfully")
         return True
     except Exception as e:
