@@ -1,0 +1,23 @@
+{
+    "type": "plugin",
+    "id": "system_chronicle",
+    "name": "System Chronicle Plugin",
+    "version": "1.0.0",
+    "description": "PRANA Pulse integration with Chronicle Cartridge - seals repository history during heartbeat",
+    "entry_point": "plugin_main.py",
+    "entry_class": "SystemChroniclePlugin",
+    "priority": 200,
+    "enabled": true,
+    "hooks": [
+        "on_pulse"
+    ],
+    "dependencies": [],
+    "author": "OPUS-091",
+    "tags": [
+        "chronicle",
+        "git",
+        "pulse",
+        "cleanup",
+        "history"
+    ]
+}
