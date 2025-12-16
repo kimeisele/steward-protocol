@@ -26,6 +26,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 # Vedic governance types (co-located with plugin)
 from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+from vibe_core.plugins.vedic_governance.state_manager import VedicStateManager, get_state_manager
 from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_function, get_varna_description
 
 if TYPE_CHECKING:
@@ -84,6 +85,10 @@ class VedicGovernancePlugin(KernelPlugin):
         # Persisted to Ledger, cached here for O(1) access
         self._bhakti_registry: Dict[str, int] = {}
 
+        # OPUS-085: Hybrid State Manager (JSON for speed, Ledger for proof)
+        # Initialized on boot (needs workspace path)
+        self._state_manager: Optional[VedicStateManager] = None
+
         # Reference to kernel (set on boot)
         self._kernel: Optional["RealVibeKernel"] = None
 
@@ -96,8 +101,17 @@ class VedicGovernancePlugin(KernelPlugin):
         """
         self._kernel = kernel
 
-        # Restore state from ledger
+        # OPUS-085: Initialize hybrid state manager (JSON + Ledger)
+        # JSON is the "hot" working memory, Ledger is the "cold" proof
+        self._state_manager = get_state_manager()
+        logger.info("🕉️ VEDIC STATE: Hybrid mode active (JSON + Ledger)")
+
+        # Restore state from ledger (for backward compatibility)
+        # Future: Could also bootstrap from JSON if ledger empty
         self._restore_from_ledger()
+
+        # Sync in-memory registries FROM state manager (if it has data)
+        self._sync_from_state_manager()
 
         # Register as THE governance plugin on kernel
         kernel.governance = self
@@ -163,6 +177,28 @@ class VedicGovernancePlugin(KernelPlugin):
                     except (ValueError, KeyError):
                         pass  # Invalid transition data
 
+    def _sync_from_state_manager(self) -> None:
+        """
+        Sync in-memory registries from VedicStateManager (JSON).
+
+        This is the "hot" side of hybrid persistence.
+        If JSON has data that ledger doesn't, use it.
+        """
+        if not self._state_manager:
+            return
+
+        for agent_id, agent_data in self._state_manager.get_all_agents().items():
+            # Sync Bhakti balance (JSON is source of truth for hot data)
+            bhakti = agent_data.get("bhakti", 0)
+            if bhakti > 0 and self._bhakti_registry.get(agent_id, 0) == 0:
+                self._bhakti_registry[agent_id] = bhakti
+                logger.debug(f"🕉️ SYNC: Restored Bhakti for '{agent_id}': {bhakti}")
+
+            # Sync task completions
+            completions = agent_data.get("task_completions", 0)
+            if completions > self._task_completions.get(agent_id, 0):
+                self._task_completions[agent_id] = completions
+
     def on_agent_registered(self, kernel: "RealVibeKernel", agent_id: str) -> None:
         """
         Called when a new agent is registered.
@@ -210,8 +246,6 @@ class VedicGovernancePlugin(KernelPlugin):
         # Check 3: Does agent have lifecycle permission?
         ashrama = self._ashrama_registry.get(agent_id)
         if ashrama:
-            permissions = ashrama.get_current_permissions()
-
             # BRAHMACHARI can only read/observe
             if ashrama.current_ashrama == Ashrama.BRAHMACHARI:
                 action = getattr(task, "action", "write")
@@ -509,7 +543,13 @@ class VedicGovernancePlugin(KernelPlugin):
         new_balance = min(200, current + amount)  # Cap at 200 (hero mode)
         self._bhakti_registry[agent_id] = new_balance
 
-        # Persist to ledger
+        # HYBRID PERSISTENCE: Write to BOTH JSON (hot) and Ledger (cold)
+
+        # 1. HOT SIDE: VedicStateManager (JSON) - Fast, working memory
+        if self._state_manager:
+            self._state_manager.update_bhakti(agent_id, amount, reason)
+
+        # 2. COLD SIDE: Kernel Ledger - Proof, audit trail
         if self._kernel and hasattr(self._kernel, "ledger"):
             self._kernel.ledger.record_event(
                 event_type="BHAKTI_GRANTED",

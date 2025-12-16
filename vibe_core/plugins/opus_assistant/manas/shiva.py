@@ -4,13 +4,26 @@ OPUS-082: Shiva Lifecycle Manager
 "The Destroyer of Illusions"
 
 Shiva manages the lifecycle of thoughts (intents) in MANAS:
-- Detects when intents are fulfilled externally
-- Archives stale intents
-- EXECUTES SAFE DESTRUCTION (with Narasimha's blessing)
+- Detects when intents are fulfilled externally (by humans or other agents)
+- Archives stale/expired intents
+- Keeps the mind (MANAS) clean and focused
 
-Architecture (Lasagna Layer 1):
-    Receives cleanup orders from CognitiveKernel (Brain).
-    MUST consult injected Guardian (Conscience) before touching filesystem.
+Architecture:
+    ┌─────────────────────────────────────────────────────────────┐
+    │                    COGNITIVE KERNEL                          │
+    │  ┌───────────────────┐  ┌───────────────────┐               │
+    │  │  Intent Generator │  │  Shiva Lifecycle  │               │
+    │  │  (Brahma)         │  │  (Destruction)    │               │
+    │  │  Creates thoughts │  │  Cleans thoughts  │               │
+    │  └───────────────────┘  └───────────────────┘               │
+    │           │                      │                           │
+    │           ▼                      ▼                           │
+    │  ┌───────────────────────────────────────────┐              │
+    │  │           INTENT BUFFER                    │              │
+    │  │  pending → executed → archived             │              │
+    │  │           ↘ fulfilled_externally → archived│              │
+    │  └───────────────────────────────────────────┘              │
+    └─────────────────────────────────────────────────────────────┘
 
 Philosophy:
     A thought that no longer reflects reality is an illusion.
@@ -19,7 +32,6 @@ Philosophy:
 """
 
 import logging
-import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,7 +40,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from .intent_generator import Intent
 
 if TYPE_CHECKING:
-    from ..narasimha.guardian import CortexNarasimha
     from .cognitive_kernel import CognitiveKernel
 
 logger = logging.getLogger("MANAS.SHIVA")
@@ -60,70 +71,12 @@ class ShivaLifecycleManager:
     def __init__(self, workspace: Path):
         self._workspace = workspace
         self._kernel: Optional["CognitiveKernel"] = None
-        self._guardian: Optional["CortexNarasimha"] = None
         logger.info("🕉️ Shiva: Lifecycle Manager initialized")
 
     def inject_kernel(self, kernel: "CognitiveKernel") -> None:
         """Inject the CognitiveKernel for access to intent buffer."""
         self._kernel = kernel
         logger.debug("Shiva: Kernel injected")
-
-    def inject_guardian(self, guardian: "CortexNarasimha") -> None:
-        """WIRING: Receive the Conscience (Narasimha)."""
-        self._guardian = guardian
-        logger.debug("Shiva: Guardian (Narasimha) injected - Divine Separation active")
-
-    def attempt_destruction(self, target_path: str) -> Dict[str, Any]:
-        """
-        ⚡ SHIVA'S DANCE: Safe Destruction.
-
-        This is the ONLY authorized method to delete files in the cortex.
-        It converts the destruction request into an Intent and submits it
-        to the Guardian for judgment.
-        """
-        full_path = self._workspace / target_path
-
-        # 1. GATE: Check if Guardian is present
-        if not self._guardian:
-            logger.critical("⛔ Shiva: Cannot destroy - Guardian not present!")
-            return {"success": False, "error": "Guardian missing - wiring error"}
-
-        # 2. GATE: Consult Guardian (Simulate Intent)
-        # Wir erzeugen ein temporäres Intent-Objekt, das Narasimha versteht
-        class DestructionIntent:
-            intent_type = "destruction"
-            params = {"path": str(full_path), "action": "delete"}
-            # Dummy attributes to satisfy duck-typing if needed
-            title = f"Destroy {target_path}"
-            risk = "CRITICAL"
-
-        # Der Richter spricht das Urteil
-        verdict = self._guardian.judge_intent(DestructionIntent())
-
-        if verdict.status == "GUILTY":
-            logger.critical(f"🦁 NARASIMHA BLOCKED: {target_path} - {verdict.reason}")
-            return {"success": False, "error": f"BLOCKED BY NARASIMHA: {verdict.reason}", "verdict": str(verdict)}
-
-        # 3. ACTION: Execute (The Hand moves)
-        try:
-            if not full_path.exists():
-                return {"success": False, "error": "Target does not exist"}
-
-            if full_path.is_file():
-                full_path.unlink()
-                action = "deleted file"
-            elif full_path.is_dir():
-                shutil.rmtree(full_path)
-                action = "deleted directory"
-            else:
-                return {"success": False, "error": "Unknown target type"}
-
-            logger.info(f"🔥 Shiva: {action} {target_path} (Sanctioned)")
-            return {"success": True, "message": f"Target {target_path} returned to Akasha."}
-
-        except Exception as e:
-            logger.error(f"❌ Shiva: Destruction failed: {e}")
-            return {"success": False, "error": str(e)}
 
     def check_external_fulfillment(self, intent: Intent) -> FulfillmentResult:
         """

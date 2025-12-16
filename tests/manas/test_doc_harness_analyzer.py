@@ -4,7 +4,6 @@ Tests for DocHarnessAnalyzer - The Self-Healing Documentation System.
 TDD: These tests define the contract for harness analysis.
 """
 
-
 import pytest
 
 
