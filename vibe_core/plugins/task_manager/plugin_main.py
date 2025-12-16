@@ -1,13 +1,12 @@
 """
 ⚙️ TASK MANAGER PLUGIN - Sub-Operating System for Work
 
-OPUS-091 Phase 2: Complete task lifecycle management
+OPUS-091 Phase 3: Complete task lifecycle management
 
 Responsibilities:
 1. SENSORS phase: Ingest from data/inbox/*.json and TASKS.md
-2. COGNITION phase: Queue prioritization (future)
-3. ACTUATORS phase: Task execution (future)
-4. CLEANUP phase: History sealing (future)
+2. ACTUATORS phase: Execute pending tasks via UnifiedRouter
+3. CLEANUP phase: Sync TaskManager state back to TASKS.md
 
 This is the hub. All work flows through here.
 
@@ -23,7 +22,7 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.task_management.models import TaskStatus
@@ -32,6 +31,23 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("TASK_MANAGER_PLUGIN")
+
+# Import execution dependencies (graceful degradation if unavailable)
+try:
+    from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate
+
+    UNIFIED_ROUTER_AVAILABLE = True
+except ImportError:
+    UNIFIED_ROUTER_AVAILABLE = False
+    logger.debug("UnifiedRouter not available - execution will be queued only")
+
+try:
+    from vibe_core.plugins.opus_assistant.manas.api import ManasOracle
+
+    MANAS_ORACLE_AVAILABLE = True
+except ImportError:
+    MANAS_ORACLE_AVAILABLE = False
+    logger.debug("MANAS Oracle not available - no pre/post task analysis")
 
 
 class TaskManagerPlugin(KernelPlugin):
@@ -47,7 +63,10 @@ class TaskManagerPlugin(KernelPlugin):
 
     @property
     def pulse_phase(self) -> PulsePhase:
-        """Run during SENSORS phase (first - collect all inputs)."""
+        """Can run in multiple phases - handle all task lifecycle."""
+        # Note: This plugin handles SENSORS, ACTUATORS, and CLEANUP
+        # The pulse phase property returns SENSORS as primary, but on_pulse
+        # checks kernel.pulse_phase to route to appropriate handler
         return PulsePhase.SENSORS
 
     @property
