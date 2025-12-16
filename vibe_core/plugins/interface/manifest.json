@@ -10,8 +10,7 @@
     "enabled": true,
     "hooks": [
         "on_boot",
-        "on_tick_post",
-        "on_shutdown"
+        "on_pulse"
     ],
     "dependencies": [],
     "defaults": {
