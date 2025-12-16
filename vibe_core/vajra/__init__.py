@@ -36,6 +36,7 @@ CANONICAL LOCATION: vibe_core/vajra/__init__.py
 
 from vibe_core.vajra.auto_wire import auto_wire, wire_all
 from vibe_core.vajra.enforcement import (
+    VajraEnforcer,
     WiringError,
     assert_wired,
     check_wired,
@@ -52,6 +53,7 @@ __all__ = [
     "require_wiring",
     "WiringError",
     "check_wired",
+    "VajraEnforcer",
     # Auto-wiring
     "auto_wire",
     "wire_all",

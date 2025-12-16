@@ -1,0 +1,62 @@
+# MANAS Cognitive Kernel Configuration
+# 
+# This is the SOUL (Dharma) that governs how MANAS thinks.
+# MANAS reads these values at boot and follows them.
+# Vajra uses these to enforce consistency against drift.
+#
+# Philosophy:
+# - Conservative defaults (require human approval)
+# - Earn autonomy through demonstrated reliability (karma)
+# - Prioritize safety over speed
+
+manas:
+  # =========================================================================
+  # Thinking Rate Limit
+  # =========================================================================
+  # How often MANAS performs a thought cycle
+  # Units: minutes
+  thinking_interval_minutes: 60  # Once per hour
+
+  # Activate MANAS after this much idle time
+  # Units: minutes
+  idle_threshold_minutes: 30
+
+  # =========================================================================
+  # Execution Policy (Conservative Defaults)
+  # =========================================================================
+  # Auto-execute safe intents without human approval?
+  # false = CONSERVATIVE (human approval always required)
+  # true = AUTONOMOUS (auto-execute SAFE risk intents)
+  auto_execute_safe: false
+
+  # Karma threshold for earned autonomy (0-100)
+  # If karma >= this value, MANAS can auto-execute LOW risk intents
+  # Earning karma requires:
+  # - Consistent successful executions
+  # - Devotional practices (Bhakti - admitting mistakes, following TDD)
+  # - Long-term system stability
+  karma_auto_execute_threshold: 90
+
+  # =========================================================================
+  # Intent Management
+  # =========================================================================
+  # Max intents to keep in buffer
+  # Prevents intent buffer overflow
+  max_intent_buffer_size: 10
+
+  # Intent expiry (hours)
+  # Pending intents are discarded after this time
+  intent_expiry_hours: 24
+
+  # =========================================================================
+  # Intent Throttling (Don't Overwhelm The Human)
+  # =========================================================================
+  # Max intents to generate per tick
+  # Prioritizes CRITICAL/HIGH over MEDIUM/LOW
+  # Prevents "intent explosion" that would paralyze human reviewers
+  max_intents_per_tick: 3
+
+  # Prioritize survival over growth?
+  # If true: CRITICAL/ERROR intents processed before GENESIS intents
+  # If false: Process all intents by priority (but still respects max_intents_per_tick)
+  survival_first: true
