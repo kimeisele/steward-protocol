@@ -13,10 +13,10 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from vibe_core.phoenix.sections.interface import InterfaceConfig, RendererConfig
-from vibe_core.plugin_protocol import KernelPlugin
+from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
 from vibe_core.plugins.interface.renderers.base import BaseRenderer
 
 if TYPE_CHECKING:
@@ -45,6 +45,11 @@ class InterfacePlugin(KernelPlugin):
     def priority(self) -> int:
         return 100
 
+    @property
+    def pulse_phase(self) -> PulsePhase:
+        """Interface renders during CLEANUP phase (after all work is done)."""
+        return PulsePhase.CLEANUP
+
     def __init__(self):
         self._kernel: Optional["RealVibeKernel"] = None
         self._renderers: Dict[str, BaseRenderer] = {}
@@ -68,6 +73,28 @@ class InterfacePlugin(KernelPlugin):
 
         logger.info(f"InterfacePlugin booted ({len(self._renderers)} views active)")
 
+    def on_pulse(self, kernel: "RealVibeKernel", transaction: Any) -> HookResult:
+        """
+        CLEANUP phase: Render all UI after TaskManager has executed.
+
+        This is called by PRANA during the CLEANUP phase (phase 4 of 4),
+        ensuring the UI always shows the current state after work is done.
+
+        Args:
+            kernel: The kernel instance
+            transaction: PulseTransaction (unused for rendering)
+
+        Returns:
+            HookResult indicating success
+        """
+        try:
+            self._render_scheduled()
+            logger.info("🎨 CLEANUP: Interface rendered (UI synced to current state)")
+            return HookResult.ok(data={"renderers": len(self._renderers)})
+        except Exception as e:
+            logger.error(f"Interface rendering failed: {e}", exc_info=True)
+            return HookResult.error(f"Interface rendering failed: {e}")
+
     def _load_interface_config(self) -> None:
         """Load config from config/interface.yaml."""
         try:
@@ -87,36 +114,6 @@ class InterfacePlugin(KernelPlugin):
             from vibe_core.phoenix.sections.interface import get_default_interface_config
 
             self._interface_config = get_default_interface_config()
-
-    def on_tick_pre(self, kernel: "RealVibeKernel") -> None:
-        """
-        Called BEFORE task processing - ALWAYS runs even if no tasks.
-        Trigger renderers based on their configured intervals.
-        """
-        self._render_scheduled()
-
-    def on_tick_post(self, kernel: "RealVibeKernel") -> None:
-        """
-        Called after task processing (only if task was processed).
-        UI already rendered in on_tick_pre, nothing to do here.
-        """
-        pass
-
-    def on_task_completed(self, kernel: "RealVibeKernel", task_id: str, result: dict) -> None:
-        """
-        FIX 5: Trigger immediate ENVOY.md update when task completes.
-
-        This fixes the timing issue where ENVOY.md renders BEFORE task
-        execution (in on_tick_pre) and doesn't see the result.
-
-        By resetting the last render time for envoy, we force an
-        immediate render on the next tick without waiting for the
-        interval timer.
-        """
-        # Mark EnvoyRenderer for immediate render on next tick
-        if "envoy" in self._renderers:
-            self._last_render["envoy"] = 0  # Force next render
-            logger.debug(f"Task {task_id} completed - forcing ENVOY.md render")
 
     def _should_render(self, name: str) -> bool:
         """Check if renderer should run based on its interval."""
