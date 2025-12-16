@@ -76,7 +76,32 @@
       "added_at": "2025-12-15T14:37:56.368349",
       "executed_at": null,
       "execution_result": null
+    },
+    {
+      "intent": {
+        "id": "ci_caps_4dad8c3a",
+        "intent_type": "ci_capabilities_failure",
+        "title": "Capabilities Check Failed",
+        "description": "The 'capabilities' command returned exit code 1.",
+        "reasoning": "MANAS could not retrieve system capabilities. This may indicate a broken installation.",
+        "priority": "high",
+        "risk": "safe",
+        "created_at": "2025-12-16T15:55:14.469351",
+        "circuit_to_execute": null,
+        "params": {
+          "exit_code": 1,
+          "error": "Traceback (most recent call last):\n  File \"/usr/local/bin/steward\", line 3, in <module>\n    from steward.cli import main\nModuleNotFoundError: No module named 'steward'\n"
+        },
+        "auto_executable": false,
+        "expires_at": null
+      },
+      "status": "failed",
+      "added_at": "2025-12-16T15:55:15.178802",
+      "executed_at": "2025-12-16T15:55:16.301771",
+      "execution_result": {
+        "error": "No execution method available"
+      }
     }
   ],
-  "updated_at": "2025-12-15T14:37:56.368587"
+  "updated_at": "2025-12-16T15:55:16.310625"
 }
