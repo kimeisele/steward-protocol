@@ -8,13 +8,21 @@ PHILOSOPHY:
 - Shadow mode (unwired) is PERMISSIVE but LOGGED
 - Production should be WIRED - tests catch violations
 - Enforcement can be strict or permissive based on context
+
+DHARMA ENFORCEMENT:
+- VajraEnforcer uses PhoenixConfig as source of truth
+- Detects and corrects drift between runtime state and config
+- Logs enforcement actions for audit trail
 """
 
 import functools
 import logging
-from typing import Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, TypeVar
 
 from vibe_core.vajra.protocol import is_wirable, is_wired
+
+if TYPE_CHECKING:
+    from vibe_core.phoenix.config import PhoenixConfig
 
 logger = logging.getLogger("VAJRA")
 
@@ -163,3 +171,128 @@ class StrictWiringContext:
     @classmethod
     def is_strict(cls) -> bool:
         return cls._strict_mode
+
+
+class VajraEnforcer:
+    """
+    VAJRA Dharma Enforcer - Runtime Config Integrity.
+
+    Uses PhoenixConfig as the source of truth and enforces it against
+    runtime state. Detects drift and corrects it.
+
+    Philosophy:
+    - Config is LAW (Dharma)
+    - State must obey Config
+    - Drift is automatically corrected
+    - All corrections are logged for audit trail
+
+    Usage:
+        config = PhoenixConfig.from_files()
+        enforcer = VajraEnforcer(config)
+
+        # Detect drift
+        has_drift = enforcer.detect_drift("manas", runtime_state)
+
+        # Enforce and correct
+        corrected = enforcer.gloss_over("manas", runtime_state)
+    """
+
+    def __init__(self, phoenix_config: "PhoenixConfig"):
+        """
+        Initialize VAJRA with PhoenixConfig.
+
+        Args:
+            phoenix_config: The Phoenix configuration (source of truth)
+        """
+        from vibe_core.phoenix.config import PhoenixConfig
+
+        if not isinstance(phoenix_config, PhoenixConfig):
+            raise TypeError(f"Expected PhoenixConfig, got {type(phoenix_config)}")
+
+        self.config = phoenix_config
+        self.corrections_applied = 0
+
+    def detect_drift(self, section_id: str, runtime_state: Dict[str, Any]) -> bool:
+        """
+        Detect if runtime state drifts from config.
+
+        Args:
+            section_id: Section name (e.g., "manas")
+            runtime_state: Current runtime values
+
+        Returns:
+            True if drift detected, False otherwise
+        """
+        section = self.config.get_section(section_id)
+        if section is None:
+            logger.warning(f"⚡ VAJRA: Section '{section_id}' not found in config")
+            return False
+
+        # Check each key in runtime state against config
+        for key, runtime_value in runtime_state.items():
+            if not hasattr(section, key):
+                logger.debug(f"⚡ VAJRA: Config section '{section_id}' has no attribute '{key}'")
+                continue
+
+            config_value = getattr(section, key)
+            if runtime_value != config_value:
+                logger.debug(
+                    f"⚡ VAJRA: Drift detected in {section_id}.{key}: state={runtime_value}, config={config_value}"
+                )
+                return True
+
+        return False
+
+    def gloss_over(self, section_id: str, runtime_state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Enforce config as law - correct any drift in runtime state.
+
+        This is VAJRA's primary enforcement method. It returns a corrected
+        copy of the runtime state that matches the config exactly.
+
+        Args:
+            section_id: Section name (e.g., "manas")
+            runtime_state: Current runtime values (will be copied and corrected)
+
+        Returns:
+            Corrected state matching config values
+        """
+        section = self.config.get_section(section_id)
+        if section is None:
+            logger.warning(f"⚡ VAJRA: Cannot enforce '{section_id}' - section not found")
+            return runtime_state.copy()
+
+        # Create corrected copy
+        corrected = runtime_state.copy()
+        corrections = []
+
+        # Apply config values to corrected state
+        for key in runtime_state:
+            if not hasattr(section, key):
+                continue
+
+            config_value = getattr(section, key)
+            current_value = corrected.get(key)
+
+            if current_value != config_value:
+                corrected[key] = config_value
+                corrections.append(f"{key}: {current_value} → {config_value}")
+                self.corrections_applied += 1
+
+        if corrections:
+            logger.info(f"⚡ VAJRA: Enforced Dharma on {section_id}. Corrections: {'; '.join(corrections)}")
+
+        return corrected
+
+    def enforce_integrity(self, section_id: str, runtime_state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Alias for gloss_over() - enforce config integrity.
+
+        Args:
+            section_id: Section name
+            runtime_state: Current runtime values
+
+        Returns:
+            Corrected state matching config
+        """
+        return self.gloss_over(section_id, runtime_state)
