@@ -75,14 +75,16 @@ class TaskManagerPlugin(KernelPlugin):
 
     def on_pulse(self, kernel: "RealVibeKernel", transaction) -> HookResult:
         """
-        Execute during SENSORS phase.
+        Execute during SENSORS, ACTUATORS, and CLEANUP phases.
+
+        Routes to appropriate handler based on kernel's current pulse phase.
 
         Args:
             kernel: Kernel instance (may be minimal in headless mode)
             transaction: PulseTransaction for mutations
 
         Returns:
-            HookResult with ingestion summary
+            HookResult with phase-specific summary
         """
         try:
             # Get task manager from kernel
@@ -98,28 +100,152 @@ class TaskManagerPlugin(KernelPlugin):
             else:
                 project_root = Path.cwd()
 
-            logger.info("⚙️ SENSORS: Task Manager initialization...")
+            # Route based on current pulse phase
+            current_phase = getattr(kernel, "pulse_phase", None)
 
-            # Phase 1: Ingest JSON files from inbox
-            inbox_count = self._ingest_json_files(task_manager, project_root)
-
-            # Phase 2: Parse TASKS.md for new tasks
-            markdown_count = self._read_tasks_md(task_manager, project_root)
-
-            total = inbox_count + markdown_count
-            if total > 0:
-                msg = f"Ingested {total} tasks ({inbox_count} from inbox, {markdown_count} from TASKS.md)"
-                logger.info(f"⚙️ SENSORS: {msg}")
-                return HookResult.ok(
-                    data={"ingested": total, "inbox": inbox_count, "markdown": markdown_count, "phase": "sensors"}
-                )
+            if current_phase == PulsePhase.SENSORS:
+                return self._handle_sensors(task_manager, project_root)
+            elif current_phase == PulsePhase.ACTUATORS:
+                return self._handle_actuators(kernel, task_manager, project_root)
+            elif current_phase == PulsePhase.CLEANUP:
+                return self._handle_cleanup(task_manager, project_root)
             else:
-                logger.debug("⚙️ SENSORS: No new tasks to ingest")
-                return HookResult.ok(data={"ingested": 0, "phase": "sensors"})
+                logger.debug(f"⚙️ TaskManager: No handler for phase {current_phase}")
+                return HookResult.ok(data={"phase": str(current_phase), "action": "skipped"})
 
         except Exception as e:
             logger.error(f"❌ TaskManager failed: {e}", exc_info=True)
             return HookResult.error(f"Task management failed: {e}")
+
+    def _handle_sensors(self, task_manager, project_root: Path) -> HookResult:
+        """Handle SENSORS phase: Ingest tasks."""
+        logger.info("⚙️ SENSORS: Task Manager initialization...")
+
+        # Phase 1: Ingest JSON files from inbox
+        inbox_count = self._ingest_json_files(task_manager, project_root)
+
+        # Phase 2: Parse TASKS.md for new tasks
+        markdown_count = self._read_tasks_md(task_manager, project_root)
+
+        total = inbox_count + markdown_count
+        if total > 0:
+            msg = f"Ingested {total} tasks ({inbox_count} from inbox, {markdown_count} from TASKS.md)"
+            logger.info(f"⚙️ SENSORS: {msg}")
+            return HookResult.ok(
+                data={"ingested": total, "inbox": inbox_count, "markdown": markdown_count, "phase": "sensors"}
+            )
+        else:
+            logger.debug("⚙️ SENSORS: No new tasks to ingest")
+            return HookResult.ok(data={"ingested": 0, "phase": "sensors"})
+
+    def _handle_actuators(self, kernel: "RealVibeKernel", task_manager, project_root: Path) -> HookResult:
+        """Handle ACTUATORS phase: Execute pending tasks."""
+        try:
+            logger.info("⚙️ ACTUATORS: Task execution phase...")
+
+            next_task = task_manager.get_next_pending()
+
+            if not next_task:
+                logger.debug("⚙️ ACTUATORS: No pending tasks to execute")
+                return HookResult.ok(data={"executed": 0, "phase": "actuators"})
+
+            logger.info(f"🚀 Executing task: {next_task.title}")
+
+            # Update status to IN_PROGRESS
+            task_manager.update_status(next_task.id, TaskStatus.IN_PROGRESS)
+
+            try:
+                # Get router from kernel context
+                router = getattr(kernel, "router", None)
+                if not router and UNIFIED_ROUTER_AVAILABLE:
+                    try:
+                        from vibe_core.runtime.unified_execution import UnifiedRouter
+
+                        router = UnifiedRouter(kernel=kernel)
+                    except Exception:
+                        router = None
+
+                if not router:
+                    logger.warning("⚠️ No Unified Router available - task queued but not executed")
+                    logger.info(f"   📋 Task: {next_task.title}")
+                    logger.info(f"   🎯 Agent: {next_task.assigned_agent or 'auto-route'}")
+                    logger.info(f"   ⚡ Priority: {next_task.priority}")
+                    return HookResult.ok(data={"executed": 0, "queued": 1, "phase": "actuators"})
+
+                # Build execution prompt
+                if next_task.assigned_agent:
+                    prompt = f"@{next_task.assigned_agent}: {next_task.description}"
+                else:
+                    prompt = next_task.description
+
+                logger.info("   🔄 Routing task through UnifiedRouter...")
+
+                # MANAS Oracle Pre-Analysis Gate
+                manas_oracle = getattr(kernel, "manas_oracle", None)
+                if manas_oracle and MANAS_ORACLE_AVAILABLE:
+                    try:
+                        context = {
+                            "task_title": next_task.title,
+                            "task_type": "generic_task",
+                            "risk_level": "medium",
+                            "is_automated": True,
+                            "user_approval": False,
+                        }
+                        gate_decision = manas_oracle.pre_analysis(context)
+                        logger.info(f"🧠 {gate_decision.get('recommendation', 'Proceeding...')}")
+
+                        if not gate_decision.get("proceed", True):
+                            logger.warning(f"🔮 MANAS Oracle blocked task: {gate_decision.get('reason')}")
+                            task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                            return HookResult.ok(data={"executed": 0, "blocked": 1, "phase": "actuators"})
+                    except Exception as e:
+                        logger.warning(f"⚠️ MANAS Oracle consultation failed: {e}")
+
+                # Route and execute
+                from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate
+
+                req = ExecutionRequest(user_input=prompt, source="TASK_MANAGER_PLUGIN")
+                gate = router.check_gate(req)
+
+                result = {}
+
+                if gate == MilkOceanGate.BLOCK:
+                    result["status"] = "blocked"
+                    result["reason"] = "Blocked by MilkOcean Gate"
+                elif gate == MilkOceanGate.QUEUE:
+                    result["status"] = "queued"
+                elif gate == MilkOceanGate.CRITICAL:
+                    result["status"] = "critical"
+                else:
+                    route_res = router.route(prompt, source="TASK_MANAGER_PLUGIN")
+                    result["status"] = "routing"
+                    result["path"] = route_res.target_id or route_res.execution_path.value
+                    result["route_info"] = {
+                        "execution_path": route_res.execution_path.value,
+                        "target_id": route_res.target_id,
+                        "confidence": route_res.confidence,
+                    }
+
+                logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
+
+                # Update task with result
+                task_manager.update_status(next_task.id, TaskStatus.COMPLETED)
+
+                return HookResult.ok(data={"executed": 1, "status": result.get("status"), "phase": "actuators"})
+
+            except Exception as e:
+                logger.error(f"   ❌ Task execution failed: {e}")
+                task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                return HookResult.error(f"Task execution failed: {e}")
+
+        except Exception as e:
+            logger.error(f"❌ ACTUATORS phase failed: {e}", exc_info=True)
+            return HookResult.error(f"Actuators phase failed: {e}")
+
+    def _handle_cleanup(self, task_manager, project_root: Path) -> HookResult:
+        """Handle CLEANUP phase: Cleanup and synchronization (delegated to interface)."""
+        logger.debug("⚙️ CLEANUP: TaskManager state ready for interface rendering")
+        return HookResult.ok(data={"phase": "cleanup", "action": "interface_renders"})
 
     def _ingest_json_files(self, task_manager, project_root: Path) -> int:
         """
