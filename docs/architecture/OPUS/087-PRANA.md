@@ -2,7 +2,23 @@
 
 **Scope:** Refactor Heartbeat to be "dumb" like the Kernel
 **Philosophy:** Heartbeat receives, Plugins execute. No business logic in scheduler.
-**Status:** 🔴 HIGH RISK / CRITICAL PATH (Pending Implementation)
+**Status:** 🟡 IN PROGRESS (Phase 4 Complete, Phase 5-7 Pending)
+
+---
+
+## Implementation Progress
+
+| Phase | Task | Status | Commit |
+|-------|------|--------|--------|
+| 1 | Add `PulsePhase` enum to plugin_protocol.py | ✅ DONE | `f9be506` |
+| 2 | Add `on_pulse` + `pulse_phase` to KernelPlugin | ✅ DONE | `f9be506` |
+| 3 | Create `vibe_core/prana_orchestrator.py` | ✅ DONE | `4948536` |
+| 4 | Create `tests/integration/test_prana_orchestrator.py` | ✅ DONE | `4948536` |
+| 5 | Implement `on_pulse` in opus_assistant | ⏳ PENDING | - |
+| 6 | Implement `on_pulse` in vedic_governance | ⏳ PENDING | - |
+| 7 | Wire heartbeat.py to use PranaOrchestrator | ⏳ PENDING | - |
+
+**Current Test Status:** 26/26 tests passing (`test_prana_orchestrator.py`)
 
 ---
 
@@ -14,6 +30,89 @@
 | **Pulse** | Macro-Cycle | Minutes | Out-of-process (GitHub Actions). `on_pulse`. Git ops, reporting, state sync. |
 
 **Key Insight:** Ticks are synchronous (kernel is running). Pulses are asynchronous (headless mode, cron-triggered).
+
+---
+
+## VISNU Compliance (Layer 0 Protection)
+
+**CRITICAL:** We MUST NOT modify `.github/workflows/*.yml` files.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    LAYER 0: VISNU PROTECTED                      │
+│  .github/workflows/heartbeat.yml  ← IMMUTABLE (cron: */15 * * *)│
+│  .github/workflows/steward-ci.yml ← IMMUTABLE                    │
+│  .github/workflows/system-cycle.yml ← IMMUTABLE                  │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 1: CONFIG-DRIVEN                        │
+│  config/prana.yaml  ← EDITABLE (behavior changes here)          │
+│  scripts/heartbeat.py ← CALLS PranaOrchestrator                 │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 2: PLUGIN CODE                          │
+│  vibe_core/prana_orchestrator.py ← Orchestration logic          │
+│  vibe_core/plugins/*/plugin_main.py ← on_pulse implementations  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Why this matters:**
+- Workflow files require manual approval for changes
+- Config changes can be committed automatically
+- Plugin code is covered by standard CI/CD
+
+---
+
+## System Wiring Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  GitHub Actions (Layer 0)                        │
+│  heartbeat.yml: cron: '*/15 * * * *'                            │
+│       ↓                                                          │
+│  python scripts/heartbeat.py                                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                  scripts/heartbeat.py                            │
+│  1. Load config/prana.yaml (via vibe_core/prana.py)             │
+│  2. Check min_interval (skip if too soon)                        │
+│  3. Boot kernel if configured                                    │
+│  4. Create PranaOrchestrator                     ← NEW!         │
+│  5. Call orchestrator.run_pulse_cycle()          ← NEW!         │
+│  6. Single git commit at end                                     │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                  PranaOrchestrator                               │
+│  1. Create PulseTransaction                                      │
+│  2. Get plugins sorted by PulsePhase                             │
+│  3. Execute each phase:                                          │
+│     SENSORS (1) → COGNITION (2) → ACTUATORS (3) → CLEANUP (4)   │
+│  4. For each plugin:                                             │
+│     try:                                                         │
+│       result = plugin.on_pulse(kernel, transaction)              │
+│     except:                                                      │
+│       quarantine_plugin(plugin_id)                               │
+│  5. Commit all mutations atomically                              │
+└─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│                  Plugin on_pulse() Implementations               │
+├─────────────────────────────────────────────────────────────────┤
+│  opus_assistant (Phase: SENSORS)                                 │
+│  → Collect Prakriti state                                        │
+│  → Render OPUS.md                                                │
+│  → Register: StateMutation(action="update_doc", target="OPUS.md")│
+├─────────────────────────────────────────────────────────────────┤
+│  vedic_governance (Phase: ACTUATORS)                             │
+│  → Calculate karma decay                                         │
+│  → Check ashrama transitions                                     │
+│  → Register: StateMutation(action="decay_karma", target=...)     │
+├─────────────────────────────────────────────────────────────────┤
+│  interface (Phase: CLEANUP)                                      │
+│  → Write rendered files                                          │
+│  → Cleanup temp state                                            │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -117,59 +216,6 @@ class StateMutation:
     def validate(self) -> bool:
         """Pre-flight validation before commit."""
         return bool(self.plugin_id and self.action and self.target)
-
-
-class PulseTransaction:
-    """Collects mutations from all plugins for atomic batch commit."""
-
-    def __init__(self):
-        self.mutations: List[StateMutation] = []
-        self.validation_errors: List[str] = []
-        self.committed: bool = False
-
-    def register(self, mutation: StateMutation) -> bool:
-        """Register a mutation. Returns False if validation fails."""
-        if not mutation.validate():
-            self.validation_errors.append(
-                f"{mutation.plugin_id}: Invalid mutation {mutation.action}"
-            )
-            return False
-        self.mutations.append(mutation)
-        return True
-
-    def abort(self, reason: str) -> None:
-        """Abort transaction before commit. Clears all mutations."""
-        logger.warning(f"PulseTransaction ABORT: {reason}")
-        self.mutations.clear()
-        self.validation_errors.append(reason)
-
-    def commit(self) -> Tuple[int, int]:
-        """
-        Execute all mutations. Returns (success_count, failure_count).
-
-        FAIL-FORWARD STRATEGY:
-        - If validation fails BEFORE write -> Abort entire transaction
-        - If error occurs DURING write -> Log, continue, don't rollback
-        - Git state is too complex for safe rollback
-        """
-        if self.validation_errors:
-            logger.error(f"Cannot commit: {len(self.validation_errors)} validation errors")
-            return (0, len(self.mutations))
-
-        success, failure = 0, 0
-        sorted_mutations = sorted(self.mutations, key=lambda m: m.priority)
-
-        for mutation in sorted_mutations:
-            try:
-                self._apply_mutation(mutation)
-                success += 1
-            except Exception as e:
-                logger.error(f"Mutation failed: {mutation.plugin_id}/{mutation.action}: {e}")
-                failure += 1
-                # FAIL-FORWARD: Continue with next mutation
-
-        self.committed = True
-        return (success, failure)
 ```
 
 ---
@@ -195,56 +241,280 @@ class PulseTransaction:
 
 ---
 
-## Plugin Protocol Extension
+## Phase 5: opus_assistant.on_pulse (DETAILED)
+
+**File:** `vibe_core/plugins/opus_assistant/plugin_main.py`
+**PulsePhase:** `SENSORS` (runs first - collects state)
+
+### Implementation
 
 ```python
-# In vibe_core/plugin_protocol.py - ADD to KernelPlugin class
+from vibe_core.plugin_protocol import HookResult, PulsePhase
+from vibe_core.prana_orchestrator import StateMutation
 
-def on_pulse(
-    self,
-    kernel: "RealVibeKernel",
-    transaction: "PulseTransaction",
-) -> HookResult:
-    """
-    Called during heartbeat pulse (macro-cycle).
+class OpusAssistantPlugin(KernelPlugin):
 
-    IMPORTANT: This runs OUT-OF-PROCESS (GitHub Actions headless mode).
-    Do NOT assume kernel is fully initialized.
+    @property
+    def pulse_phase(self) -> PulsePhase:
+        return PulsePhase.SENSORS  # Collect data first
 
-    Args:
-        kernel: The kernel instance (may be minimal in headless mode)
-        transaction: Register mutations here, don't commit directly
+    def on_pulse(self, kernel, transaction) -> HookResult:
+        """
+        Refresh OPUS.md during heartbeat.
 
-    Returns:
-        HookResult with optional data for reporting
+        This runs every 15 minutes via GitHub Actions.
+        Collects system state and renders the dashboard.
+        """
+        try:
+            # 1. Collect current state (headless-safe)
+            state = self._collect_pulse_state(kernel)
 
-    Example:
-        def on_pulse(self, kernel, transaction) -> HookResult:
-            # Collect data
-            karma = self.calculate_karma_decay()
+            # 2. Render OPUS.md content
+            content = self._render_opus_for_pulse(state)
 
-            # Register mutation (don't apply directly!)
+            # 3. Register mutation (don't write directly!)
             transaction.register(StateMutation(
                 plugin_id=self.plugin_id,
-                action="decay_karma",
-                target="karma.json",
-                payload={"agent_id": "envoy", "delta": karma}
+                action="update_doc",
+                target="OPUS.md",
+                payload={"content": content}
             ))
 
-            return HookResult.ok(data={"decayed": karma})
-    """
-    return HookResult.ok()
+            return HookResult.ok(data={
+                "sections_updated": len(state),
+                "content_length": len(content)
+            })
 
-@property
-def pulse_phase(self) -> "PulsePhase":
-    """
-    Declare execution phase for on_pulse ordering.
+        except Exception as e:
+            # Don't crash - return error result
+            return HookResult.error(f"OPUS refresh failed: {e}")
 
-    Phases execute in order: SENSORS -> COGNITION -> ACTUATORS -> CLEANUP
+    def _collect_pulse_state(self, kernel) -> Dict[str, Any]:
+        """
+        Collect state in headless mode.
 
-    Override to change default (ACTUATORS).
-    """
-    return PulsePhase.ACTUATORS
+        IMPORTANT: kernel may be None or minimal in GitHub Actions.
+        Must work without full kernel initialization.
+        """
+        state = {}
+
+        # Layer 1: Git state (always available)
+        state["git"] = self._get_git_state()
+
+        # Layer 2: Runtime state (if kernel available)
+        if kernel:
+            state["kernel"] = {
+                "running": True,
+                "agents": len(kernel.get_agents() if hasattr(kernel, 'get_agents') else [])
+            }
+        else:
+            state["kernel"] = {"running": False, "agents": 0}
+
+        # Layer 3: File-based state
+        state["verification"] = self._read_verification_cache()
+
+        return state
+
+    def _render_opus_for_pulse(self, state: Dict[str, Any]) -> str:
+        """Render OPUS.md from collected state."""
+        # Use existing renderer but in headless mode
+        return self._opus_renderer.render(state, headless=True)
+```
+
+### Test Cases Required
+
+```python
+# tests/integration/test_opus_pulse.py
+
+def test_opus_on_pulse_returns_ok():
+    """on_pulse should return HookResult.ok() on success."""
+
+def test_opus_on_pulse_registers_mutation():
+    """on_pulse should register exactly one update_doc mutation."""
+
+def test_opus_on_pulse_works_headless():
+    """on_pulse should work when kernel is None."""
+
+def test_opus_pulse_phase_is_sensors():
+    """opus_assistant should declare SENSORS phase."""
+
+def test_opus_on_pulse_handles_errors():
+    """on_pulse should return HookResult.error() not raise."""
+```
+
+---
+
+## Phase 6: vedic_governance.on_pulse (DETAILED)
+
+**File:** `vibe_core/plugins/vedic_governance/plugin_main.py`
+**PulsePhase:** `ACTUATORS` (runs after data collection)
+
+### Implementation
+
+```python
+from vibe_core.plugin_protocol import HookResult, PulsePhase
+from vibe_core.prana_orchestrator import StateMutation
+
+class VedicGovernancePlugin(KernelPlugin):
+
+    @property
+    def pulse_phase(self) -> PulsePhase:
+        return PulsePhase.ACTUATORS  # Act on collected data
+
+    def on_pulse(self, kernel, transaction) -> HookResult:
+        """
+        Apply karma decay and check ashrama transitions.
+
+        Runs every 15 minutes to:
+        1. Decay karma for inactive agents
+        2. Check if any agent should transition ashrama
+        3. Update governance state
+        """
+        try:
+            processed = 0
+
+            # 1. Load current karma state
+            karma_state = self._load_karma_state()
+
+            # 2. Calculate decay for each agent
+            for agent_id, karma in karma_state.items():
+                decay = self._calculate_pulse_decay(agent_id, karma)
+
+                if decay != 0:
+                    transaction.register(StateMutation(
+                        plugin_id=self.plugin_id,
+                        action="decay_karma",
+                        target="karma.json",
+                        payload={"agent_id": agent_id, "delta": decay}
+                    ))
+                    processed += 1
+
+            # 3. Check ashrama transitions
+            transitions = self._check_ashrama_transitions()
+            for agent_id, new_ashrama in transitions:
+                transaction.register(StateMutation(
+                    plugin_id=self.plugin_id,
+                    action="log_observation",
+                    target="journal/governance.log",
+                    payload={
+                        "severity": "INFO",
+                        "message": f"Agent {agent_id} transitioned to {new_ashrama}"
+                    }
+                ))
+
+            return HookResult.ok(data={
+                "agents_processed": processed,
+                "transitions": len(transitions)
+            })
+
+        except Exception as e:
+            return HookResult.error(f"Governance pulse failed: {e}")
+
+    def _calculate_pulse_decay(self, agent_id: str, current_karma: int) -> int:
+        """
+        Calculate karma decay for one pulse cycle.
+
+        Decay rules:
+        - No activity in 15 min: -1 karma
+        - Error in last pulse: -5 karma
+        - Success in last pulse: +1 karma (recovery)
+        """
+        # Implementation based on activity tracking
+        pass
+```
+
+### Test Cases Required
+
+```python
+# tests/integration/test_governance_pulse.py
+
+def test_governance_on_pulse_returns_ok():
+    """on_pulse should return HookResult.ok() on success."""
+
+def test_governance_on_pulse_registers_decay():
+    """on_pulse should register decay_karma mutations."""
+
+def test_governance_pulse_phase_is_actuators():
+    """vedic_governance should declare ACTUATORS phase."""
+
+def test_governance_decay_calculation():
+    """Karma decay should follow specified rules."""
+
+def test_governance_on_pulse_handles_errors():
+    """on_pulse should return HookResult.error() not raise."""
+```
+
+---
+
+## Phase 7: Wire heartbeat.py (DETAILED)
+
+**File:** `scripts/heartbeat.py`
+**Risk Level:** HIGH (production code change)
+
+### Current Structure (605 LOC)
+
+```python
+class HeartbeatEngine:
+    def pulse(self):
+        # Phase 1: Ingest from inbox
+        self._ingest_inbox()
+
+        # Phase 2: Sync TASKS.md → TaskManager
+        self._read_tasks_md()
+
+        # Phase 3: Execute pending tasks
+        self._execute_tasks()
+
+        # Phase 4: MANAS thinks (OPUS-073)
+        self._manas_think()
+
+        # Phase 5: Sync TaskManager → TASKS.md
+        self._write_tasks_md()
+
+        # Phase 6: Commit progress
+        self._commit_progress()
+```
+
+### Target Structure (~100 LOC)
+
+```python
+class HeartbeatEngine:
+    def __init__(self, project_root: Path):
+        self.project_root = project_root
+        self.orchestrator = PranaOrchestrator(kernel=None)
+
+    def pulse(self):
+        """Execute one heartbeat cycle using PranaOrchestrator."""
+        logger.info("💓 HEARTBEAT PULSE STARTED")
+
+        try:
+            # Single entry point: Let plugins do the work
+            result = self.orchestrator.run_pulse_cycle()
+
+            # Log results
+            logger.info(f"  Plugins executed: {result['plugins_executed']}")
+            logger.info(f"  Mutations committed: {result['mutations_committed']}")
+
+            # Git commit (single atomic commit)
+            if result['mutations_committed'] > 0:
+                self._commit_progress(result)
+
+            logger.info("✅ HEARTBEAT PULSE COMPLETED")
+
+        except Exception as e:
+            logger.error(f"❌ HEARTBEAT FAILED: {e}")
+            raise
+```
+
+### Migration Strategy
+
+```
+Step 1: Add PranaOrchestrator import (safe)
+Step 2: Create orchestrator in __init__ (safe)
+Step 3: Add run_pulse_cycle() call BEFORE existing logic (parallel run)
+Step 4: Compare results for 1 week
+Step 5: Remove old business logic one method at a time
+Step 6: Final cleanup
 ```
 
 ---
@@ -259,29 +529,47 @@ files:
     required: true
   - path: vibe_core/prana_orchestrator.py
     required: true
+  - path: vibe_core/plugins/opus_assistant/plugin_main.py
+    required: true
+  - path: vibe_core/plugins/vedic_governance/plugin_main.py
+    required: true
 
 wiring:
-  # === PLUGIN PROTOCOL ===
+  # === PLUGIN PROTOCOL (Phase 1-2) ===
   - pattern: "def on_pulse"
     in: vibe_core/plugin_protocol.py
   - pattern: "def pulse_phase"
     in: vibe_core/plugin_protocol.py
-
-  # === PULSE PHASE ENUM ===
   - pattern: "class PulsePhase"
     in: vibe_core/plugin_protocol.py
 
-  # === ORCHESTRATOR ===
+  # === ORCHESTRATOR (Phase 3) ===
   - pattern: "class PranaOrchestrator"
     in: vibe_core/prana_orchestrator.py
   - pattern: "class PulseTransaction"
     in: vibe_core/prana_orchestrator.py
   - pattern: "class StateMutation"
     in: vibe_core/prana_orchestrator.py
-
-  # === RATE LIMITING ===
   - pattern: "min_pulse_interval_seconds"
     in: vibe_core/prana_orchestrator.py
+
+  # === OPUS ASSISTANT (Phase 5) ===
+  - pattern: "def on_pulse"
+    in: vibe_core/plugins/opus_assistant/plugin_main.py
+  - pattern: "pulse_phase.*SENSORS"
+    in: vibe_core/plugins/opus_assistant/plugin_main.py
+
+  # === VEDIC GOVERNANCE (Phase 6) ===
+  - pattern: "def on_pulse"
+    in: vibe_core/plugins/vedic_governance/plugin_main.py
+  - pattern: "pulse_phase.*ACTUATORS"
+    in: vibe_core/plugins/vedic_governance/plugin_main.py
+
+  # === HEARTBEAT WIRING (Phase 7) ===
+  - pattern: "PranaOrchestrator"
+    in: scripts/heartbeat.py
+  - pattern: "run_pulse_cycle"
+    in: scripts/heartbeat.py
 
 semantic:
   - type: method_exists
@@ -325,79 +613,44 @@ semantic:
 
 tests:
   - tests/integration/test_prana_orchestrator.py
+  - tests/integration/test_opus_pulse.py
+  - tests/integration/test_governance_pulse.py
 -->
 
 ---
 
-## Migration Plan (Incremental)
+## Semantic Checks (Implementation Status)
 
-| Phase | Task | Risk | Safety | Reversible |
-|-------|------|------|--------|------------|
-| 1 | Add `PulsePhase` enum to plugin_protocol.py | LOW | N/A | YES |
-| 2 | Add `on_pulse` + `pulse_phase` to KernelPlugin | LOW | N/A | YES |
-| 3 | Create `vibe_core/prana_orchestrator.py` with safety wrappers | LOW | Isolated | YES |
-| 4 | Create `tests/integration/test_prana_orchestrator.py` | LOW | TDD | YES |
-| 5 | Implement `on_pulse` in opus_assistant (OPUS.md refresh) | MEDIUM | Tested | YES |
-| 6 | Implement `on_pulse` in vedic_governance (karma decay) | MEDIUM | Tested | YES |
-| 7 | Wire heartbeat.py to use PranaOrchestrator | **HIGH** | Full test | PARTIAL |
+### Phase 1-4 (DONE ✅)
 
-### Phase 5 Spec: opus_assistant.on_pulse
+- [x] `PulsePhase` enum has exactly 4 values in correct order
+- [x] `on_pulse` signature includes `transaction: PulseTransaction` parameter
+- [x] `StateMutation.validate()` checks all required fields
+- [x] `PulseTransaction.commit()` implements fail-forward (no rollback)
+- [x] `min_pulse_interval_seconds >= 60` enforced
+- [x] Tests cover: isolation failure, phase ordering, rate limiting, mutation validation
 
-```python
-def on_pulse(self, kernel, transaction) -> HookResult:
-    """Refresh OPUS.md during heartbeat."""
-    # 1. Collect current state
-    state = self._collect_prakriti_state(kernel)
+### Phase 5 (PENDING ⏳)
 
-    # 2. Render OPUS.md content
-    content = self._render_opus_md(state)
+- [ ] `opus_assistant.on_pulse` implemented
+- [ ] `opus_assistant.pulse_phase` returns `PulsePhase.SENSORS`
+- [ ] Works in headless mode (kernel=None)
+- [ ] Registers `update_doc` mutation for OPUS.md
+- [ ] Tests pass: `test_opus_pulse.py`
 
-    # 3. Register mutation
-    transaction.register(StateMutation(
-        plugin_id=self.plugin_id,
-        action="update_doc",
-        target="OPUS.md",
-        payload={"content": content}
-    ))
+### Phase 6 (PENDING ⏳)
 
-    return HookResult.ok(data={"sections_updated": len(state)})
-```
+- [ ] `vedic_governance.on_pulse` implemented
+- [ ] `vedic_governance.pulse_phase` returns `PulsePhase.ACTUATORS`
+- [ ] Registers `decay_karma` mutations
+- [ ] Tests pass: `test_governance_pulse.py`
 
-### Phase 6 Spec: vedic_governance.on_pulse
+### Phase 7 (PENDING ⏳)
 
-```python
-def on_pulse(self, kernel, transaction) -> HookResult:
-    """Apply karma decay and ashrama transitions."""
-    mutations = []
-
-    # 1. Calculate karma decay for all agents
-    for agent_id in self._get_active_agents():
-        decay = self._calculate_decay(agent_id)
-        if decay != 0:
-            transaction.register(StateMutation(
-                plugin_id=self.plugin_id,
-                action="decay_karma",
-                target="karma.json",
-                payload={"agent_id": agent_id, "delta": decay}
-            ))
-            mutations.append(agent_id)
-
-    return HookResult.ok(data={"agents_processed": len(mutations)})
-```
-
----
-
-## Semantic Checks (Pre-Implementation)
-
-All checks are automated via `@HARNESS` block above. Manual verification:
-
-- [ ] `PulsePhase` enum has exactly 4 values in correct order
-- [ ] `on_pulse` signature includes `transaction: PulseTransaction` parameter
-- [ ] `StateMutation.validate()` checks all required fields
-- [ ] `PulseTransaction.commit()` implements fail-forward (no rollback)
-- [ ] `min_pulse_interval_seconds >= 60` enforced
-- [ ] No `git commit` or `git push` inside plugin `on_pulse` methods
-- [ ] Tests cover: isolation failure, phase ordering, rate limiting, mutation validation
+- [ ] `heartbeat.py` imports `PranaOrchestrator`
+- [ ] `heartbeat.py` calls `run_pulse_cycle()`
+- [ ] No `git commit` inside plugin `on_pulse` methods
+- [ ] Single atomic commit at end of pulse
 
 ---
 
@@ -411,6 +664,8 @@ All checks are automated via `@HARNESS` block above. Manual verification:
 | Mutation validation bypass | Invalid state | StateMutation.validate() + abort on failure |
 | Git conflict during commit | Merge hell | Single atomic commit at end of cycle |
 | Rollback complexity | Data loss | Fail-forward strategy (no rollback) |
+| Headless mode failures | Silent breakage | Explicit kernel=None handling in all plugins |
+| VISNU violation | Blocked PR | Config-driven changes only (no workflow edits) |
 
 ---
 
@@ -420,10 +675,34 @@ This spec depends on:
 - `vibe_core/plugin_protocol.py` (KernelPlugin base class)
 - `vibe_core/prana.py` (config loading - DO NOT MODIFY)
 - `scripts/heartbeat.py` (orchestration target)
+- `.github/workflows/heartbeat.yml` (VISNU PROTECTED - DO NOT MODIFY)
 
 This spec is required by:
-- OPUS-088 (if exists): Advanced pulse scheduling
 - Any future plugin implementing `on_pulse`
+- OPUS dashboard refresh reliability
+- Karma/governance automation
+
+---
+
+## Next Actions
+
+1. **Implement Phase 5** - `opus_assistant.on_pulse()`
+   - Add `pulse_phase` property returning `SENSORS`
+   - Implement headless-safe state collection
+   - Register `update_doc` mutation
+   - Write tests
+
+2. **Implement Phase 6** - `vedic_governance.on_pulse()`
+   - Add `pulse_phase` property returning `ACTUATORS`
+   - Implement karma decay logic
+   - Register `decay_karma` mutations
+   - Write tests
+
+3. **Implement Phase 7** - Wire `heartbeat.py`
+   - Add PranaOrchestrator import
+   - Replace business logic with `run_pulse_cycle()`
+   - Test in parallel with existing logic first
+   - Final migration
 
 ---
 

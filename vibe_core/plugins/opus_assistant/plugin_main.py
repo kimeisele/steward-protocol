@@ -91,6 +91,13 @@ class OpusAssistantPlugin(KernelPlugin):
     def priority(self) -> int:
         return 50  # After interface (10), before most others
 
+    @property
+    def pulse_phase(self):
+        """OPUS-087 PRANA: Run in SENSORS phase to collect data first."""
+        from vibe_core.plugin_protocol import PulsePhase
+
+        return PulsePhase.SENSORS
+
     def __init__(self):
         """Initialize plugin state."""
         self._kernel: Optional["RealVibeKernel"] = None
@@ -161,6 +168,144 @@ class OpusAssistantPlugin(KernelPlugin):
             self._syscall_listener.unsubscribe()
 
         logger.info("🎯 OPUS Assistant shutdown (session state saved)")
+
+    # =========================================================================
+    # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)
+    # =========================================================================
+
+    def on_pulse(self, kernel, transaction):
+        """
+        OPUS-087 PRANA: Refresh OPUS.md during heartbeat pulse.
+
+        This runs every 15 minutes via GitHub Actions (headless mode).
+        Collects system state and registers mutation for OPUS.md update.
+
+        IMPORTANT: kernel may be None in headless mode - must handle gracefully.
+        """
+        from vibe_core.plugin_protocol import HookResult
+        from vibe_core.prana_orchestrator import StateMutation
+
+        try:
+            # 1. Collect state (headless-safe)
+            state = self._collect_pulse_state(kernel)
+
+            # 2. Render OPUS.md content
+            content = self._render_opus_for_pulse(state)
+
+            # 3. Register mutation (don't write directly!)
+            transaction.register(
+                StateMutation(
+                    plugin_id=self.plugin_id, action="update_doc", target="OPUS.md", payload={"content": content}
+                )
+            )
+
+            logger.info(f"🎯 OPUS pulse: registered update_doc mutation ({len(content)} chars)")
+
+            return HookResult.ok(data={"sections_updated": len(state), "content_length": len(content)})
+
+        except Exception as e:
+            logger.error(f"🎯 OPUS pulse failed: {e}")
+            return HookResult.error(f"OPUS refresh failed: {e}")
+
+    def _collect_pulse_state(self, kernel) -> Dict[str, Any]:
+        """
+        Collect state in headless mode for pulse cycle.
+
+        IMPORTANT: kernel may be None in GitHub Actions.
+        Must work without full kernel initialization.
+        """
+        state = {}
+        workspace = self._workspace or Path.cwd()
+
+        # Layer 1: Git state (always available, no kernel needed)
+        try:
+            import subprocess
+
+            result = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5, cwd=workspace
+            )
+            state["git_sha"] = result.stdout.strip() if result.returncode == 0 else "unknown"
+
+            result = subprocess.run(
+                ["git", "branch", "--show-current"], capture_output=True, text=True, timeout=5, cwd=workspace
+            )
+            state["git_branch"] = result.stdout.strip() if result.returncode == 0 else "unknown"
+        except Exception as e:
+            state["git_sha"] = "error"
+            state["git_branch"] = "error"
+            state["git_error"] = str(e)
+
+        # Layer 2: File-based state (always available)
+        opus_path = workspace / "OPUS.md"
+        state["opus_exists"] = opus_path.exists()
+
+        # Layer 3: Kernel state (if available)
+        if kernel:
+            state["kernel_running"] = True
+            try:
+                agents = kernel.get_agents() if hasattr(kernel, "get_agents") else []
+                state["agent_count"] = len(agents)
+            except Exception:
+                state["agent_count"] = 0
+        else:
+            state["kernel_running"] = False
+            state["agent_count"] = 0
+
+        # Layer 4: Timestamp
+        from datetime import datetime
+
+        state["pulse_time"] = datetime.utcnow().isoformat()
+
+        return state
+
+    def _render_opus_for_pulse(self, state: Dict[str, Any]) -> str:
+        """
+        Render OPUS.md content from collected pulse state.
+
+        Uses minimal rendering for headless mode - just updates timestamp
+        and basic state. Full rendering happens when kernel is available.
+        """
+        from datetime import datetime
+
+        workspace = self._workspace or Path.cwd()
+        opus_path = workspace / "OPUS.md"
+
+        # If OPUS.md exists, try to preserve most of it
+        if opus_path.exists():
+            try:
+                existing = opus_path.read_text()
+
+                # Just update the pulse timestamp in header
+                import re
+
+                timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+
+                # Update "Last Pulse" if it exists, otherwise add it
+                if "Last Pulse:" in existing:
+                    updated = re.sub(r"Last Pulse:.*", f"Last Pulse: {timestamp}", existing)
+                else:
+                    # Add after first heading
+                    updated = re.sub(r"(# OPUS.*\n)", f"\\1\n> Last Pulse: {timestamp}\n", existing, count=1)
+
+                return updated
+            except Exception as e:
+                logger.warning(f"Could not update existing OPUS.md: {e}")
+
+        # Generate minimal OPUS.md for new files
+        return f"""# OPUS - System Dashboard
+
+> Last Pulse: {state.get("pulse_time", "unknown")}
+
+## System State
+
+- Git: `{state.get("git_branch", "unknown")}` @ `{state.get("git_sha", "unknown")}`
+- Kernel: {"Running" if state.get("kernel_running") else "Offline"}
+- Agents: {state.get("agent_count", 0)}
+
+---
+
+*Generated by OPUS-087 PRANA Pulse*
+"""
 
     def _is_test_mode(self) -> bool:
         """Check if running in pytest - skip some operations in tests."""
