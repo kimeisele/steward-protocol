@@ -65,6 +65,13 @@ class VedicGovernancePlugin(KernelPlugin):
     def priority(self) -> int:
         return 10  # Early priority - governance is foundational
 
+    @property
+    def pulse_phase(self):
+        """OPUS-087 PRANA: Run in ACTUATORS phase (after data collection)."""
+        from vibe_core.plugin_protocol import PulsePhase
+
+        return PulsePhase.ACTUATORS
+
     def __init__(self):
         """Initialize governance state (owned by plugin, not kernel)."""
         # Agent pause state
@@ -118,6 +125,99 @@ class VedicGovernancePlugin(KernelPlugin):
 
         logger.info("🕉️  Vedic Governance Plugin booted (Varna + Ashrama)")
         logger.info("   Governance is now PLUGIN-BASED (not hardcoded in kernel)")
+
+    # =========================================================================
+    # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)
+    # =========================================================================
+
+    def on_pulse(self, kernel, transaction):
+        """
+        OPUS-087 PRANA: Apply karma decay and check ashrama transitions.
+
+        Runs every 15 minutes via GitHub Actions to:
+        1. Decay karma for inactive agents
+        2. Check if any agent should transition ashrama
+        3. Update governance state
+
+        IMPORTANT: kernel may be None in headless mode.
+        """
+        from vibe_core.plugin_protocol import HookResult
+        from vibe_core.prana_orchestrator import StateMutation
+
+        try:
+            processed = 0
+
+            # 1. Get all agents with karma (from bhakti registry)
+            for agent_id, current_karma in list(self._bhakti_registry.items()):
+                decay = self._calculate_pulse_decay(agent_id, current_karma)
+
+                if decay != 0:
+                    transaction.register(
+                        StateMutation(
+                            plugin_id=self.plugin_id,
+                            action="decay_karma",
+                            target="karma.json",
+                            payload={"agent_id": agent_id, "delta": decay},
+                        )
+                    )
+                    processed += 1
+
+            # 2. Check ashrama transitions (agents that should graduate)
+            transitions = self._check_pulse_transitions()
+
+            for agent_id, new_ashrama in transitions:
+                transaction.register(
+                    StateMutation(
+                        plugin_id=self.plugin_id,
+                        action="log_observation",
+                        target="journal/governance.log",
+                        payload={"severity": "INFO", "message": f"Agent {agent_id} transitioned to {new_ashrama}"},
+                    )
+                )
+
+            logger.info(f"🕉️ Governance pulse: {processed} agents processed, {len(transitions)} transitions")
+
+            return HookResult.ok(data={"agents_processed": processed, "transitions": len(transitions)})
+
+        except Exception as e:
+            logger.error(f"🕉️ Governance pulse failed: {e}")
+            return HookResult.error(f"Governance pulse failed: {e}")
+
+    def _calculate_pulse_decay(self, agent_id: str, current_karma: int) -> int:
+        """
+        Calculate karma decay for one pulse cycle (15 min).
+
+        Decay rules:
+        - Base decay: -1 per pulse (natural entropy)
+        - Active agents (recent activity): 0 decay
+        - Error in last pulse: -5 karma
+        - Success in last pulse: +1 karma (recovery)
+
+        Returns:
+            Karma delta (negative = decay, positive = recovery)
+        """
+        # For now, simple decay: -1 per pulse for all agents
+        # Future: Check activity log to determine actual decay
+        return -1
+
+    def _check_pulse_transitions(self) -> List[tuple]:
+        """
+        Check if any agents should transition ashrama.
+
+        Returns:
+            List of (agent_id, new_ashrama) tuples
+        """
+        transitions = []
+
+        for agent_id, ashrama in self._ashrama_registry.items():
+            # Check if agent has completed enough tasks to graduate
+            completions = self._task_completions.get(agent_id, 0)
+
+            if ashrama.current_ashrama == Ashrama.BRAHMACHARI and completions >= 10:
+                # Graduate to GRIHASTHA after 10 successful tasks
+                transitions.append((agent_id, Ashrama.GRIHASTHA))
+
+        return transitions
 
     def _persist_varna(self, agent_id: str, varna: "Varna") -> None:
         """Persist varna assignment to ledger."""
