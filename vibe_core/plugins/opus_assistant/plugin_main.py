@@ -186,22 +186,32 @@ class OpusAssistantPlugin(KernelPlugin):
         from vibe_core.prana_orchestrator import StateMutation
 
         try:
-            # 1. Collect state (headless-safe)
-            state = self._collect_pulse_state(kernel)
+            # 1. Use the proper renderer to generate full dashboard
+            from vibe_core.plugins.opus_assistant.render.opus_dashboard_renderer import (
+                OpusDashboardRenderer,
+            )
 
-            # 2. Render OPUS.md content
-            content = self._render_opus_for_pulse(state)
+            workspace = self._workspace or Path.cwd()
+            renderer = OpusDashboardRenderer(workspace_root=workspace, kernel=kernel)
 
-            # 3. Register mutation (don't write directly!)
+            # Render the full markdown content
+            content = renderer.render(quick=False)
+
+            # 2. Register mutation (don't write directly!)
+            # We ask PRANA to perform the write operation
             transaction.register(
                 StateMutation(
-                    plugin_id=self.plugin_id, action="update_doc", target="OPUS.md", payload={"content": content}
+                    plugin_id=self.plugin_id,
+                    action="update_doc",
+                    target="OPUS.md",
+                    payload={"content": content},
+                    priority=1,  # High priority
                 )
             )
 
             logger.info(f"🎯 OPUS pulse: registered update_doc mutation ({len(content)} chars)")
 
-            return HookResult.ok(data={"sections_updated": len(state), "content_length": len(content)})
+            return HookResult.ok(data={"refreshed": True, "content_length": len(content)})
 
         except Exception as e:
             logger.error(f"🎯 OPUS pulse failed: {e}")
