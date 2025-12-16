@@ -1,0 +1,117 @@
+{#
+  MANAS Status Panel - Full Cognitive Transparency
+
+  OPUS-083: Shows what MANAS has been thinking and doing.
+  This panel reads DIRECTLY from .opus_state/manas_intents.json
+  so it works even when the kernel isn't actively running.
+
+  THE TRANSPARENCY PRINCIPLE:
+  - Show ALL pending intents (not just when kernel runs)
+  - Show execution history
+  - Show harness health (self-healing metrics)
+  - Show last activity timestamps
+
+  Required context:
+    - manas_status: Dict with:
+        - online: bool (kernel actively running MANAS)
+        - intent_buffer:
+            - pending: List of intent dicts
+            - executed: List of executed intents
+            - rejected: List of rejected intents
+            - total_pending: int
+            - last_updated: timestamp string
+        - harness_health:
+            - total_files: int
+            - with_harness: int
+            - coverage_percent: float
+            - broken_files: List[str]
+            - sanskrit_missing: List[str]
+        - last_thought: timestamp or null
+        - uptime_hours: float or null
+#}
+
+## 🧠 MANAS Status
+
+{% if manas_status %}
+
+### System Status
+
+| Metric | Value |
+|--------|-------|
+| **Kernel** | {% if manas_status.online %}🟢 ONLINE{% else %}⚪ OFFLINE{% endif %} |
+| **Intent Buffer** | {{ manas_status.intent_buffer.total_pending }} pending |
+| **Last Updated** | `{{ manas_status.intent_buffer.last_updated or 'never' }}` |
+{% if manas_status.last_thought %}| **Last Thought** | `{{ manas_status.last_thought[-19:] }}` |{% endif %}
+
+{% if manas_status.intent_buffer.pending %}
+### Pending Intents ({{ manas_status.intent_buffer.pending|length }})
+
+| Intent | Type | Priority | Risk | Created |
+|--------|------|----------|------|---------|
+{% for intent in manas_status.intent_buffer.pending[:10] %}
+| {{ intent.title[:35] }}{% if intent.title|length > 35 %}...{% endif %} | `{{ intent.intent_type }}` | {% if intent.priority == 'critical' %}🔴{% elif intent.priority == 'high' %}🟠{% elif intent.priority == 'medium' %}🟡{% else %}🟢{% endif %} {{ intent.priority }} | {% if intent.risk == 'safe' %}✅{% elif intent.risk == 'low' %}🟢{% elif intent.risk == 'medium' %}🟡{% else %}🔴{% endif %} | `{{ intent.created_at[-19:] if intent.created_at else '?' }}` |
+{% endfor %}
+{% if manas_status.intent_buffer.pending|length > 10 %}
+| _...and {{ manas_status.intent_buffer.pending|length - 10 }} more_ | | | | |
+{% endif %}
+
+<details>
+<summary>Intent Details</summary>
+
+{% for intent in manas_status.intent_buffer.pending[:5] %}
+#### {{ intent.title }}
+
+- **ID:** `{{ intent.id }}`
+- **Type:** `{{ intent.intent_type }}`
+- **Description:** {{ intent.description }}
+- **Reasoning:** {{ intent.reasoning }}
+{% if intent.auto_executable %}- **Auto-Execute:** ⚡ Yes{% endif %}
+
+{% if intent.params %}
+**Parameters:**
+```yaml
+{% for key, value in intent.params.items() %}
+{{ key }}: {{ value }}
+{% endfor %}
+```
+{% endif %}
+
+---
+{% endfor %}
+
+</details>
+{% else %}
+_No pending intents. MANAS is idle._
+{% endif %}
+
+{% if manas_status.intent_buffer.executed %}
+### Recently Executed ({{ manas_status.intent_buffer.executed|length }})
+
+| Intent | Result | Executed |
+|--------|--------|----------|
+{% for exec in manas_status.intent_buffer.executed[:5] %}
+| {{ exec.title[:40] if exec.title else exec.id }} | {% if exec.success %}✅{% else %}❌{% endif %} | `{{ exec.executed_at[-19:] if exec.executed_at else '?' }}` |
+{% endfor %}
+{% endif %}
+
+{% if manas_status.harness_health %}
+### Documentation Health (Self-Healing)
+
+| Metric | Value |
+|--------|-------|
+| **Total OPUS Docs** | {{ manas_status.harness_health.total_files }} |
+| **With @HARNESS** | {{ manas_status.harness_health.with_harness }} |
+| **Coverage** | {% if manas_status.harness_health.coverage_percent >= 80 %}🟢{% elif manas_status.harness_health.coverage_percent >= 60 %}🟡{% else %}🟠{% endif %} **{{ manas_status.harness_health.coverage_percent|round(1) }}%** |
+{% if manas_status.harness_health.broken_harness > 0 %}| **Broken Harnesses** | 🔴 {{ manas_status.harness_health.broken_harness }} |{% endif %}
+{% if manas_status.harness_health.sanskrit_missing %}| **Sanskrit Missing** | ⚠️ {{ manas_status.harness_health.sanskrit_missing|length }} modules |{% endif %}
+
+{% if manas_status.harness_health.broken_files %}
+**Broken:** {{ manas_status.harness_health.broken_files[:3]|join(', ') }}{% if manas_status.harness_health.broken_files|length > 3 %} _+{{ manas_status.harness_health.broken_files|length - 3 }} more_{% endif %}
+{% endif %}
+{% endif %}
+
+{% else %}
+_MANAS status unavailable. Run `steward boot` to start the cognitive kernel._
+{% endif %}
+
+---
