@@ -79,9 +79,9 @@ class SystemChroniclePlugin(KernelPlugin):
             logger.info(f"📜 Chronicle: Found {len(files_changed)} changed files. Sealing history...")
 
             commit_result = tools.seal_history(
-                message=f"🫀 Heartbeat Pulse: System auto-save",
+                message="🫀 Heartbeat Pulse: System auto-save",
                 files=None,  # Commit all staged (or all modified if nothing staged)
-                sign=True,   # Sign the commit
+                sign=True,  # Sign the commit
             )
 
             if commit_result.get("success"):

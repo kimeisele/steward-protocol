@@ -1,0 +1,24 @@
+{
+  "type": "plugin",
+  "id": "task_manager",
+  "name": "Task Manager Plugin",
+  "version": "1.0.0",
+  "description": "Sub-operating system for complete task lifecycle: ingestion, queueing, execution, history",
+  "author": "STEWARD Protocol",
+  "entry_point": "plugin_main.py",
+  "entry_class": "TaskManagerPlugin",
+  "hooks": [
+    "on_pulse"
+  ],
+  "priority": 95,
+  "enabled": true,
+  "dependencies": [],
+  "tags": [
+    "tasks",
+    "management",
+    "inbox",
+    "queueing",
+    "execution",
+    "lifecycle"
+  ]
+}
