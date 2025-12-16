@@ -105,8 +105,6 @@ class HeartbeatEngine:
 
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.tasks_md = project_root / "TASKS.md"
-        self.inbox_dir = project_root / "data" / "inbox"
         self.task_manager = TaskManager(project_root)
 
         # Initialize Unified Router for intelligent task execution
@@ -236,26 +234,18 @@ class HeartbeatEngine:
         try:
             # OPUS-087 PRANA: Plugin Pulse Cycle (runs FIRST)
             # Executes all plugin on_pulse() methods in phase order
-            # SENSORS → COGNITION → ACTUATORS → CLEANUP
+            # SENSORS (TaskIngestPlugin ingests here)
+            # COGNITION → ACTUATORS → CLEANUP (SystemChroniclePlugin commits here)
             self._run_prana_pulse()
 
-            # Phase 1: Ingest from inbox
-            self._ingest_inbox()
-
-            # Phase 2: Sync TASKS.md → TaskManager (read user input)
-            self._read_tasks_md()
-
-            # Phase 3: Execute pending tasks
+            # Phase 1: Execute pending tasks
             self._execute_tasks()
 
-            # Phase 4: MANAS thinks (OPUS-073)
+            # Phase 2: MANAS thinks (OPUS-073)
             self._manas_think()
 
-            # Phase 5: Sync TaskManager → TASKS.md (write results)
+            # Phase 3: Sync TaskManager → TASKS.md (write results)
             self._write_tasks_md()
-
-            # Phase 6: Commit progress → delegated to SystemChroniclePlugin (PRANA pulse)
-            # (Removes line 258 call - now handled by CLEANUP phase plugin)
 
             logger.info("✅ HEARTBEAT PULSE COMPLETED")
         except Exception as e:
@@ -296,88 +286,6 @@ class HeartbeatEngine:
             # Don't fail the entire heartbeat if PRANA fails
             logger.error(f"🫀 PRANA: Plugin pulse failed: {e}")
             # Continue with legacy heartbeat phases
-
-    def _ingest_inbox(self):
-        """Ingest tasks from data/inbox/*.json."""
-        if not self.inbox_dir.exists():
-            return
-
-        json_files = list(self.inbox_dir.glob("*.json"))
-        if not json_files:
-            return
-
-        logger.info(f"📥 Ingesting {len(json_files)} tasks from inbox...")
-
-        for json_file in json_files:
-            try:
-                with open(json_file, "r") as f:
-                    task_data = json.load(f)
-
-                # Create task in TaskManager
-                task = self.task_manager.add_task(
-                    title=task_data.get("title", "Untitled Task"),
-                    description=task_data.get("description", ""),
-                    priority=task_data.get("priority", 0),
-                    assigned_agent=task_data.get("assignee"),
-                )
-
-                logger.info(f"   ✅ Ingested: {task.title} (ID: {task.id})")
-
-                # Remove from inbox (now safely in SQLite)
-                json_file.unlink()
-
-            except Exception as e:
-                logger.warning(f"   ⚠️  Failed to ingest {json_file.name}: {e}")
-
-    def _read_tasks_md(self):
-        """Read TASKS.md and create new tasks from checkboxes."""
-        if not self.tasks_md.exists():
-            logger.warning("⚠️  TASKS.md not found, skipping sync")
-            return
-
-        content = self.tasks_md.read_text()
-
-        # Parse inbox section
-        inbox_match = re.search(r"## 🎯 Inbox \(New Commands\).*?(?=##|\Z)", content, re.DOTALL)
-
-        if not inbox_match:
-            return
-
-        inbox_text = inbox_match.group(0)
-
-        # Find unchecked tasks: - [ ] Task description @agent priority:high
-        task_pattern = re.compile(r"- \[ \] (.+?)(?:@(\w+))?\s*(?:priority:(high|medium|low))?")
-
-        new_tasks = 0
-        for match in task_pattern.finditer(inbox_text):
-            description = match.group(1).strip()
-            agent = match.group(2)
-            priority_str = match.group(3)
-
-            # Map priority
-            priority_map = {"high": 90, "medium": 50, "low": 10}
-            priority = priority_map.get(priority_str, 50)
-
-            # Check if task already exists (avoid duplicates)
-            existing = [t for t in self.task_manager.list_tasks() if t.title == description]
-            if existing:
-                continue
-
-            # Create task
-            try:
-                task = self.task_manager.add_task(
-                    title=description,
-                    description=f"Created from TASKS.md at {datetime.now().isoformat()}",
-                    priority=priority,
-                    assigned_agent=agent,
-                )
-                logger.info(f"📝 Created task from TASKS.md: {task.title}")
-                new_tasks += 1
-            except Exception as e:
-                logger.warning(f"⚠️  Failed to create task '{description}': {e}")
-
-        if new_tasks > 0:
-            logger.info(f"   ✅ Created {new_tasks} new tasks from TASKS.md")
 
     def _execute_tasks(self):
         """Execute pending tasks."""

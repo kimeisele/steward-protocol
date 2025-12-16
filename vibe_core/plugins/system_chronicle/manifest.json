@@ -6,7 +6,7 @@
     "description": "PRANA Pulse integration with Chronicle Cartridge - seals repository history during heartbeat",
     "entry_point": "plugin_main.py",
     "entry_class": "SystemChroniclePlugin",
-    "priority": 200,
+    "priority": 100,
     "enabled": true,
     "hooks": [
         "on_pulse"
