@@ -80,6 +80,16 @@ except ImportError:
     PRANA_AVAILABLE = False
     load_prana_config = None
 
+# OPUS-087 PRANA: Plugin Pulse Architecture
+# Orchestrates plugin on_pulse() calls during heartbeat
+try:
+    from vibe_core.prana_orchestrator import PranaOrchestrator
+
+    PRANA_ORCHESTRATOR_AVAILABLE = True
+except ImportError:
+    PranaOrchestrator = None
+    PRANA_ORCHESTRATOR_AVAILABLE = False
+
 
 class HeartbeatEngine:
     """The Autonomous Task Orchestrator."""
@@ -136,11 +146,25 @@ class HeartbeatEngine:
         else:
             logger.warning("⚠️ MANAS not available - no proactive cognition")
 
+        # OPUS-087 PRANA: Initialize Plugin Pulse Orchestrator
+        self.prana_orchestrator = None
+        if PRANA_ORCHESTRATOR_AVAILABLE:
+            try:
+                self.prana_orchestrator = PranaOrchestrator(kernel=None)
+                logger.info("🫀 PRANA Orchestrator ready for plugin pulse")
+            except Exception as e:
+                logger.warning(f"⚠️ PRANA Orchestrator unavailable: {e}")
+
     def pulse(self):
         """Execute one heartbeat cycle."""
         logger.info("💓 HEARTBEAT PULSE STARTED")
 
         try:
+            # OPUS-087 PRANA: Plugin Pulse Cycle (runs FIRST)
+            # Executes all plugin on_pulse() methods in phase order
+            # SENSORS → COGNITION → ACTUATORS → CLEANUP
+            self._run_prana_pulse()
+
             # Phase 1: Ingest from inbox
             self._ingest_inbox()
 
@@ -163,6 +187,41 @@ class HeartbeatEngine:
         except Exception as e:
             logger.error(f"❌ HEARTBEAT FAILED: {e}", exc_info=True)
             raise
+
+    def _run_prana_pulse(self):
+        """
+        OPUS-087 PRANA: Execute plugin pulse cycle.
+
+        Runs all registered plugins' on_pulse() methods in phase order:
+        1. SENSORS - Collect data (opus_assistant)
+        2. COGNITION - Process data
+        3. ACTUATORS - Take actions (vedic_governance)
+        4. CLEANUP - Cleanup temp state
+
+        Mutations are batched and committed atomically at the end.
+        """
+        if not self.prana_orchestrator:
+            logger.debug("🫀 PRANA: Orchestrator not available, skipping plugin pulse")
+            return
+
+        try:
+            logger.info("🫀 PRANA: Starting plugin pulse cycle...")
+
+            result = self.prana_orchestrator.run_pulse_cycle()
+
+            plugins_run = result.get("plugins_executed", 0)
+            mutations = result.get("mutations_committed", 0)
+            failures = result.get("failures", 0)
+
+            if failures > 0:
+                logger.warning(f"🫀 PRANA: {plugins_run} plugins, {mutations} mutations, {failures} failures")
+            else:
+                logger.info(f"🫀 PRANA: {plugins_run} plugins executed, {mutations} mutations committed")
+
+        except Exception as e:
+            # Don't fail the entire heartbeat if PRANA fails
+            logger.error(f"🫀 PRANA: Plugin pulse failed: {e}")
+            # Continue with legacy heartbeat phases
 
     def _ingest_inbox(self):
         """Ingest tasks from data/inbox/*.json."""
