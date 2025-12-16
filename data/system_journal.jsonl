@@ -1,0 +1,12 @@
+{"timestamp": "2025-12-16T13:56:57.977186", "plugin": "sensor", "target": "journal/sensor.log", "phase": "SENSORS"}
+{"timestamp": "2025-12-16T13:56:57.978078", "plugin": "cognition", "target": "journal/cognition.log", "phase": "COGNITION"}
+{"timestamp": "2025-12-16T13:56:57.978579", "plugin": "actuator", "target": "journal/actuator.log", "phase": "ACTUATORS"}
+{"timestamp": "2025-12-16T13:58:10.900117", "plugin": "sensor_1", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.906849", "plugin": "sen", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.917040", "plugin": "sensor_1", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.917663", "plugin": "sensor_1", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.932685", "plugin": "sensor_1", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.932978", "plugin": "sensor_2", "target": "journal/sensors.log", "collected": true}
+{"timestamp": "2025-12-16T13:58:10.936566", "plugin": "sensor", "target": "journal/sensor.log", "phase": "SENSORS"}
+{"timestamp": "2025-12-16T13:58:10.941133", "plugin": "cognition", "target": "journal/cognition.log", "phase": "COGNITION"}
+{"timestamp": "2025-12-16T13:58:10.941562", "plugin": "actuator", "target": "journal/actuator.log", "phase": "ACTUATORS"}

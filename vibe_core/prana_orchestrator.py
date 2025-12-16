@@ -254,6 +254,9 @@ class PranaOrchestrator:
         # Create transaction for this cycle
         transaction = PulseTransaction()
 
+        # Register default mutation handlers
+        self._register_default_handlers(transaction)
+
         # Get plugins sorted by phase
         plugins = self.get_plugins()
         plugins_by_phase = self._sort_plugins_by_phase(plugins)
@@ -408,6 +411,92 @@ class PranaOrchestrator:
     def quarantined_plugins(self) -> Set[str]:
         """Get set of currently quarantined plugin IDs."""
         return self._quarantined_plugins.copy()
+
+    def _register_default_handlers(self, transaction: PulseTransaction) -> None:
+        """
+        Register default mutation handlers.
+
+        These handlers actually apply the mutations to the filesystem.
+        CRITICAL: Without these, mutations are recorded but never applied!
+        """
+        from pathlib import Path
+
+        workspace = Path.cwd()
+
+        def handle_update_doc(mutation: StateMutation) -> bool:
+            """Write content to a markdown file."""
+            target_path = workspace / mutation.target
+            content = mutation.payload.get("content")
+
+            if not content:
+                logger.warning(f"update_doc: No content in payload for {mutation.target}")
+                return False
+
+            try:
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_text(content)
+                logger.info(f"✏️ PRANA: Updated {mutation.target} ({len(content)} chars)")
+                return True
+            except Exception as e:
+                logger.error(f"update_doc failed for {mutation.target}: {e}")
+                return False
+
+        def handle_log_observation(mutation: StateMutation) -> bool:
+            """Append observation to system journal."""
+            journal_path = workspace / "data" / "system_journal.jsonl"
+
+            try:
+                import json
+                from datetime import datetime
+
+                journal_path.parent.mkdir(parents=True, exist_ok=True)
+
+                entry = {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "plugin": mutation.plugin_id,
+                    "target": mutation.target,
+                    **mutation.payload,
+                }
+
+                with open(journal_path, "a") as f:
+                    f.write(json.dumps(entry) + "\n")
+
+                logger.debug(f"📝 PRANA: Logged observation from {mutation.plugin_id}")
+                return True
+            except Exception as e:
+                logger.error(f"log_observation failed: {e}")
+                return False
+
+        def handle_decay_karma(mutation: StateMutation) -> bool:
+            """Apply karma decay (placeholder - implement when karma system ready)."""
+            agent_id = mutation.payload.get("agent_id")
+            delta = mutation.payload.get("delta", 0)
+            logger.info(f"⚖️ PRANA: Karma decay for {agent_id}: {delta}")
+            # TODO: Wire to actual karma system when ready
+            return True
+
+        def handle_refresh_state(mutation: StateMutation) -> bool:
+            """Refresh Prakriti layer state."""
+            logger.info(f"🔄 PRANA: State refresh requested for {mutation.target}")
+            # Prakriti refresh is handled elsewhere - just acknowledge
+            return True
+
+        def handle_quarantine_plugin(mutation: StateMutation) -> bool:
+            """Quarantine a misbehaving plugin."""
+            plugin_id = mutation.payload.get("plugin_id")
+            reason = mutation.payload.get("reason", "Quarantine requested via mutation")
+            if plugin_id:
+                self._quarantine_plugin(plugin_id, reason)
+            return True
+
+        # Register all handlers
+        transaction.register_handler("update_doc", handle_update_doc)
+        transaction.register_handler("log_observation", handle_log_observation)
+        transaction.register_handler("decay_karma", handle_decay_karma)
+        transaction.register_handler("refresh_state", handle_refresh_state)
+        transaction.register_handler("quarantine_plugin", handle_quarantine_plugin)
+
+        logger.debug("PRANA: Registered 5 default mutation handlers")
 
     def get_status(self) -> Dict[str, Any]:
         """Get current orchestrator status."""
