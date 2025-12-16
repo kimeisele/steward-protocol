@@ -14,7 +14,6 @@ Usage (in boot.py, BEFORE any heavy imports):
 """
 
 import logging
-import os
 import sys
 from pathlib import Path
 from typing import List, Optional

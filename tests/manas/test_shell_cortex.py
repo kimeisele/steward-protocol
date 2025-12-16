@@ -12,7 +12,6 @@ SECURITY CRITICAL:
 "The voice must speak truth, not chaos."
 """
 
-
 import pytest
 
 # Import will fail until we implement - that's TDD!

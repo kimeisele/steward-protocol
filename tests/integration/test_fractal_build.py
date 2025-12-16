@@ -1,17 +1,18 @@
-import pytest
+import json
 import os
 import shutil
 import subprocess
 import zipfile
-import json
 from pathlib import Path
-from vibe_core.kernel_impl import RealVibeKernel
+
+import pytest
 
 # Define paths for temporary test plugins
 TEST_ROOT = Path("tests/temp_fractal")
 PARENT_DIR = TEST_ROOT / "parent_plugin"
 CHILD_DIR = TEST_ROOT / "child_plugin"
 DIST_DIR = TEST_ROOT / "dist"
+
 
 def setup_plugin(path, plugin_id, dependencies=None):
     """Helper to create a minimal valid plugin."""
@@ -51,6 +52,7 @@ class {plugin_id.capitalize()}Plugin(KernelPlugin):
     with open(path / "tests" / "test_dummy.py", "w") as f:
         f.write("def test_dummy(): pass")
 
+
 @pytest.fixture
 def fractal_env():
     """Setup and Teardown for fractal test environment."""
@@ -64,6 +66,7 @@ def fractal_env():
     # Cleanup
     if TEST_ROOT.exists():
         shutil.rmtree(TEST_ROOT)
+
 
 @pytest.mark.asyncio
 async def test_fractal_vibe_loading(fractal_env):
@@ -81,8 +84,7 @@ async def test_fractal_vibe_loading(fractal_env):
     # 2. Pack Child
     child_vibe = DIST_DIR / "fractal_child.vibe"
     subprocess.run(
-        ["python3", "scripts/pack_vibe.py", str(CHILD_DIR), "-o", str(child_vibe)],
-        check=True, capture_output=True
+        ["python3", "scripts/pack_vibe.py", str(CHILD_DIR), "-o", str(child_vibe)], check=True, capture_output=True
     )
     assert child_vibe.exists()
 
@@ -98,8 +100,7 @@ async def test_fractal_vibe_loading(fractal_env):
     # 5. Pack Parent
     parent_vibe = DIST_DIR / "fractal_parent.vibe"
     subprocess.run(
-        ["python3", "scripts/pack_vibe.py", str(PARENT_DIR), "-o", str(parent_vibe)],
-        check=True, capture_output=True
+        ["python3", "scripts/pack_vibe.py", str(PARENT_DIR), "-o", str(parent_vibe)], check=True, capture_output=True
     )
     assert parent_vibe.exists()
 
@@ -118,7 +119,6 @@ async def test_fractal_vibe_loading(fractal_env):
     # Let's try mounting it manually first to test the loader logic
     # This simulates what the Kernel would do if it found it.
 
-    from vibe_core.loaders.base_loader import UnifiedLoader
     from vibe_core.plugin_loader import PluginLoader
 
     # We need to trick the discovery to find our parent.vibe
@@ -152,9 +152,9 @@ async def test_fractal_vibe_loading(fractal_env):
         parent_meta = metadata["fractal_parent"]
         print(f"Parent Mount Path: {parent_meta.entry_path}")
         if parent_meta.entry_path:
-             embedded_child = parent_meta.entry_path / "hollows" / "fractal_child.vibe"
-             print(f"Scanning for child at: {embedded_child}")
-             print(f"Exists: {embedded_child.exists()}")
+            embedded_child = parent_meta.entry_path / "hollows" / "fractal_child.vibe"
+            print(f"Scanning for child at: {embedded_child}")
+            print(f"Exists: {embedded_child.exists()}")
 
     assert "fractal_child" in plugins_map, "Child plugin (Fractal Depth) failed to load recursively"
 

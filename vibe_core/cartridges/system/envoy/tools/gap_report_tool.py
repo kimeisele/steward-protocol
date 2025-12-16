@@ -323,8 +323,10 @@ class GAPReportTool(Tool):
                 "phases": [
                     {
                         "phase": "Resource Validation",
-                        "check": "HERALD license active? YES (via PROP-009)",
-                        "check": "HERALD credits available? YES",
+                        "checks": [
+                            "HERALD license active? YES (via PROP-009)",
+                            "HERALD credits available? YES",
+                        ],
                         "result": "PASSED - Ready to proceed",
                     },
                     {

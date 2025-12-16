@@ -8,7 +8,6 @@ These tests verify the ContractAnalyzer:
 4. Generates appropriate priority/risk levels
 """
 
-
 import pytest
 
 from vibe_core.governance import ContractFailure, ContractFailureType

@@ -25,6 +25,7 @@ multiprocessing.freeze_support()
 # This MUST happen before any optional imports (numpy, torch, etc.)
 try:
     from vibe_core.runtime_extensions import extend_runtime
+
     extend_runtime()
 except ImportError:
     pass  # Extensions module not available (minimal install)

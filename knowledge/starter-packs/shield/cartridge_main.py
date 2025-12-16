@@ -63,7 +63,7 @@ class ShieldCartridge(VibeAgent, OathMixin):
         return {"status": "success", "path": repo_path, "issues": []}
 
     def _validate_config(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        config_path = payload.get("config_path", "")
+        _config_path = payload.get("config_path", "")
         # TODO: Implement config validation
         return {"status": "success", "valid": True}
 

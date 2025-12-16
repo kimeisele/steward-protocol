@@ -67,7 +67,6 @@ async def get_embedding_model():
 
             # Lazy import numpy (excluded in binary build, loaded from ~/.steward/lib/)
             import numpy
-
             from sentence_transformers import SentenceTransformer
 
             # Make numpy available globally for this module

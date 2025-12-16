@@ -16,6 +16,7 @@ CONFIG (SHABDA/PRATYAYA) and produces RUNTIME (KARMA) state.
 
 # Re-export from engines (which handles optional semantic imports)
 from vibe_core.cortex.engines import (
+    SEMANTIC_AVAILABLE,
     CircuitExecutionResult,
     CircuitState,
     CognitiveCircuitExecutor,
@@ -23,7 +24,6 @@ from vibe_core.cortex.engines import (
     InvariantChecker,
     MetaCircuitManager,
     ReflexEngine,
-    SEMANTIC_AVAILABLE,
     SemanticConcept,
     SemanticRouter,
     create_circuit_executor,
