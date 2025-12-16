@@ -492,7 +492,34 @@
       "context": {},
       "feedback": null,
       "execution_time_ms": 0
+    },
+    {
+      "intent_type": "review_todos",
+      "intent_description": "Review 46 TODOs in codebase",
+      "timestamp": "2025-12-16T23:30:00.051038",
+      "outcome": "failed",
+      "context": {
+        "todo_count": 46
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
+    },
+    {
+      "intent_type": "update_opus_documentation",
+      "intent_description": "Update OPUS.md (3 files changed)",
+      "timestamp": "2025-12-16T23:30:00.053556",
+      "outcome": "failed",
+      "context": {
+        "changed_files": [
+          "cognitive_kernel.py",
+          "__init__.py",
+          "prakriti_sense.py"
+        ],
+        "hours_behind": 1.4
+      },
+      "feedback": "No execution method available",
+      "execution_time_ms": 0
     }
   ],
-  "updated_at": "2025-12-16T19:22:18.790903"
+  "updated_at": "2025-12-16T23:30:00.054162"
 }
