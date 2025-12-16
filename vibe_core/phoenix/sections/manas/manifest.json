@@ -1,0 +1,17 @@
+{
+  "type": "section",
+  "id": "manas",
+  "name": "MANAS Configuration",
+  "version": "1.0.0",
+  "description": "MANAS Cognitive Kernel settings - thinking rate, auto-execution policy, intent throttling",
+
+  "entry_point": "section_main.py",
+  "entry_class": "ManasConfig",
+
+  "priority": 50,
+
+  "config_file": "config/manas.yaml",
+
+  "author": "OPUS Protocol",
+  "tags": ["config", "manas", "cognition", "cognitive-kernel"]
+}

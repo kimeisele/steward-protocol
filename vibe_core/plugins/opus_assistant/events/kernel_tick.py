@@ -198,6 +198,9 @@ class KernelTickHandler:
         - Populates Intent Buffer in OPUS.md
         - Learns from past actions via MemoryStore
         - Can run smoke tests to verify its own environment
+
+        💎 PHOENIX INJECTION: MANAS now reads policy from Phoenix (Dharma),
+        not from hardcoded defaults. This is the "soul" binding mind to values.
         """
         if not MANAS_AVAILABLE:
             logger.debug("⚠️ MANAS not available - proactive cognition disabled")
@@ -205,12 +208,36 @@ class KernelTickHandler:
 
         try:
             workspace = self._plugin._workspace or Path.cwd()
-            config = ManasConfig(
-                thinking_interval_minutes=60,  # Once per hour
-                idle_threshold_minutes=30,  # Or after 30 min idle
-                auto_execute_safe=False,  # Conservative: require approval
-                max_intent_buffer_size=10,
-            )
+
+            # ⚡ PHOENIX INJECTION: Load config from Phoenix (Dharma)
+            # This replaces the hardcoded ManasConfig() with config from YAML
+            from vibe_core.phoenix.config import PhoenixConfig
+
+            try:
+                phoenix = PhoenixConfig.from_files(config_dir=workspace / "config")
+
+                # Load MANAS policy from Phoenix
+                phoenix_manas_section = phoenix.get_section("manas")
+                if phoenix_manas_section:
+                    # Create config from Phoenix section (it's already a ManasConfig)
+                    config = phoenix_manas_section
+                    logger.info("⚡ PHOENIX: MANAS policy injected from config/manas.yaml (Dharma binding)")
+                else:
+                    # Fallback: use Phoenix ManasConfig defaults if section not found
+                    from vibe_core.phoenix.sections.manas import ManasConfig as PhoenixManasConfig
+
+                    config = PhoenixManasConfig()
+                    logger.info("⚡ PHOENIX: MANAS using section defaults (no config/manas.yaml found)")
+            except Exception as e:
+                logger.warning(f"⚡ PHOENIX: Could not load MANAS config from Phoenix: {e}, using defaults")
+                # Fallback to minimal config
+                config = ManasConfig(
+                    thinking_interval_minutes=60,
+                    idle_threshold_minutes=30,
+                    auto_execute_safe=False,
+                    max_intent_buffer_size=10,
+                )
+
             self._manas = CognitiveKernel(workspace=workspace, config=config)
 
             # ⚡ VAJRA: Inject kernel for ledger binding
