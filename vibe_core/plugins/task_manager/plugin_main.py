@@ -1,14 +1,18 @@
 """
 ⚙️ TASK MANAGER PLUGIN - Sub-Operating System for Work
 
-OPUS-091 Phase 3: Complete task lifecycle management
+OPUS-091 Phase 3: Complete task lifecycle management with STATE SOVEREIGNTY
 
 Responsibilities:
-1. SENSORS phase: Ingest from data/inbox/*.json and TASKS.md
-2. ACTUATORS phase: Execute pending tasks via UnifiedRouter
-3. CLEANUP phase: Sync TaskManager state back to TASKS.md
+1. Initialize JsonTaskManager (plugin-local state)
+2. SENSORS phase: Ingest from data/inbox/*.json and TASKS.md
+3. ACTUATORS phase: Execute pending tasks via UnifiedRouter
+4. CLEANUP phase: Sync TaskManager state back to TASKS.md
+5. Inject manager into context (Dependency Inversion)
 
 This is the hub. All work flows through here.
+ARCHITECTURE: The plugin OWNS its state. It injects the manager into context
+so other plugins (Interface) can read it.
 
 VEDA-4 Architecture:
 - SHABDA (Sound): Task ingestion (input)
@@ -25,7 +29,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
 from vibe_core.plugin_protocol import HookResult, KernelPlugin, PulsePhase
-from vibe_core.task_management.models import TaskStatus
+
+from .state_store import JsonTaskManager, TaskStatus
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -52,10 +57,19 @@ except ImportError:
 
 class TaskManagerPlugin(KernelPlugin):
     """
-    Sub-OS for task management.
+    Sub-OS for task management with STATE SOVEREIGNTY.
 
-    Ingests, queues, executes, and archives all work.
+    The plugin OWNS its JsonTaskManager (local JSON state).
+    It injects this into context so the system can use it.
+    No legacy DB dependency.
     """
+
+    def __init__(self):
+        super().__init__()
+        # STATE SOVEREIGNTY: Plugin owns its state directory
+        self.state_dir = Path(__file__).parent / ".state"
+        self.manager = JsonTaskManager(self.state_dir)
+        logger.info(f"✅ TaskManager initialized with local state at {self.state_dir}")
 
     @property
     def plugin_id(self) -> str:
@@ -64,9 +78,6 @@ class TaskManagerPlugin(KernelPlugin):
     @property
     def pulse_phase(self) -> PulsePhase:
         """Can run in multiple phases - handle all task lifecycle."""
-        # Note: This plugin handles SENSORS, ACTUATORS, and CLEANUP
-        # The pulse phase property returns SENSORS as primary, but on_pulse
-        # checks kernel.pulse_phase to route to appropriate handler
         return PulsePhase.SENSORS
 
     @property
@@ -78,6 +89,7 @@ class TaskManagerPlugin(KernelPlugin):
         Execute during SENSORS, ACTUATORS, and CLEANUP phases.
 
         Routes to appropriate handler based on kernel's current pulse phase.
+        CRITICAL: Inject self.manager into context so other plugins see it.
 
         Args:
             kernel: Kernel instance (may be minimal in headless mode)
@@ -87,28 +99,23 @@ class TaskManagerPlugin(KernelPlugin):
             HookResult with phase-specific summary
         """
         try:
-            # Get task manager from kernel
-            if not kernel or not hasattr(kernel, "task_manager"):
-                logger.warning("❌ TaskManager: kernel/task_manager not available")
-                return HookResult.error("No task manager in kernel")
-
-            task_manager = kernel.task_manager
+            # DEPENDENCY INJECTION: Ensure our manager is in context
+            if hasattr(kernel, "context"):
+                kernel.context["task_manager"] = self.manager
+                logger.debug("💉 TaskManager injected into kernel context")
 
             # Get project root from kernel or use cwd
-            if kernel and hasattr(kernel, "workspace"):
-                project_root = Path(kernel.workspace)
-            else:
-                project_root = Path.cwd()
+            project_root = Path(kernel.workspace) if kernel and hasattr(kernel, "workspace") else Path.cwd()
 
             # Route based on current pulse phase
             current_phase = getattr(kernel, "pulse_phase", None)
 
             if current_phase == PulsePhase.SENSORS:
-                return self._handle_sensors(task_manager, project_root)
+                return self._handle_sensors(project_root)
             elif current_phase == PulsePhase.ACTUATORS:
-                return self._handle_actuators(kernel, task_manager, project_root)
+                return self._handle_actuators(kernel, project_root)
             elif current_phase == PulsePhase.CLEANUP:
-                return self._handle_cleanup(task_manager, project_root)
+                return self._handle_cleanup(project_root)
             else:
                 logger.debug(f"⚙️ TaskManager: No handler for phase {current_phase}")
                 return HookResult.ok(data={"phase": str(current_phase), "action": "skipped"})
@@ -117,15 +124,15 @@ class TaskManagerPlugin(KernelPlugin):
             logger.error(f"❌ TaskManager failed: {e}", exc_info=True)
             return HookResult.error(f"Task management failed: {e}")
 
-    def _handle_sensors(self, task_manager, project_root: Path) -> HookResult:
+    def _handle_sensors(self, project_root: Path) -> HookResult:
         """Handle SENSORS phase: Ingest tasks."""
         logger.info("⚙️ SENSORS: Task Manager initialization...")
 
         # Phase 1: Ingest JSON files from inbox
-        inbox_count = self._ingest_json_files(task_manager, project_root)
+        inbox_count = self._ingest_json_files(project_root)
 
         # Phase 2: Parse TASKS.md for new tasks
-        markdown_count = self._read_tasks_md(task_manager, project_root)
+        markdown_count = self._read_tasks_md(project_root)
 
         total = inbox_count + markdown_count
         if total > 0:
@@ -138,12 +145,12 @@ class TaskManagerPlugin(KernelPlugin):
             logger.debug("⚙️ SENSORS: No new tasks to ingest")
             return HookResult.ok(data={"ingested": 0, "phase": "sensors"})
 
-    def _handle_actuators(self, kernel: "RealVibeKernel", task_manager, project_root: Path) -> HookResult:
+    def _handle_actuators(self, kernel: "RealVibeKernel", project_root: Path) -> HookResult:
         """Handle ACTUATORS phase: Execute pending tasks."""
         try:
             logger.info("⚙️ ACTUATORS: Task execution phase...")
 
-            next_task = task_manager.get_next_pending()
+            next_task = self.manager.get_next_pending()
 
             if not next_task:
                 logger.debug("⚙️ ACTUATORS: No pending tasks to execute")
@@ -152,11 +159,11 @@ class TaskManagerPlugin(KernelPlugin):
             logger.info(f"🚀 Executing task: {next_task.title}")
 
             # Update status to IN_PROGRESS
-            task_manager.update_status(next_task.id, TaskStatus.IN_PROGRESS)
+            self.manager.update_status(next_task.id, TaskStatus.IN_PROGRESS)
 
             try:
                 # Get router from kernel context
-                router = getattr(kernel, "router", None)
+                router = getattr(kernel, "router", None) if kernel else None
                 if not router and UNIFIED_ROUTER_AVAILABLE:
                     try:
                         from vibe_core.runtime.unified_execution import UnifiedRouter
@@ -168,26 +175,21 @@ class TaskManagerPlugin(KernelPlugin):
                 if not router:
                     logger.warning("⚠️ No Unified Router available - task queued but not executed")
                     logger.info(f"   📋 Task: {next_task.title}")
-                    logger.info(f"   🎯 Agent: {next_task.assigned_agent or 'auto-route'}")
-                    logger.info(f"   ⚡ Priority: {next_task.priority}")
+                    logger.info(f"   ⚡ Type: {next_task.type}")
                     return HookResult.ok(data={"executed": 0, "queued": 1, "phase": "actuators"})
 
                 # Build execution prompt
-                if next_task.assigned_agent:
-                    prompt = f"@{next_task.assigned_agent}: {next_task.description}"
-                else:
-                    prompt = next_task.description
+                prompt = next_task.description
 
                 logger.info("   🔄 Routing task through UnifiedRouter...")
 
                 # MANAS Oracle Pre-Analysis Gate
-                manas_oracle = getattr(kernel, "manas_oracle", None)
+                manas_oracle = getattr(kernel, "manas_oracle", None) if kernel else None
                 if manas_oracle and MANAS_ORACLE_AVAILABLE:
                     try:
                         context = {
                             "task_title": next_task.title,
-                            "task_type": "generic_task",
-                            "risk_level": "medium",
+                            "task_type": next_task.type,
                             "is_automated": True,
                             "user_approval": False,
                         }
@@ -196,14 +198,12 @@ class TaskManagerPlugin(KernelPlugin):
 
                         if not gate_decision.get("proceed", True):
                             logger.warning(f"🔮 MANAS Oracle blocked task: {gate_decision.get('reason')}")
-                            task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                            self.manager.update_status(next_task.id, TaskStatus.BLOCKED)
                             return HookResult.ok(data={"executed": 0, "blocked": 1, "phase": "actuators"})
                     except Exception as e:
                         logger.warning(f"⚠️ MANAS Oracle consultation failed: {e}")
 
                 # Route and execute
-                from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate
-
                 req = ExecutionRequest(user_input=prompt, source="TASK_MANAGER_PLUGIN")
                 gate = router.check_gate(req)
 
@@ -229,25 +229,27 @@ class TaskManagerPlugin(KernelPlugin):
                 logger.info(f"   ✅ Router response: {result.get('status', 'unknown')}")
 
                 # Update task with result
-                task_manager.update_status(next_task.id, TaskStatus.COMPLETED)
+                self.manager.update_status(next_task.id, TaskStatus.COMPLETED)
 
                 return HookResult.ok(data={"executed": 1, "status": result.get("status"), "phase": "actuators"})
 
             except Exception as e:
                 logger.error(f"   ❌ Task execution failed: {e}")
-                task_manager.update_status(next_task.id, TaskStatus.BLOCKED)
+                self.manager.update_status(next_task.id, TaskStatus.BLOCKED)
                 return HookResult.error(f"Task execution failed: {e}")
 
         except Exception as e:
             logger.error(f"❌ ACTUATORS phase failed: {e}", exc_info=True)
             return HookResult.error(f"Actuators phase failed: {e}")
 
-    def _handle_cleanup(self, task_manager, project_root: Path) -> HookResult:
+    def _handle_cleanup(self, project_root: Path) -> HookResult:
         """Handle CLEANUP phase: Cleanup and synchronization (delegated to interface)."""
         logger.debug("⚙️ CLEANUP: TaskManager state ready for interface rendering")
-        return HookResult.ok(data={"phase": "cleanup", "action": "interface_renders"})
+        stats = self.manager.get_stats()
+        logger.info(f"📊 Task stats: {stats}")
+        return HookResult.ok(data={"phase": "cleanup", "action": "interface_renders", "stats": stats})
 
-    def _ingest_json_files(self, task_manager, project_root: Path) -> int:
+    def _ingest_json_files(self, project_root: Path) -> int:
         """
         Ingest tasks from data/inbox/*.json files.
 
@@ -255,8 +257,7 @@ class TaskManagerPlugin(KernelPlugin):
         {
             "title": "Task name",
             "description": "Optional description",
-            "priority": 0-100,
-            "assignee": "optional_agent_name"
+            "type": "general"
         }
 
         Returns:
@@ -277,18 +278,18 @@ class TaskManagerPlugin(KernelPlugin):
                 with open(json_file, "r") as f:
                     task_data = json.load(f)
 
-                # Create task in TaskManager
-                task = task_manager.add_task(
+                # Create task in JsonTaskManager
+                task = self.manager.add_task(
                     title=task_data.get("title", "Untitled Task"),
                     description=task_data.get("description", ""),
-                    priority=task_data.get("priority", 0),
-                    assigned_agent=task_data.get("assignee"),
+                    type=task_data.get("type", "general"),
+                    metadata=task_data.get("metadata", {}),
                 )
 
-                logger.info(f"   ✅ Inbox: {task.title} (ID: {task.id[:8]}...)")
+                logger.info(f"   ✅ Inbox: {task.title} (ID: {task.id})")
                 count += 1
 
-                # Remove from inbox (now safely in SQLite)
+                # Remove from inbox (now safely in JSON state)
                 json_file.unlink()
 
             except Exception as e:
@@ -296,13 +297,12 @@ class TaskManagerPlugin(KernelPlugin):
 
         return count
 
-    def _read_tasks_md(self, task_manager, project_root: Path) -> int:
+    def _read_tasks_md(self, project_root: Path) -> int:
         """
         Parse TASKS.md and create tasks from unchecked checkboxes.
 
         Expected markdown format:
-        - [ ] Task description @agent_name priority:high
-        - [ ] Another task priority:medium
+        - [ ] Task description
 
         Returns:
             Number of successfully created tasks
@@ -327,33 +327,26 @@ class TaskManagerPlugin(KernelPlugin):
 
         inbox_text = inbox_match.group(0)
 
-        # Find unchecked tasks: - [ ] Task description @agent priority:high
-        task_pattern = re.compile(r"- \[ \] (.+?)(?:@(\w+))?\s*(?:priority:(high|medium|low))?")
+        # Find unchecked tasks: - [ ] Task description
+        task_pattern = re.compile(r"- \[ \] (.+?)(?:\n|$)")
 
         new_tasks = 0
         for match in task_pattern.finditer(inbox_text):
             description = match.group(1).strip()
-            agent = match.group(2)
-            priority_str = match.group(3)
-
-            # Map priority strings to numeric values
-            priority_map = {"high": 90, "medium": 50, "low": 10}
-            priority = priority_map.get(priority_str, 50)
 
             # Check if task already exists (avoid duplicates)
-            existing = [t for t in task_manager.list_tasks() if t.title == description]
+            existing = [t for t in self.manager.get_all_tasks() if t.title == description]
             if existing:
                 continue
 
             # Create task
             try:
-                task = task_manager.add_task(
+                task = self.manager.add_task(
                     title=description,
-                    description=f"Created from TASKS.md at {datetime.now().isoformat()}",
-                    priority=priority,
-                    assigned_agent=agent,
+                    description="Created from TASKS.md",
+                    type="general",
                 )
-                logger.info(f"   ✅ Markdown: {task.title} (ID: {task.id[:8]}...)")
+                logger.info(f"   ✅ Markdown: {task.title} (ID: {task.id})")
                 new_tasks += 1
             except Exception as e:
                 logger.warning(f"   ⚠️  Failed to create task '{description}': {e}")
