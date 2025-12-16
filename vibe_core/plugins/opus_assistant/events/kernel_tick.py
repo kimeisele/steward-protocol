@@ -995,8 +995,7 @@ class KernelTickHandler:
         Demote an agent via Vedic Governance.
 
         This is the CONSEQUENCE - trust drop leads to lifecycle demotion.
-
-        OPUS-071: Uses string values for loose coupling (no enum import needed).
+        Uses the formal `demote_agent` API on the governance plugin.
         """
         agent_id = params.get("agent_id")
         reason = params.get("reason", "Karma consequence")
@@ -1004,55 +1003,36 @@ class KernelTickHandler:
         if not agent_id:
             return {"success": False, "error": "No agent_id provided"}
 
-        # Get current ashrama
-        current = governance.get_agent_ashrama(agent_id)
-        if not current:
-            return {"success": False, "error": f"Agent {agent_id} not found in governance"}
-
-        # OPUS-071: Use string values for loose coupling
-        current_stage = current.current_ashrama.value  # Get string value
-
-        # Determine demotion target (string-based for loose coupling)
-        # GRIHASTHA → BRAHMACHARI (back to student)
-        # VANAPRASTHA → GRIHASTHA (back to active but probation)
-        demotion_map = {
-            "grihastha": "brahmachari",
-            "vanaprastha": "grihastha",
-            "sannyasa": "vanaprastha",
-        }
-
-        new_stage = demotion_map.get(current_stage)
-        if not new_stage:
-            # BRAHMACHARI can't be demoted further
-            return {
-                "success": True,
-                "demoted": False,
-                "reason": f"Agent {agent_id} is already at lowest stage (brahmachari)",
-            }
-
-        # Execute demotion (governance now accepts strings - OPUS-071)
-        success = governance.transition_agent_ashrama(agent_id, new_stage, reason)
-
-        if success:
-            logger.warning(f"🕉️ KARMA: Agent '{agent_id}' demoted {current_stage} → {new_stage}")
-            return {
-                "success": True,
-                "demoted": True,
-                "agent_id": agent_id,
-                "from_stage": current_stage,
-                "to_stage": new_stage,
-                "reason": reason,
-            }
+        # Use new API if available
+        if hasattr(governance, "demote_agent"):
+            success = governance.demote_agent(agent_id, reason)
+            if success:
+                # Get new state for logging
+                new_state = governance.get_agent_ashrama(agent_id)
+                current_stage = new_state.current_ashrama.value if new_state else "unknown"
+                logger.warning(f"🕉️ KARMA: Agent '{agent_id}' DEMOTED to {current_stage}")
+                return {
+                    "success": True,
+                    "demoted": True,
+                    "agent_id": agent_id,
+                    "new_stage": current_stage,
+                    "reason": reason,
+                }
+            else:
+                return {
+                    "success": False,
+                    "demoted": False,
+                    "reason": f"Agent {agent_id} could not be demoted (already at bottom?)",
+                }
         else:
-            return {"success": False, "error": "Demotion transition failed"}
+            return {"success": False, "error": "Governance plugin missing demote_agent method"}
 
     async def _vedic_check_promotions(self, governance: Any, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         Check for agents eligible for accelerated promotion.
 
         When trust is consistently high, agents can graduate faster.
-
-        OPUS-071: Uses string values for loose coupling (no enum import needed).
+        Uses the formal `promote_agent` API.
         """
         accelerated = params.get("accelerated", False)
         threshold_reduction = params.get("threshold_reduction", 0)
@@ -1070,13 +1050,12 @@ class KernelTickHandler:
                 required = 3 - threshold_reduction if accelerated else 3
 
                 if completions >= required:
-                    # OPUS-071: Use string value (governance accepts strings now)
-                    success = governance.transition_agent_ashrama(
-                        agent_id, "grihastha", reason="Accelerated graduation (trust bonus)"
-                    )
-                    if success:
-                        promoted.append(agent_id)
-                        logger.info(f"🕉️ KARMA: Agent '{agent_id}' graduated early (high trust)")
+                    # Use new API
+                    if hasattr(governance, "promote_agent"):
+                        success = governance.promote_agent(agent_id, reason="Accelerated graduation (trust bonus)")
+                        if success:
+                            promoted.append(agent_id)
+                            logger.info(f"🕉️ KARMA: Agent '{agent_id}' graduated early (high trust)")
 
         return {"success": True, "promoted": promoted, "count": len(promoted)}
 
