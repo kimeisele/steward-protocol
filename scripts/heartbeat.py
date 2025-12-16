@@ -153,6 +153,21 @@ class HeartbeatEngine:
                 except Exception as wire_err:
                     logger.warning(f"⚠️ SILPA: Could not wire execution: {wire_err}")
 
+                # OPUS-JNANA: Verify LLM Provider is available
+                # The provider auto-detects from env vars (OPENROUTER_API_KEY, ANTHROPIC_API_KEY, etc.)
+                # Individual handlers import and create providers as needed at runtime
+                try:
+                    from vibe_core.runtime.providers.factory import create_provider
+
+                    llm_provider = create_provider()
+                    provider_name = type(llm_provider).__name__
+                    if provider_name != "NoOpProvider":
+                        logger.info(f"🧠 JNANA: LLM available ({provider_name}) - deep cognition enabled")
+                    else:
+                        logger.warning("⚠️ JNANA: No LLM configured - running in analysis-only mode")
+                except Exception as llm_err:
+                    logger.warning(f"⚠️ JNANA: LLM check failed: {llm_err}")
+
                 logger.info("🧠 MANAS Cognitive Kernel ready")
             except Exception as e:
                 logger.warning(f"⚠️ MANAS unavailable: {e}")
