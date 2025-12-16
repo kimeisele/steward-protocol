@@ -15,19 +15,19 @@ manas:
   # =========================================================================
   # How often MANAS performs a thought cycle
   # Units: minutes
-  thinking_interval_minutes: 60  # Once per hour
+  thinking_interval_minutes: 15  # Match heartbeat interval for responsiveness
 
   # Activate MANAS after this much idle time
   # Units: minutes
   idle_threshold_minutes: 30
 
   # =========================================================================
-  # Execution Policy (Conservative Defaults)
+  # Execution Policy (AUTONOMOUS MODE ENABLED)
   # =========================================================================
   # Auto-execute safe intents without human approval?
   # false = CONSERVATIVE (human approval always required)
   # true = AUTONOMOUS (auto-execute SAFE risk intents)
-  auto_execute_safe: false
+  auto_execute_safe: true  # OPUS-SILPA: Activated for autonomous operation
 
   # Karma threshold for earned autonomy (0-100)
   # If karma >= this value, MANAS can auto-execute LOW risk intents
