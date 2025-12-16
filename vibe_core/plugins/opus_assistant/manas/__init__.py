@@ -13,8 +13,9 @@ Philosophy:
 The Mind generates its own input. It doesn't wait.
 """
 
+from .api import AnalysisResult, ManasOracle
 from .cognitive_kernel import CognitiveKernel, ManasConfig
-from .intent_generator import Intent, IntentGenerator, IntentPriority
+from .intent_generator import Intent, IntentPriority
 from .memory_store import MemoryEntry, MemoryStore
 
 __all__ = [
@@ -25,4 +26,6 @@ __all__ = [
     "IntentPriority",
     "MemoryStore",
     "MemoryEntry",
+    "ManasOracle",
+    "AnalysisResult",
 ]
