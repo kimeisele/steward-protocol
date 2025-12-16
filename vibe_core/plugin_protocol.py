@@ -38,6 +38,23 @@ class PluginResult(Enum):
     FATAL = "fatal"  # Unrecoverable (unload plugin)
 
 
+class PulsePhase(Enum):
+    """
+    Execution phases for pulse cycle - ordered by dependency.
+
+    OPUS-087 PRANA: Plugins declare their phase for deterministic ordering.
+    Heartbeat (macro-cycle) executes plugins in phase order:
+    SENSORS → COGNITION → ACTUATORS → CLEANUP
+
+    This prevents race conditions where e.g. a reporter plugin
+    tries to read data before a sensor has collected it.
+    """
+    SENSORS = 1    # Drishti - Collect data first
+    COGNITION = 2  # Manas - Then think
+    ACTUATORS = 3  # Karma - Then act
+    CLEANUP = 4    # Shuddhi - Finally cleanup
+
+
 @dataclass
 class HookResult:
     """
@@ -208,6 +225,66 @@ class KernelPlugin(ABC):
 
         Returns:
             HookResult indicating success/failure
+        """
+        return HookResult.ok()
+
+    # =========================================================================
+    # OPUS-087 PRANA: PULSE LIFECYCLE (Macro-Cycle / Heartbeat)
+    # =========================================================================
+
+    @property
+    def pulse_phase(self) -> PulsePhase:
+        """
+        Declare execution phase for on_pulse ordering.
+
+        Phases execute in order: SENSORS → COGNITION → ACTUATORS → CLEANUP
+
+        Override to change default (ACTUATORS).
+
+        Example:
+            @property
+            def pulse_phase(self) -> PulsePhase:
+                return PulsePhase.SENSORS  # Runs first in pulse cycle
+
+        Returns:
+            PulsePhase enum value
+        """
+        return PulsePhase.ACTUATORS
+
+    def on_pulse(
+        self,
+        kernel: "RealVibeKernel",
+        transaction: Any,  # PulseTransaction from prana_orchestrator
+    ) -> HookResult:
+        """
+        Called during heartbeat pulse (macro-cycle).
+
+        OPUS-087 PRANA: This runs OUT-OF-PROCESS (GitHub Actions headless mode).
+        Do NOT assume kernel is fully initialized.
+
+        IMPORTANT: Do NOT commit to Git directly! Register mutations instead.
+
+        Args:
+            kernel: The kernel instance (may be minimal in headless mode)
+            transaction: PulseTransaction - register mutations here
+
+        Returns:
+            HookResult with optional data for reporting
+
+        Example:
+            def on_pulse(self, kernel, transaction) -> HookResult:
+                # Collect data
+                karma = self.calculate_karma_decay()
+
+                # Register mutation (don't apply directly!)
+                transaction.register(StateMutation(
+                    plugin_id=self.plugin_id,
+                    action="decay_karma",
+                    target="karma.json",
+                    payload={"agent_id": "envoy", "delta": karma}
+                ))
+
+                return HookResult.ok(data={"decayed": karma})
         """
         return HookResult.ok()
 
