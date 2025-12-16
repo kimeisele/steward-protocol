@@ -192,7 +192,12 @@ class DocHarnessAnalyzer(BaseAnalyzer):
         content = result.harness_content
 
         # Extract files: section
-        files_match = re.search(r"files:\s*\n((?:\s+-.*\n)*)", content)
+        # FIXED: Match ALL indented lines (not just lines starting with -)
+        # This handles multi-line YAML items like:
+        #   - path: foo.py
+        #     required: true
+        # Note: Last line may not have trailing newline (before -->)
+        files_match = re.search(r"files:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if files_match:
             files_block = files_match.group(1)
             paths = re.findall(r"path:\s*([^\s\n]+)", files_block)
@@ -204,7 +209,9 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                     result.files_missing.append(path)
 
         # Extract tests: section
-        tests_match = re.search(r"tests:\s*\n((?:\s+-.*\n)*)", content)
+        # FIXED: Match ALL indented lines until next section or end
+        # Note: Last line before --> may not have trailing newline
+        tests_match = re.search(r"tests:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if tests_match:
             tests_block = tests_match.group(1)
             test_paths = re.findall(r"-\s*([^\s\n]+\.py)", tests_block)
@@ -216,7 +223,9 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                     result.tests_missing.append(test_path)
 
         # Extract wiring: section and validate patterns
-        wiring_match = re.search(r"wiring:\s*\n((?:\s+-.*\n|\s+\w+:.*\n)*)", content)
+        # FIXED: Match ALL indented lines (including comments and multi-line items)
+        # Note: Last line may not have trailing newline
+        wiring_match = re.search(r"wiring:\s*\n((?:\s+.*(?:\n|$))*)", content)
         if wiring_match:
             wiring_block = wiring_match.group(1)
             # Extract pattern/in pairs
