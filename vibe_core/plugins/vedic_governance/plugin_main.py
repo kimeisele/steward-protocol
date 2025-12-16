@@ -358,6 +358,64 @@ class VedicGovernancePlugin(KernelPlugin):
 
         return success
 
+    def demote_agent(self, agent_id: str, reason: str = "Demotion") -> bool:
+        """
+        Demote an agent to the previous Ashrama stage.
+
+        Logic:
+        - GRIHASTHA → BRAHMACHARI (back to student)
+        - VANAPRASTHA → GRIHASTHA (back to active but probation)
+        - SANNYASA → VANAPRASTHA (rare system downgrade)
+        """
+        ashrama_transition = self._ashrama_registry.get(agent_id)
+        if not ashrama_transition:
+            return False
+
+        current_stage = ashrama_transition.current_ashrama
+
+        # Demotion Map
+        demotion_map = {
+            Ashrama.GRIHASTHA: Ashrama.BRAHMACHARI,
+            Ashrama.VANAPRASTHA: Ashrama.GRIHASTHA,
+            Ashrama.SANNYASA: Ashrama.VANAPRASTHA,
+        }
+
+        new_stage = demotion_map.get(current_stage)
+        if not new_stage:
+            # Already at bottom or unknown
+            return False
+
+        return self.transition_agent_ashrama(agent_id, new_stage, reason)
+
+    def promote_agent(self, agent_id: str, reason: str = "Promotion") -> bool:
+        """
+        Promote an agent to the next Ashrama stage.
+
+        Logic:
+        - BRAHMACHARI → GRIHASTHA (graduation)
+        - GRIHASTHA → VANAPRASTHA (retirement)
+        - VANAPRASTHA → SANNYASA (system ascension)
+        """
+        ashrama_transition = self._ashrama_registry.get(agent_id)
+        if not ashrama_transition:
+            return False
+
+        current_stage = ashrama_transition.current_ashrama
+
+        # Promotion Map
+        promotion_map = {
+            Ashrama.BRAHMACHARI: Ashrama.GRIHASTHA,
+            Ashrama.GRIHASTHA: Ashrama.VANAPRASTHA,
+            Ashrama.VANAPRASTHA: Ashrama.SANNYASA,
+        }
+
+        new_stage = promotion_map.get(current_stage)
+        if not new_stage:
+            # Already at top or unknown
+            return False
+
+        return self.transition_agent_ashrama(agent_id, new_stage, reason)
+
     def get_governance_status(self, agent_id: str) -> Dict[str, Any]:
         """Get full governance status for an agent (Varna + Ashrama)."""
         varna = self._varna_registry.get(agent_id)
