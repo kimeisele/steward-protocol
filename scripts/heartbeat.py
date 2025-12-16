@@ -50,6 +50,15 @@ except ImportError:
     ManasConfig = None
     MANAS_AVAILABLE = False
 
+# OPUS-089: MANAS Oracle API - Wisdom Interface for System Agents
+try:
+    from vibe_core.plugins.opus_assistant.manas.api import ManasOracle
+
+    MANAS_ORACLE_AVAILABLE = True
+except ImportError:
+    ManasOracle = None
+    MANAS_ORACLE_AVAILABLE = False
+
 # OPUS-074 WIRING: SQLiteLedger for VAJRA binding in headless mode
 try:
     from vibe_core.ledger import SQLiteLedger
@@ -173,6 +182,17 @@ class HeartbeatEngine:
                 logger.warning(f"⚠️ MANAS unavailable: {e}")
         else:
             logger.warning("⚠️ MANAS not available - no proactive cognition")
+
+        # OPUS-089: Initialize MANAS Oracle API - Wisdom Interface
+        self.manas_oracle = None
+        if MANAS_ORACLE_AVAILABLE:
+            try:
+                self.manas_oracle = ManasOracle(config=ManasConfig(thinking_interval_minutes=15))
+                logger.info("🔮 MANAS Oracle API ready - wisdom interface active")
+            except Exception as e:
+                logger.warning(f"⚠️ MANAS Oracle API initialization failed: {e}")
+        else:
+            logger.warning("⚠️ MANAS Oracle API not available")
 
         # OPUS-087 PRANA: Initialize Plugin Pulse Orchestrator
         self.prana_orchestrator = None
@@ -390,6 +410,38 @@ class HeartbeatEngine:
             logger.info("   🔄 Routing task through UnifiedRouter...")
             logger.info(f"   📝 Prompt: {prompt[:100]}...")
 
+            # ===== OPUS-089: MANAS Oracle Pre-Analysis Gate =====
+            # Before routing, consult the MANAS Oracle for wisdom
+            manas_gate_passed = True
+            if self.manas_oracle:
+                try:
+                    context = {
+                        "task_title": next_task.title,
+                        "task_type": "generic_task",
+                        "risk_level": "medium",
+                        "is_automated": True,
+                        "user_approval": False,
+                    }
+                    gate_decision = self.manas_oracle.pre_analysis(context)
+                    logger.info(f"🧠 {gate_decision['recommendation']}")
+
+                    if not gate_decision["proceed"]:
+                        logger.warning(f"🔮 MANAS Oracle blocked task: {gate_decision['reason']}")
+                        manas_gate_passed = False
+                        self.task_manager.update_task(
+                            next_task.id,
+                            status=TaskStatus.BLOCKED,
+                            metadata={
+                                **next_task.metadata,
+                                "blocked_by": "manas_oracle",
+                                "block_reason": gate_decision["reason"],
+                            },
+                        )
+                        return
+                except Exception as e:
+                    logger.warning(f"⚠️ MANAS Oracle consultation failed: {e}")
+                    # Don't block - continue with execution
+
             # --- UNIFIED EXECUTOR ADAPTATION ---
             # Create request
             req = ExecutionRequest(user_input=prompt, source="HEARTBEAT_ENGINE")
@@ -490,6 +542,21 @@ class HeartbeatEngine:
             elif status == "COMPLETED" or status == "completed" or status == "success":
                 # Only mark as completed if agent actually ran
                 logger.info("   🎉 Task successfully executed")
+
+                # ===== OPUS-089: MANAS Oracle Post-Analysis =====
+                # Learn from the executed task
+                if self.manas_oracle:
+                    try:
+                        self.manas_oracle.post_analysis(
+                            {
+                                "task_type": "generic_task",
+                                "success": True,
+                                "error": None,
+                            }
+                        )
+                    except Exception as e:
+                        logger.warning(f"⚠️ MANAS post-analysis failed: {e}")
+
                 self.task_manager.update_task(next_task.id, status=TaskStatus.COMPLETED)
 
             else:
