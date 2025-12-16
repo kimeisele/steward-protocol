@@ -18,9 +18,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
+    from vibe_core.boot_mode import BootMode
     from vibe_core.cartridges.system.civic.economy_agent import CivicBank
     from vibe_core.phoenix import PhoenixConfig
-    from vibe_core.boot_mode import BootMode
 
 # Governance is handled by plugins (vibe_core/plugins/vedic_governance.py)
 # Kernel has no governance types - access via kernel.governance

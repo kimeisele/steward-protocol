@@ -39,7 +39,7 @@ def test_lifecycle_manager():
     logger.info(f"   Varna: {state.varna}")
 
     assert state.status == LifecycleStatus.BRAHMACHARI, "Should be BRAHMACHARI"
-    assert state.diksha_passed == False, "Should not have passed diksha"
+    assert not state.diksha_passed, "Should not have passed diksha"
 
     # TEST 2: Check permissions
     logger.info("\n" + "-" * 80)
@@ -54,9 +54,9 @@ def test_lifecycle_manager():
     logger.info(f"Write permission: {can_write} (should be False)")
     logger.info(f"Broadcast permission: {can_broadcast} (should be False)")
 
-    assert can_read == True, "BRAHMACHARI should read"
-    assert can_write == False, "BRAHMACHARI should NOT write"
-    assert can_broadcast == False, "BRAHMACHARI should NOT broadcast"
+    assert can_read, "BRAHMACHARI should read"
+    assert not can_write, "BRAHMACHARI should NOT write"
+    assert not can_broadcast, "BRAHMACHARI should NOT broadcast"
 
     logger.info("✅ TEST 2 PASSED: Permissions correct for BRAHMACHARI")
 
@@ -72,7 +72,7 @@ def test_lifecycle_manager():
     logger.info(f"   Initiator: {state.initiator_agent}")
 
     assert state.status == LifecycleStatus.GRIHASTHA, "Should be GRIHASTHA"
-    assert state.diksha_passed == True, "Should have passed diksha"
+    assert state.diksha_passed, "Should have passed diksha"
 
     # TEST 4: Check updated permissions
     logger.info("\n" + "-" * 80)
@@ -89,10 +89,10 @@ def test_lifecycle_manager():
     logger.info(f"Broadcast permission: {can_broadcast} (should be True)")
     logger.info(f"Trade permission: {can_trade} (should be True)")
 
-    assert can_read == True, "GRIHASTHA should read"
-    assert can_write == True, "GRIHASTHA should write"
-    assert can_broadcast == True, "GRIHASTHA should broadcast"
-    assert can_trade == True, "GRIHASTHA should trade"
+    assert can_read, "GRIHASTHA should read"
+    assert can_write, "GRIHASTHA should write"
+    assert can_broadcast, "GRIHASTHA should broadcast"
+    assert can_trade, "GRIHASTHA should trade"
 
     logger.info("✅ TEST 4 PASSED: GRIHASTHA has full permissions")
 
@@ -123,9 +123,9 @@ def test_lifecycle_manager():
     logger.info(f"Write permission: {can_write} (should be False)")
     logger.info(f"Broadcast permission: {can_broadcast} (should be False)")
 
-    assert can_read == True, "SHUDRA should read"
-    assert can_write == False, "SHUDRA should NOT write"
-    assert can_broadcast == False, "SHUDRA should NOT broadcast"
+    assert can_read, "SHUDRA should read"
+    assert not can_write, "SHUDRA should NOT write"
+    assert not can_broadcast, "SHUDRA should NOT broadcast"
 
     logger.info("✅ TEST 6 PASSED: SHUDRA correctly restricted")
 
@@ -162,8 +162,8 @@ def test_lifecycle_manager():
     logger.info(f"Read permission: {can_read} (should be False)")
     logger.info(f"Write permission: {can_write} (should be False)")
 
-    assert can_read == False, "SANNYASA should NOT read"
-    assert can_write == False, "SANNYASA should NOT write"
+    assert not can_read, "SANNYASA should NOT read"
+    assert not can_write, "SANNYASA should NOT write"
 
     logger.info("✅ TEST 9 PASSED: SANNYASA has no permissions")
 

@@ -174,8 +174,8 @@ def test_positive():
         print(f"{'=' * 60}")
         print(f"Result: {result}")
 
-        assert result.get("success") == True, "GREEN Gate should PASS with working code"
-        assert result.get("test_passed") == True
+        assert result.get("success"), "GREEN Gate should PASS with working code"
+        assert result.get("test_passed")
         print("GREEN GATE CORRECTLY PASSED!")
 
     @pytest.mark.asyncio
@@ -212,8 +212,8 @@ def test_greet():
         print(f"{'=' * 60}")
         print(f"Result: {result}")
 
-        assert result.get("success") == False, "GREEN Gate should FAIL with broken test"
-        assert result.get("test_passed") == False
+        assert not result.get("success"), "GREEN Gate should FAIL with broken test"
+        assert not result.get("test_passed")
         print("GREEN GATE CORRECTLY REJECTED BROKEN TEST!")
 
     @pytest.mark.asyncio

@@ -49,10 +49,11 @@ class PulsePhase(Enum):
     This prevents race conditions where e.g. a reporter plugin
     tries to read data before a sensor has collected it.
     """
-    SENSORS = 1    # Drishti - Collect data first
+
+    SENSORS = 1  # Drishti - Collect data first
     COGNITION = 2  # Manas - Then think
     ACTUATORS = 3  # Karma - Then act
-    CLEANUP = 4    # Shuddhi - Finally cleanup
+    CLEANUP = 4  # Shuddhi - Finally cleanup
 
 
 @dataclass
