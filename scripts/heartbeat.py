@@ -90,15 +90,6 @@ except ImportError:
     PranaOrchestrator = None
     PRANA_ORCHESTRATOR_AVAILABLE = False
 
-# OPUS Assistant Plugin (for OPUS.md generation in heartbeat)
-try:
-    from vibe_core.plugins.opus_assistant.plugin_main import OpusAssistantPlugin
-
-    OPUS_ASSISTANT_AVAILABLE = True
-except ImportError:
-    OpusAssistantPlugin = None
-    OPUS_ASSISTANT_AVAILABLE = False
-
 
 class HeartbeatEngine:
     """The Autonomous Task Orchestrator."""
@@ -161,15 +152,26 @@ class HeartbeatEngine:
             try:
                 self.prana_orchestrator = PranaOrchestrator(kernel=None)
 
-                # Headless Mode: Manually register critical plugins
-                if OPUS_ASSISTANT_AVAILABLE:
-                    try:
-                        # Instantiate without kernel (headless)
-                        opus_plugin = OpusAssistantPlugin()
-                        self.prana_orchestrator.register_plugin(opus_plugin)
-                        logger.info("   + OPUS Assistant registered for pulse")
-                    except Exception as e:
-                        logger.warning(f"   - Failed to register OPUS Assistant: {e}")
+                # Headless Mode: Dynamically load all plugins via PluginLoader
+                # This ensures Prana can see and pulse all plugins without a full kernel boot
+                try:
+                    from pathlib import Path
+
+                    from vibe_core.plugin_loader import PluginLoader
+
+                    logger.info("🔌 PRANA: dynamically loading plugins for headless pulse...")
+                    # Scan plugins directory relative to current working directory (root)
+                    plugins_map, _ = PluginLoader.discover_and_load(scan_paths=[Path("vibe_core/plugins")])
+
+                    count = 0
+                    for plugin in plugins_map.values():
+                        self.prana_orchestrator.register_plugin(plugin)
+                        count += 1
+
+                    logger.info(f"   + Registered {count} plugins for pulse (Headless)")
+
+                except Exception as e:
+                    logger.warning(f"   - Failed to load plugins: {e}")
 
                 logger.info("🫀 PRANA Orchestrator ready for plugin pulse")
             except Exception as e:
