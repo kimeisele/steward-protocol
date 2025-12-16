@@ -90,6 +90,15 @@ except ImportError:
     PranaOrchestrator = None
     PRANA_ORCHESTRATOR_AVAILABLE = False
 
+# OPUS Assistant Plugin (for OPUS.md generation in heartbeat)
+try:
+    from vibe_core.plugins.opus_assistant.plugin_main import OpusAssistantPlugin
+
+    OPUS_ASSISTANT_AVAILABLE = True
+except ImportError:
+    OpusAssistantPlugin = None
+    OPUS_ASSISTANT_AVAILABLE = False
+
 
 class HeartbeatEngine:
     """The Autonomous Task Orchestrator."""
@@ -151,6 +160,17 @@ class HeartbeatEngine:
         if PRANA_ORCHESTRATOR_AVAILABLE:
             try:
                 self.prana_orchestrator = PranaOrchestrator(kernel=None)
+
+                # Headless Mode: Manually register critical plugins
+                if OPUS_ASSISTANT_AVAILABLE:
+                    try:
+                        # Instantiate without kernel (headless)
+                        opus_plugin = OpusAssistantPlugin()
+                        self.prana_orchestrator.register_plugin(opus_plugin)
+                        logger.info("   + OPUS Assistant registered for pulse")
+                    except Exception as e:
+                        logger.warning(f"   - Failed to register OPUS Assistant: {e}")
+
                 logger.info("🫀 PRANA Orchestrator ready for plugin pulse")
             except Exception as e:
                 logger.warning(f"⚠️ PRANA Orchestrator unavailable: {e}")

@@ -231,16 +231,37 @@ class PranaOrchestrator:
         self.kernel = kernel
         self.config = config or PranaOrchestratorConfig()
         self._quarantined_plugins: Set[str] = set()
+        self._manual_plugins: List[KernelPlugin] = []
         self._failure_counts: Dict[str, int] = {}
         self._pulse_results: Dict[str, Any] = {}
 
-    def get_plugins(self) -> List[KernelPlugin]:
-        """Get all registered kernel plugins, excluding quarantined ones."""
-        if self.kernel is None:
-            return []
+    def register_plugin(self, plugin: KernelPlugin) -> None:
+        """
+        Manually register a plugin (for headless mode).
 
-        plugins = getattr(self.kernel, "_plugins", [])
-        return [p for p in plugins if p.plugin_id not in self._quarantined_plugins]
+        Useful when running Prana without a full kernel boot.
+        """
+        self._manual_plugins.append(plugin)
+        logger.debug(f"PranaOrchestrator: Manually registered plugin '{plugin.plugin_id}'")
+
+    def get_plugins(self) -> List[KernelPlugin]:
+        """Get all registered kernel plugins (kernel + manual), excluding quarantined ones."""
+        kernel_plugins = []
+        if self.kernel:
+            kernel_plugins = getattr(self.kernel, "_plugins", [])
+
+        all_plugins = self._manual_plugins + kernel_plugins
+
+        # Deduplicate by plugin_id (prefer kernel instances if duplicate)
+        seen_ids = set()
+        unique_plugins = []
+
+        for p in all_plugins:
+            if p.plugin_id not in seen_ids and p.plugin_id not in self._quarantined_plugins:
+                unique_plugins.append(p)
+                seen_ids.add(p.plugin_id)
+
+        return unique_plugins
 
     def run_pulse_cycle(self) -> Dict[str, Any]:
         """
