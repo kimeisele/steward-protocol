@@ -27,6 +27,16 @@ files:
     required: true
   - path: vibe_core/state/persona.py
     required: true
+  # === UNIFIED WEAVER COMPONENTS (NEW) ===
+  - path: vibe_core/state/sync_holon.py
+    required: true
+    rationale: "StateSyncHolon - The Zwischeninstanz for plugin state discovery"
+  - path: vibe_core/state/merge_engine.py
+    required: true
+    rationale: "UntotbarMergeEngine - Organic conflict healing"
+  - path: vibe_core/state/guna_classifier.py
+    required: true
+    rationale: "State Tri-Guna diagnosis (Sattva/Rajas/Tamas)"
   # === RUNTIME INTEGRATION ===
   - path: vibe_core/runtime/unified_execution.py
     required: true
@@ -49,9 +59,15 @@ tests:
   - tests/state/test_file_state.py
   - tests/state/test_ephemeral_state.py
   - tests/state/test_persona.py
+  # === UNIFIED WEAVER TESTS (NEW) ===
+  - tests/state/test_sync_holon.py
+  - tests/state/test_merge_engine.py
+  - tests/state/test_guna_classifier.py
   # === INTEGRATION ===
   - tests/integration/test_prakriti_kernel.py
   - tests/integration/test_state_sync.py
+  - tests/integration/test_plugin_state_discovery.py
+  - tests/integration/test_untotbar_merge.py
 
 wiring:
   # === CORE CLASS STRUCTURE ===
@@ -65,6 +81,30 @@ wiring:
     in: vibe_core/state/kernel_state.py
   - pattern: "class AgentPersona"
     in: vibe_core/state/persona.py
+
+  # === UNIFIED WEAVER WIRING (NEW) ===
+  - pattern: "class StateSyncHolon"
+    in: vibe_core/state/sync_holon.py
+  - pattern: "class UntotbarMergeEngine"
+    in: vibe_core/state/merge_engine.py
+  - pattern: "class GunaClassifier"
+    in: vibe_core/state/guna_classifier.py
+
+  # === STATESYNCHOLON METHODS ===
+  - pattern: "def discover_state_paths"
+    in: vibe_core/state/sync_holon.py
+  - pattern: "def ensure_tracked"
+    in: vibe_core/state/sync_holon.py
+  - pattern: "def diagnose_guna"
+    in: vibe_core/state/sync_holon.py
+  - pattern: "def heal_toward_sattva"
+    in: vibe_core/state/sync_holon.py
+
+  # === MERGE ENGINE METHODS ===
+  - pattern: "def heal_conflict"
+    in: vibe_core/state/merge_engine.py
+  - pattern: "def _deep_merge_json"
+    in: vibe_core/state/merge_engine.py
 
   # === CRITICAL METHODS ===
   - pattern: "def commit_if_dirty"
@@ -81,16 +121,23 @@ wiring:
     in: vibe_core/kernel_impl.py
   - pattern: "prakriti\\.commit_if_dirty"
     in: vibe_core/kernel_impl.py
+  - pattern: "self\\.sync_holon"
+    in: vibe_core/kernel_impl.py
 
-  # === STATE FILE TRACKING (NEW - Plugin Discovery) ===
+  # === STATE FILE TRACKING (Plugin Discovery) ===
   # Every plugin with state MUST have its state tracked
   - pattern: "\\.opus_state"
     in: vibe_core/plugins/opus_assistant/plugin_main.py
   - pattern: "\\.vibe/state"
     in: vibe_core/task_management/task_manager.py
+  # PluginStateContract implementations
+  - pattern: "def get_state_paths"
+    in: vibe_core/plugins/opus_assistant/plugin_main.py
+  - pattern: "def get_state_paths"
+    in: vibe_core/task_management/task_manager.py
 
 absent:
-  # === NO ORPHAN STATE ===
+  # === NO ORPHAN STATE (LOBOTOMY PREVENTION) ===
   # State files must NEVER be in .gitignore
   - pattern: "\\.opus_state"
     in: .gitignore
@@ -98,16 +145,30 @@ absent:
     in: .gitignore
   - pattern: "state.*\\.json"
     in: .gitignore
+  - pattern: "\\*\\.db"
+    in: .gitignore
+    rationale: "SQLite state must be tracked"
   # === NO INCOMPLETE PRAKRITI ===
   - pattern: "TODO.*prakriti"
     in: vibe_core/state/prakriti.py
   - pattern: "TODO.*persona"
     in: vibe_core/state/persona.py
+  - pattern: "TODO.*sync_holon"
+    in: vibe_core/state/sync_holon.py
+  # === NO PASS STATEMENTS IN CORE ===
+  - pattern: "^\\s*pass\\s*$"
+    in: vibe_core/state/prakriti.py
+    rationale: "No stub implementations allowed in Prakriti"
+  - pattern: "^\\s*pass\\s*$"
+    in: vibe_core/state/sync_holon.py
+    rationale: "No stub implementations allowed in SyncHolon"
 
 config:
   - section: state_management
   - section: persona_storage
   - section: guardrails.ui_files
+  - section: prakriti.guna_thresholds
+    rationale: "Configurable thresholds for Sattva/Rajas/Tamas detection"
 
 semantic:
   # === API COMPLETENESS ===
@@ -120,6 +181,22 @@ semantic:
       - ConsistencyReport
       - SyncResult
       - CommitResult
+
+  - type: module_exports
+    name: sync_holon_public_api
+    module: vibe_core.state.sync_holon
+    exports:
+      - StateSyncHolon
+      - PluginStateContract
+      - StateGuna
+
+  - type: module_exports
+    name: merge_engine_public_api
+    module: vibe_core.state.merge_engine
+    exports:
+      - UntotbarMergeEngine
+      - MergeStrategy
+      - HealedConflict
 
   # === LAYER COMPLETENESS ===
   - type: method_exists
@@ -140,6 +217,31 @@ semantic:
     class: Prakriti
     method: commit_if_dirty
 
+  # === UNIFIED WEAVER METHOD CHECKS ===
+  - type: method_exists
+    name: sync_holon_can_discover
+    in: vibe_core/state/sync_holon.py
+    class: StateSyncHolon
+    method: discover_state_paths
+
+  - type: method_exists
+    name: sync_holon_can_diagnose
+    in: vibe_core/state/sync_holon.py
+    class: StateSyncHolon
+    method: diagnose_guna
+
+  - type: method_exists
+    name: sync_holon_can_heal
+    in: vibe_core/state/sync_holon.py
+    class: StateSyncHolon
+    method: heal_toward_sattva
+
+  - type: method_exists
+    name: merge_engine_can_heal
+    in: vibe_core/state/merge_engine.py
+    class: UntotbarMergeEngine
+    method: heal_conflict
+
   # === HOLISTIC RUNTIME CHECKS ===
   - type: file_writable
     name: opus_state_writable
@@ -157,7 +259,31 @@ semantic:
       - .opus_state/
       - .vibe/state/
       - .vibe/config/
-    rationale: "State files MUST be committed, never ignored"
+    rationale: "State files MUST be committed, never ignored (LOBOTOMY PREVENTION)"
+
+  - type: git_clean
+    name: no_index_lock
+    check: ".git/index.lock"
+    rationale: "Git index must not be locked (concurrency safety)"
+
+  - type: ledger_healthy
+    name: vajra_ledger_intact
+    min_events: 10
+    rationale: "VAJRA should have history for state verification"
+
+  # === TRI-GUNA RUNTIME CHECKS ===
+  - type: guna_state
+    name: system_state_not_tamas
+    expected: ["sattva", "rajas"]
+    rationale: "System state should not be in Tamas (dead) on healthy boot"
+
+  - type: state_coherence
+    name: runtime_disk_sync
+    layers:
+      - runtime
+      - disk
+    max_drift_seconds: 3600
+    rationale: "Runtime state should not drift >1h from disk state"
 -->
 
 ---
@@ -343,6 +469,195 @@ When .gitignore lobotomizes → detect and warn
 
 "The untötbar is not the invincible.
  The untötbar is that which heals."
+```
+
+---
+
+## TRI-GUNA: The Three Modes of State
+
+**IMPORTANT**: This is about STATE oscillation, not about agents. See OPUS-086 for agent-level Guna classification. This section describes the THREE MODES through which all state moves.
+
+> **Note on OPUS-086**: OPUS-086 (TRIGUNA) classifies AGENTS by their behavioral mode (Tamas=errors, Rajas=overaction, Sattva=clarity). THIS section describes the equivalent modes for STATE ITSELF. Same philosophy, different domain.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    TRI-GUNA: THREE MODES OF STATE                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ╔═══════════════════════════════════════════════════════════════╗  │
+│  ║  SATTVA (सत्त्व) - Balance / Harmony                          ║  │
+│  ║  ─────────────────────────────────────────────────────────    ║  │
+│  ║  • State is SYNCED (Git ↔ Runtime ↔ Disk)                    ║  │
+│  ║  • Tests pass                                                 ║  │
+│  ║  • Git is clean (no dirty files)                             ║  │
+│  ║  • Ledger matches Git history                                ║  │
+│  ║  • All plugins have their state committed                    ║  │
+│  ║  • The system is AT REST (but alive)                         ║  │
+│  ╚═══════════════════════════════════════════════════════════════╝  │
+│                          ▲                                          │
+│                          │ healing (sync, commit)                   │
+│                          │                                          │
+│  ╔═══════════════════════════════════════════════════════════════╗  │
+│  ║  RAJAS (रजस्) - Activity / Transformation                     ║  │
+│  ║  ─────────────────────────────────────────────────────────    ║  │
+│  ║  • State is CHANGING (work in progress)                      ║  │
+│  ║  • Files are dirty (modifications uncommitted)               ║  │
+│  ║  • Branches diverge (parallel work)                          ║  │
+│  ║  • Runtime state differs from disk                           ║  │
+│  ║  • Merge conflicts exist                                      ║  │
+│  ║  • The system is ACTIVE (productive chaos)                   ║  │
+│  ╚═══════════════════════════════════════════════════════════════╝  │
+│                          ▲                                          │
+│                          │ activation (change, work)                │
+│                          │                                          │
+│  ╔═══════════════════════════════════════════════════════════════╗  │
+│  ║  TAMAS (तमस्) - Inertia / Stagnation                         ║  │
+│  ║  ─────────────────────────────────────────────────────────    ║  │
+│  ║  • State is STALE (outdated, forgotten)                      ║  │
+│  ║  • State is BROKEN (corrupt, invalid)                        ║  │
+│  ║  • State is LOCKED (deadlock, index.lock)                    ║  │
+│  ║  • State is ORPHANED (no plugin claims it)                   ║  │
+│  ║  • State is IGNORED (.gitignore lobotomy)                    ║  │
+│  ║  • The system is DEAD (needs resurrection)                   ║  │
+│  ╚═══════════════════════════════════════════════════════════════╝  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### The Guna Cycle
+
+**All state oscillates through these three modes. This is NATURAL.**
+
+```
+                    ┌──────────────┐
+                    │    SATTVA    │
+                    │   (Balance)  │
+                    └──────┬───────┘
+                           │
+            work begins    │    work completes
+                           ▼
+       ┌───────────────────────────────────────┐
+       │                                       │
+       ▼                                       │
+┌──────────────┐                       ┌───────┴──────┐
+│    RAJAS     │ ──────────────────►  │    SATTVA    │
+│  (Activity)  │   healing/commit      │   (Balance)  │
+└──────┬───────┘                       └──────────────┘
+       │
+       │ neglect/crash
+       ▼
+┌──────────────┐
+│    TAMAS     │
+│  (Inertia)   │
+└──────┬───────┘
+       │
+       │ StateSyncHolon awakens
+       ▼
+┌──────────────┐
+│    RAJAS     │ ──── then ────► SATTVA
+│  (Activity)  │
+└──────────────┘
+```
+
+### StateSyncHolon as the Awakening Force
+
+**The StateSyncHolon's PRIMARY PURPOSE is to push state from Tamas → Rajas → Sattva.**
+
+```python
+class StateSyncHolon:
+    """
+    The awakening force that fights entropy.
+
+    Without this, all state drifts toward Tamas (death).
+    With this, state is constantly HEALED back toward Sattva.
+    """
+
+    def diagnose_guna(self, state_path: Path) -> str:
+        """
+        Diagnose the current Guna of a state path.
+
+        Returns: "sattva", "rajas", or "tamas"
+        """
+        if not state_path.exists():
+            return "tamas"  # Orphaned/missing
+
+        if self._is_ignored(state_path):
+            return "tamas"  # Lobotomized
+
+        if self._is_corrupt(state_path):
+            return "tamas"  # Broken
+
+        if self._is_dirty(state_path):
+            return "rajas"  # Active but uncommitted
+
+        if self._is_stale(state_path):
+            return "tamas"  # Old, forgotten
+
+        return "sattva"  # Clean, synced
+
+    def heal_toward_sattva(self, state_path: Path) -> str:
+        """
+        Apply healing force to move state toward Sattva.
+
+        Tamas → Rajas: Resurrect, unignore, repair
+        Rajas → Sattva: Commit, sync, verify
+        """
+        guna = self.diagnose_guna(state_path)
+
+        if guna == "tamas":
+            # First, activate (Tamas → Rajas)
+            self._resurrect(state_path)
+            return "rajas"
+
+        elif guna == "rajas":
+            # Then, balance (Rajas → Sattva)
+            self._commit_and_sync(state_path)
+            return "sattva"
+
+        else:
+            # Already Sattva - maintain
+            return "sattva"
+```
+
+### Guna Metrics for State
+
+**How to measure each state's Guna:**
+
+| Metric | Sattva | Rajas | Tamas |
+|--------|--------|-------|-------|
+| Git status | Clean | Dirty | Locked/Corrupt |
+| Last commit age | < 24h | < 7d | > 7d |
+| Runtime ↔ Disk | Synced | Diverged | Unknown |
+| Tests | Pass | Some fail | Can't run |
+| .gitignore | Not ignored | - | IGNORED |
+| Ledger | Verified | Behind | Corrupt |
+
+### Governance by Guna
+
+**The system responds differently based on state Guna:**
+
+| State Guna | System Response |
+|------------|-----------------|
+| **Sattva** | Normal operation. Full trust. |
+| **Rajas** | Work in progress. Periodic commit nudges. |
+| **Tamas** | ALERT. StateSyncHolon activates. Healing priority. |
+
+**Example: Detecting Lobotomy (Tamas)**
+
+```python
+def on_boot(self):
+    """Boot-time Guna check."""
+    for plugin, paths in self.discover_state_paths().items():
+        for path in paths:
+            guna = self.diagnose_guna(path)
+            if guna == "tamas":
+                self.ledger.record_event(
+                    "STATE_TAMAS_DETECTED",
+                    plugin,
+                    {"path": str(path), "reason": self._tamas_reason(path)}
+                )
+                # Attempt healing
+                self.heal_toward_sattva(path)
 ```
 
 ---
@@ -969,81 +1284,491 @@ class PluginStateContract(Protocol):
 
 **The Solution**: State Sync Holon - the Zwischeninstanz.
 
+### Complete StateSyncHolon Prototype
+
 ```python
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional, Protocol, Any
+import json
+import hashlib
+import time
+
+class StateGuna(Enum):
+    """The three modes of state."""
+    SATTVA = "sattva"  # Balance - synced, clean
+    RAJAS = "rajas"    # Activity - dirty, changing
+    TAMAS = "tamas"    # Inertia - stale, broken, ignored
+
+
+@dataclass
+class StatePathInfo:
+    """Information about a discovered state path."""
+    path: Path
+    plugin: str
+    guna: StateGuna
+    last_commit: Optional[str] = None
+    last_modified: Optional[float] = None
+    is_ignored: bool = False
+    content_hash: Optional[str] = None
+
+
+class PluginStateContract(Protocol):
+    """
+    Contract every stateful plugin MUST implement.
+
+    This is how plugins declare their state to Prakriti.
+    """
+
+    def get_state_paths(self) -> List[Path]:
+        """Return all paths where this plugin stores state."""
+        ...
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for snapshot."""
+        ...
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot."""
+        ...
+
+
 class StateSyncHolon:
     """
     The Zwischeninstanz - bridges Plugin State to Git.
 
+    Named after Arthur Koestler's "holon" concept:
+    A holon is something that is simultaneously a whole and a part.
+
+    The StateSyncHolon is:
+    - A PART of Prakriti (the larger state system)
+    - A WHOLE that contains plugin state discovery, tracking, and sync
+
     Responsibilities:
-    1. DISCOVER all plugin state paths
-    2. WATCH for changes
-    3. STAGE on session boundaries
-    4. COMMIT via Prakriti
-    5. RESOLVE merge conflicts (untötbar)
+    1. DISCOVER all plugin state paths (Protocol + Convention + Manifest)
+    2. DIAGNOSE the Guna of each state path
+    3. WATCH for changes (file system events)
+    4. STAGE on session boundaries
+    5. COMMIT via Prakriti (atomic, signed)
+    6. HEAL merge conflicts (untötbar)
+    7. RESURRECT from Tamas (stale, broken, ignored)
+
+    Lifecycle:
+    - on_boot(): Discover → Diagnose → Heal Tamas
+    - on_change(): Update Guna → Queue for commit
+    - on_shutdown(): Stage all → Commit → Verify
+    - on_conflict(): Heal → Auto-merge → Log
     """
 
-    def discover_state_paths(self) -> Dict[str, List[Path]]:
+    def __init__(self, kernel, prakriti):
+        self.kernel = kernel
+        self.prakriti = prakriti
+        self._discovered: Dict[str, List[StatePathInfo]] = {}
+        self._watch_handlers = []
+        self._commit_queue = []
+
+    # ========== DISCOVERY ==========
+
+    def discover_state_paths(self) -> Dict[str, List[StatePathInfo]]:
         """
         Auto-discover all plugin state paths.
 
-        Strategy:
-        1. Query all loaded plugins for get_state_paths()
-        2. Scan known locations (.opus_state/, .vibe/, plugin_dir/state/)
-        3. Check manifest.json for state_paths declaration
+        Three-pronged discovery strategy:
+        1. PROTOCOL: Query plugins implementing PluginStateContract
+        2. CONVENTION: Scan known locations (.opus_state/, .vibe/, etc.)
+        3. MANIFEST: Read state_paths from manifest.json files
 
         Returns:
-            {"plugin_name": [Path(...), Path(...)], ...}
+            {"plugin_name": [StatePathInfo(...), ...], ...}
         """
-        paths = {}
+        paths: Dict[str, List[StatePathInfo]] = {}
 
-        # Method 1: Protocol query
+        # === Method 1: Protocol Query ===
         for plugin in self.kernel.plugins:
             if hasattr(plugin, 'get_state_paths'):
-                paths[plugin.name] = plugin.get_state_paths()
+                plugin_paths = plugin.get_state_paths()
+                for p in plugin_paths:
+                    info = self._analyze_path(p, plugin.name)
+                    paths.setdefault(plugin.name, []).append(info)
 
-        # Method 2: Convention scan
+        # === Method 2: Convention Scan ===
         conventions = [
-            Path(".opus_state"),
-            Path(".vibe/state"),
-            Path(".vibe/config"),
+            (".opus_state", "opus_assistant"),
+            (".vibe/state", "task_manager"),
+            (".vibe/config", "system"),
         ]
-        for plugin_dir in Path("vibe_core/plugins").iterdir():
-            state_dir = plugin_dir / "state"
-            if state_dir.exists():
-                paths.setdefault(plugin_dir.name, []).append(state_dir)
+        for dir_path, default_owner in conventions:
+            path = Path(dir_path)
+            if path.exists():
+                owner = self._find_owner(path) or default_owner
+                info = self._analyze_path(path, owner)
+                paths.setdefault(owner, []).append(info)
 
-        # Method 3: Manifest declaration
+        # Plugin-specific state directories
+        plugin_base = Path("vibe_core/plugins")
+        if plugin_base.exists():
+            for plugin_dir in plugin_base.iterdir():
+                state_dir = plugin_dir / "state"
+                if state_dir.exists():
+                    info = self._analyze_path(state_dir, plugin_dir.name)
+                    paths.setdefault(plugin_dir.name, []).append(info)
+
+        # === Method 3: Manifest Declaration ===
         for manifest in Path(".").glob("**/manifest.json"):
-            data = json.loads(manifest.read_text())
-            if "state_paths" in data:
-                plugin_name = manifest.parent.name
-                paths.setdefault(plugin_name, []).extend(
-                    Path(p) for p in data["state_paths"]
-                )
+            try:
+                data = json.loads(manifest.read_text())
+                if "state_paths" in data:
+                    plugin_name = data.get("name", manifest.parent.name)
+                    for p in data["state_paths"]:
+                        info = self._analyze_path(Path(p), plugin_name)
+                        paths.setdefault(plugin_name, []).append(info)
+            except (json.JSONDecodeError, OSError):
+                continue
 
+        self._discovered = paths
         return paths
+
+    def _analyze_path(self, path: Path, plugin: str) -> StatePathInfo:
+        """Analyze a state path and return its info including Guna."""
+        guna = self.diagnose_guna(path)
+        is_ignored = self._is_ignored(path)
+
+        content_hash = None
+        last_modified = None
+        if path.exists():
+            last_modified = path.stat().st_mtime
+            if path.is_file():
+                content_hash = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+        last_commit = self._get_last_commit(path)
+
+        return StatePathInfo(
+            path=path,
+            plugin=plugin,
+            guna=guna,
+            last_commit=last_commit,
+            last_modified=last_modified,
+            is_ignored=is_ignored,
+            content_hash=content_hash
+        )
+
+    def _find_owner(self, path: Path) -> Optional[str]:
+        """Find which plugin owns a state path."""
+        # Check if any loaded plugin claims this path
+        for plugin in self.kernel.plugins:
+            if hasattr(plugin, 'get_state_paths'):
+                if path in plugin.get_state_paths():
+                    return plugin.name
+        return None
+
+    def _get_last_commit(self, path: Path) -> Optional[str]:
+        """Get the last commit SHA that touched this path."""
+        try:
+            result = self.prakriti.git.log(path, n=1)
+            return result[0].sha if result else None
+        except Exception:
+            return None
+
+    # ========== GUNA DIAGNOSIS ==========
+
+    def diagnose_guna(self, path: Path) -> StateGuna:
+        """
+        Diagnose the current Guna of a state path.
+
+        TAMAS (dead): Missing, ignored, corrupt, stale (>7d)
+        RAJAS (active): Dirty, uncommitted changes
+        SATTVA (balanced): Clean, synced, recent
+        """
+        # Tamas: Path doesn't exist
+        if not path.exists():
+            return StateGuna.TAMAS
+
+        # Tamas: Ignored by git
+        if self._is_ignored(path):
+            return StateGuna.TAMAS
+
+        # Tamas: Corrupt (can't read)
+        if not self._is_readable(path):
+            return StateGuna.TAMAS
+
+        # Tamas: Stale (>7 days since last touch)
+        if self._is_stale(path, max_age_days=7):
+            return StateGuna.TAMAS
+
+        # Rajas: Has uncommitted changes
+        if self._is_dirty(path):
+            return StateGuna.RAJAS
+
+        # Sattva: Clean and recent
+        return StateGuna.SATTVA
+
+    def _is_ignored(self, path: Path) -> bool:
+        """Check if path is in .gitignore."""
+        try:
+            result = self.prakriti.git.check_ignore(path)
+            return result
+        except Exception:
+            # Fallback: manual check
+            gitignore = Path(".gitignore")
+            if gitignore.exists():
+                patterns = gitignore.read_text().splitlines()
+                path_str = str(path)
+                for pattern in patterns:
+                    if pattern and not pattern.startswith("#"):
+                        if pattern in path_str or path.match(pattern):
+                            return True
+            return False
+
+    def _is_readable(self, path: Path) -> bool:
+        """Check if path can be read without errors."""
+        try:
+            if path.is_file():
+                path.read_bytes()
+            elif path.is_dir():
+                list(path.iterdir())
+            return True
+        except Exception:
+            return False
+
+    def _is_stale(self, path: Path, max_age_days: int = 7) -> bool:
+        """Check if path hasn't been touched in max_age_days."""
+        try:
+            mtime = path.stat().st_mtime
+            age_days = (time.time() - mtime) / (60 * 60 * 24)
+            return age_days > max_age_days
+        except Exception:
+            return True
+
+    def _is_dirty(self, path: Path) -> bool:
+        """Check if path has uncommitted changes."""
+        try:
+            return self.prakriti.git.is_dirty(path)
+        except Exception:
+            return False
+
+    # ========== ENFORCEMENT ==========
 
     def ensure_tracked(self) -> List[str]:
         """
         Ensure all state paths are git-tracked (not ignored).
 
-        Raises GovernanceViolation if any state path is in .gitignore.
+        This is the LOBOTOMY PREVENTION check.
+
+        Raises:
+            GovernanceViolation: If any state path is in .gitignore
         """
         violations = []
-        gitignore = Path(".gitignore").read_text() if Path(".gitignore").exists() else ""
 
-        for plugin, paths in self.discover_state_paths().items():
-            for path in paths:
-                if self._is_ignored(path, gitignore):
-                    violations.append(f"{plugin}: {path} is IGNORED (LOBOTOMY!)")
+        for plugin, infos in self.discover_state_paths().items():
+            for info in infos:
+                if info.is_ignored:
+                    violations.append(
+                        f"{plugin}: {info.path} is IGNORED (LOBOTOMY!)"
+                    )
 
         if violations:
+            self.prakriti.ledger.record_event(
+                "LOBOTOMY_DETECTED",
+                "StateSyncHolon",
+                {"violations": violations}
+            )
             raise GovernanceViolation(
                 "State files in .gitignore = LOBOTOMY!\n" +
                 "\n".join(violations)
             )
 
         return list(self.discover_state_paths().keys())
+
+    # ========== HEALING ==========
+
+    def heal_toward_sattva(self, path: Path) -> StateGuna:
+        """
+        Apply healing force to move state toward Sattva.
+
+        Tamas → Rajas: Resurrect, unignore, repair
+        Rajas → Sattva: Commit, sync, verify
+
+        Returns:
+            The new Guna after healing attempt
+        """
+        guna = self.diagnose_guna(path)
+
+        if guna == StateGuna.TAMAS:
+            # Resurrection sequence
+            self._resurrect(path)
+            return StateGuna.RAJAS  # Now active, needs commit
+
+        elif guna == StateGuna.RAJAS:
+            # Balancing sequence
+            self._commit_and_sync(path)
+            return StateGuna.SATTVA
+
+        return StateGuna.SATTVA  # Already balanced
+
+    def _resurrect(self, path: Path) -> None:
+        """
+        Resurrect a Tamas state path.
+
+        Actions:
+        1. If ignored: Remove from .gitignore
+        2. If missing: Create from template or last known state
+        3. If corrupt: Restore from backup or reset
+        4. If stale: Touch and mark for review
+        """
+        # Remove from gitignore if present
+        self._unignore(path)
+
+        # Create if missing
+        if not path.exists():
+            self._create_from_template(path)
+
+        # Attempt repair if corrupt
+        if not self._is_readable(path):
+            self._repair_corrupt(path)
+
+        # Touch to mark as active
+        path.touch()
+
+        self.prakriti.ledger.record_event(
+            "STATE_RESURRECTED",
+            "StateSyncHolon",
+            {"path": str(path)}
+        )
+
+    def _unignore(self, path: Path) -> None:
+        """Remove a path from .gitignore."""
+        gitignore = Path(".gitignore")
+        if not gitignore.exists():
+            return
+
+        lines = gitignore.read_text().splitlines()
+        path_str = str(path)
+        new_lines = [
+            line for line in lines
+            if path_str not in line and not path.match(line.strip())
+        ]
+
+        if len(new_lines) != len(lines):
+            gitignore.write_text("\n".join(new_lines) + "\n")
+            self.prakriti.ledger.record_event(
+                "GITIGNORE_HEALED",
+                "StateSyncHolon",
+                {"removed": path_str}
+            )
+
+    def _create_from_template(self, path: Path) -> None:
+        """Create missing state from template."""
+        if path.suffix == ".json":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}")
+        elif path.suffix == ".yaml":
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# Auto-created by StateSyncHolon\n")
+        elif path.is_dir() or not path.suffix:
+            path.mkdir(parents=True, exist_ok=True)
+
+    def _repair_corrupt(self, path: Path) -> None:
+        """Attempt to repair corrupt state."""
+        # Try to get from git history
+        try:
+            content = self.prakriti.git.show(f"HEAD:{path}")
+            path.write_bytes(content)
+        except Exception:
+            # Last resort: reset to empty
+            self._create_from_template(path)
+
+    def _commit_and_sync(self, path: Path) -> None:
+        """Commit dirty state and sync with ledger."""
+        if self._is_dirty(path):
+            self.prakriti.git.add(path)
+            self.prakriti.git.commit(
+                f"state(sync): Auto-commit {path.name}",
+                author="StateSyncHolon"
+            )
+            self.prakriti.sync_ledger_git()
+
+    # ========== LIFECYCLE HOOKS ==========
+
+    def on_boot(self) -> Dict[str, List[StatePathInfo]]:
+        """
+        Boot-time state discovery and healing.
+
+        Called by Prakriti during kernel boot.
+        """
+        # Discover all state paths
+        discovered = self.discover_state_paths()
+
+        # Check for lobotomy
+        try:
+            self.ensure_tracked()
+        except GovernanceViolation as e:
+            # Log but don't crash - attempt healing
+            self.prakriti.ledger.record_event(
+                "BOOT_LOBOTOMY_WARNING",
+                "StateSyncHolon",
+                {"error": str(e)}
+            )
+
+        # Heal any Tamas states
+        for plugin, infos in discovered.items():
+            for info in infos:
+                if info.guna == StateGuna.TAMAS:
+                    self.heal_toward_sattva(info.path)
+
+        return discovered
+
+    def on_shutdown(self) -> None:
+        """
+        Shutdown-time state commit.
+
+        Called by Prakriti during kernel shutdown.
+        """
+        # Commit any dirty state
+        for plugin, infos in self._discovered.items():
+            for info in infos:
+                if self.diagnose_guna(info.path) == StateGuna.RAJAS:
+                    self._commit_and_sync(info.path)
+
+        self.prakriti.ledger.record_event(
+            "SHUTDOWN_STATE_SYNCED",
+            "StateSyncHolon",
+            {"plugins": list(self._discovered.keys())}
+        )
+
+    def on_conflict(self, path: Path, ours: bytes, theirs: bytes) -> bytes:
+        """
+        Handle merge conflict via UntotbarMergeEngine.
+
+        Called by Prakriti during git merge.
+        """
+        from .merge_engine import UntotbarMergeEngine
+        engine = UntotbarMergeEngine()
+        healed = engine.heal_conflict(path, ours, theirs)
+
+        self.prakriti.ledger.record_event(
+            "CONFLICT_HEALED",
+            "StateSyncHolon",
+            {"path": str(path), "strategy": engine.get_strategy(path)}
+        )
+
+        return healed
+```
+
+### Usage Example
+
+```python
+# In kernel_impl.py boot()
+self.sync_holon = StateSyncHolon(self, self.prakriti)
+discovered = self.sync_holon.on_boot()
+
+print(f"Discovered {len(discovered)} plugins with state:")
+for plugin, infos in discovered.items():
+    gunas = [info.guna.value for info in infos]
+    print(f"  {plugin}: {gunas}")
+
+# In kernel_impl.py shutdown()
+self.sync_holon.on_shutdown()
 ```
 
 ---
