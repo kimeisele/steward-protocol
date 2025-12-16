@@ -4,7 +4,6 @@ TEST: CLI Renderer
 Tests for GAD-000 compliant output rendering.
 """
 
-
 from vibe_core.cli.protocol import CLIResponse, ExecutionMode
 from vibe_core.cli.renderer import CLIRenderer, get_renderer
 

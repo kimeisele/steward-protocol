@@ -11,9 +11,9 @@ Keys stay in environment variables - this section defines
 WHERE to find them (which env var names).
 """
 
+import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-import os
 
 
 @dataclass

@@ -186,6 +186,10 @@ select = [
 ]
 ignore = [
     "E501",  # Line too long (handled by formatter)
+    "F841",  # Unused variables (too many in TODO stubs, fix incrementally)
+    "E741",  # Ambiguous variable names (l in list comps is fine)
+    "E402",  # Import order (scripts need sys.path manipulation before imports)
+    "F401",  # Unused imports (TYPE_CHECKING + optional deps are false positives)
 ]
 
 # Same complexity limit as current flake8

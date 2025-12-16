@@ -1,4 +1,3 @@
-
 import pytest
 
 from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel

@@ -10,7 +10,6 @@ These tests verify:
 4. Config limits are respected
 """
 
-
 import pytest
 
 from vibe_core.plugins.opus_assistant.manas.analyzers.semantic_analyzer import (

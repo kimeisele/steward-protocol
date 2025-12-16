@@ -7,7 +7,6 @@ Using existing fixtures from conftest.py and test_orchestration.
 """
 
 
-
 class TestAgentCityPluginLoading:
     """Tests for Agent City plugin loading."""
 

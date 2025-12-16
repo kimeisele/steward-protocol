@@ -24,7 +24,6 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 
-
 @pytest.mark.hardening
 def test_herald_content_filtering():
     """

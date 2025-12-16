@@ -9,7 +9,6 @@ Tests for vibe_core/tools/file_tools.py (ReadFileTool, WriteFileTool)
 Run with: pytest tests/tools/test_file_tools.py -v
 """
 
-
 import pytest
 
 from vibe_core.tools.file_tools import ReadFileTool, WriteFileTool

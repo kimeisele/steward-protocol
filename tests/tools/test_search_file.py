@@ -9,7 +9,6 @@ Tests for vibe_core/tools/search_file.py
 Run with: pytest tests/tools/test_search_file.py -v
 """
 
-
 import pytest
 
 from vibe_core.tools.search_file import SearchFileTool

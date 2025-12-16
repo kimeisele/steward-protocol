@@ -56,7 +56,7 @@ def test_concurrent_writes_integrity():
             try:
                 for i in range(events_per_thread):
                     event_id = ledger.record_event(
-                        f"stress_test", f"thread_{thread_id}", {"thread": thread_id, "seq": i}
+                        "stress_test", f"thread_{thread_id}", {"thread": thread_id, "seq": i}
                     )
                     local_ids.append(event_id)
             except Exception as e:
@@ -87,9 +87,9 @@ def test_concurrent_writes_integrity():
         actual_events = len(events)
 
         # Check 1: No lost writes
-        assert (
-            actual_events == expected_events
-        ), f"LOST WRITES: Expected {expected_events}, got {actual_events} (lost: {expected_events - actual_events}, duration: {duration:.2f}s)"
+        assert actual_events == expected_events, (
+            f"LOST WRITES: Expected {expected_events}, got {actual_events} (lost: {expected_events - actual_events}, duration: {duration:.2f}s)"
+        )
 
         # Check 2: Hash chain integrity
         integrity = verify_ledger.verify_chain_integrity()
@@ -103,7 +103,7 @@ def test_concurrent_writes_integrity():
 
         assert not errors, f"THREAD ERRORS: {len(errors)} - {errors[:5]}"
 
-        print(f"{actual_events} events, chain intact, {duration:.2f}s, rate: {actual_events/duration:.0f} events/s")
+        print(f"{actual_events} events, chain intact, {duration:.2f}s, rate: {actual_events / duration:.0f} events/s")
 
     finally:
         os.unlink(db_path)
@@ -235,9 +235,9 @@ def test_replay_attack_detection():
         integrity = ledger.verify_chain_integrity()
         ledger.close()
 
-        assert integrity[
-            "corrupted"
-        ], "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
+        assert integrity["corrupted"], (
+            "REPLAY ATTACK UNDETECTED: Injected old event, chain reported clean (injected: REPLAYED_EVT)"
+        )
 
         print(
             f"Replay attack detected via hash chain verification ({len(integrity.get('corruptions', []))} corruptions found)"
@@ -285,11 +285,11 @@ def test_tamper_detection():
         corruptions = integrity.get("corruptions", [])
         flagged_indices = [c.get("index") for c in corruptions]
 
-        assert (
-            2 in flagged_indices
-        ), f"WRONG EVENT FLAGGED: Tampered event #3 not in corruption list (flagged: {flagged_indices})"
+        assert 2 in flagged_indices, (
+            f"WRONG EVENT FLAGGED: Tampered event #3 not in corruption list (flagged: {flagged_indices})"
+        )
 
-        print(f"Payload tampering detected at correct position (index 2)")
+        print("Payload tampering detected at correct position (index 2)")
 
     finally:
         os.unlink(db_path)

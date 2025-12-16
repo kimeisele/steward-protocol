@@ -23,19 +23,18 @@ from pydantic import BaseModel
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# KERNEL IMPORTS
-# STEWARD AGENT IMPORT
-from vibe_core.cartridges.system.discoverer.agent import Discoverer
-from vibe_core.cartridges.system.envoy.provider import UniversalProvider
-from vibe_core.event_bus import Event, get_event_bus
-from vibe_core.kernel_impl import RealVibeKernel
-
-# PULSE SYSTEM IMPORTS
-from vibe_core.pulse import get_pulse_manager
-
-# NEW: Unified Execution Imports (replaces MilkOceanRouter)
-from vibe_core.runtime.unified_execution import ExecutionRequest, MilkOceanGate, UnifiedRouter
-from vibe_core.scheduling import Task
+# KERNEL IMPORTS (after sys.path fix for Docker)
+from vibe_core.cartridges.system.discoverer.agent import Discoverer  # noqa: E402
+from vibe_core.cartridges.system.envoy.provider import UniversalProvider  # noqa: E402
+from vibe_core.event_bus import Event, get_event_bus  # noqa: E402
+from vibe_core.kernel_impl import RealVibeKernel  # noqa: E402
+from vibe_core.pulse import get_pulse_manager  # noqa: E402
+from vibe_core.runtime.unified_execution import (  # noqa: E402
+    ExecutionRequest,
+    MilkOceanGate,
+    UnifiedRouter,
+)
+from vibe_core.scheduling import Task  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("GATEWAY")

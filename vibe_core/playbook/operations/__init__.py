@@ -15,6 +15,6 @@ AIRLOCK PATTERN:
     This prevents data loss when the ephemeral kernel is terminated.
 """
 
-from .kernel_spawn import spawn_city, SpawnCityResult, HarvestedArtifact
+from .kernel_spawn import HarvestedArtifact, SpawnCityResult, spawn_city
 
 __all__ = ["spawn_city", "SpawnCityResult", "HarvestedArtifact"]

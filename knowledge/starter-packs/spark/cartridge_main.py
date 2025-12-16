@@ -58,7 +58,7 @@ class SparkCartridge(VibeAgent, OathMixin):
             return {"status": "error", "error": f"Unknown action: {action}"}
 
     def _generate_tweet(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        context = payload.get("context", "")
+        _context = payload.get("context", "")
         # TODO: Implement tweet generation via LLM
         return {"status": "success", "tweet": ""}
 
