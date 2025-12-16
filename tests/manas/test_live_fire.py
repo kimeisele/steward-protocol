@@ -50,7 +50,9 @@ class TestLiveWiring:
         This proves the entire pipeline works:
         Message → Listener → JnanaHandler → LLM → Response
         """
-        socket_path = str(tmp_path / "test_samvada.sock")
+        import tempfile
+
+        socket_path = tempfile.mktemp(suffix=".sock", prefix="manas_")
 
         # Create listener with JnanaHandler
         listener = SamvadaListener(
