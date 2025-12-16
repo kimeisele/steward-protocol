@@ -110,13 +110,48 @@ circuit:
           target: "opus.get_last_actor"
           params:
             context: "{{ trigger_event }}"
-      on_success: demote_agent
+      on_success: check_grace_eligibility  # OPUS-085: Check for Bhakti grace first
       on_failure: demote_fallback
 
-    # Phase 4a: DEMOTE the responsible agent
+    # NEW: Phase 3b: OPUS-085 - Check if agent deserves grace (forgiveness)
+    check_grace_eligibility:
+      name: "Check Bhakti Grace Eligibility"
+      description: "Does agent have enough past devotion to avoid demotion?"
+      state_var: "grace_result"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "vedic.should_grant_grace"
+          params:
+            agent_id: "{{ responsible_agent.id }}"
+            offense_severity: 2  # Demotion-level offense
+      transitions:
+        - condition: "grace_result.granted == true"
+          to: apply_grace_penalty
+        - condition: "grace_result.granted == false"
+          to: demote_agent
+
+    # NEW: Phase 3c: OPUS-085 - Agent spared by Bhakti (but costs devotion)
+    apply_grace_penalty:
+      name: "Apply Grace Penalty (No Demotion)"
+      description: "Agent spared by past devotion - Bhakti consumed as cost"
+      state_var: "grace_applied"
+      actions:
+        - action_type: EXECUTE_SCRIPT
+          target: "opus.log_observation"
+          params:
+            severity: "WARN"
+            message: "🙏 GRACE: Agent '{{ responsible_agent.id }}' SPARED by Bhakti (trust: {{ trust_data.score }}%, devotion: {{ grace_result.bhakti_balance }})"
+            source: "karma_consequence"
+            context:
+              bhakti_cost: "{{ grace_result.cost }}"
+              remaining_bhakti: "{{ grace_result.bhakti_balance }}"
+      on_success: COMPLETE_GRACED
+      on_failure: demote_agent  # If grace logging fails, still demote
+
+    # Phase 4a: DEMOTE the responsible agent (No grace available)
     demote_agent:
       name: "Demote Agent (Karma Consequence)"
-      description: "Agent loses lifecycle stage due to trust failure"
+      description: "Agent loses lifecycle stage due to trust failure - no Bhakti protection"
       state_var: "demotion_result"
       actions:
         - action_type: EMIT_EVENT
@@ -124,17 +159,17 @@ circuit:
           params:
             agent_id: "{{ responsible_agent.id }}"
             trust_score: "{{ trust_data.score }}"
-            reason: "Trust dropped below critical threshold"
+            reason: "Trust dropped below critical threshold (no grace available)"
         - action_type: EXECUTE_SCRIPT
           target: "vedic.demote_agent"
           params:
             agent_id: "{{ responsible_agent.id }}"
-            reason: "KARMA: Trust score {{ trust_data.score }}% below threshold"
+            reason: "KARMA: Trust score {{ trust_data.score }}% below threshold (Bhakti insufficient)"
         - action_type: EXECUTE_SCRIPT
           target: "opus.log_observation"
           params:
             severity: "ALERT"
-            message: "🕉️ KARMA: Agent '{{ responsible_agent.id }}' DEMOTED (trust: {{ trust_data.score }}%)"
+            message: "🕉️ KARMA: Agent '{{ responsible_agent.id }}' DEMOTED (trust: {{ trust_data.score }}%, no grace)"
             source: "karma_consequence"
       on_success: COMPLETE_DEMOTED
       on_failure: log_error
@@ -189,16 +224,28 @@ circuit:
       on_success: COMPLETE
       on_failure: COMPLETE
 
-    # Terminal: Demotion occurred
+    # Terminal: Demotion occurred (no grace)
     COMPLETE_DEMOTED:
       name: "Karma Applied"
-      description: "Agent was demoted due to trust failure"
+      description: "Agent was demoted due to trust failure (no Bhakti protection)"
       terminal: true
       result:
         status: "demoted"
         agent_id: "{{ responsible_agent.id }}"
         trust_score: "{{ trust_data.score }}"
         consequence: "lifecycle_demotion"
+
+    # Terminal: OPUS-085 - Agent spared by Bhakti grace
+    COMPLETE_GRACED:
+      name: "Grace Applied"
+      description: "Agent was spared demotion due to past devotion (Bhakti consumed)"
+      terminal: true
+      result:
+        status: "graced"
+        agent_id: "{{ responsible_agent.id }}"
+        trust_score: "{{ trust_data.score }}"
+        bhakti_cost: "{{ grace_result.cost }}"
+        consequence: "bhakti_consumed"
 
     # Terminal: Normal completion
     COMPLETE:

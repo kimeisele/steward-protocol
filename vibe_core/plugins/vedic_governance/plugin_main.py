@@ -80,6 +80,10 @@ class VedicGovernancePlugin(KernelPlugin):
         # Track task completions for automatic graduation
         self._task_completions: Dict[str, int] = {}
 
+        # OPUS-085: Bhakti (devotion) balance for grace-based enforcement
+        # Persisted to Ledger, cached here for O(1) access
+        self._bhakti_registry: Dict[str, int] = {}
+
         # Reference to kernel (set on boot)
         self._kernel: Optional["RealVibeKernel"] = None
 
@@ -449,3 +453,175 @@ class VedicGovernancePlugin(KernelPlugin):
     def get_all_agents_status(self) -> Dict[str, Dict[str, Any]]:
         """Get governance status for all registered agents."""
         return {agent_id: self.get_governance_status(agent_id) for agent_id in self._varna_registry.keys()}
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # OPUS-085: BHAKTI (DEVOTION) BALANCE - Grace-Based Enforcement
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def get_bhakti_balance(self, agent_id: str) -> int:
+        """
+        Get current Bhakti (devotion points) for an agent.
+
+        Bhakti is earned through devotional practices:
+        - Surrender (admitting mistakes): +10
+        - Seva (selfless service): +5
+        - Tapas (code purification): +5
+        - TDD Dharma (tests before code): +5
+        - Mantra (Hare Krishna): +100 (instant moksha)
+
+        Returns: Current Bhakti balance (0-100+)
+        """
+        return self._bhakti_registry.get(agent_id, 0)
+
+    def add_bhakti(self, agent_id: str, amount: int, reason: str = "Bhakti practice") -> bool:
+        """
+        Add Bhakti points to an agent (reward for devotional practice).
+
+        Args:
+            agent_id: The agent to reward
+            amount: Points to add
+            reason: Why Bhakti was granted
+
+        Returns: True if successful
+        """
+        if agent_id not in self._ashrama_registry:
+            logger.warning(f"Cannot add Bhakti: Agent '{agent_id}' not registered")
+            return False
+
+        current = self._bhakti_registry.get(agent_id, 0)
+        new_balance = min(200, current + amount)  # Cap at 200 (hero mode)
+        self._bhakti_registry[agent_id] = new_balance
+
+        # Persist to ledger
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="BHAKTI_GRANTED",
+                agent_id=agent_id,
+                details={
+                    "amount": amount,
+                    "old_balance": current,
+                    "new_balance": new_balance,
+                    "reason": reason,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
+
+        logger.info(f"🙏 BHAKTI: +{amount} for '{agent_id}' → {new_balance} ({reason})")
+        return True
+
+    def consume_bhakti(self, agent_id: str, amount: int, reason: str = "Grace granted") -> bool:
+        """
+        Consume Bhakti points (cost of grace).
+
+        Grace is NOT free - it costs Bhakti. This prevents abuse.
+
+        Args:
+            agent_id: The agent spending Bhakti
+            amount: Cost of grace
+            reason: Why grace was needed
+
+        Returns: True if successful (had enough Bhakti)
+        """
+        current = self._bhakti_registry.get(agent_id, 0)
+        if current < amount:
+            logger.warning(f"Cannot consume Bhakti: '{agent_id}' has {current}, needs {amount}")
+            return False
+
+        new_balance = current - amount
+        self._bhakti_registry[agent_id] = new_balance
+
+        # Persist to ledger
+        if self._kernel and hasattr(self._kernel, "ledger"):
+            self._kernel.ledger.record_event(
+                event_type="BHAKTI_CONSUMED",
+                agent_id=agent_id,
+                details={
+                    "amount": amount,
+                    "old_balance": current,
+                    "new_balance": new_balance,
+                    "reason": reason,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
+
+        logger.info(f"🙏 BHAKTI: -{amount} for '{agent_id}' → {new_balance} ({reason})")
+        return True
+
+    def should_grant_grace(self, agent_id: str, offense_severity: int = 1) -> Dict[str, Any]:
+        """
+        Check if agent has enough Bhakti to deserve grace (forgiveness).
+
+        Grace Economics:
+        - Severity 1 (warning): Requires 30 Bhakti, costs 15
+        - Severity 2 (demotion): Requires 60 Bhakti, costs 50
+        - Severity 3 (critical): Requires 100 Bhakti, costs 80
+
+        Returns:
+            {
+                "granted": bool,
+                "bhakti_balance": int,
+                "cost": int (if granted),
+                "reason": str
+            }
+        """
+        current = self.get_bhakti_balance(agent_id)
+
+        # Grace thresholds and costs
+        grace_table = {
+            1: {"required": 30, "cost": 15, "name": "warning"},
+            2: {"required": 60, "cost": 50, "name": "demotion"},
+            3: {"required": 100, "cost": 80, "name": "critical"},
+        }
+
+        threshold = grace_table.get(offense_severity, grace_table[2])
+
+        if current >= threshold["required"]:
+            # Grace GRANTED - but it COSTS Bhakti
+            self.consume_bhakti(agent_id, threshold["cost"], reason=f"Grace for {threshold['name']} offense")
+            logger.info(
+                f"🙏 GRACE: Agent '{agent_id}' spared ({threshold['name']}) - "
+                f"Bhakti: {current} → {current - threshold['cost']}"
+            )
+            return {
+                "granted": True,
+                "bhakti_balance": current - threshold["cost"],
+                "cost": threshold["cost"],
+                "reason": f"Past devotion ({current} Bhakti) earned mercy",
+            }
+        else:
+            # No grace - not enough Bhakti
+            logger.warning(
+                f"⚖️ NO GRACE: Agent '{agent_id}' has {current} Bhakti, "
+                f"needs {threshold['required']} for {threshold['name']} offense"
+            )
+            return {
+                "granted": False,
+                "bhakti_balance": current,
+                "required": threshold["required"],
+                "reason": f"Insufficient devotion ({current}/{threshold['required']} Bhakti)",
+            }
+
+    def decay_bhakti(self, decay_percent: float = 1.0) -> Dict[str, int]:
+        """
+        Decay all Bhakti balances by a percentage (entropy).
+
+        Called by maintenance_pulse to ensure Bhakti must be actively maintained.
+        "Use it or lose it" - inactivity erodes past devotion.
+
+        Args:
+            decay_percent: Percentage to decay (default 1%)
+
+        Returns: Dict of {agent_id: new_balance}
+        """
+        results = {}
+        for agent_id, balance in list(self._bhakti_registry.items()):
+            if balance > 0:
+                decay_amount = max(1, int(balance * (decay_percent / 100)))
+                new_balance = max(0, balance - decay_amount)
+                self._bhakti_registry[agent_id] = new_balance
+                results[agent_id] = new_balance
+
+        if results:
+            logger.debug(f"🕉️ BHAKTI DECAY: {decay_percent}% entropy applied to {len(results)} agents")
+
+        return results
