@@ -215,8 +215,14 @@ class HeartbeatEngine:
 
         inbox_text = inbox_match.group(0)
 
+        # Strip code blocks (examples shouldn't be parsed as real tasks)
+        inbox_text = re.sub(r"```.*?```", "", inbox_text, flags=re.DOTALL)
+
         # Find unchecked tasks: - [ ] Task description @agent priority:high
-        task_pattern = re.compile(r"- \[ \] (.+?)(?:@(\w+))?\s*(?:priority:(high|medium|low))?")
+        # Fixed regex: capture until @ or priority: or end of line (not greedy single char)
+        task_pattern = re.compile(
+            r"- \[ \] ([^@\n]+?)(?:\s*@(\w+))?(?:\s*priority:(high|medium|low))?\s*$", re.MULTILINE
+        )
 
         new_tasks = 0
         for match in task_pattern.finditer(inbox_text):
