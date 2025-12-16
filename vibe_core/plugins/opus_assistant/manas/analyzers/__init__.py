@@ -4,7 +4,6 @@ MANAS Analyzers - Intent generation from system state.
 OPUS-032: Modular analyzers for the 51% singularity.
 OPUS-041: VAK (The Voice) - CI Monitor via ShellCortex.
 OPUS-077: PRATYAYA - Self-falsification via Red Team.
-OPUS-083: DocHarnessAnalyzer - Self-healing documentation.
 
 Each analyzer examines a specific aspect of system state and generates
 intents when action is needed.
@@ -15,7 +14,6 @@ Architecture:
 - SemanticAnalyzer: Missing coverage → creation intents (51% - growth)
 - CIMonitorAnalyzer: System status → observability intents (OPUS-041)
 - PratyayaAnalyzer: Self-mutation testing → security intents (OPUS-077)
-- DocHarnessAnalyzer: Documentation health → harness intents (soft training)
 
 The 50%/51%/52% distinction:
 - 50% analyzers fix what's BROKEN (immune system)
@@ -26,7 +24,6 @@ The 50%/51%/52% distinction:
 from .base import AnalyzerConfig, BaseAnalyzer
 from .ci_monitor_analyzer import CIMonitorAnalyzer
 from .contract_analyzer import ContractAnalyzer
-from .doc_harness_analyzer import DocHarnessAnalyzer
 from .pratyaya_analyzer import PratyayaAnalyzer
 from .semantic_analyzer import SemanticAnalyzer
 
@@ -37,5 +34,4 @@ __all__ = [
     "SemanticAnalyzer",
     "CIMonitorAnalyzer",
     "PratyayaAnalyzer",
-    "DocHarnessAnalyzer",
 ]

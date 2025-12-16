@@ -265,7 +265,6 @@ class OpusDashboardRenderer:
             "treasury": treasury,  # 💰 LAYER 1.5: Budget tracking
             "syscalls": self._gather_syscalls(),  # ⚡ LAYER 2: Experience Replay
             "pending_intent": self._gather_pending_intent(),  # 🎯 LAYER 1.5: Intent Buffer
-            "manas_status": self._gather_manas_status(),  # 🧠 OPUS-083: Full MANAS transparency
             "layers": self._gather_prakriti_layers(),
             "focus_areas": self._gather_focus_areas(),
             "journal": self._gather_journal(),
@@ -690,111 +689,6 @@ class OpusDashboardRenderer:
             logger.debug(f"Failed to gather legacy pending intent: {e}")
 
         return None
-
-    def _gather_manas_status(self) -> Optional[Dict[str, Any]]:
-        """
-        Gather MANAS cognitive status from state files.
-
-        🧠 OPUS-083: Full MANAS transparency - reads DIRECTLY from
-        .opus_state/manas_intents.json so it works even when the
-        kernel isn't actively running.
-
-        This is the "what has MANAS been thinking?" answer.
-        """
-        import json
-
-        manas_status: Dict[str, Any] = {
-            "online": False,
-            "intent_buffer": {
-                "pending": [],
-                "executed": [],
-                "rejected": [],
-                "total_pending": 0,
-                "last_updated": None,
-            },
-            "harness_health": None,
-            "last_thought": None,
-        }
-
-        # Check if kernel is online
-        if self._kernel:
-            try:
-                manas_status["online"] = self._kernel.status.value == "RUNNING"
-            except Exception:
-                pass
-
-        # Read intent buffer from state file
-        intents_path = self._root / ".opus_state" / "manas_intents.json"
-        if intents_path.exists():
-            try:
-                data = json.loads(intents_path.read_text())
-                intents = data.get("intents", [])
-
-                pending = []
-                executed = []
-                rejected = []
-
-                for item in intents:
-                    intent_data = item.get("intent", {})
-                    status = item.get("status", "pending")
-
-                    intent_entry = {
-                        "id": intent_data.get("id"),
-                        "intent_type": intent_data.get("intent_type"),
-                        "title": intent_data.get("title"),
-                        "description": intent_data.get("description"),
-                        "reasoning": intent_data.get("reasoning"),
-                        "priority": intent_data.get("priority"),
-                        "risk": intent_data.get("risk"),
-                        "created_at": intent_data.get("created_at"),
-                        "auto_executable": intent_data.get("auto_executable"),
-                        "params": intent_data.get("params", {}),
-                    }
-
-                    if status == "pending":
-                        pending.append(intent_entry)
-                    elif status == "executed":
-                        intent_entry["executed_at"] = item.get("executed_at")
-                        intent_entry["success"] = item.get("execution_result", {}).get("success", False)
-                        executed.append(intent_entry)
-                    elif status == "rejected":
-                        rejected.append(intent_entry)
-
-                manas_status["intent_buffer"] = {
-                    "pending": pending,
-                    "executed": executed,
-                    "rejected": rejected,
-                    "total_pending": len(pending),
-                    "last_updated": data.get("updated_at"),
-                }
-
-            except Exception as e:
-                logger.debug(f"Failed to read MANAS intents: {e}")
-
-        # Get harness health from DocHarnessAnalyzer
-        try:
-            from vibe_core.plugins.opus_assistant.manas.analyzers.doc_harness_analyzer import (
-                DocHarnessAnalyzer,
-            )
-
-            analyzer = DocHarnessAnalyzer(workspace=self._root)
-            manas_status["harness_health"] = analyzer.get_harness_report()
-        except Exception as e:
-            logger.debug(f"Failed to get harness health: {e}")
-
-        # Get last thought timestamp
-        try:
-            if manas_status["intent_buffer"]["pending"]:
-                # Most recent intent creation time
-                latest = max(
-                    (p["created_at"] for p in manas_status["intent_buffer"]["pending"] if p.get("created_at")),
-                    default=None,
-                )
-                manas_status["last_thought"] = latest
-        except Exception:
-            pass
-
-        return manas_status
 
     def _gather_circuits(self) -> List[Dict[str, Any]]:
         """Gather circuit definitions."""

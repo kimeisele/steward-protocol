@@ -15,7 +15,6 @@
     - treasury: { date, tokens_input, estimated_cost, ... } or null
     - syscalls: { history, stats } or null (Layer 2: Experience Replay)
     - pending_intent: { intent, syscall_type, params, approved, ... } or null (Layer 1.5)
-    - manas_status: { online, intent_buffer, harness_health, last_thought } (OPUS-083)
     - layers: { sthula, prana, purusha }
     - focus_areas: list of strings
     - journal: list of { timestamp, severity, source, message }
@@ -83,12 +82,6 @@
    ============================================================================ #}
 
 {% include 'panels/intent_buffer.md.j2' ignore missing %}
-
-{# ============================================================================
-   🧠 MANAS STATUS - Cognitive Transparency (OPUS-083)
-   ============================================================================ #}
-
-{% include 'panels/manas_status.md.j2' ignore missing %}
 
 {# ============================================================================
    ⚡ SYSCALL CONSOLE - Experience Replay Buffer (Layer 2)
