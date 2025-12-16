@@ -1,20 +1,23 @@
 # OPUS-009: Unified State Management (PRAKRITI)
 
-> **Status**: 🚧 PARTIAL - Phase 1-3 Complete, Superseded by OPUS-027
+> **Status**: 🔥 GOLDEN FOUNDATION - The Philosophical Core
 > **Created**: 2025-12-08
-> **Phase 1-3**: 2025-12-08
-> **Superseded By**: OPUS-027 (Complete Implementation)
+> **Deepened**: 2025-12-16 (Fractal State, Plugin Discovery, Sync Holon)
+> **Related**: OPUS-027 (Implementation), OPUS-028 (Git Slave)
 > **Purpose**: Unified State & Identity Management for Agent OS
 > **GAD-000**: See compliance section below
-> **Note**: This document is CONCEPT only. See OPUS-027 for production implementation.
+> **Philosophy**: This is the CONCEPTUAL FOUNDATION. Not "superseded" - FOUNDATIONAL.
+
+**IMPORTANT**: OPUS-027/028 implement PARTS of this vision. This document is the SOURCE OF TRUTH for the complete architecture. When 027/028 conflict with 009, 009 wins.
 
 <!-- @HARNESS
 files:
-  - path: vibe_core/runtime/unified_execution.py
-    required: true
-  - path: vibe_core/runtime/layered_router.py
+  # === CORE STATE ENGINE ===
+  - path: vibe_core/state/prakriti.py
     required: true
   - path: vibe_core/state/git_state.py
+    required: true
+  - path: vibe_core/state/ledger_state.py
     required: true
   - path: vibe_core/state/kernel_state.py
     required: true
@@ -24,28 +27,137 @@ files:
     required: true
   - path: vibe_core/state/persona.py
     required: true
+  # === RUNTIME INTEGRATION ===
+  - path: vibe_core/runtime/unified_execution.py
+    required: true
+  - path: vibe_core/runtime/layered_router.py
+    required: true
   - path: vibe_core/kernel_impl.py
     required: true
-  - path: vibe_core/state/prakriti.py
+  # === STATE LOCATIONS (must exist, must be tracked) ===
+  - path: .opus_state/manas_intents.json
     required: true
-tests: []
+  - path: .opus_state/sankalpa.json
+    required: true
+
+tests:
+  # === PRAKRITI TEST SUITE ===
+  - tests/state/test_prakriti.py
+  - tests/state/test_git_state.py
+  - tests/state/test_ledger_state.py
+  - tests/state/test_kernel_state.py
+  - tests/state/test_file_state.py
+  - tests/state/test_ephemeral_state.py
+  - tests/state/test_persona.py
+  # === INTEGRATION ===
+  - tests/integration/test_prakriti_kernel.py
+  - tests/integration/test_state_sync.py
+
 wiring:
-  - pattern: "Prakriti"
+  # === CORE CLASS STRUCTURE ===
+  - pattern: "class Prakriti"
     in: vibe_core/state/prakriti.py
-  - pattern: "AgentPersona"
-    in: vibe_core/state/persona.py
-  - pattern: "GitState"
+  - pattern: "class GitState"
     in: vibe_core/state/git_state.py
-  - pattern: "KernelState"
+  - pattern: "class LedgerState"
+    in: vibe_core/state/ledger_state.py
+  - pattern: "class KernelState"
     in: vibe_core/state/kernel_state.py
-absent:
-  - pattern: "TODO.*persona"
+  - pattern: "class AgentPersona"
     in: vibe_core/state/persona.py
+
+  # === CRITICAL METHODS ===
+  - pattern: "def commit_if_dirty"
+    in: vibe_core/state/prakriti.py
+  - pattern: "def sync_ledger_git"
+    in: vibe_core/state/prakriti.py
+  - pattern: "def snapshot"
+    in: vibe_core/state/prakriti.py
+  - pattern: "def verify"
+    in: vibe_core/state/prakriti.py
+
+  # === KERNEL INTEGRATION ===
+  - pattern: "self\\.prakriti"
+    in: vibe_core/kernel_impl.py
+  - pattern: "prakriti\\.commit_if_dirty"
+    in: vibe_core/kernel_impl.py
+
+  # === STATE FILE TRACKING (NEW - Plugin Discovery) ===
+  # Every plugin with state MUST have its state tracked
+  - pattern: "\\.opus_state"
+    in: vibe_core/plugins/opus_assistant/plugin_main.py
+  - pattern: "\\.vibe/state"
+    in: vibe_core/task_management/task_manager.py
+
+absent:
+  # === NO ORPHAN STATE ===
+  # State files must NEVER be in .gitignore
+  - pattern: "\\.opus_state"
+    in: .gitignore
+  - pattern: "\\.vibe/state"
+    in: .gitignore
+  - pattern: "state.*\\.json"
+    in: .gitignore
+  # === NO INCOMPLETE PRAKRITI ===
   - pattern: "TODO.*prakriti"
     in: vibe_core/state/prakriti.py
+  - pattern: "TODO.*persona"
+    in: vibe_core/state/persona.py
+
 config:
   - section: state_management
   - section: persona_storage
+  - section: guardrails.ui_files
+
+semantic:
+  # === API COMPLETENESS ===
+  - type: module_exports
+    name: prakriti_public_api
+    module: vibe_core.state.prakriti
+    exports:
+      - Prakriti
+      - StateSnapshot
+      - ConsistencyReport
+      - SyncResult
+      - CommitResult
+
+  # === LAYER COMPLETENESS ===
+  - type: method_exists
+    name: prakriti_has_all_layers
+    in: vibe_core/state/prakriti.py
+    class: Prakriti
+    method: snapshot
+
+  - type: method_exists
+    name: prakriti_can_verify
+    in: vibe_core/state/prakriti.py
+    class: Prakriti
+    method: verify
+
+  - type: method_exists
+    name: prakriti_can_commit
+    in: vibe_core/state/prakriti.py
+    class: Prakriti
+    method: commit_if_dirty
+
+  # === HOLISTIC RUNTIME CHECKS ===
+  - type: file_writable
+    name: opus_state_writable
+    path: .opus_state/
+    rationale: "MANAS needs write access to persist intents"
+
+  - type: file_writable
+    name: vibe_state_writable
+    path: .vibe/state/
+    rationale: "Task Manager needs write access to persist tasks"
+
+  - type: git_tracked
+    name: state_files_tracked
+    paths:
+      - .opus_state/
+      - .vibe/state/
+      - .vibe/config/
+    rationale: "State files MUST be committed, never ignored"
 -->
 
 ---
@@ -612,39 +724,341 @@ class Prakriti:
 
 ---
 
+## FRACTAL STATE ARCHITECTURE (2025-12-16 Deepening)
+
+**The Missing Piece: Every Plugin IS a Mini-Prakriti**
+
+The original 009 described 3 layers. But it missed the FRACTAL nature:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    FRACTAL STATE HOLARCHY                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   PRAKRITI (System-Level)                                          │
+│   ├── STHULA: Git + Ledger + Files                                 │
+│   ├── PRANA: Kernel + Ephemeral + Session                          │
+│   └── PURUSHA: System Personas                                     │
+│         │                                                          │
+│         ├──→ PLUGIN PRAKRITI (opus_assistant/MANAS)                │
+│         │    ├── STHULA: .opus_state/*.json                        │
+│         │    ├── PRANA: CognitiveKernel memory                     │
+│         │    └── PURUSHA: MANAS persona/config                     │
+│         │                                                          │
+│         ├──→ PLUGIN PRAKRITI (task_manager)                        │
+│         │    ├── STHULA: .vibe/state/*.json + SQLite              │
+│         │    ├── PRANA: TaskManager in-memory dict                 │
+│         │    └── PURUSHA: Roadmap config                           │
+│         │                                                          │
+│         └──→ PLUGIN PRAKRITI (any_plugin)                          │
+│              ├── STHULA: {plugin_dir}/state/                       │
+│              ├── PRANA: Plugin runtime state                       │
+│              └── PURUSHA: Plugin config/identity                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Plugin State Contract
+
+Every plugin with state MUST implement:
+
+```python
+class PluginStateContract(Protocol):
+    """The Fractal Prakriti Contract."""
+
+    def get_state_paths(self) -> List[Path]:
+        """Return all paths where this plugin stores state.
+
+        These paths will be:
+        1. Auto-discovered by Prakriti
+        2. Auto-committed on session boundaries
+        3. NEVER ignored by git
+
+        Examples:
+            - [Path(".opus_state/")]
+            - [Path(".vibe/state/"), Path("data/vibe_agency.db")]
+        """
+        ...
+
+    def snapshot_state(self) -> Dict[str, Any]:
+        """Return current runtime state for inclusion in system snapshot."""
+        ...
+
+    def restore_state(self, snapshot: Dict[str, Any]) -> None:
+        """Restore state from snapshot (crash recovery)."""
+        ...
+```
+
+---
+
+## PLUGIN STATE DISCOVERY (Zwischeninstanz)
+
+**The Problem**: Plugins create state files. Nobody knows where. Nobody commits them.
+
+**The Solution**: State Sync Holon - the Zwischeninstanz.
+
+```python
+class StateSyncHolon:
+    """
+    The Zwischeninstanz - bridges Plugin State to Git.
+
+    Responsibilities:
+    1. DISCOVER all plugin state paths
+    2. WATCH for changes
+    3. STAGE on session boundaries
+    4. COMMIT via Prakriti
+    5. RESOLVE merge conflicts (untötbar)
+    """
+
+    def discover_state_paths(self) -> Dict[str, List[Path]]:
+        """
+        Auto-discover all plugin state paths.
+
+        Strategy:
+        1. Query all loaded plugins for get_state_paths()
+        2. Scan known locations (.opus_state/, .vibe/, plugin_dir/state/)
+        3. Check manifest.json for state_paths declaration
+
+        Returns:
+            {"plugin_name": [Path(...), Path(...)], ...}
+        """
+        paths = {}
+
+        # Method 1: Protocol query
+        for plugin in self.kernel.plugins:
+            if hasattr(plugin, 'get_state_paths'):
+                paths[plugin.name] = plugin.get_state_paths()
+
+        # Method 2: Convention scan
+        conventions = [
+            Path(".opus_state"),
+            Path(".vibe/state"),
+            Path(".vibe/config"),
+        ]
+        for plugin_dir in Path("vibe_core/plugins").iterdir():
+            state_dir = plugin_dir / "state"
+            if state_dir.exists():
+                paths.setdefault(plugin_dir.name, []).append(state_dir)
+
+        # Method 3: Manifest declaration
+        for manifest in Path(".").glob("**/manifest.json"):
+            data = json.loads(manifest.read_text())
+            if "state_paths" in data:
+                plugin_name = manifest.parent.name
+                paths.setdefault(plugin_name, []).extend(
+                    Path(p) for p in data["state_paths"]
+                )
+
+        return paths
+
+    def ensure_tracked(self) -> List[str]:
+        """
+        Ensure all state paths are git-tracked (not ignored).
+
+        Raises GovernanceViolation if any state path is in .gitignore.
+        """
+        violations = []
+        gitignore = Path(".gitignore").read_text() if Path(".gitignore").exists() else ""
+
+        for plugin, paths in self.discover_state_paths().items():
+            for path in paths:
+                if self._is_ignored(path, gitignore):
+                    violations.append(f"{plugin}: {path} is IGNORED (LOBOTOMY!)")
+
+        if violations:
+            raise GovernanceViolation(
+                "State files in .gitignore = LOBOTOMY!\n" +
+                "\n".join(violations)
+            )
+
+        return list(self.discover_state_paths().keys())
+```
+
+---
+
+## UNTÖTBAR MERGE STRATEGY
+
+**The Problem**: State files get merge conflicts. System breaks.
+
+**The Solution**: Per-type merge strategies that NEVER fail.
+
+```python
+class UntotbarMergeEngine:
+    """
+    Merge conflicts are NOT fatal. They are HEALABLE.
+
+    Strategy per file type:
+    - JSON state files: Deep merge with conflict markers
+    - YAML config: Ours wins (config is human-controlled)
+    - SQLite: Ledger merge via event replay
+    - Binary: Ours wins (regenerate from source)
+    """
+
+    STRATEGIES = {
+        "*.json": "deep_merge",      # Merge objects, concat arrays
+        "*.yaml": "ours_wins",       # Config is human-controlled
+        "*.db": "ledger_replay",     # Replay missing events
+        "*.sqlite": "ledger_replay",
+        "*": "ours_wins",            # Default: don't lose local work
+    }
+
+    def heal_conflict(self, path: Path, ours: bytes, theirs: bytes) -> bytes:
+        """
+        Heal a merge conflict. NEVER returns None. ALWAYS produces valid state.
+
+        Args:
+            path: Conflicting file path
+            ours: Our version
+            theirs: Their version
+
+        Returns:
+            Healed content (valid state)
+        """
+        strategy = self._get_strategy(path)
+
+        if strategy == "deep_merge":
+            return self._deep_merge_json(ours, theirs)
+        elif strategy == "ours_wins":
+            return ours
+        elif strategy == "ledger_replay":
+            return self._replay_ledger_events(path, ours, theirs)
+        else:
+            return ours  # Safe default
+
+    def _deep_merge_json(self, ours: bytes, theirs: bytes) -> bytes:
+        """
+        Deep merge two JSON objects.
+
+        Rules:
+        - Objects: Recursive merge, ours wins on conflict
+        - Arrays: Concatenate, dedupe by id if present
+        - Primitives: Ours wins
+        - Conflict markers preserved in _conflicts key
+        """
+        ours_data = json.loads(ours)
+        theirs_data = json.loads(theirs)
+
+        merged = self._recursive_merge(ours_data, theirs_data)
+        merged["_merge_timestamp"] = time.time()
+        merged["_merge_strategy"] = "deep_merge"
+
+        return json.dumps(merged, indent=2).encode()
+
+    def _recursive_merge(self, ours: Any, theirs: Any) -> Any:
+        if isinstance(ours, dict) and isinstance(theirs, dict):
+            result = dict(theirs)  # Start with theirs
+            for key, value in ours.items():
+                if key in result:
+                    result[key] = self._recursive_merge(value, result[key])
+                else:
+                    result[key] = value
+            return result
+        elif isinstance(ours, list) and isinstance(theirs, list):
+            # Concat and dedupe
+            combined = theirs + [x for x in ours if x not in theirs]
+            return combined
+        else:
+            return ours  # Ours wins
+```
+
+---
+
+## STATE SYNC LIFECYCLE
+
+The complete lifecycle of state in the system:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    STATE SYNC LIFECYCLE                              │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. BOOT                                                           │
+│     ├── StateSyncHolon.discover_state_paths()                      │
+│     ├── StateSyncHolon.ensure_tracked()  ─→ FAIL if .gitignore!    │
+│     ├── Prakriti.verify() ─→ Check Git↔Ledger consistency          │
+│     └── Prakriti.recover_from_crash() ─→ Commit dirty state        │
+│                                                                     │
+│  2. RUNTIME                                                         │
+│     ├── Plugins write state to their paths                         │
+│     ├── StateSyncHolon watches for changes (optional)              │
+│     └── MANAS intents accumulate in .opus_state/                   │
+│                                                                     │
+│  3. SHUTDOWN                                                        │
+│     ├── StateSyncHolon.stage_all_state()                          │
+│     ├── Prakriti.commit_if_dirty()                                 │
+│     ├── Prakriti.sync_ledger_git()                                │
+│     └── Prakriti.save_snapshot("shutdown")                         │
+│                                                                     │
+│  4. CRASH RECOVERY                                                  │
+│     ├── Prakriti.begin_session()                                   │
+│     ├── Detect dirty state from previous session                   │
+│     ├── Prakriti.recover_from_crash() ─→ Commit with marker        │
+│     └── Resume normal boot                                          │
+│                                                                     │
+│  5. MERGE CONFLICT (git pull)                                       │
+│     ├── UntotbarMergeEngine.detect_conflicts()                     │
+│     ├── UntotbarMergeEngine.heal_conflict() per file               │
+│     ├── Auto-commit healed state                                   │
+│     └── Log healing in Ledger                                       │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## IMPLEMENTATION ROADMAP
+
+### Phase 5: Plugin State Discovery (NEW)
+- `StateSyncHolon` class in `vibe_core/state/sync_holon.py`
+- Plugin state contract protocol
+- Auto-discovery via protocol + convention + manifest
+- `ensure_tracked()` enforcement
+
+### Phase 6: Untötbar Merge Engine (NEW)
+- `UntotbarMergeEngine` class in `vibe_core/state/merge_engine.py`
+- Per-type merge strategies
+- JSON deep merge
+- Ledger replay for SQLite
+
+### Phase 7: Fractal Plugin Integration (NEW)
+- All plugins implement `PluginStateContract`
+- MANAS: `.opus_state/` → Prakriti
+- TaskManager: `.vibe/state/` → Prakriti
+- Template for new plugins
+
+---
+
 ## Related Documents
 
-- **OPUS-001-008**: Foundation (superseded context)
-- **GAD-000**: Operator Inversion (Prakriti must be AI-operable)
-- **Gemini Review**: Requested for this document
+- **OPUS-027**: Implements Phases 1-4 (Git, Ledger, Session, Kernel)
+- **OPUS-028**: Git write operations (sub-component)
+- **OPUS-075**: MANAS Reliability (example of deep harness)
+- **GAD-000**: Operator Inversion (API design)
+
+---
+
+## Philosophy Reminder
+
+**"The Repository IS the Mind"**
+
+State files are not "data to be backed up". They are **neurons**.
+Ignoring them is **lobotomy**.
+Merge conflicts are not errors - they are **opportunities for learning**.
+Every plugin is a **cell in the organism** with its own state lifecycle.
+
+The fractal nature means: What works for the whole, works for the part.
+Prakriti at system level. Mini-Prakriti at plugin level.
+Same patterns. Same contracts. Same lifecycle.
 
 ---
 
 **Signed**: Opus 4.5
-**Date**: 2025-12-08
-**Status**: 🚧 PARTIAL - Read operations complete, Write operations in OPUS-027
+**Original**: 2025-12-08
+**Deepened**: 2025-12-16
+**Status**: 🔥 GOLDEN FOUNDATION
 
 > *"The Repository IS the Mind"*
 > *- Gemini's Insight*
 
----
-
-## Continuation
-
-**This document is superseded by OPUS-027.**
-
-OPUS-009 was the conceptual foundation. OPUS-027 delivers the complete implementation:
-
-- **OPUS-027: Unified State Implementation (MASTER)**
-  - All 3 layers complete (STHULA, PRANA, PURUSHA)
-  - LedgerState integration (Split-Brain fix)
-  - Session boundaries
-  - Crash recovery
-  - Kernel integration
-
-- **OPUS-028: Prakriti Git Integration (SUB-DOCUMENT)**
-  - `GitState.commit()`, `stage()`
-  - VISNU protection in commit path
-  - Concurrency lock
-
-Git is 5% of unified state. OPUS-027 covers the full 100%.
+> *"State files in .gitignore = Lobotomy"*
+> *- User's Insight, 2025-12-16*
