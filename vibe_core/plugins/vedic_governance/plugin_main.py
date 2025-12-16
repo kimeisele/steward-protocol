@@ -26,6 +26,7 @@ from vibe_core.plugin_protocol import KernelPlugin
 
 # Vedic governance types (co-located with plugin)
 from vibe_core.plugins.vedic_governance.ashrama import Ashrama, AshramaTransition, get_ashrama_description
+from vibe_core.plugins.vedic_governance.state_manager import VedicStateManager, get_state_manager
 from vibe_core.plugins.vedic_governance.varna import Varna, categorize_agent_by_function, get_varna_description
 
 if TYPE_CHECKING:
@@ -33,12 +34,6 @@ if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
 logger = logging.getLogger("VEDIC_GOVERNANCE")
-
-# OPUS-085: Import state manager for hybrid persistence (JSON + Ledger)
-from vibe_core.plugins.vedic_governance.state_manager import (
-    VedicStateManager,
-    get_state_manager,
-)
 
 
 class VedicGovernancePlugin(KernelPlugin):
@@ -251,8 +246,6 @@ class VedicGovernancePlugin(KernelPlugin):
         # Check 3: Does agent have lifecycle permission?
         ashrama = self._ashrama_registry.get(agent_id)
         if ashrama:
-            permissions = ashrama.get_current_permissions()
-
             # BRAHMACHARI can only read/observe
             if ashrama.current_ashrama == Ashrama.BRAHMACHARI:
                 action = getattr(task, "action", "write")
