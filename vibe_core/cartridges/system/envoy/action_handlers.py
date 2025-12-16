@@ -925,6 +925,138 @@ class RetrieveEphemeralHandler(ActionHandler):
 
 
 # ============================================================================
+# GIT OPERATIONS (GAD-5500: MANAS Self-Healing Loop)
+# ============================================================================
+
+
+class GitCommitHandler(ActionHandler):
+    """
+    Handler for GIT_COMMIT actions.
+
+    Commits specific files modified by the circuit - the "Seal of Action".
+    In CI/CD (GitHub Actions), this prepares the state for the final push.
+
+    The circuit that heals is also responsible for sealing its work into git history.
+    This makes MANAS truly autonomous - it doesn't just change bits in RAM,
+    it changes the HISTORY of the project.
+
+    Target format: "commit_message" or use params["message"]
+
+    Params:
+        files: List of file paths or glob patterns to stage and commit
+        message: Commit message (optional, can also be target)
+        allow_empty: If True, create commit even if no changes (default: False)
+    """
+
+    @property
+    def action_type(self) -> str:
+        return "GIT_COMMIT"
+
+    async def execute(
+        self,
+        target: str,
+        params: Dict[str, Any],
+        context: ActionContext,
+    ) -> ActionResult:
+        """Commit files to git repository."""
+        import subprocess
+
+        files = params.get("files", [])
+        message = params.get("message", target) or "chore(manas): Automated circuit execution"
+        allow_empty = params.get("allow_empty", False)
+
+        logger.info(f"  📝 GIT_COMMIT: {message[:50]}...")
+
+        if not files:
+            logger.warning("    ⚠️ No files specified for commit")
+            return ActionResult.fail("No files to commit")
+
+        try:
+            # Determine workspace from kernel or cwd
+            workspace = None
+            if context.kernel and hasattr(context.kernel, "workspace_path"):
+                workspace = str(context.kernel.workspace_path)
+
+            # Stage files (supports glob patterns)
+            from pathlib import Path
+
+            staged_files = []
+            for file_pattern in files:
+                # Expand glob patterns
+                if "*" in file_pattern:
+                    base_path = Path(workspace) if workspace else Path(".")
+                    matched = list(base_path.glob(file_pattern))
+                    for match in matched:
+                        staged_files.append(str(match))
+                else:
+                    staged_files.append(file_pattern)
+
+            if not staged_files:
+                logger.info("    ○ No files matched patterns")
+                if allow_empty:
+                    return ActionResult.ok({"committed": False, "reason": "no_matching_files"})
+                return ActionResult.fail("No files matched the specified patterns")
+
+            # Git add
+            add_cmd = ["git", "add"] + staged_files
+            add_result = subprocess.run(
+                add_cmd,
+                capture_output=True,
+                text=True,
+                cwd=workspace,
+            )
+
+            if add_result.returncode != 0:
+                logger.error(f"    ❌ git add failed: {add_result.stderr}")
+                return ActionResult.fail(f"git add failed: {add_result.stderr}")
+
+            logger.info(f"    📦 Staged {len(staged_files)} files")
+
+            # Git commit
+            commit_cmd = ["git", "commit", "-m", message]
+            if allow_empty:
+                commit_cmd.append("--allow-empty")
+
+            commit_result = subprocess.run(
+                commit_cmd,
+                capture_output=True,
+                text=True,
+                cwd=workspace,
+            )
+
+            # Return code 1 means "nothing to commit" which is OK
+            if commit_result.returncode == 0:
+                logger.info(f"    ✓ Committed: {message[:40]}...")
+                return ActionResult.ok(
+                    {
+                        "committed": True,
+                        "message": message,
+                        "files": staged_files,
+                        "stdout": commit_result.stdout,
+                    }
+                )
+            elif (
+                "nothing to commit" in commit_result.stdout.lower()
+                or "nothing to commit" in commit_result.stderr.lower()
+            ):
+                logger.info("    ○ Nothing to commit (already up to date)")
+                return ActionResult.ok(
+                    {
+                        "committed": False,
+                        "reason": "nothing_to_commit",
+                        "files": staged_files,
+                    }
+                )
+            else:
+                logger.error(f"    ❌ git commit failed: {commit_result.stderr}")
+                return ActionResult.fail(f"git commit failed: {commit_result.stderr}")
+
+        except Exception as e:
+            logger.error(f"    ❌ Git operation failed: {e}")
+            return ActionResult.fail(f"Git operation failed: {e}")
+
+
+# ============================================================================
 # DEFAULT REGISTRY
 # ============================================================================
 
@@ -950,6 +1082,9 @@ def create_default_registry() -> ActionHandlerRegistry:
     registry.register(RenderTemplateHandler())
     registry.register(StoreEphemeralHandler())  # No ephemeral storage injected
     registry.register(RetrieveEphemeralHandler())  # No ephemeral storage injected
+
+    # Git operations (GAD-5500: MANAS Self-Healing)
+    registry.register(GitCommitHandler())
 
     return registry
 
@@ -980,6 +1115,9 @@ def create_registry_with_ephemeral(ephemeral=None) -> ActionHandlerRegistry:
     # Ephemeral storage handlers (with dependency injection)
     registry.register(StoreEphemeralHandler(ephemeral=ephemeral))
     registry.register(RetrieveEphemeralHandler(ephemeral=ephemeral))
+
+    # Git operations (GAD-5500: MANAS Self-Healing)
+    registry.register(GitCommitHandler())
 
     return registry
 
