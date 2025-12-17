@@ -254,11 +254,15 @@ class CognitiveKernel:
         self._shiva = ShivaLifecycleManager(workspace=self._workspace)
         self._shiva.inject_kernel(self)
 
+        # 🌙 SANKALPA: Strategic Will - Proactive Mission Planning (OPUS-089)
+        self._sankalpa = None
+        self._init_sankalpa()
+
         # 📓 OBSERVATION LOGGER: Make MANAS thoughts visible in OPUS.md
         self._observation_logger = None
         self._init_observation_logger()
 
-        logger.info("MANAS Cognitive Kernel initialized (with Shiva Lifecycle)")
+        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
@@ -678,6 +682,86 @@ class CognitiveKernel:
             return None
 
     # =========================================================================
+    # 🌙 SANKALPA: STRATEGIC WILL (OPUS-089)
+    # =========================================================================
+
+    def _init_sankalpa(self) -> None:
+        """
+        Initialize Sankalpa - the Strategic Will.
+
+        OPUS-089: Sankalpa provides proactive mission planning.
+        It evaluates strategies and triggers intents based on:
+        - Time (weekly audits, etc.)
+        - Idle state (memory review when system is quiet)
+        - Conditions (CI green, etc.)
+        """
+        try:
+            from .cortex.sankalpa import SankalpaOrchestrator
+
+            self._sankalpa = SankalpaOrchestrator(workspace=self._workspace)
+            logger.info("🌙 SANKALPA: Strategic Will initialized - proactive planning active")
+        except Exception as e:
+            logger.warning(f"🌙 SANKALPA: Could not initialize: {e}")
+            self._sankalpa = None
+
+    def _generate_sankalpa_intents(self, context: Dict[str, Any]) -> List[Intent]:
+        """
+        Generate proactive intents from Sankalpa strategies.
+
+        Called during think() to evaluate missions and trigger
+        time/idle/condition-based intents.
+
+        Args:
+            context: System context
+
+        Returns:
+            List of proactive intents from Sankalpa
+        """
+        if not self._sankalpa:
+            return []
+
+        try:
+            # Get idle time
+            idle_minutes = self.idle_minutes
+
+            # Get pending intent count
+            pending_count = len([e for e in self._intent_buffer if e.status == "pending"])
+
+            # Ask Sankalpa to evaluate strategies
+            sankalpa_intents = self._sankalpa.think(
+                context=context,
+                idle_minutes=idle_minutes,
+                pending_intents=pending_count,
+            )
+
+            # Convert SankalpaIntents to our Intent format
+            intents = []
+            for si in sankalpa_intents:
+                intent = Intent(
+                    id=f"sankalpa_{si.strategy_id}_{datetime.utcnow().strftime('%H%M%S')}",
+                    intent_type=si.intent_type,
+                    title=si.title,
+                    description=si.description,
+                    reasoning=f"SANKALPA: {si.mission_name} - {si.strategy_name}",
+                    priority=IntentPriority.MEDIUM,
+                    risk=IntentRisk.LOW,
+                    params=si.params,
+                    auto_executable=True,  # Sankalpa intents are pre-approved
+                    expires_at=(datetime.utcnow() + timedelta(hours=24)).isoformat(),
+                    related_docs=["089-SANKALPA-WILL.md"] if si.strategy_id == "strategy_memory_review" else [],
+                )
+                intents.append(intent)
+
+            if intents:
+                self.log_insight(f"🌙 SANKALPA: Generated {len(intents)} proactive intents from strategic planning")
+
+            return intents
+
+        except Exception as e:
+            logger.warning(f"🌙 SANKALPA: Strategy evaluation failed: {e}")
+            return []
+
+    # =========================================================================
     # 📓 OBSERVATION LOGGER: MANAS THOUGHTS → OPUS.md (OPUS-089)
     # =========================================================================
 
@@ -1002,6 +1086,10 @@ class CognitiveKernel:
         # MANAS is the curator of its own knowledge base
         gap_intents = self._perceive_and_generate_gap_intents()
 
+        # 🌙 SANKALPA: Strategic proactive intents (OPUS-089)
+        # Evaluates missions/strategies based on time, idle, conditions
+        sankalpa_intents = self._generate_sankalpa_intents(context or {})
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
@@ -1014,11 +1102,14 @@ class CognitiveKernel:
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
 
-        # Prepend healing intents (survival first!) then gap intents
+        # Prepend healing intents (survival first!) then gap intents, then sankalpa
         if healing_intents:
             new_intents = healing_intents + new_intents
         if gap_intents:
             new_intents = gap_intents + new_intents
+        if sankalpa_intents:
+            # Sankalpa intents are proactive - add after gap intents
+            new_intents = sankalpa_intents + new_intents
 
         # OPUS-035: Throttling - Prioritize survival over growth
         if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
