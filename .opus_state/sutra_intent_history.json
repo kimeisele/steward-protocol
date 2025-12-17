@@ -106,5 +106,17 @@
     "topic": "documentation",
     "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
     "timestamp": "2025-12-17T01:58:17.307222"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references vibe_core/path/to/file...",
+    "timestamp": "2025-12-17T02:08:19.480514"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
+    "timestamp": "2025-12-17T02:08:19.502195"
   }
 ]
