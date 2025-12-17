@@ -289,14 +289,17 @@ class SutraSense:
     def __init__(
         self,
         workspace: Optional[Path] = None,
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize SUTRA SENSE.
 
         Args:
             workspace: Workspace root (default: cwd)
+            config: Optional config dict from config/manas.yaml (sutra_sense section)
         """
         self._workspace = workspace or Path.cwd()
+        self._config = config or {}
         self._gaps: List[DocCodeGap] = []
         self._harness_checks: Dict[str, HarnessCheck] = {}
 

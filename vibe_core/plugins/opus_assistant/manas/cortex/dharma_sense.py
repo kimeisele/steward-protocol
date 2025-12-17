@@ -199,6 +199,7 @@ class DharmaSense:
             agent_id: The agent ID to check permissions for
         """
         self._workspace = workspace or Path.cwd()
+        self._config: Dict[str, Any] = {}  # For future config
         self._agent_id = agent_id
         self._governance = None  # Lazy-loaded
         self._state_manager = None  # Lazy-loaded
