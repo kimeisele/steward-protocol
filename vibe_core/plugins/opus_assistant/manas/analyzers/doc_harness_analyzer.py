@@ -281,6 +281,9 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                             "module_name": result.sanskrit_module_name,
                             "action": "generate_harness",
                         },
+                        # WEAVING: Link to related code/docs
+                        related_files=[f"manas/cortex/{result.sanskrit_module_name}.py"],
+                        related_docs=[result.opus_file.name],
                     )
                 )
             else:
@@ -299,6 +302,8 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                             "opus_file": str(result.opus_file),
                             "action": "add_harness",
                         },
+                        # WEAVING: Link to the doc that needs harness
+                        related_docs=[result.opus_file.name],
                     )
                 )
 
@@ -312,6 +317,8 @@ class DocHarnessAnalyzer(BaseAnalyzer):
             if result.wiring_broken:
                 broken_refs.append(f"wiring: {len(result.wiring_broken)} broken patterns")
 
+            # WEAVING: Collect all broken files for semantic links
+            weave_files = result.files_missing + [w["in"] for w in result.wiring_broken]
             intents.append(
                 Intent(
                     id=self._next_id(),
@@ -330,6 +337,9 @@ class DocHarnessAnalyzer(BaseAnalyzer):
                         "quality_score": result.quality_score,
                         "action": "fix_harness",
                     },
+                    # WEAVING: Link broken files + doc
+                    related_files=weave_files[:5],  # Cap at 5 to avoid clutter
+                    related_docs=[result.opus_file.name],
                 )
             )
 

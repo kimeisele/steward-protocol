@@ -17,7 +17,7 @@
   Required context:
     - pending_intent: Dict with:
       For MANAS (source="manas"):
-        - intents: List of { id, title, description, priority, risk, reasoning, auto_executable }
+        - intents: List of { id, title, description, priority, risk, reasoning, auto_executable, related_files, related_docs }
         - total_pending: int
         - idle_minutes: int
         - last_thought: str or null
@@ -58,6 +58,13 @@
 {% if intent.auto_executable %}| **Auto-Execute** | ⚡ Yes (if enabled) |{% endif %}
 
 **Reasoning:** {{ intent.reasoning }}
+{% if intent.related_files %}
+
+**🔗 Related Code:** {% for f in intent.related_files %}`{{ f }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+{% if intent.related_docs %}
+**📚 Related Docs:** {% for d in intent.related_docs %}`{{ d }}`{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
 
 - [ ] Approve `{{ intent.id }}`
 - [ ] Reject `{{ intent.id }}`
