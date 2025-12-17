@@ -447,14 +447,12 @@ class TestEventBusIntegration:
 class TestCognitiveKernelMigration:
     """These tests FAIL before Phase B, PASS after Phase B migration."""
 
-    @pytest.mark.skip(reason="Phase B: CognitiveKernel migration not yet done")
     def test_cognitive_kernel_is_cycle(self):
         """CognitiveKernel properly inherits from CognitiveCycle."""
         from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel
 
         assert issubclass(CognitiveKernel, CognitiveCycle)
 
-    @pytest.mark.skip(reason="Phase B: CognitiveKernel migration not yet done")
     def test_cognitive_kernel_think_is_thin(self):
         """think() method is thin wrapper, not full orchestration."""
         import inspect
@@ -470,29 +468,48 @@ class TestCognitiveKernelMigration:
 class TestPranaOrchestratorMigration:
     """These tests FAIL before Phase C, PASS after Phase C migration."""
 
-    @pytest.mark.skip(reason="Phase C: PranaOrchestrator migration not yet done")
     def test_prana_orchestrator_is_cycle(self):
         """PranaOrchestrator properly inherits from CognitiveCycle."""
         from vibe_core.prana_orchestrator import PranaOrchestrator
 
         assert issubclass(PranaOrchestrator, CognitiveCycle)
 
+    def test_prana_orchestrator_pulse_is_thin(self):
+        """pulse() method is thin wrapper delegating to orchestrate()."""
+        import inspect
+
+        from vibe_core.prana_orchestrator import PranaOrchestrator
+
+        source = inspect.getsource(PranaOrchestrator.pulse)
+        lines = [l.strip() for l in source.split("\n") if l.strip() and not l.strip().startswith("#")]
+
+        assert len(lines) < 15, f"pulse() is {len(lines)} lines - should be <15 (thin wrapper)"
+
 
 class TestBootOrchestratorMigration:
     """These tests FAIL before Phase D, PASS after Phase D migration."""
 
-    @pytest.mark.skip(reason="Phase D: BootOrchestrator migration not yet done")
     def test_boot_orchestrator_is_cycle(self):
         """BootOrchestrator properly inherits from CognitiveCycle."""
         from vibe_core.boot_orchestrator import BootOrchestrator
 
         assert issubclass(BootOrchestrator, CognitiveCycle)
 
+    def test_boot_orchestrator_boot_is_thin(self):
+        """boot() method is thin wrapper delegating to orchestrate()."""
+        import inspect
+
+        from vibe_core.boot_orchestrator import BootOrchestrator
+
+        source = inspect.getsource(BootOrchestrator.boot)
+        lines = [l.strip() for l in source.split("\n") if l.strip() and not l.strip().startswith("#")]
+
+        assert len(lines) < 15, f"boot() is {len(lines)} lines - should be <15 (thin wrapper)"
+
 
 class TestCircuitExecutorCorrection:
     """Test CRITICAL CORRECTION: CircuitExecutor is CognitiveProcess, NOT CognitiveCycle."""
 
-    @pytest.mark.skip(reason="Phase E: CircuitExecutor migration not yet done")
     def test_circuit_executor_is_process_not_cycle(self):
         """CircuitExecutor inherits from CognitiveProcess, NOT CognitiveCycle."""
         from vibe_core.plugins.opus_assistant.manas.circuit_executor import CognitiveCircuitExecutor
