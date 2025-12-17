@@ -279,6 +279,7 @@ class OpusDashboardRenderer:
             "dependency_graph": self._gather_dependency_graph(),  # 🎯 SENIOR AI COCKPIT
             "tri_guna": self._gather_tri_guna(),  # 🔮 OPUS-009: State Health
             "dharma": self._gather_dharma(),  # 🙏 OPUS-009: Vedic Conscience
+            "sutra": self._gather_sutra(),  # 📜 OPUS-054: Doc/Code Gap Detection
             "preserved": {},  # Will be injected separately
         }
 
@@ -851,6 +852,84 @@ class OpusDashboardRenderer:
             summary = sense.get_dharma_summary()
             return summary.to_dict()
         except Exception:
+            return None
+
+    def _gather_sutra(self) -> Optional[Dict[str, Any]]:
+        """
+        Gather Sutra state from SutraSense (OPUS-054).
+
+        📜 SUTRA SENSE: The Third Eye of MANAS
+        Doc/Code gap detection for documentation curation.
+
+        Bhagavad Gita 9.22:
+        "yoga-kṣemaṁ vahāmy aham" - I bring what is lacking
+        """
+        try:
+            from datetime import datetime
+
+            from vibe_core.plugins.opus_assistant.manas.cortex.sutra_sense import SutraSense
+
+            sense = SutraSense(workspace=self._root)
+            summary = sense.perceive_gaps(refresh=True)  # Fresh scan for OPUS.md
+            gaps = sense.get_gaps()
+
+            # Build top gaps for display
+            top_gaps = []
+            for gap in gaps[:5]:
+                top_gaps.append(
+                    {
+                        "type": gap.gap_type,
+                        "doc": gap.doc_path.name if gap.doc_path else None,
+                        "code": gap.code_path.name if gap.code_path else None,
+                        "severity": gap.severity,
+                        "message": gap.description[:60] if gap.description else "",
+                    }
+                )
+
+            high_severity_gaps = [g for g in gaps if g.severity in ("high", "critical")]
+
+            # Phase 2: Hidden Code Discovery
+            hidden_code = sense.discover_hidden_code()
+            hidden_high = [h for h in hidden_code if h.importance == "high"]
+
+            # Phase 2: Roadmap
+            roadmap = sense.generate_roadmap()
+            roadmap_preview = [
+                {
+                    "priority": item.priority,
+                    "action": item.action,
+                    "target": item.target.split("/")[-1][:25] if "/" in item.target else item.target[:25],
+                    "effort": item.estimated_effort,
+                }
+                for item in roadmap[:5]
+            ]
+
+            # Phase 2: Intent Clusters
+            clusters = sense.get_clusters(min_intents=3)
+
+            return {
+                # Phase 1: Gap Detection
+                "total_docs": summary.total_docs,
+                "docs_with_harness": summary.docs_with_harness,
+                "docs_without_harness": summary.docs_without_harness,
+                "gaps_count": summary.gaps_found,
+                "health_ratio": summary.health_ratio,
+                "health_pct": int(summary.health_ratio * 100),
+                "critical_gaps": len(high_severity_gaps),
+                "top_gaps": top_gaps,
+                # Phase 2: Proactive Mode
+                "hidden_code_count": len(hidden_code),
+                "hidden_code_high": len(hidden_high),
+                "roadmap_count": len(roadmap),
+                "roadmap_preview": roadmap_preview,
+                "cluster_count": len(clusters),
+                "clusters": [{"topic": c.topic, "intents": c.intent_count} for c in clusters[:3]],
+                # Freshness indicator
+                "last_scan": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                "phase": 2,
+            }
+        except Exception as e:
+            logger.debug(f"Failed to gather sutra: {e}")
             return None
 
     def _gather_code_health(self) -> Dict[str, List[Dict[str, Any]]]:

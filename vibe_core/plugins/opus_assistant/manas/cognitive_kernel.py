@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 
     from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
+    from .cortex.sutra_sense import SutraSense, SutraSummary
 
 logger = logging.getLogger("MANAS.Kernel")
 
@@ -242,6 +243,10 @@ class CognitiveKernel:
         # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
         self._dharma_sense: Optional["DharmaSense"] = None
         self._init_dharma_sense()
+
+        # 📜 SUTRA SENSE: The Third Eye - Doc/Code Gap Detection (OPUS-054)
+        self._sutra_sense: Optional["SutraSense"] = None
+        self._init_sutra_sense()
 
         logger.info("MANAS Cognitive Kernel initialized")
 
@@ -514,6 +519,191 @@ class CognitiveKernel:
         except Exception:
             return None
 
+    # =========================================================================
+    # 📜 SUTRA SENSE: THE THIRD EYE (OPUS-054)
+    # =========================================================================
+
+    def _init_sutra_sense(self) -> None:
+        """
+        Initialize Sutra Sense - the Third Eye.
+
+        This provides doc/code gap detection for MANAS.
+        MANAS becomes the curator of its own documentation.
+
+        Bhagavad Gita 9.22:
+        "ananyāś cintayanto māṁ... yoga-kṣemaṁ vahāmy aham"
+        "I bring what is lacking (Yoga) and preserve what they have (Kshema)"
+        """
+        try:
+            from .cortex.sutra_sense import SutraSense
+
+            self._sutra_sense = SutraSense(workspace=self._workspace)
+            # Boot perception
+            summary = self._sutra_sense.perceive_gaps(refresh=True)
+            logger.info(
+                f"📜 SUTRA SENSE: Third Eye opened - "
+                f"{summary.total_docs} docs, {summary.gaps_found} gaps, {summary.health_ratio:.0%} health"
+            )
+        except Exception as e:
+            logger.warning(f"📜 SUTRA SENSE: Could not initialize: {e}")
+            self._sutra_sense = None
+
+    def inject_sutra_sense(self, sense: "SutraSense") -> None:
+        """
+        Inject the Sutra Sense for doc/code gap detection.
+
+        OPUS-054: MANAS needs three senses:
+        - PRAKRITI SENSE: "What is the state of the world?"
+        - DHARMA SENSE: "Is this action righteous?"
+        - SUTRA SENSE: "What knowledge is missing?"
+
+        Args:
+            sense: SutraSense instance
+        """
+        self._sutra_sense = sense
+        logger.info("📜 SUTRA SENSE: Third Eye injected - MANAS can now perceive documentation gaps")
+
+    def get_sutra_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Sutra summary for OPUS.md display."""
+        if not self._sutra_sense:
+            return None
+        try:
+            summary = self._sutra_sense.perceive_gaps(refresh=False)
+            gaps = self._sutra_sense.get_gaps()  # Get actual gap objects
+            high_severity_gaps = [g for g in gaps if g.severity in ("high", "critical")]
+
+            return {
+                "total_docs": summary.total_docs,
+                "docs_with_harness": summary.docs_with_harness,
+                "docs_without_harness": summary.docs_without_harness,
+                "gaps_count": summary.gaps_found,
+                "health_ratio": summary.health_ratio,
+                "critical_gaps": len(high_severity_gaps),
+                "top_gaps": [
+                    {
+                        "type": g.gap_type,
+                        "doc": g.doc_path.name if g.doc_path else None,
+                        "code": g.code_path.name if g.code_path else None,
+                        "severity": g.severity,
+                        "message": g.description,
+                    }
+                    for g in gaps[:5]  # Top 5 gaps
+                ],
+            }
+        except Exception as e:
+            logger.debug(f"📜 SUTRA SENSE: Could not get summary: {e}")
+            return None
+
+    def _perceive_and_generate_gap_intents(self) -> List[Intent]:
+        """
+        Use SutraSense to perceive documentation gaps and generate intents.
+
+        Called during think() to ensure MANAS is aware of documentation
+        health and can propose curation actions.
+
+        Returns:
+            List of gap intents (if any documentation needs attention)
+        """
+        if not self._sutra_sense:
+            return []
+
+        gap_intents = []
+
+        try:
+            # Generate gap intents from SutraSense
+            raw_intents = self._sutra_sense.generate_gap_intents(limit=2)
+
+            for raw in raw_intents:
+                intent = Intent(
+                    id=raw.get("id", f"gap_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"),
+                    intent_type=raw.get("intent_type", "doc_modify"),
+                    title=raw.get("title", "Documentation gap detected"),
+                    description=raw.get("description", ""),
+                    reasoning=raw.get("reasoning", "SUTRA SENSE detected documentation gap"),
+                    priority=IntentPriority(raw.get("priority", "medium")),
+                    risk=IntentRisk(raw.get("risk", "low")),
+                    params=raw.get("params", {}),
+                    auto_executable=raw.get("auto_executable", False),
+                )
+                gap_intents.append(intent)
+
+            if gap_intents:
+                logger.info(f"📜 SUTRA SENSE: Generated {len(gap_intents)} documentation gap intents")
+
+        except Exception as e:
+            logger.warning(f"📜 SUTRA SENSE: Gap perception failed: {e}")
+
+        return gap_intents
+
+    def _record_intent_for_clustering(self, intent: Intent) -> None:
+        """
+        Record intent to SutraSense for pattern detection.
+
+        OPUS-054 Phase 2: When MANAS generates intents repeatedly for
+        similar topics, this indicates a need for structured documentation.
+
+        Args:
+            intent: The intent to record
+        """
+        if not self._sutra_sense:
+            return
+
+        try:
+            # Extract topic from intent type or params
+            topic = self._extract_topic_from_intent(intent)
+            if topic:
+                self._sutra_sense.record_intent(
+                    intent_type=intent.intent_type,
+                    topic=topic,
+                    title=intent.title,
+                )
+        except Exception as e:
+            logger.debug(f"📜 SUTRA SENSE: Could not record intent: {e}")
+
+    def _extract_topic_from_intent(self, intent: Intent) -> Optional[str]:
+        """
+        Extract topic category from an intent.
+
+        Maps intent types and content to topic categories for clustering.
+        """
+        # Map common intent types to topics
+        type_to_topic = {
+            "doc_modify": "documentation",
+            "code_modify": "codebase",
+            "test_create": "testing",
+            "git_commit": "version_control",
+            "state_heal": "state_management",
+            "heal_system_state": "state_management",
+            "fix_lobotomy": "state_management",
+            "sutra_missing_harness": "documentation",
+            "sutra_missing_doc": "documentation",
+            "sutra_stale_doc": "documentation",
+        }
+
+        # Check direct mapping first
+        if intent.intent_type in type_to_topic:
+            return type_to_topic[intent.intent_type]
+
+        # Extract from intent type prefix
+        if intent.intent_type.startswith("sutra_"):
+            return "documentation"
+        if intent.intent_type.startswith("roadmap_"):
+            return "roadmap"
+        if "dharma" in intent.intent_type.lower():
+            return "vedic_governance"
+        if "state" in intent.intent_type.lower():
+            return "state_management"
+
+        # Extract from params if available
+        if intent.params:
+            if "gap_type" in intent.params:
+                return "documentation"
+            if "module" in intent.params:
+                return intent.params["module"]
+
+        # Default to intent type as topic
+        return intent.intent_type.replace("_", " ").split()[0] if "_" in intent.intent_type else None
+
     def _record_to_ledger(
         self,
         event_type: str,
@@ -605,15 +795,21 @@ class CognitiveKernel:
         # Before generating other intents, check system state health
         healing_intents = self._perceive_and_generate_healing_intents()
 
+        # 📜 SUTRA SENSE: Perceive documentation gaps (OPUS-054)
+        # MANAS is the curator of its own knowledge base
+        gap_intents = self._perceive_and_generate_gap_intents()
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
 
-        # Prepend healing intents (survival first!)
+        # Prepend healing intents (survival first!) then gap intents
         if healing_intents:
             new_intents = healing_intents + new_intents
+        if gap_intents:
+            new_intents = gap_intents + new_intents
 
         # OPUS-035: Throttling - Prioritize survival over growth
         if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
@@ -643,6 +839,9 @@ class CognitiveKernel:
 
                 self._intent_buffer.append(entry)
                 added.append(intent)
+
+                # 📜 SUTRA SENSE: Record intent for clustering (OPUS-054 Phase 2)
+                self._record_intent_for_clustering(intent)
 
                 # ⚡ VAJRA: Record intent proposal to ledger
                 self._record_to_ledger(
