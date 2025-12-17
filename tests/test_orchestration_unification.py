@@ -447,14 +447,12 @@ class TestEventBusIntegration:
 class TestCognitiveKernelMigration:
     """These tests FAIL before Phase B, PASS after Phase B migration."""
 
-    @pytest.mark.skip(reason="Phase B: CognitiveKernel migration not yet done")
     def test_cognitive_kernel_is_cycle(self):
         """CognitiveKernel properly inherits from CognitiveCycle."""
         from vibe_core.plugins.opus_assistant.manas.cognitive_kernel import CognitiveKernel
 
         assert issubclass(CognitiveKernel, CognitiveCycle)
 
-    @pytest.mark.skip(reason="Phase B: CognitiveKernel migration not yet done")
     def test_cognitive_kernel_think_is_thin(self):
         """think() method is thin wrapper, not full orchestration."""
         import inspect
