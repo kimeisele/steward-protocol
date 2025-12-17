@@ -15,6 +15,13 @@
     "dependencies": [
         "steward_protocol"
     ],
+    "generated_outputs": {
+        "_comment": "OPUS-081: Prakriti runtime state files (Ghost Lock Protocol + Session Snapshots)",
+        "prakriti_files": [
+            ".prakriti/session.lock",
+            ".prakriti/snapshots/*.json"
+        ]
+    },
     "author": "OPUS-012",
     "tags": [
         "lifecycle",
