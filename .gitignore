@@ -301,7 +301,6 @@ examples/herald/assets/
 # Temporary workspaces (test artifacts, sandbox files)
 workspaces/
 temp_repo_test/
-.vibe/
 .backup/
 data/library/
 
@@ -310,8 +309,12 @@ TRIGGER_NEW_RUN.txt
 server.log
 *.log
 __pycache__/
-*.vibe
-.prakriti/
+
+# OPUS-009 PRAKRITI: State directories are now TRACKED (LOBOTOMY HEALED)
+# The brain must persist. Git is consciousness. State files = Neurons.
+# Removed: .vibe/ (task_manager state)
+# Removed: .prakriti/ (prakriti state)
+# Removed: *.vibe (vibe state files)
 
 # OPUS-061 AMRITA: .opus_state/ is now TRACKED
 # The brain must persist. Git is consciousness.
