@@ -218,6 +218,8 @@ class RoadmapItem:
     description: str
     estimated_effort: str  # "trivial", "small", "medium", "large"
     dependencies: List[str] = field(default_factory=list)
+    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    stale_after_days: int = 7  # Item considered stale after this many days
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -227,7 +229,26 @@ class RoadmapItem:
             "description": self.description,
             "estimated_effort": self.estimated_effort,
             "dependencies": self.dependencies,
+            "created_at": self.created_at,
+            "is_stale": self.is_stale(),
         }
+
+    def is_stale(self) -> bool:
+        """Check if this roadmap item is stale."""
+        try:
+            created = datetime.fromisoformat(self.created_at)
+            age_days = (datetime.utcnow() - created).days
+            return age_days >= self.stale_after_days
+        except Exception:
+            return False
+
+    def age_days(self) -> int:
+        """Get age of this item in days."""
+        try:
+            created = datetime.fromisoformat(self.created_at)
+            return (datetime.utcnow() - created).days
+        except Exception:
+            return 0
 
 
 # Known OPUS doc ranges that MANAS can curate
@@ -1143,11 +1164,49 @@ class SutraSense:
         logger.info(f"📜 SUTRA SENSE: Generated roadmap with {len(self._roadmap)} items")
         return self._roadmap
 
-    def get_roadmap(self, max_items: int = 20) -> List[RoadmapItem]:
+    def get_roadmap(self, max_items: int = 20, include_stale: bool = True) -> List[RoadmapItem]:
         """Get the documentation roadmap."""
         if not self._roadmap:
             self.generate_roadmap()
-        return self._roadmap[:max_items]
+
+        if include_stale:
+            return self._roadmap[:max_items]
+        else:
+            return [item for item in self._roadmap if not item.is_stale()][:max_items]
+
+    def get_roadmap_health(self) -> Dict[str, Any]:
+        """
+        Get health metrics for the roadmap.
+
+        Returns staleness report and progress tracking.
+        """
+        if not self._roadmap:
+            self.generate_roadmap()
+
+        total = len(self._roadmap)
+        stale = sum(1 for item in self._roadmap if item.is_stale())
+        fresh = total - stale
+
+        by_priority = {}
+        by_action = {}
+        by_effort = {}
+
+        for item in self._roadmap:
+            by_priority[item.priority] = by_priority.get(item.priority, 0) + 1
+            by_action[item.action] = by_action.get(item.action, 0) + 1
+            by_effort[item.estimated_effort] = by_effort.get(item.estimated_effort, 0) + 1
+
+        return {
+            "total_items": total,
+            "fresh_items": fresh,
+            "stale_items": stale,
+            "staleness_ratio": stale / max(1, total),
+            "by_priority": by_priority,
+            "by_action": by_action,
+            "by_effort": by_effort,
+            "oldest_item_days": max((item.age_days() for item in self._roadmap), default=0),
+            "is_healthy": stale == 0 or (stale / max(1, total)) < 0.3,
+        }
 
     def generate_roadmap_intents(self, limit: int = 3) -> List[Dict[str, Any]]:
         """
