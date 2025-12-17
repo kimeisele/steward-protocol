@@ -254,7 +254,15 @@ class CognitiveKernel:
         self._shiva = ShivaLifecycleManager(workspace=self._workspace)
         self._shiva.inject_kernel(self)
 
-        logger.info("MANAS Cognitive Kernel initialized (with Shiva Lifecycle)")
+        # 🌙 SANKALPA: Strategic Will - Proactive Mission Planning (OPUS-089)
+        self._sankalpa = None
+        self._init_sankalpa()
+
+        # 📓 OBSERVATION LOGGER: Make MANAS thoughts visible in OPUS.md
+        self._observation_logger = None
+        self._init_observation_logger()
+
+        logger.info("MANAS Cognitive Kernel initialized (with Shiva + Sankalpa)")
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
@@ -433,6 +441,79 @@ class CognitiveKernel:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def _execute_memory_review(self, intent: Intent) -> Dict[str, Any]:
+        """
+        🌙 Execute Dreaming: Consolidate wisdom from past actions.
+
+        OPUS-089: Shiva/Sankalpa Memory Review
+        Triggered by Sankalpa during idle times (The Void).
+        This closes the cognitive loop: Experience → Wisdom.
+
+        The digital equivalent of REM sleep - pattern consolidation.
+        """
+        logger.info("🌙 MANAS: Entering Dream State (Memory Review)...")
+
+        try:
+            # 1. Extract successful patterns (What works?)
+            successful_patterns = self._memory.get_successful_patterns(limit=5)
+
+            # 2. Extract failure patterns (What to avoid?)
+            # Group recent failures by intent_type
+            failure_counts: Dict[str, int] = {}
+            for mem in self._memory.get_all_memories():
+                if mem.outcome == "failed":
+                    failure_counts[mem.intent_type] = failure_counts.get(mem.intent_type, 0) + 1
+
+            # Sort by failure count
+            failure_patterns = sorted(failure_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+            # 3. Wisdom Synthesis - Log insights to OPUS.md journal
+            insights = []
+
+            if successful_patterns:
+                self.log_insight("🧠 Dream Insights - Successful Patterns:")
+                for pattern in successful_patterns:
+                    success_rate = self._memory.get_success_rate(pattern)
+                    insight_msg = f"✅ {pattern}: {success_rate:.0%} success rate"
+                    self.log_insight(insight_msg)
+                    insights.append({"type": pattern, "success_rate": success_rate, "status": "trusted"})
+
+            if failure_patterns:
+                self.log_insight("🧠 Dream Insights - Failure Patterns (to avoid):")
+                for pattern, count in failure_patterns:
+                    insight_msg = f"⚠️ {pattern}: {count} failures"
+                    self.log_insight(insight_msg)
+                    insights.append({"type": pattern, "failure_count": count, "status": "avoid"})
+
+            if not successful_patterns and not failure_patterns:
+                self.log_insight("🧠 Dream: No clear patterns formed yet. Mind is still young.")
+
+            # 4. Record dream summary to memory (meta-learning)
+            self._memory.record_intent_outcome(
+                intent_type="memory_review",
+                description="Dream cycle completed",
+                outcome="success",
+                context={
+                    "successful_patterns": successful_patterns,
+                    "failure_patterns": [p[0] for p in failure_patterns],
+                    "insights_count": len(insights),
+                },
+            )
+
+            logger.info(f"🌙 MANAS: Dream complete. {len(insights)} insights consolidated.")
+
+            return {
+                "success": True,
+                "insights": insights,
+                "successful_patterns": successful_patterns,
+                "failure_patterns": [{"type": p[0], "count": p[1]} for p in failure_patterns],
+                "wisdom": "Patterns consolidated into memory",
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Nightmare (Dream failed): {e}")
+            return {"success": False, "error": str(e)}
+
     # =========================================================================
     # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
     # =========================================================================
@@ -599,6 +680,140 @@ class CognitiveKernel:
         except Exception as e:
             logger.debug(f"📜 SUTRA SENSE: Could not get summary: {e}")
             return None
+
+    # =========================================================================
+    # 🌙 SANKALPA: STRATEGIC WILL (OPUS-089)
+    # =========================================================================
+
+    def _init_sankalpa(self) -> None:
+        """
+        Initialize Sankalpa - the Strategic Will.
+
+        OPUS-089: Sankalpa provides proactive mission planning.
+        It evaluates strategies and triggers intents based on:
+        - Time (weekly audits, etc.)
+        - Idle state (memory review when system is quiet)
+        - Conditions (CI green, etc.)
+        """
+        try:
+            from .cortex.sankalpa import SankalpaOrchestrator
+
+            self._sankalpa = SankalpaOrchestrator(workspace=self._workspace)
+            logger.info("🌙 SANKALPA: Strategic Will initialized - proactive planning active")
+        except Exception as e:
+            logger.warning(f"🌙 SANKALPA: Could not initialize: {e}")
+            self._sankalpa = None
+
+    def _generate_sankalpa_intents(self, context: Dict[str, Any]) -> List[Intent]:
+        """
+        Generate proactive intents from Sankalpa strategies.
+
+        Called during think() to evaluate missions and trigger
+        time/idle/condition-based intents.
+
+        Args:
+            context: System context
+
+        Returns:
+            List of proactive intents from Sankalpa
+        """
+        if not self._sankalpa:
+            return []
+
+        try:
+            # Get idle time
+            idle_minutes = self.idle_minutes
+
+            # Get pending intent count
+            pending_count = len([e for e in self._intent_buffer if e.status == "pending"])
+
+            # Ask Sankalpa to evaluate strategies
+            sankalpa_intents = self._sankalpa.think(
+                context=context,
+                idle_minutes=idle_minutes,
+                pending_intents=pending_count,
+            )
+
+            # Convert SankalpaIntents to our Intent format
+            intents = []
+            for si in sankalpa_intents:
+                intent = Intent(
+                    id=f"sankalpa_{si.strategy_id}_{datetime.utcnow().strftime('%H%M%S')}",
+                    intent_type=si.intent_type,
+                    title=si.title,
+                    description=si.description,
+                    reasoning=f"SANKALPA: {si.mission_name} - {si.strategy_name}",
+                    priority=IntentPriority.MEDIUM,
+                    risk=IntentRisk.LOW,
+                    params=si.params,
+                    auto_executable=True,  # Sankalpa intents are pre-approved
+                    expires_at=(datetime.utcnow() + timedelta(hours=24)).isoformat(),
+                    related_docs=["089-SANKALPA-WILL.md"] if si.strategy_id == "strategy_memory_review" else [],
+                )
+                intents.append(intent)
+
+            if intents:
+                self.log_insight(f"🌙 SANKALPA: Generated {len(intents)} proactive intents from strategic planning")
+
+            return intents
+
+        except Exception as e:
+            logger.warning(f"🌙 SANKALPA: Strategy evaluation failed: {e}")
+            return []
+
+    # =========================================================================
+    # 📓 OBSERVATION LOGGER: MANAS THOUGHTS → OPUS.md (OPUS-089)
+    # =========================================================================
+
+    def _init_observation_logger(self) -> None:
+        """
+        Initialize ObservationLogger for making MANAS thoughts visible.
+
+        OPUS-089: The journal in OPUS.md should show MANAS's internal state,
+        not just events. Dreams, insights, patterns - all visible.
+        """
+        try:
+            from vibe_core.plugins.opus_assistant.core.observation_logger import (
+                ObservationLogger,
+            )
+
+            self._observation_logger = ObservationLogger(workspace_root=self._workspace)
+            logger.info("📓 MANAS: ObservationLogger wired - thoughts now visible in OPUS.md")
+        except Exception as e:
+            logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
+            self._observation_logger = None
+
+    def log_insight(self, message: str) -> None:
+        """
+        Log an insight to OPUS.md journal.
+
+        Use this to make MANAS's internal thoughts visible:
+        - Dream insights from memory_review
+        - Pattern recognitions
+        - Self-debugging observations
+        """
+        if self._observation_logger:
+            self._observation_logger.log_insight(message, source="MANAS")
+        # Also log to Python logger for file logs
+        logger.info(f"💡 MANAS INSIGHT: {message}")
+
+    def log_observation(self, message: str, severity: str = "info") -> None:
+        """
+        Log an observation to OPUS.md journal.
+
+        Args:
+            message: The observation message
+            severity: "info", "warn", "alert", or "insight"
+        """
+        if self._observation_logger:
+            if severity == "insight":
+                self._observation_logger.log_insight(message, source="MANAS")
+            elif severity == "warn":
+                self._observation_logger.log_warn(message, source="MANAS")
+            elif severity == "alert":
+                self._observation_logger.log_alert(message, source="MANAS")
+            else:
+                self._observation_logger.log_info(message, source="MANAS")
 
     def _perceive_and_generate_gap_intents(self) -> List[Intent]:
         """
@@ -871,6 +1086,10 @@ class CognitiveKernel:
         # MANAS is the curator of its own knowledge base
         gap_intents = self._perceive_and_generate_gap_intents()
 
+        # 🌙 SANKALPA: Strategic proactive intents (OPUS-089)
+        # Evaluates missions/strategies based on time, idle, conditions
+        sankalpa_intents = self._generate_sankalpa_intents(context or {})
+
         # Clean up expired intents
         self._cleanup_expired_intents()
 
@@ -883,11 +1102,14 @@ class CognitiveKernel:
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
 
-        # Prepend healing intents (survival first!) then gap intents
+        # Prepend healing intents (survival first!) then gap intents, then sankalpa
         if healing_intents:
             new_intents = healing_intents + new_intents
         if gap_intents:
             new_intents = gap_intents + new_intents
+        if sankalpa_intents:
+            # Sankalpa intents are proactive - add after gap intents
+            new_intents = sankalpa_intents + new_intents
 
         # OPUS-035: Throttling - Prioritize survival over growth
         if self._config.survival_first and len(new_intents) > self._config.max_intents_per_tick:
@@ -1233,6 +1455,10 @@ class CognitiveKernel:
             # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
             if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
                 result = self._execute_healing(intent)
+                success = result.get("success", False)
+            # 🌙 SHIVA/SANKALPA: Handle dreaming/wisdom consolidation
+            elif intent.intent_type == "memory_review":
+                result = self._execute_memory_review(intent)
                 success = result.get("success", False)
             elif self._execution_callback:
                 result = self._execution_callback(intent)

@@ -127,6 +127,48 @@ wiring:
   - pattern: "class LLMAdapter"
     in: vibe_core/cli/unified_cli.py
 
+  # === OPUS-088: MIRROR TEST (Re-entrancy Guard) ===
+  # Prevents infinite loop: MANAS commits → triggers itself
+  - pattern: "_is_self_triggered_change"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "chore\\(manas\\):"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
+  # === OPUS-089: SANKALPA STRATEGIC WILL ===
+  # Sankalpa MUST be called in think() for proactive intents
+  - pattern: "_init_sankalpa"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "_generate_sankalpa_intents"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "sankalpa_intents"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
+  # === OPUS-089: DREAMING (Memory Review) ===
+  # memory_review must be handled internally (not via router)
+  - pattern: "_execute_memory_review"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "memory_review"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
+  # === OPUS-089: OBSERVATION LOGGER (Transparency) ===
+  # MANAS thoughts must be visible in OPUS.md journal
+  - pattern: "_init_observation_logger"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "def log_insight"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
+  # === HYGIENE CHECK HANDLER ===
+  - pattern: "hygiene_check"
+    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
+  - pattern: "_handle_hygiene"
+    in: vibe_core/plugins/opus_assistant/manas/intent_router.py
+
+  # === SHIVA LIFECYCLE (Dreaming Infrastructure) ===
+  - pattern: "ShivaLifecycleManager"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+  - pattern: "sweep_stale_intents"
+    in: vibe_core/plugins/opus_assistant/manas/cognitive_kernel.py
+
 tests:
   # === ALL 20 MANAS TEST SUITES ===
   - tests/manas/test_cognitive_kernel.py
@@ -308,7 +350,7 @@ $ steward chat "Why is CI red?"
 
 ---
 
-## 6D Fortress Checklist (2025-12-15)
+## 6D Fortress Checklist (2025-12-17)
 
 - [x] Core MANAS files exist
 - [x] All 11 Cortex modules exist
@@ -317,5 +359,11 @@ $ steward chat "Why is CI red?"
 - [x] Intent Buffer renders to OPUS.md
 - [x] **MANAS CLI Commands** (status, intents, help, chat)
 - [x] **LLM Provider Wiring** (OpenRouter via factory + adapter)
+- [x] **OPUS-088: Mirror Test** (Re-entrancy guard prevents infinite loops)
+- [x] **OPUS-089: Sankalpa Strategic Will** (Proactive intents from missions)
+- [x] **OPUS-089: Dreaming** (memory_review consolidates patterns)
+- [x] **OPUS-089: ObservationLogger** (MANAS thoughts visible in OPUS.md)
+- [x] **Hygiene Check Handler** (lint/format/test on idle)
+- [x] **Shiva Lifecycle** (Sweep stale intents)
 - [ ] **Intent approval flow** (`steward chat approve <id>`)
 - [ ] **Auto-execution for SAFE intents**
