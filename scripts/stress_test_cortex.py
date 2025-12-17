@@ -25,7 +25,14 @@ from typing import Any, Dict, List
 # Add vibe_core to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from vibe_core.orchestration_cycle import CognitiveCycle, CycleRegistry, RetentionPolicy
+from vibe_core.orchestration_cycle import (
+    CognitiveCycle,
+    CycleRegistry,
+    RetentionPolicy,
+    get_cycle_registry,
+    reset_cycle_registry,
+    set_cycle_registry,
+)
 
 
 class FakeCycle(CognitiveCycle):
@@ -83,20 +90,22 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     print(f"{'=' * 70}")
     print(f"Target: {num_intents} intents in {timeout_seconds}s ({num_intents / timeout_seconds:.0f} intents/sec)")
 
-    # Create registry with retention policy
+    # Reset and configure global registry with retention policy for this test
+    reset_cycle_registry()
     retention = RetentionPolicy(
         max_completed_cycles=100,
         max_error_cycles=50,
         enabled=True,
     )
-    registry = CycleRegistry(retention_policy=retention)
+    test_registry = CycleRegistry(retention_policy=retention)
+    set_cycle_registry(test_registry)  # Use this registry for all cycles in this test
 
     print("\n📊 Starting conditions:")
     print(f"   Retention: {retention.max_completed_cycles} max completed, {retention.max_error_cycles} max errors")
     print("   Rate limit: 0s (disabled for stress)")
 
     start_time = time.time()
-    active_cycles = []
+    tasks = []
     errors = []
     memory_snapshots = []
 
@@ -105,13 +114,12 @@ async def stress_test(num_intents: int, timeout_seconds: float):
 
     for i in range(num_intents):
         cycle = FakeCycle(f"stress_{i}")
-        active_cycles.append(cycle)
 
         try:
             # Fire orchestrate() without awaiting (gather all)
-            # NOTE: Cycles auto-register with registry during orchestrate()
+            # NOTE: Cycles AUTO-REGISTER with global registry during orchestrate()
             task = asyncio.create_task(cycle.orchestrate(force=True))
-            # Don't await - let them run in parallel
+            tasks.append(task)
 
         except Exception as e:
             errors.append(f"Cycle {i}: {e}")
@@ -122,6 +130,7 @@ async def stress_test(num_intents: int, timeout_seconds: float):
             elapsed = time.time() - start_time
             rate = (i + 1) / elapsed
             print(f"   ✓ {i + 1}/{num_intents} cycles fired ({rate:.0f} intents/sec)")
+            registry = get_cycle_registry()
             memory_snapshots.append(
                 {
                     "count": i + 1,
@@ -163,6 +172,8 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     print(f"   Average rate: {final_rate:.0f} intents/sec")
     print(f"   Within timeout: {'✅ YES' if elapsed_total <= timeout_seconds else '❌ NO'}")
 
+    # Get final registry state
+    registry = get_cycle_registry()
     print("\n📈 Registry Status (Final):")
     print(f"   Active cycles: {len(registry.get_active_cycles())}")
     print(f"   Completed cycles: {len(registry.get_completed_cycles())}")
@@ -180,13 +191,12 @@ async def stress_test(num_intents: int, timeout_seconds: float):
             f"Errors={snap['errors_in_registry']:>3}"
         )
 
-    # Check retention policy
-    if len(registry.get_completed_cycles()) <= retention.max_completed_cycles:
+    # Check retention policy (registry already has it applied)
+    completed_count = len(registry.get_completed_cycles())
+    if completed_count <= retention.max_completed_cycles:
         print("\n✅ Retention Policy: ENFORCED (completed cycles pruned)")
     else:
-        print(
-            f"\n⚠️  Retention Policy: NOT ENFORCED ({len(registry.get_completed_cycles())} > {retention.max_completed_cycles})"
-        )
+        print(f"\n⚠️  Retention Policy: NOT ENFORCED ({completed_count} > {retention.max_completed_cycles})")
 
     if errors:
         print(f"\n❌ Errors ({len(errors)}):")
@@ -202,7 +212,7 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     success = (
         elapsed_total <= timeout_seconds * 1.5  # Allow 50% buffer
         and len(errors) == 0
-        and len(registry.get_completed_cycles()) <= retention.max_completed_cycles
+        and completed_count <= retention.max_completed_cycles
     )
 
     if success:
