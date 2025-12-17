@@ -777,7 +777,7 @@ class CognitiveKernel:
                 ObservationLogger,
             )
 
-            self._observation_logger = ObservationLogger(workspace=self._workspace)
+            self._observation_logger = ObservationLogger(workspace_root=self._workspace)
             logger.info("📓 MANAS: ObservationLogger wired - thoughts now visible in OPUS.md")
         except Exception as e:
             logger.warning(f"📓 MANAS: Could not initialize ObservationLogger: {e}")
