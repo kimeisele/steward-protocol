@@ -31,6 +31,7 @@ from .memory_store import MemoryStore
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
 
+    from .cortex.dharma_sense import DharmaSense, DharmaSummary
     from .cortex.prakriti_sense import GunaSummary, PrakritiSense
 
 logger = logging.getLogger("MANAS.Kernel")
@@ -238,6 +239,10 @@ class CognitiveKernel:
         # 👁️ PRAKRITI SENSE: The Sixth Jnanendriya (OPUS-009)
         self._prakriti_sense: Optional["PrakritiSense"] = None
 
+        # 🙏 DHARMA SENSE: The Vedic Conscience (OPUS-009 Extension)
+        self._dharma_sense: Optional["DharmaSense"] = None
+        self._init_dharma_sense()
+
         logger.info("MANAS Cognitive Kernel initialized")
 
     # =========================================================================
@@ -416,6 +421,98 @@ class CognitiveKernel:
 
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    # =========================================================================
+    # 🙏 DHARMA SENSE: THE VEDIC CONSCIENCE (OPUS-009 Extension)
+    # =========================================================================
+
+    def _init_dharma_sense(self) -> None:
+        """
+        Initialize Dharma Sense - the Vedic Conscience.
+
+        This provides ethical alignment checks before intent execution.
+        """
+        try:
+            from .cortex.dharma_sense import DharmaSense
+
+            self._dharma_sense = DharmaSense(workspace=self._workspace, agent_id="manas")
+            # Boot registration
+            summary = self._dharma_sense.on_manas_boot()
+            logger.info(
+                f"🙏 DHARMA SENSE: Conscience initialized - Ashrama: {summary.ashrama}, Bhakti: {summary.bhakti}"
+            )
+        except Exception as e:
+            logger.warning(f"🙏 DHARMA SENSE: Could not initialize: {e}")
+            self._dharma_sense = None
+
+    def inject_dharma_sense(self, sense: "DharmaSense") -> None:
+        """
+        Inject the Dharma Sense for ethical alignment checks.
+
+        OPUS-009 Extension: MANAS needs both senses:
+        - PRAKRITI SENSE: "What is the state of the world?"
+        - DHARMA SENSE: "Is this action righteous?"
+
+        Args:
+            sense: DharmaSense instance
+        """
+        self._dharma_sense = sense
+        logger.info("🙏 DHARMA SENSE: Vedic Conscience injected - MANAS now has ethical awareness")
+
+    def _check_dharma_gate(self, intent: Intent) -> tuple:
+        """
+        Check Dharma Gate before intent execution.
+
+        This is the ethical conscience check. Even if NARASIMHA (technical guardian)
+        approves, DHARMA SENSE (ethical conscience) must also approve.
+
+        "An efficient mind without dharma makes efficient catastrophes."
+
+        Args:
+            intent: The intent to check
+
+        Returns:
+            (is_permitted, reason)
+        """
+        if not self._dharma_sense:
+            # No conscience = permissive (legacy mode)
+            return True, "Dharma Sense not available - defaulting to permissive"
+
+        try:
+            verdict = self._dharma_sense.check_dharmic_alignment(intent, agent_id="manas")
+
+            if verdict.is_dharmic:
+                logger.debug(f"🙏 DHARMA GATE: PASSED - {verdict.reason}")
+                return True, verdict.reason
+            else:
+                logger.warning(
+                    f"🙏 DHARMA GATE: BLOCKED - {intent.intent_type} - "
+                    f"Missing: {verdict.missing_permissions}, Bhakti: {verdict.agent_bhakti}"
+                )
+                return False, verdict.reason
+
+        except Exception as e:
+            logger.warning(f"🙏 DHARMA GATE: Check failed: {e}")
+            # On error, default to permissive (don't block due to bugs)
+            return True, f"Dharma check error: {e}"
+
+    def _on_dharma_success(self, intent: Intent) -> None:
+        """Record successful dharmic action - increases Bhakti."""
+        if self._dharma_sense:
+            try:
+                self._dharma_sense.on_intent_success(intent)
+            except Exception as e:
+                logger.debug(f"🙏 DHARMA SENSE: Could not record success: {e}")
+
+    def get_dharma_summary(self) -> Optional[Dict[str, Any]]:
+        """Get Dharma summary for OPUS.md display."""
+        if not self._dharma_sense:
+            return None
+        try:
+            summary = self._dharma_sense.get_dharma_summary()
+            return summary.to_dict()
+        except Exception:
+            return None
 
     def _record_to_ledger(
         self,
@@ -841,6 +938,20 @@ class CognitiveKernel:
             extra_data={"timestamp": start_time.isoformat()},
         )
 
+        # 🙏 DHARMA GATE: Check ethical alignment before execution (OPUS-009)
+        dharma_permitted, dharma_reason = self._check_dharma_gate(intent)
+        if not dharma_permitted:
+            logger.warning(f"🙏 DHARMA GATE BLOCKED: {intent.title}")
+            entry.status = "blocked_adharmic"
+            entry.execution_result = {"error": f"BLOCKED BY DHARMA GATE: {dharma_reason}"}
+            self._record_to_ledger(
+                event_type="MANAS_INTENT_BLOCKED_ADHARMIC",
+                intent=intent,
+                extra_data={"reason": dharma_reason},
+            )
+            self._save_intent_buffer()
+            return False
+
         try:
             # 👁️ PRAKRITI SENSE: Handle healing intents (OPUS-009)
             if intent.intent_type in ("heal_system_state", "fix_lobotomy"):
@@ -896,6 +1007,8 @@ class CognitiveKernel:
         self._save_intent_buffer()
 
         if success:
+            # 🙏 DHARMA SENSE: Record success to increase Bhakti (OPUS-009)
+            self._on_dharma_success(intent)
             logger.info(f"MANAS: Intent {intent.id} executed successfully")
         else:
             logger.warning(f"MANAS: Intent {intent.id} execution failed: {result.get('error')}")

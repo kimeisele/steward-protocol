@@ -248,6 +248,7 @@ class StateSyncHolon:
         conventions = [
             (".opus_state", "opus_assistant"),
             (".vibe/state", "task_manager"),
+            (".vibe/state/vedic_dharma.json", "vedic_governance"),  # OPUS-009: Dharma State
             (".vibe/config", "system"),
             (".prakriti", "prakriti"),
         ]
