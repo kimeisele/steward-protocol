@@ -25,6 +25,7 @@ from typing import Any, Dict, List
 # Add vibe_core to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from vibe_core.event_bus import EventBus
 from vibe_core.orchestration_cycle import (
     CognitiveCycle,
     CycleRegistry,
@@ -33,6 +34,7 @@ from vibe_core.orchestration_cycle import (
     reset_cycle_registry,
     set_cycle_registry,
 )
+from vibe_core.runtime.unified_trace import UnifiedTrace
 
 
 class FakeCycle(CognitiveCycle):
@@ -104,6 +106,11 @@ async def stress_test(num_intents: int, timeout_seconds: float):
     print(f"   Retention: {retention.max_completed_cycles} max completed, {retention.max_error_cycles} max errors")
     print("   Rate limit: 0s (disabled for stress)")
 
+    # Create mock system dependencies for FakeCycles
+    trace = UnifiedTrace()  # Mock tracer
+    event_bus = EventBus()  # Mock event bus
+    steward_context = {}  # Mock context (can be empty dict)
+
     start_time = time.time()
     tasks = []
     errors = []
@@ -114,6 +121,7 @@ async def stress_test(num_intents: int, timeout_seconds: float):
 
     for i in range(num_intents):
         cycle = FakeCycle(f"stress_{i}")
+        cycle.setup(trace, event_bus, steward_context)  # Wire up dependencies
 
         try:
             # Fire orchestrate() without awaiting (gather all)
@@ -143,18 +151,14 @@ async def stress_test(num_intents: int, timeout_seconds: float):
 
     # Wait for all to complete
     print("\n⏳ Waiting for all cycles to complete...")
-    completed = 0
     try:
-        # Collect all pending tasks
-        pending = asyncio.all_tasks()
-        for task in pending:
-            try:
-                await asyncio.wait_for(task, timeout=5.0)
-                completed += 1
-            except asyncio.TimeoutError:
-                errors.append(f"Task timeout: {task}")
-            except Exception as e:
-                errors.append(f"Task error: {e}")
+        # Wait for all tasks to complete together (they run in parallel)
+        # Give them 30 seconds total (plenty of time for 500 light cycles)
+        results = await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=30.0)
+        # Count successful completions (non-None results)
+        completed = sum(1 for r in results if r is not None and not isinstance(r, Exception))
+    except asyncio.TimeoutError:
+        errors.append("Overall timeout waiting for cycles to complete")
     except Exception as e:
         errors.append(f"Error waiting for tasks: {e}")
 
