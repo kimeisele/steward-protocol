@@ -172,6 +172,7 @@ class PrakritiSense:
         workspace: Optional[Path] = None,
         prakriti: Optional["Prakriti"] = None,
         enable_watcher: bool = False,
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize PRAKRITI SENSE.
@@ -180,9 +181,10 @@ class PrakritiSense:
             workspace: Workspace root (default: cwd)
             prakriti: Optional existing Prakriti instance
             enable_watcher: Enable realtime file watching
+            config: Configuration dict from manas.yaml
         """
         self._workspace = workspace or Path.cwd()
-        self._config: Dict[str, Any] = {}  # For future config
+        self._config: Dict[str, Any] = config or {}  # OPUS-092: Config wiring
         self._prakriti = prakriti
         self._sync_holon: Optional[StateSyncHolon] = None
         self._enable_watcher = enable_watcher

@@ -190,6 +190,7 @@ class DharmaSense:
         self,
         workspace: Optional[Path] = None,
         agent_id: str = "manas",
+        config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize DHARMA SENSE.
@@ -197,9 +198,10 @@ class DharmaSense:
         Args:
             workspace: Workspace root (default: cwd)
             agent_id: The agent ID to check permissions for
+            config: Configuration dict from manas.yaml
         """
         self._workspace = workspace or Path.cwd()
-        self._config: Dict[str, Any] = {}  # For future config
+        self._config: Dict[str, Any] = config or {}  # OPUS-092: Config wiring
         self._agent_id = agent_id
         self._governance = None  # Lazy-loaded
         self._state_manager = None  # Lazy-loaded
