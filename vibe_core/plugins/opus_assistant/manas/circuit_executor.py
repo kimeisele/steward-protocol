@@ -168,8 +168,12 @@ class CognitiveCircuitExecutor:
         """
         Evaluate transitions and return next state.
 
-        For now: takes first transition (condition evaluation TBD).
-        This is simplified - full condition eval would need expression parser.
+        Supports basic condition patterns:
+        - "variable == true" / "variable == false"
+        - "variable == 'string_value'"
+        - "variable.attribute == value"
+        - "true" (always matches)
+        - No condition (always matches)
 
         Args:
             transitions: List of transition definitions
@@ -181,9 +185,160 @@ class CognitiveCircuitExecutor:
         if not transitions:
             return None
 
-        # Simplified: take first transition
-        # TODO: Implement condition evaluation
+        for transition in transitions:
+            condition = transition.get("condition")
+
+            # No condition = always take this transition
+            if not condition:
+                return transition.get("to")
+
+            # Evaluate the condition
+            if self._evaluate_condition(condition, state_vars):
+                return transition.get("to")
+
+        # No matching transition - take first as fallback (legacy behavior)
+        logger.warning("No condition matched, falling back to first transition")
         return transitions[0].get("to")
+
+    def _evaluate_condition(self, condition: str, state_vars: Dict[str, Any]) -> bool:
+        """
+        Evaluate a condition string against state variables.
+
+        Supports:
+        - "true" → always True
+        - "false" → always False
+        - "var == true" / "var == false"
+        - "var == 'string'"
+        - "var.attr == value"
+        - "not var.attr"
+
+        Args:
+            condition: Condition string to evaluate
+            state_vars: Current state variables
+
+        Returns:
+            Boolean result of condition evaluation
+        """
+        import re
+
+        condition = condition.strip()
+
+        # Handle "true" / "false" literals
+        if condition.lower() == "true":
+            return True
+        if condition.lower() == "false":
+            return False
+
+        # Handle Jinja-style {{ variable }} - extract inner part
+        jinja_match = re.match(r"\{\{\s*(.+?)\s*\}\}", condition)
+        if jinja_match:
+            condition = jinja_match.group(1)
+
+        # Handle "not variable.attribute"
+        if condition.startswith("not "):
+            inner = condition[4:].strip()
+            return not self._evaluate_condition(inner, state_vars)
+
+        # Handle equality: "var == value" or "var.attr == value"
+        eq_match = re.match(r"(.+?)\s*==\s*(.+)", condition)
+        if eq_match:
+            left = eq_match.group(1).strip()
+            right = eq_match.group(2).strip()
+
+            # Resolve both sides (handles variables, numbers, strings, booleans)
+            left_val = self._resolve_value(left, state_vars)
+            right_val = self._resolve_value(right, state_vars)
+
+            return left_val == right_val
+
+        # Handle inequality: "var < value" or "var >= value"
+        # Order matters: check >= and <= before > and < to avoid partial matches
+        ineq_patterns = [
+            (r"(.+?)\s*<=\s*(.+)", lambda a, b: a <= b),
+            (r"(.+?)\s*>=\s*(.+)", lambda a, b: a >= b),
+            (r"(.+?)\s*<\s*(.+)", lambda a, b: a < b),
+            (r"(.+?)\s*>\s*(.+)", lambda a, b: a > b),
+        ]
+        for pattern, op in ineq_patterns:
+            match = re.match(pattern, condition)
+            if match:
+                left = self._resolve_value(match.group(1).strip(), state_vars)
+                right = self._resolve_value(match.group(2).strip(), state_vars)
+                try:
+                    return op(left, right)
+                except (TypeError, ValueError):
+                    return False
+
+        # Fallback: treat as truthy check on variable
+        val = self._resolve_var(condition, state_vars)
+        return bool(val)
+
+    def _resolve_value(self, value_str: str, state_vars: Dict[str, Any]) -> Any:
+        """
+        Resolve a value - either a literal (number, string, boolean) or a variable path.
+
+        Args:
+            value_str: Value string (e.g., "42", "true", "result.count", "'string'")
+            state_vars: State variables dict
+
+        Returns:
+            Resolved value
+        """
+        value_str = value_str.strip()
+
+        # Check for boolean literals first
+        if value_str.lower() == "true":
+            return True
+        if value_str.lower() == "false":
+            return False
+
+        # Try to parse as integer
+        try:
+            return int(value_str)
+        except ValueError:
+            pass
+
+        # Try to parse as float
+        try:
+            return float(value_str)
+        except ValueError:
+            pass
+
+        # Check for quoted string
+        if (value_str.startswith("'") and value_str.endswith("'")) or (
+            value_str.startswith('"') and value_str.endswith('"')
+        ):
+            return value_str[1:-1]
+
+        # Try to resolve as variable path
+        return self._resolve_var(value_str, state_vars)
+
+    def _resolve_var(self, var_path: str, state_vars: Dict[str, Any]) -> Any:
+        """
+        Resolve a variable path like "result.success" from state_vars.
+
+        Args:
+            var_path: Dot-separated path like "result.success"
+            state_vars: State variables dict
+
+        Returns:
+            Resolved value or None if not found
+        """
+        parts = var_path.split(".")
+        current = state_vars
+
+        for part in parts:
+            if isinstance(current, dict):
+                current = current.get(part)
+            elif hasattr(current, part):
+                current = getattr(current, part)
+            else:
+                return None
+
+            if current is None:
+                return None
+
+        return current
 
     def _dispatch_action(self, action: Dict, state_vars: Dict[str, Any]) -> Dict[str, Any]:
         """

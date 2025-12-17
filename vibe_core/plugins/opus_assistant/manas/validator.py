@@ -158,11 +158,20 @@ class SrutiValidator:
         "recorded",
     ]
 
-    def __init__(self, workspace: Optional[Path] = None):
-        """Initialize SrutiValidator with workspace context."""
+    def __init__(self, workspace: Optional[Path] = None, strict_mode: bool = False):
+        """
+        Initialize SrutiValidator with workspace context.
+
+        Args:
+            workspace: Workspace root directory
+            strict_mode: If True, fail on verification errors instead of permissive fallback
+        """
         self._workspace = workspace or Path.cwd()
+        self._strict_mode = strict_mode
         # ⚡ VAJRA: Core kernel reference for ledger binding
         self._vibe_kernel = None
+        # Track verification failures for debugging
+        self._verification_failures: List[str] = []
 
     def inject_kernel(self, kernel) -> None:
         """
@@ -277,10 +286,18 @@ class SrutiValidator:
         - InMemoryLedger: events attribute (List[Dict])
 
         Both return events with 'event_id' key.
+
+        In strict_mode, verification failures return False.
+        In permissive mode (default), failures return True with warnings.
         """
         ledger = self._get_ledger()
         if ledger is None:
-            logger.debug(f"⚠️ SRUTI: Cannot verify ref {ref} - no ledger (permissive mode)")
+            msg = f"Cannot verify ref {ref} - no ledger"
+            if self._strict_mode:
+                logger.warning(f"⚠️ SRUTI (strict): {msg}")
+                self._verification_failures.append(msg)
+                return False
+            logger.debug(f"⚠️ SRUTI: {msg} (permissive mode)")
             return True  # Permissive fallback when no kernel
 
         try:
@@ -291,17 +308,36 @@ class SrutiValidator:
                 if found:
                     logger.debug(f"✅ SRUTI: Verified ref {ref}")
                 else:
-                    logger.warning(f"⚠️ SRUTI: Ref {ref} not found in ledger ({len(events)} events)")
+                    msg = f"Ref {ref} not found in ledger ({len(events)} events)"
+                    logger.warning(f"⚠️ SRUTI: {msg}")
+                    self._verification_failures.append(msg)
                 return found
             elif hasattr(ledger, "events"):
                 # Direct access for InMemoryLedger
                 return any(e.get("event_id") == ref for e in ledger.events)
             else:
-                logger.warning("⚠️ SRUTI: Unknown ledger type - permissive fallback")
+                msg = "Unknown ledger type"
+                if self._strict_mode:
+                    logger.warning(f"⚠️ SRUTI (strict): {msg}")
+                    self._verification_failures.append(msg)
+                    return False
+                logger.warning(f"⚠️ SRUTI: {msg} - permissive fallback")
                 return True  # Permissive fallback
         except Exception as e:
-            logger.error(f"❌ SRUTI: Error verifying ref {ref}: {e}")
+            msg = f"Error verifying ref {ref}: {e}"
+            logger.error(f"❌ SRUTI: {msg}")
+            self._verification_failures.append(msg)
+            if self._strict_mode:
+                return False
             return True  # Permissive fallback
+
+    def get_verification_failures(self) -> List[str]:
+        """Get list of verification failures for debugging."""
+        return list(self._verification_failures)
+
+    def clear_failures(self) -> None:
+        """Clear the verification failures list."""
+        self._verification_failures = []
 
     def validate_intent_output(
         self,
@@ -409,6 +445,18 @@ class SrutiValidator:
 
 
 # Factory function
-def get_sruti_validator(workspace: Optional[Path] = None) -> SrutiValidator:
-    """Get a SrutiValidator instance."""
-    return SrutiValidator(workspace=workspace)
+def get_sruti_validator(
+    workspace: Optional[Path] = None,
+    strict_mode: bool = False,
+) -> SrutiValidator:
+    """
+    Get a SrutiValidator instance.
+
+    Args:
+        workspace: Workspace root directory
+        strict_mode: If True, verification failures return False instead of permissive True
+
+    Returns:
+        Configured SrutiValidator instance
+    """
+    return SrutiValidator(workspace=workspace, strict_mode=strict_mode)
