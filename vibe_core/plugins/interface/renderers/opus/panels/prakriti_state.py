@@ -232,9 +232,16 @@ class PrakritiStatePanel(BasePanel):
                     return prakriti_sense.perceive_state()
 
             # Fallback: Create standalone PrakritiSense for read-only
+            from pathlib import Path
+
             from vibe_core.plugins.opus_assistant.manas.cortex.prakriti_sense import PrakritiSense
 
-            sense = PrakritiSense(self._root)
+            root = getattr(self, "_root", None) or Path(".")
+            sense = PrakritiSense(root)
             return sense.perceive_state()
-        except Exception:
+        except Exception as e:
+            # Log but don't crash - Tri-Guna is nice to have
+            import logging
+
+            logging.getLogger("PRAKRITI_PANEL").debug(f"PrakritiSense unavailable: {e}")
             return None
