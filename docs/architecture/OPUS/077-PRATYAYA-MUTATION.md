@@ -176,7 +176,6 @@ files:
     required: true
   
   # === OPTIONAL: CLI COMMAND ===
-  - path: vibe_core/cli/commands/pratyaya.py
     required: false
     absent_note: "Phase 2 - CLI convenience wrapper"
 
