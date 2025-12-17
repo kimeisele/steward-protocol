@@ -647,7 +647,71 @@
       },
       "feedback": "No execution method available",
       "execution_time_ms": 0
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references your/module/file.py   ...",
+      "timestamp": "2025-12-17T11:17:30.730133",
+      "outcome": "success",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "your/module/file.py          # <-- Replace with actual path",
+        "description": "Doc 054-SUTRA.md references your/module/file.py          # <-- Replace with actual path but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": null,
+      "execution_time_ms": 11
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 054-SUTRA.md references tests/test_your_module...",
+      "timestamp": "2025-12-17T11:17:30.766230",
+      "outcome": "success",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/054-SUTRA.md",
+        "code_path": "tests/test_your_module.py    # <-- Replace with actual test",
+        "description": "Doc 054-SUTRA.md references tests/test_your_module.py    # <-- Replace with actual test but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": null,
+      "execution_time_ms": 10
+    },
+    {
+      "intent_type": "sutra_missing_code",
+      "intent_description": "Sutra Gap: Doc 077-PRATYAYA-MUTATION.md references vibe_core/...",
+      "timestamp": "2025-12-17T11:19:04.624237",
+      "outcome": "success",
+      "context": {
+        "gap_type": "missing_code",
+        "severity": "high",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/077-PRATYAYA-MUTATION.md",
+        "code_path": "vibe_core/cli/commands/pratyaya.py",
+        "description": "Doc 077-PRATYAYA-MUTATION.md references vibe_core/cli/commands/pratyaya.py but it doesn't exist",
+        "suggested_action": "Either create the file or update the harness"
+      },
+      "feedback": null,
+      "execution_time_ms": 12
+    },
+    {
+      "intent_type": "sutra_missing_harness",
+      "intent_description": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+      "timestamp": "2025-12-17T11:19:04.664671",
+      "outcome": "failed",
+      "context": {
+        "gap_type": "missing_harness",
+        "severity": "medium",
+        "doc_path": "/home/user/steward-protocol/docs/architecture/OPUS/056-SHUDDHI.md",
+        "code_path": null,
+        "description": "Doc 056-SHUDDHI.md has no @HARNESS block",
+        "suggested_action": "Add @HARNESS block with file references and wiring patterns"
+      },
+      "feedback": "No target file specified",
+      "execution_time_ms": 10
     }
   ],
-  "updated_at": "2025-12-17T02:08:19.506964"
+  "updated_at": "2025-12-17T11:19:04.665782"
 }

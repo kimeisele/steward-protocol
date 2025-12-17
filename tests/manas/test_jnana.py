@@ -252,10 +252,24 @@ class TestSpecialQueries:
     async def test_why_query_gets_intelligent_response(self, handler):
         """Integration: 'Why' questions should use LLM."""
         from vibe_core.plugins.opus_assistant.manas.cortex.samvada import SamvadaMessage
+        from vibe_core.runtime.providers.base import LLMResponse, LLMUsage
 
-        # Mock the LLM
+        # Mock the LLM provider with invoke(messages=...) API
         mock_llm = MagicMock()
-        mock_llm.chat.return_value = "The CI is red because test_foo.py failed."
+        mock_response = LLMResponse(
+            content="The CI is red because test_foo.py failed.",
+            usage=LLMUsage(
+                input_tokens=10,
+                output_tokens=20,
+                model="test",
+                cost_usd=0.0,
+                timestamp="2025-01-01T00:00:00Z",
+            ),
+            model="test",
+            finish_reason="stop",
+            provider="test",
+        )
+        mock_llm.invoke.return_value = mock_response
         handler._llm_provider = mock_llm
 
         msg = SamvadaMessage(msg_type="chat", content="Why is the CI red?")
@@ -263,7 +277,7 @@ class TestSpecialQueries:
 
         # Should have called LLM for "why" questions
         if handler._llm_provider:
-            mock_llm.chat.assert_called()
+            mock_llm.invoke.assert_called()
 
 
 # =============================================================================

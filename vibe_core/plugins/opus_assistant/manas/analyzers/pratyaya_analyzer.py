@@ -93,6 +93,8 @@ class PratyayaAnalyzer(BaseAnalyzer):
                         },
                         auto_executable=False,  # Security fixes need human review
                         expires_at=(datetime.utcnow() + timedelta(days=7)).isoformat(),
+                        # WEAVING: Link to security mutation doc
+                        related_docs=["077-PRATYAYA-MUTATION.md"],
                     )
                     intents.append(intent)
                     logger.warning(f"🚨 VULNERABILITY DETECTED: {attack_name}")

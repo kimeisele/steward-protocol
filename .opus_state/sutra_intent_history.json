@@ -118,5 +118,29 @@
     "topic": "documentation",
     "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_something.p...",
     "timestamp": "2025-12-17T02:08:19.502195"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references your/module/file.py   ...",
+    "timestamp": "2025-12-17T11:17:30.666054"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 054-SUTRA.md references tests/test_your_module...",
+    "timestamp": "2025-12-17T11:17:30.733079"
+  },
+  {
+    "intent_type": "sutra_missing_code",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 077-PRATYAYA-MUTATION.md references vibe_core/...",
+    "timestamp": "2025-12-17T11:19:04.556311"
+  },
+  {
+    "intent_type": "sutra_missing_harness",
+    "topic": "documentation",
+    "title": "Sutra Gap: Doc 056-SHUDDHI.md has no @HARNESS block...",
+    "timestamp": "2025-12-17T11:19:04.628249"
   }
 ]

@@ -18,7 +18,7 @@ Version: 1.0 (GAD-511 Phase 2)
 import logging
 import time
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 from .base import (
     LLMProvider,
@@ -100,22 +100,24 @@ class OpenRouterProvider(LLMProvider):
 
     def invoke(
         self,
-        prompt: str,
+        prompt: str = "",
         model: str = "anthropic/claude-3.5-sonnet",
         max_tokens: int = 4096,
         temperature: float = 1.0,
         max_retries: int = 3,
+        messages: Optional[List[Dict[str, str]]] = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """
         Invoke model via OpenRouter.
 
         Args:
-            prompt: Input prompt
+            prompt: Input prompt (used if messages not provided)
             model: OpenRouter model identifier (e.g., "anthropic/claude-3.5-sonnet")
             max_tokens: Maximum output tokens
             temperature: Sampling temperature
             max_retries: Maximum retry attempts
+            messages: Optional list of message dicts (native format, preferred)
             **kwargs: Additional OpenAI-compatible parameters
 
         Returns:
@@ -124,6 +126,10 @@ class OpenRouterProvider(LLMProvider):
         Raises:
             ProviderInvocationError: If all retries fail
         """
+        # Use native messages if provided, otherwise wrap prompt
+        if messages is None:
+            messages = [{"role": "user", "content": prompt}]
+
         last_error = None
 
         for attempt in range(max_retries):
@@ -132,7 +138,7 @@ class OpenRouterProvider(LLMProvider):
                     model=model,
                     max_tokens=max_tokens,
                     temperature=temperature,
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=messages,
                     **kwargs,
                 )
 

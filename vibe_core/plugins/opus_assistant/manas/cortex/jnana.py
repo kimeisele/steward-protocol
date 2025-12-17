@@ -404,9 +404,7 @@ class JnanaHandler:
 
     def _invoke_llm(self, messages: List[Dict[str, str]]) -> str:
         """
-        Invoke LLM provider with messages format.
-
-        Converts messages to single prompt string for provider.invoke().
+        Invoke LLM provider with native messages format.
 
         Args:
             messages: List of {"role": ..., "content": ...} dicts
@@ -417,21 +415,9 @@ class JnanaHandler:
         if not self._llm_provider:
             raise RuntimeError("No LLM provider configured")
 
-        # Convert messages to prompt string
-        # Format: system context + user message
-        parts = []
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role == "system":
-                parts.append(f"<system>\n{content}\n</system>")
-            else:
-                parts.append(content)
-
-        prompt = "\n\n".join(parts)
-
-        # Invoke provider and return content
-        response = self._llm_provider.invoke(prompt)
+        # Pass messages directly to provider (OpenRouter supports native messages)
+        # Fallback: provider wraps as single user message if messages= not supported
+        response = self._llm_provider.invoke(messages=messages)
         return response.content
 
     def _format_context(self, ctx: Dict[str, Any]) -> str:
