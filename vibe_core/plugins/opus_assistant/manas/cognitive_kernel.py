@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from .intent_generator import Intent, IntentGenerator, IntentPriority, IntentRisk
 from .memory_store import MemoryStore
+from .shiva import ShivaLifecycleManager  # OPUS-082: Destroyer of Illusions
 
 if TYPE_CHECKING:
     from vibe_core.kernel_impl import RealVibeKernel
@@ -248,7 +249,11 @@ class CognitiveKernel:
         self._sutra_sense: Optional["SutraSense"] = None
         self._init_sutra_sense()
 
-        logger.info("MANAS Cognitive Kernel initialized")
+        # 🕉️ SHIVA: The Destroyer of Illusions - Lifecycle Manager (OPUS-082)
+        self._shiva = ShivaLifecycleManager(workspace=self._workspace)
+        self._shiva.inject_kernel(self)
+
+        logger.info("MANAS Cognitive Kernel initialized (with Shiva Lifecycle)")
 
     # =========================================================================
     # ⚡ VAJRA: KERNEL INTEGRATION (OPUS-057)
@@ -801,6 +806,12 @@ class CognitiveKernel:
 
         # Clean up expired intents
         self._cleanup_expired_intents()
+
+        # 🕉️ SHIVA: Sweep stale intents (destroy illusions)
+        # If reality already satisfied an intent, archive it
+        swept = self._shiva.sweep_stale_intents()
+        if swept > 0:
+            logger.info(f"🕉️ SHIVA: Swept {swept} fulfilled intents (illusions destroyed)")
 
         # Generate new intents
         new_intents = self._intent_generator.generate_intents(context or {})
