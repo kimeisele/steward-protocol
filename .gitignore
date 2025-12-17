@@ -319,3 +319,4 @@ __pycache__/
 # OPUS-061 AMRITA: .opus_state/ is now TRACKED
 # The brain must persist. Git is consciousness.
 # Removed: .opus_state/
+.state/

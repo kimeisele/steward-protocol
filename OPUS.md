@@ -76,6 +76,14 @@ Quick Start: python -m vibe_core.cli boot
 
 ---
 
+<details>
+<summary>📜 Recently Executed (1)</summary>
+
+| Intent | Status | Time |
+|--------|--------|------|
+| Review 46 TODOs in codebase | ✅ | `9.973211` |
+
+</details>
 
 
 
