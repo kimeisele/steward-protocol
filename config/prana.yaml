@@ -64,6 +64,23 @@ opus:
   # If false, OPUS.md may show stale data (pussy mode symptom)
   force_refresh_on_heartbeat: true
 
+# Chronicle Configuration (Git Commit Automation)
+# Controls how heartbeat seals changes in git history
+chronicle:
+  # Enable automatic git commits after heartbeat pulse
+  enabled: true
+
+  # GPG sign commits?
+  # true = Production mode (cryptographic signatures)
+  # false = Dev/test mode (unsigned commits, faster, no GPG required)
+  gpg_sign_commits: true
+
+  # Commit message prefix for heartbeat auto-commits
+  commit_prefix: "🫀 Heartbeat Pulse:"
+
+  # Only commit if changes detected
+  commit_only_if_dirty: true
+
 # Safety Limits
 limits:
   # Max concurrent agents
